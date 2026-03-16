@@ -1,0 +1,17 @@
+# Static sites
+https://news.ycombinator.com
+https://en.wikipedia.org/wiki/Rust_(programming_language)
+https://example.com
+https://httpbin.org
+
+# Code hosting
+https://github.com/nickel-org/nickel.rs
+
+# Documentation
+https://doc.rust-lang.org/book/
+https://docs.python.org/3/
+
+# News / Media
+https://www.bbc.com/news
+https://lite.cnn.com
+https://text.npr.org

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Widget Store - Products</title>
+  <style>.product{border:1px solid #ddd;padding:16px;margin:8px}</style>
+  <script src="/analytics.js"></script>
+</head>
+<body>
+<nav aria-label="Site navigation">
+  <a href="/">Home</a>
+  <a href="/products">Products</a>
+  <a href="/cart">Cart (3)</a>
+  <a href="/account">Account</a>
+</nav>
+<main>
+  <h1>Products</h1>
+  <div class="product" data-product-id="1">
+    <h2><a href="/products/widget-pro">Widget Pro</a></h2>
+    <p>The ultimate widget for professionals. Built with care.</p>
+    <p>$49.99</p>
+    <img src="/images/widget-pro.jpg" alt="Widget Pro product photo">
+    <select aria-label="Quantity">
+      <option value="1" selected>1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="5">5</option>
+      <option value="10">10</option>
+    </select>
+    <button>Add to Cart</button>
+  </div>
+  <div class="product" data-product-id="2">
+    <h2><a href="/products/widget-basic">Widget Basic</a></h2>
+    <p>Great entry-level widget. Perfect for beginners.</p>
+    <p>$19.99</p>
+    <img src="/images/widget-basic.jpg" alt="Widget Basic product photo">
+    <select aria-label="Quantity">
+      <option value="1" selected>1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+    </select>
+    <button>Add to Cart</button>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Product</th><th>Price</th><th>Rating</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Widget Pro</td><td>$49.99</td><td>4.8/5</td></tr>
+      <tr><td>Widget Basic</td><td>$19.99</td><td>4.2/5</td></tr>
+      <tr><td>Widget Enterprise</td><td>$199.99</td><td>4.9/5</td></tr>
+    </tbody>
+  </table>
+</main>
+<footer>
+  <a href="/terms">Terms</a>
+  <a href="/privacy">Privacy</a>
+</footer>
+</body>
+</html>
