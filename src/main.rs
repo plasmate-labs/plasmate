@@ -6,6 +6,7 @@ use tracing_subscriber::EnvFilter;
 mod awp;
 mod bench;
 mod cache;
+mod cdp;
 mod js;
 mod network;
 mod som;
@@ -35,7 +36,7 @@ enum Commands {
         #[arg(long)]
         no_js: bool,
     },
-    /// Start the AWP WebSocket server
+    /// Start the WebSocket server
     Serve {
         /// Host to bind to
         #[arg(long, default_value = "127.0.0.1")]
@@ -43,6 +44,9 @@ enum Commands {
         /// Port to listen on
         #[arg(long, default_value = "9222")]
         port: u16,
+        /// Protocol: awp (default), cdp (Puppeteer/Playwright compatible), or both
+        #[arg(long, default_value = "cdp")]
+        protocol: String,
     },
     /// Run SOM benchmarks against a list of URLs
     Bench {
@@ -84,11 +88,56 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Fetch { url, output, no_external, no_js } => {
+        Commands::Fetch {
+            url,
+            output,
+            no_external,
+            no_js,
+        } => {
             cmd_fetch(&url, output.as_deref(), !no_external, no_js).await?;
         }
-        Commands::Serve { host, port } => {
-            awp::server::start(&host, port).await?;
+        Commands::Serve {
+            host,
+            port,
+            protocol,
+        } => {
+            match protocol.as_str() {
+                "awp" => {
+                    info!("Starting AWP protocol server");
+                    awp::server::start(&host, port).await?;
+                }
+                "cdp" => {
+                    info!("Starting CDP-compatible server (Puppeteer/Playwright ready)");
+                    info!("  Custom domain: Plasmate.getSom, Plasmate.getStructuredData, Plasmate.getInteractiveElements, Plasmate.getMarkdown");
+                    cdp::server::start(&host, port).await?;
+                }
+                "both" => {
+                    // CDP on main port, AWP on main port + 1
+                    let awp_port = port + 1;
+                    info!("Starting dual-protocol server");
+                    info!("  CDP (Puppeteer/Playwright): ws://{}:{}", host, port);
+                    info!("  AWP (native):               ws://{}:{}", host, awp_port);
+                    let host_awp = host.clone();
+                    let awp_handle = tokio::spawn(async move {
+                        if let Err(e) = awp::server::start(&host_awp, awp_port).await {
+                            eprintln!("AWP server error: {}", e);
+                        }
+                    });
+                    let cdp_handle = tokio::spawn(async move {
+                        if let Err(e) = cdp::server::start(&host, port).await {
+                            eprintln!("CDP server error: {}", e);
+                        }
+                    });
+                    tokio::select! {
+                        _ = cdp_handle => {}
+                        _ = awp_handle => {}
+                    }
+                }
+                _ => {
+                    eprintln!("Unknown protocol: {}. Use: awp, cdp, or both", protocol);
+                    std::process::exit(1);
+                }
+            }
         }
         Commands::Bench {
             urls,
@@ -109,7 +158,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn cmd_fetch(url: &str, output: Option<&str>, external_scripts: bool, no_js: bool) -> Result<(), Box<dyn std::error::Error>> {
+async fn cmd_fetch(
+    url: &str,
+    output: Option<&str>,
+    external_scripts: bool,
+    no_js: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
     let jar = Arc::new(reqwest::cookie::Jar::default());
     let client = network::fetch::build_client_h1_fallback(None, jar)?;
 
@@ -130,12 +184,9 @@ async fn cmd_fetch(url: &str, output: Option<&str>, external_scripts: bool, no_j
         ..Default::default()
     };
 
-    let page_result = js::pipeline::process_page_async(
-        &result.html,
-        &result.url,
-        &pipeline_config,
-        &client,
-    ).await?;
+    let page_result =
+        js::pipeline::process_page_async(&result.html, &result.url, &pipeline_config, &client)
+            .await?;
 
     if let Some(ref report) = page_result.js_report {
         info!(
@@ -159,7 +210,11 @@ async fn cmd_fetch(url: &str, output: Option<&str>, external_scripts: bool, no_j
     match output {
         Some(path) => {
             std::fs::write(path, &json)?;
-            info!(path, som_bytes = page_result.som.meta.som_bytes, "SOM written");
+            info!(
+                path,
+                som_bytes = page_result.som.meta.som_bytes,
+                "SOM written"
+            );
         }
         None => {
             println!("{}", json);
@@ -234,10 +289,26 @@ async fn cmd_throughput_bench(
     let seq_per_page = seq_ms as f64 / pages as f64;
 
     eprintln!("Total time: {}ms ({:.1}ms/page)", seq_ms, seq_per_page);
-    eprintln!("SOM compile time: {}ms ({:.1}us/page)", compile_time_us / 1000, compile_time_us as f64 / pages as f64);
-    eprintln!("HTML bytes: {} ({}/page)", total_html_bytes, total_html_bytes / pages);
-    eprintln!("SOM bytes: {} ({}/page)", total_som_bytes, total_som_bytes / pages);
-    eprintln!("Elements: {} ({}/page)", total_elements, total_elements / pages);
+    eprintln!(
+        "SOM compile time: {}ms ({:.1}us/page)",
+        compile_time_us / 1000,
+        compile_time_us as f64 / pages as f64
+    );
+    eprintln!(
+        "HTML bytes: {} ({}/page)",
+        total_html_bytes,
+        total_html_bytes / pages
+    );
+    eprintln!(
+        "SOM bytes: {} ({}/page)",
+        total_som_bytes,
+        total_som_bytes / pages
+    );
+    eprintln!(
+        "Elements: {} ({}/page)",
+        total_elements,
+        total_elements / pages
+    );
     eprintln!();
 
     // --- Parallel benchmark ---
@@ -269,15 +340,28 @@ async fn cmd_throughput_bench(
     let par_ms = fetch_elapsed.as_millis();
     let par_per_page = par_ms as f64 / pages as f64;
 
-    eprintln!("Total time: {}ms ({:.1}ms/page effective)", par_ms, par_per_page);
-    eprintln!("SOM compile time: {}ms ({:.1}us/page)", par_compile_us / 1000, par_compile_us as f64 / success_count as f64);
+    eprintln!(
+        "Total time: {}ms ({:.1}ms/page effective)",
+        par_ms, par_per_page
+    );
+    eprintln!(
+        "SOM compile time: {}ms ({:.1}us/page)",
+        par_compile_us / 1000,
+        par_compile_us as f64 / success_count as f64
+    );
     eprintln!("Successful: {}/{}", success_count, pages);
     eprintln!();
 
     // --- Memory usage ---
     eprintln!("--- Summary ---");
-    eprintln!("Sequential:  {}ms total, {:.1}ms/page", seq_ms, seq_per_page);
-    eprintln!("Parallel:    {}ms total, {:.1}ms/page effective", par_ms, par_per_page);
+    eprintln!(
+        "Sequential:  {}ms total, {:.1}ms/page",
+        seq_ms, seq_per_page
+    );
+    eprintln!(
+        "Parallel:    {}ms total, {:.1}ms/page effective",
+        par_ms, par_per_page
+    );
     eprintln!("Speedup:     {:.1}x", seq_ms as f64 / par_ms as f64);
     eprintln!();
     eprintln!("Comparison (Lightpanda claims for 100 local pages):");

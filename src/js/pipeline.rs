@@ -6,7 +6,7 @@
 //! in a single pass with no intermediate rendering.
 
 use std::time::Instant;
-use tracing::{debug, info};
+use tracing::debug;
 
 use super::extract;
 use super::runtime::{JsExecutionReport, JsRuntime, RuntimeConfig};
@@ -51,9 +51,7 @@ pub struct PipelineConfig {
     pub js_config: RuntimeConfig,
     /// Max timer drain threshold in ms (execute short setTimeout callbacks).
     pub timer_drain_ms: u64,
-    /// HTTP client for fetching external scripts (None = skip external).
-    #[cfg(feature = "external-scripts")]
-    pub http_client: Option<reqwest::Client>,
+
 }
 
 impl Default for PipelineConfig {
@@ -90,7 +88,8 @@ pub async fn process_page_async(
         let resolved = if config.fetch_external_scripts {
             script_fetch::resolve_scripts(&scripts, url, client).await
         } else {
-            scripts.iter()
+            scripts
+                .iter()
                 .filter(|s| s.is_inline)
                 .map(|s| script_fetch::ResolvedScript {
                     source: s.source.clone(),
@@ -100,7 +99,8 @@ pub async fn process_page_async(
                 .collect()
         };
 
-        let exec_scripts: Vec<(String, String)> = resolved.iter()
+        let exec_scripts: Vec<(String, String)> = resolved
+            .iter()
             .filter(|s| !s.source.is_empty())
             .map(|s| (s.source.clone(), s.label.clone()))
             .collect();
@@ -121,7 +121,10 @@ pub async fn process_page_async(
                 scripts_total = report.total,
                 scripts_ok = report.succeeded,
                 scripts_err = report.failed,
-                external_fetched = resolved.iter().filter(|s| !s.label.starts_with("inline")).count(),
+                external_fetched = resolved
+                    .iter()
+                    .filter(|s| !s.label.starts_with("inline"))
+                    .count(),
                 js_ms = js_us / 1000,
                 "JS execution complete (async)"
             );
@@ -131,8 +134,7 @@ pub async fn process_page_async(
     }
 
     let t2 = Instant::now();
-    let som = compiler::compile(html, url)
-        .map_err(|e| PipelineError::SomCompile(e.to_string()))?;
+    let som = compiler::compile(html, url).map_err(|e| PipelineError::SomCompile(e.to_string()))?;
     let som_us = t2.elapsed().as_micros();
 
     let total_us = pipeline_start.elapsed().as_micros();
@@ -156,7 +158,11 @@ pub async fn process_page_async(
 /// If JS execution is enabled, inline scripts are extracted and run in V8
 /// before the SOM is compiled. The DOM shim captures mutations that could
 /// affect the semantic structure.
-pub fn process_page(html: &str, url: &str, config: &PipelineConfig) -> Result<PageResult, PipelineError> {
+pub fn process_page(
+    html: &str,
+    url: &str,
+    config: &PipelineConfig,
+) -> Result<PageResult, PipelineError> {
     let pipeline_start = Instant::now();
 
     let mut js_report = None;
@@ -169,7 +175,8 @@ pub fn process_page(html: &str, url: &str, config: &PipelineConfig) -> Result<Pa
         let scripts = extract::extract_scripts(html);
         extract_us = t0.elapsed().as_micros();
 
-        let inline_scripts: Vec<(String, String)> = scripts.iter()
+        let inline_scripts: Vec<(String, String)> = scripts
+            .iter()
             .filter(|s| s.is_inline)
             .map(|s| (s.source.clone(), s.label.clone()))
             .collect();
@@ -211,7 +218,8 @@ pub fn process_page(html: &str, url: &str, config: &PipelineConfig) -> Result<Pa
 
         // Re-execute scripts in a fresh context to get mutations
         let scripts = extract::extract_scripts(html);
-        let inline_scripts: Vec<(String, String)> = scripts.iter()
+        let inline_scripts: Vec<(String, String)> = scripts
+            .iter()
             .filter(|s| s.is_inline)
             .map(|s| (s.source.clone(), s.label.clone()))
             .collect();
@@ -240,7 +248,11 @@ pub fn process_page(html: &str, url: &str, config: &PipelineConfig) -> Result<Pa
                     }
                     if let Some(text) = m.get("text").and_then(|v| v.as_str()) {
                         if let Some(tag) = m.get("tag").and_then(|v| v.as_str()) {
-                            injection.push_str(&format!("<{0}>{1}</{0}>", tag.to_lowercase(), text));
+                            injection.push_str(&format!(
+                                "<{0}>{1}</{0}>",
+                                tag.to_lowercase(),
+                                text
+                            ));
                         }
                     }
                 }
@@ -383,7 +395,11 @@ mod tests {
         </body></html>"#;
         let result = process_page(html, "https://example.com", &config).unwrap();
         let report = result.js_report.unwrap();
-        assert_eq!(report.succeeded, 3, "All 3 common JS patterns should execute: {:?}", report.errors);
+        assert_eq!(
+            report.succeeded, 3,
+            "All 3 common JS patterns should execute: {:?}",
+            report.errors
+        );
         assert_eq!(report.failed, 0);
     }
 }

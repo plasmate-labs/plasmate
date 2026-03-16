@@ -4,7 +4,7 @@ use std::time::Instant;
 use reqwest::cookie::Jar;
 use reqwest::Client;
 
-use crate::js::pipeline::{PipelineConfig, PageResult};
+use crate::js::pipeline::PipelineConfig;
 use crate::network::fetch;
 use crate::som::metadata::StructuredData;
 use crate::som::types::Som;
@@ -55,8 +55,8 @@ impl Session {
         let locale = locale.unwrap_or_else(|| "en-US".to_string());
         let timeout = timeout_ms.unwrap_or(30000);
         let jar = Arc::new(Jar::default());
-        let client = fetch::build_client_h1_fallback(Some(&ua), jar.clone())
-            .map_err(|e| e.to_string())?;
+        let client =
+            fetch::build_client_h1_fallback(Some(&ua), jar.clone()).map_err(|e| e.to_string())?;
 
         Ok(Session {
             id,
@@ -101,7 +101,9 @@ impl Session {
             &final_url,
             &self.pipeline_config,
             &self.client,
-        ).await.map_err(|e| e.to_string())?;
+        )
+        .await
+        .map_err(|e| e.to_string())?;
 
         let pipeline_ms = page_result.timing.total_us / 1000;
         let som_bytes = page_result.som.meta.som_bytes;

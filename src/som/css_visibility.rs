@@ -7,7 +7,7 @@
 use html5ever::parse_document;
 use html5ever::tendril::TendrilSink;
 use markup5ever_rcdom::{Handle, NodeData, RcDom};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 /// Selectors that hide elements (from <style> blocks).
 #[derive(Debug, Default)]
@@ -164,10 +164,14 @@ impl VisibilityRules {
                 }
 
                 // Check for tag-level hiding (rare but happens)
-                let tag_part = segment.split(|c: char| c == '.' || c == '#' || c == ':' || c == '[')
+                let tag_part = segment
+                    .split(|c: char| c == '.' || c == '#' || c == ':' || c == '[')
                     .next()
                     .unwrap_or("");
-                if !tag_part.is_empty() && tag_part.chars().all(|c| c.is_ascii_alphabetic()) && is_hidden {
+                if !tag_part.is_empty()
+                    && tag_part.chars().all(|c| c.is_ascii_alphabetic())
+                    && is_hidden
+                {
                     // Only add tag hiding for specific patterns, not broad tags
                     if matches!(tag_part, "noscript" | "template") {
                         self.hidden_tags.insert(tag_part.to_string());

@@ -5,7 +5,7 @@
 
 use reqwest::Client;
 use std::time::Duration;
-use tracing::{debug, warn};
+use tracing::debug;
 use url::Url;
 
 use super::extract::ScriptBlock;
@@ -49,7 +49,8 @@ pub async fn resolve_scripts(
             });
         } else if fetch_count < MAX_EXTERNAL {
             // Resolve URL
-            let url = if script.label.starts_with("http://") || script.label.starts_with("https://") {
+            let url = if script.label.starts_with("http://") || script.label.starts_with("https://")
+            {
                 script.label.clone()
             } else if let Some(ref base) = base_url {
                 base.join(&script.label)
@@ -84,33 +85,32 @@ pub async fn resolve_scripts(
             async move {
                 let result = tokio::time::timeout(
                     Duration::from_millis(FETCH_TIMEOUT_MS),
-                    client.get(&url)
+                    client
+                        .get(&url)
                         .header("Accept", "application/javascript, text/javascript, */*")
                         .send(),
                 )
                 .await;
 
                 match result {
-                    Ok(Ok(resp)) if resp.status().is_success() => {
-                        match resp.text().await {
-                            Ok(text) if text.len() <= MAX_SCRIPT_BYTES => {
-                                debug!(url, bytes = text.len(), "Fetched external script");
-                                Some(ResolvedScript {
-                                    source: text,
-                                    label: url,
-                                    index: idx,
-                                })
-                            }
-                            Ok(text) => {
-                                debug!(url, bytes = text.len(), "Script too large, skipping");
-                                None
-                            }
-                            Err(e) => {
-                                debug!(url, error = %e, "Failed to read script body");
-                                None
-                            }
+                    Ok(Ok(resp)) if resp.status().is_success() => match resp.text().await {
+                        Ok(text) if text.len() <= MAX_SCRIPT_BYTES => {
+                            debug!(url, bytes = text.len(), "Fetched external script");
+                            Some(ResolvedScript {
+                                source: text,
+                                label: url,
+                                index: idx,
+                            })
                         }
-                    }
+                        Ok(text) => {
+                            debug!(url, bytes = text.len(), "Script too large, skipping");
+                            None
+                        }
+                        Err(e) => {
+                            debug!(url, error = %e, "Failed to read script body");
+                            None
+                        }
+                    },
                     Ok(Ok(resp)) => {
                         debug!(url, status = resp.status().as_u16(), "Script fetch failed");
                         None
@@ -127,8 +127,7 @@ pub async fn resolve_scripts(
             }
         });
 
-        let results: Vec<Option<ResolvedScript>> =
-            futures_util::future::join_all(fetches).await;
+        let results: Vec<Option<ResolvedScript>> = futures_util::future::join_all(fetches).await;
 
         for result in results.into_iter().flatten() {
             resolved.push(result);
@@ -198,7 +197,10 @@ mod tests {
         let resolved = rt.block_on(resolve_scripts(&scripts, "https://example.com", &client));
 
         // At minimum, inline scripts should be in order
-        let inline: Vec<_> = resolved.iter().filter(|s| s.label.starts_with("inline")).collect();
+        let inline: Vec<_> = resolved
+            .iter()
+            .filter(|s| s.label.starts_with("inline"))
+            .collect();
         assert_eq!(inline.len(), 2);
         assert!(inline[0].index < inline[1].index);
     }
