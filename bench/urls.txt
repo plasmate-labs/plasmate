@@ -1,17 +1,66 @@
-# Static sites
+# === Real-World Agent Benchmark Suite ===
+# Diverse sites an AI agent would actually need to navigate
+
+# News / Media (text-heavy, layout complexity)
 https://news.ycombinator.com
+https://www.bbc.com/news
+https://text.npr.org
+https://lite.cnn.com
+https://www.reuters.com
+https://arstechnica.com
+
+# Wikipedia (article pages, massive DOM)
 https://en.wikipedia.org/wiki/Rust_(programming_language)
+https://en.wikipedia.org/wiki/Artificial_intelligence
+https://en.wikipedia.org/wiki/United_States
+
+# Documentation (structured, code-heavy)
+https://doc.rust-lang.org/book/
+https://docs.python.org/3/
+https://developer.mozilla.org/en-US/docs/Web/HTML
+
+# E-commerce / Product pages
+https://www.amazon.com
+https://www.ebay.com
+https://store.steampowered.com
+
+# SaaS / Dashboards (modern React/Vue)
+https://github.com/nickel-org/nickel.rs
+https://github.com/nickel-org/nickel.rs/issues
+https://linear.app
+https://vercel.com
+
+# Government / Institutional
+https://www.usa.gov
+https://www.whitehouse.gov
+
+# Search engines
+https://www.google.com
+https://duckduckgo.com
+https://www.bing.com
+
+# Forums / Community
+https://stackoverflow.com/questions
+https://old.reddit.com
+https://lobste.rs
+
+# Forms / Auth
+https://accounts.google.com
+https://login.microsoftonline.com
+
+# Static / Simple
 https://example.com
 https://httpbin.org
 
-# Code hosting
-https://github.com/nickel-org/nickel.rs
+# Legacy table-layout
+https://news.ycombinator.com
+https://craigslist.org
 
-# Documentation
-https://doc.rust-lang.org/book/
-https://docs.python.org/3/
+# Complex modern apps
+https://mail.google.com
+https://twitter.com
+https://www.linkedin.com
 
-# News / Media
-https://www.bbc.com/news
-https://lite.cnn.com
-https://text.npr.org
+# Developer tools
+https://bundlephobia.com
+https://caniuse.com
