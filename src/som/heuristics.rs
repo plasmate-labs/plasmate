@@ -1,5 +1,43 @@
 use markup5ever_rcdom::{Handle, NodeData};
 
+/// Configuration for content summarization thresholds.
+///
+/// These defaults are tuned for token efficiency. The goal of the v0.1 PoC is to
+/// preserve intent-relevant structure, not to reproduce full article text.
+pub struct ContentConfig {
+    /// Max characters for the first paragraph in main content.
+    pub first_para_max: usize,
+    /// Max characters for subsequent paragraphs.
+    pub subsequent_para_max: usize,
+    /// Max number of paragraph elements to keep per region.
+    pub max_paragraphs: usize,
+    /// Max list items to show before collapsing.
+    pub max_list_items: usize,
+    /// Max link elements to keep in a non-navigation region.
+    pub max_links: usize,
+    /// Max link elements to keep in a navigation region.
+    pub max_navigation_links: usize,
+    /// Max total elements to keep per region.
+    pub max_elements: usize,
+    /// Max characters per table cell string.
+    pub max_table_cell_chars: usize,
+}
+
+impl Default for ContentConfig {
+    fn default() -> Self {
+        Self {
+            first_para_max: 200,
+            subsequent_para_max: 80,
+            max_paragraphs: 10,
+            max_list_items: 5,
+            max_links: 200,
+            max_navigation_links: 80,
+            max_elements: 400,
+            max_table_cell_chars: 80,
+        }
+    }
+}
+
 /// Check if a node should be stripped from SOM output.
 pub fn should_strip(node: &Handle) -> bool {
     match &node.data {
@@ -119,10 +157,6 @@ pub fn normalize_text(text: &str) -> String {
     }
 }
 
-/// Check if a div is a "wrapper" (single child element, no semantic meaning).
-pub fn is_wrapper_div(tag: &str, child_element_count: usize) -> bool {
-    tag == "div" && child_element_count == 1
-}
 
 /// Get the accessible label for an element from its attributes.
 pub fn get_accessible_label(attrs: &[(String, String)]) -> Option<String> {
@@ -143,4 +177,288 @@ pub fn get_accessible_label(attrs: &[(String, String)]) -> Option<String> {
         }
     }
     None
+}
+
+/// Detect if a table is used for layout purposes rather than data display.
+/// Layout tables typically have no semantic structure (no <th>, no <caption>)
+/// and contain layout elements like <nav>, <form>, <div>, etc.
+pub fn is_layout_table(node: &Handle) -> bool {
+    // Many legacy sites (HN, old forums) use tables for layout.
+    // We want to treat those as containers, not as data tables.
+
+    let mut has_th = false;
+    let mut has_caption = false;
+    let mut has_layout_children = false;
+    let mut nested_table_count = 0;
+    let mut cell_count = 0;
+
+    check_table_structure(
+        node,
+        &mut has_th,
+        &mut has_caption,
+        &mut has_layout_children,
+        &mut nested_table_count,
+        &mut cell_count,
+        0,
+    );
+
+    if has_th || has_caption {
+        // Real data tables often have headers or captions.
+        return false;
+    }
+
+    // Strong signals of layout.
+    if nested_table_count > 0 {
+        return true;
+    }
+    if has_layout_children {
+        return true;
+    }
+
+    // Layout tables commonly use cellpadding/cellspacing/border/width/bgcolor.
+    if has_layout_table_attributes(node) {
+        return true;
+    }
+
+    let link_count = count_descendant_links(node);
+
+    // High link density with no headers is almost always layout.
+    if link_count >= 20 {
+        return true;
+    }
+
+    // Very few cells suggests a wrapper.
+    if cell_count <= 2 {
+        return true;
+    }
+
+    false
+}
+
+fn has_layout_table_attributes(node: &Handle) -> bool {
+    if let NodeData::Element { attrs, .. } = &node.data {
+        let attrs = attrs.borrow();
+        for a in attrs.iter() {
+            let n = a.name.local.as_ref();
+            if matches!(n, "cellpadding" | "cellspacing" | "border" | "width" | "bgcolor") {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn check_table_structure(
+    node: &Handle,
+    has_th: &mut bool,
+    has_caption: &mut bool,
+    has_layout_children: &mut bool,
+    nested_table_count: &mut usize,
+    cell_count: &mut usize,
+    depth: usize,
+) {
+    if let NodeData::Element { name, .. } = &node.data {
+        let tag = name.local.as_ref();
+
+        match tag {
+            "th" => *has_th = true,
+            "caption" => *has_caption = true,
+            "td" => *cell_count += 1,
+            "table" if depth > 0 => *nested_table_count += 1,
+            "nav" | "form" | "header" | "footer" | "aside" | "main" | "article" | "section" => {
+                *has_layout_children = true;
+            }
+            "div" => {
+                // Check if div has significant content (links, forms, etc.)
+                let link_count = count_descendant_links(node);
+                if link_count >= 2 {
+                    *has_layout_children = true;
+                }
+            }
+            _ => {}
+        }
+
+        // Don't recurse into nested tables for structure check
+        if tag == "table" && depth > 0 {
+            return;
+        }
+    }
+
+    let children = node.children.borrow();
+    for child in children.iter() {
+        check_table_structure(
+            child,
+            has_th,
+            has_caption,
+            has_layout_children,
+            nested_table_count,
+            cell_count,
+            depth + 1
+        );
+    }
+}
+
+fn count_descendant_links(node: &Handle) -> usize {
+    let mut count = 0;
+    if let NodeData::Element { name, attrs, .. } = &node.data {
+        if name.local.as_ref() == "a" {
+            let attrs = attrs.borrow();
+            if attrs.iter().any(|a| a.name.local.as_ref() == "href") {
+                count += 1;
+            }
+        }
+    }
+    for child in node.children.borrow().iter() {
+        count += count_descendant_links(child);
+    }
+    count
+}
+
+/// Check class/id attributes for semantic hints.
+/// Returns a region role string if the class/id suggests a semantic region.
+pub fn class_id_region_hint(attrs: &[(String, String)]) -> Option<&'static str> {
+    let class_val = attrs.iter()
+        .find(|(n, _)| n == "class")
+        .map(|(_, v)| v.to_lowercase());
+
+    let id_val = attrs.iter()
+        .find(|(n, _)| n == "id")
+        .map(|(_, v)| v.to_lowercase());
+
+    // Check patterns in class and id
+    for val in [&class_val, &id_val].iter().filter_map(|v| v.as_ref()) {
+        // Navigation patterns
+        if val.contains("nav") || val.contains("menu") || val.contains("navigation") {
+            return Some("navigation");
+        }
+        // Main content patterns
+        if val.contains("main-content") || val.contains("maincontent") ||
+           val.contains("primary-content") || val.contains("article-body") ||
+           (val.contains("main") && !val.contains("nav")) {
+            return Some("main");
+        }
+        // Sidebar patterns
+        if val.contains("sidebar") || val.contains("side-bar") ||
+           val.contains("aside") || val.contains("rail") {
+            return Some("aside");
+        }
+        // Footer patterns
+        if val.contains("footer") || val.contains("copyright") ||
+           val.contains("site-footer") || val.contains("page-footer") {
+            return Some("footer");
+        }
+        // Header patterns
+        if val.contains("header") || val.contains("site-header") ||
+           val.contains("page-header") || val.contains("masthead") {
+            return Some("header");
+        }
+        // Search patterns
+        if val.contains("search") {
+            return Some("search");
+        }
+    }
+
+    None
+}
+
+/// Truncate text for summarization with a given max length.
+pub fn truncate_text(text: &str, max_chars: usize) -> String {
+    let trimmed: String = text.split_whitespace().collect::<Vec<_>>().join(" ");
+    if trimmed.len() > max_chars {
+        let truncated: String = trimmed.chars().take(max_chars.saturating_sub(3)).collect();
+        format!("{}...", truncated)
+    } else {
+        trimmed
+    }
+}
+
+/// Check if a div is a wrapper that should be collapsed.
+/// Now handles: single element child, text-only content, or single interactive element.
+pub fn is_collapsible_wrapper(tag: &str, node: &Handle) -> bool {
+    if tag != "div" && tag != "span" {
+        return false;
+    }
+
+    let children = node.children.borrow();
+    let mut element_count = 0;
+    let mut text_only = true;
+    let mut interactive_count = 0;
+
+    for child in children.iter() {
+        match &child.data {
+            NodeData::Element { name, attrs, .. } => {
+                element_count += 1;
+                text_only = false;
+                let child_tag = name.local.as_ref();
+                // Check if interactive
+                if matches!(child_tag, "a" | "button" | "input" | "select" | "textarea") {
+                    let attrs = attrs.borrow();
+                    // For <a>, only count if it has href
+                    if child_tag == "a" {
+                        if attrs.iter().any(|a| a.name.local.as_ref() == "href") {
+                            interactive_count += 1;
+                        }
+                    } else {
+                        interactive_count += 1;
+                    }
+                }
+            }
+            NodeData::Text { contents } => {
+                let text = contents.borrow();
+                if !text.trim().is_empty() {
+                    // Has meaningful text
+                }
+            }
+            _ => {}
+        }
+    }
+
+    // Collapse if:
+    // 1. Single element child (original behavior)
+    // 2. Text-only content (no element children)
+    // 3. Single interactive element with maybe some text
+    element_count == 1 || (text_only && element_count == 0) ||
+        (element_count == 1 && interactive_count == 1)
+}
+
+
+/// Detect footer heuristically: last block element with copyright/privacy/terms content.
+pub fn looks_like_footer(node: &Handle) -> bool {
+    if let NodeData::Element { .. } = &node.data {
+        let text = get_all_text(node).to_lowercase();
+        // Check for footer-like content
+        if text.contains("copyright") || text.contains("©") ||
+           text.contains("privacy") || text.contains("terms of") ||
+           text.contains("all rights reserved") {
+            return true;
+        }
+    }
+    false
+}
+
+fn get_all_text(node: &Handle) -> String {
+    let mut buf = String::new();
+    collect_all_text(node, &mut buf);
+    buf
+}
+
+fn collect_all_text(node: &Handle, buf: &mut String) {
+    match &node.data {
+        NodeData::Text { contents } => {
+            buf.push_str(&contents.borrow());
+        }
+        NodeData::Element { name, .. } => {
+            let tag = name.local.as_ref();
+            if !matches!(tag, "script" | "style") {
+                for child in node.children.borrow().iter() {
+                    collect_all_text(child, buf);
+                }
+            }
+        }
+        _ => {
+            for child in node.children.borrow().iter() {
+                collect_all_text(child, buf);
+            }
+        }
+    }
 }

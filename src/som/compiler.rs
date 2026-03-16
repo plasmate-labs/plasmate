@@ -6,8 +6,15 @@ use std::cell::Cell;
 use std::collections::HashMap;
 
 use super::element_id::{generate_element_id, generate_region_id, ElementIdTracker};
-use super::heuristics;
+use super::heuristics::{self, ContentConfig};
 use super::types::*;
+
+/// Context for content summarization during compilation.
+struct CompileContext {
+    config: ContentConfig,
+    paragraph_count: Cell<usize>,
+    is_main_region: Cell<bool>,
+}
 
 /// Errors that can occur during SOM compilation.
 #[derive(Debug, thiserror::Error)]
@@ -30,6 +37,11 @@ pub fn compile(html: &str, page_url: &str) -> Result<Som, CompileError> {
     let html_bytes = html.len();
     let mut id_tracker = ElementIdTracker::new();
     let mut region_counts: HashMap<String, usize> = HashMap::new();
+    let ctx = CompileContext {
+        config: ContentConfig::default(),
+        paragraph_count: Cell::new(0),
+        is_main_region: Cell::new(false),
+    };
 
     // Extract page title and lang
     let title = extract_title(&dom.document);
@@ -40,7 +52,7 @@ pub fn compile(html: &str, page_url: &str) -> Result<Som, CompileError> {
 
     let regions = match body {
         Some(body_handle) => {
-            extract_regions(&body_handle, &origin, &mut id_tracker, &mut region_counts)
+            extract_regions(&body_handle, &origin, &mut id_tracker, &mut region_counts, &ctx)
         }
         None => vec![],
     };
@@ -50,7 +62,8 @@ pub fn compile(html: &str, page_url: &str) -> Result<Som, CompileError> {
     let interactive_count = Cell::new(0usize);
     count_elements(&regions, &element_count, &interactive_count);
 
-    let som = Som {
+    // Calculate SOM bytes by serializing once
+    let mut som = Som {
         som_version: "0.1".to_string(),
         url: page_url.to_string(),
         title,
@@ -58,23 +71,17 @@ pub fn compile(html: &str, page_url: &str) -> Result<Som, CompileError> {
         regions,
         meta: SomMeta {
             html_bytes,
-            som_bytes: 0, // Will be updated after serialization
+            som_bytes: 0,
             element_count: element_count.get(),
             interactive_count: interactive_count.get(),
         },
     };
 
-    // Calculate actual SOM bytes
+    // Serialize once for byte count
     let som_json = serde_json::to_string(&som).unwrap_or_default();
-    let som_bytes = som_json.len();
+    som.meta.som_bytes = som_json.len();
 
-    Ok(Som {
-        meta: SomMeta {
-            som_bytes,
-            ..som.meta
-        },
-        ..som
-    })
+    Ok(som)
 }
 
 fn count_elements(regions: &[Region], total: &Cell<usize>, interactive: &Cell<usize>) {
@@ -150,6 +157,7 @@ fn extract_regions(
     origin: &str,
     id_tracker: &mut ElementIdTracker,
     region_counts: &mut HashMap<String, usize>,
+    ctx: &CompileContext,
 ) -> Vec<Region> {
     let mut regions = Vec::new();
     let mut unassigned_elements = Vec::new();
@@ -163,6 +171,7 @@ fn extract_regions(
         &mut regions,
         &mut unassigned_elements,
         &"0".to_string(),
+        ctx,
     );
 
     // If no landmarks found, wrap everything in a single content region
@@ -176,7 +185,7 @@ fn extract_regions(
             label: None,
             action: None,
             method: None,
-            elements: unassigned_elements,
+            elements: summarize_elements(unassigned_elements, ctx, false),
         });
     } else if !unassigned_elements.is_empty() {
         // Add remaining elements to a content region
@@ -189,13 +198,114 @@ fn extract_regions(
             label: None,
             action: None,
             method: None,
-            elements: unassigned_elements,
+            elements: summarize_elements(unassigned_elements, ctx, false),
         });
     }
 
     // Filter out empty regions
     regions.retain(|r| !r.elements.is_empty());
     regions
+}
+
+/// Summarize elements by enforcing per-region budgets.
+///
+/// v0.1 goal: preserve intent-relevant structure while staying token-efficient.
+/// This function:
+/// - limits paragraphs
+/// - limits links (more aggressive in navigation regions)
+/// - enforces a max elements budget
+/// - appends a summary paragraph when items are dropped
+fn summarize_elements(elements: Vec<Element>, ctx: &CompileContext, is_navigation: bool) -> Vec<Element> {
+    let mut result = Vec::new();
+
+    let mut kept_paras = 0usize;
+    let mut kept_links = 0usize;
+
+    let mut dropped_paras = 0usize;
+    let mut dropped_links = 0usize;
+    let mut dropped_other = 0usize;
+    let mut dropped_chars = 0usize;
+
+    let link_limit = if is_navigation {
+        ctx.config.max_navigation_links
+    } else {
+        ctx.config.max_links
+    };
+
+    for el in elements {
+        // Never drop form controls, they are high-signal for agents.
+        let is_form_control = matches!(
+            el.role,
+            ElementRole::TextInput
+                | ElementRole::Textarea
+                | ElementRole::Select
+                | ElementRole::Checkbox
+                | ElementRole::Radio
+                | ElementRole::Button
+        );
+
+        // Enforce max elements budget, but keep form controls even past the limit.
+        if result.len() >= ctx.config.max_elements && !is_form_control {
+            dropped_other += 1;
+            if let Some(text) = &el.text {
+                dropped_chars += text.len();
+            }
+            continue;
+        }
+
+        // Paragraph budget
+        if el.role == ElementRole::Paragraph {
+            kept_paras += 1;
+            if kept_paras > ctx.config.max_paragraphs {
+                dropped_paras += 1;
+                if let Some(text) = &el.text {
+                    dropped_chars += text.len();
+                }
+                continue;
+            }
+        }
+
+        // Link budget
+        if el.role == ElementRole::Link {
+            kept_links += 1;
+            if kept_links > link_limit {
+                dropped_links += 1;
+                if let Some(text) = &el.text {
+                    dropped_chars += text.len();
+                }
+                continue;
+            }
+        }
+
+        result.push(el);
+    }
+
+    let total_dropped = dropped_paras + dropped_links + dropped_other;
+    if total_dropped > 0 {
+        let mut parts = Vec::new();
+        if dropped_links > 0 {
+            parts.push(format!("{} more links", dropped_links));
+        }
+        if dropped_paras > 0 {
+            parts.push(format!("{} more paragraphs", dropped_paras));
+        }
+        if dropped_other > 0 {
+            parts.push(format!("{} more elements", dropped_other));
+        }
+        let summary_text = format!("[{} dropped, ~{} chars]", parts.join(", "), dropped_chars);
+
+        result.push(Element {
+            id: format!("e_summary_{}", total_dropped),
+            role: ElementRole::Paragraph,
+            text: Some(summary_text),
+            label: None,
+            actions: None,
+            attrs: None,
+            children: None,
+        });
+    }
+
+    result
 }
 
 fn collect_regions(
@@ -206,6 +316,7 @@ fn collect_regions(
     regions: &mut Vec<Region>,
     unassigned: &mut Vec<Element>,
     dom_path: &str,
+    ctx: &CompileContext,
 ) {
     if heuristics::should_strip(node) {
         return;
@@ -215,49 +326,18 @@ fn collect_regions(
         let tag = name.local.as_ref();
         let attr_pairs = get_attr_pairs(node);
 
-        // Check for landmark / form region
+        // Check for landmark / form region (HTML5 and ARIA)
         if let Some(role_str) = heuristics::landmark_role(tag, &attr_pairs) {
-            let region_role = match role_str {
-                "navigation" => RegionRole::Navigation,
-                "main" => RegionRole::Main,
-                "aside" => RegionRole::Aside,
-                "header" => RegionRole::Header,
-                "footer" => RegionRole::Footer,
-                "dialog" => RegionRole::Dialog,
-                _ => RegionRole::Content,
-            };
-            let count = region_counts.entry(role_str.to_string()).or_insert(0);
-            let rid = generate_region_id(role_str, *count);
-            *count += 1;
-            let label = heuristics::get_accessible_label(&attr_pairs);
-
-            // Recursively collect sub-regions (forms, nested landmarks) and elements
-            let mut sub_elements = Vec::new();
-            let children = node.children.borrow();
-            for (i, child) in children.iter().enumerate() {
-                let child_path = format!("{}/{}", dom_path, i);
-                collect_regions(
-                    child,
-                    origin,
-                    id_tracker,
-                    region_counts,
-                    regions,
-                    &mut sub_elements,
-                    &child_path,
-                );
-            }
-
-            if !sub_elements.is_empty() {
-                regions.push(Region {
-                    id: rid,
-                    role: region_role,
-                    label,
-                    action: None,
-                    method: None,
-                    elements: sub_elements,
-                });
-            }
+            create_landmark_region(node, role_str, origin, id_tracker, region_counts, regions, dom_path, ctx, &attr_pairs);
             return;
+        }
+
+        // Check for class/id-based region hints (when no explicit landmarks)
+        if matches!(tag, "div" | "section" | "article" | "ul" | "ol") {
+            if let Some(role_str) = heuristics::class_id_region_hint(&attr_pairs) {
+                create_landmark_region(node, role_str, origin, id_tracker, region_counts, regions, dom_path, ctx, &attr_pairs);
+                return;
+            }
         }
 
         // Check for form regions
@@ -281,7 +361,7 @@ fn collect_regions(
                 .find(|(n, _)| n == "method")
                 .map(|(_, v)| v.to_uppercase());
             let mut elements = Vec::new();
-            extract_elements(node, origin, id_tracker, &mut elements, dom_path);
+            extract_elements(node, origin, id_tracker, &mut elements, dom_path, ctx);
             if !elements.is_empty() {
                 regions.push(Region {
                     id: rid,
@@ -289,21 +369,22 @@ fn collect_regions(
                     label,
                     action: form_action,
                     method: form_method,
-                    elements,
+                    elements: summarize_elements(elements, ctx, false),
                 });
             }
             return;
         }
 
-        // Check for wrapper divs - collapse them
-        let children = node.children.borrow();
-        let element_children: Vec<_> = children
-            .iter()
-            .filter(|c| matches!(&c.data, NodeData::Element { .. }))
-            .collect();
+        // Check for layout tables - decompose them instead of treating as data tables
+        if tag == "table" && heuristics::is_layout_table(node) {
+            // Decompose layout table: extract children as if the table weren't there
+            extract_layout_table_contents(node, origin, id_tracker, region_counts, regions, unassigned, dom_path, ctx);
+            return;
+        }
 
-        if heuristics::is_wrapper_div(tag, element_children.len()) {
-            // Just recurse into the single child
+        // Check for improved wrapper divs - collapse them
+        if heuristics::is_collapsible_wrapper(tag, node) {
+            let children = node.children.borrow();
             for (i, child) in children.iter().enumerate() {
                 let child_path = format!("{}/{}", dom_path, i);
                 collect_regions(
@@ -314,6 +395,7 @@ fn collect_regions(
                     regions,
                     unassigned,
                     &child_path,
+                    ctx,
                 );
             }
             return;
@@ -322,13 +404,17 @@ fn collect_regions(
         // Check if this subtree looks like navigation (heuristic)
         if matches!(tag, "div" | "ul" | "ol") {
             let link_count = count_links(node);
+            let children = node.children.borrow();
             let direct_children = children.len();
-            if heuristics::looks_like_navigation(link_count, direct_children) {
+            drop(children);
+            if heuristics::looks_like_navigation(link_count, direct_children)
+                && !contains_descendant_tag(node, &["main", "article"], 6)
+            {
                 let count = region_counts.entry("navigation".to_string()).or_insert(0);
                 let rid = generate_region_id("navigation", *count);
                 *count += 1;
                 let mut elements = Vec::new();
-                extract_elements(node, origin, id_tracker, &mut elements, dom_path);
+                extract_elements(node, origin, id_tracker, &mut elements, dom_path, ctx);
                 if !elements.is_empty() {
                     regions.push(Region {
                         id: rid,
@@ -336,17 +422,39 @@ fn collect_regions(
                         label: None,
                         action: None,
                         method: None,
-                        elements,
+                        elements: summarize_elements(elements, ctx, true),
                     });
                 }
                 return;
             }
         }
 
+        // Check for footer heuristic (last block with copyright/terms/privacy)
+        if matches!(tag, "div" | "section")
+            && heuristics::looks_like_footer(node)
+            && !contains_descendant_tag(node, &["main", "article"], 6)
+        {
+            let count = region_counts.entry("footer".to_string()).or_insert(0);
+            let rid = generate_region_id("footer", *count);
+            *count += 1;
+            let mut elements = Vec::new();
+            extract_elements(node, origin, id_tracker, &mut elements, dom_path, ctx);
+            if !elements.is_empty() {
+                regions.push(Region {
+                    id: rid,
+                    role: RegionRole::Footer,
+                    label: None,
+                    action: None,
+                    method: None,
+                    elements: summarize_elements(elements, ctx, false),
+                });
+            }
+            return;
+        }
+
         // Not a region - try to convert this element to a SOM element
         // (e.g., <a>, <button>, <input>, <h1>, <p>, <img>, etc.)
-        drop(children);
-        if let Some(el) = node_to_element(node, origin, id_tracker, dom_path) {
+        if let Some(el) = node_to_element(node, origin, id_tracker, dom_path, ctx) {
             // For non-interactive elements, also extract interactive children
             if !el.role.is_interactive() {
                 let mut child_interactive = Vec::new();
@@ -377,15 +485,128 @@ fn collect_regions(
                 regions,
                 unassigned,
                 &child_path,
+                ctx,
             );
         }
         return;
     }
 
     // For non-element nodes (text, etc.), try to extract
-    if let Some(el) = node_to_element(node, origin, id_tracker, dom_path) {
+    if let Some(el) = node_to_element(node, origin, id_tracker, dom_path, ctx) {
         unassigned.push(el);
     }
+}
+
+/// Helper to create a landmark region from detected role.
+fn create_landmark_region(
+    node: &Handle,
+    role_str: &str,
+    origin: &str,
+    id_tracker: &mut ElementIdTracker,
+    region_counts: &mut HashMap<String, usize>,
+    regions: &mut Vec<Region>,
+    dom_path: &str,
+    ctx: &CompileContext,
+    attr_pairs: &[(String, String)],
+) {
+    let region_role = match role_str {
+        "navigation" => RegionRole::Navigation,
+        "main" => RegionRole::Main,
+        "aside" => RegionRole::Aside,
+        "header" => RegionRole::Header,
+        "footer" => RegionRole::Footer,
+        "dialog" => RegionRole::Dialog,
+        "search" => RegionRole::Navigation, // Search is a form of navigation
+        _ => RegionRole::Content,
+    };
+    let count = region_counts.entry(role_str.to_string()).or_insert(0);
+    let rid = generate_region_id(role_str, *count);
+    *count += 1;
+    let label = heuristics::get_accessible_label(attr_pairs);
+
+    // Track if we're in main region for content summarization
+    let was_main = ctx.is_main_region.get();
+    if region_role == RegionRole::Main {
+        ctx.is_main_region.set(true);
+        ctx.paragraph_count.set(0); // Reset paragraph count for main region
+    }
+
+    // Recursively collect sub-regions (forms, nested landmarks) and elements
+    let mut sub_elements = Vec::new();
+    let children = node.children.borrow();
+    for (i, child) in children.iter().enumerate() {
+        let child_path = format!("{}/{}", dom_path, i);
+        collect_regions(
+            child,
+            origin,
+            id_tracker,
+            region_counts,
+            regions,
+            &mut sub_elements,
+            &child_path,
+            ctx,
+        );
+    }
+
+    ctx.is_main_region.set(was_main);
+
+    if !sub_elements.is_empty() {
+        regions.push(Region {
+            id: rid,
+            role: region_role.clone(),
+            label,
+            action: None,
+            method: None,
+            elements: summarize_elements(sub_elements, ctx, region_role == RegionRole::Navigation),
+        });
+    }
+}
+
+/// Extract contents from a layout table, treating it as a container rather than data.
+fn extract_layout_table_contents(
+    node: &Handle,
+    origin: &str,
+    id_tracker: &mut ElementIdTracker,
+    region_counts: &mut HashMap<String, usize>,
+    regions: &mut Vec<Region>,
+    unassigned: &mut Vec<Element>,
+    dom_path: &str,
+    ctx: &CompileContext,
+) {
+    // Recursively process table contents, extracting semantic elements
+    fn visit_layout_table(
+        node: &Handle,
+        origin: &str,
+        id_tracker: &mut ElementIdTracker,
+        region_counts: &mut HashMap<String, usize>,
+        regions: &mut Vec<Region>,
+        unassigned: &mut Vec<Element>,
+        dom_path: &str,
+        ctx: &CompileContext,
+    ) {
+        let children = node.children.borrow();
+        for (i, child) in children.iter().enumerate() {
+            let child_path = format!("{}/{}", dom_path, i);
+            if let NodeData::Element { name, .. } = &child.data {
+                let tag = name.local.as_ref();
+                match tag {
+                    "table" | "tbody" | "thead" | "tfoot" | "tr" | "td" | "th" => {
+                        // Continue recursing through table structure
+                        visit_layout_table(child, origin, id_tracker, region_counts, regions, unassigned, &child_path, ctx);
+                    }
+                    _ => {
+                        // Found non-table element, process normally
+                        collect_regions(child, origin, id_tracker, region_counts, regions, unassigned, &child_path, ctx);
+                    }
+                }
+            } else {
+                // Text or other nodes
+                collect_regions(child, origin, id_tracker, region_counts, regions, unassigned, &child_path, ctx);
+            }
+        }
+    }
+
+    visit_layout_table(node, origin, id_tracker, region_counts, regions, unassigned, dom_path, ctx);
 }
 
 fn extract_elements(
@@ -394,13 +615,23 @@ fn extract_elements(
     id_tracker: &mut ElementIdTracker,
     elements: &mut Vec<Element>,
     dom_path: &str,
+    ctx: &CompileContext,
 ) {
     if heuristics::should_strip(node) {
         return;
     }
 
+    // Check for layout tables within regions
+    if let NodeData::Element { name, .. } = &node.data {
+        if name.local.as_ref() == "table" && heuristics::is_layout_table(node) {
+            // Decompose layout table
+            extract_layout_table_elements(node, origin, id_tracker, elements, dom_path, ctx);
+            return;
+        }
+    }
+
     // Try to convert this node into an element
-    if let Some(el) = node_to_element(node, origin, id_tracker, dom_path) {
+    if let Some(el) = node_to_element(node, origin, id_tracker, dom_path, ctx) {
         // For non-interactive container elements (paragraph, section, list),
         // also extract any interactive children they contain
         if !el.role.is_interactive() {
@@ -425,8 +656,44 @@ fn extract_elements(
     let children = node.children.borrow();
     for (i, child) in children.iter().enumerate() {
         let child_path = format!("{}/{}", dom_path, i);
-        extract_elements(child, origin, id_tracker, elements, &child_path);
+        extract_elements(child, origin, id_tracker, elements, &child_path, ctx);
     }
+}
+
+/// Extract elements from a layout table, treating it as a container.
+fn extract_layout_table_elements(
+    node: &Handle,
+    origin: &str,
+    id_tracker: &mut ElementIdTracker,
+    elements: &mut Vec<Element>,
+    dom_path: &str,
+    ctx: &CompileContext,
+) {
+    fn visit(
+        node: &Handle,
+        origin: &str,
+        id_tracker: &mut ElementIdTracker,
+        elements: &mut Vec<Element>,
+        dom_path: &str,
+        ctx: &CompileContext,
+    ) {
+        let children = node.children.borrow();
+        for (i, child) in children.iter().enumerate() {
+            let child_path = format!("{}/{}", dom_path, i);
+            if let NodeData::Element { name, .. } = &child.data {
+                let tag = name.local.as_ref();
+                match tag {
+                    "table" | "tbody" | "thead" | "tfoot" | "tr" | "td" | "th" => {
+                        visit(child, origin, id_tracker, elements, &child_path, ctx);
+                    }
+                    _ => {
+                        extract_elements(child, origin, id_tracker, elements, &child_path, ctx);
+                    }
+                }
+            }
+        }
+    }
+    visit(node, origin, id_tracker, elements, dom_path, ctx);
 }
 
 /// Extract only interactive elements from a subtree (for finding links inside paragraphs, etc.)
@@ -445,7 +712,7 @@ fn extract_interactive_children(
         let attr_pairs = get_attr_pairs(node);
         if let Some(role) = tag_to_role(tag, &attr_pairs) {
             if role.is_interactive() {
-                if let Some(el) = node_to_element(node, origin, id_tracker, dom_path) {
+                if let Some(el) = interactive_node_to_element(node, origin, id_tracker, dom_path) {
                     elements.push(el);
                     return;
                 }
@@ -459,23 +726,99 @@ fn extract_interactive_children(
     }
 }
 
-fn node_to_element(
+/// Convert an interactive node to an element (without content summarization context).
+fn interactive_node_to_element(
     node: &Handle,
     origin: &str,
     id_tracker: &mut ElementIdTracker,
     dom_path: &str,
 ) -> Option<Element> {
+    if let NodeData::Element { name, .. } = &node.data {
+        let tag = name.local.as_ref();
+        let attr_pairs = get_attr_pairs(node);
+        let role = tag_to_role(tag, &attr_pairs)?;
+        let text_content = get_text_content(node);
+        let text = if text_content.is_empty() {
+            None
+        } else {
+            Some(heuristics::normalize_text(&text_content))
+        };
+        let label = resolve_label(tag, &attr_pairs, &text);
+        let accessible_name = label
+            .as_deref()
+            .or(text.as_deref())
+            .unwrap_or("");
+        let raw_id = generate_element_id(origin, role.as_str(), accessible_name, dom_path);
+        let id = id_tracker.register(raw_id);
+        let actions = role.default_actions();
+        let actions = if actions.is_empty() {
+            None
+        } else {
+            Some(actions)
+        };
+        // Use a dummy context for attrs (interactive elements don't need list/para summarization)
+        let dummy_ctx = CompileContext {
+            config: ContentConfig::default(),
+            paragraph_count: Cell::new(0),
+            is_main_region: Cell::new(false),
+        };
+        let element_attrs = build_element_attrs(tag, &attr_pairs, node, &dummy_ctx);
+        let children = build_children(node, origin, id_tracker, dom_path, &role);
+
+        return Some(Element {
+            id,
+            role,
+            text,
+            label,
+            actions,
+            attrs: element_attrs,
+            children,
+        });
+    }
+    None
+}
+
+fn node_to_element(
+    node: &Handle,
+    origin: &str,
+    id_tracker: &mut ElementIdTracker,
+    dom_path: &str,
+    ctx: &CompileContext,
+) -> Option<Element> {
     match &node.data {
         NodeData::Element { name, .. } => {
             let tag = name.local.as_ref();
             let attr_pairs = get_attr_pairs(node);
+
+            // Treat layout tables as containers, not data.
+            if tag == "table" && heuristics::is_layout_table(node) {
+                return None;
+            }
+
             let role = tag_to_role(tag, &attr_pairs)?;
             let text_content = get_text_content(node);
-            let text = if text_content.is_empty() {
+
+            // Apply summarization for paragraphs based on position
+            let mut text = if text_content.is_empty() {
                 None
+            } else if role == ElementRole::Paragraph && ctx.is_main_region.get() {
+                let para_num = ctx.paragraph_count.get();
+                ctx.paragraph_count.set(para_num + 1);
+                let max_len = if para_num == 0 {
+                    ctx.config.first_para_max
+                } else {
+                    ctx.config.subsequent_para_max
+                };
+                Some(heuristics::truncate_text(&text_content, max_len))
             } else {
                 Some(heuristics::normalize_text(&text_content))
             };
+
+            // Avoid duplicating massive string content for structured container roles.
+            if matches!(role, ElementRole::Table | ElementRole::List) {
+                text = None;
+            }
+
             let label = resolve_label(tag, &attr_pairs, &text);
             let accessible_name = label
                 .as_deref()
@@ -489,7 +832,7 @@ fn node_to_element(
             } else {
                 Some(actions)
             };
-            let element_attrs = build_element_attrs(tag, &attr_pairs, node);
+            let element_attrs = build_element_attrs(tag, &attr_pairs, node, ctx);
             let children = build_children(node, origin, id_tracker, dom_path, &role);
 
             Some(Element {
@@ -614,6 +957,7 @@ fn build_element_attrs(
     tag: &str,
     attrs: &[(String, String)],
     node: &Handle,
+    ctx: &CompileContext,
 ) -> Option<serde_json::Value> {
     let mut map = serde_json::Map::new();
 
@@ -700,20 +1044,20 @@ fn build_element_attrs(
         }
         "ul" => {
             map.insert("ordered".into(), json!(false));
-            let items = extract_list_items(node);
+            let items = extract_list_items_with_limit(node, ctx.config.max_list_items);
             if !items.is_empty() {
                 map.insert("items".into(), json!(items));
             }
         }
         "ol" => {
             map.insert("ordered".into(), json!(true));
-            let items = extract_list_items(node);
+            let items = extract_list_items_with_limit(node, ctx.config.max_list_items);
             if !items.is_empty() {
                 map.insert("items".into(), json!(items));
             }
         }
         "table" => {
-            let (headers, rows) = extract_table_data(node);
+            let (headers, rows) = extract_table_data(node, ctx.config.max_table_cell_chars);
             if !headers.is_empty() {
                 map.insert("headers".into(), json!(headers));
             }
@@ -785,36 +1129,55 @@ fn extract_select_options(node: &Handle) -> Vec<serde_json::Value> {
     options
 }
 
-fn extract_list_items(node: &Handle) -> Vec<serde_json::Value> {
+fn extract_list_items_with_limit(node: &Handle, max_items: usize) -> Vec<serde_json::Value> {
     let mut items = Vec::new();
+    let mut total_count = 0;
     let children = node.children.borrow();
+
     for child in children.iter() {
         if let NodeData::Element { name, .. } = &child.data {
             if name.local.as_ref() == "li" {
                 let text = get_text_content(child);
                 if !text.trim().is_empty() {
-                    let mut item = serde_json::Map::new();
-                    item.insert("text".into(), json!(heuristics::normalize_text(&text)));
-                    items.push(serde_json::Value::Object(item));
+                    total_count += 1;
+                    if items.len() < max_items {
+                        let mut item = serde_json::Map::new();
+                        item.insert("text".into(), json!(heuristics::normalize_text(&text)));
+                        items.push(serde_json::Value::Object(item));
+                    }
                 }
             }
         }
     }
+
+    // Add summary if items were truncated
+    if total_count > max_items {
+        let remaining = total_count - max_items;
+        let mut summary = serde_json::Map::new();
+        summary.insert("text".into(), json!(format!("[{} more items]", remaining)));
+        items.push(serde_json::Value::Object(summary));
+    }
+
     items
 }
 
-fn extract_table_data(node: &Handle) -> (Vec<String>, Vec<Vec<String>>) {
+fn extract_table_data(node: &Handle, max_cell_chars: usize) -> (Vec<String>, Vec<Vec<String>>) {
     let mut headers = Vec::new();
     let mut rows = Vec::new();
 
-    fn visit_table(node: &Handle, headers: &mut Vec<String>, rows: &mut Vec<Vec<String>>) {
+    fn visit_table(
+        node: &Handle,
+        headers: &mut Vec<String>,
+        rows: &mut Vec<Vec<String>>,
+        max_cell_chars: usize,
+    ) {
         let children = node.children.borrow();
         for child in children.iter() {
             if let NodeData::Element { name, .. } = &child.data {
                 let tag = name.local.as_ref();
                 match tag {
                     "thead" | "tbody" | "tfoot" => {
-                        visit_table(child, headers, rows);
+                        visit_table(child, headers, rows, max_cell_chars);
                     }
                     "tr" => {
                         let cells = child.children.borrow();
@@ -823,11 +1186,20 @@ fn extract_table_data(node: &Handle) -> (Vec<String>, Vec<Vec<String>>) {
                         for cell in cells.iter() {
                             if let NodeData::Element { name, .. } = &cell.data {
                                 let cell_tag = name.local.as_ref();
+                                if row.len() >= 8 {
+                                    break;
+                                }
                                 if cell_tag == "th" {
-                                    row.push(heuristics::normalize_text(&get_text_content(cell)));
+                                    row.push(heuristics::truncate_text(
+                                        &get_text_content(cell),
+                                        max_cell_chars,
+                                    ));
                                 } else if cell_tag == "td" {
                                     is_header_row = false;
-                                    row.push(heuristics::normalize_text(&get_text_content(cell)));
+                                    row.push(heuristics::truncate_text(
+                                        &get_text_content(cell),
+                                        max_cell_chars,
+                                    ));
                                 }
                             }
                         }
@@ -840,14 +1212,14 @@ fn extract_table_data(node: &Handle) -> (Vec<String>, Vec<Vec<String>>) {
                         }
                     }
                     _ => {
-                        visit_table(child, headers, rows);
+                        visit_table(child, headers, rows, max_cell_chars);
                     }
                 }
             }
         }
     }
 
-    visit_table(node, &mut headers, &mut rows);
+    visit_table(node, &mut headers, &mut rows, max_cell_chars);
     (headers, rows)
 }
 
@@ -908,6 +1280,28 @@ fn count_links(node: &Handle) -> usize {
         count += count_links(child);
     }
     count
+}
+
+fn contains_descendant_tag(node: &Handle, tags: &[&str], max_depth: usize) -> bool {
+    fn visit(node: &Handle, tags: &[&str], depth: usize, max_depth: usize) -> bool {
+        if depth > max_depth {
+            return false;
+        }
+        if let NodeData::Element { name, .. } = &node.data {
+            let tag = name.local.as_ref();
+            if tags.iter().any(|t| *t == tag) {
+                return true;
+            }
+        }
+        for child in node.children.borrow().iter() {
+            if visit(child, tags, depth + 1, max_depth) {
+                return true;
+            }
+        }
+        false
+    }
+
+    visit(node, tags, 0, max_depth)
 }
 
 #[cfg(test)]

@@ -85,29 +85,135 @@ impl BenchReport {
         }
 
         md.push_str("\n## Per-URL Results\n\n");
-        md.push_str("| URL | HTML bytes | SOM bytes | Ratio | Elements | Interactive | Status |\n");
-        md.push_str("|---|---|---|---|---|---|---|\n");
+        md.push_str("| URL | HTML bytes | SOM bytes | Ratio | Grade | Elements | Interactive | Fetch ms | Parse ms | Status |\n");
+        md.push_str("|---|---|---|---|---|---|---|---|---|---|\n");
 
         for r in &self.results {
+            let ratio_val = if r.som_bytes > 0 {
+                r.html_bytes as f64 / r.som_bytes as f64
+            } else {
+                0.0
+            };
             let ratio = if r.som_bytes > 0 {
-                format!("{:.1}x", r.html_bytes as f64 / r.som_bytes as f64)
+                format!("{:.1}x", ratio_val)
             } else {
                 "N/A".into()
             };
+            let grade = ratio_to_grade(ratio_val);
             let short_url = shorten_url(&r.url);
             md.push_str(&format!(
-                "| {} | {} | {} | {} | {} | {} | {} |\n",
+                "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |\n",
                 short_url,
                 format_number(r.html_bytes),
                 format_number(r.som_bytes),
                 ratio,
+                grade,
                 r.element_count,
                 r.interactive_count,
+                r.fetch_ms,
+                r.parse_ms,
                 r.status
             ));
         }
 
+        // Add total summary at the bottom
+        md.push_str("\n## Grade Distribution\n\n");
+        let mut grade_counts = [0usize; 5]; // A, B, C, D, F
+        for r in &ok {
+            if r.som_bytes > 0 {
+                let ratio = r.html_bytes as f64 / r.som_bytes as f64;
+                match ratio_to_grade(ratio).as_str() {
+                    "A" => grade_counts[0] += 1,
+                    "B" => grade_counts[1] += 1,
+                    "C" => grade_counts[2] += 1,
+                    "D" => grade_counts[3] += 1,
+                    _ => grade_counts[4] += 1,
+                }
+            } else {
+                grade_counts[4] += 1; // F for no SOM
+            }
+        }
+        md.push_str("| Grade | Count | Criteria |\n");
+        md.push_str("|---|---|---|\n");
+        md.push_str(&format!("| A | {} | >15x ratio |\n", grade_counts[0]));
+        md.push_str(&format!("| B | {} | 8-15x ratio |\n", grade_counts[1]));
+        md.push_str(&format!("| C | {} | 3-8x ratio |\n", grade_counts[2]));
+        md.push_str(&format!("| D | {} | 1-3x ratio |\n", grade_counts[3]));
+        md.push_str(&format!("| F | {} | <1x ratio |\n", grade_counts[4]));
+
         md
+    }
+
+    /// Print a brief summary to stdout (for console output).
+    pub fn print_summary(&self) {
+        let ok = self.successful();
+        let ok_count = ok.len();
+        let total = self.results.len();
+
+        println!("=== Plasmate SOM Benchmark Summary ===");
+        println!("URLs tested: {}, Successful: {} ({:.0}%)",
+            total, ok_count,
+            if total > 0 { (ok_count as f64 / total as f64) * 100.0 } else { 0.0 }
+        );
+
+        if !ok.is_empty() {
+            let ratios: Vec<f64> = ok
+                .iter()
+                .filter(|r| r.som_bytes > 0)
+                .map(|r| r.html_bytes as f64 / r.som_bytes as f64)
+                .collect();
+
+            if !ratios.is_empty() {
+                let mean = ratios.iter().sum::<f64>() / ratios.len() as f64;
+                let median = percentile(&ratios, 0.5);
+                println!("Compression ratio: mean {:.1}x, median {:.1}x", mean, median);
+            }
+
+            // Print per-URL results
+            println!("\nPer-URL Results:");
+            println!("{:<50} {:>10} {:>10} {:>8} {:>6}",
+                "URL", "HTML", "SOM", "Ratio", "Grade");
+            println!("{}", "-".repeat(90));
+
+            for r in &self.results {
+                let ratio_val = if r.som_bytes > 0 {
+                    r.html_bytes as f64 / r.som_bytes as f64
+                } else {
+                    0.0
+                };
+                let ratio_str = if r.som_bytes > 0 {
+                    format!("{:.1}x", ratio_val)
+                } else {
+                    "N/A".into()
+                };
+                let grade = ratio_to_grade(ratio_val);
+                let short_url: String = shorten_url(&r.url).chars().take(48).collect();
+                let status_marker = if r.status == "ok" { "" } else { " [ERR]" };
+                println!("{:<50} {:>10} {:>10} {:>8} {:>6}{}",
+                    short_url,
+                    format_number(r.html_bytes),
+                    format_number(r.som_bytes),
+                    ratio_str,
+                    grade,
+                    status_marker
+                );
+            }
+        }
+    }
+}
+
+/// Convert compression ratio to letter grade.
+fn ratio_to_grade(ratio: f64) -> String {
+    if ratio > 15.0 {
+        "A".into()
+    } else if ratio >= 8.0 {
+        "B".into()
+    } else if ratio >= 3.0 {
+        "C".into()
+    } else if ratio >= 1.0 {
+        "D".into()
+    } else {
+        "F".into()
     }
 }
 

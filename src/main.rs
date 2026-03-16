@@ -52,7 +52,9 @@ enum Commands {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Configure tracing to write to stderr, not stdout
     tracing_subscriber::fmt()
+        .with_writer(std::io::stderr)
         .with_env_filter(
             EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")),
         )
@@ -124,12 +126,8 @@ async fn cmd_bench(
     std::fs::write(output, &md)?;
     info!(output, "Benchmark report written");
 
-    let ok = report.results.iter().filter(|r| r.status == "ok").count();
-    println!(
-        "Benchmark complete: {}/{} URLs succeeded",
-        ok,
-        report.results.len()
-    );
+    // Print summary to stdout
+    report.print_summary();
 
     Ok(())
 }
