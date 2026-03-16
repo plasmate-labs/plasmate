@@ -150,10 +150,38 @@ pub fn normalize_text(text: &str) -> String {
         .collect::<Vec<_>>()
         .join(" ");
     if trimmed.len() > 200 {
-        let truncated: String = trimmed.chars().take(197).collect();
-        format!("{}...", truncated)
+        // Smart truncation: prefer breaking at sentence boundaries
+        smart_truncate(&trimmed, 200)
     } else {
         trimmed
+    }
+}
+
+/// Smart truncation that prefers sentence boundaries over mid-word cuts.
+/// Looks for the last sentence-ending punctuation before max_chars,
+/// falls back to word boundary if no sentence end found.
+pub fn smart_truncate(text: &str, max_chars: usize) -> String {
+    if text.len() <= max_chars {
+        return text.to_string();
+    }
+
+    let window = &text[..max_chars];
+
+    // Try to find last sentence boundary (. ! ?)
+    let sentence_end = window.rfind(|c: char| c == '.' || c == '!' || c == '?');
+    if let Some(pos) = sentence_end {
+        // Only use sentence boundary if it captures at least 40% of the budget
+        if pos >= max_chars * 2 / 5 {
+            return text[..=pos].to_string();
+        }
+    }
+
+    // Fall back to word boundary
+    let word_end = window.rfind(char::is_whitespace);
+    if let Some(pos) = word_end {
+        format!("{}...", &text[..pos])
+    } else {
+        format!("{}...", &text[..max_chars.saturating_sub(3)])
     }
 }
 
@@ -420,6 +448,99 @@ pub fn is_collapsible_wrapper(tag: &str, node: &Handle) -> bool {
     element_count == 1 || (text_only && element_count == 0)
 }
 
+
+/// Infer semantic hints from CSS class names.
+/// Returns a list of hints like "primary", "danger", "disabled", "active", etc.
+/// These give agents context about element importance without seeing raw CSS.
+pub fn infer_class_hints(attrs: &[(String, String)]) -> Option<Vec<String>> {
+    let class_val = attrs.iter()
+        .find(|(n, _)| n == "class")
+        .map(|(_, v)| v.to_lowercase())?;
+
+    let mut hints = Vec::new();
+
+    // Importance / variant
+    if class_val.contains("primary") || class_val.contains("cta") {
+        hints.push("primary".to_string());
+    }
+    if class_val.contains("secondary") {
+        hints.push("secondary".to_string());
+    }
+    if class_val.contains("danger") || class_val.contains("destructive") || class_val.contains("delete") {
+        hints.push("danger".to_string());
+    }
+    if class_val.contains("warning") || class_val.contains("caution") {
+        hints.push("warning".to_string());
+    }
+    if class_val.contains("success") {
+        hints.push("success".to_string());
+    }
+    if class_val.contains("error") || class_val.contains("invalid") {
+        hints.push("error".to_string());
+    }
+
+    // State
+    if class_val.contains("disabled") || class_val.contains("is-disabled") {
+        hints.push("disabled".to_string());
+    }
+    if class_val.contains("active") || class_val.contains("is-active") || class_val.contains("current") {
+        hints.push("active".to_string());
+    }
+    if class_val.contains("selected") || class_val.contains("is-selected") || class_val.contains("checked") {
+        hints.push("selected".to_string());
+    }
+    if class_val.contains("hidden") || class_val.contains("sr-only") || class_val.contains("visually-hidden") {
+        hints.push("hidden".to_string());
+    }
+    if class_val.contains("loading") || class_val.contains("spinner") || class_val.contains("skeleton") {
+        hints.push("loading".to_string());
+    }
+    if class_val.contains("collapsed") || class_val.contains("is-closed") {
+        hints.push("collapsed".to_string());
+    }
+    if class_val.contains("expanded") || class_val.contains("is-open") || class_val.contains("show") {
+        hints.push("expanded".to_string());
+    }
+
+    // Size
+    if class_val.contains("lg") || class_val.contains("large") || class_val.contains("xl") {
+        hints.push("large".to_string());
+    }
+    if class_val.contains("sm") || class_val.contains("small") || class_val.contains("xs") || class_val.contains("mini") {
+        hints.push("small".to_string());
+    }
+
+    // Layout / grouping
+    if class_val.contains("card") && !class_val.contains("discard") {
+        hints.push("card".to_string());
+    }
+    if class_val.contains("hero") || class_val.contains("jumbotron") || class_val.contains("banner") {
+        hints.push("hero".to_string());
+    }
+    if class_val.contains("modal") || class_val.contains("dialog") || class_val.contains("popup") || class_val.contains("overlay") {
+        hints.push("modal".to_string());
+    }
+    if class_val.contains("toast") || class_val.contains("snackbar") || class_val.contains("notification") || class_val.contains("alert") {
+        hints.push("notification".to_string());
+    }
+    if class_val.contains("badge") || class_val.contains("chip") || class_val.contains("tag") || class_val.contains("pill") {
+        hints.push("badge".to_string());
+    }
+    if class_val.contains("sticky") || class_val.contains("fixed") || class_val.contains("pinned") {
+        hints.push("sticky".to_string());
+    }
+    if class_val.contains("required") || class_val.contains("mandatory") {
+        hints.push("required".to_string());
+    }
+
+    if hints.is_empty() {
+        None
+    } else {
+        hints.sort();
+        hints.dedup();
+        Some(hints)
+    }
+}
 
 /// Detect footer heuristically: last block element with copyright/privacy/terms content.
 pub fn looks_like_footer(node: &Handle) -> bool {

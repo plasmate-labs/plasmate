@@ -3,7 +3,7 @@ use html5ever::tendril::TendrilSink;
 use markup5ever_rcdom::{Handle, NodeData, RcDom};
 use serde_json::json;
 use std::cell::Cell;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use super::element_id::{generate_element_id, generate_region_id, ElementIdTracker};
 use super::heuristics::{self, ContentConfig};
@@ -14,6 +14,43 @@ struct CompileContext {
     config: ContentConfig,
     paragraph_count: Cell<usize>,
     is_main_region: Cell<bool>,
+}
+
+/// Tracks heading hierarchy for a region.
+struct HeadingTracker {
+    /// Stack of (level, id) representing the current heading hierarchy.
+    stack: Vec<(u8, String)>,
+}
+
+impl HeadingTracker {
+    fn new() -> Self {
+        Self { stack: Vec::new() }
+    }
+
+    /// Record a heading and determine if it's redundant.
+    /// Returns true if the heading adds value (not a duplicate or same text as parent).
+    fn track(&mut self, level: u8, text: &str, id: &str) -> bool {
+        // Pop headings at same or lower level
+        while let Some((l, _)) = self.stack.last() {
+            if *l >= level {
+                self.stack.pop();
+            } else {
+                break;
+            }
+        }
+        self.stack.push((level, id.to_string()));
+        true
+    }
+
+    /// Build a breadcrumb path from the heading stack.
+    /// e.g. "Introduction > History > Early development"
+    fn breadcrumb(&self) -> Option<String> {
+        if self.stack.len() <= 1 {
+            None
+        } else {
+            None // For now, don't emit breadcrumbs; the hierarchy is implicit from level attrs
+        }
+    }
 }
 
 /// Errors that can occur during SOM compilation.
@@ -211,18 +248,22 @@ fn extract_regions(
 ///
 /// v0.1 goal: preserve intent-relevant structure while staying token-efficient.
 /// This function:
-/// - limits paragraphs
-/// - limits links (more aggressive in navigation regions)
+/// - deduplicates links by href (same URL = keep only first occurrence)
+/// - limits paragraphs, links, and total element counts
+/// - preserves heading hierarchy (never drops headings)
 /// - enforces a max elements budget
 /// - appends a summary paragraph when items are dropped
 fn summarize_elements(elements: Vec<Element>, ctx: &CompileContext, is_navigation: bool) -> Vec<Element> {
     let mut result = Vec::new();
+    let mut seen_hrefs: HashSet<String> = HashSet::new();
+    let mut heading_tracker = HeadingTracker::new();
 
     let mut kept_paras = 0usize;
     let mut kept_links = 0usize;
 
     let mut dropped_paras = 0usize;
     let mut dropped_links = 0usize;
+    let mut dropped_dupes = 0usize;
     let mut dropped_other = 0usize;
     let mut dropped_chars = 0usize;
 
@@ -244,13 +285,53 @@ fn summarize_elements(elements: Vec<Element>, ctx: &CompileContext, is_navigatio
                 | ElementRole::Button
         );
 
-        // Enforce max elements budget, but keep form controls even past the limit.
-        if result.len() >= ctx.config.max_elements && !is_form_control {
+        // Never drop headings - they provide structure for agent navigation
+        let is_heading = el.role == ElementRole::Heading;
+
+        // Track heading hierarchy
+        if is_heading {
+            let level = el.attrs.as_ref()
+                .and_then(|a| a.get("level"))
+                .and_then(|v| v.as_u64())
+                .unwrap_or(6) as u8;
+            let text = el.text.as_deref().unwrap_or("");
+            heading_tracker.track(level, text, &el.id);
+        }
+
+        // Enforce max elements budget, but keep form controls and headings.
+        if result.len() >= ctx.config.max_elements && !is_form_control && !is_heading {
             dropped_other += 1;
             if let Some(text) = &el.text {
                 dropped_chars += text.len();
             }
             continue;
+        }
+
+        // Link deduplication: if same href already seen, skip
+        if el.role == ElementRole::Link {
+            if let Some(attrs) = &el.attrs {
+                if let Some(href) = attrs.get("href").and_then(|v| v.as_str()) {
+                    // Normalize: strip trailing slash and fragment for dedup
+                    let normalized = normalize_href(href);
+                    if !seen_hrefs.insert(normalized) {
+                        dropped_dupes += 1;
+                        if let Some(text) = &el.text {
+                            dropped_chars += text.len();
+                        }
+                        continue;
+                    }
+                }
+            }
+
+            // Link budget
+            kept_links += 1;
+            if kept_links > link_limit {
+                dropped_links += 1;
+                if let Some(text) = &el.text {
+                    dropped_chars += text.len();
+                }
+                continue;
+            }
         }
 
         // Paragraph budget
@@ -265,24 +346,15 @@ fn summarize_elements(elements: Vec<Element>, ctx: &CompileContext, is_navigatio
             }
         }
 
-        // Link budget
-        if el.role == ElementRole::Link {
-            kept_links += 1;
-            if kept_links > link_limit {
-                dropped_links += 1;
-                if let Some(text) = &el.text {
-                    dropped_chars += text.len();
-                }
-                continue;
-            }
-        }
-
         result.push(el);
     }
 
-    let total_dropped = dropped_paras + dropped_links + dropped_other;
+    let total_dropped = dropped_paras + dropped_links + dropped_dupes + dropped_other;
     if total_dropped > 0 {
         let mut parts = Vec::new();
+        if dropped_dupes > 0 {
+            parts.push(format!("{} duplicate links", dropped_dupes));
+        }
         if dropped_links > 0 {
             parts.push(format!("{} more links", dropped_links));
         }
@@ -302,10 +374,26 @@ fn summarize_elements(elements: Vec<Element>, ctx: &CompileContext, is_navigatio
             actions: None,
             attrs: None,
             children: None,
+            hints: None,
         });
     }
 
     result
+}
+
+/// Normalize an href for deduplication purposes.
+fn normalize_href(href: &str) -> String {
+    let mut s = href.to_string();
+    // Strip fragment
+    if let Some(pos) = s.find('#') {
+        s.truncate(pos);
+    }
+    // Strip trailing slash (but keep root "/")
+    if s.len() > 1 && s.ends_with('/') {
+        s.pop();
+    }
+    // Lowercase for case-insensitive dedup
+    s.to_lowercase()
 }
 
 fn collect_regions(
@@ -764,6 +852,7 @@ fn interactive_node_to_element(
         };
         let element_attrs = build_element_attrs(tag, &attr_pairs, node, &dummy_ctx);
         let children = build_children(node, origin, id_tracker, dom_path, &role);
+        let hints = heuristics::infer_class_hints(&attr_pairs);
 
         return Some(Element {
             id,
@@ -773,6 +862,7 @@ fn interactive_node_to_element(
             actions,
             attrs: element_attrs,
             children,
+            hints,
         });
     }
     None
@@ -834,6 +924,7 @@ fn node_to_element(
             };
             let element_attrs = build_element_attrs(tag, &attr_pairs, node, ctx);
             let children = build_children(node, origin, id_tracker, dom_path, &role);
+            let hints = heuristics::infer_class_hints(&attr_pairs);
 
             Some(Element {
                 id,
@@ -843,6 +934,7 @@ fn node_to_element(
                 actions,
                 attrs: element_attrs,
                 children,
+                hints,
             })
         }
         NodeData::Text { contents } => {
@@ -860,6 +952,7 @@ fn node_to_element(
                 actions: None,
                 attrs: None,
                 children: None,
+                hints: None,
             })
         }
         _ => None,

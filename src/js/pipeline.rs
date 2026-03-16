@@ -111,12 +111,77 @@ pub fn process_page(html: &str, url: &str, config: &PipelineConfig) -> Result<Pa
         }
     }
 
-    // Phase 3: Compile SOM from HTML
-    // Note: In v0.2+ we'll feed JS-mutated DOM into the compiler.
-    // For now, we compile from the original HTML (which is correct for
-    // server-rendered pages and progressive enhancement patterns).
+    // Phase 3: Apply JS mutations to HTML, then compile SOM.
+    // If JS created document.write() calls or DOM insertions, we inject them
+    // back into the HTML before SOM compilation for maximum accuracy.
+    let effective_html = if config.execute_js && js_report.is_some() {
+        let t_mut = Instant::now();
+        let mut runtime = JsRuntime::new(config.js_config.clone());
+        runtime.set_page_url(url);
+
+        // Re-execute scripts in a fresh context to get mutations
+        let scripts = extract::extract_scripts(html);
+        let inline_scripts: Vec<(String, String)> = scripts.iter()
+            .filter(|s| s.is_inline)
+            .map(|s| (s.source.clone(), s.label.clone()))
+            .collect();
+
+        if !inline_scripts.is_empty() {
+            runtime.execute_page_scripts(&inline_scripts);
+            if config.timer_drain_ms > 0 {
+                runtime.drain_timers(config.timer_drain_ms);
+            }
+        }
+
+        // Collect document.write and appendChild mutations
+        let mutations_json = runtime.execute_in_context(
+            "JSON.stringify(__plasmate_mutations.filter(function(m){ return m.type === 'document.write' || m.type === 'appendChild'; }))",
+            "<collect-mutations>",
+        ).unwrap_or_else(|_| "[]".to_string());
+
+        if let Ok(mutations) = serde_json::from_str::<Vec<serde_json::Value>>(&mutations_json) {
+            if !mutations.is_empty() {
+                // Inject mutation content before </body>
+                let mut patched = html.to_string();
+                let mut injection = String::new();
+                for m in &mutations {
+                    if let Some(html_content) = m.get("html").and_then(|v| v.as_str()) {
+                        injection.push_str(html_content);
+                    }
+                    if let Some(text) = m.get("text").and_then(|v| v.as_str()) {
+                        if let Some(tag) = m.get("tag").and_then(|v| v.as_str()) {
+                            injection.push_str(&format!("<{0}>{1}</{0}>", tag.to_lowercase(), text));
+                        }
+                    }
+                }
+                if !injection.is_empty() {
+                    if let Some(pos) = patched.to_lowercase().rfind("</body>") {
+                        patched.insert_str(pos, &injection);
+                    } else {
+                        patched.push_str(&injection);
+                    }
+                    debug!(
+                        mutations = mutations.len(),
+                        injected_bytes = injection.len(),
+                        elapsed_us = t_mut.elapsed().as_micros(),
+                        "JS mutations applied to HTML"
+                    );
+                    std::borrow::Cow::Owned(patched)
+                } else {
+                    std::borrow::Cow::Borrowed(html)
+                }
+            } else {
+                std::borrow::Cow::Borrowed(html)
+            }
+        } else {
+            std::borrow::Cow::Borrowed(html)
+        }
+    } else {
+        std::borrow::Cow::Borrowed(html)
+    };
+
     let t2 = Instant::now();
-    let som = compiler::compile(html, url)
+    let som = compiler::compile(&effective_html, url)
         .map_err(|e| PipelineError::SomCompile(e.to_string()))?;
     let som_us = t2.elapsed().as_micros();
 

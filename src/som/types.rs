@@ -63,6 +63,10 @@ pub struct Element {
     pub attrs: Option<serde_json::Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub children: Option<Vec<Element>>,
+    /// Semantic hints inferred from CSS classes (e.g. "primary", "danger", "disabled").
+    /// Helps agents understand element importance without seeing raw CSS.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hints: Option<Vec<String>>,
 }
 
 /// Element roles as defined by the SOM spec.
