@@ -28,6 +28,12 @@ enum Commands {
         /// Output file (defaults to stdout)
         #[arg(long, short)]
         output: Option<String>,
+        /// Skip fetching external <script src="..."> files (inline only)
+        #[arg(long)]
+        no_external: bool,
+        /// Disable JavaScript execution entirely
+        #[arg(long)]
+        no_js: bool,
     },
     /// Start the AWP WebSocket server
     Serve {
@@ -78,8 +84,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Fetch { url, output } => {
-            cmd_fetch(&url, output.as_deref()).await?;
+        Commands::Fetch { url, output, no_external, no_js } => {
+            cmd_fetch(&url, output.as_deref(), !no_external, no_js).await?;
         }
         Commands::Serve { host, port } => {
             awp::server::start(&host, port).await?;
@@ -103,12 +109,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn cmd_fetch(url: &str, output: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+async fn cmd_fetch(url: &str, output: Option<&str>, external_scripts: bool, no_js: bool) -> Result<(), Box<dyn std::error::Error>> {
     let jar = Arc::new(reqwest::cookie::Jar::default());
     let client = network::fetch::build_client_h1_fallback(None, jar)?;
-
-    // Initialize SOM cache
-    let som_cache = cache::store::SomCache::new(cache::store::CacheConfig::default());
 
     info!(url, "Fetching");
     let result = network::fetch::fetch_url(&client, url, 30000).await?;
@@ -120,9 +123,19 @@ async fn cmd_fetch(url: &str, output: Option<&str>) -> Result<(), Box<dyn std::e
         "Fetched"
     );
 
-    // Process through JS pipeline
-    let pipeline_config = js::pipeline::PipelineConfig::default();
-    let page_result = js::pipeline::process_page(&result.html, &result.url, &pipeline_config)?;
+    // Process through async JS pipeline (supports external script fetching)
+    let pipeline_config = js::pipeline::PipelineConfig {
+        execute_js: !no_js,
+        fetch_external_scripts: external_scripts && !no_js,
+        ..Default::default()
+    };
+
+    let page_result = js::pipeline::process_page_async(
+        &result.html,
+        &result.url,
+        &pipeline_config,
+        &client,
+    ).await?;
 
     if let Some(ref report) = page_result.js_report {
         info!(
