@@ -10,6 +10,7 @@ use tracing::{debug, info};
 
 use super::extract;
 use super::runtime::{JsExecutionReport, JsRuntime, RuntimeConfig};
+use super::script_fetch;
 use crate::som::compiler;
 use crate::som::types::Som;
 
@@ -44,20 +45,109 @@ pub struct PipelineTiming {
 pub struct PipelineConfig {
     /// Whether to execute JavaScript before compiling SOM.
     pub execute_js: bool,
+    /// Whether to fetch external <script src="..."> files.
+    pub fetch_external_scripts: bool,
     /// JS runtime configuration.
     pub js_config: RuntimeConfig,
     /// Max timer drain threshold in ms (execute short setTimeout callbacks).
     pub timer_drain_ms: u64,
+    /// HTTP client for fetching external scripts (None = skip external).
+    #[cfg(feature = "external-scripts")]
+    pub http_client: Option<reqwest::Client>,
 }
 
 impl Default for PipelineConfig {
     fn default() -> Self {
         Self {
             execute_js: true,
+            fetch_external_scripts: false, // Off by default for sync API; async API enables it
             js_config: RuntimeConfig::default(),
             timer_drain_ms: 100,
         }
     }
+}
+
+/// Process a page through the full pipeline (async version with external script fetching).
+pub async fn process_page_async(
+    html: &str,
+    url: &str,
+    config: &PipelineConfig,
+    client: &reqwest::Client,
+) -> Result<PageResult, PipelineError> {
+    let pipeline_start = Instant::now();
+
+    let mut js_report = None;
+    let mut extract_us = 0u128;
+    let mut js_us = 0u128;
+
+    if config.execute_js {
+        let t0 = Instant::now();
+        let scripts = extract::extract_scripts(html);
+        extract_us = t0.elapsed().as_micros();
+
+        // Resolve external scripts (fetch from network)
+        let t1 = Instant::now();
+        let resolved = if config.fetch_external_scripts {
+            script_fetch::resolve_scripts(&scripts, url, client).await
+        } else {
+            scripts.iter()
+                .filter(|s| s.is_inline)
+                .map(|s| script_fetch::ResolvedScript {
+                    source: s.source.clone(),
+                    label: s.label.clone(),
+                    index: s.index,
+                })
+                .collect()
+        };
+
+        let exec_scripts: Vec<(String, String)> = resolved.iter()
+            .filter(|s| !s.source.is_empty())
+            .map(|s| (s.source.clone(), s.label.clone()))
+            .collect();
+
+        if !exec_scripts.is_empty() {
+            let mut runtime = JsRuntime::new(config.js_config.clone());
+            runtime.set_page_url(url);
+
+            let report = runtime.execute_page_scripts(&exec_scripts);
+
+            if config.timer_drain_ms > 0 {
+                runtime.drain_timers(config.timer_drain_ms);
+            }
+
+            js_us = t1.elapsed().as_micros();
+
+            debug!(
+                scripts_total = report.total,
+                scripts_ok = report.succeeded,
+                scripts_err = report.failed,
+                external_fetched = resolved.iter().filter(|s| !s.label.starts_with("inline")).count(),
+                js_ms = js_us / 1000,
+                "JS execution complete (async)"
+            );
+
+            js_report = Some(report);
+        }
+    }
+
+    let t2 = Instant::now();
+    let som = compiler::compile(html, url)
+        .map_err(|e| PipelineError::SomCompile(e.to_string()))?;
+    let som_us = t2.elapsed().as_micros();
+
+    let total_us = pipeline_start.elapsed().as_micros();
+
+    Ok(PageResult {
+        som,
+        url: url.to_string(),
+        timing: PipelineTiming {
+            extract_scripts_us: extract_us,
+            js_execution_us: js_us,
+            som_compile_us: som_us,
+            total_us,
+        },
+        js_report,
+    })
 }
 
 /// Process a page through the full pipeline.

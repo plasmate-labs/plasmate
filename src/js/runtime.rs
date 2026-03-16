@@ -53,6 +53,7 @@ const DOM_SHIM: &str = r#"
 
 var __plasmate_mutations = [];
 var __plasmate_timers = [];
+var __plasmate_event_listeners = [];
 
 var window = globalThis;
 window.location = { href: '', protocol: 'https:', host: '', pathname: '/', search: '', hash: '' };
@@ -85,6 +86,7 @@ PlasElement.prototype.getAttribute = function(k) { return this.attributes[k] || 
 PlasElement.prototype.addEventListener = function(ev, fn) {
     if (!this._listeners[ev]) this._listeners[ev] = [];
     this._listeners[ev].push(fn);
+    __plasmate_event_listeners.push({ tag: this.tagName, id: this.id, className: this.className, event: ev });
 };
 PlasElement.prototype.removeEventListener = function() {};
 PlasElement.prototype.appendChild = function(child) {
@@ -146,6 +148,7 @@ var document = {
     getElementsByTagName: function(tag) { return tag === 'head' ? [_docHead] : tag === 'body' ? [_docBody] : []; },
     getElementsByClassName: function() { return []; },
     addEventListener: function(ev, fn) {
+        __plasmate_event_listeners.push({ tag: 'DOCUMENT', event: ev });
         if (ev === 'DOMContentLoaded' || ev === 'readystatechange') {
             try { fn(); } catch(e) {}
         }
@@ -404,6 +407,20 @@ impl JsRuntime {
             }
         }
         report
+    }
+
+    /// Get event listeners registered during JS execution.
+    pub fn get_event_listeners(&mut self) -> Vec<String> {
+        match self.execute_in_context("JSON.stringify(__plasmate_event_listeners)", "<get-listeners>") {
+            Ok(json) => {
+                serde_json::from_str::<Vec<serde_json::Value>>(&json)
+                    .unwrap_or_default()
+                    .iter()
+                    .map(|v| v.to_string())
+                    .collect()
+            }
+            Err(_) => Vec::new(),
+        }
     }
 
     /// Get the DOM mutations captured by the shim.

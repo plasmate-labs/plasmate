@@ -5,8 +5,10 @@ use serde_json::json;
 use std::cell::Cell;
 use std::collections::{HashMap, HashSet};
 
+use super::css_visibility::VisibilityRules;
 use super::element_id::{generate_element_id, generate_region_id, ElementIdTracker};
 use super::heuristics::{self, ContentConfig};
+use super::metadata;
 use super::types::*;
 
 /// Context for content summarization during compilation.
@@ -14,6 +16,8 @@ struct CompileContext {
     config: ContentConfig,
     paragraph_count: Cell<usize>,
     is_main_region: Cell<bool>,
+    /// CSS visibility rules for filtering hidden elements.
+    css_rules: VisibilityRules,
 }
 
 /// Tracks heading hierarchy for a region.
@@ -74,10 +78,20 @@ pub fn compile(html: &str, page_url: &str) -> Result<Som, CompileError> {
     let html_bytes = html.len();
     let mut id_tracker = ElementIdTracker::new();
     let mut region_counts: HashMap<String, usize> = HashMap::new();
+    let css_rules = VisibilityRules::from_html(html);
     let ctx = CompileContext {
         config: ContentConfig::default(),
         paragraph_count: Cell::new(0),
         is_main_region: Cell::new(false),
+        css_rules,
+    };
+
+    // Extract structured data (JSON-LD, OpenGraph, Twitter Cards, meta)
+    let structured = metadata::extract_structured_data(html);
+    let structured_data = if structured.is_empty() {
+        None
+    } else {
+        Some(structured)
     };
 
     // Extract page title and lang
@@ -112,6 +126,7 @@ pub fn compile(html: &str, page_url: &str) -> Result<Som, CompileError> {
             element_count: element_count.get(),
             interactive_count: interactive_count.get(),
         },
+        structured_data,
     };
 
     // Serialize once for byte count
@@ -408,6 +423,26 @@ fn collect_regions(
 ) {
     if heuristics::should_strip(node) {
         return;
+    }
+
+    // Check CSS visibility rules
+    if let NodeData::Element { name, attrs, .. } = &node.data {
+        let tag = name.local.as_ref();
+        let attrs_borrow = attrs.borrow();
+        let class = attrs_borrow
+            .iter()
+            .find(|a| a.name.local.as_ref() == "class")
+            .map(|a| a.value.to_string())
+            .unwrap_or_default();
+        let id = attrs_borrow
+            .iter()
+            .find(|a| a.name.local.as_ref() == "id")
+            .map(|a| a.value.to_string())
+            .unwrap_or_default();
+        drop(attrs_borrow);
+        if ctx.css_rules.is_hidden(tag, &class, &id) {
+            return;
+        }
     }
 
     if let NodeData::Element { name, .. } = &node.data {
@@ -709,6 +744,26 @@ fn extract_elements(
         return;
     }
 
+    // Check CSS visibility
+    if let NodeData::Element { name, attrs, .. } = &node.data {
+        let tag = name.local.as_ref();
+        let attrs_borrow = attrs.borrow();
+        let class = attrs_borrow
+            .iter()
+            .find(|a| a.name.local.as_ref() == "class")
+            .map(|a| a.value.to_string())
+            .unwrap_or_default();
+        let id = attrs_borrow
+            .iter()
+            .find(|a| a.name.local.as_ref() == "id")
+            .map(|a| a.value.to_string())
+            .unwrap_or_default();
+        drop(attrs_borrow);
+        if ctx.css_rules.is_hidden(tag, &class, &id) {
+            return;
+        }
+    }
+
     // Check for layout tables within regions
     if let NodeData::Element { name, .. } = &node.data {
         if name.local.as_ref() == "table" && heuristics::is_layout_table(node) {
@@ -849,6 +904,7 @@ fn interactive_node_to_element(
             config: ContentConfig::default(),
             paragraph_count: Cell::new(0),
             is_main_region: Cell::new(false),
+            css_rules: VisibilityRules::default(),
         };
         let element_attrs = build_element_attrs(tag, &attr_pairs, node, &dummy_ctx);
         let children = build_children(node, origin, id_tracker, dom_path, &role);

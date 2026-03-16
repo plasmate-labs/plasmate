@@ -9,6 +9,9 @@ pub struct Som {
     pub lang: String,
     pub regions: Vec<Region>,
     pub meta: SomMeta,
+    /// Structured data extracted from the page (JSON-LD, OpenGraph, Twitter Cards, meta).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub structured_data: Option<super::metadata::StructuredData>,
 }
 
 /// Metadata about the SOM compilation.

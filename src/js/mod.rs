@@ -11,3 +11,4 @@
 pub mod extract;
 pub mod pipeline;
 pub mod runtime;
+pub mod script_fetch;
