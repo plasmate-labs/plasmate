@@ -149,7 +149,7 @@ pub fn normalize_text(text: &str) -> String {
         .split_whitespace()
         .collect::<Vec<_>>()
         .join(" ");
-    if trimmed.len() > 200 {
+    if trimmed.chars().count() > 200 {
         // Smart truncation: prefer breaking at sentence boundaries
         smart_truncate(&trimmed, 200)
     } else {
@@ -165,7 +165,9 @@ pub fn smart_truncate(text: &str, max_chars: usize) -> String {
         return text.to_string();
     }
 
-    let window = &text[..max_chars];
+    // Find a safe char boundary at or before max_chars
+    let safe_end = floor_char_boundary(text, max_chars);
+    let window = &text[..safe_end];
 
     // Try to find last sentence boundary (. ! ?)
     let sentence_end = window.rfind(|c: char| c == '.' || c == '!' || c == '?');
@@ -181,8 +183,20 @@ pub fn smart_truncate(text: &str, max_chars: usize) -> String {
     if let Some(pos) = word_end {
         format!("{}...", &text[..pos])
     } else {
-        format!("{}...", &text[..max_chars.saturating_sub(3)])
+        format!("{}...", &text[..safe_end.saturating_sub(3).max(1)])
     }
+}
+
+/// Find the largest byte index <= pos that is a valid char boundary.
+fn floor_char_boundary(s: &str, pos: usize) -> usize {
+    if pos >= s.len() {
+        return s.len();
+    }
+    let mut i = pos;
+    while i > 0 && !s.is_char_boundary(i) {
+        i -= 1;
+    }
+    i
 }
 
 
@@ -392,7 +406,7 @@ pub fn class_id_region_hint(attrs: &[(String, String)]) -> Option<&'static str> 
 /// Truncate text for summarization with a given max length.
 pub fn truncate_text(text: &str, max_chars: usize) -> String {
     let trimmed: String = text.split_whitespace().collect::<Vec<_>>().join(" ");
-    if trimmed.len() > max_chars {
+    if trimmed.chars().count() > max_chars {
         let truncated: String = trimmed.chars().take(max_chars.saturating_sub(3)).collect();
         format!("{}...", truncated)
     } else {
