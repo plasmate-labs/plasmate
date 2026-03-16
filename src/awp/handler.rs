@@ -4,8 +4,6 @@ use tracing::{info, warn};
 
 use super::messages::{ErrorCode, Response};
 use super::session::Session;
-use crate::network::fetch;
-use crate::som::compiler;
 use crate::som::types::{Element, ElementRole};
 
 /// Connection state tracked per WebSocket connection.
@@ -169,49 +167,40 @@ async fn handle_page_navigate(
         }
     };
 
-    let timeout_ms = params
-        .get("timeout_ms")
-        .and_then(|v| v.as_u64())
-        .unwrap_or(session.timeout_ms);
+    info!(url, "Navigating (full pipeline)");
 
-    info!(url, "Navigating");
-
-    match fetch::fetch_url(&session.client, url, timeout_ms).await {
+    // Use the full async pipeline: fetch -> external scripts -> V8 -> SOM
+    match session.navigate(url).await {
         Ok(result) => {
-            let page_url = result.url.clone();
-            let html_bytes = result.html_bytes;
-            let content_type = result.content_type.clone();
-            let status = result.status;
-            let load_ms = result.load_ms;
+            let mut response = json!({
+                "url": result.url,
+                "status": result.status,
+                "content_type": result.content_type,
+                "title": result.title,
+                "html_bytes": result.html_bytes,
+                "som_bytes": result.som_bytes,
+                "som_ready": true,
+                "fetch_ms": result.fetch_ms,
+                "pipeline_ms": result.pipeline_ms,
+            });
 
-            match compiler::compile(&result.html, &page_url) {
-                Ok(som) => {
-                    session.current_url = Some(page_url.clone());
-                    session.current_html = Some(result.html);
-                    session.current_som = Some(som);
-                    Response::success(
-                        id,
-                        json!({
-                            "url": page_url,
-                            "status": status,
-                            "content_type": content_type,
-                            "html_bytes": html_bytes,
-                            "som_ready": true,
-                            "load_ms": load_ms
-                        }),
-                    )
-                }
-                Err(e) => Response::error(
-                    id,
-                    ErrorCode::Internal,
-                    &format!("SOM compilation failed: {}", e),
-                ),
+            if let Some(js) = &result.js_report {
+                response["js"] = json!({
+                    "scripts_total": js.total,
+                    "scripts_ok": js.succeeded,
+                    "scripts_err": js.failed,
+                });
+            }
+
+            Response::success(id, response)
+        }
+        Err(e) => {
+            if e.contains("Timeout") {
+                Response::error(id, ErrorCode::Timeout, &e)
+            } else {
+                Response::error(id, ErrorCode::NavigationFailed, &e)
             }
         }
-        Err(fetch::FetchError::Timeout(ms)) => {
-            Response::error(id, ErrorCode::Timeout, &format!("Navigation timed out after {}ms", ms))
-        }
-        Err(e) => Response::error(id, ErrorCode::NavigationFailed, &e.to_string()),
     }
 }
 
@@ -308,7 +297,7 @@ async fn handle_page_act(
             let mut navigated = false;
             let mut som_changed = false;
 
-            // If it's a link, navigate to href
+            // If it's a link, navigate to href using full pipeline
             if element.role == ElementRole::Link {
                 if let Some(attrs) = &element.attrs {
                     if let Some(href) = attrs.get("href").and_then(|v| v.as_str()) {
@@ -316,19 +305,11 @@ async fn handle_page_act(
                         let base_url = session.current_url.as_deref().unwrap_or("");
                         let resolved_url = resolve_url(base_url, href);
 
-                        match fetch::fetch_url(&session.client, &resolved_url, session.timeout_ms)
-                            .await
-                        {
-                            Ok(result) => {
-                                if let Ok(new_som) =
-                                    compiler::compile(&result.html, &result.url)
-                                {
-                                    session.current_url = Some(result.url);
-                                    session.current_html = Some(result.html);
-                                    session.current_som = Some(new_som);
-                                    navigated = true;
-                                    som_changed = true;
-                                }
+                        // Use full pipeline (JS + external scripts + structured data)
+                        match session.navigate(&resolved_url).await {
+                            Ok(_) => {
+                                navigated = true;
+                                som_changed = true;
                             }
                             Err(e) => {
                                 warn!("Click navigation failed: {}", e);
@@ -455,13 +436,51 @@ fn handle_page_extract(
         None => return Response::error(id, ErrorCode::NotFound, "No page loaded yet"),
     };
 
+    // If "structured_data" is requested, return the full structured data
+    if params.get("structured_data").and_then(|v| v.as_bool()).unwrap_or(false) {
+        let sd = &session.current_structured_data;
+        return Response::success(
+            id,
+            json!({
+                "structured_data": sd,
+                "url": session.current_url,
+            }),
+        );
+    }
+
+    // If "interactive_elements" is requested, return all interactive elements
+    if params.get("interactive_elements").and_then(|v| v.as_bool()).unwrap_or(false) {
+        let all_elements = collect_all_elements(som);
+        let interactive: Vec<serde_json::Value> = all_elements.iter()
+            .filter(|e| e.role.is_interactive())
+            .map(|e| {
+                json!({
+                    "id": e.id,
+                    "role": e.role,
+                    "text": e.text,
+                    "label": e.label,
+                    "actions": e.actions,
+                    "attrs": e.attrs,
+                    "hints": e.hints,
+                })
+            })
+            .collect();
+        return Response::success(
+            id,
+            json!({
+                "interactive_elements": interactive,
+                "count": interactive.len(),
+            }),
+        );
+    }
+
     let fields = match params.get("fields") {
         Some(f) if f.is_object() => f.as_object().unwrap(),
         _ => {
             return Response::error(
                 id,
                 ErrorCode::InvalidRequest,
-                "Missing required param: fields (object)",
+                "Missing required param: fields (object), or use structured_data:true / interactive_elements:true",
             )
         }
     };

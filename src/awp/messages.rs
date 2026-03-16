@@ -4,11 +4,15 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Deserialize)]
 pub struct Request {
     pub id: String,
-    #[serde(rename = "type")]
+    #[serde(rename = "type", default = "default_request_type")]
     pub msg_type: String,
     pub method: String,
     #[serde(default)]
     pub params: serde_json::Value,
+}
+
+fn default_request_type() -> String {
+    "request".to_string()
 }
 
 /// Outgoing success response.
