@@ -21,6 +21,12 @@ url = "2"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 clap = { version = "4", features = ["derive"] }
+
+# V8 JavaScript engine (Chrome's JS runtime, Rust bindings)
+v8 = "130"
+
+# Fast hashing for SOM cache keys
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
 uuid = { version = "1", features = ["v4"] }
 regex = "1"
 thiserror = "2"

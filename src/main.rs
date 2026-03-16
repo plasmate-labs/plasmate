@@ -5,6 +5,8 @@ use tracing_subscriber::EnvFilter;
 
 mod awp;
 mod bench;
+mod cache;
+mod js;
 mod network;
 mod som;
 
@@ -85,6 +87,9 @@ async fn cmd_fetch(url: &str, output: Option<&str>) -> Result<(), Box<dyn std::e
     let jar = Arc::new(reqwest::cookie::Jar::default());
     let client = network::fetch::build_client(None, jar)?;
 
+    // Initialize SOM cache
+    let som_cache = cache::store::SomCache::new(cache::store::CacheConfig::default());
+
     info!(url, "Fetching");
     let result = network::fetch::fetch_url(&client, url, 30000).await?;
     info!(
@@ -95,13 +100,31 @@ async fn cmd_fetch(url: &str, output: Option<&str>) -> Result<(), Box<dyn std::e
         "Fetched"
     );
 
-    let som = som::compiler::compile(&result.html, &result.url)?;
-    let json = serde_json::to_string_pretty(&som)?;
+    // Check SOM cache
+    let content_hash = cache::store::SomCache::content_hash(result.html.as_bytes());
+    let (json, cache_status) = match som_cache.lookup(&result.url, content_hash) {
+        cache::store::CacheLookup::Hit(entry) => {
+            info!(url = %result.url, hit_count = entry.hit_count, "SOM cache HIT");
+            (String::from_utf8(entry.som_json).unwrap_or_default(), "hit")
+        }
+        _ => {
+            let fetch_start = std::time::Instant::now();
+            let som = som::compiler::compile(&result.html, &result.url)?;
+            let compile_ms = fetch_start.elapsed().as_millis();
+            let json = serde_json::to_string_pretty(&som)?;
+
+            // Store in cache for next time
+            som_cache.store(&result.url, content_hash, json.as_bytes().to_vec(), result.html_bytes);
+            info!(compile_ms, "SOM compiled and cached");
+
+            (json, "miss")
+        }
+    };
 
     match output {
         Some(path) => {
             std::fs::write(path, &json)?;
-            info!(path, som_bytes = som.meta.som_bytes, "SOM written");
+            info!(path, cache = cache_status, "SOM written");
         }
         None => {
             println!("{}", json);
