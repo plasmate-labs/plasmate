@@ -105,7 +105,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 async fn cmd_fetch(url: &str, output: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
     let jar = Arc::new(reqwest::cookie::Jar::default());
-    let client = network::fetch::build_client(None, jar)?;
+    let client = network::fetch::build_client_h1_fallback(None, jar)?;
 
     // Initialize SOM cache
     let som_cache = cache::store::SomCache::new(cache::store::CacheConfig::default());
@@ -120,31 +120,33 @@ async fn cmd_fetch(url: &str, output: Option<&str>) -> Result<(), Box<dyn std::e
         "Fetched"
     );
 
-    // Check SOM cache
-    let content_hash = cache::store::SomCache::content_hash(result.html.as_bytes());
-    let (json, cache_status) = match som_cache.lookup(&result.url, content_hash) {
-        cache::store::CacheLookup::Hit(entry) => {
-            info!(url = %result.url, hit_count = entry.hit_count, "SOM cache HIT");
-            (String::from_utf8(entry.som_json).unwrap_or_default(), "hit")
-        }
-        _ => {
-            let fetch_start = std::time::Instant::now();
-            let som = som::compiler::compile(&result.html, &result.url)?;
-            let compile_ms = fetch_start.elapsed().as_millis();
-            let json = serde_json::to_string_pretty(&som)?;
+    // Process through JS pipeline
+    let pipeline_config = js::pipeline::PipelineConfig::default();
+    let page_result = js::pipeline::process_page(&result.html, &result.url, &pipeline_config)?;
 
-            // Store in cache for next time
-            som_cache.store(&result.url, content_hash, json.as_bytes().to_vec(), result.html_bytes);
-            info!(compile_ms, "SOM compiled and cached");
+    if let Some(ref report) = page_result.js_report {
+        info!(
+            scripts = report.total,
+            ok = report.succeeded,
+            err = report.failed,
+            "JS execution"
+        );
+    }
 
-            (json, "miss")
-        }
-    };
+    info!(
+        extract_us = page_result.timing.extract_scripts_us,
+        js_us = page_result.timing.js_execution_us,
+        som_us = page_result.timing.som_compile_us,
+        total_us = page_result.timing.total_us,
+        "Pipeline complete"
+    );
+
+    let json = serde_json::to_string_pretty(&page_result.som)?;
 
     match output {
         Some(path) => {
             std::fs::write(path, &json)?;
-            info!(path, cache = cache_status, "SOM written");
+            info!(path, som_bytes = page_result.som.meta.som_bytes, "SOM written");
         }
         None => {
             println!("{}", json);
