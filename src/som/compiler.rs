@@ -170,7 +170,7 @@ fn extract_regions(
         region_counts,
         &mut regions,
         &mut unassigned_elements,
-        &"0".to_string(),
+        "0",
         ctx,
     );
 

@@ -416,9 +416,8 @@ pub fn is_collapsible_wrapper(tag: &str, node: &Handle) -> bool {
     // Collapse if:
     // 1. Single element child (original behavior)
     // 2. Text-only content (no element children)
-    // 3. Single interactive element with maybe some text
-    element_count == 1 || (text_only && element_count == 0) ||
-        (element_count == 1 && interactive_count == 1)
+    // Note: a single interactive element is already covered by the single-element rule.
+    element_count == 1 || (text_only && element_count == 0)
 }
 
 
