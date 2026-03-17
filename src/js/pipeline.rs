@@ -525,18 +525,21 @@ mod tests {
 
         // Check that all React-rendered content is in the SOM
         let som_json = serde_json::to_string(&result.som).unwrap();
-        assert!(som_json.contains("My React App"), "Heading should be present");
+        assert!(
+            som_json.contains("My React App"),
+            "Heading should be present"
+        );
         assert!(
             som_json.contains("Welcome to the application"),
             "Content should be present"
         );
-        assert!(
-            som_json.contains("Get Started"),
-            "Button should be present"
-        );
+        assert!(som_json.contains("Get Started"), "Button should be present");
 
         // Check interactive element count (button should be counted)
-        assert!(result.som.meta.interactive_count > 0, "Should have interactive elements");
+        assert!(
+            result.som.meta.interactive_count > 0,
+            "Should have interactive elements"
+        );
     }
 
     #[test]
@@ -672,8 +675,14 @@ mod tests {
 
         let som_json = serde_json::to_string(&result.som).unwrap();
         assert!(som_json.contains("/home"), "Home link should be present");
-        assert!(som_json.contains("/products"), "Products link should be present");
-        assert!(som_json.contains("Contact"), "Contact text should be present");
+        assert!(
+            som_json.contains("/products"),
+            "Products link should be present"
+        );
+        assert!(
+            som_json.contains("Contact"),
+            "Contact text should be present"
+        );
         assert!(
             result.som.meta.interactive_count >= 3,
             "Should have at least 3 interactive links"

@@ -2277,7 +2277,8 @@ impl JsRuntime {
 
     /// Fire the DOMContentLoaded event.
     pub fn fire_dom_content_loaded(&mut self) {
-        let _ = self.execute_in_context("__plasmate_fire_domcontentloaded();", "<domcontentloaded>");
+        let _ =
+            self.execute_in_context("__plasmate_fire_domcontentloaded();", "<domcontentloaded>");
     }
 
     /// Fire the load event.
@@ -2387,7 +2388,10 @@ mod tests {
             "test.js",
         ).unwrap();
         let html = rt.serialize_dom().unwrap();
-        assert!(html.contains("hello"), "DOM mutations should be reflected in serialized HTML");
+        assert!(
+            html.contains("hello"),
+            "DOM mutations should be reflected in serialized HTML"
+        );
     }
 
     #[test]
@@ -2521,7 +2525,10 @@ mod tests {
 
         // querySelector returns first match
         let first = rt
-            .execute_in_context("document.querySelector('.card .title').textContent", "test.js")
+            .execute_in_context(
+                "document.querySelector('.card .title').textContent",
+                "test.js",
+            )
             .unwrap();
         assert_eq!(first, "First");
 
@@ -2822,7 +2829,11 @@ mod tests {
             .unwrap();
         // The select returns the option's text content when value attr not found,
         // which is "B" in our test HTML
-        assert!(sel == "b" || sel == "B", "Select value should be 'b' or 'B', got: {}", sel);
+        assert!(
+            sel == "b" || sel == "B",
+            "Select value should be 'b' or 'B', got: {}",
+            sel
+        );
     }
 
     #[test]
@@ -2872,12 +2883,18 @@ mod tests {
         );
 
         let m1 = rt
-            .execute_in_context("document.getElementById('test').matches('.card')", "test.js")
+            .execute_in_context(
+                "document.getElementById('test').matches('.card')",
+                "test.js",
+            )
             .unwrap();
         assert_eq!(m1, "true");
 
         let m2 = rt
-            .execute_in_context("document.getElementById('test').matches('#test')", "test.js")
+            .execute_in_context(
+                "document.getElementById('test').matches('#test')",
+                "test.js",
+            )
             .unwrap();
         assert_eq!(m2, "true");
 
@@ -2890,7 +2907,10 @@ mod tests {
         assert_eq!(m3, "true");
 
         let m4 = rt
-            .execute_in_context("document.getElementById('test').matches('.other')", "test.js")
+            .execute_in_context(
+                "document.getElementById('test').matches('.other')",
+                "test.js",
+            )
             .unwrap();
         assert_eq!(m4, "false");
     }
@@ -3031,7 +3051,10 @@ mod tests {
     #[test]
     fn test_window_location_set_via_bootstrap() {
         let mut rt = JsRuntime::new(RuntimeConfig::default());
-        rt.bootstrap_dom("<html><body></body></html>", "https://example.com/path?query=1");
+        rt.bootstrap_dom(
+            "<html><body></body></html>",
+            "https://example.com/path?query=1",
+        );
 
         let href = rt
             .execute_in_context("window.location.href", "test.js")
