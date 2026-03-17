@@ -228,24 +228,49 @@ pub async fn handle_cdp_request(
                 .get("returnByValue")
                 .and_then(|v| v.as_bool())
                 .unwrap_or(false);
+            let arguments: Vec<serde_json::Value> = params
+                .get("arguments")
+                .and_then(|v| v.as_array())
+                .map(|arr| {
+                    arr.iter()
+                        .map(|a| {
+                            // CDP passes arguments as {value: ...} objects
+                            a.get("value").cloned().unwrap_or(a.clone())
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
+
             debug!("callFunctionOn: {}", &function[..function.len().min(500)]);
 
-            let result = if function.contains("document.title") {
-                let title = target
-                    .current_som
-                    .as_ref()
-                    .map(|s| s.title.clone())
-                    .unwrap_or_default();
-                serde_json::json!({"type": "string", "value": title})
-            } else if function.contains("outerHTML")
-                || function.contains("document.documentElement")
-            {
-                let html = target.current_html.as_deref().unwrap_or("<html></html>");
-                serde_json::json!({"type": "string", "value": html})
-            } else if return_by_value {
-                serde_json::json!({"type": "undefined"})
+            // Use real V8 execution if we have effective HTML
+            let result = if target.effective_html.is_some() {
+                match target.call_function_on(function, &arguments) {
+                    Ok(value) => domains::value_to_cdp_result(&value, return_by_value),
+                    Err(e) => {
+                        debug!("callFunctionOn error: {}", e);
+                        serde_json::json!({"type": "undefined"})
+                    }
+                }
             } else {
-                serde_json::json!({"type": "object", "objectId": "eval-result"})
+                // Fallback for when no page is loaded
+                if function.contains("document.title") {
+                    let title = target
+                        .current_som
+                        .as_ref()
+                        .map(|s| s.title.clone())
+                        .unwrap_or_default();
+                    serde_json::json!({"type": "string", "value": title})
+                } else if function.contains("outerHTML")
+                    || function.contains("document.documentElement")
+                {
+                    let html = target.current_html.as_deref().unwrap_or("<html></html>");
+                    serde_json::json!({"type": "string", "value": html})
+                } else if return_by_value {
+                    serde_json::json!({"type": "undefined"})
+                } else {
+                    serde_json::json!({"type": "object", "objectId": "eval-result"})
+                }
             };
 
             (
@@ -308,8 +333,41 @@ pub async fn handle_cdp_request(
         }
 
         // ---- Extra Target methods ----
-        "Target.activateTarget" | "Target.closeTarget" | "Target.detachFromTarget" => {
+        "Target.activateTarget" | "Target.detachFromTarget" => {
             (CdpResponse::success(id, serde_json::json!({})), vec![])
+        }
+        "Target.closeTarget" => {
+            // Extract target ID from params, or use current target
+            let close_target_id = params
+                .get("targetId")
+                .and_then(|v| v.as_str())
+                .unwrap_or(&target.target_id)
+                .to_string();
+
+            // Get the session ID for this target
+            let session_for_target = target.session_id.clone();
+
+            // Emit both detachedFromTarget and targetDestroyed events
+            // Puppeteer waits for detachedFromTarget when closing pages
+            let events = vec![
+                CdpEvent::new(
+                    "Target.detachedFromTarget",
+                    serde_json::json!({
+                        "sessionId": session_for_target,
+                        "targetId": close_target_id,
+                    }),
+                ),
+                CdpEvent::new(
+                    "Target.targetDestroyed",
+                    serde_json::json!({
+                        "targetId": close_target_id,
+                    }),
+                ),
+            ];
+            (
+                CdpResponse::success(id, serde_json::json!({"success": true})),
+                events,
+            )
         }
         "Target.getTargetInfo" => (
             CdpResponse::success(

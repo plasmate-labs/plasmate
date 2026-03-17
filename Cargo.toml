@@ -10,7 +10,7 @@ readme = "README.md"
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
-reqwest = { version = "0.12", default-features = false, features = ["cookies", "rustls-tls-native-roots", "gzip", "brotli", "deflate", "stream", "http2", "charset"] }
+reqwest = { version = "0.12", default-features = false, features = ["cookies", "rustls-tls-native-roots", "gzip", "brotli", "deflate", "stream", "http2", "charset", "blocking"] }
 html5ever = "0.38"
 markup5ever = "0.38"
 markup5ever_rcdom = "0.38"

@@ -8,6 +8,7 @@ use reqwest::cookie::Jar;
 use reqwest::Client;
 
 use crate::js::pipeline::PipelineConfig;
+use crate::js::runtime::{JsRuntime, RuntimeConfig};
 use crate::network::fetch;
 use crate::som::metadata::StructuredData;
 use crate::som::types::{Element, ElementRole, Som};
@@ -28,6 +29,9 @@ pub struct CdpTarget {
     // Page state
     pub current_url: Option<String>,
     pub current_html: Option<String>,
+    /// The effective HTML after JS execution (post-JS DOM serialized back to HTML).
+    /// This is the HTML that CDP Runtime.evaluate operates against.
+    pub effective_html: Option<String>,
     pub current_som: Option<Som>,
     pub current_structured_data: Option<StructuredData>,
 
@@ -88,6 +92,7 @@ impl CdpTarget {
             auto_attach_configured: false,
             current_url: None,
             current_html: None,
+            effective_html: None,
             current_som: None,
             current_structured_data: None,
             node_map: HashMap::new(),
@@ -121,6 +126,7 @@ impl CdpTarget {
         // Reset page state for the new "page"
         self.current_url = None;
         self.current_html = None;
+        self.effective_html = None;
         self.current_som = None;
         self.current_structured_data = None;
         self.node_map.clear();
@@ -152,6 +158,7 @@ impl CdpTarget {
 
         self.current_url = Some(final_url.clone());
         self.current_html = Some(html);
+        self.effective_html = Some(page_result.effective_html);
         self.current_structured_data = page_result.som.structured_data.clone();
         self.current_som = Some(page_result.som);
 
@@ -323,6 +330,124 @@ impl CdpTarget {
             }
         }
         results
+    }
+
+    /// Evaluate JavaScript expression against the post-navigation DOM.
+    ///
+    /// This creates a temporary JsRuntime, bootstraps the DOM from effective_html
+    /// (without re-executing scripts), and evaluates the expression.
+    ///
+    /// Returns the result as a serde_json::Value, or an error string.
+    pub fn evaluate_js(&self, expression: &str) -> Result<serde_json::Value, String> {
+        let html = self
+            .effective_html
+            .as_ref()
+            .ok_or_else(|| "No page loaded".to_string())?;
+        let url = self.current_url.as_deref().unwrap_or("about:blank");
+
+        // Create a temporary runtime for this evaluation
+        // We use spawn_blocking because V8 is !Send and we're in an async context
+        let html_clone = html.clone();
+        let url_clone = url.to_string();
+        let expression_clone = expression.to_string();
+
+        // Create the runtime and evaluate synchronously
+        // This is safe because we're creating a new isolate just for this evaluation
+        let mut runtime = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false, // Don't re-execute scripts
+            ..Default::default()
+        });
+
+        // Bootstrap DOM from effective HTML (scripts won't re-execute because
+        // the DOM shim's bootstrap just parses HTML into the DOM tree)
+        runtime.bootstrap_dom(&html_clone, &url_clone);
+
+        // Wrap expression to properly serialize objects/arrays
+        let wrapped_expr = format!(
+            "(function() {{ var __r = ({}); return typeof __r === 'object' && __r !== null ? JSON.stringify(__r) : __r; }})()",
+            expression_clone
+        );
+
+        // Evaluate the expression
+        match runtime.eval(&wrapped_expr) {
+            Ok(result) => {
+                // Handle undefined
+                if result == "undefined" || result.is_empty() {
+                    return Ok(serde_json::Value::Null);
+                }
+                // Try to parse as JSON first (for objects/arrays)
+                if let Ok(json_val) = serde_json::from_str::<serde_json::Value>(&result) {
+                    Ok(json_val)
+                } else {
+                    // Return as string value
+                    Ok(serde_json::Value::String(result))
+                }
+            }
+            Err(e) => Err(e.to_string()),
+        }
+    }
+
+    /// Execute a function call against the post-navigation DOM.
+    ///
+    /// This is used by Runtime.callFunctionOn. The function is wrapped and called
+    /// with the provided arguments.
+    pub fn call_function_on(
+        &self,
+        function_declaration: &str,
+        arguments: &[serde_json::Value],
+    ) -> Result<serde_json::Value, String> {
+        let html = self
+            .effective_html
+            .as_ref()
+            .ok_or_else(|| "No page loaded".to_string())?;
+        let url = self.current_url.as_deref().unwrap_or("about:blank");
+
+        let html_clone = html.clone();
+        let url_clone = url.to_string();
+
+        let mut runtime = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+
+        runtime.bootstrap_dom(&html_clone, &url_clone);
+
+        // Build the call expression: (function).call(null, arg1, arg2, ...)
+        // We wrap the result in JSON.stringify to properly serialize objects/arrays
+        // Serialize arguments to JSON
+        let args_json: Vec<String> = arguments.iter().map(|a| a.to_string()).collect();
+        let args_str = args_json.join(", ");
+
+        let call_expr = if args_str.is_empty() {
+            format!(
+                "(function() {{ var __r = ({})(); return typeof __r === 'object' && __r !== null ? JSON.stringify(__r) : __r; }})()",
+                function_declaration
+            )
+        } else {
+            format!(
+                "(function() {{ var __r = ({}).call(null, {}); return typeof __r === 'object' && __r !== null ? JSON.stringify(__r) : __r; }})()",
+                function_declaration, args_str
+            )
+        };
+
+        match runtime.eval(&call_expr) {
+            Ok(result) => {
+                // Handle undefined
+                if result == "undefined" || result.is_empty() {
+                    return Ok(serde_json::Value::Null);
+                }
+                // Try to parse as JSON first (for objects/arrays)
+                if let Ok(json_val) = serde_json::from_str::<serde_json::Value>(&result) {
+                    Ok(json_val)
+                } else {
+                    // Return as string value
+                    Ok(serde_json::Value::String(result))
+                }
+            }
+            Err(e) => Err(e.to_string()),
+        }
     }
 }
 

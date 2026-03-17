@@ -176,7 +176,9 @@ pub fn smart_truncate(text: &str, max_chars: usize) -> String {
     if let Some(pos) = word_end {
         format!("{}...", &text[..pos])
     } else {
-        format!("{}...", &text[..safe_end.saturating_sub(3).max(1)])
+        // Make sure we land on a char boundary
+        let fallback_end = floor_char_boundary(text, safe_end.saturating_sub(3).max(1));
+        format!("{}...", &text[..fallback_end])
     }
 }
 

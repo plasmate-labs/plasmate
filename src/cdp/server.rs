@@ -7,7 +7,7 @@
 use futures_util::{sink::SinkExt, StreamExt};
 use std::time::Duration;
 use tokio::net::TcpListener;
-use tracing::{error, info, warn};
+use tracing::{debug, error, info, warn};
 
 use super::handler::handle_cdp_request;
 use super::session::CdpTarget;
@@ -209,6 +209,7 @@ async fn handle_websocket_connection(stream: tokio::net::TcpStream, peer: std::n
 
                 for event in events {
                     let event_json = serde_json::to_string(&event).unwrap_or_default();
+                    debug!(%peer, method = %event.method, "Sending CDP event");
                     if let Err(e) = sink
                         .send(tokio_tungstenite::tungstenite::Message::Text(event_json))
                         .await

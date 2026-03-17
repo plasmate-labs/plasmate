@@ -5,11 +5,10 @@
 //! goes through Plasmate's engine - agents get speed + token efficiency for free.
 
 use serde_json::json;
-use tracing::{info, warn};
+use tracing::info;
 
 use super::session::{CdpTarget, NodeEntry};
 use super::types::*;
-use crate::som::types::ElementRole;
 
 // ============================================================
 // Browser domain
@@ -340,91 +339,131 @@ pub fn runtime_evaluate(id: u64, params: &serde_json::Value, target: &CdpTarget)
         .get("returnByValue")
         .and_then(|v| v.as_bool())
         .unwrap_or(false);
+    let _await_promise = params
+        .get("awaitPromise")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
 
-    // Common Puppeteer evaluations we can handle
-    match expression {
-        // document.title
-        e if e.contains("document.title") => {
-            let title = target
-                .current_som
-                .as_ref()
-                .map(|s| s.title.clone())
-                .unwrap_or_default();
-            CdpResponse::success(
-                id,
-                json!({
-                    "result": {
-                        "type": "string",
-                        "value": title,
-                    }
-                }),
-            )
-        }
-        // document.URL or window.location.href
-        e if e.contains("document.URL") || e.contains("location.href") => {
-            let url = target.current_url.as_deref().unwrap_or("about:blank");
-            CdpResponse::success(
-                id,
-                json!({
-                    "result": {
-                        "type": "string",
-                        "value": url,
-                    }
-                }),
-            )
-        }
-        // document.querySelectorAll('a') - return links
-        e if e.contains("querySelectorAll") && e.contains("'a'") => {
-            let links: Vec<String> = if let Some(som) = &target.current_som {
-                som.regions
-                    .iter()
-                    .flat_map(|r| &r.elements)
-                    .filter(|el| el.role == ElementRole::Link)
-                    .filter_map(|el| el.attrs.as_ref()?.get("href")?.as_str().map(String::from))
-                    .collect()
-            } else {
-                vec![]
-            };
-
-            if return_by_value {
+    // Check if we have effective HTML for real JS evaluation
+    if target.effective_html.is_some() {
+        // Use real V8 evaluation
+        match target.evaluate_js(expression) {
+            Ok(value) => {
+                // Convert the result to CDP format
+                let result = value_to_cdp_result(&value, return_by_value);
+                CdpResponse::success(id, json!({"result": result}))
+            }
+            Err(e) => {
+                // Return exception details for JS errors
+                info!("Runtime.evaluate error: {}", e);
                 CdpResponse::success(
                     id,
                     json!({
                         "result": {
-                            "type": "object",
-                            "subtype": "array",
-                            "value": links,
-                        }
-                    }),
-                )
-            } else {
-                CdpResponse::success(
-                    id,
-                    json!({
-                        "result": {
-                            "type": "object",
-                            "subtype": "array",
-                            "description": format!("Array({})", links.len()),
-                            "objectId": "links-result",
+                            "type": "undefined",
+                        },
+                        "exceptionDetails": {
+                            "exceptionId": 1,
+                            "text": e,
+                            "lineNumber": 0,
+                            "columnNumber": 0,
                         }
                     }),
                 )
             }
         }
-        // Generic: try to evaluate in V8 if we have a runtime
-        _ => {
-            warn!(
-                "CDP Runtime.evaluate not fully supported: {}",
-                &expression[..expression.len().min(100)]
-            );
-            CdpResponse::success(
+    } else {
+        // Fallback to pattern matching for common expressions (no page loaded)
+        match expression {
+            e if e.contains("document.title") => {
+                let title = target
+                    .current_som
+                    .as_ref()
+                    .map(|s| s.title.clone())
+                    .unwrap_or_default();
+                CdpResponse::success(
+                    id,
+                    json!({
+                        "result": {
+                            "type": "string",
+                            "value": title,
+                        }
+                    }),
+                )
+            }
+            e if e.contains("document.URL") || e.contains("location.href") => {
+                let url = target.current_url.as_deref().unwrap_or("about:blank");
+                CdpResponse::success(
+                    id,
+                    json!({
+                        "result": {
+                            "type": "string",
+                            "value": url,
+                        }
+                    }),
+                )
+            }
+            _ => CdpResponse::success(
                 id,
                 json!({
                     "result": {
                         "type": "undefined",
                     }
                 }),
-            )
+            ),
+        }
+    }
+}
+
+/// Convert a serde_json::Value to CDP result format.
+pub fn value_to_cdp_result(value: &serde_json::Value, return_by_value: bool) -> serde_json::Value {
+    match value {
+        serde_json::Value::Null => json!({"type": "undefined"}),
+        serde_json::Value::Bool(b) => json!({"type": "boolean", "value": b}),
+        serde_json::Value::Number(n) => json!({"type": "number", "value": n}),
+        serde_json::Value::String(s) => {
+            // Check for special string values
+            if s == "undefined" {
+                json!({"type": "undefined"})
+            } else if s == "true" {
+                json!({"type": "boolean", "value": true})
+            } else if s == "false" {
+                json!({"type": "boolean", "value": false})
+            } else if let Ok(n) = s.parse::<f64>() {
+                json!({"type": "number", "value": n})
+            } else {
+                json!({"type": "string", "value": s})
+            }
+        }
+        serde_json::Value::Array(arr) => {
+            if return_by_value {
+                json!({
+                    "type": "object",
+                    "subtype": "array",
+                    "value": arr,
+                })
+            } else {
+                json!({
+                    "type": "object",
+                    "subtype": "array",
+                    "description": format!("Array({})", arr.len()),
+                    "objectId": format!("arr-{}", arr.len()),
+                })
+            }
+        }
+        serde_json::Value::Object(obj) => {
+            if return_by_value {
+                json!({
+                    "type": "object",
+                    "value": obj,
+                })
+            } else {
+                json!({
+                    "type": "object",
+                    "description": "Object",
+                    "objectId": "obj-result",
+                })
+            }
         }
     }
 }

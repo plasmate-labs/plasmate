@@ -924,13 +924,82 @@ function _matchesSelector(el, selector) {
 }
 
 function _matchesSingleSelector(el, selector) {
-    // Handle compound selectors (space = descendant, > = child)
-    var parts = selector.split(/\s+/);
-    if (parts.length > 1) {
-        // For compound selectors, check if the last part matches this element
-        return _matchesSimpleSelector(el, parts[parts.length - 1]);
+    // Handle compound selectors with combinators (space = descendant, > = child)
+    // Split while keeping the combinator info
+    var tokens = [];
+    var current = '';
+    var i = 0;
+    while (i < selector.length) {
+        var c = selector[i];
+        if (c === '>') {
+            if (current.trim()) tokens.push({type: 'sel', val: current.trim()});
+            tokens.push({type: 'child'});
+            current = '';
+        } else if (c === ' ' && current.trim() && (i + 1 >= selector.length || selector[i+1] !== '>')) {
+            // Space combinator (descendant), but not if followed by >
+            var nextNonSpace = i + 1;
+            while (nextNonSpace < selector.length && selector[nextNonSpace] === ' ') nextNonSpace++;
+            if (nextNonSpace < selector.length && selector[nextNonSpace] === '>') {
+                // Skip spaces before >
+                i++;
+                continue;
+            }
+            tokens.push({type: 'sel', val: current.trim()});
+            tokens.push({type: 'descendant'});
+            current = '';
+        } else {
+            current += c;
+        }
+        i++;
     }
-    return _matchesSimpleSelector(el, selector);
+    if (current.trim()) tokens.push({type: 'sel', val: current.trim()});
+
+    if (tokens.length === 0) return false;
+    if (tokens.length === 1) return _matchesSimpleSelector(el, tokens[0].val);
+
+    // For compound selectors, work backwards from the element
+    // Last token must be a selector that matches the element
+    var lastToken = tokens[tokens.length - 1];
+    if (lastToken.type !== 'sel') return false;
+    if (!_matchesSimpleSelector(el, lastToken.val)) return false;
+
+    // Now check the combinator chain going upward
+    var idx = tokens.length - 2;
+    var current_el = el;
+    while (idx >= 0) {
+        var combinator = tokens[idx];
+        if (combinator.type === 'child') {
+            // Must have parent selector before it
+            idx--;
+            if (idx < 0 || tokens[idx].type !== 'sel') return false;
+            var parent = current_el.parentNode;
+            if (!parent || parent.nodeType !== Node.ELEMENT_NODE) return false;
+            if (!_matchesSimpleSelector(parent, tokens[idx].val)) return false;
+            current_el = parent;
+            idx--;
+        } else if (combinator.type === 'descendant') {
+            // Must have ancestor selector before it
+            idx--;
+            if (idx < 0 || tokens[idx].type !== 'sel') return false;
+            var ancestorSel = tokens[idx].val;
+            var found = false;
+            var ancestor = current_el.parentNode;
+            while (ancestor && ancestor.nodeType === Node.ELEMENT_NODE) {
+                if (_matchesSimpleSelector(ancestor, ancestorSel)) {
+                    found = true;
+                    current_el = ancestor;
+                    break;
+                }
+                ancestor = ancestor.parentNode;
+            }
+            if (!found) return false;
+            idx--;
+        } else {
+            // Shouldn't happen
+            return false;
+        }
+    }
+    return true;
 }
 
 function _matchesSimpleSelector(el, selector) {
@@ -1158,7 +1227,11 @@ function _parseTag(html, start) {
             }
         }
 
-        element.setAttribute(attrName.toLowerCase(), _decodeEntities(attrValue));
+        // HTML5: first attribute with same name wins (ignore duplicates)
+        var lowerName = attrName.toLowerCase();
+        if (!element.hasAttribute(lowerName)) {
+            element.setAttribute(lowerName, _decodeEntities(attrValue));
+        }
     }
 
     // Check for self-closing or void
@@ -1509,22 +1582,32 @@ function requestAnimationFrame(fn) { return setTimeout(fn, 16); }
 function cancelAnimationFrame(id) { clearTimeout(id); }
 
 // ============================================================================
-// Fetch (stub that records requests - actual fetch done by Rust)
+// URL resolution helper
 // ============================================================================
-function fetch(url, opts) {
-    var urlStr = String(url).substring(0, 500);
+function __plasmate_resolve_url(raw) {
+    var urlStr = String(raw).substring(0, 500);
     // Resolve relative URLs against the page origin
     if (urlStr.charAt(0) === '/' && window.location && window.location.href) {
         try {
             var loc = window.location;
-            urlStr = loc.protocol + '//' + loc.host + urlStr;
-        } catch(e) {}
-    } else if (urlStr.indexOf('://') === -1 && window.location && window.location.href) {
+            return loc.protocol + '//' + loc.host + urlStr;
+        } catch(e) { return urlStr; }
+    }
+    // Relative path like "json/product.json"
+    if (urlStr.indexOf('://') === -1 && window.location && window.location.href) {
         try {
             var base = window.location.href.replace(/[^\/]*$/, '');
-            urlStr = base + urlStr;
-        } catch(e) {}
+            return base + urlStr;
+        } catch(e) { return urlStr; }
     }
+    return urlStr;
+}
+
+// ============================================================================
+// Fetch (stub that records requests - actual fetch done by Rust)
+// ============================================================================
+function fetch(url, opts) {
+    var urlStr = __plasmate_resolve_url(url);
     __plasmate_fetch_queue.push({ url: urlStr, opts: opts || {} });
 
     // If Rust has injected __plasmate_do_fetch, use it
@@ -1585,7 +1668,8 @@ function XMLHttpRequest() {
 
 XMLHttpRequest.prototype.open = function(method, url, async) {
     this._method = method;
-    this._url = url;
+    this._url = __plasmate_resolve_url(url);
+    this.responseURL = this._url;
     this._async = async !== false;
     this.readyState = 1;
 };
@@ -1603,18 +1687,39 @@ XMLHttpRequest.prototype.send = function(body) {
         try {
             var opts = JSON.stringify({ method: this._method, headers: this._headers, body: body });
             var result = __plasmate_do_fetch(this._url, opts);
+            if (typeof console !== 'undefined' && console.error) {
+                console.error('XHR __plasmate_do_fetch result type:', typeof result, 'length:', result ? result.length : 'null', 'first 300:', result ? result.substring(0, 300) : 'null');
+            }
             if (result) {
                 var parsed = JSON.parse(result);
                 self.status = parsed.status || 200;
                 self.statusText = parsed.statusText || 'OK';
                 self.responseText = parsed.body || '';
-                self.response = self.responseText;
+                // Handle responseType
+                if (self.responseType === 'json') {
+                    try {
+                        self.response = JSON.parse(self.responseText);
+                    } catch(parseErr) {
+                        if (typeof console !== 'undefined' && console.error) {
+                            console.error('XHR JSON parse error for ' + self._url + ':', parseErr.message,
+                                'responseText length:', self.responseText.length,
+                                'first 200 chars:', self.responseText.substring(0, 200));
+                        }
+                        self.response = null;
+                    }
+                } else {
+                    self.response = self.responseText;
+                }
                 self.readyState = 4;
                 self._fireEvent('readystatechange');
                 self._fireEvent('load');
                 return;
             }
-        } catch(e) {}
+        } catch(e) {
+            if (typeof console !== 'undefined' && console.error) {
+                console.error('XHR send error:', e.message);
+            }
+        }
     }
 
     // Stub response
@@ -1652,11 +1757,15 @@ XMLHttpRequest.prototype.removeEventListener = function(type, fn) {
 XMLHttpRequest.prototype._fireEvent = function(type) {
     var evt = { type: type, target: this };
     if (this['on' + type]) {
-        try { this['on' + type](evt); } catch(e) {}
+        try { this['on' + type](evt); } catch(e) {
+            if (typeof console !== 'undefined' && console.error) console.error('XHR on' + type + ' error:', e.message || e);
+        }
     }
     if (this._listeners[type]) {
         for (var i = 0; i < this._listeners[type].length; i++) {
-            try { this._listeners[type][i].call(this, evt); } catch(e) {}
+            try { this._listeners[type][i].call(this, evt); } catch(e) {
+                if (typeof console !== 'undefined' && console.error) console.error('XHR ' + type + ' listener error:', e.message || e);
+            }
         }
     }
 };
@@ -2392,6 +2501,8 @@ fn fetch_bridge_callback(
     args: v8::FunctionCallbackArguments,
     mut rv: v8::ReturnValue,
 ) {
+    debug!("fetch_bridge_callback invoked with {} args", args.length());
+
     // Get URL argument
     let url = if args.length() > 0 {
         let url_val = args.get(0);
@@ -2436,12 +2547,15 @@ fn fetch_bridge_callback(
         })
         .unwrap_or_default();
 
+    debug!(url = %url, method = %method, "Fetch bridge performing request");
+
     // Perform the fetch using the thread-local client
     let result = FETCH_CLIENT.with(|c| {
         let client_opt = c.borrow();
         let client = match client_opt.as_ref() {
             Some(c) => c,
             None => {
+                debug!("No fetch client in thread-local storage");
                 return Err("No fetch client available".to_string());
             }
         };
@@ -2450,6 +2564,8 @@ fn fetch_bridge_callback(
         // Using handle.block_on() panics when called from within an async runtime.
         perform_blocking_fetch(client, &url, &method, body.as_deref(), &headers)
     });
+
+    debug!(result = ?result, "Fetch bridge result");
 
     // Build the result JSON and return it
     let result_json = match result {
@@ -2550,43 +2666,94 @@ async fn perform_async_fetch(
     Ok(result.to_string())
 }
 
-/// Perform a blocking fetch request when no async runtime is available.
+/// Perform a blocking fetch request using reqwest's blocking client.
+///
+/// We use reqwest::blocking::Client because the async Client is tied to
+/// a specific tokio runtime and cannot be safely used from V8 callbacks
+/// which run on the main thread outside of any async context.
 fn perform_blocking_fetch(
-    client: &reqwest::Client,
+    _client: &reqwest::Client, // We ignore this and create a fresh blocking client
     url: &str,
     method: &str,
     body: Option<&str>,
     headers: &std::collections::HashMap<String, String>,
 ) -> Result<String, String> {
-    // Spawn a dedicated thread with its own tokio runtime to avoid
-    // "cannot start a runtime from within a runtime" panics.
-    let client = client.clone();
-    let url = url.to_string();
-    let method = method.to_string();
-    let body = body.map(|s| s.to_string());
-    let headers: std::collections::HashMap<String, String> = headers
-        .iter()
-        .map(|(k, v)| (k.clone(), v.clone()))
-        .collect();
+    use reqwest::blocking::Client as BlockingClient;
 
-    let handle = std::thread::spawn(move || {
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .map_err(|e| e.to_string())?;
+    // Build a fresh blocking client for this request.
+    // This is necessary because the async reqwest::Client cannot be used
+    // from a synchronous context without an active tokio runtime, and
+    // creating a new runtime per-request causes connection pool issues.
+    let client = BlockingClient::builder()
+        .timeout(FETCH_TIMEOUT)
+        .user_agent("Plasmate/0.1")
+        .build()
+        .map_err(|e| e.to_string())?;
 
-        rt.block_on(perform_async_fetch(
-            &client,
-            &url,
-            &method,
-            body.as_deref(),
-            &headers,
-        ))
+    let req_method = match method {
+        "GET" => reqwest::Method::GET,
+        "POST" => reqwest::Method::POST,
+        "PUT" => reqwest::Method::PUT,
+        "DELETE" => reqwest::Method::DELETE,
+        "PATCH" => reqwest::Method::PATCH,
+        "HEAD" => reqwest::Method::HEAD,
+        "OPTIONS" => reqwest::Method::OPTIONS,
+        _ => reqwest::Method::GET,
+    };
+
+    let mut request = client.request(req_method, url);
+
+    // Add headers
+    for (k, v) in headers {
+        if let Ok(header_name) = reqwest::header::HeaderName::from_bytes(k.as_bytes()) {
+            if let Ok(header_value) = reqwest::header::HeaderValue::from_str(v) {
+                request = request.header(header_name, header_value);
+            }
+        }
+    }
+
+    // Add body if present
+    if let Some(body_str) = body {
+        request = request.body(body_str.to_string());
+    }
+
+    // Send the request
+    let response = request.send().map_err(|e| e.to_string())?;
+
+    let status = response.status().as_u16();
+    let status_text = response
+        .status()
+        .canonical_reason()
+        .unwrap_or("Unknown")
+        .to_string();
+    let ok = response.status().is_success();
+
+    // Collect response headers
+    let mut resp_headers = serde_json::Map::new();
+    for (k, v) in response.headers() {
+        if let Ok(v_str) = v.to_str() {
+            resp_headers.insert(k.to_string().to_lowercase(), serde_json::json!(v_str));
+        }
+    }
+
+    // Read the body with size limit
+    let body_bytes = response.bytes().map_err(|e| e.to_string())?;
+
+    let body_str = if body_bytes.len() > MAX_RESPONSE_BODY_SIZE {
+        String::from_utf8_lossy(&body_bytes[..MAX_RESPONSE_BODY_SIZE]).to_string()
+    } else {
+        String::from_utf8_lossy(&body_bytes).to_string()
+    };
+
+    let result = serde_json::json!({
+        "ok": ok,
+        "status": status,
+        "statusText": status_text,
+        "headers": resp_headers,
+        "body": body_str
     });
 
-    handle
-        .join()
-        .map_err(|_| "Fetch thread panicked".to_string())?
+    Ok(result.to_string())
 }
 
 /// Report from executing page scripts.
@@ -3420,5 +3587,41 @@ mod tests {
         // The stub returns status 200
         assert!(result.contains("200"));
         assert!(result.contains("OK"));
+    }
+
+    #[test]
+    fn test_textcontent_setter_and_serialize() {
+        // Verify that setting textContent via JS is reflected in serialized HTML
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+
+        let html = r#"<html><body><h4 id="product-price"></h4></body></html>"#;
+        rt.bootstrap_dom(html, "http://localhost:1234/");
+
+        // Set textContent via JS
+        rt.execute_in_context(
+            "document.getElementById('product-price').textContent = '$244.99';",
+            "test.js",
+        )
+        .unwrap();
+
+        // Check textContent getter
+        let price = rt
+            .execute_in_context(
+                "document.getElementById('product-price').textContent",
+                "test",
+            )
+            .unwrap();
+        assert_eq!(price, "$244.99", "textContent should be set to $244.99");
+
+        // Check serialized HTML contains the value
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("$244.99"),
+            "Serialized HTML should contain $244.99"
+        );
     }
 }

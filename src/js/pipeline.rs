@@ -25,6 +25,9 @@ pub struct PageResult {
     pub timing: PipelineTiming,
     /// JS execution report (if JS was enabled).
     pub js_report: Option<JsExecutionReport>,
+    /// The effective HTML after JS execution (post-JS DOM serialized to HTML).
+    /// For CDP Runtime.evaluate, this is the HTML that will be used to bootstrap a fresh DOM.
+    pub effective_html: String,
 }
 
 /// Timing breakdown for the pipeline stages.
@@ -161,7 +164,8 @@ pub async fn process_page_async(
     }
 
     let t2 = Instant::now();
-    let som = compiler::compile(&effective_html, url)
+    let effective_html_owned = effective_html.into_owned();
+    let som = compiler::compile(&effective_html_owned, url)
         .map_err(|e| PipelineError::SomCompile(e.to_string()))?;
     let som_us = t2.elapsed().as_micros();
 
@@ -177,6 +181,7 @@ pub async fn process_page_async(
             total_us,
         },
         js_report,
+        effective_html: effective_html_owned,
     })
 }
 
@@ -282,7 +287,8 @@ pub fn process_page_with_client(
     }
 
     let t2 = Instant::now();
-    let som = compiler::compile(&effective_html, url)
+    let effective_html_owned = effective_html.into_owned();
+    let som = compiler::compile(&effective_html_owned, url)
         .map_err(|e| PipelineError::SomCompile(e.to_string()))?;
     let som_us = t2.elapsed().as_micros();
 
@@ -298,6 +304,7 @@ pub fn process_page_with_client(
             total_us,
         },
         js_report,
+        effective_html: effective_html_owned,
     })
 }
 
