@@ -10,6 +10,20 @@
       ]
     }
   ],
+  "redirects": [
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "doc.plasmate.app" }],
+      "destination": "https://doc.plasmate.app/index",
+      "permanent": true
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "docs.plasmate.app" }],
+      "destination": "https://docs.plasmate.app/index",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/:match*",
