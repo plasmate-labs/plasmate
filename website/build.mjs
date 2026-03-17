@@ -11,7 +11,7 @@ const SRC = join(import.meta.dirname, 'docs', 'src');
 const OUT = join(import.meta.dirname, 'docs');
 
 const NAV = [
-  { slug: 'index', label: 'Overview' },
+  { slug: 'overview', label: 'Overview' },
   { slug: 'quickstart', label: 'Quick Start' },
   { slug: 'spec', label: 'Product Spec' },
   { slug: 'som', label: 'SOM Reference' },
@@ -26,7 +26,7 @@ const NAV = [
 function template(title, body, currentSlug) {
   const sidebar = NAV.map(n => {
     const active = n.slug === currentSlug ? ' class="active"' : '';
-    const href = n.slug === 'index' ? '.' : n.slug;
+    const href = n.slug === 'overview' ? '.' : n.slug;
     return `<a href="${href}"${active}>${n.label}</a>`;
   }).join('\n          ');
 

@@ -14,13 +14,13 @@
     {
       "source": "/",
       "has": [{ "type": "host", "value": "doc.plasmate.app" }],
-      "destination": "https://doc.plasmate.app/index",
+      "destination": "https://doc.plasmate.app/overview",
       "permanent": true
     },
     {
       "source": "/",
       "has": [{ "type": "host", "value": "docs.plasmate.app" }],
-      "destination": "https://docs.plasmate.app/index",
+      "destination": "https://docs.plasmate.app/overview",
       "permanent": true
     }
   ],
@@ -35,7 +35,7 @@
       "has": [{ "type": "host", "value": "docs.plasmate.app" }],
       "destination": "/docs/:match*"
     },
-    { "source": "/docs", "destination": "/docs/index.html" },
-    { "source": "/docs/", "destination": "/docs/index.html" }
+    { "source": "/docs", "destination": "/docs/overview.html" },
+    { "source": "/docs/", "destination": "/docs/overview.html" }
   ]
 }
