@@ -5,3 +5,4 @@
 .DS_Store
 report.md
 .claude/settings.local.json
+smoke/node_modules/
