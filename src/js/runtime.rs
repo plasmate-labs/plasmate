@@ -1513,6 +1513,18 @@ function cancelAnimationFrame(id) { clearTimeout(id); }
 // ============================================================================
 function fetch(url, opts) {
     var urlStr = String(url).substring(0, 500);
+    // Resolve relative URLs against the page origin
+    if (urlStr.charAt(0) === '/' && window.location && window.location.href) {
+        try {
+            var loc = window.location;
+            urlStr = loc.protocol + '//' + loc.host + urlStr;
+        } catch(e) {}
+    } else if (urlStr.indexOf('://') === -1 && window.location && window.location.href) {
+        try {
+            var base = window.location.href.replace(/[^\/]*$/, '');
+            urlStr = base + urlStr;
+        } catch(e) {}
+    }
     __plasmate_fetch_queue.push({ url: urlStr, opts: opts || {} });
 
     // If Rust has injected __plasmate_do_fetch, use it
@@ -2300,9 +2312,18 @@ impl JsRuntime {
         let _ = self.execute_in_context("__plasmate_fire_load();", "<load>");
     }
 
+    /// Pump V8 microtask queue - resolves pending Promise.then() callbacks.
+    /// This is critical for fetch().then() chains to execute.
+    pub fn pump_microtasks(&mut self) {
+        self.isolate.perform_microtask_checkpoint();
+    }
+
     /// Serialize the current DOM tree back to HTML.
     /// Returns the full HTML document as a string.
     pub fn serialize_dom(&mut self) -> Result<String, JsError> {
+        // Pump microtasks first to resolve any pending Promise.then() chains
+        // (e.g. from fetch().then() that modify the DOM)
+        self.pump_microtasks();
         self.execute_in_context("document.__plasmate_serialize()", "<serialize>")
     }
 
@@ -2425,19 +2446,9 @@ fn fetch_bridge_callback(
             }
         };
 
-        // Try to get the current tokio runtime handle
-        let handle = match tokio::runtime::Handle::try_current() {
-            Ok(h) => h,
-            Err(_) => {
-                // No async runtime available - create a blocking one
-                return perform_blocking_fetch(client, &url, &method, body.as_deref(), &headers);
-            }
-        };
-
-        // Use block_on to perform the async request
-        handle.block_on(async {
-            perform_async_fetch(client, &url, &method, body.as_deref(), &headers).await
-        })
+        // Always use blocking fetch - we're inside a V8 callback which is synchronous.
+        // Using handle.block_on() panics when called from within an async runtime.
+        perform_blocking_fetch(client, &url, &method, body.as_deref(), &headers)
     });
 
     // Build the result JSON and return it
@@ -2547,13 +2558,35 @@ fn perform_blocking_fetch(
     body: Option<&str>,
     headers: &std::collections::HashMap<String, String>,
 ) -> Result<String, String> {
-    // Create a new runtime for the blocking fetch
-    let rt = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .map_err(|e| e.to_string())?;
+    // Spawn a dedicated thread with its own tokio runtime to avoid
+    // "cannot start a runtime from within a runtime" panics.
+    let client = client.clone();
+    let url = url.to_string();
+    let method = method.to_string();
+    let body = body.map(|s| s.to_string());
+    let headers: std::collections::HashMap<String, String> = headers
+        .iter()
+        .map(|(k, v)| (k.clone(), v.clone()))
+        .collect();
 
-    rt.block_on(perform_async_fetch(client, url, method, body, headers))
+    let handle = std::thread::spawn(move || {
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .map_err(|e| e.to_string())?;
+
+        rt.block_on(perform_async_fetch(
+            &client,
+            &url,
+            &method,
+            body.as_deref(),
+            &headers,
+        ))
+    });
+
+    handle
+        .join()
+        .map_err(|_| "Fetch thread panicked".to_string())?
 }
 
 /// Report from executing page scripts.

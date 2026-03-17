@@ -118,16 +118,22 @@ pub async fn process_page_async(
             // Execute page scripts
             let report = runtime.execute_page_scripts(&exec_scripts);
 
+            // Pump microtasks after script execution (resolves Promise.then chains)
+            runtime.pump_microtasks();
+
             // Fire DOMContentLoaded after scripts execute
             runtime.fire_dom_content_loaded();
+            runtime.pump_microtasks();
 
             // Drain short timers
             if config.timer_drain_ms > 0 {
                 runtime.drain_timers(config.timer_drain_ms);
+                runtime.pump_microtasks();
             }
 
             // Fire load event
             runtime.fire_load();
+            runtime.pump_microtasks();
 
             js_us = t1.elapsed().as_micros();
 
@@ -145,7 +151,7 @@ pub async fn process_page_async(
 
             js_report = Some(report);
 
-            // Serialize the DOM tree back to HTML
+            // Serialize the DOM tree back to HTML (also pumps microtasks internally)
             if let Ok(serialized) = runtime.serialize_dom() {
                 if !serialized.is_empty() && serialized != "undefined" {
                     effective_html = std::borrow::Cow::Owned(serialized);
@@ -236,16 +242,22 @@ pub fn process_page_with_client(
             // Execute page scripts in the context with the bootstrapped DOM
             let report = runtime.execute_page_scripts(&inline_scripts);
 
+            // Pump microtasks after script execution (resolves Promise.then chains)
+            runtime.pump_microtasks();
+
             // Fire DOMContentLoaded after scripts execute
             runtime.fire_dom_content_loaded();
+            runtime.pump_microtasks();
 
             // Drain short timers (many pages use setTimeout(fn, 0) for initialization)
             if config.timer_drain_ms > 0 {
                 runtime.drain_timers(config.timer_drain_ms);
+                runtime.pump_microtasks();
             }
 
             // Fire load event
             runtime.fire_load();
+            runtime.pump_microtasks();
 
             js_us = t1.elapsed().as_micros();
 
