@@ -176,6 +176,25 @@ cargo build --release
 
 Requirements: Rust 1.75+, V8 (fetched automatically by rusty_v8).
 
+## Docker
+
+Prebuilt multi-arch images (linux/amd64 and linux/arm64) are published to GHCR:
+
+```bash
+# Server mode (CDP or AWP)
+docker run --rm -p 9222:9222 ghcr.io/plasmate-labs/plasmate:latest
+
+# One-shot fetch
+docker run --rm ghcr.io/plasmate-labs/plasmate:latest fetch https://example.com
+```
+
+Build locally:
+
+```bash
+docker build -t plasmate .
+docker run --rm -p 9222:9222 plasmate
+```
+
 ## Tests
 
 ```bash

@@ -5,8 +5,8 @@
 #   docker buildx build --platform linux/amd64,linux/arm64 .
 #
 # Usage:
-#   docker run -p 9222:9222 plasmate/browser
-#   docker run plasmate/browser fetch https://example.com
+#   docker run -p 9222:9222 ghcr.io/plasmate-labs/plasmate:latest
+#   docker run ghcr.io/plasmate-labs/plasmate:latest fetch https://example.com
 
 FROM debian:bookworm-slim
 
