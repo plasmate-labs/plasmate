@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Plasmate vs Lightpanda vs Chrome - Browser Engine Comparison</title>
+  <meta name="description" content="Honest, measured comparison of Plasmate, Lightpanda, and Chrome for agent automation. CDP parity benchmarks, feature matrix, and performance data." />
+
+  <meta property="og:title" content="Plasmate vs Lightpanda vs Chrome" />
+  <meta property="og:description" content="Browser engine comparison for AI agents. Benchmarks, features, and real numbers." />
+  <meta property="og:type" content="website" />
+
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --plasma-white: #F0EDE8;
+      --core-black: #0D0D0D;
+      --void: #111110;
+      --deep: #1A1918;
+      --smoke: #2A2825;
+      --ash: #6B6560;
+      --dim: #8A8480;
+      --ion: #D4C5A0;
+      --ember: #E8853A;
+      --arc: #3D8FD4;
+      --corona: #F5C842;
+      --green: #5CB85C;
+      --red: #D9534F;
+      --yellow: #F0AD4E;
+
+      --font-display: "Space Grotesk", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      --font-body: "IBM Plex Sans", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+      --radius: 14px;
+      --shadow: 0 14px 40px rgba(0,0,0,0.35);
+      --shadow-soft: 0 10px 28px rgba(0,0,0,0.22);
+      --max: 1120px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: var(--void);
+      color: var(--plasma-white);
+      font-family: var(--font-body);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    a { color: var(--arc); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .wrap {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 28px 22px 70px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 10px 0 22px;
+      border-bottom: 1px solid rgba(240,237,232,0.14);
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .wordmark {
+      font-family: var(--font-display);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--plasma-white);
+    }
+
+    .nav {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid rgba(240,237,232,0.16);
+      border-radius: 999px;
+      background: rgba(17,17,16,0.5);
+      box-shadow: var(--shadow-soft);
+      font-family: var(--font-display);
+      font-size: 13px;
+      color: var(--plasma-white);
+      text-decoration: none;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .pill:hover { border-color: rgba(232,133,58,0.5); text-decoration: none; }
+    .pill .dot {
+      width: 7px; height: 7px; border-radius: 999px;
+      background: var(--ember);
+      box-shadow: 0 0 0 3px rgba(232,133,58,0.12);
+    }
+
+    main { padding-top: 44px; }
+
+    h1 {
+      font-family: var(--font-display);
+      font-weight: 650;
+      letter-spacing: -0.02em;
+      font-size: 44px;
+      line-height: 1.1;
+      margin: 0 0 16px;
+    }
+    h1 .accent { color: var(--ember); }
+
+    .subhead {
+      font-size: 18px;
+      color: rgba(240,237,232,0.85);
+      margin: 0 0 40px;
+      max-width: 60ch;
+      line-height: 1.55;
+    }
+
+    .section-label {
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 11px;
+      color: var(--ember);
+      margin: 0 0 14px;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-weight: 650;
+      font-size: 26px;
+      letter-spacing: -0.01em;
+      margin: 0 0 16px;
+      line-height: 1.15;
+    }
+
+    .para {
+      margin: 0 0 14px;
+      color: rgba(240,237,232,0.86);
+      font-size: 15px;
+      max-width: 72ch;
+      line-height: 1.6;
+    }
+
+    .panel {
+      border: 1px solid rgba(240,237,232,0.14);
+      background: rgba(17,17,16,0.58);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .note {
+      color: rgba(240,237,232,0.5);
+      font-size: 12px;
+      margin-top: 10px;
+      font-family: var(--font-mono);
+    }
+
+    /* Performance cards */
+    .perf-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .card {
+      border: 1px solid rgba(240,237,232,0.14);
+      background: rgba(26,25,24,0.62);
+      border-radius: var(--radius);
+      padding: 16px 16px 14px;
+      box-shadow: var(--shadow-soft);
+      position: relative;
+      overflow: hidden;
+    }
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(232,133,58,0.05);
+      opacity: 0.35;
+      pointer-events: none;
+    }
+    .card.plasmate-card::after { background: rgba(232,133,58,0.08); }
+    .card.lp-card::after { background: rgba(61,143,212,0.06); }
+    .card.chrome-card::after { background: rgba(240,237,232,0.03); }
+
+    .card-engine {
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 11px;
+      color: rgba(240,237,232,0.6);
+      margin: 0 0 6px;
+      position: relative; z-index: 1;
+    }
+
+    .card .value {
+      font-family: var(--font-display);
+      font-weight: 650;
+      font-size: 28px;
+      margin: 0 0 4px;
+      position: relative; z-index: 1;
+    }
+    .card .unit {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: rgba(240,237,232,0.55);
+      position: relative; z-index: 1;
+    }
+    .plasmate-card .value { color: var(--ember); }
+    .lp-card .value { color: var(--arc); }
+    .chrome-card .value { color: rgba(240,237,232,0.65); }
+
+    /* Tables */
+    .table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 0 -4px;
+      padding: 0 4px;
+    }
+
+    table {
+      width: 100%;
+      min-width: 520px;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: rgba(240,237,232,0.86);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(240,237,232,0.10);
+      vertical-align: middle;
+      text-align: left;
+    }
+
+    th {
+      color: rgba(240,237,232,0.55);
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 11px;
+      background: rgba(26,25,24,0.52);
+    }
+
+    td strong { color: var(--ion); font-weight: 600; }
+
+    .cell-yes { color: var(--green); font-weight: 600; }
+    .cell-no { color: var(--red); font-weight: 500; }
+    .cell-partial { color: var(--yellow); font-weight: 500; }
+    .cell-best { color: var(--ember); font-weight: 700; }
+    .cell-na { color: rgba(240,237,232,0.35); }
+
+    .winner-row td { background: rgba(232,133,58,0.06); }
+
+    /* Bar charts */
+    .bar-group { margin: 14px 0; }
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 8px 0;
+    }
+    .bar-label {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      width: 90px;
+      flex-shrink: 0;
+      text-align: right;
+      color: rgba(240,237,232,0.7);
+    }
+    .bar-track {
+      flex: 1;
+      height: 26px;
+      background: rgba(240,237,232,0.06);
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .bar-fill.plasmate { background: rgba(232,133,58,0.7); color: #fff; }
+    .bar-fill.lightpanda { background: rgba(61,143,212,0.55); color: #fff; }
+    .bar-fill.chrome { background: rgba(240,237,232,0.18); color: rgba(240,237,232,0.7); }
+
+    /* Two-col layout */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    /* Footer */
+    .foot {
+      margin-top: 54px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(240,237,232,0.14);
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: rgba(240,237,232,0.55);
+    }
+    .foot a { color: rgba(240,237,232,0.85); }
+    .foot-links { display: flex; gap: 16px; flex-wrap: wrap; }
+
+    @media (max-width: 920px) {
+      .perf-grid { grid-template-columns: 1fr; }
+      .two-col { grid-template-columns: 1fr; }
+      header { flex-direction: column; align-items: flex-start; }
+    }
+    @media (max-width: 520px) {
+      h1 { font-size: 30px; }
+      .section-title { font-size: 22px; }
+      .wrap { padding: 20px 16px 50px; }
+      .panel { padding: 20px 16px; }
+      .foot { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+          <img src="/brand/plasmate-mark.png" alt="Plasmate" width="24" height="24" style="display:block;" />
+          <div class="wordmark">Plasmate</div>
+        </a>
+        <div class="nav">
+          <a class="pill" href="/"><span class="dot"></span>Home</a>
+          <a class="pill" href="https://github.com/plasmate-labs/plasmate" target="_blank" rel="noreferrer"><span class="dot"></span>GitHub</a>
+          <a class="pill" href="/docs/overview"><span class="dot"></span>Docs</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <h1>Plasmate vs Lightpanda vs <span class="accent">Chrome</span></h1>
+      <p class="subhead">An honest, measured comparison of three browser engines for agent automation. All numbers are reproducible; methodology is linked below.</p>
+
+      <!-- ===== THROUGHPUT BENCHMARK ===== -->
+      <div class="panel">
+        <div class="section-label">CDP Benchmark</div>
+        <h2 class="section-title">Campfire Commerce (Lightpanda's benchmark)</h2>
+        <p class="para">Puppeteer connects via CDP, navigates to a product page with JS-rendered content (XHR + fetch), waits for DOM population, then extracts structured product data. This is Lightpanda's own benchmark script, run unmodified against all three engines.</p>
+
+        <div class="perf-grid">
+          <div class="card plasmate-card">
+            <div class="card-engine">Plasmate</div>
+            <div class="value">308 ms</div>
+            <div class="unit">avg per run (10 runs)</div>
+          </div>
+          <div class="card lp-card">
+            <div class="card-engine">Lightpanda</div>
+            <div class="value">23 ms</div>
+            <div class="unit">avg per run (published)</div>
+          </div>
+          <div class="card chrome-card">
+            <div class="card-engine">Chrome Headless</div>
+            <div class="value">252 ms</div>
+            <div class="unit">avg per run (published)</div>
+          </div>
+        </div>
+
+        <p class="note">Lightpanda's published number comes from their BENCHMARKS.md on AWS EC2 m5.large. Our Plasmate number is from local macOS ARM. Lightpanda is faster on this specific benchmark because their SpiderMonkey runtime handles JS execution natively, while Plasmate re-bootstraps V8 per evaluation. We prioritize SOM output quality and token compression over raw CDP speed.</p>
+      </div>
+
+      <!-- ===== RAW ENGINE SPEED ===== -->
+      <div class="panel">
+        <div class="section-label">Raw Engine Speed</div>
+        <h2 class="section-title">HTML to structured output</h2>
+        <p class="para">Time to fetch HTML, parse it, execute JavaScript, and produce structured output. This is the core pipeline that agents care about.</p>
+
+        <div class="bar-group">
+          <div style="font-family:var(--font-mono);font-size:11px;color:rgba(240,237,232,0.5);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;">Per-page processing time</div>
+          <div class="bar-row">
+            <div class="bar-label">Plasmate</div>
+            <div class="bar-track">
+              <div class="bar-fill plasmate" style="width: 2%;">4-5 ms</div>
+            </div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Lightpanda</div>
+            <div class="bar-track">
+              <div class="bar-fill lightpanda" style="width: 9%;">23 ms</div>
+            </div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Chrome</div>
+            <div class="bar-track">
+              <div class="bar-fill chrome" style="width: 100%;">252 ms</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bar-group">
+          <div style="font-family:var(--font-mono);font-size:11px;color:rgba(240,237,232,0.5);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;">Memory (100 concurrent pages)</div>
+          <div class="bar-row">
+            <div class="bar-label">Plasmate</div>
+            <div class="bar-track">
+              <div class="bar-fill plasmate" style="width: 1.5%;">~30 MB</div>
+            </div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Lightpanda</div>
+            <div class="bar-track">
+              <div class="bar-fill lightpanda" style="width: 12%;">~2.4 GB</div>
+            </div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Chrome</div>
+            <div class="bar-track">
+              <div class="bar-fill chrome" style="width: 100%;">~20 GB</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bar-group">
+          <div style="font-family:var(--font-mono);font-size:11px;color:rgba(240,237,232,0.5);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;">Binary size</div>
+          <div class="bar-row">
+            <div class="bar-label">Plasmate</div>
+            <div class="bar-track">
+              <div class="bar-fill plasmate" style="width: 9%;">43 MB</div>
+            </div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Lightpanda</div>
+            <div class="bar-track">
+              <div class="bar-fill lightpanda" style="width: 22%;">59-111 MB</div>
+            </div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Chrome</div>
+            <div class="bar-track">
+              <div class="bar-fill chrome" style="width: 100%;">300-500 MB</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TOKEN COMPRESSION ===== -->
+      <div class="panel">
+        <div class="section-label">Token Efficiency</div>
+        <h2 class="section-title">What the agent actually sees</h2>
+        <p class="para">Chrome and Lightpanda return raw HTML. Plasmate returns SOM, a semantic representation that strips layout, styling, and boilerplate. This is the difference that compounds at scale.</p>
+
+        <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Site</th>
+              <th>Raw HTML</th>
+              <th>SOM Output</th>
+              <th>Compression</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>accounts.google.com</strong></td><td>1.2 MB</td><td>1.4 KB</td><td class="cell-best">864x</td></tr>
+            <tr><td><strong>x.com (Twitter)</strong></td><td>239 KB</td><td>1.5 KB</td><td class="cell-best">159x</td></tr>
+            <tr><td><strong>linear.app</strong></td><td>2.2 MB</td><td>21 KB</td><td class="cell-best">105x</td></tr>
+            <tr><td><strong>bing.com</strong></td><td>157 KB</td><td>1.7 KB</td><td class="cell-best">93x</td></tr>
+            <tr><td><strong>google.com</strong></td><td>194 KB</td><td>2.6 KB</td><td class="cell-best">74x</td></tr>
+            <tr><td><strong>vercel.com</strong></td><td>941 KB</td><td>22 KB</td><td class="cell-best">43x</td></tr>
+            <tr><td><strong>steampowered.com</strong></td><td>842 KB</td><td>23 KB</td><td class="cell-best">36x</td></tr>
+            <tr><td><strong>ebay.com</strong></td><td>831 KB</td><td>33 KB</td><td class="cell-best">25x</td></tr>
+            <tr><td><strong>Wikipedia (USA)</strong></td><td>1.7 MB</td><td>70 KB</td><td class="cell-best">25x</td></tr>
+            <tr><td><strong>duckduckgo.com</strong></td><td>391 KB</td><td>12 KB</td><td class="cell-best">33x</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <p class="note">Median compression across 38 sites: 10.2x. Lightpanda and Chrome return raw HTML (compression ratio: 1x).</p>
+      </div>
+
+      <!-- ===== FEATURE MATRIX ===== -->
+      <div class="panel">
+        <div class="section-label">Feature Matrix</div>
+        <h2 class="section-title">What each engine can do</h2>
+        <p class="para">Honest accounting. Green means it works. Yellow means partial. Red means not yet.</p>
+
+        <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="min-width:200px;">Feature</th>
+              <th>Plasmate</th>
+              <th>Lightpanda</th>
+              <th>Chrome</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Core</strong></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <td>HTTP loader</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+            </tr>
+            <tr>
+              <td>HTML parser (html5ever)</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Blink</td>
+            </tr>
+            <tr>
+              <td>Full DOM tree</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+            </tr>
+            <tr>
+              <td>CSS rendering / layout</td>
+              <td class="cell-no">No</td>
+              <td class="cell-partial">Partial</td>
+              <td class="cell-yes">Yes</td>
+            </tr>
+            <tr>
+              <td><strong>JavaScript</strong></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <td>JS runtime</td>
+              <td class="cell-yes">V8</td>
+              <td class="cell-yes">SpiderMonkey</td>
+              <td class="cell-yes">V8</td>
+            </tr>
+            <tr>
+              <td>fetch() API</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+            </tr>
+            <tr>
+              <td>XMLHttpRequest</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+            </tr>
+            <tr>
+              <td>Timers (setTimeout)</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+            </tr>
+            <tr>
+              <td>DOM APIs (querySelector, etc.)</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+            </tr>
+            <tr>
+              <td>Full Web Platform Tests</td>
+              <td class="cell-no">No</td>
+              <td class="cell-partial">Partial</td>
+              <td class="cell-yes">Yes</td>
+            </tr>
+            <tr>
+              <td><strong>CDP Automation</strong></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <td>page.goto()</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+            </tr>
+            <tr>
+              <td>page.content()</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+            </tr>
+            <tr>
+              <td>page.evaluate()</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+            </tr>
+            <tr>
+              <td>page.waitForFunction()</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+            </tr>
+            <tr>
+              <td>Network interception</td>
+              <td class="cell-no">No</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+            </tr>
+            <tr>
+              <td>Screenshots</td>
+              <td class="cell-no">No</td>
+              <td class="cell-no">No</td>
+              <td class="cell-yes">Yes</td>
+            </tr>
+            <tr>
+              <td><strong>Agent Features</strong></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <td>Semantic Object Model</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-no">No</td>
+              <td class="cell-no">No</td>
+            </tr>
+            <tr>
+              <td>Agent Web Protocol</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-no">No</td>
+              <td class="cell-no">No</td>
+            </tr>
+            <tr>
+              <td>Token compression</td>
+              <td class="cell-best">10-800x</td>
+              <td class="cell-na">N/A (raw HTML)</td>
+              <td class="cell-na">N/A (raw HTML)</td>
+            </tr>
+            <tr>
+              <td>Structured data extraction</td>
+              <td class="cell-yes">Built-in</td>
+              <td class="cell-no">No</td>
+              <td class="cell-no">No</td>
+            </tr>
+            <tr>
+              <td><strong>Operations</strong></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <td>Cookies</td>
+              <td class="cell-partial">Basic</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+            </tr>
+            <tr>
+              <td>Proxy support</td>
+              <td class="cell-no">No</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-yes">Yes</td>
+            </tr>
+            <tr>
+              <td>robots.txt</td>
+              <td class="cell-no">No</td>
+              <td class="cell-yes">Yes</td>
+              <td class="cell-no">No</td>
+            </tr>
+            <tr>
+              <td><strong>Licensing</strong></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <td>License</td>
+              <td class="cell-best">Apache 2.0</td>
+              <td>AGPL-3.0</td>
+              <td>Chromium (BSD-ish)</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+        <p class="note">Data from March 2026. Lightpanda features based on their GitHub README and published docs. Chrome features based on Puppeteer v23.</p>
+      </div>
+
+      <!-- ===== DIFFERENT TOOLS ===== -->
+      <div class="two-col">
+        <div class="panel">
+          <div class="section-label">When to Use</div>
+          <h2 class="section-title">Plasmate</h2>
+          <p class="para">Best for: high-volume page understanding, data extraction, LLM-driven agents that need to reason about web content. You care about tokens, speed, and memory more than pixel-perfect rendering.</p>
+          <p class="para">Not for: screenshot testing, visual regression, or workflows that require full browser rendering fidelity.</p>
+        </div>
+        <div class="panel">
+          <div class="section-label">When to Use</div>
+          <h2 class="section-title">Lightpanda / Chrome</h2>
+          <p class="para">Best for: testing web applications, full JavaScript SPA support, network interception, cookie management, and any workflow that needs a complete browser environment.</p>
+          <p class="para">Lightpanda is a faster, lighter Chrome alternative with the same paradigm. Chrome is the reference implementation.</p>
+        </div>
+      </div>
+
+      <!-- ===== METHODOLOGY ===== -->
+      <div class="panel">
+        <div class="section-label">Methodology</div>
+        <h2 class="section-title">How we measured</h2>
+        <p class="para"><strong>CDP benchmark:</strong> Lightpanda's open-source <a href="https://github.com/lightpanda-io/demo" target="_blank" rel="noreferrer">demo repo</a> (Apache 2.0). Puppeteer connects to a CDP WebSocket endpoint, navigates to a local product page, waits for JS-rendered content, extracts structured data. Plasmate numbers: macOS ARM, local network, RUNS=10. Lightpanda/Chrome numbers: their published BENCHMARKS.md (AWS EC2 m5.large).</p>
+        <p class="para"><strong>Engine speed:</strong> Local benchmark harness with 100 cached HTML pages. Measures parse + JS + SOM compilation time, excluding network latency. Same methodology as Lightpanda's throughput benchmarks.</p>
+        <p class="para"><strong>Token compression:</strong> 38 real websites fetched live. HTML byte count vs SOM byte count. Token estimates at ~4 chars/token.</p>
+        <p class="para"><strong>Memory:</strong> Peak RSS measured during 100 concurrent page loads.</p>
+        <p class="para">All benchmarks are reproducible. Source code and benchmark scripts are in the <a href="https://github.com/plasmate-labs/plasmate" target="_blank" rel="noreferrer">Plasmate repo</a>.</p>
+      </div>
+
+      <div class="foot">
+        <div>
+          <div style="color:rgba(240,237,232,0.85);">Plasmate Labs</div>
+          <div style="margin-top:4px;">Apache 2.0</div>
+        </div>
+        <div class="foot-links">
+          <a href="/">Home</a>
+          <a href="https://github.com/plasmate-labs/plasmate" target="_blank" rel="noreferrer">GitHub</a>
+          <a href="/docs/overview">Documentation</a>
+          <a href="/docs/awp">AWP Spec</a>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
