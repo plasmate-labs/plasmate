@@ -13,7 +13,6 @@ It compiles HTML into a **Semantic Object Model (SOM)** - a structured, token-ef
 | [AWP Protocol](awp) | Agent Web Protocol draft specification |
 | [AWP MVP v0.1](awp-mvp) | The 7-method subset shipped in v0.1 |
 | [SOM Reference](som) | Semantic Object Model structure and element addressing |
-| [PoC Build Brief](poc) | Scope and acceptance criteria for the proof of concept |
 | [Roadmap (v0.2)](roadmap) | V8 integration, CDP compatibility, SOM cache, parallel sessions |
 | [Brand Guide](brand) | Colors, typography, voice, and the pixie dust system |
 

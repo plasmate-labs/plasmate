@@ -13,23 +13,12 @@
   "redirects": [
     {
       "source": "/",
-      "has": [{ "type": "host", "value": "doc.plasmate.app" }],
-      "destination": "https://doc.plasmate.app/overview",
-      "permanent": true
-    },
-    {
-      "source": "/",
       "has": [{ "type": "host", "value": "docs.plasmate.app" }],
       "destination": "https://docs.plasmate.app/overview",
       "permanent": true
     }
   ],
   "rewrites": [
-    {
-      "source": "/:match*",
-      "has": [{ "type": "host", "value": "doc.plasmate.app" }],
-      "destination": "/docs/:match*"
-    },
     {
       "source": "/:match*",
       "has": [{ "type": "host", "value": "docs.plasmate.app" }],

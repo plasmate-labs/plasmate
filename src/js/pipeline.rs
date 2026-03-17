@@ -76,6 +76,7 @@ pub async fn process_page_async(
     let mut js_report = None;
     let mut extract_us = 0u128;
     let mut js_us = 0u128;
+    let mut effective_html = std::borrow::Cow::Borrowed(html);
 
     if config.execute_js {
         let t0 = Instant::now();
@@ -104,15 +105,26 @@ pub async fn process_page_async(
             .map(|s| (s.source.clone(), s.label.clone()))
             .collect();
 
-        if !exec_scripts.is_empty() {
-            let mut runtime = JsRuntime::new(config.js_config.clone());
-            runtime.set_page_url(url);
+        // Always create runtime to bootstrap DOM, even if no scripts
+        let mut runtime = JsRuntime::new(config.js_config.clone());
 
+        // Bootstrap the DOM tree from source HTML
+        runtime.bootstrap_dom(html, url);
+
+        if !exec_scripts.is_empty() {
+            // Execute page scripts
             let report = runtime.execute_page_scripts(&exec_scripts);
 
+            // Fire DOMContentLoaded after scripts execute
+            runtime.fire_dom_content_loaded();
+
+            // Drain short timers
             if config.timer_drain_ms > 0 {
                 runtime.drain_timers(config.timer_drain_ms);
             }
+
+            // Fire load event
+            runtime.fire_load();
 
             js_us = t1.elapsed().as_micros();
 
@@ -129,11 +141,19 @@ pub async fn process_page_async(
             );
 
             js_report = Some(report);
+
+            // Serialize the DOM tree back to HTML
+            if let Ok(serialized) = runtime.serialize_dom() {
+                if !serialized.is_empty() && serialized != "undefined" {
+                    effective_html = std::borrow::Cow::Owned(serialized);
+                }
+            }
         }
     }
 
     let t2 = Instant::now();
-    let som = compiler::compile(html, url).map_err(|e| PipelineError::SomCompile(e.to_string()))?;
+    let som = compiler::compile(&effective_html, url)
+        .map_err(|e| PipelineError::SomCompile(e.to_string()))?;
     let som_us = t2.elapsed().as_micros();
 
     let total_us = pipeline_start.elapsed().as_micros();
