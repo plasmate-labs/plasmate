@@ -8,15 +8,15 @@ It compiles HTML into a **Semantic Object Model (SOM)** - a structured, token-ef
 
 | Document | Description |
 |----------|-------------|
-| [Quick Start](/docs/quickstart.html) | Install Plasmate and run your first fetch in 60 seconds |
-| [Product Spec](/docs/spec.html) | Full architecture, market analysis, and technical vision |
-| [AWP Protocol](/docs/awp.html) | Agent Web Protocol draft specification |
-| [AWP MVP v0.1](/docs/awp-mvp.html) | The 7-method subset shipped in v0.1 |
-| [SOM Reference](/docs/som.html) | Semantic Object Model structure and element addressing |
-| [Thesis](/docs/thesis.html) | Why this exists and what makes it different |
-| [PoC Build Brief](/docs/poc.html) | Scope and acceptance criteria for the proof of concept |
-| [Roadmap (v0.2)](/docs/roadmap.html) | V8 integration, CDP compatibility, SOM cache, parallel sessions |
-| [Brand Guide](/docs/brand.html) | Colors, typography, voice, and the pixie dust system |
+| [Quick Start](/docs/quickstart) | Install Plasmate and run your first fetch in 60 seconds |
+| [Product Spec](/docs/spec) | Full architecture, market analysis, and technical vision |
+| [AWP Protocol](/docs/awp) | Agent Web Protocol draft specification |
+| [AWP MVP v0.1](/docs/awp-mvp) | The 7-method subset shipped in v0.1 |
+| [SOM Reference](/docs/som) | Semantic Object Model structure and element addressing |
+| [Thesis](/docs/thesis) | Why this exists and what makes it different |
+| [PoC Build Brief](/docs/poc) | Scope and acceptance criteria for the proof of concept |
+| [Roadmap (v0.2)](/docs/roadmap) | V8 integration, CDP compatibility, SOM cache, parallel sessions |
+| [Brand Guide](/docs/brand) | Colors, typography, voice, and the pixie dust system |
 
 ## Key Numbers
 

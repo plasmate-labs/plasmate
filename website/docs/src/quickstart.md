@@ -186,6 +186,6 @@ Element IDs are deterministic: `e_` + first 12 hex chars of `sha256(origin|role|
 
 ## What's Next
 
-- Read the full [Product Spec](/docs/spec.html) for architecture details
-- Read the [AWP Protocol](/docs/awp.html) specification
-- Check the [Roadmap](/docs/roadmap.html) for what's coming in v0.2
+- Read the full [Product Spec](/docs/spec) for architecture details
+- Read the [AWP Protocol](/docs/awp) specification
+- Check the [Roadmap](/docs/roadmap) for what's coming in v0.2

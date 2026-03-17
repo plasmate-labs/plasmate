@@ -11,16 +11,16 @@ const SRC = join(import.meta.dirname, 'docs', 'src');
 const OUT = join(import.meta.dirname, 'docs');
 
 const NAV = [
-  { href: '/docs/index.html', label: 'Overview' },
-  { href: '/docs/quickstart.html', label: 'Quick Start' },
-  { href: '/docs/spec.html', label: 'Product Spec' },
-  { href: '/docs/som.html', label: 'SOM Reference' },
-  { href: '/docs/awp.html', label: 'AWP Protocol' },
-  { href: '/docs/awp-mvp.html', label: 'AWP MVP v0.1' },
-  { href: '/docs/thesis.html', label: 'Thesis' },
-  { href: '/docs/poc.html', label: 'PoC Build Brief' },
-  { href: '/docs/roadmap.html', label: 'Roadmap v0.2' },
-  { href: '/docs/brand.html', label: 'Brand Guide' },
+  { href: '/docs', label: 'Overview', file: 'index' },
+  { href: '/docs/quickstart', label: 'Quick Start', file: 'quickstart' },
+  { href: '/docs/spec', label: 'Product Spec', file: 'spec' },
+  { href: '/docs/som', label: 'SOM Reference', file: 'som' },
+  { href: '/docs/awp', label: 'AWP Protocol', file: 'awp' },
+  { href: '/docs/awp-mvp', label: 'AWP MVP v0.1', file: 'awp-mvp' },
+  { href: '/docs/thesis', label: 'Thesis', file: 'thesis' },
+  { href: '/docs/poc', label: 'PoC Build Brief', file: 'poc' },
+  { href: '/docs/roadmap', label: 'Roadmap v0.2', file: 'roadmap' },
+  { href: '/docs/brand', label: 'Brand Guide', file: 'brand' },
 ];
 
 function template(title, body, currentHref) {
