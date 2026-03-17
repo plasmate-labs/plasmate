@@ -37,6 +37,10 @@ function template(title, body, currentHref) {
   <title>${title} - Plasmate Docs</title>
   <meta name="description" content="Plasmate documentation: ${title}" />
 
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -332,7 +336,7 @@ function template(title, body, currentHref) {
 <body>
   <div class="layout">
     <nav class="sidebar" aria-label="Documentation navigation">
-      <a class="sidebar-brand" href="/"><span class="dot"></span>Plasmate</a>
+      <a class="sidebar-brand" href="/"><img src="/brand/plasmate-mark.png" alt="" width="22" height="22" style="vertical-align: -3px;" />Plasmate</a>
       ${sidebar}
       <div class="sidebar-foot">
         <a href="https://github.com/plasmate-labs/plasmate">GitHub</a>
