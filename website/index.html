@@ -1,0 +1,679 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Plasmate - The browser engine for agents</title>
+  <meta name="description" content="Plasmate compiles HTML into a Semantic Object Model (SOM) for AI agents. Apache 2.0. Fast, memory-efficient, built to become a standard." />
+
+  <meta property="og:title" content="Plasmate" />
+  <meta property="og:description" content="The browser engine for agents. HTML in. Semantic Object Model out." />
+  <meta property="og:type" content="website" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --plasma-white: #F0EDE8;
+      --core-black: #0D0D0D;
+      --void: #111110;
+      --deep: #1A1918;
+      --smoke: #2A2825;
+      --ash: #6B6560;
+      --dim: #8A8480;
+      --ion: #D4C5A0;
+      --ember: #E8853A;
+      --arc: #3D8FD4;
+      --corona: #F5C842;
+
+      --font-display: "Space Grotesk", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      --font-body: "IBM Plex Sans", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+      --radius: 14px;
+      --shadow: 0 14px 40px rgba(0,0,0,0.35);
+      --shadow-soft: 0 10px 28px rgba(0,0,0,0.22);
+
+      --max: 1120px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: var(--void);
+      color: var(--plasma-white);
+      font-family: var(--font-body);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    a { color: var(--arc); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .page {
+      position: relative;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    canvas#dust {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.95;
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+
+    .wrap {
+      position: relative;
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 28px 22px 70px;
+    }
+
+    header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 10px 0 22px;
+      border-bottom: 1px solid rgba(240,237,232,0.14);
+    }
+
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+    }
+
+    .wordmark {
+      font-family: var(--font-display);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--plasma-white);
+    }
+
+    .meta {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: rgba(240,237,232,0.7);
+      letter-spacing: 0.02em;
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .meta strong { color: var(--ion); font-weight: 600; }
+
+    .nav {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid rgba(240,237,232,0.16);
+      border-radius: 999px;
+      background: rgba(17,17,16,0.5);
+      box-shadow: var(--shadow-soft);
+      font-family: var(--font-display);
+      font-size: 13px;
+      color: var(--plasma-white);
+      text-decoration: none;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .pill:hover { border-color: rgba(232,133,58,0.5); text-decoration: none; }
+
+    .pill .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--ember);
+      box-shadow: 0 0 0 3px rgba(232,133,58,0.12);
+    }
+
+    main { padding-top: 44px; }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 26px;
+      align-items: start;
+    }
+
+    @media (max-width: 920px) {
+      .hero { grid-template-columns: 1fr; }
+      header { flex-direction: column; align-items: flex-start; }
+      .meta { justify-content: flex-start; }
+    }
+
+    .headline {
+      font-family: var(--font-display);
+      font-weight: 650;
+      letter-spacing: -0.02em;
+      font-size: 46px;
+      line-height: 1.08;
+      margin: 0 0 16px;
+    }
+
+    .headline .accent { color: var(--ember); }
+
+    .subhead {
+      font-size: 18px;
+      color: rgba(240,237,232,0.86);
+      margin: 0 0 26px;
+      max-width: 48ch;
+    }
+
+    .callouts {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    @media (max-width: 520px) {
+      .callouts { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      border: 1px solid rgba(240,237,232,0.14);
+      background: rgba(26,25,24,0.62);
+      border-radius: var(--radius);
+      padding: 14px 14px 13px;
+      box-shadow: var(--shadow-soft);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(232,133,58,0.05);
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .kicker {
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 11px;
+      color: rgba(240,237,232,0.7);
+      margin: 0 0 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .value {
+      font-family: var(--font-display);
+      font-weight: 650;
+      font-size: 24px;
+      margin: 0 0 6px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .desc {
+      margin: 0;
+      font-size: 13px;
+      color: rgba(240,237,232,0.78);
+      position: relative;
+      z-index: 1;
+    }
+
+    .panel {
+      border: 1px solid rgba(240,237,232,0.14);
+      background: rgba(17,17,16,0.58);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel h2 {
+      margin: 0 0 10px;
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 16px;
+      letter-spacing: 0.02em;
+    }
+
+    .panel p {
+      margin: 0 0 12px;
+      color: rgba(240,237,232,0.84);
+      font-size: 14px;
+    }
+
+    .rule {
+      height: 1px;
+      background: rgba(240,237,232,0.14);
+      margin: 16px 0;
+      position: relative;
+    }
+
+    .rule::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 1px;
+      width: 44%;
+      background: rgba(232,133,58,0.55);
+    }
+
+    .spec {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: baseline;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: rgba(240,237,232,0.78);
+      word-break: break-word;
+    }
+
+    .spec-row .label { color: rgba(240,237,232,0.6); }
+    .spec-row .val { color: var(--ion); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 36px;
+    }
+
+    @media (max-width: 920px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    section { margin-top: 34px; }
+
+    section h3 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 18px;
+      margin: 0 0 12px;
+      letter-spacing: 0.01em;
+    }
+
+    .para {
+      margin: 0 0 12px;
+      color: rgba(240,237,232,0.86);
+      font-size: 15px;
+      max-width: 78ch;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(26,25,24,0.62);
+      border: 1px solid rgba(240,237,232,0.14);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: rgba(240,237,232,0.85);
+    }
+
+    .chip .key { color: rgba(240,237,232,0.62); }
+    .chip .num { color: var(--corona); font-weight: 600; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: rgba(240,237,232,0.86);
+      overflow: hidden;
+      border-radius: 12px;
+    }
+
+    th, td {
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(240,237,232,0.12);
+      vertical-align: top;
+    }
+
+    th {
+      text-align: left;
+      color: rgba(240,237,232,0.62);
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 11px;
+      background: rgba(26,25,24,0.52);
+    }
+
+    td strong { color: var(--ion); font-weight: 600; }
+    .good { color: var(--ember); }
+
+    .foot {
+      margin-top: 54px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(240,237,232,0.14);
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: rgba(240,237,232,0.65);
+    }
+
+    .foot a { color: rgba(240,237,232,0.9); }
+
+    .note {
+      color: rgba(240,237,232,0.65);
+      font-size: 12px;
+      margin-top: 10px;
+      font-family: var(--font-mono);
+    }
+
+    .no-motion { display: none; }
+
+    @media (prefers-reduced-motion: reduce) {
+      canvas#dust { display: none; }
+      .no-motion { display: block; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <canvas id="dust" aria-hidden="true"></canvas>
+
+    <div class="wrap">
+      <header>
+        <div class="brand">
+          <div class="wordmark">Plasmate</div>
+          <div class="nav">
+            <a class="pill" href="https://github.com/plasmate-labs/plasmate" target="_blank" rel="noreferrer"><span class="dot"></span>GitHub</a>
+            <a class="pill" href="#install"><span class="dot"></span>Install</a>
+            <a class="pill" href="#bench"><span class="dot"></span>Benchmarks</a>
+            <a class="pill" href="#standard"><span class="dot"></span>Standard</a>
+          </div>
+        </div>
+        <div class="meta">
+          <span><strong>License</strong> Apache-2.0</span>
+          <span><strong>SOM</strong> v0.1</span>
+          <span><strong>AWP</strong> v0.1</span>
+          <span><strong>Port</strong> 9222</span>
+        </div>
+      </header>
+
+      <main>
+        <div class="hero">
+          <div>
+            <h1 class="headline">The <span class="accent">browser engine</span><br/>for agents.</h1>
+            <p class="subhead">Plasmate compiles HTML into a Semantic Object Model (SOM). It is built for throughput, token efficiency, and becoming a real open standard.</p>
+
+            <div class="callouts">
+              <div class="card">
+                <div class="kicker">Throughput</div>
+                <div class="value">4 to 5 ms / page</div>
+                <p class="desc">Local harness, 100 pages, 231KB average. No caching tricks.</p>
+              </div>
+              <div class="card">
+                <div class="kicker">Compression</div>
+                <div class="value">10.4x (Wikipedia)</div>
+                <p class="desc">HTML to SOM token reduction. Median 9.4x across 38 URLs.</p>
+              </div>
+              <div class="card">
+                <div class="kicker">Memory</div>
+                <div class="value">~30 MB RSS</div>
+                <p class="desc">Per page baseline. Designed to run as sidecars at scale.</p>
+              </div>
+              <div class="card">
+                <div class="kicker">Shape</div>
+                <div class="value">Single binary</div>
+                <p class="desc">Fetch for one-shot, Serve for persistent sessions and protocols.</p>
+              </div>
+            </div>
+
+            <p class="note no-motion">Reduced motion is enabled. Background particles are disabled.</p>
+          </div>
+
+          <aside class="panel" id="bench">
+            <h2>Performance in context</h2>
+            <p>Plasmate targets the one metric that matters for agents: how fast you can turn web pages into actionable semantics at low memory cost.</p>
+            <div class="rule"></div>
+
+            <table aria-label="Plasmate benchmark comparisons">
+              <thead>
+                <tr>
+                  <th>Engine</th>
+                  <th>Total (100 pages)</th>
+                  <th>Per page</th>
+                  <th>Memory</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Plasmate</strong></td>
+                  <td class="good"><strong>405 to 512 ms</strong></td>
+                  <td class="good"><strong>4 to 5 ms</strong></td>
+                  <td><strong>~30 MB</strong></td>
+                </tr>
+                <tr>
+                  <td>Lightpanda</td>
+                  <td>2,300 ms</td>
+                  <td>23 ms</td>
+                  <td>~2.4 GB</td>
+                </tr>
+                <tr>
+                  <td>Chrome</td>
+                  <td>25,200 ms</td>
+                  <td>252 ms</td>
+                  <td>~20 GB</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="rule"></div>
+
+            <div class="spec">
+              <div class="spec-row"><span class="label">Output</span><span class="val">Semantic Object Model (SOM)</span></div>
+              <div class="spec-row"><span class="label">Protocol</span><span class="val">Agent Web Protocol (AWP)</span></div>
+              <div class="spec-row"><span class="label">Legacy</span><span class="val">CDP compatibility (drop-in)</span></div>
+              <div class="spec-row"><span class="label">Runtime</span><span class="val">Rust + tokio + V8</span></div>
+            </div>
+          </aside>
+        </div>
+
+        <div class="grid">
+          <section class="panel" id="standard">
+            <h3>This is a standard, not a platform</h3>
+            <p class="para">Plasmate is open infrastructure. Apache 2.0. Built to be embedded everywhere: local tools, CI, sidecars, and future control planes.</p>
+            <p class="para">The goal is not a flashy SaaS. The goal is that every serious agent stack ships a Plasmate-compatible path.</p>
+            <div class="chips">
+              <div class="chip"><span class="key">License</span><span>Apache-2.0</span></div>
+              <div class="chip"><span class="key">Default port</span><span>9222</span></div>
+              <div class="chip"><span class="key">SOM IDs</span><span>deterministic</span></div>
+              <div class="chip"><span class="key">Output budget</span><span class="num">token-efficient</span></div>
+            </div>
+          </section>
+
+          <section class="panel" id="install">
+            <h3>Install and run</h3>
+            <p class="para">Use the installer after the v0.1.0 release finishes. No Docker required. One binary, two modes.</p>
+
+            <div class="rule"></div>
+
+            <div class="spec">
+              <div class="spec-row"><span class="label">Install</span><span class="val"><code style="font-family: var(--font-mono);">curl -fsSL https://plasmate.app/install.sh | sh</code></span></div>
+              <div class="spec-row"><span class="label">One-shot</span><span class="val"><code style="font-family: var(--font-mono);">plasmate fetch https://plasmate.app</code></span></div>
+              <div class="spec-row"><span class="label">Server</span><span class="val"><code style="font-family: var(--font-mono);">plasmate serve --protocol awp</code></span></div>
+              <div class="spec-row"><span class="label">CDP</span><span class="val"><code style="font-family: var(--font-mono);">plasmate serve --protocol cdp</code></span></div>
+            </div>
+
+            <p class="note">Note: CDP is a legacy compatibility layer. AWP is the native agent protocol.</p>
+          </section>
+        </div>
+
+        <section class="panel" style="margin-top: 18px;">
+          <h3>Why SOM beats DOM for agents</h3>
+          <p class="para">CDP was built for devtools, not for agents. The DOM is too large, too low-level, and too expensive in tokens.</p>
+          <p class="para">SOM is the opposite: stable semantic regions, deterministic element IDs, content budgets, and interactive elements preserved even when the page is huge. Agents spend tokens on meaning, not markup.</p>
+
+          <div class="rule"></div>
+
+          <table aria-label="SOM properties">
+            <thead>
+              <tr>
+                <th>Property</th>
+                <th>Plasmate SOM</th>
+                <th>DOM-based stacks</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Interface</strong></td>
+                <td>Semantic, agent-first</td>
+                <td>Developer tooling primitives</td>
+              </tr>
+              <tr>
+                <td><strong>IDs</strong></td>
+                <td>Deterministic (sha256 prefix)</td>
+                <td>Ephemeral node IDs</td>
+              </tr>
+              <tr>
+                <td><strong>Output</strong></td>
+                <td>Budgeted and compressive</td>
+                <td>Unbounded and verbose</td>
+              </tr>
+              <tr>
+                <td><strong>Goal</strong></td>
+                <td>Throughput per dollar</td>
+                <td>Fidelity per interaction</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <div class="foot">
+          <div>
+            <div>Plasmate Labs</div>
+            <div style="margin-top: 6px;">Apache 2.0, built for the agentic web.</div>
+          </div>
+          <div>
+            <a href="https://github.com/plasmate-labs/plasmate" target="_blank" rel="noreferrer">github.com/plasmate-labs/plasmate</a>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const canvas = document.getElementById('dust');
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+
+      let W = 0;
+      let H = 0;
+      let particles = [];
+
+      function resize() {
+        W = Math.floor(window.innerWidth);
+        H = Math.floor(window.innerHeight);
+        canvas.width = Math.floor(W * DPR);
+        canvas.height = Math.floor(H * DPR);
+        canvas.style.width = W + 'px';
+        canvas.style.height = H + 'px';
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+        const area = W * H;
+        const count = Math.max(120, Math.min(380, Math.floor(area / 5200)));
+
+        particles = new Array(count).fill(0).map(() => {
+          const edgeBias = Math.random();
+          const x = edgeBias < 0.6
+            ? (Math.random() < 0.5 ? Math.random() * (W * 0.18) : W - Math.random() * (W * 0.18))
+            : Math.random() * W;
+          const y = edgeBias < 0.6
+            ? (Math.random() < 0.5 ? Math.random() * (H * 0.22) : H - Math.random() * (H * 0.22))
+            : Math.random() * H;
+
+          const r = 1.2 + Math.random() * 2.2;
+          const o = 0.06 + Math.random() * 0.18;
+          const huePick = Math.random();
+
+          let c;
+          if (huePick < 0.72) c = `rgba(232,133,58,${o})`;
+          else if (huePick < 0.92) c = `rgba(61,143,212,${o})`;
+          else c = `rgba(240,237,232,${o})`;
+
+          const vx = (Math.random() - 0.5) * 0.08;
+          const vy = (Math.random() - 0.5) * 0.08;
+
+          return { x, y, r, c, vx, vy };
+        });
+      }
+
+      function tick() {
+        ctx.clearRect(0, 0, W, H);
+
+        for (const p of particles) {
+          p.x += p.vx;
+          p.y += p.vy;
+
+          if (p.x < -20) p.x = W + 20;
+          if (p.x > W + 20) p.x = -20;
+          if (p.y < -20) p.y = H + 20;
+          if (p.y > H + 20) p.y = -20;
+
+          ctx.beginPath();
+          ctx.fillStyle = p.c;
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        requestAnimationFrame(tick);
+      }
+
+      const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduced) return;
+
+      resize();
+      window.addEventListener('resize', () => {
+        clearTimeout(window.__plasmateDustResize);
+        window.__plasmateDustResize = setTimeout(resize, 120);
+      });
+
+      tick();
+    })();
+  </script>
+</body>
+</html>
