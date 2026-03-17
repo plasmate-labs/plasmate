@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2021"
 description = "Agent-native headless browser engine with Semantic Object Model"
 license = "Apache-2.0"
+repository = "https://github.com/plasmate-labs/plasmate"
+homepage = "https://plasmate.app"
+readme = "README.md"
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
