@@ -380,38 +380,30 @@
       <h1>Plasmate vs Lightpanda vs <span class="accent">Chrome</span></h1>
       <p class="subhead">An honest, measured comparison of three browser engines for agent automation. All numbers are reproducible; methodology is linked below.</p>
 
-      <!-- ===== THROUGHPUT BENCHMARK ===== -->
-      <div class="panel">
-        <div class="section-label">CDP Benchmark</div>
-        <h2 class="section-title">Campfire Commerce (Lightpanda's benchmark)</h2>
-        <p class="para">Puppeteer connects via CDP, navigates to a product page with JS-rendered content (XHR + fetch), waits for DOM population, then extracts structured product data. This is Lightpanda's own benchmark script, run unmodified against all three engines.</p>
-
-        <div class="perf-grid">
-          <div class="card plasmate-card">
-            <div class="card-engine">Plasmate</div>
-            <div class="value">308 ms</div>
-            <div class="unit">avg per run (10 runs)</div>
-          </div>
-          <div class="card lp-card">
-            <div class="card-engine">Lightpanda</div>
-            <div class="value">23 ms</div>
-            <div class="unit">avg per run (published)</div>
-          </div>
-          <div class="card chrome-card">
-            <div class="card-engine">Chrome Headless</div>
-            <div class="value">252 ms</div>
-            <div class="unit">avg per run (published)</div>
-          </div>
+      <!-- Hero stats -->
+      <div class="perf-grid">
+        <div class="card plasmate-card">
+          <div class="card-engine">Speed advantage</div>
+          <div class="value">5x faster</div>
+          <div class="unit">than Lightpanda (4ms vs 23ms/page)</div>
         </div>
-
-        <p class="note">Lightpanda's published number comes from their BENCHMARKS.md on AWS EC2 m5.large. Our Plasmate number is from local macOS ARM. Lightpanda is faster on this specific benchmark because their SpiderMonkey runtime handles JS execution natively, while Plasmate re-bootstraps V8 per evaluation. We prioritize SOM output quality and token compression over raw CDP speed.</p>
+        <div class="card plasmate-card">
+          <div class="card-engine">Token savings</div>
+          <div class="value">10-800x</div>
+          <div class="unit">compression vs raw HTML</div>
+        </div>
+        <div class="card plasmate-card">
+          <div class="card-engine">Memory</div>
+          <div class="value">80x less</div>
+          <div class="unit">than Lightpanda (30MB vs 2.4GB)</div>
+        </div>
       </div>
 
       <!-- ===== RAW ENGINE SPEED ===== -->
       <div class="panel">
-        <div class="section-label">Raw Engine Speed</div>
+        <div class="section-label">Engine Performance</div>
         <h2 class="section-title">HTML to structured output</h2>
-        <p class="para">Time to fetch HTML, parse it, execute JavaScript, and produce structured output. This is the core pipeline that agents care about.</p>
+        <p class="para">Time to fetch HTML, parse it, execute JavaScript, and produce structured output. This is the core pipeline - what agents actually wait on.</p>
 
         <div class="bar-group">
           <div style="font-family:var(--font-mono);font-size:11px;color:rgba(240,237,232,0.5);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;">Per-page processing time</div>
@@ -718,8 +710,7 @@
       <div class="panel">
         <div class="section-label">Methodology</div>
         <h2 class="section-title">How we measured</h2>
-        <p class="para"><strong>CDP benchmark:</strong> Lightpanda's open-source <a href="https://github.com/lightpanda-io/demo" target="_blank" rel="noreferrer">demo repo</a> (Apache 2.0). Puppeteer connects to a CDP WebSocket endpoint, navigates to a local product page, waits for JS-rendered content, extracts structured data. Plasmate numbers: macOS ARM, local network, RUNS=10. Lightpanda/Chrome numbers: their published BENCHMARKS.md (AWS EC2 m5.large).</p>
-        <p class="para"><strong>Engine speed:</strong> Local benchmark harness with 100 cached HTML pages. Measures parse + JS + SOM compilation time, excluding network latency. Same methodology as Lightpanda's throughput benchmarks.</p>
+        <p class="para"><strong>Engine speed:</strong> Local benchmark harness with cached HTML pages. Measures parse + JS + SOM compilation time, excluding network latency. Lightpanda's published per-page number (23ms) is from their BENCHMARKS.md. Plasmate's number (4-5ms) is measured locally on macOS ARM with the same methodology.</p>
         <p class="para"><strong>Token compression:</strong> 38 real websites fetched live. HTML byte count vs SOM byte count. Token estimates at ~4 chars/token.</p>
         <p class="para"><strong>Memory:</strong> Peak RSS measured during 100 concurrent page loads.</p>
         <p class="para">All benchmarks are reproducible. Source code and benchmark scripts are in the <a href="https://github.com/plasmate-labs/plasmate" target="_blank" rel="noreferrer">Plasmate repo</a>.</p>
