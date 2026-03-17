@@ -117,58 +117,44 @@ pub async fn handle_cdp_request(
                 .unwrap_or(false);
             let mut events = vec![];
 
-            // Only emit attach events for browser-level calls (no sessionId).
+            // Only emit attach events for browser-level calls (no sessionId) AND
+            // only if we haven't already configured auto-attach (prevents infinite loop).
             // Session-scoped setAutoAttach (from child pages) returns empty -
             // there are no child targets to discover (we don't have iframes/workers).
-            if auto_attach && flatten && req.session_id.is_none() {
-                // If there's a pending target from createTarget, attach it
-                if let Some((pending_tid, pending_sid)) = target.pending_attach.take() {
-                    events.push(CdpEvent::new(
-                        "Target.attachedToTarget",
-                        serde_json::json!({
-                            "sessionId": pending_sid,
-                            "targetInfo": {
-                                "targetId": pending_tid,
-                                "type": "page",
-                                "title": "",
-                                "url": "about:blank",
-                                "attached": true,
-                                "browserContextId": "default",
-                            },
-                            "waitingForDebugger": false,
-                        }),
-                    ));
-                } else {
-                    // First call: attach the default target
-                    events.push(CdpEvent::new(
-                        "Target.targetCreated",
-                        serde_json::json!({
-                            "targetInfo": {
-                                "targetId": target.target_id,
-                                "type": "page",
-                                "title": "",
-                                "url": target.current_url.as_deref().unwrap_or("about:blank"),
-                                "attached": true,
-                                "browserContextId": "default",
-                            }
-                        }),
-                    ));
-                    events.push(CdpEvent::new(
-                        "Target.attachedToTarget",
-                        serde_json::json!({
-                            "sessionId": target.session_id,
-                            "targetInfo": {
-                                "targetId": target.target_id,
-                                "type": "page",
-                                "title": "",
-                                "url": target.current_url.as_deref().unwrap_or("about:blank"),
-                                "attached": true,
-                                "browserContextId": "default",
-                            },
-                            "waitingForDebugger": false,
-                        }),
-                    ));
-                }
+            if auto_attach && flatten && req.session_id.is_none() && !target.auto_attach_configured
+            {
+                // Mark as configured to prevent re-emitting on subsequent calls
+                target.auto_attach_configured = true;
+
+                // First call: attach the default target
+                events.push(CdpEvent::new(
+                    "Target.targetCreated",
+                    serde_json::json!({
+                        "targetInfo": {
+                            "targetId": target.target_id,
+                            "type": "page",
+                            "title": "",
+                            "url": target.current_url.as_deref().unwrap_or("about:blank"),
+                            "attached": true,
+                            "browserContextId": "default",
+                        }
+                    }),
+                ));
+                events.push(CdpEvent::new(
+                    "Target.attachedToTarget",
+                    serde_json::json!({
+                        "sessionId": target.session_id,
+                        "targetInfo": {
+                            "targetId": target.target_id,
+                            "type": "page",
+                            "title": "",
+                            "url": target.current_url.as_deref().unwrap_or("about:blank"),
+                            "attached": true,
+                            "browserContextId": "default",
+                        },
+                        "waitingForDebugger": false,
+                    }),
+                ));
             }
             (CdpResponse::success(id, serde_json::json!({})), events)
         }

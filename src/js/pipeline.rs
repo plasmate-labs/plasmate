@@ -108,6 +108,9 @@ pub async fn process_page_async(
         // Always create runtime to bootstrap DOM, even if no scripts
         let mut runtime = JsRuntime::new(config.js_config.clone());
 
+        // Inject the fetch bridge for real HTTP requests from JS
+        runtime.inject_fetch_bridge(client.clone());
+
         // Bootstrap the DOM tree from source HTML
         runtime.bootstrap_dom(html, url);
 
@@ -185,6 +188,19 @@ pub fn process_page(
     url: &str,
     config: &PipelineConfig,
 ) -> Result<PageResult, PipelineError> {
+    process_page_with_client(html, url, config, None)
+}
+
+/// Process a page through the full pipeline with an optional HTTP client.
+///
+/// When a client is provided, JS fetch() and XMLHttpRequest will make real
+/// HTTP requests. Without a client, they return stub responses.
+pub fn process_page_with_client(
+    html: &str,
+    url: &str,
+    config: &PipelineConfig,
+    client: Option<&reqwest::Client>,
+) -> Result<PageResult, PipelineError> {
     let pipeline_start = Instant::now();
 
     let mut js_report = None;
@@ -207,6 +223,11 @@ pub fn process_page(
         // Phase 2: Bootstrap DOM and execute JS
         let t1 = Instant::now();
         let mut runtime = JsRuntime::new(config.js_config.clone());
+
+        // Inject the fetch bridge if a client is provided
+        if let Some(c) = client {
+            runtime.inject_fetch_bridge(c.clone());
+        }
 
         // Bootstrap the DOM tree from source HTML
         runtime.bootstrap_dom(html, url);
@@ -687,5 +708,25 @@ mod tests {
             result.som.meta.interactive_count >= 3,
             "Should have at least 3 interactive links"
         );
+    }
+
+    #[test]
+    fn test_process_page_with_client_no_client() {
+        // Test process_page_with_client with None client (fallback to stub)
+        let config = PipelineConfig::default();
+        let html = r#"<html><body>
+            <div id="result"></div>
+            <script>
+                // fetch without bridge should return stub response
+                fetch('/api/data').then(function(r) {
+                    document.getElementById('result').textContent = r.ok ? 'OK' : 'FAIL';
+                });
+            </script>
+        </body></html>"#;
+        let result = process_page_with_client(html, "https://example.com", &config, None).unwrap();
+
+        // The stub fetch returns ok:true, so result should be "OK"
+        let som_json = serde_json::to_string(&result.som).unwrap();
+        assert!(som_json.contains("OK"), "Stub fetch should return ok");
     }
 }

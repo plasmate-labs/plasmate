@@ -46,6 +46,8 @@ pub struct CdpTarget {
     pub session_ids: Vec<String>,
     // Pending target needing attachedToTarget (set by createTarget, consumed by setAutoAttach)
     pub pending_attach: Option<(String, String)>, // (target_id, session_id)
+    // Whether auto-attach has been configured at browser level (prevents duplicate events)
+    pub auto_attach_configured: bool,
 }
 
 #[derive(Clone)]
@@ -83,6 +85,7 @@ impl CdpTarget {
             extra_headers: HashMap::new(),
             session_ids: vec![session_id],
             pending_attach: None,
+            auto_attach_configured: false,
             current_url: None,
             current_html: None,
             current_som: None,

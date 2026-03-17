@@ -4,8 +4,22 @@
 //! Scripts share state within a page (as in a real browser).
 //! A minimal DOM shim lets common JS patterns work without a full DOM.
 
+use std::cell::RefCell;
 use std::sync::Once;
+use std::time::Duration;
 use tracing::{debug, info, warn};
+
+// Thread-local storage for the reqwest client used by the fetch bridge.
+// This is needed because V8 callbacks can't easily capture external state.
+thread_local! {
+    static FETCH_CLIENT: RefCell<Option<reqwest::Client>> = const { RefCell::new(None) };
+}
+
+/// Maximum response body size (1MB) to prevent memory issues.
+const MAX_RESPONSE_BODY_SIZE: usize = 1024 * 1024;
+
+/// Timeout for fetch requests (5 seconds).
+const FETCH_TIMEOUT: Duration = Duration::from_secs(5);
 
 static V8_INIT: Once = Once::new();
 
@@ -2292,6 +2306,45 @@ impl JsRuntime {
         self.execute_in_context("document.__plasmate_serialize()", "<serialize>")
     }
 
+    /// Inject the fetch bridge into the V8 context.
+    ///
+    /// This registers a native `__plasmate_do_fetch(url, opts_json)` function
+    /// that performs real HTTP requests using reqwest. The JS fetch() and
+    /// XMLHttpRequest in the DOM shim will call this if it exists.
+    ///
+    /// # Arguments
+    /// * `client` - The reqwest Client to use for HTTP requests
+    pub fn inject_fetch_bridge(&mut self, client: reqwest::Client) {
+        // Store the client in thread-local storage
+        FETCH_CLIENT.with(|c| {
+            *c.borrow_mut() = Some(client);
+        });
+
+        let context = match self.context.as_ref() {
+            Some(c) => c,
+            None => {
+                warn!("No context available for fetch bridge injection");
+                return;
+            }
+        };
+
+        let scope = &mut v8::HandleScope::new(&mut self.isolate);
+        let context = v8::Local::new(scope, context);
+        let scope = &mut v8::ContextScope::new(scope, context);
+
+        // Create the native fetch function
+        let fetch_fn = v8::Function::new(scope, fetch_bridge_callback);
+
+        if let Some(fetch_fn) = fetch_fn {
+            let global = context.global(scope);
+            let key = v8::String::new(scope, "__plasmate_do_fetch").unwrap();
+            global.set(scope, key.into(), fetch_fn.into());
+            debug!("Fetch bridge injected into V8 context");
+        } else {
+            warn!("Failed to create fetch bridge function");
+        }
+    }
+
     /// Get heap statistics.
     pub fn heap_stats(&mut self) -> HeapStats {
         let mut stats = v8::HeapStatistics::default();
@@ -2307,6 +2360,200 @@ impl JsRuntime {
     pub fn scripts_executed(&self) -> usize {
         self.scripts_executed
     }
+}
+
+/// V8 callback for the fetch bridge.
+///
+/// This function is called from JS when `__plasmate_do_fetch(url, opts_json)` is invoked.
+/// It performs a synchronous HTTP request using reqwest and returns a JSON response.
+fn fetch_bridge_callback(
+    scope: &mut v8::HandleScope,
+    args: v8::FunctionCallbackArguments,
+    mut rv: v8::ReturnValue,
+) {
+    // Get URL argument
+    let url = if args.length() > 0 {
+        let url_val = args.get(0);
+        if url_val.is_string() {
+            url_val.to_rust_string_lossy(scope)
+        } else {
+            rv.set(v8::undefined(scope).into());
+            return;
+        }
+    } else {
+        rv.set(v8::undefined(scope).into());
+        return;
+    };
+
+    // Get options JSON argument
+    let opts_json = if args.length() > 1 {
+        let opts_val = args.get(1);
+        if opts_val.is_string() {
+            opts_val.to_rust_string_lossy(scope)
+        } else {
+            "{}".to_string()
+        }
+    } else {
+        "{}".to_string()
+    };
+
+    // Parse options
+    let opts: serde_json::Value = serde_json::from_str(&opts_json).unwrap_or(serde_json::json!({}));
+    let method = opts
+        .get("method")
+        .and_then(|v| v.as_str())
+        .unwrap_or("GET")
+        .to_uppercase();
+    let body = opts.get("body").and_then(|v| v.as_str()).map(String::from);
+    let headers: std::collections::HashMap<String, String> = opts
+        .get("headers")
+        .and_then(|v| v.as_object())
+        .map(|h| {
+            h.iter()
+                .filter_map(|(k, v)| v.as_str().map(|s| (k.clone(), s.to_string())))
+                .collect()
+        })
+        .unwrap_or_default();
+
+    // Perform the fetch using the thread-local client
+    let result = FETCH_CLIENT.with(|c| {
+        let client_opt = c.borrow();
+        let client = match client_opt.as_ref() {
+            Some(c) => c,
+            None => {
+                return Err("No fetch client available".to_string());
+            }
+        };
+
+        // Try to get the current tokio runtime handle
+        let handle = match tokio::runtime::Handle::try_current() {
+            Ok(h) => h,
+            Err(_) => {
+                // No async runtime available - create a blocking one
+                return perform_blocking_fetch(client, &url, &method, body.as_deref(), &headers);
+            }
+        };
+
+        // Use block_on to perform the async request
+        handle.block_on(async {
+            perform_async_fetch(client, &url, &method, body.as_deref(), &headers).await
+        })
+    });
+
+    // Build the result JSON and return it
+    let result_json = match result {
+        Ok(resp) => resp,
+        Err(e) => {
+            // Return an error response
+            serde_json::json!({
+                "ok": false,
+                "status": 0,
+                "statusText": e,
+                "headers": {},
+                "body": ""
+            })
+            .to_string()
+        }
+    };
+
+    if let Some(result_str) = v8::String::new(scope, &result_json) {
+        rv.set(result_str.into());
+    } else {
+        rv.set(v8::undefined(scope).into());
+    }
+}
+
+/// Perform an async fetch request.
+async fn perform_async_fetch(
+    client: &reqwest::Client,
+    url: &str,
+    method: &str,
+    body: Option<&str>,
+    headers: &std::collections::HashMap<String, String>,
+) -> Result<String, String> {
+    use reqwest::Method;
+
+    let method = match method {
+        "GET" => Method::GET,
+        "POST" => Method::POST,
+        "PUT" => Method::PUT,
+        "DELETE" => Method::DELETE,
+        "PATCH" => Method::PATCH,
+        "HEAD" => Method::HEAD,
+        "OPTIONS" => Method::OPTIONS,
+        _ => Method::GET,
+    };
+
+    let mut request = client.request(method, url).timeout(FETCH_TIMEOUT);
+
+    // Add headers
+    for (k, v) in headers {
+        if let Ok(header_name) = reqwest::header::HeaderName::from_bytes(k.as_bytes()) {
+            if let Ok(header_value) = reqwest::header::HeaderValue::from_str(v) {
+                request = request.header(header_name, header_value);
+            }
+        }
+    }
+
+    // Add body if present
+    if let Some(body_str) = body {
+        request = request.body(body_str.to_string());
+    }
+
+    // Send the request
+    let response = request.send().await.map_err(|e| e.to_string())?;
+
+    let status = response.status().as_u16();
+    let status_text = response
+        .status()
+        .canonical_reason()
+        .unwrap_or("Unknown")
+        .to_string();
+    let ok = response.status().is_success();
+
+    // Collect response headers
+    let mut resp_headers = serde_json::Map::new();
+    for (k, v) in response.headers() {
+        if let Ok(v_str) = v.to_str() {
+            resp_headers.insert(k.to_string().to_lowercase(), serde_json::json!(v_str));
+        }
+    }
+
+    // Read the body with size limit
+    let body_bytes = response.bytes().await.map_err(|e| e.to_string())?;
+
+    let body_str = if body_bytes.len() > MAX_RESPONSE_BODY_SIZE {
+        String::from_utf8_lossy(&body_bytes[..MAX_RESPONSE_BODY_SIZE]).to_string()
+    } else {
+        String::from_utf8_lossy(&body_bytes).to_string()
+    };
+
+    let result = serde_json::json!({
+        "ok": ok,
+        "status": status,
+        "statusText": status_text,
+        "headers": resp_headers,
+        "body": body_str
+    });
+
+    Ok(result.to_string())
+}
+
+/// Perform a blocking fetch request when no async runtime is available.
+fn perform_blocking_fetch(
+    client: &reqwest::Client,
+    url: &str,
+    method: &str,
+    body: Option<&str>,
+    headers: &std::collections::HashMap<String, String>,
+) -> Result<String, String> {
+    // Create a new runtime for the blocking fetch
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    rt.block_on(perform_async_fetch(client, url, method, body, headers))
 }
 
 /// Report from executing page scripts.
@@ -3065,5 +3312,80 @@ mod tests {
             .execute_in_context("window.location.hostname", "test.js")
             .unwrap();
         assert_eq!(hostname, "example.com");
+    }
+
+    // =========================================================================
+    // Fetch Bridge Tests
+    // =========================================================================
+
+    #[test]
+    fn test_fetch_bridge_not_injected_returns_stub() {
+        // When no fetch bridge is injected, fetch() should return stub response
+        let mut rt = JsRuntime::new(RuntimeConfig::default());
+
+        // Check that __plasmate_do_fetch is not defined initially
+        let result = rt
+            .execute_in_context("typeof __plasmate_do_fetch", "test.js")
+            .unwrap();
+        assert_eq!(result, "undefined");
+
+        // fetch() should return a Promise-like object
+        let result = rt
+            .execute_in_context(
+                r#"
+                var p = fetch('https://example.com/test');
+                typeof p.then === 'function' ? 'has_then' : 'no_then'
+                "#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(result, "has_then", "fetch should return a Promise");
+
+        // The fetch queue should have our request recorded
+        let queue_len = rt
+            .execute_in_context("__plasmate_fetch_queue.length", "test.js")
+            .unwrap();
+        assert_eq!(queue_len, "1", "fetch should be recorded in queue");
+    }
+
+    #[test]
+    fn test_fetch_bridge_injection() {
+        // Test that we can inject the fetch bridge
+        let mut rt = JsRuntime::new(RuntimeConfig::default());
+
+        // Create a simple client for testing
+        let client = reqwest::Client::builder()
+            .build()
+            .expect("Failed to create client");
+
+        // Inject the fetch bridge
+        rt.inject_fetch_bridge(client);
+
+        // Check that __plasmate_do_fetch is now defined
+        let result = rt
+            .execute_in_context("typeof __plasmate_do_fetch", "test.js")
+            .unwrap();
+        assert_eq!(result, "function");
+    }
+
+    #[test]
+    fn test_xhr_not_injected_returns_stub() {
+        // When no fetch bridge is injected, XMLHttpRequest should return stub response
+        let mut rt = JsRuntime::new(RuntimeConfig::default());
+
+        let result = rt
+            .execute_in_context(
+                r#"
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', 'https://example.com/test', false);
+                xhr.send();
+                JSON.stringify({ status: xhr.status, statusText: xhr.statusText })
+                "#,
+                "test.js",
+            )
+            .unwrap();
+        // The stub returns status 200
+        assert!(result.contains("200"));
+        assert!(result.contains("OK"));
     }
 }
