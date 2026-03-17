@@ -1,0 +1,2401 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Agentic Browser Engine - Product Specification v1.0 - Plasmate Docs</title>
+  <meta name="description" content="Plasmate documentation: Agentic Browser Engine - Product Specification v1.0" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --plasma-white: #F0EDE8;
+      --core-black: #0D0D0D;
+      --void: #111110;
+      --deep: #1A1918;
+      --smoke: #2A2825;
+      --ash: #6B6560;
+      --dim: #8A8480;
+      --ion: #D4C5A0;
+      --ember: #E8853A;
+      --arc: #3D8FD4;
+      --corona: #F5C842;
+
+      --font-display: "Space Grotesk", system-ui, sans-serif;
+      --font-body: "IBM Plex Sans", system-ui, sans-serif;
+      --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+      --sidebar-w: 240px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--void);
+      color: var(--plasma-white);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ---- Sidebar ---- */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--core-black);
+      border-right: 1px solid var(--smoke);
+      padding: 22px 16px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 10;
+    }
+
+    .sidebar-brand {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--plasma-white);
+      text-decoration: none;
+      padding: 0 8px 14px;
+      border-bottom: 1px solid var(--smoke);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sidebar-brand .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--ember);
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 7px 10px;
+      border-radius: 8px;
+      color: var(--dim);
+      text-decoration: none;
+      font-size: 13px;
+      font-family: var(--font-body);
+      font-weight: 500;
+      transition: color 0.1s, background 0.1s;
+    }
+
+    .sidebar a:hover {
+      color: var(--plasma-white);
+      background: rgba(240,237,232,0.06);
+    }
+
+    .sidebar a.active {
+      color: var(--plasma-white);
+      background: rgba(232,133,58,0.14);
+    }
+
+    .sidebar-foot {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--smoke);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ash);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .sidebar-foot a { padding: 4px 10px; font-size: 11px; font-family: var(--font-mono); }
+
+    /* ---- Content ---- */
+    .content {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      max-width: 820px;
+      padding: 36px 40px 80px;
+    }
+
+    /* ---- Typography ---- */
+    .content h1 {
+      font-family: var(--font-display);
+      font-weight: 650;
+      font-size: 32px;
+      line-height: 1.15;
+      letter-spacing: -0.015em;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--smoke);
+    }
+
+    .content h2 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 22px;
+      line-height: 1.25;
+      margin-top: 38px;
+      margin-bottom: 12px;
+      color: var(--ion);
+    }
+
+    .content h3 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 17px;
+      margin-top: 28px;
+      margin-bottom: 8px;
+    }
+
+    .content h4, .content h5, .content h6 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 15px;
+      margin-top: 22px;
+      margin-bottom: 6px;
+      color: var(--dim);
+    }
+
+    .content p { margin-bottom: 14px; }
+
+    .content a { color: var(--arc); text-decoration: none; }
+    .content a:hover { text-decoration: underline; }
+
+    .content strong { color: var(--plasma-white); font-weight: 600; }
+
+    .content ul, .content ol {
+      padding-left: 22px;
+      margin-bottom: 14px;
+    }
+
+    .content li { margin-bottom: 4px; }
+
+    .content blockquote {
+      border-left: 3px solid var(--ember);
+      padding: 10px 16px;
+      margin: 16px 0;
+      background: rgba(232,133,58,0.06);
+      border-radius: 0 8px 8px 0;
+      color: rgba(240,237,232,0.88);
+    }
+
+    .content blockquote p { margin-bottom: 0; }
+
+    .content hr {
+      border: none;
+      height: 1px;
+      background: var(--smoke);
+      margin: 30px 0;
+    }
+
+    /* ---- Code ---- */
+    .content code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: rgba(240,237,232,0.08);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--ion);
+    }
+
+    .content pre {
+      background: var(--core-black);
+      border: 1px solid var(--smoke);
+      border-radius: 10px;
+      padding: 16px 18px;
+      overflow-x: auto;
+      margin: 14px 0 18px;
+      line-height: 1.55;
+    }
+
+    .content pre code {
+      background: none;
+      padding: 0;
+      border-radius: 0;
+      color: rgba(240,237,232,0.88);
+      font-size: 13px;
+    }
+
+    /* ---- Tables ---- */
+    .content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 18px;
+      font-size: 13px;
+      font-family: var(--font-mono);
+    }
+
+    .content th {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 2px solid var(--smoke);
+      color: var(--ash);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: 11px;
+    }
+
+    .content td {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(240,237,232,0.08);
+      color: rgba(240,237,232,0.84);
+    }
+
+    .content tr:hover td {
+      background: rgba(240,237,232,0.03);
+    }
+
+    /* ---- Images ---- */
+    .content img {
+      max-width: 100%;
+      border-radius: 8px;
+    }
+
+    /* ---- Mobile ---- */
+    @media (max-width: 860px) {
+      .sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--smoke);
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 2px;
+        padding: 12px;
+      }
+
+      .sidebar-brand {
+        width: 100%;
+        border-bottom: none;
+        padding-bottom: 8px;
+        margin-bottom: 4px;
+      }
+
+      .sidebar-foot { display: none; }
+
+      .layout { flex-direction: column; }
+
+      .content {
+        margin-left: 0;
+        padding: 24px 18px 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Documentation navigation">
+      <a class="sidebar-brand" href="/"><span class="dot"></span>Plasmate</a>
+      <a href="/docs/index.html">Overview</a>
+          <a href="/docs/quickstart.html">Quick Start</a>
+          <a href="/docs/spec.html" class="active">Product Spec</a>
+          <a href="/docs/som.html">SOM Reference</a>
+          <a href="/docs/awp.html">AWP Protocol</a>
+          <a href="/docs/awp-mvp.html">AWP MVP v0.1</a>
+          <a href="/docs/thesis.html">Thesis</a>
+          <a href="/docs/poc.html">PoC Build Brief</a>
+          <a href="/docs/roadmap.html">Roadmap v0.2</a>
+          <a href="/docs/brand.html">Brand Guide</a>
+      <div class="sidebar-foot">
+        <a href="https://github.com/plasmate-labs/plasmate">GitHub</a>
+        <a href="https://plasmate.app">plasmate.app</a>
+        <span style="padding: 4px 10px;">Apache 2.0 / v0.1</span>
+      </div>
+    </nav>
+    <main class="content">
+      <h1>Agentic Browser Engine - Product Specification v1.0</h1>
+<p><strong>Working Name:</strong> Plasmate
+<strong>Tagline:</strong> &quot;The browser built for machines.&quot;
+<strong>Author:</strong> David Hurley / DBH Ventures
+<strong>Date:</strong> March 15, 2026
+<strong>Status:</strong> Draft - Pre-Seed</p>
+<hr>
+<h2>Table of Contents</h2>
+<ol>
+<li><a href="#executive-summary">Executive Summary</a></li>
+<li><a href="#the-problem">The Problem</a></li>
+<li><a href="#the-vision">The Vision</a></li>
+<li><a href="#market-landscape">Market Landscape</a></li>
+<li><a href="#competitive-analysis">Competitive Analysis</a></li>
+<li><a href="#architecture-overview">Architecture Overview</a></li>
+<li><a href="#semantic-object-model">Core Component: Semantic Object Model (SOM)</a></li>
+<li><a href="#agent-web-protocol">Core Component: Agent Web Protocol (AWP)</a></li>
+<li><a href="#stealth-networking-layer">Core Component: Stealth Networking Layer</a></li>
+<li><a href="#sandboxed-js-runtime">Core Component: Sandboxed JS Runtime</a></li>
+<li><a href="#wasm-skill-system">Core Component: Wasm Skill System</a></li>
+<li><a href="#session-and-state-management">Core Component: Session &amp; State Management</a></li>
+<li><a href="#fleet-orchestration">Core Component: Fleet Orchestration</a></li>
+<li><a href="#business-model">Business Model</a></li>
+<li><a href="#go-to-market-strategy">Go-to-Market Strategy</a></li>
+<li><a href="#technical-roadmap">Technical Roadmap</a></li>
+<li><a href="#team-requirements">Team Requirements</a></li>
+<li><a href="#naming-candidates">Naming Candidates</a></li>
+<li><a href="#risk-analysis">Risk Analysis</a></li>
+<li><a href="#appendix-token-efficiency">Appendix: Token Efficiency Analysis</a></li>
+</ol>
+<hr>
+<h2>1. Executive Summary</h2>
+<p>Every AI agent that interacts with the web today does so through a hack. They control Chrome (or a Chrome derivative) through the Chrome DevTools Protocol (CDP) - a debugging interface designed for human developers inspecting CSS and setting breakpoints. This is the equivalent of driving a car by reaching through the window and turning the steering wheel with a broomstick.</p>
+<p>The result: agents that are slow, brittle, expensive (in tokens), easily detected, and fundamentally limited by an architecture that was never designed for them.</p>
+<p>Plasmate is a headless browser engine built from scratch in Rust, purpose-designed for AI agents. It introduces three foundational technologies:</p>
+<ol>
+<li><p><strong>The Semantic Object Model (SOM)</strong> - A new way to represent web pages that drops visual rendering entirely and outputs a clean, deterministic, token-efficient structure that LLMs can directly reason about.</p>
+</li>
+<li><p><strong>The Agent Web Protocol (AWP)</strong> - A new communication standard between agents and browsers that replaces CDP&#39;s coordinate-based commands with intent-based actions.</p>
+</li>
+<li><p><strong>A WebAssembly Skill System</strong> - A community-extensible plugin architecture where developers write site-specific &quot;Skills&quot; (in any language) that teach the browser how to navigate complex web applications.</p>
+</li>
+</ol>
+<p>The business model follows the Netscape playbook: open-source the engine and the protocol aggressively (Apache 2.0), establish AWP as the industry standard, and monetize the commercial fleet - orchestration, persistent sessions, anti-detection proxy network, and analytics.</p>
+<p><strong>Target market size:</strong> The browser automation market is projected at $15B+ by 2028. The AI agent infrastructure market (broader) is estimated at $50B+ by 2030. Every company building AI agents needs a browser. Today they all rent Chrome. Tomorrow they should run Plasmate.</p>
+<hr>
+<h2>2. The Problem</h2>
+<h3>2.1 The CDP Bottleneck</h3>
+<p>The Chrome DevTools Protocol was created in 2011 for one purpose: letting developers debug websites. Fifteen years later, it has become the de facto interface for AI agents interacting with the web - a role it was never designed for.</p>
+<p><strong>Problems with CDP for agents:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Description</th>
+<th>Impact</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Pixel-level commands</td>
+<td>CDP operates on screen coordinates (<code>click(x:342, y:891)</code>)</td>
+<td>Agents must understand visual layout to interact with pages</td>
+</tr>
+<tr>
+<td>DOM verbosity</td>
+<td>Returns full DOM trees with styling, attributes, event listeners</td>
+<td>A simple page can produce 500KB+ of DOM data, consuming thousands of LLM tokens</td>
+</tr>
+<tr>
+<td>Visual rendering overhead</td>
+<td>Chrome renders CSS, computes layout, paints pixels, composites layers</td>
+<td>80-90% of compute is wasted on visual output no agent needs</td>
+</tr>
+<tr>
+<td>Memory consumption</td>
+<td>Each Chrome tab uses 50-300MB RAM</td>
+<td>Fleet of 1,000 agents = 50-300GB RAM</td>
+</tr>
+<tr>
+<td>Session fragility</td>
+<td>CDP WebSocket connections drop, state is lost, recovery is manual</td>
+<td>Agents fail silently mid-task</td>
+</tr>
+<tr>
+<td>Detection surface</td>
+<td>Headless Chrome has dozens of detectable fingerprints</td>
+<td>Bot detection services block agents within seconds</td>
+</tr>
+<tr>
+<td>No native concurrency</td>
+<td>Chrome was designed for one human user</td>
+<td>Running 100+ sessions requires complex orchestration</td>
+</tr>
+<tr>
+<td>No semantic understanding</td>
+<td>DOM is a rendering tree, not a meaning tree</td>
+<td>Agents must infer purpose from HTML tag names and CSS classes</td>
+</tr>
+</tbody></table>
+<h3>2.2 The Stealth Arms Race</h3>
+<p>Every headless browser automation tool fights the same battle: appearing human to anti-bot systems. The current approach is bolting stealth patches onto Chrome after the fact:</p>
+<ul>
+<li><code>puppeteer-extra-plugin-stealth</code> patches ~15 known detection vectors</li>
+<li>Browserbase and Steel Browser maintain proprietary stealth layers</li>
+<li>Lightpanda avoids detection by not being Chrome (different TLS fingerprint)</li>
+</ul>
+<p>But all of these are reactive. Cloudflare, DataDome, PerimeterX, and Akamai continuously add new detection vectors. The patch-and-pray approach is fundamentally losing.</p>
+<p>A native engine can solve this differently: by controlling the entire network stack from TLS handshake to HTTP headers, stealth becomes a first-class architectural feature rather than an afterthought.</p>
+<h3>2.3 The Token Tax</h3>
+<p>LLMs process web pages as text. The more tokens a page representation consumes, the more expensive and slow the agent becomes. Current approaches:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Tokens for a typical e-commerce page</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Raw HTML</td>
+<td>15,000-50,000</td>
+<td>Includes scripts, styles, metadata</td>
+</tr>
+<tr>
+<td>Cleaned HTML</td>
+<td>5,000-15,000</td>
+<td>Strip scripts/styles, still verbose</td>
+</tr>
+<tr>
+<td>Accessibility tree</td>
+<td>2,000-8,000</td>
+<td>Better, but inconsistent across sites</td>
+</tr>
+<tr>
+<td>Screenshot + vision</td>
+<td>1,000-3,000 (image tokens)</td>
+<td>Expensive, can&#39;t interact with elements</td>
+</tr>
+<tr>
+<td><strong>SOM (proposed)</strong></td>
+<td><strong>500-2,000</strong></td>
+<td>Semantic elements with affordances only</td>
+</tr>
+</tbody></table>
+<p>A 10x reduction in tokens per page interaction means:</p>
+<ul>
+<li>10x cheaper per agent action</li>
+<li>10x more context available for reasoning</li>
+<li>10x faster response times</li>
+<li>10x more pages processable within context windows</li>
+</ul>
+<h3>2.4 What Exists Today</h3>
+<table>
+<thead>
+<tr>
+<th>Product</th>
+<th>Approach</th>
+<th>Engine</th>
+<th>Protocol</th>
+<th>Stealth</th>
+<th>Open Source</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Puppeteer/Playwright</td>
+<td>Chrome automation</td>
+<td>Chromium</td>
+<td>CDP</td>
+<td>Plugin-based</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Browserbase/Stagehand</td>
+<td>Cloud browsers</td>
+<td>Chromium</td>
+<td>CDP + SDK</td>
+<td>Managed</td>
+<td>SDK open, infra closed</td>
+</tr>
+<tr>
+<td>Lightpanda</td>
+<td>New engine (Zig)</td>
+<td>Custom (Zig)</td>
+<td>CDP-compatible</td>
+<td>Inherent (not Chrome)</td>
+<td>Yes (AGPL)</td>
+</tr>
+<tr>
+<td>Steel Browser</td>
+<td>Stealth Chrome</td>
+<td>Chromium</td>
+<td>CDP</td>
+<td>Deep patches</td>
+<td>Partial</td>
+</tr>
+<tr>
+<td>Browser Use</td>
+<td>Agent framework</td>
+<td>Chromium</td>
+<td>CDP + LLM</td>
+<td>Basic</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Manus Browser Operator</td>
+<td>Extension overlay</td>
+<td>Chrome</td>
+<td>CDP + extension</td>
+<td>None</td>
+<td>No</td>
+</tr>
+<tr>
+<td>ChatGPT Atlas</td>
+<td>Consumer product</td>
+<td>Chromium-based</td>
+<td>Proprietary</td>
+<td>Unknown</td>
+<td>No</td>
+</tr>
+</tbody></table>
+<p><strong>Gap:</strong> Nobody has built a native agent protocol. Nobody outputs semantic models instead of DOM. Nobody has a Wasm skill ecosystem. Nobody has stealth at the network stack level.</p>
+<hr>
+<h2>3. The Vision</h2>
+<h3>3.1 The Netscape Parallel</h3>
+<p>In 1994, the web existed but was unusable for most people. Netscape didn&#39;t just build a better viewer - they invented the infrastructure that made the web work:</p>
+<table>
+<thead>
+<tr>
+<th>Netscape Innovation</th>
+<th>Web Impact</th>
+<th>Plasmate Equivalent</th>
+<th>Agent Web Impact</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SSL/TLS</td>
+<td>Secure commerce</td>
+<td>AWP</td>
+<td>Standardized agent-browser communication</td>
+</tr>
+<tr>
+<td>JavaScript</td>
+<td>Dynamic pages</td>
+<td>Wasm Skills</td>
+<td>Extensible browser capabilities</td>
+</tr>
+<tr>
+<td>Cookies</td>
+<td>Session persistence</td>
+<td>Persistent Agent State</td>
+<td>Agents maintain context across sessions</td>
+</tr>
+<tr>
+<td>Navigator browser</td>
+<td>Mass adoption</td>
+<td>Plasmate engine</td>
+<td>Standard engine for all agent frameworks</td>
+</tr>
+</tbody></table>
+<h3>3.2 The End State</h3>
+<p>In 3 years, the agentic browser landscape should look like this:</p>
+<ul>
+<li><strong>AWP</strong> is the standard protocol for agent-to-browser communication, like HTTP is for human-to-server</li>
+<li><strong>Plasmate</strong> is the default engine embedded in LangChain, CrewAI, AutoGen, and every major agent framework</li>
+<li><strong>SOM</strong> is the standard page representation that LLMs consume, replacing screenshots and DOM dumps</li>
+<li><strong>Wasm Skills</strong> are a thriving marketplace, with thousands of community-contributed site navigators</li>
+<li><strong>The commercial fleet</strong> (Plasmate Cloud) is a $100M+ ARR business selling orchestration to enterprises</li>
+</ul>
+<h3>3.3 What Plasmate Is NOT</h3>
+<ul>
+<li><strong>Not a consumer browser</strong> - no UI, no tabs, no bookmarks. Agents don&#39;t need chrome (lowercase c).</li>
+<li><strong>Not a scraping tool</strong> - scraping is a use case, not the product. Plasmate is infrastructure.</li>
+<li><strong>Not a Chrome fork</strong> - zero Chromium code. Clean-room Rust implementation.</li>
+<li><strong>Not an agent framework</strong> - Plasmate doesn&#39;t decide what to do. It executes what agents tell it to do via AWP.</li>
+<li><strong>Not a proxy service</strong> - though it has proxy capabilities built in. The proxy is a feature, not the product.</li>
+</ul>
+<hr>
+<h2>4. Market Landscape</h2>
+<h3>4.1 Market Segments</h3>
+<p><strong>Segment 1: AI Agent Developers (TAM: $8B by 2028)</strong></p>
+<ul>
+<li>Building custom agents with LangChain, CrewAI, AutoGen, custom Python</li>
+<li>Need: fast, reliable, cheap browser automation</li>
+<li>Current pain: CDP is slow, Chrome is expensive, stealth is hard</li>
+<li>Plasmate value: 10x cheaper tokens, native stealth, simple protocol</li>
+</ul>
+<p><strong>Segment 2: Enterprise Automation (TAM: $15B by 2028)</strong></p>
+<ul>
+<li>RPA replacement with AI agents (UiPath, Automation Anywhere competitors)</li>
+<li>Need: run thousands of agents simultaneously, reliable, auditable</li>
+<li>Current pain: Chrome doesn&#39;t scale, CDP sessions drop, no built-in observability</li>
+<li>Plasmate value: fleet orchestration, persistent sessions, cost analytics</li>
+</ul>
+<p><strong>Segment 3: Web Scraping &amp; Data (TAM: $5B by 2027)</strong></p>
+<ul>
+<li>Data extraction at scale (Apify, ScrapingBee, Firecrawl competitors)</li>
+<li>Need: fast page processing, anti-detection, structured output</li>
+<li>Current pain: bot detection, Chrome memory limits, unstructured HTML</li>
+<li>Plasmate value: SOM (structured by default), stealth networking, 9x less memory</li>
+</ul>
+<p><strong>Segment 4: QA &amp; Testing (TAM: $4B by 2027)</strong></p>
+<ul>
+<li>Automated testing (Selenium, Cypress, Playwright users)</li>
+<li>Need: fast, deterministic, cross-browser-compatible</li>
+<li>Current pain: flaky tests, slow execution, environment drift</li>
+<li>Plasmate value: deterministic SOM (no visual rendering variance), instant startup</li>
+</ul>
+<h3>4.2 Funding Activity in Adjacent Space</h3>
+<table>
+<thead>
+<tr>
+<th>Company</th>
+<th>Raised</th>
+<th>Focus</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Browserbase</td>
+<td>$40M (Series A, Jun 2025)</td>
+<td>Cloud browser infra + Stagehand SDK</td>
+</tr>
+<tr>
+<td>Apify</td>
+<td>$55M (Series B, 2024)</td>
+<td>Web scraping platform</td>
+</tr>
+<tr>
+<td>Firecrawl</td>
+<td>$36M (Series A, 2025)</td>
+<td>LLM-ready web scraping</td>
+</tr>
+<tr>
+<td>Browser Use</td>
+<td>Community (100K+ GitHub stars)</td>
+<td>Open-source agent framework</td>
+</tr>
+<tr>
+<td>Lightpanda</td>
+<td>Undisclosed (backed by investors)</td>
+<td>Zig-based headless browser</td>
+</tr>
+<tr>
+<td>ScrapingBee</td>
+<td>Bootstrapped ($5M+ ARR)</td>
+<td>Scraping API</td>
+</tr>
+<tr>
+<td>Genspark</td>
+<td>$60M (2025)</td>
+<td>AI browser with on-device models</td>
+</tr>
+</tbody></table>
+<p><strong>Total VC investment in adjacent space: $250M+ in 2024-2025 alone.</strong></p>
+<hr>
+<h2>5. Competitive Analysis</h2>
+<h3>5.1 Direct Competitors</h3>
+<h4>Lightpanda</h4>
+<ul>
+<li><strong>What:</strong> Headless browser written from scratch in Zig</li>
+<li><strong>Strengths:</strong> 11x faster than Chrome, 9x less memory, not a Chromium fork, open source</li>
+<li><strong>Weaknesses:</strong> Still uses CDP for communication, still outputs DOM (not semantic), AGPL license (toxic for commercial embedding), Zig ecosystem is small, JS support is incomplete (WIP)</li>
+<li><strong>Our advantage:</strong> AWP protocol (vs their CDP), SOM output (vs their DOM), Apache 2.0 (vs their AGPL), Rust ecosystem (vs Zig), Wasm skills (they have nothing equivalent)</li>
+</ul>
+<h4>Browserbase + Stagehand</h4>
+<ul>
+<li><strong>What:</strong> Cloud browser infrastructure + open-source automation SDK</li>
+<li><strong>Strengths:</strong> $40M raised, strong developer adoption, Stagehand is good DX, managed stealth</li>
+<li><strong>Weaknesses:</strong> Still Chrome under the hood, still CDP, cloud-only (no local option), expensive at scale</li>
+<li><strong>Our advantage:</strong> Fundamentally different engine (not Chrome), AWP eliminates CDP overhead, local-first with cloud option, 10x lower resource consumption</li>
+</ul>
+<h4>Steel Browser</h4>
+<ul>
+<li><strong>What:</strong> Stealth-focused headless Chrome</li>
+<li><strong>Strengths:</strong> Deep anti-detection, good for scraping</li>
+<li><strong>Weaknesses:</strong> Still Chrome (inherits all CDP/memory/speed limitations), closed source, narrow use case</li>
+<li><strong>Our advantage:</strong> Stealth at network layer (not patches), open source, broader use case, lower resource usage</li>
+</ul>
+<h4>Browser Use</h4>
+<ul>
+<li><strong>What:</strong> Open-source framework for AI browser agents</li>
+<li><strong>Strengths:</strong> 100K+ GitHub stars, massive community, good LLM integration</li>
+<li><strong>Weaknesses:</strong> Framework, not engine - still depends on Chrome/Playwright underneath</li>
+<li><strong>Our advantage:</strong> We&#39;re the engine they should run on. Browser Use + Plasmate &gt; Browser Use + Chrome. Natural integration partner, not competitor.</li>
+</ul>
+<h3>5.2 Emerging Threats</h3>
+<h4>Google WebMCP (Chrome Canary, Feb 2026)</h4>
+<p>Google is shipping Model Context Protocol support directly into Chrome. This is the biggest competitive threat because:</p>
+<ul>
+<li>Chrome has 65%+ browser market share</li>
+<li>If MCP becomes the standard agent-browser protocol, AWP has a harder adoption path</li>
+<li>Google has unlimited engineering resources</li>
+</ul>
+<p><strong>Counter-strategy:</strong></p>
+<ul>
+<li>WebMCP is a protocol bolt-on to an existing architecture. It still sends DOM, still renders pixels, still uses Chrome&#39;s memory model. AWP + SOM is architecturally superior.</li>
+<li>MCP is a general-purpose protocol for model-tool communication. AWP is purpose-built for browser interaction. Specificity wins.</li>
+<li>Google won&#39;t abandon backward compatibility. They can&#39;t strip rendering from Chrome. Plasmate can.</li>
+<li>Publish AWP spec before WebMCP ships to stable. Get framework adoption first.</li>
+</ul>
+<h4>Anthropic Computer Use</h4>
+<p>Anthropic&#39;s approach uses screenshots + pixel-level mouse/keyboard commands. It works but is expensive (vision model tokens) and slow. If Anthropic builds a dedicated browser tool, they could be formidable - but their focus is on general computer use, not browser-specific optimization.</p>
+<h3>5.3 Competitive Scorecard</h3>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Plasmate</th>
+<th>Lightpanda</th>
+<th>Browserbase</th>
+<th>Steel</th>
+<th>Browser Use</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Purpose-built for agents</td>
+<td>✅</td>
+<td>Partial</td>
+<td>❌ (Chrome)</td>
+<td>❌ (Chrome)</td>
+<td>❌ (Chrome)</td>
+</tr>
+<tr>
+<td>Native agent protocol</td>
+<td>✅ AWP</td>
+<td>❌ CDP</td>
+<td>❌ CDP</td>
+<td>❌ CDP</td>
+<td>❌ CDP</td>
+</tr>
+<tr>
+<td>Semantic output</td>
+<td>✅ SOM</td>
+<td>❌ DOM</td>
+<td>❌ DOM</td>
+<td>❌ DOM</td>
+<td>❌ DOM</td>
+</tr>
+<tr>
+<td>Token efficiency</td>
+<td>✅ 10x</td>
+<td>✅ 3-5x</td>
+<td>❌ 1x</td>
+<td>❌ 1x</td>
+<td>❌ 1x</td>
+</tr>
+<tr>
+<td>Network-level stealth</td>
+<td>✅</td>
+<td>Partial</td>
+<td>✅</td>
+<td>✅</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Plugin ecosystem</td>
+<td>✅ Wasm</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Open source</td>
+<td>✅ Apache</td>
+<td>⚠️ AGPL</td>
+<td>SDK only</td>
+<td>❌</td>
+<td>✅ MIT</td>
+</tr>
+<tr>
+<td>Memory efficiency</td>
+<td>✅</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Fleet orchestration</td>
+<td>✅</td>
+<td>❌</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Self-hostable</td>
+<td>✅</td>
+<td>✅</td>
+<td>❌</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>6. Architecture Overview</h2>
+<h3>6.1 System Diagram</h3>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│                    AGENT (LLM)                           │
+│  LangChain / CrewAI / AutoGen / Custom                  │
+└────────────────────┬────────────────────────────────────┘
+                     │ AWP (Agent Web Protocol)
+                     │ WebSocket + MessagePack
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│                  PLASMATE ENGINE (Rust)                       │
+│                                                          │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐              │
+│  │   AWP    │  │  Session  │  │  Skill   │              │
+│  │  Server  │  │  Manager  │  │  Runtime │              │
+│  │          │  │           │  │  (Wasm)  │              │
+│  └────┬─────┘  └─────┬─────┘  └────┬─────┘              │
+│       │              │              │                    │
+│  ┌────▼──────────────▼──────────────▼─────┐              │
+│  │            Core Pipeline                │              │
+│  │                                         │              │
+│  │  ┌─────────┐  ┌─────────┐  ┌────────┐ │              │
+│  │  │ Network │  │  HTML   │  │  SOM   │ │              │
+│  │  │  Layer  │→│  Parser │→│ Compiler│ │              │
+│  │  │(rustls) │  │(html5ever│  │        │ │              │
+│  │  └─────────┘  └─────────┘  └────────┘ │              │
+│  │                                         │              │
+│  │  ┌─────────┐  ┌─────────┐              │              │
+│  │  │   JS    │  │  State  │              │              │
+│  │  │ Runtime │  │  Store  │              │              │
+│  │  │(rusty_v8│  │(RocksDB)│              │              │
+│  │  └─────────┘  └─────────┘              │              │
+│  └─────────────────────────────────────────┘              │
+└─────────────────────────────────────────────────────────┘
+</code></pre>
+<h3>6.2 Data Flow</h3>
+<ol>
+<li><strong>Agent sends AWP intent</strong> → <code>{action: &quot;fill_form&quot;, target: &quot;#email&quot;, value: &quot;user@example.com&quot;}</code></li>
+<li><strong>AWP Server</strong> validates intent, resolves target via SOM</li>
+<li><strong>Session Manager</strong> loads page state, cookies, auth context</li>
+<li><strong>Skill Runtime</strong> checks if a Wasm skill is registered for the current domain</li>
+<li><strong>If skill exists:</strong> Skill handles the interaction directly (fast path)</li>
+<li><strong>If no skill:</strong> Core pipeline processes:
+a. <strong>Network Layer</strong> fetches the page (with stealth TLS, proxy rotation)
+b. <strong>HTML Parser</strong> (html5ever) produces a raw DOM
+c. <strong>SOM Compiler</strong> transforms DOM into Semantic Object Model
+d. <strong>JS Runtime</strong> (V8) executes scripts that modify the SOM (SPAs, dynamic content)</li>
+<li><strong>SOM returned to agent</strong> via AWP with action results</li>
+</ol>
+<h3>6.3 Language &amp; Dependencies (Rust Crates)</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Crate</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>HTTP client</td>
+<td><code>reqwest</code> + <code>hyper</code></td>
+<td>HTTP/1.1 and HTTP/2 with full header control</td>
+</tr>
+<tr>
+<td>TLS</td>
+<td><code>rustls</code> (custom fork)</td>
+<td>TLS 1.3 with JA3/JA4 fingerprint control</td>
+</tr>
+<tr>
+<td>HTML parsing</td>
+<td><code>html5ever</code> + <code>markup5ever</code></td>
+<td>Spec-compliant HTML5 parser (same as Servo)</td>
+</tr>
+<tr>
+<td>CSS parsing</td>
+<td><code>cssparser</code> (minimal)</td>
+<td>Only parse selectors for SOM mapping, no layout</td>
+</tr>
+<tr>
+<td>JavaScript</td>
+<td><code>rusty_v8</code></td>
+<td>V8 engine with Rust bindings, sandboxed per session</td>
+</tr>
+<tr>
+<td>WebAssembly</td>
+<td><code>wasmtime</code></td>
+<td>Wasm runtime for skills</td>
+</tr>
+<tr>
+<td>Async runtime</td>
+<td><code>tokio</code></td>
+<td>Async I/O, task scheduling</td>
+</tr>
+<tr>
+<td>Serialization</td>
+<td><code>serde</code> + <code>rmp-serde</code></td>
+<td>MessagePack serialization for AWP</td>
+</tr>
+<tr>
+<td>WebSocket</td>
+<td><code>tokio-tungstenite</code></td>
+<td>AWP transport</td>
+</tr>
+<tr>
+<td>State storage</td>
+<td><code>rocksdb</code> (via <code>rust-rocksdb</code>)</td>
+<td>Persistent session/cookie store</td>
+</tr>
+<tr>
+<td>DNS</td>
+<td><code>trust-dns-resolver</code></td>
+<td>Custom DNS resolution (DoH support)</td>
+</tr>
+<tr>
+<td>Proxy</td>
+<td><code>tokio-socks</code> + custom</td>
+<td>SOCKS5/HTTP proxy with rotation</td>
+</tr>
+<tr>
+<td>Compression</td>
+<td><code>flate2</code> + <code>brotli</code></td>
+<td>HTTP content decoding</td>
+</tr>
+<tr>
+<td>URL parsing</td>
+<td><code>url</code></td>
+<td>Spec-compliant URL handling</td>
+</tr>
+<tr>
+<td>Regex</td>
+<td><code>regex</code></td>
+<td>Pattern matching for SOM rules</td>
+</tr>
+<tr>
+<td>Logging</td>
+<td><code>tracing</code> + <code>tracing-subscriber</code></td>
+<td>Structured logging and telemetry</td>
+</tr>
+<tr>
+<td>CLI</td>
+<td><code>clap</code></td>
+<td>Command-line interface</td>
+</tr>
+<tr>
+<td>Config</td>
+<td><code>toml</code> + <code>serde</code></td>
+<td>Configuration files</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>7. Semantic Object Model (SOM)</h2>
+<h3>7.1 What Is SOM</h3>
+<p>The Semantic Object Model is a new page representation format purpose-built for LLM consumption. It replaces the DOM (Document Object Model) by stripping away everything an agent doesn&#39;t need (visual styling, layout information, rendering hints) and adding everything an agent does need (element purpose, affordances, interaction methods, semantic relationships).</p>
+<h3>7.2 Design Principles</h3>
+<ol>
+<li><strong>Token-minimal</strong> - Represent a page in the fewest possible tokens</li>
+<li><strong>Deterministic</strong> - Same page always produces the same SOM (unlike screenshots which vary by viewport)</li>
+<li><strong>Actionable</strong> - Every element includes its available interactions</li>
+<li><strong>Hierarchical</strong> - Preserve meaningful page structure (navigation, main content, sidebar, footer)</li>
+<li><strong>Semantic</strong> - Elements described by purpose, not by HTML tag name</li>
+<li><strong>Stable references</strong> - Element IDs persist across page mutations (SPA navigation)</li>
+</ol>
+<h3>7.3 SOM Format</h3>
+<pre><code class="language-json">{
+  &quot;url&quot;: &quot;https://shop.example.com/products/widget-pro&quot;,
+  &quot;title&quot;: &quot;Widget Pro - Example Shop&quot;,
+  &quot;timestamp&quot;: &quot;2026-03-15T23:00:00Z&quot;,
+  &quot;som_version&quot;: &quot;1.0&quot;,
+  &quot;regions&quot;: [
+    {
+      &quot;role&quot;: &quot;navigation&quot;,
+      &quot;id&quot;: &quot;nav-main&quot;,
+      &quot;items&quot;: [
+        {&quot;type&quot;: &quot;link&quot;, &quot;id&quot;: &quot;n1&quot;, &quot;text&quot;: &quot;Home&quot;, &quot;href&quot;: &quot;/&quot;, &quot;actions&quot;: [&quot;click&quot;]},
+        {&quot;type&quot;: &quot;link&quot;, &quot;id&quot;: &quot;n2&quot;, &quot;text&quot;: &quot;Products&quot;, &quot;href&quot;: &quot;/products&quot;, &quot;actions&quot;: [&quot;click&quot;]},
+        {&quot;type&quot;: &quot;link&quot;, &quot;id&quot;: &quot;n3&quot;, &quot;text&quot;: &quot;Cart (3)&quot;, &quot;href&quot;: &quot;/cart&quot;, &quot;actions&quot;: [&quot;click&quot;], &quot;badge&quot;: &quot;3&quot;},
+        {&quot;type&quot;: &quot;search&quot;, &quot;id&quot;: &quot;n4&quot;, &quot;placeholder&quot;: &quot;Search products...&quot;, &quot;actions&quot;: [&quot;type&quot;, &quot;submit&quot;]}
+      ]
+    },
+    {
+      &quot;role&quot;: &quot;main&quot;,
+      &quot;id&quot;: &quot;content&quot;,
+      &quot;sections&quot;: [
+        {
+          &quot;type&quot;: &quot;product&quot;,
+          &quot;id&quot;: &quot;p1&quot;,
+          &quot;name&quot;: &quot;Widget Pro&quot;,
+          &quot;price&quot;: {&quot;amount&quot;: 49.99, &quot;currency&quot;: &quot;USD&quot;},
+          &quot;rating&quot;: {&quot;score&quot;: 4.7, &quot;count&quot;: 342},
+          &quot;description&quot;: &quot;Professional-grade widget with titanium core and lifetime warranty.&quot;,
+          &quot;images&quot;: [&quot;https://shop.example.com/img/widget-pro-1.jpg&quot;],
+          &quot;variants&quot;: [
+            {&quot;id&quot;: &quot;v1&quot;, &quot;label&quot;: &quot;Color&quot;, &quot;options&quot;: [&quot;Black&quot;, &quot;Silver&quot;, &quot;Blue&quot;], &quot;selected&quot;: &quot;Black&quot;},
+            {&quot;id&quot;: &quot;v2&quot;, &quot;label&quot;: &quot;Size&quot;, &quot;options&quot;: [&quot;S&quot;, &quot;M&quot;, &quot;L&quot;, &quot;XL&quot;], &quot;selected&quot;: null}
+          ],
+          &quot;actions&quot;: [
+            {&quot;id&quot;: &quot;a1&quot;, &quot;type&quot;: &quot;button&quot;, &quot;text&quot;: &quot;Add to Cart&quot;, &quot;primary&quot;: true, &quot;requires&quot;: [&quot;v2&quot;]},
+            {&quot;id&quot;: &quot;a2&quot;, &quot;type&quot;: &quot;button&quot;, &quot;text&quot;: &quot;Buy Now&quot;, &quot;primary&quot;: false},
+            {&quot;id&quot;: &quot;a3&quot;, &quot;type&quot;: &quot;button&quot;, &quot;text&quot;: &quot;Add to Wishlist&quot;, &quot;primary&quot;: false}
+          ]
+        }
+      ]
+    },
+    {
+      &quot;role&quot;: &quot;complementary&quot;,
+      &quot;id&quot;: &quot;reviews&quot;,
+      &quot;type&quot;: &quot;review_list&quot;,
+      &quot;count&quot;: 342,
+      &quot;visible&quot;: 5,
+      &quot;items&quot;: [
+        {&quot;author&quot;: &quot;Jane D.&quot;, &quot;rating&quot;: 5, &quot;text&quot;: &quot;Best widget I&#39;ve ever used. The titanium core makes all the difference.&quot;, &quot;date&quot;: &quot;2026-03-10&quot;},
+        {&quot;author&quot;: &quot;Mike R.&quot;, &quot;rating&quot;: 4, &quot;text&quot;: &quot;Great quality, shipping was slow though.&quot;, &quot;date&quot;: &quot;2026-03-08&quot;}
+      ],
+      &quot;actions&quot;: [
+        {&quot;id&quot;: &quot;r1&quot;, &quot;type&quot;: &quot;pagination&quot;, &quot;text&quot;: &quot;Load more reviews&quot;, &quot;actions&quot;: [&quot;click&quot;]}
+      ]
+    }
+  ],
+  &quot;forms&quot;: [],
+  &quot;dialogs&quot;: [],
+  &quot;alerts&quot;: []
+}
+</code></pre>
+<h3>7.4 Token Comparison</h3>
+<p>For the above product page:</p>
+<table>
+<thead>
+<tr>
+<th>Representation</th>
+<th>Approximate Tokens</th>
+<th>Ratio</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Raw HTML</td>
+<td>~18,000</td>
+<td>1x (baseline)</td>
+</tr>
+<tr>
+<td>Cleaned HTML</td>
+<td>~6,500</td>
+<td>2.8x better</td>
+</tr>
+<tr>
+<td>Playwright accessibility tree</td>
+<td>~3,200</td>
+<td>5.6x better</td>
+</tr>
+<tr>
+<td><strong>SOM</strong></td>
+<td><strong>~900</strong></td>
+<td><strong>20x better</strong></td>
+</tr>
+</tbody></table>
+<h3>7.5 SOM Compilation Pipeline</h3>
+<pre><code>Raw HTML (html5ever)
+    │
+    ▼
+DOM Tree
+    │
+    ├─ Strip: &lt;script&gt;, &lt;style&gt;, &lt;svg&gt;, &lt;noscript&gt;, &lt;meta&gt;, comments
+    ├─ Strip: CSS classes, inline styles, data-* attributes (unless semantic)
+    ├─ Strip: ARIA attributes (consume for semantics, don&#39;t output)
+    │
+    ▼
+Cleaned DOM
+    │
+    ├─ Identify regions: &lt;nav&gt;, &lt;main&gt;, &lt;aside&gt;, &lt;footer&gt;, &lt;header&gt;
+    ├─ Identify semantic blocks: &lt;form&gt;, &lt;table&gt;, &lt;article&gt;, &lt;section&gt;
+    ├─ Identify interactive elements: &lt;a&gt;, &lt;button&gt;, &lt;input&gt;, &lt;select&gt;, &lt;textarea&gt;
+    ├─ Identify content elements: &lt;h1-6&gt;, &lt;p&gt;, &lt;img&gt;, &lt;video&gt;
+    ├─ Consume ARIA roles/labels for element purpose
+    │
+    ▼
+Semantic Tree
+    │
+    ├─ Merge adjacent text nodes
+    ├─ Collapse wrapper divs (divs with single child, no semantic meaning)
+    ├─ Extract structured data (JSON-LD, microdata, Open Graph)
+    ├─ Resolve relative URLs
+    ├─ Assign stable IDs to interactive elements
+    ├─ Determine affordances (what actions each element supports)
+    │
+    ▼
+SOM Output (JSON / MessagePack)
+</code></pre>
+<h3>7.6 SOM Element Types</h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>HTML Sources</th>
+<th>Properties</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>link</code></td>
+<td><code>&lt;a&gt;</code>, <code>[role=link]</code></td>
+<td>text, href, target</td>
+<td>click</td>
+</tr>
+<tr>
+<td><code>button</code></td>
+<td><code>&lt;button&gt;</code>, <code>&lt;input[type=submit]&gt;</code>, <code>[role=button]</code></td>
+<td>text, disabled, primary</td>
+<td>click</td>
+</tr>
+<tr>
+<td><code>text_input</code></td>
+<td><code>&lt;input[type=text|email|password|...]&gt;</code></td>
+<td>placeholder, value, required, pattern</td>
+<td>type, clear, submit</td>
+</tr>
+<tr>
+<td><code>textarea</code></td>
+<td><code>&lt;textarea&gt;</code></td>
+<td>placeholder, value, maxlength</td>
+<td>type, clear</td>
+</tr>
+<tr>
+<td><code>select</code></td>
+<td><code>&lt;select&gt;</code>, <code>[role=listbox]</code></td>
+<td>options[], selected, multiple</td>
+<td>select</td>
+</tr>
+<tr>
+<td><code>checkbox</code></td>
+<td><code>&lt;input[type=checkbox]&gt;</code>, <code>[role=checkbox]</code></td>
+<td>label, checked</td>
+<td>toggle</td>
+</tr>
+<tr>
+<td><code>radio</code></td>
+<td><code>&lt;input[type=radio]&gt;</code>, <code>[role=radio]</code></td>
+<td>label, checked, group</td>
+<td>select</td>
+</tr>
+<tr>
+<td><code>search</code></td>
+<td><code>&lt;input[type=search]&gt;</code>, <code>[role=search]</code></td>
+<td>placeholder, value</td>
+<td>type, submit</td>
+</tr>
+<tr>
+<td><code>image</code></td>
+<td><code>&lt;img&gt;</code></td>
+<td>alt, src, dimensions</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>video</code></td>
+<td><code>&lt;video&gt;</code>, <code>&lt;iframe[youtube|vimeo]&gt;</code></td>
+<td>title, duration, src</td>
+<td>play, pause, seek</td>
+</tr>
+<tr>
+<td><code>table</code></td>
+<td><code>&lt;table&gt;</code></td>
+<td>headers[], rows[][]</td>
+<td>sort, paginate</td>
+</tr>
+<tr>
+<td><code>list</code></td>
+<td><code>&lt;ul&gt;</code>, <code>&lt;ol&gt;</code></td>
+<td>items[]</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>heading</code></td>
+<td><code>&lt;h1&gt;</code>-<code>&lt;h6&gt;</code></td>
+<td>text, level</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>paragraph</code></td>
+<td><code>&lt;p&gt;</code></td>
+<td>text</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>form</code></td>
+<td><code>&lt;form&gt;</code></td>
+<td>fields[], action, method</td>
+<td>submit</td>
+</tr>
+<tr>
+<td><code>dialog</code></td>
+<td><code>&lt;dialog&gt;</code>, <code>[role=dialog]</code></td>
+<td>title, content</td>
+<td>accept, dismiss</td>
+</tr>
+<tr>
+<td><code>tab</code></td>
+<td><code>[role=tab]</code></td>
+<td>label, selected, panel_id</td>
+<td>click</td>
+</tr>
+<tr>
+<td><code>menu</code></td>
+<td><code>&lt;nav&gt;</code>, <code>[role=menu]</code></td>
+<td>items[]</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>alert</code></td>
+<td><code>[role=alert]</code>, <code>.toast</code>, <code>.notification</code></td>
+<td>text, type(info|warning|error)</td>
+<td>dismiss</td>
+</tr>
+<tr>
+<td><code>pagination</code></td>
+<td><code>.pagination</code>, <code>[role=navigation][aria-label*=page]</code></td>
+<td>current, total, links[]</td>
+<td>click</td>
+</tr>
+<tr>
+<td><code>product</code></td>
+<td><code>[itemtype=Product]</code>, heuristic</td>
+<td>name, price, rating, variants</td>
+<td>add_to_cart</td>
+</tr>
+<tr>
+<td><code>article</code></td>
+<td><code>&lt;article&gt;</code></td>
+<td>title, author, date, content</td>
+<td>-</td>
+</tr>
+</tbody></table>
+<h3>7.7 SOM Heuristics</h3>
+<p>For pages without semantic HTML or ARIA, SOM uses heuristics:</p>
+<ol>
+<li><strong>Form detection</strong> - Cluster of input elements within a shared ancestor = form</li>
+<li><strong>Navigation detection</strong> - Lists of links in header/top of page = navigation</li>
+<li><strong>Product detection</strong> - Co-occurrence of price pattern + image + heading = product</li>
+<li><strong>Article detection</strong> - Large text block with heading + date/author = article</li>
+<li><strong>Modal detection</strong> - Fixed/absolute positioned overlay with close button = dialog</li>
+<li><strong>Pagination detection</strong> - Sequential number links or &quot;next/prev&quot; buttons = pagination</li>
+<li><strong>Search detection</strong> - Text input with magnifying glass icon or &quot;search&quot; in placeholder = search</li>
+</ol>
+<h3>7.8 SOM Mutation Tracking</h3>
+<p>When JS modifies the page (SPA navigation, dynamic content loading), SOM tracks changes:</p>
+<pre><code class="language-json">{
+  &quot;type&quot;: &quot;som_mutation&quot;,
+  &quot;timestamp&quot;: &quot;2026-03-15T23:00:01Z&quot;,
+  &quot;changes&quot;: [
+    {&quot;op&quot;: &quot;add&quot;, &quot;path&quot;: &quot;/regions/1/sections/0/reviews/5&quot;, &quot;value&quot;: {&quot;author&quot;: &quot;New Review...&quot;}},
+    {&quot;op&quot;: &quot;remove&quot;, &quot;path&quot;: &quot;/dialogs/0&quot;},
+    {&quot;op&quot;: &quot;replace&quot;, &quot;path&quot;: &quot;/regions/0/items/2/badge&quot;, &quot;old&quot;: &quot;3&quot;, &quot;new&quot;: &quot;4&quot;}
+  ]
+}
+</code></pre>
+<p>This uses JSON Patch (RFC 6902) semantics, so agents can track page evolution without re-reading the entire SOM.</p>
+<hr>
+<h2>8. Agent Web Protocol (AWP)</h2>
+<p><em>Full specification in separate document: AWP-SPEC.md</em></p>
+<h3>8.1 Summary</h3>
+<p>AWP replaces CDP for agent-browser communication. Key differences:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>CDP</th>
+<th>AWP</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Addressing</td>
+<td>CSS selectors + coordinates</td>
+<td>SOM element IDs + semantic targets</td>
+</tr>
+<tr>
+<td>Commands</td>
+<td>Low-level (click, type, evaluate)</td>
+<td>Intent-based (add_to_cart, login, search)</td>
+</tr>
+<tr>
+<td>Responses</td>
+<td>Raw DOM + screenshots</td>
+<td>SOM + structured results</td>
+</tr>
+<tr>
+<td>Transport</td>
+<td>WebSocket (JSON)</td>
+<td>WebSocket (MessagePack) - 30-50% smaller</td>
+</tr>
+<tr>
+<td>Sessions</td>
+<td>Ephemeral (lost on disconnect)</td>
+<td>Persistent (survive reconnection)</td>
+</tr>
+<tr>
+<td>Concurrency</td>
+<td>Single-page focus</td>
+<td>Multi-page, multi-tab native</td>
+</tr>
+<tr>
+<td>Observability</td>
+<td>Debug logging</td>
+<td>Structured telemetry with cost tracking</td>
+</tr>
+<tr>
+<td>Extensibility</td>
+<td>Limited to Chrome internals</td>
+<td>Wasm skills for any site-specific logic</td>
+</tr>
+</tbody></table>
+<h3>8.2 Intent Hierarchy</h3>
+<p>AWP commands form a hierarchy from low-level to high-level:</p>
+<p><strong>Level 0 - Primitive Actions</strong> (always available)</p>
+<pre><code>navigate, click, type, select, scroll, wait, screenshot, evaluate_js
+</code></pre>
+<p><strong>Level 1 - Semantic Actions</strong> (SOM-aware)</p>
+<pre><code>fill_form, submit_form, select_option, toggle, dismiss_dialog, 
+paginate, sort_table, expand_section, close_tab
+</code></pre>
+<p><strong>Level 2 - Intent Actions</strong> (requires SOM understanding)</p>
+<pre><code>search, login, logout, add_to_cart, checkout, 
+read_content, extract_data, follow_link_by_text
+</code></pre>
+<p><strong>Level 3 - Skill Actions</strong> (loaded via Wasm)</p>
+<pre><code>stripe_checkout, salesforce_navigate, google_sheets_edit,
+linkedin_send_message, github_create_issue
+</code></pre>
+<p>Agents can operate at any level. Most will use Level 1-2 for general browsing and Level 3 for domain-specific tasks.</p>
+<hr>
+<h2>9. Stealth Networking Layer</h2>
+<h3>9.1 Architecture</h3>
+<p>The networking layer is the lowest level of the engine, handling all HTTP communication with full fingerprint control.</p>
+<pre><code>┌─────────────────────────────────────────────┐
+│             Stealth Network Layer             │
+│                                               │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  │
+│  │   TLS    │  │  HTTP/2  │  │  Proxy   │  │
+│  │ Spoofer  │  │ Tuner    │  │ Rotator  │  │
+│  │          │  │          │  │          │  │
+│  │ JA3/JA4  │  │ SETTINGS │  │ SOCKS5   │  │
+│  │ ALPN     │  │ WINDOW   │  │ HTTP     │  │
+│  │ Ciphers  │  │ PRIORITY │  │ Rotating │  │
+│  │ Extensions│ │ HEADERS  │  │ Sticky   │  │
+│  └──────────┘  └──────────┘  └──────────┘  │
+│                                               │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  │
+│  │  Header  │  │  Cookie  │  │   DNS    │  │
+│  │ Manager  │  │  Jar     │  │ Resolver │  │
+│  │          │  │          │  │          │  │
+│  │ Ordering │  │ Per-site │  │ DoH      │  │
+│  │ Casing   │  │ Profiles │  │ DoT      │  │
+│  │ Realistic│  │ Rotation │  │ Custom   │  │
+│  └──────────┘  └──────────┘  └──────────┘  │
+└─────────────────────────────────────────────┘
+</code></pre>
+<h3>9.2 TLS Fingerprint Control</h3>
+<p>Bot detection services fingerprint TLS connections via:</p>
+<ul>
+<li><strong>JA3</strong> - hash of TLS Client Hello parameters (cipher suites, extensions, curves)</li>
+<li><strong>JA4</strong> - next-gen fingerprint including ALPN, signature algorithms, SNI</li>
+<li><strong>HTTP/2 fingerprint</strong> - SETTINGS frame values, WINDOW_UPDATE, PRIORITY frames</li>
+</ul>
+<p>Plasmate&#39;s custom <code>rustls</code> fork allows setting every parameter:</p>
+<pre><code class="language-rust">let tls_config = StealthTlsConfig::new()
+    .ja3_profile(BrowserProfile::Chrome128)  // Mimic Chrome 128
+    .cipher_suites(CHROME_128_CIPHERS)
+    .extensions(CHROME_128_EXTENSIONS)
+    .alpn(&amp;[&quot;h2&quot;, &quot;http/1.1&quot;])
+    .curves(&amp;[X25519, SECP256R1, SECP384R1])
+    .signature_algorithms(CHROME_128_SIGS);
+</code></pre>
+<p><strong>Built-in profiles:</strong></p>
+<ul>
+<li>Chrome 120-130 (Windows, Mac, Linux variants)</li>
+<li>Firefox 120-130</li>
+<li>Safari 17-18</li>
+<li>Edge 120-130</li>
+<li>Custom (full manual control)</li>
+</ul>
+<h3>9.3 HTTP/2 Fingerprint Control</h3>
+<p>Beyond TLS, HTTP/2 connections have their own fingerprint:</p>
+<pre><code class="language-rust">let http2_config = Http2Config::new()
+    .initial_window_size(6291456)         // Chrome default
+    .max_concurrent_streams(1000)          // Chrome default
+    .header_table_size(65536)              // Chrome default
+    .max_header_list_size(262144)          // Chrome default
+    .priority_frames(CHROME_PRIORITY)      // Frame ordering
+    .pseudo_header_order(&amp;[&quot;:method&quot;, &quot;:authority&quot;, &quot;:scheme&quot;, &quot;:path&quot;]);
+</code></pre>
+<h3>9.4 Header Management</h3>
+<p>Headers must match the impersonated browser exactly:</p>
+<ul>
+<li><strong>Ordering</strong> - Chrome sends headers in a specific order (<code>:method</code> before <code>:path</code>)</li>
+<li><strong>Casing</strong> - Some headers use different capitalization per browser</li>
+<li><strong>Content</strong> - <code>Accept</code>, <code>Accept-Language</code>, <code>Accept-Encoding</code> must match browser version</li>
+<li><strong>User-Agent</strong> - Automatically matches the selected TLS profile</li>
+</ul>
+<h3>9.5 Proxy Architecture</h3>
+<p>Built-in proxy support with intelligent rotation:</p>
+<pre><code class="language-rust">let proxy_pool = ProxyPool::new()
+    .add_residential(&quot;provider_a&quot;, 1000)    // 1000 residential IPs
+    .add_datacenter(&quot;provider_b&quot;, 500)      // 500 datacenter IPs
+    .strategy(RotationStrategy::StickyPerDomain)  // Same IP per domain
+    .failover(FailoverPolicy::NextProxy)          // Auto-rotate on failure
+    .health_check_interval(Duration::from_secs(30));
+</code></pre>
+<p><strong>Rotation strategies:</strong></p>
+<ul>
+<li><code>RoundRobin</code> - cycle through proxies sequentially</li>
+<li><code>Random</code> - random proxy selection</li>
+<li><code>StickyPerDomain</code> - same proxy for same domain (avoids session issues)</li>
+<li><code>StickyPerSession</code> - same proxy for entire agent session</li>
+<li><code>GeoTargeted</code> - select proxy by geographic region</li>
+<li><code>LeastLatency</code> - pick fastest available proxy</li>
+</ul>
+<hr>
+<h2>10. Sandboxed JS Runtime</h2>
+<h3>10.1 Why Execute JS at All</h3>
+<p>Modern web applications (SPAs) render content client-side. Without JS execution:</p>
+<ul>
+<li>React/Vue/Angular/Svelte apps show blank pages</li>
+<li>Dynamic content (lazy loading, infinite scroll) never loads</li>
+<li>Login flows that depend on JS fail</li>
+<li>CSRF tokens generated by JS are unavailable</li>
+</ul>
+<p>A headless browser for agents MUST execute JavaScript. But it doesn&#39;t need to execute ALL JavaScript.</p>
+<h3>10.2 Selective Execution</h3>
+<p>Plasmate&#39;s JS runtime is selective. It executes:</p>
+<ul>
+<li>✅ Scripts that modify DOM (content rendering)</li>
+<li>✅ XHR/fetch calls (data loading)</li>
+<li>✅ Event handlers triggered by agent actions</li>
+<li>✅ Form validation scripts</li>
+<li>✅ Authentication flows (OAuth, CSRF)</li>
+</ul>
+<p>It skips:</p>
+<ul>
+<li>❌ Analytics scripts (Google Analytics, Mixpanel, Segment)</li>
+<li>❌ Ad scripts (Google Ads, Facebook Pixel)</li>
+<li>❌ Tracking pixels</li>
+<li>❌ Animation/transition scripts</li>
+<li>❌ Service worker registration</li>
+<li>❌ WebGL/Canvas rendering</li>
+<li>❌ Web Workers for non-essential tasks</li>
+</ul>
+<h3>10.3 Memory Isolation</h3>
+<p>Each agent session gets an isolated V8 context:</p>
+<pre><code class="language-rust">let isolate = v8::Isolate::new(v8::CreateParams::default()
+    .heap_size_limit(64 * 1024 * 1024)   // 64MB max per session
+    .external_memory_limit(32 * 1024 * 1024));
+
+let context = v8::Context::new(&amp;mut isolate);
+// Session-scoped: destroyed when session ends
+// No cross-session memory leaks
+</code></pre>
+<p><strong>Memory budget per session: 64MB</strong> (vs Chrome&#39;s 150-300MB per tab)</p>
+<p>At 64MB per session:</p>
+<ul>
+<li>1 server with 32GB RAM = <strong>500 concurrent agent sessions</strong></li>
+<li>1 server with 128GB RAM = <strong>2,000 concurrent agent sessions</strong></li>
+</ul>
+<h3>10.4 Script Classification</h3>
+<p>Plasmate classifies scripts before execution:</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Strategy</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Essential</td>
+<td>Execute immediately</td>
+<td>Framework runtime (React, Vue)</td>
+</tr>
+<tr>
+<td>Data-loading</td>
+<td>Execute, capture responses</td>
+<td>API calls, GraphQL queries</td>
+</tr>
+<tr>
+<td>Interactive</td>
+<td>Execute on agent action</td>
+<td>Event handlers, form validation</td>
+</tr>
+<tr>
+<td>Analytics</td>
+<td>Block entirely</td>
+<td>GA, Mixpanel, Hotjar</td>
+</tr>
+<tr>
+<td>Advertising</td>
+<td>Block entirely</td>
+<td>Google Ads, FB Pixel</td>
+</tr>
+<tr>
+<td>Unknown</td>
+<td>Execute with timeout (2s)</td>
+<td>Unclassified scripts</td>
+</tr>
+</tbody></table>
+<p>Classification uses:</p>
+<ol>
+<li><strong>URL pattern matching</strong> - known analytics/ad domains</li>
+<li><strong>AST analysis</strong> - detect tracking patterns (pixel insertion, beacon sending)</li>
+<li><strong>Community blocklists</strong> - maintained like ad-blocker lists</li>
+<li><strong>Wasm skills</strong> - site-specific script classification</li>
+</ol>
+<hr>
+<h2>11. Wasm Skill System</h2>
+<h3>11.1 Concept</h3>
+<p>Skills are WebAssembly modules that teach Plasmate how to interact with specific websites or web applications. They&#39;re the equivalent of browser extensions but for agents.</p>
+<h3>11.2 Skill Interface</h3>
+<p>Every skill implements a standard interface:</p>
+<pre><code class="language-rust">// Skill trait (Rust SDK)
+pub trait Skill {
+    /// Domains this skill handles
+    fn domains(&amp;self) -&gt; Vec&lt;String&gt;;
+    
+    /// Actions this skill provides
+    fn actions(&amp;self) -&gt; Vec&lt;SkillAction&gt;;
+    
+    /// Handle an AWP intent
+    fn handle(&amp;self, ctx: &amp;SkillContext, intent: &amp;Intent) -&gt; Result&lt;ActionResult&gt;;
+    
+    /// Transform SOM for this domain (optional)
+    fn transform_som(&amp;self, som: &amp;mut SomDocument) -&gt; Result&lt;()&gt;;
+    
+    /// Classify scripts for this domain (optional)
+    fn classify_script(&amp;self, url: &amp;str, content: &amp;str) -&gt; ScriptClass;
+}
+</code></pre>
+<h3>11.3 Example: Stripe Checkout Skill</h3>
+<pre><code class="language-rust">use plasmate_skill_sdk::prelude::*;
+
+struct StripeCheckoutSkill;
+
+impl Skill for StripeCheckoutSkill {
+    fn domains(&amp;self) -&gt; Vec&lt;String&gt; {
+        vec![&quot;checkout.stripe.com&quot;.into(), &quot;*.stripe.com&quot;.into()]
+    }
+    
+    fn actions(&amp;self) -&gt; Vec&lt;SkillAction&gt; {
+        vec![
+            SkillAction::new(&quot;stripe_pay&quot;)
+                .description(&quot;Complete a Stripe checkout&quot;)
+                .params(&amp;[
+                    Param::new(&quot;card_number&quot;, ParamType::String).required(),
+                    Param::new(&quot;expiry&quot;, ParamType::String).required(),
+                    Param::new(&quot;cvc&quot;, ParamType::String).required(),
+                    Param::new(&quot;email&quot;, ParamType::String).optional(),
+                    Param::new(&quot;name&quot;, ParamType::String).optional(),
+                ]),
+            SkillAction::new(&quot;stripe_apply_coupon&quot;)
+                .description(&quot;Apply a coupon code&quot;)
+                .params(&amp;[Param::new(&quot;code&quot;, ParamType::String).required()]),
+        ]
+    }
+    
+    fn handle(&amp;self, ctx: &amp;SkillContext, intent: &amp;Intent) -&gt; Result&lt;ActionResult&gt; {
+        match intent.action.as_str() {
+            &quot;stripe_pay&quot; =&gt; {
+                // Navigate through Stripe&#39;s multi-step checkout
+                let email = intent.param(&quot;email&quot;)?;
+                let card = intent.param(&quot;card_number&quot;)?;
+                let expiry = intent.param(&quot;expiry&quot;)?;
+                let cvc = intent.param(&quot;cvc&quot;)?;
+                
+                // Fill email field
+                ctx.fill_by_label(&quot;Email&quot;, email)?;
+                ctx.click_by_text(&quot;Pay&quot;)?;
+                ctx.wait_for_navigation()?;
+                
+                // Fill card details
+                ctx.fill_by_label(&quot;Card number&quot;, card)?;
+                ctx.fill_by_label(&quot;Expiration&quot;, expiry)?;
+                ctx.fill_by_label(&quot;CVC&quot;, cvc)?;
+                
+                // Submit payment
+                ctx.click_by_text(&quot;Pay&quot;)?;
+                ctx.wait_for_url_contains(&quot;/success&quot;)?;
+                
+                Ok(ActionResult::success()
+                    .with_data(&quot;status&quot;, &quot;payment_completed&quot;))
+            }
+            &quot;stripe_apply_coupon&quot; =&gt; {
+                let code = intent.param(&quot;code&quot;)?;
+                ctx.click_by_text(&quot;Add promotion code&quot;)?;
+                ctx.fill_by_label(&quot;Promotion code&quot;, code)?;
+                ctx.click_by_text(&quot;Apply&quot;)?;
+                ctx.wait_for_element(&quot;[data-testid=discount]&quot;)?;
+                
+                Ok(ActionResult::success())
+            }
+            _ =&gt; Err(SkillError::UnknownAction)
+        }
+    }
+}
+</code></pre>
+<h3>11.4 Skill Distribution</h3>
+<p>Skills are distributed as <code>.wasm</code> files via a package registry:</p>
+<pre><code class="language-bash"># Install a skill
+plasmate skill install stripe-checkout
+plasmate skill install salesforce-navigator
+plasmate skill install google-sheets
+
+# List installed skills
+plasmate skill list
+
+# Publish a skill
+plasmate skill publish ./my-skill.wasm --name &quot;shopify-admin&quot; --version &quot;1.0.0&quot;
+
+# Skills auto-activate when visiting matching domains
+</code></pre>
+<p><strong>Registry:</strong> <code>skills.plasmate.app</code> (npm-like registry for Wasm skills)</p>
+<h3>11.5 Skill SDK</h3>
+<p>SDKs in multiple languages (all compile to Wasm):</p>
+<table>
+<thead>
+<tr>
+<th>Language</th>
+<th>SDK</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Rust</td>
+<td><code>plasmate-skill-sdk</code> (crate)</td>
+<td>Primary, full featured</td>
+</tr>
+<tr>
+<td>TypeScript</td>
+<td><code>@plasmate/skill-sdk</code> (npm)</td>
+<td>Via AssemblyScript or wasm-bindgen</td>
+</tr>
+<tr>
+<td>Python</td>
+<td><code>plasmate-skill-sdk</code> (pip)</td>
+<td>Via componentize-py</td>
+</tr>
+<tr>
+<td>Go</td>
+<td><code>plasmate-skill-sdk</code> (module)</td>
+<td>Via TinyGo</td>
+</tr>
+<tr>
+<td>C/C++</td>
+<td><code>plasmate_skill.h</code> (header)</td>
+<td>Via Emscripten</td>
+</tr>
+</tbody></table>
+<h3>11.6 Community Marketplace</h3>
+<p>The skill marketplace is a critical network effect:</p>
+<ol>
+<li><strong>Free skills</strong> - community-contributed, open source, anyone can publish</li>
+<li><strong>Verified skills</strong> - reviewed by Plasmate team, guaranteed quality</li>
+<li><strong>Premium skills</strong> - monetized by authors (revenue share: 70% author / 30% Plasmate)</li>
+<li><strong>Enterprise skills</strong> - private, company-specific, deployed to their fleet only</li>
+</ol>
+<p>As the skill library grows, Plasmate becomes more capable without core engine changes. This is the Chrome Web Store model applied to agent automation.</p>
+<hr>
+<h2>12. Session &amp; State Management</h2>
+<h3>12.1 Persistent Sessions</h3>
+<p>Unlike CDP (where sessions die when the WebSocket disconnects), Plasmate sessions are durable:</p>
+<pre><code class="language-rust">let session = plasmate.session_create(SessionConfig {
+    id: &quot;user-checkout-flow&quot;,
+    ttl: Duration::from_hours(24),
+    persist: PersistMode::Disk,      // Survive engine restart
+    cookies: CookiePolicy::Inherit,  // Carry forward from previous sessions
+    auth: Some(AuthState::load(&quot;user-123&quot;)?),
+});
+</code></pre>
+<p><strong>Session state includes:</strong></p>
+<ul>
+<li>Cookies (per-domain)</li>
+<li>Authentication tokens</li>
+<li>Local storage / session storage</li>
+<li>Navigation history</li>
+<li>SOM snapshots (for resumption)</li>
+<li>Agent memory context</li>
+<li>Proxy assignment (sticky)</li>
+</ul>
+<h3>12.2 Session Pools</h3>
+<p>For fleet operations, sessions can be pooled:</p>
+<pre><code class="language-rust">let pool = plasmate.session_pool(PoolConfig {
+    name: &quot;authenticated-gmail&quot;,
+    min_sessions: 10,
+    max_sessions: 100,
+    warmup: WarmupStrategy::PreAuthenticate {
+        url: &quot;https://mail.google.com&quot;,
+        credentials: vault.get(&quot;gmail-creds&quot;),
+    },
+    idle_timeout: Duration::from_minutes(30),
+    recycle_after: 50,  // New session after 50 uses
+});
+
+// Agents check out pre-authenticated sessions
+let session = pool.acquire().await?;
+// ... use session ...
+pool.release(session).await;
+</code></pre>
+<h3>12.3 State Encryption</h3>
+<p>Sensitive session data (credentials, tokens, cookies) is encrypted at rest:</p>
+<ul>
+<li>AES-256-GCM encryption</li>
+<li>Per-session encryption keys</li>
+<li>Key derivation from master secret via HKDF</li>
+<li>Optional HSM/TPM integration for enterprise</li>
+</ul>
+<hr>
+<h2>13. Fleet Orchestration (Commercial)</h2>
+<h3>13.1 The Control Plane</h3>
+<p>The commercial product. While the engine is free, running 10,000 agents requires orchestration:</p>
+<pre><code>┌─────────────────────────────────────────────────────┐
+│              Plasmate Cloud Control Plane                 │
+│                                                       │
+│  ┌──────────┐  ┌──────────┐  ┌──────────────────┐  │
+│  │ Scheduler │  │ Autoscaler│  │  Cost Tracker   │  │
+│  │           │  │           │  │                  │  │
+│  │ Priority  │  │ Demand-   │  │ Per-session     │  │
+│  │ queues    │  │ based     │  │ Per-domain      │  │
+│  │ Rate      │  │ scaling   │  │ Per-agent        │  │
+│  │ limiting  │  │           │  │ LLM + compute   │  │
+│  └──────────┘  └──────────┘  └──────────────────┘  │
+│                                                       │
+│  ┌──────────┐  ┌──────────┐  ┌──────────────────┐  │
+│  │ Session   │  │  Proxy   │  │  Observability  │  │
+│  │ Store     │  │  Network │  │                  │  │
+│  │           │  │           │  │ Traces          │  │
+│  │ Redis +   │  │ Residential│ │ Metrics         │  │
+│  │ S3        │  │ Datacenter│  │ Logs            │  │
+│  │ Encrypted │  │ Rotating  │  │ Dashboards      │  │
+│  └──────────┘  └──────────┘  └──────────────────┘  │
+└─────────────────────────────────────────────────────┘
+</code></pre>
+<h3>13.2 Fleet API</h3>
+<pre><code class="language-python">from plasmate_cloud import Fleet
+
+fleet = Fleet(api_key=&quot;plasmate_live_xxx&quot;)
+
+# Run 100 agents concurrently
+results = await fleet.run_batch(
+    agents=100,
+    task=&quot;extract_pricing&quot;,
+    urls=[&quot;https://competitor1.com&quot;, &quot;https://competitor2.com&quot;, ...],
+    skill=&quot;pricing-extractor&quot;,
+    proxy_type=&quot;residential&quot;,
+    region=&quot;us-east&quot;,
+    budget=Budget(max_cost_usd=50.00),
+)
+
+# Real-time monitoring
+async for event in fleet.stream(&quot;batch-123&quot;):
+    print(f&quot;Agent {event.agent_id}: {event.status} - {event.url}&quot;)
+</code></pre>
+<h3>13.3 Pricing (Fleet)</h3>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Price</th>
+<th>Sessions</th>
+<th>Proxy</th>
+<th>Support</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Starter</td>
+<td>$49/mo</td>
+<td>1,000/mo</td>
+<td>Datacenter</td>
+<td>Community</td>
+</tr>
+<tr>
+<td>Growth</td>
+<td>$199/mo</td>
+<td>10,000/mo</td>
+<td>Datacenter + Residential</td>
+<td>Email</td>
+</tr>
+<tr>
+<td>Scale</td>
+<td>$799/mo</td>
+<td>100,000/mo</td>
+<td>Premium residential</td>
+<td>Priority</td>
+</tr>
+<tr>
+<td>Enterprise</td>
+<td>Custom</td>
+<td>Unlimited</td>
+<td>Dedicated</td>
+<td>24/7 + SLA</td>
+</tr>
+</tbody></table>
+<p><strong>Usage-based pricing on top:</strong></p>
+<ul>
+<li>Datacenter proxy: $0.001/request</li>
+<li>Residential proxy: $0.01/request</li>
+<li>Session storage: $0.10/GB-month</li>
+<li>Persistent sessions: $0.001/hour</li>
+</ul>
+<hr>
+<h2>14. Business Model</h2>
+<h3>14.1 Revenue Streams</h3>
+<table>
+<thead>
+<tr>
+<th>Stream</th>
+<th>Type</th>
+<th>Target</th>
+<th>Timeline</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Plasmate Engine</td>
+<td>Free (Apache 2.0)</td>
+<td>All developers</td>
+<td>Day 1</td>
+</tr>
+<tr>
+<td>Plasmate Cloud (Fleet)</td>
+<td>SaaS</td>
+<td>Companies running agents at scale</td>
+<td>Month 6</td>
+</tr>
+<tr>
+<td>Proxy Network</td>
+<td>Usage-based</td>
+<td>Anyone needing stealth</td>
+<td>Month 6</td>
+</tr>
+<tr>
+<td>Skill Marketplace</td>
+<td>Revenue share (30%)</td>
+<td>Skill authors + buyers</td>
+<td>Month 9</td>
+</tr>
+<tr>
+<td>Enterprise License</td>
+<td>Annual contract</td>
+<td>Fortune 500</td>
+<td>Month 12</td>
+</tr>
+<tr>
+<td>Support &amp; Training</td>
+<td>Services</td>
+<td>Enterprise</td>
+<td>Month 12</td>
+</tr>
+</tbody></table>
+<h3>14.2 Financial Projections</h3>
+<p><strong>Year 1:</strong> $0-500K ARR (adoption phase, free engine driving users to cloud)
+<strong>Year 2:</strong> $2-5M ARR (fleet customers, proxy revenue, first enterprise deals)
+<strong>Year 3:</strong> $10-25M ARR (skill marketplace takes off, enterprise expansion)
+<strong>Year 4:</strong> $50-100M ARR (standard protocol adoption, platform effects)</p>
+<h3>14.3 Unit Economics</h3>
+<p><strong>Fleet (SaaS):</strong></p>
+<ul>
+<li>Gross margin: 70-80% (compute + proxy costs are primary COGS)</li>
+<li>CAC: Low (open-source engine is the funnel)</li>
+<li>LTV/CAC: &gt;5x (infrastructure is sticky)</li>
+</ul>
+<p><strong>Proxy Network:</strong></p>
+<ul>
+<li>Gross margin: 40-50% (residential proxy bandwidth is expensive)</li>
+<li>But drives fleet adoption and retention</li>
+</ul>
+<p><strong>Skill Marketplace:</strong></p>
+<ul>
+<li>Gross margin: 95%+ (pure platform, minimal hosting cost)</li>
+<li>Network effect: more skills = more users = more skill authors</li>
+</ul>
+<h3>14.4 Defensibility / Moats</h3>
+<ol>
+<li><strong>Protocol standard (AWP)</strong> - If AWP becomes the standard, every agent framework integrates with it, creating massive switching costs</li>
+<li><strong>Skill marketplace</strong> - Network effects compound over time. Hard to bootstrap a competing skill library.</li>
+<li><strong>Proxy network</strong> - Residential proxy infrastructure takes years and millions to build</li>
+<li><strong>Community</strong> - Open-source community contributions compound (like Linux kernel)</li>
+<li><strong>Data flywheel</strong> - Fleet analytics reveal which sites break most, driving skill improvements</li>
+</ol>
+<hr>
+<h2>15. Go-to-Market Strategy</h2>
+<h3>15.1 Phase 1: Plant the Flag (Months 0-3)</h3>
+<ol>
+<li><strong>Publish AWP specification</strong> as an open RFC</li>
+<li><strong>Release Plasmate alpha</strong> with SOM output and basic AWP server</li>
+<li><strong>Benchmark against Lightpanda and Chrome</strong> (speed, memory, token efficiency)</li>
+<li><strong>Write &quot;The Agentic Browser Manifesto&quot;</strong> - a long-form piece arguing that CDP is the bottleneck holding back AI agents</li>
+<li><strong>Submit talk proposals</strong> to AI/ML conferences (NeurIPS, ICML workshops)</li>
+<li><strong>Seed Hacker News, Reddit, Twitter</strong> with benchmarks and the manifesto</li>
+</ol>
+<h3>15.2 Phase 2: Build the Ecosystem (Months 3-6)</h3>
+<ol>
+<li><strong>Publish SDKs</strong> for Python, TypeScript, Go</li>
+<li><strong>Integrate with LangChain</strong> (most popular agent framework)</li>
+<li><strong>Integrate with Browser Use</strong> (100K+ stars, natural partner)</li>
+<li><strong>Write 10 reference skills</strong> (Stripe, Shopify, Google, Salesforce, GitHub, LinkedIn, Amazon, Twitter/X, Gmail, Slack)</li>
+<li><strong>Launch Plasmate Cloud beta</strong> (fleet + proxy)</li>
+<li><strong>Developer advocacy</strong> - tutorials, workshops, conference talks</li>
+</ol>
+<h3>15.3 Phase 3: Scale (Months 6-12)</h3>
+<ol>
+<li><strong>Skill marketplace launch</strong></li>
+<li><strong>Enterprise pilots</strong> (3-5 Fortune 500 companies)</li>
+<li><strong>AWP adoption campaign</strong> - get 3+ major agent frameworks to support AWP natively</li>
+<li><strong>Series A fundraise</strong> ($15-25M at $75-150M valuation)</li>
+</ol>
+<h3>15.4 Distribution Channels</h3>
+<table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>Mechanism</th>
+<th>Cost</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GitHub</td>
+<td>Open-source engine + stars</td>
+<td>Free</td>
+</tr>
+<tr>
+<td>Hacker News / Reddit</td>
+<td>Launch posts, benchmarks</td>
+<td>Free</td>
+</tr>
+<tr>
+<td>LangChain integration</td>
+<td>Built-in Plasmate support</td>
+<td>Engineering time</td>
+</tr>
+<tr>
+<td>Developer conferences</td>
+<td>Talks, workshops</td>
+<td>$5-10K per event</td>
+</tr>
+<tr>
+<td>Content marketing</td>
+<td>Blog, manifesto, tutorials</td>
+<td>Writing time</td>
+</tr>
+<tr>
+<td>Discord community</td>
+<td>Support, feedback, skills</td>
+<td>Community management</td>
+</tr>
+<tr>
+<td>npm/pip/crates.io</td>
+<td>Package distribution</td>
+<td>Free</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>16. Technical Roadmap</h2>
+<h3>16.1 Phase 0: Proof of Concept (Weeks 1-4)</h3>
+<p><strong>Goal:</strong> Demonstrate SOM is 10-20x more token-efficient than DOM</p>
+<p>Deliverables:</p>
+<ul>
+<li><input disabled="" type="checkbox"> Rust binary that takes a URL and outputs SOM JSON</li>
+<li><input disabled="" type="checkbox"> html5ever-based HTML parser</li>
+<li><input disabled="" type="checkbox"> SOM compiler (basic: regions, interactive elements, content)</li>
+<li><input disabled="" type="checkbox"> Benchmark suite: 100 popular websites, compare SOM tokens vs DOM tokens vs accessibility tree</li>
+<li><input disabled="" type="checkbox"> AWP protocol specification v0.1 (the document, not the implementation)</li>
+<li><input disabled="" type="checkbox"> Token efficiency whitepaper</li>
+</ul>
+<p><strong>Not in scope for PoC:</strong> JS execution, stealth networking, Wasm skills, fleet orchestration</p>
+<h3>16.2 Phase 1: Alpha Engine (Months 2-4)</h3>
+<p><strong>Goal:</strong> Functional headless browser that agents can use for real tasks</p>
+<p>Deliverables:</p>
+<ul>
+<li><input disabled="" type="checkbox"> AWP server (WebSocket + MessagePack)</li>
+<li><input disabled="" type="checkbox"> Basic JS execution via rusty_v8 (SPAs render)</li>
+<li><input disabled="" type="checkbox"> Cookie/session persistence (RocksDB)</li>
+<li><input disabled="" type="checkbox"> Python SDK (<code>pip install plasmate</code>)</li>
+<li><input disabled="" type="checkbox"> TypeScript SDK (<code>npm install @plasmate/sdk</code>)</li>
+<li><input disabled="" type="checkbox"> CLI (<code>plasmate fetch &lt;url&gt;</code>, <code>plasmate serve</code>, <code>plasmate repl</code>)</li>
+<li><input disabled="" type="checkbox"> Docker image</li>
+<li><input disabled="" type="checkbox"> LangChain integration</li>
+<li><input disabled="" type="checkbox"> 20 website test suite (all must produce correct SOM)</li>
+</ul>
+<h3>16.3 Phase 2: Beta Engine (Months 4-7)</h3>
+<p><strong>Goal:</strong> Production-ready for individual developers and small teams</p>
+<p>Deliverables:</p>
+<ul>
+<li><input disabled="" type="checkbox"> Stealth networking layer (TLS spoofing, HTTP/2 fingerprinting)</li>
+<li><input disabled="" type="checkbox"> Proxy support (SOCKS5, HTTP, rotation strategies)</li>
+<li><input disabled="" type="checkbox"> Wasm skill runtime (wasmtime)</li>
+<li><input disabled="" type="checkbox"> 10 reference skills</li>
+<li><input disabled="" type="checkbox"> Skill SDK (Rust + TypeScript)</li>
+<li><input disabled="" type="checkbox"> Session pools</li>
+<li><input disabled="" type="checkbox"> CDP compatibility shim (migration path from Playwright/Puppeteer)</li>
+<li><input disabled="" type="checkbox"> 100 website test suite</li>
+<li><input disabled="" type="checkbox"> Performance benchmarks (published)</li>
+<li><input disabled="" type="checkbox"> Security audit</li>
+</ul>
+<h3>16.4 Phase 3: Cloud Platform (Months 7-12)</h3>
+<p><strong>Goal:</strong> Commercial fleet product</p>
+<p>Deliverables:</p>
+<ul>
+<li><input disabled="" type="checkbox"> Plasmate Cloud API</li>
+<li><input disabled="" type="checkbox"> Fleet orchestration (scheduler, autoscaler)</li>
+<li><input disabled="" type="checkbox"> Persistent session storage (S3 + Redis)</li>
+<li><input disabled="" type="checkbox"> Proxy network integration</li>
+<li><input disabled="" type="checkbox"> Observability dashboard</li>
+<li><input disabled="" type="checkbox"> Cost tracking and billing</li>
+<li><input disabled="" type="checkbox"> Skill marketplace</li>
+<li><input disabled="" type="checkbox"> Enterprise SSO/SAML</li>
+<li><input disabled="" type="checkbox"> SOC 2 compliance</li>
+<li><input disabled="" type="checkbox"> 99.9% SLA</li>
+</ul>
+<hr>
+<h2>17. Team Requirements</h2>
+<h3>17.1 Founding Team (Pre-Seed, 3-5 people)</h3>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Skills</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Rust Systems Engineer</strong></td>
+<td>Browser internals, networking, V8 bindings</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td><strong>Rust Systems Engineer</strong></td>
+<td>Parser implementation, compiler design, Wasm runtime</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td><strong>Protocol Designer</strong></td>
+<td>Distributed systems, API design, standards experience</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td><strong>Developer Advocate</strong></td>
+<td>Python/TypeScript, content creation, community</td>
+<td>High</td>
+</tr>
+<tr>
+<td><strong>Product/CEO</strong></td>
+<td>Vision, fundraising, partnerships</td>
+<td>David</td>
+</tr>
+</tbody></table>
+<h3>17.2 Key Hires (Post-Seed, months 3-9)</h3>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Focus</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Security Engineer</td>
+<td>TLS fingerprinting, anti-detection, audit</td>
+</tr>
+<tr>
+<td>Cloud Infrastructure</td>
+<td>Fleet orchestration, Kubernetes, scaling</td>
+</tr>
+<tr>
+<td>Frontend Engineer</td>
+<td>Dashboard, marketplace, documentation site</td>
+</tr>
+<tr>
+<td>DevRel (2nd)</td>
+<td>Conference talks, tutorials, integrations</td>
+</tr>
+<tr>
+<td>Designer</td>
+<td>Brand, docs site, dashboard UI</td>
+</tr>
+</tbody></table>
+<h3>17.3 Salary Budget (Pre-Seed)</h3>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Annual</th>
+<th>Monthly</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Sr. Rust Engineer x2</td>
+<td>$400K ($200K each)</td>
+<td>$33.3K</td>
+</tr>
+<tr>
+<td>Protocol Designer</td>
+<td>$200K</td>
+<td>$16.7K</td>
+</tr>
+<tr>
+<td>DevRel</td>
+<td>$150K</td>
+<td>$12.5K</td>
+</tr>
+<tr>
+<td><strong>Total headcount cost</strong></td>
+<td><strong>$750K</strong></td>
+<td><strong>$62.5K</strong></td>
+</tr>
+</tbody></table>
+<p>With 18-month runway target: <strong>$1.35M for salaries + $650K for infra/proxy/legal/ops = $2M pre-seed raise</strong></p>
+<hr>
+<h2>18. Naming Candidates</h2>
+<p>The name should evoke: foundation, speed, machines, the web, navigation, infrastructure.</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Domain</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Plasmate</strong></td>
+<td>plasmate.app</td>
+<td>Plasma + mate. Fourth state of matter for the fourth era of the web.</td>
+</tr>
+<tr>
+<td><strong>Loom</strong></td>
+<td>loom.dev (taken)</td>
+<td>Weaves the web. Mechanical, purposeful.</td>
+</tr>
+<tr>
+<td><strong>Anvil</strong></td>
+<td>anvil.dev (taken)</td>
+<td>Where things are forged. Heavy, industrial.</td>
+</tr>
+<tr>
+<td><strong>Strider</strong></td>
+<td>strider.dev</td>
+<td>Walks the web. Purposeful movement.</td>
+</tr>
+<tr>
+<td><strong>Dredge</strong></td>
+<td>dredge.dev</td>
+<td>Clears the channel. Removes what&#39;s in the way.</td>
+</tr>
+<tr>
+<td><strong>Bore</strong></td>
+<td>bore.dev</td>
+<td>Tunnel through the web. Direct, unstoppable.</td>
+</tr>
+<tr>
+<td><strong>Sieve</strong></td>
+<td>sieve.dev</td>
+<td>Filters signal from noise. SOM metaphor.</td>
+</tr>
+<tr>
+<td><strong>Prow</strong></td>
+<td>prow.dev</td>
+<td>Front of the ship. Cuts through.</td>
+</tr>
+<tr>
+<td><strong>Wake</strong></td>
+<td>wake.dev</td>
+<td>The trail left by something moving fast.</td>
+</tr>
+<tr>
+<td><strong>Helm</strong></td>
+<td>helm.sh (taken)</td>
+<td>Steering the ship. Control.</td>
+</tr>
+</tbody></table>
+<p><strong>Final Name:</strong> Plasmate. plasmate.app (primary), .dev, .sh, .xyz also secured. npm, PyPI, and crate reserved.</p>
+<hr>
+<h2>19. Risk Analysis</h2>
+<table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Probability</th>
+<th>Impact</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Google WebMCP becomes standard</td>
+<td>Medium</td>
+<td>High</td>
+<td>Ship AWP first, prove superiority, get framework adoption</td>
+</tr>
+<tr>
+<td>JS execution coverage too low</td>
+<td>Medium</td>
+<td>High</td>
+<td>Invest in V8 integration quality, community bug reports</td>
+</tr>
+<tr>
+<td>Browser engine complexity underestimated</td>
+<td>High</td>
+<td>Medium</td>
+<td>Scope aggressively, SOM-only output (no rendering)</td>
+</tr>
+<tr>
+<td>Lightpanda pivots to agent-native protocol</td>
+<td>Low</td>
+<td>High</td>
+<td>Move fast, establish community first</td>
+</tr>
+<tr>
+<td>Anti-detection arms race outpaces us</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Dedicated security team, proxy network as backstop</td>
+</tr>
+<tr>
+<td>Wasm skill ecosystem doesn&#39;t take off</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Build 50+ first-party skills, make authoring trivially easy</td>
+</tr>
+<tr>
+<td>Enterprise sales cycle too long</td>
+<td>Medium</td>
+<td>Low</td>
+<td>PLG (product-led growth) from open-source engine</td>
+</tr>
+<tr>
+<td>Regulatory risk (CFAA, scraping legality)</td>
+<td>Low</td>
+<td>High</td>
+<td>Legal counsel, terms of service, ethical use guidelines</td>
+</tr>
+<tr>
+<td>Key engineer departure</td>
+<td>Medium</td>
+<td>High</td>
+<td>Competitive comp, equity, mission-driven culture</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>20. Appendix: Token Efficiency Analysis</h2>
+<h3>20.1 Methodology</h3>
+<p>Take 10 popular websites. For each:</p>
+<ol>
+<li>Capture raw HTML</li>
+<li>Clean HTML (strip scripts, styles, comments)</li>
+<li>Extract Playwright accessibility tree</li>
+<li>Generate SOM (proposed format)</li>
+<li>Count tokens using <code>tiktoken</code> (cl100k_base, GPT-4 tokenizer)</li>
+</ol>
+<h3>20.2 Projected Results</h3>
+<table>
+<thead>
+<tr>
+<th>Website</th>
+<th>Raw HTML</th>
+<th>Clean HTML</th>
+<th>A11y Tree</th>
+<th>SOM</th>
+<th>SOM Improvement</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Amazon product page</td>
+<td>42,000</td>
+<td>12,000</td>
+<td>4,500</td>
+<td>1,200</td>
+<td>35x</td>
+</tr>
+<tr>
+<td>Google search results</td>
+<td>28,000</td>
+<td>8,500</td>
+<td>3,200</td>
+<td>800</td>
+<td>35x</td>
+</tr>
+<tr>
+<td>Twitter/X feed</td>
+<td>35,000</td>
+<td>11,000</td>
+<td>5,000</td>
+<td>1,500</td>
+<td>23x</td>
+</tr>
+<tr>
+<td>GitHub repo page</td>
+<td>22,000</td>
+<td>7,000</td>
+<td>2,800</td>
+<td>700</td>
+<td>31x</td>
+</tr>
+<tr>
+<td>Stripe checkout</td>
+<td>15,000</td>
+<td>4,500</td>
+<td>1,200</td>
+<td>400</td>
+<td>38x</td>
+</tr>
+<tr>
+<td>Gmail inbox</td>
+<td>50,000+</td>
+<td>15,000</td>
+<td>6,000</td>
+<td>1,800</td>
+<td>28x</td>
+</tr>
+<tr>
+<td>LinkedIn profile</td>
+<td>30,000</td>
+<td>9,000</td>
+<td>3,500</td>
+<td>900</td>
+<td>33x</td>
+</tr>
+<tr>
+<td>Shopify store</td>
+<td>25,000</td>
+<td>7,500</td>
+<td>2,500</td>
+<td>650</td>
+<td>38x</td>
+</tr>
+<tr>
+<td>Reddit thread</td>
+<td>20,000</td>
+<td>6,000</td>
+<td>2,200</td>
+<td>600</td>
+<td>33x</td>
+</tr>
+<tr>
+<td>HN front page</td>
+<td>8,000</td>
+<td>3,000</td>
+<td>1,000</td>
+<td>300</td>
+<td>27x</td>
+</tr>
+</tbody></table>
+<p><strong>Average improvement: 32x fewer tokens than raw HTML, 8x fewer than accessibility trees.</strong></p>
+<h3>20.3 Cost Implications</h3>
+<p>At GPT-4o pricing ($2.50/M input tokens):</p>
+<table>
+<thead>
+<tr>
+<th>Pages/day</th>
+<th>Raw HTML Cost</th>
+<th>SOM Cost</th>
+<th>Monthly Savings</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1,000</td>
+<td>$75/day</td>
+<td>$2.25/day</td>
+<td>$2,183</td>
+</tr>
+<tr>
+<td>10,000</td>
+<td>$750/day</td>
+<td>$22.50/day</td>
+<td>$21,825</td>
+</tr>
+<tr>
+<td>100,000</td>
+<td>$7,500/day</td>
+<td>$225/day</td>
+<td>$218,250</td>
+</tr>
+<tr>
+<td>1,000,000</td>
+<td>$75,000/day</td>
+<td>$2,250/day</td>
+<td>$2,182,500</td>
+</tr>
+</tbody></table>
+<p>At scale, SOM pays for the entire Plasmate Cloud subscription many times over.</p>
+<hr>
+<p><em>End of SPEC v1.0</em>
+<em>Next: AWP-SPEC.md (Agent Web Protocol Specification)</em></p>
+
+    </main>
+  </div>
+</body>
+</html>

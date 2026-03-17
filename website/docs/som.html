@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Semantic Object Model (SOM) Reference - Plasmate Docs</title>
+  <meta name="description" content="Plasmate documentation: Semantic Object Model (SOM) Reference" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --plasma-white: #F0EDE8;
+      --core-black: #0D0D0D;
+      --void: #111110;
+      --deep: #1A1918;
+      --smoke: #2A2825;
+      --ash: #6B6560;
+      --dim: #8A8480;
+      --ion: #D4C5A0;
+      --ember: #E8853A;
+      --arc: #3D8FD4;
+      --corona: #F5C842;
+
+      --font-display: "Space Grotesk", system-ui, sans-serif;
+      --font-body: "IBM Plex Sans", system-ui, sans-serif;
+      --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+      --sidebar-w: 240px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--void);
+      color: var(--plasma-white);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ---- Sidebar ---- */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--core-black);
+      border-right: 1px solid var(--smoke);
+      padding: 22px 16px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 10;
+    }
+
+    .sidebar-brand {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--plasma-white);
+      text-decoration: none;
+      padding: 0 8px 14px;
+      border-bottom: 1px solid var(--smoke);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sidebar-brand .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--ember);
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 7px 10px;
+      border-radius: 8px;
+      color: var(--dim);
+      text-decoration: none;
+      font-size: 13px;
+      font-family: var(--font-body);
+      font-weight: 500;
+      transition: color 0.1s, background 0.1s;
+    }
+
+    .sidebar a:hover {
+      color: var(--plasma-white);
+      background: rgba(240,237,232,0.06);
+    }
+
+    .sidebar a.active {
+      color: var(--plasma-white);
+      background: rgba(232,133,58,0.14);
+    }
+
+    .sidebar-foot {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--smoke);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ash);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .sidebar-foot a { padding: 4px 10px; font-size: 11px; font-family: var(--font-mono); }
+
+    /* ---- Content ---- */
+    .content {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      max-width: 820px;
+      padding: 36px 40px 80px;
+    }
+
+    /* ---- Typography ---- */
+    .content h1 {
+      font-family: var(--font-display);
+      font-weight: 650;
+      font-size: 32px;
+      line-height: 1.15;
+      letter-spacing: -0.015em;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--smoke);
+    }
+
+    .content h2 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 22px;
+      line-height: 1.25;
+      margin-top: 38px;
+      margin-bottom: 12px;
+      color: var(--ion);
+    }
+
+    .content h3 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 17px;
+      margin-top: 28px;
+      margin-bottom: 8px;
+    }
+
+    .content h4, .content h5, .content h6 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 15px;
+      margin-top: 22px;
+      margin-bottom: 6px;
+      color: var(--dim);
+    }
+
+    .content p { margin-bottom: 14px; }
+
+    .content a { color: var(--arc); text-decoration: none; }
+    .content a:hover { text-decoration: underline; }
+
+    .content strong { color: var(--plasma-white); font-weight: 600; }
+
+    .content ul, .content ol {
+      padding-left: 22px;
+      margin-bottom: 14px;
+    }
+
+    .content li { margin-bottom: 4px; }
+
+    .content blockquote {
+      border-left: 3px solid var(--ember);
+      padding: 10px 16px;
+      margin: 16px 0;
+      background: rgba(232,133,58,0.06);
+      border-radius: 0 8px 8px 0;
+      color: rgba(240,237,232,0.88);
+    }
+
+    .content blockquote p { margin-bottom: 0; }
+
+    .content hr {
+      border: none;
+      height: 1px;
+      background: var(--smoke);
+      margin: 30px 0;
+    }
+
+    /* ---- Code ---- */
+    .content code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: rgba(240,237,232,0.08);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--ion);
+    }
+
+    .content pre {
+      background: var(--core-black);
+      border: 1px solid var(--smoke);
+      border-radius: 10px;
+      padding: 16px 18px;
+      overflow-x: auto;
+      margin: 14px 0 18px;
+      line-height: 1.55;
+    }
+
+    .content pre code {
+      background: none;
+      padding: 0;
+      border-radius: 0;
+      color: rgba(240,237,232,0.88);
+      font-size: 13px;
+    }
+
+    /* ---- Tables ---- */
+    .content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 18px;
+      font-size: 13px;
+      font-family: var(--font-mono);
+    }
+
+    .content th {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 2px solid var(--smoke);
+      color: var(--ash);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: 11px;
+    }
+
+    .content td {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(240,237,232,0.08);
+      color: rgba(240,237,232,0.84);
+    }
+
+    .content tr:hover td {
+      background: rgba(240,237,232,0.03);
+    }
+
+    /* ---- Images ---- */
+    .content img {
+      max-width: 100%;
+      border-radius: 8px;
+    }
+
+    /* ---- Mobile ---- */
+    @media (max-width: 860px) {
+      .sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--smoke);
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 2px;
+        padding: 12px;
+      }
+
+      .sidebar-brand {
+        width: 100%;
+        border-bottom: none;
+        padding-bottom: 8px;
+        margin-bottom: 4px;
+      }
+
+      .sidebar-foot { display: none; }
+
+      .layout { flex-direction: column; }
+
+      .content {
+        margin-left: 0;
+        padding: 24px 18px 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Documentation navigation">
+      <a class="sidebar-brand" href="/"><span class="dot"></span>Plasmate</a>
+      <a href="/docs/index.html">Overview</a>
+          <a href="/docs/quickstart.html">Quick Start</a>
+          <a href="/docs/spec.html">Product Spec</a>
+          <a href="/docs/som.html" class="active">SOM Reference</a>
+          <a href="/docs/awp.html">AWP Protocol</a>
+          <a href="/docs/awp-mvp.html">AWP MVP v0.1</a>
+          <a href="/docs/thesis.html">Thesis</a>
+          <a href="/docs/poc.html">PoC Build Brief</a>
+          <a href="/docs/roadmap.html">Roadmap v0.2</a>
+          <a href="/docs/brand.html">Brand Guide</a>
+      <div class="sidebar-foot">
+        <a href="https://github.com/plasmate-labs/plasmate">GitHub</a>
+        <a href="https://plasmate.app">plasmate.app</a>
+        <span style="padding: 4px 10px;">Apache 2.0 / v0.1</span>
+      </div>
+    </nav>
+    <main class="content">
+      <h1>Semantic Object Model (SOM) Reference</h1>
+<h2>Overview</h2>
+<p>The Semantic Object Model is Plasmate&#39;s core output format. It replaces the DOM as the interface between browser and agent.</p>
+<p>Where the DOM is a faithful representation of every tag, attribute, and style in an HTML document, SOM is a compressed, budgeted, semantic representation designed for LLM consumption.</p>
+<h2>Design Principles</h2>
+<ol>
+<li><p><strong>Token efficiency over fidelity.</strong> SOM drops anything an agent does not need: inline styles, class names (except for hint inference), script tags, empty elements, decorative markup.</p>
+</li>
+<li><p><strong>Deterministic IDs.</strong> Every element gets a stable ID derived from its semantic identity, not its position in a mutable tree. The same button on the same page always has the same ID.</p>
+</li>
+<li><p><strong>Budget enforcement.</strong> SOM has hard limits on output size. Content is summarized, lists are collapsed, duplicate links are removed. The model does not grow unbounded.</p>
+</li>
+<li><p><strong>Interactive elements are sacred.</strong> Links, buttons, inputs, selects, and textareas are never dropped by budget limits. An agent must always be able to act.</p>
+</li>
+</ol>
+<h2>Structure</h2>
+<pre><code class="language-json">{
+  &quot;version&quot;: &quot;0.1&quot;,
+  &quot;url&quot;: &quot;https://example.com&quot;,
+  &quot;title&quot;: &quot;Page Title&quot;,
+  &quot;meta&quot;: {
+    &quot;html_bytes&quot;: 589546,
+    &quot;som_bytes&quot;: 56625,
+    &quot;element_count&quot;: 325,
+    &quot;compression_ratio&quot;: 10.4
+  },
+  &quot;structured_data&quot;: {
+    &quot;json_ld&quot;: [...],
+    &quot;opengraph&quot;: {...},
+    &quot;twitter_cards&quot;: {...},
+    &quot;meta_tags&quot;: [...]
+  },
+  &quot;regions&quot;: [
+    {
+      &quot;id&quot;: &quot;r_navigation&quot;,
+      &quot;role&quot;: &quot;Navigation&quot;,
+      &quot;elements&quot;: [...]
+    },
+    {
+      &quot;id&quot;: &quot;r_main&quot;,
+      &quot;role&quot;: &quot;Main&quot;,
+      &quot;elements&quot;: [...]
+    }
+  ]
+}
+</code></pre>
+<h2>Regions</h2>
+<p>SOM organizes page content into semantic regions. Region detection uses HTML5 landmark elements and heuristic analysis of class names, IDs, and DOM structure.</p>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Detection</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Navigation</strong></td>
+<td><code>&lt;nav&gt;</code>, class/ID containing &quot;nav&quot;, &quot;menu&quot;, &quot;header-links&quot;</td>
+</tr>
+<tr>
+<td><strong>Main</strong></td>
+<td><code>&lt;main&gt;</code>, <code>&lt;article&gt;</code>, class/ID containing &quot;content&quot;, &quot;main&quot;, &quot;post&quot;</td>
+</tr>
+<tr>
+<td><strong>Header</strong></td>
+<td><code>&lt;header&gt;</code>, class/ID containing &quot;header&quot;, &quot;masthead&quot;, &quot;banner&quot;</td>
+</tr>
+<tr>
+<td><strong>Footer</strong></td>
+<td><code>&lt;footer&gt;</code>, class/ID containing &quot;footer&quot;, &quot;colophon&quot;</td>
+</tr>
+<tr>
+<td><strong>Aside</strong></td>
+<td><code>&lt;aside&gt;</code>, class/ID containing &quot;sidebar&quot;, &quot;aside&quot;, &quot;widget&quot;</td>
+</tr>
+<tr>
+<td><strong>Form</strong></td>
+<td><code>&lt;form&gt;</code>, class/ID containing &quot;form&quot;, &quot;login&quot;, &quot;signup&quot;</td>
+</tr>
+<tr>
+<td><strong>Dialog</strong></td>
+<td><code>&lt;dialog&gt;</code>, role=&quot;dialog&quot;, class containing &quot;modal&quot;, &quot;popup&quot;</td>
+</tr>
+<tr>
+<td><strong>Content</strong></td>
+<td>Fallback for regions that do not match other roles</td>
+</tr>
+</tbody></table>
+<h3>Region ID Format</h3>
+<p>Region IDs use the format <code>r_</code> + a descriptor derived from the region&#39;s role and position:</p>
+<ul>
+<li><code>r_navigation</code> (primary nav)</li>
+<li><code>r_main</code> (primary content)</li>
+<li><code>r_footer</code> (page footer)</li>
+<li><code>r_aside_0</code>, <code>r_aside_1</code> (multiple sidebars)</li>
+</ul>
+<h2>Elements</h2>
+<p>Each element in a region has:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>string</td>
+<td>Deterministic ID: <code>e_</code> + hex(sha256(origin|role|name|dom_path))[0..12]</td>
+</tr>
+<tr>
+<td><code>role</code></td>
+<td>string</td>
+<td>Semantic role: link, button, input, select, textarea, heading, paragraph, image, list, table</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>string</td>
+<td>Accessible name from aria-label, label[for], placeholder, alt, or visible text</td>
+</tr>
+<tr>
+<td><code>text</code></td>
+<td>string</td>
+<td>Summarized text content (budget-limited)</td>
+</tr>
+<tr>
+<td><code>href</code></td>
+<td>string</td>
+<td>For links: the target URL</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td>string</td>
+<td>For inputs: the input type (text, email, password, etc.)</td>
+</tr>
+<tr>
+<td><code>value</code></td>
+<td>string</td>
+<td>Current value for form elements</td>
+</tr>
+<tr>
+<td><code>hints</code></td>
+<td>array</td>
+<td>CSS class-inferred hints: primary, secondary, danger, disabled, active, etc.</td>
+</tr>
+</tbody></table>
+<h3>Element ID Stability</h3>
+<p>Element IDs are computed as:</p>
+<pre><code>sha256(normalized_origin + &quot;|&quot; + role + &quot;|&quot; + accessible_name + &quot;|&quot; + dom_path_indices)
+</code></pre>
+<p>The first 12 hex characters are used, prefixed with <code>e_</code>.</p>
+<p>This means:</p>
+<ul>
+<li>The same link to &quot;About&quot; on example.com always gets the same ID</li>
+<li>IDs survive page refreshes and minor layout changes</li>
+<li>IDs change if the element&#39;s semantic identity changes (different text, different role)</li>
+</ul>
+<h2>Content Budgets</h2>
+<p>SOM enforces output budgets to keep token costs predictable:</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>first_para_max</code></td>
+<td>200 chars</td>
+<td>First paragraph of a content block gets more space</td>
+</tr>
+<tr>
+<td><code>subsequent_para_max</code></td>
+<td>80 chars</td>
+<td>Later paragraphs are aggressively summarized</td>
+</tr>
+<tr>
+<td><code>max_paragraphs</code></td>
+<td>10</td>
+<td>Content blocks collapse after this many paragraphs</td>
+</tr>
+<tr>
+<td><code>max_list_items</code></td>
+<td>5</td>
+<td>Lists show first 5 items, then collapse</td>
+</tr>
+<tr>
+<td><code>max_links</code></td>
+<td>200</td>
+<td>Total links before excess are dropped</td>
+</tr>
+<tr>
+<td><code>max_navigation_links</code></td>
+<td>80</td>
+<td>Navigation links before excess are dropped</td>
+</tr>
+<tr>
+<td><code>max_elements</code></td>
+<td>400</td>
+<td>Total elements before budget trimming</td>
+</tr>
+<tr>
+<td><code>max_table_cell_chars</code></td>
+<td>80</td>
+<td>Table cell content truncation</td>
+</tr>
+</tbody></table>
+<h3>Budget Priority</h3>
+<p>When element limits are reached, SOM drops in this order:</p>
+<ol>
+<li>Duplicate links (same href, already seen)</li>
+<li>Navigation links beyond budget</li>
+<li>Paragraph elements beyond budget</li>
+<li>Non-interactive elements (decorative, redundant)</li>
+</ol>
+<p>Interactive elements (links, buttons, inputs, selects, textareas) are <strong>never</strong> dropped.</p>
+<h2>Smart Text Truncation</h2>
+<p>When text exceeds its budget, SOM prefers to break at sentence boundaries:</p>
+<ul>
+<li>Sentence boundary within 40%-100% of budget: break there</li>
+<li>No sentence boundary: break at word boundary</li>
+<li>Adds &quot;...&quot; suffix when truncated</li>
+</ul>
+<h2>CSS Class Hint Inference</h2>
+<p>SOM extracts semantic hints from CSS class names. This gives agents context about element purpose without exposing raw class strings.</p>
+<p>22 recognized hint categories:</p>
+<p><code>primary</code>, <code>secondary</code>, <code>danger</code>, <code>warning</code>, <code>success</code>, <code>error</code>, <code>disabled</code>, <code>active</code>, <code>selected</code>, <code>hidden</code>, <code>loading</code>, <code>collapsed</code>, <code>expanded</code>, <code>large</code>, <code>small</code>, <code>card</code>, <code>hero</code>, <code>modal</code>, <code>notification</code>, <code>badge</code>, <code>sticky</code>, <code>required</code></p>
+<p>Example: A button with class <code>btn btn-primary btn-lg disabled</code> produces hints <code>[&quot;primary&quot;, &quot;large&quot;, &quot;disabled&quot;]</code>.</p>
+<h2>Heading Hierarchy</h2>
+<p>Headings (<code>h1</code> through <code>h6</code>) are always preserved regardless of budget limits. They provide the structural outline of the page that agents use for navigation and context.</p>
+<h2>Layout Table Detection</h2>
+<p>SOM distinguishes layout tables from data tables using heuristics:</p>
+<ul>
+<li>Tables with <code>role=&quot;presentation&quot;</code> or <code>role=&quot;layout&quot;</code> are layout tables</li>
+<li>Tables nested inside other tables are likely layout tables</li>
+<li>Tables with a high ratio of links to cells are likely layout tables (e.g., HN)</li>
+<li>Tables with proper <code>&lt;thead&gt;</code>, <code>&lt;th&gt;</code> elements are data tables</li>
+</ul>
+<p>Layout tables are decomposed into their semantic child elements rather than preserved as table structures.</p>
+<h2>Link Deduplication</h2>
+<p>SOM normalizes URLs and deduplicates links across the entire page. On Wikipedia, this removes ~839 duplicate links, significantly improving token efficiency.</p>
+<p>Normalization: lowercase scheme and host, remove trailing slashes, remove default ports, sort query parameters.</p>
+<h2>JS DOM Mutations</h2>
+<p>When JavaScript modifies the DOM (via <code>document.write()</code>, <code>appendChild</code>, etc.), Plasmate&#39;s V8 runtime captures these mutations and feeds them back into the SOM compiler. The final SOM reflects the page as it appears after script execution.</p>
+<h2>Structured Data Extraction</h2>
+<p>SOM extracts structured metadata from:</p>
+<ul>
+<li><strong>JSON-LD</strong> (<code>&lt;script type=&quot;application/ld+json&quot;&gt;</code>)</li>
+<li><strong>OpenGraph</strong> (<code>&lt;meta property=&quot;og:*&quot;&gt;</code>)</li>
+<li><strong>Twitter Cards</strong> (<code>&lt;meta name=&quot;twitter:*&quot;&gt;</code>)</li>
+<li><strong>Standard meta tags</strong> (description, author, keywords)</li>
+<li><strong>Link elements</strong> (canonical, alternate, stylesheet counts)</li>
+</ul>
+<h2>CSS Visibility</h2>
+<p>SOM respects CSS visibility rules from inline <code>&lt;style&gt;</code> blocks:</p>
+<ul>
+<li><code>display: none</code> - element excluded from SOM</li>
+<li><code>visibility: hidden</code> - element excluded from SOM</li>
+<li><code>opacity: 0</code> - element excluded from SOM</li>
+</ul>
+<p>This prevents hidden elements (dropdowns, modals, off-screen content) from polluting the agent&#39;s view.</p>
+<h2>Benchmarks</h2>
+<table>
+<thead>
+<tr>
+<th>Site</th>
+<th>HTML</th>
+<th>SOM</th>
+<th>Compression</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Wikipedia</td>
+<td>589 KB</td>
+<td>56 KB</td>
+<td>10.4x</td>
+</tr>
+<tr>
+<td>BBC News</td>
+<td>~180 KB</td>
+<td>~12 KB</td>
+<td>15x</td>
+</tr>
+<tr>
+<td>GitHub</td>
+<td>~120 KB</td>
+<td>~12 KB</td>
+<td>10.1x</td>
+</tr>
+<tr>
+<td>Hacker News</td>
+<td>34 KB</td>
+<td>~26 KB</td>
+<td>1.3x</td>
+</tr>
+<tr>
+<td>x.com</td>
+<td>~15 KB</td>
+<td>~0.1 KB</td>
+<td>159x</td>
+</tr>
+</tbody></table>
+<p>Median across 38 URLs: <strong>9.4x compression</strong>.</p>
+<p>Note: Link-dense pages like HN compress less because links are interactive and cannot be dropped.</p>
+
+    </main>
+  </div>
+</body>
+</html>

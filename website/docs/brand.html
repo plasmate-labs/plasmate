@@ -1,0 +1,837 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Plasmate Brand Guide - Plasmate Docs</title>
+  <meta name="description" content="Plasmate documentation: Plasmate Brand Guide" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --plasma-white: #F0EDE8;
+      --core-black: #0D0D0D;
+      --void: #111110;
+      --deep: #1A1918;
+      --smoke: #2A2825;
+      --ash: #6B6560;
+      --dim: #8A8480;
+      --ion: #D4C5A0;
+      --ember: #E8853A;
+      --arc: #3D8FD4;
+      --corona: #F5C842;
+
+      --font-display: "Space Grotesk", system-ui, sans-serif;
+      --font-body: "IBM Plex Sans", system-ui, sans-serif;
+      --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+      --sidebar-w: 240px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--void);
+      color: var(--plasma-white);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ---- Sidebar ---- */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--core-black);
+      border-right: 1px solid var(--smoke);
+      padding: 22px 16px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 10;
+    }
+
+    .sidebar-brand {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--plasma-white);
+      text-decoration: none;
+      padding: 0 8px 14px;
+      border-bottom: 1px solid var(--smoke);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sidebar-brand .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--ember);
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 7px 10px;
+      border-radius: 8px;
+      color: var(--dim);
+      text-decoration: none;
+      font-size: 13px;
+      font-family: var(--font-body);
+      font-weight: 500;
+      transition: color 0.1s, background 0.1s;
+    }
+
+    .sidebar a:hover {
+      color: var(--plasma-white);
+      background: rgba(240,237,232,0.06);
+    }
+
+    .sidebar a.active {
+      color: var(--plasma-white);
+      background: rgba(232,133,58,0.14);
+    }
+
+    .sidebar-foot {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--smoke);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ash);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .sidebar-foot a { padding: 4px 10px; font-size: 11px; font-family: var(--font-mono); }
+
+    /* ---- Content ---- */
+    .content {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      max-width: 820px;
+      padding: 36px 40px 80px;
+    }
+
+    /* ---- Typography ---- */
+    .content h1 {
+      font-family: var(--font-display);
+      font-weight: 650;
+      font-size: 32px;
+      line-height: 1.15;
+      letter-spacing: -0.015em;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--smoke);
+    }
+
+    .content h2 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 22px;
+      line-height: 1.25;
+      margin-top: 38px;
+      margin-bottom: 12px;
+      color: var(--ion);
+    }
+
+    .content h3 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 17px;
+      margin-top: 28px;
+      margin-bottom: 8px;
+    }
+
+    .content h4, .content h5, .content h6 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 15px;
+      margin-top: 22px;
+      margin-bottom: 6px;
+      color: var(--dim);
+    }
+
+    .content p { margin-bottom: 14px; }
+
+    .content a { color: var(--arc); text-decoration: none; }
+    .content a:hover { text-decoration: underline; }
+
+    .content strong { color: var(--plasma-white); font-weight: 600; }
+
+    .content ul, .content ol {
+      padding-left: 22px;
+      margin-bottom: 14px;
+    }
+
+    .content li { margin-bottom: 4px; }
+
+    .content blockquote {
+      border-left: 3px solid var(--ember);
+      padding: 10px 16px;
+      margin: 16px 0;
+      background: rgba(232,133,58,0.06);
+      border-radius: 0 8px 8px 0;
+      color: rgba(240,237,232,0.88);
+    }
+
+    .content blockquote p { margin-bottom: 0; }
+
+    .content hr {
+      border: none;
+      height: 1px;
+      background: var(--smoke);
+      margin: 30px 0;
+    }
+
+    /* ---- Code ---- */
+    .content code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: rgba(240,237,232,0.08);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--ion);
+    }
+
+    .content pre {
+      background: var(--core-black);
+      border: 1px solid var(--smoke);
+      border-radius: 10px;
+      padding: 16px 18px;
+      overflow-x: auto;
+      margin: 14px 0 18px;
+      line-height: 1.55;
+    }
+
+    .content pre code {
+      background: none;
+      padding: 0;
+      border-radius: 0;
+      color: rgba(240,237,232,0.88);
+      font-size: 13px;
+    }
+
+    /* ---- Tables ---- */
+    .content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 18px;
+      font-size: 13px;
+      font-family: var(--font-mono);
+    }
+
+    .content th {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 2px solid var(--smoke);
+      color: var(--ash);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: 11px;
+    }
+
+    .content td {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(240,237,232,0.08);
+      color: rgba(240,237,232,0.84);
+    }
+
+    .content tr:hover td {
+      background: rgba(240,237,232,0.03);
+    }
+
+    /* ---- Images ---- */
+    .content img {
+      max-width: 100%;
+      border-radius: 8px;
+    }
+
+    /* ---- Mobile ---- */
+    @media (max-width: 860px) {
+      .sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--smoke);
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 2px;
+        padding: 12px;
+      }
+
+      .sidebar-brand {
+        width: 100%;
+        border-bottom: none;
+        padding-bottom: 8px;
+        margin-bottom: 4px;
+      }
+
+      .sidebar-foot { display: none; }
+
+      .layout { flex-direction: column; }
+
+      .content {
+        margin-left: 0;
+        padding: 24px 18px 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Documentation navigation">
+      <a class="sidebar-brand" href="/"><span class="dot"></span>Plasmate</a>
+      <a href="/docs/index.html">Overview</a>
+          <a href="/docs/quickstart.html">Quick Start</a>
+          <a href="/docs/spec.html">Product Spec</a>
+          <a href="/docs/som.html">SOM Reference</a>
+          <a href="/docs/awp.html">AWP Protocol</a>
+          <a href="/docs/awp-mvp.html">AWP MVP v0.1</a>
+          <a href="/docs/thesis.html">Thesis</a>
+          <a href="/docs/poc.html">PoC Build Brief</a>
+          <a href="/docs/roadmap.html">Roadmap v0.2</a>
+          <a href="/docs/brand.html" class="active">Brand Guide</a>
+      <div class="sidebar-foot">
+        <a href="https://github.com/plasmate-labs/plasmate">GitHub</a>
+        <a href="https://plasmate.app">plasmate.app</a>
+        <span style="padding: 4px 10px;">Apache 2.0 / v0.1</span>
+      </div>
+    </nav>
+    <main class="content">
+      <h1>Plasmate Brand Guide</h1>
+<blockquote>
+<p>&quot;The living information, the plasmate, replicates itself - not through information or in information - but <em>as</em> information.&quot;
+-- Philip K. Dick, VALIS (1981)</p>
+</blockquote>
+<hr>
+<h2>Origin Story</h2>
+<p>The name <strong>Plasmate</strong> comes from Philip K. Dick&#39;s novel VALIS, where the plasmate is described as &quot;living information&quot; - an energy form that crosses between realities, transforms raw matter into structured intelligence, and replicates itself through contact with human consciousness.</p>
+<p>This is exactly what Plasmate the browser engine does: it transforms the raw, chaotic HTML of the web into a <strong>Semantic Object Model</strong> - living, structured information that AI agents can understand, reason about, and act upon.</p>
+<p><strong>Plasma is the fourth state of matter.</strong> Agents are the fourth state of the web.</p>
+<table>
+<thead>
+<tr>
+<th>State</th>
+<th>Matter</th>
+<th>Web</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1st</td>
+<td>Solid</td>
+<td>Static HTML</td>
+</tr>
+<tr>
+<td>2nd</td>
+<td>Liquid</td>
+<td>Dynamic (JavaScript)</td>
+</tr>
+<tr>
+<td>3rd</td>
+<td>Gas</td>
+<td>Real-time (WebSockets)</td>
+</tr>
+<tr>
+<td><strong>4th</strong></td>
+<td><strong>Plasma</strong></td>
+<td><strong>Agentic (SOM)</strong></td>
+</tr>
+</tbody></table>
+<p>The &quot;mate&quot; suffix carries double meaning: a companion (your agent&#39;s browser companion) and the act of bonding (the plasmate &quot;crossbands&quot; with the agent, just as Dick described it bonding with human consciousness).</p>
+<hr>
+<h2>Brand Personality</h2>
+<p><strong>Pioneer.</strong> We are building the Netscape of agentic browsers. The first to reject CDP and DOM as the interface between agents and the web.</p>
+<p><strong>Precise.</strong> This is an engine, not a wrapper. Every design decision reflects engineering discipline.</p>
+<p><strong>Open.</strong> Apache 2.0. The standard belongs to everyone. The brand should feel institutional enough to trust, not corporate enough to fear.</p>
+<p><strong>Alive.</strong> The plasmate is living information. The brand should feel energetic, luminous, present - never cold or sterile.</p>
+<hr>
+<h2>Color System</h2>
+<h3>Philosophy</h3>
+<p>Plasma in nature is not one color. It is determined by the gas being ionized and the energy level of the excitation. Lightning is blue-white (nitrogen ionization at extreme temperature). Neon is amber-red. Solar corona is golden-white. The Plasmate palette draws from these real plasma emission colors.</p>
+<p><strong>No purple.</strong> No gradients. Flat, confident, scientific.</p>
+<h3>Primary Palette</h3>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Hex</th>
+<th>RGB</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Plasma White</strong></td>
+<td><code>#F0EDE8</code></td>
+<td>240, 237, 232</td>
+<td>Backgrounds, body text areas. Warm white - not blue-white, not stark. Like the afterglow of an ionized field.</td>
+</tr>
+<tr>
+<td><strong>Core Black</strong></td>
+<td><code>#0D0D0D</code></td>
+<td>13, 13, 13</td>
+<td>Primary text, dark backgrounds, terminal UI. Near-black with warmth.</td>
+</tr>
+<tr>
+<td><strong>Ember</strong></td>
+<td><code>#E8853A</code></td>
+<td>232, 133, 58</td>
+<td>Primary brand color. The color of neon plasma - ionized gas at mid-energy. Used for the wordmark, primary CTAs, key accents.</td>
+</tr>
+</tbody></table>
+<h3>Secondary Palette</h3>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Hex</th>
+<th>RGB</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Arc</strong></td>
+<td><code>#3D8FD4</code></td>
+<td>61, 143, 212</td>
+<td>Secondary accent. The color of an electric arc - nitrogen plasma at high energy. Used for links, interactive states, code highlights.</td>
+</tr>
+<tr>
+<td><strong>Ion</strong></td>
+<td><code>#D4C5A0</code></td>
+<td>212, 197, 160</td>
+<td>Tertiary. Warm sand/parchment tone. Backgrounds, cards, subtle dividers. The color of low-energy plasma glow.</td>
+</tr>
+<tr>
+<td><strong>Ash</strong></td>
+<td><code>#6B6560</code></td>
+<td>107, 101, 96</td>
+<td>Muted text, captions, borders. Warm gray - the residue after plasma discharge.</td>
+</tr>
+<tr>
+<td><strong>Corona</strong></td>
+<td><code>#F5C842</code></td>
+<td>245, 200, 66</td>
+<td>Highlight/attention only. The solar corona. Use sparingly for badges, warnings, &quot;new&quot; tags.</td>
+</tr>
+</tbody></table>
+<h3>Dark Mode</h3>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Hex</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Void</strong></td>
+<td><code>#111110</code></td>
+<td>Dark background</td>
+</tr>
+<tr>
+<td><strong>Deep</strong></td>
+<td><code>#1A1918</code></td>
+<td>Cards, elevated surfaces</td>
+</tr>
+<tr>
+<td><strong>Smoke</strong></td>
+<td><code>#2A2825</code></td>
+<td>Borders, dividers</td>
+</tr>
+<tr>
+<td><strong>Dim</strong></td>
+<td><code>#8A8480</code></td>
+<td>Muted text in dark mode</td>
+</tr>
+</tbody></table>
+<h3>Usage Rules</h3>
+<ol>
+<li><strong>Ember is the signature.</strong> When you see that warm orange on a dark field, you should think Plasmate. It should appear on every page, but not dominate.</li>
+<li><strong>Arc is functional.</strong> Blue is for clickable things, focused states, and code. It is not decorative.</li>
+<li><strong>Never use gradients.</strong> Flat color only. A gradient says &quot;startup trying to look cool.&quot; A flat field of Ember on Core Black says &quot;we built a browser engine.&quot;</li>
+<li><strong>Corona is rare.</strong> It exists for moments of delight or urgency. If everything is golden, nothing is.</li>
+<li><strong>White space is structural.</strong> Plasmate design uses generous whitespace. The content breathes.</li>
+</ol>
+<hr>
+<h2>Typography</h2>
+<h3>Philosophy</h3>
+<p>Plasmate is infrastructure. The typography should feel engineered, not designed. We avoid Inter (ubiquitous to the point of invisibility), geometric sans-serifs that feel like SaaS dashboards, and anything with &quot;startup energy.&quot;</p>
+<h3>Type Stack</h3>
+<p><strong>Primary: Space Grotesk</strong></p>
+<ul>
+<li>Proportional sans-serif derived from Space Mono</li>
+<li>Open source (SIL OFL), designed by Florian Karsten</li>
+<li>Has a mechanical, engineered quality without being cold</li>
+<li>Distinctive letter shapes (the &#39;a&#39;, the &#39;g&#39;) give it identity</li>
+<li>Use for: headlines, navigation, UI labels, the wordmark lockup</li>
+</ul>
+<p><strong>Secondary: IBM Plex Mono</strong></p>
+<ul>
+<li>Monospaced, designed for IBM&#39;s systems identity</li>
+<li>Open source (SIL OFL)</li>
+<li>Carries the weight of infrastructure heritage</li>
+<li>Use for: code blocks, terminal output, technical specs, element IDs, protocol names</li>
+<li>Also use for small data labels, version numbers, and timestamps</li>
+</ul>
+<p><strong>Body: IBM Plex Sans</strong></p>
+<ul>
+<li>Pairs with IBM Plex Mono from the same family</li>
+<li>Open source (SIL OFL)</li>
+<li>Highly readable at body sizes, neutral but not generic</li>
+<li>Use for: documentation, long-form text, descriptions, README content</li>
+</ul>
+<h3>Type Scale</h3>
+<pre><code>Display:    Space Grotesk Bold     48px / 56px line
+H1:         Space Grotesk SemiBold 36px / 44px line
+H2:         Space Grotesk Medium   28px / 36px line
+H3:         Space Grotesk Medium   22px / 30px line
+Body:       IBM Plex Sans Regular  16px / 26px line
+Body Small: IBM Plex Sans Regular  14px / 22px line
+Caption:    IBM Plex Sans Regular  12px / 18px line
+Code:       IBM Plex Mono Regular  14px / 22px line
+Code Small: IBM Plex Mono Regular  12px / 18px line
+Label:      Space Grotesk Medium   11px / 16px line, UPPERCASE, 0.08em tracking
+</code></pre>
+<h3>CSS Implementation</h3>
+<pre><code class="language-css">@import url(&#39;https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap&#39;);
+
+:root {
+  --font-display: &#39;Space Grotesk&#39;, system-ui, sans-serif;
+  --font-body: &#39;IBM Plex Sans&#39;, system-ui, sans-serif;
+  --font-mono: &#39;IBM Plex Mono&#39;, &#39;Menlo&#39;, monospace;
+}
+</code></pre>
+<hr>
+<h2>Pixie Dust: The Particle System</h2>
+<h3>Concept</h3>
+<p>The &quot;pixie dust&quot; is Plasmate&#39;s signature visual texture. It represents <strong>ionized particles</strong> - the fundamental unit of plasma. When matter transitions to the plasma state, atoms lose electrons and become a field of charged particles. This is what we visualize.</p>
+<h3>Implementation</h3>
+<p><strong>Dot Field</strong> - A sparse, randomized grid of small circles (2-4px) at varying opacities (0.08-0.25) placed on dark backgrounds. The dots are always Ember (<code>#E8853A</code>) or Plasma White (<code>#F0EDE8</code>).</p>
+<pre><code>Rules:
+- Dots are circular, never other shapes
+- Size range: 2px to 4px diameter
+- Opacity range: 0.08 to 0.25 (barely visible to faintly present)
+- Density: sparse. Think starfield, not confetti.
+- Distribution: pseudo-random with clustering bias toward edges
+- Never animate on marketing pages (respect user motion preferences)
+- On interactive surfaces (demos, playground): subtle drift at 0.1px/frame
+</code></pre>
+<p><strong>Emission Lines</strong> - Thin horizontal or vertical lines (1px, Ember at 0.12 opacity) that suggest spectral emission lines from plasma discharge. Used as section dividers or background texture on hero sections.</p>
+<pre><code>Rules:
+- Always 1px width
+- Always Ember color at low opacity (0.08-0.15)
+- Horizontal preferred; vertical only in sidebar contexts
+- Spacing: irregular, clustered in groups of 2-4 with large gaps between
+- Never more than 5-7 lines visible at once
+</code></pre>
+<p><strong>Ionization Border</strong> - A subtle particle scatter effect along the edges of cards or containers. Small dots (1-2px) that appear to be dispersing from the edge of a surface. Suggests matter transitioning states at the boundary.</p>
+<pre><code>Rules:
+- Only on key interactive cards (not every card)
+- Particles scatter outward from the card edge
+- 8-15 particles per edge
+- Fade to 0 opacity within 20px of the card edge
+- Use on: hero cards, feature highlights, the &quot;SOM output&quot; preview
+</code></pre>
+<h3>Where to Use Pixie Dust</h3>
+<table>
+<thead>
+<tr>
+<th>Context</th>
+<th>Technique</th>
+<th>Density</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Hero background (dark)</td>
+<td>Dot field + emission lines</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>Documentation</td>
+<td>None</td>
+<td>None - docs are clean</td>
+</tr>
+<tr>
+<td>Code examples</td>
+<td>Subtle dot field behind code block</td>
+<td>Very low</td>
+</tr>
+<tr>
+<td>Marketing cards</td>
+<td>Ionization border on hover</td>
+<td>Low</td>
+</tr>
+<tr>
+<td>CLI / terminal screenshots</td>
+<td>Emission lines as scan lines</td>
+<td>Very low</td>
+</tr>
+<tr>
+<td>404 / empty states</td>
+<td>Dense dot field (the void)</td>
+<td>High</td>
+</tr>
+<tr>
+<td>Loading states</td>
+<td>Converging dot animation</td>
+<td>Medium</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Logo</h2>
+<h3>The Mark</h3>
+<p>The Plasmate mark is a <strong>stylized &quot;P&quot;</strong> whose vertical stroke disperses into particles at the top - matter transitioning into plasma. The letter form is geometric, drawn from Space Grotesk&#39;s proportions but simplified for icon use.</p>
+<p>The dispersion effect at the top of the P is the brand&#39;s pixie dust rendered at mark scale: 5-8 small circles breaking away from the letterform, decreasing in size and opacity as they scatter upward and rightward.</p>
+<h3>Lockup Variants</h3>
+<table>
+<thead>
+<tr>
+<th>Variant</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Full lockup</strong></td>
+<td>Mark + &quot;PLASMATE&quot; wordmark (Space Grotesk SemiBold, uppercase, 0.06em tracking)</td>
+</tr>
+<tr>
+<td><strong>Compact</strong></td>
+<td>Mark + &quot;plasmate&quot; wordmark (Space Grotesk Medium, lowercase)</td>
+</tr>
+<tr>
+<td><strong>Icon only</strong></td>
+<td>The P mark alone. For favicons, app icons, social avatars.</td>
+</tr>
+</tbody></table>
+<h3>Color Variants</h3>
+<table>
+<thead>
+<tr>
+<th>Context</th>
+<th>Mark</th>
+<th>Wordmark</th>
+<th>Background</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Primary (dark bg)</td>
+<td>Ember</td>
+<td>Plasma White</td>
+<td>Core Black / Void</td>
+</tr>
+<tr>
+<td>Primary (light bg)</td>
+<td>Ember</td>
+<td>Core Black</td>
+<td>Plasma White</td>
+</tr>
+<tr>
+<td>Monochrome (dark bg)</td>
+<td>Plasma White</td>
+<td>Plasma White</td>
+<td>Core Black</td>
+</tr>
+<tr>
+<td>Monochrome (light bg)</td>
+<td>Core Black</td>
+<td>Core Black</td>
+<td>Plasma White</td>
+</tr>
+</tbody></table>
+<h3>Clear Space</h3>
+<p>Minimum clear space around the full lockup: the width of the &quot;P&quot; mark on all sides. For the icon only: half the mark width.</p>
+<h3>Don&#39;ts</h3>
+<ul>
+<li>Do not rotate the mark</li>
+<li>Do not apply gradients to the mark</li>
+<li>Do not change the dispersion direction (always up-right)</li>
+<li>Do not use the mark smaller than 16px (switch to a simplified version without particles below 16px)</li>
+<li>Do not place the mark on busy photography or patterned backgrounds</li>
+<li>Do not outline the mark</li>
+<li>Do not animate the mark dispersion without explicit brand team approval</li>
+</ul>
+<hr>
+<h2>Voice and Tone</h2>
+<h3>Writing Principles</h3>
+<p><strong>Be direct.</strong> &quot;Plasmate compiles HTML into a Semantic Object Model.&quot; Not &quot;Plasmate leverages cutting-edge AI to revolutionize how agents interact with the web.&quot;</p>
+<p><strong>Be specific.</strong> &quot;10.4x compression on Wikipedia. 4ms per page.&quot; Not &quot;blazing fast performance.&quot;</p>
+<p><strong>Be honest about scope.</strong> &quot;v0.1 does not execute JavaScript dynamically&quot; is better than silence. Open source trust is built on honesty.</p>
+<p><strong>Use the metaphor sparingly.</strong> The plasma/fourth-state metaphor is powerful in introductions and keynotes. In documentation, just be clear.</p>
+<h3>Naming Conventions</h3>
+<table>
+<thead>
+<tr>
+<th>Thing</th>
+<th>Name</th>
+<th>Style</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>The product</td>
+<td>Plasmate</td>
+<td>Capital P, no &quot;the&quot;</td>
+</tr>
+<tr>
+<td>The output format</td>
+<td>SOM (Semantic Object Model)</td>
+<td>Acronym, always capitalized</td>
+</tr>
+<tr>
+<td>The protocol</td>
+<td>AWP (Agent Web Protocol)</td>
+<td>Acronym, always capitalized</td>
+</tr>
+<tr>
+<td>The CLI commands</td>
+<td><code>plasmate fetch</code>, <code>plasmate serve</code></td>
+<td>Monospace, lowercase</td>
+</tr>
+<tr>
+<td>The organization</td>
+<td>Plasmate Labs</td>
+<td>Two words, both capitalized</td>
+</tr>
+<tr>
+<td>Element IDs</td>
+<td><code>e_a1b2c3d4e5f6</code></td>
+<td>Monospace, always with <code>e_</code> prefix</td>
+</tr>
+<tr>
+<td>Session IDs</td>
+<td><code>s_abc123</code></td>
+<td>Monospace, always with <code>s_</code> prefix</td>
+</tr>
+</tbody></table>
+<h3>Taglines</h3>
+<p><strong>Primary:</strong> <em>The browser engine for agents.</em></p>
+<p><strong>Technical:</strong> <em>HTML in. Semantic Object Model out.</em></p>
+<p><strong>Philosophical:</strong> <em>The fourth state of the web.</em></p>
+<p><strong>For developers:</strong> <em>Drop-in Puppeteer replacement. 10x less tokens.</em></p>
+<hr>
+<h2>Application Examples</h2>
+<h3>GitHub README Header</h3>
+<pre><code>[P mark, Ember on transparent]
+
+# plasmate
+
+The browser engine for agents.
+
+HTML in. Semantic Object Model out.
+</code></pre>
+<p>Dark background. Mark left-aligned. Title in Space Grotesk SemiBold. Subtitle in IBM Plex Sans. Dot field texture at very low opacity behind the header area.</p>
+<h3>Documentation Site (docs.plasmate.app)</h3>
+<ul>
+<li>Sidebar: Core Black background, Plasma White text, Ember for active section</li>
+<li>Content: Plasma White background, Core Black text</li>
+<li>Code blocks: Void background, syntax highlighted with Arc for keywords and Ember for strings</li>
+<li>Navigation: Space Grotesk Medium, 14px</li>
+<li>Body: IBM Plex Sans Regular, 16px</li>
+</ul>
+<h3>Terminal / CLI Output</h3>
+<ul>
+<li>Background: Core Black</li>
+<li>Standard output: Plasma White</li>
+<li>Success messages: Ember</li>
+<li>URLs and paths: Arc</li>
+<li>Metrics and numbers: Corona</li>
+<li>Errors: <code>#D4443A</code> (a warm red, not pure red)</li>
+<li>Version strings: IBM Plex Mono</li>
+</ul>
+<h3>Social / Open Graph Cards</h3>
+<ul>
+<li>Background: Core Black</li>
+<li>Mark: Ember, centered or left-third</li>
+<li>Title: Space Grotesk SemiBold, Plasma White</li>
+<li>Subtitle: IBM Plex Sans, Ash</li>
+<li>Dot field: subtle, 0.08-0.12 opacity, Ember particles</li>
+</ul>
+<hr>
+<h2>File Formats and Assets</h2>
+<h3>Deliverables Needed</h3>
+<ul>
+<li><input disabled="" type="checkbox"> SVG mark (all color variants)</li>
+<li><input disabled="" type="checkbox"> SVG full lockup (all color variants)</li>
+<li><input disabled="" type="checkbox"> PNG mark at 16, 32, 64, 128, 256, 512, 1024px</li>
+<li><input disabled="" type="checkbox"> Favicon set (ICO + PNG)</li>
+<li><input disabled="" type="checkbox"> Open Graph image template (1200x630)</li>
+<li><input disabled="" type="checkbox"> Twitter card template (1200x600)</li>
+<li><input disabled="" type="checkbox"> GitHub social preview (1280x640)</li>
+<li><input disabled="" type="checkbox"> Dot field SVG pattern tile (repeatable)</li>
+<li><input disabled="" type="checkbox"> Emission line SVG pattern tile</li>
+<li><input disabled="" type="checkbox"> Color swatch file (ASE, CLR)</li>
+</ul>
+<h3>Repository Location</h3>
+<p>All brand assets live in the <code>plasmate</code> repo under <code>brand/</code>:</p>
+<pre><code>brand/
+  mark/
+    plasmate-mark-ember.svg
+    plasmate-mark-white.svg
+    plasmate-mark-black.svg
+  lockup/
+    plasmate-lockup-dark.svg
+    plasmate-lockup-light.svg
+  icons/
+    favicon.ico
+    icon-16.png ... icon-1024.png
+  social/
+    og-default.png
+    twitter-card.png
+    github-social.png
+  patterns/
+    dot-field.svg
+    emission-lines.svg
+  colors/
+    plasmate-palette.ase
+</code></pre>
+<hr>
+<h2>Quick Reference Card</h2>
+<pre><code>COLORS
+  Ember:        #E8853A    Primary brand
+  Arc:          #3D8FD4    Links, interactive
+  Corona:       #F5C842    Highlights (rare)
+  Core Black:   #0D0D0D    Text, dark bg
+  Plasma White: #F0EDE8    Light bg
+  Ion:          #D4C5A0    Cards, subtle bg
+  Ash:          #6B6560    Muted text
+
+FONTS
+  Display/UI:   Space Grotesk (SemiBold, Medium)
+  Body:         IBM Plex Sans (Regular, Medium)
+  Code:         IBM Plex Mono (Regular, Medium)
+
+RULES
+  No gradients. No purple. No Inter.
+  Ember is the signature color.
+  Pixie dust = sparse particle dots, never confetti.
+  Direct voice. Specific claims. Honest scope.
+
+TAGLINE
+  The browser engine for agents.
+</code></pre>
+<hr>
+<p><em>Created March 16, 2026. Plasmate Labs. Apache 2.0.</em></p>
+
+    </main>
+  </div>
+</body>
+</html>

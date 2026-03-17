@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Plasmate v0.2 Roadmap - The Full Engine - Plasmate Docs</title>
+  <meta name="description" content="Plasmate documentation: Plasmate v0.2 Roadmap - The Full Engine" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --plasma-white: #F0EDE8;
+      --core-black: #0D0D0D;
+      --void: #111110;
+      --deep: #1A1918;
+      --smoke: #2A2825;
+      --ash: #6B6560;
+      --dim: #8A8480;
+      --ion: #D4C5A0;
+      --ember: #E8853A;
+      --arc: #3D8FD4;
+      --corona: #F5C842;
+
+      --font-display: "Space Grotesk", system-ui, sans-serif;
+      --font-body: "IBM Plex Sans", system-ui, sans-serif;
+      --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+      --sidebar-w: 240px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--void);
+      color: var(--plasma-white);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ---- Sidebar ---- */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--core-black);
+      border-right: 1px solid var(--smoke);
+      padding: 22px 16px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 10;
+    }
+
+    .sidebar-brand {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--plasma-white);
+      text-decoration: none;
+      padding: 0 8px 14px;
+      border-bottom: 1px solid var(--smoke);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sidebar-brand .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--ember);
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 7px 10px;
+      border-radius: 8px;
+      color: var(--dim);
+      text-decoration: none;
+      font-size: 13px;
+      font-family: var(--font-body);
+      font-weight: 500;
+      transition: color 0.1s, background 0.1s;
+    }
+
+    .sidebar a:hover {
+      color: var(--plasma-white);
+      background: rgba(240,237,232,0.06);
+    }
+
+    .sidebar a.active {
+      color: var(--plasma-white);
+      background: rgba(232,133,58,0.14);
+    }
+
+    .sidebar-foot {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--smoke);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ash);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .sidebar-foot a { padding: 4px 10px; font-size: 11px; font-family: var(--font-mono); }
+
+    /* ---- Content ---- */
+    .content {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      max-width: 820px;
+      padding: 36px 40px 80px;
+    }
+
+    /* ---- Typography ---- */
+    .content h1 {
+      font-family: var(--font-display);
+      font-weight: 650;
+      font-size: 32px;
+      line-height: 1.15;
+      letter-spacing: -0.015em;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--smoke);
+    }
+
+    .content h2 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 22px;
+      line-height: 1.25;
+      margin-top: 38px;
+      margin-bottom: 12px;
+      color: var(--ion);
+    }
+
+    .content h3 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 17px;
+      margin-top: 28px;
+      margin-bottom: 8px;
+    }
+
+    .content h4, .content h5, .content h6 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 15px;
+      margin-top: 22px;
+      margin-bottom: 6px;
+      color: var(--dim);
+    }
+
+    .content p { margin-bottom: 14px; }
+
+    .content a { color: var(--arc); text-decoration: none; }
+    .content a:hover { text-decoration: underline; }
+
+    .content strong { color: var(--plasma-white); font-weight: 600; }
+
+    .content ul, .content ol {
+      padding-left: 22px;
+      margin-bottom: 14px;
+    }
+
+    .content li { margin-bottom: 4px; }
+
+    .content blockquote {
+      border-left: 3px solid var(--ember);
+      padding: 10px 16px;
+      margin: 16px 0;
+      background: rgba(232,133,58,0.06);
+      border-radius: 0 8px 8px 0;
+      color: rgba(240,237,232,0.88);
+    }
+
+    .content blockquote p { margin-bottom: 0; }
+
+    .content hr {
+      border: none;
+      height: 1px;
+      background: var(--smoke);
+      margin: 30px 0;
+    }
+
+    /* ---- Code ---- */
+    .content code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: rgba(240,237,232,0.08);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--ion);
+    }
+
+    .content pre {
+      background: var(--core-black);
+      border: 1px solid var(--smoke);
+      border-radius: 10px;
+      padding: 16px 18px;
+      overflow-x: auto;
+      margin: 14px 0 18px;
+      line-height: 1.55;
+    }
+
+    .content pre code {
+      background: none;
+      padding: 0;
+      border-radius: 0;
+      color: rgba(240,237,232,0.88);
+      font-size: 13px;
+    }
+
+    /* ---- Tables ---- */
+    .content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 18px;
+      font-size: 13px;
+      font-family: var(--font-mono);
+    }
+
+    .content th {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 2px solid var(--smoke);
+      color: var(--ash);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: 11px;
+    }
+
+    .content td {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(240,237,232,0.08);
+      color: rgba(240,237,232,0.84);
+    }
+
+    .content tr:hover td {
+      background: rgba(240,237,232,0.03);
+    }
+
+    /* ---- Images ---- */
+    .content img {
+      max-width: 100%;
+      border-radius: 8px;
+    }
+
+    /* ---- Mobile ---- */
+    @media (max-width: 860px) {
+      .sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--smoke);
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 2px;
+        padding: 12px;
+      }
+
+      .sidebar-brand {
+        width: 100%;
+        border-bottom: none;
+        padding-bottom: 8px;
+        margin-bottom: 4px;
+      }
+
+      .sidebar-foot { display: none; }
+
+      .layout { flex-direction: column; }
+
+      .content {
+        margin-left: 0;
+        padding: 24px 18px 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Documentation navigation">
+      <a class="sidebar-brand" href="/"><span class="dot"></span>Plasmate</a>
+      <a href="/docs/index.html">Overview</a>
+          <a href="/docs/quickstart.html">Quick Start</a>
+          <a href="/docs/spec.html">Product Spec</a>
+          <a href="/docs/som.html">SOM Reference</a>
+          <a href="/docs/awp.html">AWP Protocol</a>
+          <a href="/docs/awp-mvp.html">AWP MVP v0.1</a>
+          <a href="/docs/thesis.html">Thesis</a>
+          <a href="/docs/poc.html">PoC Build Brief</a>
+          <a href="/docs/roadmap.html" class="active">Roadmap v0.2</a>
+          <a href="/docs/brand.html">Brand Guide</a>
+      <div class="sidebar-foot">
+        <a href="https://github.com/plasmate-labs/plasmate">GitHub</a>
+        <a href="https://plasmate.app">plasmate.app</a>
+        <span style="padding: 4px 10px;">Apache 2.0 / v0.1</span>
+      </div>
+    </nav>
+    <main class="content">
+      <h1>Plasmate v0.2 Roadmap - The Full Engine</h1>
+<h2>Vision</h2>
+<p>Plasmate v0.1 proved SOM works: 9.4x median compression across 38 real sites.
+v0.2 makes it a drop-in replacement for Lightpanda and Chrome headless.</p>
+<p>Three pillars: <strong>Speed</strong>, <strong>Memory</strong>, <strong>Parallelism</strong> - all powered by SOM-native architecture.</p>
+<h2>Architecture</h2>
+<pre><code>                    +-----------------------+
+                    |     CDP Gateway       |  &lt;-- Puppeteer/Playwright compatible
+                    |  (Chrome DevTools     |
+                    |   Protocol subset)    |
+                    +----------+------------+
+                               |
+                    +----------+------------+
+                    |     AWP Server        |  &lt;-- Native protocol (SOM-aware)
+                    |  (WebSocket, v0.1)    |
+                    +----------+------------+
+                               |
+              +----------------+----------------+
+              |                |                |
+    +---------v------+ +------v--------+ +-----v--------+
+    |  Page Runtime  | | SOM Compiler  | | SOM Cache    |
+    |  (V8 via       | | (v0.1, proven)| | (new)        |
+    |   rusty_v8)    | |               | |              |
+    +--------+-------+ +------+--------+ +-----+--------+
+             |                |                |
+    +--------v-------+ +-----v--------+       |
+    | DOM Mutations  | | Heuristics   |       |
+    | Observer       | | Engine       |       |
+    +--------+-------+ +--------------+       |
+             |                                |
+    +--------v---------------------------------v-----+
+    |              Session Manager                    |
+    |  (per-tab isolation, parallel execution,        |
+    |   shared cache, resource budgets)               |
+    +-------------------------------------------------+
+</code></pre>
+<h2>Module Plan</h2>
+<h3>1. JavaScript Execution (<code>src/js/</code>)</h3>
+<ul>
+<li><strong>Crate</strong>: <code>rusty_v8</code> (V8 bindings for Rust)</li>
+<li><strong>Scope</strong>: Create V8 isolate per session, execute <code>&lt;script&gt;</code> tags</li>
+<li><strong>DOM bridge</strong>: Minimal - expose <code>document.querySelector</code>, <code>document.getElementById</code>,
+<code>element.textContent</code>, <code>element.getAttribute</code>, <code>element.click()</code>,
+<code>window.location</code>, <code>setTimeout/setInterval</code></li>
+<li><strong>Not needed for v0.2</strong>: Full Web API (Canvas, WebRTC, WebGL, Workers)</li>
+<li><strong>Key insight</strong>: We only need enough JS to make pages render their content.
+90% of agent-relevant JS is &quot;fetch data, insert into DOM.&quot; We skip layout/paint.</li>
+</ul>
+<h3>2. CDP Compatibility Layer (<code>src/cdp/</code>)</h3>
+<ul>
+<li><strong>Goal</strong>: Puppeteer <code>puppeteer.connect()</code> works out of the box</li>
+<li><strong>Domains to implement</strong>:<ul>
+<li><code>Browser</code> (getVersion, close)</li>
+<li><code>Target</code> (createTarget, attachToTarget, getTargets)</li>
+<li><code>Page</code> (navigate, enable, getFrameTree, lifecycleEvent)</li>
+<li><code>Runtime</code> (evaluate, callFunctionOn, getProperties)</li>
+<li><code>DOM</code> (getDocument, querySelector, getOuterHTML, setAttributeValue)</li>
+<li><code>Network</code> (enable, requestWillBeSent, responseReceived - for interception)</li>
+<li><code>Input</code> (dispatchMouseEvent, dispatchKeyEvent)</li>
+<li><code>LP</code> (getMarkdown, getSemanticTree, getInteractiveElements) - Lightpanda compat!</li>
+</ul>
+</li>
+<li><strong>Bonus</strong>: Also expose <code>Plasmate</code> CDP domain with native SOM access</li>
+</ul>
+<h3>3. SOM Cache (<code>src/cache/</code>)</h3>
+<ul>
+<li><strong>The paradigm shift</strong>: Why re-parse a page you already understand?</li>
+<li><strong>Architecture</strong>:<pre><code>URL + content_hash -&gt; cached SOM snapshot
+</code></pre>
+</li>
+<li><strong>Three tiers</strong>:<ol>
+<li><strong>Hot cache</strong> (in-memory): Last N pages, instant retrieval, ~0ms</li>
+<li><strong>Warm cache</strong> (RocksDB on disk): Thousands of pages, &lt;1ms retrieval</li>
+<li><strong>Cold cache</strong> (shared/networked): Cross-session, cross-agent SOM sharing</li>
+</ol>
+</li>
+<li><strong>Differential SOM</strong>: When revisiting a URL:<ol>
+<li>Fetch HTML, compute content hash</li>
+<li>If hash matches cache: return cached SOM instantly (zero parse time)</li>
+<li>If hash differs: compile new SOM, diff against cached version,
+return only changed elements + full SOM</li>
+</ol>
+</li>
+<li><strong>Cache-aware navigation</strong>: Agent says &quot;go to HN&quot; - if cached SOM is &lt;60s old,
+return it WITHOUT fetching. Agent gets instant page understanding.</li>
+<li><strong>Prewarming</strong>: Background thread fetches + caches URLs the agent is likely
+to visit (based on links in current SOM)</li>
+</ul>
+<h3>4. Parallel Session Manager (<code>src/sessions/</code>)</h3>
+<ul>
+<li><strong>Rust advantage</strong>: tokio green threads + zero-cost async</li>
+<li><strong>Per-session isolation</strong>: Each session gets its own V8 isolate + cookie jar</li>
+<li><strong>Shared resources</strong>: SOM cache, DNS cache, connection pool</li>
+<li><strong>Budget enforcement</strong>: Max memory per session, max JS execution time</li>
+<li><strong>Benchmarks target</strong>:<ul>
+<li>500+ concurrent sessions per 8GB RAM (vs Lightpanda&#39;s 140, Chrome&#39;s 15)</li>
+<li>&lt;50ms cold start per session (vs Lightpanda&#39;s 100ms, Chrome&#39;s 3-5s)</li>
+<li>&lt;10ms warm start (cached SOM, no fetch needed)</li>
+</ul>
+</li>
+</ul>
+<h3>5. Network Layer Upgrades (<code>src/network/</code>)</h3>
+<ul>
+<li><strong>Connection pooling</strong>: Reuse TCP/TLS connections across sessions</li>
+<li><strong>HTTP/2 multiplexing</strong>: Multiple requests per connection</li>
+<li><strong>DNS caching</strong>: Shared across sessions</li>
+<li><strong>Request interception</strong>: Block ads, tracking, unnecessary resources</li>
+<li><strong>Resource budgets</strong>: Skip images, fonts, media by default (agent doesn&#39;t need them)</li>
+</ul>
+<h2>Performance Targets (vs Lightpanda)</h2>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Chrome</th>
+<th>Lightpanda</th>
+<th>Plasmate Target</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>100-page benchmark</td>
+<td>25.2s</td>
+<td>2.3s</td>
+<td>&lt;1.0s</td>
+</tr>
+<tr>
+<td>Memory per instance</td>
+<td>207MB</td>
+<td>24MB</td>
+<td>&lt;8MB</td>
+</tr>
+<tr>
+<td>Concurrent (8GB)</td>
+<td>15</td>
+<td>140</td>
+<td>500+</td>
+</tr>
+<tr>
+<td>Cold start</td>
+<td>3-5s</td>
+<td>&lt;100ms</td>
+<td>&lt;50ms</td>
+</tr>
+<tr>
+<td>Token output</td>
+<td>Raw DOM</td>
+<td>Markdown/Tree (bolt-on)</td>
+<td>SOM (native)</td>
+</tr>
+<tr>
+<td>Warm page load</td>
+<td>N/A</td>
+<td>N/A</td>
+<td>&lt;10ms (cached SOM)</td>
+</tr>
+</tbody></table>
+<h2>Why SOM Cache Changes Everything</h2>
+<p>Lightpanda and Chrome re-render every page from scratch every time.
+Plasmate with SOM Cache creates a fundamentally different paradigm:</p>
+<ol>
+<li><strong>First visit</strong>: Fetch -&gt; Parse -&gt; JS -&gt; Compile SOM -&gt; Cache (normal speed)</li>
+<li><strong>Revisit (same content)</strong>: Cache hit -&gt; Return SOM (~0ms)</li>
+<li><strong>Revisit (changed content)</strong>: Fetch -&gt; Diff -&gt; Update cache -&gt; Return delta</li>
+<li><strong>Predicted navigation</strong>: Cache prewarms links from current page</li>
+</ol>
+<p>For an AI agent that navigates 50 pages in a workflow, pages 2-50 are often
+revisits or predictable next-pages. SOM Cache makes those effectively free.</p>
+<h2>Build Order</h2>
+<ol>
+<li><strong>V8 integration</strong> (unblocks JS execution, biggest gap vs Lightpanda)</li>
+<li><strong>CDP compatibility</strong> (unblocks Puppeteer/Playwright, enables benchmarking vs LP)</li>
+<li><strong>SOM Cache</strong> (the differentiator, makes us categorically faster)</li>
+<li><strong>Parallel session manager</strong> (proves the concurrency story)</li>
+<li><strong>Network upgrades</strong> (polish, production readiness)</li>
+</ol>
+<h2>Dependencies to Add</h2>
+<pre><code class="language-toml"># V8 JavaScript engine
+rusty_v8 = &quot;0.106&quot;
+
+# On-disk cache
+rocksdb = { version = &quot;0.22&quot;, default-features = false }
+
+# Faster hashing for cache keys
+xxhash-rust = { version = &quot;0.8&quot;, features = [&quot;xxh3&quot;] }
+
+# Memory tracking
+jemalloc-ctl = &quot;0.5&quot;
+jemallocator = &quot;0.5&quot;
+
+# HTTP/2
+hyper = { version = &quot;1&quot;, features = [&quot;http2&quot;, &quot;server&quot;] }
+</code></pre>
+
+    </main>
+  </div>
+</body>
+</html>

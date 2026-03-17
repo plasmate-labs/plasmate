@@ -1,0 +1,1038 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AWP - Agent Web Protocol (Draft Specification v0.1) - Plasmate Docs</title>
+  <meta name="description" content="Plasmate documentation: AWP - Agent Web Protocol (Draft Specification v0.1)" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --plasma-white: #F0EDE8;
+      --core-black: #0D0D0D;
+      --void: #111110;
+      --deep: #1A1918;
+      --smoke: #2A2825;
+      --ash: #6B6560;
+      --dim: #8A8480;
+      --ion: #D4C5A0;
+      --ember: #E8853A;
+      --arc: #3D8FD4;
+      --corona: #F5C842;
+
+      --font-display: "Space Grotesk", system-ui, sans-serif;
+      --font-body: "IBM Plex Sans", system-ui, sans-serif;
+      --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+      --sidebar-w: 240px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--void);
+      color: var(--plasma-white);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ---- Sidebar ---- */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--core-black);
+      border-right: 1px solid var(--smoke);
+      padding: 22px 16px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 10;
+    }
+
+    .sidebar-brand {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--plasma-white);
+      text-decoration: none;
+      padding: 0 8px 14px;
+      border-bottom: 1px solid var(--smoke);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sidebar-brand .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--ember);
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 7px 10px;
+      border-radius: 8px;
+      color: var(--dim);
+      text-decoration: none;
+      font-size: 13px;
+      font-family: var(--font-body);
+      font-weight: 500;
+      transition: color 0.1s, background 0.1s;
+    }
+
+    .sidebar a:hover {
+      color: var(--plasma-white);
+      background: rgba(240,237,232,0.06);
+    }
+
+    .sidebar a.active {
+      color: var(--plasma-white);
+      background: rgba(232,133,58,0.14);
+    }
+
+    .sidebar-foot {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--smoke);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ash);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .sidebar-foot a { padding: 4px 10px; font-size: 11px; font-family: var(--font-mono); }
+
+    /* ---- Content ---- */
+    .content {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      max-width: 820px;
+      padding: 36px 40px 80px;
+    }
+
+    /* ---- Typography ---- */
+    .content h1 {
+      font-family: var(--font-display);
+      font-weight: 650;
+      font-size: 32px;
+      line-height: 1.15;
+      letter-spacing: -0.015em;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--smoke);
+    }
+
+    .content h2 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 22px;
+      line-height: 1.25;
+      margin-top: 38px;
+      margin-bottom: 12px;
+      color: var(--ion);
+    }
+
+    .content h3 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 17px;
+      margin-top: 28px;
+      margin-bottom: 8px;
+    }
+
+    .content h4, .content h5, .content h6 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 15px;
+      margin-top: 22px;
+      margin-bottom: 6px;
+      color: var(--dim);
+    }
+
+    .content p { margin-bottom: 14px; }
+
+    .content a { color: var(--arc); text-decoration: none; }
+    .content a:hover { text-decoration: underline; }
+
+    .content strong { color: var(--plasma-white); font-weight: 600; }
+
+    .content ul, .content ol {
+      padding-left: 22px;
+      margin-bottom: 14px;
+    }
+
+    .content li { margin-bottom: 4px; }
+
+    .content blockquote {
+      border-left: 3px solid var(--ember);
+      padding: 10px 16px;
+      margin: 16px 0;
+      background: rgba(232,133,58,0.06);
+      border-radius: 0 8px 8px 0;
+      color: rgba(240,237,232,0.88);
+    }
+
+    .content blockquote p { margin-bottom: 0; }
+
+    .content hr {
+      border: none;
+      height: 1px;
+      background: var(--smoke);
+      margin: 30px 0;
+    }
+
+    /* ---- Code ---- */
+    .content code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: rgba(240,237,232,0.08);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--ion);
+    }
+
+    .content pre {
+      background: var(--core-black);
+      border: 1px solid var(--smoke);
+      border-radius: 10px;
+      padding: 16px 18px;
+      overflow-x: auto;
+      margin: 14px 0 18px;
+      line-height: 1.55;
+    }
+
+    .content pre code {
+      background: none;
+      padding: 0;
+      border-radius: 0;
+      color: rgba(240,237,232,0.88);
+      font-size: 13px;
+    }
+
+    /* ---- Tables ---- */
+    .content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 18px;
+      font-size: 13px;
+      font-family: var(--font-mono);
+    }
+
+    .content th {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 2px solid var(--smoke);
+      color: var(--ash);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: 11px;
+    }
+
+    .content td {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(240,237,232,0.08);
+      color: rgba(240,237,232,0.84);
+    }
+
+    .content tr:hover td {
+      background: rgba(240,237,232,0.03);
+    }
+
+    /* ---- Images ---- */
+    .content img {
+      max-width: 100%;
+      border-radius: 8px;
+    }
+
+    /* ---- Mobile ---- */
+    @media (max-width: 860px) {
+      .sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--smoke);
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 2px;
+        padding: 12px;
+      }
+
+      .sidebar-brand {
+        width: 100%;
+        border-bottom: none;
+        padding-bottom: 8px;
+        margin-bottom: 4px;
+      }
+
+      .sidebar-foot { display: none; }
+
+      .layout { flex-direction: column; }
+
+      .content {
+        margin-left: 0;
+        padding: 24px 18px 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Documentation navigation">
+      <a class="sidebar-brand" href="/"><span class="dot"></span>Plasmate</a>
+      <a href="/docs/index.html">Overview</a>
+          <a href="/docs/quickstart.html">Quick Start</a>
+          <a href="/docs/spec.html">Product Spec</a>
+          <a href="/docs/som.html">SOM Reference</a>
+          <a href="/docs/awp.html" class="active">AWP Protocol</a>
+          <a href="/docs/awp-mvp.html">AWP MVP v0.1</a>
+          <a href="/docs/thesis.html">Thesis</a>
+          <a href="/docs/poc.html">PoC Build Brief</a>
+          <a href="/docs/roadmap.html">Roadmap v0.2</a>
+          <a href="/docs/brand.html">Brand Guide</a>
+      <div class="sidebar-foot">
+        <a href="https://github.com/plasmate-labs/plasmate">GitHub</a>
+        <a href="https://plasmate.app">plasmate.app</a>
+        <span style="padding: 4px 10px;">Apache 2.0 / v0.1</span>
+      </div>
+    </nav>
+    <main class="content">
+      <h1>AWP - Agent Web Protocol (Draft Specification v0.1)</h1>
+<p><strong>Working Project Name:</strong> Plasmate (Agentic Browser Engine)</p>
+<h2>Abstract</h2>
+<p>The Agent Web Protocol (AWP) is a purpose-built, intent-forward protocol for controlling a headless browser engine in AI agent workloads.</p>
+<p>AWP is designed as a replacement for the Chrome DevTools Protocol (CDP) in agentic environments. CDP is a debugging interface optimized for human developers and pixel-oriented automation. AWP is optimized for:</p>
+<ul>
+<li>Semantic interaction, not coordinate clicking</li>
+<li>Token efficiency, not visual fidelity</li>
+<li>Massive concurrency, not single-user tabs</li>
+<li>Determinism, not rendering</li>
+<li>Extensibility via WebAssembly skills</li>
+</ul>
+<p>AWP is transport-agnostic but specified primarily over WebSocket. Payload encoding is binary (MessagePack) by default.</p>
+<h2>Status of This Document</h2>
+<p>This is a draft for discussion and implementation planning. It is intentionally exhaustive so an agentic engineering team can implement:</p>
+<ol>
+<li>A minimal AWP server</li>
+<li>A minimal AWP client SDK</li>
+<li>A Rust proof of concept focused on SOM generation and basic action execution</li>
+</ol>
+<h2>Table of Contents</h2>
+<ol>
+<li><a href="#goals-and-non-goals">Goals and Non-Goals</a></li>
+<li><a href="#terminology">Terminology</a></li>
+<li><a href="#architecture-overview">Architecture Overview</a></li>
+<li><a href="#versioning-and-capability-negotiation">Versioning and Capability Negotiation</a></li>
+<li><a href="#transport">Transport</a></li>
+<li><a href="#encoding">Encoding</a></li>
+<li><a href="#message-model">Message Model</a></li>
+<li><a href="#error-model">Error Model</a></li>
+<li><a href="#authentication-and-authorization">Authentication and Authorization</a></li>
+<li><a href="#resources-and-identifiers">Resources and Identifiers</a></li>
+<li><a href="#sessions">Sessions</a></li>
+<li><a href="#page-lifecycle">Page Lifecycle</a></li>
+<li><a href="#observation-som-snapshots-and-mutations">Observation: SOM Snapshots and Mutations</a></li>
+<li><a href="#actions-intent-based-interaction">Actions: Intent-Based Interaction</a></li>
+<li><a href="#data-extraction">Data Extraction</a></li>
+<li><a href="#network-controls-proxy-profiles-stealth">Network Controls: Proxy, Profiles, Stealth</a></li>
+<li><a href="#state-cookies-storage-downloads">State: Cookies, Storage, Downloads</a></li>
+<li><a href="#skills-webassembly-extensions">Skills: WebAssembly Extensions</a></li>
+<li><a href="#telemetry-and-auditing">Telemetry and Auditing</a></li>
+<li><a href="#determinism-and-reproducibility">Determinism and Reproducibility</a></li>
+<li><a href="#examples">Examples</a></li>
+<li><a href="#compatibility-and-migration-from-cdp">Compatibility and Migration from CDP</a></li>
+<li><a href="#implementation-notes-for-a-rust-poc">Implementation Notes for a Rust PoC</a></li>
+</ol>
+<hr>
+<h2>Goals and Non-Goals</h2>
+<h3>Goals</h3>
+<ol>
+<li><strong>Intent-first</strong>: agents issue semantic actions, not pixels.</li>
+<li><strong>Token efficiency</strong>: primary observation output is the Semantic Object Model (SOM), not screenshots.</li>
+<li><strong>Deterministic references</strong>: stable element addressing across SPA mutations.</li>
+<li><strong>Massive concurrency</strong>: protocol supports thousands of sessions with strict resource limits.</li>
+<li><strong>Robustness</strong>: sessions survive reconnects, and operations are idempotent when practical.</li>
+<li><strong>Extensibility</strong>: site-specific logic is implemented as Wasm skills, not baked into the engine.</li>
+<li><strong>Observability</strong>: first-class telemetry for latency, errors, retries, costs, and provenance.</li>
+<li><strong>Security</strong>: clear trust boundaries and permission model for high-risk operations.</li>
+</ol>
+<h3>Non-Goals</h3>
+<ol>
+<li>AWP does not define a UI, rendering pipeline, or pixel output requirements.</li>
+<li>AWP does not define scraping legality or usage policy.</li>
+<li>AWP does not mandate a specific SOM schema beyond normative minimums.</li>
+<li>AWP does not prescribe a particular LLM, agent framework, or planning strategy.</li>
+</ol>
+<hr>
+<h2>Terminology</h2>
+<ul>
+<li><strong>Agent</strong>: A client system (often LLM-driven) that issues commands.</li>
+<li><strong>Engine</strong>: The headless browser implementation that executes commands.</li>
+<li><strong>AWP Client</strong>: Library used by the Agent to speak AWP.</li>
+<li><strong>AWP Server</strong>: Component inside the Engine that receives and executes AWP messages.</li>
+<li><strong>Session</strong>: A durable context including cookies, storage, proxy settings, and optional persistence.</li>
+<li><strong>Page</strong>: A browsing context within a Session, analogous to a tab.</li>
+<li><strong>Frame</strong>: An iframe or sub-document within a Page.</li>
+<li><strong>SOM</strong>: Semantic Object Model. A token-efficient representation of interactive and meaningful content.</li>
+<li><strong>SOM Snapshot</strong>: Full SOM document at a point in time.</li>
+<li><strong>SOM Mutation</strong>: Incremental changes to the SOM using JSON Patch semantics.</li>
+<li><strong>Intent</strong>: A semantic operation request (for example, <code>add_to_cart</code>).</li>
+<li><strong>Primitive Action</strong>: Low-level operations (click, type, navigate).</li>
+<li><strong>Skill</strong>: WebAssembly module that provides domain or application specific automation.</li>
+<li><strong>Target</strong>: An element reference or selection query that resolves to an element.</li>
+</ul>
+<hr>
+<h2>Architecture Overview</h2>
+<p>AWP is designed around a simple loop:</p>
+<ol>
+<li>Agent requests observation (<code>page.observe</code>) and receives a SOM snapshot or mutations.</li>
+<li>Agent decides action and sends intent (<code>page.act</code>) targeting SOM elements.</li>
+<li>Engine executes using primitives or skills.</li>
+<li>Engine returns structured results and emits events.</li>
+</ol>
+<p>AWP explicitly separates:</p>
+<ul>
+<li><strong>Observation</strong>: what the Agent sees (SOM)</li>
+<li><strong>Action</strong>: what the Agent does (Intent)</li>
+<li><strong>State</strong>: cookies/storage/session persistence</li>
+<li><strong>Network</strong>: proxy profiles, browser impersonation profiles</li>
+<li><strong>Skills</strong>: extensibility</li>
+</ul>
+<hr>
+<h2>Versioning and Capability Negotiation</h2>
+<h3>Protocol Version</h3>
+<p>AWP version is a semantic version string: <code>MAJOR.MINOR</code>.</p>
+<ul>
+<li>MAJOR increments indicate breaking changes.</li>
+<li>MINOR increments indicate backward compatible additions.</li>
+</ul>
+<h3>Handshake</h3>
+<p>Upon WebSocket connection, the client MUST send <code>awp.hello</code>.</p>
+<p><strong>Request</strong></p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;1&quot;,
+  &quot;type&quot;: &quot;request&quot;,
+  &quot;method&quot;: &quot;awp.hello&quot;,
+  &quot;params&quot;: {
+    &quot;client&quot;: {
+      &quot;name&quot;: &quot;plasmate-python&quot;,
+      &quot;version&quot;: &quot;0.1.0&quot;
+    },
+    &quot;awp&quot;: {
+      &quot;versions&quot;: [&quot;0.1&quot;]
+    },
+    &quot;wants&quot;: {
+      &quot;encoding&quot;: [&quot;msgpack&quot;, &quot;json&quot;],
+      &quot;compression&quot;: [&quot;none&quot;, &quot;zstd&quot;],
+      &quot;features&quot;: [
+        &quot;som.snapshots&quot;,
+        &quot;som.mutations&quot;,
+        &quot;intents.level2&quot;,
+        &quot;skills.invoke&quot;,
+        &quot;sessions.persist&quot;
+      ]
+    }
+  }
+}
+</code></pre>
+<p><strong>Response</strong></p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;1&quot;,
+  &quot;type&quot;: &quot;response&quot;,
+  &quot;result&quot;: {
+    &quot;awp&quot;: {&quot;version&quot;: &quot;0.1&quot;},
+    &quot;encoding&quot;: {&quot;selected&quot;: &quot;msgpack&quot;},
+    &quot;compression&quot;: {&quot;selected&quot;: &quot;none&quot;},
+    &quot;features&quot;: {
+      &quot;som&quot;: {
+        &quot;snapshot&quot;: true,
+        &quot;mutation&quot;: true,
+        &quot;formats&quot;: [&quot;som+json&quot;, &quot;som+msgpack&quot;],
+        &quot;max_bytes&quot;: 1048576
+      },
+      &quot;skills&quot;: {
+        &quot;invoke&quot;: true,
+        &quot;registry&quot;: true
+      },
+      &quot;network&quot;: {
+        &quot;proxy&quot;: true,
+        &quot;profiles&quot;: [&quot;chrome128&quot;, &quot;firefox128&quot;, &quot;safari17&quot;]
+      },
+      &quot;limits&quot;: {
+        &quot;max_sessions&quot;: 500,
+        &quot;max_pages_per_session&quot;: 16
+      }
+    },
+    &quot;server&quot;: {
+      &quot;name&quot;: &quot;plasmate-engine&quot;,
+      &quot;version&quot;: &quot;0.1.0&quot;,
+      &quot;build&quot;: &quot;dev&quot;
+    }
+  }
+}
+</code></pre>
+<h3>Capability Rules</h3>
+<ul>
+<li>The server MUST reject requests that require unsupported features with <code>error.code = &quot;UNSUPPORTED&quot;</code>.</li>
+<li>Clients SHOULD degrade gracefully by falling back to primitive actions when intent levels are unsupported.</li>
+</ul>
+<hr>
+<h2>Transport</h2>
+<h3>WebSocket</h3>
+<ul>
+<li>Default transport: WebSocket.</li>
+<li>One WebSocket connection may multiplex multiple sessions.</li>
+<li>Clients MAY open multiple connections for isolation.</li>
+</ul>
+<h3>Message Ordering</h3>
+<ul>
+<li>Requests and responses are matched by <code>id</code>.</li>
+<li>Events are out-of-band and do not require <code>id</code>.</li>
+<li>The server MUST preserve per-page action ordering unless the client opts into concurrency.</li>
+</ul>
+<h3>Heartbeats</h3>
+<ul>
+<li>Either side MAY send ping frames.</li>
+<li>Server SHOULD emit <code>awp.pong</code> events if application-level liveness is needed.</li>
+</ul>
+<hr>
+<h2>Encoding</h2>
+<h3>Default Encoding</h3>
+<ul>
+<li>Default: MessagePack.</li>
+<li>Optional: JSON (for debugging).</li>
+</ul>
+<h3>Compression</h3>
+<ul>
+<li>Default: none.</li>
+<li>Optional: zstd per-message.</li>
+</ul>
+<h3>Canonical JSON</h3>
+<p>When JSON is used, keys MUST be lower_snake_case.</p>
+<hr>
+<h2>Message Model</h2>
+<h3>Envelope</h3>
+<p>Every message uses this envelope:</p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;string-optional&quot;,
+  &quot;type&quot;: &quot;request|response|event&quot;,
+  &quot;method&quot;: &quot;string-optional&quot;,
+  &quot;params&quot;: {&quot;...&quot;: &quot;...&quot;},
+  &quot;result&quot;: {&quot;...&quot;: &quot;...&quot;},
+  &quot;error&quot;: {&quot;code&quot;: &quot;...&quot;, &quot;message&quot;: &quot;...&quot;, &quot;details&quot;: {}}
+}
+</code></pre>
+<p>Rules:</p>
+<ul>
+<li><code>request</code> MUST include <code>id</code>, <code>method</code>, and <code>params</code>.</li>
+<li><code>response</code> MUST include <code>id</code> and either <code>result</code> or <code>error</code>.</li>
+<li><code>event</code> MUST include <code>method</code> and <code>params</code>. It MUST NOT include <code>id</code>.</li>
+</ul>
+<h3>Idempotency</h3>
+<p>Requests MAY include <code>meta.idempotency_key</code>.</p>
+<pre><code class="language-json">{
+  &quot;meta&quot;: {
+    &quot;idempotency_key&quot;: &quot;uuid&quot;,
+    &quot;trace_id&quot;: &quot;uuid&quot;
+  }
+}
+</code></pre>
+<p>If provided, the server SHOULD guarantee that repeating the request yields the same effect (when feasible).</p>
+<h3>Tracing</h3>
+<p>All responses and events SHOULD include <code>meta.trace_id</code> and <code>meta.span_id</code>.</p>
+<hr>
+<h2>Error Model</h2>
+<h3>Standard Error Codes</h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>INVALID_REQUEST</code></td>
+<td>Malformed message or missing fields</td>
+</tr>
+<tr>
+<td><code>UNSUPPORTED</code></td>
+<td>Feature or method not supported</td>
+</tr>
+<tr>
+<td><code>NOT_FOUND</code></td>
+<td>Session/page/element not found</td>
+</tr>
+<tr>
+<td><code>TIMEOUT</code></td>
+<td>Operation timed out</td>
+</tr>
+<tr>
+<td><code>CONFLICT</code></td>
+<td>Concurrent state conflict</td>
+</tr>
+<tr>
+<td><code>RATE_LIMITED</code></td>
+<td>Server rate limit</td>
+</tr>
+<tr>
+<td><code>PERMISSION_DENIED</code></td>
+<td>Action not permitted</td>
+</tr>
+<tr>
+<td><code>NAVIGATION_FAILED</code></td>
+<td>Failed to load page</td>
+</tr>
+<tr>
+<td><code>SCRIPT_ERROR</code></td>
+<td>JS evaluation error</td>
+</tr>
+<tr>
+<td><code>SKILL_ERROR</code></td>
+<td>Skill execution failed</td>
+</tr>
+<tr>
+<td><code>INTERNAL</code></td>
+<td>Unexpected error</td>
+</tr>
+</tbody></table>
+<h3>Error Object</h3>
+<pre><code class="language-json">{
+  &quot;code&quot;: &quot;TIMEOUT&quot;,
+  &quot;message&quot;: &quot;wait_for condition not met&quot;,
+  &quot;details&quot;: {
+    &quot;timeout_ms&quot;: 10000,
+    &quot;method&quot;: &quot;page.wait_for&quot;
+  }
+}
+</code></pre>
+<hr>
+<h2>Authentication and Authorization</h2>
+<p>AWP supports several deployment modes:</p>
+<ol>
+<li><strong>Local engine</strong>: no auth required.</li>
+<li><strong>LAN engine</strong>: shared secret.</li>
+<li><strong>Cloud engine</strong>: API key + per-tenant permissions.</li>
+</ol>
+<h3>Auth Methods</h3>
+<ul>
+<li><code>auth.none</code></li>
+<li><code>auth.bearer</code> (token)</li>
+<li><code>auth.hmac</code> (signed requests)</li>
+</ul>
+<h3>Permissions</h3>
+<p>Actions are permissioned because some operations are dangerous:</p>
+<ul>
+<li><code>page.evaluate_js</code> is high risk.</li>
+<li>file uploads/downloads can exfiltrate data.</li>
+<li>proxy configuration can leak traffic.</li>
+</ul>
+<p>Permissions are expressed as scopes:</p>
+<ul>
+<li><code>som:read</code></li>
+<li><code>page:act</code></li>
+<li><code>page:evaluate</code></li>
+<li><code>session:write</code></li>
+<li><code>network:configure</code></li>
+<li><code>skills:invoke</code></li>
+</ul>
+<p>The server MAY enforce per-domain allowlists.</p>
+<hr>
+<h2>Resources and Identifiers</h2>
+<p>AWP uses stable identifiers:</p>
+<ul>
+<li><code>session_id</code>: string</li>
+<li><code>page_id</code>: string</li>
+<li><code>frame_id</code>: string</li>
+<li><code>som_id</code>: string</li>
+<li><code>element_id</code>: string</li>
+</ul>
+<h3>Element References</h3>
+<p>AWP prefers stable element IDs from the SOM.</p>
+<p>A target is specified as one of:</p>
+<ol>
+<li><code>element_ref</code>: direct reference by SOM ID.</li>
+<li><code>query</code>: semantic query.</li>
+<li><code>fallback</code>: list of fallbacks.</li>
+</ol>
+<p><strong>Example</strong></p>
+<pre><code class="language-json">{
+  &quot;target&quot;: {
+    &quot;element_ref&quot;: &quot;e:9f2c...&quot;,
+    &quot;fallback&quot;: [
+      {&quot;query&quot;: {&quot;text&quot;: &quot;Add to Cart&quot;, &quot;role&quot;: &quot;button&quot;}},
+      {&quot;query&quot;: {&quot;css&quot;: &quot;button[data-testid=&#39;add-to-cart&#39;]&quot;}}
+    ]
+  }
+}
+</code></pre>
+<hr>
+<h2>Sessions</h2>
+<h3>session.create</h3>
+<p>Creates a browsing session.</p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;10&quot;,
+  &quot;type&quot;: &quot;request&quot;,
+  &quot;method&quot;: &quot;session.create&quot;,
+  &quot;params&quot;: {
+    &quot;persist&quot;: false,
+    &quot;ttl_ms&quot;: 3600000,
+    &quot;profile&quot;: {
+      &quot;impersonation&quot;: &quot;chrome128&quot;,
+      &quot;locale&quot;: &quot;en-US&quot;,
+      &quot;timezone&quot;: &quot;America/New_York&quot;,
+      &quot;viewport&quot;: {&quot;width&quot;: 1280, &quot;height&quot;: 720}
+    },
+    &quot;network&quot;: {
+      &quot;proxy&quot;: {&quot;mode&quot;: &quot;none&quot;}
+    },
+    &quot;limits&quot;: {
+      &quot;max_pages&quot;: 8,
+      &quot;max_js_heap_mb&quot;: 64
+    }
+  }
+}
+</code></pre>
+<p>Response includes <code>session_id</code>.</p>
+<h3>session.close</h3>
+<p>Closes and optionally persists state.</p>
+<h3>session.export / session.import</h3>
+<p>Optional methods for portable session snapshots.</p>
+<hr>
+<h2>Page Lifecycle</h2>
+<h3>page.create</h3>
+<p>Creates a page (tab) inside a session.</p>
+<h3>page.navigate</h3>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;20&quot;,
+  &quot;type&quot;: &quot;request&quot;,
+  &quot;method&quot;: &quot;page.navigate&quot;,
+  &quot;params&quot;: {
+    &quot;session_id&quot;: &quot;s:1&quot;,
+    &quot;page_id&quot;: &quot;p:1&quot;,
+    &quot;url&quot;: &quot;https://example.com&quot;,
+    &quot;wait&quot;: {&quot;until&quot;: &quot;network_idle&quot;, &quot;timeout_ms&quot;: 15000}
+  }
+}
+</code></pre>
+<p>Wait strategies:</p>
+<ul>
+<li><code>dom_content_loaded</code></li>
+<li><code>load</code></li>
+<li><code>network_idle</code></li>
+<li><code>som_stable</code> (SOM mutation quiet period)</li>
+</ul>
+<h3>page.close</h3>
+<hr>
+<h2>Observation: SOM Snapshots and Mutations</h2>
+<h3>page.observe</h3>
+<p>Returns either:</p>
+<ul>
+<li>A full SOM snapshot, or</li>
+<li>A stream of SOM mutations since a cursor</li>
+</ul>
+<p><strong>Snapshot request</strong></p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;30&quot;,
+  &quot;type&quot;: &quot;request&quot;,
+  &quot;method&quot;: &quot;page.observe&quot;,
+  &quot;params&quot;: {
+    &quot;session_id&quot;: &quot;s:1&quot;,
+    &quot;page_id&quot;: &quot;p:1&quot;,
+    &quot;mode&quot;: &quot;snapshot&quot;,
+    &quot;format&quot;: &quot;som+json&quot;,
+    &quot;max_bytes&quot;: 262144
+  }
+}
+</code></pre>
+<p><strong>Mutation request</strong></p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;31&quot;,
+  &quot;type&quot;: &quot;request&quot;,
+  &quot;method&quot;: &quot;page.observe&quot;,
+  &quot;params&quot;: {
+    &quot;session_id&quot;: &quot;s:1&quot;,
+    &quot;page_id&quot;: &quot;p:1&quot;,
+    &quot;mode&quot;: &quot;mutations&quot;,
+    &quot;cursor&quot;: &quot;c:12345&quot;,
+    &quot;max_events&quot;: 100
+  }
+}
+</code></pre>
+<h3>SOM Minimum Requirements</h3>
+<p>A SOM snapshot MUST include:</p>
+<ul>
+<li><code>som_version</code></li>
+<li><code>url</code></li>
+<li><code>title</code></li>
+<li><code>elements</code> (or <code>regions</code>) that include:<ul>
+<li>stable <code>element_id</code></li>
+<li><code>role</code> (button, link, input, select, dialog, tab, etc)</li>
+<li><code>text</code> or <code>label</code> where relevant</li>
+<li><code>actions</code> supported</li>
+</ul>
+</li>
+</ul>
+<h3>page.som_mutation Event</h3>
+<pre><code class="language-json">{
+  &quot;type&quot;: &quot;event&quot;,
+  &quot;method&quot;: &quot;page.som_mutation&quot;,
+  &quot;params&quot;: {
+    &quot;session_id&quot;: &quot;s:1&quot;,
+    &quot;page_id&quot;: &quot;p:1&quot;,
+    &quot;cursor&quot;: &quot;c:12346&quot;,
+    &quot;patch&quot;: [
+      {&quot;op&quot;: &quot;replace&quot;, &quot;path&quot;: &quot;/regions/0/items/2/badge&quot;, &quot;value&quot;: &quot;4&quot;}
+    ]
+  }
+}
+</code></pre>
+<hr>
+<h2>Actions: Intent-Based Interaction</h2>
+<h3>page.act</h3>
+<p>This is the central operation.</p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;40&quot;,
+  &quot;type&quot;: &quot;request&quot;,
+  &quot;method&quot;: &quot;page.act&quot;,
+  &quot;params&quot;: {
+    &quot;session_id&quot;: &quot;s:1&quot;,
+    &quot;page_id&quot;: &quot;p:1&quot;,
+    &quot;intent&quot;: {
+      &quot;action&quot;: &quot;click&quot;,
+      &quot;target&quot;: {&quot;element_ref&quot;: &quot;e:9f2c&quot;}
+    },
+    &quot;wait&quot;: {&quot;until&quot;: &quot;som_stable&quot;, &quot;timeout_ms&quot;: 10000}
+  }
+}
+</code></pre>
+<h3>Intent Object</h3>
+<p><code>intent</code> has:</p>
+<ul>
+<li><code>action</code>: string</li>
+<li><code>target</code>: optional target</li>
+<li><code>value</code>: optional value</li>
+<li><code>options</code>: optional action options</li>
+</ul>
+<p>Examples:</p>
+<ul>
+<li>Click: <code>{action:&quot;click&quot;, target:{element_ref:&quot;e:...&quot;}}</code></li>
+<li>Type: <code>{action:&quot;type&quot;, target:{...}, value:&quot;hello&quot;}</code></li>
+<li>Select: <code>{action:&quot;select&quot;, target:{...}, value:&quot;United States&quot;}</code></li>
+<li>Submit: <code>{action:&quot;submit_form&quot;, target:{query:{role:&quot;form&quot;, text:&quot;Checkout&quot;}}}</code></li>
+</ul>
+<h3>Intent Levels</h3>
+<p>AWP reserves namespaces:</p>
+<ul>
+<li><code>primitive.*</code> (lowest level)</li>
+<li><code>semantic.*</code> (SOM-aware)</li>
+<li><code>intent.*</code> (higher-level intents)</li>
+<li><code>skill.*</code> (provided by Wasm)</li>
+</ul>
+<p>Examples:</p>
+<ul>
+<li><code>primitive.click</code></li>
+<li><code>semantic.fill_form</code></li>
+<li><code>intent.checkout</code></li>
+<li><code>skill.stripe_pay</code></li>
+</ul>
+<p>Servers MAY accept un-namespaced action strings for convenience, but MUST normalize internally.</p>
+<h3>Result Object</h3>
+<pre><code class="language-json">{
+  &quot;status&quot;: &quot;ok&quot;,
+  &quot;effects&quot;: {
+    &quot;navigation&quot;: true,
+    &quot;som_changed&quot;: true
+  },
+  &quot;target_resolved&quot;: {
+    &quot;element_id&quot;: &quot;e:9f2c&quot;,
+    &quot;confidence&quot;: 0.98
+  },
+  &quot;artifacts&quot;: {
+    &quot;som_cursor&quot;: &quot;c:12350&quot;
+  }
+}
+</code></pre>
+<hr>
+<h2>Data Extraction</h2>
+<h3>page.extract</h3>
+<p>Extracts structured data based on selectors or semantic queries.</p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;50&quot;,
+  &quot;type&quot;: &quot;request&quot;,
+  &quot;method&quot;: &quot;page.extract&quot;,
+  &quot;params&quot;: {
+    &quot;session_id&quot;: &quot;s:1&quot;,
+    &quot;page_id&quot;: &quot;p:1&quot;,
+    &quot;schema&quot;: {
+      &quot;type&quot;: &quot;object&quot;,
+      &quot;properties&quot;: {
+        &quot;price&quot;: {&quot;type&quot;: &quot;number&quot;},
+        &quot;title&quot;: {&quot;type&quot;: &quot;string&quot;}
+      },
+      &quot;required&quot;: [&quot;price&quot;, &quot;title&quot;]
+    },
+    &quot;queries&quot;: {
+      &quot;title&quot;: {&quot;query&quot;: {&quot;role&quot;: &quot;heading&quot;, &quot;level&quot;: 1}},
+      &quot;price&quot;: {&quot;query&quot;: {&quot;text_regex&quot;: &quot;\\$[0-9]+\\.[0-9]{2}&quot;}}
+    }
+  }
+}
+</code></pre>
+<p>Response returns JSON data and provenance (element IDs used).</p>
+<hr>
+<h2>Network Controls: Proxy, Profiles, Stealth</h2>
+<h3>session.set_network</h3>
+<p>Allows selecting proxy mode and impersonation profile.</p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;60&quot;,
+  &quot;type&quot;: &quot;request&quot;,
+  &quot;method&quot;: &quot;session.set_network&quot;,
+  &quot;params&quot;: {
+    &quot;session_id&quot;: &quot;s:1&quot;,
+    &quot;proxy&quot;: {&quot;mode&quot;: &quot;sticky_per_domain&quot;, &quot;pool&quot;: &quot;residential-us&quot;},
+    &quot;impersonation&quot;: &quot;chrome128&quot;
+  }
+}
+</code></pre>
+<p>Security: server SHOULD require <code>network:configure</code> scope.</p>
+<hr>
+<h2>State: Cookies, Storage, Downloads</h2>
+<h3>session.cookies</h3>
+<p>Methods:</p>
+<ul>
+<li><code>session.cookies.get</code></li>
+<li><code>session.cookies.set</code></li>
+<li><code>session.cookies.clear</code></li>
+</ul>
+<h3>page.downloads</h3>
+<p>Methods:</p>
+<ul>
+<li><code>page.downloads.list</code></li>
+<li><code>page.downloads.get</code> (stream file)</li>
+</ul>
+<hr>
+<h2>Skills: WebAssembly Extensions</h2>
+<h3>skills.list</h3>
+<p>Returns installed skills and provided actions.</p>
+<h3>skills.invoke</h3>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;70&quot;,
+  &quot;type&quot;: &quot;request&quot;,
+  &quot;method&quot;: &quot;skills.invoke&quot;,
+  &quot;params&quot;: {
+    &quot;session_id&quot;: &quot;s:1&quot;,
+    &quot;page_id&quot;: &quot;p:1&quot;,
+    &quot;skill&quot;: &quot;stripe-checkout&quot;,
+    &quot;action&quot;: &quot;stripe_pay&quot;,
+    &quot;args&quot;: {
+      &quot;card_number&quot;: &quot;4242424242424242&quot;,
+      &quot;expiry&quot;: &quot;12/30&quot;,
+      &quot;cvc&quot;: &quot;123&quot;
+    }
+  }
+}
+</code></pre>
+<p>Security: server MUST treat skill invocation as privileged and permissioned.</p>
+<hr>
+<h2>Telemetry and Auditing</h2>
+<h3>page.telemetry Event</h3>
+<p>Servers SHOULD emit structured telemetry:</p>
+<ul>
+<li>latency (network, parse, som, js)</li>
+<li>retries</li>
+<li>proxy used</li>
+<li>cost estimation (optional)</li>
+<li>errors</li>
+</ul>
+<p>Telemetry MUST NOT include secrets (passwords, card numbers).</p>
+<hr>
+<h2>Determinism and Reproducibility</h2>
+<p>AWP encourages reproducibility:</p>
+<ul>
+<li>Stable element IDs in SOM.</li>
+<li>Mutation cursors.</li>
+<li>Action logs with trace IDs.</li>
+<li>Optional session export.</li>
+</ul>
+<p>A minimal reproducible trace should allow replaying:</p>
+<ul>
+<li>initial URL</li>
+<li>observed SOM snapshot</li>
+<li>action sequence with resolved targets</li>
+<li>navigation and mutation events</li>
+</ul>
+<hr>
+<h2>Examples</h2>
+<h3>Example 1: Search Workflow</h3>
+<ol>
+<li><code>awp.hello</code></li>
+<li><code>session.create</code></li>
+<li><code>page.create</code></li>
+<li><code>page.navigate</code> to search engine</li>
+<li><code>page.observe</code> snapshot</li>
+<li><code>page.act</code> type into search input</li>
+<li><code>page.act</code> submit</li>
+<li><code>page.observe</code> snapshot of results</li>
+<li><code>page.extract</code> titles and links</li>
+</ol>
+<h3>Example 2: Checkout Workflow (Skill + Fallback)</h3>
+<ol>
+<li>Observe page</li>
+<li>If <code>skills.list</code> shows <code>stripe-checkout</code>, call <code>skills.invoke</code></li>
+<li>Else fallback to <code>page.act</code> fill_form + submit</li>
+</ol>
+<hr>
+<h2>Compatibility and Migration from CDP</h2>
+<p>Migration strategy:</p>
+<ul>
+<li>Provide a thin shim that maps CDP calls into AWP primitives.</li>
+<li>Encourage frameworks to adopt AWP for observation and intent actions.</li>
+<li>Long-term: AWP becomes native and CDP shim is optional.</li>
+</ul>
+<hr>
+<h2>Implementation Notes for a Rust PoC</h2>
+<p>A minimal Rust PoC can implement:</p>
+<ul>
+<li>WebSocket server</li>
+<li><code>awp.hello</code></li>
+<li><code>session.create</code> (in-memory)</li>
+<li><code>page.navigate</code> (HTTP fetch)</li>
+<li><code>page.observe</code> (SOM snapshot only)</li>
+</ul>
+<p>And defer:</p>
+<ul>
+<li>JS execution</li>
+<li>stealth TLS spoofing</li>
+<li>proxy rotation</li>
+<li>Wasm skills</li>
+</ul>
+<p>This PoC proves the thesis: SOM is token-efficient and deterministic.</p>
+<hr>
+<p><em>End of AWP Draft v0.1</em></p>
+
+    </main>
+  </div>
+</body>
+</html>

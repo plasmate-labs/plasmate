@@ -1,0 +1,1375 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AWP v0.1 MVP - Implementable Specification - Plasmate Docs</title>
+  <meta name="description" content="Plasmate documentation: AWP v0.1 MVP - Implementable Specification" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --plasma-white: #F0EDE8;
+      --core-black: #0D0D0D;
+      --void: #111110;
+      --deep: #1A1918;
+      --smoke: #2A2825;
+      --ash: #6B6560;
+      --dim: #8A8480;
+      --ion: #D4C5A0;
+      --ember: #E8853A;
+      --arc: #3D8FD4;
+      --corona: #F5C842;
+
+      --font-display: "Space Grotesk", system-ui, sans-serif;
+      --font-body: "IBM Plex Sans", system-ui, sans-serif;
+      --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+      --sidebar-w: 240px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--void);
+      color: var(--plasma-white);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ---- Sidebar ---- */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--core-black);
+      border-right: 1px solid var(--smoke);
+      padding: 22px 16px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 10;
+    }
+
+    .sidebar-brand {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--plasma-white);
+      text-decoration: none;
+      padding: 0 8px 14px;
+      border-bottom: 1px solid var(--smoke);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sidebar-brand .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--ember);
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 7px 10px;
+      border-radius: 8px;
+      color: var(--dim);
+      text-decoration: none;
+      font-size: 13px;
+      font-family: var(--font-body);
+      font-weight: 500;
+      transition: color 0.1s, background 0.1s;
+    }
+
+    .sidebar a:hover {
+      color: var(--plasma-white);
+      background: rgba(240,237,232,0.06);
+    }
+
+    .sidebar a.active {
+      color: var(--plasma-white);
+      background: rgba(232,133,58,0.14);
+    }
+
+    .sidebar-foot {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--smoke);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ash);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .sidebar-foot a { padding: 4px 10px; font-size: 11px; font-family: var(--font-mono); }
+
+    /* ---- Content ---- */
+    .content {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      max-width: 820px;
+      padding: 36px 40px 80px;
+    }
+
+    /* ---- Typography ---- */
+    .content h1 {
+      font-family: var(--font-display);
+      font-weight: 650;
+      font-size: 32px;
+      line-height: 1.15;
+      letter-spacing: -0.015em;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--smoke);
+    }
+
+    .content h2 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 22px;
+      line-height: 1.25;
+      margin-top: 38px;
+      margin-bottom: 12px;
+      color: var(--ion);
+    }
+
+    .content h3 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 17px;
+      margin-top: 28px;
+      margin-bottom: 8px;
+    }
+
+    .content h4, .content h5, .content h6 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 15px;
+      margin-top: 22px;
+      margin-bottom: 6px;
+      color: var(--dim);
+    }
+
+    .content p { margin-bottom: 14px; }
+
+    .content a { color: var(--arc); text-decoration: none; }
+    .content a:hover { text-decoration: underline; }
+
+    .content strong { color: var(--plasma-white); font-weight: 600; }
+
+    .content ul, .content ol {
+      padding-left: 22px;
+      margin-bottom: 14px;
+    }
+
+    .content li { margin-bottom: 4px; }
+
+    .content blockquote {
+      border-left: 3px solid var(--ember);
+      padding: 10px 16px;
+      margin: 16px 0;
+      background: rgba(232,133,58,0.06);
+      border-radius: 0 8px 8px 0;
+      color: rgba(240,237,232,0.88);
+    }
+
+    .content blockquote p { margin-bottom: 0; }
+
+    .content hr {
+      border: none;
+      height: 1px;
+      background: var(--smoke);
+      margin: 30px 0;
+    }
+
+    /* ---- Code ---- */
+    .content code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: rgba(240,237,232,0.08);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--ion);
+    }
+
+    .content pre {
+      background: var(--core-black);
+      border: 1px solid var(--smoke);
+      border-radius: 10px;
+      padding: 16px 18px;
+      overflow-x: auto;
+      margin: 14px 0 18px;
+      line-height: 1.55;
+    }
+
+    .content pre code {
+      background: none;
+      padding: 0;
+      border-radius: 0;
+      color: rgba(240,237,232,0.88);
+      font-size: 13px;
+    }
+
+    /* ---- Tables ---- */
+    .content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 18px;
+      font-size: 13px;
+      font-family: var(--font-mono);
+    }
+
+    .content th {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 2px solid var(--smoke);
+      color: var(--ash);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: 11px;
+    }
+
+    .content td {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(240,237,232,0.08);
+      color: rgba(240,237,232,0.84);
+    }
+
+    .content tr:hover td {
+      background: rgba(240,237,232,0.03);
+    }
+
+    /* ---- Images ---- */
+    .content img {
+      max-width: 100%;
+      border-radius: 8px;
+    }
+
+    /* ---- Mobile ---- */
+    @media (max-width: 860px) {
+      .sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--smoke);
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 2px;
+        padding: 12px;
+      }
+
+      .sidebar-brand {
+        width: 100%;
+        border-bottom: none;
+        padding-bottom: 8px;
+        margin-bottom: 4px;
+      }
+
+      .sidebar-foot { display: none; }
+
+      .layout { flex-direction: column; }
+
+      .content {
+        margin-left: 0;
+        padding: 24px 18px 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Documentation navigation">
+      <a class="sidebar-brand" href="/"><span class="dot"></span>Plasmate</a>
+      <a href="/docs/index.html">Overview</a>
+          <a href="/docs/quickstart.html">Quick Start</a>
+          <a href="/docs/spec.html">Product Spec</a>
+          <a href="/docs/som.html">SOM Reference</a>
+          <a href="/docs/awp.html">AWP Protocol</a>
+          <a href="/docs/awp-mvp.html" class="active">AWP MVP v0.1</a>
+          <a href="/docs/thesis.html">Thesis</a>
+          <a href="/docs/poc.html">PoC Build Brief</a>
+          <a href="/docs/roadmap.html">Roadmap v0.2</a>
+          <a href="/docs/brand.html">Brand Guide</a>
+      <div class="sidebar-foot">
+        <a href="https://github.com/plasmate-labs/plasmate">GitHub</a>
+        <a href="https://plasmate.app">plasmate.app</a>
+        <span style="padding: 4px 10px;">Apache 2.0 / v0.1</span>
+      </div>
+    </nav>
+    <main class="content">
+      <h1>AWP v0.1 MVP - Implementable Specification</h1>
+<p>This document is the tightened, build-ready subset of the full AWP draft. Everything here is MUST-implement for the Rust PoC. Anything not listed here is deferred to v0.2.</p>
+<p>An agentic engineering team should be able to implement a working AWP server from this document alone.</p>
+<hr>
+<h2>1. Scope</h2>
+<h3>v0.1 implements</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>awp.hello</code></td>
+<td>Handshake, version and encoding negotiation</td>
+</tr>
+<tr>
+<td><code>session.create</code></td>
+<td>Create in-memory session</td>
+</tr>
+<tr>
+<td><code>session.close</code></td>
+<td>Destroy session</td>
+</tr>
+<tr>
+<td><code>page.navigate</code></td>
+<td>Fetch URL, parse HTML, compile SOM</td>
+</tr>
+<tr>
+<td><code>page.observe</code></td>
+<td>Return SOM snapshot</td>
+</tr>
+<tr>
+<td><code>page.act</code></td>
+<td>Execute primitive actions (click, type, select)</td>
+</tr>
+<tr>
+<td><code>page.extract</code></td>
+<td>Extract structured data from SOM</td>
+</tr>
+</tbody></table>
+<h3>v0.1 defers (v0.2 backlog)</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>page.create</code> / <code>page.close</code></td>
+<td>v0.1 uses one implicit page per session</td>
+</tr>
+<tr>
+<td><code>page.observe</code> mutations mode</td>
+<td>Requires DOM mutation tracking (needs JS runtime)</td>
+</tr>
+<tr>
+<td><code>session.export</code> / <code>session.import</code></td>
+<td>Persistence layer not in PoC</td>
+</tr>
+<tr>
+<td><code>session.set_network</code></td>
+<td>Stealth/proxy not in PoC</td>
+</tr>
+<tr>
+<td><code>session.cookies.*</code></td>
+<td>Cookie jar exists internally but not exposed via protocol yet</td>
+</tr>
+<tr>
+<td><code>skills.list</code> / <code>skills.invoke</code></td>
+<td>Wasm runtime not in PoC</td>
+</tr>
+<tr>
+<td>Telemetry events</td>
+<td>Nice-to-have; PoC logs to tracing instead</td>
+</tr>
+<tr>
+<td><code>auth.bearer</code> / <code>auth.hmac</code></td>
+<td>PoC runs local-only, no auth needed</td>
+</tr>
+<tr>
+<td>MessagePack encoding</td>
+<td>v0.1 uses JSON only; MessagePack added in v0.2</td>
+</tr>
+<tr>
+<td>Compression (zstd)</td>
+<td>Deferred</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>2. Transport</h2>
+<p><strong>WebSocket</strong> over TCP. Single connection, single session (v0.1 simplification).</p>
+<ul>
+<li>Server listens on configurable <code>host:port</code> (default <code>127.0.0.1:9222</code>).</li>
+<li>Client connects via <code>ws://{host}:{port}/</code>.</li>
+<li>All messages are UTF-8 JSON text frames.</li>
+<li>Binary frames are reserved for future MessagePack (v0.2).</li>
+</ul>
+<h3>Connection lifecycle</h3>
+<ol>
+<li>Client opens WebSocket.</li>
+<li>Client MUST send <code>awp.hello</code> as first message.</li>
+<li>Server responds with capabilities.</li>
+<li>Client sends requests; server responds and may emit events.</li>
+<li>Either side may close the WebSocket.</li>
+</ol>
+<hr>
+<h2>3. Message Envelope</h2>
+<p>Every message is a JSON object with this shape:</p>
+<pre><code class="language-typescript">// Request (client -&gt; server)
+{
+  id: string,           // unique per-connection, client-generated
+  type: &quot;request&quot;,
+  method: string,       // e.g. &quot;page.navigate&quot;
+  params: object        // method-specific
+}
+
+// Response (server -&gt; client)
+{
+  id: string,           // matches request id
+  type: &quot;response&quot;,
+  result?: object,      // present on success
+  error?: {             // present on failure
+    code: string,
+    message: string,
+    details?: object
+  }
+}
+
+// Event (server -&gt; client, unsolicited)
+{
+  type: &quot;event&quot;,
+  method: string,       // e.g. &quot;page.load_complete&quot;
+  params: object
+}
+</code></pre>
+<h3>Rules</h3>
+<ul>
+<li><code>id</code> MUST be a non-empty string. UUIDs or incrementing integers as strings are both fine.</li>
+<li>Exactly one of <code>result</code> or <code>error</code> MUST be present in a response.</li>
+<li>Events have no <code>id</code> field.</li>
+<li>Unknown fields MUST be ignored (forward compatibility).</li>
+</ul>
+<h3>Error codes (v0.1 subset)</h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>When</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>INVALID_REQUEST</code></td>
+<td>Malformed JSON, missing required fields, unknown method</td>
+</tr>
+<tr>
+<td><code>NOT_FOUND</code></td>
+<td>Session or element reference doesn&#39;t exist</td>
+</tr>
+<tr>
+<td><code>TIMEOUT</code></td>
+<td>Navigation or wait exceeded timeout</td>
+</tr>
+<tr>
+<td><code>NAVIGATION_FAILED</code></td>
+<td>HTTP error, DNS failure, TLS error</td>
+</tr>
+<tr>
+<td><code>INTERNAL</code></td>
+<td>Unexpected server error</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>4. Methods</h2>
+<h3>4.1 awp.hello</h3>
+<p>First message after WebSocket connect. Negotiates protocol version.</p>
+<p><strong>Request</strong></p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;1&quot;,
+  &quot;type&quot;: &quot;request&quot;,
+  &quot;method&quot;: &quot;awp.hello&quot;,
+  &quot;params&quot;: {
+    &quot;client_name&quot;: &quot;my-agent&quot;,
+    &quot;client_version&quot;: &quot;0.1.0&quot;,
+    &quot;awp_version&quot;: &quot;0.1&quot;
+  }
+}
+</code></pre>
+<p><strong>Response</strong></p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;1&quot;,
+  &quot;type&quot;: &quot;response&quot;,
+  &quot;result&quot;: {
+    &quot;awp_version&quot;: &quot;0.1&quot;,
+    &quot;server_name&quot;: &quot;plasmate&quot;,
+    &quot;server_version&quot;: &quot;0.1.0&quot;,
+    &quot;features&quot;: [&quot;som.snapshot&quot;, &quot;act.primitive&quot;, &quot;extract&quot;]
+  }
+}
+</code></pre>
+<p><strong>Behavior</strong></p>
+<ul>
+<li>If <code>awp_version</code> is not supported, respond with error <code>INVALID_REQUEST</code>.</li>
+<li>Server MUST NOT process any other method before <code>awp.hello</code> succeeds.</li>
+</ul>
+<hr>
+<h3>4.2 session.create</h3>
+<p>Creates a browsing session. v0.1: one session per WebSocket connection.</p>
+<p><strong>Request</strong></p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;2&quot;,
+  &quot;type&quot;: &quot;request&quot;,
+  &quot;method&quot;: &quot;session.create&quot;,
+  &quot;params&quot;: {
+    &quot;user_agent&quot;: &quot;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36&quot;,
+    &quot;locale&quot;: &quot;en-US&quot;,
+    &quot;timeout_ms&quot;: 30000
+  }
+}
+</code></pre>
+<p>All params are optional. Defaults:</p>
+<ul>
+<li><code>user_agent</code>: Chrome 128 on macOS</li>
+<li><code>locale</code>: <code>en-US</code></li>
+<li><code>timeout_ms</code>: <code>30000</code> (default navigation timeout)</li>
+</ul>
+<p><strong>Response</strong></p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;2&quot;,
+  &quot;type&quot;: &quot;response&quot;,
+  &quot;result&quot;: {
+    &quot;session_id&quot;: &quot;s_a1b2c3d4&quot;
+  }
+}
+</code></pre>
+<p><strong>Behavior</strong></p>
+<ul>
+<li>Allocates in-memory session with empty cookie jar.</li>
+<li>v0.1: only one active session per connection. Creating a second closes the first.</li>
+</ul>
+<hr>
+<h3>4.3 session.close</h3>
+<p>Destroys a session and frees resources.</p>
+<p><strong>Request</strong></p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;3&quot;,
+  &quot;type&quot;: &quot;request&quot;,
+  &quot;method&quot;: &quot;session.close&quot;,
+  &quot;params&quot;: {
+    &quot;session_id&quot;: &quot;s_a1b2c3d4&quot;
+  }
+}
+</code></pre>
+<p><strong>Response</strong></p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;3&quot;,
+  &quot;type&quot;: &quot;response&quot;,
+  &quot;result&quot;: {
+    &quot;closed&quot;: true
+  }
+}
+</code></pre>
+<hr>
+<h3>4.4 page.navigate</h3>
+<p>Fetches a URL and compiles the HTML into a SOM.</p>
+<p><strong>Request</strong></p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;10&quot;,
+  &quot;type&quot;: &quot;request&quot;,
+  &quot;method&quot;: &quot;page.navigate&quot;,
+  &quot;params&quot;: {
+    &quot;session_id&quot;: &quot;s_a1b2c3d4&quot;,
+    &quot;url&quot;: &quot;https://news.ycombinator.com&quot;,
+    &quot;timeout_ms&quot;: 15000
+  }
+}
+</code></pre>
+<p><strong>Response</strong></p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;10&quot;,
+  &quot;type&quot;: &quot;response&quot;,
+  &quot;result&quot;: {
+    &quot;url&quot;: &quot;https://news.ycombinator.com&quot;,
+    &quot;status&quot;: 200,
+    &quot;content_type&quot;: &quot;text/html&quot;,
+    &quot;html_bytes&quot;: 42891,
+    &quot;som_ready&quot;: true,
+    &quot;load_ms&quot;: 312
+  }
+}
+</code></pre>
+<p><strong>Behavior</strong></p>
+<ol>
+<li>HTTP GET with session&#39;s User-Agent and cookie jar.</li>
+<li>Follow redirects (max 10).</li>
+<li>Store response cookies.</li>
+<li>Parse HTML with <code>html5ever</code>.</li>
+<li>Compile SOM (see Section 5).</li>
+<li>Store SOM in session state (overwriting previous page).</li>
+</ol>
+<p><strong>Errors</strong></p>
+<ul>
+<li>DNS failure, TLS error, HTTP 4xx/5xx without HTML body: <code>NAVIGATION_FAILED</code></li>
+<li>Timeout: <code>TIMEOUT</code></li>
+</ul>
+<hr>
+<h3>4.5 page.observe</h3>
+<p>Returns the current page&#39;s SOM snapshot.</p>
+<p><strong>Request</strong></p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;20&quot;,
+  &quot;type&quot;: &quot;request&quot;,
+  &quot;method&quot;: &quot;page.observe&quot;,
+  &quot;params&quot;: {
+    &quot;session_id&quot;: &quot;s_a1b2c3d4&quot;
+  }
+}
+</code></pre>
+<p><strong>Response</strong></p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;20&quot;,
+  &quot;type&quot;: &quot;response&quot;,
+  &quot;result&quot;: {
+    &quot;som&quot;: { ... }
+  }
+}
+</code></pre>
+<p>The <code>som</code> object follows the SOM schema defined in Section 5.</p>
+<p><strong>Errors</strong></p>
+<ul>
+<li>No page loaded yet: <code>NOT_FOUND</code></li>
+</ul>
+<hr>
+<h3>4.6 page.act</h3>
+<p>Executes an action against a SOM element. v0.1 supports primitive actions only.</p>
+<p><strong>Request</strong></p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;30&quot;,
+  &quot;type&quot;: &quot;request&quot;,
+  &quot;method&quot;: &quot;page.act&quot;,
+  &quot;params&quot;: {
+    &quot;session_id&quot;: &quot;s_a1b2c3d4&quot;,
+    &quot;intent&quot;: {
+      &quot;action&quot;: &quot;click&quot;,
+      &quot;target&quot;: {
+        &quot;ref&quot;: &quot;e_8f3a1b&quot;
+      }
+    }
+  }
+}
+</code></pre>
+<p><strong>Target resolution</strong> (tried in order):</p>
+<ol>
+<li><code>ref</code> - direct element_id from SOM</li>
+<li><code>text</code> + <code>role</code> - semantic query (find element matching role and visible text)</li>
+<li><code>css</code> - CSS selector fallback</li>
+</ol>
+<pre><code class="language-json">// Target by ref
+{&quot;ref&quot;: &quot;e_8f3a1b&quot;}
+
+// Target by semantic query
+{&quot;text&quot;: &quot;Add to Cart&quot;, &quot;role&quot;: &quot;button&quot;}
+
+// Target by CSS selector
+{&quot;css&quot;: &quot;button.btn-primary&quot;}
+
+// Target with fallback chain
+{&quot;ref&quot;: &quot;e_8f3a1b&quot;, &quot;fallback&quot;: {&quot;text&quot;: &quot;Submit&quot;, &quot;role&quot;: &quot;button&quot;}}
+</code></pre>
+<p><strong>v0.1 actions</strong></p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Params</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>click</code></td>
+<td><code>target</code></td>
+<td>Resolve target. If target is a link (<code>&lt;a href&gt;</code>), navigate to href and recompile SOM. If target is a button within a form, treat as form submission. Otherwise return resolved element.</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td><code>target</code>, <code>value</code> (string)</td>
+<td>Resolve target to an input/textarea. Set its value in the SOM. Return updated element.</td>
+</tr>
+<tr>
+<td><code>select</code></td>
+<td><code>target</code>, <code>value</code> (string)</td>
+<td>Resolve target to a select/radio group. Set selected option in the SOM. Return updated element.</td>
+</tr>
+<tr>
+<td><code>scroll</code></td>
+<td><code>direction</code> (&quot;down&quot;|&quot;up&quot;), <code>amount</code> (optional int, default 1 screen)</td>
+<td>No-op in v0.1 (no viewport), but accept and return ok for protocol compatibility.</td>
+</tr>
+</tbody></table>
+<p><strong>Response</strong></p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;30&quot;,
+  &quot;type&quot;: &quot;response&quot;,
+  &quot;result&quot;: {
+    &quot;status&quot;: &quot;ok&quot;,
+    &quot;resolved&quot;: {
+      &quot;element_id&quot;: &quot;e_8f3a1b&quot;,
+      &quot;role&quot;: &quot;button&quot;,
+      &quot;text&quot;: &quot;Add to Cart&quot;
+    },
+    &quot;effects&quot;: {
+      &quot;navigated&quot;: false,
+      &quot;som_changed&quot;: true
+    }
+  }
+}
+</code></pre>
+<p><strong>Errors</strong></p>
+<ul>
+<li>Target not found: <code>NOT_FOUND</code> with details including the attempted resolution strategy.</li>
+</ul>
+<hr>
+<h3>4.7 page.extract</h3>
+<p>Extracts structured data from the current SOM.</p>
+<p><strong>Request</strong></p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;40&quot;,
+  &quot;type&quot;: &quot;request&quot;,
+  &quot;method&quot;: &quot;page.extract&quot;,
+  &quot;params&quot;: {
+    &quot;session_id&quot;: &quot;s_a1b2c3d4&quot;,
+    &quot;fields&quot;: {
+      &quot;title&quot;: {&quot;role&quot;: &quot;heading&quot;, &quot;level&quot;: 1},
+      &quot;links&quot;: {&quot;role&quot;: &quot;link&quot;, &quot;all&quot;: true, &quot;props&quot;: [&quot;text&quot;, &quot;href&quot;]},
+      &quot;price&quot;: {&quot;text_match&quot;: &quot;\\$\\d+\\.\\d{2}&quot;}
+    }
+  }
+}
+</code></pre>
+<p><strong>Response</strong></p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;40&quot;,
+  &quot;type&quot;: &quot;response&quot;,
+  &quot;result&quot;: {
+    &quot;data&quot;: {
+      &quot;title&quot;: &quot;Widget Pro&quot;,
+      &quot;links&quot;: [
+        {&quot;text&quot;: &quot;Home&quot;, &quot;href&quot;: &quot;/&quot;},
+        {&quot;text&quot;: &quot;Products&quot;, &quot;href&quot;: &quot;/products&quot;}
+      ],
+      &quot;price&quot;: &quot;$49.99&quot;
+    },
+    &quot;provenance&quot;: {
+      &quot;title&quot;: &quot;e_1a2b3c&quot;,
+      &quot;price&quot;: &quot;e_7d8e9f&quot;
+    }
+  }
+}
+</code></pre>
+<p><strong>Field query types</strong></p>
+<table>
+<thead>
+<tr>
+<th>Query</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>{&quot;role&quot;: &quot;heading&quot;, &quot;level&quot;: 1}</code></td>
+<td>First element with role=heading and level=1</td>
+</tr>
+<tr>
+<td><code>{&quot;role&quot;: &quot;link&quot;, &quot;all&quot;: true}</code></td>
+<td>All elements with role=link</td>
+</tr>
+<tr>
+<td><code>{&quot;text_match&quot;: &quot;regex&quot;}</code></td>
+<td>First element whose text matches regex</td>
+</tr>
+<tr>
+<td><code>{&quot;ref&quot;: &quot;e_xxx&quot;}</code></td>
+<td>Specific element by ID</td>
+</tr>
+</tbody></table>
+<p>When <code>all: true</code> is set, result is an array. Otherwise, result is the first match (or null).</p>
+<p><code>provenance</code> maps each field to the element_id it was extracted from. This allows agents to verify and re-target.</p>
+<hr>
+<h2>5. SOM Schema (v0.1)</h2>
+<h3>5.1 Top-level structure</h3>
+<pre><code class="language-json">{
+  &quot;som_version&quot;: &quot;0.1&quot;,
+  &quot;url&quot;: &quot;https://example.com/page&quot;,
+  &quot;title&quot;: &quot;Page Title&quot;,
+  &quot;lang&quot;: &quot;en&quot;,
+  &quot;regions&quot;: [ ... ],
+  &quot;meta&quot;: {
+    &quot;html_bytes&quot;: 42891,
+    &quot;som_bytes&quot;: 1823,
+    &quot;element_count&quot;: 47,
+    &quot;interactive_count&quot;: 12
+  }
+}
+</code></pre>
+<h3>5.2 Regions</h3>
+<p>Regions are top-level semantic areas. Determined by HTML5 landmarks or heuristics.</p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;r_nav&quot;,
+  &quot;role&quot;: &quot;navigation&quot;,
+  &quot;label&quot;: &quot;Main navigation&quot;,
+  &quot;elements&quot;: [ ... ]
+}
+</code></pre>
+<p><strong>Region roles (v0.1)</strong></p>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Sources</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>navigation</code></td>
+<td><code>&lt;nav&gt;</code>, <code>[role=navigation]</code>, heuristic: list of links in header</td>
+</tr>
+<tr>
+<td><code>main</code></td>
+<td><code>&lt;main&gt;</code>, <code>[role=main]</code>, heuristic: largest content block</td>
+</tr>
+<tr>
+<td><code>aside</code></td>
+<td><code>&lt;aside&gt;</code>, <code>[role=complementary]</code></td>
+</tr>
+<tr>
+<td><code>header</code></td>
+<td><code>&lt;header&gt;</code>, <code>[role=banner]</code> (page-level only)</td>
+</tr>
+<tr>
+<td><code>footer</code></td>
+<td><code>&lt;footer&gt;</code>, <code>[role=contentinfo]</code> (page-level only)</td>
+</tr>
+<tr>
+<td><code>form</code></td>
+<td><code>&lt;form&gt;</code> that is a direct child or prominent</td>
+</tr>
+<tr>
+<td><code>dialog</code></td>
+<td><code>&lt;dialog&gt;</code>, <code>[role=dialog]</code>, <code>[role=alertdialog]</code></td>
+</tr>
+<tr>
+<td><code>content</code></td>
+<td>Fallback: significant content blocks not matched above</td>
+</tr>
+</tbody></table>
+<p>If no landmarks are found, the entire body becomes a single <code>content</code> region.</p>
+<h3>5.3 Elements</h3>
+<p>Every element in the SOM has:</p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;e_8f3a1b&quot;,
+  &quot;role&quot;: &quot;button&quot;,
+  &quot;text&quot;: &quot;Add to Cart&quot;,
+  &quot;actions&quot;: [&quot;click&quot;],
+  &quot;attrs&quot;: {}
+}
+</code></pre>
+<p><strong>Required fields:</strong></p>
+<ul>
+<li><code>id</code> - stable element identifier (see Section 6)</li>
+<li><code>role</code> - semantic role (see table below)</li>
+</ul>
+<p><strong>Optional fields:</strong></p>
+<ul>
+<li><code>text</code> - visible text content (trimmed, max 200 chars)</li>
+<li><code>label</code> - accessible label if different from text (aria-label, title, label[for])</li>
+<li><code>actions</code> - array of available actions: <code>[&quot;click&quot;]</code>, <code>[&quot;type&quot;, &quot;clear&quot;]</code>, <code>[&quot;select&quot;]</code>, etc.</li>
+<li><code>attrs</code> - role-specific attributes (see below)</li>
+<li><code>children</code> - nested elements (for lists, tables, forms)</li>
+</ul>
+<p><strong>Element roles (v0.1)</strong></p>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>HTML Sources</th>
+<th>attrs</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>link</code></td>
+<td><code>&lt;a href&gt;</code></td>
+<td><code>href</code></td>
+</tr>
+<tr>
+<td><code>button</code></td>
+<td><code>&lt;button&gt;</code>, <code>input[type=submit|button|reset]</code>, <code>[role=button]</code></td>
+<td><code>disabled</code>, <code>form_id</code></td>
+</tr>
+<tr>
+<td><code>text_input</code></td>
+<td><code>input[type=text|email|password|search|tel|url|number]</code></td>
+<td><code>input_type</code>, <code>placeholder</code>, <code>value</code>, <code>required</code>, <code>disabled</code></td>
+</tr>
+<tr>
+<td><code>textarea</code></td>
+<td><code>&lt;textarea&gt;</code></td>
+<td><code>placeholder</code>, <code>value</code>, <code>required</code></td>
+</tr>
+<tr>
+<td><code>select</code></td>
+<td><code>&lt;select&gt;</code></td>
+<td><code>options: [{value, text, selected}]</code>, <code>multiple</code>, <code>required</code></td>
+</tr>
+<tr>
+<td><code>checkbox</code></td>
+<td><code>input[type=checkbox]</code>, <code>[role=checkbox]</code></td>
+<td><code>checked</code>, <code>disabled</code></td>
+</tr>
+<tr>
+<td><code>radio</code></td>
+<td><code>input[type=radio]</code>, <code>[role=radio]</code></td>
+<td><code>checked</code>, <code>group</code>, <code>disabled</code></td>
+</tr>
+<tr>
+<td><code>heading</code></td>
+<td><code>&lt;h1&gt;</code> through <code>&lt;h6&gt;</code></td>
+<td><code>level</code> (1-6)</td>
+</tr>
+<tr>
+<td><code>image</code></td>
+<td><code>&lt;img&gt;</code>, <code>&lt;picture&gt;</code>, <code>[role=img]</code></td>
+<td><code>alt</code>, <code>src</code></td>
+</tr>
+<tr>
+<td><code>list</code></td>
+<td><code>&lt;ul&gt;</code>, <code>&lt;ol&gt;</code></td>
+<td><code>ordered</code>, <code>items: [{text}]</code></td>
+</tr>
+<tr>
+<td><code>table</code></td>
+<td><code>&lt;table&gt;</code></td>
+<td><code>headers: [string]</code>, <code>rows: [[string]]</code> (max 20 rows in snapshot)</td>
+</tr>
+<tr>
+<td><code>paragraph</code></td>
+<td><code>&lt;p&gt;</code>, bare text blocks</td>
+<td>(none)</td>
+</tr>
+<tr>
+<td><code>section</code></td>
+<td><code>&lt;section&gt;</code>, <code>&lt;article&gt;</code></td>
+<td><code>section_label</code></td>
+</tr>
+<tr>
+<td><code>separator</code></td>
+<td><code>&lt;hr&gt;</code></td>
+<td>(none)</td>
+</tr>
+</tbody></table>
+<h3>5.4 Text handling</h3>
+<ul>
+<li>All text is trimmed and collapsed (consecutive whitespace becomes single space).</li>
+<li>Text longer than 200 characters is truncated with <code>...</code> suffix.</li>
+<li>Hidden text (<code>display:none</code>, <code>visibility:hidden</code>, <code>aria-hidden=true</code>) is excluded.<ul>
+<li>v0.1 caveat: without CSS computation, hidden detection uses heuristics (inline <code>style=&quot;display:none&quot;</code>, <code>hidden</code> attribute, <code>aria-hidden</code>).</li>
+</ul>
+</li>
+</ul>
+<h3>5.5 Form grouping</h3>
+<p>When a <code>&lt;form&gt;</code> contains interactive elements, those elements are nested:</p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;r_form1&quot;,
+  &quot;role&quot;: &quot;form&quot;,
+  &quot;label&quot;: &quot;Login&quot;,
+  &quot;action&quot;: &quot;/api/login&quot;,
+  &quot;method&quot;: &quot;POST&quot;,
+  &quot;elements&quot;: [
+    {&quot;id&quot;: &quot;e_1&quot;, &quot;role&quot;: &quot;text_input&quot;, &quot;label&quot;: &quot;Email&quot;, &quot;attrs&quot;: {&quot;input_type&quot;: &quot;email&quot;, &quot;required&quot;: true}},
+    {&quot;id&quot;: &quot;e_2&quot;, &quot;role&quot;: &quot;text_input&quot;, &quot;label&quot;: &quot;Password&quot;, &quot;attrs&quot;: {&quot;input_type&quot;: &quot;password&quot;, &quot;required&quot;: true}},
+    {&quot;id&quot;: &quot;e_3&quot;, &quot;role&quot;: &quot;button&quot;, &quot;text&quot;: &quot;Sign In&quot;, &quot;actions&quot;: [&quot;click&quot;]}
+  ]
+}
+</code></pre>
+<h3>5.6 Omitted content</h3>
+<p>SOM v0.1 omits:</p>
+<ul>
+<li><code>&lt;script&gt;</code>, <code>&lt;style&gt;</code>, <code>&lt;noscript&gt;</code>, <code>&lt;template&gt;</code></li>
+<li>HTML comments</li>
+<li>SVG content (except <code>&lt;svg&gt;</code> with <code>role=img</code> and an accessible name)</li>
+<li><code>&lt;meta&gt;</code>, <code>&lt;link&gt;</code> (consumed for page metadata, not output)</li>
+<li>Inline styles and CSS classes</li>
+<li><code>data-*</code> attributes (except <code>data-testid</code> which is preserved for fallback targeting)</li>
+<li>Empty elements (no text, no interactive role, no children with content)</li>
+<li>Decorative images (<code>alt=&quot;&quot;</code> or <code>role=presentation</code>)</li>
+</ul>
+<hr>
+<h2>6. Element ID Generation</h2>
+<h3>Algorithm</h3>
+<p>Element IDs must be deterministic: same page structure produces same IDs.</p>
+<pre><code>input = &quot;{origin}|{role}|{accessible_name}|{dom_path}&quot;
+element_id = &quot;e_&quot; + hex(sha256(input))[0..12]
+</code></pre>
+<p>Where:</p>
+<ul>
+<li><code>origin</code> = URL origin (<code>https://example.com</code>)</li>
+<li><code>role</code> = SOM role string (<code>button</code>, <code>link</code>, etc.)</li>
+<li><code>accessible_name</code> = normalized: lowercased, trimmed, first 100 chars</li>
+<li><code>dom_path</code> = slash-separated indices from <code>&lt;body&gt;</code>: <code>0/3/1/0</code> (0th child of body, 3rd child of that, etc.)</li>
+</ul>
+<h3>Collisions</h3>
+<p>If two elements produce the same ID (rare but possible), append a counter: <code>e_8f3a1b_2</code>.</p>
+<h3>Stability</h3>
+<p>IDs are stable across fetches of the same page as long as:</p>
+<ul>
+<li>The DOM structure doesn&#39;t change</li>
+<li>The element text doesn&#39;t change</li>
+</ul>
+<p>This is acceptable for static and server-rendered pages. SPA-driven changes (v0.2 with JS execution) will require mutation tracking.</p>
+<hr>
+<h2>7. Full Worked Example</h2>
+<h3>Agent wants to search Hacker News</h3>
+<p><strong>Step 1: Connect and handshake</strong></p>
+<pre><code>-&gt; {&quot;id&quot;:&quot;1&quot;,&quot;type&quot;:&quot;request&quot;,&quot;method&quot;:&quot;awp.hello&quot;,&quot;params&quot;:{&quot;client_name&quot;:&quot;demo&quot;,&quot;client_version&quot;:&quot;0.1.0&quot;,&quot;awp_version&quot;:&quot;0.1&quot;}}
+&lt;- {&quot;id&quot;:&quot;1&quot;,&quot;type&quot;:&quot;response&quot;,&quot;result&quot;:{&quot;awp_version&quot;:&quot;0.1&quot;,&quot;server_name&quot;:&quot;plasmate&quot;,&quot;server_version&quot;:&quot;0.1.0&quot;,&quot;features&quot;:[&quot;som.snapshot&quot;,&quot;act.primitive&quot;,&quot;extract&quot;]}}
+</code></pre>
+<p><strong>Step 2: Create session</strong></p>
+<pre><code>-&gt; {&quot;id&quot;:&quot;2&quot;,&quot;type&quot;:&quot;request&quot;,&quot;method&quot;:&quot;session.create&quot;,&quot;params&quot;:{}}
+&lt;- {&quot;id&quot;:&quot;2&quot;,&quot;type&quot;:&quot;response&quot;,&quot;result&quot;:{&quot;session_id&quot;:&quot;s_1&quot;}}
+</code></pre>
+<p><strong>Step 3: Navigate</strong></p>
+<pre><code>-&gt; {&quot;id&quot;:&quot;3&quot;,&quot;type&quot;:&quot;request&quot;,&quot;method&quot;:&quot;page.navigate&quot;,&quot;params&quot;:{&quot;session_id&quot;:&quot;s_1&quot;,&quot;url&quot;:&quot;https://news.ycombinator.com&quot;}}
+&lt;- {&quot;id&quot;:&quot;3&quot;,&quot;type&quot;:&quot;response&quot;,&quot;result&quot;:{&quot;url&quot;:&quot;https://news.ycombinator.com&quot;,&quot;status&quot;:200,&quot;content_type&quot;:&quot;text/html; charset=utf-8&quot;,&quot;html_bytes&quot;:42891,&quot;som_ready&quot;:true,&quot;load_ms&quot;:287}}
+</code></pre>
+<p><strong>Step 4: Observe</strong></p>
+<pre><code>-&gt; {&quot;id&quot;:&quot;4&quot;,&quot;type&quot;:&quot;request&quot;,&quot;method&quot;:&quot;page.observe&quot;,&quot;params&quot;:{&quot;session_id&quot;:&quot;s_1&quot;}}
+&lt;- {&quot;id&quot;:&quot;4&quot;,&quot;type&quot;:&quot;response&quot;,&quot;result&quot;:{&quot;som&quot;:{&quot;som_version&quot;:&quot;0.1&quot;,&quot;url&quot;:&quot;https://news.ycombinator.com&quot;,&quot;title&quot;:&quot;Hacker News&quot;,&quot;lang&quot;:&quot;en&quot;,&quot;regions&quot;:[{&quot;id&quot;:&quot;r_nav&quot;,&quot;role&quot;:&quot;navigation&quot;,&quot;elements&quot;:[{&quot;id&quot;:&quot;e_a1b2c3&quot;,&quot;role&quot;:&quot;link&quot;,&quot;text&quot;:&quot;Hacker News&quot;,&quot;attrs&quot;:{&quot;href&quot;:&quot;https://news.ycombinator.com&quot;},&quot;actions&quot;:[&quot;click&quot;]},{&quot;id&quot;:&quot;e_d4e5f6&quot;,&quot;role&quot;:&quot;link&quot;,&quot;text&quot;:&quot;new&quot;,&quot;attrs&quot;:{&quot;href&quot;:&quot;newest&quot;},&quot;actions&quot;:[&quot;click&quot;]},{&quot;id&quot;:&quot;e_g7h8i9&quot;,&quot;role&quot;:&quot;link&quot;,&quot;text&quot;:&quot;past&quot;,&quot;attrs&quot;:{&quot;href&quot;:&quot;front&quot;},&quot;actions&quot;:[&quot;click&quot;]},{&quot;id&quot;:&quot;e_j0k1l2&quot;,&quot;role&quot;:&quot;link&quot;,&quot;text&quot;:&quot;comments&quot;,&quot;attrs&quot;:{&quot;href&quot;:&quot;newcomments&quot;},&quot;actions&quot;:[&quot;click&quot;]},{&quot;id&quot;:&quot;e_m3n4o5&quot;,&quot;role&quot;:&quot;link&quot;,&quot;text&quot;:&quot;ask&quot;,&quot;attrs&quot;:{&quot;href&quot;:&quot;ask&quot;},&quot;actions&quot;:[&quot;click&quot;]},{&quot;id&quot;:&quot;e_p6q7r8&quot;,&quot;role&quot;:&quot;link&quot;,&quot;text&quot;:&quot;show&quot;,&quot;attrs&quot;:{&quot;href&quot;:&quot;show&quot;},&quot;actions&quot;:[&quot;click&quot;]},{&quot;id&quot;:&quot;e_s9t0u1&quot;,&quot;role&quot;:&quot;link&quot;,&quot;text&quot;:&quot;jobs&quot;,&quot;attrs&quot;:{&quot;href&quot;:&quot;jobs&quot;},&quot;actions&quot;:[&quot;click&quot;]},{&quot;id&quot;:&quot;e_v2w3x4&quot;,&quot;role&quot;:&quot;link&quot;,&quot;text&quot;:&quot;submit&quot;,&quot;attrs&quot;:{&quot;href&quot;:&quot;submit&quot;},&quot;actions&quot;:[&quot;click&quot;]}]},{&quot;id&quot;:&quot;r_main&quot;,&quot;role&quot;:&quot;main&quot;,&quot;elements&quot;:[{&quot;id&quot;:&quot;e_story1&quot;,&quot;role&quot;:&quot;link&quot;,&quot;text&quot;:&quot;Show HN: Plasmate - an agent-native headless browser engine&quot;,&quot;attrs&quot;:{&quot;href&quot;:&quot;https://plasmate.app&quot;},&quot;actions&quot;:[&quot;click&quot;]},{&quot;id&quot;:&quot;e_meta1&quot;,&quot;role&quot;:&quot;paragraph&quot;,&quot;text&quot;:&quot;142 points by thinker 3 hours ago | 89 comments&quot;}]}],&quot;meta&quot;:{&quot;html_bytes&quot;:42891,&quot;som_bytes&quot;:1847,&quot;element_count&quot;:94,&quot;interactive_count&quot;:38}}}}
+</code></pre>
+<p><strong>Step 5: Extract all story links</strong></p>
+<pre><code>-&gt; {&quot;id&quot;:&quot;5&quot;,&quot;type&quot;:&quot;request&quot;,&quot;method&quot;:&quot;page.extract&quot;,&quot;params&quot;:{&quot;session_id&quot;:&quot;s_1&quot;,&quot;fields&quot;:{&quot;stories&quot;:{&quot;role&quot;:&quot;link&quot;,&quot;all&quot;:true,&quot;props&quot;:[&quot;text&quot;,&quot;href&quot;]}}}}
+&lt;- {&quot;id&quot;:&quot;5&quot;,&quot;type&quot;:&quot;response&quot;,&quot;result&quot;:{&quot;data&quot;:{&quot;stories&quot;:[{&quot;text&quot;:&quot;Show HN: Plasmate...&quot;,&quot;href&quot;:&quot;https://plasmate.app&quot;},{&quot;text&quot;:&quot;Why Rust is eating the world&quot;,&quot;href&quot;:&quot;https://...&quot;}]},&quot;provenance&quot;:{&quot;stories&quot;:[&quot;e_story1&quot;,&quot;e_story2&quot;]}}}
+</code></pre>
+<p><strong>Step 6: Click a link</strong></p>
+<pre><code>-&gt; {&quot;id&quot;:&quot;6&quot;,&quot;type&quot;:&quot;request&quot;,&quot;method&quot;:&quot;page.act&quot;,&quot;params&quot;:{&quot;session_id&quot;:&quot;s_1&quot;,&quot;intent&quot;:{&quot;action&quot;:&quot;click&quot;,&quot;target&quot;:{&quot;ref&quot;:&quot;e_story1&quot;}}}}
+&lt;- {&quot;id&quot;:&quot;6&quot;,&quot;type&quot;:&quot;response&quot;,&quot;result&quot;:{&quot;status&quot;:&quot;ok&quot;,&quot;resolved&quot;:{&quot;element_id&quot;:&quot;e_story1&quot;,&quot;role&quot;:&quot;link&quot;,&quot;text&quot;:&quot;Show HN: Plasmate...&quot;},&quot;effects&quot;:{&quot;navigated&quot;:true,&quot;som_changed&quot;:true}}}
+</code></pre>
+<p>After navigation, <code>page.observe</code> would return the SOM for the new page.</p>
+<hr>
+<h2>8. Python Client Example</h2>
+<p>This is the reference client implementation that ships with the PoC.</p>
+<pre><code class="language-python">&quot;&quot;&quot;
+plasmate_client.py - AWP v0.1 Python client
+
+Usage:
+    client = PlasmateClient(&quot;ws://127.0.0.1:9222&quot;)
+    await client.connect()
+    session = await client.create_session()
+    await client.navigate(session, &quot;https://example.com&quot;)
+    som = await client.observe(session)
+    print(json.dumps(som, indent=2))
+&quot;&quot;&quot;
+
+import asyncio
+import json
+import uuid
+import websockets
+
+
+class PlasmateClient:
+    def __init__(self, url: str = &quot;ws://127.0.0.1:9222&quot;):
+        self.url = url
+        self.ws = None
+        self._pending = {}
+
+    async def connect(self):
+        self.ws = await websockets.connect(self.url)
+        asyncio.create_task(self._reader())
+        result = await self._request(&quot;awp.hello&quot;, {
+            &quot;client_name&quot;: &quot;plasmate-python&quot;,
+            &quot;client_version&quot;: &quot;0.1.0&quot;,
+            &quot;awp_version&quot;: &quot;0.1&quot;
+        })
+        return result
+
+    async def create_session(self, **kwargs) -&gt; str:
+        result = await self._request(&quot;session.create&quot;, kwargs)
+        return result[&quot;session_id&quot;]
+
+    async def close_session(self, session_id: str):
+        return await self._request(&quot;session.close&quot;, {&quot;session_id&quot;: session_id})
+
+    async def navigate(self, session_id: str, url: str, timeout_ms: int = 15000):
+        return await self._request(&quot;page.navigate&quot;, {
+            &quot;session_id&quot;: session_id,
+            &quot;url&quot;: url,
+            &quot;timeout_ms&quot;: timeout_ms
+        })
+
+    async def observe(self, session_id: str) -&gt; dict:
+        result = await self._request(&quot;page.observe&quot;, {&quot;session_id&quot;: session_id})
+        return result[&quot;som&quot;]
+
+    async def act(self, session_id: str, action: str, target: dict, value: str = None):
+        intent = {&quot;action&quot;: action, &quot;target&quot;: target}
+        if value is not None:
+            intent[&quot;value&quot;] = value
+        return await self._request(&quot;page.act&quot;, {
+            &quot;session_id&quot;: session_id,
+            &quot;intent&quot;: intent
+        })
+
+    async def extract(self, session_id: str, fields: dict) -&gt; dict:
+        result = await self._request(&quot;page.extract&quot;, {
+            &quot;session_id&quot;: session_id,
+            &quot;fields&quot;: fields
+        })
+        return result[&quot;data&quot;]
+
+    async def _request(self, method: str, params: dict) -&gt; dict:
+        msg_id = str(uuid.uuid4())[:8]
+        msg = {&quot;id&quot;: msg_id, &quot;type&quot;: &quot;request&quot;, &quot;method&quot;: method, &quot;params&quot;: params}
+        future = asyncio.get_event_loop().create_future()
+        self._pending[msg_id] = future
+        await self.ws.send(json.dumps(msg))
+        result = await asyncio.wait_for(future, timeout=30)
+        return result
+
+    async def _reader(self):
+        async for raw in self.ws:
+            msg = json.loads(raw)
+            if msg.get(&quot;type&quot;) == &quot;response&quot; and msg.get(&quot;id&quot;) in self._pending:
+                future = self._pending.pop(msg[&quot;id&quot;])
+                if &quot;error&quot; in msg:
+                    future.set_exception(
+                        PlasmateError(msg[&quot;error&quot;][&quot;code&quot;], msg[&quot;error&quot;][&quot;message&quot;])
+                    )
+                else:
+                    future.set_result(msg.get(&quot;result&quot;, {}))
+            # Events (v0.2) would be handled here
+
+
+class PlasmateError(Exception):
+    def __init__(self, code: str, message: str):
+        self.code = code
+        super().__init__(f&quot;[{code}] {message}&quot;)
+
+
+# --- Quick test ---
+async def main():
+    client = PlasmateClient()
+    await client.connect()
+    session = await client.create_session()
+
+    nav = await client.navigate(session, &quot;https://news.ycombinator.com&quot;)
+    print(f&quot;Loaded {nav[&#39;url&#39;]} ({nav[&#39;html_bytes&#39;]} bytes HTML, {nav[&#39;load_ms&#39;]}ms)&quot;)
+
+    som = await client.observe(session)
+    print(f&quot;SOM: {som[&#39;meta&#39;][&#39;som_bytes&#39;]} bytes, &quot;
+          f&quot;{som[&#39;meta&#39;][&#39;element_count&#39;]} elements, &quot;
+          f&quot;{som[&#39;meta&#39;][&#39;interactive_count&#39;]} interactive&quot;)
+
+    print(f&quot;\nToken ratio: {som[&#39;meta&#39;][&#39;html_bytes&#39;] / som[&#39;meta&#39;][&#39;som_bytes&#39;]:.1f}x reduction&quot;)
+
+    links = await client.extract(session, {
+        &quot;stories&quot;: {&quot;role&quot;: &quot;link&quot;, &quot;all&quot;: True, &quot;props&quot;: [&quot;text&quot;, &quot;href&quot;]}
+    })
+    for link in links.get(&quot;stories&quot;, [])[:5]:
+        print(f&quot;  - {link[&#39;text&#39;][:60]}&quot;)
+
+    await client.close_session(session)
+
+if __name__ == &quot;__main__&quot;:
+    asyncio.run(main())
+</code></pre>
+<hr>
+<h2>9. Benchmark Harness Specification</h2>
+<p>The PoC MUST ship with a benchmark tool.</p>
+<h3>CLI</h3>
+<pre><code class="language-bash">plasmate bench --urls urls.txt --output report.md
+</code></pre>
+<h3>urls.txt format</h3>
+<p>One URL per line. Comments with <code>#</code>.</p>
+<pre><code># Static sites
+https://news.ycombinator.com
+https://en.wikipedia.org/wiki/Rust_(programming_language)
+https://github.com/nickel-org/nickel.rs
+https://stripe.com/docs/api
+
+# E-commerce
+https://www.shopify.com/shop-themes/free
+https://store.steampowered.com
+
+# News
+https://www.bbc.com/news
+https://www.reuters.com
+</code></pre>
+<h3>Output (report.md)</h3>
+<pre><code class="language-markdown"># Plasmate SOM Benchmark Report
+
+Date: 2026-03-XX
+Engine: plasmate v0.1.0
+URLs tested: 50
+Successful: 47 (94%)
+
+## Summary
+
+| Metric | Mean | Median | P95 |
+|---|---|---|---|
+| HTML bytes | 38,412 | 32,100 | 89,200 |
+| SOM bytes | 2,147 | 1,830 | 4,910 |
+| Byte ratio | 17.9x | 17.5x | 18.2x |
+| HTML tokens (est) | 9,603 | 8,025 | 22,300 |
+| SOM tokens (est) | 537 | 458 | 1,228 |
+| Token ratio | 17.9x | 17.5x | 18.2x |
+| Elements found | 84 | 72 | 198 |
+| Interactive found | 23 | 18 | 52 |
+| Fetch time (ms) | 412 | 318 | 1,240 |
+| Parse+SOM time (ms) | 8 | 6 | 18 |
+
+## Per-URL Results
+
+| URL | HTML bytes | SOM bytes | Ratio | Elements | Interactive | Status |
+|---|---|---|---|---|---|---|
+| news.ycombinator.com | 42,891 | 1,847 | 23.2x | 94 | 38 | ok |
+| en.wikipedia.org/... | 218,445 | 8,932 | 24.5x | 312 | 89 | ok |
+| ... | | | | | | |
+</code></pre>
+<h3>Token estimation</h3>
+<p>v0.1 uses <code>bytes / 4</code> as rough token estimate (works within 20% for English text and cl100k_base). A companion Python script using <code>tiktoken</code> produces exact counts for the final report.</p>
+<hr>
+<h2>10. v0.2 Backlog</h2>
+<p>Methods and features explicitly deferred. Listed here so the protocol is designed to accommodate them without breaking changes.</p>
+<h3>v0.2 Methods</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>page.create</code> / <code>page.close</code></td>
+<td>Multi-page support within a session</td>
+</tr>
+<tr>
+<td><code>page.observe</code> with <code>mode: &quot;mutations&quot;</code></td>
+<td>Incremental SOM updates via JSON Patch</td>
+</tr>
+<tr>
+<td><code>session.cookies.get/set/clear</code></td>
+<td>Explicit cookie management</td>
+</tr>
+<tr>
+<td><code>session.export</code> / <code>session.import</code></td>
+<td>Portable session state</td>
+</tr>
+<tr>
+<td><code>session.set_network</code></td>
+<td>Proxy and impersonation configuration</td>
+</tr>
+<tr>
+<td><code>skills.list</code> / <code>skills.invoke</code></td>
+<td>Wasm skill system</td>
+</tr>
+<tr>
+<td><code>page.screenshot</code></td>
+<td>Optional pixel output (not primary, but useful for debugging)</td>
+</tr>
+<tr>
+<td><code>page.evaluate_js</code></td>
+<td>Raw JS evaluation (requires V8, privileged action)</td>
+</tr>
+</tbody></table>
+<h3>v0.2 Transport</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MessagePack encoding</td>
+<td>Binary serialization (30-50% smaller than JSON)</td>
+</tr>
+<tr>
+<td>zstd compression</td>
+<td>Per-message compression</td>
+</tr>
+<tr>
+<td>Connection multiplexing</td>
+<td>Multiple sessions per WebSocket</td>
+</tr>
+</tbody></table>
+<h3>v0.2 SOM Enhancements</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Mutation tracking</td>
+<td>DOM MutationObserver equivalent, JSON Patch output</td>
+</tr>
+<tr>
+<td>Dynamic content</td>
+<td>Content loaded by JS execution</td>
+</tr>
+<tr>
+<td>Shadow DOM</td>
+<td>Web Components support</td>
+</tr>
+<tr>
+<td>iframe extraction</td>
+<td>Nested browsing context SOM</td>
+</tr>
+</tbody></table>
+<h3>v0.2 Engine Features</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>rusty_v8</code> JS execution</td>
+<td>SPA rendering</td>
+</tr>
+<tr>
+<td>Stealth TLS (rustls fork)</td>
+<td>JA3/JA4 fingerprint control</td>
+</tr>
+<tr>
+<td>HTTP/2 fingerprinting</td>
+<td>SETTINGS, WINDOW_UPDATE, PRIORITY tuning</td>
+</tr>
+<tr>
+<td>Proxy rotation</td>
+<td>SOCKS5/HTTP with strategies</td>
+</tr>
+<tr>
+<td>RocksDB persistence</td>
+<td>Durable sessions, cookies, state</td>
+</tr>
+</tbody></table>
+<hr>
+<p><em>End of AWP v0.1 MVP Specification</em></p>
+
+    </main>
+  </div>
+</body>
+</html>
