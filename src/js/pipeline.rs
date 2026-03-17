@@ -51,7 +51,6 @@ pub struct PipelineConfig {
     pub js_config: RuntimeConfig,
     /// Max timer drain threshold in ms (execute short setTimeout callbacks).
     pub timer_drain_ms: u64,
-
 }
 
 impl Default for PipelineConfig {

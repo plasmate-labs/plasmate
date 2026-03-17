@@ -53,11 +53,7 @@ pub async fn handle_request(
     }
 }
 
-fn handle_hello(
-    id: &str,
-    params: &serde_json::Value,
-    state: &mut ConnectionState,
-) -> Response {
+fn handle_hello(id: &str, params: &serde_json::Value, state: &mut ConnectionState) -> Response {
     let awp_version = params
         .get("awp_version")
         .and_then(|v| v.as_str())
@@ -101,8 +97,14 @@ fn handle_session_create(
     }
 
     let session_id = format!("s_{}", &uuid::Uuid::new_v4().to_string()[..8]);
-    let user_agent = params.get("user_agent").and_then(|v| v.as_str()).map(String::from);
-    let locale = params.get("locale").and_then(|v| v.as_str()).map(String::from);
+    let user_agent = params
+        .get("user_agent")
+        .and_then(|v| v.as_str())
+        .map(String::from);
+    let locale = params
+        .get("locale")
+        .and_then(|v| v.as_str())
+        .map(String::from);
     let timeout_ms = params.get("timeout_ms").and_then(|v| v.as_u64());
 
     match Session::new(session_id.clone(), user_agent, locale, timeout_ms) {
@@ -258,18 +260,23 @@ async fn handle_page_act(
     let intent = match params.get("intent") {
         Some(i) => i,
         None => {
-            return Response::error(id, ErrorCode::InvalidRequest, "Missing required param: intent")
+            return Response::error(
+                id,
+                ErrorCode::InvalidRequest,
+                "Missing required param: intent",
+            )
         }
     };
 
-    let action = intent
-        .get("action")
-        .and_then(|v| v.as_str())
-        .unwrap_or("");
+    let action = intent.get("action").and_then(|v| v.as_str()).unwrap_or("");
     let target = match intent.get("target") {
         Some(t) => t,
         None => {
-            return Response::error(id, ErrorCode::InvalidRequest, "Missing required param: intent.target")
+            return Response::error(
+                id,
+                ErrorCode::InvalidRequest,
+                "Missing required param: intent.target",
+            )
         }
     };
 
@@ -336,10 +343,7 @@ async fn handle_page_act(
             )
         }
         "type" => {
-            let value = intent
-                .get("value")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
+            let value = intent.get("value").and_then(|v| v.as_str()).unwrap_or("");
 
             // Update element value in SOM
             if let Some(som) = &mut session.current_som {
@@ -363,10 +367,7 @@ async fn handle_page_act(
             )
         }
         "select" => {
-            let value = intent
-                .get("value")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
+            let value = intent.get("value").and_then(|v| v.as_str()).unwrap_or("");
 
             if let Some(som) = &mut session.current_som {
                 update_element_value(som, &element.id, value);
@@ -437,7 +438,11 @@ fn handle_page_extract(
     };
 
     // If "structured_data" is requested, return the full structured data
-    if params.get("structured_data").and_then(|v| v.as_bool()).unwrap_or(false) {
+    if params
+        .get("structured_data")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false)
+    {
         let sd = &session.current_structured_data;
         return Response::success(
             id,
@@ -449,9 +454,14 @@ fn handle_page_extract(
     }
 
     // If "interactive_elements" is requested, return all interactive elements
-    if params.get("interactive_elements").and_then(|v| v.as_bool()).unwrap_or(false) {
+    if params
+        .get("interactive_elements")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false)
+    {
         let all_elements = collect_all_elements(som);
-        let interactive: Vec<serde_json::Value> = all_elements.iter()
+        let interactive: Vec<serde_json::Value> = all_elements
+            .iter()
             .filter(|e| e.role.is_interactive())
             .map(|e| {
                 json!({
@@ -506,10 +516,7 @@ fn handle_page_extract(
 }
 
 /// Resolve a target specification to an element in the SOM.
-fn resolve_target(
-    target: &serde_json::Value,
-    som: &crate::som::types::Som,
-) -> Option<Element> {
+fn resolve_target(target: &serde_json::Value, som: &crate::som::types::Som) -> Option<Element> {
     let all_elements = collect_all_elements(som);
 
     // Try ref first
@@ -525,9 +532,7 @@ fn resolve_target(
 
     if target_text.is_some() || target_role.is_some() {
         for el in &all_elements {
-            let role_match = target_role
-                .map(|r| el.role.as_str() == r)
-                .unwrap_or(true);
+            let role_match = target_role.map(|r| el.role.as_str() == r).unwrap_or(true);
             let text_match = target_text
                 .map(|t| {
                     el.text
@@ -621,18 +626,15 @@ fn execute_field_query(
             .collect();
 
         if all {
-            let values: Vec<serde_json::Value> =
-                matches.iter().map(|e| element_to_extract_value(e, &props)).collect();
-            let ids: Vec<serde_json::Value> =
-                matches.iter().map(|e| json!(e.id)).collect();
+            let values: Vec<serde_json::Value> = matches
+                .iter()
+                .map(|e| element_to_extract_value(e, &props))
+                .collect();
+            let ids: Vec<serde_json::Value> = matches.iter().map(|e| json!(e.id)).collect();
             return (json!(values), json!(ids));
         } else if let Some(first) = matches.first() {
             let value = if props.is_empty() {
-                first
-                    .text
-                    .as_ref()
-                    .map(|t| json!(t))
-                    .unwrap_or(json!(null))
+                first.text.as_ref().map(|t| json!(t)).unwrap_or(json!(null))
             } else {
                 element_to_extract_value(first, &props)
             };
@@ -661,11 +663,7 @@ fn execute_field_query(
 
 fn element_to_extract_value(el: &Element, props: &[String]) -> serde_json::Value {
     if props.is_empty() {
-        return el
-            .text
-            .as_ref()
-            .map(|t| json!(t))
-            .unwrap_or(json!(null));
+        return el.text.as_ref().map(|t| json!(t)).unwrap_or(json!(null));
     }
 
     let mut map = serde_json::Map::new();
@@ -728,11 +726,7 @@ fn resolve_url(base: &str, href: &str) -> String {
     href.to_string()
 }
 
-fn update_element_value(
-    som: &mut crate::som::types::Som,
-    element_id: &str,
-    value: &str,
-) {
+fn update_element_value(som: &mut crate::som::types::Som, element_id: &str, value: &str) {
     for region in &mut som.regions {
         update_element_value_in_list(&mut region.elements, element_id, value);
     }

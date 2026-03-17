@@ -97,36 +97,163 @@ pub async fn page_navigate(
 
     match target.navigate(url).await {
         Ok(result) => {
+            let url = result.url.clone();
+            let loader_id = result.loader_id.clone();
+            let frame_id = result.frame_id.clone();
+            let mime_type = result.mime_type.clone();
+            let status = result.status;
+            let encoded_data_length = result.encoded_data_length;
+            let request_id = format!("req_{}", loader_id);
+
             let events = vec![
+                // Minimal Network events so Puppeteer can resolve navigationResponse()
+                CdpEvent::new(
+                    "Network.requestWillBeSent",
+                    json!({
+                        "requestId": request_id.clone(),
+                        "loaderId": loader_id.clone(),
+                        "frameId": frame_id.clone(),
+                        "documentURL": url.clone(),
+                        "request": {
+                            "url": url.clone(),
+                            "method": "GET",
+                            "headers": {},
+                            "initialPriority": "High",
+                            "referrerPolicy": "strict-origin-when-cross-origin"
+                        },
+                        "timestamp": timestamp_sec(),
+                        "type": "Document",
+                        "initiator": {"type": "other"}
+                    }),
+                ),
+                CdpEvent::new(
+                    "Network.responseReceived",
+                    json!({
+                        "requestId": request_id.clone(),
+                        "loaderId": loader_id.clone(),
+                        "frameId": frame_id.clone(),
+                        "timestamp": timestamp_sec(),
+                        "type": "Document",
+                        "response": {
+                            "url": url.clone(),
+                            "status": status,
+                            "statusText": "OK",
+                            "headers": {},
+                            "mimeType": mime_type.clone(),
+                            "connectionReused": false,
+                            "connectionId": 0,
+                            "fromDiskCache": false,
+                            "fromServiceWorker": false,
+                            "encodedDataLength": encoded_data_length
+                        }
+                    }),
+                ),
+                CdpEvent::new(
+                    "Network.loadingFinished",
+                    json!({
+                        "requestId": request_id.clone(),
+                        "frameId": frame_id.clone(),
+                        "timestamp": timestamp_sec(),
+                        "encodedDataLength": encoded_data_length
+                    }),
+                ),
                 CdpEvent::new(
                     "Page.frameStartedLoading",
-                    json!({"frameId": result.frame_id}),
+                    json!({"frameId": frame_id.clone()}),
                 ),
+                // We intentionally do NOT send executionContextsCleared here.
+                // Plasmate owns the engine - context references remain valid
+                // across navigations because we resolve evaluate() from SOM,
+                // not from a real JS isolate. Clearing would force Puppeteer to
+                // wait for new context creation, which is fragile to get right.
                 CdpEvent::new(
                     "Page.frameNavigated",
                     json!({
                         "frame": {
-                            "id": result.frame_id,
-                            "loaderId": result.loader_id,
-                            "url": result.url,
-                            "securityOrigin": result.url,
+                            "id": frame_id.clone(),
+                            "loaderId": loader_id.clone(),
+                            "url": url.clone(),
+                            "securityOrigin": url.clone(),
                             "mimeType": "text/html",
                         }
+                    }),
+                ),
+                // Full lifecycle sequence that Puppeteer's LifecycleWatcher expects
+                CdpEvent::new(
+                    "Page.lifecycleEvent",
+                    json!({
+                        "frameId": frame_id.clone(),
+                        "loaderId": loader_id.clone(),
+                        "name": "init",
+                        "timestamp": timestamp_sec(),
+                    }),
+                ),
+                CdpEvent::new(
+                    "Page.lifecycleEvent",
+                    json!({
+                        "frameId": frame_id.clone(),
+                        "loaderId": loader_id.clone(),
+                        "name": "commit",
+                        "timestamp": timestamp_sec(),
+                    }),
+                ),
+                CdpEvent::new(
+                    "Page.domContentEventFired",
+                    json!({"timestamp": timestamp_sec()}),
+                ),
+                CdpEvent::new(
+                    "Page.lifecycleEvent",
+                    json!({
+                        "frameId": frame_id.clone(),
+                        "loaderId": loader_id.clone(),
+                        "name": "DOMContentLoaded",
+                        "timestamp": timestamp_sec(),
                     }),
                 ),
                 CdpEvent::new("Page.loadEventFired", json!({"timestamp": timestamp_sec()})),
                 CdpEvent::new(
                     "Page.lifecycleEvent",
                     json!({
-                        "frameId": result.frame_id,
-                        "loaderId": result.loader_id,
+                        "frameId": frame_id.clone(),
+                        "loaderId": loader_id.clone(),
                         "name": "load",
                         "timestamp": timestamp_sec(),
                     }),
                 ),
                 CdpEvent::new(
+                    "Page.lifecycleEvent",
+                    json!({
+                        "frameId": frame_id.clone(),
+                        "loaderId": loader_id.clone(),
+                        "name": "networkAlmostIdle",
+                        "timestamp": timestamp_sec(),
+                    }),
+                ),
+                CdpEvent::new(
+                    "Page.lifecycleEvent",
+                    json!({
+                        "frameId": frame_id.clone(),
+                        "loaderId": loader_id.clone(),
+                        "name": "networkIdle",
+                        "timestamp": timestamp_sec(),
+                    }),
+                ),
+                CdpEvent::new(
                     "Page.frameStoppedLoading",
-                    json!({"frameId": result.frame_id}),
+                    json!({"frameId": frame_id.clone()}),
+                ),
+                CdpEvent::new(
+                    "Target.targetInfoChanged",
+                    json!({
+                        "targetInfo": {
+                            "targetId": frame_id.clone(),
+                            "type": "page",
+                            "title": "",
+                            "url": url.clone(),
+                            "attached": true,
+                            "browserContextId": "default",
+                        }
+                    }),
                 ),
             ];
 
@@ -134,8 +261,8 @@ pub async fn page_navigate(
                 CdpResponse::success(
                     id,
                     json!({
-                        "frameId": result.frame_id,
-                        "loaderId": result.loader_id,
+                        "frameId": frame_id,
+                        "loaderId": loader_id,
                     }),
                 ),
                 events,

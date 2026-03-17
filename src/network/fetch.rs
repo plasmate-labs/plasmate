@@ -36,10 +36,7 @@ const DEFAULT_USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7
 /// - Accepts compressed responses (gzip, brotli, deflate)
 /// - Skips unnecessary resources (we only want HTML)
 /// - Uses rustls (no OpenSSL dependency)
-pub fn build_client(
-    user_agent: Option<&str>,
-    cookie_jar: Arc<Jar>,
-) -> Result<Client, FetchError> {
+pub fn build_client(user_agent: Option<&str>, cookie_jar: Arc<Jar>) -> Result<Client, FetchError> {
     Client::builder()
         .user_agent(user_agent.unwrap_or(DEFAULT_USER_AGENT))
         .cookie_provider(cookie_jar)

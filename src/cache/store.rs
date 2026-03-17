@@ -83,7 +83,10 @@ pub struct CacheStats {
 
 impl SomCache {
     pub fn new(config: CacheConfig) -> Self {
-        info!(max_entries = config.max_hot_entries, "SOM cache initialized");
+        info!(
+            max_entries = config.max_hot_entries,
+            "SOM cache initialized"
+        );
         Self {
             config,
             entries: Arc::new(RwLock::new(HashMap::new())),

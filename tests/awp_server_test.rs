@@ -41,13 +41,17 @@ async fn start_test_server() -> String {
     addr_str
 }
 
-async fn connect(addr: &str) -> tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>> {
+async fn connect(
+    addr: &str,
+) -> tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>> {
     let (ws, _) = tokio_tungstenite::connect_async(addr).await.unwrap();
     ws
 }
 
 async fn send_recv(
-    ws: &mut tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>,
+    ws: &mut tokio_tungstenite::WebSocketStream<
+        tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
+    >,
     msg: serde_json::Value,
 ) -> serde_json::Value {
     let text = serde_json::to_string(&msg).unwrap();

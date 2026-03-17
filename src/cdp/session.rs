@@ -41,6 +41,11 @@ pub struct CdpTarget {
 
     // Pipeline config
     pub pipeline_config: PipelineConfig,
+
+    // All session IDs that map to this target (for multi-attach routing)
+    pub session_ids: Vec<String>,
+    // Pending target needing attachedToTarget (set by createTarget, consumed by setAutoAttach)
+    pub pending_attach: Option<(String, String)>, // (target_id, session_id)
 }
 
 #[derive(Clone)]
@@ -70,12 +75,14 @@ impl CdpTarget {
 
         Ok(CdpTarget {
             target_id,
-            session_id,
+            session_id: session_id.clone(),
             client,
             cookie_jar: jar,
             timeout_ms: 30000,
             user_agent: DEFAULT_USER_AGENT.to_string(),
             extra_headers: HashMap::new(),
+            session_ids: vec![session_id],
+            pending_attach: None,
             current_url: None,
             current_html: None,
             current_som: None,
@@ -90,6 +97,32 @@ impl CdpTarget {
                 ..Default::default()
             },
         })
+    }
+
+    /// Generate a fresh target ID and session ID for a new "page".
+    /// The new session routes to this same CdpTarget (single-page for v0.1).
+    /// Does NOT immediately attach - the next setAutoAttach fires the events.
+    pub fn create_child_target(&mut self) -> String {
+        let num = TARGET_COUNTER.fetch_add(1, Ordering::Relaxed);
+        let new_target_id = format!("{:032X}", num);
+        let new_session_id = format!("{:032X}", num + 1000);
+        let new_frame_id = format!("{:032X}", num + 2000);
+
+        // Update to use the new IDs (latest "page" wins)
+        self.target_id = new_target_id.clone();
+        self.session_id = new_session_id.clone();
+        self.frame_id = new_frame_id.clone();
+        self.session_ids.push(new_session_id.clone());
+        self.pending_attach = Some((new_target_id.clone(), new_session_id));
+
+        // Reset page state for the new "page"
+        self.current_url = None;
+        self.current_html = None;
+        self.current_som = None;
+        self.current_structured_data = None;
+        self.node_map.clear();
+
+        new_target_id
     }
 
     /// Navigate using our full pipeline, return events to emit.
@@ -109,8 +142,13 @@ impl CdpTarget {
         .await
         .map_err(|e| e.to_string())?;
 
+        let status = fetch_result.status;
+        let mime_type = fetch_result.content_type.clone();
+        let encoded_data_length = fetch_result.html_bytes;
+        let html = fetch_result.html;
+
         self.current_url = Some(final_url.clone());
-        self.current_html = Some(fetch_result.html);
+        self.current_html = Some(html);
         self.current_structured_data = page_result.som.structured_data.clone();
         self.current_som = Some(page_result.som);
 
@@ -125,6 +163,9 @@ impl CdpTarget {
             url: final_url,
             loader_id: self.loader_id.clone(),
             frame_id: self.frame_id.clone(),
+            status,
+            mime_type,
+            encoded_data_length,
         })
     }
 
@@ -286,6 +327,9 @@ pub struct NavigateResult {
     pub url: String,
     pub loader_id: String,
     pub frame_id: String,
+    pub status: u16,
+    pub mime_type: String,
+    pub encoded_data_length: usize,
 }
 
 fn next_node_id() -> u64 {

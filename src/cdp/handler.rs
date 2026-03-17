@@ -19,7 +19,7 @@ pub async fn handle_cdp_request(
     let method = req.method.as_str();
     let params = &req.params;
 
-    debug!(method, id, "CDP request");
+    debug!(method, id, session_id = ?req.session_id, "CDP request");
 
     let (response, events) = match method {
         // ---- Browser ----
@@ -28,10 +28,151 @@ pub async fn handle_cdp_request(
 
         // ---- Target ----
         "Target.getTargets" => (domains::target_get_targets(id, target), vec![]),
-        "Target.createTarget" => (domains::target_create_target(id, target), vec![]),
-        "Target.attachToTarget" => (domains::target_attach_to_target(id, target), vec![]),
+        "Target.createBrowserContext" => (
+            CdpResponse::success(
+                id,
+                serde_json::json!({
+                    "browserContextId": "default",
+                }),
+            ),
+            vec![],
+        ),
+        "Target.createTarget" => {
+            // Generate fresh target + session IDs
+            let new_target_id = target.create_child_target();
+            let new_session_id = target.session_id.clone();
+            // Emit targetCreated + attachedToTarget (browser-level events,
+            // not wrapped with sessionId because they start with "Target.")
+            let events = vec![
+                CdpEvent::new(
+                    "Target.targetCreated",
+                    serde_json::json!({
+                        "targetInfo": {
+                            "targetId": new_target_id,
+                            "type": "page",
+                            "title": "",
+                            "url": "about:blank",
+                            "attached": true,
+                            "browserContextId": "default",
+                        }
+                    }),
+                ),
+                CdpEvent::new(
+                    "Target.attachedToTarget",
+                    serde_json::json!({
+                        "sessionId": new_session_id,
+                        "targetInfo": {
+                            "targetId": new_target_id,
+                            "type": "page",
+                            "title": "",
+                            "url": "about:blank",
+                            "attached": true,
+                            "browserContextId": "default",
+                        },
+                        "waitingForDebugger": false,
+                    }),
+                ),
+            ];
+            (
+                CdpResponse::success(id, serde_json::json!({"targetId": new_target_id})),
+                events,
+            )
+        }
+        "Target.attachToTarget" => {
+            let events = vec![CdpEvent::new(
+                "Target.attachedToTarget",
+                serde_json::json!({
+                    "sessionId": target.session_id,
+                    "targetInfo": {
+                        "targetId": target.target_id,
+                        "type": "page",
+                        "title": "",
+                        "url": target.current_url.as_deref().unwrap_or("about:blank"),
+                        "attached": true,
+                        "browserContextId": "default",
+                    },
+                    "waitingForDebugger": false,
+                }),
+            )];
+            (domains::target_attach_to_target(id, target), events)
+        }
         "Target.setDiscoverTargets" => (domains::target_set_discover_targets(id), vec![]),
-        "Target.setAutoAttach" => (CdpResponse::success(id, serde_json::json!({})), vec![]),
+        "Target.getBrowserContexts" => (
+            CdpResponse::success(
+                id,
+                serde_json::json!({
+                    "browserContextIds": []
+                }),
+            ),
+            vec![],
+        ),
+        "Target.setAutoAttach" => {
+            let auto_attach = params
+                .get("autoAttach")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
+            let flatten = params
+                .get("flatten")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
+            let mut events = vec![];
+
+            // Only emit attach events for browser-level calls (no sessionId).
+            // Session-scoped setAutoAttach (from child pages) returns empty -
+            // there are no child targets to discover (we don't have iframes/workers).
+            if auto_attach && flatten && req.session_id.is_none() {
+                // If there's a pending target from createTarget, attach it
+                if let Some((pending_tid, pending_sid)) = target.pending_attach.take() {
+                    events.push(CdpEvent::new(
+                        "Target.attachedToTarget",
+                        serde_json::json!({
+                            "sessionId": pending_sid,
+                            "targetInfo": {
+                                "targetId": pending_tid,
+                                "type": "page",
+                                "title": "",
+                                "url": "about:blank",
+                                "attached": true,
+                                "browserContextId": "default",
+                            },
+                            "waitingForDebugger": false,
+                        }),
+                    ));
+                } else {
+                    // First call: attach the default target
+                    events.push(CdpEvent::new(
+                        "Target.targetCreated",
+                        serde_json::json!({
+                            "targetInfo": {
+                                "targetId": target.target_id,
+                                "type": "page",
+                                "title": "",
+                                "url": target.current_url.as_deref().unwrap_or("about:blank"),
+                                "attached": true,
+                                "browserContextId": "default",
+                            }
+                        }),
+                    ));
+                    events.push(CdpEvent::new(
+                        "Target.attachedToTarget",
+                        serde_json::json!({
+                            "sessionId": target.session_id,
+                            "targetInfo": {
+                                "targetId": target.target_id,
+                                "type": "page",
+                                "title": "",
+                                "url": target.current_url.as_deref().unwrap_or("about:blank"),
+                                "attached": true,
+                                "browserContextId": "default",
+                            },
+                            "waitingForDebugger": false,
+                        }),
+                    ));
+                }
+            }
+            (CdpResponse::success(id, serde_json::json!({})), events)
+        }
+        "Target.disposeBrowserContext" => (CdpResponse::success(id, serde_json::json!({})), vec![]),
 
         // ---- Page ----
         "Page.navigate" => domains::page_navigate(id, params, target).await,
@@ -40,7 +181,34 @@ pub async fn handle_cdp_request(
         "Page.setLifecycleEventsEnabled" => {
             (domains::page_set_lifecycle_events_enabled(id), vec![])
         }
-        "Page.createIsolatedWorld" => (domains::page_create_isolated_world(id), vec![]),
+        "Page.createIsolatedWorld" => {
+            let world_name = params
+                .get("worldName")
+                .and_then(|v| v.as_str())
+                .unwrap_or("__puppeteer_utility_world__")
+                .to_string();
+            let ctx_id = 3; // isolated world context
+            let events = vec![CdpEvent::new(
+                "Runtime.executionContextCreated",
+                serde_json::json!({
+                    "context": {
+                        "id": ctx_id,
+                        "origin": target.current_url.as_deref().unwrap_or("about:blank"),
+                        "name": world_name,
+                        "uniqueId": format!("iso-{}", ctx_id),
+                        "auxData": {
+                            "isDefault": false,
+                            "type": "isolated",
+                            "frameId": target.frame_id,
+                        }
+                    }
+                }),
+            )];
+            (
+                CdpResponse::success(id, serde_json::json!({"executionContextId": ctx_id})),
+                events,
+            )
+        }
         "Page.setInterceptFileChooserDialog" => {
             (CdpResponse::success(id, serde_json::json!({})), vec![])
         }
@@ -66,19 +234,36 @@ pub async fn handle_cdp_request(
         "Runtime.enable" => domains::runtime_enable(id, target),
         "Runtime.evaluate" => (domains::runtime_evaluate(id, params, target), vec![]),
         "Runtime.callFunctionOn" => {
-            // Puppeteer uses this heavily for DOM manipulation
             let function = params
                 .get("functionDeclaration")
                 .and_then(|v| v.as_str())
                 .unwrap_or("");
-            debug!("callFunctionOn: {}", &function[..function.len().min(80)]);
+            let return_by_value = params
+                .get("returnByValue")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
+            debug!("callFunctionOn: {}", &function[..function.len().min(500)]);
+
+            let result = if function.contains("document.title") {
+                let title = target
+                    .current_som
+                    .as_ref()
+                    .map(|s| s.title.clone())
+                    .unwrap_or_default();
+                serde_json::json!({"type": "string", "value": title})
+            } else if function.contains("outerHTML")
+                || function.contains("document.documentElement")
+            {
+                let html = target.current_html.as_deref().unwrap_or("<html></html>");
+                serde_json::json!({"type": "string", "value": html})
+            } else if return_by_value {
+                serde_json::json!({"type": "undefined"})
+            } else {
+                serde_json::json!({"type": "object", "objectId": "eval-result"})
+            };
+
             (
-                CdpResponse::success(
-                    id,
-                    serde_json::json!({
-                        "result": {"type": "undefined"}
-                    }),
-                ),
+                CdpResponse::success(id, serde_json::json!({"result": result})),
                 vec![],
             )
         }
@@ -136,6 +321,37 @@ pub async fn handle_cdp_request(
             (CdpResponse::success(id, serde_json::json!({})), vec![])
         }
 
+        // ---- Extra Target methods ----
+        "Target.activateTarget" | "Target.closeTarget" | "Target.detachFromTarget" => {
+            (CdpResponse::success(id, serde_json::json!({})), vec![])
+        }
+        "Target.getTargetInfo" => (
+            CdpResponse::success(
+                id,
+                serde_json::json!({
+                    "targetInfo": {
+                        "targetId": target.target_id,
+                        "type": "page",
+                        "title": target.current_som.as_ref().map(|s| s.title.as_str()).unwrap_or(""),
+                        "url": target.current_url.as_deref().unwrap_or("about:blank"),
+                        "attached": true,
+                        "browserContextId": "default",
+                    }
+                }),
+            ),
+            vec![],
+        ),
+
+        // ---- Extra Page methods ----
+        "Page.bringToFront"
+        | "Page.stopLoading"
+        | "Page.close"
+        | "Page.setBypassCSP"
+        | "Page.getLayoutMetrics"
+        | "Page.removeScriptToEvaluateOnNewDocument" => {
+            (CdpResponse::success(id, serde_json::json!({})), vec![])
+        }
+
         // ---- Log / Performance / Security (ack and ignore) ----
         "Log.enable"
         | "Log.disable"
@@ -184,7 +400,11 @@ pub async fn handle_cdp_request(
     let events: Vec<CdpEvent> = events
         .into_iter()
         .map(|mut e| {
-            e.session_id = req.session_id.clone();
+            // Target-level events are always browser-scoped (no sessionId wrapper).
+            // All other events inherit the request's sessionId.
+            if !e.method.starts_with("Target.") {
+                e.session_id = req.session_id.clone();
+            }
             e
         })
         .collect();

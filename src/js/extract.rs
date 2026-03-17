@@ -40,10 +40,12 @@ fn visit_scripts(node: &Handle, scripts: &mut Vec<ScriptBlock>, index: &mut usiz
     if let NodeData::Element { name, attrs, .. } = &node.data {
         if name.local.as_ref() == "script" {
             let attrs_borrowed = attrs.borrow();
-            let script_type = attrs_borrowed.iter()
+            let script_type = attrs_borrowed
+                .iter()
                 .find(|a| a.name.local.as_ref() == "type")
                 .map(|a| a.value.to_string().to_lowercase());
-            let has_src = attrs_borrowed.iter()
+            let has_src = attrs_borrowed
+                .iter()
                 .any(|a| a.name.local.as_ref() == "src");
 
             // Skip non-executable types
@@ -51,7 +53,9 @@ fn visit_scripts(node: &Handle, scripts: &mut Vec<ScriptBlock>, index: &mut usiz
                 Some("module") => true,
                 Some("application/json") | Some("application/ld+json") => true,
                 Some("text/html") | Some("text/template") => true,
-                Some(t) if t != "text/javascript" && t != "application/javascript" && t != "" => true,
+                Some(t) if t != "text/javascript" && t != "application/javascript" && t != "" => {
+                    true
+                }
                 _ => false,
             };
 
@@ -73,7 +77,8 @@ fn visit_scripts(node: &Handle, scripts: &mut Vec<ScriptBlock>, index: &mut usiz
             }
 
             if has_src {
-                let src = attrs_borrowed.iter()
+                let src = attrs_borrowed
+                    .iter()
                     .find(|a| a.name.local.as_ref() == "src")
                     .map(|a| a.value.to_string())
                     .unwrap_or_default();
@@ -135,7 +140,8 @@ mod tests {
 
     #[test]
     fn test_skip_module() {
-        let html = r#"<html><head><script type="module">import x from './x';</script></head></html>"#;
+        let html =
+            r#"<html><head><script type="module">import x from './x';</script></head></html>"#;
         let scripts = extract_scripts(html);
         let inline: Vec<_> = scripts.iter().filter(|s| s.is_inline).collect();
         assert_eq!(inline.len(), 0);

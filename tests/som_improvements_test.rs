@@ -30,10 +30,14 @@ fn test_duplicate_links_removed() {
 
     // Count occurrences of /about href - should appear once (dedup strips fragment and trailing slash)
     let about_count = json.matches("\"/about\"").count();
-    assert_eq!(about_count, 1, "Duplicate /about links should be deduplicated");
+    assert_eq!(
+        about_count, 1,
+        "Duplicate /about links should be deduplicated"
+    );
 
     // /contact and /contact/ should dedup
-    let contact_count = json.matches("\"/contact\"").count() + json.matches("\"/contact/\"").count();
+    let contact_count =
+        json.matches("\"/contact\"").count() + json.matches("\"/contact/\"").count();
     assert_eq!(contact_count, 1, "/contact and /contact/ should dedup");
 
     // /unique should still be there
@@ -53,7 +57,10 @@ fn test_dedup_preserves_first_occurrence() {
     let som = compiler::compile(html, "https://example.com").unwrap();
     let json = serde_json::to_string(&som).unwrap();
 
-    assert!(json.contains("First text"), "First occurrence should be kept");
+    assert!(
+        json.contains("First text"),
+        "First occurrence should be kept"
+    );
     // Total /page hrefs should be 1
     let page_count = json.matches("\"/page\"").count();
     assert_eq!(page_count, 1, "Only first /page link should survive");
@@ -98,7 +105,11 @@ fn test_smart_truncate_at_sentence() {
 fn test_smart_truncate_no_sentence_falls_to_word() {
     let text = "This is a very long text without any sentence ending punctuation that just keeps going and going without stopping for breath or any kind of pause";
     let result = heuristics::smart_truncate(text, 60);
-    assert!(result.ends_with("..."), "Should add ellipsis when truncating at word, got: '{}'", result);
+    assert!(
+        result.ends_with("..."),
+        "Should add ellipsis when truncating at word, got: '{}'",
+        result
+    );
     assert!(result.len() <= 63, "Should be within budget plus ellipsis");
 }
 
@@ -115,7 +126,10 @@ fn test_smart_truncate_avoids_early_sentence() {
     let text = "Hi. This is a very long continuation that has no more periods in it and just goes on describing something at great length without stopping";
     let result = heuristics::smart_truncate(text, 100);
     // "Hi." is only 3 chars, which is < 40% of 100 = 40, so should NOT cut there
-    assert_ne!(result, "Hi.", "Should not truncate at very early sentence boundary");
+    assert_ne!(
+        result, "Hi.",
+        "Should not truncate at very early sentence boundary"
+    );
 }
 
 // ============================================================
@@ -126,8 +140,14 @@ fn test_smart_truncate_avoids_early_sentence() {
 fn test_infer_primary_button() {
     let attrs = vec![("class".to_string(), "btn btn-primary large".to_string())];
     let hints = heuristics::infer_class_hints(&attrs).unwrap();
-    assert!(hints.contains(&"primary".to_string()), "Should detect 'primary'");
-    assert!(hints.contains(&"large".to_string()), "Should detect 'large'");
+    assert!(
+        hints.contains(&"primary".to_string()),
+        "Should detect 'primary'"
+    );
+    assert!(
+        hints.contains(&"large".to_string()),
+        "Should detect 'large'"
+    );
 }
 
 #[test]
@@ -139,7 +159,10 @@ fn test_infer_danger_button() {
 
 #[test]
 fn test_infer_state_classes() {
-    let attrs = vec![("class".to_string(), "nav-item active is-selected".to_string())];
+    let attrs = vec![(
+        "class".to_string(),
+        "nav-item active is-selected".to_string(),
+    )];
     let hints = heuristics::infer_class_hints(&attrs).unwrap();
     assert!(hints.contains(&"active".to_string()));
     assert!(hints.contains(&"selected".to_string()));
@@ -156,7 +179,10 @@ fn test_infer_loading_state() {
 fn test_infer_no_hints_for_generic_class() {
     let attrs = vec![("class".to_string(), "container flex mt-4".to_string())];
     let hints = heuristics::infer_class_hints(&attrs);
-    assert!(hints.is_none(), "Generic utility classes should produce no hints");
+    assert!(
+        hints.is_none(),
+        "Generic utility classes should produce no hints"
+    );
 }
 
 #[test]
@@ -187,8 +213,14 @@ fn test_hints_in_compiled_som() {
     let som = compiler::compile(html, "https://example.com").unwrap();
     let json = serde_json::to_string(&som).unwrap();
 
-    assert!(json.contains("\"primary\""), "Primary hint should appear in SOM JSON");
-    assert!(json.contains("\"danger\""), "Danger hint should appear in SOM JSON");
+    assert!(
+        json.contains("\"primary\""),
+        "Primary hint should appear in SOM JSON"
+    );
+    assert!(
+        json.contains("\"danger\""),
+        "Danger hint should appear in SOM JSON"
+    );
 }
 
 // ============================================================
@@ -198,11 +230,13 @@ fn test_hints_in_compiled_som() {
 #[test]
 fn test_headings_never_dropped_by_budget() {
     // Create a page with lots of elements + headings interspersed
-    let mut html = String::from(r#"<!DOCTYPE html>
+    let mut html = String::from(
+        r#"<!DOCTYPE html>
 <html><head><title>Heading Test</title></head>
 <body><main>
     <h1>Main Title</h1>
-"#);
+"#,
+    );
 
     // Add enough links to blow the budget
     for i in 0..250 {
@@ -251,7 +285,7 @@ fn test_heading_levels_preserved() {
 
 #[test]
 fn test_pipeline_with_document_write() {
-    use plasmate::js::pipeline::{PipelineConfig, process_page};
+    use plasmate::js::pipeline::{process_page, PipelineConfig};
 
     let config = PipelineConfig::default();
     let html = r#"<html><head><title>Write Test</title></head>
@@ -269,7 +303,7 @@ fn test_pipeline_with_document_write() {
 
 #[test]
 fn test_pipeline_with_appendchild() {
-    use plasmate::js::pipeline::{PipelineConfig, process_page};
+    use plasmate::js::pipeline::{process_page, PipelineConfig};
 
     let config = PipelineConfig::default();
     let html = r#"<html><body>
@@ -329,7 +363,10 @@ fn test_all_improvements_combined() {
 
     // Link dedup: /home should appear once, /about should appear once
     let home_count = json.matches("\"/home\"").count();
-    assert_eq!(home_count, 1, "Duplicate /home links should be deduplicated");
+    assert_eq!(
+        home_count, 1,
+        "Duplicate /home links should be deduplicated"
+    );
 
     // Heading hierarchy: all levels present
     assert!(json.contains("\"level\": 1"));
@@ -337,7 +374,10 @@ fn test_all_improvements_combined() {
     assert!(json.contains("\"level\": 3"));
 
     // CSS hints: primary and danger buttons should have hints
-    assert!(json.contains("\"primary\""), "Primary hint should be present");
+    assert!(
+        json.contains("\"primary\""),
+        "Primary hint should be present"
+    );
     assert!(json.contains("\"danger\""), "Danger hint should be present");
     assert!(json.contains("\"badge\""), "Badge hint should be present");
 
@@ -349,5 +389,8 @@ fn test_all_improvements_combined() {
     // For small test pages, SOM JSON overhead can exceed source HTML.
     // What matters: structural elements are preserved and semantic info is enriched.
     assert!(som.meta.element_count > 0, "SOM should contain elements");
-    assert!(som.meta.interactive_count > 0, "SOM should contain interactive elements");
+    assert!(
+        som.meta.interactive_count > 0,
+        "SOM should contain interactive elements"
+    );
 }

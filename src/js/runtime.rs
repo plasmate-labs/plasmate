@@ -5,7 +5,7 @@
 //! A minimal DOM shim lets common JS patterns work without a full DOM.
 
 use std::sync::Once;
-use tracing::{info, warn, debug};
+use tracing::{debug, info, warn};
 
 static V8_INIT: Once = Once::new();
 
@@ -290,8 +290,7 @@ impl JsRuntime {
         init_platform();
 
         let params = if config.max_heap_bytes > 0 {
-            v8::CreateParams::default()
-                .heap_limits(0, config.max_heap_bytes)
+            v8::CreateParams::default().heap_limits(0, config.max_heap_bytes)
         } else {
             v8::CreateParams::default()
         };
@@ -338,7 +337,9 @@ impl JsRuntime {
 
     /// Execute a script in the persistent page context.
     pub fn execute_in_context(&mut self, source: &str, filename: &str) -> Result<String, JsError> {
-        let context = self.context.as_ref()
+        let context = self
+            .context
+            .as_ref()
             .ok_or_else(|| JsError::Runtime("No context available".into()))?;
 
         let scope = &mut v8::HandleScope::new(&mut self.isolate);
@@ -350,7 +351,17 @@ impl JsRuntime {
 
         let name = v8::String::new(scope, filename).unwrap();
         let origin = v8::ScriptOrigin::new(
-            scope, name.into(), 0, 0, false, 0, None, false, false, false, None,
+            scope,
+            name.into(),
+            0,
+            0,
+            false,
+            0,
+            None,
+            false,
+            false,
+            false,
+            None,
         );
 
         let tc = &mut v8::TryCatch::new(scope);
@@ -358,7 +369,8 @@ impl JsRuntime {
         let script = match v8::Script::compile(tc, source_str, Some(&origin)) {
             Some(s) => s,
             None => {
-                let msg = tc.exception()
+                let msg = tc
+                    .exception()
                     .map(|e| e.to_rust_string_lossy(tc))
                     .unwrap_or_else(|| "Unknown compile error".into());
                 return Err(JsError::Compile(msg));
@@ -375,7 +387,8 @@ impl JsRuntime {
                 Ok(result_str)
             }
             None => {
-                let msg = tc.exception()
+                let msg = tc
+                    .exception()
                     .map(|e| e.to_rust_string_lossy(tc))
                     .unwrap_or_else(|| "Unknown runtime error".into());
                 // Don't fail - just log and continue (like a real browser)
@@ -411,14 +424,15 @@ impl JsRuntime {
 
     /// Get event listeners registered during JS execution.
     pub fn get_event_listeners(&mut self) -> Vec<String> {
-        match self.execute_in_context("JSON.stringify(__plasmate_event_listeners)", "<get-listeners>") {
-            Ok(json) => {
-                serde_json::from_str::<Vec<serde_json::Value>>(&json)
-                    .unwrap_or_default()
-                    .iter()
-                    .map(|v| v.to_string())
-                    .collect()
-            }
+        match self.execute_in_context(
+            "JSON.stringify(__plasmate_event_listeners)",
+            "<get-listeners>",
+        ) {
+            Ok(json) => serde_json::from_str::<Vec<serde_json::Value>>(&json)
+                .unwrap_or_default()
+                .iter()
+                .map(|v| v.to_string())
+                .collect(),
             Err(_) => Vec::new(),
         }
     }
@@ -426,13 +440,11 @@ impl JsRuntime {
     /// Get the DOM mutations captured by the shim.
     pub fn get_mutations(&mut self) -> Vec<String> {
         match self.execute_in_context("JSON.stringify(__plasmate_mutations)", "<get-mutations>") {
-            Ok(json) => {
-                serde_json::from_str::<Vec<serde_json::Value>>(&json)
-                    .unwrap_or_default()
-                    .iter()
-                    .map(|v| v.to_string())
-                    .collect()
-            }
+            Ok(json) => serde_json::from_str::<Vec<serde_json::Value>>(&json)
+                .unwrap_or_default()
+                .iter()
+                .map(|v| v.to_string())
+                .collect(),
             Err(_) => Vec::new(),
         }
     }
@@ -545,10 +557,12 @@ mod tests {
     #[test]
     fn test_document_create_element() {
         let mut rt = JsRuntime::new(RuntimeConfig::default());
-        let result = rt.execute_in_context(
-            "var el = document.createElement('div'); el.tagName",
-            "test.js",
-        ).unwrap();
+        let result = rt
+            .execute_in_context(
+                "var el = document.createElement('div'); el.tagName",
+                "test.js",
+            )
+            .unwrap();
         assert_eq!(result, "DIV");
     }
 
@@ -566,16 +580,22 @@ mod tests {
     #[test]
     fn test_set_timeout_captured() {
         let mut rt = JsRuntime::new(RuntimeConfig::default());
-        rt.execute_in_context("setTimeout(function(){}, 100)", "test.js").unwrap();
-        let timers = rt.execute_in_context("__plasmate_timers.length", "test.js").unwrap();
+        rt.execute_in_context("setTimeout(function(){}, 100)", "test.js")
+            .unwrap();
+        let timers = rt
+            .execute_in_context("__plasmate_timers.length", "test.js")
+            .unwrap();
         assert_eq!(timers, "1");
     }
 
     #[test]
     fn test_console_captured() {
         let mut rt = JsRuntime::new(RuntimeConfig::default());
-        rt.execute_in_context("console.log('hello', 'world')", "test.js").unwrap();
-        let logs = rt.execute_in_context("__plasmate_console.length", "test.js").unwrap();
+        rt.execute_in_context("console.log('hello', 'world')", "test.js")
+            .unwrap();
+        let logs = rt
+            .execute_in_context("__plasmate_console.length", "test.js")
+            .unwrap();
         assert_eq!(logs, "1");
     }
 
@@ -609,14 +629,20 @@ mod tests {
     fn test_page_url_set() {
         let mut rt = JsRuntime::new(RuntimeConfig::default());
         rt.set_page_url("https://example.com/page");
-        let href = rt.execute_in_context("window.location.href", "test.js").unwrap();
+        let href = rt
+            .execute_in_context("window.location.href", "test.js")
+            .unwrap();
         assert!(href.contains("example.com"));
     }
 
     #[test]
     fn test_drain_timers() {
         let mut rt = JsRuntime::new(RuntimeConfig::default());
-        rt.execute_in_context("var x = 0; setTimeout(function(){ x = 42; }, 0);", "test.js").unwrap();
+        rt.execute_in_context(
+            "var x = 0; setTimeout(function(){ x = 42; }, 0);",
+            "test.js",
+        )
+        .unwrap();
         rt.drain_timers(100);
         let val = rt.execute_in_context("x", "check.js").unwrap();
         assert_eq!(val, "42");

@@ -3,7 +3,8 @@ use plasmate::som::types::*;
 
 fn load_fixture(name: &str) -> String {
     let path = format!("tests/fixtures/{}", name);
-    std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("Failed to load fixture {}: {}", path, e))
+    std::fs::read_to_string(&path)
+        .unwrap_or_else(|e| panic!("Failed to load fixture {}: {}", path, e))
 }
 
 fn all_elements(som: &Som) -> Vec<&Element> {
@@ -21,7 +22,10 @@ fn test_simple_page_regions() {
     assert_eq!(som.title, "Simple Test Page");
     assert_eq!(som.lang, "en");
     let roles: Vec<&RegionRole> = som.regions.iter().map(|r| &r.role).collect();
-    assert!(roles.contains(&&RegionRole::Navigation), "Missing navigation region");
+    assert!(
+        roles.contains(&&RegionRole::Navigation),
+        "Missing navigation region"
+    );
     assert!(roles.contains(&&RegionRole::Main), "Missing main region");
 }
 
@@ -29,20 +33,34 @@ fn test_simple_page_regions() {
 fn test_simple_page_interactive_elements() {
     let html = load_fixture("simple_page.html");
     let som = compiler::compile(&html, "https://example.com").unwrap();
-    assert!(som.meta.interactive_count >= 5, "Expected >=5 interactive, got {}", som.meta.interactive_count);
+    assert!(
+        som.meta.interactive_count >= 5,
+        "Expected >=5 interactive, got {}",
+        som.meta.interactive_count
+    );
 }
 
 #[test]
 fn test_login_form() {
     let html = load_fixture("login_form.html");
     let som = compiler::compile(&html, "https://example.com").unwrap();
-    let form = som.regions.iter().find(|r| r.role == RegionRole::Form).expect("Should have form region");
+    let form = som
+        .regions
+        .iter()
+        .find(|r| r.role == RegionRole::Form)
+        .expect("Should have form region");
     assert_eq!(form.label.as_deref(), Some("Login"));
     assert_eq!(form.action.as_deref(), Some("/api/login"));
     assert_eq!(form.method.as_deref(), Some("POST"));
     let roles: Vec<&ElementRole> = form.elements.iter().map(|e| &e.role).collect();
-    assert!(roles.contains(&&ElementRole::TextInput), "Missing text inputs");
-    assert!(roles.contains(&&ElementRole::Button), "Missing submit button");
+    assert!(
+        roles.contains(&&ElementRole::TextInput),
+        "Missing text inputs"
+    );
+    assert!(
+        roles.contains(&&ElementRole::Button),
+        "Missing submit button"
+    );
     assert!(roles.contains(&&ElementRole::Checkbox), "Missing checkbox");
 }
 
@@ -50,10 +68,20 @@ fn test_login_form() {
 fn test_ecommerce_page() {
     let html = load_fixture("ecommerce.html");
     let som = compiler::compile(&html, "https://example.com").unwrap();
-    assert!(som.meta.interactive_count >= 8, "Expected >=8 interactive, got {}", som.meta.interactive_count);
+    assert!(
+        som.meta.interactive_count >= 8,
+        "Expected >=8 interactive, got {}",
+        som.meta.interactive_count
+    );
     let elems = all_elements(&som);
-    assert!(elems.iter().any(|e| e.role == ElementRole::Select), "Missing select element");
-    assert!(elems.iter().any(|e| e.role == ElementRole::Table), "Missing table element");
+    assert!(
+        elems.iter().any(|e| e.role == ElementRole::Select),
+        "Missing select element"
+    );
+    assert!(
+        elems.iter().any(|e| e.role == ElementRole::Table),
+        "Missing table element"
+    );
 }
 
 #[test]
@@ -61,32 +89,50 @@ fn test_hidden_elements_stripped() {
     let html = load_fixture("hidden_elements.html");
     let som = compiler::compile(&html, "https://example.com").unwrap();
     let json = serde_json::to_string(&som).unwrap();
-    assert!(!json.contains("This should be hidden"), "display:none should be stripped");
-    assert!(json.contains("Visible Heading"), "Visible content should remain");
-    assert!(!json.contains("decorative.png"), "Decorative images should be stripped");
+    assert!(
+        !json.contains("This should be hidden"),
+        "display:none should be stripped"
+    );
+    assert!(
+        json.contains("Visible Heading"),
+        "Visible content should remain"
+    );
+    assert!(
+        !json.contains("decorative.png"),
+        "Decorative images should be stripped"
+    );
 }
 
 #[test]
 fn test_news_page_structure() {
     let html = load_fixture("news_page.html");
     let som = compiler::compile(&html, "https://example.com").unwrap();
-    assert!(som.regions.iter().any(|r| r.role == RegionRole::Navigation), "Missing navigation");
-    let link_count = all_elements(&som).iter().filter(|e| e.role == ElementRole::Link).count();
+    assert!(
+        som.regions.iter().any(|r| r.role == RegionRole::Navigation),
+        "Missing navigation"
+    );
+    let link_count = all_elements(&som)
+        .iter()
+        .filter(|e| e.role == ElementRole::Link)
+        .count();
     assert!(link_count >= 5, "Expected >=5 links, got {}", link_count);
 }
 
 #[test]
 fn test_deterministic_ids_across_compiles() {
     let html = load_fixture("simple_page.html");
-    let j1 = serde_json::to_string(&compiler::compile(&html, "https://example.com").unwrap()).unwrap();
-    let j2 = serde_json::to_string(&compiler::compile(&html, "https://example.com").unwrap()).unwrap();
+    let j1 =
+        serde_json::to_string(&compiler::compile(&html, "https://example.com").unwrap()).unwrap();
+    let j2 =
+        serde_json::to_string(&compiler::compile(&html, "https://example.com").unwrap()).unwrap();
     assert_eq!(j1, j2, "Same input must produce identical SOM output");
 }
 
 #[test]
 fn test_scripts_and_styles_never_leak() {
     let html = load_fixture("simple_page.html");
-    let json = serde_json::to_string(&compiler::compile(&html, "https://example.com").unwrap()).unwrap();
+    let json =
+        serde_json::to_string(&compiler::compile(&html, "https://example.com").unwrap()).unwrap();
     assert!(!json.contains("console.log"), "Script content leaked");
     assert!(!json.contains("font-family"), "Style content leaked");
 }
@@ -95,7 +141,11 @@ fn test_scripts_and_styles_never_leak() {
 fn test_som_captures_key_info() {
     let html = load_fixture("ecommerce.html");
     let som = compiler::compile(&html, "https://example.com").unwrap();
-    assert!(som.meta.element_count >= 5, "Expected >=5 elements, got {}", som.meta.element_count);
+    assert!(
+        som.meta.element_count >= 5,
+        "Expected >=5 elements, got {}",
+        som.meta.element_count
+    );
     let json = serde_json::to_string(&som).unwrap();
     let _parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
 }
@@ -111,12 +161,23 @@ fn test_hn_layout_table_decomposition() {
     let elems = all_elements(&som);
 
     // Layout tables should be decomposed, not kept as table elements
-    let table_count = elems.iter().filter(|e| e.role == ElementRole::Table).count();
-    assert_eq!(table_count, 0, "Layout tables should be decomposed, found {} table elements", table_count);
+    let table_count = elems
+        .iter()
+        .filter(|e| e.role == ElementRole::Table)
+        .count();
+    assert_eq!(
+        table_count, 0,
+        "Layout tables should be decomposed, found {} table elements",
+        table_count
+    );
 
     // The links inside the layout table should be individually extractable
     let link_count = elems.iter().filter(|e| e.role == ElementRole::Link).count();
-    assert!(link_count >= 12, "Expected >=12 links from layout table, found {}", link_count);
+    assert!(
+        link_count >= 12,
+        "Expected >=12 links from layout table, found {}",
+        link_count
+    );
 }
 
 #[test]
@@ -126,12 +187,23 @@ fn test_layout_table_attributes_detected() {
     let elems = all_elements(&som);
 
     // Table with cellpadding/cellspacing/border/width should be layout
-    let table_count = elems.iter().filter(|e| e.role == ElementRole::Table).count();
-    assert_eq!(table_count, 0, "Layout table with attributes should be decomposed, found {} tables", table_count);
+    let table_count = elems
+        .iter()
+        .filter(|e| e.role == ElementRole::Table)
+        .count();
+    assert_eq!(
+        table_count, 0,
+        "Layout table with attributes should be decomposed, found {} tables",
+        table_count
+    );
 
     // Links inside should still be present
     let link_count = elems.iter().filter(|e| e.role == ElementRole::Link).count();
-    assert!(link_count >= 3, "Expected >=3 links after decomposition, found {}", link_count);
+    assert!(
+        link_count >= 3,
+        "Expected >=3 links after decomposition, found {}",
+        link_count
+    );
 }
 
 #[test]
@@ -140,11 +212,20 @@ fn test_data_table_preserved() {
     let html = load_fixture("ecommerce.html");
     let som = compiler::compile(&html, "https://example.com").unwrap();
     let elems = all_elements(&som);
-    let tables: Vec<&&Element> = elems.iter().filter(|e| e.role == ElementRole::Table).collect();
-    assert!(!tables.is_empty(), "Real data tables (with <th>) should be preserved");
+    let tables: Vec<&&Element> = elems
+        .iter()
+        .filter(|e| e.role == ElementRole::Table)
+        .collect();
+    assert!(
+        !tables.is_empty(),
+        "Real data tables (with <th>) should be preserved"
+    );
     if let Some(t) = tables.first() {
         if let Some(attrs) = &t.attrs {
-            assert!(attrs.get("headers").is_some(), "Data table should have headers extracted");
+            assert!(
+                attrs.get("headers").is_some(),
+                "Data table should have headers extracted"
+            );
         }
     }
 }
@@ -159,18 +240,34 @@ fn test_wiki_paragraph_summarization() {
     let som = compiler::compile(&html, "https://en.wikipedia.org").unwrap();
 
     // Find the main region (the fixture uses <main id="main-content">)
-    let main = som.regions.iter().find(|r| r.role == RegionRole::Main)
+    let main = som
+        .regions
+        .iter()
+        .find(|r| r.role == RegionRole::Main)
         .expect("Should find main region from <main> tag");
 
-    let para_count = main.elements.iter().filter(|e| e.role == ElementRole::Paragraph).count();
+    let para_count = main
+        .elements
+        .iter()
+        .filter(|e| e.role == ElementRole::Paragraph)
+        .count();
     // max_paragraphs=10, so we expect 10 real + 1 summary = 11 max
-    assert!(para_count <= 12, "Expected <=12 paragraphs (10 + summary + heading), found {}", para_count);
+    assert!(
+        para_count <= 12,
+        "Expected <=12 paragraphs (10 + summary + heading), found {}",
+        para_count
+    );
 
     // Verify a summary element exists mentioning dropped paragraphs
     let has_summary = main.elements.iter().any(|e| {
-        e.text.as_ref().map_or(false, |t| t.contains("more paragraphs"))
+        e.text
+            .as_ref()
+            .map_or(false, |t| t.contains("more paragraphs"))
     });
-    assert!(has_summary, "Should have a summary element for dropped paragraphs");
+    assert!(
+        has_summary,
+        "Should have a summary element for dropped paragraphs"
+    );
 }
 
 #[test]
@@ -179,13 +276,28 @@ fn test_wiki_navigation_link_summarization() {
     let som = compiler::compile(&html, "https://en.wikipedia.org").unwrap();
 
     // Find navigation regions
-    let nav_regions: Vec<&Region> = som.regions.iter().filter(|r| r.role == RegionRole::Navigation).collect();
-    assert!(!nav_regions.is_empty(), "Should have at least one navigation region");
+    let nav_regions: Vec<&Region> = som
+        .regions
+        .iter()
+        .filter(|r| r.role == RegionRole::Navigation)
+        .collect();
+    assert!(
+        !nav_regions.is_empty(),
+        "Should have at least one navigation region"
+    );
 
     // The fixture has 200 links in a nav-like div; should be capped at max_navigation_links=80
     for nav in &nav_regions {
-        let link_count = nav.elements.iter().filter(|e| e.role == ElementRole::Link).count();
-        assert!(link_count <= 81, "Nav region should have <=81 links (80 + summary), found {}", link_count);
+        let link_count = nav
+            .elements
+            .iter()
+            .filter(|e| e.role == ElementRole::Link)
+            .count();
+        assert!(
+            link_count <= 81,
+            "Nav region should have <=81 links (80 + summary), found {}",
+            link_count
+        );
     }
 }
 
@@ -194,19 +306,37 @@ fn test_paragraph_text_truncation() {
     // Paragraphs in main content should be truncated: first para 200 chars, subsequent 80
     let html = load_fixture("wiki_like.html");
     let som = compiler::compile(&html, "https://en.wikipedia.org").unwrap();
-    let main = som.regions.iter().find(|r| r.role == RegionRole::Main)
+    let main = som
+        .regions
+        .iter()
+        .find(|r| r.role == RegionRole::Main)
         .expect("Should find main region");
 
-    let paragraphs: Vec<&Element> = main.elements.iter()
-        .filter(|e| e.role == ElementRole::Paragraph && e.text.as_ref().map_or(false, |t| !t.contains("more paragraphs")))
+    let paragraphs: Vec<&Element> = main
+        .elements
+        .iter()
+        .filter(|e| {
+            e.role == ElementRole::Paragraph
+                && e.text
+                    .as_ref()
+                    .map_or(false, |t| !t.contains("more paragraphs"))
+        })
         .collect();
 
     if paragraphs.len() >= 2 {
         let first_len = paragraphs[0].text.as_ref().unwrap().len();
         let second_len = paragraphs[1].text.as_ref().unwrap().len();
         // First paragraph has 200 char limit, subsequent 80
-        assert!(first_len <= 210, "First paragraph should be <=~200 chars, got {}", first_len);
-        assert!(second_len <= 90, "Subsequent paragraphs should be <=~80 chars, got {}", second_len);
+        assert!(
+            first_len <= 210,
+            "First paragraph should be <=~200 chars, got {}",
+            first_len
+        );
+        assert!(
+            second_len <= 90,
+            "Subsequent paragraphs should be <=~80 chars, got {}",
+            second_len
+        );
     }
 }
 
@@ -218,9 +348,13 @@ fn test_element_budget_enforced() {
 
     // Each individual region should respect the element budget
     for region in &som.regions {
-        assert!(region.elements.len() <= 401,
+        assert!(
+            region.elements.len() <= 401,
             "Region {} ({:?}) should have <=401 elements (400 + summary), found {}",
-            region.id, region.role, region.elements.len());
+            region.id,
+            region.role,
+            region.elements.len()
+        );
     }
 }
 
@@ -235,9 +369,16 @@ fn test_class_based_region_detection() {
     let roles: Vec<&RegionRole> = som.regions.iter().map(|r| &r.role).collect();
 
     // class="header site-header" should yield a header region
-    assert!(roles.contains(&&RegionRole::Header), "Should detect header from class hint");
+    assert!(
+        roles.contains(&&RegionRole::Header),
+        "Should detect header from class hint"
+    );
     // Should have multiple meaningful regions detected from class-based hints
-    assert!(som.regions.len() >= 2, "Should detect at least 2 regions from class hints, found {}", som.regions.len());
+    assert!(
+        som.regions.len() >= 2,
+        "Should detect at least 2 regions from class hints, found {}",
+        som.regions.len()
+    );
 }
 
 #[test]
@@ -246,7 +387,10 @@ fn test_footer_heuristic_detection() {
     let som = compiler::compile(&html, "https://en.wikipedia.org").unwrap();
     // The wiki_like fixture has <div class="footer"> with copyright text
     let has_footer = som.regions.iter().any(|r| r.role == RegionRole::Footer);
-    assert!(has_footer, "Should detect footer region from class='footer' with copyright text");
+    assert!(
+        has_footer,
+        "Should detect footer region from class='footer' with copyright text"
+    );
 }
 
 #[test]
@@ -254,8 +398,15 @@ fn test_heading_elements_extracted() {
     let html = load_fixture("heading_structure.html");
     let som = compiler::compile(&html, "https://example.com").unwrap();
     let elems = all_elements(&som);
-    let headings: Vec<&&Element> = elems.iter().filter(|e| e.role == ElementRole::Heading).collect();
-    assert!(headings.len() >= 3, "Expected >=3 headings, found {}", headings.len());
+    let headings: Vec<&&Element> = elems
+        .iter()
+        .filter(|e| e.role == ElementRole::Heading)
+        .collect();
+    assert!(
+        headings.len() >= 3,
+        "Expected >=3 headings, found {}",
+        headings.len()
+    );
 }
 
 #[test]
@@ -265,7 +416,10 @@ fn test_collapsible_wrapper_divs() {
     let som = compiler::compile(html, "https://example.com").unwrap();
     let elems = all_elements(&som);
     let link_count = elems.iter().filter(|e| e.role == ElementRole::Link).count();
-    assert!(link_count >= 1, "Collapsed wrappers should still expose inner links");
+    assert!(
+        link_count >= 1,
+        "Collapsed wrappers should still expose inner links"
+    );
 }
 
 // ============================================================
@@ -280,7 +434,10 @@ fn test_edge_cases_empty_divs() {
     let json = serde_json::to_string(&som).unwrap();
     assert!(!json.is_empty(), "SOM should be valid JSON");
     // Empty divs should not produce empty string elements
-    assert!(!json.contains("\"text\":\"\""), "Should not have empty text strings");
+    assert!(
+        !json.contains("\"text\":\"\""),
+        "Should not have empty text strings"
+    );
 }
 
 #[test]
@@ -297,7 +454,10 @@ fn test_deeply_nested_html() {
     html.push_str("</body></html>");
     let som = compiler::compile(&html, "https://example.com").unwrap();
     let elems = all_elements(&som);
-    assert!(elems.iter().any(|e| e.role == ElementRole::Link), "Deep link should be extracted");
+    assert!(
+        elems.iter().any(|e| e.role == ElementRole::Link),
+        "Deep link should be extracted"
+    );
 }
 
 #[test]
@@ -312,7 +472,10 @@ fn test_empty_page() {
 fn test_minimal_page_with_just_text() {
     let html = "<html><body>Hello world</body></html>";
     let som = compiler::compile(html, "https://example.com").unwrap();
-    assert!(som.meta.element_count >= 1, "Should have at least 1 text element");
+    assert!(
+        som.meta.element_count >= 1,
+        "Should have at least 1 text element"
+    );
 }
 
 #[test]
@@ -330,8 +493,14 @@ fn test_form_controls_survive_budget() {
 
     let som = compiler::compile(&html, "https://example.com").unwrap();
     let elems = all_elements(&som);
-    assert!(elems.iter().any(|e| e.role == ElementRole::TextInput), "Form controls should survive element budget");
-    assert!(elems.iter().any(|e| e.role == ElementRole::Button), "Buttons should survive element budget");
+    assert!(
+        elems.iter().any(|e| e.role == ElementRole::TextInput),
+        "Form controls should survive element budget"
+    );
+    assert!(
+        elems.iter().any(|e| e.role == ElementRole::Button),
+        "Buttons should survive element budget"
+    );
 }
 
 #[test]
@@ -345,7 +514,10 @@ fn test_table_cell_truncation() {
     </table></body></html>"#;
     let som = compiler::compile(html, "https://example.com").unwrap();
     let elems = all_elements(&som);
-    let tables: Vec<&&Element> = elems.iter().filter(|e| e.role == ElementRole::Table).collect();
+    let tables: Vec<&&Element> = elems
+        .iter()
+        .filter(|e| e.role == ElementRole::Table)
+        .collect();
     assert!(!tables.is_empty(), "Should have a data table");
     if let Some(t) = tables.first() {
         if let Some(attrs) = &t.attrs {
@@ -374,8 +546,15 @@ fn test_wikipedia_like_page_structure() {
     let som = compiler::compile(&html, "https://example.com").unwrap();
     let roles: Vec<&RegionRole> = som.regions.iter().map(|r| &r.role).collect();
     // Should detect some structure
-    assert!(som.regions.len() >= 2, "Should have multiple regions, found {}", som.regions.len());
-    assert!(roles.contains(&&RegionRole::Navigation), "Should detect navigation");
+    assert!(
+        som.regions.len() >= 2,
+        "Should have multiple regions, found {}",
+        som.regions.len()
+    );
+    assert!(
+        roles.contains(&&RegionRole::Navigation),
+        "Should detect navigation"
+    );
 }
 
 #[test]
@@ -385,9 +564,13 @@ fn test_som_token_reduction_from_summarization() {
     let som = compiler::compile(&html, "https://en.wikipedia.org").unwrap();
     let som_json = serde_json::to_string(&som).unwrap();
     let ratio = html.len() as f64 / som_json.len() as f64;
-    assert!(ratio > 2.0,
+    assert!(
+        ratio > 2.0,
         "Wiki-like page should achieve >2x compression ratio, got {:.2}x (html={}, som={})",
-        ratio, html.len(), som_json.len());
+        ratio,
+        html.len(),
+        som_json.len()
+    );
 }
 
 #[test]
@@ -398,11 +581,21 @@ fn test_hn_fixture_structure() {
     let som = compiler::compile(&html, "https://news.ycombinator.com").unwrap();
 
     let elems: Vec<&Element> = som.regions.iter().flat_map(|r| r.elements.iter()).collect();
-    let table_count = elems.iter().filter(|e| e.role == ElementRole::Table).count();
-    assert_eq!(table_count, 0, "HN layout table should not be emitted as a table element");
+    let table_count = elems
+        .iter()
+        .filter(|e| e.role == ElementRole::Table)
+        .count();
+    assert_eq!(
+        table_count, 0,
+        "HN layout table should not be emitted as a table element"
+    );
 
     let link_count = elems.iter().filter(|e| e.role == ElementRole::Link).count();
-    assert!(link_count >= 10, "Expected >=10 links in HN fixture, found {}", link_count);
+    assert!(
+        link_count >= 10,
+        "Expected >=10 links in HN fixture, found {}",
+        link_count
+    );
 }
 
 #[test]

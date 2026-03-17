@@ -102,9 +102,13 @@ pub fn compile(html: &str, page_url: &str) -> Result<Som, CompileError> {
     let body = find_body(&dom.document);
 
     let regions = match body {
-        Some(body_handle) => {
-            extract_regions(&body_handle, &origin, &mut id_tracker, &mut region_counts, &ctx)
-        }
+        Some(body_handle) => extract_regions(
+            &body_handle,
+            &origin,
+            &mut id_tracker,
+            &mut region_counts,
+            &ctx,
+        ),
         None => vec![],
     };
 
@@ -268,7 +272,11 @@ fn extract_regions(
 /// - preserves heading hierarchy (never drops headings)
 /// - enforces a max elements budget
 /// - appends a summary paragraph when items are dropped
-fn summarize_elements(elements: Vec<Element>, ctx: &CompileContext, is_navigation: bool) -> Vec<Element> {
+fn summarize_elements(
+    elements: Vec<Element>,
+    ctx: &CompileContext,
+    is_navigation: bool,
+) -> Vec<Element> {
     let mut result = Vec::new();
     let mut seen_hrefs: HashSet<String> = HashSet::new();
     let mut heading_tracker = HeadingTracker::new();
@@ -305,7 +313,9 @@ fn summarize_elements(elements: Vec<Element>, ctx: &CompileContext, is_navigatio
 
         // Track heading hierarchy
         if is_heading {
-            let level = el.attrs.as_ref()
+            let level = el
+                .attrs
+                .as_ref()
                 .and_then(|a| a.get("level"))
                 .and_then(|v| v.as_u64())
                 .unwrap_or(6) as u8;
@@ -451,14 +461,34 @@ fn collect_regions(
 
         // Check for landmark / form region (HTML5 and ARIA)
         if let Some(role_str) = heuristics::landmark_role(tag, &attr_pairs) {
-            create_landmark_region(node, role_str, origin, id_tracker, region_counts, regions, dom_path, ctx, &attr_pairs);
+            create_landmark_region(
+                node,
+                role_str,
+                origin,
+                id_tracker,
+                region_counts,
+                regions,
+                dom_path,
+                ctx,
+                &attr_pairs,
+            );
             return;
         }
 
         // Check for class/id-based region hints (when no explicit landmarks)
         if matches!(tag, "div" | "section" | "article" | "ul" | "ol") {
             if let Some(role_str) = heuristics::class_id_region_hint(&attr_pairs) {
-                create_landmark_region(node, role_str, origin, id_tracker, region_counts, regions, dom_path, ctx, &attr_pairs);
+                create_landmark_region(
+                    node,
+                    role_str,
+                    origin,
+                    id_tracker,
+                    region_counts,
+                    regions,
+                    dom_path,
+                    ctx,
+                    &attr_pairs,
+                );
                 return;
             }
         }
@@ -468,13 +498,12 @@ fn collect_regions(
             let count = region_counts.entry("form".to_string()).or_insert(0);
             let rid = generate_region_id("form", *count);
             *count += 1;
-            let label = heuristics::get_accessible_label(&attr_pairs)
-                .or_else(|| {
-                    attr_pairs
-                        .iter()
-                        .find(|(n, _)| n == "name" || n == "id")
-                        .map(|(_, v)| v.clone())
-                });
+            let label = heuristics::get_accessible_label(&attr_pairs).or_else(|| {
+                attr_pairs
+                    .iter()
+                    .find(|(n, _)| n == "name" || n == "id")
+                    .map(|(_, v)| v.clone())
+            });
             let form_action = attr_pairs
                 .iter()
                 .find(|(n, _)| n == "action")
@@ -501,7 +530,16 @@ fn collect_regions(
         // Check for layout tables - decompose them instead of treating as data tables
         if tag == "table" && heuristics::is_layout_table(node) {
             // Decompose layout table: extract children as if the table weren't there
-            extract_layout_table_contents(node, origin, id_tracker, region_counts, regions, unassigned, dom_path, ctx);
+            extract_layout_table_contents(
+                node,
+                origin,
+                id_tracker,
+                region_counts,
+                regions,
+                unassigned,
+                dom_path,
+                ctx,
+            );
             return;
         }
 
@@ -584,7 +622,13 @@ fn collect_regions(
                 let children = node.children.borrow();
                 for (i, child) in children.iter().enumerate() {
                     let child_path = format!("{}/{}", dom_path, i);
-                    extract_interactive_children(child, origin, id_tracker, &mut child_interactive, &child_path);
+                    extract_interactive_children(
+                        child,
+                        origin,
+                        id_tracker,
+                        &mut child_interactive,
+                        &child_path,
+                    );
                 }
                 if !child_interactive.is_empty() {
                     unassigned.push(el);
@@ -715,21 +759,57 @@ fn extract_layout_table_contents(
                 match tag {
                     "table" | "tbody" | "thead" | "tfoot" | "tr" | "td" | "th" => {
                         // Continue recursing through table structure
-                        visit_layout_table(child, origin, id_tracker, region_counts, regions, unassigned, &child_path, ctx);
+                        visit_layout_table(
+                            child,
+                            origin,
+                            id_tracker,
+                            region_counts,
+                            regions,
+                            unassigned,
+                            &child_path,
+                            ctx,
+                        );
                     }
                     _ => {
                         // Found non-table element, process normally
-                        collect_regions(child, origin, id_tracker, region_counts, regions, unassigned, &child_path, ctx);
+                        collect_regions(
+                            child,
+                            origin,
+                            id_tracker,
+                            region_counts,
+                            regions,
+                            unassigned,
+                            &child_path,
+                            ctx,
+                        );
                     }
                 }
             } else {
                 // Text or other nodes
-                collect_regions(child, origin, id_tracker, region_counts, regions, unassigned, &child_path, ctx);
+                collect_regions(
+                    child,
+                    origin,
+                    id_tracker,
+                    region_counts,
+                    regions,
+                    unassigned,
+                    &child_path,
+                    ctx,
+                );
             }
         }
     }
 
-    visit_layout_table(node, origin, id_tracker, region_counts, regions, unassigned, dom_path, ctx);
+    visit_layout_table(
+        node,
+        origin,
+        id_tracker,
+        region_counts,
+        regions,
+        unassigned,
+        dom_path,
+        ctx,
+    );
 }
 
 fn extract_elements(
@@ -782,7 +862,13 @@ fn extract_elements(
             let children = node.children.borrow();
             for (i, child) in children.iter().enumerate() {
                 let child_path = format!("{}/{}", dom_path, i);
-                extract_interactive_children(child, origin, id_tracker, &mut child_interactive, &child_path);
+                extract_interactive_children(
+                    child,
+                    origin,
+                    id_tracker,
+                    &mut child_interactive,
+                    &child_path,
+                );
             }
             if !child_interactive.is_empty() {
                 // Add the paragraph/container first, then the interactive children
@@ -887,10 +973,7 @@ fn interactive_node_to_element(
             Some(heuristics::normalize_text(&text_content))
         };
         let label = resolve_label(tag, &attr_pairs, &text);
-        let accessible_name = label
-            .as_deref()
-            .or(text.as_deref())
-            .unwrap_or("");
+        let accessible_name = label.as_deref().or(text.as_deref()).unwrap_or("");
         let raw_id = generate_element_id(origin, role.as_str(), accessible_name, dom_path);
         let id = id_tracker.register(raw_id);
         let actions = role.default_actions();
@@ -966,10 +1049,7 @@ fn node_to_element(
             }
 
             let label = resolve_label(tag, &attr_pairs, &text);
-            let accessible_name = label
-                .as_deref()
-                .or(text.as_deref())
-                .unwrap_or("");
+            let accessible_name = label.as_deref().or(text.as_deref()).unwrap_or("");
             let raw_id = generate_element_id(origin, role.as_str(), accessible_name, dom_path);
             let id = id_tracker.register(raw_id);
             let actions = role.default_actions();
@@ -1071,11 +1151,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
     }
 }
 
-fn resolve_label(
-    _tag: &str,
-    attrs: &[(String, String)],
-    text: &Option<String>,
-) -> Option<String> {
+fn resolve_label(_tag: &str, attrs: &[(String, String)], text: &Option<String>) -> Option<String> {
     // aria-label takes priority
     if let Some(label) = attrs.iter().find(|(n, _)| n == "aria-label") {
         if !label.1.is_empty() {
@@ -1177,12 +1253,24 @@ fn build_element_attrs(
                 map.insert("required".into(), json!(true));
             }
         }
-        "h1" => { map.insert("level".into(), json!(1)); }
-        "h2" => { map.insert("level".into(), json!(2)); }
-        "h3" => { map.insert("level".into(), json!(3)); }
-        "h4" => { map.insert("level".into(), json!(4)); }
-        "h5" => { map.insert("level".into(), json!(5)); }
-        "h6" => { map.insert("level".into(), json!(6)); }
+        "h1" => {
+            map.insert("level".into(), json!(1));
+        }
+        "h2" => {
+            map.insert("level".into(), json!(2));
+        }
+        "h3" => {
+            map.insert("level".into(), json!(3));
+        }
+        "h4" => {
+            map.insert("level".into(), json!(4));
+        }
+        "h5" => {
+            map.insert("level".into(), json!(5));
+        }
+        "h6" => {
+            map.insert("level".into(), json!(6));
+        }
         "img" | "picture" => {
             if let Some(alt) = attrs.iter().find(|(n, _)| n == "alt") {
                 map.insert("alt".into(), json!(alt.1));
@@ -1530,7 +1618,8 @@ mod tests {
     fn test_token_reduction() {
         // Real-world pages have lots of CSS classes, data attributes, scripts, etc.
         // that SOM strips out. Build a more realistic test page.
-        let mut html = String::from(r#"<!DOCTYPE html>
+        let mut html = String::from(
+            r#"<!DOCTYPE html>
 <html lang="en">
 <head>
   <title>Big Page</title>
@@ -1545,7 +1634,8 @@ mod tests {
   <link rel="icon" href="/favicon.ico">
 </head>
 <body>
-"#);
+"#,
+        );
         // Add a realistic nav with wrapper divs and classes
         html.push_str(r#"<nav class="navbar navbar-expand-lg navbar-light bg-light" role="navigation" aria-label="Main navigation">
   <div class="container-fluid">
@@ -1563,11 +1653,13 @@ mod tests {
         html.push_str("      </ul>\n    </div>\n  </div>\n</nav>\n");
 
         // Main content with lots of divs and classes
-        html.push_str(r#"<main class="container mt-4" role="main">
+        html.push_str(
+            r#"<main class="container mt-4" role="main">
   <div class="row">
     <div class="col-lg-8 col-md-12">
       <div class="content-wrapper" data-component="article-list">
-"#);
+"#,
+        );
         for i in 0..15 {
             html.push_str(&format!(
                 r#"        <div class="card mb-3 shadow-sm" data-article-id="{}">

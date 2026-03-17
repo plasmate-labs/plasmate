@@ -4,7 +4,8 @@
 //! plus the WebSocket connection for CDP messages. This is what Puppeteer and
 //! Playwright connect to.
 
-use futures_util::{SinkExt, StreamExt};
+use futures_util::{sink::SinkExt, StreamExt};
+use std::time::Duration;
 use tokio::net::TcpListener;
 use tracing::{error, info, warn};
 
@@ -178,13 +179,38 @@ async fn handle_websocket_connection(stream: tokio::net::TcpStream, peer: std::n
 
                 let (response, events) = handle_cdp_request(&req, &mut target).await;
 
-                // Send events first (Puppeteer expects events before response for navigation)
+                // Important: Puppeteer waits for the Page.navigate response (loaderId)
+                // before it starts matching lifecycle events. So for navigation,
+                // send the response first, then the events.
+                let send_response_first =
+                    req.method == "Page.navigate" || req.method == "Target.createTarget";
+
+                let response_json = serde_json::to_string(&response).unwrap_or_default();
+
+                if send_response_first {
+                    if let Err(e) = sink
+                        .send(tokio_tungstenite::tungstenite::Message::Text(
+                            response_json.clone(),
+                        ))
+                        .await
+                    {
+                        error!(%peer, "Failed to send response: {}", e);
+                        return;
+                    }
+
+                    // Flush the response to the network before sending events.
+                    // Puppeteer must process Page.navigate's loaderId before
+                    // lifecycle events arrive - they're matched by loaderId.
+                    if req.method == "Page.navigate" {
+                        let _ = sink.flush().await;
+                        tokio::time::sleep(Duration::from_millis(50)).await;
+                    }
+                }
+
                 for event in events {
                     let event_json = serde_json::to_string(&event).unwrap_or_default();
                     if let Err(e) = sink
-                        .send(tokio_tungstenite::tungstenite::Message::Text(
-                            event_json.into(),
-                        ))
+                        .send(tokio_tungstenite::tungstenite::Message::Text(event_json))
                         .await
                     {
                         error!(%peer, "Failed to send event: {}", e);
@@ -192,16 +218,14 @@ async fn handle_websocket_connection(stream: tokio::net::TcpStream, peer: std::n
                     }
                 }
 
-                // Then send the response
-                let response_json = serde_json::to_string(&response).unwrap_or_default();
-                if let Err(e) = sink
-                    .send(tokio_tungstenite::tungstenite::Message::Text(
-                        response_json.into(),
-                    ))
-                    .await
-                {
-                    error!(%peer, "Failed to send response: {}", e);
-                    return;
+                if !send_response_first {
+                    if let Err(e) = sink
+                        .send(tokio_tungstenite::tungstenite::Message::Text(response_json))
+                        .await
+                    {
+                        error!(%peer, "Failed to send response: {}", e);
+                        return;
+                    }
                 }
             }
             Ok(tokio_tungstenite::tungstenite::Message::Close(_)) => {

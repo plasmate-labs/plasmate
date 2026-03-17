@@ -39,3 +39,24 @@ jobs:
 
       - name: Test
         run: cargo test
+
+      - name: Setup Node (for CDP smoke test)
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install smoke test deps
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        working-directory: smoke
+        run: npm install
+
+      - name: CDP smoke test (Puppeteer)
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: |
+          cargo build --release
+          ./target/release/plasmate serve --protocol cdp --host 127.0.0.1 --port 9222 2>/dev/null &
+          PID=$!
+          sleep 1
+          node smoke/puppeteer-smoke.mjs
+          kill $PID

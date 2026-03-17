@@ -1,6 +1,6 @@
-pub mod types;
+pub mod compiler;
+pub mod css_visibility;
 pub mod element_id;
 pub mod heuristics;
-pub mod compiler;
 pub mod metadata;
-pub mod css_visibility;
+pub mod types;

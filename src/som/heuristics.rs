@@ -63,10 +63,7 @@ pub fn should_strip(node: &Handle) -> bool {
             }
             // Check for hidden elements
             let attrs = attrs.borrow();
-            if attrs
-                .iter()
-                .any(|a| a.name.local.as_ref() == "hidden")
-            {
+            if attrs.iter().any(|a| a.name.local.as_ref() == "hidden") {
                 return true;
             }
             if attrs
@@ -90,8 +87,7 @@ pub fn should_strip(node: &Handle) -> bool {
             if tag == "img" {
                 let is_decorative = attrs.iter().any(|a| {
                     (a.name.local.as_ref() == "alt" && a.value.as_ref().is_empty())
-                        || (a.name.local.as_ref() == "role"
-                            && a.value.as_ref() == "presentation")
+                        || (a.name.local.as_ref() == "role" && a.value.as_ref() == "presentation")
                 });
                 if is_decorative {
                     return true;
@@ -145,10 +141,7 @@ pub fn looks_like_navigation(link_count: usize, total_children: usize) -> bool {
 
 /// Normalize and clean text content.
 pub fn normalize_text(text: &str) -> String {
-    let trimmed: String = text
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join(" ");
+    let trimmed: String = text.split_whitespace().collect::<Vec<_>>().join(" ");
     if trimmed.chars().count() > 200 {
         // Smart truncation: prefer breaking at sentence boundaries
         smart_truncate(&trimmed, 200)
@@ -198,7 +191,6 @@ fn floor_char_boundary(s: &str, pos: usize) -> usize {
     }
     i
 }
-
 
 /// Get the accessible label for an element from its attributes.
 pub fn get_accessible_label(attrs: &[(String, String)]) -> Option<String> {
@@ -282,7 +274,10 @@ fn has_layout_table_attributes(node: &Handle) -> bool {
         let attrs = attrs.borrow();
         for a in attrs.iter() {
             let n = a.name.local.as_ref();
-            if matches!(n, "cellpadding" | "cellspacing" | "border" | "width" | "bgcolor") {
+            if matches!(
+                n,
+                "cellpadding" | "cellspacing" | "border" | "width" | "bgcolor"
+            ) {
                 return true;
             }
         }
@@ -335,7 +330,7 @@ fn check_table_structure(
             has_layout_children,
             nested_table_count,
             cell_count,
-            depth + 1
+            depth + 1,
         );
     }
 }
@@ -359,11 +354,13 @@ fn count_descendant_links(node: &Handle) -> usize {
 /// Check class/id attributes for semantic hints.
 /// Returns a region role string if the class/id suggests a semantic region.
 pub fn class_id_region_hint(attrs: &[(String, String)]) -> Option<&'static str> {
-    let class_val = attrs.iter()
+    let class_val = attrs
+        .iter()
         .find(|(n, _)| n == "class")
         .map(|(_, v)| v.to_lowercase());
 
-    let id_val = attrs.iter()
+    let id_val = attrs
+        .iter()
         .find(|(n, _)| n == "id")
         .map(|(_, v)| v.to_lowercase());
 
@@ -374,24 +371,36 @@ pub fn class_id_region_hint(attrs: &[(String, String)]) -> Option<&'static str> 
             return Some("navigation");
         }
         // Main content patterns
-        if val.contains("main-content") || val.contains("maincontent") ||
-           val.contains("primary-content") || val.contains("article-body") ||
-           (val.contains("main") && !val.contains("nav")) {
+        if val.contains("main-content")
+            || val.contains("maincontent")
+            || val.contains("primary-content")
+            || val.contains("article-body")
+            || (val.contains("main") && !val.contains("nav"))
+        {
             return Some("main");
         }
         // Sidebar patterns
-        if val.contains("sidebar") || val.contains("side-bar") ||
-           val.contains("aside") || val.contains("rail") {
+        if val.contains("sidebar")
+            || val.contains("side-bar")
+            || val.contains("aside")
+            || val.contains("rail")
+        {
             return Some("aside");
         }
         // Footer patterns
-        if val.contains("footer") || val.contains("copyright") ||
-           val.contains("site-footer") || val.contains("page-footer") {
+        if val.contains("footer")
+            || val.contains("copyright")
+            || val.contains("site-footer")
+            || val.contains("page-footer")
+        {
             return Some("footer");
         }
         // Header patterns
-        if val.contains("header") || val.contains("site-header") ||
-           val.contains("page-header") || val.contains("masthead") {
+        if val.contains("header")
+            || val.contains("site-header")
+            || val.contains("page-header")
+            || val.contains("masthead")
+        {
             return Some("header");
         }
         // Search patterns
@@ -462,12 +471,12 @@ pub fn is_collapsible_wrapper(tag: &str, node: &Handle) -> bool {
     element_count == 1 || (text_only && element_count == 0)
 }
 
-
 /// Infer semantic hints from CSS class names.
 /// Returns a list of hints like "primary", "danger", "disabled", "active", etc.
 /// These give agents context about element importance without seeing raw CSS.
 pub fn infer_class_hints(attrs: &[(String, String)]) -> Option<Vec<String>> {
-    let class_val = attrs.iter()
+    let class_val = attrs
+        .iter()
         .find(|(n, _)| n == "class")
         .map(|(_, v)| v.to_lowercase())?;
 
@@ -480,7 +489,10 @@ pub fn infer_class_hints(attrs: &[(String, String)]) -> Option<Vec<String>> {
     if class_val.contains("secondary") {
         hints.push("secondary".to_string());
     }
-    if class_val.contains("danger") || class_val.contains("destructive") || class_val.contains("delete") {
+    if class_val.contains("danger")
+        || class_val.contains("destructive")
+        || class_val.contains("delete")
+    {
         hints.push("danger".to_string());
     }
     if class_val.contains("warning") || class_val.contains("caution") {
@@ -497,22 +509,35 @@ pub fn infer_class_hints(attrs: &[(String, String)]) -> Option<Vec<String>> {
     if class_val.contains("disabled") || class_val.contains("is-disabled") {
         hints.push("disabled".to_string());
     }
-    if class_val.contains("active") || class_val.contains("is-active") || class_val.contains("current") {
+    if class_val.contains("active")
+        || class_val.contains("is-active")
+        || class_val.contains("current")
+    {
         hints.push("active".to_string());
     }
-    if class_val.contains("selected") || class_val.contains("is-selected") || class_val.contains("checked") {
+    if class_val.contains("selected")
+        || class_val.contains("is-selected")
+        || class_val.contains("checked")
+    {
         hints.push("selected".to_string());
     }
-    if class_val.contains("hidden") || class_val.contains("sr-only") || class_val.contains("visually-hidden") {
+    if class_val.contains("hidden")
+        || class_val.contains("sr-only")
+        || class_val.contains("visually-hidden")
+    {
         hints.push("hidden".to_string());
     }
-    if class_val.contains("loading") || class_val.contains("spinner") || class_val.contains("skeleton") {
+    if class_val.contains("loading")
+        || class_val.contains("spinner")
+        || class_val.contains("skeleton")
+    {
         hints.push("loading".to_string());
     }
     if class_val.contains("collapsed") || class_val.contains("is-closed") {
         hints.push("collapsed".to_string());
     }
-    if class_val.contains("expanded") || class_val.contains("is-open") || class_val.contains("show") {
+    if class_val.contains("expanded") || class_val.contains("is-open") || class_val.contains("show")
+    {
         hints.push("expanded".to_string());
     }
 
@@ -520,7 +545,11 @@ pub fn infer_class_hints(attrs: &[(String, String)]) -> Option<Vec<String>> {
     if class_val.contains("lg") || class_val.contains("large") || class_val.contains("xl") {
         hints.push("large".to_string());
     }
-    if class_val.contains("sm") || class_val.contains("small") || class_val.contains("xs") || class_val.contains("mini") {
+    if class_val.contains("sm")
+        || class_val.contains("small")
+        || class_val.contains("xs")
+        || class_val.contains("mini")
+    {
         hints.push("small".to_string());
     }
 
@@ -528,16 +557,29 @@ pub fn infer_class_hints(attrs: &[(String, String)]) -> Option<Vec<String>> {
     if class_val.contains("card") && !class_val.contains("discard") {
         hints.push("card".to_string());
     }
-    if class_val.contains("hero") || class_val.contains("jumbotron") || class_val.contains("banner") {
+    if class_val.contains("hero") || class_val.contains("jumbotron") || class_val.contains("banner")
+    {
         hints.push("hero".to_string());
     }
-    if class_val.contains("modal") || class_val.contains("dialog") || class_val.contains("popup") || class_val.contains("overlay") {
+    if class_val.contains("modal")
+        || class_val.contains("dialog")
+        || class_val.contains("popup")
+        || class_val.contains("overlay")
+    {
         hints.push("modal".to_string());
     }
-    if class_val.contains("toast") || class_val.contains("snackbar") || class_val.contains("notification") || class_val.contains("alert") {
+    if class_val.contains("toast")
+        || class_val.contains("snackbar")
+        || class_val.contains("notification")
+        || class_val.contains("alert")
+    {
         hints.push("notification".to_string());
     }
-    if class_val.contains("badge") || class_val.contains("chip") || class_val.contains("tag") || class_val.contains("pill") {
+    if class_val.contains("badge")
+        || class_val.contains("chip")
+        || class_val.contains("tag")
+        || class_val.contains("pill")
+    {
         hints.push("badge".to_string());
     }
     if class_val.contains("sticky") || class_val.contains("fixed") || class_val.contains("pinned") {
@@ -561,9 +603,12 @@ pub fn looks_like_footer(node: &Handle) -> bool {
     if let NodeData::Element { .. } = &node.data {
         let text = get_all_text(node).to_lowercase();
         // Check for footer-like content
-        if text.contains("copyright") || text.contains("©") ||
-           text.contains("privacy") || text.contains("terms of") ||
-           text.contains("all rights reserved") {
+        if text.contains("copyright")
+            || text.contains("©")
+            || text.contains("privacy")
+            || text.contains("terms of")
+            || text.contains("all rights reserved")
+        {
             return true;
         }
     }

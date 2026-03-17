@@ -151,9 +151,15 @@ impl BenchReport {
         let total = self.results.len();
 
         println!("=== Plasmate SOM Benchmark Summary ===");
-        println!("URLs tested: {}, Successful: {} ({:.0}%)",
-            total, ok_count,
-            if total > 0 { (ok_count as f64 / total as f64) * 100.0 } else { 0.0 }
+        println!(
+            "URLs tested: {}, Successful: {} ({:.0}%)",
+            total,
+            ok_count,
+            if total > 0 {
+                (ok_count as f64 / total as f64) * 100.0
+            } else {
+                0.0
+            }
         );
 
         if !ok.is_empty() {
@@ -166,13 +172,18 @@ impl BenchReport {
             if !ratios.is_empty() {
                 let mean = ratios.iter().sum::<f64>() / ratios.len() as f64;
                 let median = percentile(&ratios, 0.5);
-                println!("Compression ratio: mean {:.1}x, median {:.1}x", mean, median);
+                println!(
+                    "Compression ratio: mean {:.1}x, median {:.1}x",
+                    mean, median
+                );
             }
 
             // Print per-URL results
             println!("\nPer-URL Results:");
-            println!("{:<50} {:>10} {:>10} {:>8} {:>6}",
-                "URL", "HTML", "SOM", "Ratio", "Grade");
+            println!(
+                "{:<50} {:>10} {:>10} {:>8} {:>6}",
+                "URL", "HTML", "SOM", "Ratio", "Grade"
+            );
             println!("{}", "-".repeat(90));
 
             for r in &self.results {
@@ -189,7 +200,8 @@ impl BenchReport {
                 let grade = ratio_to_grade(ratio_val);
                 let short_url: String = shorten_url(&r.url).chars().take(48).collect();
                 let status_marker = if r.status == "ok" { "" } else { " [ERR]" };
-                println!("{:<50} {:>10} {:>10} {:>8} {:>6}{}",
+                println!(
+                    "{:<50} {:>10} {:>10} {:>8} {:>6}{}",
                     short_url,
                     format_number(r.html_bytes),
                     format_number(r.som_bytes),
@@ -292,9 +304,14 @@ pub async fn run(urls: &[String], timeout_ms: u64) -> BenchReport {
                 url,
                 html_bytes = result.html_bytes,
                 som_bytes = result.som_bytes,
-                ratio = format!("{:.1}x", if result.som_bytes > 0 {
-                    result.html_bytes as f64 / result.som_bytes as f64
-                } else { 0.0 }),
+                ratio = format!(
+                    "{:.1}x",
+                    if result.som_bytes > 0 {
+                        result.html_bytes as f64 / result.som_bytes as f64
+                    } else {
+                        0.0
+                    }
+                ),
                 "Benchmark complete"
             ),
         }
