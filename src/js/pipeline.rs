@@ -174,9 +174,12 @@ pub async fn process_page_async(
 /// Process a page through the full pipeline.
 ///
 /// This is the main entry point for converting fetched HTML into a SOM.
-/// If JS execution is enabled, inline scripts are extracted and run in V8
-/// before the SOM is compiled. The DOM shim captures mutations that could
-/// affect the semantic structure.
+/// If JS execution is enabled:
+/// 1. The source HTML is parsed into a JS DOM tree
+/// 2. Inline scripts are extracted and executed in V8
+/// 3. DOMContentLoaded and load events are fired
+/// 4. The resulting DOM tree is serialized back to HTML
+/// 5. The serialized HTML (with JS modifications) is compiled to SOM
 pub fn process_page(
     html: &str,
     url: &str,
@@ -187,6 +190,7 @@ pub fn process_page(
     let mut js_report = None;
     let mut extract_us = 0u128;
     let mut js_us = 0u128;
+    let mut effective_html = std::borrow::Cow::Borrowed(html);
 
     // Phase 1: Extract scripts (if JS enabled)
     if config.execute_js {
@@ -200,18 +204,27 @@ pub fn process_page(
             .map(|s| (s.source.clone(), s.label.clone()))
             .collect();
 
-        // Phase 2: Execute JS
-        if !inline_scripts.is_empty() {
-            let t1 = Instant::now();
-            let mut runtime = JsRuntime::new(config.js_config.clone());
-            runtime.set_page_url(url);
+        // Phase 2: Bootstrap DOM and execute JS
+        let t1 = Instant::now();
+        let mut runtime = JsRuntime::new(config.js_config.clone());
 
+        // Bootstrap the DOM tree from source HTML
+        runtime.bootstrap_dom(html, url);
+
+        if !inline_scripts.is_empty() {
+            // Execute page scripts in the context with the bootstrapped DOM
             let report = runtime.execute_page_scripts(&inline_scripts);
+
+            // Fire DOMContentLoaded after scripts execute
+            runtime.fire_dom_content_loaded();
 
             // Drain short timers (many pages use setTimeout(fn, 0) for initialization)
             if config.timer_drain_ms > 0 {
                 runtime.drain_timers(config.timer_drain_ms);
             }
+
+            // Fire load event
+            runtime.fire_load();
 
             js_us = t1.elapsed().as_micros();
 
@@ -224,82 +237,16 @@ pub fn process_page(
             );
 
             js_report = Some(report);
+
+            // Serialize the DOM tree back to HTML
+            // This captures all JS modifications: createElement, appendChild, innerHTML, etc.
+            if let Ok(serialized) = runtime.serialize_dom() {
+                if !serialized.is_empty() && serialized != "undefined" {
+                    effective_html = std::borrow::Cow::Owned(serialized);
+                }
+            }
         }
     }
-
-    // Phase 3: Apply JS mutations to HTML, then compile SOM.
-    // If JS created document.write() calls or DOM insertions, we inject them
-    // back into the HTML before SOM compilation for maximum accuracy.
-    let effective_html = if config.execute_js && js_report.is_some() {
-        let t_mut = Instant::now();
-        let mut runtime = JsRuntime::new(config.js_config.clone());
-        runtime.set_page_url(url);
-
-        // Re-execute scripts in a fresh context to get mutations
-        let scripts = extract::extract_scripts(html);
-        let inline_scripts: Vec<(String, String)> = scripts
-            .iter()
-            .filter(|s| s.is_inline)
-            .map(|s| (s.source.clone(), s.label.clone()))
-            .collect();
-
-        if !inline_scripts.is_empty() {
-            runtime.execute_page_scripts(&inline_scripts);
-            if config.timer_drain_ms > 0 {
-                runtime.drain_timers(config.timer_drain_ms);
-            }
-        }
-
-        // Collect document.write and appendChild mutations
-        let mutations_json = runtime.execute_in_context(
-            "JSON.stringify(__plasmate_mutations.filter(function(m){ return m.type === 'document.write' || m.type === 'appendChild'; }))",
-            "<collect-mutations>",
-        ).unwrap_or_else(|_| "[]".to_string());
-
-        if let Ok(mutations) = serde_json::from_str::<Vec<serde_json::Value>>(&mutations_json) {
-            if !mutations.is_empty() {
-                // Inject mutation content before </body>
-                let mut patched = html.to_string();
-                let mut injection = String::new();
-                for m in &mutations {
-                    if let Some(html_content) = m.get("html").and_then(|v| v.as_str()) {
-                        injection.push_str(html_content);
-                    }
-                    if let Some(text) = m.get("text").and_then(|v| v.as_str()) {
-                        if let Some(tag) = m.get("tag").and_then(|v| v.as_str()) {
-                            injection.push_str(&format!(
-                                "<{0}>{1}</{0}>",
-                                tag.to_lowercase(),
-                                text
-                            ));
-                        }
-                    }
-                }
-                if !injection.is_empty() {
-                    if let Some(pos) = patched.to_lowercase().rfind("</body>") {
-                        patched.insert_str(pos, &injection);
-                    } else {
-                        patched.push_str(&injection);
-                    }
-                    debug!(
-                        mutations = mutations.len(),
-                        injected_bytes = injection.len(),
-                        elapsed_us = t_mut.elapsed().as_micros(),
-                        "JS mutations applied to HTML"
-                    );
-                    std::borrow::Cow::Owned(patched)
-                } else {
-                    std::borrow::Cow::Borrowed(html)
-                }
-            } else {
-                std::borrow::Cow::Borrowed(html)
-            }
-        } else {
-            std::borrow::Cow::Borrowed(html)
-        }
-    } else {
-        std::borrow::Cow::Borrowed(html)
-    };
 
     let t2 = Instant::now();
     let som = compiler::compile(&effective_html, url)
