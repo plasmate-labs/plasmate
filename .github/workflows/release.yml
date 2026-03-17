@@ -171,7 +171,19 @@ jobs:
             echo "version=nightly" >> $GITHUB_OUTPUT
           fi
 
-      - name: Build and push
+      - name: Build and push to GHCR
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ steps.tag.outputs.version }}
+            ghcr.io/${{ github.repository }}:latest
+
+      - name: Push to Docker Hub
+        continue-on-error: true
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -181,8 +193,6 @@ jobs:
           tags: |
             plasmate/browser:${{ steps.tag.outputs.version }}
             plasmate/browser:latest
-            ghcr.io/${{ github.repository }}:${{ steps.tag.outputs.version }}
-            ghcr.io/${{ github.repository }}:latest
 
   publish_crate:
     if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
