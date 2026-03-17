@@ -185,7 +185,7 @@ jobs:
             ghcr.io/${{ github.repository }}:latest
 
   publish_crate:
-    if: ${{ github.event_name == 'push' }}
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
     needs: build
     runs-on: ubuntu-latest
     steps:
