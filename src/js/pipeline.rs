@@ -368,4 +368,315 @@ mod tests {
         );
         assert_eq!(report.failed, 0);
     }
+
+    // =========================================================================
+    // JS Rendering Pipeline Tests
+    // =========================================================================
+
+    #[test]
+    fn test_pipeline_js_creates_elements() {
+        // Test that JS-created elements appear in the SOM
+        let config = PipelineConfig::default();
+        let html = r#"<html><body>
+            <div id="root"></div>
+            <script>
+                var root = document.getElementById('root');
+                var p = document.createElement('p');
+                p.id = 'dynamic-para';
+                p.textContent = 'Created by JavaScript';
+                root.appendChild(p);
+            </script>
+        </body></html>"#;
+        let result = process_page(html, "https://example.com", &config).unwrap();
+
+        // Serialize SOM to JSON and check for dynamic content
+        let som_json = serde_json::to_string(&result.som).unwrap();
+        assert!(
+            som_json.contains("Created by JavaScript"),
+            "SOM should contain JS-created content"
+        );
+    }
+
+    #[test]
+    fn test_pipeline_innerhtml_rendering() {
+        // Test that innerHTML modifications appear in SOM
+        let config = PipelineConfig::default();
+        let html = r#"<html><body>
+            <div id="app"></div>
+            <script>
+                document.getElementById('app').innerHTML = '<h1>Rendered Title</h1><p>Rendered paragraph</p>';
+            </script>
+        </body></html>"#;
+        let result = process_page(html, "https://example.com", &config).unwrap();
+
+        let som_json = serde_json::to_string(&result.som).unwrap();
+        assert!(
+            som_json.contains("Rendered Title"),
+            "SOM should contain innerHTML content"
+        );
+        assert!(
+            som_json.contains("Rendered paragraph"),
+            "SOM should contain innerHTML paragraph"
+        );
+    }
+
+    #[test]
+    fn test_pipeline_getelementbyid_modify() {
+        // Test that modifying existing elements via getElementById works
+        let config = PipelineConfig::default();
+        let html = r#"<html><body>
+            <p id="target">Original text</p>
+            <script>
+                document.getElementById('target').textContent = 'Modified by JS';
+            </script>
+        </body></html>"#;
+        let result = process_page(html, "https://example.com", &config).unwrap();
+
+        let som_json = serde_json::to_string(&result.som).unwrap();
+        assert!(
+            som_json.contains("Modified by JS"),
+            "SOM should reflect JS text modification"
+        );
+        assert!(
+            !som_json.contains("Original text"),
+            "Original text should be replaced"
+        );
+    }
+
+    #[test]
+    fn test_pipeline_timer_based_rendering() {
+        // Test that setTimeout(fn, 0) callbacks are executed
+        let config = PipelineConfig::default();
+        let html = r#"<html><body>
+            <div id="container"></div>
+            <script>
+                setTimeout(function() {
+                    var el = document.createElement('span');
+                    el.textContent = 'Timer rendered';
+                    document.getElementById('container').appendChild(el);
+                }, 0);
+            </script>
+        </body></html>"#;
+        let result = process_page(html, "https://example.com", &config).unwrap();
+
+        let som_json = serde_json::to_string(&result.som).unwrap();
+        assert!(
+            som_json.contains("Timer rendered"),
+            "Timer callback should have executed"
+        );
+    }
+
+    #[test]
+    fn test_pipeline_domcontentloaded_handler() {
+        // Test that DOMContentLoaded handlers execute
+        let config = PipelineConfig::default();
+        let html = r#"<html><body>
+            <div id="target"></div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    document.getElementById('target').innerHTML = '<strong>Loaded!</strong>';
+                });
+            </script>
+        </body></html>"#;
+        let result = process_page(html, "https://example.com", &config).unwrap();
+
+        let som_json = serde_json::to_string(&result.som).unwrap();
+        assert!(
+            som_json.contains("Loaded!"),
+            "DOMContentLoaded handler should have executed"
+        );
+    }
+
+    #[test]
+    fn test_pipeline_react_style_app() {
+        // Simulate a React-style single page app with JS rendering
+        let config = PipelineConfig::default();
+        let html = r#"<html><body>
+            <div id="root"></div>
+            <script>
+                function App() {
+                    var div = document.createElement('div');
+                    div.className = 'app-container';
+
+                    var header = document.createElement('header');
+                    var h1 = document.createElement('h1');
+                    h1.textContent = 'My React App';
+                    header.appendChild(h1);
+                    div.appendChild(header);
+
+                    var main = document.createElement('main');
+                    var p = document.createElement('p');
+                    p.textContent = 'Welcome to the application';
+                    main.appendChild(p);
+
+                    var btn = document.createElement('button');
+                    btn.textContent = 'Get Started';
+                    btn.id = 'cta-button';
+                    main.appendChild(btn);
+                    div.appendChild(main);
+
+                    return div;
+                }
+
+                document.getElementById('root').appendChild(App());
+            </script>
+        </body></html>"#;
+        let result = process_page(html, "https://example.com", &config).unwrap();
+
+        // Check that all React-rendered content is in the SOM
+        let som_json = serde_json::to_string(&result.som).unwrap();
+        assert!(som_json.contains("My React App"), "Heading should be present");
+        assert!(
+            som_json.contains("Welcome to the application"),
+            "Content should be present"
+        );
+        assert!(
+            som_json.contains("Get Started"),
+            "Button should be present"
+        );
+
+        // Check interactive element count (button should be counted)
+        assert!(result.som.meta.interactive_count > 0, "Should have interactive elements");
+    }
+
+    #[test]
+    fn test_pipeline_document_write() {
+        // Test that document.write works
+        let config = PipelineConfig::default();
+        let html = r#"<html><body>
+            <script>
+                document.write('<p id="written">Written content</p>');
+            </script>
+        </body></html>"#;
+        let result = process_page(html, "https://example.com", &config).unwrap();
+
+        let som_json = serde_json::to_string(&result.som).unwrap();
+        assert!(
+            som_json.contains("Written content"),
+            "document.write content should appear"
+        );
+    }
+
+    #[test]
+    fn test_pipeline_no_regression_static_html() {
+        // Ensure static HTML without JS still works correctly
+        let config = PipelineConfig::default();
+        let html = r#"<!DOCTYPE html>
+<html lang="en">
+<head><title>Static Page</title></head>
+<body>
+<nav>
+    <a href="/">Home</a>
+    <a href="/about">About</a>
+</nav>
+<main>
+    <h1>Welcome</h1>
+    <p>This is static content with no JavaScript.</p>
+    <form action="/search" method="GET">
+        <input type="text" placeholder="Search...">
+        <button type="submit">Search</button>
+    </form>
+</main>
+<footer>
+    <p>Copyright 2026</p>
+</footer>
+</body>
+</html>"#;
+        let result = process_page(html, "https://example.com", &config).unwrap();
+
+        // SOM should have proper structure
+        assert_eq!(result.som.title, "Static Page");
+        assert!(!result.som.regions.is_empty());
+
+        // Should have navigation, main, form regions
+        let region_roles: Vec<_> = result.som.regions.iter().map(|r| &r.role).collect();
+        assert!(
+            result.som.regions.iter().any(|r| !r.elements.is_empty()),
+            "Regions should have elements"
+        );
+    }
+
+    #[test]
+    fn test_pipeline_queryselector_in_script() {
+        // Test that querySelector works in scripts
+        let config = PipelineConfig::default();
+        let html = r#"<html><body>
+            <div class="container">
+                <p class="message">Initial</p>
+            </div>
+            <script>
+                var msg = document.querySelector('.container .message');
+                if (msg) {
+                    msg.textContent = 'Found and modified';
+                }
+            </script>
+        </body></html>"#;
+        let result = process_page(html, "https://example.com", &config).unwrap();
+
+        let som_json = serde_json::to_string(&result.som).unwrap();
+        assert!(
+            som_json.contains("Found and modified"),
+            "querySelector should find element"
+        );
+    }
+
+    #[test]
+    fn test_pipeline_multiple_scripts_state_persistence() {
+        // Test that state persists across multiple script blocks
+        let config = PipelineConfig::default();
+        let html = r#"<html><body>
+            <div id="output"></div>
+            <script>
+                var items = [];
+                items.push('first');
+            </script>
+            <script>
+                items.push('second');
+            </script>
+            <script>
+                items.push('third');
+                document.getElementById('output').textContent = items.join(', ');
+            </script>
+        </body></html>"#;
+        let result = process_page(html, "https://example.com", &config).unwrap();
+
+        let som_json = serde_json::to_string(&result.som).unwrap();
+        assert!(
+            som_json.contains("first, second, third"),
+            "State should persist across script blocks"
+        );
+    }
+
+    #[test]
+    fn test_pipeline_link_creation() {
+        // Test that dynamically created links appear in SOM with correct attributes
+        let config = PipelineConfig::default();
+        let html = r#"<html><body>
+            <nav id="nav"></nav>
+            <script>
+                var nav = document.getElementById('nav');
+                var links = [
+                    {href: '/home', text: 'Home'},
+                    {href: '/products', text: 'Products'},
+                    {href: '/contact', text: 'Contact'}
+                ];
+                links.forEach(function(link) {
+                    var a = document.createElement('a');
+                    a.href = link.href;
+                    a.textContent = link.text;
+                    nav.appendChild(a);
+                });
+            </script>
+        </body></html>"#;
+        let result = process_page(html, "https://example.com", &config).unwrap();
+
+        let som_json = serde_json::to_string(&result.som).unwrap();
+        assert!(som_json.contains("/home"), "Home link should be present");
+        assert!(som_json.contains("/products"), "Products link should be present");
+        assert!(som_json.contains("Contact"), "Contact text should be present");
+        assert!(
+            result.som.meta.interactive_count >= 3,
+            "Should have at least 3 interactive links"
+        );
+    }
 }
