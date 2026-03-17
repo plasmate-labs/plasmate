@@ -51,10 +51,9 @@ pub fn build_client(user_agent: Option<&str>, cookie_jar: Arc<Jar>) -> Result<Cl
         // TCP optimizations
         .tcp_nodelay(true)
         .tcp_keepalive(std::time::Duration::from_secs(60))
-        // HTTP/2: multiplexed requests
-        .http2_prior_knowledge() // try HTTP/2 first
+        // HTTP/2: allow negotiation via ALPN (do not force prior knowledge)
         .build()
-        .map_err(|e| FetchError::NavigationFailed(e.to_string()))
+        .map_err(|e| FetchError::NavigationFailed(format!("{e:?}")))
 }
 
 /// Build a client that allows HTTP/1.1 fallback (for servers that don't support h2).
@@ -74,7 +73,7 @@ pub fn build_client_h1_fallback(
         .tcp_nodelay(true)
         .tcp_keepalive(std::time::Duration::from_secs(60))
         .build()
-        .map_err(|e| FetchError::NavigationFailed(e.to_string()))
+        .map_err(|e| FetchError::NavigationFailed(format!("{e:?}")))
 }
 
 /// Fetch a URL and return the HTML content.
@@ -97,7 +96,7 @@ pub async fn fetch_url(
     )
     .await
     .map_err(|_| FetchError::Timeout(timeout_ms))?
-    .map_err(|e| FetchError::NavigationFailed(e.to_string()))?;
+    .map_err(|e| FetchError::NavigationFailed(format!("{e:?}")))?;
 
     let status = response.status().as_u16();
     let final_url = response.url().to_string();
@@ -118,7 +117,7 @@ pub async fn fetch_url(
     let html = response
         .text()
         .await
-        .map_err(|e| FetchError::NavigationFailed(e.to_string()))?;
+        .map_err(|e| FetchError::NavigationFailed(format!("{e:?}")))?;
 
     let html_bytes = html.len();
     let load_ms = start.elapsed().as_millis() as u64;

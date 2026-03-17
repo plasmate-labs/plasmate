@@ -4,6 +4,111 @@
 
 use plasmate::awp::handler::{handle_request, ConnectionState};
 use serde_json::json;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::TcpListener;
+use tokio::sync::oneshot;
+
+async fn start_test_server() -> (String, oneshot::Sender<()>) {
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap();
+    let base_url = format!("http://{}", addr);
+
+    let (shutdown_tx, mut shutdown_rx) = oneshot::channel::<()>();
+
+    let base_for_server = base_url.clone();
+
+    tokio::spawn(async move {
+        loop {
+            tokio::select! {
+                _ = &mut shutdown_rx => {
+                    break;
+                }
+                accept = listener.accept() => {
+                    let Ok((mut stream, _peer)) = accept else { continue; };
+                    let base = base_for_server.clone();
+
+                    tokio::spawn(async move {
+                        let mut buf = vec![0u8; 8192];
+                        let n = match stream.read(&mut buf).await {
+                            Ok(n) if n > 0 => n,
+                            _ => return,
+                        };
+                        let req = String::from_utf8_lossy(&buf[..n]);
+                        let first_line = req.lines().next().unwrap_or("");
+                        let mut parts = first_line.split_whitespace();
+                        let _method = parts.next().unwrap_or("GET");
+                        let path = parts.next().unwrap_or("/");
+
+                        let (status, body, content_type): (u16, String, &str) = match path {
+                            "/" => (200, HOME_HTML_TEMPLATE.replace("__BASE__", &base), "text/html"),
+                            "/next" => (200, NEXT_HTML_TEMPLATE.replace("__BASE__", &base), "text/html"),
+                            "/js" => (200, JS_HTML.to_string(), "text/html"),
+                            _ => (404, NOT_FOUND_HTML.to_string(), "text/html"),
+                        };
+
+                        let resp = format!(
+                            "HTTP/1.1 {} {}\r\nContent-Type: {}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+                            status,
+                            if status == 200 { "OK" } else { "Not Found" },
+                            content_type,
+                            body.as_bytes().len(),
+                            body
+                        );
+
+                        let _ = stream.write_all(resp.as_bytes()).await;
+                        let _ = stream.shutdown().await;
+                    });
+                }
+            }
+        }
+    });
+
+    (base_url, shutdown_tx)
+}
+
+const HOME_HTML_TEMPLATE: &str = r#"<!doctype html>
+<html>
+  <head>
+    <title>AWP Test Home</title>
+    <meta property="og:title" content="AWP Test Home" />
+    <script type="application/ld+json">{
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "AWP Test",
+      "url": "__BASE__/"
+    }</script>
+  </head>
+  <body>
+    <h1>Hello from Plasmate AWP</h1>
+    <p>This is a local fixture page used for integration tests.</p>
+    <a href="__BASE__/next">Next</a>
+    <form>
+      <label>Query <input type="text" name="q" aria-label="Query" /></label>
+      <button type="submit">Submit</button>
+    </form>
+  </body>
+</html>"#;
+
+const NEXT_HTML_TEMPLATE: &str = r#"<!doctype html>
+<html>
+  <head><title>AWP Test Next</title></head>
+  <body>
+    <h1>Next page</h1>
+    <a href="__BASE__/">Home</a>
+  </body>
+</html>"#;
+
+const JS_HTML: &str = r#"<!doctype html>
+<html>
+  <head><title>AWP Test JS</title></head>
+  <body>
+    <h1>JS page</h1>
+    <script>window.__plasmate_smoke = 1;</script>
+  </body>
+</html>"#;
+
+const NOT_FOUND_HTML: &str =
+    r#"<!doctype html><html><head><title>Not Found</title></head><body>404</body></html>"#;
 
 /// Helper: run a request through the handler.
 async fn send(
@@ -85,6 +190,9 @@ async fn test_session_create_and_close() {
 
 #[tokio::test]
 async fn test_navigate_real_page() {
+    let (base_url, shutdown) = start_test_server().await;
+    let url = format!("{}/", base_url);
+
     let mut state = ConnectionState::new();
     send(&mut state, "awp.hello", json!({"awp_version": "0.1"})).await;
 
@@ -99,10 +207,12 @@ async fn test_navigate_real_page() {
         "page.navigate",
         json!({
             "session_id": session_id,
-            "url": "https://example.com"
+            "url": url
         }),
     )
     .await;
+
+    let _ = shutdown.send(());
 
     assert!(is_success(&resp), "Navigation should succeed: {:?}", resp);
     let result = get_result(&resp);
@@ -115,6 +225,9 @@ async fn test_navigate_real_page() {
 
 #[tokio::test]
 async fn test_navigate_with_js_execution() {
+    let (base_url, shutdown) = start_test_server().await;
+    let url = format!("{}/js", base_url);
+
     let mut state = ConnectionState::new();
     send(&mut state, "awp.hello", json!({"awp_version": "0.1"})).await;
 
@@ -129,14 +242,15 @@ async fn test_navigate_with_js_execution() {
         "page.navigate",
         json!({
             "session_id": session_id,
-            "url": "https://httpbin.org"
+            "url": url
         }),
     )
     .await;
 
+    let _ = shutdown.send(());
+
     assert!(is_success(&resp));
     let result = get_result(&resp);
-    // httpbin has inline JS
     if let Some(js) = result.get("js") {
         assert!(js["scripts_total"].as_u64().unwrap() > 0);
     }
@@ -148,6 +262,9 @@ async fn test_navigate_with_js_execution() {
 
 #[tokio::test]
 async fn test_observe_after_navigate() {
+    let (base_url, shutdown) = start_test_server().await;
+    let url = format!("{}/", base_url);
+
     let mut state = ConnectionState::new();
     send(&mut state, "awp.hello", json!({"awp_version": "0.1"})).await;
 
@@ -162,7 +279,7 @@ async fn test_observe_after_navigate() {
         "page.navigate",
         json!({
             "session_id": session_id,
-            "url": "https://example.com"
+            "url": url
         }),
     )
     .await;
@@ -175,6 +292,8 @@ async fn test_observe_after_navigate() {
         }),
     )
     .await;
+
+    let _ = shutdown.send(());
 
     assert!(is_success(&resp));
     let result = get_result(&resp);
@@ -212,6 +331,9 @@ async fn test_observe_before_navigate_fails() {
 
 #[tokio::test]
 async fn test_extract_structured_data() {
+    let (base_url, shutdown) = start_test_server().await;
+    let url = format!("{}/", base_url);
+
     let mut state = ConnectionState::new();
     send(&mut state, "awp.hello", json!({"awp_version": "0.1"})).await;
 
@@ -226,7 +348,7 @@ async fn test_extract_structured_data() {
         "page.navigate",
         json!({
             "session_id": session_id,
-            "url": "https://www.bbc.com/news"
+            "url": url
         }),
     )
     .await;
@@ -241,16 +363,16 @@ async fn test_extract_structured_data() {
     )
     .await;
 
+    let _ = shutdown.send(());
+
     assert!(
         is_success(&resp),
         "Structured data extraction should work: {:?}",
         resp
     );
     let result = get_result(&resp);
-    // BBC should have structured data
     if let Some(sd) = result.get("structured_data") {
         if !sd.is_null() {
-            // Should have at least some metadata
             assert!(
                 sd.get("json_ld").is_some()
                     || sd.get("open_graph").is_some()
@@ -263,6 +385,9 @@ async fn test_extract_structured_data() {
 
 #[tokio::test]
 async fn test_extract_interactive_elements() {
+    let (base_url, shutdown) = start_test_server().await;
+    let url = format!("{}/", base_url);
+
     let mut state = ConnectionState::new();
     send(&mut state, "awp.hello", json!({"awp_version": "0.1"})).await;
 
@@ -277,7 +402,7 @@ async fn test_extract_interactive_elements() {
         "page.navigate",
         json!({
             "session_id": session_id,
-            "url": "https://example.com"
+            "url": url
         }),
     )
     .await;
@@ -292,12 +417,11 @@ async fn test_extract_interactive_elements() {
     )
     .await;
 
+    let _ = shutdown.send(());
+
     assert!(is_success(&resp));
     let result = get_result(&resp);
-    assert!(
-        result["count"].as_u64().unwrap() > 0,
-        "example.com should have at least one link"
-    );
+    assert!(result["count"].as_u64().unwrap() > 0);
     let elements = result["interactive_elements"].as_array().unwrap();
     assert!(elements.iter().any(|e| e["role"] == "link"));
 }
@@ -308,6 +432,9 @@ async fn test_extract_interactive_elements() {
 
 #[tokio::test]
 async fn test_act_click_link() {
+    let (base_url, shutdown) = start_test_server().await;
+    let url = format!("{}/", base_url);
+
     let mut state = ConnectionState::new();
     send(&mut state, "awp.hello", json!({"awp_version": "0.1"})).await;
 
@@ -317,18 +444,16 @@ async fn test_act_click_link() {
         .unwrap()
         .to_string();
 
-    // Navigate to example.com which has a "More information..." link
     send(
         &mut state,
         "page.navigate",
         json!({
             "session_id": session_id,
-            "url": "https://example.com"
+            "url": url
         }),
     )
     .await;
 
-    // Click the first link (example.com has "More information..." link)
     let resp = send(
         &mut state,
         "page.act",
@@ -344,16 +469,20 @@ async fn test_act_click_link() {
     )
     .await;
 
+    let _ = shutdown.send(());
+
     assert!(is_success(&resp), "Click should succeed: {:?}", resp);
     let result = get_result(&resp);
     assert_eq!(result["status"], "ok");
-    // The link should have triggered navigation
     assert_eq!(result["effects"]["navigated"], true);
     assert_eq!(result["effects"]["som_changed"], true);
 }
 
 #[tokio::test]
 async fn test_act_type_into_field() {
+    let (base_url, shutdown) = start_test_server().await;
+    let url = format!("{}/", base_url);
+
     let mut state = ConnectionState::new();
     send(&mut state, "awp.hello", json!({"awp_version": "0.1"})).await;
 
@@ -363,18 +492,16 @@ async fn test_act_type_into_field() {
         .unwrap()
         .to_string();
 
-    // Navigate to httpbin which has a form
     send(
         &mut state,
         "page.navigate",
         json!({
             "session_id": session_id,
-            "url": "https://httpbin.org"
+            "url": url
         }),
     )
     .await;
 
-    // Try to type into any text input (if available)
     let extract_resp = send(
         &mut state,
         "page.extract",
@@ -409,6 +536,8 @@ async fn test_act_type_into_field() {
         assert!(is_success(&resp));
         assert_eq!(get_result(&resp)["effects"]["som_changed"], true);
     }
+
+    let _ = shutdown.send(());
 }
 
 // ============================================================
@@ -417,6 +546,9 @@ async fn test_act_type_into_field() {
 
 #[tokio::test]
 async fn test_full_agent_workflow() {
+    let (base_url, shutdown) = start_test_server().await;
+    let url = format!("{}/", base_url);
+
     let mut state = ConnectionState::new();
 
     // 1. Handshake
@@ -444,7 +576,7 @@ async fn test_full_agent_workflow() {
         "page.navigate",
         json!({
             "session_id": &session_id,
-            "url": "https://example.com"
+            "url": url
         }),
     )
     .await;
@@ -514,4 +646,6 @@ async fn test_full_agent_workflow() {
     )
     .await;
     assert!(is_success(&resp));
+
+    let _ = shutdown.send(());
 }
