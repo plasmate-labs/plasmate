@@ -22,7 +22,7 @@ jobs:
           - os: macos-latest
             target: aarch64-apple-darwin
             artifact: plasmate-aarch64-macos
-          - os: macos-13
+          - os: macos-latest
             target: x86_64-apple-darwin
             artifact: plasmate-x86_64-macos
           - os: ubuntu-latest
