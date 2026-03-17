@@ -11,22 +11,23 @@ const SRC = join(import.meta.dirname, 'docs', 'src');
 const OUT = join(import.meta.dirname, 'docs');
 
 const NAV = [
-  { href: '/docs', label: 'Overview', file: 'index' },
-  { href: '/docs/quickstart', label: 'Quick Start', file: 'quickstart' },
-  { href: '/docs/spec', label: 'Product Spec', file: 'spec' },
-  { href: '/docs/som', label: 'SOM Reference', file: 'som' },
-  { href: '/docs/awp', label: 'AWP Protocol', file: 'awp' },
-  { href: '/docs/awp-mvp', label: 'AWP MVP v0.1', file: 'awp-mvp' },
-  { href: '/docs/thesis', label: 'Thesis', file: 'thesis' },
-  { href: '/docs/poc', label: 'PoC Build Brief', file: 'poc' },
-  { href: '/docs/roadmap', label: 'Roadmap v0.2', file: 'roadmap' },
-  { href: '/docs/brand', label: 'Brand Guide', file: 'brand' },
+  { slug: 'index', label: 'Overview' },
+  { slug: 'quickstart', label: 'Quick Start' },
+  { slug: 'spec', label: 'Product Spec' },
+  { slug: 'som', label: 'SOM Reference' },
+  { slug: 'awp', label: 'AWP Protocol' },
+  { slug: 'awp-mvp', label: 'AWP MVP v0.1' },
+  { slug: 'thesis', label: 'Thesis' },
+  { slug: 'poc', label: 'PoC Build Brief' },
+  { slug: 'roadmap', label: 'Roadmap v0.2' },
+  { slug: 'brand', label: 'Brand Guide' },
 ];
 
-function template(title, body, currentHref) {
+function template(title, body, currentSlug) {
   const sidebar = NAV.map(n => {
-    const active = n.href === currentHref ? ' class="active"' : '';
-    return `<a href="${n.href}"${active}>${n.label}</a>`;
+    const active = n.slug === currentSlug ? ' class="active"' : '';
+    const href = n.slug === 'index' ? '.' : n.slug;
+    return `<a href="${href}"${active}>${n.label}</a>`;
   }).join('\n          ');
 
   return `<!doctype html>
@@ -336,7 +337,7 @@ function template(title, body, currentHref) {
 <body>
   <div class="layout">
     <nav class="sidebar" aria-label="Documentation navigation">
-      <a class="sidebar-brand" href="/"><img src="/brand/plasmate-mark.png" alt="" width="22" height="22" style="vertical-align: -3px;" />Plasmate</a>
+      <a class="sidebar-brand" href="https://plasmate.app"><img src="/brand/plasmate-mark.png" alt="" width="22" height="22" style="vertical-align: -3px;" />Plasmate</a>
       ${sidebar}
       <div class="sidebar-foot">
         <a href="https://github.com/plasmate-labs/plasmate">GitHub</a>
@@ -385,8 +386,7 @@ for (const file of files) {
   const title = extractTitle(md);
   const html = marked.parse(md);
   const slug = basename(file, '.md');
-  const href = `/docs/${slug}.html`;
-  const page = template(title, html, href);
+  const page = template(title, html, slug);
 
   writeFileSync(join(OUT, `${slug}.html`), page);
   built++;

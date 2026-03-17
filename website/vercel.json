@@ -11,6 +11,56 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/brand/:file*",
+      "has": [{ "type": "host", "value": "doc.plasmate.app" }],
+      "destination": "/brand/:file*"
+    },
+    {
+      "source": "/brand/:file*",
+      "has": [{ "type": "host", "value": "docs.plasmate.app" }],
+      "destination": "/brand/:file*"
+    },
+    {
+      "source": "/favicon:rest*",
+      "has": [{ "type": "host", "value": "doc.plasmate.app" }],
+      "destination": "/favicon:rest*"
+    },
+    {
+      "source": "/favicon:rest*",
+      "has": [{ "type": "host", "value": "docs.plasmate.app" }],
+      "destination": "/favicon:rest*"
+    },
+    {
+      "source": "/apple-touch-icon.png",
+      "has": [{ "type": "host", "value": "doc.plasmate.app" }],
+      "destination": "/apple-touch-icon.png"
+    },
+    {
+      "source": "/apple-touch-icon.png",
+      "has": [{ "type": "host", "value": "docs.plasmate.app" }],
+      "destination": "/apple-touch-icon.png"
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "doc.plasmate.app" }],
+      "destination": "/docs/index.html"
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "docs.plasmate.app" }],
+      "destination": "/docs/index.html"
+    },
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "doc.plasmate.app" }],
+      "destination": "/docs/:path*"
+    },
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "docs.plasmate.app" }],
+      "destination": "/docs/:path*"
+    },
     { "source": "/docs", "destination": "/docs/index.html" },
     { "source": "/docs/", "destination": "/docs/index.html" }
   ]
