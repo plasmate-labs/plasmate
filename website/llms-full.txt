@@ -1,0 +1,232 @@
+# Plasmate - Full Reference for LLMs
+
+> The browser engine for agents. HTML in, Semantic Object Model out.
+
+Plasmate is a Rust-based headless browser engine purpose-built for AI agents. Instead of dumping raw DOM (thousands of tokens), it produces a compact Semantic Object Model (SOM) - structured JSON with labeled regions, interactive elements, and clean text.
+
+## Why Plasmate exists
+
+Traditional headless browsers (Chrome, Playwright, Lightpanda) output raw HTML or DOM snapshots. For AI agents, this means:
+- Thousands of wasted tokens on boilerplate, scripts, styles
+- No semantic structure (what's a nav? what's the main content?)
+- Heavy resource usage (Chrome uses 200MB+ per page)
+
+Plasmate solves this with the Semantic Object Model: a compact, structured representation that preserves meaning while discarding noise.
+
+## Performance
+
+| Metric | Plasmate | Lightpanda | Chrome |
+|--------|----------|------------|--------|
+| Speed (pages/sec) | ~250 | ~43 | ~4 |
+| Binary size | 43 MB | 59-111 MB | 300-500 MB |
+| Memory (100 pages) | ~30 MB | ~50 MB | ~20 GB |
+| Token compression | 10.4x avg | 1x (raw DOM) | 1x (raw DOM) |
+
+## Install
+
+One-line install (macOS and Linux):
+```
+curl -fsSL https://plasmate.app/install.sh | sh
+```
+
+Package managers:
+```
+cargo install plasmate
+npm install -g plasmate
+pip install plasmate
+```
+
+Docker (multi-arch linux/amd64 and linux/arm64):
+```
+docker run --rm ghcr.io/plasmate-labs/plasmate:latest fetch https://example.com
+docker run --rm -p 9222:9222 ghcr.io/plasmate-labs/plasmate:latest
+```
+
+## CLI Commands
+
+### fetch - Get a page as SOM
+
+```
+plasmate fetch <url> [options]
+```
+
+Options:
+- --format json|text (default: json)
+- --budget <tokens> - max output tokens
+- --js - enable JavaScript execution (default: enabled)
+- --timeout <ms> - page load timeout
+
+Output: JSON object with:
+- title: page title
+- url: resolved URL
+- regions: array of semantic regions
+- meta: timing and compression stats
+
+Each region has:
+- tag: semantic label (nav, main, article, form, footer, etc.)
+- id: stable element identifier
+- text: clean extracted text
+- children: nested regions
+- interactive: boolean (forms, buttons, links)
+- attrs: relevant attributes (href, src, action, etc.)
+
+### serve - Start CDP-compatible server
+
+```
+plasmate serve [options]
+```
+
+Options:
+- --port <port> (default: 9222)
+- --host <host> (default: 127.0.0.1)
+
+Exposes a WebSocket endpoint compatible with Puppeteer and Playwright.
+
+### bench - Benchmark against URL list
+
+```
+plasmate bench --urls <file> [--runs <n>]
+```
+
+Runs fetch against each URL multiple times and reports timing stats.
+
+## Puppeteer Integration
+
+Connect Puppeteer to a running Plasmate server:
+
+```javascript
+const puppeteer = require('puppeteer');
+
+const browser = await puppeteer.connect({
+  browserWSEndpoint: 'ws://127.0.0.1:9222',
+  protocolTimeout: 10000
+});
+
+const page = await browser.newPage();
+await page.goto('https://example.com');
+
+// Get page content
+const html = await page.content();
+
+// Evaluate JavaScript
+const title = await page.evaluate(() => document.title);
+
+// Wait for dynamic content
+await page.waitForFunction(() => document.querySelector('.loaded'));
+
+// Extract data
+const data = await page.evaluate(() => {
+  return {
+    title: document.title,
+    links: [...document.querySelectorAll('a')].map(a => a.href)
+  };
+});
+
+await browser.close();
+```
+
+Supported CDP domains:
+- Page: navigate, content, evaluate, waitForFunction, close
+- Runtime: evaluate, callFunctionOn
+- Target: createTarget, attachToTarget, createBrowserContext
+- DOM: enable, disable, getDocument, querySelector
+- Network: enable, disable, setExtraHTTPHeaders, getCookies, setCookies
+- Input: dispatchMouseEvent, dispatchKeyEvent
+- Emulation: setDeviceMetricsOverride, setUserAgentOverride
+- Browser: getVersion, close
+
+## SOM Output Format
+
+Example SOM output for a simple page:
+
+```json
+{
+  "title": "Example Page",
+  "url": "https://example.com",
+  "regions": [
+    {
+      "tag": "nav",
+      "id": "e1",
+      "text": "Home About Contact",
+      "interactive": true,
+      "children": [
+        {"tag": "a", "id": "e2", "text": "Home", "attrs": {"href": "/"}},
+        {"tag": "a", "id": "e3", "text": "About", "attrs": {"href": "/about"}},
+        {"tag": "a", "id": "e4", "text": "Contact", "attrs": {"href": "/contact"}}
+      ]
+    },
+    {
+      "tag": "main",
+      "id": "e5",
+      "text": "Welcome to Example Page. This is the main content area.",
+      "children": [
+        {"tag": "h1", "id": "e6", "text": "Welcome to Example Page"},
+        {"tag": "p", "id": "e7", "text": "This is the main content area."}
+      ]
+    }
+  ],
+  "meta": {
+    "parse_us": 1200,
+    "som_us": 450,
+    "total_us": 1650,
+    "som_bytes": 512,
+    "original_bytes": 5240,
+    "compression": "10.2x"
+  }
+}
+```
+
+## AWP Protocol (Native)
+
+AWP (Agent Wire Protocol) is Plasmate's native WebSocket protocol. 7 methods:
+
+1. `navigate(url)` - Load a page, returns SOM
+2. `content()` - Get current page SOM
+3. `evaluate(expression)` - Run JavaScript, return result
+4. `click(element_id)` - Click an interactive element
+5. `type(element_id, text)` - Type into an input
+6. `screenshot()` - Capture page as PNG
+7. `close()` - Close the page
+
+AWP is simpler and more token-efficient than CDP. Use it when you don't need Puppeteer compatibility.
+
+## JavaScript Support
+
+Plasmate includes a V8-based JavaScript runtime with:
+- Full DOM shim (80+ methods): createElement, querySelector, addEventListener, etc.
+- fetch() and XMLHttpRequest with real HTTP requests
+- setTimeout/setInterval with configurable drain
+- Event system (DOMContentLoaded, load, custom events)
+- CSS selector support (id, class, tag, attribute, combinators)
+- Form elements, dataset, classList, computed styles
+
+JavaScript is executed during page load, and the resulting DOM is serialized back to HTML before SOM compilation. This means JS-rendered content (React, Vue, dynamic loading) is captured in the SOM output.
+
+## Architecture
+
+```
+HTML Input → html5ever Parser → DOM Tree
+  → V8 JS Runtime (DOM shim, fetch, timers)
+    → DOM Serialization → SOM Compiler → JSON Output
+```
+
+- Parser: html5ever (same as Servo/Lightpanda)
+- JS: V8 via rusty_v8 with custom DOM shim
+- Network: reqwest with TLS, HTTP/2, cookies, compression
+- SOM: semantic region detection, interactive element preservation, smart truncation
+
+## Source Code
+
+GitHub: https://github.com/plasmate-labs/plasmate
+License: Apache-2.0
+Language: Rust
+
+## Links
+
+- Website: https://plasmate.app
+- Docs: https://docs.plasmate.app
+- Comparison: https://plasmate.app/compare
+- crates.io: https://crates.io/crates/plasmate
+- npm: https://www.npmjs.com/package/plasmate
+- PyPI: https://pypi.org/project/plasmate/
+- Docker: ghcr.io/plasmate-labs/plasmate
