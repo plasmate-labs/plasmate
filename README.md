@@ -242,12 +242,13 @@ See [plasmate.app/compare](https://plasmate.app/compare) for the full comparison
 
 ## Roadmap
 
+- [x] MCP server mode (`plasmate mcp` over stdio)
+- [x] Docker image (GHCR multi-arch)
+- [ ] MCP Phase 2: stateful tools (open_page, click, type, evaluate)
 - [ ] Full V8 DOM mutation bridge (re-snapshot SOM after JS changes)
-- [ ] MCP server mode (`plasmate mcp` over stdio)
 - [ ] Network interception (Fetch domain)
 - [ ] Cookie management via CDP
 - [ ] Proxy support
-- [ ] Docker image
 - [ ] Real-world top-100 site coverage testing
 - [ ] Web Platform Tests integration
 
