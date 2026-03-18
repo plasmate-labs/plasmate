@@ -715,11 +715,11 @@ pub async fn handle_click(
 
                 // For links, check if we need to navigate
                 if (el.tagName === 'A' && el.href) {{
-                    return {{ navigated: true, href: el.href }};
+                    return JSON.stringify({{ navigated: true, href: el.href }});
                 }}
-                return {{ clicked: true }};
+                return JSON.stringify({{ clicked: true }});
             }}
-            return {{ error: 'Element not found in DOM' }};
+            return JSON.stringify({{ error: 'Element not found in DOM' }});
         }})()
         "#,
         element_id,
