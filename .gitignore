@@ -6,3 +6,10 @@
 report.md
 .claude/settings.local.json
 smoke/node_modules/
+sdk/node/node_modules/
+sdk/node/dist/
+sdk/python/*.egg-info/
+sdk/python/dist/
+sdk/python/build/
+__pycache__/
+*.pyc

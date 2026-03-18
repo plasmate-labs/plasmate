@@ -1,0 +1,45 @@
+{
+  "name": "plasmate",
+  "version": "0.2.0",
+  "description": "Agent-native headless browser. HTML in, Semantic Object Model out.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && tsc -p tsconfig.esm.json",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "browser",
+    "headless",
+    "scraping",
+    "ai",
+    "llm",
+    "agent",
+    "mcp",
+    "semantic",
+    "dom",
+    "puppeteer"
+  ],
+  "author": "Plasmate Labs",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/plasmate-labs/plasmate"
+  },
+  "homepage": "https://plasmate.app",
+  "mcpName": "io.github.plasmate-labs/plasmate",
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.4.0"
+  }
+}

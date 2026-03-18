@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "plasmate"
+version = "0.2.0"
+description = "Agent-native headless browser. HTML in, Semantic Object Model out."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.9"
+authors = [
+    {name = "Plasmate Labs", email = "hello@plasmate.app"}
+]
+keywords = ["browser", "headless", "scraping", "ai", "llm", "agent", "mcp", "semantic"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Internet :: WWW/HTTP :: Browsers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Homepage = "https://plasmate.app"
+Repository = "https://github.com/plasmate-labs/plasmate"
+Documentation = "https://docs.plasmate.app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
