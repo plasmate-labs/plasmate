@@ -8,6 +8,7 @@ mod bench;
 mod cache;
 mod cdp;
 mod js;
+mod mcp;
 mod network;
 mod som;
 
@@ -73,6 +74,8 @@ enum Commands {
         #[arg(long, default_value = "50")]
         concurrency: usize,
     },
+    /// Start the MCP (Model Context Protocol) server over stdio
+    Mcp,
 }
 
 #[tokio::main]
@@ -152,6 +155,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             concurrency,
         } => {
             cmd_throughput_bench(&base_url, pages, concurrency).await?;
+        }
+        Commands::Mcp => {
+            mcp::run_server().await?;
         }
     }
 
