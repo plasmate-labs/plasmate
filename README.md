@@ -187,7 +187,7 @@ HTML → Network (reqwest) → HTML Parser (html5ever)
     → DOM Serialization → SOM Compiler → JSON output
 ```
 
-- **Network**: reqwest with TLS, HTTP/2, cookies, compression, redirects
+- **Network**: reqwest with TLS, HTTP/2, redirects, compression; cookie jar supported, cookie APIs and proxy configuration are still limited
 - **JS Runtime**: V8 with DOM shim (80+ methods), blocking fetch bridge
 - **SOM Compiler**: semantic region detection, element ID generation, interactive element preservation, smart truncation, deduplication
 - **Protocols**: AWP (native, 7 methods) and CDP (Puppeteer compatibility)
@@ -251,8 +251,8 @@ See [plasmate.app/compare](https://plasmate.app/compare) for the full comparison
 - [x] Docker image (GHCR multi-arch)
 - [ ] Full V8 DOM mutation bridge (re-snapshot SOM after JS changes)
 - [ ] Network interception (Fetch domain)
-- [ ] Cookie management via CDP
-- [ ] Proxy support
+- [ ] Expose cookie APIs (CDP Network.getCookies/setCookies, MCP cookie import/export)
+- [ ] Proxy support (per-session config, SOCKS)
 - [ ] Real-world top-100 site coverage testing
 - [ ] Web Platform Tests integration
 
