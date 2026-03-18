@@ -9,7 +9,7 @@ set -e
 
 REPO="plasmate-labs/plasmate"
 BINARY="plasmate"
-TAG="${PLASMATE_VERSION:-v0.1.0}"
+TAG="${PLASMATE_VERSION:-v0.1.1}"
 
 # Colors
 RED='\033[0;31m'

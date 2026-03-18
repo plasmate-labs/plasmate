@@ -60,3 +60,29 @@ jobs:
           sleep 1
           node smoke/puppeteer-smoke.mjs
           kill $PID
+
+      - name: MCP smoke test
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: python3 smoke/mcp-smoke.py
+
+      - name: Throughput benchmark
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: |
+          python3 bench/local_server.py 8765 &
+          sleep 1
+          ./target/release/plasmate throughput-bench 2>&1 | tee bench-results.txt
+          kill $(lsof -ti:8765) 2>/dev/null || true
+
+          # Extract sequential ms/page and fail if regression > 2x baseline
+          MS_PER_PAGE=$(grep "Sequential:" bench-results.txt | grep -oP '[\d.]+ms/page' | grep -oP '[\d.]+')
+          echo "Sequential throughput: ${MS_PER_PAGE}ms/page"
+          # Baseline: 0.5ms/page on cached local pages. Fail if > 5ms (10x margin for CI variability)
+          python3 -c "
+          ms = float('${MS_PER_PAGE}')
+          limit = 5.0
+          print(f'  Result: {ms}ms/page (limit: {limit}ms)')
+          if ms > limit:
+              print(f'  REGRESSION: {ms}ms exceeds {limit}ms limit')
+              exit(1)
+          print('  PASS')
+          "

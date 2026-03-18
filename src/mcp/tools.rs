@@ -783,7 +783,15 @@ pub async fn handle_click(
 
     // If we navigated, fetch the new page
     let (final_html, final_url) = if let Some(href) = new_url {
-        match fetch::fetch_url(client, &href, DEFAULT_TIMEOUT_MS).await {
+        // Resolve relative URLs against the current page URL
+        let resolved = if href.starts_with("http://") || href.starts_with("https://") {
+            href
+        } else if let Ok(base) = url::Url::parse(&url) {
+            base.join(&href).map(|u| u.to_string()).unwrap_or(href)
+        } else {
+            href
+        };
+        match fetch::fetch_url(client, &resolved, DEFAULT_TIMEOUT_MS).await {
             Ok(r) => (r.html, r.url),
             Err(e) => {
                 return error_response(&format!("Navigation failed: {}", e));
