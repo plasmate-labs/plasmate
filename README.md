@@ -94,6 +94,29 @@ plasmate serve --protocol awp --host 127.0.0.1 --port 9222
 
 AWP has 7 methods: `navigate`, `snapshot`, `click`, `type`, `scroll`, `select`, `extract`. That's the entire protocol.
 
+### Run as an MCP tool server (Model Context Protocol)
+
+```bash
+plasmate mcp
+```
+
+This exposes Plasmate over stdio as MCP tools:
+- `fetch_page` (SOM JSON)
+- `extract_text` (clean text)
+
+Example Claude Desktop config:
+
+```json
+{
+  "mcpServers": {
+    "plasmate": {
+      "command": "plasmate",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
 ## What is SOM?
 
 The DOM was built for rendering. SOM was built for reasoning.
