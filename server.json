@@ -67,6 +67,70 @@
         },
         "required": ["url"]
       }
+    },
+    {
+      "name": "open_page",
+      "description": "Open a web page in a persistent browser session for multi-step interaction. Returns session_id and initial SOM.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "URL to open"
+          }
+        },
+        "required": ["url"]
+      }
+    },
+    {
+      "name": "evaluate",
+      "description": "Execute JavaScript in the page context and return the result.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "description": "Session ID from open_page"
+          },
+          "expression": {
+            "type": "string",
+            "description": "JavaScript expression to evaluate"
+          }
+        },
+        "required": ["session_id", "expression"]
+      }
+    },
+    {
+      "name": "click",
+      "description": "Click an element on the page by its SOM element ID. Returns updated SOM.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "description": "Session ID from open_page"
+          },
+          "element_id": {
+            "type": "string",
+            "description": "Element ID from SOM (e.g. 'e5')"
+          }
+        },
+        "required": ["session_id", "element_id"]
+      }
+    },
+    {
+      "name": "close_page",
+      "description": "Close a browser session and free resources.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "description": "Session ID to close"
+          }
+        },
+        "required": ["session_id"]
+      }
     }
   ]
 }

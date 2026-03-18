@@ -101,8 +101,12 @@ plasmate mcp
 ```
 
 This exposes Plasmate over stdio as MCP tools:
-- `fetch_page` (SOM JSON)
-- `extract_text` (clean text)
+- `fetch_page` - get structured SOM from any URL
+- `extract_text` - get clean readable text
+- `open_page` - start an interactive session (returns session_id + SOM)
+- `evaluate` - run JavaScript in the page context
+- `click` - click elements by SOM element ID
+- `close_page` - end a session
 
 Example Claude Desktop config:
 
@@ -243,8 +247,8 @@ See [plasmate.app/compare](https://plasmate.app/compare) for the full comparison
 ## Roadmap
 
 - [x] MCP server mode (`plasmate mcp` over stdio)
+- [x] MCP Phase 2: stateful tools (open_page, click, evaluate, close_page)
 - [x] Docker image (GHCR multi-arch)
-- [ ] MCP Phase 2: stateful tools (open_page, click, type, evaluate)
 - [ ] Full V8 DOM mutation bridge (re-snapshot SOM after JS changes)
 - [ ] Network interception (Fetch domain)
 - [ ] Cookie management via CDP
