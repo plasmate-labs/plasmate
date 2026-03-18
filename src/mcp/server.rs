@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tracing::{debug, error, info};
 
+use super::sessions::SessionManager;
 use super::tools::{self, ToolDefinition};
 use crate::network::fetch;
 
@@ -70,6 +71,9 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
     let jar = Arc::new(reqwest::cookie::Jar::default());
     let client = fetch::build_client_h1_fallback(None, jar)?;
 
+    // Session manager for stateful browser tools
+    let sessions = Arc::new(SessionManager::new());
+
     let stdin = io::stdin();
     let mut stdout = io::stdout();
 
@@ -125,7 +129,7 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         // Handle the request
-        let response = handle_request(&request, &client).await;
+        let response = handle_request(&request, &client, &sessions).await;
 
         // MCP notifications (no id) must not receive a response.
         if request.id.is_none() && request.method.starts_with("notifications/") {
@@ -152,7 +156,11 @@ fn write_response(
 }
 
 /// Handle a JSON-RPC request and return a response.
-async fn handle_request(request: &JsonRpcRequest, client: &reqwest::Client) -> JsonRpcResponse {
+async fn handle_request(
+    request: &JsonRpcRequest,
+    client: &reqwest::Client,
+    sessions: &Arc<SessionManager>,
+) -> JsonRpcResponse {
     match request.method.as_str() {
         // MCP lifecycle methods
         "initialize" => handle_initialize(request),
@@ -160,7 +168,7 @@ async fn handle_request(request: &JsonRpcRequest, client: &reqwest::Client) -> J
 
         // MCP tool methods
         "tools/list" => handle_tools_list(request),
-        "tools/call" => handle_tools_call(request, client).await,
+        "tools/call" => handle_tools_call(request, client, sessions).await,
 
         // Unknown method
         _ => JsonRpcResponse {
@@ -237,8 +245,14 @@ fn handle_initialized_notification(request: &JsonRpcRequest) -> JsonRpcResponse 
 /// Handle the 'tools/list' method.
 fn handle_tools_list(request: &JsonRpcRequest) -> JsonRpcResponse {
     let tools: Vec<ToolDefinition> = vec![
+        // Phase 1: Stateless tools
         tools::fetch_page_definition(),
         tools::extract_text_definition(),
+        // Phase 2: Stateful tools
+        tools::open_page_definition(),
+        tools::evaluate_definition(),
+        tools::click_definition(),
+        tools::close_page_definition(),
     ];
 
     JsonRpcResponse {
@@ -252,7 +266,11 @@ fn handle_tools_list(request: &JsonRpcRequest) -> JsonRpcResponse {
 }
 
 /// Handle the 'tools/call' method.
-async fn handle_tools_call(request: &JsonRpcRequest, client: &reqwest::Client) -> JsonRpcResponse {
+async fn handle_tools_call(
+    request: &JsonRpcRequest,
+    client: &reqwest::Client,
+    sessions: &Arc<SessionManager>,
+) -> JsonRpcResponse {
     let params = match &request.params {
         Some(p) => p,
         None => {
@@ -288,8 +306,14 @@ async fn handle_tools_call(request: &JsonRpcRequest, client: &reqwest::Client) -
     let arguments = params.get("arguments").cloned().unwrap_or(json!({}));
 
     let result = match tool_name {
+        // Phase 1: Stateless tools
         "fetch_page" => tools::handle_fetch_page(&arguments, client).await,
         "extract_text" => tools::handle_extract_text(&arguments, client).await,
+        // Phase 2: Stateful tools
+        "open_page" => tools::handle_open_page(&arguments, client, sessions).await,
+        "evaluate" => tools::handle_evaluate(&arguments, sessions).await,
+        "click" => tools::handle_click(&arguments, client, sessions).await,
+        "close_page" => tools::handle_close_page(&arguments, sessions).await,
         _ => {
             return JsonRpcResponse {
                 jsonrpc: "2.0".to_string(),
