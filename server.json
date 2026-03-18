@@ -1,0 +1,72 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.plasmate-labs/plasmate",
+  "description": "Agent-native headless browser. HTML in, Semantic Object Model out. 10x token compression.",
+  "repository": {
+    "url": "https://github.com/plasmate-labs/plasmate",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "plasmate",
+      "transport": {
+        "type": "stdio",
+        "args": ["mcp"]
+      },
+      "environmentVariables": []
+    },
+    {
+      "registryType": "pypi",
+      "identifier": "plasmate",
+      "transport": {
+        "type": "stdio",
+        "args": ["mcp"]
+      },
+      "environmentVariables": []
+    }
+  ],
+  "tools": [
+    {
+      "name": "fetch_page",
+      "description": "Fetch a web page and return its Semantic Object Model (SOM) - a structured, token-efficient representation of the page content. Use this instead of raw HTML fetching for 10x token savings.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "URL to fetch"
+          },
+          "budget": {
+            "type": "integer",
+            "description": "Maximum output tokens. SOM will be truncated to fit."
+          },
+          "javascript": {
+            "type": "boolean",
+            "description": "Enable JavaScript execution for dynamic/SPA pages. Default: true."
+          }
+        },
+        "required": ["url"]
+      }
+    },
+    {
+      "name": "extract_text",
+      "description": "Fetch a web page and return only the clean, readable text content. No HTML, no structure - just the text a human would read.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "URL to fetch"
+          },
+          "max_chars": {
+            "type": "integer",
+            "description": "Maximum characters to return."
+          }
+        },
+        "required": ["url"]
+      }
+    }
+  ]
+}
