@@ -403,6 +403,23 @@ pub fn runtime_evaluate(id: u64, params: &serde_json::Value, target: &CdpTarget)
                     }),
                 )
             }
+            e if e.contains("outerHTML") || e.contains("innerHTML") => {
+                // Puppeteer calls document.documentElement.outerHTML for page.content()
+                let html = target
+                    .effective_html
+                    .as_deref()
+                    .or(target.current_html.as_deref())
+                    .unwrap_or("<html></html>");
+                CdpResponse::success(
+                    id,
+                    json!({
+                        "result": {
+                            "type": "string",
+                            "value": html,
+                        }
+                    }),
+                )
+            }
             _ => CdpResponse::success(
                 id,
                 json!({

@@ -76,6 +76,14 @@ var __plasmate_console = [];
 var __plasmate_fetch_queue = [];
 
 var window = globalThis;
+
+// XMLSerializer stub for Puppeteer's page.content()
+function XMLSerializer() {}
+XMLSerializer.prototype.serializeToString = function(node) {
+    if (node && node.outerHTML) return node.outerHTML;
+    if (node && node.textContent != null) return node.textContent;
+    return '';
+};
 window.location = { href: '', protocol: 'https:', host: '', hostname: '', pathname: '/', search: '', hash: '', origin: '' };
 window.navigator = { userAgent: 'Plasmate/0.1', language: 'en-US', languages: ['en-US', 'en'], platform: 'Plasmate', cookieEnabled: true };
 window.innerWidth = 1920;
@@ -1397,6 +1405,7 @@ var document = {
     documentElement: _docEl,
     head: _docHead,
     body: _docBody,
+    childNodes: _docType ? [_docType, _docEl] : [_docEl],
     title: '',
     readyState: 'loading',
     cookie: '',
