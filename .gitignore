@@ -13,3 +13,6 @@ sdk/python/dist/
 sdk/python/build/
 __pycache__/
 *.pyc
+
+# MCP registry publisher tokens
+.mcpregistry_*

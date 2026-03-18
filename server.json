@@ -11,15 +11,7 @@
     {
       "registryType": "npm",
       "identifier": "plasmate",
-      "transport": {
-        "type": "stdio",
-        "args": ["mcp"]
-      },
-      "environmentVariables": []
-    },
-    {
-      "registryType": "pypi",
-      "identifier": "plasmate",
+      "version": "0.2.0",
       "transport": {
         "type": "stdio",
         "args": ["mcp"]
