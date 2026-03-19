@@ -51,7 +51,13 @@ impl Session {
         locale: Option<String>,
         timeout_ms: Option<u64>,
     ) -> Result<Self, String> {
-        Self::new_with_profiles(id, user_agent, locale, timeout_ms, crate::auth::config::profiles())
+        Self::new_with_profiles(
+            id,
+            user_agent,
+            locale,
+            timeout_ms,
+            crate::auth::config::profiles(),
+        )
     }
 
     pub fn new_with_profiles(

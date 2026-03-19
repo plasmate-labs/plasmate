@@ -141,7 +141,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             no_js,
             profile,
         } => {
-            cmd_fetch(&url, output.as_deref(), !no_external, no_js, profile.as_deref()).await?;
+            cmd_fetch(
+                &url,
+                output.as_deref(),
+                !no_external,
+                no_js,
+                profile.as_deref(),
+            )
+            .await?;
         }
         Commands::Serve {
             host,
@@ -151,7 +158,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         } => {
             // Set global auth profiles for all sessions
             if let Some(ref profile_str) = profile {
-                let domains: Vec<String> = profile_str.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect();
+                let domains: Vec<String> = profile_str
+                    .split(',')
+                    .map(|s| s.trim().to_string())
+                    .filter(|s| !s.is_empty())
+                    .collect();
                 if !domains.is_empty() {
                     info!(profiles = ?domains, "Loading auth profiles for server sessions");
                     auth::config::set_profiles(domains);
@@ -293,31 +304,29 @@ fn cmd_auth(action: AuthAction) -> Result<(), Box<dyn std::error::Error>> {
                 eprintln!("No profile found for {}", domain);
             }
         }
-        AuthAction::Info { domain } => {
-            match auth::store::load_profile(&domain)? {
-                Some(profile) => {
-                    let fp = auth::store::profile_fingerprint(&profile);
-                    eprintln!("Domain:      {}", profile.domain);
-                    eprintln!("Cookies:     {}", profile.cookies.len());
-                    eprintln!(
-                        "Cookie keys: {}",
-                        profile
-                            .cookies
-                            .keys()
-                            .cloned()
-                            .collect::<Vec<_>>()
-                            .join(", ")
-                    );
-                    eprintln!("Fingerprint: {}", fp);
-                    if let Some(ts) = &profile.created_at {
-                        eprintln!("Created:     {}", ts);
-                    }
-                }
-                None => {
-                    eprintln!("No profile found for {}", domain);
+        AuthAction::Info { domain } => match auth::store::load_profile(&domain)? {
+            Some(profile) => {
+                let fp = auth::store::profile_fingerprint(&profile);
+                eprintln!("Domain:      {}", profile.domain);
+                eprintln!("Cookies:     {}", profile.cookies.len());
+                eprintln!(
+                    "Cookie keys: {}",
+                    profile
+                        .cookies
+                        .keys()
+                        .cloned()
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                );
+                eprintln!("Fingerprint: {}", fp);
+                if let Some(ts) = &profile.created_at {
+                    eprintln!("Created:     {}", ts);
                 }
             }
-        }
+            None => {
+                eprintln!("No profile found for {}", domain);
+            }
+        },
     }
     Ok(())
 }
@@ -334,7 +343,10 @@ async fn cmd_fetch(
     // Load auth cookies if a profile is specified
     if let Some(domain) = profile {
         if !auth::store::load_into_jar(domain, &jar)? {
-            eprintln!("Warning: no auth profile found for '{}', continuing without cookies", domain);
+            eprintln!(
+                "Warning: no auth profile found for '{}', continuing without cookies",
+                domain
+            );
         }
     }
 

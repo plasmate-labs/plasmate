@@ -156,6 +156,7 @@ pub fn profile_fingerprint(profile: &CookieProfile) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
 
     #[test]
     fn test_parse_cookie_string() {
@@ -174,6 +175,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_store_and_load_profile() {
         let dir = tempfile::tempdir().unwrap();
         std::env::set_var("HOME", dir.path());
@@ -201,6 +203,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_list_and_revoke() {
         let dir = tempfile::tempdir().unwrap();
         std::env::set_var("HOME", dir.path());

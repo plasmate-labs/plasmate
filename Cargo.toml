@@ -35,4 +35,5 @@ regex = "1"
 thiserror = "2"
 
 [dev-dependencies]
+serial_test = "3.4.0"
 tempfile = "3"
