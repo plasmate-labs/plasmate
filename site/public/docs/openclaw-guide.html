@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Plasmate - Authenticated Browsing for Your AI Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+@page { size: letter; margin: 0; }
+:root {
+  --void: #111110;
+  --deep: #1A1918;
+  --smoke: #2A2825;
+  --ash: #6B6560;
+  --dim: #8A8480;
+  --ion: #D4C5A0;
+  --ember: #E8853A;
+  --arc: #3D8FD4;
+  --white: #F0EDE8;
+  --display: 'Space Grotesk', sans-serif;
+  --body: 'IBM Plex Sans', -apple-system, sans-serif;
+  --mono: 'IBM Plex Mono', monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--void); color: var(--white); font-family: var(--body); line-height: 1.65; -webkit-font-smoothing: antialiased; }
+
+/* Cover */
+.cover { height: 100vh; display: flex; flex-direction: column; justify-content: flex-end; padding: 80px; position: relative; }
+.cover::before { content: ''; position: absolute; top: 80px; left: 80px; right: 80px; height: 1px; background: linear-gradient(90deg, var(--ember) 120px, transparent 120px); }
+.cover .mark { font-family: var(--display); font-size: 5.5rem; font-weight: 700; letter-spacing: -0.04em; line-height: 0.9; }
+.cover .mark span { color: var(--ember); }
+.cover .subtitle { font-family: var(--display); font-size: 1.6rem; font-weight: 400; color: var(--dim); margin-top: 20px; max-width: 500px; letter-spacing: -0.01em; line-height: 1.3; }
+.cover .meta { font-family: var(--mono); font-size: 0.7rem; color: var(--ash); margin-top: 48px; text-transform: uppercase; letter-spacing: 0.15em; }
+
+/* Pages */
+.page { padding: 80px; min-height: 100vh; page-break-before: always; position: relative; }
+.page::after { content: 'plasmate.app'; position: absolute; bottom: 40px; right: 80px; font-family: var(--mono); font-size: 0.6rem; color: var(--smoke); letter-spacing: 0.1em; }
+
+.section-label { font-family: var(--mono); font-size: 0.65rem; color: var(--ember); text-transform: uppercase; letter-spacing: 0.18em; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+.section-label::before { content: ''; width: 24px; height: 1px; background: var(--ember); }
+h1 { font-family: var(--display); font-size: 2.6rem; font-weight: 700; letter-spacing: -0.04em; line-height: 1; margin-bottom: 20px; }
+h2 { font-family: var(--display); font-size: 1.4rem; font-weight: 600; letter-spacing: -0.02em; margin: 36px 0 12px; color: var(--white); }
+h3 { font-family: var(--display); font-size: 1rem; font-weight: 600; margin: 24px 0 8px; color: var(--ion); }
+p { color: rgba(240,237,232,0.78); font-size: 0.92rem; line-height: 1.7; margin-bottom: 12px; max-width: 620px; }
+strong { color: var(--white); font-weight: 600; }
+
+.highlight { color: var(--ember); font-weight: 600; }
+
+/* Cards */
+.card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+.card { background: var(--deep); border: 1px solid var(--smoke); border-radius: 14px; padding: 24px; }
+.card-icon { font-size: 1.6rem; margin-bottom: 10px; }
+.card h4 { font-family: var(--display); font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; }
+.card p { font-size: 0.85rem; margin-bottom: 0; }
+
+/* Steps */
+.step { display: flex; gap: 20px; margin: 20px 0; padding: 20px; background: var(--deep); border: 1px solid var(--smoke); border-radius: 14px; }
+.step-num { font-family: var(--display); font-size: 2rem; font-weight: 700; color: var(--ember); line-height: 1; min-width: 36px; }
+.step-body h4 { font-family: var(--display); font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+.step-body p { font-size: 0.88rem; margin-bottom: 0; }
+
+/* Code blocks */
+.code { margin: 14px 0; padding: 14px 18px; background: var(--deep); border: 1px solid var(--smoke); border-radius: 10px; font-family: var(--mono); font-size: 0.8rem; color: var(--ion); line-height: 1.6; overflow-x: auto; }
+.code .comment { color: var(--ash); }
+.code .cmd { color: var(--ember); }
+
+/* Callout */
+.callout { border-left: 3px solid var(--ember); padding: 16px 20px; margin: 20px 0; background: rgba(232,133,58,0.04); border-radius: 0 10px 10px 0; }
+.callout p { margin-bottom: 0; }
+
+/* List */
+.list { list-style: none; padding: 0; margin: 10px 0; }
+.list li { padding: 6px 0; color: rgba(240,237,232,0.78); font-size: 0.9rem; display: flex; align-items: flex-start; gap: 8px; }
+.list li::before { content: '›'; color: var(--ember); font-weight: 700; flex-shrink: 0; }
+
+.divider { height: 1px; background: var(--smoke); margin: 36px 0; }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="mark">Faster browsing.<br>Real logins.<br><span>Zero hassle.</span></div>
+  <div class="subtitle">How to give your OpenClaw agent a real browser with authenticated access to X, GitHub, LinkedIn, and more.</div>
+  <div class="meta">Guide for OpenClaw Users - March 2026</div>
+</div>
+
+<!-- WHY -->
+<div class="page">
+  <div class="section-label">The Problem</div>
+  <h1>Your agent browses the web like it's 2004</h1>
+  <p>Right now, when your OpenClaw agent visits a website, it's using a full Chrome browser under the hood. That works, but it's <strong>slow</strong>, uses a ton of memory, and can't log into anything without you manually setting up sessions.</p>
+  <p>Want your agent to check your X mentions? Read your GitHub notifications? Monitor a LinkedIn thread? It can't, because it's not logged in, and logging in with a headless browser triggers bot detection on every major platform.</p>
+
+  <h2>What if your agent had its own fast browser that could log in as itself?</h2>
+  <p>That's Plasmate.</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon">⚡</div>
+      <h4>10x faster page loads</h4>
+      <p>Plasmate compiles HTML into structured data without rendering pixels. No GPU, no layout engine, no wasted work.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🔐</div>
+      <h4>Real authenticated sessions</h4>
+      <p>Log into X, GitHub, or any site yourself. Hand the cookies to your agent. It browses as that account.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🧠</div>
+      <h4>Agent-native output</h4>
+      <p>Pages become structured "Semantic Object Models" instead of raw HTML. Your agent understands pages, not pixels.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">💾</div>
+      <h4>Tiny footprint</h4>
+      <p>~15MB binary. No Chrome download. Runs on a Raspberry Pi. Uses a fraction of the memory.</p>
+    </div>
+  </div>
+</div>
+
+<!-- WHAT YOU NEED -->
+<div class="page">
+  <div class="section-label">Setup</div>
+  <h1>What you need</h1>
+  <p>Three pieces, all free and open source. Setup takes about five minutes.</p>
+
+  <h2>1. Plasmate (the browser engine)</h2>
+  <p>Install with one command:</p>
+  <div class="code">
+    <span class="cmd">curl</span> -sSf https://plasmate.app/install.sh | sh
+  </div>
+  <p>This puts the <code>plasmate</code> binary on your machine. It's a single file, no dependencies.</p>
+
+  <h2>2. The OpenClaw Skill</h2>
+  <p>Install the Plasmate skill so your agent knows how to use it:</p>
+  <div class="code">
+    <span class="cmd">clawhub</span> install plasmate
+  </div>
+  <p>Once installed, your agent automatically uses Plasmate for web browsing when it makes sense. No configuration needed.</p>
+
+  <h2>3. The Chrome Extension (for authentication)</h2>
+  <p>This is what lets you hand login cookies to your agent. Install it once:</p>
+  <ul class="list">
+    <li>Go to <strong>github.com/plasmate-labs/plasmate-extension</strong></li>
+    <li>Download or clone the repo</li>
+    <li>Open <strong>chrome://extensions</strong> in Chrome</li>
+    <li>Turn on <strong>Developer mode</strong> (toggle in the top right)</li>
+    <li>Click <strong>Load unpacked</strong> and select the folder you downloaded</li>
+  </ul>
+  <p>You'll see a small Plasmate icon appear in your Chrome toolbar.</p>
+
+  <div class="callout">
+    <p><strong>Chrome Web Store listing is coming soon.</strong> For now, the manual install takes about 30 seconds.</p>
+  </div>
+</div>
+
+<!-- AUTHENTICATING -->
+<div class="page">
+  <div class="section-label">Authentication</div>
+  <h1>Giving your agent access to X</h1>
+  <p>Let's walk through the most common use case: letting your OpenClaw agent browse X/Twitter as a logged-in account.</p>
+
+  <h3>The idea</h3>
+  <p>You log into X in Chrome like normal. The extension grabs the auth cookies. Plasmate stores them encrypted on your machine. Now your agent can browse X as that account.</p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4>Start the bridge server</h4>
+      <p>Open a terminal and run: <code>plasmate auth serve</code><br>This starts a local server that the extension talks to. Leave it running.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4>Log into X in Chrome</h4>
+      <p>Go to x.com and log into the account you want your agent to use. This could be your personal account, a brand account, or an account you created specifically for your agent.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h4>Click the Plasmate extension icon</h4>
+      <p>A popup shows all cookies for x.com. The important ones (<code>ct0</code> and <code>auth_token</code>) are already highlighted and selected.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h4>Click "Push to Plasmate"</h4>
+      <p>One click. The cookies are encrypted and stored locally. The extension confirms with a green message. You're done.</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <p>That's it. Your agent can now browse X as that account. It can read timelines, check mentions, view DMs (if the cookies include that access), and interact with posts.</p>
+
+  <div class="callout">
+    <p><strong>Cookies expire eventually.</strong> Plasmate tracks expiry dates and warns you when cookies are getting stale. When that happens, just repeat steps 2-4. Takes about 10 seconds.</p>
+  </div>
+</div>
+
+<!-- OTHER SITES -->
+<div class="page">
+  <div class="section-label">Beyond X</div>
+  <h1>Works with everything</h1>
+  <p>The same process works for any website. The extension auto-selects the right cookies for popular platforms:</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon">𝕏</div>
+      <h4>X / Twitter</h4>
+      <p>Read timelines, check mentions, monitor keywords, view analytics.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🐙</div>
+      <h4>GitHub</h4>
+      <p>Review PRs, read private repos, check notifications, browse issues.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">💼</div>
+      <h4>LinkedIn</h4>
+      <p>Read messages, check connection requests, monitor company pages.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">📸</div>
+      <h4>Instagram</h4>
+      <p>View feeds, check DMs, monitor engagement on posts.</p>
+    </div>
+  </div>
+
+  <p>For any other site, just navigate there in Chrome, click the extension, select the cookies that look like session or auth tokens, and push. If you're not sure which cookies matter, select all of them.</p>
+
+  <h2>Managing your profiles</h2>
+  <p>Check which sites your agent can access:</p>
+  <div class="code">
+    <span class="cmd">plasmate</span> auth list<br>
+    <span class="comment"># ✓ x.com (2 cookies) - valid</span><br>
+    <span class="comment"># ✓ github.com (2 cookies) - valid</span><br>
+    <span class="comment"># ⚠ linkedin.com (2 cookies) - expires soon</span>
+  </div>
+
+  <p>Remove access for a site:</p>
+  <div class="code">
+    <span class="cmd">plasmate</span> auth revoke linkedin.com
+  </div>
+
+  <h2>Security</h2>
+  <ul class="list">
+    <li>All cookies are encrypted with AES-256-GCM on disk</li>
+    <li>The encryption key is auto-generated and stored with strict file permissions</li>
+    <li>The bridge server only listens on localhost (127.0.0.1), never the network</li>
+    <li>Expired cookies are automatically skipped</li>
+    <li>You can revoke any profile instantly</li>
+  </ul>
+</div>
+
+<!-- HOW YOUR AGENT USES IT -->
+<div class="page">
+  <div class="section-label">In Practice</div>
+  <h1>What your agent can do now</h1>
+  <p>Once Plasmate is installed and you've pushed cookies for the sites you care about, your OpenClaw agent can do things like:</p>
+
+  <ul class="list">
+    <li>"Check my X mentions from the last 24 hours"</li>
+    <li>"Read this GitHub PR and summarize the review comments"</li>
+    <li>"Go to this LinkedIn post and tell me what people are saying"</li>
+    <li>"Check if anyone replied to my tweet about the product launch"</li>
+    <li>"Browse this private repo and find the config file"</li>
+    <li>"Scrape this page that requires a login"</li>
+  </ul>
+
+  <p>The agent uses Plasmate automatically through the skill. You don't need to tell it "use Plasmate" or configure anything per-request. It just works.</p>
+
+  <h2>What makes this different from regular browsing?</h2>
+
+  <div class="card-grid">
+    <div class="card">
+      <h4>Regular browser tool</h4>
+      <p>Launches Chrome, renders pixels, takes screenshots, uses OCR to read them. Slow, heavy, can't log in.</p>
+    </div>
+    <div class="card">
+      <h4>Plasmate</h4>
+      <p>Compiles HTML directly into structured data. Understands forms, buttons, links, and content natively. Fast, light, authenticated.</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <h2>Quick reference</h2>
+  <div class="code">
+    <span class="comment"># Install</span><br>
+    curl -sSf https://plasmate.app/install.sh | sh<br>
+    clawhub install plasmate<br><br>
+    <span class="comment"># Start the bridge (leave running)</span><br>
+    plasmate auth serve<br><br>
+    <span class="comment"># Push cookies (from Chrome extension)</span><br>
+    <span class="comment"># Navigate to site > Click extension > Push to Plasmate</span><br><br>
+    <span class="comment"># Check status</span><br>
+    plasmate auth list<br><br>
+    <span class="comment"># Your agent now browses authenticated</span>
+  </div>
+
+  <div class="callout">
+    <p><strong>Questions?</strong> Check <strong>docs.plasmate.app</strong> for the full documentation, or ask in the <strong>OpenClaw Discord</strong> community.</p>
+  </div>
+</div>
+
+</body>
+</html>
