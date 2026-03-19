@@ -3,15 +3,16 @@ use std::sync::Arc;
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
-mod auth;
-mod awp;
-mod bench;
-mod cache;
-mod cdp;
-mod js;
 mod mcp;
-mod network;
-mod som;
+
+use plasmate::auth;
+use plasmate::awp;
+use plasmate::bench;
+use plasmate::cache;
+use plasmate::cdp;
+use plasmate::js;
+use plasmate::network;
+use plasmate::som;
 
 #[derive(Parser)]
 #[command(name = "plasmate")]
@@ -52,6 +53,9 @@ enum Commands {
         /// Protocol: awp (default), cdp (Puppeteer/Playwright compatible), or both
         #[arg(long, default_value = "cdp")]
         protocol: String,
+        /// Load cookies from stored auth profile(s) (comma-separated domain names)
+        #[arg(long)]
+        profile: Option<String>,
     },
     /// Run SOM benchmarks against a list of URLs
     Bench {
@@ -143,7 +147,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             host,
             port,
             protocol,
+            profile,
         } => {
+            // Set global auth profiles for all sessions
+            if let Some(ref profile_str) = profile {
+                let domains: Vec<String> = profile_str.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect();
+                if !domains.is_empty() {
+                    info!(profiles = ?domains, "Loading auth profiles for server sessions");
+                    auth::config::set_profiles(domains);
+                }
+            }
+
             match protocol.as_str() {
                 "awp" => {
                     info!("Starting AWP protocol server");
