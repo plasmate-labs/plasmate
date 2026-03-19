@@ -40,11 +40,11 @@ jobs:
             --output website/docs/coverage-js.json \
             --timeout 20000 \
             --concurrency 1 \
-            --js-heap-mb 256 \
-            --max-external-scripts 20 \
-            --max-external-script-kb 512 \
-            --max-external-total-kb 4096 \
-            --external-script-timeout-ms 5000 \
+            --js-heap-mb 1024 \
+            --max-external-scripts 12 \
+            --max-external-script-kb 256 \
+            --max-external-total-kb 2048 \
+            --external-script-timeout-ms 4000 \
             --max 100
 
       - name: Commit and push scorecard (if changed)
