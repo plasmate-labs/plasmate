@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Privacy Policy - Plasmate</title>
+  <meta name="description" content="Privacy policy for Plasmate and the Plasmate Cookie Export Chrome extension." />
+
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --plasma-white: #F0EDE8;
+      --void: #111110;
+      --deep: #1A1918;
+      --smoke: #2A2825;
+      --ash: #6B6560;
+      --dim: #8A8480;
+      --ion: #D4C5A0;
+      --ember: #E8853A;
+      --arc: #3D8FD4;
+      --font-display: "Space Grotesk", system-ui, sans-serif;
+      --font-body: "IBM Plex Sans", system-ui, sans-serif;
+      --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+      --max: 760px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--void); color: var(--plasma-white); font-family: var(--font-body); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+
+    .topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 16px 32px; display: flex; align-items: center; gap: 12px; background: rgba(17,17,16,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--smoke); }
+    .topbar a { text-decoration: none; color: var(--plasma-white); font-family: var(--font-display); font-weight: 600; font-size: 1.1rem; letter-spacing: -0.02em; }
+    .topbar a:hover { color: var(--ember); }
+    .topbar span { color: var(--ash); font-size: 0.85rem; }
+
+    .content { max-width: var(--max); margin: 0 auto; padding: 120px 32px 80px; }
+
+    h1 { font-family: var(--font-display); font-size: 2.4rem; font-weight: 700; letter-spacing: -0.04em; margin-bottom: 8px; }
+    .updated { font-size: 0.8rem; color: var(--ash); margin-bottom: 48px; font-family: var(--font-mono); }
+
+    h2 { font-family: var(--font-display); font-size: 1.3rem; font-weight: 600; letter-spacing: -0.02em; margin: 40px 0 12px; color: var(--ion); }
+
+    p { color: rgba(240,237,232,0.78); font-size: 0.95rem; margin-bottom: 16px; }
+    strong { color: var(--plasma-white); font-weight: 600; }
+
+    ul { list-style: none; padding: 0; margin: 12px 0 20px; }
+    ul li { padding: 4px 0; color: rgba(240,237,232,0.78); font-size: 0.95rem; }
+    ul li::before { content: '›'; color: var(--ember); margin-right: 8px; font-weight: 700; }
+
+    code { font-family: var(--font-mono); font-size: 0.88em; background: var(--deep); padding: 2px 6px; border-radius: 4px; color: var(--ion); }
+
+    .divider { height: 1px; background: var(--smoke); margin: 40px 0; }
+
+    a { color: var(--arc); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .footer { max-width: var(--max); margin: 0 auto; padding: 0 32px 48px; font-size: 0.8rem; color: var(--ash); }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="/">Plasmate</a>
+  <span>Privacy Policy</span>
+</div>
+
+<div class="content">
+  <h1>Privacy Policy</h1>
+  <div class="updated">Last updated: March 19, 2026</div>
+
+  <p>This policy covers <strong>Plasmate</strong> (the browser engine) and the <strong>Plasmate Cookie Export</strong> Chrome extension. We take privacy seriously because our software handles authentication credentials.</p>
+
+  <h2>The short version</h2>
+  <p>We collect nothing. We send nothing. Everything stays on your machine.</p>
+
+  <div class="divider"></div>
+
+  <h2>Plasmate (browser engine)</h2>
+  <p>Plasmate is a local binary that runs entirely on your computer. It does not phone home, check for updates, send telemetry, or transmit any data to Plasmate Labs or any third party.</p>
+  <ul>
+    <li>No analytics or tracking of any kind</li>
+    <li>No crash reports sent externally</li>
+    <li>No usage data collected</li>
+    <li>Cookie profiles are stored locally and encrypted with AES-256-GCM</li>
+    <li>The master encryption key never leaves your machine</li>
+  </ul>
+
+  <h2>Plasmate Cookie Export (Chrome extension)</h2>
+  <p>The Chrome extension reads cookies from the active tab and either pushes them to the local Plasmate bridge server or copies them to your clipboard. It communicates exclusively with <code>127.0.0.1:9271</code> (your own machine).</p>
+  <ul>
+    <li><strong>No external network requests.</strong> The extension never contacts any server other than localhost.</li>
+    <li><strong>No data collection.</strong> We do not collect, store, or transmit any data about you, your browsing, or your cookies.</li>
+    <li><strong>No analytics.</strong> No Google Analytics, no Mixpanel, no tracking pixels, nothing.</li>
+    <li><strong>No persistent storage.</strong> The extension stores nothing in Chrome's storage APIs. Cookies are only held in memory while the popup is open.</li>
+    <li><strong>No remote code.</strong> The extension is fully self-contained. No CDN scripts, no remote fetches.</li>
+  </ul>
+
+  <h2>Permissions explained</h2>
+  <ul>
+    <li><strong>cookies</strong> - required to read authentication cookies from sites you want to give your agent access to</li>
+    <li><strong>activeTab</strong> - required to detect the current tab's domain so we know which cookies to show</li>
+    <li><strong>host_permissions (&lt;all_urls&gt;)</strong> - Chrome Manifest V3 requires this for <code>chrome.cookies.getAll()</code> to return cookies from any domain. Without it, the extension can only see cookies for the extension's own origin, which is useless.</li>
+  </ul>
+
+  <h2>Bridge server</h2>
+  <p>The <code>plasmate auth serve</code> bridge listens on <code>127.0.0.1:9271</code> only. It is not accessible from the network, other machines, or the internet. It accepts cookie data from the Chrome extension and writes it to encrypted local storage.</p>
+
+  <h2>Data storage</h2>
+  <p>Cookie profiles are stored at <code>~/.plasmate/profiles/</code>, encrypted with AES-256-GCM. The encryption key is at <code>~/.plasmate/master.key</code> with file permissions restricted to the owner (chmod 0600). You can delete any profile at any time with <code>plasmate auth revoke &lt;domain&gt;</code>.</p>
+
+  <h2>Third-party services</h2>
+  <p>Plasmate and the extension use zero third-party services. No cloud, no SaaS, no APIs. Everything runs locally.</p>
+
+  <h2>Open source</h2>
+  <p>Both Plasmate and the extension are open source. You can verify every claim in this policy by reading the code:</p>
+  <ul>
+    <li>Engine: <a href="https://github.com/plasmate-labs/plasmate">github.com/plasmate-labs/plasmate</a> (Apache 2.0)</li>
+    <li>Extension: <a href="https://github.com/plasmate-labs/plasmate-extension">github.com/plasmate-labs/plasmate-extension</a> (MPL-2.0)</li>
+  </ul>
+
+  <h2>Changes</h2>
+  <p>If we ever change this policy, we will update this page and the "last updated" date above. Given that our software collects nothing, changes are unlikely.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy? Open an issue on <a href="https://github.com/plasmate-labs/plasmate/issues">GitHub</a>.</p>
+</div>
+
+<div class="footer">
+  Plasmate Labs - Apache 2.0 (engine) / MPL-2.0 (extension)
+</div>
+
+</body>
+</html>
