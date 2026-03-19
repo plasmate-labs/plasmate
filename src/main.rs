@@ -422,6 +422,7 @@ async fn cmd_auth(action: AuthAction) -> Result<(), Box<dyn std::error::Error>> 
             eprintln!("Endpoints:");
             eprintln!("  GET  /api/status  - Server status and stored profiles");
             eprintln!("  POST /api/cookies - Store cookies from extension");
+            eprintln!("  GET  /api/wait    - Long-poll until domain cookies arrive");
             eprintln!();
             auth::bridge::start(port).await?;
         }

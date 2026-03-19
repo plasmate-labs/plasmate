@@ -5,7 +5,7 @@
 
 use crate::auth::store::{self, CookieEntry, CookieProfile};
 use axum::{
-    extract::Json,
+    extract::{Json, Query},
     http::{Method, StatusCode},
     response::IntoResponse,
     routing::{get, post},
@@ -66,6 +66,31 @@ pub struct StatusResponse {
     pub profiles: Vec<String>,
 }
 
+/// Query params for GET /api/wait
+#[derive(Debug, Deserialize)]
+pub struct WaitQuery {
+    /// Domain to wait for (e.g., "x.com")
+    pub domain: String,
+    /// Timeout in seconds (default: 120, max: 300)
+    #[serde(default = "default_wait_timeout")]
+    pub timeout: u64,
+}
+
+fn default_wait_timeout() -> u64 {
+    120
+}
+
+/// Response body for GET /api/wait
+#[derive(Debug, Serialize)]
+pub struct WaitResponse {
+    pub ok: bool,
+    pub domain: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cookies: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
 /// Response body for POST /api/cookies
 #[derive(Debug, Serialize)]
 pub struct CookiesResponse {
@@ -90,6 +115,7 @@ pub async fn start(port: u16) -> Result<(), Box<dyn std::error::Error>> {
     let app = Router::new()
         .route("/api/status", get(handle_status))
         .route("/api/cookies", post(handle_cookies))
+        .route("/api/wait", get(handle_wait))
         .layer(cors);
 
     let listener = TcpListener::bind(addr).await?;
@@ -169,5 +195,58 @@ async fn handle_cookies(Json(request): Json<CookiesRequest>) -> impl IntoRespons
                 }),
             )
         }
+    }
+}
+
+/// Handle GET /api/wait?domain=x.com&timeout=120
+///
+/// Long-polls until a cookie profile exists for the given domain.
+/// Returns immediately if the profile already exists.
+/// Polls every 2 seconds up to the timeout (max 300s).
+async fn handle_wait(Query(params): Query<WaitQuery>) -> impl IntoResponse {
+    let timeout = params.timeout.min(300);
+    let domain = params.domain;
+    let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(timeout);
+
+    info!(domain = %domain, timeout = timeout, "Waiting for cookie profile");
+
+    loop {
+        // Check if profile exists
+        match store::load_profile(&domain) {
+            Ok(Some(profile)) => {
+                let count = profile.cookies.len();
+                info!(domain = %domain, cookies = count, "Profile arrived");
+                return (
+                    StatusCode::OK,
+                    Json(WaitResponse {
+                        ok: true,
+                        domain,
+                        cookies: Some(count),
+                        error: None,
+                    }),
+                );
+            }
+            Ok(None) => {}
+            Err(e) => {
+                error!(domain = %domain, error = %e, "Error checking profile");
+            }
+        }
+
+        // Check timeout
+        if tokio::time::Instant::now() >= deadline {
+            info!(domain = %domain, "Wait timed out");
+            return (
+                StatusCode::REQUEST_TIMEOUT,
+                Json(WaitResponse {
+                    ok: false,
+                    domain,
+                    cookies: None,
+                    error: Some("Timed out waiting for cookies".to_string()),
+                }),
+            );
+        }
+
+        // Poll interval
+        tokio::time::sleep(std::time::Duration::from_secs(2)).await;
     }
 }
