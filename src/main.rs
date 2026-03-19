@@ -106,6 +106,9 @@ enum AuthAction {
         /// X/Twitter auth_token (shorthand for --cookies)
         #[arg(long)]
         auth_token: Option<String>,
+        /// Cookie expiry TTL in seconds from now
+        #[arg(long)]
+        expires: Option<i64>,
     },
     /// List stored profiles (domains only, never cookie values)
     List,
@@ -118,6 +121,18 @@ enum AuthAction {
     Info {
         /// Domain to inspect
         domain: String,
+        /// Show encryption status only
+        #[arg(long)]
+        encrypt: bool,
+        /// Verify profile can be decrypted
+        #[arg(long)]
+        decrypt: bool,
+    },
+    /// Start local HTTP bridge server for extension push
+    Serve {
+        /// Port to listen on
+        #[arg(long, default_value = "9271")]
+        port: u16,
     },
 }
 
@@ -225,34 +240,56 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             mcp::run_server().await?;
         }
         Commands::Auth { action } => {
-            cmd_auth(action)?;
+            cmd_auth(action).await?;
         }
     }
 
     Ok(())
 }
 
-fn cmd_auth(action: AuthAction) -> Result<(), Box<dyn std::error::Error>> {
+async fn cmd_auth(action: AuthAction) -> Result<(), Box<dyn std::error::Error>> {
     match action {
         AuthAction::Set {
             domain,
             cookies,
             ct0,
             auth_token,
+            expires,
         } => {
             let mut cookie_map = std::collections::HashMap::new();
 
-            // Parse --cookies string
+            // Parse --cookies string with optional TTL
             if let Some(cookie_str) = cookies {
-                cookie_map.extend(auth::store::parse_cookie_string(&cookie_str));
+                cookie_map.extend(auth::store::parse_cookie_string_with_ttl(
+                    &cookie_str,
+                    expires,
+                ));
             }
 
             // X/Twitter shorthand flags
             if let Some(ct0_val) = ct0 {
-                cookie_map.insert("ct0".to_string(), ct0_val);
+                let entry = auth::store::CookieEntry::with_expiry(
+                    ct0_val,
+                    expires.map(|ttl| {
+                        std::time::SystemTime::now()
+                            .duration_since(std::time::UNIX_EPOCH)
+                            .map(|d| d.as_secs() as i64 + ttl)
+                            .unwrap_or(0)
+                    }),
+                );
+                cookie_map.insert("ct0".to_string(), entry);
             }
             if let Some(auth_val) = auth_token {
-                cookie_map.insert("auth_token".to_string(), auth_val);
+                let entry = auth::store::CookieEntry::with_expiry(
+                    auth_val,
+                    expires.map(|ttl| {
+                        std::time::SystemTime::now()
+                            .duration_since(std::time::UNIX_EPOCH)
+                            .map(|d| d.as_secs() as i64 + ttl)
+                            .unwrap_or(0)
+                    }),
+                );
+                cookie_map.insert("auth_token".to_string(), entry);
             }
 
             if cookie_map.is_empty() {
@@ -290,7 +327,15 @@ fn cmd_auth(action: AuthAction) -> Result<(), Box<dyn std::error::Error>> {
                 for domain in profiles {
                     if let Ok(Some(p)) = auth::store::load_profile(&domain) {
                         let fp = auth::store::profile_fingerprint(&p);
-                        eprintln!("  {} ({} cookies) [{}]", domain, p.cookies.len(), fp);
+                        // Calculate expiry status
+                        let expiry_status = calculate_profile_expiry_status(&p);
+                        eprintln!(
+                            "  {} ({} cookies) [{}] {}",
+                            domain,
+                            p.cookies.len(),
+                            fp,
+                            expiry_status
+                        );
                     } else {
                         eprintln!("  {}", domain);
                     }
@@ -304,31 +349,113 @@ fn cmd_auth(action: AuthAction) -> Result<(), Box<dyn std::error::Error>> {
                 eprintln!("No profile found for {}", domain);
             }
         }
-        AuthAction::Info { domain } => match auth::store::load_profile(&domain)? {
-            Some(profile) => {
-                let fp = auth::store::profile_fingerprint(&profile);
-                eprintln!("Domain:      {}", profile.domain);
-                eprintln!("Cookies:     {}", profile.cookies.len());
-                eprintln!(
-                    "Cookie keys: {}",
-                    profile
-                        .cookies
-                        .keys()
-                        .cloned()
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                );
-                eprintln!("Fingerprint: {}", fp);
-                if let Some(ts) = &profile.created_at {
-                    eprintln!("Created:     {}", ts);
+        AuthAction::Info {
+            domain,
+            encrypt,
+            decrypt,
+        } => {
+            // Handle encryption status check
+            if encrypt || decrypt {
+                match auth::store::is_profile_encrypted(&domain)? {
+                    Some(is_encrypted) => {
+                        if encrypt {
+                            eprintln!(
+                                "Profile '{}': {}",
+                                domain,
+                                if is_encrypted {
+                                    "encrypted"
+                                } else {
+                                    "plaintext"
+                                }
+                            );
+                        }
+                        if decrypt {
+                            // Try to load (decrypt) the profile
+                            match auth::store::load_profile(&domain) {
+                                Ok(Some(_)) => {
+                                    eprintln!("✓ Profile '{}' decrypted successfully", domain);
+                                }
+                                Ok(None) => {
+                                    eprintln!("No profile found for {}", domain);
+                                }
+                                Err(e) => {
+                                    eprintln!("✗ Failed to decrypt profile '{}': {}", domain, e);
+                                }
+                            }
+                        }
+                    }
+                    None => {
+                        eprintln!("No profile found for {}", domain);
+                    }
+                }
+                return Ok(());
+            }
+
+            // Regular info display
+            match auth::store::load_profile(&domain)? {
+                Some(profile) => {
+                    let fp = auth::store::profile_fingerprint(&profile);
+                    let is_encrypted = auth::store::is_profile_encrypted(&domain)?;
+                    eprintln!("Domain:      {}", profile.domain);
+                    eprintln!("Cookies:     {}", profile.cookies.len());
+                    eprintln!("Fingerprint: {}", fp);
+                    if let Some(encrypted) = is_encrypted {
+                        eprintln!("Encrypted:   {}", if encrypted { "yes" } else { "no" });
+                    }
+                    if let Some(ts) = &profile.created_at {
+                        eprintln!("Created:     {}", ts);
+                    }
+                    eprintln!();
+                    eprintln!("Cookies:");
+                    for (name, entry) in &profile.cookies {
+                        let status = auth::store::cookie_expiry_status(entry.expires_at);
+                        eprintln!("  {} - {}", name, status);
+                    }
+                }
+                None => {
+                    eprintln!("No profile found for {}", domain);
                 }
             }
-            None => {
-                eprintln!("No profile found for {}", domain);
-            }
-        },
+        }
+        AuthAction::Serve { port } => {
+            eprintln!("Starting auth bridge server on 127.0.0.1:{}", port);
+            eprintln!("Endpoints:");
+            eprintln!("  GET  /api/status  - Server status and stored profiles");
+            eprintln!("  POST /api/cookies - Store cookies from extension");
+            eprintln!();
+            auth::bridge::start(port).await?;
+        }
     }
     Ok(())
+}
+
+/// Calculate overall expiry status for a profile's cookies
+fn calculate_profile_expiry_status(profile: &auth::store::CookieProfile) -> &'static str {
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0);
+
+    let mut has_expired = false;
+    let mut has_expiring_soon = false;
+
+    for entry in profile.cookies.values() {
+        if let Some(exp) = entry.expires_at {
+            if exp < now {
+                has_expired = true;
+            } else if exp < now + 86400 {
+                has_expiring_soon = true;
+            }
+        }
+    }
+
+    if has_expired {
+        "✗ expired"
+    } else if has_expiring_soon {
+        "⚠ expires soon"
+    } else {
+        "✓ valid"
+    }
 }
 
 async fn cmd_fetch(
