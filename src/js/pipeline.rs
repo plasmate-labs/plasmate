@@ -50,6 +50,8 @@ pub struct PipelineConfig {
     pub execute_js: bool,
     /// Whether to fetch external <script src="..."> files.
     pub fetch_external_scripts: bool,
+    /// Limits for external script fetching.
+    pub external_script_limits: script_fetch::ScriptFetchLimits,
     /// JS runtime configuration.
     pub js_config: RuntimeConfig,
     /// Max timer drain threshold in ms (execute short setTimeout callbacks).
@@ -61,6 +63,7 @@ impl Default for PipelineConfig {
         Self {
             execute_js: true,
             fetch_external_scripts: false, // Off by default for sync API; async API enables it
+            external_script_limits: script_fetch::ScriptFetchLimits::default(),
             js_config: RuntimeConfig::default(),
             timer_drain_ms: 100,
         }
@@ -89,7 +92,8 @@ pub async fn process_page_async(
         // Resolve external scripts (fetch from network)
         let t1 = Instant::now();
         let resolved = if config.fetch_external_scripts {
-            script_fetch::resolve_scripts(&scripts, url, client).await
+            script_fetch::resolve_scripts(&scripts, url, client, &config.external_script_limits)
+                .await
         } else {
             scripts
                 .iter()

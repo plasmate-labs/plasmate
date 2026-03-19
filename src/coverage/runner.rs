@@ -13,8 +13,19 @@ use crate::network::fetch;
 pub struct CoverageOptions {
     pub timeout_ms: u64,
     pub concurrency: usize,
+
     pub execute_js: bool,
     pub fetch_external_scripts: bool,
+
+    /// V8 heap limit for the page runtime. 0 means unlimited.
+    pub js_max_heap_bytes: usize,
+
+    /// External script fetching limits (only used when fetch_external_scripts is true).
+    pub max_external_scripts: usize,
+    pub max_external_script_bytes: usize,
+    pub max_external_total_bytes: usize,
+    pub external_script_timeout_ms: u64,
+
     pub timer_drain_ms: u64,
     pub max_urls: Option<usize>,
 }
@@ -24,8 +35,17 @@ impl Default for CoverageOptions {
         Self {
             timeout_ms: 15000,
             concurrency: 8,
+
             execute_js: true,
             fetch_external_scripts: true,
+
+            js_max_heap_bytes: 256 * 1024 * 1024,
+
+            max_external_scripts: 20,
+            max_external_script_bytes: 512 * 1024,
+            max_external_total_bytes: 4 * 1024 * 1024,
+            external_script_timeout_ms: 5000,
+
             timer_drain_ms: 100,
             max_urls: Some(100),
         }
@@ -106,8 +126,17 @@ pub struct CoverageReport {
 pub struct CoverageReportOptions {
     pub timeout_ms: u64,
     pub concurrency: usize,
+
     pub execute_js: bool,
     pub fetch_external_scripts: bool,
+
+    pub js_max_heap_bytes: usize,
+
+    pub max_external_scripts: usize,
+    pub max_external_script_bytes: usize,
+    pub max_external_total_bytes: usize,
+    pub external_script_timeout_ms: u64,
+
     pub timer_drain_ms: u64,
     pub max_urls: Option<usize>,
 }
@@ -259,8 +288,17 @@ pub async fn run(urls: &[String], opts: &CoverageOptions) -> CoverageReport {
         options: CoverageReportOptions {
             timeout_ms: opts.timeout_ms,
             concurrency: opts.concurrency,
+
             execute_js: opts.execute_js,
             fetch_external_scripts: opts.fetch_external_scripts,
+
+            js_max_heap_bytes: opts.js_max_heap_bytes,
+
+            max_external_scripts: opts.max_external_scripts,
+            max_external_script_bytes: opts.max_external_script_bytes,
+            max_external_total_bytes: opts.max_external_total_bytes,
+            external_script_timeout_ms: opts.external_script_timeout_ms,
+
             timer_drain_ms: opts.timer_drain_ms,
             max_urls: opts.max_urls,
         },
@@ -343,6 +381,14 @@ async fn cover_single(
     config.execute_js = opts.execute_js;
     config.fetch_external_scripts = opts.fetch_external_scripts;
     config.timer_drain_ms = opts.timer_drain_ms;
+
+    // Coverage runs must not crash. V8 OOM is fatal, so we run with a larger heap cap.
+    config.js_config.max_heap_bytes = opts.js_max_heap_bytes;
+
+    config.external_script_limits.max_external = opts.max_external_scripts;
+    config.external_script_limits.max_script_bytes = opts.max_external_script_bytes;
+    config.external_script_limits.max_total_bytes = opts.max_external_total_bytes;
+    config.external_script_limits.timeout_ms = opts.external_script_timeout_ms;
 
     let page =
         match pipeline::process_page_async(&fetch_result.html, &fetch_result.url, &config, client)

@@ -1,12 +1,10 @@
-# Coverage Scorecard
+# Coverage Scorecard (JS)
 
-This page shows Plasmate's real-world coverage across a curated set of 100 agent-relevant pages.
+This page shows Plasmate's real-world coverage across the same curated set of 100 agent-relevant pages, with JavaScript execution enabled.
 
-- Data source: `coverage.json`
-- Generator: `plasmate coverage --urls bench/top100.txt --output website/docs/coverage.json`
-- Update cadence: scheduled GitHub Action (nightly)
-- Current mode: HTML-only (JS disabled) until V8 heap limits are raised and the harness is hardened against fatal OOM on heavy sites
-- JS-enabled scorecard: see the `Coverage (JS)` page in the sidebar
+- Data source: `coverage-js.json`
+- Generator: `plasmate coverage --urls bench/top100.txt --output website/docs/coverage-js.json`
+- Update cadence: scheduled GitHub Action
 
 <div id="coverage-summary" style="margin: 16px 0; padding: 12px 14px; border: 1px solid rgba(240,237,232,0.12); border-radius: 10px; background: rgba(240,237,232,0.04);">
   Loading coverage data...
@@ -26,6 +24,8 @@ This page shows Plasmate's real-world coverage across a curated set of 100 agent
         <th>Interactive</th>
         <th>Fetch ms</th>
         <th>Pipeline ms</th>
+        <th>JS scripts</th>
+        <th>JS failed</th>
         <th>Error</th>
       </tr>
     </thead>
@@ -60,7 +60,7 @@ This page shows Plasmate's real-world coverage across a curated set of 100 agent
   }
 
   try {
-    const res = await fetch('coverage.json', { cache: 'no-store' });
+    const res = await fetch('coverage-js.json', { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
@@ -95,13 +95,15 @@ This page shows Plasmate's real-world coverage across a curated set of 100 agent
           <td>${esc(fmt(r.interactive_count))}</td>
           <td>${esc(fmt(r.fetch_ms))}</td>
           <td>${esc(fmt(r.pipeline_ms))}</td>
+          <td>${esc(fmt(r.js_total_scripts))}</td>
+          <td>${esc(fmt(r.js_failed))}</td>
           <td style="max-width: 280px; overflow:hidden; text-overflow: ellipsis; white-space: nowrap;">${esc(err)}</td>
         </tr>
       `;
     }).join('');
 
   } catch (e) {
-    summaryEl.innerHTML = `<strong>Failed to load coverage.json</strong><br/>${esc(e && e.message ? e.message : e)}`;
+    summaryEl.innerHTML = `<strong>Failed to load coverage-js.json</strong><br/>${esc(e && e.message ? e.message : e)}`;
     tbody.innerHTML = '';
   }
 })();

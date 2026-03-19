@@ -1,0 +1,26 @@
+{
+  "generated_at_utc": "pending",
+  "plasmate_version": "pending",
+  "options": {
+    "timeout_ms": 20000,
+    "concurrency": 1,
+    "execute_js": true,
+    "fetch_external_scripts": true,
+    "js_max_heap_bytes": 268435456,
+    "max_external_scripts": 20,
+    "max_external_script_bytes": 524288,
+    "max_external_total_bytes": 4194304,
+    "external_script_timeout_ms": 5000,
+    "timer_drain_ms": 100,
+    "max_urls": 100
+  },
+  "summary": {
+    "urls_total": 0,
+    "ok": 0,
+    "thin": 0,
+    "failed": 0,
+    "ok_percent": 0,
+    "breakdown": []
+  },
+  "results": []
+}

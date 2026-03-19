@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Coverage Scorecard - Plasmate Docs</title>
-  <meta name="description" content="Plasmate documentation: Coverage Scorecard" />
+  <title>Coverage Scorecard (JS) - Plasmate Docs</title>
+  <meta name="description" content="Plasmate documentation: Coverage Scorecard (JS)" />
 
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
@@ -313,8 +313,8 @@
           <a href="awp">AWP Protocol</a>
           <a href="awp-mvp">AWP MVP v0.1</a>
           <a href="roadmap">Roadmap</a>
-          <a href="coverage" class="active">Coverage (HTML)</a>
-          <a href="coverage-js">Coverage (JS)</a>
+          <a href="coverage">Coverage (HTML)</a>
+          <a href="coverage-js" class="active">Coverage (JS)</a>
           <a href="brand">Brand Guide</a>
       <div class="sidebar-foot">
         <a href="https://github.com/plasmate-labs/plasmate">GitHub</a>
@@ -323,14 +323,12 @@
       </div>
     </nav>
     <main class="content">
-      <h1>Coverage Scorecard</h1>
-<p>This page shows Plasmate&#39;s real-world coverage across a curated set of 100 agent-relevant pages.</p>
+      <h1>Coverage Scorecard (JS)</h1>
+<p>This page shows Plasmate&#39;s real-world coverage across the same curated set of 100 agent-relevant pages, with JavaScript execution enabled.</p>
 <ul>
-<li>Data source: <code>coverage.json</code></li>
-<li>Generator: <code>plasmate coverage --urls bench/top100.txt --output website/docs/coverage.json</code></li>
-<li>Update cadence: scheduled GitHub Action (nightly)</li>
-<li>Current mode: HTML-only (JS disabled) until V8 heap limits are raised and the harness is hardened against fatal OOM on heavy sites</li>
-<li>JS-enabled scorecard: see the <code>Coverage (JS)</code> page in the sidebar</li>
+<li>Data source: <code>coverage-js.json</code></li>
+<li>Generator: <code>plasmate coverage --urls bench/top100.txt --output website/docs/coverage-js.json</code></li>
+<li>Update cadence: scheduled GitHub Action</li>
 </ul>
 <div id="coverage-summary" style="margin: 16px 0; padding: 12px 14px; border: 1px solid rgba(240,237,232,0.12); border-radius: 10px; background: rgba(240,237,232,0.04);">
   Loading coverage data...
@@ -350,6 +348,8 @@
         <th>Interactive</th>
         <th>Fetch ms</th>
         <th>Pipeline ms</th>
+        <th>JS scripts</th>
+        <th>JS failed</th>
         <th>Error</th>
       </tr>
     </thead>
@@ -384,7 +384,7 @@
   }
 
   try {
-    const res = await fetch('coverage.json', { cache: 'no-store' });
+    const res = await fetch('coverage-js.json', { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
@@ -419,13 +419,15 @@
           <td>${esc(fmt(r.interactive_count))}</td>
           <td>${esc(fmt(r.fetch_ms))}</td>
           <td>${esc(fmt(r.pipeline_ms))}</td>
+          <td>${esc(fmt(r.js_total_scripts))}</td>
+          <td>${esc(fmt(r.js_failed))}</td>
           <td style="max-width: 280px; overflow:hidden; text-overflow: ellipsis; white-space: nowrap;">${esc(err)}</td>
         </tr>
       `;
     }).join('');
 
   } catch (e) {
-    summaryEl.innerHTML = `<strong>Failed to load coverage.json</strong><br/>${esc(e && e.message ? e.message : e)}`;
+    summaryEl.innerHTML = `<strong>Failed to load coverage-js.json</strong><br/>${esc(e && e.message ? e.message : e)}`;
     tbody.innerHTML = '';
   }
 })();

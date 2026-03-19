@@ -18,24 +18,42 @@ pub struct ResolvedScript {
     pub index: usize,
 }
 
+/// Limits for external script fetching.
+#[derive(Debug, Clone)]
+pub struct ScriptFetchLimits {
+    /// Max external scripts fetched.
+    pub max_external: usize,
+    /// Max bytes per script.
+    pub max_script_bytes: usize,
+    /// Max total bytes across all fetched external scripts.
+    pub max_total_bytes: usize,
+    /// Timeout per script fetch.
+    pub timeout_ms: u64,
+}
+
+impl Default for ScriptFetchLimits {
+    fn default() -> Self {
+        Self {
+            max_external: 20,
+            max_script_bytes: 50_000,
+            max_total_bytes: 1_000_000,
+            timeout_ms: 5000,
+        }
+    }
+}
+
 /// Fetch external scripts and merge with inline scripts in document order.
 ///
-/// Limits:
-/// - Max 20 external scripts fetched (common pages have 5-15)
-/// - 5 second timeout per script
-/// - 50KB max per script (skip huge bundles - they're usually framework code)
-/// - Only .js files (skip .mjs, .tsx, etc. that need transpilation)
+/// Default limits are intentionally conservative to prevent pulling huge framework bundles.
 pub async fn resolve_scripts(
     scripts: &[ScriptBlock],
     page_url: &str,
     client: &Client,
+    limits: &ScriptFetchLimits,
 ) -> Vec<ResolvedScript> {
     let base_url = Url::parse(page_url).ok();
     let mut resolved = Vec::new();
     let mut fetch_count = 0;
-    const MAX_EXTERNAL: usize = 20;
-    const MAX_SCRIPT_BYTES: usize = 50_000;
-    const FETCH_TIMEOUT_MS: u64 = 5000;
 
     // Collect external scripts that need fetching
     let mut to_fetch: Vec<(usize, String)> = Vec::new();
@@ -47,7 +65,7 @@ pub async fn resolve_scripts(
                 label: script.label.clone(),
                 index: script.index,
             });
-        } else if fetch_count < MAX_EXTERNAL {
+        } else if fetch_count < limits.max_external {
             // Resolve URL
             let url = if script.label.starts_with("http://") || script.label.starts_with("https://")
             {
@@ -84,7 +102,7 @@ pub async fn resolve_scripts(
             let idx = *idx;
             async move {
                 let result = tokio::time::timeout(
-                    Duration::from_millis(FETCH_TIMEOUT_MS),
+                    Duration::from_millis(limits.timeout_ms),
                     client
                         .get(&url)
                         .header("Accept", "application/javascript, text/javascript, */*")
@@ -94,7 +112,7 @@ pub async fn resolve_scripts(
 
                 match result {
                     Ok(Ok(resp)) if resp.status().is_success() => match resp.text().await {
-                        Ok(text) if text.len() <= MAX_SCRIPT_BYTES => {
+                        Ok(text) if text.len() <= limits.max_script_bytes => {
                             debug!(url, bytes = text.len(), "Fetched external script");
                             Some(ResolvedScript {
                                 source: text,
@@ -129,8 +147,23 @@ pub async fn resolve_scripts(
 
         let results: Vec<Option<ResolvedScript>> = futures_util::future::join_all(fetches).await;
 
-        for result in results.into_iter().flatten() {
-            resolved.push(result);
+        let mut fetched: Vec<ResolvedScript> = results.into_iter().flatten().collect();
+        fetched.sort_by_key(|s| s.index);
+
+        let mut total_bytes = 0usize;
+        for script in fetched {
+            let bytes = script.source.len();
+            if total_bytes + bytes > limits.max_total_bytes {
+                debug!(
+                    url = script.label,
+                    bytes,
+                    max_total_bytes = limits.max_total_bytes,
+                    "External script budget exceeded, skipping"
+                );
+                continue;
+            }
+            total_bytes += bytes;
+            resolved.push(script);
         }
     }
 
@@ -162,7 +195,13 @@ mod tests {
 
         let rt = tokio::runtime::Runtime::new().unwrap();
         let client = Client::new();
-        let resolved = rt.block_on(resolve_scripts(&scripts, "https://example.com", &client));
+        let limits = ScriptFetchLimits::default();
+        let resolved = rt.block_on(resolve_scripts(
+            &scripts,
+            "https://example.com",
+            &client,
+            &limits,
+        ));
 
         assert_eq!(resolved.len(), 2);
         assert_eq!(resolved[0].source, "var x = 1;");
@@ -194,7 +233,13 @@ mod tests {
 
         let rt = tokio::runtime::Runtime::new().unwrap();
         let client = Client::new();
-        let resolved = rt.block_on(resolve_scripts(&scripts, "https://example.com", &client));
+        let limits = ScriptFetchLimits::default();
+        let resolved = rt.block_on(resolve_scripts(
+            &scripts,
+            "https://example.com",
+            &client,
+            &limits,
+        ));
 
         // At minimum, inline scripts should be in order
         let inline: Vec<_> = resolved

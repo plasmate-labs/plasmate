@@ -89,6 +89,21 @@ enum Commands {
         /// Skip fetching external <script src="..."> files (inline only)
         #[arg(long)]
         no_external: bool,
+        /// V8 heap limit for JS execution (in MB). Only used when JS is enabled.
+        #[arg(long, default_value = "256")]
+        js_heap_mb: usize,
+        /// Max external scripts fetched per page.
+        #[arg(long, default_value = "20")]
+        max_external_scripts: usize,
+        /// Max bytes per fetched external script (in KB).
+        #[arg(long, default_value = "50")]
+        max_external_script_kb: usize,
+        /// Max total bytes across fetched external scripts per page (in KB).
+        #[arg(long, default_value = "1024")]
+        max_external_total_kb: usize,
+        /// Timeout per external script fetch in milliseconds.
+        #[arg(long, default_value = "5000")]
+        external_script_timeout_ms: u64,
         /// Max URLs to run from the file
         #[arg(long, default_value = "100")]
         max: usize,
@@ -260,6 +275,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             concurrency,
             no_js,
             no_external,
+            js_heap_mb,
+            max_external_scripts,
+            max_external_script_kb,
+            max_external_total_kb,
+            external_script_timeout_ms,
             max,
         } => {
             cmd_coverage(
@@ -269,6 +289,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 concurrency,
                 no_js,
                 no_external,
+                js_heap_mb,
+                max_external_scripts,
+                max_external_script_kb,
+                max_external_total_kb,
+                external_script_timeout_ms,
                 max,
             )
             .await?;
@@ -609,6 +634,11 @@ async fn cmd_coverage(
     concurrency: usize,
     no_js: bool,
     no_external: bool,
+    js_heap_mb: usize,
+    max_external_scripts: usize,
+    max_external_script_kb: usize,
+    max_external_total_kb: usize,
+    external_script_timeout_ms: u64,
     max_urls: usize,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let content = std::fs::read_to_string(urls_file)?;
@@ -619,6 +649,14 @@ async fn cmd_coverage(
     opts.concurrency = concurrency;
     opts.execute_js = !no_js;
     opts.fetch_external_scripts = !no_external;
+
+    opts.js_max_heap_bytes = js_heap_mb.saturating_mul(1024 * 1024);
+
+    opts.max_external_scripts = max_external_scripts;
+    opts.max_external_script_bytes = max_external_script_kb.saturating_mul(1024);
+    opts.max_external_total_bytes = max_external_total_kb.saturating_mul(1024);
+    opts.external_script_timeout_ms = external_script_timeout_ms;
+
     opts.max_urls = Some(max_urls);
 
     info!(count = urls.len(), "Running coverage suite");
