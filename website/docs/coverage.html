@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Roadmap - Plasmate Docs</title>
-  <meta name="description" content="Plasmate documentation: Roadmap" />
+  <title>Coverage Scorecard - Plasmate Docs</title>
+  <meta name="description" content="Plasmate documentation: Coverage Scorecard" />
 
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
@@ -312,8 +312,8 @@
           <a href="som">SOM Reference</a>
           <a href="awp">AWP Protocol</a>
           <a href="awp-mvp">AWP MVP v0.1</a>
-          <a href="roadmap" class="active">Roadmap</a>
-          <a href="coverage">Coverage</a>
+          <a href="roadmap">Roadmap</a>
+          <a href="coverage" class="active">Coverage</a>
           <a href="brand">Brand Guide</a>
       <div class="sidebar-foot">
         <a href="https://github.com/plasmate-labs/plasmate">GitHub</a>
@@ -322,29 +322,112 @@
       </div>
     </nav>
     <main class="content">
-      <h1>Roadmap</h1>
-<p>Plasmate&#39;s roadmap is public and tracked in GitHub.</p>
+      <h1>Coverage Scorecard</h1>
+<p>This page shows Plasmate&#39;s real-world coverage across a curated set of 100 agent-relevant pages.</p>
 <ul>
-<li>Source of truth: the <code>## Roadmap</code> section in the repo README</li>
-<li>This docs page mirrors that list for convenience</li>
+<li>Data source: <code>coverage.json</code></li>
+<li>Generator: <code>plasmate coverage --urls bench/top100.txt --output website/docs/coverage.json</code></li>
+<li>Update cadence: scheduled GitHub Action (nightly)</li>
+<li>Current mode: HTML-only (JS disabled) until V8 heap limits are raised and the harness is hardened against fatal OOM on heavy sites</li>
 </ul>
-<h2>Current Roadmap</h2>
-<ul>
-<li><input checked="" disabled="" type="checkbox"> MCP server mode (<code>plasmate mcp</code> over stdio)</li>
-<li><input checked="" disabled="" type="checkbox"> MCP Phase 2: stateful tools (open_page, click, evaluate, close_page)</li>
-<li><input checked="" disabled="" type="checkbox"> Docker image (GHCR multi-arch)</li>
-<li><input disabled="" type="checkbox"> Full V8 DOM mutation bridge (re-snapshot SOM after JS changes)</li>
-<li><input disabled="" type="checkbox"> Network interception (Fetch domain)</li>
-<li><input disabled="" type="checkbox"> Expose cookie APIs (CDP Network.getCookies/setCookies, MCP cookie import/export)</li>
-<li><input disabled="" type="checkbox"> Proxy support (per-session config, SOCKS)</li>
-<li><input disabled="" type="checkbox"> Real-world top-100 site coverage testing</li>
-<li><input disabled="" type="checkbox"> Web Platform Tests integration</li>
-</ul>
-<h2>Notes</h2>
-<ul>
-<li>The older &quot;v0.2 Full Engine&quot; roadmap is kept for historical context in <code>ROADMAP-v0.2.md</code>.</li>
-<li>The coverage scorecard lives at the <code>Coverage</code> page in these docs.</li>
-</ul>
+<div id="coverage-summary" style="margin: 16px 0; padding: 12px 14px; border: 1px solid rgba(240,237,232,0.12); border-radius: 10px; background: rgba(240,237,232,0.04);">
+  Loading coverage data...
+</div>
+
+<div style="overflow-x:auto;">
+  <table id="coverage-table">
+    <thead>
+      <tr>
+        <th>Status</th>
+        <th>URL</th>
+        <th>HTTP</th>
+        <th>Title</th>
+        <th>HTML bytes</th>
+        <th>SOM bytes</th>
+        <th>Elements</th>
+        <th>Interactive</th>
+        <th>Fetch ms</th>
+        <th>Pipeline ms</th>
+        <th>Error</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+(async function() {
+  const summaryEl = document.getElementById('coverage-summary');
+  const tbody = document.querySelector('#coverage-table tbody');
+
+  function esc(s) {
+    return String(s || '').replace(/[&<>\"']/g, (c) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[c]));
+  }
+
+  function fmt(n) {
+    if (n === null || n === undefined) return '';
+    return String(n);
+  }
+
+  function statusBadge(status) {
+    const s = String(status || '');
+    const color = s === 'ok' ? '#3bd4a7' : (s === 'thin' ? '#F5C842' : '#E8853A');
+    return `<span style="display:inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(240,237,232,0.18); background: rgba(240,237,232,0.04); color: ${color}; font-family: var(--font-mono); font-size: 11px;">${esc(s)}</span>`;
+  }
+
+  try {
+    const res = await fetch('coverage.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    const s = data.summary || {};
+    summaryEl.innerHTML = `
+      <div style="display:flex; flex-wrap:wrap; gap: 14px; align-items:baseline;">
+        <div><strong>OK</strong>: ${fmt(s.ok)} / ${fmt(s.urls_total)} (${fmt((s.ok_percent || 0).toFixed ? s.ok_percent.toFixed(1) : s.ok_percent)}%)</div>
+        <div><strong>Thin</strong>: ${fmt(s.thin)}</div>
+        <div><strong>Failed</strong>: ${fmt(s.failed)}</div>
+        <div style="color: rgba(240,237,232,0.72); font-family: var(--font-mono); font-size: 11px;">Generated: ${esc(data.generated_at_utc || '')}, version: ${esc(data.plasmate_version || '')}</div>
+      </div>
+    `;
+
+    const results = Array.isArray(data.results) ? data.results : [];
+    tbody.innerHTML = results.map(r => {
+      const url = r.final_url || r.input_url;
+      const title = r.title || '';
+      const http = r.http_status || '';
+      const err = r.error || '';
+
+      return `
+        <tr>
+          <td>${statusBadge(r.status)}</td>
+          <td style="max-width: 320px; overflow:hidden; text-overflow: ellipsis; white-space: nowrap;">
+            <a href="${esc(url)}" target="_blank" rel="noreferrer">${esc(url)}</a>
+          </td>
+          <td>${esc(http)}</td>
+          <td style="max-width: 240px; overflow:hidden; text-overflow: ellipsis; white-space: nowrap;">${esc(title)}</td>
+          <td>${esc(fmt(r.html_bytes))}</td>
+          <td>${esc(fmt(r.som_bytes))}</td>
+          <td>${esc(fmt(r.element_count))}</td>
+          <td>${esc(fmt(r.interactive_count))}</td>
+          <td>${esc(fmt(r.fetch_ms))}</td>
+          <td>${esc(fmt(r.pipeline_ms))}</td>
+          <td style="max-width: 280px; overflow:hidden; text-overflow: ellipsis; white-space: nowrap;">${esc(err)}</td>
+        </tr>
+      `;
+    }).join('');
+
+  } catch (e) {
+    summaryEl.innerHTML = `<strong>Failed to load coverage.json</strong><br/>${esc(e && e.message ? e.message : e)}`;
+    tbody.innerHTML = '';
+  }
+})();
+</script>
 
     </main>
   </div>

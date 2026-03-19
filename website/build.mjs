@@ -17,7 +17,8 @@ const NAV = [
   { slug: 'som', label: 'SOM Reference' },
   { slug: 'awp', label: 'AWP Protocol' },
   { slug: 'awp-mvp', label: 'AWP MVP v0.1' },
-  { slug: 'roadmap', label: 'Roadmap v0.2' },
+  { slug: 'roadmap', label: 'Roadmap' },
+  { slug: 'coverage', label: 'Coverage' },
   { slug: 'brand', label: 'Brand Guide' },
 ];
 

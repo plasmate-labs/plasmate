@@ -1,0 +1,61 @@
+name: Coverage Scorecard
+
+on:
+  schedule:
+    # Daily at 06:15 UTC
+    - cron: '15 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build release
+        run: cargo build --release
+
+      - name: Run coverage suite
+        run: |
+          # JS is disabled for the public scorecard until we raise V8 heap limits
+          # and harden against fatal OOM on heavy sites.
+          ./target/release/plasmate coverage \
+            --urls bench/top100.txt \
+            --output website/docs/coverage.json \
+            --timeout 15000 \
+            --concurrency 6 \
+            --no-js \
+            --no-external \
+            --max 100
+
+      - name: Commit and push scorecard (if changed)
+        run: |
+          if git diff --quiet; then
+            echo "No scorecard changes"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add website/docs/coverage.json
+          git commit -m "chore: update coverage scorecard"
+          git push

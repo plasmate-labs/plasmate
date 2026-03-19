@@ -8,8 +8,8 @@ mod mcp;
 use plasmate::auth;
 use plasmate::awp;
 use plasmate::bench;
-use plasmate::cache;
 use plasmate::cdp;
+use plasmate::coverage;
 use plasmate::js;
 use plasmate::network;
 use plasmate::som;
@@ -68,6 +68,30 @@ enum Commands {
         /// Timeout per URL in milliseconds
         #[arg(long, default_value = "15000")]
         timeout: u64,
+    },
+    /// Run the real-world coverage suite and write a public scorecard JSON
+    Coverage {
+        /// File containing URLs (one per line)
+        #[arg(long, default_value = "bench/top100.txt")]
+        urls: String,
+        /// Output JSON file for the scorecard
+        #[arg(long, default_value = "website/docs/coverage.json")]
+        output: String,
+        /// Timeout per URL in milliseconds
+        #[arg(long, default_value = "15000")]
+        timeout: u64,
+        /// Max concurrent pages
+        #[arg(long, default_value = "8")]
+        concurrency: usize,
+        /// Disable JavaScript execution
+        #[arg(long)]
+        no_js: bool,
+        /// Skip fetching external <script src="..."> files (inline only)
+        #[arg(long)]
+        no_external: bool,
+        /// Max URLs to run from the file
+        #[arg(long, default_value = "100")]
+        max: usize,
     },
     /// Throughput benchmark: fetch+compile N pages from a local server.
     /// Matches Lightpanda's benchmark methodology (local server, no external latency).
@@ -228,6 +252,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             timeout,
         } => {
             cmd_bench(&urls, &output, timeout).await?;
+        }
+        Commands::Coverage {
+            urls,
+            output,
+            timeout,
+            concurrency,
+            no_js,
+            no_external,
+            max,
+        } => {
+            cmd_coverage(
+                &urls,
+                &output,
+                timeout,
+                concurrency,
+                no_js,
+                no_external,
+                max,
+            )
+            .await?;
         }
         Commands::ThroughputBench {
             base_url,
@@ -554,6 +598,44 @@ async fn cmd_bench(
 
     // Print summary to stdout
     report.print_summary();
+
+    Ok(())
+}
+
+async fn cmd_coverage(
+    urls_file: &str,
+    output: &str,
+    timeout_ms: u64,
+    concurrency: usize,
+    no_js: bool,
+    no_external: bool,
+    max_urls: usize,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let content = std::fs::read_to_string(urls_file)?;
+    let urls = coverage::runner::parse_urls_file(&content);
+
+    let mut opts = coverage::runner::CoverageOptions::default();
+    opts.timeout_ms = timeout_ms;
+    opts.concurrency = concurrency;
+    opts.execute_js = !no_js;
+    opts.fetch_external_scripts = !no_external;
+    opts.max_urls = Some(max_urls);
+
+    info!(count = urls.len(), "Running coverage suite");
+    let report = coverage::runner::run(&urls, &opts).await;
+
+    let json = serde_json::to_string_pretty(&report)?;
+    std::fs::write(output, json)?;
+    info!(output, "Coverage scorecard written");
+
+    println!(
+        "Coverage: ok {} / {} ({:.1}%), thin {}, failed {}",
+        report.summary.ok,
+        report.summary.urls_total,
+        report.summary.ok_percent,
+        report.summary.thin,
+        report.summary.failed
+    );
 
     Ok(())
 }

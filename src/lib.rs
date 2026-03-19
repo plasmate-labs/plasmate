@@ -3,6 +3,7 @@ pub mod awp;
 pub mod bench;
 pub mod cache;
 pub mod cdp;
+pub mod coverage;
 pub mod js;
 pub mod network;
 pub mod som;

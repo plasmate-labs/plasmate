@@ -1,0 +1,145 @@
+# Plasmate Coverage Suite (Top 100 real-world, agent-relevant pages)
+#
+# Goals:
+# - Measure how often Plasmate can fetch + compile a useful SOM on real sites
+# - Produce a public scorecard (website/docs/coverage.json)
+# - Drive the roadmap based on real failures
+#
+# Notes:
+# - This is intentionally diverse, not just "top sites by traffic".
+# - Many high-traffic sites are intentionally hostile to automation.
+# - Failures are valuable signal.
+
+# News / Media
+https://news.ycombinator.com
+https://lobste.rs
+https://www.bbc.com/news
+https://www.reuters.com
+https://apnews.com
+https://text.npr.org
+https://lite.cnn.com
+https://www.theguardian.com/international
+https://arstechnica.com
+https://techcrunch.com
+https://www.theverge.com
+https://www.economist.com
+
+# Wikipedia / Reference
+https://en.wikipedia.org/wiki/Rust_(programming_language)
+https://en.wikipedia.org/wiki/Artificial_intelligence
+https://en.wikipedia.org/wiki/United_States
+https://www.wikidata.org/wiki/Wikidata:Main_Page
+https://www.britannica.com
+
+# Developer docs
+https://doc.rust-lang.org/book/
+https://docs.rs
+https://docs.python.org/3/
+https://nodejs.org/en/docs
+https://developer.mozilla.org/en-US/docs/Web/HTML
+https://react.dev
+https://nextjs.org/docs
+https://tailwindcss.com/docs
+https://docs.github.com/en
+https://git-scm.com/docs
+https://kubernetes.io/docs/home/
+https://docs.docker.com
+https://www.postgresql.org/docs/
+https://redis.io/docs/latest/
+https://nginx.org/en/docs/
+https://developer.apple.com/documentation/
+https://learn.microsoft.com/en-us/
+
+# Open source repos (HTML-heavy, lots of links)
+https://github.com/plasmate-labs/plasmate
+https://github.com/plasmate-labs/plasmate/issues
+https://github.com/openclaw/openclaw
+https://github.com/vercel/next.js
+https://github.com/rust-lang/rust
+
+# Search
+https://duckduckgo.com
+https://www.bing.com
+https://www.google.com
+
+# Government / institutions
+https://www.usa.gov
+https://www.whitehouse.gov
+https://www.congress.gov
+https://www.cdc.gov
+https://www.fda.gov
+https://www.nasa.gov
+https://www.noaa.gov
+https://www.irs.gov
+https://www.mass.gov
+
+# Education
+https://www.khanacademy.org
+https://ocw.mit.edu
+https://www.harvard.edu
+https://www.stanford.edu
+
+# Product / pricing / policy pages
+https://stripe.com/docs
+https://stripe.com/pricing
+https://openai.com/policies
+https://openai.com/terms
+https://www.cloudflare.com
+https://www.cloudflare.com/plans/
+
+# Commerce (often hostile, but important)
+https://www.amazon.com
+https://www.ebay.com
+https://store.steampowered.com
+https://www.etsy.com
+https://www.walmart.com
+https://www.target.com
+
+# Travel / maps
+https://www.rome2rio.com
+https://www.booking.com
+https://www.tripadvisor.com
+
+# Forums / community
+https://stackoverflow.com/questions
+https://old.reddit.com
+https://news.ycombinator.com/item?id=1
+https://discourse.org
+
+# Blogs / publishing platforms
+https://medium.com
+https://dev.to
+https://www.substack.com
+
+# Authentication pages (expect failures)
+https://accounts.google.com
+https://login.microsoftonline.com
+https://github.com/login
+
+# Social (expect failures)
+https://x.com
+https://www.linkedin.com
+https://www.facebook.com
+https://www.instagram.com
+
+# Utilities / diagnostics
+https://example.com
+https://httpbin.org/html
+https://httpbin.org/headers
+https://www.iana.org/domains/reserved
+https://www.whatismybrowser.com/detect/what-http-headers-is-my-browser-sending
+
+# Retail and services
+https://www.apple.com
+https://www.microsoft.com
+https://www.nytimes.com
+https://www.wsj.com
+https://www.paypal.com
+
+# Modern apps and package ecosystems
+https://vercel.com
+https://huggingface.co
+https://pypi.org
+https://www.npmjs.com
+https://crates.io
+https://status.github.com
