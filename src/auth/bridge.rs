@@ -113,9 +113,7 @@ async fn handle_status() -> impl IntoResponse {
 }
 
 /// Handle POST /api/cookies
-async fn handle_cookies(
-    Json(request): Json<CookiesRequest>,
-) -> impl IntoResponse {
+async fn handle_cookies(Json(request): Json<CookiesRequest>) -> impl IntoResponse {
     // Convert cookies, applying expiry from the separate expiry map if provided
     let cookies: HashMap<String, CookieEntry> = request
         .cookies

@@ -440,10 +440,7 @@ mod tests {
     #[test]
     fn test_parse_cookie_string() {
         let cookies = parse_cookie_string("ct0=abc123; auth_token=xyz789; _ga=GA1.2.3");
-        assert_eq!(
-            cookies.get("ct0").map(|e| e.value.as_str()),
-            Some("abc123")
-        );
+        assert_eq!(cookies.get("ct0").map(|e| e.value.as_str()), Some("abc123"));
         assert_eq!(
             cookies.get("auth_token").map(|e| e.value.as_str()),
             Some("xyz789")
@@ -605,14 +602,8 @@ mod tests {
 
         assert_eq!(cookie_expiry_status(None), "no expiry");
         assert_eq!(cookie_expiry_status(Some(now - 100)), "✗ expired");
-        assert_eq!(
-            cookie_expiry_status(Some(now + 3600)),
-            "⚠ expires soon"
-        ); // 1 hour
-        assert_eq!(
-            cookie_expiry_status(Some(now + 100000)),
-            "✓ valid"
-        ); // > 24h
+        assert_eq!(cookie_expiry_status(Some(now + 3600)), "⚠ expires soon"); // 1 hour
+        assert_eq!(cookie_expiry_status(Some(now + 100000)), "✓ valid"); // > 24h
     }
 
     #[test]

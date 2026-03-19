@@ -260,7 +260,10 @@ async fn cmd_auth(action: AuthAction) -> Result<(), Box<dyn std::error::Error>> 
 
             // Parse --cookies string with optional TTL
             if let Some(cookie_str) = cookies {
-                cookie_map.extend(auth::store::parse_cookie_string_with_ttl(&cookie_str, expires));
+                cookie_map.extend(auth::store::parse_cookie_string_with_ttl(
+                    &cookie_str,
+                    expires,
+                ));
             }
 
             // X/Twitter shorthand flags
@@ -397,10 +400,7 @@ async fn cmd_auth(action: AuthAction) -> Result<(), Box<dyn std::error::Error>> 
                     eprintln!("Cookies:     {}", profile.cookies.len());
                     eprintln!("Fingerprint: {}", fp);
                     if let Some(encrypted) = is_encrypted {
-                        eprintln!(
-                            "Encrypted:   {}",
-                            if encrypted { "yes" } else { "no" }
-                        );
+                        eprintln!("Encrypted:   {}", if encrypted { "yes" } else { "no" });
                     }
                     if let Some(ts) = &profile.created_at {
                         eprintln!("Created:     {}", ts);
