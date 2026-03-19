@@ -3,6 +3,7 @@ use std::sync::Arc;
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
+mod auth;
 mod awp;
 mod bench;
 mod cache;
@@ -36,6 +37,9 @@ enum Commands {
         /// Disable JavaScript execution entirely
         #[arg(long)]
         no_js: bool,
+        /// Load cookies from a stored auth profile (domain name)
+        #[arg(long)]
+        profile: Option<String>,
     },
     /// Start the WebSocket server
     Serve {
@@ -76,6 +80,41 @@ enum Commands {
     },
     /// Start the MCP (Model Context Protocol) server over stdio
     Mcp,
+    /// Manage authentication profiles for cookie-based browsing
+    Auth {
+        #[command(subcommand)]
+        action: AuthAction,
+    },
+}
+
+#[derive(Subcommand)]
+enum AuthAction {
+    /// Store cookies for a domain
+    Set {
+        /// Domain (e.g., x.com, github.com)
+        domain: String,
+        /// Cookie string: "name1=val1; name2=val2"
+        #[arg(long)]
+        cookies: Option<String>,
+        /// X/Twitter ct0 CSRF token (shorthand for --cookies)
+        #[arg(long)]
+        ct0: Option<String>,
+        /// X/Twitter auth_token (shorthand for --cookies)
+        #[arg(long)]
+        auth_token: Option<String>,
+    },
+    /// List stored profiles (domains only, never cookie values)
+    List,
+    /// Delete a stored profile
+    Revoke {
+        /// Domain to revoke
+        domain: String,
+    },
+    /// Show profile info (domain, cookie count, fingerprint - never values)
+    Info {
+        /// Domain to inspect
+        domain: String,
+    },
 }
 
 #[tokio::main]
@@ -96,8 +135,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             output,
             no_external,
             no_js,
+            profile,
         } => {
-            cmd_fetch(&url, output.as_deref(), !no_external, no_js).await?;
+            cmd_fetch(&url, output.as_deref(), !no_external, no_js, profile.as_deref()).await?;
         }
         Commands::Serve {
             host,
@@ -159,8 +199,112 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Mcp => {
             mcp::run_server().await?;
         }
+        Commands::Auth { action } => {
+            cmd_auth(action)?;
+        }
     }
 
+    Ok(())
+}
+
+fn cmd_auth(action: AuthAction) -> Result<(), Box<dyn std::error::Error>> {
+    match action {
+        AuthAction::Set {
+            domain,
+            cookies,
+            ct0,
+            auth_token,
+        } => {
+            let mut cookie_map = std::collections::HashMap::new();
+
+            // Parse --cookies string
+            if let Some(cookie_str) = cookies {
+                cookie_map.extend(auth::store::parse_cookie_string(&cookie_str));
+            }
+
+            // X/Twitter shorthand flags
+            if let Some(ct0_val) = ct0 {
+                cookie_map.insert("ct0".to_string(), ct0_val);
+            }
+            if let Some(auth_val) = auth_token {
+                cookie_map.insert("auth_token".to_string(), auth_val);
+            }
+
+            if cookie_map.is_empty() {
+                eprintln!("No cookies provided. Use --cookies, --ct0, or --auth-token");
+                std::process::exit(1);
+            }
+
+            let profile = auth::store::CookieProfile {
+                domain: domain.clone(),
+                cookies: cookie_map,
+                created_at: Some({
+                    let dur = std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap_or_default();
+                    format!("{}", dur.as_secs())
+                }),
+                notes: None,
+            };
+
+            auth::store::store_profile(&profile)?;
+            let fp = auth::store::profile_fingerprint(&profile);
+            eprintln!(
+                "✓ Stored {} cookie(s) for {} [{}]",
+                profile.cookies.len(),
+                domain,
+                fp
+            );
+        }
+        AuthAction::List => {
+            let profiles = auth::store::list_profiles()?;
+            if profiles.is_empty() {
+                eprintln!("No stored profiles. Use `plasmate auth set <domain> --cookies ...`");
+            } else {
+                eprintln!("Stored profiles:");
+                for domain in profiles {
+                    if let Ok(Some(p)) = auth::store::load_profile(&domain) {
+                        let fp = auth::store::profile_fingerprint(&p);
+                        eprintln!("  {} ({} cookies) [{}]", domain, p.cookies.len(), fp);
+                    } else {
+                        eprintln!("  {}", domain);
+                    }
+                }
+            }
+        }
+        AuthAction::Revoke { domain } => {
+            if auth::store::revoke_profile(&domain)? {
+                eprintln!("✓ Revoked profile for {}", domain);
+            } else {
+                eprintln!("No profile found for {}", domain);
+            }
+        }
+        AuthAction::Info { domain } => {
+            match auth::store::load_profile(&domain)? {
+                Some(profile) => {
+                    let fp = auth::store::profile_fingerprint(&profile);
+                    eprintln!("Domain:      {}", profile.domain);
+                    eprintln!("Cookies:     {}", profile.cookies.len());
+                    eprintln!(
+                        "Cookie keys: {}",
+                        profile
+                            .cookies
+                            .keys()
+                            .cloned()
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    );
+                    eprintln!("Fingerprint: {}", fp);
+                    if let Some(ts) = &profile.created_at {
+                        eprintln!("Created:     {}", ts);
+                    }
+                }
+                None => {
+                    eprintln!("No profile found for {}", domain);
+                }
+            }
+        }
+    }
     Ok(())
 }
 
@@ -169,8 +313,17 @@ async fn cmd_fetch(
     output: Option<&str>,
     external_scripts: bool,
     no_js: bool,
+    profile: Option<&str>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let jar = Arc::new(reqwest::cookie::Jar::default());
+
+    // Load auth cookies if a profile is specified
+    if let Some(domain) = profile {
+        if !auth::store::load_into_jar(domain, &jar)? {
+            eprintln!("Warning: no auth profile found for '{}', continuing without cookies", domain);
+        }
+    }
+
     let client = network::fetch::build_client_h1_fallback(None, jar)?;
 
     info!(url, "Fetching");
