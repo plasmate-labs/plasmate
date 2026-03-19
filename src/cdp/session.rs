@@ -69,6 +69,10 @@ const DEFAULT_USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7
 
 impl CdpTarget {
     pub fn new() -> Result<Self, String> {
+        Self::new_with_profiles(crate::auth::config::profiles())
+    }
+
+    pub fn new_with_profiles(auth_profiles: &[String]) -> Result<Self, String> {
         let target_num = TARGET_COUNTER.fetch_add(1, Ordering::Relaxed);
         let target_id = format!("{:032X}", target_num);
         let session_id = format!("{:032X}", target_num + 1000);
@@ -76,6 +80,14 @@ impl CdpTarget {
         let loader_id = format!("{:032X}", target_num + 3000);
 
         let jar = Arc::new(Jar::default());
+
+        // Load auth cookies from profiles
+        for domain in auth_profiles {
+            if let Err(e) = crate::auth::store::load_into_jar(domain, &jar) {
+                tracing::warn!(domain = %domain, error = %e, "Failed to load auth profile");
+            }
+        }
+
         let client = fetch::build_client_h1_fallback(Some(DEFAULT_USER_AGENT), jar.clone())
             .map_err(|e| e.to_string())?;
 

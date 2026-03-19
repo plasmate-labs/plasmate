@@ -51,10 +51,28 @@ impl Session {
         locale: Option<String>,
         timeout_ms: Option<u64>,
     ) -> Result<Self, String> {
+        Self::new_with_profiles(id, user_agent, locale, timeout_ms, crate::auth::config::profiles())
+    }
+
+    pub fn new_with_profiles(
+        id: String,
+        user_agent: Option<String>,
+        locale: Option<String>,
+        timeout_ms: Option<u64>,
+        auth_profiles: &[String],
+    ) -> Result<Self, String> {
         let ua = user_agent.unwrap_or_else(|| DEFAULT_USER_AGENT.to_string());
         let locale = locale.unwrap_or_else(|| "en-US".to_string());
         let timeout = timeout_ms.unwrap_or(30000);
         let jar = Arc::new(Jar::default());
+
+        // Load auth cookies from profiles
+        for domain in auth_profiles {
+            if let Err(e) = crate::auth::store::load_into_jar(domain, &jar) {
+                tracing::warn!(domain = %domain, error = %e, "Failed to load auth profile");
+            }
+        }
+
         let client =
             fetch::build_client_h1_fallback(Some(&ua), jar.clone()).map_err(|e| e.to_string())?;
 

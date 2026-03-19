@@ -1,3 +1,4 @@
+pub mod auth;
 pub mod awp;
 pub mod bench;
 pub mod cache;
