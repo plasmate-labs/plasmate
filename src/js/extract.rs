@@ -76,7 +76,7 @@ fn visit_scripts(node: &Handle, scripts: &mut Vec<ScriptBlock>, index: &mut usiz
                 }
             }
 
-            if has_src {
+            if !skip && has_src {
                 let src = attrs_borrowed
                     .iter()
                     .find(|a| a.name.local.as_ref() == "src")
@@ -178,5 +178,13 @@ mod tests {
         let scripts = extract_scripts(html);
         let inline: Vec<_> = scripts.iter().filter(|s| s.is_inline).collect();
         assert_eq!(inline.len(), 0);
+    }
+
+    #[test]
+    fn test_skip_external_module() {
+        let html =
+            r#"<html><head><script type="module" src="/app.js"></script></head></html>"#;
+        let scripts = extract_scripts(html);
+        assert_eq!(scripts.len(), 0, "External module scripts should be skipped");
     }
 }

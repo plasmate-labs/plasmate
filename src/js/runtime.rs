@@ -79,7 +79,120 @@ var __plasmate_pending_mutations = [];
 var __plasmate_raf_queue = [];
 var __plasmate_raf_id = 0;
 
+var self = globalThis;
 var window = globalThis;
+
+// URLSearchParams and URL (needed by many SPAs - NYTimes, etc.)
+// Some V8 builds expose a partial URL that is not constructible. Detect and polyfill.
+// IMPORTANT: URLSearchParams must be polyfilled BEFORE URL because URL uses it.
+
+var __plasmate_urlsp_ok = false;
+try {
+  if (typeof URLSearchParams === 'function') new URLSearchParams('a=1');
+  __plasmate_urlsp_ok = true;
+} catch (e) { __plasmate_urlsp_ok = false; }
+
+if (!__plasmate_urlsp_ok) {
+  var URLSearchParams = function(init) {
+    this._entries = [];
+    if (typeof init === 'string') {
+      init = init.replace(/^\?/, '');
+      if (init) {
+        var pairs = init.split('&');
+        for (var i = 0; i < pairs.length; i++) {
+          var kv = pairs[i].split('=');
+          this._entries.push([decodeURIComponent(kv[0]), decodeURIComponent(kv.slice(1).join('='))]);
+        }
+      }
+    }
+  };
+  URLSearchParams.prototype.get = function(name) {
+    for (var i = 0; i < this._entries.length; i++) {
+      if (this._entries[i][0] === name) return this._entries[i][1];
+    }
+    return null;
+  };
+  URLSearchParams.prototype.getAll = function(name) {
+    var r = [];
+    for (var i = 0; i < this._entries.length; i++) {
+      if (this._entries[i][0] === name) r.push(this._entries[i][1]);
+    }
+    return r;
+  };
+  URLSearchParams.prototype.has = function(name) { return this.get(name) !== null; };
+  URLSearchParams.prototype.set = function(name, val) {
+    var found = false;
+    for (var i = 0; i < this._entries.length; i++) {
+      if (this._entries[i][0] === name) {
+        if (!found) { this._entries[i][1] = String(val); found = true; }
+        else { this._entries.splice(i, 1); i--; }
+      }
+    }
+    if (!found) this._entries.push([name, String(val)]);
+  };
+  URLSearchParams.prototype.append = function(name, val) { this._entries.push([name, String(val)]); };
+  URLSearchParams.prototype.delete = function(name) {
+    for (var i = 0; i < this._entries.length; i++) {
+      if (this._entries[i][0] === name) { this._entries.splice(i, 1); i--; }
+    }
+  };
+  URLSearchParams.prototype.toString = function() {
+    return this._entries.map(function(e) { return encodeURIComponent(e[0]) + '=' + encodeURIComponent(e[1]); }).join('&');
+  };
+  URLSearchParams.prototype.forEach = function(cb) {
+    for (var i = 0; i < this._entries.length; i++) cb(this._entries[i][1], this._entries[i][0], this);
+  };
+  URLSearchParams.prototype.keys = function() { return this._entries.map(function(e) { return e[0]; }); };
+  URLSearchParams.prototype.values = function() { return this._entries.map(function(e) { return e[1]; }); };
+  URLSearchParams.prototype.entries = function() { return this._entries.slice(); };
+  globalThis.URLSearchParams = URLSearchParams;
+}
+
+// Polyfill URL if it's not a constructible function
+var __plasmate_url_ok = false;
+try {
+  if (typeof URL === 'function') new URL('https://a.com');
+  __plasmate_url_ok = true;
+} catch (e) { __plasmate_url_ok = false; }
+
+if (!__plasmate_url_ok) {
+  var URL = function(url, base) {
+    if (base && typeof base === 'string') {
+      // Simple base resolution
+      if (url.startsWith('/')) {
+        var m = base.match(/^(https?:\/\/[^\/]+)/);
+        url = m ? m[1] + url : url;
+      } else if (!url.match(/^https?:\/\//)) {
+        url = base.replace(/\/[^\/]*$/, '/') + url;
+      }
+    }
+    var match = String(url).match(/^(https?:)\/\/([^/:]+)(:\d+)?(\/[^?#]*)?\??([^#]*)?(#.*)?$/);
+    this.href = String(url);
+    this.protocol = match ? match[1] : '';
+    this.hostname = match ? match[2] : '';
+    this.port = match ? (match[3] || '').replace(':', '') : '';
+    this.host = this.hostname + (this.port ? ':' + this.port : '');
+    this.pathname = match ? (match[4] || '/') : '/';
+    this.search = match && match[5] ? '?' + match[5] : '';
+    this.hash = match ? (match[6] || '') : '';
+    this.origin = this.protocol + '//' + this.host;
+    this.searchParams = new URLSearchParams(this.search.replace(/^\?/, ''));
+    this.username = '';
+    this.password = '';
+  };
+  URL.prototype.toString = function() { return this.href; };
+  URL.prototype.toJSON = function() { return this.href; };
+  URL.createObjectURL = function() { return 'blob:null/' + Math.random().toString(36).slice(2); };
+  URL.revokeObjectURL = function() {};
+  globalThis.URL = URL;
+}
+
+// Ensure window.URL points to the constructor without creating an object stub
+if (typeof window.URL !== 'function') {
+    window.URL = globalThis.URL;
+}
+window.URL.createObjectURL = window.URL.createObjectURL || function() { return 'blob:null'; };
+window.URL.revokeObjectURL = window.URL.revokeObjectURL || function() {};
 
 // XMLSerializer stub for Puppeteer's page.content()
 function XMLSerializer() {}
