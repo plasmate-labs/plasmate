@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Changelog - Plasmate Docs</title>
+  <meta name="description" content="Plasmate changelog: every release, feature, and fix." />
+
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --plasma-white: #F0EDE8;
+      --core-black: #0D0D0D;
+      --void: #111110;
+      --deep: #1A1918;
+      --smoke: #2A2825;
+      --ash: #6B6560;
+      --dim: #8A8480;
+      --ion: #D4C5A0;
+      --ember: #E8853A;
+      --arc: #3D8FD4;
+      --corona: #F5C842;
+
+      --font-display: "Space Grotesk", system-ui, sans-serif;
+      --font-body: "IBM Plex Sans", system-ui, sans-serif;
+      --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+      --sidebar-w: 240px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--void);
+      color: var(--plasma-white);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .layout { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      position: fixed; top: 0; left: 0;
+      width: var(--sidebar-w); height: 100vh;
+      overflow-y: auto;
+      background: var(--core-black);
+      border-right: 1px solid var(--smoke);
+      padding: 22px 16px 40px;
+      display: flex; flex-direction: column; gap: 4px;
+      z-index: 10;
+    }
+
+    .sidebar-brand {
+      font-family: var(--font-display); font-weight: 600; font-size: 14px;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--plasma-white); text-decoration: none;
+      padding: 0 8px 14px; border-bottom: 1px solid var(--smoke);
+      margin-bottom: 10px; display: flex; align-items: center; gap: 10px;
+    }
+
+    .sidebar-brand .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--ember); }
+
+    .sidebar a {
+      display: block; padding: 7px 10px; border-radius: 8px;
+      color: var(--dim); text-decoration: none; font-size: 13px;
+      font-family: var(--font-body); font-weight: 500;
+      transition: color 0.1s, background 0.1s;
+    }
+
+    .sidebar a:hover { color: var(--plasma-white); background: rgba(240,237,232,0.06); }
+    .sidebar a.active { color: var(--plasma-white); background: rgba(232,133,58,0.14); }
+
+    .sidebar .section-label {
+      font-family: var(--font-mono); text-transform: uppercase;
+      letter-spacing: 0.1em; font-size: 10px; color: var(--ash);
+      padding: 14px 10px 4px; user-select: none;
+    }
+
+    .sidebar-foot {
+      margin-top: auto; padding-top: 16px; border-top: 1px solid var(--smoke);
+      font-family: var(--font-mono); font-size: 11px; color: var(--ash);
+      display: flex; flex-direction: column; gap: 4px;
+    }
+
+    .sidebar-foot a { padding: 4px 10px; font-size: 11px; font-family: var(--font-mono); }
+
+    .content {
+      margin-left: var(--sidebar-w); flex: 1;
+      max-width: 820px; padding: 36px 40px 80px;
+    }
+
+    .content h1 {
+      font-family: var(--font-display); font-weight: 650; font-size: 32px;
+      line-height: 1.15; letter-spacing: -0.015em;
+      margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--smoke);
+    }
+
+    .content h2 {
+      font-family: var(--font-display); font-weight: 600; font-size: 22px;
+      line-height: 1.25; margin-top: 38px; margin-bottom: 12px; color: var(--ion);
+    }
+
+    .content h3 {
+      font-family: var(--font-display); font-weight: 600; font-size: 17px;
+      margin-top: 28px; margin-bottom: 8px;
+    }
+
+    .content p { margin-bottom: 14px; }
+    .content a { color: var(--arc); text-decoration: none; }
+    .content a:hover { text-decoration: underline; }
+    .content strong { color: var(--plasma-white); font-weight: 600; }
+    .content ul, .content ol { padding-left: 22px; margin-bottom: 14px; }
+    .content li { margin-bottom: 4px; }
+
+    .content code {
+      font-family: var(--font-mono); font-size: 13px;
+      background: rgba(240,237,232,0.08); padding: 2px 6px;
+      border-radius: 4px; color: var(--ion);
+    }
+
+    .content hr { border: none; height: 1px; background: var(--smoke); margin: 30px 0; }
+
+    .version-tag {
+      display: inline-block; font-family: var(--font-mono); font-size: 12px;
+      background: rgba(232,133,58,0.12); color: var(--ember);
+      padding: 3px 10px; border-radius: 6px; margin-right: 8px;
+    }
+
+    .date-tag {
+      font-family: var(--font-mono); font-size: 12px; color: var(--ash);
+    }
+
+    .change-type {
+      display: inline-block; font-family: var(--font-mono); font-size: 11px;
+      padding: 2px 8px; border-radius: 4px; margin-right: 6px; font-weight: 500;
+    }
+
+    .change-type.feat { background: rgba(61,143,212,0.15); color: var(--arc); }
+    .change-type.fix { background: rgba(232,133,58,0.15); color: var(--ember); }
+    .change-type.perf { background: rgba(245,200,66,0.15); color: var(--corona); }
+    .change-type.docs { background: rgba(240,237,232,0.08); color: var(--dim); }
+
+    @media (max-width: 860px) {
+      .sidebar {
+        position: static; width: 100%; height: auto;
+        border-right: none; border-bottom: 1px solid var(--smoke);
+        flex-direction: row; flex-wrap: wrap; gap: 2px; padding: 12px;
+      }
+      .sidebar-brand { width: 100%; border-bottom: none; padding-bottom: 8px; margin-bottom: 4px; }
+      .sidebar-foot { display: none; }
+      .sidebar .section-label { display: none; }
+      .layout { flex-direction: column; }
+      .content { margin-left: 0; padding: 24px 18px 60px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Documentation navigation">
+      <a class="sidebar-brand" href="https://plasmate.app"><img src="/brand/plasmate-mark.png" alt="" width="22" height="22" style="vertical-align: -3px;" />Plasmate</a>
+      <a href=".">Overview</a>
+      <a href="quickstart">Quick Start</a>
+      <a href="spec">Product Spec</a>
+      <a href="som">SOM Reference</a>
+      <a href="awp">AWP Protocol</a>
+      <a href="awp-mvp">AWP MVP v0.1</a>
+      <a href="roadmap">Roadmap</a>
+      <a href="coverage">Coverage (HTML)</a>
+      <a href="coverage-js">Coverage (JS)</a>
+      <a href="brand">Brand Guide</a>
+      <div class="section-label">Updates</div>
+      <a href="changelog" class="active">Changelog</a>
+      <a href="log">Engineering Log</a>
+      <div class="sidebar-foot">
+        <a href="https://github.com/plasmate-labs/plasmate">GitHub</a>
+        <a href="https://plasmate.app">plasmate.app</a>
+        <span style="padding: 4px 10px;">Apache 2.0 / v0.1</span>
+      </div>
+    </nav>
+    <main class="content">
+      <h1>Changelog</h1>
+      <p>All notable changes to Plasmate, tracked by version and date.</p>
+
+      <h2><span class="version-tag">v0.1.1</span> <span class="date-tag">2026-03-20</span></h2>
+      <p>Major JS runtime improvements. Coverage jumps from 71% to 82%.</p>
+      <ul>
+        <li><span class="change-type feat">feat</span> Functional <strong>MutationObserver</strong> for SPA framework support (React, Vue, Next.js). Observer callbacks now fire on DOM mutations, enabling client-side rendering in the headless engine.</li>
+        <li><span class="change-type feat">feat</span> <strong>URL/URLSearchParams polyfills</strong> with try-catch constructor probing. Detects partial V8 built-ins and only overrides when necessary.</li>
+        <li><span class="change-type feat">feat</span> <strong>JS coverage scorecard</strong> tracking 100 real-world sites with per-site element counts, JS failure rates, and error details.</li>
+        <li><span class="change-type fix">fix</span> <strong>Browser-realistic HTTP headers</strong> to avoid anti-bot blocking (zero speed/memory cost).</li>
+        <li><span class="change-type fix">fix</span> <strong>Pre/post JS SOM comparison</strong> keeps whichever SOM has more elements, preventing JS from degrading content.</li>
+        <li><span class="change-type fix">fix</span> Skip <code>type="module"</code> external scripts (prevents <code>SyntaxError: Cannot use import statement outside a module</code>).</li>
+        <li><span class="change-type fix">fix</span> <code>var self = globalThis</code> for SPA frameworks that reference <code>self</code>.</li>
+        <li><span class="change-type perf">perf</span> Configurable JS safety budgets: <code>--max-external-scripts</code>, <code>--max-external-script-kb</code>, <code>--external-script-timeout-ms</code>.</li>
+      </ul>
+
+      <h3>Coverage Results</h3>
+      <ul>
+        <li><strong>HTML scorecard:</strong> 80/100 OK (80%)</li>
+        <li><strong>JS scorecard:</strong> 82/100 OK (82%)</li>
+        <li><strong>New OK sites:</strong> amazon.com, ebay.com (via MutationObserver)</li>
+        <li><strong>Remaining thin:</strong> 14 sites needing deeper DOM mutation support</li>
+        <li><strong>Failed:</strong> 4 (anti-bot: etsy, tripadvisor, wsj; non-HTML: httpbin)</li>
+      </ul>
+
+      <hr />
+
+      <h2><span class="version-tag">v0.1.0</span> <span class="date-tag">2026-03-01</span></h2>
+      <p>Initial public release. The browser engine for agents.</p>
+      <ul>
+        <li><span class="change-type feat">feat</span> <strong>Semantic Object Model (SOM)</strong> compiler: HTML to structured, token-efficient representation.</li>
+        <li><span class="change-type feat">feat</span> <strong>Agent Web Protocol (AWP)</strong>: 7-method protocol for agent-native browsing (navigate, snapshot, click, type, scroll, select, extract).</li>
+        <li><span class="change-type feat">feat</span> <strong>V8 JavaScript runtime</strong> with DOM shim for JS-rendered pages.</li>
+        <li><span class="change-type feat">feat</span> <strong>CDP compatibility layer</strong> for Puppeteer/Playwright drop-in usage.</li>
+        <li><span class="change-type feat">feat</span> <strong>MCP server mode</strong> (<code>plasmate mcp</code>) with stateful tools: open_page, evaluate, click, close_page.</li>
+        <li><span class="change-type feat">feat</span> <strong>Cookie-based auth profiles</strong> with AES-256-GCM encryption at rest.</li>
+        <li><span class="change-type feat">feat</span> <strong>Chrome extension bridge</strong> for importing auth sessions from a real browser.</li>
+        <li><span class="change-type feat">feat</span> <strong>Docker image</strong> on GHCR (multi-arch).</li>
+        <li><span class="change-type feat">feat</span> <strong>Node.js and Python SDKs</strong>.</li>
+        <li><span class="change-type perf">perf</span> 4-5ms per page (50x faster than Chrome, 5x faster than Lightpanda).</li>
+        <li><span class="change-type perf">perf</span> ~30MB memory for 100 concurrent pages.</li>
+        <li><span class="change-type perf">perf</span> 10.4x token compression vs raw DOM.</li>
+      </ul>
+
+      <h3>Architecture</h3>
+      <ul>
+        <li><strong>Language:</strong> Rust (16,740 lines, 171 tests)</li>
+        <li><strong>Binary:</strong> 43MB single file, no dependencies</li>
+        <li><strong>License:</strong> Apache 2.0</li>
+      </ul>
+
+    </main>
+  </div>
+</body>
+</html>

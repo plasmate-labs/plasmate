@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Reaching 82% JS Coverage - Plasmate Engineering Log</title>
+  <meta name="description" content="How we built a functional MutationObserver inside Plasmate's V8 DOM shim and pushed JS coverage from 71% to 82% across 100 real-world sites." />
+
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --plasma-white: #F0EDE8;
+      --core-black: #0D0D0D;
+      --void: #111110;
+      --deep: #1A1918;
+      --smoke: #2A2825;
+      --ash: #6B6560;
+      --dim: #8A8480;
+      --ion: #D4C5A0;
+      --ember: #E8853A;
+      --arc: #3D8FD4;
+      --corona: #F5C842;
+
+      --font-display: "Space Grotesk", system-ui, sans-serif;
+      --font-body: "IBM Plex Sans", system-ui, sans-serif;
+      --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+      --sidebar-w: 240px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--void);
+      color: var(--plasma-white);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .layout { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      position: fixed; top: 0; left: 0;
+      width: var(--sidebar-w); height: 100vh;
+      overflow-y: auto;
+      background: var(--core-black);
+      border-right: 1px solid var(--smoke);
+      padding: 22px 16px 40px;
+      display: flex; flex-direction: column; gap: 4px;
+      z-index: 10;
+    }
+
+    .sidebar-brand {
+      font-family: var(--font-display); font-weight: 600; font-size: 14px;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--plasma-white); text-decoration: none;
+      padding: 0 8px 14px; border-bottom: 1px solid var(--smoke);
+      margin-bottom: 10px; display: flex; align-items: center; gap: 10px;
+    }
+
+    .sidebar-brand .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--ember); }
+
+    .sidebar a {
+      display: block; padding: 7px 10px; border-radius: 8px;
+      color: var(--dim); text-decoration: none; font-size: 13px;
+      font-family: var(--font-body); font-weight: 500;
+      transition: color 0.1s, background 0.1s;
+    }
+
+    .sidebar a:hover { color: var(--plasma-white); background: rgba(240,237,232,0.06); }
+    .sidebar a.active { color: var(--plasma-white); background: rgba(232,133,58,0.14); }
+
+    .sidebar .section-label {
+      font-family: var(--font-mono); text-transform: uppercase;
+      letter-spacing: 0.1em; font-size: 10px; color: var(--ash);
+      padding: 14px 10px 4px; user-select: none;
+    }
+
+    .sidebar-foot {
+      margin-top: auto; padding-top: 16px; border-top: 1px solid var(--smoke);
+      font-family: var(--font-mono); font-size: 11px; color: var(--ash);
+      display: flex; flex-direction: column; gap: 4px;
+    }
+
+    .sidebar-foot a { padding: 4px 10px; font-size: 11px; font-family: var(--font-mono); }
+
+    .content {
+      margin-left: var(--sidebar-w); flex: 1;
+      max-width: 820px; padding: 36px 40px 80px;
+    }
+
+    .content .back-link {
+      font-family: var(--font-mono); font-size: 12px; color: var(--ash);
+      margin-bottom: 16px; display: block;
+    }
+
+    .content h1 {
+      font-family: var(--font-display); font-weight: 650; font-size: 32px;
+      line-height: 1.15; letter-spacing: -0.015em; margin-bottom: 10px;
+    }
+
+    .content .article-meta {
+      font-family: var(--font-mono); font-size: 13px; color: var(--ash);
+      margin-bottom: 8px; padding-bottom: 18px; border-bottom: 1px solid var(--smoke);
+    }
+
+    .content h2 {
+      font-family: var(--font-display); font-weight: 600; font-size: 22px;
+      line-height: 1.25; margin-top: 38px; margin-bottom: 12px; color: var(--ion);
+    }
+
+    .content h3 {
+      font-family: var(--font-display); font-weight: 600; font-size: 17px;
+      margin-top: 28px; margin-bottom: 8px;
+    }
+
+    .content p { margin-bottom: 14px; }
+    .content a { color: var(--arc); text-decoration: none; }
+    .content a:hover { text-decoration: underline; }
+    .content strong { color: var(--plasma-white); font-weight: 600; }
+    .content ul, .content ol { padding-left: 22px; margin-bottom: 14px; }
+    .content li { margin-bottom: 6px; }
+
+    .content code {
+      font-family: var(--font-mono); font-size: 13px;
+      background: rgba(240,237,232,0.08); padding: 2px 6px;
+      border-radius: 4px; color: var(--ion);
+    }
+
+    .content pre {
+      background: var(--core-black);
+      border: 1px solid var(--smoke);
+      border-radius: 10px;
+      padding: 16px 18px;
+      overflow-x: auto;
+      margin: 14px 0 18px;
+      line-height: 1.55;
+    }
+
+    .content pre code {
+      background: none; padding: 0; border-radius: 0;
+      color: rgba(240,237,232,0.88); font-size: 13px;
+    }
+
+    .content hr { border: none; height: 1px; background: var(--smoke); margin: 30px 0; }
+
+    .content blockquote {
+      border-left: 3px solid var(--ember);
+      padding: 10px 16px; margin: 16px 0;
+      background: rgba(232,133,58,0.06);
+      border-radius: 0 8px 8px 0;
+      color: rgba(240,237,232,0.88);
+    }
+
+    .content blockquote p { margin-bottom: 0; }
+
+    .content table {
+      width: 100%; border-collapse: collapse;
+      margin: 14px 0 18px; font-size: 13px; font-family: var(--font-mono);
+    }
+
+    .content th {
+      text-align: left; padding: 10px 12px;
+      border-bottom: 2px solid var(--smoke);
+      color: var(--ash); font-weight: 500;
+      text-transform: uppercase; letter-spacing: 0.06em; font-size: 11px;
+    }
+
+    .content td {
+      padding: 8px 12px; border-bottom: 1px solid rgba(240,237,232,0.08);
+      color: rgba(240,237,232,0.84);
+    }
+
+    .highlight-box {
+      border: 1px solid rgba(232,133,58,0.25);
+      background: rgba(232,133,58,0.06);
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin: 18px 0;
+    }
+
+    .highlight-box p { margin-bottom: 0; }
+
+    @media (max-width: 860px) {
+      .sidebar {
+        position: static; width: 100%; height: auto;
+        border-right: none; border-bottom: 1px solid var(--smoke);
+        flex-direction: row; flex-wrap: wrap; gap: 2px; padding: 12px;
+      }
+      .sidebar-brand { width: 100%; border-bottom: none; padding-bottom: 8px; margin-bottom: 4px; }
+      .sidebar-foot { display: none; }
+      .sidebar .section-label { display: none; }
+      .layout { flex-direction: column; }
+      .content { margin-left: 0; padding: 24px 18px 60px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Documentation navigation">
+      <a class="sidebar-brand" href="https://plasmate.app"><img src="/brand/plasmate-mark.png" alt="" width="22" height="22" style="vertical-align: -3px;" />Plasmate</a>
+      <a href="..">Overview</a>
+      <a href="../quickstart">Quick Start</a>
+      <a href="../spec">Product Spec</a>
+      <a href="../som">SOM Reference</a>
+      <a href="../awp">AWP Protocol</a>
+      <a href="../awp-mvp">AWP MVP v0.1</a>
+      <a href="../roadmap">Roadmap</a>
+      <a href="../coverage">Coverage (HTML)</a>
+      <a href="../coverage-js">Coverage (JS)</a>
+      <a href="../brand">Brand Guide</a>
+      <div class="section-label">Updates</div>
+      <a href="../changelog">Changelog</a>
+      <a href="../log" class="active">Engineering Log</a>
+      <div class="sidebar-foot">
+        <a href="https://github.com/plasmate-labs/plasmate">GitHub</a>
+        <a href="https://plasmate.app">plasmate.app</a>
+        <span style="padding: 4px 10px;">Apache 2.0 / v0.1</span>
+      </div>
+    </nav>
+    <main class="content">
+      <a class="back-link" href="../log">&larr; Engineering Log</a>
+      <h1>Reaching 82% JS Coverage: MutationObserver in a Headless Engine</h1>
+      <div class="article-meta">2026-03-20</div>
+
+      <p>Plasmate is not a browser. It's a compiler that turns HTML into a Semantic Object Model. But the modern web doesn't serve HTML anymore. It serves JavaScript that <em>builds</em> HTML. To compile the real web, we need to run the real web's JavaScript.</p>
+
+      <p>This is the story of how we took Plasmate's JS coverage from 71% to 82% across 100 real-world sites, and what we learned about the gap between "has a V8 engine" and "runs React."</p>
+
+      <h2>The Problem</h2>
+
+      <p>Plasmate embeds V8 (Google's JavaScript engine) and injects a DOM shim before running page scripts. The shim provides <code>document.createElement</code>, <code>appendChild</code>, <code>innerHTML</code>, event dispatching, and dozens of other APIs. It's substantial - around 2,200 lines of JavaScript running inside V8 before any page code executes.</p>
+
+      <p>When we first ran the coverage scorecard against 100 real-world sites, 71 produced good SOM output. The other 29 were either "thin" (too few elements extracted) or failed entirely. The thin sites were almost exclusively SPAs: React, Next.js, Vue, and Angular applications that depend on browser APIs our shim didn't fully implement.</p>
+
+      <h2>The Scorecard</h2>
+
+      <p>Before diving into fixes, we built an automated coverage pipeline. For each URL, Plasmate:</p>
+
+      <ol>
+        <li>Fetches the HTML</li>
+        <li>Compiles a "pre-JS" SOM (HTML only)</li>
+        <li>Runs all inline and external scripts through V8</li>
+        <li>Serializes the post-JS DOM back to HTML</li>
+        <li>Compiles a "post-JS" SOM</li>
+        <li>Keeps whichever SOM has more elements (prevents JS from degrading content)</li>
+        <li>Reports element count, JS success/failure rates, and timing</li>
+      </ol>
+
+      <p>A site is classified as:</p>
+      <ul>
+        <li><strong>OK</strong> - 15+ elements, or 40+ elements with no interactive requirement</li>
+        <li><strong>Thin</strong> - Under 15 elements, or under 300 bytes of SOM</li>
+        <li><strong>Failed</strong> - HTTP error, non-HTML, or network failure</li>
+      </ul>
+
+      <h2>Phase 1: Headers and Safety (71% to 80%)</h2>
+
+      <p>The first 9% came from two changes that didn't touch the JS runtime at all:</p>
+
+      <h3>Browser-realistic HTTP headers</h3>
+      <p>Many sites were returning bot-detection pages or degraded HTML because our HTTP client was sending minimal headers. Adding a realistic <code>User-Agent</code>, <code>Accept</code>, <code>Accept-Language</code>, and <code>Accept-Encoding</code> moved several sites from thin to OK with zero performance cost.</p>
+
+      <h3>Pre/post SOM comparison</h3>
+      <p>Some sites have inline JavaScript that actually <em>removes</em> content (loading spinners, skeleton screens, GDPR banners that hide everything). We added a comparison step: after JS runs, if the post-JS SOM has fewer elements than the pre-JS SOM, we keep the pre-JS version. This is a safety net, not a feature - it catches cases where JavaScript makes things worse.</p>
+
+      <h3>JS safety budgets</h3>
+      <p>We added configurable limits to prevent runaway scripts from consuming resources:</p>
+
+      <pre><code>--max-external-scripts 3        # Max external scripts to fetch
+--max-external-script-kb 64     # Max size per external script
+--max-external-total-kb 128     # Total external JS budget
+--external-script-timeout-ms 2000</code></pre>
+
+      <p>These limits are intentionally conservative. We're not trying to run every script - just enough to render the primary content.</p>
+
+      <h2>Phase 2: MutationObserver (80% to 82%)</h2>
+
+      <p>This was the big one. Our DOM shim had <code>MutationObserver</code> as a no-op stub:</p>
+
+      <pre><code>function MutationObserver(callback) { this._callback = callback; }
+MutationObserver.prototype.observe = function() {};
+MutationObserver.prototype.disconnect = function() {};
+MutationObserver.prototype.takeRecords = function() { return []; };</code></pre>
+
+      <p>This is enough to prevent crashes, but it breaks every SPA framework. React, Vue, and Angular all use MutationObserver to track DOM changes and drive their rendering loops. When the observer never fires, the framework thinks nothing changed, and rendering stalls.</p>
+
+      <h3>The implementation</h3>
+
+      <p>We replaced the stub with a real implementation. Every DOM mutation method (<code>appendChild</code>, <code>removeChild</code>, <code>insertBefore</code>, <code>replaceChild</code>, <code>setAttribute</code>, <code>removeAttribute</code>, <code>textContent</code> setter) now creates a <code>MutationRecord</code> and queues it for delivery.</p>
+
+      <p>Observer configuration is respected:</p>
+      <ul>
+        <li><code>childList</code> - tracks additions and removals</li>
+        <li><code>attributes</code> - tracks attribute changes (with <code>attributeOldValue</code>)</li>
+        <li><code>characterData</code> - tracks text content changes</li>
+        <li><code>subtree</code> - recursive observation</li>
+      </ul>
+
+      <p>Mutation delivery is batched using a microtask-like flush. After all synchronous JS finishes, we drain pending mutations and call observer callbacks. This matches browser behavior - mutations are delivered asynchronously, not inline.</p>
+
+      <div class="highlight-box">
+        <p><strong>Result:</strong> Amazon.com went from thin (0 elements) to OK (151 elements). eBay went from failed to OK (210 elements). Both are heavy React/Next.js SPAs that depend entirely on MutationObserver for rendering.</p>
+      </div>
+
+      <h2>Phase 3: URL Polyfill Conflicts</h2>
+
+      <p>One of the more subtle bugs: our DOM shim defined <code>URL</code> twice. Early in the shim, we had a polyfill function:</p>
+
+      <pre><code>function URL(url, base) {
+  // parse protocol, hostname, pathname, search, hash
+  this.searchParams = new URLSearchParams(this.search);
+}</code></pre>
+
+      <p>But later in the same shim, a separate section defined:</p>
+
+      <pre><code>var URL = {
+  createObjectURL: function() { return 'blob:null'; },
+  revokeObjectURL: function() {}
+};</code></pre>
+
+      <p>This plain object silently overwrote the constructor. <code>new URL('https://nytimes.com')</code> would throw <code>TypeError: URL is not a constructor</code>, because <code>URL</code> was now a plain object with two static methods.</p>
+
+      <p>The fix: detect whether the global <code>URL</code> is already constructible using try-catch probing, and only define our polyfill if it fails. For the static methods, we attach them directly to the existing <code>URL</code> function without replacing it:</p>
+
+      <pre><code>var __plasmate_url_ok = false;
+try {
+  if (typeof URL === 'function') new URL('https://a.com');
+  __plasmate_url_ok = true;
+} catch (e) { /* ignore */ }
+
+if (!__plasmate_url_ok) {
+  function URL(url, base) { /* ... */ }
+  globalThis.URL = URL;
+}
+
+// Attach static methods without replacing the constructor
+window.URL.createObjectURL = window.URL.createObjectURL || function() { return 'blob:null'; };
+window.URL.revokeObjectURL = window.URL.revokeObjectURL || function() {};</code></pre>
+
+      <h2>Phase 4: Module Scripts</h2>
+
+      <p>V8 can parse ES modules, but our shim doesn't provide a module loader. External scripts with <code>type="module"</code> were being fetched and compiled, producing <code>SyntaxError: Cannot use import statement outside a module</code> on every <code>import</code> line.</p>
+
+      <p>The fix was one line in <code>extract.rs</code>: skip external scripts when <code>type="module"</code> is set. We already skipped inline module scripts; this extended the same logic to external ones.</p>
+
+      <h2>What's Still Thin</h2>
+
+      <p>14 sites remain thin after all improvements. They fall into clear categories:</p>
+
+      <table>
+        <thead>
+          <tr><th>Category</th><th>Sites</th><th>Root Cause</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>self</code> not defined</td>
+            <td>crates.io, Apple Docs, Medium, Khan Academy, x.com</td>
+            <td>Webpack/bundler code references <code>self</code> as the global scope</td>
+          </tr>
+          <tr>
+            <td>Heavy SPA hydration</td>
+            <td>stripe.com, bing.com, booking.com</td>
+            <td>Requires full React/framework hydration pipeline</td>
+          </tr>
+          <tr>
+            <td>Auth wall</td>
+            <td>accounts.google.com, login.microsoftonline.com, instagram.com</td>
+            <td>Login pages with minimal public content</td>
+          </tr>
+          <tr>
+            <td>Anti-bot</td>
+            <td>nytimes.com</td>
+            <td>Complex inline JS challenges</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>The <code>self = globalThis</code> fix has been implemented but is not yet reflected in the scorecard. That should push us to 84-85%.</p>
+
+      <h2>The Fundamental Tension</h2>
+
+      <p>There's an inherent design tension in what Plasmate does. We're <em>not</em> a browser. We don't render pixels. We don't support CSS layout. We don't implement the full Web Platform API surface.</p>
+
+      <p>But we need to run enough JavaScript for the page to populate its DOM with content. That means implementing just enough of the browser API surface for frameworks to function, without building a second Chromium.</p>
+
+      <p>The coverage scorecard is our way of staying honest about where that line is. Every site that's OK validates our approach. Every site that's thin tells us exactly which API is missing.</p>
+
+      <blockquote>
+        <p>The goal is not 100%. The goal is: does the agent get enough signal from this page to do useful work?</p>
+      </blockquote>
+
+      <p>For 82% of the top 100 sites, the answer is yes.</p>
+
+      <hr />
+
+      <p><em>Live scorecard: <a href="../coverage-js">Coverage (JS)</a> | Source: <a href="https://github.com/plasmate-labs/plasmate">GitHub</a></em></p>
+
+    </main>
+  </div>
+</body>
+</html>
