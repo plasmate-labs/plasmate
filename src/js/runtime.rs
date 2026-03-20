@@ -88,7 +88,12 @@ XMLSerializer.prototype.serializeToString = function(node) {
     if (node && node.textContent != null) return node.textContent;
     return '';
 };
-window.location = { href: '', protocol: 'https:', host: '', hostname: '', pathname: '/', search: '', hash: '', origin: '' };
+window.location = {
+    href: '', protocol: 'https:', host: '', hostname: '', pathname: '/', search: '', hash: '', origin: '',
+    assign: function(url) {},
+    replace: function(url) {},
+    reload: function() {}
+};
 window.navigator = { userAgent: 'Plasmate/0.1', language: 'en-US', languages: ['en-US', 'en'], platform: 'Plasmate', cookieEnabled: true };
 window.innerWidth = 1920;
 window.innerHeight = 1080;
@@ -255,6 +260,24 @@ PlasNode.prototype.contains = function(node) {
 PlasNode.prototype.cloneNode = function(deep) {
     throw new Error('cloneNode must be implemented by subclass');
 };
+
+PlasNode.prototype.getRootNode = function(options) {
+    var node = this;
+    while (node.parentNode) {
+        node = node.parentNode;
+    }
+    return node;
+};
+
+Object.defineProperty(PlasNode.prototype, 'isConnected', {
+    get: function() {
+        var node = this;
+        while (node.parentNode) {
+            node = node.parentNode;
+        }
+        return node === document || node === document.documentElement;
+    }
+});
 
 // ============================================================================
 // Text Node
@@ -929,6 +952,60 @@ PlasElement.prototype.replaceWith = function() {
         node.parentNode = parent;
         parent.childNodes.splice(idx + i, 0, node);
     }
+};
+
+PlasElement.prototype.insertAdjacentHTML = function(position, html) {
+    var nodes = _parseHTML(html);
+    var pos = position.toLowerCase();
+    if (pos === 'beforebegin' && this.parentNode) {
+        for (var i = 0; i < nodes.length; i++) {
+            this.parentNode.insertBefore(nodes[i], this);
+        }
+    } else if (pos === 'afterbegin') {
+        var first = this.firstChild;
+        for (var i = nodes.length - 1; i >= 0; i--) {
+            this.insertBefore(nodes[i], first);
+            first = nodes[i];
+        }
+    } else if (pos === 'beforeend') {
+        for (var i = 0; i < nodes.length; i++) {
+            this.appendChild(nodes[i]);
+        }
+    } else if (pos === 'afterend' && this.parentNode) {
+        var ref = this.nextSibling;
+        for (var i = 0; i < nodes.length; i++) {
+            this.parentNode.insertBefore(nodes[i], ref);
+        }
+    }
+};
+
+PlasElement.prototype.insertAdjacentElement = function(position, element) {
+    var pos = position.toLowerCase();
+    if (pos === 'beforebegin' && this.parentNode) {
+        this.parentNode.insertBefore(element, this);
+    } else if (pos === 'afterbegin') {
+        this.insertBefore(element, this.firstChild);
+    } else if (pos === 'beforeend') {
+        this.appendChild(element);
+    } else if (pos === 'afterend' && this.parentNode) {
+        this.parentNode.insertBefore(element, this.nextSibling);
+    }
+    return element;
+};
+
+PlasElement.prototype.insertAdjacentText = function(position, text) {
+    this.insertAdjacentHTML(position, _encodeEntities(text));
+};
+
+PlasElement.prototype.computedStyleMap = function() {
+    return {
+        get: function() { return undefined; },
+        has: function() { return false; },
+        entries: function() { return []; },
+        keys: function() { return []; },
+        values: function() { return []; },
+        forEach: function() {}
+    };
 };
 
 // Form element properties
@@ -1925,17 +2002,24 @@ XMLHttpRequest.DONE = 4;
 // ============================================================================
 // Storage
 // ============================================================================
-var _store = {};
+var _localStore = {};
 var localStorage = {
-    getItem: function(k) { return _store.hasOwnProperty(k) ? _store[k] : null; },
-    setItem: function(k, v) { _store[k] = String(v); },
-    removeItem: function(k) { delete _store[k]; },
-    clear: function() { _store = {}; },
-    key: function(i) { return Object.keys(_store)[i] || null; },
-    get length() { return Object.keys(_store).length; }
+    getItem: function(k) { return _localStore.hasOwnProperty(k) ? _localStore[k] : null; },
+    setItem: function(k, v) { _localStore[k] = String(v); },
+    removeItem: function(k) { delete _localStore[k]; },
+    clear: function() { _localStore = {}; },
+    key: function(i) { return Object.keys(_localStore)[i] || null; },
+    get length() { return Object.keys(_localStore).length; }
 };
-var sessionStorage = Object.create(localStorage);
-sessionStorage._store = {};
+var _sessionStore = {};
+var sessionStorage = {
+    getItem: function(k) { return _sessionStore.hasOwnProperty(k) ? _sessionStore[k] : null; },
+    setItem: function(k, v) { _sessionStore[k] = String(v); },
+    removeItem: function(k) { delete _sessionStore[k]; },
+    clear: function() { _sessionStore = {}; },
+    key: function(i) { return Object.keys(_sessionStore)[i] || null; },
+    get length() { return Object.keys(_sessionStore).length; }
+};
 
 // ============================================================================
 // Events
@@ -2010,6 +2094,56 @@ var URL = {
     createObjectURL: function() { return 'blob:null'; },
     revokeObjectURL: function() {}
 };
+
+// AbortController/AbortSignal
+function AbortSignal() {
+    this.aborted = false;
+    this.reason = undefined;
+    this._listeners = {};
+}
+AbortSignal.prototype.addEventListener = function(type, fn) {
+    if (!this._listeners[type]) this._listeners[type] = [];
+    this._listeners[type].push(fn);
+};
+AbortSignal.prototype.removeEventListener = function(type, fn) {
+    if (this._listeners[type]) {
+        var idx = this._listeners[type].indexOf(fn);
+        if (idx >= 0) this._listeners[type].splice(idx, 1);
+    }
+};
+AbortSignal.prototype.throwIfAborted = function() {
+    if (this.aborted) throw this.reason;
+};
+AbortSignal.abort = function(reason) {
+    var signal = new AbortSignal();
+    signal.aborted = true;
+    signal.reason = reason !== undefined ? reason : new DOMException('signal is aborted', 'AbortError');
+    return signal;
+};
+AbortSignal.timeout = function(ms) {
+    return new AbortSignal();
+};
+
+function AbortController() {
+    this.signal = new AbortSignal();
+}
+AbortController.prototype.abort = function(reason) {
+    if (this.signal.aborted) return;
+    this.signal.aborted = true;
+    this.signal.reason = reason !== undefined ? reason : new DOMException('signal is aborted', 'AbortError');
+    var evt = { type: 'abort', target: this.signal };
+    if (this.signal._listeners.abort) {
+        for (var i = 0; i < this.signal._listeners.abort.length; i++) {
+            try { this.signal._listeners.abort[i](evt); } catch(e) {}
+        }
+    }
+};
+
+function DOMException(message, name) {
+    this.message = message || '';
+    this.name = name || 'Error';
+}
+DOMException.prototype = Object.create(Error.prototype);
 
 function MutationObserver(callback) {
     this._callback = callback;
@@ -2290,6 +2424,77 @@ window.MutationObserver = MutationObserver;
 window.IntersectionObserver = IntersectionObserver;
 window.ResizeObserver = ResizeObserver;
 window.PerformanceObserver = PerformanceObserver;
+window.AbortController = AbortController;
+window.AbortSignal = AbortSignal;
+window.DOMException = DOMException;
+
+// structuredClone - deep clone via JSON
+var structuredClone = function(value) {
+    try {
+        return JSON.parse(JSON.stringify(value));
+    } catch(e) {
+        return value;
+    }
+};
+window.structuredClone = structuredClone;
+
+// Selection API stub
+function Selection() {
+    this.anchorNode = null;
+    this.anchorOffset = 0;
+    this.focusNode = null;
+    this.focusOffset = 0;
+    this.isCollapsed = true;
+    this.rangeCount = 0;
+    this.type = 'None';
+}
+Selection.prototype.toString = function() { return ''; };
+Selection.prototype.getRangeAt = function() { return null; };
+Selection.prototype.addRange = function() {};
+Selection.prototype.removeRange = function() {};
+Selection.prototype.removeAllRanges = function() {};
+Selection.prototype.collapse = function() {};
+Selection.prototype.collapseToStart = function() {};
+Selection.prototype.collapseToEnd = function() {};
+Selection.prototype.extend = function() {};
+Selection.prototype.selectAllChildren = function() {};
+Selection.prototype.containsNode = function() { return false; };
+
+var _selection = new Selection();
+window.getSelection = function() { return _selection; };
+document.getSelection = function() { return _selection; };
+
+// CSS-related stubs
+function CSSStyleSheet() {
+    this.cssRules = [];
+    this.ownerRule = null;
+    this.disabled = false;
+}
+CSSStyleSheet.prototype.insertRule = function(rule, index) { return index || 0; };
+CSSStyleSheet.prototype.deleteRule = function(index) {};
+CSSStyleSheet.prototype.replace = function(text) { return Promise.resolve(this); };
+CSSStyleSheet.prototype.replaceSync = function(text) {};
+window.CSSStyleSheet = CSSStyleSheet;
+
+// adoptedStyleSheets support
+Object.defineProperty(document, 'adoptedStyleSheets', {
+    get: function() { return []; },
+    set: function(v) {}
+});
+
+// Scroll methods
+window.scrollTo = function(x, y) {};
+window.scrollBy = function(x, y) {};
+window.scroll = function(x, y) {};
+window.scrollX = 0;
+window.scrollY = 0;
+window.pageXOffset = 0;
+window.pageYOffset = 0;
+
+// elementFromPoint
+document.elementFromPoint = function(x, y) { return null; };
+document.elementsFromPoint = function(x, y) { return []; };
+document.caretPositionFromPoint = function(x, y) { return null; };
 
 // ============================================================================
 // Plasmate Bootstrap Function - parses source HTML into DOM tree
@@ -4115,5 +4320,148 @@ mod tests {
         // Timestamp should be set
         let ts = rt.execute_in_context("rafTimestamp > 0", "test.js").unwrap();
         assert_eq!(ts, "true");
+    }
+
+    // =========================================================================
+    // New DOM API Tests
+    // =========================================================================
+
+    #[test]
+    fn test_insert_adjacent_html() {
+        let mut rt = JsRuntime::new(RuntimeConfig::default());
+        rt.bootstrap_dom("<html><body><div id='target'>Original</div></body></html>", "https://example.com");
+
+        // Test beforebegin
+        rt.execute_in_context(
+            r#"document.getElementById('target').insertAdjacentHTML('beforebegin', '<span>Before</span>');"#,
+            "test.js",
+        ).unwrap();
+
+        // Test afterend
+        rt.execute_in_context(
+            r#"document.getElementById('target').insertAdjacentHTML('afterend', '<span>After</span>');"#,
+            "test.js",
+        ).unwrap();
+
+        // Test afterbegin
+        rt.execute_in_context(
+            r#"document.getElementById('target').insertAdjacentHTML('afterbegin', '<em>Start</em>');"#,
+            "test.js",
+        ).unwrap();
+
+        // Test beforeend
+        rt.execute_in_context(
+            r#"document.getElementById('target').insertAdjacentHTML('beforeend', '<em>End</em>');"#,
+            "test.js",
+        ).unwrap();
+
+        let html = rt.serialize_dom().unwrap();
+        assert!(html.contains("<span>Before</span>"), "Should have before content");
+        assert!(html.contains("<span>After</span>"), "Should have after content");
+        assert!(html.contains("<em>Start</em>"), "Should have start content");
+        assert!(html.contains("<em>End</em>"), "Should have end content");
+
+        // Check order within target div
+        let target_content = rt
+            .execute_in_context("document.getElementById('target').innerHTML", "test.js")
+            .unwrap();
+        assert!(target_content.contains("Start"), "Start should be in target");
+        assert!(target_content.contains("End"), "End should be in target");
+    }
+
+    #[test]
+    fn test_abort_controller() {
+        let mut rt = JsRuntime::new(RuntimeConfig::default());
+
+        // Test AbortController creation and basic functionality
+        let result = rt.execute_in_context(
+            r#"
+            var controller = new AbortController();
+            var signal = controller.signal;
+            var abortFired = false;
+            signal.addEventListener('abort', function() {
+                abortFired = true;
+            });
+            JSON.stringify({
+                initialAborted: signal.aborted,
+                hasSignal: typeof controller.signal === 'object'
+            })
+            "#,
+            "test.js",
+        ).unwrap();
+        assert!(result.contains("\"initialAborted\":false"));
+        assert!(result.contains("\"hasSignal\":true"));
+
+        // Test abort() method
+        rt.execute_in_context("controller.abort();", "test.js").unwrap();
+        let aborted = rt.execute_in_context("controller.signal.aborted", "test.js").unwrap();
+        assert_eq!(aborted, "true", "Signal should be aborted after abort()");
+
+        let fired = rt.execute_in_context("abortFired", "test.js").unwrap();
+        assert_eq!(fired, "true", "Abort event should have fired");
+    }
+
+    #[test]
+    fn test_structured_clone() {
+        let mut rt = JsRuntime::new(RuntimeConfig::default());
+
+        let result = rt.execute_in_context(
+            r#"
+            var obj = { a: 1, b: { c: 2 }, arr: [1, 2, 3] };
+            var clone = structuredClone(obj);
+            obj.b.c = 999;
+            obj.arr[0] = 999;
+            JSON.stringify({
+                cloneC: clone.b.c,
+                cloneArr0: clone.arr[0],
+                originalC: obj.b.c
+            })
+            "#,
+            "test.js",
+        ).unwrap();
+        assert!(result.contains("\"cloneC\":2"), "Clone should have original value");
+        assert!(result.contains("\"cloneArr0\":1"), "Clone array should be independent");
+        assert!(result.contains("\"originalC\":999"), "Original should be modified");
+    }
+
+    #[test]
+    fn test_node_is_connected() {
+        let mut rt = JsRuntime::new(RuntimeConfig::default());
+        rt.bootstrap_dom("<html><body><div id='existing'>Hello</div></body></html>", "https://example.com");
+
+        // Test existing node
+        let connected = rt.execute_in_context(
+            "document.getElementById('existing').isConnected",
+            "test.js",
+        ).unwrap();
+        assert_eq!(connected, "true", "Existing node should be connected");
+
+        // Test detached node
+        let detached = rt.execute_in_context(
+            "document.createElement('div').isConnected",
+            "test.js",
+        ).unwrap();
+        assert_eq!(detached, "false", "Detached node should not be connected");
+    }
+
+    #[test]
+    fn test_session_storage_separate() {
+        let mut rt = JsRuntime::new(RuntimeConfig::default());
+
+        // Set values in both storages
+        rt.execute_in_context(
+            r#"
+            localStorage.setItem('key', 'local');
+            sessionStorage.setItem('key', 'session');
+            "#,
+            "test.js",
+        ).unwrap();
+
+        // Verify they are separate
+        let local = rt.execute_in_context("localStorage.getItem('key')", "test.js").unwrap();
+        let session = rt.execute_in_context("sessionStorage.getItem('key')", "test.js").unwrap();
+
+        assert_eq!(local, "local", "localStorage should have its own value");
+        assert_eq!(session, "session", "sessionStorage should have its own value");
     }
 }
