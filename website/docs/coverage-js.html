@@ -382,8 +382,8 @@
 
   function statusBadge(status) {
     const s = String(status || '');
-    const color = s === 'ok' ? '#3bd4a7' : (s === 'thin' ? '#F5C842' : '#E8853A');
-    return `<span style="display:inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(240,237,232,0.18); background: rgba(240,237,232,0.04); color: ${color}; font-family: var(--font-mono); font-size: 11px;">${esc(s)}</span>`;
+    const label = s === 'ok' ? 'full' : s; const color = s === 'ok' ? '#3bd4a7' : (s === 'thin' ? '#F5C842' : '#E8853A');
+    return `<span style="display:inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(240,237,232,0.18); background: rgba(240,237,232,0.04); color: ${color}; font-family: var(--font-mono); font-size: 11px;">${esc(label)}</span>`;
   }
 
   try {
@@ -394,7 +394,7 @@
     const s = data.summary || {};
     summaryEl.innerHTML = `
       <div style="display:flex; flex-wrap:wrap; gap: 14px; align-items:baseline;">
-        <div><strong>OK</strong>: ${fmt(s.ok)} / ${fmt(s.urls_total)} (${fmt((s.ok_percent || 0).toFixed ? s.ok_percent.toFixed(1) : s.ok_percent)}%)</div>
+        <div><strong>Full</strong>: ${fmt(s.ok)} / ${fmt(s.urls_total)} (${fmt((s.ok_percent || 0).toFixed ? s.ok_percent.toFixed(1) : s.ok_percent)}%)</div>
         <div><strong>Thin</strong>: ${fmt(s.thin)}</div>
         <div><strong>Failed</strong>: ${fmt(s.failed)}</div>
         <div style="color: rgba(240,237,232,0.72); font-family: var(--font-mono); font-size: 11px;">Generated: ${esc(data.generated_at_utc || '')}, version: ${esc(data.plasmate_version || '')}</div>

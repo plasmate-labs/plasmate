@@ -258,7 +258,7 @@
 
       <p>A site is classified as:</p>
       <ul>
-        <li><strong>OK</strong> - 15+ elements, or 40+ elements with no interactive requirement</li>
+        <li><strong>Full</strong> - 15+ elements, or 40+ elements with no interactive requirement</li>
         <li><strong>Thin</strong> - Under 15 elements, or under 300 bytes of SOM</li>
         <li><strong>Failed</strong> - HTTP error, non-HTML, or network failure</li>
       </ul>
@@ -268,7 +268,7 @@
       <p>The first 9% came from two changes that didn't touch the JS runtime at all:</p>
 
       <h3>Browser-realistic HTTP headers</h3>
-      <p>Many sites were returning bot-detection pages or degraded HTML because our HTTP client was sending minimal headers. Adding a realistic <code>User-Agent</code>, <code>Accept</code>, <code>Accept-Language</code>, and <code>Accept-Encoding</code> moved several sites from thin to OK with zero performance cost.</p>
+      <p>Many sites were returning bot-detection pages or degraded HTML because our HTTP client was sending minimal headers. Adding a realistic <code>User-Agent</code>, <code>Accept</code>, <code>Accept-Language</code>, and <code>Accept-Encoding</code> moved several sites from thin to full with zero performance cost.</p>
 
       <h3>Pre/post SOM comparison</h3>
       <p>Some sites have inline JavaScript that actually <em>removes</em> content (loading spinners, skeleton screens, GDPR banners that hide everything). We added a comparison step: after JS runs, if the post-JS SOM has fewer elements than the pre-JS SOM, we keep the pre-JS version. This is a safety net, not a feature - it catches cases where JavaScript makes things worse.</p>
@@ -309,7 +309,7 @@ MutationObserver.prototype.takeRecords = function() { return []; };</code></pre>
       <p>Mutation delivery is batched using a microtask-like flush. After all synchronous JS finishes, we drain pending mutations and call observer callbacks. This matches browser behavior - mutations are delivered asynchronously, not inline.</p>
 
       <div class="highlight-box">
-        <p><strong>Result:</strong> Amazon.com went from thin (0 elements) to OK (151 elements). eBay went from failed to OK (210 elements). Both are heavy React/Next.js SPAs that depend entirely on MutationObserver for rendering.</p>
+        <p><strong>Result:</strong> Amazon.com went from thin (0 elements) to full (151 elements). eBay went from failed to full (210 elements). Both are heavy React/Next.js SPAs that depend entirely on MutationObserver for rendering.</p>
       </div>
 
       <h2>Phase 3: URL Polyfill Conflicts</h2>
@@ -393,7 +393,7 @@ window.URL.revokeObjectURL = window.URL.revokeObjectURL || function() {};</code>
 
       <p>But we need to run enough JavaScript for the page to populate its DOM with content. That means implementing just enough of the browser API surface for frameworks to function, without building a second Chromium.</p>
 
-      <p>The coverage scorecard is our way of staying honest about where that line is. Every site that's OK validates our approach. Every site that's thin tells us exactly which API is missing.</p>
+      <p>The coverage scorecard is our way of staying honest about where that line is. Every site that's full validates our approach. Every site that's thin tells us exactly which API is missing.</p>
 
       <blockquote>
         <p>The goal is not 100%. The goal is: does the agent get enough signal from this page to do useful work?</p>
