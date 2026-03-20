@@ -312,8 +312,14 @@ pub async fn handle_cdp_request(
             domains::network_set_extra_http_headers(id, params, target),
             vec![],
         ),
-        "Network.getCookies" => (domains::network_get_cookies(id), vec![]),
-        "Network.setCookies" => (domains::network_set_cookies(id), vec![]),
+        "Network.getCookies" => (domains::network_get_cookies(id, params, target), vec![]),
+        "Network.getAllCookies" => (domains::network_get_all_cookies(id, target), vec![]),
+        "Network.setCookies" => (domains::network_set_cookies(id, params, target), vec![]),
+        "Network.setCookie" => (domains::network_set_cookie(id, params, target), vec![]),
+        "Network.deleteCookies" => (domains::network_delete_cookies(id, params, target), vec![]),
+        "Network.clearBrowserCookies" => {
+            (domains::network_clear_browser_cookies(id, target), vec![])
+        }
         "Network.setRequestInterception" => {
             (CdpResponse::success(id, serde_json::json!({})), vec![])
         }

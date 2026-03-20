@@ -7,6 +7,7 @@
 use serde_json::json;
 use tracing::info;
 
+use super::cookies::cookie_from_cdp_params;
 use super::session::{CdpTarget, NodeEntry};
 use super::types::*;
 
@@ -640,12 +641,100 @@ pub fn network_set_extra_http_headers(
     CdpResponse::success(id, json!({}))
 }
 
-pub fn network_get_cookies(id: u64) -> CdpResponse {
-    // Cookie jar doesn't expose cookies easily; return empty for now
-    CdpResponse::success(id, json!({"cookies": []}))
+pub fn network_get_cookies(id: u64, params: &serde_json::Value, target: &CdpTarget) -> CdpResponse {
+    // Get URLs to filter by (optional)
+    let urls: Vec<String> = params
+        .get("urls")
+        .and_then(|v| v.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                .collect()
+        })
+        .unwrap_or_default();
+
+    let cookies = if urls.is_empty() {
+        // No URLs specified - return all cookies for current page URL
+        if let Some(ref url) = target.current_url {
+            target.cookie_jar.get_cookies(url)
+        } else {
+            target.cookie_jar.get_all_cookies()
+        }
+    } else {
+        // Filter by specified URLs
+        let mut all_cookies = Vec::new();
+        for url in &urls {
+            all_cookies.extend(target.cookie_jar.get_cookies(url));
+        }
+        // Deduplicate by (name, domain, path)
+        let mut seen = std::collections::HashSet::new();
+        all_cookies.retain(|c| {
+            let key = (c.name.clone(), c.domain.clone(), c.path.clone());
+            seen.insert(key)
+        });
+        all_cookies
+    };
+
+    let cookies_json: Vec<serde_json::Value> = cookies.iter().map(|c| c.to_cdp_json()).collect();
+
+    CdpResponse::success(id, json!({"cookies": cookies_json}))
 }
 
-pub fn network_set_cookies(id: u64) -> CdpResponse {
+pub fn network_get_all_cookies(id: u64, target: &CdpTarget) -> CdpResponse {
+    let cookies = target.cookie_jar.get_all_cookies();
+    let cookies_json: Vec<serde_json::Value> = cookies.iter().map(|c| c.to_cdp_json()).collect();
+    CdpResponse::success(id, json!({"cookies": cookies_json}))
+}
+
+pub fn network_set_cookies(
+    id: u64,
+    params: &serde_json::Value,
+    target: &mut CdpTarget,
+) -> CdpResponse {
+    if let Some(cookies_array) = params.get("cookies").and_then(|v| v.as_array()) {
+        for cookie_params in cookies_array {
+            if let Some(cookie) = cookie_from_cdp_params(cookie_params) {
+                target.cookie_jar.set_cookie(cookie);
+            }
+        }
+    }
+    CdpResponse::success(id, json!({}))
+}
+
+pub fn network_set_cookie(
+    id: u64,
+    params: &serde_json::Value,
+    target: &mut CdpTarget,
+) -> CdpResponse {
+    // Network.setCookie takes cookie parameters directly (not wrapped in "cookies" array)
+    if let Some(cookie) = cookie_from_cdp_params(params) {
+        target.cookie_jar.set_cookie(cookie);
+        CdpResponse::success(id, json!({"success": true}))
+    } else {
+        CdpResponse::error(id, CDP_ERR_INVALID_PARAMS, "Invalid cookie parameters")
+    }
+}
+
+pub fn network_delete_cookies(
+    id: u64,
+    params: &serde_json::Value,
+    target: &mut CdpTarget,
+) -> CdpResponse {
+    let name = match params.get("name").and_then(|v| v.as_str()) {
+        Some(n) => n,
+        None => return CdpResponse::error(id, CDP_ERR_INVALID_PARAMS, "Missing cookie name"),
+    };
+
+    let url = params.get("url").and_then(|v| v.as_str());
+    let domain = params.get("domain").and_then(|v| v.as_str());
+    let path = params.get("path").and_then(|v| v.as_str());
+
+    target.cookie_jar.delete_cookies(name, url, domain, path);
+    CdpResponse::success(id, json!({}))
+}
+
+pub fn network_clear_browser_cookies(id: u64, target: &mut CdpTarget) -> CdpResponse {
+    target.cookie_jar.clear();
     CdpResponse::success(id, json!({}))
 }
 

@@ -12,6 +12,8 @@ pub struct FetchResult {
     pub html: String,
     pub html_bytes: usize,
     pub load_ms: u64,
+    /// Set-Cookie headers from the response (for CDP cookie jar sync).
+    pub set_cookies: Vec<String>,
 }
 
 /// Errors from the fetch layer.
@@ -124,6 +126,15 @@ pub async fn fetch_url(
         .unwrap_or("text/html")
         .to_string();
 
+    // Capture Set-Cookie headers for CDP cookie jar sync
+    let set_cookies: Vec<String> = response
+        .headers()
+        .get_all("set-cookie")
+        .iter()
+        .filter_map(|v| v.to_str().ok())
+        .map(|s| s.to_string())
+        .collect();
+
     if status >= 400 {
         return Err(FetchError::HttpError {
             status,
@@ -155,6 +166,7 @@ pub async fn fetch_url(
         html,
         html_bytes,
         load_ms,
+        set_cookies,
     })
 }
 

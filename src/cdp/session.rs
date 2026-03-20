@@ -7,6 +7,7 @@ use std::sync::Arc;
 use reqwest::cookie::Jar;
 use reqwest::Client;
 
+use crate::cdp::cookies::CookieJar;
 use crate::js::pipeline::PipelineConfig;
 use crate::js::runtime::{JsRuntime, RuntimeConfig};
 use crate::network::fetch;
@@ -21,7 +22,8 @@ pub struct CdpTarget {
     pub target_id: String,
     pub session_id: String,
     pub client: Client,
-    pub cookie_jar: Arc<Jar>,
+    pub reqwest_jar: Arc<Jar>,
+    pub cookie_jar: CookieJar,
     pub timeout_ms: u64,
     pub user_agent: String,
     pub extra_headers: HashMap<String, String>,
@@ -79,23 +81,27 @@ impl CdpTarget {
         let frame_id = format!("{:032X}", target_num + 2000);
         let loader_id = format!("{:032X}", target_num + 3000);
 
-        let jar = Arc::new(Jar::default());
+        let reqwest_jar = Arc::new(Jar::default());
 
         // Load auth cookies from profiles
         for domain in auth_profiles {
-            if let Err(e) = crate::auth::store::load_into_jar(domain, &jar) {
+            if let Err(e) = crate::auth::store::load_into_jar(domain, &reqwest_jar) {
                 tracing::warn!(domain = %domain, error = %e, "Failed to load auth profile");
             }
         }
 
-        let client = fetch::build_client_h1_fallback(Some(DEFAULT_USER_AGENT), jar.clone())
+        let client = fetch::build_client_h1_fallback(Some(DEFAULT_USER_AGENT), reqwest_jar.clone())
             .map_err(|e| e.to_string())?;
+
+        // Create CDP cookie jar that syncs with the reqwest jar
+        let cookie_jar = CookieJar::new(reqwest_jar.clone());
 
         Ok(CdpTarget {
             target_id,
             session_id: session_id.clone(),
             client,
-            cookie_jar: jar,
+            reqwest_jar,
+            cookie_jar,
             timeout_ms: 30000,
             user_agent: DEFAULT_USER_AGENT.to_string(),
             extra_headers: HashMap::new(),
@@ -153,6 +159,11 @@ impl CdpTarget {
             .map_err(|e| e.to_string())?;
 
         let final_url = fetch_result.url.clone();
+
+        // Parse Set-Cookie headers and add to our CDP cookie jar
+        for set_cookie in &fetch_result.set_cookies {
+            self.cookie_jar.parse_set_cookie(set_cookie, &final_url);
+        }
 
         let page_result = crate::js::pipeline::process_page_async(
             &fetch_result.html,

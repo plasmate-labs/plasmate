@@ -15,9 +15,10 @@
 //!   - Runtime.*     (evaluate, callFunctionOn, enable)
 //!   - DOM.*         (getDocument, querySelector, querySelectorAll, resolveNode)
 //!   - Input.*       (dispatchMouseEvent, dispatchKeyEvent)
-//!   - Network.*     (enable, setCookies, getCookies, setExtraHTTPHeaders)
+//!   - Network.*     (enable, setCookies, getCookies, deleteCookies, clearBrowserCookies)
 //!   - Plasmate.*    (getSom, getStructuredData, getInteractiveElements, act)
 
+pub mod cookies;
 pub mod domains;
 pub mod handler;
 pub mod server;
