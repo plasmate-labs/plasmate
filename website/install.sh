@@ -84,7 +84,19 @@ main() {
     # Install
     install_dir=$(find_install_dir)
     chmod +x "$tmp"
+
+    # macOS: remove quarantine flag to prevent Gatekeeper warnings
+    # (binary is unsigned; Apple blocks unsigned downloads by default)
+    if [ "$os" = "macos" ]; then
+        xattr -d com.apple.quarantine "$tmp" 2>/dev/null || true
+    fi
+
     mv "$tmp" "${install_dir}/${BINARY}"
+
+    # macOS: also clear quarantine on final path (belt and suspenders)
+    if [ "$os" = "macos" ]; then
+        xattr -d com.apple.quarantine "${install_dir}/${BINARY}" 2>/dev/null || true
+    fi
 
     success "Installed ${BINARY} to ${install_dir}/${BINARY}"
 
