@@ -191,8 +191,10 @@ if (!__plasmate_url_ok) {
 if (typeof window.URL !== 'function') {
     window.URL = globalThis.URL;
 }
-window.URL.createObjectURL = window.URL.createObjectURL || function() { return 'blob:null'; };
-window.URL.revokeObjectURL = window.URL.revokeObjectURL || function() {};
+if (window.URL) {
+    window.URL.createObjectURL = window.URL.createObjectURL || function() { return 'blob:null'; };
+    window.URL.revokeObjectURL = window.URL.revokeObjectURL || function() {};
+}
 
 // XMLSerializer stub for Puppeteer's page.content()
 function XMLSerializer() {}
