@@ -38,13 +38,13 @@ jobs:
           ./target/release/plasmate coverage \
             --urls bench/top100.txt \
             --output website/docs/coverage-js.json \
-            --timeout 20000 \
+            --timeout 15000 \
             --concurrency 1 \
-            --js-heap-mb 1024 \
-            --max-external-scripts 12 \
-            --max-external-script-kb 256 \
-            --max-external-total-kb 2048 \
-            --external-script-timeout-ms 4000 \
+            --js-heap-mb 2048 \
+            --max-external-scripts 3 \
+            --max-external-script-kb 64 \
+            --max-external-total-kb 128 \
+            --external-script-timeout-ms 2000 \
             --max 100
 
       - name: Commit and push scorecard (if changed)
