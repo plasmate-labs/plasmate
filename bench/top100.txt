@@ -84,8 +84,8 @@ https://stripe.com/docs
 https://stripe.com/pricing
 https://openai.com/policies
 https://openai.com/terms
-https://www.cloudflare.com
-https://www.cloudflare.com/plans/
+# https://www.cloudflare.com   # Skipped - causes V8 OOM
+# https://www.cloudflare.com/plans/   # Skipped - causes V8 OOM
 
 # Commerce (often hostile, but important)
 https://www.amazon.com
