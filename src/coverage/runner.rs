@@ -93,7 +93,6 @@ pub struct CoverageResult {
     pub js_total_scripts: Option<usize>,
     pub js_succeeded: Option<usize>,
     pub js_failed: Option<usize>,
-    pub js_errors: Option<Vec<String>>,
 
     pub failure_kind: Option<FailureKind>,
     pub error: Option<String>,
@@ -229,7 +228,6 @@ pub async fn run(urls: &[String], opts: &CoverageOptions) -> CoverageReport {
                     js_total_scripts: None,
                     js_succeeded: None,
                     js_failed: None,
-                    js_errors: None,
                     failure_kind: Some(FailureKind::Timeout),
                     error: Some(format!("Overall timeout after {}ms", opts.timeout_ms)),
                 },
@@ -343,7 +341,6 @@ async fn cover_single(
                 js_total_scripts: None,
                 js_succeeded: None,
                 js_failed: None,
-                js_errors: None,
                 failure_kind: Some(kind),
                 error: Some(msg),
             };
@@ -374,7 +371,6 @@ async fn cover_single(
             js_total_scripts: None,
             js_succeeded: None,
             js_failed: None,
-            js_errors: None,
             failure_kind: Some(FailureKind::NonHtml),
             error: Some("Non-HTML content-type".into()),
         };
@@ -426,7 +422,6 @@ async fn cover_single(
                     js_total_scripts: None,
                     js_succeeded: None,
                     js_failed: None,
-                    js_errors: None,
                     failure_kind: Some(FailureKind::PipelineError),
                     error: Some(format!("{e:?}")),
                 };
@@ -461,19 +456,11 @@ async fn cover_single(
         CoverageStatus::Ok
     };
 
-    let (js_total, js_succeeded, js_failed, js_errors) = page
+    let (js_total, js_succeeded, js_failed) = page
         .js_report
         .as_ref()
-        .map(|r| {
-            let errors: Vec<String> = r
-                .errors
-                .iter()
-                .map(|(label, err)| format!("{}: {}", label, err))
-                .collect();
-            let errors_opt = if errors.is_empty() { None } else { Some(errors) };
-            (Some(r.total), Some(r.succeeded), Some(r.failed), errors_opt)
-        })
-        .unwrap_or((None, None, None, None));
+        .map(|r| (Some(r.total), Some(r.succeeded), Some(r.failed)))
+        .unwrap_or((None, None, None));
 
     CoverageResult {
         input_url: input_url.to_string(),
@@ -491,7 +478,6 @@ async fn cover_single(
         js_total_scripts: js_total,
         js_succeeded,
         js_failed,
-        js_errors,
         failure_kind: None,
         error: None,
     }
