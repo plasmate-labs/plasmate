@@ -4022,7 +4022,10 @@ mod tests {
     #[test]
     fn test_mutation_observer_appendchild() {
         let mut rt = JsRuntime::new(RuntimeConfig::default());
-        rt.bootstrap_dom("<html><body><div id='root'></div></body></html>", "https://example.com");
+        rt.bootstrap_dom(
+            "<html><body><div id='root'></div></body></html>",
+            "https://example.com",
+        );
 
         // Set up MutationObserver and appendChild
         rt.execute_in_context(
@@ -4048,7 +4051,10 @@ mod tests {
         let record_count = rt
             .execute_in_context("mutationRecords.length", "test.js")
             .unwrap();
-        assert_eq!(record_count, "1", "Should have 1 mutation record for appendChild");
+        assert_eq!(
+            record_count, "1",
+            "Should have 1 mutation record for appendChild"
+        );
 
         let record_type = rt
             .execute_in_context("mutationRecords[0].type", "test.js")
@@ -4064,7 +4070,10 @@ mod tests {
     #[test]
     fn test_mutation_observer_setattribute() {
         let mut rt = JsRuntime::new(RuntimeConfig::default());
-        rt.bootstrap_dom("<html><body><div id='el'></div></body></html>", "https://example.com");
+        rt.bootstrap_dom(
+            "<html><body><div id='el'></div></body></html>",
+            "https://example.com",
+        );
 
         rt.execute_in_context(
             r#"
@@ -4085,7 +4094,10 @@ mod tests {
         let record_count = rt
             .execute_in_context("mutationRecords.length", "test.js")
             .unwrap();
-        assert_eq!(record_count, "1", "Should have 1 mutation record for setAttribute");
+        assert_eq!(
+            record_count, "1",
+            "Should have 1 mutation record for setAttribute"
+        );
 
         let record_type = rt
             .execute_in_context("mutationRecords[0].type", "test.js")
@@ -4101,7 +4113,10 @@ mod tests {
     #[test]
     fn test_mutation_observer_subtree() {
         let mut rt = JsRuntime::new(RuntimeConfig::default());
-        rt.bootstrap_dom("<html><body><div id='root'><div id='nested'></div></div></body></html>", "https://example.com");
+        rt.bootstrap_dom(
+            "<html><body><div id='root'><div id='nested'></div></div></body></html>",
+            "https://example.com",
+        );
 
         rt.execute_in_context(
             r#"
@@ -4124,7 +4139,10 @@ mod tests {
         let record_count = rt
             .execute_in_context("mutationRecords.length", "test.js")
             .unwrap();
-        assert_eq!(record_count, "1", "Should have 1 mutation record for subtree appendChild");
+        assert_eq!(
+            record_count, "1",
+            "Should have 1 mutation record for subtree appendChild"
+        );
 
         // Target should be the nested element
         let target_id = rt
@@ -4136,7 +4154,10 @@ mod tests {
     #[test]
     fn test_mutation_observer_disconnect() {
         let mut rt = JsRuntime::new(RuntimeConfig::default());
-        rt.bootstrap_dom("<html><body><div id='root'></div></body></html>", "https://example.com");
+        rt.bootstrap_dom(
+            "<html><body><div id='root'></div></body></html>",
+            "https://example.com",
+        );
 
         rt.execute_in_context(
             r#"
@@ -4159,13 +4180,19 @@ mod tests {
         let record_count = rt
             .execute_in_context("mutationRecords.length", "test.js")
             .unwrap();
-        assert_eq!(record_count, "0", "Should have 0 mutations after disconnect");
+        assert_eq!(
+            record_count, "0",
+            "Should have 0 mutations after disconnect"
+        );
     }
 
     #[test]
     fn test_mutation_observer_takerecords() {
         let mut rt = JsRuntime::new(RuntimeConfig::default());
-        rt.bootstrap_dom("<html><body><div id='root'></div></body></html>", "https://example.com");
+        rt.bootstrap_dom(
+            "<html><body><div id='root'></div></body></html>",
+            "https://example.com",
+        );
 
         // Take records before microtasks are delivered
         rt.execute_in_context(
@@ -4195,7 +4222,10 @@ mod tests {
         let callback_count = rt
             .execute_in_context("callbackRecords.length", "test.js")
             .unwrap();
-        assert_eq!(callback_count, "0", "Callback should not receive taken records");
+        assert_eq!(
+            callback_count, "0",
+            "Callback should not receive taken records"
+        );
     }
 
     #[test]
@@ -4228,7 +4258,9 @@ mod tests {
         assert_eq!(called, "true");
 
         // Timestamp should be set
-        let ts = rt.execute_in_context("rafTimestamp > 0", "test.js").unwrap();
+        let ts = rt
+            .execute_in_context("rafTimestamp > 0", "test.js")
+            .unwrap();
         assert_eq!(ts, "true");
     }
 }

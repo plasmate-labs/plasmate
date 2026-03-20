@@ -139,7 +139,9 @@ pub async fn fetch_url(
         Err(e) => {
             // If we got a decode error but partial body is available, that's still useful.
             // Unfortunately reqwest doesn't expose partial bytes on error, so we fail here.
-            return Err(FetchError::NavigationFailed(format!("Body decode error: {e:?}")));
+            return Err(FetchError::NavigationFailed(format!(
+                "Body decode error: {e:?}"
+            )));
         }
     };
 

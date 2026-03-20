@@ -182,9 +182,12 @@ mod tests {
 
     #[test]
     fn test_skip_external_module() {
-        let html =
-            r#"<html><head><script type="module" src="/app.js"></script></head></html>"#;
+        let html = r#"<html><head><script type="module" src="/app.js"></script></head></html>"#;
         let scripts = extract_scripts(html);
-        assert_eq!(scripts.len(), 0, "External module scripts should be skipped");
+        assert_eq!(
+            scripts.len(),
+            0,
+            "External module scripts should be skipped"
+        );
     }
 }
