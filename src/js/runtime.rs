@@ -74,6 +74,10 @@ var __plasmate_timers = [];
 var __plasmate_event_listeners = [];
 var __plasmate_console = [];
 var __plasmate_fetch_queue = [];
+var __plasmate_mutation_observers = [];
+var __plasmate_pending_mutations = [];
+var __plasmate_raf_queue = [];
+var __plasmate_raf_id = 0;
 
 var window = globalThis;
 
@@ -115,6 +119,14 @@ function PlasNode(nodeType) {
     this.ownerDocument = null;
 }
 
+// ============================================================================
+// MutationObserver Helpers (forward declarations, implementations after queueMicrotask)
+// ============================================================================
+var __plasmate_mutation_scheduled = false;
+var _queueMutationRecord = function() {}; // no-op until properly initialized
+var _scheduleMutationDelivery = function() {};
+var _deliverMutations = function() {};
+
 Object.defineProperty(PlasNode.prototype, 'firstChild', {
     get: function() { return this.childNodes[0] || null; }
 });
@@ -145,17 +157,36 @@ PlasNode.prototype.appendChild = function(child) {
         }
         return child;
     }
+    var prevSibling = this.childNodes.length > 0 ? this.childNodes[this.childNodes.length - 1] : null;
     child.parentNode = this;
     child.ownerDocument = this.ownerDocument || this;
     this.childNodes.push(child);
+    _queueMutationRecord(this, {
+        type: 'childList',
+        target: this,
+        addedNodes: [child],
+        removedNodes: [],
+        previousSibling: prevSibling,
+        nextSibling: null
+    });
     return child;
 };
 
 PlasNode.prototype.removeChild = function(child) {
     var idx = this.childNodes.indexOf(child);
     if (idx >= 0) {
+        var prevSib = idx > 0 ? this.childNodes[idx - 1] : null;
+        var nextSib = idx < this.childNodes.length - 1 ? this.childNodes[idx + 1] : null;
         this.childNodes.splice(idx, 1);
         child.parentNode = null;
+        _queueMutationRecord(this, {
+            type: 'childList',
+            target: this,
+            addedNodes: [],
+            removedNodes: [child],
+            previousSibling: prevSib,
+            nextSibling: nextSib
+        });
     }
     return child;
 };
@@ -171,9 +202,18 @@ PlasNode.prototype.insertBefore = function(newNode, refNode) {
     }
     var idx = refNode ? this.childNodes.indexOf(refNode) : this.childNodes.length;
     if (idx < 0) idx = this.childNodes.length;
+    var prevSib = idx > 0 ? this.childNodes[idx - 1] : null;
     newNode.parentNode = this;
     newNode.ownerDocument = this.ownerDocument || this;
     this.childNodes.splice(idx, 0, newNode);
+    _queueMutationRecord(this, {
+        type: 'childList',
+        target: this,
+        addedNodes: [newNode],
+        removedNodes: [],
+        previousSibling: prevSib,
+        nextSibling: refNode || null
+    });
     return newNode;
 };
 
@@ -181,10 +221,20 @@ PlasNode.prototype.replaceChild = function(newChild, oldChild) {
     var idx = this.childNodes.indexOf(oldChild);
     if (idx >= 0) {
         if (newChild.parentNode) newChild.parentNode.removeChild(newChild);
+        var prevSib = idx > 0 ? this.childNodes[idx - 1] : null;
+        var nextSib = idx < this.childNodes.length - 1 ? this.childNodes[idx + 1] : null;
         oldChild.parentNode = null;
         newChild.parentNode = this;
         newChild.ownerDocument = this.ownerDocument || this;
         this.childNodes[idx] = newChild;
+        _queueMutationRecord(this, {
+            type: 'childList',
+            target: this,
+            addedNodes: [newChild],
+            removedNodes: [oldChild],
+            previousSibling: prevSib,
+            nextSibling: nextSib
+        });
     }
     return oldChild;
 };
@@ -219,11 +269,27 @@ PlasText.prototype.constructor = PlasText;
 
 Object.defineProperty(PlasText.prototype, 'textContent', {
     get: function() { return this.nodeValue; },
-    set: function(v) { this.nodeValue = v; }
+    set: function(v) {
+        var oldValue = this.nodeValue;
+        this.nodeValue = v;
+        _queueMutationRecord(this, {
+            type: 'characterData',
+            target: this,
+            oldValue: oldValue
+        });
+    }
 });
 Object.defineProperty(PlasText.prototype, 'data', {
     get: function() { return this.nodeValue; },
-    set: function(v) { this.nodeValue = v; }
+    set: function(v) {
+        var oldValue = this.nodeValue;
+        this.nodeValue = v;
+        _queueMutationRecord(this, {
+            type: 'characterData',
+            target: this,
+            oldValue: oldValue
+        });
+    }
 });
 Object.defineProperty(PlasText.prototype, 'length', {
     get: function() { return this.nodeValue.length; }
@@ -485,7 +551,14 @@ PlasElement.prototype.constructor = PlasElement;
 
 // Attributes
 PlasElement.prototype.setAttribute = function(name, value) {
+    var oldValue = this._attrs.hasOwnProperty(name) ? this._attrs[name] : null;
     this._attrs[name] = String(value);
+    _queueMutationRecord(this, {
+        type: 'attributes',
+        target: this,
+        attributeName: name,
+        oldValue: oldValue
+    });
 };
 
 PlasElement.prototype.getAttribute = function(name) {
@@ -497,7 +570,16 @@ PlasElement.prototype.hasAttribute = function(name) {
 };
 
 PlasElement.prototype.removeAttribute = function(name) {
+    var oldValue = this._attrs.hasOwnProperty(name) ? this._attrs[name] : null;
     delete this._attrs[name];
+    if (oldValue !== null) {
+        _queueMutationRecord(this, {
+            type: 'attributes',
+            target: this,
+            attributeName: name,
+            oldValue: oldValue
+        });
+    }
 };
 
 PlasElement.prototype.getAttributeNames = function() {
@@ -560,7 +642,22 @@ Object.defineProperty(PlasElement.prototype, 'textContent', {
         return text;
     },
     set: function(v) {
-        this.childNodes = [];
+        // Remove existing children
+        var removedNodes = this.childNodes.slice();
+        if (removedNodes.length > 0) {
+            this.childNodes = [];
+            for (var i = 0; i < removedNodes.length; i++) {
+                removedNodes[i].parentNode = null;
+            }
+            _queueMutationRecord(this, {
+                type: 'childList',
+                target: this,
+                addedNodes: [],
+                removedNodes: removedNodes,
+                previousSibling: null,
+                nextSibling: null
+            });
+        }
         if (v != null && v !== '') {
             this.appendChild(new PlasText(String(v)));
         }
@@ -578,7 +675,22 @@ Object.defineProperty(PlasElement.prototype, 'innerHTML', {
         return _serializeChildren(this);
     },
     set: function(html) {
-        this.childNodes = [];
+        // Remove existing children (fires mutation for each)
+        var removedNodes = this.childNodes.slice();
+        if (removedNodes.length > 0) {
+            this.childNodes = [];
+            for (var i = 0; i < removedNodes.length; i++) {
+                removedNodes[i].parentNode = null;
+            }
+            _queueMutationRecord(this, {
+                type: 'childList',
+                target: this,
+                addedNodes: [],
+                removedNodes: removedNodes,
+                previousSibling: null,
+                nextSibling: null
+            });
+        }
         if (html) {
             var nodes = _parseHTML(html);
             for (var i = 0; i < nodes.length; i++) {
@@ -1587,8 +1699,33 @@ function setInterval(fn, ms) {
 function clearInterval(id) {
     __plasmate_timers = __plasmate_timers.filter(function(t) { return t.id !== id; });
 }
-function requestAnimationFrame(fn) { return setTimeout(fn, 16); }
-function cancelAnimationFrame(id) { clearTimeout(id); }
+function requestAnimationFrame(fn) {
+    var id = ++__plasmate_raf_id;
+    __plasmate_raf_queue.push({ id: id, fn: fn });
+    return id;
+}
+function cancelAnimationFrame(id) {
+    __plasmate_raf_queue = __plasmate_raf_queue.filter(function(r) { return r.id !== id; });
+}
+function _drainAnimationFrames() {
+    var maxIterations = 10;
+    var iteration = 0;
+    while (__plasmate_raf_queue.length > 0 && iteration < maxIterations) {
+        var queue = __plasmate_raf_queue.slice();
+        __plasmate_raf_queue = [];
+        var timestamp = Date.now();
+        for (var i = 0; i < queue.length; i++) {
+            try {
+                queue[i].fn(timestamp);
+            } catch(e) {
+                if (typeof console !== 'undefined' && console.error) {
+                    console.error('rAF callback error:', e.message || e);
+                }
+            }
+        }
+        iteration++;
+    }
+}
 
 // ============================================================================
 // URL resolution helper
@@ -1874,10 +2011,50 @@ var URL = {
     revokeObjectURL: function() {}
 };
 
-function MutationObserver(callback) { this._callback = callback; }
-MutationObserver.prototype.observe = function() {};
-MutationObserver.prototype.disconnect = function() {};
-MutationObserver.prototype.takeRecords = function() { return []; };
+function MutationObserver(callback) {
+    this._callback = callback;
+    this._targets = [];
+    this._records = [];
+    __plasmate_mutation_observers.push(this);
+}
+
+MutationObserver.prototype.observe = function(target, config) {
+    if (!target) return;
+    // Default config
+    var opts = {
+        childList: !!config.childList,
+        attributes: !!config.attributes,
+        characterData: !!config.characterData,
+        subtree: !!config.subtree,
+        attributeOldValue: !!config.attributeOldValue,
+        characterDataOldValue: !!config.characterDataOldValue,
+        attributeFilter: config.attributeFilter || null
+    };
+    // Remove existing entry for this target
+    for (var i = 0; i < this._targets.length; i++) {
+        if (this._targets[i].target === target) {
+            this._targets.splice(i, 1);
+            break;
+        }
+    }
+    this._targets.push({ target: target, config: opts });
+};
+
+MutationObserver.prototype.disconnect = function() {
+    this._targets = [];
+    this._records = [];
+    // Remove from global list
+    var idx = __plasmate_mutation_observers.indexOf(this);
+    if (idx >= 0) {
+        __plasmate_mutation_observers.splice(idx, 1);
+    }
+};
+
+MutationObserver.prototype.takeRecords = function() {
+    var records = this._records.slice();
+    this._records = [];
+    return records;
+};
 
 function IntersectionObserver(callback) { this._callback = callback; }
 IntersectionObserver.prototype.observe = function() {};
@@ -1975,6 +2152,91 @@ window.crypto = crypto;
 
 var queueMicrotask = function(fn) { Promise.resolve().then(fn).catch(function(){}); };
 window.queueMicrotask = queueMicrotask;
+
+// ============================================================================
+// MutationObserver Helper Implementations (now that queueMicrotask is defined)
+// ============================================================================
+_queueMutationRecord = function(target, record) {
+    // Find all observers watching this target or its ancestors with subtree
+    for (var i = 0; i < __plasmate_mutation_observers.length; i++) {
+        var obs = __plasmate_mutation_observers[i];
+        if (!obs._targets) continue;
+        for (var j = 0; j < obs._targets.length; j++) {
+            var entry = obs._targets[j];
+            var watchedNode = entry.target;
+            var config = entry.config;
+            // Check if this observer is watching the target directly
+            var matches = (watchedNode === target);
+            // Or if subtree is true, check if target is a descendant
+            if (!matches && config.subtree) {
+                var node = target;
+                while (node && node.parentNode) {
+                    node = node.parentNode;
+                    if (node === watchedNode) {
+                        matches = true;
+                        break;
+                    }
+                }
+            }
+            if (matches) {
+                // Check if this mutation type is being observed
+                var shouldQueue = false;
+                if (record.type === 'childList' && config.childList) shouldQueue = true;
+                if (record.type === 'attributes' && config.attributes) shouldQueue = true;
+                if (record.type === 'characterData' && config.characterData) shouldQueue = true;
+                if (shouldQueue) {
+                    // Add oldValue if requested
+                    var rec = {
+                        type: record.type,
+                        target: record.target,
+                        addedNodes: record.addedNodes || [],
+                        removedNodes: record.removedNodes || [],
+                        previousSibling: record.previousSibling || null,
+                        nextSibling: record.nextSibling || null,
+                        attributeName: record.attributeName || null,
+                        attributeNamespace: null,
+                        oldValue: null
+                    };
+                    if (record.type === 'attributes' && config.attributeOldValue && record.oldValue !== undefined) {
+                        rec.oldValue = record.oldValue;
+                    }
+                    if (record.type === 'characterData' && config.characterDataOldValue && record.oldValue !== undefined) {
+                        rec.oldValue = record.oldValue;
+                    }
+                    obs._records.push(rec);
+                }
+            }
+        }
+    }
+    // Schedule microtask to deliver mutations
+    _scheduleMutationDelivery();
+};
+
+_scheduleMutationDelivery = function() {
+    if (__plasmate_mutation_scheduled) return;
+    __plasmate_mutation_scheduled = true;
+    queueMicrotask(function() {
+        __plasmate_mutation_scheduled = false;
+        _deliverMutations();
+    });
+};
+
+_deliverMutations = function() {
+    for (var i = 0; i < __plasmate_mutation_observers.length; i++) {
+        var obs = __plasmate_mutation_observers[i];
+        if (obs._records.length > 0) {
+            var records = obs._records.slice();
+            obs._records = [];
+            try {
+                obs._callback(records, obs);
+            } catch(e) {
+                if (typeof console !== 'undefined' && console.error) {
+                    console.error('MutationObserver callback error:', e.message || e);
+                }
+            }
+        }
+    }
+};
 
 var requestIdleCallback = function(fn) { return setTimeout(fn, 0); };
 var cancelIdleCallback = function(id) { clearTimeout(id); };
@@ -2165,6 +2427,10 @@ function __plasmate_fire_load() {
             try { window._listeners.load[i](evt); } catch(e) {}
         }
     }
+    // Drain pending animation frames after load event
+    _drainAnimationFrames();
+    // Deliver any pending mutations
+    _deliverMutations();
 }
 
 // Window event listeners
@@ -3632,5 +3898,222 @@ mod tests {
             serialized.contains("$244.99"),
             "Serialized HTML should contain $244.99"
         );
+    }
+
+    // =========================================================================
+    // MutationObserver Tests
+    // =========================================================================
+
+    #[test]
+    fn test_mutation_observer_appendchild() {
+        let mut rt = JsRuntime::new(RuntimeConfig::default());
+        rt.bootstrap_dom("<html><body><div id='root'></div></body></html>", "https://example.com");
+
+        // Set up MutationObserver and appendChild
+        rt.execute_in_context(
+            r#"
+            var mutationRecords = [];
+            var observer = new MutationObserver(function(records) {
+                mutationRecords = mutationRecords.concat(records);
+            });
+            var root = document.getElementById('root');
+            observer.observe(root, { childList: true });
+            var child = document.createElement('span');
+            child.textContent = 'Hello';
+            root.appendChild(child);
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        // Pump microtasks to deliver mutations
+        rt.pump_microtasks();
+
+        // Check mutation record was delivered
+        let record_count = rt
+            .execute_in_context("mutationRecords.length", "test.js")
+            .unwrap();
+        assert_eq!(record_count, "1", "Should have 1 mutation record for appendChild");
+
+        let record_type = rt
+            .execute_in_context("mutationRecords[0].type", "test.js")
+            .unwrap();
+        assert_eq!(record_type, "childList");
+
+        let added_count = rt
+            .execute_in_context("mutationRecords[0].addedNodes.length", "test.js")
+            .unwrap();
+        assert_eq!(added_count, "1", "Should have 1 added node");
+    }
+
+    #[test]
+    fn test_mutation_observer_setattribute() {
+        let mut rt = JsRuntime::new(RuntimeConfig::default());
+        rt.bootstrap_dom("<html><body><div id='el'></div></body></html>", "https://example.com");
+
+        rt.execute_in_context(
+            r#"
+            var mutationRecords = [];
+            var observer = new MutationObserver(function(records) {
+                mutationRecords = mutationRecords.concat(records);
+            });
+            var el = document.getElementById('el');
+            observer.observe(el, { attributes: true, attributeOldValue: true });
+            el.setAttribute('data-test', 'value1');
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        rt.pump_microtasks();
+
+        let record_count = rt
+            .execute_in_context("mutationRecords.length", "test.js")
+            .unwrap();
+        assert_eq!(record_count, "1", "Should have 1 mutation record for setAttribute");
+
+        let record_type = rt
+            .execute_in_context("mutationRecords[0].type", "test.js")
+            .unwrap();
+        assert_eq!(record_type, "attributes");
+
+        let attr_name = rt
+            .execute_in_context("mutationRecords[0].attributeName", "test.js")
+            .unwrap();
+        assert_eq!(attr_name, "data-test");
+    }
+
+    #[test]
+    fn test_mutation_observer_subtree() {
+        let mut rt = JsRuntime::new(RuntimeConfig::default());
+        rt.bootstrap_dom("<html><body><div id='root'><div id='nested'></div></div></body></html>", "https://example.com");
+
+        rt.execute_in_context(
+            r#"
+            var mutationRecords = [];
+            var observer = new MutationObserver(function(records) {
+                mutationRecords = mutationRecords.concat(records);
+            });
+            var root = document.getElementById('root');
+            observer.observe(root, { childList: true, subtree: true });
+            var nested = document.getElementById('nested');
+            var child = document.createElement('span');
+            nested.appendChild(child);
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        rt.pump_microtasks();
+
+        let record_count = rt
+            .execute_in_context("mutationRecords.length", "test.js")
+            .unwrap();
+        assert_eq!(record_count, "1", "Should have 1 mutation record for subtree appendChild");
+
+        // Target should be the nested element
+        let target_id = rt
+            .execute_in_context("mutationRecords[0].target.id", "test.js")
+            .unwrap();
+        assert_eq!(target_id, "nested");
+    }
+
+    #[test]
+    fn test_mutation_observer_disconnect() {
+        let mut rt = JsRuntime::new(RuntimeConfig::default());
+        rt.bootstrap_dom("<html><body><div id='root'></div></body></html>", "https://example.com");
+
+        rt.execute_in_context(
+            r#"
+            var mutationRecords = [];
+            var observer = new MutationObserver(function(records) {
+                mutationRecords = mutationRecords.concat(records);
+            });
+            var root = document.getElementById('root');
+            observer.observe(root, { childList: true });
+            observer.disconnect();
+            var child = document.createElement('span');
+            root.appendChild(child);
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        rt.pump_microtasks();
+
+        let record_count = rt
+            .execute_in_context("mutationRecords.length", "test.js")
+            .unwrap();
+        assert_eq!(record_count, "0", "Should have 0 mutations after disconnect");
+    }
+
+    #[test]
+    fn test_mutation_observer_takerecords() {
+        let mut rt = JsRuntime::new(RuntimeConfig::default());
+        rt.bootstrap_dom("<html><body><div id='root'></div></body></html>", "https://example.com");
+
+        // Take records before microtasks are delivered
+        rt.execute_in_context(
+            r#"
+            var callbackRecords = [];
+            var observer = new MutationObserver(function(records) {
+                callbackRecords = callbackRecords.concat(records);
+            });
+            var root = document.getElementById('root');
+            observer.observe(root, { childList: true });
+            var child = document.createElement('span');
+            root.appendChild(child);
+            var takenRecords = observer.takeRecords();
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let taken_count = rt
+            .execute_in_context("takenRecords.length", "test.js")
+            .unwrap();
+        assert_eq!(taken_count, "1", "takeRecords should return 1 record");
+
+        rt.pump_microtasks();
+
+        // Callback should not have received the records since we took them
+        let callback_count = rt
+            .execute_in_context("callbackRecords.length", "test.js")
+            .unwrap();
+        assert_eq!(callback_count, "0", "Callback should not receive taken records");
+    }
+
+    #[test]
+    fn test_request_animation_frame() {
+        let mut rt = JsRuntime::new(RuntimeConfig::default());
+        rt.bootstrap_dom("<html><body></body></html>", "https://example.com");
+
+        rt.execute_in_context(
+            r#"
+            var rafCalled = false;
+            var rafTimestamp = 0;
+            requestAnimationFrame(function(ts) {
+                rafCalled = true;
+                rafTimestamp = ts;
+            });
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        // rAF should not be called yet
+        let called = rt.execute_in_context("rafCalled", "test.js").unwrap();
+        assert_eq!(called, "false");
+
+        // Fire load event which drains animation frames
+        rt.fire_load();
+
+        // Now it should be called
+        let called = rt.execute_in_context("rafCalled", "test.js").unwrap();
+        assert_eq!(called, "true");
+
+        // Timestamp should be set
+        let ts = rt.execute_in_context("rafTimestamp > 0", "test.js").unwrap();
+        assert_eq!(ts, "true");
     }
 }
