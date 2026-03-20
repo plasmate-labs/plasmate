@@ -2695,7 +2695,7 @@ fn perform_blocking_fetch(
     // creating a new runtime per-request causes connection pool issues.
     let client = BlockingClient::builder()
         .timeout(FETCH_TIMEOUT)
-        .user_agent("Plasmate/0.1")
+        .user_agent(crate::network::fetch::DEFAULT_USER_AGENT)
         .build()
         .map_err(|e| e.to_string())?;
 
