@@ -4,10 +4,11 @@ use std::time::Instant;
 use reqwest::cookie::Jar;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Semaphore;
-use tracing::{info, warn};
+use tracing::{debug, info, warn};
 
 use crate::js::pipeline::{self, PipelineConfig};
 use crate::network::fetch;
+use crate::som::compiler;
 
 #[derive(Debug, Clone)]
 pub struct CoverageOptions {
@@ -377,6 +378,15 @@ async fn cover_single(
 
     let pipeline_start = Instant::now();
 
+    // Pre-JS: compile SOM from raw HTML first (to compare with post-JS result).
+    // Some sites (nodejs.org, store.steampowered.com) DEGRADE with JS because
+    // JS overwrites the DOM with fewer elements. We keep whichever is richer.
+    let pre_js_som = if opts.execute_js {
+        compiler::compile(&fetch_result.html, &fetch_result.url).ok()
+    } else {
+        None
+    };
+
     let mut config = PipelineConfig::default();
     config.execute_js = opts.execute_js;
     config.fetch_external_scripts = opts.fetch_external_scripts;
@@ -420,9 +430,25 @@ async fn cover_single(
 
     let pipeline_ms = pipeline_start.elapsed().as_millis() as u64;
 
-    let som_bytes = page.som.meta.som_bytes;
-    let element_count = page.som.meta.element_count;
-    let interactive_count = page.som.meta.interactive_count;
+    // Compare pre-JS and post-JS SOMs, keep whichever has more elements.
+    // This handles cases where JS destroys content (e.g., replaces body with loading spinner).
+    let (final_som, used_pre_js) = match &pre_js_som {
+        Some(pre) if pre.meta.element_count > page.som.meta.element_count => (pre, true),
+        _ => (&page.som, false),
+    };
+
+    if used_pre_js {
+        debug!(
+            url = %input_url,
+            pre_js_elements = pre_js_som.as_ref().map(|s| s.meta.element_count),
+            post_js_elements = page.som.meta.element_count,
+            "Using pre-JS SOM (JS degraded content)"
+        );
+    }
+
+    let som_bytes = final_som.meta.som_bytes;
+    let element_count = final_som.meta.element_count;
+    let interactive_count = final_som.meta.interactive_count;
 
     let status = if is_thin(som_bytes, element_count, interactive_count) {
         CoverageStatus::Thin
@@ -442,7 +468,7 @@ async fn cover_single(
         status,
         http_status: Some(fetch_result.status),
         content_type: Some(fetch_result.content_type),
-        title: Some(page.som.title),
+        title: Some(final_som.title.clone()),
         html_bytes: Some(fetch_result.html_bytes),
         som_bytes: Some(som_bytes),
         element_count: Some(element_count),
