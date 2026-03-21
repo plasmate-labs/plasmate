@@ -1,0 +1,131 @@
+# === Plasmate 100+ URL Benchmark Suite ===
+# Diverse sites across categories for comprehensive SOM benchmarking.
+# Prefers static/server-rendered versions where possible.
+
+# ── E-commerce (10) ──
+https://www.amazon.com
+https://www.ebay.com
+https://www.etsy.com
+https://www.walmart.com
+https://www.target.com
+https://www.bestbuy.com
+https://www.newegg.com
+https://www.zappos.com
+https://www.asos.com
+https://store.steampowered.com
+
+# ── News (10) ──
+https://www.bbc.com/news
+https://lite.cnn.com
+https://www.reuters.com
+https://www.nytimes.com
+https://www.theguardian.com/international
+https://text.npr.org
+https://www.washingtonpost.com
+https://news.ycombinator.com
+https://arstechnica.com
+https://www.theverge.com
+
+# ── Social (5) ──
+https://old.reddit.com
+https://x.com
+https://www.linkedin.com
+https://news.ycombinator.com/newest
+https://lobste.rs
+
+# ── Developer (10) ──
+https://github.com/rust-lang/rust
+https://developer.mozilla.org/en-US/docs/Web/HTML
+https://stackoverflow.com/questions
+https://pypi.org
+https://crates.io
+https://www.npmjs.com
+https://docs.rs
+https://pkg.go.dev
+https://developer.chrome.com/docs
+https://readthedocs.org
+
+# ── Search (5) ──
+https://www.google.com
+https://www.bing.com
+https://duckduckgo.com
+https://search.brave.com
+https://search.yahoo.com
+
+# ── SaaS / Landing (10) ──
+https://linear.app
+https://vercel.com
+https://stripe.com
+https://www.notion.so
+https://www.figma.com
+https://www.cloudflare.com
+https://www.digitalocean.com
+https://render.com
+https://railway.app
+https://fly.io
+
+# ── Government (5) ──
+https://www.usa.gov
+https://www.whitehouse.gov
+https://data.gov
+https://www.nih.gov
+https://www.cdc.gov
+
+# ── Auth pages (5) ──
+https://accounts.google.com
+https://login.microsoftonline.com
+https://auth0.com
+https://github.com/login
+https://appleid.apple.com
+
+# ── Reference (10) ──
+https://en.wikipedia.org/wiki/Rust_(programming_language)
+https://en.wikipedia.org/wiki/Artificial_intelligence
+https://en.wikipedia.org/wiki/United_States
+https://craigslist.org
+https://www.weather.gov
+https://www.zillow.com
+https://www.booking.com
+https://www.imdb.com
+https://www.rottentomatoes.com
+https://www.allrecipes.com
+
+# ── Simple / Minimal (5) ──
+https://example.com
+https://httpbin.org
+https://motherfuckingwebsite.com
+https://info.cern.ch
+https://lite.duckduckgo.com
+
+# ── Docs / Knowledge (10) ──
+https://doc.rust-lang.org/book/
+https://docs.python.org/3/
+https://react.dev
+https://nextjs.org/docs
+https://tailwindcss.com/docs
+https://kubernetes.io/docs/home/
+https://docs.docker.com
+https://www.postgresql.org/docs/
+https://git-scm.com/docs
+https://nginx.org/en/docs/
+
+# ── Blogs / Publishing (5) ──
+https://medium.com
+https://dev.to
+https://www.substack.com
+https://techcrunch.com
+https://www.economist.com
+
+# ── Education (5) ──
+https://www.khanacademy.org
+https://ocw.mit.edu
+https://www.harvard.edu
+https://www.stanford.edu
+https://www.coursera.org
+
+# ── Utilities / Diagnostics (5) ──
+https://httpbin.org/html
+https://httpbin.org/headers
+https://www.iana.org/domains/reserved
+https://status.github.com
+https://www.whatismybrowser.com
