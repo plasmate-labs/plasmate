@@ -152,6 +152,42 @@ impl CdpTarget {
         new_target_id
     }
 
+    /// Set page content directly (no network fetch), run through JS pipeline, update SOM.
+    /// Used by Page.setContent (Playwright's primary way to set HTML).
+    pub async fn set_content(&mut self, html: &str) -> Result<SetContentResult, String> {
+        let url = self
+            .current_url
+            .as_deref()
+            .unwrap_or("about:blank")
+            .to_string();
+
+        let page_result = crate::js::pipeline::process_page_async(
+            html,
+            &url,
+            &self.pipeline_config,
+            &self.client,
+        )
+        .await
+        .map_err(|e| e.to_string())?;
+
+        self.current_html = Some(html.to_string());
+        self.effective_html = Some(page_result.effective_html);
+        self.current_structured_data = page_result.som.structured_data.clone();
+        self.current_som = Some(page_result.som);
+
+        // Rebuild node map from SOM
+        self.rebuild_node_map();
+
+        // Update loader ID for this content set
+        let nav_num = TARGET_COUNTER.fetch_add(1, Ordering::Relaxed);
+        self.loader_id = format!("{:032X}", nav_num);
+
+        Ok(SetContentResult {
+            frame_id: self.frame_id.clone(),
+            loader_id: self.loader_id.clone(),
+        })
+    }
+
     /// Navigate using our full pipeline, return events to emit.
     pub async fn navigate(&mut self, url: &str) -> Result<NavigateResult, String> {
         let fetch_result = fetch::fetch_url(&self.client, url, self.timeout_ms)
@@ -481,6 +517,11 @@ pub struct NavigateResult {
     pub status: u16,
     pub mime_type: String,
     pub encoded_data_length: usize,
+}
+
+pub struct SetContentResult {
+    pub frame_id: String,
+    pub loader_id: String,
 }
 
 fn next_node_id() -> u64 {

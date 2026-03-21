@@ -4,7 +4,7 @@
 //! Methods we don't implement are silently acknowledged (return empty success)
 //! to avoid breaking Puppeteer/Playwright which send many setup calls.
 
-use tracing::{debug, warn};
+use tracing::{debug, error, warn};
 
 use super::domains;
 use super::session::CdpTarget;
@@ -15,6 +15,21 @@ pub async fn handle_cdp_request(
     req: &CdpRequest,
     target: &mut CdpTarget,
 ) -> (CdpResponse, Vec<CdpEvent>) {
+    match handle_cdp_request_inner(req, target).await {
+        Ok(result) => result,
+        Err(msg) => {
+            error!(method = %req.method, id = req.id, error = %msg, "CDP handler panic");
+            let response = CdpResponse::error(req.id, CDP_ERR_SERVER, &msg)
+                .with_session(req.session_id.clone());
+            (response, vec![])
+        }
+    }
+}
+
+async fn handle_cdp_request_inner(
+    req: &CdpRequest,
+    target: &mut CdpTarget,
+) -> Result<(CdpResponse, Vec<CdpEvent>), String> {
     let id = req.id;
     let method = req.method.as_str();
     let params = &req.params;
@@ -162,6 +177,8 @@ pub async fn handle_cdp_request(
 
         // ---- Page ----
         "Page.navigate" => domains::page_navigate(id, params, target).await,
+        "Page.setDocumentContent" => domains::page_set_content(id, params, target).await,
+        "Page.getResourceContent" => (domains::page_get_content(id, target), vec![]),
         "Page.enable" => (domains::page_enable(id), vec![]),
         "Page.getFrameTree" => (domains::page_get_frame_tree(id, target), vec![]),
         "Page.setLifecycleEventsEnabled" => {
@@ -295,6 +312,7 @@ pub async fn handle_cdp_request(
         "DOM.querySelectorAll" => (domains::dom_query_selector_all(id, params, target), vec![]),
         "DOM.describeNode" => (domains::dom_describe_node(id, params, target), vec![]),
         "DOM.resolveNode" => (domains::dom_resolve_node(id, params, target), vec![]),
+        "DOM.getBoxModel" => (domains::dom_get_box_model(id, params, target), vec![]),
         "DOM.enable" => (CdpResponse::success(id, serde_json::json!({})), vec![]),
         "DOM.disable" => (CdpResponse::success(id, serde_json::json!({})), vec![]),
         "DOM.requestChildNodes" => (CdpResponse::success(id, serde_json::json!({})), vec![]),
@@ -420,8 +438,13 @@ pub async fn handle_cdp_request(
         | "Overlay.enable"
         | "Overlay.disable"
         | "Accessibility.enable"
-        | "Accessibility.disable"
-        | "Inspector.enable"
+        | "Accessibility.disable" => {
+            (CdpResponse::success(id, serde_json::json!({})), vec![])
+        }
+        "Accessibility.getFullAXTree" => {
+            (domains::accessibility_get_full_ax_tree(id, target), vec![])
+        }
+        "Inspector.enable"
         | "Inspector.disable"
         | "Debugger.enable"
         | "Debugger.disable"
@@ -459,5 +482,5 @@ pub async fn handle_cdp_request(
         })
         .collect();
 
-    (response, events)
+    Ok((response, events))
 }

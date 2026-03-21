@@ -272,6 +272,128 @@ pub async fn page_navigate(
     }
 }
 
+pub async fn page_set_content(
+    id: u64,
+    params: &serde_json::Value,
+    target: &mut CdpTarget,
+) -> (CdpResponse, Vec<CdpEvent>) {
+    let html = match params.get("html").and_then(|v| v.as_str()) {
+        Some(h) => h,
+        None => {
+            return (
+                CdpResponse::error(id, CDP_ERR_INVALID_PARAMS, "Missing html"),
+                vec![],
+            )
+        }
+    };
+
+    info!("CDP: Page.setContent ({} bytes)", html.len());
+
+    match target.set_content(html).await {
+        Ok(result) => {
+            let frame_id = result.frame_id;
+            let loader_id = result.loader_id;
+
+            // Emit lifecycle events (no Network events since there's no fetch)
+            let events = vec![
+                CdpEvent::new(
+                    "Page.frameStartedLoading",
+                    json!({"frameId": frame_id.clone()}),
+                ),
+                CdpEvent::new(
+                    "Page.frameNavigated",
+                    json!({
+                        "frame": {
+                            "id": frame_id.clone(),
+                            "loaderId": loader_id.clone(),
+                            "url": target.current_url.as_deref().unwrap_or("about:blank"),
+                            "securityOrigin": target.current_url.as_deref().unwrap_or("about:blank"),
+                            "mimeType": "text/html",
+                        }
+                    }),
+                ),
+                CdpEvent::new(
+                    "Page.lifecycleEvent",
+                    json!({
+                        "frameId": frame_id.clone(),
+                        "loaderId": loader_id.clone(),
+                        "name": "init",
+                        "timestamp": timestamp_sec(),
+                    }),
+                ),
+                CdpEvent::new(
+                    "Page.lifecycleEvent",
+                    json!({
+                        "frameId": frame_id.clone(),
+                        "loaderId": loader_id.clone(),
+                        "name": "commit",
+                        "timestamp": timestamp_sec(),
+                    }),
+                ),
+                CdpEvent::new(
+                    "Page.domContentEventFired",
+                    json!({"timestamp": timestamp_sec()}),
+                ),
+                CdpEvent::new(
+                    "Page.lifecycleEvent",
+                    json!({
+                        "frameId": frame_id.clone(),
+                        "loaderId": loader_id.clone(),
+                        "name": "DOMContentLoaded",
+                        "timestamp": timestamp_sec(),
+                    }),
+                ),
+                CdpEvent::new("Page.loadEventFired", json!({"timestamp": timestamp_sec()})),
+                CdpEvent::new(
+                    "Page.lifecycleEvent",
+                    json!({
+                        "frameId": frame_id.clone(),
+                        "loaderId": loader_id.clone(),
+                        "name": "load",
+                        "timestamp": timestamp_sec(),
+                    }),
+                ),
+                CdpEvent::new(
+                    "Page.lifecycleEvent",
+                    json!({
+                        "frameId": frame_id.clone(),
+                        "loaderId": loader_id.clone(),
+                        "name": "networkAlmostIdle",
+                        "timestamp": timestamp_sec(),
+                    }),
+                ),
+                CdpEvent::new(
+                    "Page.lifecycleEvent",
+                    json!({
+                        "frameId": frame_id.clone(),
+                        "loaderId": loader_id.clone(),
+                        "name": "networkIdle",
+                        "timestamp": timestamp_sec(),
+                    }),
+                ),
+                CdpEvent::new(
+                    "Page.frameStoppedLoading",
+                    json!({"frameId": frame_id.clone()}),
+                ),
+            ];
+
+            (CdpResponse::success(id, json!({})), events)
+        }
+        Err(e) => (CdpResponse::error(id, CDP_ERR_SERVER, &e), vec![]),
+    }
+}
+
+/// Return the current page HTML (effective_html after JS, or raw HTML, or empty).
+/// Used by Playwright's page.content() via Page.getResourceContent.
+pub fn page_get_content(id: u64, target: &CdpTarget) -> CdpResponse {
+    let html = target
+        .effective_html
+        .as_deref()
+        .or(target.current_html.as_deref())
+        .unwrap_or("");
+    CdpResponse::success(id, json!({"content": html, "base64Encoded": false}))
+}
+
 pub fn page_enable(id: u64) -> CdpResponse {
     CdpResponse::success(id, json!({}))
 }
@@ -586,6 +708,36 @@ pub fn dom_resolve_node(id: u64, params: &serde_json::Value, target: &CdpTarget)
     }
 }
 
+/// Return a stub box model (consistent with the DOM shim's getBoundingClientRect).
+/// Plasmate has no layout engine, so all elements report 100x100 at (0,0).
+pub fn dom_get_box_model(id: u64, params: &serde_json::Value, target: &CdpTarget) -> CdpResponse {
+    let node_id = params
+        .get("nodeId")
+        .and_then(|v| v.as_u64())
+        .or_else(|| params.get("backendNodeId").and_then(|v| v.as_u64()))
+        .unwrap_or(0);
+
+    if node_id == 0 || !target.node_map.contains_key(&node_id) {
+        return CdpResponse::error(id, CDP_ERR_NOT_FOUND, "Node not found");
+    }
+
+    // Quad format: [x1,y1, x2,y2, x3,y3, x4,y4] (four corners of rectangle)
+    let quad = vec![0, 0, 100, 0, 100, 100, 0, 100];
+    CdpResponse::success(
+        id,
+        json!({
+            "model": {
+                "content": quad,
+                "padding": quad,
+                "border": quad,
+                "margin": quad,
+                "width": 100,
+                "height": 100,
+            }
+        }),
+    )
+}
+
 // ============================================================
 // Input domain
 // ============================================================
@@ -838,6 +990,115 @@ pub fn plasmate_get_markdown(id: u64, target: &CdpTarget) -> CdpResponse {
             "url": target.current_url,
         }),
     )
+}
+
+// ============================================================
+// Accessibility domain
+// ============================================================
+
+/// Return a basic a11y tree derived from the SOM.
+/// Each SOM region becomes a landmark node; each element becomes an AX node.
+pub fn accessibility_get_full_ax_tree(id: u64, target: &CdpTarget) -> CdpResponse {
+    use crate::som::types::{ElementRole, RegionRole};
+
+    let som = match &target.current_som {
+        Some(s) => s,
+        None => {
+            return CdpResponse::success(id, json!({"nodes": []}));
+        }
+    };
+
+    let mut nodes: Vec<serde_json::Value> = Vec::new();
+    let mut next_id = 1u64;
+
+    // Root node
+    let root_id = next_id;
+    next_id += 1;
+
+    let mut root_children = Vec::new();
+
+    for region in &som.regions {
+        let region_ax_id = next_id;
+        next_id += 1;
+        root_children.push(json!({"nodeId": format!("{}", region_ax_id)}));
+
+        let landmark_role = match region.role {
+            RegionRole::Navigation => "navigation",
+            RegionRole::Main => "main",
+            RegionRole::Aside => "complementary",
+            RegionRole::Header => "banner",
+            RegionRole::Footer => "contentinfo",
+            RegionRole::Form => "form",
+            RegionRole::Dialog => "dialog",
+            RegionRole::Content => "group",
+        };
+
+        let mut region_children = Vec::new();
+
+        for element in &region.elements {
+            let el_ax_id = next_id;
+            next_id += 1;
+            region_children.push(json!({"nodeId": format!("{}", el_ax_id)}));
+
+            let ax_role = match element.role {
+                ElementRole::Link => "link",
+                ElementRole::Button => "button",
+                ElementRole::TextInput => "textbox",
+                ElementRole::Textarea => "textbox",
+                ElementRole::Select => "combobox",
+                ElementRole::Checkbox => "checkbox",
+                ElementRole::Radio => "radio",
+                ElementRole::Heading => "heading",
+                ElementRole::Image => "img",
+                ElementRole::List => "list",
+                ElementRole::Table => "table",
+                ElementRole::Paragraph => "paragraph",
+                ElementRole::Section => "Section",
+                ElementRole::Separator => "separator",
+            };
+
+            let name = element
+                .label
+                .as_deref()
+                .or(element.text.as_deref())
+                .unwrap_or("");
+
+            nodes.push(json!({
+                "nodeId": format!("{}", el_ax_id),
+                "ignored": false,
+                "role": {"type": "role", "value": ax_role},
+                "name": {"type": "computedString", "value": name},
+                "parentId": format!("{}", region_ax_id),
+                "backendDOMNodeId": target.node_map.iter()
+                    .find(|(_, entry)| entry.som_element_id.as_deref() == Some(&element.id))
+                    .map(|(nid, _)| *nid)
+                    .unwrap_or(0),
+            }));
+        }
+
+        nodes.push(json!({
+            "nodeId": format!("{}", region_ax_id),
+            "ignored": false,
+            "role": {"type": "role", "value": landmark_role},
+            "name": {"type": "computedString", "value": region.label.as_deref().unwrap_or("")},
+            "parentId": format!("{}", root_id),
+            "childIds": region_children,
+        }));
+    }
+
+    // Insert root node at the beginning
+    nodes.insert(
+        0,
+        json!({
+            "nodeId": format!("{}", root_id),
+            "ignored": false,
+            "role": {"type": "role", "value": "RootWebArea"},
+            "name": {"type": "computedString", "value": som.title},
+            "childIds": root_children,
+        }),
+    );
+
+    CdpResponse::success(id, json!({"nodes": nodes}))
 }
 
 // ============================================================
