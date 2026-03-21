@@ -1,0 +1,54 @@
+{
+  "$description": "Tests search form with GET method, search input type, ordered list, and form label resolution.",
+  "som_version": "0.1",
+  "url": "https://example.com/search",
+  "title": "Search Page",
+  "lang": "en",
+  "regions": [
+    {
+      "id": "r_header",
+      "role": "header",
+      "elements": [
+        { "role": "heading", "text": "Search Engine", "attrs": { "level": 1 } }
+      ]
+    },
+    {
+      "id": "r_form",
+      "role": "form",
+      "label": "Search",
+      "action": "/search",
+      "method": "GET",
+      "elements": [
+        {
+          "role": "text_input",
+          "label": "Search the web...",
+          "actions": ["type", "clear"],
+          "attrs": { "input_type": "search", "placeholder": "Search the web...", "required": true }
+        },
+        { "role": "button", "text": "Search", "actions": ["click"] }
+      ]
+    },
+    {
+      "id": "r_content",
+      "role": "content",
+      "elements": [
+        { "role": "heading", "text": "Popular Searches", "attrs": { "level": 2 } },
+        {
+          "role": "list",
+          "attrs": {
+            "ordered": true,
+            "items": [
+              { "text": "Weather forecast" },
+              { "text": "Latest news" },
+              { "text": "Stock market" },
+              { "text": "Sports scores" }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "interactive_count": 2
+  }
+}

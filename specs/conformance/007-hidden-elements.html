@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Hidden Elements Test</title>
+  <style>
+    .d-none { display: none; }
+    .sr-only { position: absolute; clip: rect(0,0,0,0); height: 1px; overflow: hidden; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Visible Content</h1>
+    <p>This paragraph is visible.</p>
+    <div hidden>This is hidden via attribute.</div>
+    <div aria-hidden="true">This is aria-hidden.</div>
+    <div style="display:none">This is display:none.</div>
+    <div style="visibility:hidden">This is visibility:hidden.</div>
+    <div class="d-none">This is hidden by CSS class.</div>
+    <div class="sr-only">Screen reader only content.</div>
+    <p>Another visible paragraph.</p>
+    <img src="/decorative.png" alt="" role="presentation">
+    <img src="/meaningful.png" alt="A meaningful image">
+    <script>console.log("stripped");</script>
+    <style>.extra { color: red; }</style>
+    <!-- This comment should be stripped -->
+    <noscript>Enable JavaScript</noscript>
+  </main>
+</body>
+</html>

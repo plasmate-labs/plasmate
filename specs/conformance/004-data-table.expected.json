@@ -1,0 +1,30 @@
+{
+  "$description": "Tests data table extraction with headers from <th> and rows from <td>. The <caption> and <th> elements confirm this is a data table, not a layout table.",
+  "som_version": "0.1",
+  "url": "https://example.com/compare",
+  "title": "Product Comparison",
+  "lang": "en",
+  "regions": [
+    {
+      "id": "r_main",
+      "role": "main",
+      "elements": [
+        { "role": "heading", "text": "Compare Products", "attrs": { "level": 1 } },
+        {
+          "role": "table",
+          "attrs": {
+            "headers": ["Product", "Price", "Rating"],
+            "rows": [
+              ["Widget A", "$29.99", "4.5/5"],
+              ["Widget B", "$39.99", "4.8/5"],
+              ["Widget C", "$19.99", "4.2/5"]
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "interactive_count": 0
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "$description": "Tests fallback behavior when no landmarks are detected. All elements should be wrapped in a single 'content' region.",
+  "som_version": "0.1",
+  "url": "https://example.com/no-landmarks",
+  "title": "Simple Page No Landmarks",
+  "lang": "en",
+  "regions": [
+    {
+      "id": "r_content",
+      "role": "content",
+      "elements": [
+        { "role": "heading", "text": "Hello World", "attrs": { "level": 1 } },
+        { "role": "paragraph", "text": "This page has no semantic landmarks at all." },
+        { "role": "link", "text": "Learn more", "actions": ["click"], "attrs": { "href": "/about" } },
+        { "role": "separator" },
+        { "role": "paragraph", "text": "Just plain HTML content." }
+      ]
+    }
+  ],
+  "meta": {
+    "interactive_count": 1
+  }
+}

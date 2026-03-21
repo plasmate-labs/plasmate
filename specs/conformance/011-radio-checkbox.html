@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><title>Survey Form</title></head>
+<body>
+  <main>
+    <h1>Customer Survey</h1>
+    <form action="/api/survey" method="post" aria-label="Customer survey">
+      <h2>How did you hear about us?</h2>
+      <input type="radio" name="source" value="search" id="r1">
+      <label for="r1">Search engine</label>
+      <input type="radio" name="source" value="social" id="r2" checked>
+      <label for="r2">Social media</label>
+      <input type="radio" name="source" value="friend" id="r3">
+      <label for="r3">Friend referral</label>
+
+      <h2>Select your interests</h2>
+      <input type="checkbox" id="c1" name="interests" value="tech" checked>
+      <label for="c1">Technology</label>
+      <input type="checkbox" id="c2" name="interests" value="science">
+      <label for="c2">Science</label>
+      <input type="checkbox" id="c3" name="interests" value="arts">
+      <label for="c3">Arts</label>
+
+      <textarea placeholder="Additional comments" name="comments"></textarea>
+      <input type="hidden" name="csrf" value="token123">
+      <button type="submit">Submit Survey</button>
+    </form>
+  </main>
+</body>
+</html>

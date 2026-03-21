@@ -1,0 +1,38 @@
+{
+  "$description": "Tests radio buttons with group attribute and checked state, checkboxes with checked state, textarea with placeholder, and hidden input exclusion.",
+  "som_version": "0.1",
+  "url": "https://example.com/survey",
+  "title": "Survey Form",
+  "lang": "en",
+  "regions": [
+    {
+      "id": "r_main",
+      "role": "main",
+      "elements": [
+        { "role": "heading", "text": "Customer Survey", "attrs": { "level": 1 } }
+      ]
+    },
+    {
+      "id": "r_form",
+      "role": "form",
+      "label": "Customer survey",
+      "action": "/api/survey",
+      "method": "POST",
+      "elements": [
+        { "role": "heading", "text": "How did you hear about us?", "attrs": { "level": 2 } },
+        { "role": "radio", "actions": ["select"], "attrs": { "group": "source" } },
+        { "role": "radio", "actions": ["select"], "attrs": { "checked": true, "group": "source" } },
+        { "role": "radio", "actions": ["select"], "attrs": { "group": "source" } },
+        { "role": "heading", "text": "Select your interests", "attrs": { "level": 2 } },
+        { "role": "checkbox", "actions": ["toggle"], "attrs": { "checked": true } },
+        { "role": "checkbox", "actions": ["toggle"] },
+        { "role": "checkbox", "actions": ["toggle"] },
+        { "role": "textarea", "label": "Additional comments", "actions": ["type", "clear"], "attrs": { "placeholder": "Additional comments" } },
+        { "role": "button", "text": "Submit Survey", "actions": ["click"] }
+      ]
+    }
+  ],
+  "meta": {
+    "interactive_count": 9
+  }
+}

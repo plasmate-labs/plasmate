@@ -1,0 +1,72 @@
+{
+  "$description": "Tests product page with structured data (JSON-LD, OpenGraph, meta, canonical link), image with alt text, select element with options, and semantic hints (primary, secondary) from CSS classes.",
+  "som_version": "0.1",
+  "url": "https://shop.example.com/widget-pro",
+  "title": "Widget Pro - Shop",
+  "lang": "en",
+  "regions": [
+    {
+      "id": "r_navigation",
+      "role": "navigation",
+      "elements": [
+        { "role": "link", "text": "Home", "actions": ["click"], "attrs": { "href": "/" } },
+        { "role": "link", "text": "Products", "actions": ["click"], "attrs": { "href": "/products" } },
+        { "role": "link", "text": "Cart", "actions": ["click"], "attrs": { "href": "/cart" } }
+      ]
+    },
+    {
+      "id": "r_main",
+      "role": "main",
+      "elements": [
+        { "role": "heading", "text": "Widget Pro", "attrs": { "level": 1 } },
+        { "role": "image", "attrs": { "alt": "Widget Pro product image", "src": "/images/widget-pro.jpg" } },
+        { "role": "paragraph", "text": "The Widget Pro is our premium offering with advanced features." },
+        { "role": "paragraph", "text": "Includes free shipping on orders over $50." },
+        {
+          "role": "select",
+          "label": "Size",
+          "actions": ["select"],
+          "attrs": {
+            "options": [
+              { "value": "s", "text": "Small" },
+              { "value": "m", "text": "Medium", "selected": true },
+              { "value": "l", "text": "Large" }
+            ]
+          }
+        },
+        { "role": "button", "text": "Add to Cart", "actions": ["click"], "hints": ["primary"] },
+        { "role": "button", "text": "Add to Wishlist", "actions": ["click"], "hints": ["secondary"] }
+      ]
+    },
+    {
+      "id": "r_footer",
+      "role": "footer",
+      "elements": [
+        { "role": "paragraph", "text": "© 2026 Shop. Privacy Policy. Terms of Service." }
+      ]
+    }
+  ],
+  "meta": {
+    "interactive_count": 6
+  },
+  "structured_data": {
+    "json_ld": [
+      {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": "Widget Pro",
+        "offers": { "@type": "Offer", "price": "49.99", "priceCurrency": "USD" }
+      }
+    ],
+    "open_graph": {
+      "og:title": "Widget Pro",
+      "og:type": "product"
+    },
+    "meta": {
+      "description": "Buy Widget Pro for $49.99"
+    },
+    "links": [
+      { "rel": "canonical", "href": "https://shop.example.com/widget-pro" }
+    ]
+  }
+}

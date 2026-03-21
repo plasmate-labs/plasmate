@@ -1,0 +1,38 @@
+{
+  "$description": "Basic static page with header, main, and footer landmarks. Tests region detection from HTML5 elements and basic element extraction (headings, paragraphs, separator).",
+  "som_version": "0.1",
+  "url": "https://example.com/static",
+  "title": "Simple Static Page",
+  "lang": "en",
+  "regions": [
+    {
+      "id": "r_header",
+      "role": "header",
+      "elements": [
+        { "role": "heading", "text": "Welcome to My Site", "attrs": { "level": 1 } }
+      ]
+    },
+    {
+      "id": "r_main",
+      "role": "main",
+      "elements": [
+        { "role": "heading", "text": "About Us", "attrs": { "level": 2 } },
+        { "role": "paragraph", "text": "We are a small company dedicated to quality." },
+        { "role": "paragraph", "text": "Founded in 2020, we have grown steadily." },
+        { "role": "separator" },
+        { "role": "heading", "text": "Contact", "attrs": { "level": 2 } },
+        { "role": "paragraph", "text": "Email us at hello@example.com" }
+      ]
+    },
+    {
+      "id": "r_footer",
+      "role": "footer",
+      "elements": [
+        { "role": "paragraph", "text": "© 2026 My Site. All rights reserved." }
+      ]
+    }
+  ],
+  "meta": {
+    "interactive_count": 0
+  }
+}

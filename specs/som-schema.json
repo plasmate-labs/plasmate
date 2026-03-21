@@ -1,0 +1,320 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://plasmate.dev/schemas/som/v1.0/som.json",
+  "title": "SOM (Semantic Object Model) Document",
+  "description": "A structured JSON representation of a web page for LLM and agent consumption. See SOM-SPEC-v1.0.md.",
+  "type": "object",
+  "required": ["som_version", "url", "title", "lang", "regions", "meta"],
+  "additionalProperties": false,
+  "properties": {
+    "som_version": {
+      "type": "string",
+      "description": "SOM specification version."
+    },
+    "url": {
+      "type": "string",
+      "description": "The URL of the page."
+    },
+    "title": {
+      "type": "string",
+      "description": "The page title extracted from <title>."
+    },
+    "lang": {
+      "type": "string",
+      "description": "The page language from <html lang>. Defaults to 'en'."
+    },
+    "regions": {
+      "type": "array",
+      "description": "Semantic regions extracted from the page body.",
+      "items": { "$ref": "#/$defs/Region" }
+    },
+    "meta": { "$ref": "#/$defs/SomMeta" },
+    "structured_data": {
+      "$ref": "#/$defs/StructuredData",
+      "description": "Structured data extracted from the page (JSON-LD, OpenGraph, Twitter Cards, meta). Omitted if empty."
+    }
+  },
+  "$defs": {
+    "SomMeta": {
+      "type": "object",
+      "description": "Metadata about the SOM compilation.",
+      "required": ["html_bytes", "som_bytes", "element_count", "interactive_count"],
+      "additionalProperties": false,
+      "properties": {
+        "html_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Size of the source HTML in bytes."
+        },
+        "som_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Size of the serialized SOM JSON in bytes."
+        },
+        "element_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of elements across all regions."
+        },
+        "interactive_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of interactive elements."
+        }
+      }
+    },
+    "Region": {
+      "type": "object",
+      "description": "A semantic region within the page.",
+      "required": ["id", "role", "elements"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^r_[a-z]+(_[0-9]+)?$",
+          "description": "Stable region identifier."
+        },
+        "role": { "$ref": "#/$defs/RegionRole" },
+        "label": {
+          "type": "string",
+          "description": "Accessible label for the region."
+        },
+        "action": {
+          "type": "string",
+          "description": "Form action URL (form regions only)."
+        },
+        "method": {
+          "type": "string",
+          "description": "Form method, uppercased (form regions only)."
+        },
+        "elements": {
+          "type": "array",
+          "description": "Semantic elements within this region.",
+          "items": { "$ref": "#/$defs/Element" }
+        }
+      }
+    },
+    "RegionRole": {
+      "type": "string",
+      "enum": ["navigation", "main", "aside", "header", "footer", "form", "dialog", "content"],
+      "description": "The semantic role of a region."
+    },
+    "Element": {
+      "type": "object",
+      "description": "A semantic element within a region.",
+      "required": ["id", "role"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Stable element identifier."
+        },
+        "role": { "$ref": "#/$defs/ElementRole" },
+        "text": {
+          "type": "string",
+          "description": "Visible text content of the element."
+        },
+        "label": {
+          "type": "string",
+          "description": "Accessible label, included only when different from text."
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["click", "type", "clear", "select", "toggle"]
+          },
+          "description": "Available actions for interactive elements."
+        },
+        "attrs": {
+          "type": "object",
+          "description": "Role-specific attributes.",
+          "properties": {
+            "href": { "type": "string" },
+            "input_type": { "type": "string" },
+            "value": { "type": "string" },
+            "placeholder": { "type": "string" },
+            "required": { "type": "boolean" },
+            "disabled": { "type": "boolean" },
+            "checked": { "type": "boolean" },
+            "group": { "type": "string" },
+            "multiple": { "type": "boolean" },
+            "options": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/SelectOption" }
+            },
+            "level": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 6
+            },
+            "alt": { "type": "string" },
+            "src": { "type": "string" },
+            "ordered": { "type": "boolean" },
+            "items": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/ListItem" }
+            },
+            "headers": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "rows": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            },
+            "section_label": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "children": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Element" },
+          "description": "Child elements (reserved for future use)."
+        },
+        "hints": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SemanticHint" },
+          "description": "Semantic hints inferred from CSS classes."
+        }
+      }
+    },
+    "ElementRole": {
+      "type": "string",
+      "enum": [
+        "link",
+        "button",
+        "text_input",
+        "textarea",
+        "select",
+        "checkbox",
+        "radio",
+        "heading",
+        "image",
+        "list",
+        "table",
+        "paragraph",
+        "section",
+        "separator"
+      ],
+      "description": "The semantic role of an element."
+    },
+    "SemanticHint": {
+      "type": "string",
+      "enum": [
+        "active",
+        "badge",
+        "card",
+        "collapsed",
+        "danger",
+        "disabled",
+        "error",
+        "expanded",
+        "hero",
+        "hidden",
+        "large",
+        "loading",
+        "modal",
+        "notification",
+        "primary",
+        "required",
+        "secondary",
+        "selected",
+        "small",
+        "sticky",
+        "success",
+        "warning"
+      ],
+      "description": "A semantic hint inferred from CSS class names."
+    },
+    "SelectOption": {
+      "type": "object",
+      "required": ["value", "text"],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "The option value."
+        },
+        "text": {
+          "type": "string",
+          "description": "The option display text."
+        },
+        "selected": {
+          "type": "boolean",
+          "description": "Whether this option is selected."
+        }
+      }
+    },
+    "ListItem": {
+      "type": "object",
+      "required": ["text"],
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "The list item text."
+        }
+      }
+    },
+    "StructuredData": {
+      "type": "object",
+      "description": "Structured data extracted from the page head.",
+      "additionalProperties": false,
+      "properties": {
+        "json_ld": {
+          "type": "array",
+          "items": { "type": "object" },
+          "description": "JSON-LD blocks (Schema.org data)."
+        },
+        "open_graph": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "OpenGraph metadata (og:* properties)."
+        },
+        "twitter_card": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Twitter/X Card metadata (twitter:* names)."
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Standard HTML meta tags."
+        },
+        "links": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/LinkElement" },
+          "description": "Semantically meaningful <link> elements."
+        }
+      }
+    },
+    "LinkElement": {
+      "type": "object",
+      "description": "A <link> element with rel and href.",
+      "required": ["rel", "href"],
+      "additionalProperties": false,
+      "properties": {
+        "rel": {
+          "type": "string",
+          "description": "The rel attribute value (lowercased)."
+        },
+        "href": {
+          "type": "string",
+          "description": "The href attribute value."
+        },
+        "type": {
+          "type": "string",
+          "description": "The type attribute value."
+        },
+        "hreflang": {
+          "type": "string",
+          "description": "The hreflang attribute value."
+        }
+      }
+    }
+  }
+}

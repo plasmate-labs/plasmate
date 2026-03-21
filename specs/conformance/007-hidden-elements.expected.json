@@ -1,0 +1,22 @@
+{
+  "$description": "Tests stripping of hidden elements: hidden attribute, aria-hidden, inline display:none, inline visibility:hidden, CSS class d-none, CSS class sr-only, decorative images, scripts, styles, comments, and noscript. Only visible content should remain.",
+  "som_version": "0.1",
+  "url": "https://example.com/hidden-test",
+  "title": "Hidden Elements Test",
+  "lang": "en",
+  "regions": [
+    {
+      "id": "r_main",
+      "role": "main",
+      "elements": [
+        { "role": "heading", "text": "Visible Content", "attrs": { "level": 1 } },
+        { "role": "paragraph", "text": "This paragraph is visible." },
+        { "role": "paragraph", "text": "Another visible paragraph." },
+        { "role": "image", "attrs": { "alt": "A meaningful image", "src": "/meaningful.png" } }
+      ]
+    }
+  ],
+  "meta": {
+    "interactive_count": 0
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "$description": "Tests article page with header, nav (with aria-label), main (containing article/section), aside landmark, footer, lists, images, and multiple heading levels.",
+  "som_version": "0.1",
+  "url": "https://example.com/news/deep-ocean",
+  "title": "Breaking News - Daily Times",
+  "lang": "en",
+  "regions": [
+    {
+      "id": "r_header",
+      "role": "header",
+      "elements": [
+        { "role": "link", "text": "Daily Times", "actions": ["click"], "attrs": { "href": "/" } }
+      ]
+    },
+    {
+      "id": "r_navigation",
+      "role": "navigation",
+      "label": "Categories",
+      "elements": [
+        { "role": "link", "text": "News", "actions": ["click"], "attrs": { "href": "/news" } },
+        { "role": "link", "text": "Sports", "actions": ["click"], "attrs": { "href": "/sports" } },
+        { "role": "link", "text": "Technology", "actions": ["click"], "attrs": { "href": "/tech" } },
+        { "role": "link", "text": "Opinion", "actions": ["click"], "attrs": { "href": "/opinion" } }
+      ]
+    },
+    {
+      "id": "r_main",
+      "role": "main",
+      "elements": [
+        { "role": "heading", "text": "Scientists Discover New Species in Deep Ocean", "attrs": { "level": 1 } },
+        { "role": "paragraph" },
+        { "role": "paragraph" },
+        { "role": "heading", "text": "Key Findings", "attrs": { "level": 2 } },
+        {
+          "role": "list",
+          "attrs": {
+            "ordered": false,
+            "items": [
+              { "text": "A bioluminescent jellyfish with unique tentacle structure" },
+              { "text": "A heat-resistant tube worm species" },
+              { "text": "A previously unknown type of deep-sea crab" }
+            ]
+          }
+        },
+        { "role": "heading", "text": "Impact on Marine Biology", "attrs": { "level": 2 } },
+        { "role": "paragraph" },
+        { "role": "image", "attrs": { "alt": "Deep sea hydrothermal vent with new species", "src": "/images/deep-sea.jpg" } }
+      ]
+    },
+    {
+      "id": "r_aside",
+      "role": "aside",
+      "elements": [
+        { "role": "heading", "text": "Related Articles", "attrs": { "level": 3 } },
+        { "role": "link", "text": "Ocean Exploration 2026", "actions": ["click"], "attrs": { "href": "/ocean-exploration" } },
+        { "role": "link", "text": "Marine Biology Advances", "actions": ["click"], "attrs": { "href": "/marine-biology" } }
+      ]
+    },
+    {
+      "id": "r_footer",
+      "role": "footer",
+      "elements": [
+        { "role": "paragraph", "text": "© 2026 Daily Times. All rights reserved." }
+      ]
+    }
+  ],
+  "meta": {
+    "interactive_count": 7
+  }
+}

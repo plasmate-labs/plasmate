@@ -1,0 +1,51 @@
+{
+  "$description": "Tests class/id-based region detection heuristics: masthead->header, nav-menu->navigation, main-content->main, sidebar/rail->aside, site-footer/copyright->footer.",
+  "som_version": "0.1",
+  "url": "https://example.com/class-test",
+  "title": "Class Heuristic Test",
+  "lang": "en",
+  "regions": [
+    {
+      "id": "r_header",
+      "role": "header",
+      "elements": [
+        { "role": "link", "text": "Brand", "actions": ["click"], "attrs": { "href": "/" } }
+      ]
+    },
+    {
+      "id": "r_navigation",
+      "role": "navigation",
+      "elements": [
+        { "role": "link", "text": "Home", "actions": ["click"], "attrs": { "href": "/home" } },
+        { "role": "link", "text": "About", "actions": ["click"], "attrs": { "href": "/about" } },
+        { "role": "link", "text": "Services", "actions": ["click"], "attrs": { "href": "/services" } }
+      ]
+    },
+    {
+      "id": "r_main",
+      "role": "main",
+      "elements": [
+        { "role": "heading", "text": "Our Services", "attrs": { "level": 1 } },
+        { "role": "paragraph", "text": "We offer a variety of services." }
+      ]
+    },
+    {
+      "id": "r_aside",
+      "role": "aside",
+      "elements": [
+        { "role": "heading", "text": "Quick Links", "attrs": { "level": 3 } },
+        { "role": "link", "text": "Pricing", "actions": ["click"], "attrs": { "href": "/pricing" } }
+      ]
+    },
+    {
+      "id": "r_footer",
+      "role": "footer",
+      "elements": [
+        { "role": "paragraph", "text": "© 2026 Company Inc." }
+      ]
+    }
+  ],
+  "meta": {
+    "interactive_count": 5
+  }
+}

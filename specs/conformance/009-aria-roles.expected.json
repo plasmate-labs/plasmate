@@ -1,0 +1,55 @@
+{
+  "$description": "Tests ARIA role-based region detection (banner->header, navigation, main, complementary->aside, contentinfo->footer) and ARIA element roles (role=link, role=button, role=checkbox). Tests aria-label on regions and elements.",
+  "som_version": "0.1",
+  "url": "https://example.com/aria-test",
+  "title": "ARIA Roles Test",
+  "lang": "en",
+  "regions": [
+    {
+      "id": "r_header",
+      "role": "header",
+      "elements": [
+        { "role": "link", "text": "Logo", "label": "Company Logo", "actions": ["click"] }
+      ]
+    },
+    {
+      "id": "r_navigation",
+      "role": "navigation",
+      "label": "Breadcrumb",
+      "elements": [
+        { "role": "link", "text": "Home", "actions": ["click"], "attrs": { "href": "/" } },
+        { "role": "link", "text": "Documentation", "actions": ["click"], "attrs": { "href": "/docs" } },
+        { "role": "link", "text": "API Reference", "actions": ["click"], "attrs": { "href": "/docs/api" } }
+      ]
+    },
+    {
+      "id": "r_main",
+      "role": "main",
+      "elements": [
+        { "role": "heading", "text": "API Reference", "attrs": { "level": 1 } },
+        { "role": "paragraph", "text": "Welcome to the API documentation." },
+        { "role": "button", "text": "Copy", "label": "Copy code", "actions": ["click"] },
+        { "role": "checkbox", "label": "Accept terms", "actions": ["toggle"] }
+      ]
+    },
+    {
+      "id": "r_aside",
+      "role": "aside",
+      "elements": [
+        { "role": "heading", "text": "Quick Links", "attrs": { "level": 2 } },
+        { "role": "link", "text": "Quickstart", "actions": ["click"], "attrs": { "href": "/docs/quickstart" } },
+        { "role": "link", "text": "FAQ", "actions": ["click"], "attrs": { "href": "/docs/faq" } }
+      ]
+    },
+    {
+      "id": "r_footer",
+      "role": "footer",
+      "elements": [
+        { "role": "paragraph", "text": "© 2026 Docs Inc." }
+      ]
+    }
+  ],
+  "meta": {
+    "interactive_count": 7
+  }
+}

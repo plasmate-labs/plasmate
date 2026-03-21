@@ -1,0 +1,31 @@
+{
+  "$description": "Tests dialog region detection from <dialog> element with aria-label. Tests danger and secondary hints from CSS classes.",
+  "som_version": "0.1",
+  "url": "https://example.com/dialog-test",
+  "title": "Dialog Test",
+  "lang": "en",
+  "regions": [
+    {
+      "id": "r_main",
+      "role": "main",
+      "elements": [
+        { "role": "heading", "text": "Settings", "attrs": { "level": 1 } },
+        { "role": "button", "text": "Delete Account", "actions": ["click"] }
+      ]
+    },
+    {
+      "id": "r_dialog",
+      "role": "dialog",
+      "label": "Confirm deletion",
+      "elements": [
+        { "role": "heading", "text": "Are you sure?", "attrs": { "level": 2 } },
+        { "role": "paragraph", "text": "This action cannot be undone. All your data will be permanently deleted." },
+        { "role": "button", "text": "Delete Forever", "actions": ["click"], "hints": ["danger"] },
+        { "role": "button", "text": "Cancel", "actions": ["click"], "hints": ["secondary"] }
+      ]
+    }
+  ],
+  "meta": {
+    "interactive_count": 4
+  }
+}

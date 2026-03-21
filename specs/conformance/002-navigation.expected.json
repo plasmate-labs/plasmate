@@ -1,0 +1,31 @@
+{
+  "$description": "Tests nav element detection with aria-label, link extraction with href attributes, and actions on interactive elements.",
+  "som_version": "0.1",
+  "url": "https://example.com/nav-test",
+  "title": "Navigation Test",
+  "lang": "en",
+  "regions": [
+    {
+      "id": "r_navigation",
+      "role": "navigation",
+      "label": "Main menu",
+      "elements": [
+        { "role": "link", "text": "Home", "actions": ["click"], "attrs": { "href": "/" } },
+        { "role": "link", "text": "About", "actions": ["click"], "attrs": { "href": "/about" } },
+        { "role": "link", "text": "Products", "actions": ["click"], "attrs": { "href": "/products" } },
+        { "role": "link", "text": "Contact", "actions": ["click"], "attrs": { "href": "/contact" } }
+      ]
+    },
+    {
+      "id": "r_main",
+      "role": "main",
+      "elements": [
+        { "role": "heading", "text": "Page Content", "attrs": { "level": 1 } },
+        { "role": "paragraph", "text": "Welcome to our website." }
+      ]
+    }
+  ],
+  "meta": {
+    "interactive_count": 4
+  }
+}

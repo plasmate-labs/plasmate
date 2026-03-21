@@ -1,0 +1,56 @@
+{
+  "$description": "Tests form region detection with action/method, text_input types (email, password), checkbox, button, and link inside form. Tests placeholder as label, required attribute, and primary hint from class.",
+  "som_version": "0.1",
+  "url": "https://example.com/login",
+  "title": "Login",
+  "lang": "en",
+  "regions": [
+    {
+      "id": "r_main",
+      "role": "main",
+      "elements": [
+        { "role": "heading", "text": "Sign In", "attrs": { "level": 1 } }
+      ]
+    },
+    {
+      "id": "r_form",
+      "role": "form",
+      "label": "Login form",
+      "action": "/api/login",
+      "method": "POST",
+      "elements": [
+        {
+          "role": "text_input",
+          "label": "you@example.com",
+          "actions": ["type", "clear"],
+          "attrs": { "input_type": "email", "placeholder": "you@example.com", "required": true }
+        },
+        {
+          "role": "text_input",
+          "label": "Enter password",
+          "actions": ["type", "clear"],
+          "attrs": { "input_type": "password", "placeholder": "Enter password", "required": true }
+        },
+        {
+          "role": "checkbox",
+          "actions": ["toggle"]
+        },
+        {
+          "role": "button",
+          "text": "Sign In",
+          "actions": ["click"],
+          "hints": ["primary"]
+        },
+        {
+          "role": "link",
+          "text": "Forgot password?",
+          "actions": ["click"],
+          "attrs": { "href": "/forgot-password" }
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "interactive_count": 5
+  }
+}
