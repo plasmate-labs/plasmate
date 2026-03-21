@@ -67,7 +67,7 @@ This page shows Plasmate's real-world coverage across the same curated set of 10
     const s = data.summary || {};
     summaryEl.innerHTML = `
       <div style="display:flex; flex-wrap:wrap; gap: 14px; align-items:baseline;">
-        <div><strong>OK</strong>: ${fmt(s.ok)} / ${fmt(s.urls_total)} (${fmt((s.ok_percent || 0).toFixed ? s.ok_percent.toFixed(1) : s.ok_percent)}%)</div>
+        <div><strong>Full</strong>: ${fmt(s.ok)} / ${fmt(s.urls_total)} (${fmt((s.ok_percent || 0).toFixed ? s.ok_percent.toFixed(1) : s.ok_percent)}%)</div>
         <div><strong>Thin</strong>: ${fmt(s.thin)}</div>
         <div><strong>Failed</strong>: ${fmt(s.failed)}</div>
         <div style="color: rgba(240,237,232,0.72); font-family: var(--font-mono); font-size: 11px;">Generated: ${esc(data.generated_at_utc || '')}, version: ${esc(data.plasmate_version || '')}</div>
