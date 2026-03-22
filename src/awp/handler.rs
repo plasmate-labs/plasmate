@@ -22,6 +22,9 @@ pub type SharedPlugins = Option<Arc<Mutex<PluginManager>>>;
 /// Connection state tracked per WebSocket connection.
 pub struct ConnectionState {
     pub handshake_done: bool,
+    /// Active sessions (multiple per connection supported).
+    pub sessions: std::collections::HashMap<String, Session>,
+    /// Legacy single-session field (backward compatibility).
     pub session: Option<Session>,
     pub plugins: SharedPlugins,
 }
@@ -30,8 +33,24 @@ impl ConnectionState {
     pub fn new(plugins: SharedPlugins) -> Self {
         ConnectionState {
             handshake_done: false,
+            sessions: std::collections::HashMap::new(),
             session: None,
             plugins,
+        }
+    }
+
+    /// Look up a session by ID (immutable).
+    pub fn get_session(&self, session_id: &str) -> Option<&Session> {
+        self.sessions.get(session_id)
+            .or_else(|| self.session.as_ref().filter(|s| s.id == session_id))
+    }
+
+    /// Look up a session by ID (mutable).
+    pub fn get_session_mut(&mut self, session_id: &str) -> Option<&mut Session> {
+        if self.sessions.contains_key(session_id) {
+            self.sessions.get_mut(session_id)
+        } else {
+            self.session.as_mut().filter(|s| s.id == session_id)
         }
     }
 }
@@ -56,6 +75,7 @@ pub async fn handle_request(
         "awp.hello" => handle_hello(id, params, state),
         "session.create" => handle_session_create(id, params, state),
         "session.close" => handle_session_close(id, params, state),
+        "session.list" => handle_session_list(id, state),
         "page.navigate" => handle_page_navigate(id, params, state).await,
         "page.observe" => handle_page_observe(id, params, state),
         "page.act" => handle_page_act(id, params, state).await,
@@ -119,10 +139,10 @@ fn handle_session_create(
     params: &serde_json::Value,
     state: &mut ConnectionState,
 ) -> Response {
-    // Close existing session if any (v0.1: one session per connection)
-    if state.session.is_some() {
-        info!("Closing existing session for new session creation");
-        state.session = None;
+    // Check session limit (max 50 per connection)
+    let total = state.sessions.len() + if state.session.is_some() { 1 } else { 0 };
+    if total >= 50 {
+        return Response::error(id, ErrorCode::Internal, "Maximum sessions (50) reached");
     }
 
     let session_id = format!("s_{}", &uuid::Uuid::new_v4().to_string()[..8]);
@@ -142,7 +162,11 @@ fn handle_session_create(
     match Session::new(session_id.clone(), user_agent, locale, timeout_ms, tls_config) {
         Ok(session) => {
             info!(session_id = %session.id, "Session created");
-            state.session = Some(session);
+            if state.session.is_none() && state.sessions.is_empty() {
+                state.session = Some(session);
+            } else {
+                state.sessions.insert(session_id.clone(), session);
+            }
             Response::success(id, json!({"session_id": session_id}))
         }
         Err(e) => Response::error(id, ErrorCode::Internal, &e),
@@ -159,6 +183,11 @@ fn handle_session_close(
         .and_then(|v| v.as_str())
         .unwrap_or("");
 
+    if state.sessions.remove(requested_id).is_some() {
+        info!(session_id = requested_id, "Session closed");
+        return Response::success(id, json!({"closed": true}));
+    }
+
     match &state.session {
         Some(session) if session.id == requested_id => {
             info!(session_id = requested_id, "Session closed");
@@ -173,6 +202,19 @@ fn handle_session_close(
     }
 }
 
+fn handle_session_list(id: &str, state: &ConnectionState) -> Response {
+    let mut infos = Vec::new();
+    if let Some(ref s) = state.session {
+        infos.push(json!({"session_id": s.id, "url": s.current_url, "page_count": s.page_count,
+            "uptime_ms": s.created_at.elapsed().as_millis() as u64}));
+    }
+    for s in state.sessions.values() {
+        infos.push(json!({"session_id": s.id, "url": s.current_url, "page_count": s.page_count,
+            "uptime_ms": s.created_at.elapsed().as_millis() as u64}));
+    }
+    Response::success(id, json!({"sessions": infos, "count": infos.len()}))
+}
+
 async fn handle_page_navigate(
     id: &str,
     params: &serde_json::Value,
@@ -183,9 +225,25 @@ async fn handle_page_navigate(
         .and_then(|v| v.as_str())
         .unwrap_or("");
 
-    let session = match &mut state.session {
-        Some(s) if s.id == session_id => s,
-        _ => {
+    let url = match params.get("url").and_then(|v| v.as_str()) {
+        Some(u) => u,
+        None => {
+            return Response::error(id, ErrorCode::InvalidRequest, "Missing required param: url")
+        }
+    };
+
+    // Clone plugins before borrowing session mutably (avoids borrow conflict)
+    let plugins = state.plugins.clone();
+    let effective_url = if let Some(ref pm) = plugins {
+        let mut pm = pm.lock().await;
+        pm.run_pre_navigate(url).unwrap_or_else(|_| url.to_string())
+    } else {
+        url.to_string()
+    };
+
+    let session = match state.get_session_mut(session_id) {
+        Some(s) => s,
+        None => {
             return Response::error(
                 id,
                 ErrorCode::NotFound,
@@ -194,25 +252,9 @@ async fn handle_page_navigate(
         }
     };
 
-    let url = match params.get("url").and_then(|v| v.as_str()) {
-        Some(u) => u,
-        None => {
-            return Response::error(id, ErrorCode::InvalidRequest, "Missing required param: url")
-        }
-    };
-
-    // Plugin hook: pre_navigate
-    let effective_url = if let Some(ref pm) = state.plugins {
-        let mut pm = pm.lock().await;
-        pm.run_pre_navigate(url).unwrap_or_else(|_| url.to_string())
-    } else {
-        url.to_string()
-    };
-
     info!(url = %effective_url, "Navigating (full pipeline)");
 
-    // Use the full async pipeline: fetch -> external scripts -> V8 -> SOM
-    match session.navigate_with_plugins(&effective_url, &state.plugins).await {
+    match session.navigate_with_plugins(&effective_url, &plugins).await {
         Ok(result) => {
             let mut response = json!({
                 "url": result.url,

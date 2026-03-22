@@ -13,6 +13,7 @@ use plasmate::coverage;
 use plasmate::js;
 use plasmate::network;
 use plasmate::plugin;
+use plasmate::screenshot;
 use plasmate::som;
 
 #[derive(Parser)]
@@ -198,6 +199,29 @@ enum Commands {
         /// Max concurrent fetches
         #[arg(long, default_value = "50")]
         concurrency: usize,
+    },
+    /// Capture a screenshot of a web page
+    Screenshot {
+        /// URL to screenshot
+        url: String,
+        /// Output file path (defaults to screenshot.png)
+        #[arg(long, short, default_value = "screenshot.png")]
+        output: String,
+        /// Viewport width in pixels
+        #[arg(long, default_value = "1280")]
+        width: u32,
+        /// Viewport height in pixels
+        #[arg(long, default_value = "720")]
+        height: u32,
+        /// Image format: png, jpeg, webp
+        #[arg(long, default_value = "png")]
+        format: String,
+        /// JPEG/WebP quality (1-100)
+        #[arg(long)]
+        quality: Option<u32>,
+        /// Capture the full scrollable page
+        #[arg(long)]
+        full_page: bool,
     },
     /// Start the MCP (Model Context Protocol) server over stdio
     Mcp,
@@ -411,6 +435,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             concurrency,
         } => {
             cmd_throughput_bench(&base_url, pages, concurrency).await?;
+        }
+        Commands::Screenshot {
+            url,
+            output,
+            width,
+            height,
+            format,
+            quality,
+            full_page,
+        } => {
+            cmd_screenshot(&url, &output, width, height, &format, quality, full_page)?;
         }
         Commands::Mcp => {
             mcp::run_server().await?;
@@ -841,6 +876,50 @@ async fn cmd_coverage(
         report.summary.failed,
         report.summary.median_ratio
     );
+
+    Ok(())
+}
+
+fn cmd_screenshot(
+    url: &str,
+    output: &str,
+    width: u32,
+    height: u32,
+    format: &str,
+    quality: Option<u32>,
+    full_page: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let opts = screenshot::ScreenshotOptions {
+        width,
+        height,
+        format: screenshot::Format::from_str(format),
+        quality,
+        full_page,
+    };
+
+    match screenshot::capture_url(url, &opts) {
+        Ok(data) => {
+            std::fs::write(output, &data)?;
+            eprintln!(
+                "✓ Screenshot saved to {} ({} bytes)",
+                output,
+                data.len()
+            );
+        }
+        Err(screenshot::ScreenshotError::NotImplemented) => {
+            eprintln!("Screenshot rendering is not yet implemented.");
+            eprintln!();
+            eprintln!("Plasmate does not have a built-in layout engine yet.");
+            eprintln!("A pure-Rust rasteriser (SOM → PNG) is planned but not available.");
+            eprintln!();
+            eprintln!("For structured content extraction, use:");
+            eprintln!("  plasmate fetch {}", url);
+            eprintln!();
+            eprintln!("This returns the Semantic Object Model (SOM) — a structured,");
+            eprintln!("token-efficient representation of the page content.");
+            std::process::exit(1);
+        }
+    }
 
     Ok(())
 }
