@@ -15,7 +15,7 @@ async fn start_test_server() -> String {
                 tokio::spawn(async move {
                     let ws_stream = tokio_tungstenite::accept_async(stream).await.unwrap();
                     let (mut sink, mut stream) = ws_stream.split();
-                    let mut state = plasmate::awp::handler::ConnectionState::new();
+                    let mut state = plasmate::awp::handler::ConnectionState::new(None);
 
                     while let Some(Ok(msg)) = stream.next().await {
                         if let Message::Text(text) = msg {

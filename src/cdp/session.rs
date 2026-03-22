@@ -6,6 +6,7 @@ use std::sync::Arc;
 
 use reqwest::cookie::Jar;
 use reqwest::Client;
+use tokio::sync::Mutex;
 
 use crate::cdp::cookies::CookieJar;
 use crate::js::pipeline::PipelineConfig;
@@ -14,8 +15,12 @@ use crate::network::fetch;
 use crate::network::intercept::{
     InterceptAction, NetworkInterceptor, ResourceType as InterceptResourceType,
 };
+use crate::plugin::PluginManager;
 use crate::som::metadata::StructuredData;
 use crate::som::types::{Element, ElementRole, Som};
+
+/// Shared plugin manager handle (thread-safe, optional).
+pub type SharedPlugins = Option<Arc<Mutex<PluginManager>>>;
 
 static NODE_COUNTER: AtomicU64 = AtomicU64::new(1);
 static TARGET_COUNTER: AtomicU64 = AtomicU64::new(1);
@@ -60,6 +65,9 @@ pub struct CdpTarget {
     pub pending_attach: Option<(String, String)>, // (target_id, session_id)
     // Whether auto-attach has been configured at browser level (prevents duplicate events)
     pub auto_attach_configured: bool,
+
+    // Wasm plugins (shared across connections)
+    pub plugins: SharedPlugins,
 }
 
 #[derive(Clone)]
@@ -77,10 +85,21 @@ const DEFAULT_USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7
 
 impl CdpTarget {
     pub fn new() -> Result<Self, String> {
-        Self::new_with_profiles(crate::auth::config::profiles())
+        Self::new_with_options(crate::auth::config::profiles(), None)
+    }
+
+    pub fn new_with_plugins(plugins: SharedPlugins) -> Result<Self, String> {
+        Self::new_with_options(crate::auth::config::profiles(), plugins)
     }
 
     pub fn new_with_profiles(auth_profiles: &[String]) -> Result<Self, String> {
+        Self::new_with_options(auth_profiles, None)
+    }
+
+    pub fn new_with_options(
+        auth_profiles: &[String],
+        plugins: SharedPlugins,
+    ) -> Result<Self, String> {
         let target_num = TARGET_COUNTER.fetch_add(1, Ordering::Relaxed);
         let target_id = format!("{:032X}", target_num);
         let session_id = format!("{:032X}", target_num + 1000);
@@ -132,6 +151,7 @@ impl CdpTarget {
                 ..Default::default()
             },
             interceptor: NetworkInterceptor::new(),
+            plugins,
         })
     }
 
@@ -171,14 +191,27 @@ impl CdpTarget {
             .unwrap_or("about:blank")
             .to_string();
 
-        let page_result = crate::js::pipeline::process_page_async(
-            html,
-            &url,
-            &self.pipeline_config,
-            &self.client,
-        )
-        .await
-        .map_err(|e| e.to_string())?;
+        let page_result = if let Some(ref pm) = self.plugins {
+            let mut guard = pm.lock().await;
+            crate::js::pipeline::process_page_async_with_plugins(
+                html,
+                &url,
+                &self.pipeline_config,
+                &self.client,
+                &mut guard,
+            )
+            .await
+            .map_err(|e| e.to_string())?
+        } else {
+            crate::js::pipeline::process_page_async(
+                html,
+                &url,
+                &self.pipeline_config,
+                &self.client,
+            )
+            .await
+            .map_err(|e| e.to_string())?
+        };
 
         self.current_html = Some(html.to_string());
         self.effective_html = Some(page_result.effective_html);
@@ -200,24 +233,32 @@ impl CdpTarget {
 
     /// Navigate using our full pipeline, return events to emit.
     pub async fn navigate(&mut self, url: &str) -> Result<NavigateResult, String> {
+        // Plugin hook: pre_navigate
+        let effective_url = if let Some(ref pm) = self.plugins {
+            let mut pm = pm.lock().await;
+            pm.run_pre_navigate(url).unwrap_or_else(|_| url.to_string())
+        } else {
+            url.to_string()
+        };
+
         // Check interception rules before fetch
         let (action, _intercept_info) =
             self.interceptor
-                .check_request(url, &InterceptResourceType::Document, true);
+                .check_request(&effective_url, &InterceptResourceType::Document, true);
 
         let mut fetch_result = match action {
             InterceptAction::Fulfill(params) => {
-                NetworkInterceptor::fulfill_request(&params, url)
+                NetworkInterceptor::fulfill_request(&params, &effective_url)
             }
             InterceptAction::Fail(reason) => {
-                return Err(NetworkInterceptor::fail_request(&reason, url).to_string());
+                return Err(NetworkInterceptor::fail_request(&reason, &effective_url).to_string());
             }
             InterceptAction::Continue(overrides) => {
                 let actual_url = overrides
                     .as_ref()
                     .and_then(|o| o.url.as_ref())
                     .map(|u| u.as_str())
-                    .unwrap_or(url);
+                    .unwrap_or(&effective_url);
 
                 let extra_headers = overrides
                     .as_ref()
@@ -243,7 +284,7 @@ impl CdpTarget {
 
         // Check response interception rules
         self.interceptor.check_response(
-            url,
+            &effective_url,
             &InterceptResourceType::Document,
             &mut fetch_result,
         );
@@ -255,14 +296,27 @@ impl CdpTarget {
             self.cookie_jar.parse_set_cookie(set_cookie, &final_url);
         }
 
-        let page_result = crate::js::pipeline::process_page_async(
-            &fetch_result.html,
-            &final_url,
-            &self.pipeline_config,
-            &self.client,
-        )
-        .await
-        .map_err(|e| e.to_string())?;
+        let page_result = if let Some(ref pm) = self.plugins {
+            let mut guard = pm.lock().await;
+            crate::js::pipeline::process_page_async_with_plugins(
+                &fetch_result.html,
+                &final_url,
+                &self.pipeline_config,
+                &self.client,
+                &mut guard,
+            )
+            .await
+            .map_err(|e| e.to_string())?
+        } else {
+            crate::js::pipeline::process_page_async(
+                &fetch_result.html,
+                &final_url,
+                &self.pipeline_config,
+                &self.client,
+            )
+            .await
+            .map_err(|e| e.to_string())?
+        };
 
         let status = fetch_result.status;
         let mime_type = fetch_result.content_type.clone();

@@ -3,16 +3,15 @@ use std::time::Instant;
 
 use reqwest::cookie::Jar;
 use reqwest::Client;
+use tokio::sync::Mutex;
 
 use crate::js::pipeline::PipelineConfig;
 use crate::network::fetch;
-<<<<<<< HEAD
 use crate::network::intercept::{
     InterceptAction, NetworkInterceptor, ResourceType as InterceptResourceType,
 };
-=======
 use crate::network::tls::TlsConfig;
->>>>>>> feat/tls-config
+use crate::plugin::PluginManager;
 use crate::som::metadata::StructuredData;
 use crate::som::types::Som;
 
@@ -207,6 +206,81 @@ impl Session {
         self.page_count += 1;
 
         // Add to history
+        self.history.push(HistoryEntry {
+            url: final_url.clone(),
+            title: title.clone(),
+            timestamp_ms: start.elapsed().as_millis() as u64,
+            html_bytes,
+            som_bytes,
+        });
+
+        Ok(NavigateResult {
+            url: final_url,
+            status,
+            content_type,
+            html_bytes,
+            som_bytes,
+            fetch_ms,
+            pipeline_ms: pipeline_ms as u64,
+            title,
+            js_report,
+        })
+    }
+
+    /// Navigate with optional Wasm plugin hooks at each pipeline stage.
+    pub async fn navigate_with_plugins(
+        &mut self,
+        url: &str,
+        plugins: &Option<Arc<Mutex<PluginManager>>>,
+    ) -> Result<NavigateResult, String> {
+        // If no plugins, delegate to the plain navigate.
+        let pm = match plugins {
+            Some(pm) => pm,
+            None => return self.navigate(url).await,
+        };
+
+        let start = Instant::now();
+
+        let fetch_result = fetch::fetch_url(&self.client, url, self.timeout_ms)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        let fetch_ms = fetch_result.load_ms;
+        let html_bytes = fetch_result.html_bytes;
+        let status = fetch_result.status;
+        let final_url = fetch_result.url.clone();
+        let content_type = fetch_result.content_type.clone();
+
+        let page_result = {
+            let mut guard = pm.lock().await;
+            crate::js::pipeline::process_page_async_with_plugins(
+                &fetch_result.html,
+                &final_url,
+                &self.pipeline_config,
+                &self.client,
+                &mut guard,
+            )
+            .await
+            .map_err(|e| e.to_string())?
+        };
+
+        let pipeline_ms = page_result.timing.total_us / 1000;
+        let som_bytes = page_result.som.meta.som_bytes;
+        let title = page_result.som.title.clone();
+        let structured_data = page_result.som.structured_data.clone();
+
+        let js_report = page_result.js_report.as_ref().map(|r| JsReportSummary {
+            total: r.total,
+            succeeded: r.succeeded,
+            failed: r.failed,
+        });
+
+        self.current_url = Some(final_url.clone());
+        self.current_html = Some(fetch_result.html);
+        self.current_structured_data = structured_data;
+        self.current_som = Some(page_result.som);
+        self.page_count += 1;
+
         self.history.push(HistoryEntry {
             url: final_url.clone(),
             title: title.clone(),

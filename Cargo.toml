@@ -32,6 +32,9 @@ clap = { version = "4", features = ["derive"] }
 # V8 JavaScript engine (Chrome's JS runtime, Rust bindings)
 v8 = "130"
 
+# Wasm plugin runtime
+wasmtime = "27"
+
 # Fast hashing for SOM cache keys
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
 uuid = { version = "1", features = ["v4"] }
@@ -46,3 +49,4 @@ rustls-pemfile = "2"
 [dev-dependencies]
 serial_test = "3"
 tempfile = "3"
+wat = "1"

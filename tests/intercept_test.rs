@@ -127,7 +127,7 @@ async fn setup_session(state: &mut ConnectionState) -> String {
 async fn test_awp_block_request() {
     let (base_url, shutdown) = start_test_server().await;
 
-    let mut state = ConnectionState::new();
+    let mut state = ConnectionState::new(None);
     let sid = setup_session(&mut state).await;
 
     // Enable interception
@@ -196,7 +196,7 @@ async fn test_awp_block_request() {
 async fn test_awp_fulfill_request() {
     let (base_url, shutdown) = start_test_server().await;
 
-    let mut state = ConnectionState::new();
+    let mut state = ConnectionState::new(None);
     let sid = setup_session(&mut state).await;
 
     // Enable interception
@@ -261,7 +261,7 @@ async fn test_awp_fulfill_request() {
 async fn test_awp_response_modification() {
     let (base_url, shutdown) = start_test_server().await;
 
-    let mut state = ConnectionState::new();
+    let mut state = ConnectionState::new(None);
     let sid = setup_session(&mut state).await;
 
     // Enable interception with response stage
@@ -316,7 +316,7 @@ async fn test_awp_response_modification() {
 async fn test_awp_intercepted_request_log() {
     let (base_url, shutdown) = start_test_server().await;
 
-    let mut state = ConnectionState::new();
+    let mut state = ConnectionState::new(None);
     let sid = setup_session(&mut state).await;
 
     // Enable interception
@@ -368,7 +368,7 @@ async fn test_awp_intercepted_request_log() {
 async fn test_awp_enable_disable_lifecycle() {
     let (base_url, shutdown) = start_test_server().await;
 
-    let mut state = ConnectionState::new();
+    let mut state = ConnectionState::new(None);
     let sid = setup_session(&mut state).await;
 
     // Enable interception with a block rule
@@ -441,7 +441,7 @@ async fn test_awp_enable_disable_lifecycle() {
 async fn test_awp_clear_rules() {
     let (base_url, shutdown) = start_test_server().await;
 
-    let mut state = ConnectionState::new();
+    let mut state = ConnectionState::new(None);
     let sid = setup_session(&mut state).await;
 
     // Enable + block
@@ -502,7 +502,7 @@ async fn test_awp_clear_rules() {
 async fn test_awp_remove_specific_rule() {
     let (base_url, shutdown) = start_test_server().await;
 
-    let mut state = ConnectionState::new();
+    let mut state = ConnectionState::new(None);
     let sid = setup_session(&mut state).await;
 
     // Enable + add two rules
@@ -582,7 +582,7 @@ async fn test_awp_remove_specific_rule() {
 async fn test_awp_resource_type_filter() {
     let (base_url, shutdown) = start_test_server().await;
 
-    let mut state = ConnectionState::new();
+    let mut state = ConnectionState::new(None);
     let sid = setup_session(&mut state).await;
 
     // Enable interception only for Script resources
@@ -635,7 +635,7 @@ async fn test_awp_resource_type_filter() {
 
 #[tokio::test]
 async fn test_awp_hello_advertises_intercept() {
-    let mut state = ConnectionState::new();
+    let mut state = ConnectionState::new(None);
     let resp = send(
         &mut state,
         "awp.hello",
@@ -660,7 +660,7 @@ async fn test_awp_hello_advertises_intercept() {
 async fn test_awp_navigate_without_interception() {
     let (base_url, shutdown) = start_test_server().await;
 
-    let mut state = ConnectionState::new();
+    let mut state = ConnectionState::new(None);
     let sid = setup_session(&mut state).await;
 
     // No interception configured — navigate should work normally

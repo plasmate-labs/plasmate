@@ -4,11 +4,15 @@ use tokio_tungstenite::accept_async;
 use tokio_tungstenite::tungstenite::Message;
 use tracing::{error, info, warn};
 
-use super::handler::ConnectionState;
+use super::handler::{ConnectionState, SharedPlugins};
 use super::messages::Request;
 
 /// Start the AWP WebSocket server.
-pub async fn start(host: &str, port: u16) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn start(
+    host: &str,
+    port: u16,
+    plugins: SharedPlugins,
+) -> Result<(), Box<dyn std::error::Error>> {
     let addr = format!("{}:{}", host, port);
     let listener = TcpListener::bind(&addr).await?;
     info!("AWP server listening on ws://{}", addr);
@@ -17,10 +21,11 @@ pub async fn start(host: &str, port: u16) -> Result<(), Box<dyn std::error::Erro
         let (stream, peer) = listener.accept().await?;
         info!(%peer, "New connection");
 
+        let plugins = plugins.clone();
         tokio::spawn(async move {
             match accept_async(stream).await {
                 Ok(ws_stream) => {
-                    handle_connection(ws_stream, peer).await;
+                    handle_connection(ws_stream, peer, plugins).await;
                 }
                 Err(e) => {
                     error!(%peer, "WebSocket handshake failed: {}", e);
@@ -33,9 +38,10 @@ pub async fn start(host: &str, port: u16) -> Result<(), Box<dyn std::error::Erro
 async fn handle_connection(
     ws_stream: tokio_tungstenite::WebSocketStream<tokio::net::TcpStream>,
     peer: std::net::SocketAddr,
+    plugins: SharedPlugins,
 ) {
     let (mut sink, mut stream) = ws_stream.split();
-    let mut state = ConnectionState::new();
+    let mut state = ConnectionState::new(plugins);
 
     while let Some(msg) = stream.next().await {
         match msg {
