@@ -8,6 +8,10 @@ repository = "https://github.com/plasmate-labs/plasmate"
 homepage = "https://plasmate.app"
 readme = "README.md"
 
+[features]
+default = []
+plugins = ["wasmtime"]
+
 [dependencies]
 tokio = { version = "1", features = ["full"] }
 reqwest = { version = "0.12", default-features = false, features = ["cookies", "rustls-tls-native-roots", "gzip", "brotli", "deflate", "stream", "http2", "charset", "blocking"] }
@@ -32,8 +36,8 @@ clap = { version = "4", features = ["derive"] }
 # V8 JavaScript engine (Chrome's JS runtime, Rust bindings)
 v8 = "130"
 
-# Wasm plugin runtime
-wasmtime = "27"
+# Wasm plugin runtime (optional — enable with `--features plugins`)
+wasmtime = { version = "27", optional = true }
 
 # Fast hashing for SOM cache keys
 xxhash-rust = { version = "0.8", features = ["xxh3"] }

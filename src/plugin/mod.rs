@@ -34,10 +34,87 @@
 //! - **post_parse** (2): receives HTML bytes after JS execution, returns modified HTML
 //! - **post_som** (4): receives SOM JSON, returns modified SOM JSON
 //! - **on_extract** (8): receives SOM JSON, returns extracted/annotated JSON
+//!
+//! # Feature gating
+//!
+//! The Wasm runtime (wasmtime) is behind the `plugins` Cargo feature.
+//! When disabled, a stub `PluginManager` is provided that returns errors
+//! on any attempt to load plugins. The types module is always available.
 
-pub mod manager;
-pub mod runtime;
 pub mod types;
 
+#[cfg(feature = "plugins")]
+pub mod manager;
+#[cfg(feature = "plugins")]
+pub mod runtime;
+
+#[cfg(feature = "plugins")]
 pub use manager::PluginManager;
+
 pub use types::{Hook, PluginError, PluginManifest};
+
+// ---------------------------------------------------------------------------
+// Stub PluginManager when the `plugins` feature is disabled.
+// ---------------------------------------------------------------------------
+
+#[cfg(not(feature = "plugins"))]
+pub struct PluginManager;
+
+#[cfg(not(feature = "plugins"))]
+impl PluginManager {
+    pub fn new() -> Result<Self, PluginError> {
+        Err(PluginError::Load(
+            "Wasm plugins require the 'plugins' feature (build with --features plugins)".into(),
+        ))
+    }
+
+    pub fn load(&mut self, _path: &std::path::Path) -> Result<PluginManifest, PluginError> {
+        Err(PluginError::Load(
+            "Wasm plugins require the 'plugins' feature".into(),
+        ))
+    }
+
+    pub fn load_bytes(&mut self, _bytes: &[u8]) -> Result<PluginManifest, PluginError> {
+        Err(PluginError::Load(
+            "Wasm plugins require the 'plugins' feature".into(),
+        ))
+    }
+
+    pub fn plugin_count(&self) -> usize {
+        0
+    }
+
+    pub fn manifests(&self) -> Vec<&PluginManifest> {
+        Vec::new()
+    }
+
+    pub fn has_hook(&self, _hook: Hook) -> bool {
+        false
+    }
+
+    pub fn run_hook(&mut self, _hook: Hook, input: &[u8]) -> Result<Vec<u8>, PluginError> {
+        Ok(input.to_vec())
+    }
+
+    pub fn run_pre_navigate(&mut self, url: &str) -> Result<String, PluginError> {
+        Ok(url.to_string())
+    }
+
+    pub fn run_post_parse(&mut self, html: &str) -> Result<String, PluginError> {
+        Ok(html.to_string())
+    }
+
+    pub fn run_post_som(
+        &mut self,
+        som: crate::som::types::Som,
+    ) -> Result<crate::som::types::Som, PluginError> {
+        Ok(som)
+    }
+
+    pub fn run_on_extract(
+        &mut self,
+        _som: &crate::som::types::Som,
+    ) -> Result<Option<serde_json::Value>, PluginError> {
+        Ok(None)
+    }
+}
