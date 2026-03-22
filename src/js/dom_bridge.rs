@@ -1093,10 +1093,7 @@ mod tests {
 
         // Add to empty
         reg.add_class(el, "alpha").unwrap();
-        assert_eq!(
-            reg.get_attribute(el, "class"),
-            Some("alpha".to_string())
-        );
+        assert_eq!(reg.get_attribute(el, "class"), Some("alpha".to_string()));
 
         // Add second
         reg.add_class(el, "beta").unwrap();
@@ -1151,7 +1148,8 @@ mod tests {
         let mut reg = NodeRegistry::new();
         let root = reg.create_element("div");
         let link = reg.create_element("a");
-        reg.set_attribute(link, "href", "https://example.com").unwrap();
+        reg.set_attribute(link, "href", "https://example.com")
+            .unwrap();
         reg.append_child(root, link).unwrap();
 
         match reg.click(link).unwrap() {
@@ -1178,7 +1176,10 @@ mod tests {
         let mut reg = NodeRegistry::new();
         let input = reg.create_element("input");
         reg.type_text(input, "hello world").unwrap();
-        assert_eq!(reg.get_attribute(input, "value"), Some("hello world".to_string()));
+        assert_eq!(
+            reg.get_attribute(input, "value"),
+            Some("hello world".to_string())
+        );
     }
 
     #[test]

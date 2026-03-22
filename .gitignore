@@ -16,3 +16,4 @@ __pycache__/
 
 # MCP registry publisher tokens
 .mcpregistry_*
+.vercel

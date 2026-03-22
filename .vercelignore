@@ -1,0 +1,10 @@
+target/
+.git/
+sdk/python/.venv/
+sdk/python/dist/
+sdk/node/node_modules/
+*.rlib
+*.a
+*.o
+*.d
+*.rmeta
