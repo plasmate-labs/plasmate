@@ -772,6 +772,41 @@ pub fn input_dispatch_key_event(id: u64, _params: &serde_json::Value) -> CdpResp
     CdpResponse::success(id, json!({}))
 }
 
+/// Input.insertText — insert text at the current focus point.
+/// Puppeteer uses this for page.type() after focusing an element.
+pub fn input_insert_text(
+    id: u64,
+    params: &serde_json::Value,
+    target: &CdpTarget,
+) -> CdpResponse {
+    let text = params
+        .get("text")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+
+    if text.is_empty() {
+        return CdpResponse::success(id, json!({}));
+    }
+
+    // If we have effective HTML, use JS evaluation to set the value
+    // of the currently focused/active element.
+    if target.effective_html.is_some() {
+        let escaped = text.replace('\\', "\\\\").replace('\'', "\\'").replace('\n', "\\n");
+        let script = format!(
+            "(function() {{ \
+                var el = document.activeElement || document.querySelector('input, textarea'); \
+                if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) {{ \
+                    el.value = (el.value || '') + '{}'; \
+                }} \
+            }})()",
+            escaped
+        );
+        let _ = target.evaluate_js(&script);
+    }
+
+    CdpResponse::success(id, json!({}))
+}
+
 // ============================================================
 // Network domain
 // ============================================================

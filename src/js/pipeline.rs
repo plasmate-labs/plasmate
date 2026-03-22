@@ -115,6 +115,52 @@ fn wire_dom_bridge(runtime: &mut JsRuntime, html: &str) {
     runtime.inject_dom_bridge(registry);
 }
 
+/// JavaScript source that installs timer/rAF shims so callbacks are queued
+/// rather than dropped. Must run AFTER the DOM shim but BEFORE page scripts.
+const TIMER_SETUP_JS: &str = r#"
+var __plasmate_timers = [];
+var __plasmate_raf_queue = [];
+var _origSetTimeout = typeof setTimeout !== 'undefined' ? setTimeout : null;
+setTimeout = function(fn, delay) {
+    if (typeof fn === 'function') __plasmate_timers.push(fn);
+    return __plasmate_timers.length;
+};
+requestAnimationFrame = function(fn) {
+    if (typeof fn === 'function') __plasmate_raf_queue.push(fn);
+    return __plasmate_raf_queue.length;
+};
+"#;
+
+/// JavaScript source that drains one pass of queued timer/rAF callbacks.
+/// Run AFTER all page scripts execute but BEFORE SOM re-compilation.
+const TIMER_DRAIN_JS: &str = r#"
+(function() {
+    if (typeof __plasmate_timers !== 'undefined' && __plasmate_timers.length > 0) {
+        var timers = __plasmate_timers.splice(0);
+        for (var i = 0; i < timers.length; i++) {
+            try { timers[i](); } catch(e) {}
+        }
+    }
+    if (typeof __plasmate_raf_queue !== 'undefined' && __plasmate_raf_queue.length > 0) {
+        var rafs = __plasmate_raf_queue.splice(0);
+        for (var i = 0; i < rafs.length; i++) {
+            try { rafs[i](Date.now()); } catch(e) {}
+        }
+    }
+})();
+"#;
+
+/// Install timer/rAF shims so SPA frameworks can queue deferred callbacks.
+fn install_timer_shims(runtime: &mut JsRuntime) {
+    let _ = runtime.execute_in_context(TIMER_SETUP_JS, "timer-setup");
+}
+
+/// Drain one pass of queued timer/rAF callbacks (catches React/Vue deferred rendering).
+fn drain_timer_queue(runtime: &mut JsRuntime) {
+    let _ = runtime.execute_in_context(TIMER_DRAIN_JS, "timer-drain");
+    runtime.pump_microtasks();
+}
+
 /// After JS execution, serialize the DOM preferring V8's JS serialization (which
 /// captures all mutations including innerHTML) but falling back to the NodeRegistry
 /// if V8 serialization fails. Also drains the registry from thread-local storage.
@@ -463,8 +509,12 @@ pub async fn process_page_async_with_plugins(
         // Wire the DOM bridge so JS mutations flow to the rcdom tree.
         wire_dom_bridge(&mut runtime, html);
 
+        // Install timer/rAF shims so SPA frameworks can queue deferred callbacks.
+        install_timer_shims(&mut runtime);
+
         if !exec_scripts.is_empty() {
             let report = runtime.execute_page_scripts(&exec_scripts);
+            drain_timer_queue(&mut runtime);
             runtime.pump_microtasks();
             runtime.fire_dom_content_loaded();
             runtime.pump_microtasks();
@@ -552,8 +602,12 @@ pub fn process_page_with_plugins(
         // Wire the DOM bridge so JS mutations flow to the rcdom tree.
         wire_dom_bridge(&mut runtime, html);
 
+        // Install timer/rAF shims so SPA frameworks can queue deferred callbacks.
+        install_timer_shims(&mut runtime);
+
         if !inline_scripts.is_empty() {
             let report = runtime.execute_page_scripts(&inline_scripts);
+            drain_timer_queue(&mut runtime);
             runtime.pump_microtasks();
             runtime.fire_dom_content_loaded();
             runtime.pump_microtasks();

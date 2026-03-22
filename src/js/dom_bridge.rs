@@ -399,6 +399,179 @@ impl NodeRegistry {
         self.document_id.and_then(|id| self.nodes.get(&id))
     }
 
+    /// Insert a child before a reference node.
+    pub fn insert_before(
+        &self,
+        parent_id: u32,
+        new_child_id: u32,
+        ref_child_id: u32,
+    ) -> Result<(), String> {
+        let parent = self
+            .nodes
+            .get(&parent_id)
+            .ok_or_else(|| format!("Parent node {} not found", parent_id))?;
+        let new_child = self
+            .nodes
+            .get(&new_child_id)
+            .ok_or_else(|| format!("New child node {} not found", new_child_id))?;
+        let ref_child = self
+            .nodes
+            .get(&ref_child_id)
+            .ok_or_else(|| format!("Ref child node {} not found", ref_child_id))?;
+
+        // Remove from previous parent if any
+        if let Some(prev_parent) = new_child.parent.take() {
+            if let Some(pp) = prev_parent.upgrade() {
+                pp.children
+                    .borrow_mut()
+                    .retain(|c| !Rc::ptr_eq(c, new_child));
+            }
+        }
+
+        // Find ref_child position and insert before it
+        let mut children = parent.children.borrow_mut();
+        let pos = children
+            .iter()
+            .position(|c| Rc::ptr_eq(c, ref_child))
+            .unwrap_or(children.len());
+        new_child.parent.set(Some(Rc::downgrade(parent)));
+        children.insert(pos, new_child.clone());
+        Ok(())
+    }
+
+    /// Replace a child with a new node.
+    pub fn replace_child(
+        &self,
+        parent_id: u32,
+        new_child_id: u32,
+        old_child_id: u32,
+    ) -> Result<(), String> {
+        let parent = self
+            .nodes
+            .get(&parent_id)
+            .ok_or_else(|| format!("Parent node {} not found", parent_id))?;
+        let new_child = self
+            .nodes
+            .get(&new_child_id)
+            .ok_or_else(|| format!("New child node {} not found", new_child_id))?;
+        let old_child = self
+            .nodes
+            .get(&old_child_id)
+            .ok_or_else(|| format!("Old child node {} not found", old_child_id))?;
+
+        // Remove new_child from its current parent
+        if let Some(prev) = new_child.parent.take() {
+            if let Some(pp) = prev.upgrade() {
+                pp.children
+                    .borrow_mut()
+                    .retain(|c| !Rc::ptr_eq(c, new_child));
+            }
+        }
+
+        let mut children = parent.children.borrow_mut();
+        if let Some(pos) = children.iter().position(|c| Rc::ptr_eq(c, old_child)) {
+            new_child.parent.set(Some(Rc::downgrade(parent)));
+            old_child.parent.set(None);
+            children[pos] = new_child.clone();
+        }
+        Ok(())
+    }
+
+    /// Clone a node. If `deep` is true, recursively clone children.
+    pub fn clone_node(&mut self, id: u32, deep: bool) -> Option<u32> {
+        // Extract all data we need from the source node before any mutation
+        let node = self.nodes.get(&id)?;
+        enum CloneSource {
+            Element {
+                name: QualName,
+                attrs: Vec<html5ever::Attribute>,
+                child_ids: Vec<u32>,
+            },
+            Text(String),
+        }
+        let source = match &node.data {
+            NodeData::Element { name, attrs, .. } => {
+                let child_ids = if deep {
+                    node.children
+                        .borrow()
+                        .iter()
+                        .filter_map(|child| {
+                            let ptr = Rc::as_ptr(child) as usize;
+                            self.reverse.get(&ptr).copied()
+                        })
+                        .collect()
+                } else {
+                    vec![]
+                };
+                CloneSource::Element {
+                    name: name.clone(),
+                    attrs: attrs.borrow().clone(),
+                    child_ids,
+                }
+            }
+            NodeData::Text { contents } => CloneSource::Text(contents.borrow().to_string()),
+            _ => return None,
+        };
+
+        match source {
+            CloneSource::Text(text) => {
+                let new_id = self.create_text(&text);
+                Some(new_id)
+            }
+            CloneSource::Element {
+                name,
+                attrs,
+                child_ids,
+            } => {
+                let new_node = Node::new(NodeData::Element {
+                    name,
+                    attrs: RefCell::new(attrs),
+                    template_contents: RefCell::new(None),
+                    mathml_annotation_xml_integration_point: false,
+                });
+                let new_id = self.register(&new_node);
+                for child_id in child_ids {
+                    if let Some(cloned_child_id) = self.clone_node(child_id, true) {
+                        let _ = self.append_child(new_id, cloned_child_id);
+                    }
+                }
+                Some(new_id)
+            }
+        }
+    }
+
+    /// Check if an element has a specific class.
+    pub fn has_class(&self, id: u32, class_name: &str) -> bool {
+        self.get_class_name(id)
+            .map(|classes| classes.split_whitespace().any(|c| c == class_name))
+            .unwrap_or(false)
+    }
+
+    /// Add a class to an element.
+    pub fn add_class(&self, id: u32, class_name: &str) -> Result<(), String> {
+        let current = self.get_attribute(id, "class").unwrap_or_default();
+        if !current.split_whitespace().any(|c| c == class_name) {
+            let new_val = if current.is_empty() {
+                class_name.to_string()
+            } else {
+                format!("{} {}", current, class_name)
+            };
+            self.set_attribute(id, "class", &new_val)
+        } else {
+            Ok(())
+        }
+    }
+
+    /// Remove a class from an element.
+    pub fn remove_class(&self, id: u32, class_name: &str) -> Result<(), String> {
+        let current = self.get_attribute(id, "class").unwrap_or_default();
+        let new_val: Vec<&str> = current
+            .split_whitespace()
+            .filter(|c| *c != class_name)
+            .collect();
+        self.set_attribute(id, "class", &new_val.join(" "))
+    }
+
     /// Basic querySelector - matches tag, class, ID, and attribute selectors.
     pub fn query_selector(&self, root_id: u32, selector: &str) -> Option<u32> {
         let root = self.nodes.get(&root_id)?;
@@ -530,10 +703,88 @@ impl NodeRegistry {
         }
     }
 
+    /// Wait for a selector to match an element.
+    ///
+    /// Since Plasmate doesn't have a live event loop, we simply check
+    /// whether the element currently exists in the final DOM state.
+    pub fn wait_for_selector(&self, root_id: u32, selector: &str, _timeout_ms: u64) -> Option<u32> {
+        self.query_selector(root_id, selector)
+    }
+
+    /// Click an element by ID.
+    ///
+    /// For `<a href="...">` elements, returns `ClickResult::Navigate` with the URL.
+    /// For all other elements, returns `ClickResult::Clicked`.
+    pub fn click(&self, id: u32) -> Result<ClickResult, String> {
+        let _node = self
+            .nodes
+            .get(&id)
+            .ok_or_else(|| format!("Node {} not found", id))?;
+
+        // Check if it's a link with an href
+        if let Some(href) = self.get_attribute(id, "href") {
+            if !href.is_empty() {
+                return Ok(ClickResult::Navigate(href));
+            }
+        }
+
+        // For form submit buttons, check the parent form's action
+        if let Some(tag) = self.get_tag_name(id) {
+            let tag_lower = tag.to_lowercase();
+            if tag_lower == "button" || tag_lower == "input" {
+                let input_type = self.get_attribute(id, "type").unwrap_or_default();
+                if input_type == "submit" {
+                    if let Some(parent_id) = self.get_parent(id) {
+                        if let Some(parent_tag) = self.get_tag_name(parent_id) {
+                            if parent_tag.to_lowercase() == "form" {
+                                if let Some(action) = self.get_attribute(parent_id, "action") {
+                                    if !action.is_empty() {
+                                        return Ok(ClickResult::FormSubmit(action));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(ClickResult::Clicked)
+    }
+
+    /// Type text into an element by setting its value attribute.
+    ///
+    /// Works for `<input>` and `<textarea>` elements.
+    pub fn type_text(&self, id: u32, text: &str) -> Result<(), String> {
+        let node = self
+            .nodes
+            .get(&id)
+            .ok_or_else(|| format!("Node {} not found", id))?;
+
+        match &node.data {
+            NodeData::Element { .. } => {
+                self.set_attribute(id, "value", text)?;
+                Ok(())
+            }
+            _ => Err(format!("Node {} is not an element", id)),
+        }
+    }
+
     /// Total registered node count.
     pub fn node_count(&self) -> usize {
         self.nodes.len()
     }
+}
+
+/// Result of clicking a DOM element.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ClickResult {
+    /// The element was clicked (generic click).
+    Clicked,
+    /// The element is a link; navigate to this URL.
+    Navigate(String),
+    /// The element is a submit button in a form with this action URL.
+    FormSubmit(String),
 }
 
 /// Split a compound selector like "div.header#main[data-x]" into parts.
@@ -702,5 +953,238 @@ mod tests {
         reg.create_element("span");
         reg.create_text("hello");
         assert_eq!(reg.node_count(), 3);
+    }
+
+    // =========================================================================
+    // insert_before / replace_child / clone_node / classList tests
+    // =========================================================================
+
+    #[test]
+    fn test_insert_before() {
+        let mut reg = NodeRegistry::new();
+        let parent = reg.create_element("ul");
+        let li1 = reg.create_element("li");
+        let li2 = reg.create_element("li");
+        let li_new = reg.create_element("li");
+
+        reg.append_child(parent, li1).unwrap();
+        reg.append_child(parent, li2).unwrap();
+        assert_eq!(reg.get_children(parent), vec![li1, li2]);
+
+        // Insert li_new before li2
+        reg.insert_before(parent, li_new, li2).unwrap();
+        assert_eq!(reg.get_children(parent), vec![li1, li_new, li2]);
+        assert_eq!(reg.get_parent(li_new), Some(parent));
+    }
+
+    #[test]
+    fn test_insert_before_moves_from_old_parent() {
+        let mut reg = NodeRegistry::new();
+        let parent_a = reg.create_element("div");
+        let parent_b = reg.create_element("div");
+        let child = reg.create_element("span");
+        let ref_child = reg.create_element("p");
+
+        reg.append_child(parent_a, child).unwrap();
+        reg.append_child(parent_b, ref_child).unwrap();
+
+        // Move child from parent_a to parent_b before ref_child
+        reg.insert_before(parent_b, child, ref_child).unwrap();
+        assert_eq!(reg.get_children(parent_a), Vec::<u32>::new());
+        assert_eq!(reg.get_children(parent_b), vec![child, ref_child]);
+    }
+
+    #[test]
+    fn test_replace_child() {
+        let mut reg = NodeRegistry::new();
+        let parent = reg.create_element("div");
+        let old = reg.create_element("span");
+        let new = reg.create_element("em");
+
+        reg.append_child(parent, old).unwrap();
+        assert_eq!(reg.get_children(parent), vec![old]);
+
+        reg.replace_child(parent, new, old).unwrap();
+        assert_eq!(reg.get_children(parent), vec![new]);
+        assert_eq!(reg.get_parent(new), Some(parent));
+        assert_eq!(reg.get_parent(old), None);
+    }
+
+    #[test]
+    fn test_replace_child_preserves_position() {
+        let mut reg = NodeRegistry::new();
+        let parent = reg.create_element("ul");
+        let a = reg.create_element("li");
+        let b = reg.create_element("li");
+        let c = reg.create_element("li");
+        let replacement = reg.create_element("li");
+
+        reg.append_child(parent, a).unwrap();
+        reg.append_child(parent, b).unwrap();
+        reg.append_child(parent, c).unwrap();
+
+        // Replace b (middle) with replacement
+        reg.replace_child(parent, replacement, b).unwrap();
+        assert_eq!(reg.get_children(parent), vec![a, replacement, c]);
+    }
+
+    #[test]
+    fn test_clone_node_shallow() {
+        let mut reg = NodeRegistry::new();
+        let el = reg.create_element("div");
+        reg.set_attribute(el, "class", "test").unwrap();
+        let child = reg.create_element("span");
+        reg.append_child(el, child).unwrap();
+
+        let cloned = reg.clone_node(el, false).unwrap();
+        assert_ne!(cloned, el);
+        assert_eq!(reg.get_tag_name(cloned), Some("DIV".to_string()));
+        assert_eq!(reg.get_attribute(cloned, "class"), Some("test".to_string()));
+        // Shallow: no children
+        assert_eq!(reg.get_children(cloned), Vec::<u32>::new());
+    }
+
+    #[test]
+    fn test_clone_node_deep() {
+        let mut reg = NodeRegistry::new();
+        let el = reg.create_element("div");
+        let child = reg.create_element("span");
+        let text = reg.create_text("hello");
+        reg.append_child(child, text).unwrap();
+        reg.append_child(el, child).unwrap();
+
+        let cloned = reg.clone_node(el, true).unwrap();
+        assert_ne!(cloned, el);
+        let cloned_children = reg.get_children(cloned);
+        assert_eq!(cloned_children.len(), 1);
+        let cloned_span = cloned_children[0];
+        assert_ne!(cloned_span, child);
+        assert_eq!(reg.get_tag_name(cloned_span), Some("SPAN".to_string()));
+        // Deep clone should copy text
+        assert_eq!(reg.get_text_content(cloned_span), "hello");
+    }
+
+    #[test]
+    fn test_clone_text_node() {
+        let mut reg = NodeRegistry::new();
+        let text = reg.create_text("hello world");
+        let cloned = reg.clone_node(text, false).unwrap();
+        assert_ne!(cloned, text);
+        assert_eq!(reg.get_text_content(cloned), "hello world");
+    }
+
+    #[test]
+    fn test_has_class() {
+        let mut reg = NodeRegistry::new();
+        let el = reg.create_element("div");
+        reg.set_attribute(el, "class", "foo bar baz").unwrap();
+
+        assert!(reg.has_class(el, "foo"));
+        assert!(reg.has_class(el, "bar"));
+        assert!(reg.has_class(el, "baz"));
+        assert!(!reg.has_class(el, "qux"));
+        assert!(!reg.has_class(el, "fo")); // partial match should not count
+    }
+
+    #[test]
+    fn test_add_class() {
+        let mut reg = NodeRegistry::new();
+        let el = reg.create_element("div");
+
+        // Add to empty
+        reg.add_class(el, "alpha").unwrap();
+        assert_eq!(
+            reg.get_attribute(el, "class"),
+            Some("alpha".to_string())
+        );
+
+        // Add second
+        reg.add_class(el, "beta").unwrap();
+        assert_eq!(
+            reg.get_attribute(el, "class"),
+            Some("alpha beta".to_string())
+        );
+
+        // No duplicate
+        reg.add_class(el, "alpha").unwrap();
+        assert_eq!(
+            reg.get_attribute(el, "class"),
+            Some("alpha beta".to_string())
+        );
+    }
+
+    #[test]
+    fn test_remove_class() {
+        let mut reg = NodeRegistry::new();
+        let el = reg.create_element("div");
+        reg.set_attribute(el, "class", "a b c").unwrap();
+
+        reg.remove_class(el, "b").unwrap();
+        assert_eq!(reg.get_attribute(el, "class"), Some("a c".to_string()));
+
+        reg.remove_class(el, "a").unwrap();
+        assert_eq!(reg.get_attribute(el, "class"), Some("c".to_string()));
+
+        reg.remove_class(el, "c").unwrap();
+        assert_eq!(reg.get_attribute(el, "class"), Some("".to_string()));
+
+        // Removing nonexistent class is fine
+        reg.remove_class(el, "z").unwrap();
+    }
+
+    #[test]
+    fn test_wait_for_selector_found() {
+        let reg = make_registry_with_tree();
+        let result = reg.wait_for_selector(1, "p", 5000);
+        assert!(result.is_some());
+    }
+
+    #[test]
+    fn test_wait_for_selector_not_found() {
+        let reg = make_registry_with_tree();
+        let result = reg.wait_for_selector(1, ".nonexistent", 5000);
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_click_link() {
+        let mut reg = NodeRegistry::new();
+        let root = reg.create_element("div");
+        let link = reg.create_element("a");
+        reg.set_attribute(link, "href", "https://example.com").unwrap();
+        reg.append_child(root, link).unwrap();
+
+        match reg.click(link).unwrap() {
+            ClickResult::Navigate(url) => assert_eq!(url, "https://example.com"),
+            other => panic!("Expected Navigate, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_click_button() {
+        let mut reg = NodeRegistry::new();
+        let btn = reg.create_element("button");
+        assert_eq!(reg.click(btn).unwrap(), ClickResult::Clicked);
+    }
+
+    #[test]
+    fn test_click_not_found() {
+        let reg = NodeRegistry::new();
+        assert!(reg.click(999).is_err());
+    }
+
+    #[test]
+    fn test_type_text() {
+        let mut reg = NodeRegistry::new();
+        let input = reg.create_element("input");
+        reg.type_text(input, "hello world").unwrap();
+        assert_eq!(reg.get_attribute(input, "value"), Some("hello world".to_string()));
+    }
+
+    #[test]
+    fn test_type_text_not_element() {
+        let mut reg = NodeRegistry::new();
+        let text = reg.create_text("plain text");
+        assert!(reg.type_text(text, "new value").is_err());
     }
 }

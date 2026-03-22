@@ -14,7 +14,7 @@ use markup5ever_rcdom::RcDom;
 
 use tracing::{debug, info, warn};
 
-use super::dom_bridge::NodeRegistry;
+use super::dom_bridge::{ClickResult, NodeRegistry};
 
 // Thread-local storage for the reqwest client used by the fetch bridge.
 // This is needed because V8 callbacks can't easily capture external state.
@@ -2849,6 +2849,22 @@ const DOM_BRIDGE_SHIM: &str = r#"
       getElementsByClassName: function(cls) {
         return this.querySelectorAll('.' + String(cls));
       },
+      click: function() {
+        if (typeof __plasmate_dom !== 'undefined') {
+          return __plasmate_dom.click(this._id);
+        }
+      },
+      get value() {
+        if (typeof __plasmate_dom !== 'undefined') {
+          return __plasmate_dom.getAttribute(this._id, 'value') || '';
+        }
+        return '';
+      },
+      set value(v) {
+        if (typeof __plasmate_dom !== 'undefined') {
+          __plasmate_dom.setAttribute(this._id, 'value', String(v));
+        }
+      },
       contains: function(other) { return false; },
       addEventListener: function() {},
       removeEventListener: function() {},
@@ -2932,6 +2948,20 @@ const DOM_BRIDGE_SHIM: &str = r#"
 
       var bodyId = __plasmate_dom.bodyId();
       if (bodyId) document.body = _makeNode(bodyId);
+
+      // Add waitForSelector to document
+      document.waitForSelector = function(sel, opts) {
+        var timeout = (opts && opts.timeout) || 30000;
+        return new Promise(function(resolve, reject) {
+          var root = __plasmate_dom.documentId();
+          var id = __plasmate_dom.waitForSelector(root, String(sel), timeout);
+          if (id) {
+            resolve(_makeNode(id));
+          } else {
+            reject(new Error('Element not found: ' + sel));
+          }
+        });
+      };
 
       return true;
     } catch (e) {
@@ -3314,23 +3344,22 @@ impl JsRuntime {
             dom_query_selector_all_callback
         );
         add_fn!(dom_obj, scope, "getTagName", dom_get_tag_name_callback);
+        add_fn!(dom_obj, scope, "getClassName", dom_get_class_name_callback);
         add_fn!(dom_obj, scope, "getNodeType", dom_get_node_type_callback);
+        add_fn!(dom_obj, scope, "getInnerHTML", dom_get_inner_html_callback);
+        add_fn!(dom_obj, scope, "setInnerHTML", dom_set_inner_html_callback);
+        add_fn!(dom_obj, scope, "click", dom_click_callback);
+        add_fn!(dom_obj, scope, "typeText", dom_type_text_callback);
+        add_fn!(
+            dom_obj,
+            scope,
+            "waitForSelector",
+            dom_wait_for_selector_callback
+        );
 
-        // Set bodyId and documentId properties if available
-        DOM_REGISTRY.with(|reg| {
-            if let Some(ref registry) = *reg.borrow() {
-                if let Some(body_id) = registry.body_id() {
-                    let key = v8::String::new(scope, "bodyId").unwrap();
-                    let val = v8::Integer::new(scope, body_id as i32);
-                    dom_obj.set(scope, key.into(), val.into());
-                }
-                if let Some(doc_id) = registry.document_id() {
-                    let key = v8::String::new(scope, "documentId").unwrap();
-                    let val = v8::Integer::new(scope, doc_id as i32);
-                    dom_obj.set(scope, key.into(), val.into());
-                }
-            }
-        });
+        // Add bodyId and documentId as callable functions
+        add_fn!(dom_obj, scope, "bodyId", dom_body_id_callback);
+        add_fn!(dom_obj, scope, "documentId", dom_document_id_callback);
 
         let dom_key = v8::String::new(scope, "__plasmate_dom").unwrap();
         global.set(scope, dom_key.into(), dom_obj.into());
@@ -3654,6 +3683,174 @@ fn dom_get_node_type_callback(
         if let Some(ref registry) = *reg.borrow() {
             let node_type = registry.get_node_type(id);
             rv.set(v8::Integer::new(scope, node_type as i32).into());
+        }
+    });
+}
+
+fn dom_get_class_name_callback(
+    scope: &mut v8::HandleScope,
+    args: v8::FunctionCallbackArguments,
+    mut rv: v8::ReturnValue,
+) {
+    let id = match v8_get_u32(scope, &args, 0) {
+        Some(v) => v,
+        None => return,
+    };
+    DOM_REGISTRY.with(|reg| {
+        if let Some(ref registry) = *reg.borrow() {
+            if let Some(cls) = registry.get_class_name(id) {
+                rv.set(v8::String::new(scope, &cls).unwrap().into());
+            }
+        }
+    });
+}
+
+fn dom_get_inner_html_callback(
+    scope: &mut v8::HandleScope,
+    args: v8::FunctionCallbackArguments,
+    mut rv: v8::ReturnValue,
+) {
+    let id = match v8_get_u32(scope, &args, 0) {
+        Some(v) => v,
+        None => return,
+    };
+    DOM_REGISTRY.with(|reg| {
+        if let Some(ref registry) = *reg.borrow() {
+            if let Ok(html) = registry.get_inner_html(id) {
+                rv.set(v8::String::new(scope, &html).unwrap().into());
+            }
+        }
+    });
+}
+
+fn dom_set_inner_html_callback(
+    scope: &mut v8::HandleScope,
+    args: v8::FunctionCallbackArguments,
+    mut _rv: v8::ReturnValue,
+) {
+    let id = match v8_get_u32(scope, &args, 0) {
+        Some(v) => v,
+        None => return,
+    };
+    let html = if args.length() > 1 {
+        args.get(1).to_rust_string_lossy(scope)
+    } else {
+        return;
+    };
+    DOM_REGISTRY.with(|reg| {
+        if let Some(ref mut registry) = *reg.borrow_mut() {
+            let _ = registry.set_inner_html(id, &html);
+        }
+    });
+}
+
+fn dom_click_callback(
+    scope: &mut v8::HandleScope,
+    args: v8::FunctionCallbackArguments,
+    mut rv: v8::ReturnValue,
+) {
+    let id = match v8_get_u32(scope, &args, 0) {
+        Some(v) => v,
+        None => return,
+    };
+    DOM_REGISTRY.with(|reg| {
+        if let Some(ref registry) = *reg.borrow() {
+            match registry.click(id) {
+                Ok(ClickResult::Navigate(url)) => {
+                    let s = v8::String::new(scope, &url).unwrap();
+                    rv.set(s.into());
+                }
+                Ok(ClickResult::FormSubmit(action)) => {
+                    let s = v8::String::new(scope, &action).unwrap();
+                    rv.set(s.into());
+                }
+                Ok(ClickResult::Clicked) => {
+                    rv.set(v8::Boolean::new(scope, true).into());
+                }
+                Err(_) => {
+                    rv.set(v8::Boolean::new(scope, false).into());
+                }
+            }
+        }
+    });
+}
+
+fn dom_type_text_callback(
+    scope: &mut v8::HandleScope,
+    args: v8::FunctionCallbackArguments,
+    mut rv: v8::ReturnValue,
+) {
+    let id = match v8_get_u32(scope, &args, 0) {
+        Some(v) => v,
+        None => return,
+    };
+    let text = if args.length() > 1 {
+        args.get(1).to_rust_string_lossy(scope)
+    } else {
+        return;
+    };
+    DOM_REGISTRY.with(|reg| {
+        if let Some(ref registry) = *reg.borrow() {
+            match registry.type_text(id, &text) {
+                Ok(()) => rv.set(v8::Boolean::new(scope, true).into()),
+                Err(_) => rv.set(v8::Boolean::new(scope, false).into()),
+            }
+        }
+    });
+}
+
+fn dom_wait_for_selector_callback(
+    scope: &mut v8::HandleScope,
+    args: v8::FunctionCallbackArguments,
+    mut rv: v8::ReturnValue,
+) {
+    let root_id = match v8_get_u32(scope, &args, 0) {
+        Some(v) => v,
+        None => return,
+    };
+    let selector = if args.length() > 1 {
+        args.get(1).to_rust_string_lossy(scope)
+    } else {
+        return;
+    };
+    let timeout_ms = if args.length() > 2 {
+        v8_get_u32(scope, &args, 2).unwrap_or(30000) as u64
+    } else {
+        30000
+    };
+    DOM_REGISTRY.with(|reg| {
+        if let Some(ref registry) = *reg.borrow() {
+            if let Some(found_id) = registry.wait_for_selector(root_id, &selector, timeout_ms) {
+                rv.set(v8::Integer::new(scope, found_id as i32).into());
+            }
+        }
+    });
+}
+
+fn dom_body_id_callback(
+    scope: &mut v8::HandleScope,
+    _args: v8::FunctionCallbackArguments,
+    mut rv: v8::ReturnValue,
+) {
+    DOM_REGISTRY.with(|reg| {
+        if let Some(ref registry) = *reg.borrow() {
+            if let Some(body_id) = registry.body_id() {
+                rv.set(v8::Integer::new(scope, body_id as i32).into());
+            }
+        }
+    });
+}
+
+fn dom_document_id_callback(
+    scope: &mut v8::HandleScope,
+    _args: v8::FunctionCallbackArguments,
+    mut rv: v8::ReturnValue,
+) {
+    DOM_REGISTRY.with(|reg| {
+        if let Some(ref registry) = *reg.borrow() {
+            if let Some(doc_id) = registry.document_id() {
+                rv.set(v8::Integer::new(scope, doc_id as i32).into());
+            }
         }
     });
 }

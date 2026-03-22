@@ -323,6 +323,7 @@ async fn handle_cdp_request_inner(
         // ---- Input ----
         "Input.dispatchMouseEvent" => domains::input_dispatch_mouse_event(id, params, target).await,
         "Input.dispatchKeyEvent" => (domains::input_dispatch_key_event(id, params), vec![]),
+        "Input.insertText" => (domains::input_insert_text(id, params, target), vec![]),
 
         // ---- Network ----
         "Network.enable" => (domains::network_enable(id), vec![]),
