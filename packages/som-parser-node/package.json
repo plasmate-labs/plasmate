@@ -1,0 +1,34 @@
+{
+  "name": "som-parser",
+  "version": "0.3.0",
+  "description": "Parse and query SOM (Semantic Object Model) - the structured web format for AI agents",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "keywords": ["som", "semantic-object-model", "web-scraping", "ai-agents", "browser-automation", "plasmate", "html-parser"],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/plasmate-labs/plasmate",
+    "directory": "packages/som-parser-node"
+  },
+  "homepage": "https://plasmate.app/docs/som-spec",
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "test": "vitest run",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^3.0.0"
+  }
+}
