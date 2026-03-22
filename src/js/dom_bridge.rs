@@ -8,7 +8,9 @@
 //! This bridge extends HOW we build the DOM tree, not WHAT the SOM is.
 
 use html5ever::{LocalName, QualName, Namespace, Prefix, ns, local_name, namespace_url};
-use markup5ever_rcdom::{Handle, Node, NodeData, SerializableHandle};
+use html5ever::serialize::{serialize, SerializeOpts, TraversalScope};
+use html5ever::tendril::TendrilSink;
+use markup5ever_rcdom::{Handle, Node, NodeData, RcDom, SerializableHandle};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -181,6 +183,111 @@ impl NodeRegistry {
         } else {
             None
         }
+    }
+
+    /// Get innerHTML by serializing this node's children.
+    pub fn get_inner_html(&self, id: u32) -> Result<String, String> {
+        let node = self
+            .nodes
+            .get(&id)
+            .ok_or_else(|| format!("Node {} not found", id))?
+            .clone();
+
+        let mut bytes: Vec<u8> = Vec::new();
+        let opts = SerializeOpts {
+            traversal_scope: TraversalScope::ChildrenOnly(None),
+            ..Default::default()
+        };
+        serialize(&mut bytes, &SerializableHandle::from(node), opts)
+            .map_err(|e: std::io::Error| e.to_string())?;
+
+        Ok(String::from_utf8_lossy(&bytes).to_string())
+    }
+
+    /// Set innerHTML (parse HTML fragment and replace children).
+    pub fn set_inner_html(&mut self, id: u32, html: &str) -> Result<(), String> {
+        let target = self
+            .nodes
+            .get(&id)
+            .ok_or_else(|| format!("Node {} not found", id))?
+            .clone();
+
+        // Clear existing children
+        target.children.borrow_mut().clear();
+
+        // Choose context element name and attrs
+        let (ctx_name, ctx_attrs) = match target.data {
+            NodeData::Element {
+                ref name,
+                ref attrs,
+                ..
+            } => (name.clone(), attrs.borrow().clone()),
+            _ => (
+                QualName::new(None::<Prefix>, ns!(html), LocalName::from("div")),
+                vec![],
+            ),
+        };
+
+        let dom = html5ever::parse_fragment(
+            RcDom::default(),
+            Default::default(),
+            ctx_name,
+            ctx_attrs,
+            false,
+        )
+        .from_utf8()
+        .read_from(&mut html.as_bytes())
+        .map_err(|e: std::io::Error| e.to_string())?;
+
+        // The parsed fragment tree has a Document root; move its children to target.
+        let children: Vec<Handle> = dom.document.children.borrow().iter().cloned().collect();
+
+        for child in children {
+            child.parent.set(None);
+            child.parent.set(Some(Rc::downgrade(&target)));
+            target.children.borrow_mut().push(child.clone());
+            self.register_tree(&child);
+        }
+
+        Ok(())
+    }
+
+    /// Serialize the entire document to HTML.
+    pub fn serialize_document(&self) -> Result<String, String> {
+        let Some(doc_id) = self.document_id else {
+            return Ok(String::new());
+        };
+        let doc = self
+            .nodes
+            .get(&doc_id)
+            .ok_or_else(|| "document not found".to_string())?;
+
+        // Find first <html> element under document.
+        let mut html_el: Option<Handle> = None;
+        for c in doc.children.borrow().iter() {
+            if let NodeData::Element { ref name, .. } = c.data {
+                if name.local.as_ref() == "html" {
+                    html_el = Some(c.clone());
+                    break;
+                }
+            }
+        }
+        let Some(html_el) = html_el else {
+            return Ok(String::new());
+        };
+
+        let mut bytes: Vec<u8> = Vec::new();
+        let opts = SerializeOpts {
+            traversal_scope: TraversalScope::IncludeNode,
+            ..Default::default()
+        };
+        serialize(&mut bytes, &SerializableHandle::from(html_el), opts)
+            .map_err(|e: std::io::Error| e.to_string())?;
+
+        Ok(format!(
+            "<!DOCTYPE html>{}",
+            String::from_utf8_lossy(&bytes)
+        ))
     }
 
     /// Get the tag name of an element (uppercase).
