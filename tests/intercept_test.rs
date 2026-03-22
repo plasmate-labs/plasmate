@@ -237,17 +237,16 @@ async fn test_awp_fulfill_request() {
         }),
     )
     .await;
-    assert!(is_success(&resp), "Fulfilled request should succeed: {:?}", resp);
+    assert!(
+        is_success(&resp),
+        "Fulfilled request should succeed: {:?}",
+        resp
+    );
     let result = get_result(&resp);
     assert_eq!(result["status"], 200);
 
     // Observe the SOM — should contain mocked content
-    let resp = send(
-        &mut state,
-        "page.observe",
-        json!({"session_id": sid}),
-    )
-    .await;
+    let resp = send(&mut state, "page.observe", json!({"session_id": sid})).await;
     assert!(is_success(&resp));
 
     let _ = shutdown.send(());
@@ -468,12 +467,7 @@ async fn test_awp_clear_rules() {
     .await;
 
     // Clear rules (interception still enabled, but no rules = continue)
-    send(
-        &mut state,
-        "network.clearRules",
-        json!({"session_id": sid}),
-    )
-    .await;
+    send(&mut state, "network.clearRules", json!({"session_id": sid})).await;
 
     // Navigate should succeed (rules cleared, default is continue)
     let resp = send(

@@ -372,8 +372,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let host_awp = host.clone();
                     let awp_plugins = plugins.clone();
                     let awp_handle = tokio::spawn(async move {
-                        if let Err(e) = awp::server::start(&host_awp, awp_port, awp_plugins).await
-                        {
+                        if let Err(e) = awp::server::start(&host_awp, awp_port, awp_plugins).await {
                             eprintln!("AWP server error: {}", e);
                         }
                     });
@@ -687,7 +686,9 @@ fn print_tls_options() {
     eprintln!("Usage examples:");
     eprintln!("  plasmate fetch URL --tls-min-version 1.3");
     eprintln!("  plasmate fetch URL --insecure");
-    eprintln!("  plasmate fetch URL --tls13-ciphers TLS13_AES_256_GCM_SHA384,TLS13_AES_128_GCM_SHA256");
+    eprintln!(
+        "  plasmate fetch URL --tls13-ciphers TLS13_AES_256_GCM_SHA384,TLS13_AES_128_GCM_SHA256"
+    );
     eprintln!("  plasmate fetch URL --alpn h2,http/1.1 --tls-groups x25519,secp256r1");
     eprintln!("  plasmate serve --tls-min-version 1.2 --ca-cert /path/to/ca.pem");
 }
@@ -701,7 +702,9 @@ fn load_plugins(
     }
     let mut pm = plugin::PluginManager::new().map_err(|e| e.to_string())?;
     for p in paths {
-        let manifest = pm.load(std::path::Path::new(p)).map_err(|e| e.to_string())?;
+        let manifest = pm
+            .load(std::path::Path::new(p))
+            .map_err(|e| e.to_string())?;
         info!(
             name = %manifest.name,
             version = %manifest.version,
@@ -901,11 +904,7 @@ fn cmd_screenshot(
     match screenshot::capture_url(url, &opts) {
         Ok(data) => {
             std::fs::write(output, &data)?;
-            eprintln!(
-                "✓ Screenshot saved to {} ({} bytes)",
-                output,
-                data.len()
-            );
+            eprintln!("✓ Screenshot saved to {} ({} bytes)", output, data.len());
         }
         Err(screenshot::ScreenshotError::NotImplemented) => {
             eprintln!("Screenshot rendering is not yet implemented.");

@@ -41,7 +41,8 @@ impl ConnectionState {
 
     /// Look up a session by ID (immutable).
     pub fn get_session(&self, session_id: &str) -> Option<&Session> {
-        self.sessions.get(session_id)
+        self.sessions
+            .get(session_id)
             .or_else(|| self.session.as_ref().filter(|s| s.id == session_id))
     }
 
@@ -118,7 +119,12 @@ fn handle_hello(id: &str, params: &serde_json::Value, state: &mut ConnectionStat
         .unwrap_or("unknown");
     info!(client_name, "AWP handshake completed");
 
-    let mut features = vec!["som.snapshot", "act.primitive", "extract", "network.intercept"];
+    let mut features = vec![
+        "som.snapshot",
+        "act.primitive",
+        "extract",
+        "network.intercept",
+    ];
     if state.plugins.is_some() {
         features.push("plugins");
     }
@@ -159,7 +165,13 @@ fn handle_session_create(
     // Parse per-session TLS configuration from params
     let tls_config = parse_tls_params(params);
 
-    match Session::new(session_id.clone(), user_agent, locale, timeout_ms, tls_config) {
+    match Session::new(
+        session_id.clone(),
+        user_agent,
+        locale,
+        timeout_ms,
+        tls_config,
+    ) {
         Ok(session) => {
             info!(session_id = %session.id, "Session created");
             if state.session.is_none() && state.sessions.is_empty() {
@@ -205,12 +217,16 @@ fn handle_session_close(
 fn handle_session_list(id: &str, state: &ConnectionState) -> Response {
     let mut infos = Vec::new();
     if let Some(ref s) = state.session {
-        infos.push(json!({"session_id": s.id, "url": s.current_url, "page_count": s.page_count,
-            "uptime_ms": s.created_at.elapsed().as_millis() as u64}));
+        infos.push(
+            json!({"session_id": s.id, "url": s.current_url, "page_count": s.page_count,
+            "uptime_ms": s.created_at.elapsed().as_millis() as u64}),
+        );
     }
     for s in state.sessions.values() {
-        infos.push(json!({"session_id": s.id, "url": s.current_url, "page_count": s.page_count,
-            "uptime_ms": s.created_at.elapsed().as_millis() as u64}));
+        infos.push(
+            json!({"session_id": s.id, "url": s.current_url, "page_count": s.page_count,
+            "uptime_ms": s.created_at.elapsed().as_millis() as u64}),
+        );
     }
     Response::success(id, json!({"sessions": infos, "count": infos.len()}))
 }
@@ -254,7 +270,10 @@ async fn handle_page_navigate(
 
     info!(url = %effective_url, "Navigating (full pipeline)");
 
-    match session.navigate_with_plugins(&effective_url, &plugins).await {
+    match session
+        .navigate_with_plugins(&effective_url, &plugins)
+        .await
+    {
         Ok(result) => {
             let mut response = json!({
                 "url": result.url,
@@ -745,7 +764,10 @@ fn handle_network_add_rule(
 
     if stage == "response" {
         // Response modification rule
-        let status = rule.get("status").and_then(|v| v.as_u64()).map(|s| s as u16);
+        let status = rule
+            .get("status")
+            .and_then(|v| v.as_u64())
+            .map(|s| s as u16);
         let body = rule.get("body").and_then(|v| v.as_str()).map(String::from);
 
         session.interceptor.add_response_rule(ResponseRule {
@@ -775,10 +797,7 @@ fn handle_network_add_rule(
             InterceptAction::Fail(reason)
         }
         "fulfill" | "mock" => {
-            let status = rule
-                .get("status")
-                .and_then(|v| v.as_u64())
-                .unwrap_or(200) as u16;
+            let status = rule.get("status").and_then(|v| v.as_u64()).unwrap_or(200) as u16;
             let body = rule.get("body").and_then(|v| v.as_str()).map(String::from);
             let headers: Vec<(String, String)> = rule
                 .get("headers")
@@ -797,7 +816,10 @@ fn handle_network_add_rule(
         }
         _ => {
             // "continue" with optional overrides
-            let url = rule.get("redirect_url").and_then(|v| v.as_str()).map(String::from);
+            let url = rule
+                .get("redirect_url")
+                .and_then(|v| v.as_str())
+                .map(String::from);
             let has_overrides = url.is_some();
             if has_overrides {
                 InterceptAction::Continue(Some(RequestOverrides {

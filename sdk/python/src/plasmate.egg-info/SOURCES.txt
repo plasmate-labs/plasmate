@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+src/plasmate/__init__.py
+src/plasmate/client.py
+src/plasmate/query.py
+src/plasmate/types.py
+src/plasmate.egg-info/PKG-INFO
+src/plasmate.egg-info/SOURCES.txt
+src/plasmate.egg-info/dependency_links.txt
+src/plasmate.egg-info/requires.txt
+src/plasmate.egg-info/top_level.txt
+tests/test_query.py

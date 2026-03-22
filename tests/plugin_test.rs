@@ -385,7 +385,10 @@ fn test_plugin_post_som_roundtrip() {
     let result_som = pm.run_post_som(som).unwrap();
     assert_eq!(result_som.title, "Plugin Test");
     assert_eq!(result_som.regions.len(), 1);
-    assert_eq!(result_som.regions[0].elements[0].text.as_deref(), Some("Hello World"));
+    assert_eq!(
+        result_som.regions[0].elements[0].text.as_deref(),
+        Some("Hello World")
+    );
 }
 
 #[test]
@@ -430,10 +433,7 @@ fn test_hook_from_bits() {
             Hook::OnExtract
         ]
     );
-    assert_eq!(
-        Hook::from_bits(5),
-        vec![Hook::PreNavigate, Hook::PostSom]
-    );
+    assert_eq!(Hook::from_bits(5), vec![Hook::PreNavigate, Hook::PostSom]);
 }
 
 #[test]
@@ -448,9 +448,13 @@ fn test_plugin_with_pipeline() {
         ..Default::default()
     };
     let html = r#"<html><body><h1>Test</h1><p>Content</p></body></html>"#;
-    let result =
-        plasmate::js::pipeline::process_page_with_plugins(html, "https://example.com", &config, &mut pm)
-            .unwrap();
+    let result = plasmate::js::pipeline::process_page_with_plugins(
+        html,
+        "https://example.com",
+        &config,
+        &mut pm,
+    )
+    .unwrap();
 
     assert!(result.som.meta.element_count > 0);
 }

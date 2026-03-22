@@ -543,10 +543,7 @@ mod tests {
 
     #[test]
     fn test_url_glob_match_middle() {
-        assert!(url_glob_match(
-            "*://api.*/*",
-            "https://api.example.com/v1"
-        ));
+        assert!(url_glob_match("*://api.*/*", "https://api.example.com/v1"));
         assert!(url_glob_match(
             "*tracking*",
             "https://ads.example.com/tracking/pixel"
@@ -574,11 +571,8 @@ mod tests {
         }]);
 
         // JS file should be intercepted
-        let (_, info) = interceptor.check_request(
-            "https://example.com/app.js",
-            &ResourceType::Script,
-            false,
-        );
+        let (_, info) =
+            interceptor.check_request("https://example.com/app.js", &ResourceType::Script, false);
         assert!(info.is_some());
 
         // HTML page should not match the *.js pattern
@@ -705,11 +699,8 @@ mod tests {
             })),
         });
 
-        let (action, _) = interceptor.check_request(
-            "https://example.com/api/users",
-            &ResourceType::XHR,
-            false,
-        );
+        let (action, _) =
+            interceptor.check_request("https://example.com/api/users", &ResourceType::XHR, false);
         match action {
             InterceptAction::Continue(Some(overrides)) => {
                 assert!(overrides.headers.unwrap().contains_key("Authorization"));
@@ -736,11 +727,8 @@ mod tests {
         });
 
         // Script should be blocked
-        let (action, _) = interceptor.check_request(
-            "https://example.com/app.js",
-            &ResourceType::Script,
-            false,
-        );
+        let (action, _) =
+            interceptor.check_request("https://example.com/app.js", &ResourceType::Script, false);
         assert!(matches!(action, InterceptAction::Fail(_)));
 
         // Document should pass through (doesn't match pattern)
@@ -783,11 +771,8 @@ mod tests {
             action: InterceptAction::Fail(ErrorReason::BlockedByClient),
         });
 
-        let (action, _) = interceptor.check_request(
-            "https://example.com/api/users",
-            &ResourceType::XHR,
-            false,
-        );
+        let (action, _) =
+            interceptor.check_request("https://example.com/api/users", &ResourceType::XHR, false);
         assert!(matches!(action, InterceptAction::Fulfill(_)));
     }
 
@@ -823,8 +808,11 @@ mod tests {
             set_cookies: vec![],
         };
 
-        let modified =
-            interceptor.check_response("https://example.com/page", &ResourceType::Document, &mut result);
+        let modified = interceptor.check_response(
+            "https://example.com/page",
+            &ResourceType::Document,
+            &mut result,
+        );
         assert!(modified);
         assert_eq!(result.html, "<html>Modified</html>");
     }
@@ -922,11 +910,8 @@ mod tests {
         assert!(matches!(action, InterceptAction::Continue(None)));
 
         // API rule should still work
-        let (action, _) = interceptor.check_request(
-            "https://example.com/api/data",
-            &ResourceType::XHR,
-            false,
-        );
+        let (action, _) =
+            interceptor.check_request("https://example.com/api/data", &ResourceType::XHR, false);
         assert!(matches!(action, InterceptAction::Fulfill(_)));
     }
 }

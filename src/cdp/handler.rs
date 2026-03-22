@@ -350,12 +350,8 @@ async fn handle_cdp_request_inner(
         "Fetch.fulfillRequest" => (domains::fetch_fulfill_request(id, params, target), vec![]),
         "Fetch.failRequest" => (domains::fetch_fail_request(id, params, target), vec![]),
         "Fetch.continueRequest" => (domains::fetch_continue_request(id, params, target), vec![]),
-        "Fetch.continueResponse" => {
-            (domains::fetch_continue_response(id, params, target), vec![])
-        }
-        "Fetch.getResponseBody" => {
-            (domains::fetch_get_response_body(id, params, target), vec![])
-        }
+        "Fetch.continueResponse" => (domains::fetch_continue_response(id, params, target), vec![]),
+        "Fetch.getResponseBody" => (domains::fetch_get_response_body(id, params, target), vec![]),
 
         // ---- Emulation ----
         "Emulation.setDeviceMetricsOverride" => {
@@ -451,9 +447,7 @@ async fn handle_cdp_request_inner(
         | "Overlay.enable"
         | "Overlay.disable"
         | "Accessibility.enable"
-        | "Accessibility.disable" => {
-            (CdpResponse::success(id, serde_json::json!({})), vec![])
-        }
+        | "Accessibility.disable" => (CdpResponse::success(id, serde_json::json!({})), vec![]),
         "Accessibility.getFullAXTree" => {
             (domains::accessibility_get_full_ax_tree(id, target), vec![])
         }

@@ -50,8 +50,8 @@ impl WasmPlugin {
 
     /// Load a plugin from raw Wasm bytes (used by tests).
     pub fn from_bytes(bytes: &[u8], engine: &Engine) -> Result<Self, PluginError> {
-        let module = Module::new(engine, bytes)
-            .map_err(|e| PluginError::Load(format!("<bytes>: {}", e)))?;
+        let module =
+            Module::new(engine, bytes).map_err(|e| PluginError::Load(format!("<bytes>: {}", e)))?;
 
         Self::from_module(&module, engine, Path::new("<bytes>"))
     }

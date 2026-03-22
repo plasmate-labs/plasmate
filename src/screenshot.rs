@@ -86,10 +86,7 @@ pub enum ScreenshotError {
 /// Currently returns [`ScreenshotError::NotImplemented`] — the built-in
 /// rasteriser is not yet available. Callers should fall back to returning
 /// the SOM as structured data.
-pub fn capture_url(
-    _url: &str,
-    _opts: &ScreenshotOptions,
-) -> Result<Vec<u8>, ScreenshotError> {
+pub fn capture_url(_url: &str, _opts: &ScreenshotOptions) -> Result<Vec<u8>, ScreenshotError> {
     Err(ScreenshotError::NotImplemented)
 }
 
@@ -192,7 +189,13 @@ mod tests {
         let fallback = som_fallback(&som);
         assert_eq!(fallback["error"], "screenshot_not_implemented");
         assert!(fallback["som"].is_object());
-        assert!(fallback["message"].as_str().unwrap().contains("layout engine"));
-        assert!(fallback["hint"].as_str().unwrap().contains("Plasmate.getSom"));
+        assert!(fallback["message"]
+            .as_str()
+            .unwrap()
+            .contains("layout engine"));
+        assert!(fallback["hint"]
+            .as_str()
+            .unwrap()
+            .contains("Plasmate.getSom"));
     }
 }

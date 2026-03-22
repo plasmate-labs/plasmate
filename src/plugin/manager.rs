@@ -117,10 +117,7 @@ impl PluginManager {
     }
 
     /// Run `on_extract` plugins. Returns the plugin-produced JSON (if any).
-    pub fn run_on_extract(
-        &mut self,
-        som: &Som,
-    ) -> Result<Option<serde_json::Value>, PluginError> {
+    pub fn run_on_extract(&mut self, som: &Som) -> Result<Option<serde_json::Value>, PluginError> {
         if !self.has_hook(Hook::OnExtract) {
             return Ok(None);
         }

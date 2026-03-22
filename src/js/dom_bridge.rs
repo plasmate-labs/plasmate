@@ -7,9 +7,9 @@
 //! Architecture: Plasmate is a utility. The SOM is the output paradigm.
 //! This bridge extends HOW we build the DOM tree, not WHAT the SOM is.
 
-use html5ever::{LocalName, QualName, Namespace, Prefix, ns, local_name, namespace_url};
 use html5ever::serialize::{serialize, SerializeOpts, TraversalScope};
 use html5ever::tendril::TendrilSink;
+use html5ever::{local_name, namespace_url, ns, LocalName, Namespace, Prefix, QualName};
 use markup5ever_rcdom::{Handle, Node, NodeData, RcDom, SerializableHandle};
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -81,9 +81,13 @@ impl NodeRegistry {
 
     /// Append a child node to a parent.
     pub fn append_child(&self, parent_id: u32, child_id: u32) -> Result<(), String> {
-        let parent = self.nodes.get(&parent_id)
+        let parent = self
+            .nodes
+            .get(&parent_id)
             .ok_or_else(|| format!("Parent node {} not found", parent_id))?;
-        let child = self.nodes.get(&child_id)
+        let child = self
+            .nodes
+            .get(&child_id)
             .ok_or_else(|| format!("Child node {} not found", child_id))?;
 
         // Remove from previous parent if any
@@ -100,19 +104,28 @@ impl NodeRegistry {
 
     /// Remove a child from its parent.
     pub fn remove_child(&self, parent_id: u32, child_id: u32) -> Result<(), String> {
-        let parent = self.nodes.get(&parent_id)
+        let parent = self
+            .nodes
+            .get(&parent_id)
             .ok_or_else(|| format!("Parent node {} not found", parent_id))?;
-        let child = self.nodes.get(&child_id)
+        let child = self
+            .nodes
+            .get(&child_id)
             .ok_or_else(|| format!("Child node {} not found", child_id))?;
 
-        parent.children.borrow_mut().retain(|c| !Rc::ptr_eq(c, child));
+        parent
+            .children
+            .borrow_mut()
+            .retain(|c| !Rc::ptr_eq(c, child));
         child.parent.set(None);
         Ok(())
     }
 
     /// Set text content of a node (clears children, adds single text node).
     pub fn set_text_content(&mut self, id: u32, text: &str) -> Result<(), String> {
-        let node = self.nodes.get(&id)
+        let node = self
+            .nodes
+            .get(&id)
             .ok_or_else(|| format!("Node {} not found", id))?
             .clone();
 
@@ -151,7 +164,9 @@ impl NodeRegistry {
 
     /// Set an attribute on an element.
     pub fn set_attribute(&self, id: u32, name: &str, value: &str) -> Result<(), String> {
-        let node = self.nodes.get(&id)
+        let node = self
+            .nodes
+            .get(&id)
             .ok_or_else(|| format!("Node {} not found", id))?;
 
         if let NodeData::Element { ref attrs, .. } = node.data {
@@ -177,7 +192,9 @@ impl NodeRegistry {
     pub fn get_attribute(&self, id: u32, name: &str) -> Option<String> {
         let node = self.nodes.get(&id)?;
         if let NodeData::Element { ref attrs, .. } = node.data {
-            attrs.borrow().iter()
+            attrs
+                .borrow()
+                .iter()
                 .find(|a| a.name.local.as_ref() == name)
                 .map(|a| a.value.to_string())
         } else {
@@ -311,7 +328,9 @@ impl NodeRegistry {
             Some(n) => n,
             None => return vec![],
         };
-        node.children.borrow().iter()
+        node.children
+            .borrow()
+            .iter()
             .filter_map(|child| {
                 let ptr = Rc::as_ptr(child) as usize;
                 self.reverse.get(&ptr).copied()
@@ -455,14 +474,21 @@ impl NodeRegistry {
             return false;
         }
 
-        if let NodeData::Element { ref name, ref attrs, .. } = node.data {
+        if let NodeData::Element {
+            ref name,
+            ref attrs,
+            ..
+        } = node.data
+        {
             let tag = name.local.as_ref();
             let attrs_ref = attrs.borrow();
-            let class_attr = attrs_ref.iter()
+            let class_attr = attrs_ref
+                .iter()
                 .find(|a| a.name.local.as_ref() == "class")
                 .map(|a| a.value.to_string())
                 .unwrap_or_default();
-            let id_attr = attrs_ref.iter()
+            let id_attr = attrs_ref
+                .iter()
                 .find(|a| a.name.local.as_ref() == "id")
                 .map(|a| a.value.to_string())
                 .unwrap_or_default();
@@ -477,18 +503,20 @@ impl NodeRegistry {
                     Some('.') => {
                         let cls = &part[1..];
                         class_attr.split_whitespace().any(|c| c == cls)
-                    },
+                    }
                     Some('[') => {
                         // [attr] or [attr=value]
                         let inner = part.trim_start_matches('[').trim_end_matches(']');
                         if let Some(eq_pos) = inner.find('=') {
                             let attr_name = &inner[..eq_pos];
-                            let attr_val = inner[eq_pos+1..].trim_matches('"').trim_matches('\'');
-                            attrs_ref.iter().any(|a| a.name.local.as_ref() == attr_name && a.value.as_ref() == attr_val)
+                            let attr_val = inner[eq_pos + 1..].trim_matches('"').trim_matches('\'');
+                            attrs_ref.iter().any(|a| {
+                                a.name.local.as_ref() == attr_name && a.value.as_ref() == attr_val
+                            })
                         } else {
                             attrs_ref.iter().any(|a| a.name.local.as_ref() == inner)
                         }
-                    },
+                    }
                     Some('*') => true, // universal selector
                     _ => tag.eq_ignore_ascii_case(part),
                 };
@@ -581,8 +609,12 @@ mod tests {
     fn test_attributes() {
         let mut reg = NodeRegistry::new();
         let el = reg.create_element("a");
-        reg.set_attribute(el, "href", "https://example.com").unwrap();
-        assert_eq!(reg.get_attribute(el, "href"), Some("https://example.com".to_string()));
+        reg.set_attribute(el, "href", "https://example.com")
+            .unwrap();
+        assert_eq!(
+            reg.get_attribute(el, "href"),
+            Some("https://example.com".to_string())
+        );
         assert_eq!(reg.get_attribute(el, "missing"), None);
     }
 
@@ -607,7 +639,10 @@ mod tests {
         let reg = make_registry_with_tree();
         let result = reg.query_selector(1, ".intro");
         assert!(result.is_some());
-        assert_eq!(reg.get_class_name(result.unwrap()), Some("intro".to_string()));
+        assert_eq!(
+            reg.get_class_name(result.unwrap()),
+            Some("intro".to_string())
+        );
     }
 
     #[test]

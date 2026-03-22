@@ -217,14 +217,26 @@ async fn handle_websocket_connection(
                             let sid = new_target.session_id.clone();
                             extra_targets.insert(sid.clone(), new_target);
                             let events = vec![
-                                super::types::CdpEvent::new("Target.targetCreated", serde_json::json!({
-                                    "targetInfo": {"targetId": tid, "type": "page", "title": "", "url": "about:blank", "attached": true, "browserContextId": "default"}
-                                })),
-                                super::types::CdpEvent::new("Target.attachedToTarget", serde_json::json!({
-                                    "sessionId": sid, "targetInfo": {"targetId": tid, "type": "page", "title": "", "url": "about:blank", "attached": true, "browserContextId": "default"}, "waitingForDebugger": false
-                                })),
+                                super::types::CdpEvent::new(
+                                    "Target.targetCreated",
+                                    serde_json::json!({
+                                        "targetInfo": {"targetId": tid, "type": "page", "title": "", "url": "about:blank", "attached": true, "browserContextId": "default"}
+                                    }),
+                                ),
+                                super::types::CdpEvent::new(
+                                    "Target.attachedToTarget",
+                                    serde_json::json!({
+                                        "sessionId": sid, "targetInfo": {"targetId": tid, "type": "page", "title": "", "url": "about:blank", "attached": true, "browserContextId": "default"}, "waitingForDebugger": false
+                                    }),
+                                ),
                             ];
-                            (super::types::CdpResponse::success(req.id, serde_json::json!({"targetId": tid})), events)
+                            (
+                                super::types::CdpResponse::success(
+                                    req.id,
+                                    serde_json::json!({"targetId": tid}),
+                                ),
+                                events,
+                            )
                         }
                         Err(e) => (super::types::CdpResponse::error(req.id, -32000, &e), vec![]),
                     }

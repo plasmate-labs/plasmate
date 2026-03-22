@@ -909,7 +909,10 @@ pub fn fetch_enable(id: u64, params: &serde_json::Value, target: &mut CdpTarget)
         .map(|arr| {
             arr.iter()
                 .map(|p| {
-                    let url_pattern = p.get("urlPattern").and_then(|v| v.as_str()).map(String::from);
+                    let url_pattern = p
+                        .get("urlPattern")
+                        .and_then(|v| v.as_str())
+                        .map(String::from);
                     let resource_type = p
                         .get("resourceType")
                         .and_then(|v| v.as_str())
@@ -987,7 +990,10 @@ pub fn fetch_fulfill_request(
         })
         .unwrap_or_default();
 
-    let body = params.get("body").and_then(|v| v.as_str()).map(String::from);
+    let body = params
+        .get("body")
+        .and_then(|v| v.as_str())
+        .map(String::from);
 
     target.interceptor.add_rule(InterceptRule {
         pattern: RequestPattern {
@@ -1050,13 +1056,17 @@ pub fn fetch_continue_request(
         .to_string();
 
     let url_override = params.get("url").and_then(|v| v.as_str()).map(String::from);
-    let method_override = params.get("method").and_then(|v| v.as_str()).map(String::from);
-    let post_data_override = params.get("postData").and_then(|v| v.as_str()).map(String::from);
+    let method_override = params
+        .get("method")
+        .and_then(|v| v.as_str())
+        .map(String::from);
+    let post_data_override = params
+        .get("postData")
+        .and_then(|v| v.as_str())
+        .map(String::from);
 
-    let headers_override: Option<HashMap<String, String>> = params
-        .get("headers")
-        .and_then(|v| v.as_array())
-        .map(|arr| {
+    let headers_override: Option<HashMap<String, String>> =
+        params.get("headers").and_then(|v| v.as_array()).map(|arr| {
             arr.iter()
                 .filter_map(|h| {
                     let name = h.get("name")?.as_str()?.to_string();
@@ -1066,8 +1076,10 @@ pub fn fetch_continue_request(
                 .collect()
         });
 
-    let has_overrides =
-        url_override.is_some() || method_override.is_some() || headers_override.is_some() || post_data_override.is_some();
+    let has_overrides = url_override.is_some()
+        || method_override.is_some()
+        || headers_override.is_some()
+        || post_data_override.is_some();
 
     let overrides = if has_overrides {
         Some(RequestOverrides {
@@ -1105,8 +1117,14 @@ pub fn fetch_continue_response(
         .unwrap_or("*")
         .to_string();
 
-    let status = params.get("responseCode").and_then(|v| v.as_u64()).map(|s| s as u16);
-    let body = params.get("body").and_then(|v| v.as_str()).map(String::from);
+    let status = params
+        .get("responseCode")
+        .and_then(|v| v.as_u64())
+        .map(|s| s as u16);
+    let body = params
+        .get("body")
+        .and_then(|v| v.as_str())
+        .map(String::from);
 
     let headers: Option<HashMap<String, String>> = params
         .get("responseHeaders")

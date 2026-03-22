@@ -91,10 +91,11 @@ impl Session {
         }
 
         // Use per-session TLS config, fall back to global, fall back to none
-        let effective_tls = tls_config.as_ref().or_else(|| crate::network::tls::global());
-        let client =
-            fetch::build_client_h1_fallback(Some(&ua), jar.clone(), effective_tls)
-                .map_err(|e| e.to_string())?;
+        let effective_tls = tls_config
+            .as_ref()
+            .or_else(|| crate::network::tls::global());
+        let client = fetch::build_client_h1_fallback(Some(&ua), jar.clone(), effective_tls)
+            .map_err(|e| e.to_string())?;
 
         Ok(Session {
             id,
@@ -129,9 +130,7 @@ impl Session {
                 .check_request(url, &InterceptResourceType::Document, true);
 
         let mut fetch_result = match action {
-            InterceptAction::Fulfill(params) => {
-                NetworkInterceptor::fulfill_request(&params, url)
-            }
+            InterceptAction::Fulfill(params) => NetworkInterceptor::fulfill_request(&params, url),
             InterceptAction::Fail(reason) => {
                 return Err(NetworkInterceptor::fail_request(&reason, url).to_string());
             }
@@ -165,11 +164,8 @@ impl Session {
         };
 
         // Check response interception rules
-        self.interceptor.check_response(
-            url,
-            &InterceptResourceType::Document,
-            &mut fetch_result,
-        );
+        self.interceptor
+            .check_response(url, &InterceptResourceType::Document, &mut fetch_result);
 
         let fetch_ms = fetch_result.load_ms;
         let html_bytes = fetch_result.html_bytes;

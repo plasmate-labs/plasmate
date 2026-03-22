@@ -3292,12 +3292,27 @@ impl JsRuntime {
         add_fn!(dom_obj, scope, "removeChild", dom_remove_child_callback);
         add_fn!(dom_obj, scope, "setAttribute", dom_set_attribute_callback);
         add_fn!(dom_obj, scope, "getAttribute", dom_get_attribute_callback);
-        add_fn!(dom_obj, scope, "setTextContent", dom_set_text_content_callback);
-        add_fn!(dom_obj, scope, "getTextContent", dom_get_text_content_callback);
+        add_fn!(
+            dom_obj,
+            scope,
+            "setTextContent",
+            dom_set_text_content_callback
+        );
+        add_fn!(
+            dom_obj,
+            scope,
+            "getTextContent",
+            dom_get_text_content_callback
+        );
         add_fn!(dom_obj, scope, "getChildren", dom_get_children_callback);
         add_fn!(dom_obj, scope, "getParent", dom_get_parent_callback);
         add_fn!(dom_obj, scope, "querySelector", dom_query_selector_callback);
-        add_fn!(dom_obj, scope, "querySelectorAll", dom_query_selector_all_callback);
+        add_fn!(
+            dom_obj,
+            scope,
+            "querySelectorAll",
+            dom_query_selector_all_callback
+        );
         add_fn!(dom_obj, scope, "getTagName", dom_get_tag_name_callback);
         add_fn!(dom_obj, scope, "getNodeType", dom_get_node_type_callback);
 

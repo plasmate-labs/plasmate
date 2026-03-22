@@ -117,9 +117,12 @@ impl CdpTarget {
 
         // Use global TLS config if set
         let tls_config = crate::network::tls::global();
-        let client =
-            fetch::build_client_h1_fallback(Some(DEFAULT_USER_AGENT), reqwest_jar.clone(), tls_config)
-                .map_err(|e| e.to_string())?;
+        let client = fetch::build_client_h1_fallback(
+            Some(DEFAULT_USER_AGENT),
+            reqwest_jar.clone(),
+            tls_config,
+        )
+        .map_err(|e| e.to_string())?;
 
         // Create CDP cookie jar that syncs with the reqwest jar
         let cookie_jar = CookieJar::new(reqwest_jar.clone());
@@ -203,14 +206,9 @@ impl CdpTarget {
             .await
             .map_err(|e| e.to_string())?
         } else {
-            crate::js::pipeline::process_page_async(
-                html,
-                &url,
-                &self.pipeline_config,
-                &self.client,
-            )
-            .await
-            .map_err(|e| e.to_string())?
+            crate::js::pipeline::process_page_async(html, &url, &self.pipeline_config, &self.client)
+                .await
+                .map_err(|e| e.to_string())?
         };
 
         self.current_html = Some(html.to_string());

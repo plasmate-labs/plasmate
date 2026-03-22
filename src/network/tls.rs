@@ -35,7 +35,11 @@ pub enum TlsVersion {
 impl TlsVersion {
     /// Parse from string (e.g., "1.2", "1.3", "tls1.2", "tls1.3").
     pub fn parse(s: &str) -> Result<Self, String> {
-        match s.to_lowercase().trim_start_matches("tls").trim_start_matches("v") {
+        match s
+            .to_lowercase()
+            .trim_start_matches("tls")
+            .trim_start_matches("v")
+        {
             "1.2" | "12" => Ok(TlsVersion::Tls12),
             "1.3" | "13" => Ok(TlsVersion::Tls13),
             _ => Err(format!("Invalid TLS version '{}'. Use: 1.2 or 1.3", s)),
@@ -150,8 +154,7 @@ impl TlsConfig {
         let provider = build_crypto_provider(self)?;
 
         // Determine protocol versions
-        let versions: Vec<&'static rustls::SupportedProtocolVersion> =
-            self.protocol_versions();
+        let versions: Vec<&'static rustls::SupportedProtocolVersion> = self.protocol_versions();
 
         let config_builder = rustls::ClientConfig::builder_with_provider(Arc::new(provider))
             .with_protocol_versions(&versions)
@@ -260,19 +263,15 @@ fn resolve_cipher_suites(
 
     for name in names {
         let upper = name.to_uppercase();
-        let found = all
-            .iter()
-            .find(|cs| {
-                let suite_name = format!("{:?}", cs.suite());
-                suite_name.to_uppercase() == upper
-            });
+        let found = all.iter().find(|cs| {
+            let suite_name = format!("{:?}", cs.suite());
+            suite_name.to_uppercase() == upper
+        });
         match found {
             Some(cs) => result.push(*cs),
             None => {
-                let available: Vec<String> = all
-                    .iter()
-                    .map(|cs| format!("{:?}", cs.suite()))
-                    .collect();
+                let available: Vec<String> =
+                    all.iter().map(|cs| format!("{:?}", cs.suite())).collect();
                 return Err(format!(
                     "Unknown {kind} cipher suite '{name}'. Available: {}",
                     available.join(", ")
@@ -293,7 +292,10 @@ fn build_crypto_provider(config: &TlsConfig) -> Result<CryptoProvider, String> {
         let mut suites = Vec::new();
         // TLS 1.3 ciphers first (standard ordering)
         if !config.cipher_suites_tls13.is_empty() {
-            suites.extend(resolve_cipher_suites(&config.cipher_suites_tls13, "TLS 1.3")?);
+            suites.extend(resolve_cipher_suites(
+                &config.cipher_suites_tls13,
+                "TLS 1.3",
+            )?);
         } else {
             // Keep default TLS 1.3 ciphers
             suites.extend(
@@ -303,7 +305,10 @@ fn build_crypto_provider(config: &TlsConfig) -> Result<CryptoProvider, String> {
             );
         }
         if !config.cipher_suites_tls12.is_empty() {
-            suites.extend(resolve_cipher_suites(&config.cipher_suites_tls12, "TLS 1.2")?);
+            suites.extend(resolve_cipher_suites(
+                &config.cipher_suites_tls12,
+                "TLS 1.2",
+            )?);
         } else {
             // Keep default TLS 1.2 ciphers
             suites.extend(
@@ -350,9 +355,7 @@ fn build_crypto_provider(config: &TlsConfig) -> Result<CryptoProvider, String> {
 // ---------------------------------------------------------------------------
 
 /// Load PEM certificates for the root store.
-fn build_root_store(
-    ca_cert_path: &Option<PathBuf>,
-) -> Result<rustls::RootCertStore, String> {
+fn build_root_store(ca_cert_path: &Option<PathBuf>) -> Result<rustls::RootCertStore, String> {
     let mut root_store = rustls::RootCertStore::empty();
 
     // Load native/system root certificates
@@ -393,8 +396,7 @@ fn load_pem_certs_reqwest(path: &PathBuf) -> Result<Vec<reqwest::Certificate>, S
     let mut certs = Vec::new();
     let mut cursor = std::io::BufReader::new(&pem_data[..]);
     for cert_result in rustls_pemfile::certs(&mut cursor) {
-        let cert_der = cert_result
-            .map_err(|e| format!("Failed to parse PEM cert: {e}"))?;
+        let cert_der = cert_result.map_err(|e| format!("Failed to parse PEM cert: {e}"))?;
         let cert = reqwest::Certificate::from_der(cert_der.as_ref())
             .map_err(|e| format!("Failed to create reqwest cert: {e}"))?;
         certs.push(cert);
@@ -550,20 +552,14 @@ mod tests {
 
     #[test]
     fn test_resolve_valid_cipher_suite() {
-        let suites = resolve_cipher_suites(
-            &["TLS13_AES_128_GCM_SHA256".to_string()],
-            "TLS 1.3",
-        );
+        let suites = resolve_cipher_suites(&["TLS13_AES_128_GCM_SHA256".to_string()], "TLS 1.3");
         assert!(suites.is_ok());
         assert_eq!(suites.unwrap().len(), 1);
     }
 
     #[test]
     fn test_resolve_invalid_cipher_suite() {
-        let suites = resolve_cipher_suites(
-            &["BOGUS_CIPHER".to_string()],
-            "test",
-        );
+        let suites = resolve_cipher_suites(&["BOGUS_CIPHER".to_string()], "test");
         assert!(suites.is_err());
         let err = suites.unwrap_err();
         assert!(err.contains("Unknown test cipher suite"));
