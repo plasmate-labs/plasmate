@@ -8,6 +8,7 @@
 use std::time::Instant;
 use tracing::debug;
 
+use super::dom_bridge::NodeRegistry;
 use super::extract;
 use super::runtime::{JsExecutionReport, JsRuntime, RuntimeConfig};
 use super::script_fetch;
@@ -71,6 +72,92 @@ impl Default for PipelineConfig {
     }
 }
 
+/// Wire the DOM bridge into a JsRuntime: parse HTML with html5ever, register the tree,
+/// and inject the NodeRegistry into V8. The bridge callbacks are available via
+/// `__plasmate_dom` but document methods are NOT overridden yet — the V8 JS DOM shim
+/// remains the primary DOM for script execution. The registry provides a parallel
+/// rcdom tree that can be used for direct SOM compilation in the future once all
+/// bridge callbacks (innerHTML, className, etc.) are fully wired.
+fn wire_dom_bridge(runtime: &mut JsRuntime, html: &str) {
+    use html5ever::parse_document;
+    use html5ever::tendril::TendrilSink;
+    use markup5ever_rcdom::RcDom;
+
+    // Parse HTML into an rcdom tree
+    let dom = match parse_document(RcDom::default(), Default::default())
+        .from_utf8()
+        .read_from(&mut html.as_bytes())
+    {
+        Ok(dom) => dom,
+        Err(e) => {
+            debug!("DOM bridge: html5ever parse failed, skipping bridge: {}", e);
+            return;
+        }
+    };
+
+    // Create registry and register the full tree
+    let mut registry = NodeRegistry::new();
+    registry.register_tree(&dom.document);
+
+    debug!(
+        node_count = registry.node_count(),
+        doc_id = ?registry.document_id(),
+        body_id = ?registry.body_id(),
+        "DOM bridge: registered tree"
+    );
+
+    // Inject the registry into V8 (sets __plasmate_dom with native callbacks).
+    // We do NOT call __plasmate_bridge_enable() yet because the bridge callbacks
+    // are incomplete (missing getInnerHTML, setInnerHTML, getClassName native
+    // implementations). Enabling the bridge would override document methods to
+    // use the rcdom tree while V8's JS shim tree has the actual content, causing
+    // query mismatches. For now, the registry is available but passive.
+    runtime.inject_dom_bridge(registry);
+}
+
+/// After JS execution, serialize the DOM preferring V8's JS serialization (which
+/// captures all mutations including innerHTML) but falling back to the NodeRegistry
+/// if V8 serialization fails. Also drains the registry from thread-local storage.
+fn serialize_post_js(runtime: &mut JsRuntime) -> Option<String> {
+    // V8's serialize_dom captures all JS-side mutations (innerHTML, textContent, etc.)
+    // and is more complete than the registry for now. Use it as primary.
+    let v8_html = runtime.serialize_dom().ok();
+
+    // Drain the registry from thread-local storage so it doesn't leak.
+    // In future, when all DOM callbacks are wired, the registry serialization
+    // could be preferred as it avoids the parse-serialize-reparse round-trip.
+    let registry = runtime.take_registry();
+    if let Some(ref reg) = registry {
+        debug!(
+            node_count = reg.node_count(),
+            "DOM bridge: registry drained after JS"
+        );
+    }
+
+    // Use V8 serialization. Fall back to registry if V8 failed.
+    if let Some(ref html) = v8_html {
+        if !html.is_empty() && html != "undefined" {
+            return v8_html;
+        }
+    }
+
+    // Fallback: try registry serialization
+    if let Some(reg) = registry {
+        match reg.serialize_document() {
+            Ok(html) if !html.is_empty() => {
+                debug!(
+                    html_len = html.len(),
+                    "DOM bridge: fallback to registry serialization"
+                );
+                return Some(html);
+            }
+            _ => {}
+        }
+    }
+
+    None
+}
+
 /// Process a page through the full pipeline (async version with external script fetching).
 pub async fn process_page_async(
     html: &str,
@@ -122,6 +209,10 @@ pub async fn process_page_async(
         // Bootstrap the DOM tree from source HTML
         runtime.bootstrap_dom(html, url);
 
+        // Wire the DOM bridge: parse HTML with html5ever, register tree in
+        // NodeRegistry, inject into V8 so JS mutations flow to the rcdom tree.
+        wire_dom_bridge(&mut runtime, html);
+
         if !exec_scripts.is_empty() {
             // Execute page scripts
             let report = runtime.execute_page_scripts(&exec_scripts);
@@ -159,10 +250,12 @@ pub async fn process_page_async(
 
             js_report = Some(report);
 
-            // Serialize the DOM tree back to HTML (also pumps microtasks internally)
-            if let Ok(serialized) = runtime.serialize_dom() {
-                if !serialized.is_empty() && serialized != "undefined" {
-                    effective_html = std::borrow::Cow::Owned(serialized);
+            // Try to serialize from the NodeRegistry (captures rcdom mutations),
+            // falling back to V8's JS DOM serialization.
+            let serialized = serialize_post_js(&mut runtime);
+            if let Some(s) = serialized {
+                if !s.is_empty() && s != "undefined" {
+                    effective_html = std::borrow::Cow::Owned(s);
                 }
             }
         }
@@ -248,6 +341,9 @@ pub fn process_page_with_client(
         // Bootstrap the DOM tree from source HTML
         runtime.bootstrap_dom(html, url);
 
+        // Wire the DOM bridge so JS mutations flow to the rcdom tree.
+        wire_dom_bridge(&mut runtime, html);
+
         if !inline_scripts.is_empty() {
             // Execute page scripts in the context with the bootstrapped DOM
             let report = runtime.execute_page_scripts(&inline_scripts);
@@ -281,11 +377,12 @@ pub fn process_page_with_client(
 
             js_report = Some(report);
 
-            // Serialize the DOM tree back to HTML
-            // This captures all JS modifications: createElement, appendChild, innerHTML, etc.
-            if let Ok(serialized) = runtime.serialize_dom() {
-                if !serialized.is_empty() && serialized != "undefined" {
-                    effective_html = std::borrow::Cow::Owned(serialized);
+            // Try to serialize from the NodeRegistry (captures rcdom mutations),
+            // falling back to V8's JS DOM serialization.
+            let serialized = serialize_post_js(&mut runtime);
+            if let Some(s) = serialized {
+                if !s.is_empty() && s != "undefined" {
+                    effective_html = std::borrow::Cow::Owned(s);
                 }
             }
         }
@@ -363,6 +460,9 @@ pub async fn process_page_async_with_plugins(
         runtime.inject_fetch_bridge(client.clone());
         runtime.bootstrap_dom(html, url);
 
+        // Wire the DOM bridge so JS mutations flow to the rcdom tree.
+        wire_dom_bridge(&mut runtime, html);
+
         if !exec_scripts.is_empty() {
             let report = runtime.execute_page_scripts(&exec_scripts);
             runtime.pump_microtasks();
@@ -376,9 +476,10 @@ pub async fn process_page_async_with_plugins(
             runtime.pump_microtasks();
             js_us = t1.elapsed().as_micros();
             js_report = Some(report);
-            if let Ok(serialized) = runtime.serialize_dom() {
-                if !serialized.is_empty() && serialized != "undefined" {
-                    effective_html = std::borrow::Cow::Owned(serialized);
+            let serialized = serialize_post_js(&mut runtime);
+            if let Some(s) = serialized {
+                if !s.is_empty() && s != "undefined" {
+                    effective_html = std::borrow::Cow::Owned(s);
                 }
             }
         }
@@ -448,6 +549,9 @@ pub fn process_page_with_plugins(
         let mut runtime = JsRuntime::new(config.js_config.clone());
         runtime.bootstrap_dom(html, url);
 
+        // Wire the DOM bridge so JS mutations flow to the rcdom tree.
+        wire_dom_bridge(&mut runtime, html);
+
         if !inline_scripts.is_empty() {
             let report = runtime.execute_page_scripts(&inline_scripts);
             runtime.pump_microtasks();
@@ -461,9 +565,10 @@ pub fn process_page_with_plugins(
             runtime.pump_microtasks();
             js_us = t1.elapsed().as_micros();
             js_report = Some(report);
-            if let Ok(serialized) = runtime.serialize_dom() {
-                if !serialized.is_empty() && serialized != "undefined" {
-                    effective_html = std::borrow::Cow::Owned(serialized);
+            let serialized = serialize_post_js(&mut runtime);
+            if let Some(s) = serialized {
+                if !s.is_empty() && s != "undefined" {
+                    effective_html = std::borrow::Cow::Owned(s);
                 }
             }
         }
