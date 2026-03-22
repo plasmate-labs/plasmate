@@ -16,6 +16,7 @@
 //!   - DOM.*         (getDocument, querySelector, querySelectorAll, resolveNode)
 //!   - Input.*       (dispatchMouseEvent, dispatchKeyEvent)
 //!   - Network.*     (enable, setCookies, getCookies, deleteCookies, clearBrowserCookies)
+//!   - Fetch.*       (enable, disable, fulfillRequest, failRequest, continueRequest, continueResponse, getResponseBody)
 //!   - Plasmate.*    (getSom, getStructuredData, getInteractiveElements, act)
 
 pub mod cookies;

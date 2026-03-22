@@ -4,6 +4,8 @@
 //! The goal: Puppeteer/Playwright connect and work. Under the hood, everything
 //! goes through Plasmate's engine - agents get speed + token efficiency for free.
 
+use std::collections::HashMap;
+
 use serde_json::json;
 use tracing::info;
 
@@ -888,6 +890,269 @@ pub fn network_delete_cookies(
 pub fn network_clear_browser_cookies(id: u64, target: &mut CdpTarget) -> CdpResponse {
     target.cookie_jar.clear();
     CdpResponse::success(id, json!({}))
+}
+
+// ============================================================
+// Fetch domain (network interception)
+// ============================================================
+
+use crate::network::intercept::{
+    ErrorReason, FulfillParams, InterceptAction, InterceptRule, RequestOverrides, RequestPattern,
+    RequestStage, ResourceType, ResponseOverrides, ResponseRule,
+};
+
+/// Fetch.enable — enable interception with URL patterns.
+pub fn fetch_enable(id: u64, params: &serde_json::Value, target: &mut CdpTarget) -> CdpResponse {
+    let patterns = params
+        .get("patterns")
+        .and_then(|v| v.as_array())
+        .map(|arr| {
+            arr.iter()
+                .map(|p| {
+                    let url_pattern = p.get("urlPattern").and_then(|v| v.as_str()).map(String::from);
+                    let resource_type = p
+                        .get("resourceType")
+                        .and_then(|v| v.as_str())
+                        .map(ResourceType::from_cdp_str);
+                    let request_stage = p
+                        .get("requestStage")
+                        .and_then(|v| v.as_str())
+                        .map(|s| match s {
+                            "Response" => RequestStage::Response,
+                            _ => RequestStage::Request,
+                        })
+                        .unwrap_or(RequestStage::Request);
+
+                    RequestPattern {
+                        url_pattern,
+                        resource_type,
+                        request_stage,
+                    }
+                })
+                .collect()
+        })
+        .unwrap_or_else(|| {
+            // No patterns = match all requests
+            vec![RequestPattern {
+                url_pattern: Some("*".to_string()),
+                resource_type: None,
+                request_stage: RequestStage::Request,
+            }]
+        });
+
+    target.interceptor.enable(patterns);
+    info!("Fetch.enable: interception enabled");
+    CdpResponse::success(id, json!({}))
+}
+
+/// Fetch.disable — disable interception.
+pub fn fetch_disable(id: u64, target: &mut CdpTarget) -> CdpResponse {
+    target.interceptor.disable();
+    info!("Fetch.disable: interception disabled");
+    CdpResponse::success(id, json!({}))
+}
+
+/// Fetch.fulfillRequest — register a rule to fulfill matching requests with a mock response.
+///
+/// CDP normally uses this to resolve a paused request. In Plasmate, we register
+/// it as a rule that applies to future matching requests.
+pub fn fetch_fulfill_request(
+    id: u64,
+    params: &serde_json::Value,
+    target: &mut CdpTarget,
+) -> CdpResponse {
+    let url_pattern = params
+        .get("urlPattern")
+        .and_then(|v| v.as_str())
+        .or_else(|| params.get("requestId").and_then(|v| v.as_str()))
+        .unwrap_or("*")
+        .to_string();
+
+    let status = params
+        .get("responseCode")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(200) as u16;
+
+    let headers: Vec<(String, String)> = params
+        .get("responseHeaders")
+        .and_then(|v| v.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|h| {
+                    let name = h.get("name")?.as_str()?;
+                    let value = h.get("value")?.as_str()?;
+                    Some((name.to_string(), value.to_string()))
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+
+    let body = params.get("body").and_then(|v| v.as_str()).map(String::from);
+
+    target.interceptor.add_rule(InterceptRule {
+        pattern: RequestPattern {
+            url_pattern: Some(url_pattern),
+            resource_type: None,
+            request_stage: RequestStage::Request,
+        },
+        action: InterceptAction::Fulfill(FulfillParams {
+            status,
+            headers,
+            body,
+        }),
+    });
+
+    CdpResponse::success(id, json!({}))
+}
+
+/// Fetch.failRequest — register a rule to fail matching requests.
+pub fn fetch_fail_request(
+    id: u64,
+    params: &serde_json::Value,
+    target: &mut CdpTarget,
+) -> CdpResponse {
+    let url_pattern = params
+        .get("urlPattern")
+        .and_then(|v| v.as_str())
+        .or_else(|| params.get("requestId").and_then(|v| v.as_str()))
+        .unwrap_or("*")
+        .to_string();
+
+    let reason = params
+        .get("errorReason")
+        .and_then(|v| v.as_str())
+        .map(ErrorReason::from_cdp_str)
+        .unwrap_or(ErrorReason::Failed);
+
+    target.interceptor.add_rule(InterceptRule {
+        pattern: RequestPattern {
+            url_pattern: Some(url_pattern),
+            resource_type: None,
+            request_stage: RequestStage::Request,
+        },
+        action: InterceptAction::Fail(reason),
+    });
+
+    CdpResponse::success(id, json!({}))
+}
+
+/// Fetch.continueRequest — register a rule to continue matching requests with optional overrides.
+pub fn fetch_continue_request(
+    id: u64,
+    params: &serde_json::Value,
+    target: &mut CdpTarget,
+) -> CdpResponse {
+    let url_pattern = params
+        .get("urlPattern")
+        .and_then(|v| v.as_str())
+        .or_else(|| params.get("requestId").and_then(|v| v.as_str()))
+        .unwrap_or("*")
+        .to_string();
+
+    let url_override = params.get("url").and_then(|v| v.as_str()).map(String::from);
+    let method_override = params.get("method").and_then(|v| v.as_str()).map(String::from);
+    let post_data_override = params.get("postData").and_then(|v| v.as_str()).map(String::from);
+
+    let headers_override: Option<HashMap<String, String>> = params
+        .get("headers")
+        .and_then(|v| v.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|h| {
+                    let name = h.get("name")?.as_str()?.to_string();
+                    let value = h.get("value")?.as_str()?.to_string();
+                    Some((name, value))
+                })
+                .collect()
+        });
+
+    let has_overrides =
+        url_override.is_some() || method_override.is_some() || headers_override.is_some() || post_data_override.is_some();
+
+    let overrides = if has_overrides {
+        Some(RequestOverrides {
+            url: url_override,
+            method: method_override,
+            headers: headers_override,
+            post_data: post_data_override,
+        })
+    } else {
+        None
+    };
+
+    target.interceptor.add_rule(InterceptRule {
+        pattern: RequestPattern {
+            url_pattern: Some(url_pattern),
+            resource_type: None,
+            request_stage: RequestStage::Request,
+        },
+        action: InterceptAction::Continue(overrides),
+    });
+
+    CdpResponse::success(id, json!({}))
+}
+
+/// Fetch.continueResponse — register a rule to modify responses.
+pub fn fetch_continue_response(
+    id: u64,
+    params: &serde_json::Value,
+    target: &mut CdpTarget,
+) -> CdpResponse {
+    let url_pattern = params
+        .get("urlPattern")
+        .and_then(|v| v.as_str())
+        .or_else(|| params.get("requestId").and_then(|v| v.as_str()))
+        .unwrap_or("*")
+        .to_string();
+
+    let status = params.get("responseCode").and_then(|v| v.as_u64()).map(|s| s as u16);
+    let body = params.get("body").and_then(|v| v.as_str()).map(String::from);
+
+    let headers: Option<HashMap<String, String>> = params
+        .get("responseHeaders")
+        .and_then(|v| v.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|h| {
+                    let name = h.get("name")?.as_str()?.to_string();
+                    let value = h.get("value")?.as_str()?.to_string();
+                    Some((name, value))
+                })
+                .collect()
+        });
+
+    target.interceptor.add_response_rule(ResponseRule {
+        pattern: RequestPattern {
+            url_pattern: Some(url_pattern),
+            resource_type: None,
+            request_stage: RequestStage::Response,
+        },
+        overrides: ResponseOverrides {
+            status,
+            headers,
+            body,
+        },
+    });
+
+    CdpResponse::success(id, json!({}))
+}
+
+/// Fetch.getResponseBody — return the body of the current page (if any).
+pub fn fetch_get_response_body(
+    id: u64,
+    _params: &serde_json::Value,
+    target: &CdpTarget,
+) -> CdpResponse {
+    match &target.current_html {
+        Some(html) => CdpResponse::success(
+            id,
+            json!({
+                "body": html,
+                "base64Encoded": false,
+            }),
+        ),
+        None => CdpResponse::error(id, CDP_ERR_SERVER, "No response body available"),
+    }
 }
 
 // ============================================================

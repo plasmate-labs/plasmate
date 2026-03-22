@@ -6,6 +6,9 @@ use reqwest::Client;
 
 use crate::js::pipeline::PipelineConfig;
 use crate::network::fetch;
+use crate::network::intercept::{
+    InterceptAction, NetworkInterceptor, ResourceType as InterceptResourceType,
+};
 use crate::som::metadata::StructuredData;
 use crate::som::types::Som;
 
@@ -26,6 +29,8 @@ pub struct Session {
     pub history: Vec<HistoryEntry>,
     /// Pipeline configuration for this session.
     pub pipeline_config: PipelineConfig,
+    /// Network interception.
+    pub interceptor: NetworkInterceptor,
     /// Session creation time.
     pub created_at: Instant,
     /// Number of pages navigated.
@@ -99,6 +104,7 @@ impl Session {
                 fetch_external_scripts: true,
                 ..Default::default()
             },
+            interceptor: NetworkInterceptor::new(),
             created_at: Instant::now(),
             page_count: 0,
         })
@@ -108,10 +114,53 @@ impl Session {
     pub async fn navigate(&mut self, url: &str) -> Result<NavigateResult, String> {
         let start = Instant::now();
 
-        // Fetch HTML
-        let fetch_result = fetch::fetch_url(&self.client, url, self.timeout_ms)
-            .await
-            .map_err(|e| e.to_string())?;
+        // Check interception rules before fetch
+        let (action, _intercept_info) =
+            self.interceptor
+                .check_request(url, &InterceptResourceType::Document, true);
+
+        let mut fetch_result = match action {
+            InterceptAction::Fulfill(params) => {
+                NetworkInterceptor::fulfill_request(&params, url)
+            }
+            InterceptAction::Fail(reason) => {
+                return Err(NetworkInterceptor::fail_request(&reason, url).to_string());
+            }
+            InterceptAction::Continue(overrides) => {
+                let actual_url = overrides
+                    .as_ref()
+                    .and_then(|o| o.url.as_ref())
+                    .map(|u| u.as_str())
+                    .unwrap_or(url);
+
+                let extra_headers = overrides
+                    .as_ref()
+                    .and_then(|o| o.headers.clone())
+                    .unwrap_or_default();
+
+                if extra_headers.is_empty() {
+                    fetch::fetch_url(&self.client, actual_url, self.timeout_ms)
+                        .await
+                        .map_err(|e| e.to_string())?
+                } else {
+                    fetch::fetch_url_with_headers(
+                        &self.client,
+                        actual_url,
+                        self.timeout_ms,
+                        &extra_headers,
+                    )
+                    .await
+                    .map_err(|e| e.to_string())?
+                }
+            }
+        };
+
+        // Check response interception rules
+        self.interceptor.check_response(
+            url,
+            &InterceptResourceType::Document,
+            &mut fetch_result,
+        );
 
         let fetch_ms = fetch_result.load_ms;
         let html_bytes = fetch_result.html_bytes;
