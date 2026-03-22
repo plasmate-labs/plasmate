@@ -354,11 +354,10 @@
 <li>AWP WebSocket server</li>
 <li>CDP compatibility (Puppeteer connects out of the box)</li>
 <li>MCP server mode (stdio JSON-RPC)</li>
-<li>Cookie management with encrypted profiles</li>
+<li>Cookie management</li>
 <li>Published on crates.io, npm, PyPI</li>
 <li>Docker image (GHCR multi-arch)</li>
 </ul>
-
 <h2>Completed (v0.2)</h2>
 <ul>
 <li>SOM Specification v1.0 with JSON Schema and conformance test suite</li>
@@ -371,38 +370,39 @@
 <li>Interactive coverage scorecards (nightly HTML, weekly JS)</li>
 <li>CDP cookie jar (getCookies, setCookies, deleteCookies, clearBrowserCookies)</li>
 </ul>
-
 <h2>Completed (v0.3)</h2>
 <ul>
 <li>SPA Rendering Bridge: V8 mutations flow into real DOM tree, SOM recompiled after JS</li>
-<li>NodeRegistry with bidirectional V8-DOM bindings (14 native callbacks)</li>
+<li>NodeRegistry with bidirectional V8-DOM bindings</li>
 <li>CSS selector engine for querySelector/querySelectorAll</li>
-<li>Screenshot support (CLI, CDP, AWP, MCP - SOM fallback until renderer lands)</li>
+<li>Screenshot support wired (CLI, CDP, AWP, MCP). Renderer not shipped yet, SOM fallback used.</li>
 <li>Parallel Session Manager (up to 50 concurrent sessions per instance)</li>
 <li>CDP multi-target support with independent page contexts</li>
 <li>Network request interception (block, modify, mock responses)</li>
 <li>TLS fingerprint configuration (cipher suites, version control)</li>
 <li>Wasm plugin system (8 plugin types, wasmtime runtime)</li>
-<li>DOM shim expansion (Observers, navigator, window, Element APIs)</li>
 <li>Browser-realistic HTTP headers</li>
 </ul>
-
 <h2>v0.4: SPA Coverage &amp; Adoption (Current)</h2>
 <ul>
-<li>Deep SPA hydration (insertBefore, replaceChild, classList, cloneNode)</li>
-<li>Timer queue drain (React/Vue deferred rendering)</li>
-<li>SOM Cache (in-memory + on-disk, content-hash based)</li>
-<li>Framework PRs submitted upstream (Browser Use, LangChain)</li>
-<li>Page.captureScreenshot with built-in layout renderer</li>
-<li>Page.setContent, Accessibility.getFullAXTree</li>
+<li><input checked="" disabled="" type="checkbox"> Deep SPA hydration ops (insertBefore, replaceChild, classList, cloneNode)</li>
+<li><input checked="" disabled="" type="checkbox"> Timer queue drain (setTimeout, requestAnimationFrame)</li>
+<li><input checked="" disabled="" type="checkbox"> page.click() / page.type() via DOM bridge</li>
+<li><input checked="" disabled="" type="checkbox"> page.waitForSelector() (final DOM state)</li>
+<li><input disabled="" type="checkbox"> page.waitForNavigation() and page.goto(waitUntil=...)</li>
+<li><input disabled="" type="checkbox"> SOM Cache (in-memory + on-disk, content-hash based)</li>
+<li><input disabled="" type="checkbox"> Framework PRs submitted upstream (Browser Use, LangChain)</li>
+<li><input disabled="" type="checkbox"> Page.captureScreenshot with built-in layout renderer</li>
+<li><input disabled="" type="checkbox"> Page.setContent, Accessibility.getFullAXTree</li>
 </ul>
-
 <h2>v0.5+: Scale</h2>
 <ul>
-<li>Parallel sessions at scale (500+ concurrent per 8GB)</li>
-<li>Proxy rotation support</li>
-<li>Full ES module support</li>
-<li>Chrome extension on Web Store</li>
+<li><input disabled="" type="checkbox"> Parallel sessions at scale (500+ concurrent per 8GB)</li>
+<li><input disabled="" type="checkbox"> Proxy rotation support</li>
+<li><input disabled="" type="checkbox"> Iframe support</li>
+<li><input disabled="" type="checkbox"> Shadow DOM support</li>
+<li><input disabled="" type="checkbox"> Full ES module support</li>
+<li><input disabled="" type="checkbox"> Chrome extension on Web Store</li>
 </ul>
 
     </main>

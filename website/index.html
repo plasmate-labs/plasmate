@@ -563,13 +563,13 @@
           </div>
           <div class="card">
             <div class="kicker">Memory</div>
-            <div class="value">~30 MB</div>
-            <p class="desc">Chrome uses ~20GB for 100 concurrent pages. Plasmate uses 30MB.</p>
+            <div class="value">28 MB</div>
+            <p class="desc">Chrome uses ~20GB for 100 concurrent pages. Plasmate uses 28MB.</p>
           </div>
           <div class="card">
             <div class="kicker">Tokens</div>
-            <div class="value">10.4x compression</div>
-            <p class="desc">Tested on Wikipedia. The DOM is verbose. SOM is not.</p>
+            <div class="value">9.4x median compression</div>
+            <p class="desc">Across 38 sites. Up to 864x on heavy SPAs. The DOM is verbose. SOM is not.</p>
           </div>
           <div class="card">
             <div class="kicker">Binary</div>
@@ -655,8 +655,15 @@
               </div>
             </div>
 
-            <p class="note" style="margin-top: 16px;">164 tests passing. Actively maintained.</p>
+            <p class="note" style="margin-top: 16px;">200+ tests passing. Actively maintained.</p>
           </div>
+        </div>
+
+        <!-- v0.3.0 -->
+        <div class="panel" style="margin-top: 20px;">
+          <div class="section-label">v0.3.0 - March 2026</div>
+          <h2 class="section-title" style="font-size: 22px;">What's new</h2>
+          <p class="para">SPA rendering bridge with bidirectional V8/DOM sync. Network interception. TLS fingerprint tuning. Wasm plugin system. Multi-page sessions (50 concurrent). page.click(), page.type(), page.waitForSelector(). Auth profiles with encrypted storage. ~25K lines of Rust. 200+ tests passing.</p>
         </div>
 
         <!-- BENCHMARK TABLE -->
@@ -680,7 +687,7 @@
                 <td><strong>Plasmate</strong></td>
                 <td class="good"><strong>4-5 ms</strong></td>
                 <td class="good"><strong>405-512 ms</strong></td>
-                <td><strong>~30 MB</strong></td>
+                <td><strong>28 MB</strong></td>
                 <td><strong>45 MB</strong></td>
               </tr>
               <tr>

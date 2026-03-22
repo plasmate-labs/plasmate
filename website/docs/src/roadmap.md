@@ -13,21 +13,48 @@ Plasmate's roadmap is public and standards-first. We ship compression and correc
 - Published on crates.io, npm, PyPI
 - Docker image (GHCR multi-arch)
 
-## v0.2: Standards & Adoption (Current)
+## Completed (v0.2)
 
-- [x] CDP polish (Page.setContent, Accessibility.getFullAXTree, error handling)
-- [x] SOM Specification v1.0 with JSON Schema and conformance test suite
-- [x] Benchmark expansion to 100+ URLs across 13 categories
-- [x] Node.js SDK with full TypeScript types and query helpers
-- [x] Python SDK with Pydantic models and query helpers
-- [x] Go SDK with structs, client, and query helpers
-- [x] Browser Use integration
-- [x] LangChain integration
-- [ ] Benchmark blog post and interactive results page
+- SOM Specification v1.0 with JSON Schema and conformance test suite
+- Benchmark expansion to 100 URLs across 13 categories
+- Node.js SDK with full TypeScript types (npm v0.3.0)
+- Python SDK with Pydantic models (PyPI v0.3.0)
+- Go SDK with structs, client, and query helpers
+- Browser Use integration page and docs
+- LangChain integration page and docs
+- Interactive coverage scorecards (nightly HTML, weekly JS)
+- CDP cookie jar (getCookies, setCookies, deleteCookies, clearBrowserCookies)
+
+## Completed (v0.3)
+
+- SPA Rendering Bridge: V8 mutations flow into real DOM tree, SOM recompiled after JS
+- NodeRegistry with bidirectional V8-DOM bindings
+- CSS selector engine for querySelector/querySelectorAll
+- Screenshot support wired (CLI, CDP, AWP, MCP). Renderer not shipped yet, SOM fallback used.
+- Parallel Session Manager (up to 50 concurrent sessions per instance)
+- CDP multi-target support with independent page contexts
+- Network request interception (block, modify, mock responses)
+- TLS fingerprint configuration (cipher suites, version control)
+- Wasm plugin system (8 plugin types, wasmtime runtime)
+- Browser-realistic HTTP headers
+
+## v0.4: SPA Coverage & Adoption (Current)
+
+- [x] Deep SPA hydration ops (insertBefore, replaceChild, classList, cloneNode)
+- [x] Timer queue drain (setTimeout, requestAnimationFrame)
+- [x] page.click() / page.type() via DOM bridge
+- [x] page.waitForSelector() (final DOM state)
+- [ ] page.waitForNavigation() and page.goto(waitUntil=...)
+- [ ] SOM Cache (in-memory + on-disk, content-hash based)
 - [ ] Framework PRs submitted upstream (Browser Use, LangChain)
+- [ ] Page.captureScreenshot with built-in layout renderer
+- [ ] Page.setContent, Accessibility.getFullAXTree
 
-## v0.3: Engine Hardening (Next)
+## v0.5+: Scale
 
-- Network request interception (intercept, modify, mock, block)
-- TLS configuration (cipher suites, TLS version control, fingerprint tuning)
-- Wasm plugin system (extend the SOM pipeline with loadable modules)
+- [ ] Parallel sessions at scale (500+ concurrent per 8GB)
+- [ ] Proxy rotation support
+- [ ] Iframe support
+- [ ] Shadow DOM support
+- [ ] Full ES module support
+- [ ] Chrome extension on Web Store

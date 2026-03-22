@@ -8,3 +8,5 @@ sdk/node/node_modules/
 *.o
 *.d
 *.rmeta
+tests/
+benches/
