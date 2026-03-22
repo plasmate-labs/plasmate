@@ -1,6 +1,6 @@
 [package]
 name = "plasmate"
-version = "0.1.1"
+version = "0.3.0"
 edition = "2021"
 description = "Agent-native headless browser engine with Semantic Object Model"
 license = "Apache-2.0"
