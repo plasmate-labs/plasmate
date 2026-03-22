@@ -354,37 +354,55 @@
 <li>AWP WebSocket server</li>
 <li>CDP compatibility (Puppeteer connects out of the box)</li>
 <li>MCP server mode (stdio JSON-RPC)</li>
-<li>Cookie management</li>
+<li>Cookie management with encrypted profiles</li>
 <li>Published on crates.io, npm, PyPI</li>
 <li>Docker image (GHCR multi-arch)</li>
 </ul>
-<h2>v0.2: Standards &amp; Adoption (Current)</h2>
+
+<h2>Completed (v0.2)</h2>
 <ul>
-<li><input checked="" disabled="" type="checkbox"> CDP polish (Page.setContent, Accessibility.getFullAXTree, error handling)</li>
-<li><input checked="" disabled="" type="checkbox"> SOM Specification v1.0 with JSON Schema and conformance test suite</li>
-<li><input checked="" disabled="" type="checkbox"> Benchmark expansion to 100+ URLs across 13 categories</li>
-<li><input checked="" disabled="" type="checkbox"> Node.js SDK with full TypeScript types and query helpers</li>
-<li><input checked="" disabled="" type="checkbox"> Python SDK with Pydantic models and query helpers</li>
-<li><input checked="" disabled="" type="checkbox"> Go SDK with structs, client, and query helpers</li>
-<li><input checked="" disabled="" type="checkbox"> Browser Use integration</li>
-<li><input checked="" disabled="" type="checkbox"> LangChain integration</li>
-<li><input disabled="" type="checkbox"> Benchmark blog post and interactive results page</li>
-<li><input disabled="" type="checkbox"> Framework PRs submitted upstream (Browser Use, LangChain)</li>
+<li>SOM Specification v1.0 with JSON Schema and conformance test suite</li>
+<li>Benchmark expansion to 100 URLs across 13 categories</li>
+<li>Node.js SDK with full TypeScript types (npm v0.3.0)</li>
+<li>Python SDK with Pydantic models (PyPI v0.3.0)</li>
+<li>Go SDK with structs, client, and query helpers</li>
+<li>Browser Use integration page and docs</li>
+<li>LangChain integration page and docs</li>
+<li>Interactive coverage scorecards (nightly HTML, weekly JS)</li>
+<li>CDP cookie jar (getCookies, setCookies, deleteCookies, clearBrowserCookies)</li>
 </ul>
-<h2>v0.3: Production Engine (Next)</h2>
+
+<h2>Completed (v0.3)</h2>
 <ul>
-<li>SOM Cache (in-memory + on-disk, differential updates)</li>
-<li>Parallel Session Manager (500+ concurrent sessions per 8GB)</li>
-<li>Stealth networking (TLS fingerprint control, proxy rotation)</li>
-<li>Wasm Skill System + marketplace</li>
-<li>Network request interception</li>
+<li>SPA Rendering Bridge: V8 mutations flow into real DOM tree, SOM recompiled after JS</li>
+<li>NodeRegistry with bidirectional V8-DOM bindings (14 native callbacks)</li>
+<li>CSS selector engine for querySelector/querySelectorAll</li>
+<li>Screenshot support (CLI, CDP, AWP, MCP - SOM fallback until renderer lands)</li>
+<li>Parallel Session Manager (up to 50 concurrent sessions per instance)</li>
+<li>CDP multi-target support with independent page contexts</li>
+<li>Network request interception (block, modify, mock responses)</li>
+<li>TLS fingerprint configuration (cipher suites, version control)</li>
+<li>Wasm plugin system (8 plugin types, wasmtime runtime)</li>
+<li>DOM shim expansion (Observers, navigator, window, Element APIs)</li>
+<li>Browser-realistic HTTP headers</li>
 </ul>
-<h2>v0.4+: Commercial Platform</h2>
+
+<h2>v0.4: SPA Coverage &amp; Adoption (Current)</h2>
 <ul>
-<li>Plasmate Cloud (fleet orchestration)</li>
-<li>Managed proxy network</li>
-<li>Enterprise SSO, SOC 2</li>
-<li>Skill marketplace</li>
+<li>Deep SPA hydration (insertBefore, replaceChild, classList, cloneNode)</li>
+<li>Timer queue drain (React/Vue deferred rendering)</li>
+<li>SOM Cache (in-memory + on-disk, content-hash based)</li>
+<li>Framework PRs submitted upstream (Browser Use, LangChain)</li>
+<li>Page.captureScreenshot with built-in layout renderer</li>
+<li>Page.setContent, Accessibility.getFullAXTree</li>
+</ul>
+
+<h2>v0.5+: Scale</h2>
+<ul>
+<li>Parallel sessions at scale (500+ concurrent per 8GB)</li>
+<li>Proxy rotation support</li>
+<li>Full ES module support</li>
+<li>Chrome extension on Web Store</li>
 </ul>
 
     </main>
