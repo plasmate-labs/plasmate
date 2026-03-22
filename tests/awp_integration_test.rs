@@ -134,7 +134,7 @@ fn get_result(resp: &serde_json::Value) -> &serde_json::Value {
 
 #[tokio::test]
 async fn test_hello_handshake() {
-    let mut state = ConnectionState::new();
+    let mut state = ConnectionState::new(None);
     let resp = send(
         &mut state,
         "awp.hello",
@@ -152,7 +152,7 @@ async fn test_hello_handshake() {
 
 #[tokio::test]
 async fn test_method_before_hello_rejected() {
-    let mut state = ConnectionState::new();
+    let mut state = ConnectionState::new(None);
     let resp = send(&mut state, "session.create", json!({})).await;
     assert!(!is_success(&resp), "Should reject methods before hello");
 }
@@ -163,7 +163,7 @@ async fn test_method_before_hello_rejected() {
 
 #[tokio::test]
 async fn test_session_create_and_close() {
-    let mut state = ConnectionState::new();
+    let mut state = ConnectionState::new(None);
     send(&mut state, "awp.hello", json!({"awp_version": "0.1"})).await;
 
     let resp = send(&mut state, "session.create", json!({})).await;
@@ -193,7 +193,7 @@ async fn test_navigate_real_page() {
     let (base_url, shutdown) = start_test_server().await;
     let url = format!("{}/", base_url);
 
-    let mut state = ConnectionState::new();
+    let mut state = ConnectionState::new(None);
     send(&mut state, "awp.hello", json!({"awp_version": "0.1"})).await;
 
     let resp = send(&mut state, "session.create", json!({})).await;
@@ -228,7 +228,7 @@ async fn test_navigate_with_js_execution() {
     let (base_url, shutdown) = start_test_server().await;
     let url = format!("{}/js", base_url);
 
-    let mut state = ConnectionState::new();
+    let mut state = ConnectionState::new(None);
     send(&mut state, "awp.hello", json!({"awp_version": "0.1"})).await;
 
     let resp = send(&mut state, "session.create", json!({})).await;
@@ -265,7 +265,7 @@ async fn test_observe_after_navigate() {
     let (base_url, shutdown) = start_test_server().await;
     let url = format!("{}/", base_url);
 
-    let mut state = ConnectionState::new();
+    let mut state = ConnectionState::new(None);
     send(&mut state, "awp.hello", json!({"awp_version": "0.1"})).await;
 
     let resp = send(&mut state, "session.create", json!({})).await;
@@ -304,7 +304,7 @@ async fn test_observe_after_navigate() {
 
 #[tokio::test]
 async fn test_observe_before_navigate_fails() {
-    let mut state = ConnectionState::new();
+    let mut state = ConnectionState::new(None);
     send(&mut state, "awp.hello", json!({"awp_version": "0.1"})).await;
 
     let resp = send(&mut state, "session.create", json!({})).await;
@@ -334,7 +334,7 @@ async fn test_extract_structured_data() {
     let (base_url, shutdown) = start_test_server().await;
     let url = format!("{}/", base_url);
 
-    let mut state = ConnectionState::new();
+    let mut state = ConnectionState::new(None);
     send(&mut state, "awp.hello", json!({"awp_version": "0.1"})).await;
 
     let resp = send(&mut state, "session.create", json!({})).await;
@@ -388,7 +388,7 @@ async fn test_extract_interactive_elements() {
     let (base_url, shutdown) = start_test_server().await;
     let url = format!("{}/", base_url);
 
-    let mut state = ConnectionState::new();
+    let mut state = ConnectionState::new(None);
     send(&mut state, "awp.hello", json!({"awp_version": "0.1"})).await;
 
     let resp = send(&mut state, "session.create", json!({})).await;
@@ -435,7 +435,7 @@ async fn test_act_click_link() {
     let (base_url, shutdown) = start_test_server().await;
     let url = format!("{}/", base_url);
 
-    let mut state = ConnectionState::new();
+    let mut state = ConnectionState::new(None);
     send(&mut state, "awp.hello", json!({"awp_version": "0.1"})).await;
 
     let resp = send(&mut state, "session.create", json!({})).await;
@@ -483,7 +483,7 @@ async fn test_act_type_into_field() {
     let (base_url, shutdown) = start_test_server().await;
     let url = format!("{}/", base_url);
 
-    let mut state = ConnectionState::new();
+    let mut state = ConnectionState::new(None);
     send(&mut state, "awp.hello", json!({"awp_version": "0.1"})).await;
 
     let resp = send(&mut state, "session.create", json!({})).await;
@@ -549,7 +549,7 @@ async fn test_full_agent_workflow() {
     let (base_url, shutdown) = start_test_server().await;
     let url = format!("{}/", base_url);
 
-    let mut state = ConnectionState::new();
+    let mut state = ConnectionState::new(None);
 
     // 1. Handshake
     let resp = send(

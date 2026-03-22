@@ -11,6 +11,7 @@ use tracing::debug;
 use super::extract;
 use super::runtime::{JsExecutionReport, JsRuntime, RuntimeConfig};
 use super::script_fetch;
+use crate::plugin::PluginManager;
 use crate::som::compiler;
 use crate::som::types::Som;
 
@@ -312,6 +313,195 @@ pub fn process_page_with_client(
     })
 }
 
+/// Process a page with Wasm plugin hooks at each pipeline stage.
+///
+/// Identical to `process_page_async` but also runs:
+/// - `post_parse` after JS execution, before SOM compilation
+/// - `post_som` after SOM compilation
+pub async fn process_page_async_with_plugins(
+    html: &str,
+    url: &str,
+    config: &PipelineConfig,
+    client: &reqwest::Client,
+    plugins: &mut PluginManager,
+) -> Result<PageResult, PipelineError> {
+    let pipeline_start = Instant::now();
+
+    let mut js_report = None;
+    let mut extract_us = 0u128;
+    let mut js_us = 0u128;
+    let mut effective_html = std::borrow::Cow::Borrowed(html);
+
+    if config.execute_js {
+        let t0 = Instant::now();
+        let scripts = extract::extract_scripts(html);
+        extract_us = t0.elapsed().as_micros();
+
+        let t1 = Instant::now();
+        let resolved = if config.fetch_external_scripts {
+            script_fetch::resolve_scripts(&scripts, url, client, &config.external_script_limits)
+                .await
+        } else {
+            scripts
+                .iter()
+                .filter(|s| s.is_inline)
+                .map(|s| script_fetch::ResolvedScript {
+                    source: s.source.clone(),
+                    label: s.label.clone(),
+                    index: s.index,
+                })
+                .collect()
+        };
+
+        let exec_scripts: Vec<(String, String)> = resolved
+            .iter()
+            .filter(|s| !s.source.is_empty())
+            .map(|s| (s.source.clone(), s.label.clone()))
+            .collect();
+
+        let mut runtime = JsRuntime::new(config.js_config.clone());
+        runtime.inject_fetch_bridge(client.clone());
+        runtime.bootstrap_dom(html, url);
+
+        if !exec_scripts.is_empty() {
+            let report = runtime.execute_page_scripts(&exec_scripts);
+            runtime.pump_microtasks();
+            runtime.fire_dom_content_loaded();
+            runtime.pump_microtasks();
+            if config.timer_drain_ms > 0 {
+                runtime.drain_timers(config.timer_drain_ms);
+                runtime.pump_microtasks();
+            }
+            runtime.fire_load();
+            runtime.pump_microtasks();
+            js_us = t1.elapsed().as_micros();
+            js_report = Some(report);
+            if let Ok(serialized) = runtime.serialize_dom() {
+                if !serialized.is_empty() && serialized != "undefined" {
+                    effective_html = std::borrow::Cow::Owned(serialized);
+                }
+            }
+        }
+    }
+
+    // Plugin hook: post_parse (between JS execution and SOM compilation).
+    let effective_html_owned = if plugins.has_hook(crate::plugin::Hook::PostParse) {
+        plugins
+            .run_post_parse(&effective_html)
+            .map_err(|e| PipelineError::Plugin(e.to_string()))?
+    } else {
+        effective_html.into_owned()
+    };
+
+    let t2 = Instant::now();
+    let som = compiler::compile(&effective_html_owned, url)
+        .map_err(|e| PipelineError::SomCompile(e.to_string()))?;
+    let som_us = t2.elapsed().as_micros();
+
+    // Plugin hook: post_som (after SOM compilation).
+    let som = plugins
+        .run_post_som(som)
+        .map_err(|e| PipelineError::Plugin(e.to_string()))?;
+
+    let total_us = pipeline_start.elapsed().as_micros();
+
+    Ok(PageResult {
+        som,
+        url: url.to_string(),
+        timing: PipelineTiming {
+            extract_scripts_us: extract_us,
+            js_execution_us: js_us,
+            som_compile_us: som_us,
+            total_us,
+        },
+        js_report,
+        effective_html: effective_html_owned,
+    })
+}
+
+/// Sync version of `process_page_async_with_plugins`.
+pub fn process_page_with_plugins(
+    html: &str,
+    url: &str,
+    config: &PipelineConfig,
+    plugins: &mut PluginManager,
+) -> Result<PageResult, PipelineError> {
+    let pipeline_start = Instant::now();
+
+    let mut js_report = None;
+    let mut extract_us = 0u128;
+    let mut js_us = 0u128;
+    let mut effective_html = std::borrow::Cow::Borrowed(html);
+
+    if config.execute_js {
+        let t0 = Instant::now();
+        let scripts = extract::extract_scripts(html);
+        extract_us = t0.elapsed().as_micros();
+
+        let inline_scripts: Vec<(String, String)> = scripts
+            .iter()
+            .filter(|s| s.is_inline)
+            .map(|s| (s.source.clone(), s.label.clone()))
+            .collect();
+
+        let t1 = Instant::now();
+        let mut runtime = JsRuntime::new(config.js_config.clone());
+        runtime.bootstrap_dom(html, url);
+
+        if !inline_scripts.is_empty() {
+            let report = runtime.execute_page_scripts(&inline_scripts);
+            runtime.pump_microtasks();
+            runtime.fire_dom_content_loaded();
+            runtime.pump_microtasks();
+            if config.timer_drain_ms > 0 {
+                runtime.drain_timers(config.timer_drain_ms);
+                runtime.pump_microtasks();
+            }
+            runtime.fire_load();
+            runtime.pump_microtasks();
+            js_us = t1.elapsed().as_micros();
+            js_report = Some(report);
+            if let Ok(serialized) = runtime.serialize_dom() {
+                if !serialized.is_empty() && serialized != "undefined" {
+                    effective_html = std::borrow::Cow::Owned(serialized);
+                }
+            }
+        }
+    }
+
+    let effective_html_owned = if plugins.has_hook(crate::plugin::Hook::PostParse) {
+        plugins
+            .run_post_parse(&effective_html)
+            .map_err(|e| PipelineError::Plugin(e.to_string()))?
+    } else {
+        effective_html.into_owned()
+    };
+
+    let t2 = Instant::now();
+    let som = compiler::compile(&effective_html_owned, url)
+        .map_err(|e| PipelineError::SomCompile(e.to_string()))?;
+    let som_us = t2.elapsed().as_micros();
+
+    let som = plugins
+        .run_post_som(som)
+        .map_err(|e| PipelineError::Plugin(e.to_string()))?;
+
+    let total_us = pipeline_start.elapsed().as_micros();
+
+    Ok(PageResult {
+        som,
+        url: url.to_string(),
+        timing: PipelineTiming {
+            extract_scripts_us: extract_us,
+            js_execution_us: js_us,
+            som_compile_us: som_us,
+            total_us,
+        },
+        js_report,
+        effective_html: effective_html_owned,
+    })
+}
+
 /// Errors from the page processing pipeline.
 #[derive(Debug, thiserror::Error)]
 pub enum PipelineError {
@@ -319,6 +509,8 @@ pub enum PipelineError {
     SomCompile(String),
     #[error("JS execution failed: {0}")]
     JsExecution(String),
+    #[error("plugin error: {0}")]
+    Plugin(String),
 }
 
 #[cfg(test)]

@@ -1,22 +1,32 @@
+use std::sync::Arc;
+
+use tokio::sync::Mutex;
+
 use regex::Regex;
 use serde_json::json;
 use tracing::{info, warn};
 
 use super::messages::{ErrorCode, Response};
 use super::session::Session;
+use crate::plugin::PluginManager;
 use crate::som::types::{Element, ElementRole};
+
+/// Shared plugin manager handle (thread-safe, optional).
+pub type SharedPlugins = Option<Arc<Mutex<PluginManager>>>;
 
 /// Connection state tracked per WebSocket connection.
 pub struct ConnectionState {
     pub handshake_done: bool,
     pub session: Option<Session>,
+    pub plugins: SharedPlugins,
 }
 
 impl ConnectionState {
-    pub fn new() -> Self {
+    pub fn new(plugins: SharedPlugins) -> Self {
         ConnectionState {
             handshake_done: false,
             session: None,
+            plugins,
         }
     }
 }
@@ -45,6 +55,7 @@ pub async fn handle_request(
         "page.observe" => handle_page_observe(id, params, state),
         "page.act" => handle_page_act(id, params, state).await,
         "page.extract" => handle_page_extract(id, params, state),
+        "plugin.list" => handle_plugin_list(id, state).await,
         _ => Response::error(
             id,
             ErrorCode::InvalidRequest,
@@ -74,13 +85,18 @@ fn handle_hello(id: &str, params: &serde_json::Value, state: &mut ConnectionStat
         .unwrap_or("unknown");
     info!(client_name, "AWP handshake completed");
 
+    let mut features = vec!["som.snapshot", "act.primitive", "extract"];
+    if state.plugins.is_some() {
+        features.push("plugins");
+    }
+
     Response::success(
         id,
         json!({
             "awp_version": "0.1",
             "server_name": "plasmate",
             "server_version": "0.1.0",
-            "features": ["som.snapshot", "act.primitive", "extract"]
+            "features": features
         }),
     )
 }
@@ -169,10 +185,18 @@ async fn handle_page_navigate(
         }
     };
 
-    info!(url, "Navigating (full pipeline)");
+    // Plugin hook: pre_navigate
+    let effective_url = if let Some(ref pm) = state.plugins {
+        let mut pm = pm.lock().await;
+        pm.run_pre_navigate(url).unwrap_or_else(|_| url.to_string())
+    } else {
+        url.to_string()
+    };
+
+    info!(url = %effective_url, "Navigating (full pipeline)");
 
     // Use the full async pipeline: fetch -> external scripts -> V8 -> SOM
-    match session.navigate(url).await {
+    match session.navigate_with_plugins(&effective_url, &state.plugins).await {
         Ok(result) => {
             let mut response = json!({
                 "url": result.url,
@@ -511,6 +535,32 @@ fn handle_page_extract(
         json!({
             "data": data,
             "provenance": provenance
+        }),
+    )
+}
+
+async fn handle_plugin_list(id: &str, state: &ConnectionState) -> Response {
+    let manifests = if let Some(ref pm) = state.plugins {
+        let pm = pm.lock().await;
+        pm.manifests()
+            .iter()
+            .map(|m| {
+                json!({
+                    "name": m.name,
+                    "version": m.version,
+                    "hooks": m.hooks,
+                })
+            })
+            .collect::<Vec<_>>()
+    } else {
+        vec![]
+    };
+
+    Response::success(
+        id,
+        json!({
+            "plugins": manifests,
+            "count": manifests.len(),
         }),
     )
 }

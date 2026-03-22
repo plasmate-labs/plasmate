@@ -992,6 +992,32 @@ pub fn plasmate_get_markdown(id: u64, target: &CdpTarget) -> CdpResponse {
     )
 }
 
+pub async fn plasmate_list_plugins(id: u64, target: &CdpTarget) -> CdpResponse {
+    let manifests = if let Some(ref pm) = target.plugins {
+        let pm = pm.lock().await;
+        pm.manifests()
+            .iter()
+            .map(|m| {
+                json!({
+                    "name": m.name,
+                    "version": m.version,
+                    "hooks": m.hooks,
+                })
+            })
+            .collect::<Vec<_>>()
+    } else {
+        vec![]
+    };
+
+    CdpResponse::success(
+        id,
+        json!({
+            "plugins": manifests,
+            "count": manifests.len(),
+        }),
+    )
+}
+
 // ============================================================
 // Accessibility domain
 // ============================================================

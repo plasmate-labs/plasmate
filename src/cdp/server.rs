@@ -10,13 +10,17 @@ use tokio::net::TcpListener;
 use tracing::{debug, error, info, warn};
 
 use super::handler::handle_cdp_request;
-use super::session::CdpTarget;
+use super::session::{CdpTarget, SharedPlugins};
 use super::types::CdpRequest;
 
 /// Start the CDP-compatible server.
 ///
 /// This serves both the HTTP discovery endpoints and WebSocket connections.
-pub async fn start(host: &str, port: u16) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn start(
+    host: &str,
+    port: u16,
+    plugins: SharedPlugins,
+) -> Result<(), Box<dyn std::error::Error>> {
     let addr = format!("{}:{}", host, port);
     let listener = TcpListener::bind(&addr).await?;
     info!("CDP server listening on {}", addr);
@@ -27,6 +31,7 @@ pub async fn start(host: &str, port: u16) -> Result<(), Box<dyn std::error::Erro
         let (stream, peer) = listener.accept().await?;
         let listen_port = port;
         let listen_host = host.to_string();
+        let plugins = plugins.clone();
         info!(%peer, "New connection");
 
         tokio::spawn(async move {
@@ -36,10 +41,11 @@ pub async fn start(host: &str, port: u16) -> Result<(), Box<dyn std::error::Erro
                 Ok(n) if n >= 3 => {
                     let start = String::from_utf8_lossy(&buf[..n]);
                     if start.starts_with("GET") {
-                        handle_http_or_upgrade(stream, peer, &listen_host, listen_port).await;
+                        handle_http_or_upgrade(stream, peer, &listen_host, listen_port, plugins)
+                            .await;
                     } else {
                         // Direct WebSocket (unlikely but handle it)
-                        handle_websocket_connection(stream, peer).await;
+                        handle_websocket_connection(stream, peer, plugins).await;
                     }
                 }
                 _ => {
@@ -56,6 +62,7 @@ async fn handle_http_or_upgrade(
     peer: std::net::SocketAddr,
     listen_host: &str,
     listen_port: u16,
+    plugins: SharedPlugins,
 ) {
     // Read the HTTP request line
     let mut buf = vec![0u8; 4096];
@@ -74,7 +81,7 @@ async fn handle_http_or_upgrade(
     let is_upgrade = request.to_lowercase().contains("upgrade: websocket");
 
     if is_upgrade {
-        handle_websocket_connection(stream, peer).await;
+        handle_websocket_connection(stream, peer, plugins).await;
         return;
     }
 
@@ -146,7 +153,11 @@ async fn handle_http_or_upgrade(
 }
 
 /// Handle a WebSocket connection with CDP messages.
-async fn handle_websocket_connection(stream: tokio::net::TcpStream, peer: std::net::SocketAddr) {
+async fn handle_websocket_connection(
+    stream: tokio::net::TcpStream,
+    peer: std::net::SocketAddr,
+    plugins: SharedPlugins,
+) {
     let ws_stream = match tokio_tungstenite::accept_async(stream).await {
         Ok(ws) => ws,
         Err(e) => {
@@ -158,7 +169,7 @@ async fn handle_websocket_connection(stream: tokio::net::TcpStream, peer: std::n
     info!(%peer, "CDP WebSocket connected");
 
     let (mut sink, mut stream) = ws_stream.split();
-    let mut target = match CdpTarget::new() {
+    let mut target = match CdpTarget::new_with_plugins(plugins) {
         Ok(t) => t,
         Err(e) => {
             error!(%peer, "Failed to create target: {}", e);

@@ -12,6 +12,7 @@ use plasmate::cdp;
 use plasmate::coverage;
 use plasmate::js;
 use plasmate::network;
+use plasmate::plugin;
 use plasmate::som;
 
 #[derive(Parser)]
@@ -41,6 +42,9 @@ enum Commands {
         /// Load cookies from a stored auth profile (domain name)
         #[arg(long)]
         profile: Option<String>,
+        /// Load a Wasm plugin (can be specified multiple times)
+        #[arg(long)]
+        plugin: Vec<String>,
     },
     /// Start the WebSocket server
     Serve {
@@ -56,6 +60,9 @@ enum Commands {
         /// Load cookies from stored auth profile(s) (comma-separated domain names)
         #[arg(long)]
         profile: Option<String>,
+        /// Load a Wasm plugin (can be specified multiple times)
+        #[arg(long)]
+        plugin: Vec<String>,
     },
     /// Run SOM benchmarks against a list of URLs
     Bench {
@@ -194,13 +201,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             no_external,
             no_js,
             profile,
+            plugin: plugin_paths,
         } => {
+            let mut plugins = load_plugins(&plugin_paths)?;
             cmd_fetch(
                 &url,
                 output.as_deref(),
                 !no_external,
                 no_js,
                 profile.as_deref(),
+                plugins.as_mut(),
             )
             .await?;
         }
@@ -209,7 +219,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             port,
             protocol,
             profile,
+            plugin: plugin_paths,
         } => {
+            let plugins = load_plugins(&plugin_paths)?;
+            let plugins = plugins.map(|pm| Arc::new(tokio::sync::Mutex::new(pm)));
+
             // Set global auth profiles for all sessions
             if let Some(ref profile_str) = profile {
                 let domains: Vec<String> = profile_str
@@ -226,12 +240,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             match protocol.as_str() {
                 "awp" => {
                     info!("Starting AWP protocol server");
-                    awp::server::start(&host, port).await?;
+                    awp::server::start(&host, port, plugins).await?;
                 }
                 "cdp" => {
                     info!("Starting CDP-compatible server (Puppeteer/Playwright ready)");
                     info!("  Custom domain: Plasmate.getSom, Plasmate.getStructuredData, Plasmate.getInteractiveElements, Plasmate.getMarkdown");
-                    cdp::server::start(&host, port).await?;
+                    cdp::server::start(&host, port, plugins).await?;
                 }
                 "both" => {
                     // CDP on main port, AWP on main port + 1
@@ -240,13 +254,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     info!("  CDP (Puppeteer/Playwright): ws://{}:{}", host, port);
                     info!("  AWP (native):               ws://{}:{}", host, awp_port);
                     let host_awp = host.clone();
+                    let awp_plugins = plugins.clone();
                     let awp_handle = tokio::spawn(async move {
-                        if let Err(e) = awp::server::start(&host_awp, awp_port).await {
+                        if let Err(e) = awp::server::start(&host_awp, awp_port, awp_plugins).await
+                        {
                             eprintln!("AWP server error: {}", e);
                         }
                     });
                     let cdp_handle = tokio::spawn(async move {
-                        if let Err(e) = cdp::server::start(&host, port).await {
+                        if let Err(e) = cdp::server::start(&host, port, plugins).await {
                             eprintln!("CDP server error: {}", e);
                         }
                     });
@@ -528,12 +544,32 @@ fn calculate_profile_expiry_status(profile: &auth::store::CookieProfile) -> &'st
     }
 }
 
+/// Load Wasm plugins from the given paths. Returns None if no plugins specified.
+fn load_plugins(
+    paths: &[String],
+) -> Result<Option<plugin::PluginManager>, Box<dyn std::error::Error>> {
+    if paths.is_empty() {
+        return Ok(None);
+    }
+    let mut pm = plugin::PluginManager::new().map_err(|e| e.to_string())?;
+    for p in paths {
+        let manifest = pm.load(std::path::Path::new(p)).map_err(|e| e.to_string())?;
+        info!(
+            name = %manifest.name,
+            version = %manifest.version,
+            "Loaded plugin"
+        );
+    }
+    Ok(Some(pm))
+}
+
 async fn cmd_fetch(
     url: &str,
     output: Option<&str>,
     external_scripts: bool,
     no_js: bool,
     profile: Option<&str>,
+    mut plugins: Option<&mut plugin::PluginManager>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let jar = Arc::new(reqwest::cookie::Jar::default());
 
@@ -549,8 +585,15 @@ async fn cmd_fetch(
 
     let client = network::fetch::build_client_h1_fallback(None, jar)?;
 
-    info!(url, "Fetching");
-    let result = network::fetch::fetch_url(&client, url, 30000).await?;
+    // Plugin hook: pre_navigate
+    let effective_url = if let Some(pm) = plugins.as_deref_mut() {
+        pm.run_pre_navigate(url).map_err(|e| e.to_string())?
+    } else {
+        url.to_string()
+    };
+
+    info!(url = %effective_url, "Fetching");
+    let result = network::fetch::fetch_url(&client, &effective_url, 30000).await?;
     info!(
         url = %result.url,
         status = result.status,
@@ -566,9 +609,19 @@ async fn cmd_fetch(
         ..Default::default()
     };
 
-    let page_result =
+    let page_result = if let Some(pm) = plugins {
+        js::pipeline::process_page_async_with_plugins(
+            &result.html,
+            &result.url,
+            &pipeline_config,
+            &client,
+            pm,
+        )
+        .await?
+    } else {
         js::pipeline::process_page_async(&result.html, &result.url, &pipeline_config, &client)
-            .await?;
+            .await?
+    };
 
     if let Some(ref report) = page_result.js_report {
         info!(
