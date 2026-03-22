@@ -96,8 +96,11 @@ impl CdpTarget {
             }
         }
 
-        let client = fetch::build_client_h1_fallback(Some(DEFAULT_USER_AGENT), reqwest_jar.clone())
-            .map_err(|e| e.to_string())?;
+        // Use global TLS config if set
+        let tls_config = crate::network::tls::global();
+        let client =
+            fetch::build_client_h1_fallback(Some(DEFAULT_USER_AGENT), reqwest_jar.clone(), tls_config)
+                .map_err(|e| e.to_string())?;
 
         // Create CDP cookie jar that syncs with the reqwest jar
         let cookie_jar = CookieJar::new(reqwest_jar.clone());

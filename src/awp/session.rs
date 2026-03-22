@@ -6,9 +6,13 @@ use reqwest::Client;
 
 use crate::js::pipeline::PipelineConfig;
 use crate::network::fetch;
+<<<<<<< HEAD
 use crate::network::intercept::{
     InterceptAction, NetworkInterceptor, ResourceType as InterceptResourceType,
 };
+=======
+use crate::network::tls::TlsConfig;
+>>>>>>> feat/tls-config
 use crate::som::metadata::StructuredData;
 use crate::som::types::Som;
 
@@ -55,6 +59,7 @@ impl Session {
         user_agent: Option<String>,
         locale: Option<String>,
         timeout_ms: Option<u64>,
+        tls_config: Option<TlsConfig>,
     ) -> Result<Self, String> {
         Self::new_with_profiles(
             id,
@@ -62,6 +67,7 @@ impl Session {
             locale,
             timeout_ms,
             crate::auth::config::profiles(),
+            tls_config,
         )
     }
 
@@ -71,6 +77,7 @@ impl Session {
         locale: Option<String>,
         timeout_ms: Option<u64>,
         auth_profiles: &[String],
+        tls_config: Option<TlsConfig>,
     ) -> Result<Self, String> {
         let ua = user_agent.unwrap_or_else(|| DEFAULT_USER_AGENT.to_string());
         let locale = locale.unwrap_or_else(|| "en-US".to_string());
@@ -84,8 +91,11 @@ impl Session {
             }
         }
 
+        // Use per-session TLS config, fall back to global, fall back to none
+        let effective_tls = tls_config.as_ref().or_else(|| crate::network::tls::global());
         let client =
-            fetch::build_client_h1_fallback(Some(&ua), jar.clone()).map_err(|e| e.to_string())?;
+            fetch::build_client_h1_fallback(Some(&ua), jar.clone(), effective_tls)
+                .map_err(|e| e.to_string())?;
 
         Ok(Session {
             id,

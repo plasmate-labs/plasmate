@@ -4,10 +4,14 @@ use tracing::{info, warn};
 
 use super::messages::{ErrorCode, Response};
 use super::session::Session;
+<<<<<<< HEAD
 use crate::network::intercept::{
     ErrorReason, FulfillParams, InterceptAction, InterceptRule, RequestOverrides, RequestPattern,
     RequestStage, ResourceType, ResponseOverrides, ResponseRule,
 };
+=======
+use crate::network::tls::TlsConfig;
+>>>>>>> feat/tls-config
 use crate::som::types::{Element, ElementRole};
 
 /// Connection state tracked per WebSocket connection.
@@ -119,7 +123,10 @@ fn handle_session_create(
         .map(String::from);
     let timeout_ms = params.get("timeout_ms").and_then(|v| v.as_u64());
 
-    match Session::new(session_id.clone(), user_agent, locale, timeout_ms) {
+    // Parse per-session TLS configuration from params
+    let tls_config = parse_tls_params(params);
+
+    match Session::new(session_id.clone(), user_agent, locale, timeout_ms, tls_config) {
         Ok(session) => {
             info!(session_id = %session.id, "Session created");
             state.session = Some(session);
@@ -1087,4 +1094,79 @@ fn update_element_value_in_list(elements: &mut [Element], element_id: &str, valu
             update_element_value_in_list(children, element_id, value);
         }
     }
+}
+
+/// Parse TLS configuration from AWP session.create params.
+///
+/// Supports:
+///   "tls": {
+///     "min_version": "1.3",
+///     "max_version": "1.3",
+///     "insecure": true,
+///     "ca_cert": "/path/to/ca.pem",
+///     "tls12_ciphers": ["TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"],
+///     "tls13_ciphers": ["TLS_AES_128_GCM_SHA256"],
+///     "alpn": ["h2", "http/1.1"],
+///     "groups": ["x25519", "secp256r1"],
+///     "sni": false
+///   }
+fn parse_tls_params(params: &serde_json::Value) -> Option<TlsConfig> {
+    let tls = params.get("tls")?;
+
+    let min_version = tls
+        .get("min_version")
+        .and_then(|v| v.as_str())
+        .and_then(|s| crate::network::tls::TlsVersion::parse(s).ok());
+
+    let max_version = tls
+        .get("max_version")
+        .and_then(|v| v.as_str())
+        .and_then(|s| crate::network::tls::TlsVersion::parse(s).ok());
+
+    let insecure = tls
+        .get("insecure")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+
+    let ca_cert_path = tls
+        .get("ca_cert")
+        .and_then(|v| v.as_str())
+        .map(std::path::PathBuf::from);
+
+    let cipher_suites_tls12 = parse_string_array(tls, "tls12_ciphers");
+    let cipher_suites_tls13 = parse_string_array(tls, "tls13_ciphers");
+    let alpn_protocols = parse_string_array(tls, "alpn");
+    let supported_groups = parse_string_array(tls, "groups");
+
+    let enable_sni = tls.get("sni").and_then(|v| v.as_bool());
+
+    let config = TlsConfig {
+        min_version,
+        max_version,
+        danger_accept_invalid_certs: insecure,
+        ca_cert_path,
+        cipher_suites_tls12,
+        cipher_suites_tls13,
+        alpn_protocols,
+        supported_groups,
+        enable_sni,
+    };
+
+    if config.is_default() {
+        None
+    } else {
+        info!(tls = %config.summary(), "Per-session TLS configuration");
+        Some(config)
+    }
+}
+
+fn parse_string_array(obj: &serde_json::Value, key: &str) -> Vec<String> {
+    obj.get(key)
+        .and_then(|v| v.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|v| v.as_str().map(String::from))
+                .collect()
+        })
+        .unwrap_or_default()
 }

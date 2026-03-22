@@ -4,6 +4,8 @@ use std::time::Instant;
 use reqwest::cookie::Jar;
 use reqwest::Client;
 
+use super::tls::TlsConfig;
+
 /// Result of fetching a URL.
 pub struct FetchResult {
     pub url: String,
@@ -38,8 +40,12 @@ pub const DEFAULT_USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_
 /// - Accepts compressed responses (gzip, brotli, deflate)
 /// - Skips unnecessary resources (we only want HTML)
 /// - Uses rustls (no OpenSSL dependency)
-pub fn build_client(user_agent: Option<&str>, cookie_jar: Arc<Jar>) -> Result<Client, FetchError> {
-    Client::builder()
+pub fn build_client(
+    user_agent: Option<&str>,
+    cookie_jar: Arc<Jar>,
+    tls_config: Option<&TlsConfig>,
+) -> Result<Client, FetchError> {
+    let mut builder = Client::builder()
         .user_agent(user_agent.unwrap_or(DEFAULT_USER_AGENT))
         .cookie_provider(cookie_jar)
         .redirect(reqwest::redirect::Policy::limited(10))
@@ -54,8 +60,12 @@ pub fn build_client(user_agent: Option<&str>, cookie_jar: Arc<Jar>) -> Result<Cl
         .tcp_nodelay(true)
         .tcp_keepalive(std::time::Duration::from_secs(60))
         // HTTP/1.1 quirks: some servers (e.g., eBay) send malformed chunked responses
-        .http1_allow_obsolete_multiline_headers_in_responses(true)
-        // HTTP/2: allow negotiation via ALPN (do not force prior knowledge)
+        .http1_allow_obsolete_multiline_headers_in_responses(true);
+    // HTTP/2: allow negotiation via ALPN (do not force prior knowledge)
+
+    builder = apply_tls_config(builder, tls_config)?;
+
+    builder
         .build()
         .map_err(|e| FetchError::NavigationFailed(format!("{e:?}")))
 }
@@ -64,8 +74,9 @@ pub fn build_client(user_agent: Option<&str>, cookie_jar: Arc<Jar>) -> Result<Cl
 pub fn build_client_h1_fallback(
     user_agent: Option<&str>,
     cookie_jar: Arc<Jar>,
+    tls_config: Option<&TlsConfig>,
 ) -> Result<Client, FetchError> {
-    Client::builder()
+    let mut builder = Client::builder()
         .user_agent(user_agent.unwrap_or(DEFAULT_USER_AGENT))
         .cookie_provider(cookie_jar)
         .redirect(reqwest::redirect::Policy::limited(10))
@@ -77,9 +88,40 @@ pub fn build_client_h1_fallback(
         .tcp_nodelay(true)
         .tcp_keepalive(std::time::Duration::from_secs(60))
         // HTTP/1.1 quirks: some servers (e.g., eBay) send malformed chunked responses
-        .http1_allow_obsolete_multiline_headers_in_responses(true)
+        .http1_allow_obsolete_multiline_headers_in_responses(true);
+
+    builder = apply_tls_config(builder, tls_config)?;
+
+    builder
         .build()
         .map_err(|e| FetchError::NavigationFailed(format!("{e:?}")))
+}
+
+/// Apply TLS configuration to a reqwest ClientBuilder.
+///
+/// Two paths:
+/// - Simple: uses reqwest's built-in TLS methods (min/max version, insecure, CA certs)
+/// - Advanced: builds a custom rustls::ClientConfig for cipher suite / ALPN / group control
+fn apply_tls_config(
+    builder: reqwest::ClientBuilder,
+    tls_config: Option<&TlsConfig>,
+) -> Result<reqwest::ClientBuilder, FetchError> {
+    let tls = match tls_config {
+        Some(c) if !c.is_default() => c,
+        _ => return Ok(builder),
+    };
+
+    if tls.needs_custom_rustls() {
+        // Advanced path: build rustls::ClientConfig directly
+        let rustls_config = tls
+            .build_rustls_config()
+            .map_err(FetchError::NavigationFailed)?;
+        Ok(builder.use_preconfigured_tls(rustls_config))
+    } else {
+        // Simple path: use reqwest's built-in TLS methods
+        tls.apply_to_reqwest(builder)
+            .map_err(FetchError::NavigationFailed)
+    }
 }
 
 /// Fetch a URL and return the HTML content.
