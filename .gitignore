@@ -17,3 +17,6 @@ __pycache__/
 # MCP registry publisher tokens
 .mcpregistry_*
 .vercel
+packages/*/node_modules/
+packages/*/.venv/
+packages/*/dist/
