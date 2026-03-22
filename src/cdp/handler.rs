@@ -339,7 +339,21 @@ async fn handle_cdp_request_inner(
             (domains::network_clear_browser_cookies(id, target), vec![])
         }
         "Network.setRequestInterception" => {
-            (CdpResponse::success(id, serde_json::json!({})), vec![])
+            // Legacy API — forward to Fetch.enable for compatibility
+            (domains::fetch_enable(id, params, target), vec![])
+        }
+
+        // ---- Fetch (network interception) ----
+        "Fetch.enable" => (domains::fetch_enable(id, params, target), vec![]),
+        "Fetch.disable" => (domains::fetch_disable(id, target), vec![]),
+        "Fetch.fulfillRequest" => (domains::fetch_fulfill_request(id, params, target), vec![]),
+        "Fetch.failRequest" => (domains::fetch_fail_request(id, params, target), vec![]),
+        "Fetch.continueRequest" => (domains::fetch_continue_request(id, params, target), vec![]),
+        "Fetch.continueResponse" => {
+            (domains::fetch_continue_response(id, params, target), vec![])
+        }
+        "Fetch.getResponseBody" => {
+            (domains::fetch_get_response_body(id, params, target), vec![])
         }
 
         // ---- Emulation ----
@@ -429,8 +443,6 @@ async fn handle_cdp_request_inner(
         | "Security.enable"
         | "Security.disable"
         | "Security.setIgnoreCertificateErrors"
-        | "Fetch.enable"
-        | "Fetch.disable"
         | "ServiceWorker.enable"
         | "ServiceWorker.disable"
         | "CSS.enable"

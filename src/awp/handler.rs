@@ -4,6 +4,10 @@ use tracing::{info, warn};
 
 use super::messages::{ErrorCode, Response};
 use super::session::Session;
+use crate::network::intercept::{
+    ErrorReason, FulfillParams, InterceptAction, InterceptRule, RequestOverrides, RequestPattern,
+    RequestStage, ResourceType, ResponseOverrides, ResponseRule,
+};
 use crate::som::types::{Element, ElementRole};
 
 /// Connection state tracked per WebSocket connection.
@@ -45,6 +49,14 @@ pub async fn handle_request(
         "page.observe" => handle_page_observe(id, params, state),
         "page.act" => handle_page_act(id, params, state).await,
         "page.extract" => handle_page_extract(id, params, state),
+        "network.enableInterception" => handle_network_enable_interception(id, params, state),
+        "network.disableInterception" => handle_network_disable_interception(id, params, state),
+        "network.addRule" => handle_network_add_rule(id, params, state),
+        "network.removeRule" => handle_network_remove_rule(id, params, state),
+        "network.clearRules" => handle_network_clear_rules(id, params, state),
+        "network.getInterceptedRequests" => {
+            handle_network_get_intercepted_requests(id, params, state)
+        }
         _ => Response::error(
             id,
             ErrorCode::InvalidRequest,
@@ -80,7 +92,7 @@ fn handle_hello(id: &str, params: &serde_json::Value, state: &mut ConnectionStat
             "awp_version": "0.1",
             "server_name": "plasmate",
             "server_version": "0.1.0",
-            "features": ["som.snapshot", "act.primitive", "extract"]
+            "features": ["som.snapshot", "act.primitive", "extract", "network.intercept"]
         }),
     )
 }
@@ -511,6 +523,336 @@ fn handle_page_extract(
         json!({
             "data": data,
             "provenance": provenance
+        }),
+    )
+}
+
+// ============================================================
+// NETWORK INTERCEPTION
+// ============================================================
+
+fn handle_network_enable_interception(
+    id: &str,
+    params: &serde_json::Value,
+    state: &mut ConnectionState,
+) -> Response {
+    let session_id = params
+        .get("session_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+
+    let session = match &mut state.session {
+        Some(s) if s.id == session_id => s,
+        _ => {
+            return Response::error(
+                id,
+                ErrorCode::NotFound,
+                &format!("Session not found: {}", session_id),
+            )
+        }
+    };
+
+    let patterns = params
+        .get("patterns")
+        .and_then(|v| v.as_array())
+        .map(|arr| {
+            arr.iter()
+                .map(|p| {
+                    let url_pattern = p
+                        .get("url_pattern")
+                        .and_then(|v| v.as_str())
+                        .map(String::from);
+                    let resource_type = p
+                        .get("resource_type")
+                        .and_then(|v| v.as_str())
+                        .map(ResourceType::from_cdp_str);
+                    let request_stage = p
+                        .get("stage")
+                        .and_then(|v| v.as_str())
+                        .map(|s| match s {
+                            "response" | "Response" => RequestStage::Response,
+                            _ => RequestStage::Request,
+                        })
+                        .unwrap_or(RequestStage::Request);
+
+                    RequestPattern {
+                        url_pattern,
+                        resource_type,
+                        request_stage,
+                    }
+                })
+                .collect()
+        })
+        .unwrap_or_else(|| {
+            vec![RequestPattern {
+                url_pattern: Some("*".to_string()),
+                resource_type: None,
+                request_stage: RequestStage::Request,
+            }]
+        });
+
+    session.interceptor.enable(patterns);
+    info!("AWP network interception enabled");
+    Response::success(id, json!({"enabled": true}))
+}
+
+fn handle_network_disable_interception(
+    id: &str,
+    params: &serde_json::Value,
+    state: &mut ConnectionState,
+) -> Response {
+    let session_id = params
+        .get("session_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+
+    let session = match &mut state.session {
+        Some(s) if s.id == session_id => s,
+        _ => {
+            return Response::error(
+                id,
+                ErrorCode::NotFound,
+                &format!("Session not found: {}", session_id),
+            )
+        }
+    };
+
+    session.interceptor.disable();
+    info!("AWP network interception disabled");
+    Response::success(id, json!({"enabled": false}))
+}
+
+fn handle_network_add_rule(
+    id: &str,
+    params: &serde_json::Value,
+    state: &mut ConnectionState,
+) -> Response {
+    let session_id = params
+        .get("session_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+
+    let session = match &mut state.session {
+        Some(s) if s.id == session_id => s,
+        _ => {
+            return Response::error(
+                id,
+                ErrorCode::NotFound,
+                &format!("Session not found: {}", session_id),
+            )
+        }
+    };
+
+    let rule = match params.get("rule") {
+        Some(r) => r,
+        None => {
+            return Response::error(
+                id,
+                ErrorCode::InvalidRequest,
+                "Missing required param: rule",
+            )
+        }
+    };
+
+    let url_pattern = rule
+        .get("url_pattern")
+        .and_then(|v| v.as_str())
+        .map(String::from);
+    let resource_type = rule
+        .get("resource_type")
+        .and_then(|v| v.as_str())
+        .map(ResourceType::from_cdp_str);
+
+    let action_str = rule
+        .get("action")
+        .and_then(|v| v.as_str())
+        .unwrap_or("continue");
+
+    let stage = rule
+        .get("stage")
+        .and_then(|v| v.as_str())
+        .unwrap_or("request");
+
+    if stage == "response" {
+        // Response modification rule
+        let status = rule.get("status").and_then(|v| v.as_u64()).map(|s| s as u16);
+        let body = rule.get("body").and_then(|v| v.as_str()).map(String::from);
+
+        session.interceptor.add_response_rule(ResponseRule {
+            pattern: RequestPattern {
+                url_pattern,
+                resource_type,
+                request_stage: RequestStage::Response,
+            },
+            overrides: ResponseOverrides {
+                status,
+                headers: None,
+                body,
+            },
+        });
+
+        return Response::success(id, json!({"added": true, "stage": "response"}));
+    }
+
+    // Request-stage rule
+    let action = match action_str {
+        "block" | "fail" => {
+            let reason = rule
+                .get("error_reason")
+                .and_then(|v| v.as_str())
+                .map(ErrorReason::from_cdp_str)
+                .unwrap_or(ErrorReason::BlockedByClient);
+            InterceptAction::Fail(reason)
+        }
+        "fulfill" | "mock" => {
+            let status = rule
+                .get("status")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(200) as u16;
+            let body = rule.get("body").and_then(|v| v.as_str()).map(String::from);
+            let headers: Vec<(String, String)> = rule
+                .get("headers")
+                .and_then(|v| v.as_object())
+                .map(|obj| {
+                    obj.iter()
+                        .filter_map(|(k, v)| Some((k.clone(), v.as_str()?.to_string())))
+                        .collect()
+                })
+                .unwrap_or_default();
+            InterceptAction::Fulfill(FulfillParams {
+                status,
+                headers,
+                body,
+            })
+        }
+        _ => {
+            // "continue" with optional overrides
+            let url = rule.get("redirect_url").and_then(|v| v.as_str()).map(String::from);
+            let has_overrides = url.is_some();
+            if has_overrides {
+                InterceptAction::Continue(Some(RequestOverrides {
+                    url,
+                    ..Default::default()
+                }))
+            } else {
+                InterceptAction::Continue(None)
+            }
+        }
+    };
+
+    session.interceptor.add_rule(InterceptRule {
+        pattern: RequestPattern {
+            url_pattern,
+            resource_type,
+            request_stage: RequestStage::Request,
+        },
+        action,
+    });
+
+    Response::success(id, json!({"added": true, "stage": "request"}))
+}
+
+fn handle_network_remove_rule(
+    id: &str,
+    params: &serde_json::Value,
+    state: &mut ConnectionState,
+) -> Response {
+    let session_id = params
+        .get("session_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+
+    let session = match &mut state.session {
+        Some(s) if s.id == session_id => s,
+        _ => {
+            return Response::error(
+                id,
+                ErrorCode::NotFound,
+                &format!("Session not found: {}", session_id),
+            )
+        }
+    };
+
+    let url_pattern = match params.get("url_pattern").and_then(|v| v.as_str()) {
+        Some(p) => p,
+        None => {
+            return Response::error(
+                id,
+                ErrorCode::InvalidRequest,
+                "Missing required param: url_pattern",
+            )
+        }
+    };
+
+    session.interceptor.remove_rules_by_url(url_pattern);
+    Response::success(id, json!({"removed": true}))
+}
+
+fn handle_network_clear_rules(
+    id: &str,
+    params: &serde_json::Value,
+    state: &mut ConnectionState,
+) -> Response {
+    let session_id = params
+        .get("session_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+
+    let session = match &mut state.session {
+        Some(s) if s.id == session_id => s,
+        _ => {
+            return Response::error(
+                id,
+                ErrorCode::NotFound,
+                &format!("Session not found: {}", session_id),
+            )
+        }
+    };
+
+    session.interceptor.clear_rules();
+    Response::success(id, json!({"cleared": true}))
+}
+
+fn handle_network_get_intercepted_requests(
+    id: &str,
+    params: &serde_json::Value,
+    state: &mut ConnectionState,
+) -> Response {
+    let session_id = params
+        .get("session_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+
+    let session = match &state.session {
+        Some(s) if s.id == session_id => s,
+        _ => {
+            return Response::error(
+                id,
+                ErrorCode::NotFound,
+                &format!("Session not found: {}", session_id),
+            )
+        }
+    };
+
+    let log = session.interceptor.intercepted_log();
+    let entries: Vec<serde_json::Value> = log
+        .iter()
+        .map(|entry| {
+            json!({
+                "request_id": entry.request_id,
+                "url": entry.url,
+                "method": entry.method,
+                "resource_type": entry.resource_type,
+                "is_navigation": entry.is_navigation,
+            })
+        })
+        .collect();
+
+    Response::success(
+        id,
+        json!({
+            "requests": entries,
+            "count": entries.len(),
         }),
     )
 }

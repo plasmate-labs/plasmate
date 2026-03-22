@@ -170,6 +170,89 @@ pub async fn fetch_url(
     })
 }
 
+/// Fetch a URL with additional headers (for interception overrides).
+pub async fn fetch_url_with_headers(
+    client: &Client,
+    url: &str,
+    timeout_ms: u64,
+    extra_headers: &std::collections::HashMap<String, String>,
+) -> Result<FetchResult, FetchError> {
+    let start = Instant::now();
+
+    let mut req = client
+        .get(url)
+        .header(
+            "Accept",
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        )
+        .header("Accept-Language", "en-US,en;q=0.9")
+        .header("Accept-Encoding", "gzip, deflate, br")
+        .header("Sec-Fetch-Dest", "document")
+        .header("Sec-Fetch-Mode", "navigate")
+        .header("Sec-Fetch-Site", "none")
+        .header("Sec-Fetch-User", "?1")
+        .header("Upgrade-Insecure-Requests", "1")
+        .header("Cache-Control", "max-age=0")
+        .header("sec-ch-ua", "\"Chromium\";v=\"128\", \"Not;A=Brand\";v=\"24\"")
+        .header("sec-ch-ua-mobile", "?0")
+        .header("sec-ch-ua-platform", "\"macOS\"");
+
+    for (k, v) in extra_headers {
+        req = req.header(k.as_str(), v.as_str());
+    }
+
+    let response = tokio::time::timeout(std::time::Duration::from_millis(timeout_ms), req.send())
+        .await
+        .map_err(|_| FetchError::Timeout(timeout_ms))?
+        .map_err(|e| FetchError::NavigationFailed(format!("{e:?}")))?;
+
+    let status = response.status().as_u16();
+    let final_url = response.url().to_string();
+    let content_type = response
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("text/html")
+        .to_string();
+
+    let set_cookies: Vec<String> = response
+        .headers()
+        .get_all("set-cookie")
+        .iter()
+        .filter_map(|v| v.to_str().ok())
+        .map(|s| s.to_string())
+        .collect();
+
+    if status >= 400 {
+        return Err(FetchError::HttpError {
+            status,
+            url: final_url,
+        });
+    }
+
+    let html = match response.bytes().await {
+        Ok(bytes) => String::from_utf8_lossy(&bytes).into_owned(),
+        Err(e) => {
+            return Err(FetchError::NavigationFailed(format!(
+                "Body decode error: {e:?}"
+            )));
+        }
+    };
+
+    let html_bytes = html.len();
+    let load_ms = start.elapsed().as_millis() as u64;
+
+    Ok(FetchResult {
+        url: final_url,
+        status,
+        content_type,
+        html,
+        html_bytes,
+        load_ms,
+        set_cookies,
+    })
+}
+
 /// Fetch multiple URLs concurrently using a shared client (connection reuse).
 pub async fn fetch_urls_parallel(
     client: &Client,
