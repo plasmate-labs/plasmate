@@ -3250,6 +3250,397 @@ impl JsRuntime {
     pub fn scripts_executed(&self) -> usize {
         self.scripts_executed
     }
+
+    /// Inject the DOM bridge into the V8 context.
+    ///
+    /// This creates a `__plasmate_dom` global object with native functions
+    /// that map to `NodeRegistry` operations, enabling JS frameworks to
+    /// manipulate the virtual DOM tree.
+    pub fn inject_dom_bridge(&mut self, registry: NodeRegistry) {
+        // Store in thread_local
+        DOM_REGISTRY.with(|reg| {
+            *reg.borrow_mut() = Some(registry);
+        });
+
+        // Get V8 context
+        let context = match &self.context {
+            Some(ctx) => ctx.clone(),
+            None => return,
+        };
+
+        let scope = &mut v8::HandleScope::new(&mut self.isolate);
+        let context = v8::Local::new(scope, context);
+        let scope = &mut v8::ContextScope::new(scope, context);
+        let global = context.global(scope);
+
+        // Create __plasmate_dom object
+        let dom_obj = v8::Object::new(scope);
+
+        // Helper macro to add function to object
+        macro_rules! add_fn {
+            ($obj:expr, $scope:expr, $name:expr, $callback:expr) => {
+                if let Some(func) = v8::Function::new($scope, $callback) {
+                    let key = v8::String::new($scope, $name).unwrap();
+                    $obj.set($scope, key.into(), func.into());
+                }
+            };
+        }
+
+        add_fn!(dom_obj, scope, "createElement", dom_create_element_callback);
+        add_fn!(dom_obj, scope, "createTextNode", dom_create_text_callback);
+        add_fn!(dom_obj, scope, "appendChild", dom_append_child_callback);
+        add_fn!(dom_obj, scope, "removeChild", dom_remove_child_callback);
+        add_fn!(dom_obj, scope, "setAttribute", dom_set_attribute_callback);
+        add_fn!(dom_obj, scope, "getAttribute", dom_get_attribute_callback);
+        add_fn!(dom_obj, scope, "setTextContent", dom_set_text_content_callback);
+        add_fn!(dom_obj, scope, "getTextContent", dom_get_text_content_callback);
+        add_fn!(dom_obj, scope, "getChildren", dom_get_children_callback);
+        add_fn!(dom_obj, scope, "getParent", dom_get_parent_callback);
+        add_fn!(dom_obj, scope, "querySelector", dom_query_selector_callback);
+        add_fn!(dom_obj, scope, "querySelectorAll", dom_query_selector_all_callback);
+        add_fn!(dom_obj, scope, "getTagName", dom_get_tag_name_callback);
+        add_fn!(dom_obj, scope, "getNodeType", dom_get_node_type_callback);
+
+        // Set bodyId and documentId properties if available
+        DOM_REGISTRY.with(|reg| {
+            if let Some(ref registry) = *reg.borrow() {
+                if let Some(body_id) = registry.body_id() {
+                    let key = v8::String::new(scope, "bodyId").unwrap();
+                    let val = v8::Integer::new(scope, body_id as i32);
+                    dom_obj.set(scope, key.into(), val.into());
+                }
+                if let Some(doc_id) = registry.document_id() {
+                    let key = v8::String::new(scope, "documentId").unwrap();
+                    let val = v8::Integer::new(scope, doc_id as i32);
+                    dom_obj.set(scope, key.into(), val.into());
+                }
+            }
+        });
+
+        let dom_key = v8::String::new(scope, "__plasmate_dom").unwrap();
+        global.set(scope, dom_key.into(), dom_obj.into());
+        debug!("DOM bridge injected into V8 context");
+    }
+
+    /// Take the NodeRegistry back from thread-local storage after JS execution.
+    pub fn take_registry(&mut self) -> Option<NodeRegistry> {
+        DOM_REGISTRY.with(|reg| reg.borrow_mut().take())
+    }
+}
+
+// ---------------------------------------------------------------------------
+// DOM bridge V8 callbacks
+// ---------------------------------------------------------------------------
+
+/// Helper to extract a u32 from V8 function arguments.
+fn v8_get_u32(
+    scope: &mut v8::HandleScope,
+    args: &v8::FunctionCallbackArguments,
+    idx: i32,
+) -> Option<u32> {
+    if args.length() <= idx {
+        return None;
+    }
+    let val = args.get(idx);
+    if val.is_uint32() {
+        Some(val.uint32_value(scope).unwrap_or(0))
+    } else if val.is_number() {
+        Some(val.number_value(scope).unwrap_or(0.0) as u32)
+    } else {
+        None
+    }
+}
+
+fn dom_create_element_callback(
+    scope: &mut v8::HandleScope,
+    args: v8::FunctionCallbackArguments,
+    mut rv: v8::ReturnValue,
+) {
+    let tag = if args.length() > 0 {
+        args.get(0).to_rust_string_lossy(scope)
+    } else {
+        return;
+    };
+    DOM_REGISTRY.with(|reg| {
+        if let Some(ref mut registry) = *reg.borrow_mut() {
+            let id = registry.create_element(&tag);
+            rv.set(v8::Integer::new(scope, id as i32).into());
+        }
+    });
+}
+
+fn dom_create_text_callback(
+    scope: &mut v8::HandleScope,
+    args: v8::FunctionCallbackArguments,
+    mut rv: v8::ReturnValue,
+) {
+    let text = if args.length() > 0 {
+        args.get(0).to_rust_string_lossy(scope)
+    } else {
+        return;
+    };
+    DOM_REGISTRY.with(|reg| {
+        if let Some(ref mut registry) = *reg.borrow_mut() {
+            let id = registry.create_text(&text);
+            rv.set(v8::Integer::new(scope, id as i32).into());
+        }
+    });
+}
+
+fn dom_append_child_callback(
+    scope: &mut v8::HandleScope,
+    args: v8::FunctionCallbackArguments,
+    mut _rv: v8::ReturnValue,
+) {
+    let parent_id = match v8_get_u32(scope, &args, 0) {
+        Some(v) => v,
+        None => return,
+    };
+    let child_id = match v8_get_u32(scope, &args, 1) {
+        Some(v) => v,
+        None => return,
+    };
+    DOM_REGISTRY.with(|reg| {
+        if let Some(ref registry) = *reg.borrow() {
+            let _ = registry.append_child(parent_id, child_id);
+        }
+    });
+}
+
+fn dom_remove_child_callback(
+    scope: &mut v8::HandleScope,
+    args: v8::FunctionCallbackArguments,
+    mut _rv: v8::ReturnValue,
+) {
+    let parent_id = match v8_get_u32(scope, &args, 0) {
+        Some(v) => v,
+        None => return,
+    };
+    let child_id = match v8_get_u32(scope, &args, 1) {
+        Some(v) => v,
+        None => return,
+    };
+    DOM_REGISTRY.with(|reg| {
+        if let Some(ref registry) = *reg.borrow() {
+            let _ = registry.remove_child(parent_id, child_id);
+        }
+    });
+}
+
+fn dom_set_attribute_callback(
+    scope: &mut v8::HandleScope,
+    args: v8::FunctionCallbackArguments,
+    mut _rv: v8::ReturnValue,
+) {
+    let id = match v8_get_u32(scope, &args, 0) {
+        Some(v) => v,
+        None => return,
+    };
+    let name = if args.length() > 1 {
+        args.get(1).to_rust_string_lossy(scope)
+    } else {
+        return;
+    };
+    let value = if args.length() > 2 {
+        args.get(2).to_rust_string_lossy(scope)
+    } else {
+        return;
+    };
+    DOM_REGISTRY.with(|reg| {
+        if let Some(ref registry) = *reg.borrow() {
+            let _ = registry.set_attribute(id, &name, &value);
+        }
+    });
+}
+
+fn dom_get_attribute_callback(
+    scope: &mut v8::HandleScope,
+    args: v8::FunctionCallbackArguments,
+    mut rv: v8::ReturnValue,
+) {
+    let id = match v8_get_u32(scope, &args, 0) {
+        Some(v) => v,
+        None => return,
+    };
+    let name = if args.length() > 1 {
+        args.get(1).to_rust_string_lossy(scope)
+    } else {
+        return;
+    };
+    DOM_REGISTRY.with(|reg| {
+        if let Some(ref registry) = *reg.borrow() {
+            if let Some(val) = registry.get_attribute(id, &name) {
+                rv.set(v8::String::new(scope, &val).unwrap().into());
+            }
+            // else rv stays undefined
+        }
+    });
+}
+
+fn dom_set_text_content_callback(
+    scope: &mut v8::HandleScope,
+    args: v8::FunctionCallbackArguments,
+    mut _rv: v8::ReturnValue,
+) {
+    let id = match v8_get_u32(scope, &args, 0) {
+        Some(v) => v,
+        None => return,
+    };
+    let text = if args.length() > 1 {
+        args.get(1).to_rust_string_lossy(scope)
+    } else {
+        return;
+    };
+    DOM_REGISTRY.with(|reg| {
+        if let Some(ref mut registry) = *reg.borrow_mut() {
+            let _ = registry.set_text_content(id, &text);
+        }
+    });
+}
+
+fn dom_get_text_content_callback(
+    scope: &mut v8::HandleScope,
+    args: v8::FunctionCallbackArguments,
+    mut rv: v8::ReturnValue,
+) {
+    let id = match v8_get_u32(scope, &args, 0) {
+        Some(v) => v,
+        None => return,
+    };
+    DOM_REGISTRY.with(|reg| {
+        if let Some(ref registry) = *reg.borrow() {
+            let text = registry.get_text_content(id);
+            rv.set(v8::String::new(scope, &text).unwrap().into());
+        }
+    });
+}
+
+fn dom_get_children_callback(
+    scope: &mut v8::HandleScope,
+    args: v8::FunctionCallbackArguments,
+    mut rv: v8::ReturnValue,
+) {
+    let id = match v8_get_u32(scope, &args, 0) {
+        Some(v) => v,
+        None => return,
+    };
+    DOM_REGISTRY.with(|reg| {
+        if let Some(ref registry) = *reg.borrow() {
+            let ids = registry.get_children(id);
+            let arr = v8::Array::new(scope, ids.len() as i32);
+            for (i, child_id) in ids.iter().enumerate() {
+                let val = v8::Integer::new(scope, *child_id as i32);
+                arr.set_index(scope, i as u32, val.into());
+            }
+            rv.set(arr.into());
+        }
+    });
+}
+
+fn dom_get_parent_callback(
+    scope: &mut v8::HandleScope,
+    args: v8::FunctionCallbackArguments,
+    mut rv: v8::ReturnValue,
+) {
+    let id = match v8_get_u32(scope, &args, 0) {
+        Some(v) => v,
+        None => return,
+    };
+    DOM_REGISTRY.with(|reg| {
+        if let Some(ref registry) = *reg.borrow() {
+            if let Some(parent_id) = registry.get_parent(id) {
+                rv.set(v8::Integer::new(scope, parent_id as i32).into());
+            }
+            // else rv stays undefined
+        }
+    });
+}
+
+fn dom_query_selector_callback(
+    scope: &mut v8::HandleScope,
+    args: v8::FunctionCallbackArguments,
+    mut rv: v8::ReturnValue,
+) {
+    let root_id = match v8_get_u32(scope, &args, 0) {
+        Some(v) => v,
+        None => return,
+    };
+    let selector = if args.length() > 1 {
+        args.get(1).to_rust_string_lossy(scope)
+    } else {
+        return;
+    };
+    DOM_REGISTRY.with(|reg| {
+        if let Some(ref registry) = *reg.borrow() {
+            if let Some(found_id) = registry.query_selector(root_id, &selector) {
+                rv.set(v8::Integer::new(scope, found_id as i32).into());
+            }
+            // else rv stays undefined
+        }
+    });
+}
+
+fn dom_query_selector_all_callback(
+    scope: &mut v8::HandleScope,
+    args: v8::FunctionCallbackArguments,
+    mut rv: v8::ReturnValue,
+) {
+    let root_id = match v8_get_u32(scope, &args, 0) {
+        Some(v) => v,
+        None => return,
+    };
+    let selector = if args.length() > 1 {
+        args.get(1).to_rust_string_lossy(scope)
+    } else {
+        return;
+    };
+    DOM_REGISTRY.with(|reg| {
+        if let Some(ref registry) = *reg.borrow() {
+            let ids = registry.query_selector_all(root_id, &selector);
+            let arr = v8::Array::new(scope, ids.len() as i32);
+            for (i, found_id) in ids.iter().enumerate() {
+                let val = v8::Integer::new(scope, *found_id as i32);
+                arr.set_index(scope, i as u32, val.into());
+            }
+            rv.set(arr.into());
+        }
+    });
+}
+
+fn dom_get_tag_name_callback(
+    scope: &mut v8::HandleScope,
+    args: v8::FunctionCallbackArguments,
+    mut rv: v8::ReturnValue,
+) {
+    let id = match v8_get_u32(scope, &args, 0) {
+        Some(v) => v,
+        None => return,
+    };
+    DOM_REGISTRY.with(|reg| {
+        if let Some(ref registry) = *reg.borrow() {
+            if let Some(tag) = registry.get_tag_name(id) {
+                rv.set(v8::String::new(scope, &tag).unwrap().into());
+            }
+            // else rv stays undefined
+        }
+    });
+}
+
+fn dom_get_node_type_callback(
+    scope: &mut v8::HandleScope,
+    args: v8::FunctionCallbackArguments,
+    mut rv: v8::ReturnValue,
+) {
+    let id = match v8_get_u32(scope, &args, 0) {
+        Some(v) => v,
+        None => return,
+    };
+    DOM_REGISTRY.with(|reg| {
+        if let Some(ref registry) = *reg.borrow() {
+            let node_type = registry.get_node_type(id);
+            rv.set(v8::Integer::new(scope, node_type as i32).into());
+        }
+    });
 }
 
 /// V8 callback for the fetch bridge.
