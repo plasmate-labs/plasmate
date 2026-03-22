@@ -26,17 +26,8 @@ Plasmate's roadmap is public and standards-first. We ship compression and correc
 - [ ] Benchmark blog post and interactive results page
 - [ ] Framework PRs submitted upstream (Browser Use, LangChain)
 
-## v0.3: Production Engine (Next)
+## v0.3: Engine Hardening (Next)
 
-- SOM Cache (in-memory + on-disk, differential updates)
-- Parallel Session Manager (500+ concurrent sessions per 8GB)
-- Stealth networking (TLS fingerprint control, proxy rotation)
-- Wasm Skill System + marketplace
-- Network request interception
-
-## v0.4+: Commercial Platform
-
-- Plasmate Cloud (fleet orchestration)
-- Managed proxy network
-- Enterprise SSO, SOC 2
-- Skill marketplace
+- Network request interception (intercept, modify, mock, block)
+- TLS configuration (cipher suites, TLS version control, fingerprint tuning)
+- Wasm plugin system (extend the SOM pipeline with loadable modules)
