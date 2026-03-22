@@ -1,6 +1,6 @@
 # Coverage Scorecard
 
-This page shows Plasmate's real-world coverage across a curated set of 100 agent-relevant pages.
+Real-world compression across 100 agent-relevant websites. Plasmate's SOM compiler reduces HTML to a semantic representation that agents can reason about efficiently. Higher compression = fewer tokens = lower cost.
 
 - Data source: `coverage.json`
 - Generator: `plasmate coverage --urls bench/top100.txt --output website/docs/coverage.json`
@@ -16,17 +16,15 @@ This page shows Plasmate's real-world coverage across a curated set of 100 agent
   <table id="coverage-table">
     <thead>
       <tr>
-        <th>Status</th>
         <th>URL</th>
         <th>HTTP</th>
-        <th>Title</th>
+        <th>Compression</th>
         <th>HTML bytes</th>
         <th>SOM bytes</th>
         <th>Elements</th>
         <th>Interactive</th>
-        <th>Fetch ms</th>
-        <th>Pipeline ms</th>
-        <th>Error</th>
+        <th>Parse ms</th>
+        <th>Status</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -53,10 +51,16 @@ This page shows Plasmate's real-world coverage across a curated set of 100 agent
     return String(n);
   }
 
+  function fmtRatio(n) {
+    if (n === null || n === undefined) return '';
+    return n.toFixed(1) + 'x';
+  }
+
   function statusBadge(status) {
     const s = String(status || '');
-    const color = s === 'ok' ? '#3bd4a7' : (s === 'thin' ? '#F5C842' : '#E8853A');
-    return `<span style="display:inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(240,237,232,0.18); background: rgba(240,237,232,0.04); color: ${color}; font-family: var(--font-mono); font-size: 11px;">${esc(s)}</span>`;
+    if (s === 'ok') return `<span style="display:inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(240,237,232,0.18); background: rgba(240,237,232,0.04); color: #3bd4a7; font-family: var(--font-mono); font-size: 11px;">ok</span>`;
+    if (s === 'blocked') return `<span style="display:inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(240,237,232,0.18); background: rgba(240,237,232,0.04); color: #F5C842; font-family: var(--font-mono); font-size: 11px;">\uD83D\uDD12 blocked</span>`;
+    return `<span style="display:inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(240,237,232,0.18); background: rgba(240,237,232,0.04); color: #E8853A; font-family: var(--font-mono); font-size: 11px;">${esc(s)}</span>`;
   }
 
   try {
@@ -65,37 +69,40 @@ This page shows Plasmate's real-world coverage across a curated set of 100 agent
     const data = await res.json();
 
     const s = data.summary || {};
+    const parseable = (s.urls_total || 0) - (s.blocked || 0);
     summaryEl.innerHTML = `
       <div style="display:flex; flex-wrap:wrap; gap: 14px; align-items:baseline;">
-        <div><strong>Full</strong>: ${fmt(s.ok)} / ${fmt(s.urls_total)} (${fmt((s.ok_percent || 0).toFixed ? s.ok_percent.toFixed(1) : s.ok_percent)}%)</div>
-        <div><strong>Thin</strong>: ${fmt(s.thin)}</div>
-        <div><strong>Failed</strong>: ${fmt(s.failed)}</div>
+        <div><strong>Parsed</strong>: ${fmt(s.ok)} / ${fmt(parseable)} sites (${fmt((s.parsed_percent || 0).toFixed ? s.parsed_percent.toFixed(1) : s.parsed_percent)}%)</div>
+        <div><strong>Median compression</strong>: ${fmtRatio(s.median_ratio)}</div>
+        <div><strong>Mean compression</strong>: ${fmtRatio(s.mean_ratio)}</div>
+        <div><strong>Blocked</strong>: ${fmt(s.blocked)} <span style="color: rgba(240,237,232,0.52); font-size: 11px;">(sites that returned 403/401)</span></div>
         <div style="color: rgba(240,237,232,0.72); font-family: var(--font-mono); font-size: 11px;">Generated: ${esc(data.generated_at_utc || '')}, version: ${esc(data.plasmate_version || '')}</div>
       </div>
     `;
 
     const results = Array.isArray(data.results) ? data.results : [];
+
+    // Sort by compression ratio descending (best results first).
+    results.sort((a, b) => (b.compression_ratio || 0) - (a.compression_ratio || 0));
+
     tbody.innerHTML = results.map(r => {
       const url = r.final_url || r.input_url;
-      const title = r.title || '';
       const http = r.http_status || '';
-      const err = r.error || '';
+      const parseMs = r.pipeline_ms != null ? r.pipeline_ms : r.fetch_ms;
 
       return `
         <tr>
-          <td>${statusBadge(r.status)}</td>
           <td style="max-width: 320px; overflow:hidden; text-overflow: ellipsis; white-space: nowrap;">
             <a href="${esc(url)}" target="_blank" rel="noreferrer">${esc(url)}</a>
           </td>
           <td>${esc(http)}</td>
-          <td style="max-width: 240px; overflow:hidden; text-overflow: ellipsis; white-space: nowrap;">${esc(title)}</td>
+          <td>${fmtRatio(r.compression_ratio)}</td>
           <td>${esc(fmt(r.html_bytes))}</td>
           <td>${esc(fmt(r.som_bytes))}</td>
           <td>${esc(fmt(r.element_count))}</td>
           <td>${esc(fmt(r.interactive_count))}</td>
-          <td>${esc(fmt(r.fetch_ms))}</td>
-          <td>${esc(fmt(r.pipeline_ms))}</td>
-          <td style="max-width: 280px; overflow:hidden; text-overflow: ellipsis; white-space: nowrap;">${esc(err)}</td>
+          <td>${esc(fmt(parseMs))}</td>
+          <td>${statusBadge(r.status)}</td>
         </tr>
       `;
     }).join('');

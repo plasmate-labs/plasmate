@@ -57,7 +57,7 @@ impl Default for CoverageOptions {
 #[serde(rename_all = "snake_case")]
 pub enum CoverageStatus {
     Ok,
-    Thin,
+    Blocked,
     Failed,
 }
 
@@ -84,6 +84,7 @@ pub struct CoverageResult {
 
     pub html_bytes: Option<usize>,
     pub som_bytes: Option<usize>,
+    pub compression_ratio: Option<f64>,
     pub element_count: Option<usize>,
     pub interactive_count: Option<usize>,
 
@@ -108,9 +109,12 @@ pub struct CoverageBreakdownItem {
 pub struct CoverageSummary {
     pub urls_total: usize,
     pub ok: usize,
-    pub thin: usize,
+    pub blocked: usize,
     pub failed: usize,
-    pub ok_percent: f64,
+    pub parsed_percent: f64,
+    pub median_ratio: f64,
+    pub mean_ratio: f64,
+    pub p95_ratio: f64,
     pub breakdown: Vec<CoverageBreakdownItem>,
 }
 
@@ -165,19 +169,20 @@ fn classify_fetch_error(err: &fetch::FetchError) -> (FailureKind, String) {
     }
 }
 
-fn is_thin(som_bytes: usize, element_count: usize, interactive_count: usize) -> bool {
-    // Conservative thresholds, goal is to flag pages that are technically "ok" but likely useless.
-    // We can tune after the first few runs.
-    if som_bytes < 300 {
-        return true;
+fn compute_ratio_stats(ratios: &mut Vec<f64>) -> (f64, f64, f64) {
+    if ratios.is_empty() {
+        return (0.0, 0.0, 0.0);
     }
-    if element_count < 15 {
-        return true;
-    }
-    if interactive_count == 0 && element_count < 40 {
-        return true;
-    }
-    false
+    ratios.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    let mean = ratios.iter().sum::<f64>() / ratios.len() as f64;
+    let median = if ratios.len() % 2 == 0 {
+        (ratios[ratios.len() / 2 - 1] + ratios[ratios.len() / 2]) / 2.0
+    } else {
+        ratios[ratios.len() / 2]
+    };
+    let p95_idx = ((ratios.len() as f64) * 0.95).ceil() as usize;
+    let p95 = ratios[p95_idx.min(ratios.len() - 1)];
+    (median, mean, p95)
 }
 
 pub fn parse_urls_file(content: &str) -> Vec<String> {
@@ -221,6 +226,7 @@ pub async fn run(urls: &[String], opts: &CoverageOptions) -> CoverageReport {
                     title: None,
                     html_bytes: None,
                     som_bytes: None,
+                    compression_ratio: None,
                     element_count: None,
                     interactive_count: None,
                     fetch_ms: None,
@@ -249,22 +255,28 @@ pub async fn run(urls: &[String], opts: &CoverageOptions) -> CoverageReport {
     results.sort_by(|a, b| a.input_url.cmp(&b.input_url));
 
     let mut ok = 0usize;
-    let mut thin = 0usize;
+    let mut blocked = 0usize;
     let mut failed = 0usize;
+    let mut ratios: Vec<f64> = Vec::new();
 
     let mut breakdown: std::collections::BTreeMap<String, usize> =
         std::collections::BTreeMap::new();
 
     for r in &results {
         match r.status {
-            CoverageStatus::Ok => ok += 1,
-            CoverageStatus::Thin => thin += 1,
+            CoverageStatus::Ok => {
+                ok += 1;
+                if let Some(ratio) = r.compression_ratio {
+                    ratios.push(ratio);
+                }
+            }
+            CoverageStatus::Blocked => blocked += 1,
             CoverageStatus::Failed => failed += 1,
         }
 
         let key = match (&r.status, &r.failure_kind) {
             (CoverageStatus::Ok, _) => "ok".to_string(),
-            (CoverageStatus::Thin, _) => "thin".to_string(),
+            (CoverageStatus::Blocked, _) => "blocked".to_string(),
             (CoverageStatus::Failed, Some(k)) => format!("failed:{k:?}").to_lowercase(),
             (CoverageStatus::Failed, None) => "failed:unknown".to_string(),
         };
@@ -272,11 +284,14 @@ pub async fn run(urls: &[String], opts: &CoverageOptions) -> CoverageReport {
     }
 
     let total = results.len();
-    let ok_percent = if total == 0 {
+    let parseable = total - blocked;
+    let parsed_percent = if parseable == 0 {
         0.0
     } else {
-        (ok as f64 / total as f64) * 100.0
+        (ok as f64 / parseable as f64) * 100.0
     };
+
+    let (median_ratio, mean_ratio, p95_ratio) = compute_ratio_stats(&mut ratios);
 
     let breakdown = breakdown
         .into_iter()
@@ -306,9 +321,12 @@ pub async fn run(urls: &[String], opts: &CoverageOptions) -> CoverageReport {
         summary: CoverageSummary {
             urls_total: total,
             ok,
-            thin,
+            blocked,
             failed,
-            ok_percent,
+            parsed_percent,
+            median_ratio,
+            mean_ratio,
+            p95_ratio,
             breakdown,
         },
         results,
@@ -324,6 +342,31 @@ async fn cover_single(
     let fetch_result = match fetch::fetch_url(client, input_url, opts.timeout_ms).await {
         Ok(r) => r,
         Err(e) => {
+            // 401/403 = site blocked us, not a Plasmate failure.
+            if let fetch::FetchError::HttpError { status, .. } = &e {
+                if *status == 401 || *status == 403 {
+                    return CoverageResult {
+                        input_url: input_url.to_string(),
+                        final_url: None,
+                        status: CoverageStatus::Blocked,
+                        http_status: Some(*status),
+                        content_type: None,
+                        title: None,
+                        html_bytes: None,
+                        som_bytes: None,
+                        compression_ratio: None,
+                        element_count: None,
+                        interactive_count: None,
+                        fetch_ms: Some(fetch_start.elapsed().as_millis() as u64),
+                        pipeline_ms: None,
+                        js_total_scripts: None,
+                        js_succeeded: None,
+                        js_failed: None,
+                        failure_kind: None,
+                        error: Some(format!("HTTP {status} — site blocked request")),
+                    };
+                }
+            }
             let (kind, msg) = classify_fetch_error(&e);
             return CoverageResult {
                 input_url: input_url.to_string(),
@@ -334,6 +377,7 @@ async fn cover_single(
                 title: None,
                 html_bytes: None,
                 som_bytes: None,
+                compression_ratio: None,
                 element_count: None,
                 interactive_count: None,
                 fetch_ms: Some(fetch_start.elapsed().as_millis() as u64),
@@ -364,6 +408,7 @@ async fn cover_single(
             title: None,
             html_bytes: Some(fetch_result.html_bytes),
             som_bytes: None,
+            compression_ratio: None,
             element_count: None,
             interactive_count: None,
             fetch_ms: Some(fetch_ms),
@@ -415,6 +460,7 @@ async fn cover_single(
                     title: None,
                     html_bytes: Some(fetch_result.html_bytes),
                     som_bytes: None,
+                    compression_ratio: None,
                     element_count: None,
                     interactive_count: None,
                     fetch_ms: Some(fetch_ms),
@@ -450,10 +496,10 @@ async fn cover_single(
     let element_count = final_som.meta.element_count;
     let interactive_count = final_som.meta.interactive_count;
 
-    let status = if is_thin(som_bytes, element_count, interactive_count) {
-        CoverageStatus::Thin
+    let compression_ratio = if som_bytes > 0 {
+        Some(fetch_result.html_bytes as f64 / som_bytes as f64)
     } else {
-        CoverageStatus::Ok
+        None
     };
 
     let (js_total, js_succeeded, js_failed) = page
@@ -465,12 +511,13 @@ async fn cover_single(
     CoverageResult {
         input_url: input_url.to_string(),
         final_url: Some(fetch_result.url),
-        status,
+        status: CoverageStatus::Ok,
         http_status: Some(fetch_result.status),
         content_type: Some(fetch_result.content_type),
         title: Some(final_som.title.clone()),
         html_bytes: Some(fetch_result.html_bytes),
         som_bytes: Some(som_bytes),
+        compression_ratio,
         element_count: Some(element_count),
         interactive_count: Some(interactive_count),
         fetch_ms: Some(fetch_ms),

@@ -833,12 +833,13 @@ async fn cmd_coverage(
     info!(output, "Coverage scorecard written");
 
     println!(
-        "Coverage: ok {} / {} ({:.1}%), thin {}, failed {}",
+        "Coverage: ok {} / {} ({:.1}%), blocked {}, failed {}, median compression {:.1}x",
         report.summary.ok,
         report.summary.urls_total,
-        report.summary.ok_percent,
-        report.summary.thin,
-        report.summary.failed
+        report.summary.parsed_percent,
+        report.summary.blocked,
+        report.summary.failed,
+        report.summary.median_ratio
     );
 
     Ok(())
