@@ -324,6 +324,168 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
     }
 }
 
+// ============================================================================
+// Screenshot tool
+// ============================================================================
+
+/// Parameters for screenshot_page tool.
+#[derive(Debug, Deserialize)]
+struct ScreenshotPageParams {
+    url: String,
+    #[serde(default = "default_width")]
+    width: u32,
+    #[serde(default = "default_height")]
+    height: u32,
+    #[serde(default = "default_format")]
+    format: String,
+}
+
+fn default_width() -> u32 {
+    1280
+}
+fn default_height() -> u32 {
+    720
+}
+fn default_format() -> String {
+    "png".to_string()
+}
+
+/// Get the tool definition for screenshot_page.
+pub fn screenshot_page_definition() -> ToolDefinition {
+    ToolDefinition {
+        name: "screenshot_page".to_string(),
+        description: "Capture a screenshot of a web page. NOTE: Plasmate does not yet have a built-in layout engine, so this currently returns the page's Semantic Object Model (SOM) as structured data instead of an image. The SOM provides a complete, token-efficient representation of the page content.".to_string(),
+        input_schema: json!({
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL to screenshot"
+                },
+                "width": {
+                    "type": "integer",
+                    "description": "Viewport width in pixels. Default: 1280. (Reserved for future use.)"
+                },
+                "height": {
+                    "type": "integer",
+                    "description": "Viewport height in pixels. Default: 720. (Reserved for future use.)"
+                },
+                "format": {
+                    "type": "string",
+                    "description": "Image format: png, jpeg, webp. Default: png. (Reserved for future use.)"
+                }
+            },
+            "required": ["url"]
+        }),
+    }
+}
+
+/// Handle the screenshot_page tool call.
+///
+/// Since Plasmate doesn't have a built-in renderer yet, this fetches the page,
+/// builds the SOM, and returns it as structured data with a clear message.
+pub async fn handle_screenshot_page(arguments: &Value, client: &reqwest::Client) -> Value {
+    use plasmate::screenshot;
+
+    let params: ScreenshotPageParams = match serde_json::from_value(arguments.clone()) {
+        Ok(p) => p,
+        Err(e) => {
+            return error_response(&format!("Invalid arguments: {}", e));
+        }
+    };
+
+    info!(url = %params.url, "screenshot_page");
+
+    // Fetch the page and build SOM
+    let fetch_result = match fetch::fetch_url(client, &params.url, DEFAULT_TIMEOUT_MS).await {
+        Ok(r) => r,
+        Err(e) => {
+            return error_response(&format!("Failed to fetch {}: {}", params.url, e));
+        }
+    };
+
+    let pipeline_config = PipelineConfig {
+        execute_js: true,
+        fetch_external_scripts: true,
+        ..Default::default()
+    };
+
+    let page_result = match pipeline::process_page_async(
+        &fetch_result.html,
+        &fetch_result.url,
+        &pipeline_config,
+        client,
+    )
+    .await
+    {
+        Ok(r) => r,
+        Err(e) => {
+            return error_response(&format!("Pipeline error: {}", e));
+        }
+    };
+
+    // Try the screenshot capture (will return NotImplemented for now)
+    let opts = screenshot::ScreenshotOptions {
+        width: params.width,
+        height: params.height,
+        format: screenshot::Format::from_str(&params.format),
+        ..Default::default()
+    };
+
+    match screenshot::capture_url(&params.url, &opts) {
+        Ok(data) => {
+            // When the renderer is implemented, return the image
+            let base64 = base64_encode_simple(&data);
+            json!({
+                "content": [
+                    {
+                        "type": "image",
+                        "data": base64,
+                        "mimeType": screenshot::Format::from_str(&params.format).content_type()
+                    }
+                ]
+            })
+        }
+        Err(_) => {
+            // Return SOM as structured fallback
+            let fallback = screenshot::som_fallback(&page_result.som);
+            json!({
+                "content": [
+                    {
+                        "type": "text",
+                        "text": serde_json::to_string(&fallback).unwrap_or_default()
+                    }
+                ]
+            })
+        }
+    }
+}
+
+/// Simple base64 encoding for image data.
+fn base64_encode_simple(data: &[u8]) -> String {
+    const CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut result = String::with_capacity((data.len() + 2) / 3 * 4);
+    for chunk in data.chunks(3) {
+        let b0 = chunk[0] as u32;
+        let b1 = if chunk.len() > 1 { chunk[1] as u32 } else { 0 };
+        let b2 = if chunk.len() > 2 { chunk[2] as u32 } else { 0 };
+        let triple = (b0 << 16) | (b1 << 8) | b2;
+        result.push(CHARS[((triple >> 18) & 0x3F) as usize] as char);
+        result.push(CHARS[((triple >> 12) & 0x3F) as usize] as char);
+        if chunk.len() > 1 {
+            result.push(CHARS[((triple >> 6) & 0x3F) as usize] as char);
+        } else {
+            result.push('=');
+        }
+        if chunk.len() > 2 {
+            result.push(CHARS[(triple & 0x3F) as usize] as char);
+        } else {
+            result.push('=');
+        }
+    }
+    result
+}
+
 /// Create an MCP error response.
 fn error_response(message: &str) -> Value {
     json!({

@@ -1168,6 +1168,42 @@ pub fn emulation_set_touch_emulation_enabled(id: u64) -> CdpResponse {
 }
 
 // ============================================================
+// Page.captureScreenshot
+// ============================================================
+
+pub fn page_capture_screenshot(
+    id: u64,
+    _params: &serde_json::Value,
+    target: &CdpTarget,
+) -> (CdpResponse, Vec<CdpEvent>) {
+    if target.current_som.is_some() {
+        return (
+            CdpResponse::error(
+                id,
+                CDP_ERR_SERVER,
+                &format!(
+                    "Screenshot not implemented: Plasmate does not have a built-in layout engine yet. \
+                     Use Plasmate.getSom for structured content extraction instead. \
+                     Page: {}",
+                    target.current_url.as_deref().unwrap_or("about:blank")
+                ),
+            ),
+            vec![],
+        );
+    }
+
+    (
+        CdpResponse::error(
+            id,
+            CDP_ERR_SERVER,
+            "Screenshot not implemented and no page loaded. Navigate first with Page.navigate, \
+             then use Plasmate.getSom for structured content.",
+        ),
+        vec![],
+    )
+}
+
+// ============================================================
 // Plasmate custom domain (our SOM-native API over CDP)
 // ============================================================
 

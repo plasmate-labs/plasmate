@@ -298,9 +298,9 @@ fn handle_page_observe(
         .and_then(|v| v.as_str())
         .unwrap_or("");
 
-    let session = match &state.session {
-        Some(s) if s.id == session_id => s,
-        _ => {
+    let session = match state.get_session(session_id) {
+        Some(s) => s,
+        None => {
             return Response::error(
                 id,
                 ErrorCode::NotFound,
@@ -328,9 +328,9 @@ async fn handle_page_act(
         .and_then(|v| v.as_str())
         .unwrap_or("");
 
-    let session = match &mut state.session {
-        Some(s) if s.id == session_id => s,
-        _ => {
+    let session = match state.get_session_mut(session_id) {
+        Some(s) => s,
+        None => {
             return Response::error(
                 id,
                 ErrorCode::NotFound,
@@ -503,9 +503,9 @@ fn handle_page_extract(
         .and_then(|v| v.as_str())
         .unwrap_or("");
 
-    let session = match &state.session {
-        Some(s) if s.id == session_id => s,
-        _ => {
+    let session = match state.get_session(session_id) {
+        Some(s) => s,
+        None => {
             return Response::error(
                 id,
                 ErrorCode::NotFound,
@@ -611,9 +611,9 @@ fn handle_network_enable_interception(
         .and_then(|v| v.as_str())
         .unwrap_or("");
 
-    let session = match &mut state.session {
-        Some(s) if s.id == session_id => s,
-        _ => {
+    let session = match state.get_session_mut(session_id) {
+        Some(s) => s,
+        None => {
             return Response::error(
                 id,
                 ErrorCode::NotFound,
@@ -676,9 +676,9 @@ fn handle_network_disable_interception(
         .and_then(|v| v.as_str())
         .unwrap_or("");
 
-    let session = match &mut state.session {
-        Some(s) if s.id == session_id => s,
-        _ => {
+    let session = match state.get_session_mut(session_id) {
+        Some(s) => s,
+        None => {
             return Response::error(
                 id,
                 ErrorCode::NotFound,
@@ -702,9 +702,9 @@ fn handle_network_add_rule(
         .and_then(|v| v.as_str())
         .unwrap_or("");
 
-    let session = match &mut state.session {
-        Some(s) if s.id == session_id => s,
-        _ => {
+    let session = match state.get_session_mut(session_id) {
+        Some(s) => s,
+        None => {
             return Response::error(
                 id,
                 ErrorCode::NotFound,
@@ -832,9 +832,9 @@ fn handle_network_remove_rule(
         .and_then(|v| v.as_str())
         .unwrap_or("");
 
-    let session = match &mut state.session {
-        Some(s) if s.id == session_id => s,
-        _ => {
+    let session = match state.get_session_mut(session_id) {
+        Some(s) => s,
+        None => {
             return Response::error(
                 id,
                 ErrorCode::NotFound,
@@ -868,9 +868,9 @@ fn handle_network_clear_rules(
         .and_then(|v| v.as_str())
         .unwrap_or("");
 
-    let session = match &mut state.session {
-        Some(s) if s.id == session_id => s,
-        _ => {
+    let session = match state.get_session_mut(session_id) {
+        Some(s) => s,
+        None => {
             return Response::error(
                 id,
                 ErrorCode::NotFound,
@@ -893,9 +893,9 @@ fn handle_network_get_intercepted_requests(
         .and_then(|v| v.as_str())
         .unwrap_or("");
 
-    let session = match &state.session {
-        Some(s) if s.id == session_id => s,
-        _ => {
+    let session = match state.get_session(session_id) {
+        Some(s) => s,
+        None => {
             return Response::error(
                 id,
                 ErrorCode::NotFound,

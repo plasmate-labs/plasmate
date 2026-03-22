@@ -212,6 +212,7 @@ async fn handle_cdp_request_inner(
                 events,
             )
         }
+        "Page.captureScreenshot" => domains::page_capture_screenshot(id, params, target),
         "Page.setInterceptFileChooserDialog" => {
             (CdpResponse::success(id, serde_json::json!({})), vec![])
         }
