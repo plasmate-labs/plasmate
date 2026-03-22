@@ -341,7 +341,7 @@
       <div class="sidebar-foot">
         <a href="https://github.com/plasmate-labs/plasmate">GitHub</a>
         <a href="https://plasmate.app">plasmate.app</a>
-        <span style="padding: 4px 10px;">Apache 2.0 / v0.1</span>
+        <span style="padding: 4px 10px;">Apache 2.0 / v0.3.0</span>
       </div>
     </nav>
     <main class="content">
@@ -354,7 +354,7 @@
 <li>AWP WebSocket server</li>
 <li>CDP compatibility (Puppeteer connects out of the box)</li>
 <li>MCP server mode (stdio JSON-RPC)</li>
-<li>Cookie management</li>
+<li>Cookie management with encrypted profiles</li>
 <li>Published on crates.io, npm, PyPI</li>
 <li>Docker image (GHCR multi-arch)</li>
 </ul>
@@ -370,39 +370,32 @@
 <li>Interactive coverage scorecards (nightly HTML, weekly JS)</li>
 <li>CDP cookie jar (getCookies, setCookies, deleteCookies, clearBrowserCookies)</li>
 </ul>
-<h2>Completed (v0.3)</h2>
+<h2>Completed (v0.3.0)</h2>
 <ul>
-<li>SPA Rendering Bridge: V8 mutations flow into real DOM tree, SOM recompiled after JS</li>
-<li>NodeRegistry with bidirectional V8-DOM bindings</li>
-<li>CSS selector engine for querySelector/querySelectorAll</li>
-<li>Screenshot support wired (CLI, CDP, AWP, MCP). Renderer not shipped yet, SOM fallback used.</li>
-<li>Parallel Session Manager (up to 50 concurrent sessions per instance)</li>
-<li>CDP multi-target support with independent page contexts</li>
 <li>Network request interception (block, modify, mock responses)</li>
-<li>TLS fingerprint configuration (cipher suites, version control)</li>
-<li>Wasm plugin system (8 plugin types, wasmtime runtime)</li>
+<li>TLS configuration and fingerprint tuning (cipher suites, version control)</li>
+<li>Wasm plugin system (optional feature flag, wasmtime runtime)</li>
+<li>SPA rendering bridge (bidirectional V8/rcdom DOM sync)</li>
+<li>Timer queue drain for React/Vue deferred rendering</li>
+<li>page.click(), page.type(), page.waitForSelector() via DOM bridge</li>
+<li>insertBefore, replaceChild, cloneNode, classList operations</li>
+<li>Multi-page session manager (50 concurrent)</li>
+<li>Auth profiles with encrypted cookie storage</li>
+<li>Screenshots protocol surface (SOM fallback)</li>
+<li>CSS selector engine for querySelector/querySelectorAll</li>
+<li>CDP multi-target support with independent page contexts</li>
+<li>DOM shim expansion (Observers, navigator, window, Element APIs)</li>
 <li>Browser-realistic HTTP headers</li>
 </ul>
-<h2>v0.4: SPA Coverage &amp; Adoption (Current)</h2>
+<h2>v0.4: Next</h2>
 <ul>
-<li><input checked="" disabled="" type="checkbox"> Deep SPA hydration ops (insertBefore, replaceChild, classList, cloneNode)</li>
-<li><input checked="" disabled="" type="checkbox"> Timer queue drain (setTimeout, requestAnimationFrame)</li>
-<li><input checked="" disabled="" type="checkbox"> page.click() / page.type() via DOM bridge</li>
-<li><input checked="" disabled="" type="checkbox"> page.waitForSelector() (final DOM state)</li>
-<li><input disabled="" type="checkbox"> page.waitForNavigation() and page.goto(waitUntil=...)</li>
-<li><input disabled="" type="checkbox"> SOM Cache (in-memory + on-disk, content-hash based)</li>
-<li><input disabled="" type="checkbox"> Framework PRs submitted upstream (Browser Use, LangChain)</li>
-<li><input disabled="" type="checkbox"> Page.captureScreenshot with built-in layout renderer</li>
-<li><input disabled="" type="checkbox"> Page.setContent, Accessibility.getFullAXTree</li>
-</ul>
-<h2>v0.5+: Scale</h2>
-<ul>
-<li><input disabled="" type="checkbox"> Parallel sessions at scale (500+ concurrent per 8GB)</li>
-<li><input disabled="" type="checkbox"> Proxy rotation support</li>
-<li><input disabled="" type="checkbox"> Iframe support</li>
-<li><input disabled="" type="checkbox"> Shadow DOM support</li>
-<li><input disabled="" type="checkbox"> Full ES module support</li>
-<li><input disabled="" type="checkbox"> Chrome extension on Web Store</li>
+<li>page.waitForNavigation</li>
+<li>page.goto waitUntil options</li>
+<li>Proxy support (SOCKS5/HTTP)</li>
+<li>Iframe content extraction</li>
+<li>Shadow DOM traversal</li>
+<li>Full screenshot rendering (headless pixel output)</li>
+<li>CDP coverage expansion (remaining Puppeteer API surface)</li>
 </ul>
 
     </main>

@@ -341,7 +341,7 @@
       <div class="sidebar-foot">
         <a href="https://github.com/plasmate-labs/plasmate">GitHub</a>
         <a href="https://plasmate.app">plasmate.app</a>
-        <span style="padding: 4px 10px;">Apache 2.0 / v0.1</span>
+        <span style="padding: 4px 10px;">Apache 2.0 / v0.3.0</span>
       </div>
     </nav>
     <main class="content">
@@ -377,8 +377,8 @@
 <td>Semantic Object Model structure and element addressing</td>
 </tr>
 <tr>
-<td><a href="roadmap">Roadmap (v0.2)</a></td>
-<td>V8 integration, CDP compatibility, SOM cache, parallel sessions</td>
+<td><a href="roadmap">Roadmap</a></td>
+<td>Release history and what's next</td>
 </tr>
 <tr>
 <td><a href="brand">Brand Guide</a></td>
@@ -388,10 +388,10 @@
 <h2>Key Numbers</h2>
 <ul>
 <li><strong>4-5 ms per page</strong> throughput (100-page local benchmark, 231KB average)</li>
-<li><strong>10.4x compression</strong> on Wikipedia (HTML to SOM token reduction)</li>
-<li><strong>~30 MB RSS</strong> memory baseline per page</li>
-<li><strong>43 MB</strong> single binary (macOS arm64)</li>
-<li><strong>184 tests</strong> passing</li>
+<li><strong>9.4x median compression</strong> across 38 sites (HTML to SOM token reduction)</li>
+<li><strong>28 MB RSS</strong> memory per process</li>
+<li><strong>45.8 MB</strong> single binary (default) / <strong>54 MB</strong> with plugins</li>
+<li><strong>200+ tests</strong> passing</li>
 <li><strong>Apache 2.0</strong> license</li>
 </ul>
 <h2>Architecture at a Glance</h2>
@@ -404,8 +404,10 @@ Plasmate Engine
   |-- HTML Parser (html5ever)
   |-- SOM Compiler (regions, elements, budgets)
   |-- V8 JS Runtime (script execution, DOM shim)
-  |-- Network Layer (reqwest, connection pooling, HTTP/2)
-  |-- Session Manager (cookie persistence, navigation history)
+  |-- Network Layer (reqwest, connection pooling, HTTP/2, request interception)
+  |-- TLS Configuration (cipher suites, fingerprint tuning)
+  |-- Session Manager (multi-page, 50 concurrent, encrypted auth profiles)
+  |-- Wasm Plugin System (optional, wasmtime runtime)
 </code></pre>
 <h2>Source</h2>
 <ul>
