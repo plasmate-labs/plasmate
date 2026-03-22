@@ -1729,8 +1729,118 @@ var document = {
     },
 
     hasFocus: function() { return true; },
-    getSelection: function() { return { toString: function() { return ''; } }; },
+    getSelection: function() { return { toString: function() { return ''; }, getRangeAt: function() { return document.createRange(); }, rangeCount: 0, removeAllRanges: function() {}, addRange: function() {}, collapse: function() {} }; },
     execCommand: function() { return false; },
+
+    createTreeWalker: function(root, whatToShow, filter) {
+        var walker = {
+            root: root,
+            currentNode: root,
+            whatToShow: whatToShow || 0xFFFFFFFF,
+            filter: filter || null,
+            _accept: function(node) {
+                if (this.whatToShow === 0xFFFFFFFF) return true;
+                if (this.whatToShow & 0x1 && node.nodeType === 1) return true;
+                if (this.whatToShow & 0x4 && node.nodeType === 3) return true;
+                if (this.whatToShow & 0x80 && node.nodeType === 8) return true;
+                return false;
+            },
+            _allNodes: function(node, result) {
+                if (this._accept(node) && node !== this.root) result.push(node);
+                if (node.childNodes) {
+                    for (var i = 0; i < node.childNodes.length; i++) {
+                        this._allNodes(node.childNodes[i], result);
+                    }
+                }
+                return result;
+            },
+            nextNode: function() {
+                var all = this._allNodes(this.root, []);
+                var idx = all.indexOf(this.currentNode);
+                if (idx < 0) { if (all.length > 0) { this.currentNode = all[0]; return all[0]; } return null; }
+                if (idx + 1 < all.length) { this.currentNode = all[idx + 1]; return all[idx + 1]; }
+                return null;
+            },
+            previousNode: function() {
+                var all = this._allNodes(this.root, []);
+                var idx = all.indexOf(this.currentNode);
+                if (idx > 0) { this.currentNode = all[idx - 1]; return all[idx - 1]; }
+                return null;
+            },
+            firstChild: function() {
+                if (this.currentNode.childNodes) {
+                    for (var i = 0; i < this.currentNode.childNodes.length; i++) {
+                        if (this._accept(this.currentNode.childNodes[i])) {
+                            this.currentNode = this.currentNode.childNodes[i];
+                            return this.currentNode;
+                        }
+                    }
+                }
+                return null;
+            },
+            nextSibling: function() {
+                var node = this.currentNode;
+                if (!node.parentNode) return null;
+                var siblings = node.parentNode.childNodes;
+                var idx = siblings.indexOf(node);
+                for (var i = idx + 1; i < siblings.length; i++) {
+                    if (this._accept(siblings[i])) {
+                        this.currentNode = siblings[i];
+                        return siblings[i];
+                    }
+                }
+                return null;
+            },
+            parentNode: function() {
+                if (this.currentNode !== this.root && this.currentNode.parentNode) {
+                    this.currentNode = this.currentNode.parentNode;
+                    return this.currentNode;
+                }
+                return null;
+            }
+        };
+        return walker;
+    },
+
+    createRange: function() {
+        return {
+            startContainer: null, startOffset: 0,
+            endContainer: null, endOffset: 0,
+            collapsed: true, commonAncestorContainer: null,
+            setStart: function(node, offset) { this.startContainer = node; this.startOffset = offset; this.collapsed = false; },
+            setEnd: function(node, offset) { this.endContainer = node; this.endOffset = offset; },
+            setStartBefore: function(node) { this.startContainer = node.parentNode; },
+            setStartAfter: function(node) { this.startContainer = node.parentNode; },
+            setEndBefore: function(node) { this.endContainer = node.parentNode; },
+            setEndAfter: function(node) { this.endContainer = node.parentNode; },
+            collapse: function(toStart) { this.collapsed = true; },
+            selectNode: function(node) { this.startContainer = node; this.endContainer = node; },
+            selectNodeContents: function(node) { this.startContainer = node; this.endContainer = node; },
+            deleteContents: function() {},
+            extractContents: function() { return document.createDocumentFragment(); },
+            cloneContents: function() { return document.createDocumentFragment(); },
+            insertNode: function() {},
+            surroundContents: function() {},
+            cloneRange: function() { return document.createRange(); },
+            detach: function() {},
+            getBoundingClientRect: function() { return {top:0,left:0,bottom:0,right:0,width:0,height:0,x:0,y:0}; },
+            getClientRects: function() { return []; },
+            createContextualFragment: function(html) {
+                var frag = document.createDocumentFragment();
+                var nodes = _parseHTML(html);
+                for (var i = 0; i < nodes.length; i++) frag.appendChild(nodes[i]);
+                return frag;
+            },
+            toString: function() { return ''; }
+        };
+    },
+
+    createNodeIterator: function(root, whatToShow) {
+        return document.createTreeWalker(root, whatToShow);
+    },
+
+    adoptNode: function(node) { node.ownerDocument = document; return node; },
+    importNode: function(node, deep) { var clone = node.cloneNode ? node.cloneNode(deep) : node; clone.ownerDocument = document; return clone; },
 
     implementation: {
         hasFeature: function() { return false; },
@@ -2405,6 +2515,71 @@ window.MutationObserver = MutationObserver;
 window.IntersectionObserver = IntersectionObserver;
 window.ResizeObserver = ResizeObserver;
 window.PerformanceObserver = PerformanceObserver;
+
+// SPA framework window stubs
+window.scrollTo = window.scrollTo || function() {};
+window.scroll = window.scroll || function() {};
+window.scrollBy = window.scrollBy || function() {};
+window.scrollX = 0;
+window.scrollY = 0;
+window.pageXOffset = 0;
+window.pageYOffset = 0;
+window.visualViewport = { width: 1280, height: 720, offsetLeft: 0, offsetTop: 0, scale: 1, addEventListener: function() {}, removeEventListener: function() {} };
+window.open = function() { return null; };
+window.close = function() {};
+window.focus = function() {};
+window.blur = function() {};
+window.print = function() {};
+window.alert = function() {};
+window.confirm = function() { return false; };
+window.prompt = function() { return null; };
+window.postMessage = function() {};
+window.atob = function(s) { return s; };
+window.btoa = function(s) { return s; };
+window.getSelection = function() { return document.getSelection(); };
+window.queueMicrotask = window.queueMicrotask || function(cb) { Promise.resolve().then(cb); };
+window.structuredClone = window.structuredClone || function(v) { return JSON.parse(JSON.stringify(v)); };
+window.WeakRef = window.WeakRef || function(target) { this.deref = function() { return target; }; };
+window.FinalizationRegistry = window.FinalizationRegistry || function() { this.register = function() {}; this.unregister = function() {}; };
+
+// AbortController / AbortSignal
+window.AbortController = window.AbortController || function() {
+    this.signal = { aborted: false, addEventListener: function() {}, removeEventListener: function() {}, onabort: null, reason: undefined, throwIfAborted: function() {} };
+    this.abort = function(reason) { this.signal.aborted = true; this.signal.reason = reason || new Error('Aborted'); };
+};
+
+// TextEncoder / TextDecoder
+window.TextEncoder = window.TextEncoder || function() {
+    this.encode = function(str) {
+        var arr = [];
+        for (var i = 0; i < str.length; i++) {
+            var c = str.charCodeAt(i);
+            if (c < 128) arr.push(c);
+            else if (c < 2048) { arr.push(192 | (c >> 6)); arr.push(128 | (c & 63)); }
+            else { arr.push(224 | (c >> 12)); arr.push(128 | ((c >> 6) & 63)); arr.push(128 | (c & 63)); }
+        }
+        return new Uint8Array(arr);
+    };
+    this.encoding = 'utf-8';
+};
+window.TextDecoder = window.TextDecoder || function() {
+    this.decode = function(buf) {
+        if (!buf) return '';
+        var arr = new Uint8Array(buf);
+        var str = '';
+        for (var i = 0; i < arr.length; i++) str += String.fromCharCode(arr[i]);
+        return str;
+    };
+    this.encoding = 'utf-8';
+};
+
+// Map / Set (should already exist in V8 but ensure)
+window.Map = window.Map || Map;
+window.Set = window.Set || Set;
+window.WeakMap = window.WeakMap || WeakMap;
+window.WeakSet = window.WeakSet || WeakSet;
+window.Symbol = window.Symbol || Symbol;
+window.Proxy = window.Proxy || Proxy;
 
 // ============================================================================
 // Plasmate Bootstrap Function - parses source HTML into DOM tree
