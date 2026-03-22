@@ -8,4 +8,5 @@ pub mod js;
 pub mod network;
 pub mod plugin;
 pub mod screenshot;
+pub mod session;
 pub mod som;

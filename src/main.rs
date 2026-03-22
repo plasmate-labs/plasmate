@@ -14,6 +14,7 @@ use plasmate::js;
 use plasmate::network;
 use plasmate::plugin;
 use plasmate::screenshot;
+use plasmate::session;
 use plasmate::som;
 
 #[derive(Parser)]
