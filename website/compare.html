@@ -502,7 +502,7 @@
           </tbody>
         </table>
         </div>
-        <p class="note">Median compression across 38 sites: 10.2x (100+ URL benchmark suite available). Lightpanda and Chrome return raw HTML (compression ratio: 1x).</p>
+        <p class="note">Median compression across 100 sites: 10.2x (98% success rate). Lightpanda and Chrome return raw HTML (compression ratio: 1x).</p>
       </div>
 
       <!-- ===== FEATURE MATRIX ===== -->
@@ -729,7 +729,7 @@
         <div class="section-label">Methodology</div>
         <h2 class="section-title">How we measured</h2>
         <p class="para"><strong>Engine speed:</strong> Local benchmark harness with cached HTML pages. Measures parse + JS + SOM compilation time, excluding network latency. Lightpanda's published per-page number (23ms) is from their BENCHMARKS.md. Plasmate's number (4-5ms) is measured locally on macOS ARM with the same methodology.</p>
-        <p class="para"><strong>Token compression:</strong> 38 real websites fetched live. HTML byte count vs SOM byte count. Token estimates at ~4 chars/token.</p>
+        <p class="para"><strong>Token compression:</strong> 100 real websites fetched live across 13 categories (e-commerce, news, social, SaaS, developer tools, etc.). HTML byte count vs SOM byte count. Token estimates at ~4 chars/token. 98% success rate.</p>
         <p class="para"><strong>Memory:</strong> Peak RSS measured during 100 concurrent page loads.</p>
         <p class="para">All benchmarks are reproducible. Source code and benchmark scripts are in the <a href="https://github.com/plasmate-labs/plasmate" target="_blank" rel="noreferrer">Plasmate repo</a>.</p>
       </div>
