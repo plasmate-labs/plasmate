@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "plasmate-browser-use"
+version = "0.1.0"
+description = "Browser Use integration for Plasmate — 10x fewer tokens with SOM output"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [{ name = "Plasmate Contributors" }]
+keywords = ["browser-use", "plasmate", "browser", "agent", "som", "llm", "ai"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries",
+]
+dependencies = [
+    "plasmate",
+    "browser-use>=0.1.40",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+]
+
+[project.urls]
+Homepage = "https://github.com/nicepkg/plasmate"
+Documentation = "https://github.com/nicepkg/plasmate/tree/master/integrations/browser-use"
+
+[tool.hatch.build.targets.wheel]
+packages = ["plasmate_browser_use"]
