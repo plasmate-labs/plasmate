@@ -169,13 +169,19 @@ async fn handle_websocket_connection(
     info!(%peer, "CDP WebSocket connected");
 
     let (mut sink, mut stream) = ws_stream.split();
-    let mut target = match CdpTarget::new_with_plugins(plugins) {
+
+    // Default target (always present)
+    let mut default_target = match CdpTarget::new_with_plugins(plugins.clone()) {
         Ok(t) => t,
         Err(e) => {
             error!(%peer, "Failed to create target: {}", e);
             return;
         }
     };
+
+    // Additional targets keyed by session_id (for multi-target support)
+    let mut extra_targets: std::collections::HashMap<String, CdpTarget> =
+        std::collections::HashMap::new();
 
     while let Some(msg) = stream.next().await {
         match msg {
@@ -188,7 +194,43 @@ async fn handle_websocket_connection(
                     }
                 };
 
-                let (response, events) = handle_cdp_request(&req, &mut target).await;
+                let can_create = extra_targets.len() < 49;
+
+                // Route by sessionId to the correct target
+                let target = if let Some(ref sid) = req.session_id {
+                    if default_target.session_ids.contains(sid) {
+                        &mut default_target
+                    } else if let Some(t) = extra_targets.get_mut(sid) {
+                        t
+                    } else {
+                        &mut default_target // fallback
+                    }
+                } else {
+                    &mut default_target
+                };
+
+                // Intercept Target.createTarget to create independent targets
+                let (response, events) = if req.method == "Target.createTarget" && can_create {
+                    match CdpTarget::new_with_plugins(plugins.clone()) {
+                        Ok(new_target) => {
+                            let tid = new_target.target_id.clone();
+                            let sid = new_target.session_id.clone();
+                            extra_targets.insert(sid.clone(), new_target);
+                            let events = vec![
+                                super::types::CdpEvent::new("Target.targetCreated", serde_json::json!({
+                                    "targetInfo": {"targetId": tid, "type": "page", "title": "", "url": "about:blank", "attached": true, "browserContextId": "default"}
+                                })),
+                                super::types::CdpEvent::new("Target.attachedToTarget", serde_json::json!({
+                                    "sessionId": sid, "targetInfo": {"targetId": tid, "type": "page", "title": "", "url": "about:blank", "attached": true, "browserContextId": "default"}, "waitingForDebugger": false
+                                })),
+                            ];
+                            (super::types::CdpResponse::success(req.id, serde_json::json!({"targetId": tid})), events)
+                        }
+                        Err(e) => (super::types::CdpResponse::error(req.id, -32000, &e), vec![]),
+                    }
+                } else {
+                    handle_cdp_request(&req, target).await
+                };
 
                 // Important: Puppeteer waits for the Page.navigate response (loaderId)
                 // before it starts matching lifecycle events. So for navigation,
