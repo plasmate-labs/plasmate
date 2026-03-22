@@ -1,23 +1,42 @@
 # Roadmap
 
-Plasmate's roadmap is public and tracked in GitHub.
+Plasmate's roadmap is public and standards-first. We ship compression and correctness before scale.
 
-- Source of truth: the `## Roadmap` section in the repo README
-- This docs page mirrors that list for convenience
+## Completed (v0.1.1)
 
-## Current Roadmap
+- SOM compiler with 9.4x median compression across 38 sites
+- V8 JavaScript execution with full DOM shim
+- AWP WebSocket server
+- CDP compatibility (Puppeteer connects out of the box)
+- MCP server mode (stdio JSON-RPC)
+- Cookie management
+- Published on crates.io, npm, PyPI
+- Docker image (GHCR multi-arch)
 
-- [x] MCP server mode (`plasmate mcp` over stdio)
-- [x] MCP Phase 2: stateful tools (open_page, click, evaluate, close_page)
-- [x] Docker image (GHCR multi-arch)
-- [ ] Full V8 DOM mutation bridge (re-snapshot SOM after JS changes)
-- [ ] Network interception (Fetch domain)
-- [ ] Expose cookie APIs (CDP Network.getCookies/setCookies, MCP cookie import/export)
-- [ ] Proxy support (per-session config, SOCKS)
-- [ ] Real-world top-100 site coverage testing
-- [ ] Web Platform Tests integration
+## v0.2: Standards & Adoption (Current)
 
-## Notes
+- [x] CDP polish (Page.setContent, Accessibility.getFullAXTree, error handling)
+- [x] SOM Specification v1.0 with JSON Schema and conformance test suite
+- [x] Benchmark expansion to 100+ URLs across 13 categories
+- [x] Node.js SDK with full TypeScript types and query helpers
+- [x] Python SDK with Pydantic models and query helpers
+- [x] Go SDK with structs, client, and query helpers
+- [x] Browser Use integration
+- [x] LangChain integration
+- [ ] Benchmark blog post and interactive results page
+- [ ] Framework PRs submitted upstream (Browser Use, LangChain)
 
-- The older "v0.2 Full Engine" roadmap is kept for historical context in `ROADMAP-v0.2.md`.
-- The coverage scorecard lives at the `Coverage` page in these docs.
+## v0.3: Production Engine (Next)
+
+- SOM Cache (in-memory + on-disk, differential updates)
+- Parallel Session Manager (500+ concurrent sessions per 8GB)
+- Stealth networking (TLS fingerprint control, proxy rotation)
+- Wasm Skill System + marketplace
+- Network request interception
+
+## v0.4+: Commercial Platform
+
+- Plasmate Cloud (fleet orchestration)
+- Managed proxy network
+- Enterprise SSO, SOC 2
+- Skill marketplace

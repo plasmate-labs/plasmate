@@ -113,6 +113,16 @@
       background: rgba(232,133,58,0.14);
     }
 
+    .sidebar .section-label {
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 10px;
+      color: var(--ash);
+      padding: 14px 10px 4px;
+      user-select: none;
+    }
+
     .sidebar-foot {
       margin-top: auto;
       padding-top: 16px;
@@ -292,6 +302,7 @@
       }
 
       .sidebar-foot { display: none; }
+      .sidebar .section-label { display: none; }
 
       .layout { flex-direction: column; }
 
@@ -309,45 +320,68 @@
       <a href=".">Overview</a>
           <a href="quickstart">Quick Start</a>
           <a href="spec">Product Spec</a>
+          <div class="section-label">Reference</div>
           <a href="som">SOM Reference</a>
+          <a href="som-spec">SOM Spec v1.0</a>
           <a href="awp">AWP Protocol</a>
           <a href="awp-mvp">AWP MVP v0.1</a>
-          <a href="roadmap" class="active">Roadmap</a>
+          <div class="section-label">SDKs</div>
+          <a href="sdk-node">Node.js</a>
+          <a href="sdk-python">Python</a>
+          <a href="sdk-go">Go</a>
+          <div class="section-label">Coverage & Benchmarks</div>
           <a href="coverage">Coverage (HTML)</a>
           <a href="coverage-js">Coverage (JS)</a>
-          <a href="brand">Brand Guide</a>
-      <div class="section-label" style="font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; font-size: 10px; color: #6B6560; padding: 14px 10px 4px; user-select: none;">Updates</div>
+          <a href="roadmap" class="active">Roadmap</a>
+          <div class="section-label">Updates</div>
           <a href="changelog">Changelog</a>
-          <a href="log">Engineering Log</a>
       <div class="sidebar-foot">
         <a href="https://github.com/plasmate-labs/plasmate">GitHub</a>
         <a href="https://plasmate.app">plasmate.app</a>
-        <span style="padding: 4px 10px;">Apache 2.0 / v0.1.1</span>
+        <span style="padding: 4px 10px;">Apache 2.0 / v0.1</span>
       </div>
     </nav>
     <main class="content">
       <h1>Roadmap</h1>
-<p>Plasmate&#39;s roadmap is public and tracked in GitHub.</p>
+<p>Plasmate&#39;s roadmap is public and standards-first. We ship compression and correctness before scale.</p>
+<h2>Completed (v0.1.1)</h2>
 <ul>
-<li>Source of truth: the <code>## Roadmap</code> section in the repo README</li>
-<li>This docs page mirrors that list for convenience</li>
+<li>SOM compiler with 9.4x median compression across 38 sites</li>
+<li>V8 JavaScript execution with full DOM shim</li>
+<li>AWP WebSocket server</li>
+<li>CDP compatibility (Puppeteer connects out of the box)</li>
+<li>MCP server mode (stdio JSON-RPC)</li>
+<li>Cookie management</li>
+<li>Published on crates.io, npm, PyPI</li>
+<li>Docker image (GHCR multi-arch)</li>
 </ul>
-<h2>Current Roadmap</h2>
+<h2>v0.2: Standards &amp; Adoption (Current)</h2>
 <ul>
-<li><input checked="" disabled="" type="checkbox"> MCP server mode (<code>plasmate mcp</code> over stdio)</li>
-<li><input checked="" disabled="" type="checkbox"> MCP Phase 2: stateful tools (open_page, click, evaluate, close_page)</li>
-<li><input checked="" disabled="" type="checkbox"> Docker image (GHCR multi-arch)</li>
-<li><input disabled="" type="checkbox"> Full V8 DOM mutation bridge (re-snapshot SOM after JS changes)</li>
-<li><input disabled="" type="checkbox"> Network interception (Fetch domain)</li>
-<li><input disabled="" type="checkbox"> Expose cookie APIs (CDP Network.getCookies/setCookies, MCP cookie import/export)</li>
-<li><input disabled="" type="checkbox"> Proxy support (per-session config, SOCKS)</li>
-<li><input disabled="" type="checkbox"> Real-world top-100 site coverage testing</li>
-<li><input disabled="" type="checkbox"> Web Platform Tests integration</li>
+<li><input checked="" disabled="" type="checkbox"> CDP polish (Page.setContent, Accessibility.getFullAXTree, error handling)</li>
+<li><input checked="" disabled="" type="checkbox"> SOM Specification v1.0 with JSON Schema and conformance test suite</li>
+<li><input checked="" disabled="" type="checkbox"> Benchmark expansion to 100+ URLs across 13 categories</li>
+<li><input checked="" disabled="" type="checkbox"> Node.js SDK with full TypeScript types and query helpers</li>
+<li><input checked="" disabled="" type="checkbox"> Python SDK with Pydantic models and query helpers</li>
+<li><input checked="" disabled="" type="checkbox"> Go SDK with structs, client, and query helpers</li>
+<li><input checked="" disabled="" type="checkbox"> Browser Use integration</li>
+<li><input checked="" disabled="" type="checkbox"> LangChain integration</li>
+<li><input disabled="" type="checkbox"> Benchmark blog post and interactive results page</li>
+<li><input disabled="" type="checkbox"> Framework PRs submitted upstream (Browser Use, LangChain)</li>
 </ul>
-<h2>Notes</h2>
+<h2>v0.3: Production Engine (Next)</h2>
 <ul>
-<li>The older &quot;v0.2 Full Engine&quot; roadmap is kept for historical context in <code>ROADMAP-v0.2.md</code>.</li>
-<li>The coverage scorecard lives at the <code>Coverage</code> page in these docs.</li>
+<li>SOM Cache (in-memory + on-disk, differential updates)</li>
+<li>Parallel Session Manager (500+ concurrent sessions per 8GB)</li>
+<li>Stealth networking (TLS fingerprint control, proxy rotation)</li>
+<li>Wasm Skill System + marketplace</li>
+<li>Network request interception</li>
+</ul>
+<h2>v0.4+: Commercial Platform</h2>
+<ul>
+<li>Plasmate Cloud (fleet orchestration)</li>
+<li>Managed proxy network</li>
+<li>Enterprise SSO, SOC 2</li>
+<li>Skill marketplace</li>
 </ul>
 
     </main>

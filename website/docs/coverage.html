@@ -113,6 +113,16 @@
       background: rgba(232,133,58,0.14);
     }
 
+    .sidebar .section-label {
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 10px;
+      color: var(--ash);
+      padding: 14px 10px 4px;
+      user-select: none;
+    }
+
     .sidebar-foot {
       margin-top: auto;
       padding-top: 16px;
@@ -292,6 +302,7 @@
       }
 
       .sidebar-foot { display: none; }
+      .sidebar .section-label { display: none; }
 
       .layout { flex-direction: column; }
 
@@ -309,20 +320,25 @@
       <a href=".">Overview</a>
           <a href="quickstart">Quick Start</a>
           <a href="spec">Product Spec</a>
+          <div class="section-label">Reference</div>
           <a href="som">SOM Reference</a>
+          <a href="som-spec">SOM Spec v1.0</a>
           <a href="awp">AWP Protocol</a>
           <a href="awp-mvp">AWP MVP v0.1</a>
-          <a href="roadmap">Roadmap</a>
+          <div class="section-label">SDKs</div>
+          <a href="sdk-node">Node.js</a>
+          <a href="sdk-python">Python</a>
+          <a href="sdk-go">Go</a>
+          <div class="section-label">Coverage & Benchmarks</div>
           <a href="coverage" class="active">Coverage (HTML)</a>
           <a href="coverage-js">Coverage (JS)</a>
-          <a href="brand">Brand Guide</a>
-      <div class="section-label" style="font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; font-size: 10px; color: #6B6560; padding: 14px 10px 4px; user-select: none;">Updates</div>
+          <a href="roadmap">Roadmap</a>
+          <div class="section-label">Updates</div>
           <a href="changelog">Changelog</a>
-          <a href="log">Engineering Log</a>
       <div class="sidebar-foot">
         <a href="https://github.com/plasmate-labs/plasmate">GitHub</a>
         <a href="https://plasmate.app">plasmate.app</a>
-        <span style="padding: 4px 10px;">Apache 2.0 / v0.1.1</span>
+        <span style="padding: 4px 10px;">Apache 2.0 / v0.1</span>
       </div>
     </nav>
     <main class="content">
@@ -382,8 +398,8 @@
 
   function statusBadge(status) {
     const s = String(status || '');
-    const label = s === 'ok' ? 'full' : s; const color = s === 'ok' ? '#3bd4a7' : (s === 'thin' ? '#F5C842' : '#E8853A');
-    return `<span style="display:inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(240,237,232,0.18); background: rgba(240,237,232,0.04); color: ${color}; font-family: var(--font-mono); font-size: 11px;">${esc(label)}</span>`;
+    const color = s === 'ok' ? '#3bd4a7' : (s === 'thin' ? '#F5C842' : '#E8853A');
+    return `<span style="display:inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(240,237,232,0.18); background: rgba(240,237,232,0.04); color: ${color}; font-family: var(--font-mono); font-size: 11px;">${esc(s)}</span>`;
   }
 
   try {

@@ -14,17 +14,28 @@ const NAV = [
   { slug: 'overview', label: 'Overview' },
   { slug: 'quickstart', label: 'Quick Start' },
   { slug: 'spec', label: 'Product Spec' },
+  { section: 'Reference' },
   { slug: 'som', label: 'SOM Reference' },
+  { slug: 'som-spec', label: 'SOM Spec v1.0' },
   { slug: 'awp', label: 'AWP Protocol' },
   { slug: 'awp-mvp', label: 'AWP MVP v0.1' },
-  { slug: 'roadmap', label: 'Roadmap' },
+  { section: 'SDKs' },
+  { slug: 'sdk-node', label: 'Node.js' },
+  { slug: 'sdk-python', label: 'Python' },
+  { slug: 'sdk-go', label: 'Go' },
+  { section: 'Coverage & Benchmarks' },
   { slug: 'coverage', label: 'Coverage (HTML)' },
   { slug: 'coverage-js', label: 'Coverage (JS)' },
-  { slug: 'brand', label: 'Brand Guide' },
+  { slug: 'roadmap', label: 'Roadmap' },
+  { section: 'Updates' },
+  { slug: 'changelog', label: 'Changelog' },
 ];
 
 function template(title, body, currentSlug) {
   const sidebar = NAV.map(n => {
+    if (n.section) {
+      return `<div class="section-label">${n.section}</div>`;
+    }
     const active = n.slug === currentSlug ? ' class="active"' : '';
     const href = n.slug === 'overview' ? '.' : n.slug;
     return `<a href="${href}"${active}>${n.label}</a>`;
@@ -143,6 +154,16 @@ function template(title, body, currentSlug) {
     .sidebar a.active {
       color: var(--plasma-white);
       background: rgba(232,133,58,0.14);
+    }
+
+    .sidebar .section-label {
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 10px;
+      color: var(--ash);
+      padding: 14px 10px 4px;
+      user-select: none;
     }
 
     .sidebar-foot {
@@ -324,6 +345,7 @@ function template(title, body, currentSlug) {
       }
 
       .sidebar-foot { display: none; }
+      .sidebar .section-label { display: none; }
 
       .layout { flex-direction: column; }
 

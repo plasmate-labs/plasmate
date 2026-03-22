@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Plasmate Benchmark Results (March 2026) - Plasmate Docs</title>
-  <meta name="description" content="Plasmate documentation: Plasmate Benchmark Results (March 2026)" />
+  <title>Node.js SDK - Plasmate Docs</title>
+  <meta name="description" content="Plasmate documentation: Node.js SDK" />
 
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
@@ -326,7 +326,7 @@
           <a href="awp">AWP Protocol</a>
           <a href="awp-mvp">AWP MVP v0.1</a>
           <div class="section-label">SDKs</div>
-          <a href="sdk-node">Node.js</a>
+          <a href="sdk-node" class="active">Node.js</a>
           <a href="sdk-python">Python</a>
           <a href="sdk-go">Go</a>
           <div class="section-label">Coverage & Benchmarks</div>
@@ -342,224 +342,152 @@
       </div>
     </nav>
     <main class="content">
-      <h1>Plasmate Benchmark Results (March 2026)</h1>
-<h2>CDP Parity Benchmark (Lightpanda campfire-commerce)</h2>
-<p><strong>Test:</strong> Puppeteer script navigates to a local product page, waits for JS-rendered content (product price, reviews from XHR), extracts structured data.</p>
-<p><strong>Result:</strong> PASS - All assertions pass consistently</p>
-<table>
-<thead>
-<tr>
-<th>Metric</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>Runs</td>
-<td>10</td>
-</tr>
-<tr>
-<td>Total duration</td>
-<td>3,165ms</td>
-</tr>
-<tr>
-<td>Avg run duration</td>
-<td>308ms</td>
-</tr>
-<tr>
-<td>Min run duration</td>
-<td>275ms</td>
-</tr>
-<tr>
-<td>Max run duration</td>
-<td>348ms</td>
-</tr>
-</tbody></table>
-<p><strong>What this validates:</strong></p>
-<ul>
-<li>CDP WebSocket server compatibility with Puppeteer</li>
-<li><code>page.goto()</code> with full JS pipeline execution</li>
-<li><code>page.waitForFunction()</code> polling</li>
-<li><code>page.evaluate()</code> for DOM queries</li>
-<li>XHR/fetch requests from V8 (blocking bridge)</li>
-<li>DOM serialization with JS-mutated content</li>
-</ul>
-<hr>
-<h2>Major Sites Speed Test</h2>
-<p>Engine: plasmate v0.1.0
-URLs tested: 38
-Successful: 36 (95%)</p>
-<h3>Summary</h3>
-<table>
-<thead>
-<tr>
-<th>Metric</th>
-<th>Mean</th>
-<th>Median</th>
-<th>P95</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>HTML bytes</td>
-<td>379,656</td>
-<td>193,796</td>
-<td>1,214,266</td>
-</tr>
-<tr>
-<td>SOM bytes</td>
-<td>22,759</td>
-<td>22,034</td>
-<td>56,625</td>
-</tr>
-<tr>
-<td><strong>Compression ratio</strong></td>
-<td><strong>45.4x</strong></td>
-<td><strong>10.2x</strong></td>
-<td>105.1x</td>
-</tr>
-<tr>
-<td>HTML tokens (est)</td>
-<td>94,914</td>
-<td>48,449</td>
-<td>303,566</td>
-</tr>
-<tr>
-<td>SOM tokens (est)</td>
-<td>5,689</td>
-<td>5,508</td>
-<td>14,156</td>
-</tr>
-<tr>
-<td>Fetch time (ms)</td>
-<td>256</td>
-<td>172</td>
-<td>629</td>
-</tr>
-<tr>
-<td>Parse+SOM time (ms)</td>
-<td>20</td>
-<td>16</td>
-<td>61</td>
-</tr>
-</tbody></table>
-<h3>Grade Distribution</h3>
-<table>
-<thead>
-<tr>
-<th>Grade</th>
-<th>Count</th>
-<th>Criteria</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>A</td>
-<td>12</td>
-<td>&gt;15x compression</td>
-</tr>
-<tr>
-<td>B</td>
-<td>8</td>
-<td>8-15x compression</td>
-</tr>
-<tr>
-<td>C</td>
-<td>9</td>
-<td>3-8x compression</td>
-</tr>
-<tr>
-<td>D</td>
-<td>4</td>
-<td>1-3x compression</td>
-</tr>
-<tr>
-<td>F</td>
-<td>3</td>
-<td>&lt;1x or error</td>
-</tr>
-</tbody></table>
-<h3>Highlights</h3>
-<table>
-<thead>
-<tr>
-<th>Site</th>
-<th>HTML</th>
-<th>SOM</th>
-<th>Compression</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>accounts.google.com</td>
-<td>1.2MB</td>
-<td>1.4KB</td>
-<td><strong>864x</strong></td>
-</tr>
-<tr>
-<td>x.com (Twitter)</td>
-<td>239KB</td>
-<td>1.5KB</td>
-<td><strong>159x</strong></td>
-</tr>
-<tr>
-<td>linear.app</td>
-<td>2.2MB</td>
-<td>21KB</td>
-<td><strong>105x</strong></td>
-</tr>
-<tr>
-<td>bing.com</td>
-<td>157KB</td>
-<td>1.7KB</td>
-<td><strong>93x</strong></td>
-</tr>
-<tr>
-<td>google.com</td>
-<td>194KB</td>
-<td>2.6KB</td>
-<td><strong>74x</strong></td>
-</tr>
-<tr>
-<td>vercel.com</td>
-<td>941KB</td>
-<td>22KB</td>
-<td><strong>43x</strong></td>
-</tr>
-<tr>
-<td>steampowered.com</td>
-<td>842KB</td>
-<td>23KB</td>
-<td><strong>36x</strong></td>
-</tr>
-<tr>
-<td>duckduckgo.com</td>
-<td>391KB</td>
-<td>12KB</td>
-<td><strong>33x</strong></td>
-</tr>
-<tr>
-<td>ebay.com</td>
-<td>831KB</td>
-<td>33KB</td>
-<td><strong>25x</strong></td>
-</tr>
-<tr>
-<td>Wikipedia (USA)</td>
-<td>1.7MB</td>
-<td>70KB</td>
-<td><strong>25x</strong></td>
-</tr>
-</tbody></table>
-<h3>Performance Notes</h3>
-<ul>
-<li><strong>Parse+SOM time</strong>: Median 16ms for full HTML-&gt;SOM compilation</li>
-<li><strong>Heavy JS sites</strong>: Excellent compression (login pages, SPAs) due to stripping non-essential markup</li>
-<li><strong>Content-rich sites</strong>: Good compression (Wikipedia 10-25x, news sites 11-15x)</li>
-<li><strong>Text-minimal sites</strong>: Lower ratios expected (text.npr.org, example.com)</li>
-</ul>
-<h3>Test Environment</h3>
-<ul>
-<li>macOS, Apple Silicon</li>
-<li>Local network fetch (varies by site latency)</li>
-<li>No caching between runs</li>
-</ul>
+      <h1>Node.js SDK</h1>
+<p>The official Node.js SDK for Plasmate, with full TypeScript types and SOM query helpers.</p>
+<h2>Installation</h2>
+<pre><code class="language-sh">npm install plasmate
+</code></pre>
+<p>Requires Node.js 18+ and the <code>plasmate</code> binary on your PATH.</p>
+<h2>Quick Start</h2>
+<pre><code class="language-typescript">import { Plasmate } from &#39;plasmate&#39;;
+
+const client = new Plasmate();
+
+// Fetch a page and get SOM
+const som = await client.som(&#39;https://example.com&#39;);
+console.log(som.title);       // &quot;Example Domain&quot;
+console.log(som.regions);     // semantic regions
+console.log(som.meta);        // compression stats
+
+client.close();
+</code></pre>
+<h2>TypeScript Types</h2>
+<h3><code>Som</code></h3>
+<p>The top-level SOM document.</p>
+<pre><code class="language-typescript">interface Som {
+  som_version: string;
+  url: string;
+  title: string;
+  lang: string;
+  regions: SomRegion[];
+  meta: SomMeta;
+  structured_data?: StructuredData;
+}
+</code></pre>
+<h3><code>SomRegion</code></h3>
+<p>A semantic region of the page (navigation, main content, sidebar, etc.).</p>
+<pre><code class="language-typescript">interface SomRegion {
+  id: string;
+  role: RegionRole;   // &#39;navigation&#39; | &#39;main&#39; | &#39;aside&#39; | &#39;header&#39; | &#39;footer&#39; | &#39;form&#39; | &#39;dialog&#39; | &#39;content&#39;
+  label?: string;
+  action?: string;
+  method?: string;
+  elements: SomElement[];
+}
+</code></pre>
+<h3><code>SomElement</code></h3>
+<p>An individual element within a region.</p>
+<pre><code class="language-typescript">interface SomElement {
+  id: string;
+  role: ElementRole;  // &#39;link&#39; | &#39;button&#39; | &#39;text_input&#39; | &#39;textarea&#39; | &#39;select&#39; | &#39;checkbox&#39; | &#39;radio&#39; | &#39;heading&#39; | &#39;image&#39; | &#39;list&#39; | &#39;table&#39; | &#39;paragraph&#39; | &#39;section&#39; | &#39;separator&#39;
+  text?: string;
+  label?: string;
+  actions?: ElementAction[];
+  attrs?: SomElementAttrs;
+  children?: SomElement[];
+  hints?: SemanticHint[];
+}
+</code></pre>
+<h3><code>SomMeta</code></h3>
+<p>Compression and element statistics.</p>
+<pre><code class="language-typescript">interface SomMeta {
+  html_bytes: number;
+  som_bytes: number;
+  element_count: number;
+  interactive_count: number;
+}
+</code></pre>
+<h2>Query Helpers</h2>
+<p>All query helpers accept a <code>Som</code> object and return matching elements or regions.</p>
+<h3><code>findByRole(som, role)</code></h3>
+<p>Find all regions matching a given role.</p>
+<pre><code class="language-typescript">import { findByRole } from &#39;plasmate&#39;;
+
+const navRegions = findByRole(som, &#39;navigation&#39;);
+</code></pre>
+<h3><code>findById(som, id)</code></h3>
+<p>Find a single element by its stable ID.</p>
+<pre><code class="language-typescript">import { findById } from &#39;plasmate&#39;;
+
+const el = findById(som, &#39;login-btn&#39;);
+if (el) console.log(el.text);
+</code></pre>
+<h3><code>findByTag(som, tag)</code></h3>
+<p>Find elements matching a tag/role string.</p>
+<pre><code class="language-typescript">import { findByTag } from &#39;plasmate&#39;;
+
+const links = findByTag(som, &#39;link&#39;);
+</code></pre>
+<h3><code>findInteractive(som)</code></h3>
+<p>Return all interactive elements (links, buttons, inputs, selects, textareas, checkboxes, radios).</p>
+<pre><code class="language-typescript">import { findInteractive } from &#39;plasmate&#39;;
+
+const interactive = findInteractive(som);
+console.log(`${interactive.length} interactive elements`);
+</code></pre>
+<h3><code>findByText(som, text)</code></h3>
+<p>Find elements whose text content contains the given string (case-insensitive).</p>
+<pre><code class="language-typescript">import { findByText } from &#39;plasmate&#39;;
+
+const matches = findByText(som, &#39;Sign in&#39;);
+</code></pre>
+<h3><code>flatElements(som)</code></h3>
+<p>Flatten all elements across all regions into a single array.</p>
+<pre><code class="language-typescript">import { flatElements } from &#39;plasmate&#39;;
+
+const all = flatElements(som);
+</code></pre>
+<h3><code>getTokenEstimate(som)</code></h3>
+<p>Estimate the LLM token count for the SOM (heuristic: ~4 bytes per token).</p>
+<pre><code class="language-typescript">import { getTokenEstimate } from &#39;plasmate&#39;;
+
+const tokens = getTokenEstimate(som);
+console.log(`~${tokens} tokens`);
+</code></pre>
+<h2>Client API</h2>
+<h3>Constructor</h3>
+<pre><code class="language-typescript">const client = new Plasmate({
+  binary: &#39;plasmate&#39;,   // path to plasmate binary (default: &#39;plasmate&#39;)
+  timeout: 30000,       // timeout in ms (default: 30000)
+});
+</code></pre>
+<h3>Stateless Methods</h3>
+<pre><code class="language-typescript">// Fetch a page and return SOM
+const som = await client.som(url, options?);
+
+// Alias for som()
+const som = await client.fetchPage(url, options?);
+
+// Extract plain text from a page
+const text = await client.extractText(url, options?);
+</code></pre>
+<h3>Stateful Sessions</h3>
+<pre><code class="language-typescript">// Open a persistent page session
+const { sessionId, som } = await client.openPage(url);
+
+// Execute JavaScript in the session
+const result = await client.evaluate(sessionId, &#39;document.title&#39;);
+
+// Click an element and get updated SOM
+const updatedSom = await client.click(sessionId, &#39;login-btn&#39;);
+
+// Close the session
+await client.closePage(sessionId);
+</code></pre>
+<h3>Cleanup</h3>
+<pre><code class="language-typescript">client.close();
+</code></pre>
+<p>The client communicates with the <code>plasmate mcp</code> subprocess over JSON-RPC 2.0 on stdio. It auto-starts the process on first call.</p>
 
     </main>
   </div>

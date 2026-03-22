@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Plasmate Benchmark Results (March 2026) - Plasmate Docs</title>
-  <meta name="description" content="Plasmate documentation: Plasmate Benchmark Results (March 2026)" />
+  <title>LangChain Integration - Plasmate Docs</title>
+  <meta name="description" content="Plasmate documentation: LangChain Integration" />
 
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
@@ -342,224 +342,133 @@
       </div>
     </nav>
     <main class="content">
-      <h1>Plasmate Benchmark Results (March 2026)</h1>
-<h2>CDP Parity Benchmark (Lightpanda campfire-commerce)</h2>
-<p><strong>Test:</strong> Puppeteer script navigates to a local product page, waits for JS-rendered content (product price, reviews from XHR), extracts structured data.</p>
-<p><strong>Result:</strong> PASS - All assertions pass consistently</p>
+      <h1>LangChain Integration</h1>
+<p>LangChain tools and document loader for Plasmate — browse the web with <strong>~10x fewer tokens</strong> than raw HTML.</p>
+<p>Plasmate&#39;s SOM output compiles web pages into compact, structured representations that preserve interactive elements and content hierarchy. This integration provides LangChain-native tools for stateless fetching, persistent browsing, and batch document loading.</p>
+<p>Source: <a href="https://github.com/nicepkg/plasmate/tree/master/integrations/langchain"><code>integrations/langchain/</code></a></p>
+<h2>Installation</h2>
+<pre><code class="language-bash">pip install langchain-plasmate
+</code></pre>
+<p>Requires the <code>plasmate</code> binary on your PATH:</p>
+<pre><code class="language-bash">curl -fsSL https://plasmate.app/install.sh | sh
+</code></pre>
+<h2>Quick Start</h2>
+<h3>Fetch a page (stateless)</h3>
+<pre><code class="language-python">from langchain_plasmate import PlasmateFetchTool
+
+fetch = PlasmateFetchTool()
+result = fetch.invoke(&quot;https://news.ycombinator.com&quot;)
+print(result)
+</code></pre>
+<h3>Agent with browsing tools</h3>
+<pre><code class="language-python">from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
+from langchain_plasmate import get_plasmate_tools
+
+tools = get_plasmate_tools()
+llm = ChatOpenAI(model=&quot;gpt-4o&quot;)
+
+prompt = ChatPromptTemplate.from_messages([
+    (&quot;system&quot;, &quot;You can browse the web using Plasmate tools.&quot;),
+    (&quot;human&quot;, &quot;{input}&quot;),
+    (&quot;placeholder&quot;, &quot;{agent_scratchpad}&quot;),
+])
+
+agent = create_tool_calling_agent(llm, tools, prompt)
+executor = AgentExecutor(agent=agent, tools=tools)
+
+result = executor.invoke({
+    &quot;input&quot;: &quot;Go to Hacker News and tell me the top 3 stories&quot;
+})
+print(result[&quot;output&quot;])
+</code></pre>
+<h3>Document loader</h3>
+<pre><code class="language-python">from langchain_plasmate import PlasmateSOMLoader
+
+loader = PlasmateSOMLoader([
+    &quot;https://example.com&quot;,
+    &quot;https://news.ycombinator.com&quot;,
+])
+docs = loader.load()
+
+for doc in docs:
+    print(f&quot;{doc.metadata[&#39;title&#39;]} — {doc.metadata[&#39;element_count&#39;]} elements&quot;)
+    print(doc.page_content[:200])
+    print()
+</code></pre>
+<h2>Available Tools</h2>
+<h3><code>PlasmateFetchTool</code></h3>
+<p>Stateless page fetch. Each call creates a fresh connection, fetches the URL, and returns SOM text. Best for one-off page reads.</p>
+<pre><code class="language-python">from langchain_plasmate import PlasmateFetchTool
+
+fetch = PlasmateFetchTool()
+result = fetch.invoke(&quot;https://example.com&quot;)
+</code></pre>
+<h3><code>PlasmateNavigateTool</code></h3>
+<p>Opens a URL in a persistent browser session. Use with <code>PlasmateClickTool</code> and <code>PlasmateTypeTool</code> for multi-step browsing workflows.</p>
+<pre><code class="language-python">from langchain_plasmate import get_plasmate_tools
+
+tools = get_plasmate_tools()
+navigate, click, type_tool, fetch = tools
+</code></pre>
+<h3><code>PlasmateClickTool</code></h3>
+<p>Clicks an interactive element by its SOM element ID (e.g., <code>e_a1b2c3d4e5f6</code>). Requires an active session from <code>PlasmateNavigateTool</code>.</p>
+<h3><code>PlasmateTypeTool</code></h3>
+<p>Types text into a form input or textarea by SOM element ID. Takes <code>element_id</code> and <code>text</code> as input.</p>
+<h3><code>get_plasmate_tools()</code></h3>
+<p>Returns all four tools with a shared Plasmate client and browser session:</p>
+<pre><code class="language-python">from langchain_plasmate import get_plasmate_tools
+from plasmate import Plasmate
+
+# Default client
+tools = get_plasmate_tools()
+
+# Custom client
+client = Plasmate(binary=&quot;/path/to/plasmate&quot;, timeout=60)
+tools = get_plasmate_tools(client=client)
+</code></pre>
+<h2>PlasmateSOMLoader</h2>
+<p>Loads web pages as LangChain <code>Document</code> objects with SOM text as <code>page_content</code>.</p>
+<pre><code class="language-python">PlasmateSOMLoader(
+    urls=[&quot;https://example.com&quot;],
+    budget=2000,          # optional token budget per page
+    javascript=True,      # enable JS execution (default)
+    client=None,          # optional Plasmate instance
+)
+</code></pre>
+<p>Document metadata includes: <code>url</code>, <code>title</code>, <code>lang</code>, <code>html_bytes</code>, <code>som_bytes</code>, <code>element_count</code>, <code>interactive_count</code>, and optionally <code>description</code>, <code>open_graph</code>, <code>json_ld</code>.</p>
+<h2>Token Efficiency</h2>
+<p>Compared to LangChain&#39;s <code>WebBaseLoader</code> which passes raw HTML:</p>
 <table>
 <thead>
 <tr>
-<th>Metric</th>
-<th>Value</th>
+<th>Source</th>
+<th>Hacker News</th>
+<th>Example.com</th>
+<th>News Article</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>Runs</td>
-<td>10</td>
+<td>Raw HTML (WebBaseLoader)</td>
+<td>~22,000 tokens</td>
+<td>~400 tokens</td>
+<td>~45,000 tokens</td>
 </tr>
 <tr>
-<td>Total duration</td>
-<td>3,165ms</td>
+<td><strong>SOM (PlasmateSOMLoader)</strong></td>
+<td><strong>~1,500 tokens</strong></td>
+<td><strong>~80 tokens</strong></td>
+<td><strong>~3,000 tokens</strong></td>
 </tr>
 <tr>
-<td>Avg run duration</td>
-<td>308ms</td>
-</tr>
-<tr>
-<td>Min run duration</td>
-<td>275ms</td>
-</tr>
-<tr>
-<td>Max run duration</td>
-<td>348ms</td>
+<td><strong>Savings</strong></td>
+<td><strong>~15x</strong></td>
+<td><strong>~5x</strong></td>
+<td><strong>~15x</strong></td>
 </tr>
 </tbody></table>
-<p><strong>What this validates:</strong></p>
-<ul>
-<li>CDP WebSocket server compatibility with Puppeteer</li>
-<li><code>page.goto()</code> with full JS pipeline execution</li>
-<li><code>page.waitForFunction()</code> polling</li>
-<li><code>page.evaluate()</code> for DOM queries</li>
-<li>XHR/fetch requests from V8 (blocking bridge)</li>
-<li>DOM serialization with JS-mutated content</li>
-</ul>
-<hr>
-<h2>Major Sites Speed Test</h2>
-<p>Engine: plasmate v0.1.0
-URLs tested: 38
-Successful: 36 (95%)</p>
-<h3>Summary</h3>
-<table>
-<thead>
-<tr>
-<th>Metric</th>
-<th>Mean</th>
-<th>Median</th>
-<th>P95</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>HTML bytes</td>
-<td>379,656</td>
-<td>193,796</td>
-<td>1,214,266</td>
-</tr>
-<tr>
-<td>SOM bytes</td>
-<td>22,759</td>
-<td>22,034</td>
-<td>56,625</td>
-</tr>
-<tr>
-<td><strong>Compression ratio</strong></td>
-<td><strong>45.4x</strong></td>
-<td><strong>10.2x</strong></td>
-<td>105.1x</td>
-</tr>
-<tr>
-<td>HTML tokens (est)</td>
-<td>94,914</td>
-<td>48,449</td>
-<td>303,566</td>
-</tr>
-<tr>
-<td>SOM tokens (est)</td>
-<td>5,689</td>
-<td>5,508</td>
-<td>14,156</td>
-</tr>
-<tr>
-<td>Fetch time (ms)</td>
-<td>256</td>
-<td>172</td>
-<td>629</td>
-</tr>
-<tr>
-<td>Parse+SOM time (ms)</td>
-<td>20</td>
-<td>16</td>
-<td>61</td>
-</tr>
-</tbody></table>
-<h3>Grade Distribution</h3>
-<table>
-<thead>
-<tr>
-<th>Grade</th>
-<th>Count</th>
-<th>Criteria</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>A</td>
-<td>12</td>
-<td>&gt;15x compression</td>
-</tr>
-<tr>
-<td>B</td>
-<td>8</td>
-<td>8-15x compression</td>
-</tr>
-<tr>
-<td>C</td>
-<td>9</td>
-<td>3-8x compression</td>
-</tr>
-<tr>
-<td>D</td>
-<td>4</td>
-<td>1-3x compression</td>
-</tr>
-<tr>
-<td>F</td>
-<td>3</td>
-<td>&lt;1x or error</td>
-</tr>
-</tbody></table>
-<h3>Highlights</h3>
-<table>
-<thead>
-<tr>
-<th>Site</th>
-<th>HTML</th>
-<th>SOM</th>
-<th>Compression</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>accounts.google.com</td>
-<td>1.2MB</td>
-<td>1.4KB</td>
-<td><strong>864x</strong></td>
-</tr>
-<tr>
-<td>x.com (Twitter)</td>
-<td>239KB</td>
-<td>1.5KB</td>
-<td><strong>159x</strong></td>
-</tr>
-<tr>
-<td>linear.app</td>
-<td>2.2MB</td>
-<td>21KB</td>
-<td><strong>105x</strong></td>
-</tr>
-<tr>
-<td>bing.com</td>
-<td>157KB</td>
-<td>1.7KB</td>
-<td><strong>93x</strong></td>
-</tr>
-<tr>
-<td>google.com</td>
-<td>194KB</td>
-<td>2.6KB</td>
-<td><strong>74x</strong></td>
-</tr>
-<tr>
-<td>vercel.com</td>
-<td>941KB</td>
-<td>22KB</td>
-<td><strong>43x</strong></td>
-</tr>
-<tr>
-<td>steampowered.com</td>
-<td>842KB</td>
-<td>23KB</td>
-<td><strong>36x</strong></td>
-</tr>
-<tr>
-<td>duckduckgo.com</td>
-<td>391KB</td>
-<td>12KB</td>
-<td><strong>33x</strong></td>
-</tr>
-<tr>
-<td>ebay.com</td>
-<td>831KB</td>
-<td>33KB</td>
-<td><strong>25x</strong></td>
-</tr>
-<tr>
-<td>Wikipedia (USA)</td>
-<td>1.7MB</td>
-<td>70KB</td>
-<td><strong>25x</strong></td>
-</tr>
-</tbody></table>
-<h3>Performance Notes</h3>
-<ul>
-<li><strong>Parse+SOM time</strong>: Median 16ms for full HTML-&gt;SOM compilation</li>
-<li><strong>Heavy JS sites</strong>: Excellent compression (login pages, SPAs) due to stripping non-essential markup</li>
-<li><strong>Content-rich sites</strong>: Good compression (Wikipedia 10-25x, news sites 11-15x)</li>
-<li><strong>Text-minimal sites</strong>: Lower ratios expected (text.npr.org, example.com)</li>
-</ul>
-<h3>Test Environment</h3>
-<ul>
-<li>macOS, Apple Silicon</li>
-<li>Local network fetch (varies by site latency)</li>
-<li>No caching between runs</li>
-</ul>
+<p>SOM preserves all interactive elements, headings, and content structure while stripping scripts, styles, hidden elements, and layout-only markup.</p>
 
     </main>
   </div>

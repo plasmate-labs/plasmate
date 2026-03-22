@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Plasmate Benchmark Results (March 2026) - Plasmate Docs</title>
-  <meta name="description" content="Plasmate documentation: Plasmate Benchmark Results (March 2026)" />
+  <title>Python SDK - Plasmate Docs</title>
+  <meta name="description" content="Plasmate documentation: Python SDK" />
 
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
@@ -327,7 +327,7 @@
           <a href="awp-mvp">AWP MVP v0.1</a>
           <div class="section-label">SDKs</div>
           <a href="sdk-node">Node.js</a>
-          <a href="sdk-python">Python</a>
+          <a href="sdk-python" class="active">Python</a>
           <a href="sdk-go">Go</a>
           <div class="section-label">Coverage & Benchmarks</div>
           <a href="coverage">Coverage (HTML)</a>
@@ -342,224 +342,151 @@
       </div>
     </nav>
     <main class="content">
-      <h1>Plasmate Benchmark Results (March 2026)</h1>
-<h2>CDP Parity Benchmark (Lightpanda campfire-commerce)</h2>
-<p><strong>Test:</strong> Puppeteer script navigates to a local product page, waits for JS-rendered content (product price, reviews from XHR), extracts structured data.</p>
-<p><strong>Result:</strong> PASS - All assertions pass consistently</p>
-<table>
-<thead>
-<tr>
-<th>Metric</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>Runs</td>
-<td>10</td>
-</tr>
-<tr>
-<td>Total duration</td>
-<td>3,165ms</td>
-</tr>
-<tr>
-<td>Avg run duration</td>
-<td>308ms</td>
-</tr>
-<tr>
-<td>Min run duration</td>
-<td>275ms</td>
-</tr>
-<tr>
-<td>Max run duration</td>
-<td>348ms</td>
-</tr>
-</tbody></table>
-<p><strong>What this validates:</strong></p>
-<ul>
-<li>CDP WebSocket server compatibility with Puppeteer</li>
-<li><code>page.goto()</code> with full JS pipeline execution</li>
-<li><code>page.waitForFunction()</code> polling</li>
-<li><code>page.evaluate()</code> for DOM queries</li>
-<li>XHR/fetch requests from V8 (blocking bridge)</li>
-<li>DOM serialization with JS-mutated content</li>
-</ul>
-<hr>
-<h2>Major Sites Speed Test</h2>
-<p>Engine: plasmate v0.1.0
-URLs tested: 38
-Successful: 36 (95%)</p>
-<h3>Summary</h3>
-<table>
-<thead>
-<tr>
-<th>Metric</th>
-<th>Mean</th>
-<th>Median</th>
-<th>P95</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>HTML bytes</td>
-<td>379,656</td>
-<td>193,796</td>
-<td>1,214,266</td>
-</tr>
-<tr>
-<td>SOM bytes</td>
-<td>22,759</td>
-<td>22,034</td>
-<td>56,625</td>
-</tr>
-<tr>
-<td><strong>Compression ratio</strong></td>
-<td><strong>45.4x</strong></td>
-<td><strong>10.2x</strong></td>
-<td>105.1x</td>
-</tr>
-<tr>
-<td>HTML tokens (est)</td>
-<td>94,914</td>
-<td>48,449</td>
-<td>303,566</td>
-</tr>
-<tr>
-<td>SOM tokens (est)</td>
-<td>5,689</td>
-<td>5,508</td>
-<td>14,156</td>
-</tr>
-<tr>
-<td>Fetch time (ms)</td>
-<td>256</td>
-<td>172</td>
-<td>629</td>
-</tr>
-<tr>
-<td>Parse+SOM time (ms)</td>
-<td>20</td>
-<td>16</td>
-<td>61</td>
-</tr>
-</tbody></table>
-<h3>Grade Distribution</h3>
-<table>
-<thead>
-<tr>
-<th>Grade</th>
-<th>Count</th>
-<th>Criteria</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>A</td>
-<td>12</td>
-<td>&gt;15x compression</td>
-</tr>
-<tr>
-<td>B</td>
-<td>8</td>
-<td>8-15x compression</td>
-</tr>
-<tr>
-<td>C</td>
-<td>9</td>
-<td>3-8x compression</td>
-</tr>
-<tr>
-<td>D</td>
-<td>4</td>
-<td>1-3x compression</td>
-</tr>
-<tr>
-<td>F</td>
-<td>3</td>
-<td>&lt;1x or error</td>
-</tr>
-</tbody></table>
-<h3>Highlights</h3>
-<table>
-<thead>
-<tr>
-<th>Site</th>
-<th>HTML</th>
-<th>SOM</th>
-<th>Compression</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>accounts.google.com</td>
-<td>1.2MB</td>
-<td>1.4KB</td>
-<td><strong>864x</strong></td>
-</tr>
-<tr>
-<td>x.com (Twitter)</td>
-<td>239KB</td>
-<td>1.5KB</td>
-<td><strong>159x</strong></td>
-</tr>
-<tr>
-<td>linear.app</td>
-<td>2.2MB</td>
-<td>21KB</td>
-<td><strong>105x</strong></td>
-</tr>
-<tr>
-<td>bing.com</td>
-<td>157KB</td>
-<td>1.7KB</td>
-<td><strong>93x</strong></td>
-</tr>
-<tr>
-<td>google.com</td>
-<td>194KB</td>
-<td>2.6KB</td>
-<td><strong>74x</strong></td>
-</tr>
-<tr>
-<td>vercel.com</td>
-<td>941KB</td>
-<td>22KB</td>
-<td><strong>43x</strong></td>
-</tr>
-<tr>
-<td>steampowered.com</td>
-<td>842KB</td>
-<td>23KB</td>
-<td><strong>36x</strong></td>
-</tr>
-<tr>
-<td>duckduckgo.com</td>
-<td>391KB</td>
-<td>12KB</td>
-<td><strong>33x</strong></td>
-</tr>
-<tr>
-<td>ebay.com</td>
-<td>831KB</td>
-<td>33KB</td>
-<td><strong>25x</strong></td>
-</tr>
-<tr>
-<td>Wikipedia (USA)</td>
-<td>1.7MB</td>
-<td>70KB</td>
-<td><strong>25x</strong></td>
-</tr>
-</tbody></table>
-<h3>Performance Notes</h3>
-<ul>
-<li><strong>Parse+SOM time</strong>: Median 16ms for full HTML-&gt;SOM compilation</li>
-<li><strong>Heavy JS sites</strong>: Excellent compression (login pages, SPAs) due to stripping non-essential markup</li>
-<li><strong>Content-rich sites</strong>: Good compression (Wikipedia 10-25x, news sites 11-15x)</li>
-<li><strong>Text-minimal sites</strong>: Lower ratios expected (text.npr.org, example.com)</li>
-</ul>
-<h3>Test Environment</h3>
-<ul>
-<li>macOS, Apple Silicon</li>
-<li>Local network fetch (varies by site latency)</li>
-<li>No caching between runs</li>
-</ul>
+      <h1>Python SDK</h1>
+<p>The official Python SDK for Plasmate, with Pydantic models and SOM query helpers.</p>
+<h2>Installation</h2>
+<pre><code class="language-sh">pip install plasmate
+</code></pre>
+<p>Requires Python 3.9+, Pydantic 2.0+, and the <code>plasmate</code> binary on your PATH.</p>
+<h2>Quick Start</h2>
+<pre><code class="language-python">from plasmate import Plasmate
+
+with Plasmate() as client:
+    som = client.fetch_page(&quot;https://example.com&quot;)
+    print(som[&quot;title&quot;])
+    print(som[&quot;meta&quot;])
+</code></pre>
+<h2>Pydantic Models</h2>
+<p>All SOM types are fully typed Pydantic models, making them easy to validate and serialize.</p>
+<h3><code>Som</code></h3>
+<pre><code class="language-python">class Som(BaseModel):
+    som_version: str
+    url: str
+    title: str
+    lang: str
+    regions: List[SomRegion]
+    meta: SomMeta
+    structured_data: Optional[StructuredData] = None
+</code></pre>
+<h3><code>SomRegion</code></h3>
+<pre><code class="language-python">class SomRegion(BaseModel):
+    id: str
+    role: RegionRole   # navigation, main, aside, header, footer, form, dialog, content
+    label: Optional[str] = None
+    action: Optional[str] = None
+    method: Optional[str] = None
+    elements: List[SomElement]
+</code></pre>
+<h3><code>SomElement</code></h3>
+<pre><code class="language-python">class SomElement(BaseModel):
+    id: str
+    role: ElementRole  # link, button, text_input, textarea, select, checkbox, radio, heading, image, list, table, paragraph, section, separator
+    text: Optional[str] = None
+    label: Optional[str] = None
+    actions: Optional[List[str]] = None
+    attrs: Optional[ElementAttrs] = None
+    children: Optional[List[SomElement]] = None
+    hints: Optional[List[SemanticHint]] = None
+</code></pre>
+<h3><code>SomMeta</code></h3>
+<pre><code class="language-python">class SomMeta(BaseModel):
+    html_bytes: int
+    som_bytes: int
+    element_count: int
+    interactive_count: int
+</code></pre>
+<h2>Query Helpers</h2>
+<h3><code>find_by_role(som, role)</code></h3>
+<p>Find all regions matching a given role.</p>
+<pre><code class="language-python">from plasmate.query import find_by_role
+
+nav_regions = find_by_role(som, &quot;navigation&quot;)
+</code></pre>
+<h3><code>find_by_id(som, element_id)</code></h3>
+<p>Find a single element by its stable ID.</p>
+<pre><code class="language-python">from plasmate.query import find_by_id
+
+el = find_by_id(som, &quot;login-btn&quot;)
+if el:
+    print(el.text)
+</code></pre>
+<h3><code>find_by_tag(som, tag)</code></h3>
+<p>Find elements matching a tag/role string.</p>
+<pre><code class="language-python">from plasmate.query import find_by_tag
+
+links = find_by_tag(som, &quot;link&quot;)
+</code></pre>
+<h3><code>find_interactive(som)</code></h3>
+<p>Return all interactive elements.</p>
+<pre><code class="language-python">from plasmate.query import find_interactive
+
+interactive = find_interactive(som)
+print(f&quot;{len(interactive)} interactive elements&quot;)
+</code></pre>
+<h3><code>find_by_text(som, text)</code></h3>
+<p>Find elements whose text content contains the given string (case-insensitive).</p>
+<pre><code class="language-python">from plasmate.query import find_by_text
+
+matches = find_by_text(som, &quot;Sign in&quot;)
+</code></pre>
+<h3><code>flat_elements(som)</code></h3>
+<p>Flatten all elements across all regions into a single list.</p>
+<pre><code class="language-python">from plasmate.query import flat_elements
+
+all_elements = flat_elements(som)
+</code></pre>
+<h3><code>get_token_estimate(som)</code></h3>
+<p>Estimate the LLM token count for the SOM (heuristic: ~4 characters per token).</p>
+<pre><code class="language-python">from plasmate.query import get_token_estimate
+
+tokens = get_token_estimate(som)
+print(f&quot;~{tokens} tokens&quot;)
+</code></pre>
+<h2>Client API</h2>
+<h3>Synchronous Client</h3>
+<pre><code class="language-python">from plasmate import Plasmate
+
+client = Plasmate(
+    binary=&quot;plasmate&quot;,  # path to plasmate binary (default: &quot;plasmate&quot;)
+    timeout=30,         # timeout in seconds (default: 30)
+)
+
+# Fetch a page and return SOM
+som = client.fetch_page(&quot;https://example.com&quot;)
+
+# Extract plain text
+text = client.extract_text(&quot;https://example.com&quot;)
+
+# Stateful sessions
+session = client.open_page(&quot;https://example.com&quot;)
+session_id = session[&quot;session_id&quot;]
+
+result = client.evaluate(session_id, &quot;document.title&quot;)
+updated = client.click(session_id, &quot;login-btn&quot;)
+client.close_page(session_id)
+
+client.close()
+</code></pre>
+<p>Supports context manager:</p>
+<pre><code class="language-python">with Plasmate() as client:
+    som = client.fetch_page(&quot;https://example.com&quot;)
+</code></pre>
+<h2>Async Support</h2>
+<p>The <code>AsyncPlasmate</code> client provides the same API with <code>async</code>/<code>await</code>.</p>
+<pre><code class="language-python">from plasmate import AsyncPlasmate
+
+async with AsyncPlasmate() as client:
+    som = await client.fetch_page(&quot;https://example.com&quot;)
+    text = await client.extract_text(&quot;https://example.com&quot;)
+
+    session = await client.open_page(&quot;https://example.com&quot;)
+    session_id = session[&quot;session_id&quot;]
+
+    result = await client.evaluate(session_id, &quot;document.title&quot;)
+    updated = await client.click(session_id, &quot;login-btn&quot;)
+    await client.close_page(session_id)
+</code></pre>
+<p>Both clients communicate with the <code>plasmate mcp</code> subprocess over JSON-RPC 2.0 on stdio.</p>
 
     </main>
   </div>

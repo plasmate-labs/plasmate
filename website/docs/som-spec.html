@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Plasmate Benchmark Results (March 2026) - Plasmate Docs</title>
-  <meta name="description" content="Plasmate documentation: Plasmate Benchmark Results (March 2026)" />
+  <title>SOM Specification - Plasmate Docs</title>
+  <meta name="description" content="Plasmate documentation: SOM Specification" />
 
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
@@ -322,7 +322,7 @@
           <a href="spec">Product Spec</a>
           <div class="section-label">Reference</div>
           <a href="som">SOM Reference</a>
-          <a href="som-spec">SOM Spec v1.0</a>
+          <a href="som-spec" class="active">SOM Spec v1.0</a>
           <a href="awp">AWP Protocol</a>
           <a href="awp-mvp">AWP MVP v0.1</a>
           <div class="section-label">SDKs</div>
@@ -342,223 +342,263 @@
       </div>
     </nav>
     <main class="content">
-      <h1>Plasmate Benchmark Results (March 2026)</h1>
-<h2>CDP Parity Benchmark (Lightpanda campfire-commerce)</h2>
-<p><strong>Test:</strong> Puppeteer script navigates to a local product page, waits for JS-rendered content (product price, reviews from XHR), extracts structured data.</p>
-<p><strong>Result:</strong> PASS - All assertions pass consistently</p>
+      <h1>SOM Specification</h1>
+<p>The Semantic Object Model (SOM) is a formal, open specification for representing web pages as structured JSON documents optimized for LLM and agent consumption. SOM compiles raw HTML into compact, semantically meaningful output that preserves interactive elements and content hierarchy while stripping presentational noise.</p>
+<p>The full specification is at <a href="https://github.com/nicepkg/plasmate/blob/master/specs/SOM-SPEC-v1.0.md"><code>specs/SOM-SPEC-v1.0.md</code></a> in the repository.</p>
+<h2>Document Structure</h2>
+<p>Every SOM document is a JSON object with these top-level fields:</p>
 <table>
 <thead>
 <tr>
-<th>Metric</th>
-<th>Value</th>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>Runs</td>
-<td>10</td>
+<td><code>som_version</code></td>
+<td>string</td>
+<td>Yes</td>
+<td>Specification version (e.g., <code>&quot;0.1&quot;</code>)</td>
 </tr>
 <tr>
-<td>Total duration</td>
-<td>3,165ms</td>
+<td><code>url</code></td>
+<td>string</td>
+<td>Yes</td>
+<td>Page URL</td>
 </tr>
 <tr>
-<td>Avg run duration</td>
-<td>308ms</td>
+<td><code>title</code></td>
+<td>string</td>
+<td>Yes</td>
+<td>Page title from <code>&lt;title&gt;</code></td>
 </tr>
 <tr>
-<td>Min run duration</td>
-<td>275ms</td>
+<td><code>lang</code></td>
+<td>string</td>
+<td>Yes</td>
+<td>Page language from <code>&lt;html lang&gt;</code>, defaults to <code>&quot;en&quot;</code></td>
 </tr>
 <tr>
-<td>Max run duration</td>
-<td>348ms</td>
+<td><code>regions</code></td>
+<td>array</td>
+<td>Yes</td>
+<td>Semantic regions extracted from the page</td>
+</tr>
+<tr>
+<td><code>meta</code></td>
+<td>object</td>
+<td>Yes</td>
+<td>Compilation metadata (html_bytes, som_bytes, element_count, interactive_count)</td>
+</tr>
+<tr>
+<td><code>structured_data</code></td>
+<td>object</td>
+<td>No</td>
+<td>JSON-LD, OpenGraph, Twitter Cards, meta tags</td>
 </tr>
 </tbody></table>
-<p><strong>What this validates:</strong></p>
+<h2>Region Roles</h2>
+<p>Regions are the primary organizational unit. SOM detects them from HTML5 landmarks, ARIA roles, and class/ID heuristics.</p>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Detection Sources</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>navigation</code></td>
+<td><code>&lt;nav&gt;</code>, <code>role=&quot;navigation&quot;</code>, link-density heuristic</td>
+</tr>
+<tr>
+<td><code>main</code></td>
+<td><code>&lt;main&gt;</code>, <code>role=&quot;main&quot;</code>, class/ID heuristics</td>
+</tr>
+<tr>
+<td><code>complementary</code></td>
+<td><code>&lt;aside&gt;</code>, <code>role=&quot;complementary&quot;</code></td>
+</tr>
+<tr>
+<td><code>contentinfo</code></td>
+<td><code>&lt;footer&gt;</code>, <code>role=&quot;contentinfo&quot;</code></td>
+</tr>
+<tr>
+<td><code>banner</code></td>
+<td><code>&lt;header&gt;</code>, <code>role=&quot;banner&quot;</code></td>
+</tr>
+<tr>
+<td><code>form</code></td>
+<td><code>&lt;form&gt;</code> elements with interactive controls</td>
+</tr>
+<tr>
+<td><code>search</code></td>
+<td><code>role=&quot;search&quot;</code> (maps to navigation)</td>
+</tr>
+<tr>
+<td><code>generic</code></td>
+<td>Fallback for unclassified content</td>
+</tr>
+</tbody></table>
+<p>Detection precedence: ARIA roles &gt; HTML5 landmarks &gt; <code>&lt;form&gt;</code> elements &gt; class/ID heuristics &gt; link-density heuristic &gt; fallback.</p>
+<h2>Element Types</h2>
+<p>Each element has a <code>role</code>, stable <code>id</code>, and role-specific <code>attrs</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Interactive</th>
+<th>Default Actions</th>
+<th>HTML Sources</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>link</code></td>
+<td>Yes</td>
+<td><code>[&quot;click&quot;]</code></td>
+<td><code>&lt;a href&gt;</code>, <code>role=&quot;link&quot;</code></td>
+</tr>
+<tr>
+<td><code>button</code></td>
+<td>Yes</td>
+<td><code>[&quot;click&quot;]</code></td>
+<td><code>&lt;button&gt;</code>, <code>&lt;input type=&quot;submit&quot;&gt;</code>, <code>role=&quot;button&quot;</code></td>
+</tr>
+<tr>
+<td><code>text_input</code></td>
+<td>Yes</td>
+<td><code>[&quot;type&quot;, &quot;clear&quot;]</code></td>
+<td><code>&lt;input type=&quot;text|email|password|search|...&quot;&gt;</code></td>
+</tr>
+<tr>
+<td><code>textarea</code></td>
+<td>Yes</td>
+<td><code>[&quot;type&quot;, &quot;clear&quot;]</code></td>
+<td><code>&lt;textarea&gt;</code></td>
+</tr>
+<tr>
+<td><code>select</code></td>
+<td>Yes</td>
+<td><code>[&quot;select&quot;]</code></td>
+<td><code>&lt;select&gt;</code></td>
+</tr>
+<tr>
+<td><code>checkbox</code></td>
+<td>Yes</td>
+<td><code>[&quot;toggle&quot;]</code></td>
+<td><code>&lt;input type=&quot;checkbox&quot;&gt;</code>, <code>role=&quot;checkbox&quot;</code></td>
+</tr>
+<tr>
+<td><code>radio</code></td>
+<td>Yes</td>
+<td><code>[&quot;select&quot;]</code></td>
+<td><code>&lt;input type=&quot;radio&quot;&gt;</code>, <code>role=&quot;radio&quot;</code></td>
+</tr>
+<tr>
+<td><code>image</code></td>
+<td>No</td>
+<td>—</td>
+<td><code>&lt;img&gt;</code>, <code>&lt;picture&gt;</code>, <code>role=&quot;img&quot;</code></td>
+</tr>
+<tr>
+<td><code>heading</code></td>
+<td>No</td>
+<td>—</td>
+<td><code>&lt;h1&gt;</code> through <code>&lt;h6&gt;</code></td>
+</tr>
+<tr>
+<td><code>paragraph</code></td>
+<td>No</td>
+<td>—</td>
+<td><code>&lt;p&gt;</code>, bare text nodes</td>
+</tr>
+<tr>
+<td><code>table</code></td>
+<td>No</td>
+<td>—</td>
+<td><code>&lt;table&gt;</code> (data tables only)</td>
+</tr>
+<tr>
+<td><code>list</code></td>
+<td>No</td>
+<td>—</td>
+<td><code>&lt;ul&gt;</code>, <code>&lt;ol&gt;</code></td>
+</tr>
+<tr>
+<td><code>section</code></td>
+<td>No</td>
+<td>—</td>
+<td><code>&lt;section&gt;</code>, <code>&lt;article&gt;</code></td>
+</tr>
+</tbody></table>
+<p>Interactive elements are <strong>never</strong> dropped by budget limits.</p>
+<h2>Stable Element IDs</h2>
+<p>Every element gets a deterministic ID derived from its semantic identity:</p>
+<pre><code>element_id = &quot;e_&quot; + hex(sha256(origin + &quot;|&quot; + role + &quot;|&quot; + name + &quot;|&quot; + dom_path))[0..12]
+</code></pre>
+<p>IDs survive page refreshes and minor layout changes. The same button with the same text on the same page always produces the same ID. Agents can reference elements across snapshots using these stable IDs.</p>
+<p>Region IDs follow a simpler pattern: <code>r_{role}</code> for the first of each role, <code>r_{role}_{index}</code> for subsequent ones (e.g., <code>r_navigation</code>, <code>r_navigation_1</code>).</p>
+<h2>Affordances</h2>
+<p>The <code>actions</code> array on interactive elements tells agents what operations are available:</p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Elements</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>click</code></td>
+<td>link, button</td>
+<td>Navigate or activate</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td>text_input, textarea</td>
+<td>Enter text content</td>
+</tr>
+<tr>
+<td><code>clear</code></td>
+<td>text_input, textarea</td>
+<td>Clear current value</td>
+</tr>
+<tr>
+<td><code>select</code></td>
+<td>select, radio</td>
+<td>Choose an option</td>
+</tr>
+<tr>
+<td><code>toggle</code></td>
+<td>checkbox</td>
+<td>Toggle checked state</td>
+</tr>
+</tbody></table>
+<p>Non-interactive elements omit the <code>actions</code> field entirely.</p>
+<h2>JSON Schema</h2>
+<p>The formal JSON Schema is at <a href="https://github.com/nicepkg/plasmate/blob/master/specs/som-schema.json"><code>specs/som-schema.json</code></a>. Use it to validate SOM output from any producer:</p>
+<pre><code class="language-bash"># Using ajv-cli
+npm install -g ajv-cli
+ajv validate -s specs/som-schema.json -d output.json
+
+# Using Python jsonschema
+pip install jsonschema
+python -c &quot;
+import json, jsonschema
+schema = json.load(open(&#39;specs/som-schema.json&#39;))
+doc = json.load(open(&#39;output.json&#39;))
+jsonschema.validate(doc, schema)
+print(&#39;Valid SOM document&#39;)
+&quot;
+</code></pre>
+<h2>Conformance Tests</h2>
+<p>The conformance test suite at <a href="https://github.com/nicepkg/plasmate/tree/master/specs/conformance"><code>specs/conformance/</code></a> contains HTML inputs paired with expected SOM outputs. Use these to verify a SOM producer handles all element types, region detection, ID generation, and budget enforcement correctly.</p>
+<h2>What&#39;s Next</h2>
 <ul>
-<li>CDP WebSocket server compatibility with Puppeteer</li>
-<li><code>page.goto()</code> with full JS pipeline execution</li>
-<li><code>page.waitForFunction()</code> polling</li>
-<li><code>page.evaluate()</code> for DOM queries</li>
-<li>XHR/fetch requests from V8 (blocking bridge)</li>
-<li>DOM serialization with JS-mutated content</li>
-</ul>
-<hr>
-<h2>Major Sites Speed Test</h2>
-<p>Engine: plasmate v0.1.0
-URLs tested: 38
-Successful: 36 (95%)</p>
-<h3>Summary</h3>
-<table>
-<thead>
-<tr>
-<th>Metric</th>
-<th>Mean</th>
-<th>Median</th>
-<th>P95</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>HTML bytes</td>
-<td>379,656</td>
-<td>193,796</td>
-<td>1,214,266</td>
-</tr>
-<tr>
-<td>SOM bytes</td>
-<td>22,759</td>
-<td>22,034</td>
-<td>56,625</td>
-</tr>
-<tr>
-<td><strong>Compression ratio</strong></td>
-<td><strong>45.4x</strong></td>
-<td><strong>10.2x</strong></td>
-<td>105.1x</td>
-</tr>
-<tr>
-<td>HTML tokens (est)</td>
-<td>94,914</td>
-<td>48,449</td>
-<td>303,566</td>
-</tr>
-<tr>
-<td>SOM tokens (est)</td>
-<td>5,689</td>
-<td>5,508</td>
-<td>14,156</td>
-</tr>
-<tr>
-<td>Fetch time (ms)</td>
-<td>256</td>
-<td>172</td>
-<td>629</td>
-</tr>
-<tr>
-<td>Parse+SOM time (ms)</td>
-<td>20</td>
-<td>16</td>
-<td>61</td>
-</tr>
-</tbody></table>
-<h3>Grade Distribution</h3>
-<table>
-<thead>
-<tr>
-<th>Grade</th>
-<th>Count</th>
-<th>Criteria</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>A</td>
-<td>12</td>
-<td>&gt;15x compression</td>
-</tr>
-<tr>
-<td>B</td>
-<td>8</td>
-<td>8-15x compression</td>
-</tr>
-<tr>
-<td>C</td>
-<td>9</td>
-<td>3-8x compression</td>
-</tr>
-<tr>
-<td>D</td>
-<td>4</td>
-<td>1-3x compression</td>
-</tr>
-<tr>
-<td>F</td>
-<td>3</td>
-<td>&lt;1x or error</td>
-</tr>
-</tbody></table>
-<h3>Highlights</h3>
-<table>
-<thead>
-<tr>
-<th>Site</th>
-<th>HTML</th>
-<th>SOM</th>
-<th>Compression</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>accounts.google.com</td>
-<td>1.2MB</td>
-<td>1.4KB</td>
-<td><strong>864x</strong></td>
-</tr>
-<tr>
-<td>x.com (Twitter)</td>
-<td>239KB</td>
-<td>1.5KB</td>
-<td><strong>159x</strong></td>
-</tr>
-<tr>
-<td>linear.app</td>
-<td>2.2MB</td>
-<td>21KB</td>
-<td><strong>105x</strong></td>
-</tr>
-<tr>
-<td>bing.com</td>
-<td>157KB</td>
-<td>1.7KB</td>
-<td><strong>93x</strong></td>
-</tr>
-<tr>
-<td>google.com</td>
-<td>194KB</td>
-<td>2.6KB</td>
-<td><strong>74x</strong></td>
-</tr>
-<tr>
-<td>vercel.com</td>
-<td>941KB</td>
-<td>22KB</td>
-<td><strong>43x</strong></td>
-</tr>
-<tr>
-<td>steampowered.com</td>
-<td>842KB</td>
-<td>23KB</td>
-<td><strong>36x</strong></td>
-</tr>
-<tr>
-<td>duckduckgo.com</td>
-<td>391KB</td>
-<td>12KB</td>
-<td><strong>33x</strong></td>
-</tr>
-<tr>
-<td>ebay.com</td>
-<td>831KB</td>
-<td>33KB</td>
-<td><strong>25x</strong></td>
-</tr>
-<tr>
-<td>Wikipedia (USA)</td>
-<td>1.7MB</td>
-<td>70KB</td>
-<td><strong>25x</strong></td>
-</tr>
-</tbody></table>
-<h3>Performance Notes</h3>
-<ul>
-<li><strong>Parse+SOM time</strong>: Median 16ms for full HTML-&gt;SOM compilation</li>
-<li><strong>Heavy JS sites</strong>: Excellent compression (login pages, SPAs) due to stripping non-essential markup</li>
-<li><strong>Content-rich sites</strong>: Good compression (Wikipedia 10-25x, news sites 11-15x)</li>
-<li><strong>Text-minimal sites</strong>: Lower ratios expected (text.npr.org, example.com)</li>
-</ul>
-<h3>Test Environment</h3>
-<ul>
-<li>macOS, Apple Silicon</li>
-<li>Local network fetch (varies by site latency)</li>
-<li>No caching between runs</li>
+<li>Read the <a href="som">SOM Reference</a> for implementation details on budgets, hints, and compression</li>
+<li>Read the <a href="awp">AWP Protocol</a> for the WebSocket API that serves SOM</li>
+<li>Check the <a href="quickstart">Quick Start</a> to produce your first SOM output</li>
 </ul>
 
     </main>
