@@ -9,6 +9,9 @@ description = "Agent-native headless browser. HTML in, Semantic Object Model out
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.9"
+dependencies = [
+    "pydantic>=2.0",
+]
 authors = [
     {name = "Plasmate Labs", email = "hello@plasmate.app"}
 ]

@@ -27,40 +27,37 @@ import { ChildProcess, spawn } from 'child_process';
 import { createInterface, Interface } from 'readline';
 import { EventEmitter } from 'events';
 
-// ---- Types ----
+// ---- SOM types (from specs/som-schema.json) ----
 
-export interface SomRegion {
-  role: string;
-  elements: SomElement[];
-}
+export type {
+  Som,
+  SomRegion,
+  SomElement,
+  SomElementAttrs,
+  SomMeta,
+  StructuredData,
+  RegionRole,
+  ElementRole,
+  ElementAction,
+  SemanticHint,
+  SelectOption,
+  ListItem,
+  LinkElement,
+} from './types';
 
-export interface SomElement {
-  id?: string;
-  tag?: string;
-  role?: string;
-  text?: string;
-  attrs?: Record<string, unknown>;
-  hints?: string[];
-  children?: SomElement[];
-  interactive?: boolean;
-}
+// ---- SOM query helpers ----
 
-export interface SomMeta {
-  som_bytes: number;
-  element_count: number;
-  interactive_count: number;
-  parse_us?: number;
-  som_us?: number;
-  total_us?: number;
-}
+export {
+  findByRole,
+  findById,
+  findByTag,
+  findInteractive,
+  findByText,
+  flatElements,
+  getTokenEstimate,
+} from './query';
 
-export interface Som {
-  title: string;
-  url: string;
-  regions: SomRegion[];
-  meta: SomMeta;
-  structured_data?: unknown;
-}
+import type { Som } from './types';
 
 export interface PageSession {
   sessionId: string;
@@ -243,6 +240,20 @@ export class Plasmate extends EventEmitter {
   }
 
   // ---- Stateless Tools ----
+
+  /**
+   * Convenience alias for `fetchPage` — fetch a page and return its typed SOM.
+   *
+   * @param url - URL to fetch
+   * @param options.budget - Maximum output tokens (SOM will be truncated)
+   * @param options.javascript - Enable JS execution (default: true)
+   */
+  async som(url: string, options?: {
+    budget?: number;
+    javascript?: boolean;
+  }): Promise<Som> {
+    return this.fetchPage(url, options);
+  }
 
   /**
    * Fetch a page and return its Semantic Object Model.

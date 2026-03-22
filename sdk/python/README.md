@@ -83,6 +83,59 @@ with Plasmate() as browser:
 
 - **`close()`** - Shut down the plasmate process
 
+### Pydantic Models
+
+Parse SOM responses into typed Pydantic v2 models:
+
+```python
+from plasmate import Plasmate, Som, find_interactive, find_by_text, flat_elements
+
+browser = Plasmate()
+data = browser.fetch_page("https://example.com")
+som = Som(**data)
+
+print(som.title)               # "Example Domain"
+print(som.meta.element_count)  # 12
+
+for region in som.regions:
+    print(f"{region.role}: {len(region.elements)} elements")
+```
+
+### Query Helpers
+
+Search and traverse SOM documents:
+
+```python
+from plasmate import Som, find_by_role, find_by_id, find_by_tag
+from plasmate import find_interactive, find_by_text, flat_elements, get_token_estimate
+
+# Find all navigation regions
+navs = find_by_role(som, "navigation")
+
+# Find a specific element
+el = find_by_id(som, "e5")
+if el:
+    print(el.role, el.text)
+
+# Find all links
+links = find_by_tag(som, "link")
+
+# Get all interactive elements (buttons, inputs, etc.)
+for el in find_interactive(som):
+    print(f"{el.id}: {el.role} - {el.text}")
+
+# Search by text content (case-insensitive)
+results = find_by_text(som, "sign up")
+
+# Flatten all elements for iteration
+all_elements = flat_elements(som)
+print(f"{len(all_elements)} total elements")
+
+# Estimate token usage
+tokens = get_token_estimate(som)
+print(f"~{tokens} tokens")
+```
+
 ## How It Works
 
 The SDK spawns `plasmate mcp` as a child process and communicates via JSON-RPC 2.0 over stdio. The plasmate binary handles HTML parsing, JavaScript execution (V8), and SOM compilation in Rust.

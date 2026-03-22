@@ -23,6 +23,54 @@ Example::
 """
 
 from .client import Plasmate, AsyncPlasmate
+from .types import (
+    ElementAttrs,
+    ElementRole,
+    LinkElement,
+    ListItem,
+    RegionRole,
+    SelectOption,
+    SemanticHint,
+    Som,
+    SomElement,
+    SomMeta,
+    SomRegion,
+    StructuredData,
+)
+from .query import (
+    find_by_id,
+    find_by_role,
+    find_by_tag,
+    find_by_text,
+    find_interactive,
+    flat_elements,
+    get_token_estimate,
+)
 
-__all__ = ["Plasmate", "AsyncPlasmate"]
+__all__ = [
+    # Client
+    "Plasmate",
+    "AsyncPlasmate",
+    # Types
+    "ElementAttrs",
+    "ElementRole",
+    "LinkElement",
+    "ListItem",
+    "RegionRole",
+    "SelectOption",
+    "SemanticHint",
+    "Som",
+    "SomElement",
+    "SomMeta",
+    "SomRegion",
+    "StructuredData",
+    # Query helpers
+    "find_by_id",
+    "find_by_role",
+    "find_by_tag",
+    "find_by_text",
+    "find_interactive",
+    "flat_elements",
+    "get_token_estimate",
+]
 __version__ = "0.2.0"
