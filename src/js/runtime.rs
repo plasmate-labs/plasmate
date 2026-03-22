@@ -7,12 +7,20 @@
 use std::cell::RefCell;
 use std::sync::Once;
 use std::time::Duration;
+
+use html5ever::parse_document;
+use html5ever::tendril::TendrilSink;
+use markup5ever_rcdom::RcDom;
+
 use tracing::{debug, info, warn};
+
+use super::dom_bridge::NodeRegistry;
 
 // Thread-local storage for the reqwest client used by the fetch bridge.
 // This is needed because V8 callbacks can't easily capture external state.
 thread_local! {
     static FETCH_CLIENT: RefCell<Option<reqwest::Client>> = const { RefCell::new(None) };
+    static DOM_REGISTRY: RefCell<Option<NodeRegistry>> = const { RefCell::new(None) };
 }
 
 /// Maximum response body size (1MB) to prevent memory issues.
@@ -2750,6 +2758,189 @@ window.dispatchEvent = function(event) {
 document.readyState = 'loading';
 "#;
 
+/// Optional DOM bridge shim.
+///
+/// When `__plasmate_dom` is injected by Rust and `__plasmate_bridge_enable()`
+/// is invoked, this installs lightweight node wrappers that proxy DOM
+/// mutations and queries into the Rust NodeRegistry.
+const DOM_BRIDGE_SHIM: &str = r#"
+(function(){
+  function _makeNode(id) {
+    if (!id) return null;
+    if (!window.__plasmate_node_cache) window.__plasmate_node_cache = {};
+    if (window.__plasmate_node_cache[id]) return window.__plasmate_node_cache[id];
+
+    var node = {
+      _id: id,
+      get nodeType() { return __plasmate_dom.getNodeType(this._id); },
+      get tagName() { return (__plasmate_dom.getTagName(this._id) || '').toUpperCase(); },
+      get nodeName() {
+        var nt = this.nodeType;
+        if (nt === 1) return this.tagName;
+        if (nt === 3) return '#text';
+        if (nt === 9) return '#document';
+        return '#node';
+      },
+      get parentNode() {
+        var pid = __plasmate_dom.getParent(this._id);
+        return pid ? _makeNode(pid) : null;
+      },
+      get parentElement() { return this.parentNode; },
+      get childNodes() {
+        return (__plasmate_dom.getChildren(this._id) || []).map(_makeNode);
+      },
+      get children() { return this.childNodes.filter(function(n){ return n && n.nodeType === 1; }); },
+      get firstChild() { var cn = this.childNodes; return cn.length ? cn[0] : null; },
+      get lastChild() { var cn = this.childNodes; return cn.length ? cn[cn.length-1] : null; },
+      get nextSibling() {
+        var p = this.parentNode;
+        if (!p) return null;
+        var cn = p.childNodes;
+        for (var i = 0; i < cn.length; i++) {
+          if (cn[i]._id === this._id) return cn[i+1] || null;
+        }
+        return null;
+      },
+      get previousSibling() {
+        var p = this.parentNode;
+        if (!p) return null;
+        var cn = p.childNodes;
+        for (var i = 0; i < cn.length; i++) {
+          if (cn[i]._id === this._id) return cn[i-1] || null;
+        }
+        return null;
+      },
+      get textContent() { return __plasmate_dom.getTextContent(this._id); },
+      set textContent(v) { __plasmate_dom.setTextContent(this._id, String(v)); },
+      get innerHTML() { return __plasmate_dom.getInnerHTML(this._id); },
+      set innerHTML(v) { __plasmate_dom.setInnerHTML(this._id, String(v)); },
+      appendChild: function(child) {
+        __plasmate_dom.appendChild(this._id, child._id);
+        return child;
+      },
+      removeChild: function(child) {
+        __plasmate_dom.removeChild(this._id, child._id);
+        return child;
+      },
+      insertBefore: function(newChild, refChild) {
+        // Simplified: just appendChild (correct ordering requires more work)
+        __plasmate_dom.appendChild(this._id, newChild._id);
+        return newChild;
+      },
+      replaceChild: function(newChild, oldChild) {
+        __plasmate_dom.appendChild(this._id, newChild._id);
+        __plasmate_dom.removeChild(this._id, oldChild._id);
+        return oldChild;
+      },
+      setAttribute: function(n, v) { __plasmate_dom.setAttribute(this._id, String(n), String(v)); },
+      getAttribute: function(n) { return __plasmate_dom.getAttribute(this._id, String(n)); },
+      removeAttribute: function(n) { __plasmate_dom.setAttribute(this._id, String(n), ''); },
+      hasAttribute: function(n) { return __plasmate_dom.getAttribute(this._id, String(n)) !== null; },
+      querySelector: function(sel) {
+        var id = __plasmate_dom.querySelector(this._id, String(sel));
+        return id ? _makeNode(id) : null;
+      },
+      querySelectorAll: function(sel) {
+        return (__plasmate_dom.querySelectorAll(this._id, String(sel)) || []).map(_makeNode);
+      },
+      getElementsByTagName: function(tag) {
+        return this.querySelectorAll(String(tag));
+      },
+      getElementsByClassName: function(cls) {
+        return this.querySelectorAll('.' + String(cls));
+      },
+      contains: function(other) { return false; },
+      addEventListener: function() {},
+      removeEventListener: function() {},
+      dispatchEvent: function() { return true; },
+      getBoundingClientRect: function() { return {x:0,y:0,top:0,left:0,bottom:100,right:100,width:100,height:100}; },
+      focus: function() {},
+      blur: function() {},
+      cloneNode: function(deep) {
+        // Stub: create a new element with same tag
+        var tag = this.tagName;
+        if (tag && tag !== '') {
+          return document.createElement(tag.toLowerCase());
+        }
+        return document.createTextNode(this.textContent || '');
+      },
+      get style() {
+        var self = this;
+        return new Proxy({}, {
+          get: function(t, p) { return ''; },
+          set: function(t, p, v) { return true; }
+        });
+      },
+      get classList() {
+        var self = this;
+        return {
+          add: function() { var c = self.getAttribute('class') || ''; var args = Array.prototype.slice.call(arguments); args.forEach(function(a){ if (c.split(/\s+/).indexOf(a) < 0) c = c ? c + ' ' + a : a; }); self.setAttribute('class', c); },
+          remove: function() { var c = (self.getAttribute('class') || '').split(/\s+/); var args = Array.prototype.slice.call(arguments); c = c.filter(function(x){ return args.indexOf(x) < 0; }); self.setAttribute('class', c.join(' ')); },
+          toggle: function(a) { var c = (self.getAttribute('class') || '').split(/\s+/); if (c.indexOf(a) >= 0) { c = c.filter(function(x){ return x !== a; }); self.setAttribute('class', c.join(' ')); return false; } else { self.setAttribute('class', (self.getAttribute('class') || '') + ' ' + a); return true; } },
+          contains: function(a) { return (self.getAttribute('class') || '').split(/\s+/).indexOf(a) >= 0; },
+          get length() { return (self.getAttribute('class') || '').trim().split(/\s+/).filter(Boolean).length; },
+          item: function(i) { return (self.getAttribute('class') || '').trim().split(/\s+/).filter(Boolean)[i] || null; }
+        };
+      }
+    };
+
+    // Common expando properties
+    Object.defineProperty(node, 'id', {
+      get: function(){ return this.getAttribute('id') || ''; },
+      set: function(v){ this.setAttribute('id', v); },
+      configurable: true
+    });
+    Object.defineProperty(node, 'className', {
+      get: function(){ return __plasmate_dom.getClassName(this._id) || ''; },
+      set: function(v){ this.setAttribute('class', v); },
+      configurable: true
+    });
+
+    window.__plasmate_node_cache[id] = node;
+    return node;
+  }
+
+  window.__plasmate_bridge_enable = function() {
+    try {
+      if (typeof __plasmate_dom === 'undefined') return false;
+
+      // Patch a minimal subset of document so common frameworks work.
+      // Keep existing event/mutation infrastructure from the legacy shim.
+      document.createElement = function(tag){ return _makeNode(__plasmate_dom.createElement(String(tag))); };
+      document.createTextNode = function(text){ return _makeNode(__plasmate_dom.createTextNode(String(text))); };
+      document.createDocumentFragment = function(){ return _makeNode(__plasmate_dom.createElement('div')); };
+      document.getElementById = function(id){
+        var root = __plasmate_dom.documentId();
+        var found = __plasmate_dom.querySelector(root, '#' + String(id));
+        return found ? _makeNode(found) : null;
+      };
+      document.querySelector = function(sel){
+        var root = __plasmate_dom.documentId();
+        var found = __plasmate_dom.querySelector(root, String(sel));
+        return found ? _makeNode(found) : null;
+      };
+      document.querySelectorAll = function(sel){
+        var root = __plasmate_dom.documentId();
+        return (__plasmate_dom.querySelectorAll(root, String(sel)) || []).map(_makeNode);
+      };
+      document.getElementsByTagName = function(tag){
+        return document.querySelectorAll(String(tag));
+      };
+      document.getElementsByClassName = function(cls){
+        return document.querySelectorAll('.' + String(cls));
+      };
+
+      var bodyId = __plasmate_dom.bodyId();
+      if (bodyId) document.body = _makeNode(bodyId);
+
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+})();
+"#;
+
 /// A JavaScript runtime bound to a single page.
 /// Context persists between script executions (state accumulates like a browser).
 pub struct JsRuntime {
@@ -2790,6 +2981,10 @@ impl JsRuntime {
         if config.inject_dom_shim {
             if let Err(e) = rt.execute_in_context(DOM_SHIM, "<plasmate-shim>") {
                 warn!("Failed to inject DOM shim: {}", e);
+            }
+            // Inject DOM bridge shim (defines __plasmate_bridge_enable)
+            if let Err(e) = rt.execute_in_context(DOM_BRIDGE_SHIM, "<plasmate-dom-bridge>") {
+                warn!("Failed to inject DOM bridge shim: {}", e);
             }
         }
 
