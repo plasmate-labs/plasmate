@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::{Args, Parser, Subcommand};
 use std::sync::Arc;
 use tracing::info;
 use tracing_subscriber::EnvFilter;
@@ -23,6 +23,73 @@ struct Cli {
     command: Commands,
 }
 
+/// TLS configuration options (shared across fetch and serve commands).
+#[derive(Args, Debug, Clone, Default)]
+struct TlsArgs {
+    /// Minimum TLS version (1.2 or 1.3)
+    #[arg(long, value_name = "VERSION")]
+    tls_min_version: Option<String>,
+    /// Maximum TLS version (1.2 or 1.3)
+    #[arg(long, value_name = "VERSION")]
+    tls_max_version: Option<String>,
+    /// Skip TLS certificate verification (like curl -k)
+    #[arg(long, short = 'k')]
+    insecure: bool,
+    /// Path to PEM file with custom CA certificates
+    #[arg(long, value_name = "FILE")]
+    ca_cert: Option<String>,
+    /// TLS 1.2 cipher suites (comma-separated IANA names, controls order in ClientHello)
+    #[arg(long, value_name = "CIPHERS", value_delimiter = ',')]
+    tls12_ciphers: Vec<String>,
+    /// TLS 1.3 cipher suites (comma-separated IANA names)
+    #[arg(long, value_name = "CIPHERS", value_delimiter = ',')]
+    tls13_ciphers: Vec<String>,
+    /// ALPN protocols to advertise (comma-separated, e.g., "h2,http/1.1")
+    #[arg(long, value_name = "PROTOCOLS", value_delimiter = ',')]
+    alpn: Vec<String>,
+    /// Supported key exchange groups / curves (comma-separated, e.g., "x25519,secp256r1")
+    #[arg(long, value_name = "GROUPS", value_delimiter = ',')]
+    tls_groups: Vec<String>,
+    /// Disable TLS Server Name Indication
+    #[arg(long)]
+    no_sni: bool,
+    /// List available cipher suites and supported groups, then exit
+    #[arg(long)]
+    list_tls_options: bool,
+}
+
+impl TlsArgs {
+    fn to_tls_config(&self) -> Result<Option<network::tls::TlsConfig>, Box<dyn std::error::Error>> {
+        use network::tls::{TlsConfig, TlsVersion};
+
+        let config = TlsConfig {
+            min_version: self
+                .tls_min_version
+                .as_deref()
+                .map(TlsVersion::parse)
+                .transpose()?,
+            max_version: self
+                .tls_max_version
+                .as_deref()
+                .map(TlsVersion::parse)
+                .transpose()?,
+            danger_accept_invalid_certs: self.insecure,
+            ca_cert_path: self.ca_cert.as_ref().map(std::path::PathBuf::from),
+            cipher_suites_tls12: self.tls12_ciphers.clone(),
+            cipher_suites_tls13: self.tls13_ciphers.clone(),
+            alpn_protocols: self.alpn.clone(),
+            supported_groups: self.tls_groups.clone(),
+            enable_sni: if self.no_sni { Some(false) } else { None },
+        };
+
+        if config.is_default() {
+            Ok(None)
+        } else {
+            Ok(Some(config))
+        }
+    }
+}
+
 #[derive(Subcommand)]
 enum Commands {
     /// Fetch a URL and output SOM JSON
@@ -41,6 +108,8 @@ enum Commands {
         /// Load cookies from a stored auth profile (domain name)
         #[arg(long)]
         profile: Option<String>,
+        #[command(flatten)]
+        tls: TlsArgs,
     },
     /// Start the WebSocket server
     Serve {
@@ -56,6 +125,8 @@ enum Commands {
         /// Load cookies from stored auth profile(s) (comma-separated domain names)
         #[arg(long)]
         profile: Option<String>,
+        #[command(flatten)]
+        tls: TlsArgs,
     },
     /// Run SOM benchmarks against a list of URLs
     Bench {
@@ -194,7 +265,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             no_external,
             no_js,
             profile,
+            tls,
         } => {
+            if tls.list_tls_options {
+                print_tls_options();
+                return Ok(());
+            }
+            // Set global TLS config if any TLS flags were provided
+            if let Some(tls_config) = tls.to_tls_config()? {
+                info!(tls = %tls_config.summary(), "TLS configuration");
+                network::tls::set_global(tls_config);
+            }
             cmd_fetch(
                 &url,
                 output.as_deref(),
@@ -209,7 +290,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             port,
             protocol,
             profile,
+            tls,
         } => {
+            if tls.list_tls_options {
+                print_tls_options();
+                return Ok(());
+            }
+            // Set global TLS config if any TLS flags were provided
+            if let Some(tls_config) = tls.to_tls_config()? {
+                info!(tls = %tls_config.summary(), "TLS configuration for all sessions");
+                network::tls::set_global(tls_config);
+            }
             // Set global auth profiles for all sessions
             if let Some(ref profile_str) = profile {
                 let domains: Vec<String> = profile_str
@@ -528,6 +619,27 @@ fn calculate_profile_expiry_status(profile: &auth::store::CookieProfile) -> &'st
     }
 }
 
+fn print_tls_options() {
+    eprintln!("Available TLS cipher suites (ring provider):");
+    eprintln!();
+    for suite in network::tls::available_cipher_suites() {
+        eprintln!("  {}", suite);
+    }
+    eprintln!();
+    eprintln!("Available key exchange groups:");
+    eprintln!();
+    for group in network::tls::available_kx_groups() {
+        eprintln!("  {}", group);
+    }
+    eprintln!();
+    eprintln!("Usage examples:");
+    eprintln!("  plasmate fetch URL --tls-min-version 1.3");
+    eprintln!("  plasmate fetch URL --insecure");
+    eprintln!("  plasmate fetch URL --tls13-ciphers TLS13_AES_256_GCM_SHA384,TLS13_AES_128_GCM_SHA256");
+    eprintln!("  plasmate fetch URL --alpn h2,http/1.1 --tls-groups x25519,secp256r1");
+    eprintln!("  plasmate serve --tls-min-version 1.2 --ca-cert /path/to/ca.pem");
+}
+
 async fn cmd_fetch(
     url: &str,
     output: Option<&str>,
@@ -547,7 +659,8 @@ async fn cmd_fetch(
         }
     }
 
-    let client = network::fetch::build_client_h1_fallback(None, jar)?;
+    let tls_config = network::tls::global();
+    let client = network::fetch::build_client_h1_fallback(None, jar, tls_config)?;
 
     info!(url, "Fetching");
     let result = network::fetch::fetch_url(&client, url, 30000).await?;
@@ -686,7 +799,7 @@ async fn cmd_throughput_bench(
     use std::time::Instant;
 
     let jar = Arc::new(reqwest::cookie::Jar::default());
-    let client = network::fetch::build_client_h1_fallback(None, jar)?;
+    let client = network::fetch::build_client_h1_fallback(None, jar, None)?;
 
     // Generate URLs
     let urls: Vec<String> = (1..=pages).map(|i| format!("{}/{}", base_url, i)).collect();

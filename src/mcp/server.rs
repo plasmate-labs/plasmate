@@ -69,7 +69,7 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
 
     // Build HTTP client for fetching pages
     let jar = Arc::new(reqwest::cookie::Jar::default());
-    let client = fetch::build_client_h1_fallback(None, jar)?;
+    let client = fetch::build_client_h1_fallback(None, jar, None)?;
 
     // Session manager for stateful browser tools
     let sessions = Arc::new(SessionManager::new());

@@ -291,7 +291,7 @@ fn percentile(values: &[f64], p: f64) -> f64 {
 /// Run benchmarks for a list of URLs.
 pub async fn run(urls: &[String], timeout_ms: u64) -> BenchReport {
     let jar = Arc::new(Jar::default());
-    let client = fetch::build_client(None, jar).expect("Failed to build HTTP client");
+    let client = fetch::build_client(None, jar, None).expect("Failed to build HTTP client");
 
     let mut results = Vec::new();
 

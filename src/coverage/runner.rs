@@ -191,7 +191,7 @@ pub fn parse_urls_file(content: &str) -> Vec<String> {
 
 pub async fn run(urls: &[String], opts: &CoverageOptions) -> CoverageReport {
     let jar = Arc::new(Jar::default());
-    let client = fetch::build_client(None, jar).expect("Failed to build HTTP client");
+    let client = fetch::build_client(None, jar, None).expect("Failed to build HTTP client");
 
     let max = opts.max_urls.unwrap_or(urls.len());
     let urls: Vec<String> = urls.iter().take(max).cloned().collect();
