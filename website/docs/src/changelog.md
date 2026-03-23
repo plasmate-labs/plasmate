@@ -1,6 +1,19 @@
       <h1>Changelog</h1>
       <p>All notable changes to Plasmate, tracked by version and date.</p>
 
+      <h2><span class="version-tag">v0.4.0</span> <span class="date-tag">2026-03-23</span></h2>
+      <p>Chrome-delegated screenshots, completed SPA hydration, and full CDP stub coverage for Puppeteer compatibility.</p>
+      <ul>
+        <li><span class="change-type feat">feat</span> <strong>Chrome-delegated screenshots</strong> for pixel-perfect rendering via <code>Page.captureScreenshot</code>.</li>
+        <li><span class="change-type feat">feat</span> <strong>Completed SPA hydration ops:</strong> <code>insertBefore</code>, <code>replaceChild</code>, <code>classList</code>, <code>cloneNode</code>.</li>
+        <li><span class="change-type feat">feat</span> <strong>Timer queue drain</strong> for <code>setTimeout</code> and <code>requestAnimationFrame</code>.</li>
+        <li><span class="change-type feat">feat</span> <strong>Wired <code>page.click()</code> and <code>page.type()</code></strong> via DOM bridge.</li>
+        <li><span class="change-type feat">feat</span> <strong>Implemented <code>page.waitForSelector()</code></strong> for final DOM state.</li>
+        <li><span class="change-type fix">fix</span> <strong>Fixed all remaining CDP stubs</strong>, including <code>setDeviceMetricsOverride</code>, <code>addScriptToEvaluateOnNewDocument</code>, <code>getLayoutMetrics</code>, and <code>getProperties</code> for improved Puppeteer compatibility.</li>
+      </ul>
+
+      <hr />
+
       <h2><span class="version-tag">v0.3.0</span> <span class="date-tag">2026-03-22</span></h2>
       <p>SPA rendering, interaction APIs, plugin system, and multi-session support. ~25K lines Rust, 200+ tests passing.</p>
       <ul>

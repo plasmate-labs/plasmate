@@ -38,19 +38,22 @@ Plasmate's roadmap is public and standards-first. We ship compression and correc
 - Wasm plugin system (8 plugin types, wasmtime runtime)
 - Browser-realistic HTTP headers
 
-## v0.4: SPA Coverage & Adoption (Current)
+## Completed (v0.4)
 
-- [x] Deep SPA hydration ops (insertBefore, replaceChild, classList, cloneNode)
-- [x] Timer queue drain (setTimeout, requestAnimationFrame)
-- [x] page.click() / page.type() via DOM bridge
-- [x] page.waitForSelector() (final DOM state)
+- Deep SPA hydration ops (insertBefore, replaceChild, classList, cloneNode)
+- Timer queue drain (setTimeout, requestAnimationFrame)
+- page.click() / page.type() via DOM bridge
+- page.waitForSelector() (final DOM state)
+
+## v0.5: Rendering & Scale (Current)
+
+- [x] Page.captureScreenshot (delegated to Chrome for pixel-perfect results)
 - [ ] page.waitForNavigation() and page.goto(waitUntil=...)
 - [ ] SOM Cache (in-memory + on-disk, content-hash based)
 - [ ] Framework PRs submitted upstream (Browser Use, LangChain)
-- [ ] Page.captureScreenshot with built-in layout renderer
 - [ ] Page.setContent, Accessibility.getFullAXTree
 
-## v0.5+: Scale
+## v0.6+: Scale & Adoption
 
 - [ ] Parallel sessions at scale (500+ concurrent per 8GB)
 - [ ] Proxy rotation support
