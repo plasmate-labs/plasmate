@@ -389,9 +389,15 @@ function stripFrontmatter(md) {
   return md;
 }
 
-// Extract first H1 as title
+// Extract first H1 as title (markdown)
 function extractTitle(md) {
   const m = md.match(/^#\s+(.+)$/m);
+  return m ? m[1].trim() : 'Plasmate Docs';
+}
+
+// Extract title from HTML content (first <h1>)
+function extractHtmlTitle(html) {
+  const m = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
   return m ? m[1].trim() : 'Plasmate Docs';
 }
 
@@ -409,15 +415,16 @@ let built = 0;
 
 for (const file of files) {
   const raw = readFileSync(join(SRC, file), 'utf-8');
-  const md = stripFrontmatter(raw);
-  const title = extractTitle(md);
-  const html = marked.parse(md);
+  const content = stripFrontmatter(raw);
+  const isHtml = content.trimStart().startsWith('<');
+  const title = isHtml ? extractHtmlTitle(content) : extractTitle(content);
+  const html = isHtml ? content : marked.parse(content);
   const slug = basename(file, '.md');
   const page = template(title, html, slug);
 
   writeFileSync(join(OUT, `${slug}.html`), page);
   built++;
-  console.log(`  ${slug}.html  (${title})`);
+  console.log(`  ${slug}.html  (${title})${isHtml ? ' [html passthrough]' : ''}`);
 }
 
 console.log(`\nBuilt ${built} pages -> ${OUT}/`);

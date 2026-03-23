@@ -47,14 +47,7 @@ Plasmate's roadmap is public and standards-first. We ship compression and correc
 - Chrome-delegated Page.captureScreenshot for pixel-perfect rendering
 - CDP stubs wired: setDeviceMetricsOverride, addScriptToEvaluateOnNewDocument, getLayoutMetrics, getProperties
 
-## v0.5: Rendering & Navigation (Current)
-
-- [ ] page.waitForNavigation() and page.goto(waitUntil=...)
-- [ ] SOM Cache (in-memory + on-disk, content-hash based)
-- [ ] Page.setContent, Accessibility.getFullAXTree
-- [ ] Framework PRs submitted upstream (Browser Use, LangChain)
-
-## v0.6+: Scale & Adoption
+## v0.5: Scale & Adoption (Next)
 
 - [ ] Parallel sessions at scale (500+ concurrent per 8GB)
 - [ ] Proxy rotation support

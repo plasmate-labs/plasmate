@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Plasmate Docs - Plasmate Docs</title>
-  <meta name="description" content="Plasmate documentation: Plasmate Docs" />
+  <title>SOM Cost Analysis - Plasmate Docs</title>
+  <meta name="description" content="Plasmate documentation: SOM Cost Analysis" />
 
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
@@ -347,236 +347,235 @@
       </div>
     </nav>
     <main class="content">
-      <pre><code>  &lt;h1&gt;SOM Cost Analysis&lt;/h1&gt;
+            <h1>SOM Cost Analysis</h1>
 
-  &lt;p&gt;How much does SOM compression save on LLM input costs? We tested &lt;strong&gt;49 real-world websites&lt;/strong&gt; and measured the token reduction from raw HTML to Plasmate SOM output.&lt;/p&gt;
+      <p>How much does SOM compression save on LLM input costs? We tested <strong>49 real-world websites</strong> and measured the token reduction from raw HTML to Plasmate SOM output.</p>
 
-  &lt;div class=&quot;hero-stats&quot;&gt;
-    &lt;div class=&quot;stat-card&quot;&gt;
-      &lt;div class=&quot;stat-value&quot;&gt;16.6x&lt;/div&gt;
-      &lt;div class=&quot;stat-label&quot;&gt;Overall Compression&lt;/div&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;stat-card&quot;&gt;
-      &lt;div class=&quot;stat-value&quot;&gt;10.5x&lt;/div&gt;
-      &lt;div class=&quot;stat-label&quot;&gt;Median Compression&lt;/div&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;stat-card&quot;&gt;
-      &lt;div class=&quot;stat-value&quot;&gt;94%&lt;/div&gt;
-      &lt;div class=&quot;stat-label&quot;&gt;Token Cost Savings&lt;/div&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;stat-card&quot;&gt;
-      &lt;div class=&quot;stat-value&quot;&gt;49&lt;/div&gt;
-      &lt;div class=&quot;stat-label&quot;&gt;URLs Tested&lt;/div&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
+      <div class="hero-stats">
+        <div class="stat-card">
+          <div class="stat-value">16.6x</div>
+          <div class="stat-label">Overall Compression</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">10.5x</div>
+          <div class="stat-label">Median Compression</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">94%</div>
+          <div class="stat-label">Token Cost Savings</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">49</div>
+          <div class="stat-label">URLs Tested</div>
+        </div>
+      </div>
 
-  &lt;p&gt;Range: &lt;strong&gt;0.7x&lt;/strong&gt; (example.com, tiny page) to &lt;strong&gt;116.9x&lt;/strong&gt; (cloud.google.com)&lt;/p&gt;
+      <p>Range: <strong>0.7x</strong> (example.com, tiny page) to <strong>116.9x</strong> (cloud.google.com)</p>
 
-  &lt;hr&gt;
+      <hr>
 
-  &lt;h2&gt;Cost per 1,000 Page Loads (49 URLs)&lt;/h2&gt;
+      <h2>Cost per 1,000 Page Loads (49 URLs)</h2>
 
-  &lt;p&gt;What it costs to send the content of all 49 test URLs to an LLM, repeated 1,000 times:&lt;/p&gt;
+      <p>What it costs to send the content of all 49 test URLs to an LLM, repeated 1,000 times:</p>
 
-  &lt;table&gt;
-    &lt;thead&gt;
-      &lt;tr&gt;
-        &lt;th&gt;Model&lt;/th&gt;
-        &lt;th&gt;HTML Cost&lt;/th&gt;
-        &lt;th&gt;SOM Cost&lt;/th&gt;
-        &lt;th&gt;Savings&lt;/th&gt;
-      &lt;/tr&gt;
-    &lt;/thead&gt;
-    &lt;tbody&gt;
-      &lt;tr&gt;
-        &lt;td&gt;GPT-4 ($10/M)&lt;/td&gt;
-        &lt;td&gt;$50,397&lt;/td&gt;
-        &lt;td&gt;$3,042&lt;/td&gt;
-        &lt;td class=&quot;savings&quot;&gt;$47,355 (94%)&lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr&gt;
-        &lt;td&gt;GPT-4o ($2.50/M)&lt;/td&gt;
-        &lt;td&gt;$12,599&lt;/td&gt;
-        &lt;td&gt;$761&lt;/td&gt;
-        &lt;td class=&quot;savings&quot;&gt;$11,839 (94%)&lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr&gt;
-        &lt;td&gt;Claude Sonnet ($3/M)&lt;/td&gt;
-        &lt;td&gt;$15,119&lt;/td&gt;
-        &lt;td&gt;$913&lt;/td&gt;
-        &lt;td class=&quot;savings&quot;&gt;$14,207 (94%)&lt;/td&gt;
-      &lt;/tr&gt;
-    &lt;/tbody&gt;
-  &lt;/table&gt;
+      <table>
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>HTML Cost</th>
+            <th>SOM Cost</th>
+            <th>Savings</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>GPT-4 ($10/M)</td>
+            <td>$50,397</td>
+            <td>$3,042</td>
+            <td class="savings">$47,355 (94%)</td>
+          </tr>
+          <tr>
+            <td>GPT-4o ($2.50/M)</td>
+            <td>$12,599</td>
+            <td>$761</td>
+            <td class="savings">$11,839 (94%)</td>
+          </tr>
+          <tr>
+            <td>Claude Sonnet ($3/M)</td>
+            <td>$15,119</td>
+            <td>$913</td>
+            <td class="savings">$14,207 (94%)</td>
+          </tr>
+        </tbody>
+      </table>
 
-  &lt;h2&gt;At Scale: 1M Pages/Month&lt;/h2&gt;
+      <h2>At Scale: 1M Pages/Month</h2>
 
-  &lt;p&gt;Monthly cost for processing one million pages at the average page size from this benchmark:&lt;/p&gt;
+      <p>Monthly cost for processing one million pages at the average page size from this benchmark:</p>
 
-  &lt;table&gt;
-    &lt;thead&gt;
-      &lt;tr&gt;
-        &lt;th&gt;Model&lt;/th&gt;
-        &lt;th&gt;HTML/month&lt;/th&gt;
-        &lt;th&gt;SOM/month&lt;/th&gt;
-        &lt;th&gt;Monthly Savings&lt;/th&gt;
-      &lt;/tr&gt;
-    &lt;/thead&gt;
-    &lt;tbody&gt;
-      &lt;tr&gt;
-        &lt;td&gt;GPT-4&lt;/td&gt;
-        &lt;td&gt;$1,028&lt;/td&gt;
-        &lt;td&gt;$62&lt;/td&gt;
-        &lt;td class=&quot;savings&quot;&gt;$966&lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr&gt;
-        &lt;td&gt;GPT-4o&lt;/td&gt;
-        &lt;td&gt;$257&lt;/td&gt;
-        &lt;td&gt;$16&lt;/td&gt;
-        &lt;td class=&quot;savings&quot;&gt;$241&lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr&gt;
-        &lt;td&gt;Sonnet&lt;/td&gt;
-        &lt;td&gt;$308&lt;/td&gt;
-        &lt;td&gt;$19&lt;/td&gt;
-        &lt;td class=&quot;savings&quot;&gt;$290&lt;/td&gt;
-      &lt;/tr&gt;
-    &lt;/tbody&gt;
-  &lt;/table&gt;
+      <table>
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>HTML/month</th>
+            <th>SOM/month</th>
+            <th>Monthly Savings</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>GPT-4</td>
+            <td>$1,028</td>
+            <td>$62</td>
+            <td class="savings">$966</td>
+          </tr>
+          <tr>
+            <td>GPT-4o</td>
+            <td>$257</td>
+            <td>$16</td>
+            <td class="savings">$241</td>
+          </tr>
+          <tr>
+            <td>Sonnet</td>
+            <td>$308</td>
+            <td>$19</td>
+            <td class="savings">$290</td>
+          </tr>
+        </tbody>
+      </table>
 
-  &lt;hr&gt;
+      <hr>
 
-  &lt;h2&gt;Top 15 Compression Results&lt;/h2&gt;
+      <h2>Top 15 Compression Results</h2>
 
-  &lt;div style=&quot;margin: 18px 0 28px;&quot;&gt;
-    &lt;div class=&quot;compression-row&quot;&gt;
-      &lt;span class=&quot;site-name&quot;&gt;cloud.google.com&lt;/span&gt;
-      &lt;div class=&quot;bar-wrap&quot;&gt;&lt;div class=&quot;bar&quot; style=&quot;width: 100%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;
-      &lt;span class=&quot;ratio&quot;&gt;116.9x&lt;/span&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;compression-row&quot;&gt;
-      &lt;span class=&quot;site-name&quot;&gt;linear.app&lt;/span&gt;
-      &lt;div class=&quot;bar-wrap&quot;&gt;&lt;div class=&quot;bar&quot; style=&quot;width: 90.1%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;
-      &lt;span class=&quot;ratio&quot;&gt;105.3x&lt;/span&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;compression-row&quot;&gt;
-      &lt;span class=&quot;site-name&quot;&gt;reddit.com&lt;/span&gt;
-      &lt;div class=&quot;bar-wrap&quot;&gt;&lt;div class=&quot;bar&quot; style=&quot;width: 88.8%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;
-      &lt;span class=&quot;ratio&quot;&gt;103.8x&lt;/span&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;compression-row&quot;&gt;
-      &lt;span class=&quot;site-name&quot;&gt;figma.com&lt;/span&gt;
-      &lt;div class=&quot;bar-wrap&quot;&gt;&lt;div class=&quot;bar&quot; style=&quot;width: 54.4%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;
-      &lt;span class=&quot;ratio&quot;&gt;63.6x&lt;/span&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;compression-row&quot;&gt;
-      &lt;span class=&quot;site-name&quot;&gt;tailwindcss.com&lt;/span&gt;
-      &lt;div class=&quot;bar-wrap&quot;&gt;&lt;div class=&quot;bar&quot; style=&quot;width: 45.9%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;
-      &lt;span class=&quot;ratio&quot;&gt;53.7x&lt;/span&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;compression-row&quot;&gt;
-      &lt;span class=&quot;site-name&quot;&gt;nodejs.org&lt;/span&gt;
-      &lt;div class=&quot;bar-wrap&quot;&gt;&lt;div class=&quot;bar&quot; style=&quot;width: 36.5%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;
-      &lt;span class=&quot;ratio&quot;&gt;42.7x&lt;/span&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;compression-row&quot;&gt;
-      &lt;span class=&quot;site-name&quot;&gt;vercel.com&lt;/span&gt;
-      &lt;div class=&quot;bar-wrap&quot;&gt;&lt;div class=&quot;bar&quot; style=&quot;width: 30.5%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;
-      &lt;span class=&quot;ratio&quot;&gt;35.7x&lt;/span&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;compression-row&quot;&gt;
-      &lt;span class=&quot;site-name&quot;&gt;wired.com&lt;/span&gt;
-      &lt;div class=&quot;bar-wrap&quot;&gt;&lt;div class=&quot;bar&quot; style=&quot;width: 29.9%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;
-      &lt;span class=&quot;ratio&quot;&gt;35.0x&lt;/span&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;compression-row&quot;&gt;
-      &lt;span class=&quot;site-name&quot;&gt;aws.amazon.com&lt;/span&gt;
-      &lt;div class=&quot;bar-wrap&quot;&gt;&lt;div class=&quot;bar&quot; style=&quot;width: 26.9%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;
-      &lt;span class=&quot;ratio&quot;&gt;31.4x&lt;/span&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;compression-row&quot;&gt;
-      &lt;span class=&quot;site-name&quot;&gt;mongodb.com&lt;/span&gt;
-      &lt;div class=&quot;bar-wrap&quot;&gt;&lt;div class=&quot;bar&quot; style=&quot;width: 25.0%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;
-      &lt;span class=&quot;ratio&quot;&gt;29.2x&lt;/span&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;compression-row&quot;&gt;
-      &lt;span class=&quot;site-name&quot;&gt;typescriptlang.org&lt;/span&gt;
-      &lt;div class=&quot;bar-wrap&quot;&gt;&lt;div class=&quot;bar&quot; style=&quot;width: 23.7%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;
-      &lt;span class=&quot;ratio&quot;&gt;27.7x&lt;/span&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;compression-row&quot;&gt;
-      &lt;span class=&quot;site-name&quot;&gt;theguardian.com&lt;/span&gt;
-      &lt;div class=&quot;bar-wrap&quot;&gt;&lt;div class=&quot;bar&quot; style=&quot;width: 17.4%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;
-      &lt;span class=&quot;ratio&quot;&gt;20.3x&lt;/span&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;compression-row&quot;&gt;
-      &lt;span class=&quot;site-name&quot;&gt;azure.microsoft.com&lt;/span&gt;
-      &lt;div class=&quot;bar-wrap&quot;&gt;&lt;div class=&quot;bar&quot; style=&quot;width: 13.4%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;
-      &lt;span class=&quot;ratio&quot;&gt;15.7x&lt;/span&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;compression-row&quot;&gt;
-      &lt;span class=&quot;site-name&quot;&gt;nytimes.com&lt;/span&gt;
-      &lt;div class=&quot;bar-wrap&quot;&gt;&lt;div class=&quot;bar&quot; style=&quot;width: 13.1%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;
-      &lt;span class=&quot;ratio&quot;&gt;15.3x&lt;/span&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;compression-row&quot;&gt;
-      &lt;span class=&quot;site-name&quot;&gt;stripe.com/docs&lt;/span&gt;
-      &lt;div class=&quot;bar-wrap&quot;&gt;&lt;div class=&quot;bar&quot; style=&quot;width: 12.5%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;
-      &lt;span class=&quot;ratio&quot;&gt;14.6x&lt;/span&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
+      <div style="margin: 18px 0 28px;">
+        <div class="compression-row">
+          <span class="site-name">cloud.google.com</span>
+          <div class="bar-wrap"><div class="bar" style="width: 100%;"></div></div>
+          <span class="ratio">116.9x</span>
+        </div>
+        <div class="compression-row">
+          <span class="site-name">linear.app</span>
+          <div class="bar-wrap"><div class="bar" style="width: 90.1%;"></div></div>
+          <span class="ratio">105.3x</span>
+        </div>
+        <div class="compression-row">
+          <span class="site-name">reddit.com</span>
+          <div class="bar-wrap"><div class="bar" style="width: 88.8%;"></div></div>
+          <span class="ratio">103.8x</span>
+        </div>
+        <div class="compression-row">
+          <span class="site-name">figma.com</span>
+          <div class="bar-wrap"><div class="bar" style="width: 54.4%;"></div></div>
+          <span class="ratio">63.6x</span>
+        </div>
+        <div class="compression-row">
+          <span class="site-name">tailwindcss.com</span>
+          <div class="bar-wrap"><div class="bar" style="width: 45.9%;"></div></div>
+          <span class="ratio">53.7x</span>
+        </div>
+        <div class="compression-row">
+          <span class="site-name">nodejs.org</span>
+          <div class="bar-wrap"><div class="bar" style="width: 36.5%;"></div></div>
+          <span class="ratio">42.7x</span>
+        </div>
+        <div class="compression-row">
+          <span class="site-name">vercel.com</span>
+          <div class="bar-wrap"><div class="bar" style="width: 30.5%;"></div></div>
+          <span class="ratio">35.7x</span>
+        </div>
+        <div class="compression-row">
+          <span class="site-name">wired.com</span>
+          <div class="bar-wrap"><div class="bar" style="width: 29.9%;"></div></div>
+          <span class="ratio">35.0x</span>
+        </div>
+        <div class="compression-row">
+          <span class="site-name">aws.amazon.com</span>
+          <div class="bar-wrap"><div class="bar" style="width: 26.9%;"></div></div>
+          <span class="ratio">31.4x</span>
+        </div>
+        <div class="compression-row">
+          <span class="site-name">mongodb.com</span>
+          <div class="bar-wrap"><div class="bar" style="width: 25.0%;"></div></div>
+          <span class="ratio">29.2x</span>
+        </div>
+        <div class="compression-row">
+          <span class="site-name">typescriptlang.org</span>
+          <div class="bar-wrap"><div class="bar" style="width: 23.7%;"></div></div>
+          <span class="ratio">27.7x</span>
+        </div>
+        <div class="compression-row">
+          <span class="site-name">theguardian.com</span>
+          <div class="bar-wrap"><div class="bar" style="width: 17.4%;"></div></div>
+          <span class="ratio">20.3x</span>
+        </div>
+        <div class="compression-row">
+          <span class="site-name">azure.microsoft.com</span>
+          <div class="bar-wrap"><div class="bar" style="width: 13.4%;"></div></div>
+          <span class="ratio">15.7x</span>
+        </div>
+        <div class="compression-row">
+          <span class="site-name">nytimes.com</span>
+          <div class="bar-wrap"><div class="bar" style="width: 13.1%;"></div></div>
+          <span class="ratio">15.3x</span>
+        </div>
+        <div class="compression-row">
+          <span class="site-name">stripe.com/docs</span>
+          <div class="bar-wrap"><div class="bar" style="width: 12.5%;"></div></div>
+          <span class="ratio">14.6x</span>
+        </div>
+      </div>
 
-  &lt;h3&gt;Token Counts&lt;/h3&gt;
+      <h3>Token Counts</h3>
 
-  &lt;table&gt;
-    &lt;thead&gt;
-      &lt;tr&gt;
-        &lt;th&gt;Site&lt;/th&gt;
-        &lt;th&gt;HTML Tokens&lt;/th&gt;
-        &lt;th&gt;SOM Tokens&lt;/th&gt;
-        &lt;th&gt;Ratio&lt;/th&gt;
-      &lt;/tr&gt;
-    &lt;/thead&gt;
-    &lt;tbody&gt;
-      &lt;tr&gt;&lt;td&gt;cloud.google.com&lt;/td&gt;&lt;td&gt;464,616&lt;/td&gt;&lt;td&gt;3,973&lt;/td&gt;&lt;td&gt;&lt;strong&gt;116.9x&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;
-      &lt;tr&gt;&lt;td&gt;linear.app&lt;/td&gt;&lt;td&gt;562,922&lt;/td&gt;&lt;td&gt;5,347&lt;/td&gt;&lt;td&gt;&lt;strong&gt;105.3x&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;
-      &lt;tr&gt;&lt;td&gt;reddit.com&lt;/td&gt;&lt;td&gt;121,027&lt;/td&gt;&lt;td&gt;1,166&lt;/td&gt;&lt;td&gt;&lt;strong&gt;103.8x&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;
-      &lt;tr&gt;&lt;td&gt;figma.com&lt;/td&gt;&lt;td&gt;369,124&lt;/td&gt;&lt;td&gt;5,806&lt;/td&gt;&lt;td&gt;&lt;strong&gt;63.6x&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;
-      &lt;tr&gt;&lt;td&gt;tailwindcss.com&lt;/td&gt;&lt;td&gt;233,071&lt;/td&gt;&lt;td&gt;4,338&lt;/td&gt;&lt;td&gt;&lt;strong&gt;53.7x&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;
-      &lt;tr&gt;&lt;td&gt;nodejs.org&lt;/td&gt;&lt;td&gt;115,771&lt;/td&gt;&lt;td&gt;2,709&lt;/td&gt;&lt;td&gt;&lt;strong&gt;42.7x&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;
-      &lt;tr&gt;&lt;td&gt;vercel.com&lt;/td&gt;&lt;td&gt;198,761&lt;/td&gt;&lt;td&gt;5,565&lt;/td&gt;&lt;td&gt;&lt;strong&gt;35.7x&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;
-      &lt;tr&gt;&lt;td&gt;wired.com&lt;/td&gt;&lt;td&gt;350,411&lt;/td&gt;&lt;td&gt;10,006&lt;/td&gt;&lt;td&gt;&lt;strong&gt;35.0x&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;
-      &lt;tr&gt;&lt;td&gt;aws.amazon.com&lt;/td&gt;&lt;td&gt;81,318&lt;/td&gt;&lt;td&gt;2,588&lt;/td&gt;&lt;td&gt;&lt;strong&gt;31.4x&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;
-      &lt;tr&gt;&lt;td&gt;mongodb.com&lt;/td&gt;&lt;td&gt;232,141&lt;/td&gt;&lt;td&gt;7,944&lt;/td&gt;&lt;td&gt;&lt;strong&gt;29.2x&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;
-      &lt;tr&gt;&lt;td&gt;typescriptlang.org&lt;/td&gt;&lt;td&gt;64,899&lt;/td&gt;&lt;td&gt;2,345&lt;/td&gt;&lt;td&gt;&lt;strong&gt;27.7x&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;
-      &lt;tr&gt;&lt;td&gt;theguardian.com&lt;/td&gt;&lt;td&gt;319,879&lt;/td&gt;&lt;td&gt;15,753&lt;/td&gt;&lt;td&gt;&lt;strong&gt;20.3x&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;
-      &lt;tr&gt;&lt;td&gt;azure.microsoft.com&lt;/td&gt;&lt;td&gt;134,654&lt;/td&gt;&lt;td&gt;8,555&lt;/td&gt;&lt;td&gt;&lt;strong&gt;15.7x&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;
-      &lt;tr&gt;&lt;td&gt;nytimes.com&lt;/td&gt;&lt;td&gt;48,042&lt;/td&gt;&lt;td&gt;3,133&lt;/td&gt;&lt;td&gt;&lt;strong&gt;15.3x&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;
-      &lt;tr&gt;&lt;td&gt;stripe.com/docs&lt;/td&gt;&lt;td&gt;48,378&lt;/td&gt;&lt;td&gt;3,305&lt;/td&gt;&lt;td&gt;&lt;strong&gt;14.6x&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;
-    &lt;/tbody&gt;
-  &lt;/table&gt;
+      <table>
+        <thead>
+          <tr>
+            <th>Site</th>
+            <th>HTML Tokens</th>
+            <th>SOM Tokens</th>
+            <th>Ratio</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>cloud.google.com</td><td>464,616</td><td>3,973</td><td><strong>116.9x</strong></td></tr>
+          <tr><td>linear.app</td><td>562,922</td><td>5,347</td><td><strong>105.3x</strong></td></tr>
+          <tr><td>reddit.com</td><td>121,027</td><td>1,166</td><td><strong>103.8x</strong></td></tr>
+          <tr><td>figma.com</td><td>369,124</td><td>5,806</td><td><strong>63.6x</strong></td></tr>
+          <tr><td>tailwindcss.com</td><td>233,071</td><td>4,338</td><td><strong>53.7x</strong></td></tr>
+          <tr><td>nodejs.org</td><td>115,771</td><td>2,709</td><td><strong>42.7x</strong></td></tr>
+          <tr><td>vercel.com</td><td>198,761</td><td>5,565</td><td><strong>35.7x</strong></td></tr>
+          <tr><td>wired.com</td><td>350,411</td><td>10,006</td><td><strong>35.0x</strong></td></tr>
+          <tr><td>aws.amazon.com</td><td>81,318</td><td>2,588</td><td><strong>31.4x</strong></td></tr>
+          <tr><td>mongodb.com</td><td>232,141</td><td>7,944</td><td><strong>29.2x</strong></td></tr>
+          <tr><td>typescriptlang.org</td><td>64,899</td><td>2,345</td><td><strong>27.7x</strong></td></tr>
+          <tr><td>theguardian.com</td><td>319,879</td><td>15,753</td><td><strong>20.3x</strong></td></tr>
+          <tr><td>azure.microsoft.com</td><td>134,654</td><td>8,555</td><td><strong>15.7x</strong></td></tr>
+          <tr><td>nytimes.com</td><td>48,042</td><td>3,133</td><td><strong>15.3x</strong></td></tr>
+          <tr><td>stripe.com/docs</td><td>48,378</td><td>3,305</td><td><strong>14.6x</strong></td></tr>
+        </tbody>
+      </table>
 
-  &lt;hr&gt;
+      <hr>
 
-  &lt;h2&gt;Methodology&lt;/h2&gt;
+      <h2>Methodology</h2>
 
-  &lt;ul&gt;
-    &lt;li&gt;Each URL fetched once via &lt;code&gt;plasmate fetch &amp;lt;url&amp;gt;&lt;/code&gt;&lt;/li&gt;
-    &lt;li&gt;HTML token count: raw HTML bytes / 4 (standard byte-to-token estimate)&lt;/li&gt;
-    &lt;li&gt;SOM token count: SOM JSON output bytes / 4&lt;/li&gt;
-    &lt;li&gt;Compression ratio: HTML tokens / SOM tokens&lt;/li&gt;
-    &lt;li&gt;Cost calculated at published model input pricing&lt;/li&gt;
-    &lt;li&gt;No caching, no warm-up, single fetch per URL&lt;/li&gt;
-    &lt;li&gt;2 URLs failed (w3.org, dev.to) and were excluded&lt;/li&gt;
-  &lt;/ul&gt;
+      <ul>
+        <li>Each URL fetched once via <code>plasmate fetch &lt;url&gt;</code></li>
+        <li>HTML token count: raw HTML bytes / 4 (standard byte-to-token estimate)</li>
+        <li>SOM token count: SOM JSON output bytes / 4</li>
+        <li>Compression ratio: HTML tokens / SOM tokens</li>
+        <li>Cost calculated at published model input pricing</li>
+        <li>No caching, no warm-up, single fetch per URL</li>
+        <li>2 URLs failed (w3.org, dev.to) and were excluded</li>
+      </ul>
 
-  &lt;h2&gt;Reproduce&lt;/h2&gt;
+      <h2>Reproduce</h2>
 
-  &lt;pre&gt;&lt;code&gt;cargo install plasmate
-</code></pre>
-<p>git clone <a href="https://github.com/plasmate-labs/plasmate">https://github.com/plasmate-labs/plasmate</a>
+      <pre><code>cargo install plasmate
+git clone https://github.com/plasmate-labs/plasmate
 cd plasmate
-./benchmarks/run-cost-analysis.sh</code></pre></p>
+./benchmarks/run-cost-analysis.sh</code></pre>
 
     </main>
   </div>
