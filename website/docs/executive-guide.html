@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Plasmate - Executive Guide</title>
+<meta name="description" content="Plasmate reduces AI agent infrastructure costs by 94% while improving reliability. A guide for decision-makers." />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --void: #111110;
+  --deep: #1A1918;
+  --smoke: #2A2825;
+  --ash: #6B6560;
+  --dim: #8A8480;
+  --ion: #D4C5A0;
+  --ember: #E8853A;
+  --arc: #3D8FD4;
+  --green: #6dba6d;
+  --white: #F0EDE8;
+  --display: 'Space Grotesk', sans-serif;
+  --body: 'IBM Plex Sans', -apple-system, sans-serif;
+  --mono: 'IBM Plex Mono', monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--void); color: var(--white); font-family: var(--body); line-height: 1.65; -webkit-font-smoothing: antialiased; }
+
+/* Cover */
+.cover { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 80px; position: relative; }
+.cover::before { content: ''; position: absolute; top: 80px; left: 80px; right: 80px; height: 1px; background: linear-gradient(90deg, var(--ember) 120px, transparent 120px); }
+.cover .mark { font-family: var(--display); font-size: 4.5rem; font-weight: 700; letter-spacing: -0.04em; line-height: 0.95; max-width: 700px; }
+.cover .mark span { color: var(--ember); }
+.cover .subtitle { font-family: var(--body); font-size: 1.15rem; font-weight: 400; color: var(--dim); margin-top: 28px; max-width: 520px; line-height: 1.6; }
+.cover .meta { font-family: var(--mono); font-size: 0.65rem; color: var(--ash); margin-top: 56px; text-transform: uppercase; letter-spacing: 0.15em; }
+.cover .logo { position: absolute; top: 80px; right: 80px; display: flex; align-items: center; gap: 10px; }
+.cover .logo img { width: 28px; height: 28px; }
+.cover .logo span { font-family: var(--display); font-size: 0.85rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--white); }
+
+/* Pages */
+.page { padding: 80px; min-height: 100vh; position: relative; }
+.page::after { content: 'plasmate.app'; position: absolute; bottom: 40px; right: 80px; font-family: var(--mono); font-size: 0.6rem; color: var(--smoke); letter-spacing: 0.1em; }
+
+.section-label { font-family: var(--mono); font-size: 0.65rem; color: var(--ember); text-transform: uppercase; letter-spacing: 0.18em; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+.section-label::before { content: ''; width: 24px; height: 1px; background: var(--ember); }
+
+h1 { font-family: var(--display); font-size: 2.6rem; font-weight: 700; letter-spacing: -0.04em; line-height: 1.05; margin-bottom: 20px; }
+h2 { font-family: var(--display); font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; margin: 40px 0 14px; color: var(--white); }
+h3 { font-family: var(--display); font-size: 1.05rem; font-weight: 600; margin: 28px 0 8px; color: var(--ion); }
+p, li { color: rgba(240,237,232,0.78); font-size: 0.95rem; line-height: 1.7; }
+p { margin-bottom: 14px; max-width: 640px; }
+strong { color: var(--white); font-weight: 600; }
+a { color: var(--ember); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.lead { font-size: 1.1rem; color: rgba(240,237,232,0.88); max-width: 600px; }
+
+/* Big stat cards */
+.stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 32px 0; }
+.stat-card { background: var(--deep); border: 1px solid var(--smoke); border-radius: 16px; padding: 28px 24px; text-align: center; }
+.stat-card .number { font-family: var(--display); font-size: 3rem; font-weight: 700; color: var(--ember); line-height: 1; }
+.stat-card .label { font-family: var(--mono); font-size: 0.7rem; color: var(--ash); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 8px; }
+.stat-card .context { font-size: 0.82rem; color: var(--dim); margin-top: 6px; }
+
+/* Scenario cards */
+.scenario-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 28px 0; }
+.scenario { background: var(--deep); border: 1px solid var(--smoke); border-radius: 14px; padding: 28px; }
+.scenario .icon { font-size: 1.8rem; margin-bottom: 12px; }
+.scenario h4 { font-family: var(--display); font-size: 1rem; font-weight: 600; margin-bottom: 8px; color: var(--white); }
+.scenario p { font-size: 0.88rem; margin-bottom: 0; max-width: none; }
+
+/* Before/After */
+.compare-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 28px 0; }
+.compare-col { background: var(--deep); border-radius: 14px; padding: 28px; position: relative; overflow: hidden; }
+.compare-col.before { border: 1px solid rgba(255,80,80,0.2); }
+.compare-col.after { border: 1px solid rgba(109,186,109,0.25); }
+.compare-tag { font-family: var(--mono); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 16px; display: inline-block; padding: 3px 10px; border-radius: 4px; }
+.compare-col.before .compare-tag { background: rgba(255,80,80,0.12); color: #ff5050; }
+.compare-col.after .compare-tag { background: rgba(109,186,109,0.12); color: var(--green); }
+.compare-col ul { list-style: none; padding: 0; }
+.compare-col li { padding: 5px 0; font-size: 0.88rem; display: flex; align-items: flex-start; gap: 8px; }
+.compare-col.before li::before { content: '✕'; color: #ff5050; font-weight: 700; font-size: 0.75rem; flex-shrink: 0; margin-top: 3px; }
+.compare-col.after li::before { content: '✓'; color: var(--green); font-weight: 700; font-size: 0.85rem; flex-shrink: 0; margin-top: 1px; }
+
+/* Cost table */
+.cost-table { width: 100%; max-width: 640px; border-collapse: collapse; margin: 24px 0; }
+.cost-table th { text-align: left; padding: 10px 16px; font-family: var(--mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ash); border-bottom: 2px solid var(--smoke); }
+.cost-table td { padding: 10px 16px; font-size: 0.9rem; border-bottom: 1px solid rgba(240,237,232,0.06); }
+.cost-table .savings { color: var(--green); font-weight: 600; }
+.cost-table .old { color: var(--dim); }
+
+/* Quote */
+.quote { border-left: 3px solid var(--ember); padding: 20px 24px; margin: 32px 0; background: rgba(232,133,58,0.04); border-radius: 0 12px 12px 0; max-width: 600px; }
+.quote p { font-size: 1.05rem; font-style: italic; color: rgba(240,237,232,0.88); margin-bottom: 8px; }
+.quote .attr { font-family: var(--mono); font-size: 0.72rem; color: var(--ash); font-style: normal; }
+
+/* Checklist */
+.checklist { list-style: none; padding: 0; margin: 20px 0; max-width: 600px; }
+.checklist li { padding: 8px 0; font-size: 0.92rem; display: flex; align-items: flex-start; gap: 10px; }
+.checklist li::before { content: '✓'; color: var(--ember); font-weight: 700; flex-shrink: 0; }
+
+/* Divider */
+.divider { height: 1px; background: var(--smoke); margin: 40px 0; }
+
+/* Footer links */
+.footer-links { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 28px; }
+.footer-links a { font-family: var(--mono); font-size: 0.78rem; color: var(--ember); text-transform: uppercase; letter-spacing: 0.06em; padding: 8px 16px; border: 1px solid var(--smoke); border-radius: 8px; transition: all 0.15s; }
+.footer-links a:hover { background: rgba(232,133,58,0.08); border-color: var(--ember); text-decoration: none; }
+
+/* Mobile */
+@media (max-width: 768px) {
+  .cover, .page { padding: 40px 24px; }
+  .cover .mark { font-size: 2.8rem; }
+  .stat-row { grid-template-columns: 1fr; }
+  .scenario-grid, .compare-row { grid-template-columns: 1fr; }
+  .cover .logo { position: static; margin-bottom: 40px; }
+}
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="logo">
+    <img src="/brand/plasmate-mark.png" alt="Plasmate" />
+    <span>Plasmate</span>
+  </div>
+  <div class="mark">Your AI agents are<br>burning money on<br><span>the wrong browser.</span></div>
+  <div class="subtitle">Every time an AI agent reads a web page, it processes thousands of tokens of irrelevant code. Plasmate eliminates 94% of that waste. Here's what that means for your business.</div>
+  <div class="meta">Executive Guide &mdash; March 2026</div>
+</div>
+
+<!-- THE PROBLEM -->
+<div class="page">
+  <div class="section-label">The Problem</div>
+  <h1>AI agents use Chrome. Chrome wasn't built for them.</h1>
+  <p class="lead">When your AI agents browse the web, they're using the same browser you use to watch YouTube. It's like hiring a translator who reads every word in the dictionary before answering a question.</p>
+
+  <p>Chrome returns raw HTML: a massive blob of layout code, tracking scripts, ad containers, CSS classes, and SVG paths. Your agent has to process all of it, even though <strong>80-95% of that data is completely irrelevant</strong> to what the agent actually needs to know.</p>
+
+  <p>This creates three problems:</p>
+
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="number">$$$</div>
+      <div class="label">Cost</div>
+      <div class="context">LLM tokens are priced per million. More tokens = higher bills. Most of those tokens are noise.</div>
+    </div>
+    <div class="stat-card">
+      <div class="number">252ms</div>
+      <div class="label">Latency</div>
+      <div class="context">Chrome takes a quarter second per page. At scale, your agents are waiting, not working.</div>
+    </div>
+    <div class="stat-card">
+      <div class="number">20GB</div>
+      <div class="label">Memory</div>
+      <div class="context">100 Chrome tabs use 20GB of RAM. That's expensive cloud infrastructure doing nothing useful.</div>
+    </div>
+  </div>
+
+  <p>The cost compounds. If you're running agents that read hundreds or thousands of pages per day, you're paying for a firehose of irrelevant data and the compute to process it.</p>
+</div>
+
+<!-- THE SOLUTION -->
+<div class="page">
+  <div class="section-label">The Solution</div>
+  <h1>Plasmate gives your agents only what they need.</h1>
+  <p class="lead">Plasmate is a browser engine built specifically for AI agents. Instead of returning raw HTML, it compiles pages into structured, semantic output. Only the meaningful content. Only what's actionable.</p>
+
+  <div class="compare-row">
+    <div class="compare-col before">
+      <div class="compare-tag">Today (Chrome)</div>
+      <ul>
+        <li>Returns 50,000+ tokens of raw HTML per page</li>
+        <li>Includes CSS, scripts, tracking, and layout code</li>
+        <li>Agent can't tell a button from a paragraph</li>
+        <li>252ms per page, 20GB for 100 concurrent pages</li>
+        <li>No built-in understanding of page structure</li>
+      </ul>
+    </div>
+    <div class="compare-col after">
+      <div class="compare-tag">With Plasmate</div>
+      <ul>
+        <li>Returns 3,000 tokens of structured data per page</li>
+        <li>Only semantic content: text, links, buttons, forms</li>
+        <li>Every element labeled with its role and actions</li>
+        <li>4ms per page, 30MB for 100 concurrent pages</li>
+        <li>Agent knows exactly what it can click, type, and read</li>
+      </ul>
+    </div>
+  </div>
+
+  <p>The output format is called <strong>SOM</strong> (Semantic Object Model). Think of it as a table of contents for a web page, not the full book with all its margin notes and illustrations.</p>
+</div>
+
+<!-- THE NUMBERS -->
+<div class="page">
+  <div class="section-label">The Numbers</div>
+  <h1>94% reduction in token costs.</h1>
+  <p class="lead">We tested Plasmate against 98 of the most popular websites on the internet. The results are consistent and dramatic.</p>
+
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="number">94%</div>
+      <div class="label">Token Savings</div>
+      <div class="context">Average across 49 benchmarked sites</div>
+    </div>
+    <div class="stat-card">
+      <div class="number">50x</div>
+      <div class="label">Faster</div>
+      <div class="context">Than Chrome (4ms vs 252ms per page)</div>
+    </div>
+    <div class="stat-card">
+      <div class="number">660x</div>
+      <div class="label">Less Memory</div>
+      <div class="context">30MB vs 20GB for 100 pages</div>
+    </div>
+  </div>
+
+  <h2>What this means in dollars</h2>
+  <p>Cost to process all 49 benchmark URLs, 1,000 times each:</p>
+
+  <table class="cost-table">
+    <thead>
+      <tr>
+        <th>LLM Model</th>
+        <th>With Chrome</th>
+        <th>With Plasmate</th>
+        <th>You Save</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>GPT-4</td>
+        <td class="old">$50,397</td>
+        <td>$3,042</td>
+        <td class="savings">$47,355</td>
+      </tr>
+      <tr>
+        <td>GPT-4o</td>
+        <td class="old">$12,599</td>
+        <td>$761</td>
+        <td class="savings">$11,839</td>
+      </tr>
+      <tr>
+        <td>Claude Sonnet</td>
+        <td class="old">$15,119</td>
+        <td>$913</td>
+        <td class="savings">$14,207</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>At enterprise scale (1 million pages per month), Plasmate saves <strong>$966/month on GPT-4 input costs alone</strong>. Multiply across models, agents, and workflows, and the savings are substantial.</p>
+</div>
+
+<!-- USE CASES -->
+<div class="page">
+  <div class="section-label">Use Cases</div>
+  <h1>Where this matters most.</h1>
+  <p class="lead">Any workflow where AI agents interact with web content benefits from Plasmate. Here are the highest-impact scenarios:</p>
+
+  <div class="scenario-grid">
+    <div class="scenario">
+      <div class="icon">🔍</div>
+      <h4>Competitive Intelligence</h4>
+      <p>Monitor competitor pricing, product changes, and content updates across hundreds of URLs. Get structured data instead of HTML soup. Run 50 concurrent sessions per instance.</p>
+    </div>
+    <div class="scenario">
+      <div class="icon">🤖</div>
+      <h4>Customer-Facing AI Agents</h4>
+      <p>Agents that browse on behalf of users respond faster and more accurately when they get clean, structured page data instead of raw HTML. Lower latency, better answers.</p>
+    </div>
+    <div class="scenario">
+      <div class="icon">📊</div>
+      <h4>Data Extraction at Scale</h4>
+      <p>Pull structured data from thousands of pages per hour. Plasmate's semantic output means your extraction pipeline doesn't need to parse raw HTML or guess at page structure.</p>
+    </div>
+    <div class="scenario">
+      <div class="icon">🛡️</div>
+      <h4>Compliance Monitoring</h4>
+      <p>Scan regulatory filings, terms of service changes, and legal documents across many sites. Structured output makes diff-detection reliable and auditable.</p>
+    </div>
+    <div class="scenario">
+      <div class="icon">📈</div>
+      <h4>SEO and Content Analysis</h4>
+      <p>Analyze page structure, content hierarchy, and link architecture across your properties and competitors. SOM exposes semantic structure that raw HTML obscures.</p>
+    </div>
+    <div class="scenario">
+      <div class="icon">🔄</div>
+      <h4>Workflow Automation</h4>
+      <p>Agents that fill forms, click buttons, and navigate multi-step workflows perform more reliably when every interactive element is explicitly labeled with its available actions.</p>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS (non-technical) -->
+<div class="page">
+  <div class="section-label">How It Works</div>
+  <h1>Drop-in replacement. No rewrite required.</h1>
+  <p class="lead">Plasmate is designed to work with your existing agent infrastructure. Your team doesn't need to learn a new framework or rewrite their automation.</p>
+
+  <h2>Three integration paths</h2>
+
+  <div class="scenario-grid">
+    <div class="scenario">
+      <div class="icon">🔌</div>
+      <h4>Puppeteer / Playwright compatible</h4>
+      <p>If your agents already use Puppeteer or Playwright, they can connect to Plasmate with minimal configuration changes. Same API, dramatically better performance.</p>
+    </div>
+    <div class="scenario">
+      <div class="icon">🧠</div>
+      <h4>MCP Server for AI assistants</h4>
+      <p>Claude, GPT, and other MCP-compatible AI assistants can use Plasmate as a tool directly. One line of configuration gives your assistant fast, structured web access.</p>
+    </div>
+    <div class="scenario">
+      <div class="icon">📦</div>
+      <h4>SDKs for Node.js, Python, Go, Rust</h4>
+      <p>Native SDKs with full type safety. Your engineering team can integrate Plasmate into any stack in under an hour.</p>
+    </div>
+  </div>
+
+  <h2>Already integrated with</h2>
+  <p><strong>Browser Use</strong> and <strong>LangChain</strong> have published integration guides. If your team uses either framework, Plasmate is a drop-in addition.</p>
+
+  <div class="quote">
+    <p>The output format (SOM) is an open specification with JSON Schema validation. You're not locked in. If you ever want to switch engines, your downstream code keeps working.</p>
+    <div class="attr">SOM Spec v1.0 - Apache 2.0 Licensed</div>
+  </div>
+</div>
+
+<!-- COMPETITIVE POSITION -->
+<div class="page">
+  <div class="section-label">Competitive Position</div>
+  <h1>Why not just use Chrome?</h1>
+  <p class="lead">Chrome is a general-purpose browser designed for humans. Plasmate is purpose-built infrastructure for AI agents. The difference shows up in every metric that matters.</p>
+
+  <table class="cost-table" style="max-width: 100%;">
+    <thead>
+      <tr>
+        <th></th>
+        <th style="color: var(--ember);">Plasmate</th>
+        <th>Chrome / Playwright</th>
+        <th>Lightpanda</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Speed</strong></td>
+        <td style="color: var(--ember); font-weight: 600;">4ms/page</td>
+        <td>252ms/page</td>
+        <td>23ms/page</td>
+      </tr>
+      <tr>
+        <td><strong>Memory (100 pages)</strong></td>
+        <td style="color: var(--ember); font-weight: 600;">30MB</td>
+        <td>20GB</td>
+        <td>2.4GB</td>
+      </tr>
+      <tr>
+        <td><strong>Output</strong></td>
+        <td style="color: var(--ember); font-weight: 600;">Structured JSON</td>
+        <td>Raw HTML</td>
+        <td>Raw HTML</td>
+      </tr>
+      <tr>
+        <td><strong>Token reduction</strong></td>
+        <td style="color: var(--ember); font-weight: 600;">94%</td>
+        <td>0%</td>
+        <td>0%</td>
+      </tr>
+      <tr>
+        <td><strong>License</strong></td>
+        <td style="color: var(--ember); font-weight: 600;">Apache-2.0</td>
+        <td>Chromium</td>
+        <td>AGPL</td>
+      </tr>
+      <tr>
+        <td><strong>Self-hostable</strong></td>
+        <td style="color: var(--ember); font-weight: 600;">Yes</td>
+        <td>Yes</td>
+        <td>Yes (AGPL)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p><strong>On licensing:</strong> The closest alternative (Lightpanda) uses AGPL, which requires you to open source any product that integrates it. Plasmate is Apache-2.0 with no such requirement. Use it however you want.</p>
+</div>
+
+<!-- GETTING STARTED -->
+<div class="page">
+  <div class="section-label">Getting Started</div>
+  <h1>From zero to running in under 5 minutes.</h1>
+  <p class="lead">Plasmate is a single binary with no dependencies. Your team can evaluate it today without infrastructure changes.</p>
+
+  <ul class="checklist">
+    <li>Single binary install (curl, cargo, npm, pip, or Docker)</li>
+    <li>No Chrome or browser dependencies required</li>
+    <li>Works alongside existing Puppeteer/Playwright setups</li>
+    <li>Open source with full test suite (230 tests, 98.9% site coverage)</li>
+    <li>Published on crates.io, npm, and PyPI</li>
+    <li>Docker image available for containerized deployments</li>
+  </ul>
+
+  <div class="divider"></div>
+
+  <h2>Learn more</h2>
+  <div class="footer-links">
+    <a href="https://plasmate.app">Website</a>
+    <a href="https://docs.plasmate.app">Documentation</a>
+    <a href="https://docs.plasmate.app/benchmark-cost">Cost Analysis</a>
+    <a href="https://docs.plasmate.app/coverage-js">Coverage Scorecard</a>
+    <a href="https://docs.plasmate.app/why-som">Why SOM</a>
+    <a href="https://docs.plasmate.app/roadmap">Roadmap</a>
+    <a href="https://github.com/plasmate-labs/plasmate">GitHub</a>
+  </div>
+
+  <div class="divider"></div>
+
+  <p style="color: var(--ash); font-size: 0.82rem;">Plasmate is built by <a href="https://dbhurley.com/plasmate">David Hurley</a>. Apache-2.0 licensed. All benchmark data is reproducible and publicly available.</p>
+</div>
+
+</body>
+</html>
