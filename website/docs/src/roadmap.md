@@ -44,14 +44,15 @@ Plasmate's roadmap is public and standards-first. We ship compression and correc
 - Timer queue drain (setTimeout, requestAnimationFrame)
 - page.click() / page.type() via DOM bridge
 - page.waitForSelector() (final DOM state)
+- Chrome-delegated Page.captureScreenshot for pixel-perfect rendering
+- CDP stubs wired: setDeviceMetricsOverride, addScriptToEvaluateOnNewDocument, getLayoutMetrics, getProperties
 
-## v0.5: Rendering & Scale (Current)
+## v0.5: Rendering & Navigation (Current)
 
-- [x] Page.captureScreenshot (delegated to Chrome for pixel-perfect results)
 - [ ] page.waitForNavigation() and page.goto(waitUntil=...)
 - [ ] SOM Cache (in-memory + on-disk, content-hash based)
-- [ ] Framework PRs submitted upstream (Browser Use, LangChain)
 - [ ] Page.setContent, Accessibility.getFullAXTree
+- [ ] Framework PRs submitted upstream (Browser Use, LangChain)
 
 ## v0.6+: Scale & Adoption
 

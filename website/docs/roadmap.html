@@ -391,14 +391,15 @@
 <li>Timer queue drain (setTimeout, requestAnimationFrame)</li>
 <li>page.click() / page.type() via DOM bridge</li>
 <li>page.waitForSelector() (final DOM state)</li>
+<li>Chrome-delegated Page.captureScreenshot for pixel-perfect rendering</li>
+<li>CDP stubs wired: setDeviceMetricsOverride, addScriptToEvaluateOnNewDocument, getLayoutMetrics, getProperties</li>
 </ul>
-<h2>v0.5: Rendering &amp; Scale (Current)</h2>
+<h2>v0.5: Rendering &amp; Navigation (Current)</h2>
 <ul>
-<li><input checked="" disabled="" type="checkbox"> Page.captureScreenshot (delegated to Chrome for pixel-perfect results)</li>
 <li><input disabled="" type="checkbox"> page.waitForNavigation() and page.goto(waitUntil=...)</li>
 <li><input disabled="" type="checkbox"> SOM Cache (in-memory + on-disk, content-hash based)</li>
-<li><input disabled="" type="checkbox"> Framework PRs submitted upstream (Browser Use, LangChain)</li>
 <li><input disabled="" type="checkbox"> Page.setContent, Accessibility.getFullAXTree</li>
+<li><input disabled="" type="checkbox"> Framework PRs submitted upstream (Browser Use, LangChain)</li>
 </ul>
 <h2>v0.6+: Scale &amp; Adoption</h2>
 <ul>

@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Plasmate Docs - Plasmate Docs</title>
-  <meta name="description" content="Plasmate documentation: Plasmate Docs" />
+  <title>Changelog - Plasmate Docs</title>
+  <meta name="description" content="Plasmate documentation: Changelog" />
 
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
@@ -347,113 +347,100 @@
       </div>
     </nav>
     <main class="content">
-      <pre><code>  &lt;h1&gt;Changelog&lt;/h1&gt;
-  &lt;p&gt;All notable changes to Plasmate, tracked by version and date.&lt;/p&gt;
-
-  &lt;h2&gt;&lt;span class=&quot;version-tag&quot;&gt;v0.4.0&lt;/span&gt; &lt;span class=&quot;date-tag&quot;&gt;2026-03-23&lt;/span&gt;&lt;/h2&gt;
-  &lt;p&gt;Chrome-delegated screenshots, completed SPA hydration, and full CDP stub coverage for Puppeteer compatibility.&lt;/p&gt;
-  &lt;ul&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;Chrome-delegated screenshots&lt;/strong&gt; for pixel-perfect rendering via &lt;code&gt;Page.captureScreenshot&lt;/code&gt;.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;Completed SPA hydration ops:&lt;/strong&gt; &lt;code&gt;insertBefore&lt;/code&gt;, &lt;code&gt;replaceChild&lt;/code&gt;, &lt;code&gt;classList&lt;/code&gt;, &lt;code&gt;cloneNode&lt;/code&gt;.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;Timer queue drain&lt;/strong&gt; for &lt;code&gt;setTimeout&lt;/code&gt; and &lt;code&gt;requestAnimationFrame&lt;/code&gt;.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;Wired &lt;code&gt;page.click()&lt;/code&gt; and &lt;code&gt;page.type()&lt;/code&gt;&lt;/strong&gt; via DOM bridge.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;Implemented &lt;code&gt;page.waitForSelector()&lt;/code&gt;&lt;/strong&gt; for final DOM state.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type fix&quot;&gt;fix&lt;/span&gt; &lt;strong&gt;Fixed all remaining CDP stubs&lt;/strong&gt;, including &lt;code&gt;setDeviceMetricsOverride&lt;/code&gt;, &lt;code&gt;addScriptToEvaluateOnNewDocument&lt;/code&gt;, &lt;code&gt;getLayoutMetrics&lt;/code&gt;, and &lt;code&gt;getProperties&lt;/code&gt; for improved Puppeteer compatibility.&lt;/li&gt;
-  &lt;/ul&gt;
-
-  &lt;hr /&gt;
-
-  &lt;h2&gt;&lt;span class=&quot;version-tag&quot;&gt;v0.3.0&lt;/span&gt; &lt;span class=&quot;date-tag&quot;&gt;2026-03-22&lt;/span&gt;&lt;/h2&gt;
-  &lt;p&gt;SPA rendering, interaction APIs, plugin system, and multi-session support. ~25K lines Rust, 200+ tests passing.&lt;/p&gt;
-  &lt;ul&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;Network request interception&lt;/strong&gt; - block, modify, or mock responses.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;TLS configuration&lt;/strong&gt; - cipher suite and fingerprint tuning.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;Wasm plugin system&lt;/strong&gt; - optional feature flag, wasmtime runtime.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;SPA rendering bridge&lt;/strong&gt; - bidirectional V8/rcdom DOM sync, SOM recompiled after JS.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;Timer queue drain&lt;/strong&gt; for React/Vue deferred rendering.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;page.click(), page.type(), page.waitForSelector()&lt;/strong&gt; via DOM bridge.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;Deep SPA hydration&lt;/strong&gt; - insertBefore, replaceChild, cloneNode, classList.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;Multi-page session manager&lt;/strong&gt; - 50 concurrent sessions per instance.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;Auth profiles&lt;/strong&gt; with encrypted cookie storage.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;Screenshots protocol surface&lt;/strong&gt; (SOM fallback until renderer lands).&lt;/li&gt;
-  &lt;/ul&gt;
-
-  &lt;h3&gt;Stats&lt;/h3&gt;
-  &lt;ul&gt;
-    &lt;li&gt;&lt;strong&gt;Binary:&lt;/strong&gt; 45.8 MB default / 54 MB with plugins&lt;/li&gt;
-    &lt;li&gt;&lt;strong&gt;Memory:&lt;/strong&gt; 28 MB RSS per process&lt;/li&gt;
-    &lt;li&gt;&lt;strong&gt;Tests:&lt;/strong&gt; 200+ passing&lt;/li&gt;
-    &lt;li&gt;&lt;strong&gt;Codebase:&lt;/strong&gt; ~25K lines Rust&lt;/li&gt;
-  &lt;/ul&gt;
-
-  &lt;hr /&gt;
-
-  &lt;h2&gt;&lt;span class=&quot;version-tag&quot;&gt;v0.2.0&lt;/span&gt; &lt;span class=&quot;date-tag&quot;&gt;2026-03-21&lt;/span&gt;&lt;/h2&gt;
-  &lt;p&gt;V8 integration, CDP server, SDK expansion, and coverage tooling.&lt;/p&gt;
-  &lt;ul&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;V8 JavaScript integration&lt;/strong&gt; with full DOM shim.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;CDP server&lt;/strong&gt; for Puppeteer/Playwright compatibility.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;MCP server mode&lt;/strong&gt; (stdio JSON-RPC).&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;SOM Specification v1.0&lt;/strong&gt; with JSON Schema and conformance test suite.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;Node.js SDK&lt;/strong&gt; with full TypeScript types.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;Python SDK&lt;/strong&gt; with Pydantic models.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;Go SDK&lt;/strong&gt; with structs, client, and query helpers.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;Throughput CI&lt;/strong&gt; benchmark expansion to 100 URLs across 13 categories.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;CDP cookie jar&lt;/strong&gt; (getCookies, setCookies, deleteCookies, clearBrowserCookies).&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type docs&quot;&gt;docs&lt;/span&gt; Browser Use and LangChain integration pages.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type docs&quot;&gt;docs&lt;/span&gt; Interactive coverage scorecards (nightly HTML, weekly JS).&lt;/li&gt;
-  &lt;/ul&gt;
-
-  &lt;hr /&gt;
-
-  &lt;h2&gt;&lt;span class=&quot;version-tag&quot;&gt;v0.1.1&lt;/span&gt; &lt;span class=&quot;date-tag&quot;&gt;2026-03-20&lt;/span&gt;&lt;/h2&gt;
-  &lt;p&gt;Major JS runtime improvements. Coverage jumps from 71% to 82%.&lt;/p&gt;
-  &lt;ul&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; Functional &lt;strong&gt;MutationObserver&lt;/strong&gt; for SPA framework support (React, Vue, Next.js). Observer callbacks now fire on DOM mutations, enabling client-side rendering in the headless engine.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;URL/URLSearchParams polyfills&lt;/strong&gt; with try-catch constructor probing. Detects partial V8 built-ins and only overrides when necessary.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;JS coverage scorecard&lt;/strong&gt; tracking 100 real-world sites with per-site element counts, JS failure rates, and error details.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type fix&quot;&gt;fix&lt;/span&gt; &lt;strong&gt;Browser-realistic HTTP headers&lt;/strong&gt; to avoid anti-bot blocking (zero speed/memory cost).&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type fix&quot;&gt;fix&lt;/span&gt; &lt;strong&gt;Pre/post JS SOM comparison&lt;/strong&gt; keeps whichever SOM has more elements, preventing JS from degrading content.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type fix&quot;&gt;fix&lt;/span&gt; Skip &lt;code&gt;type=&quot;module&quot;&lt;/code&gt; external scripts (prevents &lt;code&gt;SyntaxError: Cannot use import statement outside a module&lt;/code&gt;).&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type fix&quot;&gt;fix&lt;/span&gt; &lt;code&gt;var self = globalThis&lt;/code&gt; for SPA frameworks that reference &lt;code&gt;self&lt;/code&gt;.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type perf&quot;&gt;perf&lt;/span&gt; Configurable JS safety budgets: &lt;code&gt;--max-external-scripts&lt;/code&gt;, &lt;code&gt;--max-external-script-kb&lt;/code&gt;, &lt;code&gt;--external-script-timeout-ms&lt;/code&gt;.&lt;/li&gt;
-  &lt;/ul&gt;
-
-  &lt;h3&gt;Coverage Results&lt;/h3&gt;
-  &lt;ul&gt;
-    &lt;li&gt;&lt;strong&gt;HTML scorecard:&lt;/strong&gt; 80/100 Full (80%)&lt;/li&gt;
-    &lt;li&gt;&lt;strong&gt;JS scorecard:&lt;/strong&gt; 79/98 Full (80.6%)&lt;/li&gt;
-    &lt;li&gt;&lt;strong&gt;New Full sites:&lt;/strong&gt; amazon.com, ebay.com (via MutationObserver)&lt;/li&gt;
-    &lt;li&gt;&lt;strong&gt;Remaining thin:&lt;/strong&gt; 14 sites needing deeper DOM mutation support&lt;/li&gt;
-    &lt;li&gt;&lt;strong&gt;Failed:&lt;/strong&gt; 4 (anti-bot: etsy, tripadvisor, wsj; non-HTML: httpbin)&lt;/li&gt;
-  &lt;/ul&gt;
-
-  &lt;hr /&gt;
-
-  &lt;h2&gt;&lt;span class=&quot;version-tag&quot;&gt;v0.1.0&lt;/span&gt; &lt;span class=&quot;date-tag&quot;&gt;2026-03-01&lt;/span&gt;&lt;/h2&gt;
-  &lt;p&gt;Initial public release. The browser engine for agents.&lt;/p&gt;
-  &lt;ul&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;Semantic Object Model (SOM)&lt;/strong&gt; compiler: HTML to structured, token-efficient representation.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;Agent Web Protocol (AWP)&lt;/strong&gt;: 7-method protocol for agent-native browsing (navigate, snapshot, click, type, scroll, select, extract).&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;V8 JavaScript runtime&lt;/strong&gt; with DOM shim for JS-rendered pages.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;CDP compatibility layer&lt;/strong&gt; for Puppeteer/Playwright drop-in usage.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;MCP server mode&lt;/strong&gt; (&lt;code&gt;plasmate mcp&lt;/code&gt;) with stateful tools: open_page, evaluate, click, close_page.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;Cookie-based auth profiles&lt;/strong&gt; with AES-256-GCM encryption at rest.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;Chrome extension bridge&lt;/strong&gt; for importing auth sessions from a real browser.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;Docker image&lt;/strong&gt; on GHCR (multi-arch).&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type feat&quot;&gt;feat&lt;/span&gt; &lt;strong&gt;Node.js and Python SDKs&lt;/strong&gt;.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type perf&quot;&gt;perf&lt;/span&gt; 4-5ms per page (50x faster than Chrome, 5x faster than Lightpanda).&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type perf&quot;&gt;perf&lt;/span&gt; ~30MB memory for 100 concurrent pages.&lt;/li&gt;
-    &lt;li&gt;&lt;span class=&quot;change-type perf&quot;&gt;perf&lt;/span&gt; 10.4x token compression vs raw DOM.&lt;/li&gt;
-  &lt;/ul&gt;
-
-  &lt;h3&gt;Architecture&lt;/h3&gt;
-  &lt;ul&gt;
-    &lt;li&gt;&lt;strong&gt;Language:&lt;/strong&gt; Rust (16,740 lines at launch, 171 tests)&lt;/li&gt;
-    &lt;li&gt;&lt;strong&gt;Binary:&lt;/strong&gt; 43 MB single file, no dependencies&lt;/li&gt;
-    &lt;li&gt;&lt;strong&gt;License:&lt;/strong&gt; Apache 2.0&lt;/li&gt;
-  &lt;/ul&gt;
-</code></pre>
+      <h1>Changelog</h1>
+<p>All notable changes to Plasmate, tracked by version and date.</p>
+<h2>v0.4.0 - 2026-03-23</h2>
+<p>Chrome-delegated screenshots, completed SPA hydration, and full CDP stub coverage for Puppeteer compatibility.</p>
+<ul>
+<li><strong>feat</strong> - <strong>Chrome-delegated screenshots</strong> for pixel-perfect rendering via <code>Page.captureScreenshot</code>.</li>
+<li><strong>feat</strong> - <strong>Completed SPA hydration ops:</strong> <code>insertBefore</code>, <code>replaceChild</code>, <code>classList</code>, <code>cloneNode</code>.</li>
+<li><strong>feat</strong> - <strong>Timer queue drain</strong> for <code>setTimeout</code> and <code>requestAnimationFrame</code>.</li>
+<li><strong>feat</strong> - <strong>Wired <code>page.click()</code> and <code>page.type()</code></strong> via DOM bridge.</li>
+<li><strong>feat</strong> - <strong>Implemented <code>page.waitForSelector()</code></strong> for final DOM state.</li>
+<li><strong>fix</strong> - <strong>Fixed all remaining CDP stubs</strong>, including <code>setDeviceMetricsOverride</code>, <code>addScriptToEvaluateOnNewDocument</code>, <code>getLayoutMetrics</code>, and <code>getProperties</code> for improved Puppeteer compatibility.</li>
+</ul>
+<hr>
+<h2>v0.3.0 - 2026-03-22</h2>
+<p>SPA rendering, interaction APIs, plugin system, and multi-session support. ~25K lines Rust, 200+ tests passing.</p>
+<ul>
+<li><strong>feat</strong> - <strong>Network request interception</strong> - block, modify, or mock responses.</li>
+<li><strong>feat</strong> - <strong>TLS configuration</strong> - cipher suite and fingerprint tuning.</li>
+<li><strong>feat</strong> - <strong>Wasm plugin system</strong> - optional feature flag, wasmtime runtime.</li>
+<li><strong>feat</strong> - <strong>SPA rendering bridge</strong> - bidirectional V8/rcdom DOM sync, SOM recompiled after JS.</li>
+<li><strong>feat</strong> - <strong>Timer queue drain</strong> for React/Vue deferred rendering.</li>
+<li><strong>feat</strong> - <strong>page.click(), page.type(), page.waitForSelector()</strong> via DOM bridge.</li>
+<li><strong>feat</strong> - <strong>Deep SPA hydration</strong> - insertBefore, replaceChild, cloneNode, classList.</li>
+<li><strong>feat</strong> - <strong>Multi-page session manager</strong> - 50 concurrent sessions per instance.</li>
+<li><strong>feat</strong> - <strong>Auth profiles</strong> with encrypted cookie storage.</li>
+<li><strong>feat</strong> - <strong>Screenshots protocol surface</strong> (SOM fallback until renderer lands).</li>
+</ul>
+<h3>Stats</h3>
+<ul>
+<li><strong>Binary:</strong> 45.8 MB default / 54 MB with plugins</li>
+<li><strong>Memory:</strong> 28 MB RSS per process</li>
+<li><strong>Tests:</strong> 200+ passing</li>
+<li><strong>Codebase:</strong> ~25K lines Rust</li>
+</ul>
+<hr>
+<h2>v0.2.0 - 2026-03-21</h2>
+<p>V8 integration, CDP server, SDK expansion, and coverage tooling.</p>
+<ul>
+<li><strong>feat</strong> - <strong>V8 JavaScript integration</strong> with full DOM shim.</li>
+<li><strong>feat</strong> - <strong>CDP server</strong> for Puppeteer/Playwright compatibility.</li>
+<li><strong>feat</strong> - <strong>MCP server mode</strong> (stdio JSON-RPC).</li>
+<li><strong>feat</strong> - <strong>SOM Specification v1.0</strong> with JSON Schema and conformance test suite.</li>
+<li><strong>feat</strong> - <strong>Node.js SDK</strong> with full TypeScript types.</li>
+<li><strong>feat</strong> - <strong>Python SDK</strong> with Pydantic models.</li>
+<li><strong>feat</strong> - <strong>Go SDK</strong> with structs, client, and query helpers.</li>
+<li><strong>feat</strong> - <strong>Throughput CI</strong> benchmark expansion to 100 URLs across 13 categories.</li>
+<li><strong>feat</strong> - <strong>CDP cookie jar</strong> (getCookies, setCookies, deleteCookies, clearBrowserCookies).</li>
+<li><strong>docs</strong> - Browser Use and LangChain integration pages.</li>
+<li><strong>docs</strong> - Interactive coverage scorecards (nightly HTML, weekly JS).</li>
+</ul>
+<hr>
+<h2>v0.1.1 - 2026-03-20</h2>
+<p>Major JS runtime improvements. Coverage jumps from 71% to 82%.</p>
+<ul>
+<li><strong>feat</strong> - Functional <strong>MutationObserver</strong> for SPA framework support (React, Vue, Next.js). Observer callbacks now fire on DOM mutations, enabling client-side rendering in the headless engine.</li>
+<li><strong>feat</strong> - <strong>URL/URLSearchParams polyfills</strong> with try-catch constructor probing. Detects partial V8 built-ins and only overrides when necessary.</li>
+<li><strong>feat</strong> - <strong>JS coverage scorecard</strong> tracking 100 real-world sites with per-site element counts, JS failure rates, and error details.</li>
+<li><strong>fix</strong> - <strong>Browser-realistic HTTP headers</strong> to avoid anti-bot blocking (zero speed/memory cost).</li>
+<li><strong>fix</strong> - <strong>Pre/post JS SOM comparison</strong> keeps whichever SOM has more elements, preventing JS from degrading content.</li>
+<li><strong>fix</strong> - Skip <code>type=&quot;module&quot;</code> external scripts (prevents <code>SyntaxError: Cannot use import statement outside a module</code>).</li>
+<li><strong>fix</strong> - <code>var self = globalThis</code> for SPA frameworks that reference <code>self</code>.</li>
+<li><strong>perf</strong> - Configurable JS safety budgets: <code>--max-external-scripts</code>, <code>--max-external-script-kb</code>, <code>--external-script-timeout-ms</code>.</li>
+</ul>
+<h3>Coverage Results</h3>
+<ul>
+<li><strong>HTML scorecard:</strong> 80/100 Full (80%)</li>
+<li><strong>JS scorecard:</strong> 79/98 Full (80.6%)</li>
+<li><strong>New Full sites:</strong> amazon.com, ebay.com (via MutationObserver)</li>
+<li><strong>Remaining thin:</strong> 14 sites needing deeper DOM mutation support</li>
+<li><strong>Failed:</strong> 4 (anti-bot: etsy, tripadvisor, wsj; non-HTML: httpbin)</li>
+</ul>
+<hr>
+<h2>v0.1.0 - 2026-03-01</h2>
+<p>Initial public release. The browser engine for agents.</p>
+<ul>
+<li><strong>feat</strong> - <strong>Semantic Object Model (SOM)</strong> compiler: HTML to structured, token-efficient representation.</li>
+<li><strong>feat</strong> - <strong>Agent Web Protocol (AWP)</strong>: 7-method protocol for agent-native browsing (navigate, snapshot, click, type, scroll, select, extract).</li>
+<li><strong>feat</strong> - <strong>V8 JavaScript runtime</strong> with DOM shim for JS-rendered pages.</li>
+<li><strong>feat</strong> - <strong>CDP compatibility layer</strong> for Puppeteer/Playwright drop-in usage.</li>
+<li><strong>feat</strong> - <strong>MCP server mode</strong> (<code>plasmate mcp</code>) with stateful tools: open_page, evaluate, click, close_page.</li>
+<li><strong>feat</strong> - <strong>Cookie-based auth profiles</strong> with AES-256-GCM encryption at rest.</li>
+<li><strong>feat</strong> - <strong>Chrome extension bridge</strong> for importing auth sessions from a real browser.</li>
+<li><strong>feat</strong> - <strong>Docker image</strong> on GHCR (multi-arch).</li>
+<li><strong>feat</strong> - <strong>Node.js and Python SDKs</strong>.</li>
+<li><strong>perf</strong> - 4-5ms per page (50x faster than Chrome, 5x faster than Lightpanda).</li>
+<li><strong>perf</strong> - ~30MB memory for 100 concurrent pages.</li>
+<li><strong>perf</strong> - 10.4x token compression vs raw DOM.</li>
+</ul>
+<h3>Architecture</h3>
+<ul>
+<li><strong>Language:</strong> Rust (16,740 lines at launch, 171 tests)</li>
+<li><strong>Binary:</strong> 43 MB single file, no dependencies</li>
+<li><strong>License:</strong> Apache 2.0</li>
+</ul>
 
     </main>
   </div>
