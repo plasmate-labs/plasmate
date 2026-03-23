@@ -1,27 +1,24 @@
 """
-Browser Use integration for Plasmate.
+Plasmate SOM integration for Browser Use.
 
-Provides a Plasmate-backed browser for Browser Use that returns SOM output
-instead of raw DOM — typically 10x fewer tokens for the same page.
+Provides SOM-based content extraction that can replace or complement
+Browser Use's default DOM serialization, reducing token costs by 90%+.
 
 Example::
 
-    from plasmate_browser_use import PlasmateBrowser
+    from plasmate_browser_use import PlasmateExtractor
 
-    async with PlasmateBrowser() as browser:
-        state = await browser.navigate("https://news.ycombinator.com")
-        print(state.text)  # SOM-formatted page state
-        state = await browser.click(state.interactive_elements[0].index)
+    extractor = PlasmateExtractor()
+    context = extractor.get_page_context("https://example.com")
+    print(context)
 """
 
-from .browser import PlasmateBrowser, PageState, InteractiveElement
-from .som_formatter import som_to_browser_use_state, token_count_comparison
+from .extractor import PlasmateExtractor
+from .utils import token_count_comparison, estimate_tokens
 
 __all__ = [
-    "PlasmateBrowser",
-    "PageState",
-    "InteractiveElement",
-    "som_to_browser_use_state",
+    "PlasmateExtractor",
     "token_count_comparison",
+    "estimate_tokens",
 ]
-__version__ = "0.1.0"
+__version__ = "0.3.0"

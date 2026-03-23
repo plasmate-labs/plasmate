@@ -1,215 +1,154 @@
 # plasmate-browser-use
 
-[Browser Use](https://github.com/browser-use/browser-use) integration for [Plasmate](https://github.com/nicepkg/plasmate) — replace Playwright + Chrome with Plasmate's SOM output for **~10x fewer tokens**.
+SOM-based content extraction for [Browser Use](https://github.com/browser-use/browser-use). Drop-in alternative to Browser Use's default DOM serializer that uses Plasmate's Semantic Object Model (SOM) to reduce token costs by 10x or more.
 
-Browser Use is the most popular open-source AI browser agent framework. By default it uses Playwright to render pages in Chrome and feeds the raw DOM tree to the LLM. Plasmate replaces this with its Semantic Object Model (SOM), which compiles HTML into compact, structured representations that preserve all interactive elements while stripping layout noise.
+Instead of sending the full DOM tree to your LLM, Plasmate compresses web pages into a compact semantic representation. Same information, 90% fewer tokens, lower costs, faster responses.
 
-## Why Plasmate?
-
-| | Browser Use (Playwright) | Browser Use (Plasmate) |
-|---|---|---|
-| **Backend** | Chrome via Playwright | Plasmate MCP subprocess |
-| **Output to LLM** | Raw DOM tree | SOM (Semantic Object Model) |
-| **Typical tokens** | ~20,000 per page | ~2,000 per page |
-| **Screenshots** | Yes | No (headless, no rendering) |
-| **Interactive elements** | `[backend_node_id]<tag>` | `[N] role "label"` |
-| **Dependencies** | Chrome, Playwright | `plasmate` binary only |
-| **Startup time** | ~2-5s (browser launch) | ~50ms (subprocess) |
-
-## Installation
+## Install
 
 ```bash
 pip install plasmate-browser-use
 ```
 
-Requires the `plasmate` binary on your PATH:
+## Prerequisites
+
+You need the `plasmate` binary installed:
 
 ```bash
-# Via npm
-npm install -g plasmate
-
 # Via cargo
 cargo install plasmate
 
-# Via install script
-curl -fsSL https://raw.githubusercontent.com/nicepkg/plasmate/master/install.sh | bash
+# Or via install script
+curl -fsSL https://plasmate.app/install.sh | sh
+```
+
+Verify it works:
+
+```bash
+plasmate --version
 ```
 
 ## Quick Start
 
+### Basic extraction
+
+```python
+from plasmate_browser_use import PlasmateExtractor
+
+extractor = PlasmateExtractor()
+
+# Get raw SOM data as a dict
+som = extractor.extract("https://news.ycombinator.com")
+print(f"Elements: {som['meta']['element_count']}")
+print(f"Compression: {som['meta']['html_bytes'] / som['meta']['som_bytes']:.1f}x")
+```
+
+### Get page context for an LLM
+
+The `get_page_context()` method returns a formatted string optimized for LLM consumption, with interactive elements, links, content, and compression stats:
+
+```python
+context = extractor.get_page_context("https://example.com")
+print(context)
+```
+
+Output:
+
+```
+# Example Domain
+URL: https://example.com
+Language: en
+
+## Interactive Elements (1)
+  [e1] link "More information..." (click)
+
+## Content
+This domain is for use in illustrative examples in documents...
+
+---
+Compression: 15.2x (1256 HTML bytes -> 83 SOM bytes)
+Elements: 5 (1 interactive)
+```
+
+### Markdown extraction
+
+```python
+md = extractor.extract_markdown("https://example.com")
+print(md)
+```
+
+### Async support
+
+All methods have async variants:
+
 ```python
 import asyncio
-from plasmate_browser_use import PlasmateBrowser
 
 async def main():
-    async with PlasmateBrowser() as browser:
-        # Navigate and get SOM state
-        state = await browser.navigate("https://news.ycombinator.com")
-        print(state.text)  # What the LLM sees
-
-        # Click an element by its index
-        link = state.interactive_elements[0]
-        state = await browser.click(link.index)
-
-        # Type into a form field
-        inputs = [el for el in state.interactive_elements if el.role == "text_input"]
-        if inputs:
-            state = await browser.type_text(inputs[0].index, "hello world")
+    extractor = PlasmateExtractor()
+    context = await extractor.get_page_context_async("https://example.com")
+    som = await extractor.extract_async("https://example.com")
+    md = await extractor.extract_markdown_async("https://example.com")
 
 asyncio.run(main())
 ```
 
-## What the LLM Sees
-
-### Browser Use (Playwright) — ~20,000 tokens
-
-```
-[1234]<div class="athing" id="12345678" />
-  [1235]<td class="title" />
-    [1236]<span class="titleline" />
-      [1237]<a href="https://example.com" />
-        Show HN: Something Cool
-      [1238]<span class="sitebit comhead" />
-        (<a href="from?site=example.com" />
-          [1239]example.com
-        )
-  [1240]<td class="subtext" />
-    [1241]<span class="score" id="score_12345678" />
-      142 points
-    [1242]<a href="user?id=someone" />
-      someone
-    [1243]<a href="item?id=12345678" />
-      89 comments
-...
-```
-
-### Plasmate (SOM) — ~2,000 tokens
-
-```
-[Tab] Hacker News
-[URL] https://news.ycombinator.com
-
---- navigation "Main menu" ---
-  [1] link "Hacker News" -> /
-  [2] link "new" -> /newest
-  [3] link "past" -> /front
-
---- main ---
-  [4] link "Show HN: Something Cool" -> https://example.com
-  142 points by someone
-  [5] link "89 comments" -> /item?id=12345678
-...
-
-[SOM] 87,234 -> 4,521 bytes (19.3x) | 156 elements, 89 interactive
-```
-
-Same information, 10x fewer tokens.
-
-## API Reference
-
-### `PlasmateBrowser`
-
-The main class. Wraps a Plasmate MCP subprocess and provides Browser Use-compatible methods.
+### Using with a Browser Use agent
 
 ```python
-PlasmateBrowser(
-    binary="plasmate",   # Path to plasmate binary
-    timeout=30,          # Response timeout in seconds
-    budget=None,         # Optional SOM token budget
-)
+from browser_use import Agent
+from plasmate_browser_use import PlasmateExtractor
+
+extractor = PlasmateExtractor()
+
+# Get compact page context instead of full DOM
+context = extractor.get_page_context("https://example.com/products")
+
+# Feed to your Browser Use agent with 10x fewer tokens
+agent = Agent(task="Find the cheapest product", page_context=context)
+result = await agent.run()
 ```
 
-#### Methods
-
-| Method | Description | Returns |
-|--------|-------------|---------|
-| `navigate(url)` | Open a URL in a persistent session | `PageState` |
-| `click(element_index)` | Click element by its `[N]` index | `PageState` |
-| `type_text(element_index, text)` | Type into an input/textarea | `PageState` |
-| `get_state()` | Get current page state as SOM | `PageState` |
-| `screenshot()` | Returns `None` (no visual rendering) | `None` |
-| `close()` | Close session and shut down process | — |
-
-### `PageState`
-
-Returned by all navigation/interaction methods.
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `url` | `str` | Current page URL |
-| `title` | `str` | Page title |
-| `text` | `str` | SOM text for the LLM |
-| `interactive_elements` | `list[InteractiveElement]` | All clickable/typeable elements |
-| `selector_map` | `dict[int, InteractiveElement]` | Index -> element lookup |
-| `som` | `dict` | Raw SOM dict |
-| `som_tokens` | `int` | Estimated token count |
-| `html_bytes` | `int` | Original HTML size |
-| `som_bytes` | `int` | SOM output size |
-
-### `InteractiveElement`
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `index` | `int` | Integer index (`[N]` in SOM text) |
-| `som_id` | `str` | Original SOM element ID |
-| `role` | `str` | `link`, `button`, `text_input`, etc. |
-| `text` | `str` | Display text or label |
-| `attrs` | `dict` | Role-specific attributes |
-
-### `som_to_browser_use_state(som, index_map=None)`
-
-Convert a raw SOM dict to Browser Use-compatible text format.
-
-### `token_count_comparison(som, som_text=None)`
-
-Returns a dict comparing HTML vs SOM token counts:
+### Token savings comparison
 
 ```python
-{
-    "html_bytes": 87234,
-    "som_bytes": 4521,
-    "html_tokens_est": 21808,
-    "som_tokens_est": 1130,
-    "byte_ratio": 19.3,
-    "token_ratio": 19.3,
-    "token_savings_pct": 94.8,
-}
+from plasmate_browser_use import PlasmateExtractor, token_count_comparison
+
+extractor = PlasmateExtractor()
+som = extractor.extract("https://news.ycombinator.com")
+stats = token_count_comparison(som)
+
+print(f"HTML tokens: ~{stats['html_tokens_est']:,}")
+print(f"SOM tokens:  ~{stats['som_tokens_est']:,}")
+print(f"Savings:     {stats['token_savings_pct']}%")
+print(f"Ratio:       {stats['token_ratio']}x fewer tokens")
 ```
 
-## Token Savings
+## Typical token savings
 
-Benchmarked across common websites:
+| Site | HTML tokens | SOM tokens | Reduction |
+|------|------------|------------|-----------|
+| Hacker News | ~22,000 | ~1,200 | 18x |
+| Wikipedia article | ~85,000 | ~8,500 | 10x |
+| Amazon product page | ~120,000 | ~6,000 | 20x |
+| Google search results | ~45,000 | ~3,500 | 13x |
 
-| Site | HTML tokens | SOM tokens | Savings |
-|------|------------|------------|---------|
-| Hacker News | ~22,000 | ~1,500 | **15x** |
-| GitHub repo page | ~45,000 | ~3,500 | **13x** |
-| Wikipedia article | ~60,000 | ~5,000 | **12x** |
-| News article | ~35,000 | ~3,000 | **12x** |
-| Simple landing page | ~8,000 | ~500 | **16x** |
-| E-commerce product | ~40,000 | ~4,000 | **10x** |
+Numbers vary by page. The more complex the page (ads, trackers, layout noise), the bigger the savings.
 
-Average: **~10-15x fewer tokens per page**.
+## How it works
 
-Over a multi-step agent task (5-10 page loads), this translates to **50,000-150,000 fewer tokens** — significant cost savings and faster LLM responses.
+1. Plasmate fetches the page and parses the HTML
+2. The DOM is compiled into a Semantic Object Model (SOM) that preserves meaning while stripping layout noise
+3. The SOM is serialized into a compact format with tagged interactive elements
+4. Your LLM agent sees the same page information in 10x fewer tokens
 
-## Known Limitations
+## Links
 
-- **No screenshots**: Plasmate has no visual rendering pipeline. Agents that rely on screenshots (e.g., for CAPTCHA solving or visual layout understanding) should use the default Playwright backend.
-- **No coordinate-based clicking**: Plasmate operates at the DOM level. All interactions use SOM element IDs, not pixel coordinates.
-- **No file uploads**: The `upload_file` action is not supported.
-- **No scroll position**: Plasmate renders the full page, not a viewport. There is no concept of "pixels above/below."
-- **Single tab**: Each `PlasmateBrowser` instance maintains one session. For multi-tab workflows, create multiple instances.
-- **Not yet upstream**: This is a standalone integration package. The goal is to prove it works here, then submit as a PR to the Browser Use repo.
-
-## Example
-
-```bash
-python example.py
-```
-
-See [example.py](example.py) for a full working example that navigates to Hacker News, finds the top story, clicks it, and compares token usage.
+- [Plasmate](https://plasmate.app) -- the SOM engine
+- [SOM Spec](https://plasmate.app/docs/som-spec) -- Semantic Object Model specification
+- [Browser Use](https://github.com/browser-use/browser-use) -- AI agent browser framework
+- [Token cost analysis](https://plasmate.app/docs/cost-analysis) -- detailed benchmarks
 
 ## License
 
-MIT
+Apache-2.0
