@@ -354,7 +354,7 @@ fn default_format() -> String {
 pub fn screenshot_page_definition() -> ToolDefinition {
     ToolDefinition {
         name: "screenshot_page".to_string(),
-        description: "Capture a screenshot of a web page. NOTE: Plasmate does not yet have a built-in layout engine, so this currently returns the page's Semantic Object Model (SOM) as structured data instead of an image. The SOM provides a complete, token-efficient representation of the page content.".to_string(),
+        description: "Capture a pixel-perfect screenshot of a web page using headless Chrome. Requires Chrome/Chromium to be installed. If Chrome is not available, returns the page's Semantic Object Model (SOM) as structured data instead.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -424,7 +424,7 @@ pub async fn handle_screenshot_page(arguments: &Value, client: &reqwest::Client)
         }
     };
 
-    // Try the screenshot capture (will return NotImplemented for now)
+    // Try Chrome-based screenshot, fall back to SOM if Chrome not found
     let opts = screenshot::ScreenshotOptions {
         width: params.width,
         height: params.height,
@@ -434,7 +434,6 @@ pub async fn handle_screenshot_page(arguments: &Value, client: &reqwest::Client)
 
     match screenshot::capture_url(&params.url, &opts) {
         Ok(data) => {
-            // When the renderer is implemented, return the image
             let base64 = base64_encode_simple(&data);
             json!({
                 "content": [
@@ -446,8 +445,8 @@ pub async fn handle_screenshot_page(arguments: &Value, client: &reqwest::Client)
                 ]
             })
         }
-        Err(_) => {
-            // Return SOM as structured fallback
+        Err(screenshot::ScreenshotError::ChromeNotFound) => {
+            // Fall back to SOM as structured data
             let fallback = screenshot::som_fallback(&page_result.som);
             json!({
                 "content": [
@@ -458,6 +457,7 @@ pub async fn handle_screenshot_page(arguments: &Value, client: &reqwest::Client)
                 ]
             })
         }
+        Err(e) => error_response(&format!("Screenshot failed: {}", e)),
     }
 }
 

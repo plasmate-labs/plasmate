@@ -1222,34 +1222,78 @@ pub fn emulation_set_touch_emulation_enabled(id: u64) -> CdpResponse {
 
 pub fn page_capture_screenshot(
     id: u64,
-    _params: &serde_json::Value,
+    params: &serde_json::Value,
     target: &CdpTarget,
 ) -> (CdpResponse, Vec<CdpEvent>) {
-    if target.current_som.is_some() {
-        return (
-            CdpResponse::error(
-                id,
-                CDP_ERR_SERVER,
-                &format!(
-                    "Screenshot not implemented: Plasmate does not have a built-in layout engine yet. \
-                     Use Plasmate.getSom for structured content extraction instead. \
-                     Page: {}",
-                    target.current_url.as_deref().unwrap_or("about:blank")
-                ),
-            ),
-            vec![],
-        );
-    }
+    use crate::screenshot;
 
-    (
-        CdpResponse::error(
-            id,
-            CDP_ERR_SERVER,
-            "Screenshot not implemented and no page loaded. Navigate first with Page.navigate, \
-             then use Plasmate.getSom for structured content.",
+    let url = target.current_url.as_deref().unwrap_or("about:blank");
+    let format_str = params
+        .get("format")
+        .and_then(|v| v.as_str())
+        .unwrap_or("png");
+    let quality = params
+        .get("quality")
+        .and_then(|v| v.as_u64())
+        .map(|q| q as u32);
+
+    let opts = screenshot::ScreenshotOptions {
+        format: screenshot::Format::from_str(format_str),
+        quality,
+        ..Default::default()
+    };
+
+    match screenshot::capture_url(url, &opts) {
+        Ok(data) => {
+            let base64 = base64_encode_simple(&data);
+            (CdpResponse::success(id, json!({"data": base64})), vec![])
+        }
+        Err(screenshot::ScreenshotError::ChromeNotFound) => {
+            // Fall back to SOM if Chrome not available
+            if let Some(ref som) = target.current_som {
+                let fallback = screenshot::som_fallback(som);
+                (CdpResponse::success(id, fallback), vec![])
+            } else {
+                (
+                    CdpResponse::error(
+                        id,
+                        CDP_ERR_SERVER,
+                        "Screenshot requires Chrome/Chromium. Install Chrome for screenshot support.",
+                    ),
+                    vec![],
+                )
+            }
+        }
+        Err(e) => (
+            CdpResponse::error(id, CDP_ERR_SERVER, &e.to_string()),
+            vec![],
         ),
-        vec![],
-    )
+    }
+}
+
+/// Simple base64 encoding for image data (CDP module).
+fn base64_encode_simple(data: &[u8]) -> String {
+    const CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut result = String::with_capacity((data.len() + 2) / 3 * 4);
+    for chunk in data.chunks(3) {
+        let b0 = chunk[0] as u32;
+        let b1 = if chunk.len() > 1 { chunk[1] as u32 } else { 0 };
+        let b2 = if chunk.len() > 2 { chunk[2] as u32 } else { 0 };
+        let triple = (b0 << 16) | (b1 << 8) | b2;
+        result.push(CHARS[((triple >> 18) & 0x3F) as usize] as char);
+        result.push(CHARS[((triple >> 12) & 0x3F) as usize] as char);
+        if chunk.len() > 1 {
+            result.push(CHARS[((triple >> 6) & 0x3F) as usize] as char);
+        } else {
+            result.push('=');
+        }
+        if chunk.len() > 2 {
+            result.push(CHARS[(triple & 0x3F) as usize] as char);
+        } else {
+            result.push('=');
+        }
+    }
+    result
 }
 
 // ============================================================

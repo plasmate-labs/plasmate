@@ -49,6 +49,7 @@ thiserror = "2"
 rustls = { version = "0.23", default-features = false, features = ["ring", "logging", "std", "tls12"] }
 rustls-native-certs = "0.8"
 rustls-pemfile = "2"
+tempfile = "3"
 
 [dev-dependencies]
 serial_test = "3"

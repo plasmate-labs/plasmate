@@ -906,17 +906,21 @@ fn cmd_screenshot(
             std::fs::write(output, &data)?;
             eprintln!("✓ Screenshot saved to {} ({} bytes)", output, data.len());
         }
-        Err(screenshot::ScreenshotError::NotImplemented) => {
-            eprintln!("Screenshot rendering is not yet implemented.");
+        Err(screenshot::ScreenshotError::ChromeNotFound) => {
+            eprintln!("Chrome/Chromium not found.");
             eprintln!();
-            eprintln!("Plasmate does not have a built-in layout engine yet.");
-            eprintln!("A pure-Rust rasteriser (SOM → PNG) is planned but not available.");
+            eprintln!("Install Google Chrome or Chromium for screenshot support.");
+            eprintln!("Screenshots delegate rendering to a headless Chrome subprocess.");
             eprintln!();
-            eprintln!("For structured content extraction, use:");
+            eprintln!("For structured content extraction without Chrome, use:");
             eprintln!("  plasmate fetch {}", url);
             eprintln!();
             eprintln!("This returns the Semantic Object Model (SOM) — a structured,");
             eprintln!("token-efficient representation of the page content.");
+            std::process::exit(1);
+        }
+        Err(e) => {
+            eprintln!("Screenshot failed: {}", e);
             std::process::exit(1);
         }
     }
