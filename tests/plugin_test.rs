@@ -1,3 +1,4 @@
+#![cfg(feature = "plugins")]
 //! Integration tests for the Wasm plugin system.
 
 use plasmate::plugin::{Hook, PluginManager};
