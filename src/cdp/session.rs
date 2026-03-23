@@ -66,6 +66,15 @@ pub struct CdpTarget {
     // Whether auto-attach has been configured at browser level (prevents duplicate events)
     pub auto_attach_configured: bool,
 
+    // Viewport emulation
+    pub viewport_width: u32,
+    pub viewport_height: u32,
+    pub device_scale_factor: f64,
+
+    // Scripts to inject on every new document
+    pub scripts_on_new_document: Vec<(String, String)>, // (identifier, script_source)
+    pub next_script_id: u32,
+
     // Wasm plugins (shared across connections)
     pub plugins: SharedPlugins,
 }
@@ -154,6 +163,11 @@ impl CdpTarget {
                 ..Default::default()
             },
             interceptor: NetworkInterceptor::new(),
+            viewport_width: 1280,
+            viewport_height: 720,
+            device_scale_factor: 1.0,
+            scripts_on_new_document: Vec::new(),
+            next_script_id: 0,
             plugins,
         })
     }
@@ -193,6 +207,28 @@ impl CdpTarget {
             .as_deref()
             .unwrap_or("about:blank")
             .to_string();
+
+        // Inject scripts registered via Page.addScriptToEvaluateOnNewDocument
+        let html_for_pipeline = if !self.scripts_on_new_document.is_empty() {
+            let mut html_with_scripts = html.to_string();
+            let scripts: String = self
+                .scripts_on_new_document
+                .iter()
+                .map(|(_, src)| format!("<script>{}</script>", src))
+                .collect();
+            if let Some(pos) = html_with_scripts.find("<head>") {
+                html_with_scripts.insert_str(pos + 6, &scripts);
+            } else if let Some(pos) = html_with_scripts.find("<html>") {
+                html_with_scripts.insert_str(pos + 6, &format!("<head>{}</head>", scripts));
+            } else {
+                html_with_scripts =
+                    format!("<html><head>{}</head>{}</html>", scripts, html_with_scripts);
+            }
+            html_with_scripts
+        } else {
+            html.to_string()
+        };
+        let html = &html_for_pipeline;
 
         let page_result = if let Some(ref pm) = self.plugins {
             let mut guard = pm.lock().await;
@@ -294,10 +330,31 @@ impl CdpTarget {
             self.cookie_jar.parse_set_cookie(set_cookie, &final_url);
         }
 
+        // Inject scripts registered via Page.addScriptToEvaluateOnNewDocument
+        let html_for_pipeline = if !self.scripts_on_new_document.is_empty() {
+            let mut html_with_scripts = fetch_result.html.clone();
+            let scripts: String = self
+                .scripts_on_new_document
+                .iter()
+                .map(|(_, src)| format!("<script>{}</script>", src))
+                .collect();
+            if let Some(pos) = html_with_scripts.find("<head>") {
+                html_with_scripts.insert_str(pos + 6, &scripts);
+            } else if let Some(pos) = html_with_scripts.find("<html>") {
+                html_with_scripts.insert_str(pos + 6, &format!("<head>{}</head>", scripts));
+            } else {
+                html_with_scripts =
+                    format!("<html><head>{}</head>{}</html>", scripts, html_with_scripts);
+            }
+            html_with_scripts
+        } else {
+            fetch_result.html.clone()
+        };
+
         let page_result = if let Some(ref pm) = self.plugins {
             let mut guard = pm.lock().await;
             crate::js::pipeline::process_page_async_with_plugins(
-                &fetch_result.html,
+                &html_for_pipeline,
                 &final_url,
                 &self.pipeline_config,
                 &self.client,
@@ -307,7 +364,7 @@ impl CdpTarget {
             .map_err(|e| e.to_string())?
         } else {
             crate::js::pipeline::process_page_async(
-                &fetch_result.html,
+                &html_for_pipeline,
                 &final_url,
                 &self.pipeline_config,
                 &self.client,

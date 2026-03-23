@@ -1208,7 +1208,20 @@ pub fn fetch_get_response_body(
 // Emulation domain (Puppeteer needs these)
 // ============================================================
 
-pub fn emulation_set_device_metrics_override(id: u64) -> CdpResponse {
+pub fn emulation_set_device_metrics_override(
+    id: u64,
+    params: &serde_json::Value,
+    target: &mut CdpTarget,
+) -> CdpResponse {
+    if let Some(w) = params.get("width").and_then(|v| v.as_u64()) {
+        target.viewport_width = w as u32;
+    }
+    if let Some(h) = params.get("height").and_then(|v| v.as_u64()) {
+        target.viewport_height = h as u32;
+    }
+    if let Some(s) = params.get("deviceScaleFactor").and_then(|v| v.as_f64()) {
+        target.device_scale_factor = s;
+    }
     CdpResponse::success(id, json!({}))
 }
 
@@ -1238,6 +1251,8 @@ pub fn page_capture_screenshot(
         .map(|q| q as u32);
 
     let opts = screenshot::ScreenshotOptions {
+        width: target.viewport_width,
+        height: target.viewport_height,
         format: screenshot::Format::from_str(format_str),
         quality,
         ..Default::default()

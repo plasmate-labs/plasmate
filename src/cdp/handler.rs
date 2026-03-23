@@ -216,10 +216,18 @@ async fn handle_cdp_request_inner(
         "Page.setInterceptFileChooserDialog" => {
             (CdpResponse::success(id, serde_json::json!({})), vec![])
         }
-        "Page.addScriptToEvaluateOnNewDocument" => (
-            CdpResponse::success(id, serde_json::json!({"identifier": "1"})),
-            vec![],
-        ),
+        "Page.addScriptToEvaluateOnNewDocument" => {
+            let source = params.get("source").and_then(|v| v.as_str()).unwrap_or("");
+            target.next_script_id += 1;
+            let identifier = format!("{}", target.next_script_id);
+            target
+                .scripts_on_new_document
+                .push((identifier.clone(), source.to_string()));
+            (
+                CdpResponse::success(id, serde_json::json!({"identifier": identifier})),
+                vec![],
+            )
+        }
         "Page.getNavigationHistory" => {
             let url = target.current_url.as_deref().unwrap_or("about:blank");
             (
@@ -297,7 +305,14 @@ async fn handle_cdp_request_inner(
             )
         }
         "Runtime.getProperties" => (
-            CdpResponse::success(id, serde_json::json!({"result": []})),
+            CdpResponse::success(
+                id,
+                serde_json::json!({
+                    "result": [],
+                    "internalProperties": [],
+                    "privateProperties": []
+                }),
+            ),
             vec![],
         ),
         "Runtime.releaseObject" | "Runtime.releaseObjectGroup" => {
@@ -355,9 +370,10 @@ async fn handle_cdp_request_inner(
         "Fetch.getResponseBody" => (domains::fetch_get_response_body(id, params, target), vec![]),
 
         // ---- Emulation ----
-        "Emulation.setDeviceMetricsOverride" => {
-            (domains::emulation_set_device_metrics_override(id), vec![])
-        }
+        "Emulation.setDeviceMetricsOverride" => (
+            domains::emulation_set_device_metrics_override(id, params, target),
+            vec![],
+        ),
         "Emulation.setTouchEmulationEnabled" => {
             (domains::emulation_set_touch_emulation_enabled(id), vec![])
         }
@@ -430,12 +446,35 @@ async fn handle_cdp_request_inner(
         ),
 
         // ---- Extra Page methods ----
-        "Page.bringToFront"
-        | "Page.stopLoading"
-        | "Page.close"
-        | "Page.setBypassCSP"
-        | "Page.getLayoutMetrics"
-        | "Page.removeScriptToEvaluateOnNewDocument" => {
+        "Page.getLayoutMetrics" => {
+            let w = target.viewport_width;
+            let h = target.viewport_height;
+            (
+                CdpResponse::success(
+                    id,
+                    serde_json::json!({
+                        "layoutViewport": {"pageX": 0, "pageY": 0, "clientWidth": w, "clientHeight": h},
+                        "visualViewport": {"offsetX": 0, "offsetY": 0, "pageX": 0, "pageY": 0, "clientWidth": w, "clientHeight": h, "scale": target.device_scale_factor},
+                        "contentSize": {"x": 0, "y": 0, "width": w, "height": h},
+                        "cssLayoutViewport": {"clientWidth": w, "clientHeight": h, "pageX": 0, "pageY": 0},
+                        "cssVisualViewport": {"clientWidth": w, "clientHeight": h, "offsetX": 0, "offsetY": 0, "pageX": 0, "pageY": 0, "zoom": target.device_scale_factor},
+                        "cssContentSize": {"x": 0, "y": 0, "width": w, "height": h}
+                    }),
+                ),
+                vec![],
+            )
+        }
+        "Page.removeScriptToEvaluateOnNewDocument" => {
+            let identifier = params
+                .get("identifier")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            target
+                .scripts_on_new_document
+                .retain(|(id, _)| id != identifier);
+            (CdpResponse::success(id, serde_json::json!({})), vec![])
+        }
+        "Page.bringToFront" | "Page.stopLoading" | "Page.close" | "Page.setBypassCSP" => {
             (CdpResponse::success(id, serde_json::json!({})), vec![])
         }
 
