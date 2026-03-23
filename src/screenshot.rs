@@ -170,23 +170,24 @@ pub fn capture_url(url: &str, opts: &ScreenshotOptions) -> Result<Vec<u8>, Scree
         }
 
         match child.try_wait() {
-            Ok(Some(status)) => {
+            Ok(Some(_status)) => {
                 let res = child.wait_with_output().map_err(|e| {
                     ScreenshotError::CaptureFailed(format!("wait_with_output failed: {}", e))
                 })?;
-                if !status.success() {
-                    let stderr = String::from_utf8_lossy(&res.stderr);
-                    return Err(ScreenshotError::CaptureFailed(format!(
-                        "Chrome exited with non-zero status: {}. stderr: {}",
-                        status,
-                        stderr.chars().take(500).collect::<String>()
-                    )));
-                }
+                // Chrome often exits with non-zero status due to GPU warnings
+                // even when the screenshot was produced. Check for the file instead.
                 output = Some(res);
                 break;
             }
             Ok(None) => {
-                // Still running
+                // Still running - also check if screenshot file exists already
+                if screenshot_path.exists() {
+                    // Chrome wrote the file but hasn't exited yet (cleanup)
+                    // Give it a moment then kill
+                    std::thread::sleep(std::time::Duration::from_millis(500));
+                    child.kill().ok();
+                    break;
+                }
                 std::thread::sleep(std::time::Duration::from_millis(100));
             }
             Err(e) => {
@@ -198,14 +199,17 @@ pub fn capture_url(url: &str, opts: &ScreenshotOptions) -> Result<Vec<u8>, Scree
         }
     }
 
-    let output = output.unwrap(); // We broke the loop, so it's Some
-
     if !screenshot_path.exists() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(ScreenshotError::CaptureFailed(format!(
-            "Chrome did not produce screenshot. stderr: {}",
-            stderr.chars().take(500).collect::<String>()
-        )));
+        let msg = if let Some(ref out) = output {
+            let stderr = String::from_utf8_lossy(&out.stderr);
+            format!(
+                "Chrome did not produce screenshot. stderr: {}",
+                stderr.chars().take(500).collect::<String>()
+            )
+        } else {
+            "Chrome did not produce screenshot".to_string()
+        };
+        return Err(ScreenshotError::CaptureFailed(msg));
     }
 
     let data = std::fs::read(&screenshot_path)
@@ -265,22 +269,19 @@ pub fn capture_html(
         }
 
         match child.try_wait() {
-            Ok(Some(status)) => {
+            Ok(Some(_status)) => {
                 let res = child.wait_with_output().map_err(|e| {
                     ScreenshotError::CaptureFailed(format!("wait_with_output failed: {}", e))
                 })?;
-                if !status.success() {
-                    let stderr = String::from_utf8_lossy(&res.stderr);
-                    return Err(ScreenshotError::CaptureFailed(format!(
-                        "Chrome exited with non-zero status: {}. stderr: {}",
-                        status,
-                        stderr.chars().take(500).collect::<String>()
-                    )));
-                }
                 output = Some(res);
                 break;
             }
             Ok(None) => {
+                if screenshot_path.exists() {
+                    std::thread::sleep(std::time::Duration::from_millis(500));
+                    child.kill().ok();
+                    break;
+                }
                 std::thread::sleep(std::time::Duration::from_millis(100));
             }
             Err(e) => {
@@ -292,14 +293,17 @@ pub fn capture_html(
         }
     }
 
-    let output = output.unwrap();
-
     if !screenshot_path.exists() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(ScreenshotError::CaptureFailed(format!(
-            "Chrome did not produce screenshot. stderr: {}",
-            stderr.chars().take(500).collect::<String>()
-        )));
+        let msg = if let Some(ref out) = output {
+            let stderr = String::from_utf8_lossy(&out.stderr);
+            format!(
+                "Chrome did not produce screenshot. stderr: {}",
+                stderr.chars().take(500).collect::<String>()
+            )
+        } else {
+            "Chrome did not produce screenshot".to_string()
+        };
+        return Err(ScreenshotError::CaptureFailed(msg));
     }
 
     std::fs::read(&screenshot_path)

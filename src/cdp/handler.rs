@@ -362,6 +362,13 @@ async fn handle_cdp_request_inner(
             (domains::emulation_set_touch_emulation_enabled(id), vec![])
         }
         "Emulation.setUserAgentOverride" => {
+            if let Some(ua) = params.get("userAgent").and_then(|v| v.as_str()) {
+                target.user_agent = ua.to_string();
+                // Also set as extra header so it's used in subsequent fetches
+                target
+                    .extra_headers
+                    .insert("User-Agent".to_string(), ua.to_string());
+            }
             (CdpResponse::success(id, serde_json::json!({})), vec![])
         }
         "Emulation.setScrollbarsHidden" => {
