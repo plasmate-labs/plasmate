@@ -322,6 +322,84 @@ function template(title, body, currentSlug) {
       background: rgba(240,237,232,0.03);
     }
 
+    /* ---- Changelog labels ---- */
+    .version-tag {
+      display: inline-block; font-family: var(--font-mono); font-size: 12px;
+      background: rgba(232,133,58,0.12); color: var(--ember);
+      padding: 2px 10px; border-radius: 4px; font-weight: 600;
+    }
+
+    .date-tag {
+      font-family: var(--font-mono); font-size: 12px; color: var(--ash); margin-left: 6px;
+    }
+
+    .change-type {
+      display: inline-block; font-family: var(--font-mono); font-size: 11px;
+      padding: 2px 8px; border-radius: 4px; margin-right: 6px; font-weight: 500;
+    }
+
+    .change-type.feat { background: rgba(61,143,212,0.15); color: var(--arc); }
+    .change-type.fix { background: rgba(232,133,58,0.15); color: var(--ember); }
+    .change-type.perf { background: rgba(245,200,66,0.15); color: var(--corona); }
+    .change-type.docs { background: rgba(240,237,232,0.08); color: var(--dim); }
+
+    /* ---- Benchmark / Why SOM stats ---- */
+    .hero-stats {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 14px; margin: 22px 0 28px;
+    }
+
+    .stat-card {
+      background: var(--deep); border: 1px solid var(--smoke); border-radius: 10px;
+      padding: 18px 16px; text-align: center;
+    }
+
+    .stat-value {
+      font-family: var(--font-display); font-size: 28px; font-weight: 700;
+      color: var(--ember); line-height: 1.1;
+    }
+
+    .stat-label {
+      font-family: var(--font-mono); font-size: 11px; color: var(--ash);
+      text-transform: uppercase; letter-spacing: 0.06em; margin-top: 6px;
+    }
+
+    .savings { color: #6dba6d; font-weight: 600; }
+
+    .compression-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 6px 0; border-bottom: 1px solid rgba(240,237,232,0.06);
+    }
+
+    .compression-row .site-name {
+      width: 160px; font-family: var(--font-mono); font-size: 12px; color: var(--dim);
+      flex-shrink: 0;
+    }
+
+    .compression-row .bar-wrap {
+      flex: 1; background: rgba(240,237,232,0.06); border-radius: 4px; height: 14px;
+    }
+
+    .compression-row .bar {
+      height: 100%; background: linear-gradient(90deg, var(--ember), var(--corona));
+      border-radius: 4px;
+    }
+
+    .compression-row .ratio {
+      width: 60px; text-align: right; font-family: var(--font-mono); font-size: 13px;
+      font-weight: 600; color: var(--plasma-white); flex-shrink: 0;
+    }
+
+    .compare-box {
+      background: var(--deep); border: 1px solid var(--smoke); border-radius: 10px;
+      padding: 14px 16px; margin: 12px 0;
+    }
+
+    .compare-label {
+      font-family: var(--font-mono); font-size: 11px; color: var(--ash);
+      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px;
+    }
+
     /* ---- Images ---- */
     .content img {
       max-width: 100%;
