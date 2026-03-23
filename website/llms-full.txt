@@ -20,7 +20,7 @@ Plasmate solves this with the Semantic Object Model: a compact, structured repre
 | Speed (pages/sec) | ~250 | ~43 | ~4 |
 | Binary size | 43 MB | 59-111 MB | 300-500 MB |
 | Memory (100 pages) | ~30 MB | ~50 MB | ~20 GB |
-| Token compression | 10.4x avg | 1x (raw DOM) | 1x (raw DOM) |
+| Token compression | 16.6x avg (94% savings) | 1x (raw DOM) | 1x (raw DOM) |
 
 ## Install
 

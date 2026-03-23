@@ -447,7 +447,7 @@ function template(title, body, currentSlug) {
       <div class="sidebar-foot">
         <a href="https://github.com/plasmate-labs/plasmate">GitHub</a>
         <a href="https://plasmate.app">plasmate.app</a>
-        <span style="padding: 4px 10px;">Apache 2.0 / v0.1</span>
+        <span style="padding: 4px 10px;">Apache 2.0 / v0.4</span>
       </div>
     </nav>
     <main class="content">

@@ -2,13 +2,14 @@
 
 > The browser engine for agents. HTML in, Semantic Object Model out.
 
-Plasmate is a Rust-based headless browser engine purpose-built for AI agents. Instead of dumping raw DOM (thousands of tokens), it produces a compact Semantic Object Model (SOM) - structured JSON with labeled regions, interactive elements, and clean text. 10x average token compression.
+Plasmate is a Rust-based headless browser engine purpose-built for AI agents. Instead of dumping raw DOM (thousands of tokens), it produces a compact Semantic Object Model (SOM) - structured JSON with labeled regions, interactive elements, and clean text. 94% token savings across 98 sites.
 
 ## Key facts
 
-- 5x faster than Lightpanda, 50x faster than Chrome
+- v0.4.0, 25K lines Rust, 230 tests, 94/98 top sites covered
+- 50x faster than Chrome (4ms vs 252ms per page)
 - Apache-2.0 licensed
-- 43MB binary, ~30MB memory per page (vs Chrome's 300-500MB binary, ~20GB for 100 pages)
+- 46MB binary, ~30MB per page (vs Chrome's ~20GB for 100 pages)
 - Puppeteer-compatible via CDP
 - Native protocol: AWP (Agent Wire Protocol) - 7 methods over WebSocket
 
