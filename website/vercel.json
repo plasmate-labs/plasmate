@@ -30,6 +30,18 @@
       "has": [{ "type": "host", "value": "docs.plasmate.app" }],
       "destination": "https://docs.plasmate.app/overview",
       "permanent": true
+    },
+    {
+      "source": "/docs/:path*",
+      "has": [{ "type": "host", "value": "plasmate.app" }],
+      "destination": "https://docs.plasmate.app/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/docs",
+      "has": [{ "type": "host", "value": "plasmate.app" }],
+      "destination": "https://docs.plasmate.app/overview",
+      "permanent": true
     }
   ],
   "rewrites": [
