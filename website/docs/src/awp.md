@@ -7,7 +7,7 @@ version: 0.1
 
 # AWP - Agent Web Protocol (Draft Specification v0.1)
 
-**Working Project Name:** Plasmate (Agentic Browser Engine)
+**Project:** Plasmate
 
 ## Abstract
 

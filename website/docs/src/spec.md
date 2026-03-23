@@ -1,10 +1,7 @@
 # Agentic Browser Engine - Product Specification v1.0
 
-**Working Name:** Plasmate
 **Tagline:** "The browser built for machines."
-**Author:** David Hurley / DBH Ventures
-**Date:** March 15, 2026
-**Status:** Draft - Pre-Seed
+**Author:** David Hurley
 
 ---
 

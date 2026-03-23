@@ -425,26 +425,21 @@
       </div>
     </nav>
     <main class="content">
-      <h1>LangChain Integration</h1>
-<p>LangChain tools and document loader for Plasmate — browse the web with <strong>~10x fewer tokens</strong> than raw HTML.</p>
+      <h1 id="langchain-integration">LangChain Integration</h1><p>LangChain tools and document loader for Plasmate — browse the web with <strong>~10x fewer tokens</strong> than raw HTML.</p>
 <p>Plasmate&#39;s SOM output compiles web pages into compact, structured representations that preserve interactive elements and content hierarchy. This integration provides LangChain-native tools for stateless fetching, persistent browsing, and batch document loading.</p>
 <p>Source: <a href="https://github.com/nicepkg/plasmate/tree/master/integrations/langchain"><code>integrations/langchain/</code></a></p>
-<h2>Installation</h2>
-<pre><code class="language-bash">pip install langchain-plasmate
+<h2 id="installation">Installation</h2><pre><code class="language-bash">pip install langchain-plasmate
 </code></pre>
 <p>Requires the <code>plasmate</code> binary on your PATH:</p>
 <pre><code class="language-bash">curl -fsSL https://plasmate.app/install.sh | sh
 </code></pre>
-<h2>Quick Start</h2>
-<h3>Fetch a page (stateless)</h3>
-<pre><code class="language-python">from langchain_plasmate import PlasmateFetchTool
+<h2 id="quick-start">Quick Start</h2><h3 id="fetch-a-page-stateless">Fetch a page (stateless)</h3><pre><code class="language-python">from langchain_plasmate import PlasmateFetchTool
 
 fetch = PlasmateFetchTool()
 result = fetch.invoke(&quot;https://news.ycombinator.com&quot;)
 print(result)
 </code></pre>
-<h3>Agent with browsing tools</h3>
-<pre><code class="language-python">from langchain.agents import AgentExecutor, create_tool_calling_agent
+<h3 id="agent-with-browsing-tools">Agent with browsing tools</h3><pre><code class="language-python">from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain_plasmate import get_plasmate_tools
@@ -466,8 +461,7 @@ result = executor.invoke({
 })
 print(result[&quot;output&quot;])
 </code></pre>
-<h3>Document loader</h3>
-<pre><code class="language-python">from langchain_plasmate import PlasmateSOMLoader
+<h3 id="document-loader">Document loader</h3><pre><code class="language-python">from langchain_plasmate import PlasmateSOMLoader
 
 loader = PlasmateSOMLoader([
     &quot;https://example.com&quot;,
@@ -480,27 +474,21 @@ for doc in docs:
     print(doc.page_content[:200])
     print()
 </code></pre>
-<h2>Available Tools</h2>
-<h3><code>PlasmateFetchTool</code></h3>
-<p>Stateless page fetch. Each call creates a fresh connection, fetches the URL, and returns SOM text. Best for one-off page reads.</p>
+<h2 id="available-tools">Available Tools</h2><h3 id="plasmatefetchtool">`PlasmateFetchTool`</h3><p>Stateless page fetch. Each call creates a fresh connection, fetches the URL, and returns SOM text. Best for one-off page reads.</p>
 <pre><code class="language-python">from langchain_plasmate import PlasmateFetchTool
 
 fetch = PlasmateFetchTool()
 result = fetch.invoke(&quot;https://example.com&quot;)
 </code></pre>
-<h3><code>PlasmateNavigateTool</code></h3>
-<p>Opens a URL in a persistent browser session. Use with <code>PlasmateClickTool</code> and <code>PlasmateTypeTool</code> for multi-step browsing workflows.</p>
+<h3 id="plasmatenavigatetool">`PlasmateNavigateTool`</h3><p>Opens a URL in a persistent browser session. Use with <code>PlasmateClickTool</code> and <code>PlasmateTypeTool</code> for multi-step browsing workflows.</p>
 <pre><code class="language-python">from langchain_plasmate import get_plasmate_tools
 
 tools = get_plasmate_tools()
 navigate, click, type_tool, fetch = tools
 </code></pre>
-<h3><code>PlasmateClickTool</code></h3>
-<p>Clicks an interactive element by its SOM element ID (e.g., <code>e_a1b2c3d4e5f6</code>). Requires an active session from <code>PlasmateNavigateTool</code>.</p>
-<h3><code>PlasmateTypeTool</code></h3>
-<p>Types text into a form input or textarea by SOM element ID. Takes <code>element_id</code> and <code>text</code> as input.</p>
-<h3><code>get_plasmate_tools()</code></h3>
-<p>Returns all four tools with a shared Plasmate client and browser session:</p>
+<h3 id="plasmateclicktool">`PlasmateClickTool`</h3><p>Clicks an interactive element by its SOM element ID (e.g., <code>e_a1b2c3d4e5f6</code>). Requires an active session from <code>PlasmateNavigateTool</code>.</p>
+<h3 id="plasmatetypetool">`PlasmateTypeTool`</h3><p>Types text into a form input or textarea by SOM element ID. Takes <code>element_id</code> and <code>text</code> as input.</p>
+<h3 id="getplasmatetools">`get_plasmate_tools()`</h3><p>Returns all four tools with a shared Plasmate client and browser session:</p>
 <pre><code class="language-python">from langchain_plasmate import get_plasmate_tools
 from plasmate import Plasmate
 
@@ -511,8 +499,7 @@ tools = get_plasmate_tools()
 client = Plasmate(binary=&quot;/path/to/plasmate&quot;, timeout=60)
 tools = get_plasmate_tools(client=client)
 </code></pre>
-<h2>PlasmateSOMLoader</h2>
-<p>Loads web pages as LangChain <code>Document</code> objects with SOM text as <code>page_content</code>.</p>
+<h2 id="plasmatesomloader">PlasmateSOMLoader</h2><p>Loads web pages as LangChain <code>Document</code> objects with SOM text as <code>page_content</code>.</p>
 <pre><code class="language-python">PlasmateSOMLoader(
     urls=[&quot;https://example.com&quot;],
     budget=2000,          # optional token budget per page
@@ -521,8 +508,7 @@ tools = get_plasmate_tools(client=client)
 )
 </code></pre>
 <p>Document metadata includes: <code>url</code>, <code>title</code>, <code>lang</code>, <code>html_bytes</code>, <code>som_bytes</code>, <code>element_count</code>, <code>interactive_count</code>, and optionally <code>description</code>, <code>open_graph</code>, <code>json_ld</code>.</p>
-<h2>Token Efficiency</h2>
-<p>Compared to LangChain&#39;s <code>WebBaseLoader</code> which passes raw HTML:</p>
+<h2 id="token-efficiency">Token Efficiency</h2><p>Compared to LangChain&#39;s <code>WebBaseLoader</code> which passes raw HTML:</p>
 <table>
 <thead>
 <tr>

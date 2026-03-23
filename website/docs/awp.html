@@ -425,10 +425,8 @@
       </div>
     </nav>
     <main class="content">
-      <h1>AWP - Agent Web Protocol (Draft Specification v0.1)</h1>
-<p><strong>Working Project Name:</strong> Plasmate (Agentic Browser Engine)</p>
-<h2>Abstract</h2>
-<p>The Agent Web Protocol (AWP) is a purpose-built, intent-forward protocol for controlling a headless browser engine in AI agent workloads.</p>
+      <h1 id="awp-agent-web-protocol-draft-specification-v01">AWP - Agent Web Protocol (Draft Specification v0.1)</h1><p><strong>Project:</strong> Plasmate</p>
+<h2 id="abstract">Abstract</h2><p>The Agent Web Protocol (AWP) is a purpose-built, intent-forward protocol for controlling a headless browser engine in AI agent workloads.</p>
 <p>AWP is designed as a replacement for the Chrome DevTools Protocol (CDP) in agentic environments. CDP is a debugging interface optimized for human developers and pixel-oriented automation. AWP is optimized for:</p>
 <ul>
 <li>Semantic interaction, not coordinate clicking</li>
@@ -438,15 +436,13 @@
 <li>Extensibility via WebAssembly skills</li>
 </ul>
 <p>AWP is transport-agnostic but specified primarily over WebSocket. Payload encoding is binary (MessagePack) by default.</p>
-<h2>Status of This Document</h2>
-<p>This is a draft for discussion and implementation planning. It is intentionally exhaustive so an agentic engineering team can implement:</p>
+<h2 id="status-of-this-document">Status of This Document</h2><p>This is a draft for discussion and implementation planning. It is intentionally exhaustive so an agentic engineering team can implement:</p>
 <ol>
 <li>A minimal AWP server</li>
 <li>A minimal AWP client SDK</li>
 <li>A Rust proof of concept focused on SOM generation and basic action execution</li>
 </ol>
-<h2>Table of Contents</h2>
-<ol>
+<h2 id="table-of-contents">Table of Contents</h2><ol>
 <li><a href="#goals-and-non-goals">Goals and Non-Goals</a></li>
 <li><a href="#terminology">Terminology</a></li>
 <li><a href="#architecture-overview">Architecture Overview</a></li>
@@ -472,9 +468,7 @@
 <li><a href="#implementation-notes-for-a-rust-poc">Implementation Notes for a Rust PoC</a></li>
 </ol>
 <hr>
-<h2>Goals and Non-Goals</h2>
-<h3>Goals</h3>
-<ol>
+<h2 id="goals-and-non-goals">Goals and Non-Goals</h2><h3 id="goals">Goals</h3><ol>
 <li><strong>Intent-first</strong>: agents issue semantic actions, not pixels.</li>
 <li><strong>Token efficiency</strong>: primary observation output is the Semantic Object Model (SOM), not screenshots.</li>
 <li><strong>Deterministic references</strong>: stable element addressing across SPA mutations.</li>
@@ -484,16 +478,14 @@
 <li><strong>Observability</strong>: first-class telemetry for latency, errors, retries, costs, and provenance.</li>
 <li><strong>Security</strong>: clear trust boundaries and permission model for high-risk operations.</li>
 </ol>
-<h3>Non-Goals</h3>
-<ol>
+<h3 id="non-goals">Non-Goals</h3><ol>
 <li>AWP does not define a UI, rendering pipeline, or pixel output requirements.</li>
 <li>AWP does not define scraping legality or usage policy.</li>
 <li>AWP does not mandate a specific SOM schema beyond normative minimums.</li>
 <li>AWP does not prescribe a particular LLM, agent framework, or planning strategy.</li>
 </ol>
 <hr>
-<h2>Terminology</h2>
-<ul>
+<h2 id="terminology">Terminology</h2><ul>
 <li><strong>Agent</strong>: A client system (often LLM-driven) that issues commands.</li>
 <li><strong>Engine</strong>: The headless browser implementation that executes commands.</li>
 <li><strong>AWP Client</strong>: Library used by the Agent to speak AWP.</li>
@@ -510,8 +502,7 @@
 <li><strong>Target</strong>: An element reference or selection query that resolves to an element.</li>
 </ul>
 <hr>
-<h2>Architecture Overview</h2>
-<p>AWP is designed around a simple loop:</p>
+<h2 id="architecture-overview">Architecture Overview</h2><p>AWP is designed around a simple loop:</p>
 <ol>
 <li>Agent requests observation (<code>page.observe</code>) and receives a SOM snapshot or mutations.</li>
 <li>Agent decides action and sends intent (<code>page.act</code>) targeting SOM elements.</li>
@@ -527,15 +518,12 @@
 <li><strong>Skills</strong>: extensibility</li>
 </ul>
 <hr>
-<h2>Versioning and Capability Negotiation</h2>
-<h3>Protocol Version</h3>
-<p>AWP version is a semantic version string: <code>MAJOR.MINOR</code>.</p>
+<h2 id="versioning-and-capability-negotiation">Versioning and Capability Negotiation</h2><h3 id="protocol-version">Protocol Version</h3><p>AWP version is a semantic version string: <code>MAJOR.MINOR</code>.</p>
 <ul>
 <li>MAJOR increments indicate breaking changes.</li>
 <li>MINOR increments indicate backward compatible additions.</li>
 </ul>
-<h3>Handshake</h3>
-<p>Upon WebSocket connection, the client MUST send <code>awp.hello</code>.</p>
+<h3 id="handshake">Handshake</h3><p>Upon WebSocket connection, the client MUST send <code>awp.hello</code>.</p>
 <p><strong>Request</strong></p>
 <pre><code class="language-json">{
   &quot;id&quot;: &quot;1&quot;,
@@ -599,48 +587,37 @@
   }
 }
 </code></pre>
-<h3>Capability Rules</h3>
-<ul>
+<h3 id="capability-rules">Capability Rules</h3><ul>
 <li>The server MUST reject requests that require unsupported features with <code>error.code = &quot;UNSUPPORTED&quot;</code>.</li>
 <li>Clients SHOULD degrade gracefully by falling back to primitive actions when intent levels are unsupported.</li>
 </ul>
 <hr>
-<h2>Transport</h2>
-<h3>WebSocket</h3>
-<ul>
+<h2 id="transport">Transport</h2><h3 id="websocket">WebSocket</h3><ul>
 <li>Default transport: WebSocket.</li>
 <li>One WebSocket connection may multiplex multiple sessions.</li>
 <li>Clients MAY open multiple connections for isolation.</li>
 </ul>
-<h3>Message Ordering</h3>
-<ul>
+<h3 id="message-ordering">Message Ordering</h3><ul>
 <li>Requests and responses are matched by <code>id</code>.</li>
 <li>Events are out-of-band and do not require <code>id</code>.</li>
 <li>The server MUST preserve per-page action ordering unless the client opts into concurrency.</li>
 </ul>
-<h3>Heartbeats</h3>
-<ul>
+<h3 id="heartbeats">Heartbeats</h3><ul>
 <li>Either side MAY send ping frames.</li>
 <li>Server SHOULD emit <code>awp.pong</code> events if application-level liveness is needed.</li>
 </ul>
 <hr>
-<h2>Encoding</h2>
-<h3>Default Encoding</h3>
-<ul>
+<h2 id="encoding">Encoding</h2><h3 id="default-encoding">Default Encoding</h3><ul>
 <li>Default: MessagePack.</li>
 <li>Optional: JSON (for debugging).</li>
 </ul>
-<h3>Compression</h3>
-<ul>
+<h3 id="compression">Compression</h3><ul>
 <li>Default: none.</li>
 <li>Optional: zstd per-message.</li>
 </ul>
-<h3>Canonical JSON</h3>
-<p>When JSON is used, keys MUST be lower_snake_case.</p>
+<h3 id="canonical-json">Canonical JSON</h3><p>When JSON is used, keys MUST be lower_snake_case.</p>
 <hr>
-<h2>Message Model</h2>
-<h3>Envelope</h3>
-<p>Every message uses this envelope:</p>
+<h2 id="message-model">Message Model</h2><h3 id="envelope">Envelope</h3><p>Every message uses this envelope:</p>
 <pre><code class="language-json">{
   &quot;id&quot;: &quot;string-optional&quot;,
   &quot;type&quot;: &quot;request|response|event&quot;,
@@ -656,8 +633,7 @@
 <li><code>response</code> MUST include <code>id</code> and either <code>result</code> or <code>error</code>.</li>
 <li><code>event</code> MUST include <code>method</code> and <code>params</code>. It MUST NOT include <code>id</code>.</li>
 </ul>
-<h3>Idempotency</h3>
-<p>Requests MAY include <code>meta.idempotency_key</code>.</p>
+<h3 id="idempotency">Idempotency</h3><p>Requests MAY include <code>meta.idempotency_key</code>.</p>
 <pre><code class="language-json">{
   &quot;meta&quot;: {
     &quot;idempotency_key&quot;: &quot;uuid&quot;,
@@ -666,12 +642,9 @@
 }
 </code></pre>
 <p>If provided, the server SHOULD guarantee that repeating the request yields the same effect (when feasible).</p>
-<h3>Tracing</h3>
-<p>All responses and events SHOULD include <code>meta.trace_id</code> and <code>meta.span_id</code>.</p>
+<h3 id="tracing">Tracing</h3><p>All responses and events SHOULD include <code>meta.trace_id</code> and <code>meta.span_id</code>.</p>
 <hr>
-<h2>Error Model</h2>
-<h3>Standard Error Codes</h3>
-<table>
+<h2 id="error-model">Error Model</h2><h3 id="standard-error-codes">Standard Error Codes</h3><table>
 <thead>
 <tr>
 <th>Code</th>
@@ -723,8 +696,7 @@
 <td>Unexpected error</td>
 </tr>
 </tbody></table>
-<h3>Error Object</h3>
-<pre><code class="language-json">{
+<h3 id="error-object">Error Object</h3><pre><code class="language-json">{
   &quot;code&quot;: &quot;TIMEOUT&quot;,
   &quot;message&quot;: &quot;wait_for condition not met&quot;,
   &quot;details&quot;: {
@@ -734,21 +706,18 @@
 }
 </code></pre>
 <hr>
-<h2>Authentication and Authorization</h2>
-<p>AWP supports several deployment modes:</p>
+<h2 id="authentication-and-authorization">Authentication and Authorization</h2><p>AWP supports several deployment modes:</p>
 <ol>
 <li><strong>Local engine</strong>: no auth required.</li>
 <li><strong>LAN engine</strong>: shared secret.</li>
 <li><strong>Cloud engine</strong>: API key + per-tenant permissions.</li>
 </ol>
-<h3>Auth Methods</h3>
-<ul>
+<h3 id="auth-methods">Auth Methods</h3><ul>
 <li><code>auth.none</code></li>
 <li><code>auth.bearer</code> (token)</li>
 <li><code>auth.hmac</code> (signed requests)</li>
 </ul>
-<h3>Permissions</h3>
-<p>Actions are permissioned because some operations are dangerous:</p>
+<h3 id="permissions">Permissions</h3><p>Actions are permissioned because some operations are dangerous:</p>
 <ul>
 <li><code>page.evaluate_js</code> is high risk.</li>
 <li>file uploads/downloads can exfiltrate data.</li>
@@ -765,8 +734,7 @@
 </ul>
 <p>The server MAY enforce per-domain allowlists.</p>
 <hr>
-<h2>Resources and Identifiers</h2>
-<p>AWP uses stable identifiers:</p>
+<h2 id="resources-and-identifiers">Resources and Identifiers</h2><p>AWP uses stable identifiers:</p>
 <ul>
 <li><code>session_id</code>: string</li>
 <li><code>page_id</code>: string</li>
@@ -774,8 +742,7 @@
 <li><code>som_id</code>: string</li>
 <li><code>element_id</code>: string</li>
 </ul>
-<h3>Element References</h3>
-<p>AWP prefers stable element IDs from the SOM.</p>
+<h3 id="element-references">Element References</h3><p>AWP prefers stable element IDs from the SOM.</p>
 <p>A target is specified as one of:</p>
 <ol>
 <li><code>element_ref</code>: direct reference by SOM ID.</li>
@@ -794,9 +761,7 @@
 }
 </code></pre>
 <hr>
-<h2>Sessions</h2>
-<h3>session.create</h3>
-<p>Creates a browsing session.</p>
+<h2 id="sessions">Sessions</h2><h3 id="sessioncreate">session.create</h3><p>Creates a browsing session.</p>
 <pre><code class="language-json">{
   &quot;id&quot;: &quot;10&quot;,
   &quot;type&quot;: &quot;request&quot;,
@@ -821,16 +786,11 @@
 }
 </code></pre>
 <p>Response includes <code>session_id</code>.</p>
-<h3>session.close</h3>
-<p>Closes and optionally persists state.</p>
-<h3>session.export / session.import</h3>
-<p>Optional methods for portable session snapshots.</p>
+<h3 id="sessionclose">session.close</h3><p>Closes and optionally persists state.</p>
+<h3 id="sessionexport-sessionimport">session.export / session.import</h3><p>Optional methods for portable session snapshots.</p>
 <hr>
-<h2>Page Lifecycle</h2>
-<h3>page.create</h3>
-<p>Creates a page (tab) inside a session.</p>
-<h3>page.navigate</h3>
-<pre><code class="language-json">{
+<h2 id="page-lifecycle">Page Lifecycle</h2><h3 id="pagecreate">page.create</h3><p>Creates a page (tab) inside a session.</p>
+<h3 id="pagenavigate">page.navigate</h3><pre><code class="language-json">{
   &quot;id&quot;: &quot;20&quot;,
   &quot;type&quot;: &quot;request&quot;,
   &quot;method&quot;: &quot;page.navigate&quot;,
@@ -849,11 +809,8 @@
 <li><code>network_idle</code></li>
 <li><code>som_stable</code> (SOM mutation quiet period)</li>
 </ul>
-<h3>page.close</h3>
-<hr>
-<h2>Observation: SOM Snapshots and Mutations</h2>
-<h3>page.observe</h3>
-<p>Returns either:</p>
+<h3 id="pageclose">page.close</h3><hr>
+<h2 id="observation-som-snapshots-and-mutations">Observation: SOM Snapshots and Mutations</h2><h3 id="pageobserve">page.observe</h3><p>Returns either:</p>
 <ul>
 <li>A full SOM snapshot, or</li>
 <li>A stream of SOM mutations since a cursor</li>
@@ -886,8 +843,7 @@
   }
 }
 </code></pre>
-<h3>SOM Minimum Requirements</h3>
-<p>A SOM snapshot MUST include:</p>
+<h3 id="som-minimum-requirements">SOM Minimum Requirements</h3><p>A SOM snapshot MUST include:</p>
 <ul>
 <li><code>som_version</code></li>
 <li><code>url</code></li>
@@ -900,8 +856,7 @@
 </ul>
 </li>
 </ul>
-<h3>page.som_mutation Event</h3>
-<pre><code class="language-json">{
+<h3 id="pagesommutation-event">page.som_mutation Event</h3><pre><code class="language-json">{
   &quot;type&quot;: &quot;event&quot;,
   &quot;method&quot;: &quot;page.som_mutation&quot;,
   &quot;params&quot;: {
@@ -915,9 +870,7 @@
 }
 </code></pre>
 <hr>
-<h2>Actions: Intent-Based Interaction</h2>
-<h3>page.act</h3>
-<p>This is the central operation.</p>
+<h2 id="actions-intent-based-interaction">Actions: Intent-Based Interaction</h2><h3 id="pageact">page.act</h3><p>This is the central operation.</p>
 <pre><code class="language-json">{
   &quot;id&quot;: &quot;40&quot;,
   &quot;type&quot;: &quot;request&quot;,
@@ -933,8 +886,7 @@
   }
 }
 </code></pre>
-<h3>Intent Object</h3>
-<p><code>intent</code> has:</p>
+<h3 id="intent-object">Intent Object</h3><p><code>intent</code> has:</p>
 <ul>
 <li><code>action</code>: string</li>
 <li><code>target</code>: optional target</li>
@@ -948,8 +900,7 @@
 <li>Select: <code>{action:&quot;select&quot;, target:{...}, value:&quot;United States&quot;}</code></li>
 <li>Submit: <code>{action:&quot;submit_form&quot;, target:{query:{role:&quot;form&quot;, text:&quot;Checkout&quot;}}}</code></li>
 </ul>
-<h3>Intent Levels</h3>
-<p>AWP reserves namespaces:</p>
+<h3 id="intent-levels">Intent Levels</h3><p>AWP reserves namespaces:</p>
 <ul>
 <li><code>primitive.*</code> (lowest level)</li>
 <li><code>semantic.*</code> (SOM-aware)</li>
@@ -964,8 +915,7 @@
 <li><code>skill.stripe_pay</code></li>
 </ul>
 <p>Servers MAY accept un-namespaced action strings for convenience, but MUST normalize internally.</p>
-<h3>Result Object</h3>
-<pre><code class="language-json">{
+<h3 id="result-object">Result Object</h3><pre><code class="language-json">{
   &quot;status&quot;: &quot;ok&quot;,
   &quot;effects&quot;: {
     &quot;navigation&quot;: true,
@@ -981,9 +931,7 @@
 }
 </code></pre>
 <hr>
-<h2>Data Extraction</h2>
-<h3>page.extract</h3>
-<p>Extracts structured data based on selectors or semantic queries.</p>
+<h2 id="data-extraction">Data Extraction</h2><h3 id="pageextract">page.extract</h3><p>Extracts structured data based on selectors or semantic queries.</p>
 <pre><code class="language-json">{
   &quot;id&quot;: &quot;50&quot;,
   &quot;type&quot;: &quot;request&quot;,
@@ -1008,9 +956,7 @@
 </code></pre>
 <p>Response returns JSON data and provenance (element IDs used).</p>
 <hr>
-<h2>Network Controls: Proxy, Profiles, Stealth</h2>
-<h3>session.set_network</h3>
-<p>Allows selecting proxy mode and impersonation profile.</p>
+<h2 id="network-controls-proxy-profiles-stealth">Network Controls: Proxy, Profiles, Stealth</h2><h3 id="sessionsetnetwork">session.set_network</h3><p>Allows selecting proxy mode and impersonation profile.</p>
 <pre><code class="language-json">{
   &quot;id&quot;: &quot;60&quot;,
   &quot;type&quot;: &quot;request&quot;,
@@ -1024,26 +970,20 @@
 </code></pre>
 <p>Security: server SHOULD require <code>network:configure</code> scope.</p>
 <hr>
-<h2>State: Cookies, Storage, Downloads</h2>
-<h3>session.cookies</h3>
-<p>Methods:</p>
+<h2 id="state-cookies-storage-downloads">State: Cookies, Storage, Downloads</h2><h3 id="sessioncookies">session.cookies</h3><p>Methods:</p>
 <ul>
 <li><code>session.cookies.get</code></li>
 <li><code>session.cookies.set</code></li>
 <li><code>session.cookies.clear</code></li>
 </ul>
-<h3>page.downloads</h3>
-<p>Methods:</p>
+<h3 id="pagedownloads">page.downloads</h3><p>Methods:</p>
 <ul>
 <li><code>page.downloads.list</code></li>
 <li><code>page.downloads.get</code> (stream file)</li>
 </ul>
 <hr>
-<h2>Skills: WebAssembly Extensions</h2>
-<h3>skills.list</h3>
-<p>Returns installed skills and provided actions.</p>
-<h3>skills.invoke</h3>
-<pre><code class="language-json">{
+<h2 id="skills-webassembly-extensions">Skills: WebAssembly Extensions</h2><h3 id="skillslist">skills.list</h3><p>Returns installed skills and provided actions.</p>
+<h3 id="skillsinvoke">skills.invoke</h3><pre><code class="language-json">{
   &quot;id&quot;: &quot;70&quot;,
   &quot;type&quot;: &quot;request&quot;,
   &quot;method&quot;: &quot;skills.invoke&quot;,
@@ -1062,9 +1002,7 @@
 </code></pre>
 <p>Security: server MUST treat skill invocation as privileged and permissioned.</p>
 <hr>
-<h2>Telemetry and Auditing</h2>
-<h3>page.telemetry Event</h3>
-<p>Servers SHOULD emit structured telemetry:</p>
+<h2 id="telemetry-and-auditing">Telemetry and Auditing</h2><h3 id="pagetelemetry-event">page.telemetry Event</h3><p>Servers SHOULD emit structured telemetry:</p>
 <ul>
 <li>latency (network, parse, som, js)</li>
 <li>retries</li>
@@ -1074,8 +1012,7 @@
 </ul>
 <p>Telemetry MUST NOT include secrets (passwords, card numbers).</p>
 <hr>
-<h2>Determinism and Reproducibility</h2>
-<p>AWP encourages reproducibility:</p>
+<h2 id="determinism-and-reproducibility">Determinism and Reproducibility</h2><p>AWP encourages reproducibility:</p>
 <ul>
 <li>Stable element IDs in SOM.</li>
 <li>Mutation cursors.</li>
@@ -1090,9 +1027,7 @@
 <li>navigation and mutation events</li>
 </ul>
 <hr>
-<h2>Examples</h2>
-<h3>Example 1: Search Workflow</h3>
-<ol>
+<h2 id="examples">Examples</h2><h3 id="example-1-search-workflow">Example 1: Search Workflow</h3><ol>
 <li><code>awp.hello</code></li>
 <li><code>session.create</code></li>
 <li><code>page.create</code></li>
@@ -1103,23 +1038,20 @@
 <li><code>page.observe</code> snapshot of results</li>
 <li><code>page.extract</code> titles and links</li>
 </ol>
-<h3>Example 2: Checkout Workflow (Skill + Fallback)</h3>
-<ol>
+<h3 id="example-2-checkout-workflow-skill-fallback">Example 2: Checkout Workflow (Skill + Fallback)</h3><ol>
 <li>Observe page</li>
 <li>If <code>skills.list</code> shows <code>stripe-checkout</code>, call <code>skills.invoke</code></li>
 <li>Else fallback to <code>page.act</code> fill_form + submit</li>
 </ol>
 <hr>
-<h2>Compatibility and Migration from CDP</h2>
-<p>Migration strategy:</p>
+<h2 id="compatibility-and-migration-from-cdp">Compatibility and Migration from CDP</h2><p>Migration strategy:</p>
 <ul>
 <li>Provide a thin shim that maps CDP calls into AWP primitives.</li>
 <li>Encourage frameworks to adopt AWP for observation and intent actions.</li>
 <li>Long-term: AWP becomes native and CDP shim is optional.</li>
 </ul>
 <hr>
-<h2>Implementation Notes for a Rust PoC</h2>
-<p>A minimal Rust PoC can implement:</p>
+<h2 id="implementation-notes-for-a-rust-poc">Implementation Notes for a Rust PoC</h2><p>A minimal Rust PoC can implement:</p>
 <ul>
 <li>WebSocket server</li>
 <li><code>awp.hello</code></li>

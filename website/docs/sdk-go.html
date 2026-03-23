@@ -425,14 +425,11 @@
       </div>
     </nav>
     <main class="content">
-      <h1>Go SDK</h1>
-<p>The official Go SDK for Plasmate, with typed structs and SOM query functions.</p>
-<h2>Installation</h2>
-<pre><code class="language-sh">go get github.com/nickel-org/plasmate-go
+      <h1 id="go-sdk">Go SDK</h1><p>The official Go SDK for Plasmate, with typed structs and SOM query functions.</p>
+<h2 id="installation">Installation</h2><pre><code class="language-sh">go get github.com/nickel-org/plasmate-go
 </code></pre>
 <p>Requires Go 1.21+ and the <code>plasmate</code> binary on your PATH.</p>
-<h2>Quick Start</h2>
-<pre><code class="language-go">package main
+<h2 id="quick-start">Quick Start</h2><pre><code class="language-go">package main
 
 import (
     &quot;fmt&quot;
@@ -454,9 +451,7 @@ func main() {
     fmt.Printf(&quot;Regions: %d, Elements: %d\n&quot;, len(som.Regions), som.Meta.ElementCount)
 }
 </code></pre>
-<h2>Go Structs</h2>
-<h3><code>Som</code></h3>
-<pre><code class="language-go">type Som struct {
+<h2 id="go-structs">Go Structs</h2><h3 id="som">`Som`</h3><pre><code class="language-go">type Som struct {
     SOMVersion     string          `json:&quot;som_version&quot;`
     URL            string          `json:&quot;url&quot;`
     Title          string          `json:&quot;title&quot;`
@@ -466,8 +461,7 @@ func main() {
     StructuredData *StructuredData `json:&quot;structured_data,omitempty&quot;`
 }
 </code></pre>
-<h3><code>Region</code></h3>
-<pre><code class="language-go">type Region struct {
+<h3 id="region">`Region`</h3><pre><code class="language-go">type Region struct {
     ID       string    `json:&quot;id&quot;`
     Role     string    `json:&quot;role&quot;`     // navigation, main, aside, header, footer, form, dialog, content
     Label    *string   `json:&quot;label,omitempty&quot;`
@@ -476,8 +470,7 @@ func main() {
     Elements []Element `json:&quot;elements&quot;`
 }
 </code></pre>
-<h3><code>Element</code></h3>
-<pre><code class="language-go">type Element struct {
+<h3 id="element">`Element`</h3><pre><code class="language-go">type Element struct {
     ID       string        `json:&quot;id&quot;`
     Role     string        `json:&quot;role&quot;`     // link, button, text_input, textarea, select, checkbox, radio, heading, image, list, table, paragraph, section, separator
     Text     *string       `json:&quot;text,omitempty&quot;`
@@ -488,62 +481,49 @@ func main() {
     Hints    []string      `json:&quot;hints,omitempty&quot;`
 }
 </code></pre>
-<h3><code>SomMeta</code></h3>
-<pre><code class="language-go">type SomMeta struct {
+<h3 id="sommeta">`SomMeta`</h3><pre><code class="language-go">type SomMeta struct {
     HTMLBytes        int `json:&quot;html_bytes&quot;`
     SOMBytes         int `json:&quot;som_bytes&quot;`
     ElementCount     int `json:&quot;element_count&quot;`
     InteractiveCount int `json:&quot;interactive_count&quot;`
 }
 </code></pre>
-<h2>Query Functions</h2>
-<h3><code>Parse(data)</code></h3>
-<p>Parse raw JSON bytes into a <code>Som</code> struct.</p>
+<h2 id="query-functions">Query Functions</h2><h3 id="parsedata">`Parse(data)`</h3><p>Parse raw JSON bytes into a <code>Som</code> struct.</p>
 <pre><code class="language-go">som, err := plasmate.Parse(jsonBytes)
 </code></pre>
-<h3><code>FindByRole(som, role)</code></h3>
-<p>Find all regions matching a given role.</p>
+<h3 id="findbyrolesom-role">`FindByRole(som, role)`</h3><p>Find all regions matching a given role.</p>
 <pre><code class="language-go">navRegions := plasmate.FindByRole(som, &quot;navigation&quot;)
 </code></pre>
-<h3><code>FindByID(som, id)</code></h3>
-<p>Find a single element by its stable ID. Returns <code>nil</code> if not found.</p>
+<h3 id="findbyidsom-id">`FindByID(som, id)`</h3><p>Find a single element by its stable ID. Returns <code>nil</code> if not found.</p>
 <pre><code class="language-go">el := plasmate.FindByID(som, &quot;login-btn&quot;)
 if el != nil {
     fmt.Println(*el.Text)
 }
 </code></pre>
-<h3><code>FindByTag(som, tag)</code></h3>
-<p>Find elements matching a tag/role string.</p>
+<h3 id="findbytagsom-tag">`FindByTag(som, tag)`</h3><p>Find elements matching a tag/role string.</p>
 <pre><code class="language-go">links := plasmate.FindByTag(som, &quot;link&quot;)
 </code></pre>
-<h3><code>FindInteractive(som)</code></h3>
-<p>Return all interactive elements.</p>
+<h3 id="findinteractivesom">`FindInteractive(som)`</h3><p>Return all interactive elements.</p>
 <pre><code class="language-go">interactive := plasmate.FindInteractive(som)
 fmt.Printf(&quot;%d interactive elements\n&quot;, len(interactive))
 </code></pre>
-<h3><code>FindByText(som, text)</code></h3>
-<p>Find elements whose text content contains the given string (case-insensitive).</p>
+<h3 id="findbytextsom-text">`FindByText(som, text)`</h3><p>Find elements whose text content contains the given string (case-insensitive).</p>
 <pre><code class="language-go">matches := plasmate.FindByText(som, &quot;Sign in&quot;)
 </code></pre>
-<h3><code>FlatElements(som)</code></h3>
-<p>Flatten all elements across all regions into a single slice.</p>
+<h3 id="flatelementssom">`FlatElements(som)`</h3><p>Flatten all elements across all regions into a single slice.</p>
 <pre><code class="language-go">all := plasmate.FlatElements(som)
 </code></pre>
-<h3><code>TokenEstimate(som)</code></h3>
-<p>Estimate the LLM token count for the SOM (heuristic: SOMBytes / 4).</p>
+<h3 id="tokenestimatesom">`TokenEstimate(som)`</h3><p>Estimate the LLM token count for the SOM (heuristic: SOMBytes / 4).</p>
 <pre><code class="language-go">tokens := plasmate.TokenEstimate(som)
 fmt.Printf(&quot;~%d tokens\n&quot;, tokens)
 </code></pre>
-<h2>Client Usage</h2>
-<h3>Creating a Client</h3>
-<pre><code class="language-go">// Default options
+<h2 id="client-usage">Client Usage</h2><h3 id="creating-a-client">Creating a Client</h3><pre><code class="language-go">// Default options
 client := plasmate.NewClient()
 
 // Custom binary path
 client := plasmate.NewClient(plasmate.WithBinary(&quot;/usr/local/bin/plasmate&quot;))
 </code></pre>
-<h3>Stateless Methods</h3>
-<pre><code class="language-go">// Fetch a page and return SOM
+<h3 id="stateless-methods">Stateless Methods</h3><pre><code class="language-go">// Fetch a page and return SOM
 som, err := client.FetchPage(&quot;https://example.com&quot;)
 
 // Fetch with options
@@ -555,8 +535,7 @@ som, err := client.FetchPageWithOptions(&quot;https://example.com&quot;, plasmat
 // Extract plain text
 text, err := client.ExtractText(&quot;https://example.com&quot;)
 </code></pre>
-<h3>Stateful Sessions</h3>
-<pre><code class="language-go">// Open a persistent page session
+<h3 id="stateful-sessions">Stateful Sessions</h3><pre><code class="language-go">// Open a persistent page session
 session, err := client.OpenPage(&quot;https://example.com&quot;)
 // session.SessionID, session.Som
 
@@ -569,8 +548,7 @@ updatedSom, err := client.Click(session.SessionID, &quot;login-btn&quot;)
 // Close the session
 err = client.ClosePage(session.SessionID)
 </code></pre>
-<h3>Cleanup</h3>
-<pre><code class="language-go">err := client.Close()
+<h3 id="cleanup">Cleanup</h3><pre><code class="language-go">err := client.Close()
 </code></pre>
 <p>The client is thread-safe with internal mutex protection. It communicates with the <code>plasmate mcp</code> subprocess over JSON-RPC 2.0 on stdio.</p>
 

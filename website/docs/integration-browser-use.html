@@ -425,18 +425,15 @@
       </div>
     </nav>
     <main class="content">
-      <h1>Browser Use Integration</h1>
-<p>Use Plasmate as the browser backend for <a href="https://github.com/browser-use/browser-use">Browser Use</a>, replacing Chrome + Playwright with SOM output for <strong>~10x fewer tokens</strong>.</p>
+      <h1 id="browser-use-integration">Browser Use Integration</h1><p>Use Plasmate as the browser backend for <a href="https://github.com/browser-use/browser-use">Browser Use</a>, replacing Chrome + Playwright with SOM output for <strong>~10x fewer tokens</strong>.</p>
 <p>Browser Use is the most popular open-source AI browser agent framework. By default it feeds raw DOM trees to the LLM. Plasmate replaces this with the Semantic Object Model — compact, structured page representations that preserve all interactive elements while stripping layout noise.</p>
 <p>Source: <a href="https://github.com/nicepkg/plasmate/tree/master/integrations/browser-use"><code>integrations/browser-use/</code></a></p>
-<h2>Installation</h2>
-<pre><code class="language-bash">pip install plasmate-browser-use
+<h2 id="installation">Installation</h2><pre><code class="language-bash">pip install plasmate-browser-use
 </code></pre>
 <p>Requires the <code>plasmate</code> binary on your PATH:</p>
 <pre><code class="language-bash">curl -fsSL https://plasmate.app/install.sh | sh
 </code></pre>
-<h2>Quick Start</h2>
-<pre><code class="language-python">import asyncio
+<h2 id="quick-start">Quick Start</h2><pre><code class="language-python">import asyncio
 from plasmate_browser_use import PlasmateBrowser
 
 async def main():
@@ -456,8 +453,7 @@ async def main():
 
 asyncio.run(main())
 </code></pre>
-<h2>How It Works</h2>
-<p><code>PlasmateBrowser</code> wraps a Plasmate MCP subprocess. When you call <code>navigate()</code>, <code>click()</code>, or <code>type_text()</code>, it sends AWP commands to Plasmate and returns SOM output formatted for Browser Use compatibility.</p>
+<h2 id="how-it-works">How It Works</h2><p><code>PlasmateBrowser</code> wraps a Plasmate MCP subprocess. When you call <code>navigate()</code>, <code>click()</code>, or <code>type_text()</code>, it sends AWP commands to Plasmate and returns SOM output formatted for Browser Use compatibility.</p>
 <table>
 <thead>
 <tr>
@@ -513,8 +509,7 @@ asyncio.run(main())
 
 [SOM] 87,234 -&gt; 4,521 bytes (19.3x) | 156 elements, 89 interactive
 </code></pre>
-<h2>Token Savings</h2>
-<table>
+<h2 id="token-savings">Token Savings</h2><table>
 <thead>
 <tr>
 <th>Site</th>
@@ -555,9 +550,7 @@ asyncio.run(main())
 </tr>
 </tbody></table>
 <p>Over a multi-step agent task (5-10 page loads), this translates to <strong>50,000-150,000 fewer tokens</strong>.</p>
-<h2>API Reference</h2>
-<h3><code>PlasmateBrowser</code></h3>
-<pre><code class="language-python">PlasmateBrowser(
+<h2 id="api-reference">API Reference</h2><h3 id="plasmatebrowser">`PlasmateBrowser`</h3><pre><code class="language-python">PlasmateBrowser(
     binary=&quot;plasmate&quot;,   # Path to plasmate binary
     timeout=30,          # Response timeout in seconds
     budget=None,         # Optional SOM token budget
@@ -602,8 +595,7 @@ asyncio.run(main())
 <td>—</td>
 </tr>
 </tbody></table>
-<h3><code>PageState</code></h3>
-<table>
+<h3 id="pagestate">`PageState`</h3><table>
 <thead>
 <tr>
 <th>Field</th>
@@ -657,8 +649,7 @@ asyncio.run(main())
 <td>SOM output size</td>
 </tr>
 </tbody></table>
-<h3><code>InteractiveElement</code></h3>
-<table>
+<h3 id="interactiveelement">`InteractiveElement`</h3><table>
 <thead>
 <tr>
 <th>Field</th>
@@ -692,8 +683,7 @@ asyncio.run(main())
 <td>Role-specific attributes</td>
 </tr>
 </tbody></table>
-<h2>Known Limitations</h2>
-<ul>
+<h2 id="known-limitations">Known Limitations</h2><ul>
 <li><strong>No screenshots</strong> — Plasmate has no visual rendering. Agents that rely on screenshots (CAPTCHA, visual layout) should use the Playwright backend.</li>
 <li><strong>No coordinate-based clicking</strong> — all interactions use SOM element IDs, not pixel coordinates.</li>
 <li><strong>No file uploads</strong> — the <code>upload_file</code> action is not supported.</li>

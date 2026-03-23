@@ -425,11 +425,9 @@
       </div>
     </nav>
     <main class="content">
-      <h1>Plasmate Documentation</h1>
-<p>Plasmate is an open-source, agent-native headless browser engine written in Rust.</p>
+      <h1 id="plasmate-documentation">Plasmate Documentation</h1><p>Plasmate is an open-source, agent-native headless browser engine written in Rust.</p>
 <p>It compiles HTML into a <strong>Semantic Object Model (SOM)</strong> - a structured, token-efficient representation that AI agents can reason about directly. It replaces CDP with a purpose-built <strong>Agent Web Protocol (AWP)</strong>.</p>
-<h2>Quick Links</h2>
-<table>
+<h2 id="quick-links">Quick Links</h2><table>
 <thead>
 <tr>
 <th>Document</th>
@@ -465,8 +463,7 @@
 <td>Colors, typography, voice, and the pixie dust system</td>
 </tr>
 </tbody></table>
-<h2>Key Numbers</h2>
-<ul>
+<h2 id="key-numbers">Key Numbers</h2><ul>
 <li><strong>4-5 ms per page</strong> throughput (100-page local benchmark, 231KB average)</li>
 <li><strong>10.4x compression</strong> on Wikipedia (HTML to SOM token reduction)</li>
 <li><strong>~30 MB RSS</strong> memory baseline per page</li>
@@ -474,8 +471,7 @@
 <li><strong>184 tests</strong> passing</li>
 <li><strong>Apache 2.0</strong> license</li>
 </ul>
-<h2>Architecture at a Glance</h2>
-<pre><code>Agent (Python/JS/Rust)
+<h2 id="architecture-at-a-glance">Architecture at a Glance</h2><pre><code>Agent (Python/JS/Rust)
   |
   |-- AWP (native, 7 methods)
   |-- CDP (legacy compatibility)
@@ -487,8 +483,7 @@ Plasmate Engine
   |-- Network Layer (reqwest, connection pooling, HTTP/2)
   |-- Session Manager (cookie persistence, navigation history)
 </code></pre>
-<h2>Source</h2>
-<ul>
+<h2 id="source">Source</h2><ul>
 <li>GitHub: <a href="https://github.com/plasmate-labs/plasmate">plasmate-labs/plasmate</a></li>
 <li>License: Apache 2.0</li>
 <li>Website: <a href="https://plasmate.app">plasmate.app</a></li>

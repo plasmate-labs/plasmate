@@ -479,10 +479,31 @@ function extractHtmlTitle(html) {
   return m ? m[1].trim() : 'Plasmate Docs';
 }
 
+// Slugify helper for heading anchors
+function slugify(text) {
+  return text.toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
+}
+
+// Custom renderer for heading anchors
+const renderer = new marked.Renderer();
+renderer.heading = function({ text, depth }) {
+  // Strip any inline HTML tags for the slug
+  const raw = text.replace(/<[^>]+>/g, '');
+  // Strip leading numbers like "4. " for cleaner anchors
+  const stripped = raw.replace(/^\d+\.\s*/, '');
+  const id = slugify(stripped);
+  return `<h${depth} id="${id}">${text}</h${depth}>`;
+};
+
 // Configure marked
 marked.setOptions({
   gfm: true,
   breaks: false,
+  renderer,
 });
 
 // Build

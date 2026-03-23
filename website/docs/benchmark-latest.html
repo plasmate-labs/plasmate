@@ -425,9 +425,7 @@
       </div>
     </nav>
     <main class="content">
-      <h1>Plasmate Benchmark Results (March 2026)</h1>
-<h2>CDP Parity Benchmark (Lightpanda campfire-commerce)</h2>
-<p><strong>Test:</strong> Puppeteer script navigates to a local product page, waits for JS-rendered content (product price, reviews from XHR), extracts structured data.</p>
+      <h1 id="plasmate-benchmark-results-march-2026">Plasmate Benchmark Results (March 2026)</h1><h2 id="cdp-parity-benchmark-lightpanda-campfire-commerce">CDP Parity Benchmark (Lightpanda campfire-commerce)</h2><p><strong>Test:</strong> Puppeteer script navigates to a local product page, waits for JS-rendered content (product price, reviews from XHR), extracts structured data.</p>
 <p><strong>Result:</strong> PASS - All assertions pass consistently</p>
 <table>
 <thead>
@@ -467,12 +465,10 @@
 <li>DOM serialization with JS-mutated content</li>
 </ul>
 <hr>
-<h2>Major Sites Speed Test</h2>
-<p>Engine: plasmate v0.1.0
+<h2 id="major-sites-speed-test">Major Sites Speed Test</h2><p>Engine: plasmate v0.1.0
 URLs tested: 38
 Successful: 36 (95%)</p>
-<h3>Summary</h3>
-<table>
+<h3 id="summary">Summary</h3><table>
 <thead>
 <tr>
 <th>Metric</th>
@@ -524,8 +520,7 @@ Successful: 36 (95%)</p>
 <td>61</td>
 </tr>
 </tbody></table>
-<h3>Grade Distribution</h3>
-<table>
+<h3 id="grade-distribution">Grade Distribution</h3><table>
 <thead>
 <tr>
 <th>Grade</th>
@@ -559,8 +554,7 @@ Successful: 36 (95%)</p>
 <td>&lt;1x or error</td>
 </tr>
 </tbody></table>
-<h3>Highlights</h3>
-<table>
+<h3 id="highlights">Highlights</h3><table>
 <thead>
 <tr>
 <th>Site</th>
@@ -630,15 +624,13 @@ Successful: 36 (95%)</p>
 <td><strong>25x</strong></td>
 </tr>
 </tbody></table>
-<h3>Performance Notes</h3>
-<ul>
+<h3 id="performance-notes">Performance Notes</h3><ul>
 <li><strong>Parse+SOM time</strong>: Median 16ms for full HTML-&gt;SOM compilation</li>
 <li><strong>Heavy JS sites</strong>: Excellent compression (login pages, SPAs) due to stripping non-essential markup</li>
 <li><strong>Content-rich sites</strong>: Good compression (Wikipedia 10-25x, news sites 11-15x)</li>
 <li><strong>Text-minimal sites</strong>: Lower ratios expected (text.npr.org, example.com)</li>
 </ul>
-<h3>Test Environment</h3>
-<ul>
+<h3 id="test-environment">Test Environment</h3><ul>
 <li>macOS, Apple Silicon</li>
 <li>Local network fetch (varies by site latency)</li>
 <li>No caching between runs</li>

@@ -425,24 +425,19 @@
       </div>
     </nav>
     <main class="content">
-      <h1>Python SDK</h1>
-<p>The official Python SDK for Plasmate, with Pydantic models and SOM query helpers.</p>
-<h2>Installation</h2>
-<pre><code class="language-sh">pip install plasmate
+      <h1 id="python-sdk">Python SDK</h1><p>The official Python SDK for Plasmate, with Pydantic models and SOM query helpers.</p>
+<h2 id="installation">Installation</h2><pre><code class="language-sh">pip install plasmate
 </code></pre>
 <p>Requires Python 3.9+, Pydantic 2.0+, and the <code>plasmate</code> binary on your PATH.</p>
-<h2>Quick Start</h2>
-<pre><code class="language-python">from plasmate import Plasmate
+<h2 id="quick-start">Quick Start</h2><pre><code class="language-python">from plasmate import Plasmate
 
 with Plasmate() as client:
     som = client.fetch_page(&quot;https://example.com&quot;)
     print(som[&quot;title&quot;])
     print(som[&quot;meta&quot;])
 </code></pre>
-<h2>Pydantic Models</h2>
-<p>All SOM types are fully typed Pydantic models, making them easy to validate and serialize.</p>
-<h3><code>Som</code></h3>
-<pre><code class="language-python">class Som(BaseModel):
+<h2 id="pydantic-models">Pydantic Models</h2><p>All SOM types are fully typed Pydantic models, making them easy to validate and serialize.</p>
+<h3 id="som">`Som`</h3><pre><code class="language-python">class Som(BaseModel):
     som_version: str
     url: str
     title: str
@@ -451,8 +446,7 @@ with Plasmate() as client:
     meta: SomMeta
     structured_data: Optional[StructuredData] = None
 </code></pre>
-<h3><code>SomRegion</code></h3>
-<pre><code class="language-python">class SomRegion(BaseModel):
+<h3 id="somregion">`SomRegion`</h3><pre><code class="language-python">class SomRegion(BaseModel):
     id: str
     role: RegionRole   # navigation, main, aside, header, footer, form, dialog, content
     label: Optional[str] = None
@@ -460,8 +454,7 @@ with Plasmate() as client:
     method: Optional[str] = None
     elements: List[SomElement]
 </code></pre>
-<h3><code>SomElement</code></h3>
-<pre><code class="language-python">class SomElement(BaseModel):
+<h3 id="somelement">`SomElement`</h3><pre><code class="language-python">class SomElement(BaseModel):
     id: str
     role: ElementRole  # link, button, text_input, textarea, select, checkbox, radio, heading, image, list, table, paragraph, section, separator
     text: Optional[str] = None
@@ -471,63 +464,52 @@ with Plasmate() as client:
     children: Optional[List[SomElement]] = None
     hints: Optional[List[SemanticHint]] = None
 </code></pre>
-<h3><code>SomMeta</code></h3>
-<pre><code class="language-python">class SomMeta(BaseModel):
+<h3 id="sommeta">`SomMeta`</h3><pre><code class="language-python">class SomMeta(BaseModel):
     html_bytes: int
     som_bytes: int
     element_count: int
     interactive_count: int
 </code></pre>
-<h2>Query Helpers</h2>
-<h3><code>find_by_role(som, role)</code></h3>
-<p>Find all regions matching a given role.</p>
+<h2 id="query-helpers">Query Helpers</h2><h3 id="findbyrolesom-role">`find_by_role(som, role)`</h3><p>Find all regions matching a given role.</p>
 <pre><code class="language-python">from plasmate.query import find_by_role
 
 nav_regions = find_by_role(som, &quot;navigation&quot;)
 </code></pre>
-<h3><code>find_by_id(som, element_id)</code></h3>
-<p>Find a single element by its stable ID.</p>
+<h3 id="findbyidsom-elementid">`find_by_id(som, element_id)`</h3><p>Find a single element by its stable ID.</p>
 <pre><code class="language-python">from plasmate.query import find_by_id
 
 el = find_by_id(som, &quot;login-btn&quot;)
 if el:
     print(el.text)
 </code></pre>
-<h3><code>find_by_tag(som, tag)</code></h3>
-<p>Find elements matching a tag/role string.</p>
+<h3 id="findbytagsom-tag">`find_by_tag(som, tag)`</h3><p>Find elements matching a tag/role string.</p>
 <pre><code class="language-python">from plasmate.query import find_by_tag
 
 links = find_by_tag(som, &quot;link&quot;)
 </code></pre>
-<h3><code>find_interactive(som)</code></h3>
-<p>Return all interactive elements.</p>
+<h3 id="findinteractivesom">`find_interactive(som)`</h3><p>Return all interactive elements.</p>
 <pre><code class="language-python">from plasmate.query import find_interactive
 
 interactive = find_interactive(som)
 print(f&quot;{len(interactive)} interactive elements&quot;)
 </code></pre>
-<h3><code>find_by_text(som, text)</code></h3>
-<p>Find elements whose text content contains the given string (case-insensitive).</p>
+<h3 id="findbytextsom-text">`find_by_text(som, text)`</h3><p>Find elements whose text content contains the given string (case-insensitive).</p>
 <pre><code class="language-python">from plasmate.query import find_by_text
 
 matches = find_by_text(som, &quot;Sign in&quot;)
 </code></pre>
-<h3><code>flat_elements(som)</code></h3>
-<p>Flatten all elements across all regions into a single list.</p>
+<h3 id="flatelementssom">`flat_elements(som)`</h3><p>Flatten all elements across all regions into a single list.</p>
 <pre><code class="language-python">from plasmate.query import flat_elements
 
 all_elements = flat_elements(som)
 </code></pre>
-<h3><code>get_token_estimate(som)</code></h3>
-<p>Estimate the LLM token count for the SOM (heuristic: ~4 characters per token).</p>
+<h3 id="gettokenestimatesom">`get_token_estimate(som)`</h3><p>Estimate the LLM token count for the SOM (heuristic: ~4 characters per token).</p>
 <pre><code class="language-python">from plasmate.query import get_token_estimate
 
 tokens = get_token_estimate(som)
 print(f&quot;~{tokens} tokens&quot;)
 </code></pre>
-<h2>Client API</h2>
-<h3>Synchronous Client</h3>
-<pre><code class="language-python">from plasmate import Plasmate
+<h2 id="client-api">Client API</h2><h3 id="synchronous-client">Synchronous Client</h3><pre><code class="language-python">from plasmate import Plasmate
 
 client = Plasmate(
     binary=&quot;plasmate&quot;,  # path to plasmate binary (default: &quot;plasmate&quot;)
@@ -554,8 +536,7 @@ client.close()
 <pre><code class="language-python">with Plasmate() as client:
     som = client.fetch_page(&quot;https://example.com&quot;)
 </code></pre>
-<h2>Async Support</h2>
-<p>The <code>AsyncPlasmate</code> client provides the same API with <code>async</code>/<code>await</code>.</p>
+<h2 id="async-support">Async Support</h2><p>The <code>AsyncPlasmate</code> client provides the same API with <code>async</code>/<code>await</code>.</p>
 <pre><code class="language-python">from plasmate import AsyncPlasmate
 
 async with AsyncPlasmate() as client:

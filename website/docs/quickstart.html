@@ -425,14 +425,10 @@
       </div>
     </nav>
     <main class="content">
-      <h1>Quick Start</h1>
-<p>Get Plasmate running and produce your first SOM output in under 60 seconds.</p>
-<h2>Install</h2>
-<h3>From the install script</h3>
-<pre><code class="language-sh">curl -fsSL https://plasmate.app/install.sh | sh
+      <h1 id="quick-start">Quick Start</h1><p>Get Plasmate running and produce your first SOM output in under 60 seconds.</p>
+<h2 id="install">Install</h2><h3 id="from-the-install-script">From the install script</h3><pre><code class="language-sh">curl -fsSL https://plasmate.app/install.sh | sh
 </code></pre>
-<h3>From GitHub Releases</h3>
-<p>Download the binary for your platform from <a href="https://github.com/plasmate-labs/plasmate/releases">GitHub Releases</a>:</p>
+<h3 id="from-github-releases">From GitHub Releases</h3><p>Download the binary for your platform from <a href="https://github.com/plasmate-labs/plasmate/releases">GitHub Releases</a>:</p>
 <ul>
 <li><code>plasmate-aarch64-macos</code> (Apple Silicon)</li>
 <li><code>plasmate-x86_64-macos</code> (Intel Mac)</li>
@@ -443,28 +439,22 @@
 <pre><code class="language-sh">chmod +x plasmate-aarch64-macos
 mv plasmate-aarch64-macos /usr/local/bin/plasmate
 </code></pre>
-<h3>From Docker</h3>
-<pre><code class="language-sh">docker run -p 9222:9222 plasmate/browser
+<h3 id="from-docker">From Docker</h3><pre><code class="language-sh">docker run -p 9222:9222 plasmate/browser
 </code></pre>
-<h3>From Source</h3>
-<pre><code class="language-sh">git clone https://github.com/plasmate-labs/plasmate.git
+<h3 id="from-source">From Source</h3><pre><code class="language-sh">git clone https://github.com/plasmate-labs/plasmate.git
 cd plasmate
 cargo build --release
 ./target/release/plasmate --help
 </code></pre>
-<h2>Usage</h2>
-<h3>One-shot fetch (CLI)</h3>
-<p>Fetch a page and output its SOM representation:</p>
+<h2 id="usage">Usage</h2><h3 id="one-shot-fetch-cli">One-shot fetch (CLI)</h3><p>Fetch a page and output its SOM representation:</p>
 <pre><code class="language-sh">plasmate fetch https://news.ycombinator.com
 </code></pre>
 <p>This prints the Semantic Object Model to stdout: title, regions, elements, compression ratio, and timing.</p>
-<h3>Persistent server (AWP)</h3>
-<p>Start the AWP WebSocket server:</p>
+<h3 id="persistent-server-awp">Persistent server (AWP)</h3><p>Start the AWP WebSocket server:</p>
 <pre><code class="language-sh">plasmate serve --protocol awp
 </code></pre>
 <p>Connect on <code>ws://127.0.0.1:9222</code>. The server accepts AWP messages (JSON over WebSocket).</p>
-<h3>Persistent server (CDP compatibility)</h3>
-<p>Start with Chrome DevTools Protocol compatibility for Puppeteer and Playwright:</p>
+<h3 id="persistent-server-cdp-compatibility">Persistent server (CDP compatibility)</h3><p>Start with Chrome DevTools Protocol compatibility for Puppeteer and Playwright:</p>
 <pre><code class="language-sh">plasmate serve --protocol cdp
 </code></pre>
 <p>Connect with Puppeteer:</p>
@@ -479,12 +469,10 @@ const page = await browser.newPage();
 await page.goto(&#39;https://news.ycombinator.com&#39;);
 console.log(await page.title());
 </code></pre>
-<h3>Benchmark mode</h3>
-<p>Run the built-in throughput benchmark against a set of local pages:</p>
+<h3 id="benchmark-mode">Benchmark mode</h3><p>Run the built-in throughput benchmark against a set of local pages:</p>
 <pre><code class="language-sh">plasmate throughput-bench --base-url http://localhost:8765 --pages 100
 </code></pre>
-<h2>AWP Protocol (Quick Reference)</h2>
-<p>AWP v0.1 has 7 methods:</p>
+<h2 id="awp-protocol-quick-reference">AWP Protocol (Quick Reference)</h2><p>AWP v0.1 has 7 methods:</p>
 <table>
 <thead>
 <tr>
@@ -521,8 +509,7 @@ console.log(await page.title());
 <td>Extract structured data, interactive elements, or specific fields</td>
 </tr>
 </tbody></table>
-<h3>Example AWP session (Python pseudocode)</h3>
-<pre><code class="language-python">import asyncio, websockets, json
+<h3 id="example-awp-session-python-pseudocode">Example AWP session (Python pseudocode)</h3><pre><code class="language-python">import asyncio, websockets, json
 
 async def main():
     async with websockets.connect(&quot;ws://127.0.0.1:9222&quot;) as ws:
@@ -555,8 +542,7 @@ async def main():
 
 asyncio.run(main())
 </code></pre>
-<h2>SOM Output Structure</h2>
-<p>A SOM snapshot contains:</p>
+<h2 id="som-output-structure">SOM Output Structure</h2><p>A SOM snapshot contains:</p>
 <pre><code class="language-json">{
   &quot;version&quot;: &quot;0.1&quot;,
   &quot;url&quot;: &quot;https://news.ycombinator.com&quot;,
@@ -589,8 +575,7 @@ asyncio.run(main())
 }
 </code></pre>
 <p>Element IDs are deterministic: <code>e_</code> + first 12 hex chars of <code>sha256(origin|role|name|dom_path)</code>.</p>
-<h2>What&#39;s Next</h2>
-<ul>
+<h2 id="whats-next">What's Next</h2><ul>
 <li>Read the full <a href="spec">Product Spec</a> for architecture details</li>
 <li>Read the <a href="awp">AWP Protocol</a> specification</li>
 <li>Check the <a href="roadmap">Roadmap</a> for what&#39;s coming in v0.2</li>

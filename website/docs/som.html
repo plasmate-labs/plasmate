@@ -425,12 +425,9 @@
       </div>
     </nav>
     <main class="content">
-      <h1>Semantic Object Model (SOM) Reference</h1>
-<h2>Overview</h2>
-<p>The Semantic Object Model is Plasmate&#39;s core output format. It replaces the DOM as the interface between browser and agent.</p>
+      <h1 id="semantic-object-model-som-reference">Semantic Object Model (SOM) Reference</h1><h2 id="overview">Overview</h2><p>The Semantic Object Model is Plasmate&#39;s core output format. It replaces the DOM as the interface between browser and agent.</p>
 <p>Where the DOM is a faithful representation of every tag, attribute, and style in an HTML document, SOM is a compressed, budgeted, semantic representation designed for LLM consumption.</p>
-<h2>Design Principles</h2>
-<ol>
+<h2 id="design-principles">Design Principles</h2><ol>
 <li><p><strong>Token efficiency over fidelity.</strong> SOM drops anything an agent does not need: inline styles, class names (except for hint inference), script tags, empty elements, decorative markup.</p>
 </li>
 <li><p><strong>Deterministic IDs.</strong> Every element gets a stable ID derived from its semantic identity, not its position in a mutable tree. The same button on the same page always has the same ID.</p>
@@ -440,8 +437,7 @@
 <li><p><strong>Interactive elements are sacred.</strong> Links, buttons, inputs, selects, and textareas are never dropped by budget limits. An agent must always be able to act.</p>
 </li>
 </ol>
-<h2>Structure</h2>
-<pre><code class="language-json">{
+<h2 id="structure">Structure</h2><pre><code class="language-json">{
   &quot;version&quot;: &quot;0.1&quot;,
   &quot;url&quot;: &quot;https://example.com&quot;,
   &quot;title&quot;: &quot;Page Title&quot;,
@@ -471,8 +467,7 @@
   ]
 }
 </code></pre>
-<h2>Regions</h2>
-<p>SOM organizes page content into semantic regions. Region detection uses HTML5 landmark elements and heuristic analysis of class names, IDs, and DOM structure.</p>
+<h2 id="regions">Regions</h2><p>SOM organizes page content into semantic regions. Region detection uses HTML5 landmark elements and heuristic analysis of class names, IDs, and DOM structure.</p>
 <table>
 <thead>
 <tr>
@@ -513,16 +508,14 @@
 <td>Fallback for regions that do not match other roles</td>
 </tr>
 </tbody></table>
-<h3>Region ID Format</h3>
-<p>Region IDs use the format <code>r_</code> + a descriptor derived from the region&#39;s role and position:</p>
+<h3 id="region-id-format">Region ID Format</h3><p>Region IDs use the format <code>r_</code> + a descriptor derived from the region&#39;s role and position:</p>
 <ul>
 <li><code>r_navigation</code> (primary nav)</li>
 <li><code>r_main</code> (primary content)</li>
 <li><code>r_footer</code> (page footer)</li>
 <li><code>r_aside_0</code>, <code>r_aside_1</code> (multiple sidebars)</li>
 </ul>
-<h2>Elements</h2>
-<p>Each element in a region has:</p>
+<h2 id="elements">Elements</h2><p>Each element in a region has:</p>
 <table>
 <thead>
 <tr>
@@ -572,8 +565,7 @@
 <td>CSS class-inferred hints: primary, secondary, danger, disabled, active, etc.</td>
 </tr>
 </tbody></table>
-<h3>Element ID Stability</h3>
-<p>Element IDs are computed as:</p>
+<h3 id="element-id-stability">Element ID Stability</h3><p>Element IDs are computed as:</p>
 <pre><code>sha256(normalized_origin + &quot;|&quot; + role + &quot;|&quot; + accessible_name + &quot;|&quot; + dom_path_indices)
 </code></pre>
 <p>The first 12 hex characters are used, prefixed with <code>e_</code>.</p>
@@ -583,8 +575,7 @@
 <li>IDs survive page refreshes and minor layout changes</li>
 <li>IDs change if the element&#39;s semantic identity changes (different text, different role)</li>
 </ul>
-<h2>Content Budgets</h2>
-<p>SOM enforces output budgets to keep token costs predictable:</p>
+<h2 id="content-budgets">Content Budgets</h2><p>SOM enforces output budgets to keep token costs predictable:</p>
 <table>
 <thead>
 <tr>
@@ -634,8 +625,7 @@
 <td>Table cell content truncation</td>
 </tr>
 </tbody></table>
-<h3>Budget Priority</h3>
-<p>When element limits are reached, SOM drops in this order:</p>
+<h3 id="budget-priority">Budget Priority</h3><p>When element limits are reached, SOM drops in this order:</p>
 <ol>
 <li>Duplicate links (same href, already seen)</li>
 <li>Navigation links beyond budget</li>
@@ -643,22 +633,18 @@
 <li>Non-interactive elements (decorative, redundant)</li>
 </ol>
 <p>Interactive elements (links, buttons, inputs, selects, textareas) are <strong>never</strong> dropped.</p>
-<h2>Smart Text Truncation</h2>
-<p>When text exceeds its budget, SOM prefers to break at sentence boundaries:</p>
+<h2 id="smart-text-truncation">Smart Text Truncation</h2><p>When text exceeds its budget, SOM prefers to break at sentence boundaries:</p>
 <ul>
 <li>Sentence boundary within 40%-100% of budget: break there</li>
 <li>No sentence boundary: break at word boundary</li>
 <li>Adds &quot;...&quot; suffix when truncated</li>
 </ul>
-<h2>CSS Class Hint Inference</h2>
-<p>SOM extracts semantic hints from CSS class names. This gives agents context about element purpose without exposing raw class strings.</p>
+<h2 id="css-class-hint-inference">CSS Class Hint Inference</h2><p>SOM extracts semantic hints from CSS class names. This gives agents context about element purpose without exposing raw class strings.</p>
 <p>22 recognized hint categories:</p>
 <p><code>primary</code>, <code>secondary</code>, <code>danger</code>, <code>warning</code>, <code>success</code>, <code>error</code>, <code>disabled</code>, <code>active</code>, <code>selected</code>, <code>hidden</code>, <code>loading</code>, <code>collapsed</code>, <code>expanded</code>, <code>large</code>, <code>small</code>, <code>card</code>, <code>hero</code>, <code>modal</code>, <code>notification</code>, <code>badge</code>, <code>sticky</code>, <code>required</code></p>
 <p>Example: A button with class <code>btn btn-primary btn-lg disabled</code> produces hints <code>[&quot;primary&quot;, &quot;large&quot;, &quot;disabled&quot;]</code>.</p>
-<h2>Heading Hierarchy</h2>
-<p>Headings (<code>h1</code> through <code>h6</code>) are always preserved regardless of budget limits. They provide the structural outline of the page that agents use for navigation and context.</p>
-<h2>Layout Table Detection</h2>
-<p>SOM distinguishes layout tables from data tables using heuristics:</p>
+<h2 id="heading-hierarchy">Heading Hierarchy</h2><p>Headings (<code>h1</code> through <code>h6</code>) are always preserved regardless of budget limits. They provide the structural outline of the page that agents use for navigation and context.</p>
+<h2 id="layout-table-detection">Layout Table Detection</h2><p>SOM distinguishes layout tables from data tables using heuristics:</p>
 <ul>
 <li>Tables with <code>role=&quot;presentation&quot;</code> or <code>role=&quot;layout&quot;</code> are layout tables</li>
 <li>Tables nested inside other tables are likely layout tables</li>
@@ -666,13 +652,10 @@
 <li>Tables with proper <code>&lt;thead&gt;</code>, <code>&lt;th&gt;</code> elements are data tables</li>
 </ul>
 <p>Layout tables are decomposed into their semantic child elements rather than preserved as table structures.</p>
-<h2>Link Deduplication</h2>
-<p>SOM normalizes URLs and deduplicates links across the entire page. On Wikipedia, this removes ~839 duplicate links, significantly improving token efficiency.</p>
+<h2 id="link-deduplication">Link Deduplication</h2><p>SOM normalizes URLs and deduplicates links across the entire page. On Wikipedia, this removes ~839 duplicate links, significantly improving token efficiency.</p>
 <p>Normalization: lowercase scheme and host, remove trailing slashes, remove default ports, sort query parameters.</p>
-<h2>JS DOM Mutations</h2>
-<p>When JavaScript modifies the DOM (via <code>document.write()</code>, <code>appendChild</code>, etc.), Plasmate&#39;s V8 runtime captures these mutations and feeds them back into the SOM compiler. The final SOM reflects the page as it appears after script execution.</p>
-<h2>Structured Data Extraction</h2>
-<p>SOM extracts structured metadata from:</p>
+<h2 id="js-dom-mutations">JS DOM Mutations</h2><p>When JavaScript modifies the DOM (via <code>document.write()</code>, <code>appendChild</code>, etc.), Plasmate&#39;s V8 runtime captures these mutations and feeds them back into the SOM compiler. The final SOM reflects the page as it appears after script execution.</p>
+<h2 id="structured-data-extraction">Structured Data Extraction</h2><p>SOM extracts structured metadata from:</p>
 <ul>
 <li><strong>JSON-LD</strong> (<code>&lt;script type=&quot;application/ld+json&quot;&gt;</code>)</li>
 <li><strong>OpenGraph</strong> (<code>&lt;meta property=&quot;og:*&quot;&gt;</code>)</li>
@@ -680,16 +663,14 @@
 <li><strong>Standard meta tags</strong> (description, author, keywords)</li>
 <li><strong>Link elements</strong> (canonical, alternate, stylesheet counts)</li>
 </ul>
-<h2>CSS Visibility</h2>
-<p>SOM respects CSS visibility rules from inline <code>&lt;style&gt;</code> blocks:</p>
+<h2 id="css-visibility">CSS Visibility</h2><p>SOM respects CSS visibility rules from inline <code>&lt;style&gt;</code> blocks:</p>
 <ul>
 <li><code>display: none</code> - element excluded from SOM</li>
 <li><code>visibility: hidden</code> - element excluded from SOM</li>
 <li><code>opacity: 0</code> - element excluded from SOM</li>
 </ul>
 <p>This prevents hidden elements (dropdowns, modals, off-screen content) from polluting the agent&#39;s view.</p>
-<h2>Benchmarks</h2>
-<table>
+<h2 id="benchmarks">Benchmarks</h2><table>
 <thead>
 <tr>
 <th>Site</th>

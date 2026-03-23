@@ -425,15 +425,10 @@
       </div>
     </nav>
     <main class="content">
-      <h1>Agentic Browser Engine - Product Specification v1.0</h1>
-<p><strong>Working Name:</strong> Plasmate
-<strong>Tagline:</strong> &quot;The browser built for machines.&quot;
-<strong>Author:</strong> David Hurley / DBH Ventures
-<strong>Date:</strong> March 15, 2026
-<strong>Status:</strong> Draft - Pre-Seed</p>
+      <h1 id="agentic-browser-engine-product-specification-v10">Agentic Browser Engine - Product Specification v1.0</h1><p><strong>Tagline:</strong> &quot;The browser built for machines.&quot;
+<strong>Author:</strong> David Hurley</p>
 <hr>
-<h2>Table of Contents</h2>
-<ol>
+<h2 id="table-of-contents">Table of Contents</h2><ol>
 <li><a href="#executive-summary">Executive Summary</a></li>
 <li><a href="#the-problem">The Problem</a></li>
 <li><a href="#the-vision">The Vision</a></li>
@@ -447,8 +442,7 @@
 <li><a href="#fleet-orchestration">Fleet Orchestration (Commercial)</a></li>
 </ol>
 <hr>
-<h2>1. Executive Summary</h2>
-<p>Every AI agent that interacts with the web today does so through a hack. They control Chrome (or a Chrome derivative) through the Chrome DevTools Protocol (CDP) - a debugging interface designed for human developers inspecting CSS and setting breakpoints. This is the equivalent of driving a car by reaching through the window and turning the steering wheel with a broomstick.</p>
+<h2 id="executive-summary">1. Executive Summary</h2><p>Every AI agent that interacts with the web today does so through a hack. They control Chrome (or a Chrome derivative) through the Chrome DevTools Protocol (CDP) - a debugging interface designed for human developers inspecting CSS and setting breakpoints. This is the equivalent of driving a car by reaching through the window and turning the steering wheel with a broomstick.</p>
 <p>The result: agents that are slow, brittle, expensive (in tokens), easily detected, and fundamentally limited by an architecture that was never designed for them.</p>
 <p>Plasmate is a headless browser engine built from scratch in Rust, purpose-designed for AI agents. It introduces three foundational technologies:</p>
 <ol>
@@ -462,9 +456,7 @@
 <p>The business model follows the Netscape playbook: open-source the engine and the protocol aggressively (Apache 2.0), establish AWP as the industry standard, and monetize the commercial fleet - orchestration, persistent sessions, anti-detection proxy network, and analytics.</p>
 <p><strong>Target market size:</strong> The browser automation market is projected at $15B+ by 2028. The AI agent infrastructure market (broader) is estimated at $50B+ by 2030. Every company building AI agents needs a browser. Today they all rent Chrome. Tomorrow they should run Plasmate.</p>
 <hr>
-<h2>2. The Problem</h2>
-<h3>2.1 The CDP Bottleneck</h3>
-<p>The Chrome DevTools Protocol was created in 2011 for one purpose: letting developers debug websites. Fifteen years later, it has become the de facto interface for AI agents interacting with the web - a role it was never designed for.</p>
+<h2 id="the-problem">2. The Problem</h2><h3 id="1-the-cdp-bottleneck">2.1 The CDP Bottleneck</h3><p>The Chrome DevTools Protocol was created in 2011 for one purpose: letting developers debug websites. Fifteen years later, it has become the de facto interface for AI agents interacting with the web - a role it was never designed for.</p>
 <p><strong>Problems with CDP for agents:</strong></p>
 <table>
 <thead>
@@ -515,8 +507,7 @@
 <td>Agents must infer purpose from HTML tag names and CSS classes</td>
 </tr>
 </tbody></table>
-<h3>2.2 The Stealth Arms Race</h3>
-<p>Every headless browser automation tool fights the same battle: appearing human to anti-bot systems. The current approach is bolting stealth patches onto Chrome after the fact:</p>
+<h3 id="2-the-stealth-arms-race">2.2 The Stealth Arms Race</h3><p>Every headless browser automation tool fights the same battle: appearing human to anti-bot systems. The current approach is bolting stealth patches onto Chrome after the fact:</p>
 <ul>
 <li><code>puppeteer-extra-plugin-stealth</code> patches ~15 known detection vectors</li>
 <li>Browserbase and Steel Browser maintain proprietary stealth layers</li>
@@ -524,8 +515,7 @@
 </ul>
 <p>But all of these are reactive. Cloudflare, DataDome, PerimeterX, and Akamai continuously add new detection vectors. The patch-and-pray approach is fundamentally losing.</p>
 <p>A native engine can solve this differently: by controlling the entire network stack from TLS handshake to HTTP headers, stealth becomes a first-class architectural feature rather than an afterthought.</p>
-<h3>2.3 The Token Tax</h3>
-<p>LLMs process web pages as text. The more tokens a page representation consumes, the more expensive and slow the agent becomes. Current approaches:</p>
+<h3 id="3-the-token-tax">2.3 The Token Tax</h3><p>LLMs process web pages as text. The more tokens a page representation consumes, the more expensive and slow the agent becomes. Current approaches:</p>
 <table>
 <thead>
 <tr>
@@ -567,8 +557,7 @@
 <li>10x faster response times</li>
 <li>10x more pages processable within context windows</li>
 </ul>
-<h3>2.4 What Exists Today</h3>
-<table>
+<h3 id="4-what-exists-today">2.4 What Exists Today</h3><table>
 <thead>
 <tr>
 <th>Product</th>
@@ -638,9 +627,7 @@
 </tbody></table>
 <p><strong>Gap:</strong> Nobody has built a native agent protocol. Nobody outputs semantic models instead of DOM. Nobody has a Wasm skill ecosystem. Nobody has stealth at the network stack level.</p>
 <hr>
-<h2>3. The Vision</h2>
-<h3>3.1 The Netscape Parallel</h3>
-<p>In 1994, the web existed but was unusable for most people. Netscape didn&#39;t just build a better viewer - they invented the infrastructure that made the web work:</p>
+<h2 id="the-vision">3. The Vision</h2><h3 id="1-the-netscape-parallel">3.1 The Netscape Parallel</h3><p>In 1994, the web existed but was unusable for most people. Netscape didn&#39;t just build a better viewer - they invented the infrastructure that made the web work:</p>
 <table>
 <thead>
 <tr>
@@ -675,8 +662,7 @@
 <td>Standard engine for all agent frameworks</td>
 </tr>
 </tbody></table>
-<h3>3.2 The End State</h3>
-<p>In 3 years, the agentic browser landscape should look like this:</p>
+<h3 id="2-the-end-state">3.2 The End State</h3><p>In 3 years, the agentic browser landscape should look like this:</p>
 <ul>
 <li><strong>AWP</strong> is the standard protocol for agent-to-browser communication, like HTTP is for human-to-server</li>
 <li><strong>Plasmate</strong> is the default engine embedded in LangChain, CrewAI, AutoGen, and every major agent framework</li>
@@ -684,8 +670,7 @@
 <li><strong>Wasm Skills</strong> are a thriving marketplace, with thousands of community-contributed site navigators</li>
 <li><strong>The commercial fleet</strong> (Plasmate Cloud) is a $100M+ ARR business selling orchestration to enterprises</li>
 </ul>
-<h3>3.3 What Plasmate Is NOT</h3>
-<ul>
+<h3 id="3-what-plasmate-is-not">3.3 What Plasmate Is NOT</h3><ul>
 <li><strong>Not a consumer browser</strong> - no UI, no tabs, no bookmarks. Agents don&#39;t need chrome (lowercase c).</li>
 <li><strong>Not a scraping tool</strong> - scraping is a use case, not the product. Plasmate is infrastructure.</li>
 <li><strong>Not a Chrome fork</strong> - zero Chromium code. Clean-room Rust implementation.</li>
@@ -693,9 +678,7 @@
 <li><strong>Not a proxy service</strong> - though it has proxy capabilities built in. The proxy is a feature, not the product.</li>
 </ul>
 <hr>
-<h2>4. Architecture Overview</h2>
-<h3>4.1 System Diagram</h3>
-<pre><code>┌─────────────────────────────────────────────────────────┐
+<h2 id="architecture-overview">4. Architecture Overview</h2><h3 id="1-system-diagram">4.1 System Diagram</h3><pre><code>┌─────────────────────────────────────────────────────────┐
 │                    AGENT (LLM)                           │
 │  LangChain / CrewAI / AutoGen / Custom                  │
 └────────────────────┬────────────────────────────────────┘
@@ -728,8 +711,7 @@
 │  └─────────────────────────────────────────┘              │
 └─────────────────────────────────────────────────────────┘
 </code></pre>
-<h3>4.2 Data Flow</h3>
-<ol>
+<h3 id="2-data-flow">4.2 Data Flow</h3><ol>
 <li><strong>Agent sends AWP intent</strong> → <code>{action: &quot;fill_form&quot;, target: &quot;#email&quot;, value: &quot;user@example.com&quot;}</code></li>
 <li><strong>AWP Server</strong> validates intent, resolves target via SOM</li>
 <li><strong>Session Manager</strong> loads page state, cookies, auth context</li>
@@ -742,8 +724,7 @@ c. <strong>SOM Compiler</strong> transforms DOM into Semantic Object Model
 d. <strong>JS Runtime</strong> (V8) executes scripts that modify the SOM (SPAs, dynamic content)</li>
 <li><strong>SOM returned to agent</strong> via AWP with action results</li>
 </ol>
-<h3>4.3 Language &amp; Dependencies (Rust Crates)</h3>
-<table>
+<h3 id="3-language-dependencies-rust-crates">4.3 Language & Dependencies (Rust Crates)</h3><table>
 <thead>
 <tr>
 <th>Component</th>
@@ -843,11 +824,8 @@ d. <strong>JS Runtime</strong> (V8) executes scripts that modify the SOM (SPAs, 
 </tr>
 </tbody></table>
 <hr>
-<h2>5. Semantic Object Model (SOM)</h2>
-<h3>5.1 What Is SOM</h3>
-<p>The Semantic Object Model is a new page representation format purpose-built for LLM consumption. It replaces the DOM (Document Object Model) by stripping away everything an agent doesn&#39;t need (visual styling, layout information, rendering hints) and adding everything an agent does need (element purpose, affordances, interaction methods, semantic relationships).</p>
-<h3>5.2 Design Principles</h3>
-<ol>
+<h2 id="semantic-object-model-som">5. Semantic Object Model (SOM)</h2><h3 id="1-what-is-som">5.1 What Is SOM</h3><p>The Semantic Object Model is a new page representation format purpose-built for LLM consumption. It replaces the DOM (Document Object Model) by stripping away everything an agent doesn&#39;t need (visual styling, layout information, rendering hints) and adding everything an agent does need (element purpose, affordances, interaction methods, semantic relationships).</p>
+<h3 id="2-design-principles">5.2 Design Principles</h3><ol>
 <li><strong>Token-minimal</strong> - Represent a page in the fewest possible tokens</li>
 <li><strong>Deterministic</strong> - Same page always produces the same SOM (unlike screenshots which vary by viewport)</li>
 <li><strong>Actionable</strong> - Every element includes its available interactions</li>
@@ -855,8 +833,7 @@ d. <strong>JS Runtime</strong> (V8) executes scripts that modify the SOM (SPAs, 
 <li><strong>Semantic</strong> - Elements described by purpose, not by HTML tag name</li>
 <li><strong>Stable references</strong> - Element IDs persist across page mutations (SPA navigation)</li>
 </ol>
-<h3>5.3 SOM Format</h3>
-<pre><code class="language-json">{
+<h3 id="3-som-format">5.3 SOM Format</h3><pre><code class="language-json">{
   &quot;url&quot;: &quot;https://shop.example.com/products/widget-pro&quot;,
   &quot;title&quot;: &quot;Widget Pro - Example Shop&quot;,
   &quot;timestamp&quot;: &quot;2026-03-15T23:00:00Z&quot;,
@@ -916,8 +893,7 @@ d. <strong>JS Runtime</strong> (V8) executes scripts that modify the SOM (SPAs, 
   &quot;alerts&quot;: []
 }
 </code></pre>
-<h3>5.4 Token Comparison</h3>
-<p>For the above product page:</p>
+<h3 id="4-token-comparison">5.4 Token Comparison</h3><p>For the above product page:</p>
 <table>
 <thead>
 <tr>
@@ -947,8 +923,7 @@ d. <strong>JS Runtime</strong> (V8) executes scripts that modify the SOM (SPAs, 
 <td><strong>20x better</strong></td>
 </tr>
 </tbody></table>
-<h3>5.5 SOM Compilation Pipeline</h3>
-<pre><code>Raw HTML (html5ever)
+<h3 id="5-som-compilation-pipeline">5.5 SOM Compilation Pipeline</h3><pre><code>Raw HTML (html5ever)
     │
     ▼
 DOM Tree
@@ -979,8 +954,7 @@ Semantic Tree
     ▼
 SOM Output (JSON / MessagePack)
 </code></pre>
-<h3>5.6 SOM Element Types</h3>
-<table>
+<h3 id="6-som-element-types">5.6 SOM Element Types</h3><table>
 <thead>
 <tr>
 <th>Type</th>
@@ -1122,8 +1096,7 @@ SOM Output (JSON / MessagePack)
 <td>-</td>
 </tr>
 </tbody></table>
-<h3>5.7 SOM Heuristics</h3>
-<p>For pages without semantic HTML or ARIA, SOM uses heuristics:</p>
+<h3 id="7-som-heuristics">5.7 SOM Heuristics</h3><p>For pages without semantic HTML or ARIA, SOM uses heuristics:</p>
 <ol>
 <li><strong>Form detection</strong> - Cluster of input elements within a shared ancestor = form</li>
 <li><strong>Navigation detection</strong> - Lists of links in header/top of page = navigation</li>
@@ -1133,8 +1106,7 @@ SOM Output (JSON / MessagePack)
 <li><strong>Pagination detection</strong> - Sequential number links or &quot;next/prev&quot; buttons = pagination</li>
 <li><strong>Search detection</strong> - Text input with magnifying glass icon or &quot;search&quot; in placeholder = search</li>
 </ol>
-<h3>5.8 SOM Mutation Tracking</h3>
-<p>When JS modifies the page (SPA navigation, dynamic content loading), SOM tracks changes:</p>
+<h3 id="8-som-mutation-tracking">5.8 SOM Mutation Tracking</h3><p>When JS modifies the page (SPA navigation, dynamic content loading), SOM tracks changes:</p>
 <pre><code class="language-json">{
   &quot;type&quot;: &quot;som_mutation&quot;,
   &quot;timestamp&quot;: &quot;2026-03-15T23:00:01Z&quot;,
@@ -1147,10 +1119,8 @@ SOM Output (JSON / MessagePack)
 </code></pre>
 <p>This uses JSON Patch (RFC 6902) semantics, so agents can track page evolution without re-reading the entire SOM.</p>
 <hr>
-<h2>6. Agent Web Protocol (AWP)</h2>
-<p><em>Full specification in separate document: AWP-SPEC.md</em></p>
-<h3>6.1 Summary</h3>
-<p>AWP replaces CDP for agent-browser communication. Key differences:</p>
+<h2 id="agent-web-protocol-awp">6. Agent Web Protocol (AWP)</h2><p><em>Full specification in separate document: AWP-SPEC.md</em></p>
+<h3 id="1-summary">6.1 Summary</h3><p>AWP replaces CDP for agent-browser communication. Key differences:</p>
 <table>
 <thead>
 <tr>
@@ -1200,8 +1170,7 @@ SOM Output (JSON / MessagePack)
 <td>Wasm skills for any site-specific logic</td>
 </tr>
 </tbody></table>
-<h3>6.2 Intent Hierarchy</h3>
-<p>AWP commands form a hierarchy from low-level to high-level:</p>
+<h3 id="2-intent-hierarchy">6.2 Intent Hierarchy</h3><p>AWP commands form a hierarchy from low-level to high-level:</p>
 <p><strong>Level 0 - Primitive Actions</strong> (always available)</p>
 <pre><code>navigate, click, type, select, scroll, wait, screenshot, evaluate_js
 </code></pre>
@@ -1219,9 +1188,7 @@ linkedin_send_message, github_create_issue
 </code></pre>
 <p>Agents can operate at any level. Most will use Level 1-2 for general browsing and Level 3 for domain-specific tasks.</p>
 <hr>
-<h2>7. Stealth Networking Layer</h2>
-<h3>7.1 Architecture</h3>
-<p>The networking layer is the lowest level of the engine, handling all HTTP communication with full fingerprint control.</p>
+<h2 id="stealth-networking-layer">7. Stealth Networking Layer</h2><h3 id="1-architecture">7.1 Architecture</h3><p>The networking layer is the lowest level of the engine, handling all HTTP communication with full fingerprint control.</p>
 <pre><code>┌─────────────────────────────────────────────┐
 │             Stealth Network Layer             │
 │                                               │
@@ -1245,8 +1212,7 @@ linkedin_send_message, github_create_issue
 │  └──────────┘  └──────────┘  └──────────┘  │
 └─────────────────────────────────────────────┘
 </code></pre>
-<h3>7.2 TLS Fingerprint Control</h3>
-<p>Bot detection services fingerprint TLS connections via:</p>
+<h3 id="2-tls-fingerprint-control">7.2 TLS Fingerprint Control</h3><p>Bot detection services fingerprint TLS connections via:</p>
 <ul>
 <li><strong>JA3</strong> - hash of TLS Client Hello parameters (cipher suites, extensions, curves)</li>
 <li><strong>JA4</strong> - next-gen fingerprint including ALPN, signature algorithms, SNI</li>
@@ -1269,8 +1235,7 @@ linkedin_send_message, github_create_issue
 <li>Edge 120-130</li>
 <li>Custom (full manual control)</li>
 </ul>
-<h3>7.3 HTTP/2 Fingerprint Control</h3>
-<p>Beyond TLS, HTTP/2 connections have their own fingerprint:</p>
+<h3 id="3-http2-fingerprint-control">7.3 HTTP/2 Fingerprint Control</h3><p>Beyond TLS, HTTP/2 connections have their own fingerprint:</p>
 <pre><code class="language-rust">let http2_config = Http2Config::new()
     .initial_window_size(6291456)         // Chrome default
     .max_concurrent_streams(1000)          // Chrome default
@@ -1279,16 +1244,14 @@ linkedin_send_message, github_create_issue
     .priority_frames(CHROME_PRIORITY)      // Frame ordering
     .pseudo_header_order(&amp;[&quot;:method&quot;, &quot;:authority&quot;, &quot;:scheme&quot;, &quot;:path&quot;]);
 </code></pre>
-<h3>7.4 Header Management</h3>
-<p>Headers must match the impersonated browser exactly:</p>
+<h3 id="4-header-management">7.4 Header Management</h3><p>Headers must match the impersonated browser exactly:</p>
 <ul>
 <li><strong>Ordering</strong> - Chrome sends headers in a specific order (<code>:method</code> before <code>:path</code>)</li>
 <li><strong>Casing</strong> - Some headers use different capitalization per browser</li>
 <li><strong>Content</strong> - <code>Accept</code>, <code>Accept-Language</code>, <code>Accept-Encoding</code> must match browser version</li>
 <li><strong>User-Agent</strong> - Automatically matches the selected TLS profile</li>
 </ul>
-<h3>7.5 Proxy Architecture</h3>
-<p>Built-in proxy support with intelligent rotation:</p>
+<h3 id="5-proxy-architecture">7.5 Proxy Architecture</h3><p>Built-in proxy support with intelligent rotation:</p>
 <pre><code class="language-rust">let proxy_pool = ProxyPool::new()
     .add_residential(&quot;provider_a&quot;, 1000)    // 1000 residential IPs
     .add_datacenter(&quot;provider_b&quot;, 500)      // 500 datacenter IPs
@@ -1306,9 +1269,7 @@ linkedin_send_message, github_create_issue
 <li><code>LeastLatency</code> - pick fastest available proxy</li>
 </ul>
 <hr>
-<h2>8. Sandboxed JS Runtime</h2>
-<h3>8.1 Why Execute JS at All</h3>
-<p>Modern web applications (SPAs) render content client-side. Without JS execution:</p>
+<h2 id="sandboxed-js-runtime">8. Sandboxed JS Runtime</h2><h3 id="1-why-execute-js-at-all">8.1 Why Execute JS at All</h3><p>Modern web applications (SPAs) render content client-side. Without JS execution:</p>
 <ul>
 <li>React/Vue/Angular/Svelte apps show blank pages</li>
 <li>Dynamic content (lazy loading, infinite scroll) never loads</li>
@@ -1316,8 +1277,7 @@ linkedin_send_message, github_create_issue
 <li>CSRF tokens generated by JS are unavailable</li>
 </ul>
 <p>A headless browser for agents MUST execute JavaScript. But it doesn&#39;t need to execute ALL JavaScript.</p>
-<h3>8.2 Selective Execution</h3>
-<p>Plasmate&#39;s JS runtime is selective. It executes:</p>
+<h3 id="2-selective-execution">8.2 Selective Execution</h3><p>Plasmate&#39;s JS runtime is selective. It executes:</p>
 <ul>
 <li>✅ Scripts that modify DOM (content rendering)</li>
 <li>✅ XHR/fetch calls (data loading)</li>
@@ -1335,8 +1295,7 @@ linkedin_send_message, github_create_issue
 <li>❌ WebGL/Canvas rendering</li>
 <li>❌ Web Workers for non-essential tasks</li>
 </ul>
-<h3>8.3 Memory Isolation</h3>
-<p>Each agent session gets an isolated V8 context:</p>
+<h3 id="3-memory-isolation">8.3 Memory Isolation</h3><p>Each agent session gets an isolated V8 context:</p>
 <pre><code class="language-rust">let isolate = v8::Isolate::new(v8::CreateParams::default()
     .heap_size_limit(64 * 1024 * 1024)   // 64MB max per session
     .external_memory_limit(32 * 1024 * 1024));
@@ -1351,8 +1310,7 @@ let context = v8::Context::new(&amp;mut isolate);
 <li>1 server with 32GB RAM = <strong>500 concurrent agent sessions</strong></li>
 <li>1 server with 128GB RAM = <strong>2,000 concurrent agent sessions</strong></li>
 </ul>
-<h3>8.4 Script Classification</h3>
-<p>Plasmate classifies scripts before execution:</p>
+<h3 id="4-script-classification">8.4 Script Classification</h3><p>Plasmate classifies scripts before execution:</p>
 <table>
 <thead>
 <tr>
@@ -1400,11 +1358,8 @@ let context = v8::Context::new(&amp;mut isolate);
 <li><strong>Wasm skills</strong> - site-specific script classification</li>
 </ol>
 <hr>
-<h2>9. Wasm Skill System</h2>
-<h3>9.1 Concept</h3>
-<p>Skills are WebAssembly modules that teach Plasmate how to interact with specific websites or web applications. They&#39;re the equivalent of browser extensions but for agents.</p>
-<h3>9.2 Skill Interface</h3>
-<p>Every skill implements a standard interface:</p>
+<h2 id="wasm-skill-system">9. Wasm Skill System</h2><h3 id="1-concept">9.1 Concept</h3><p>Skills are WebAssembly modules that teach Plasmate how to interact with specific websites or web applications. They&#39;re the equivalent of browser extensions but for agents.</p>
+<h3 id="2-skill-interface">9.2 Skill Interface</h3><p>Every skill implements a standard interface:</p>
 <pre><code class="language-rust">// Skill trait (Rust SDK)
 pub trait Skill {
     /// Domains this skill handles
@@ -1423,8 +1378,7 @@ pub trait Skill {
     fn classify_script(&amp;self, url: &amp;str, content: &amp;str) -&gt; ScriptClass;
 }
 </code></pre>
-<h3>9.3 Example: Stripe Checkout Skill</h3>
-<pre><code class="language-rust">use plasmate_skill_sdk::prelude::*;
+<h3 id="3-example-stripe-checkout-skill">9.3 Example: Stripe Checkout Skill</h3><pre><code class="language-rust">use plasmate_skill_sdk::prelude::*;
 
 struct StripeCheckoutSkill;
 
@@ -1490,8 +1444,7 @@ impl Skill for StripeCheckoutSkill {
     }
 }
 </code></pre>
-<h3>9.4 Skill Distribution</h3>
-<p>Skills are distributed as <code>.wasm</code> files via a package registry:</p>
+<h3 id="4-skill-distribution">9.4 Skill Distribution</h3><p>Skills are distributed as <code>.wasm</code> files via a package registry:</p>
 <pre><code class="language-bash"># Install a skill
 plasmate skill install stripe-checkout
 plasmate skill install salesforce-navigator
@@ -1506,8 +1459,7 @@ plasmate skill publish ./my-skill.wasm --name &quot;shopify-admin&quot; --versio
 # Skills auto-activate when visiting matching domains
 </code></pre>
 <p><strong>Registry:</strong> <code>skills.plasmate.app</code> (npm-like registry for Wasm skills)</p>
-<h3>9.5 Skill SDK</h3>
-<p>SDKs in multiple languages (all compile to Wasm):</p>
+<h3 id="5-skill-sdk">9.5 Skill SDK</h3><p>SDKs in multiple languages (all compile to Wasm):</p>
 <table>
 <thead>
 <tr>
@@ -1542,8 +1494,7 @@ plasmate skill publish ./my-skill.wasm --name &quot;shopify-admin&quot; --versio
 <td>Via Emscripten</td>
 </tr>
 </tbody></table>
-<h3>9.6 Community Marketplace</h3>
-<p>The skill marketplace is a critical network effect:</p>
+<h3 id="6-community-marketplace">9.6 Community Marketplace</h3><p>The skill marketplace is a critical network effect:</p>
 <ol>
 <li><strong>Free skills</strong> - community-contributed, open source, anyone can publish</li>
 <li><strong>Verified skills</strong> - reviewed by Plasmate team, guaranteed quality</li>
@@ -1552,9 +1503,7 @@ plasmate skill publish ./my-skill.wasm --name &quot;shopify-admin&quot; --versio
 </ol>
 <p>As the skill library grows, Plasmate becomes more capable without core engine changes. This is the Chrome Web Store model applied to agent automation.</p>
 <hr>
-<h2>10. Session &amp; State Management</h2>
-<h3>10.1 Persistent Sessions</h3>
-<p>Unlike CDP (where sessions die when the WebSocket disconnects), Plasmate sessions are durable:</p>
+<h2 id="session-state-management">10. Session & State Management</h2><h3 id="1-persistent-sessions">10.1 Persistent Sessions</h3><p>Unlike CDP (where sessions die when the WebSocket disconnects), Plasmate sessions are durable:</p>
 <pre><code class="language-rust">let session = plasmate.session_create(SessionConfig {
     id: &quot;user-checkout-flow&quot;,
     ttl: Duration::from_hours(24),
@@ -1573,8 +1522,7 @@ plasmate skill publish ./my-skill.wasm --name &quot;shopify-admin&quot; --versio
 <li>Agent memory context</li>
 <li>Proxy assignment (sticky)</li>
 </ul>
-<h3>10.2 Session Pools</h3>
-<p>For fleet operations, sessions can be pooled:</p>
+<h3 id="2-session-pools">10.2 Session Pools</h3><p>For fleet operations, sessions can be pooled:</p>
 <pre><code class="language-rust">let pool = plasmate.session_pool(PoolConfig {
     name: &quot;authenticated-gmail&quot;,
     min_sessions: 10,
@@ -1592,8 +1540,7 @@ let session = pool.acquire().await?;
 // ... use session ...
 pool.release(session).await;
 </code></pre>
-<h3>10.3 State Encryption</h3>
-<p>Sensitive session data (credentials, tokens, cookies) is encrypted at rest:</p>
+<h3 id="3-state-encryption">10.3 State Encryption</h3><p>Sensitive session data (credentials, tokens, cookies) is encrypted at rest:</p>
 <ul>
 <li>AES-256-GCM encryption</li>
 <li>Per-session encryption keys</li>
@@ -1601,9 +1548,7 @@ pool.release(session).await;
 <li>Optional HSM/TPM integration for enterprise</li>
 </ul>
 <hr>
-<h2>11. Fleet Orchestration (Commercial)</h2>
-<h3>11.1 The Control Plane</h3>
-<p>The commercial product. While the engine is free, running 10,000 agents requires orchestration:</p>
+<h2 id="fleet-orchestration-commercial">11. Fleet Orchestration (Commercial)</h2><h3 id="1-the-control-plane">11.1 The Control Plane</h3><p>The commercial product. While the engine is free, running 10,000 agents requires orchestration:</p>
 <pre><code>┌─────────────────────────────────────────────────────┐
 │              Plasmate Cloud Control Plane                 │
 │                                                       │
@@ -1626,8 +1571,7 @@ pool.release(session).await;
 │  └──────────┘  └──────────┘  └──────────────────┘  │
 └─────────────────────────────────────────────────────┘
 </code></pre>
-<h3>11.2 Fleet API</h3>
-<pre><code class="language-python">from plasmate_cloud import Fleet
+<h3 id="2-fleet-api">11.2 Fleet API</h3><pre><code class="language-python">from plasmate_cloud import Fleet
 
 fleet = Fleet(api_key=&quot;plasmate_live_xxx&quot;)
 
@@ -1646,8 +1590,7 @@ results = await fleet.run_batch(
 async for event in fleet.stream(&quot;batch-123&quot;):
     print(f&quot;Agent {event.agent_id}: {event.status} - {event.url}&quot;)
 </code></pre>
-<h3>11.3 Pricing (Fleet)</h3>
-<table>
+<h3 id="3-pricing-fleet">11.3 Pricing (Fleet)</h3><table>
 <thead>
 <tr>
 <th>Tier</th>
