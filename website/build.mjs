@@ -51,8 +51,10 @@ function template(title, body, currentSlug) {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>${title} - Plasmate Docs</title>
-  <meta name="description" content="Plasmate documentation: ${title}" />
+  <title>${title} - Plasmate Docs | The Better Browser for AI Agents</title>
+  <meta name="description" content="${title} - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
+  <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, ${title.toLowerCase()}" />
+  <link rel="canonical" href="https://docs.plasmate.app/${currentSlug === 'overview' ? '' : currentSlug}" />
 
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
