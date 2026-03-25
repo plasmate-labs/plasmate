@@ -32,6 +32,8 @@ const NAV = [
   { slug: 'coverage-js', label: 'Coverage (JS)' },
   { slug: 'benchmark-cost', label: 'Cost Analysis' },
   { slug: 'roadmap', label: 'Roadmap' },
+  { section: 'Tutorials' },
+  { slug: 'tutorial-research-agent', label: 'Build a Research Agent' },
   { section: 'Proposals' },
   { slug: 'robots-txt-proposal', label: 'Robots.txt for Agents' },
   { section: 'Updates' },
