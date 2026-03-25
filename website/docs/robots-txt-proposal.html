@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SOM Cost Analysis - Plasmate Docs | The Better Browser for AI Agents</title>
-  <meta name="description" content="SOM Cost Analysis - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
-  <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, som cost analysis" />
-  <link rel="canonical" href="https://docs.plasmate.app/benchmark-cost" />
+  <title>Robots.txt for the Agentic Web - Plasmate Docs | The Better Browser for AI Agents</title>
+  <meta name="description" content="Robots.txt for the Agentic Web - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
+  <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, robots.txt for the agentic web" />
+  <link rel="canonical" href="https://docs.plasmate.app/robots-txt-proposal" />
 
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
@@ -416,10 +416,10 @@
           <div class="section-label">Coverage & Benchmarks</div>
           <a href="coverage">Coverage (HTML)</a>
           <a href="coverage-js">Coverage (JS)</a>
-          <a href="benchmark-cost" class="active">Cost Analysis</a>
+          <a href="benchmark-cost">Cost Analysis</a>
           <a href="roadmap">Roadmap</a>
           <div class="section-label">Proposals</div>
-          <a href="robots-txt-proposal">Robots.txt for Agents</a>
+          <a href="robots-txt-proposal" class="active">Robots.txt for Agents</a>
           <div class="section-label">Updates</div>
           <a href="changelog">Changelog</a>
       <div class="sidebar-foot">
@@ -429,235 +429,66 @@
       </div>
     </nav>
     <main class="content">
-            <h1>SOM Cost Analysis</h1>
+      <h1 id="robotstxt-for-the-agentic-web">Robots.txt for the Agentic Web</h1><p>The robots.txt standard was designed in 1994 for a simple question: should this crawler index my page?</p>
+<p>Thirty-two years later, we&#39;re using the same binary mechanism to manage a fundamentally different relationship. AI agents don&#39;t just index pages - they read, reason, extract, and act on web content. The conversation is stuck on a single axis: <strong>block or allow</strong>.</p>
+<h2 id="the-current-state">The Current State</h2><pre><code>User-agent: GPTBot
+Disallow: /
 
-      <p>How much does SOM compression save on LLM input costs? We tested <strong>49 real-world websites</strong> and measured the token reduction from raw HTML to Plasmate SOM output.</p>
+User-agent: ClaudeBot
+Disallow: /
+</code></pre>
+<p>Website owners face an all-or-nothing choice. Allow everything and lose control, or block everything and become invisible to the fastest-growing discovery channel on the web.</p>
+<p>There&#39;s no way to say: &quot;Yes, you can read my content, and here&#39;s a better way to do it.&quot;</p>
+<h2 id="the-proposal-som-directives">The Proposal: SOM Directives</h2><p>We propose extending robots.txt with directives that let websites advertise semantic representations of their content.</p>
+<pre><code>User-agent: *
+Allow: /
 
-      <div class="hero-stats">
-        <div class="stat-card">
-          <div class="stat-value">16.6x</div>
-          <div class="stat-label">Overall Compression</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">10.5x</div>
-          <div class="stat-label">Median Compression</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">94%</div>
-          <div class="stat-label">Token Cost Savings</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">49</div>
-          <div class="stat-label">URLs Tested</div>
-        </div>
-      </div>
-
-      <p>Range: <strong>0.7x</strong> (example.com, tiny page) to <strong>116.9x</strong> (cloud.google.com)</p>
-
-      <hr>
-
-      <h2>Cost per 1,000 Page Loads (49 URLs)</h2>
-
-      <p>What it costs to send the content of all 49 test URLs to an LLM, repeated 1,000 times:</p>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Model</th>
-            <th>HTML Cost</th>
-            <th>SOM Cost</th>
-            <th>Savings</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>GPT-4 ($10/M)</td>
-            <td>$50,397</td>
-            <td>$3,042</td>
-            <td class="savings">$47,355 (94%)</td>
-          </tr>
-          <tr>
-            <td>GPT-4o ($2.50/M)</td>
-            <td>$12,599</td>
-            <td>$761</td>
-            <td class="savings">$11,839 (94%)</td>
-          </tr>
-          <tr>
-            <td>Claude Sonnet ($3/M)</td>
-            <td>$15,119</td>
-            <td>$913</td>
-            <td class="savings">$14,207 (94%)</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <h2>At Scale: 1M Pages/Month</h2>
-
-      <p>Monthly cost for processing one million pages at the average page size from this benchmark:</p>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Model</th>
-            <th>HTML/month</th>
-            <th>SOM/month</th>
-            <th>Monthly Savings</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>GPT-4</td>
-            <td>$1,028</td>
-            <td>$62</td>
-            <td class="savings">$966</td>
-          </tr>
-          <tr>
-            <td>GPT-4o</td>
-            <td>$257</td>
-            <td>$16</td>
-            <td class="savings">$241</td>
-          </tr>
-          <tr>
-            <td>Sonnet</td>
-            <td>$308</td>
-            <td>$19</td>
-            <td class="savings">$290</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <hr>
-
-      <h2>Top 15 Compression Results</h2>
-
-      <div style="margin: 18px 0 28px;">
-        <div class="compression-row">
-          <span class="site-name">cloud.google.com</span>
-          <div class="bar-wrap"><div class="bar" style="width: 100%;"></div></div>
-          <span class="ratio">116.9x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">linear.app</span>
-          <div class="bar-wrap"><div class="bar" style="width: 90.1%;"></div></div>
-          <span class="ratio">105.3x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">reddit.com</span>
-          <div class="bar-wrap"><div class="bar" style="width: 88.8%;"></div></div>
-          <span class="ratio">103.8x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">figma.com</span>
-          <div class="bar-wrap"><div class="bar" style="width: 54.4%;"></div></div>
-          <span class="ratio">63.6x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">tailwindcss.com</span>
-          <div class="bar-wrap"><div class="bar" style="width: 45.9%;"></div></div>
-          <span class="ratio">53.7x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">nodejs.org</span>
-          <div class="bar-wrap"><div class="bar" style="width: 36.5%;"></div></div>
-          <span class="ratio">42.7x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">vercel.com</span>
-          <div class="bar-wrap"><div class="bar" style="width: 30.5%;"></div></div>
-          <span class="ratio">35.7x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">wired.com</span>
-          <div class="bar-wrap"><div class="bar" style="width: 29.9%;"></div></div>
-          <span class="ratio">35.0x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">aws.amazon.com</span>
-          <div class="bar-wrap"><div class="bar" style="width: 26.9%;"></div></div>
-          <span class="ratio">31.4x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">mongodb.com</span>
-          <div class="bar-wrap"><div class="bar" style="width: 25.0%;"></div></div>
-          <span class="ratio">29.2x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">typescriptlang.org</span>
-          <div class="bar-wrap"><div class="bar" style="width: 23.7%;"></div></div>
-          <span class="ratio">27.7x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">theguardian.com</span>
-          <div class="bar-wrap"><div class="bar" style="width: 17.4%;"></div></div>
-          <span class="ratio">20.3x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">azure.microsoft.com</span>
-          <div class="bar-wrap"><div class="bar" style="width: 13.4%;"></div></div>
-          <span class="ratio">15.7x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">nytimes.com</span>
-          <div class="bar-wrap"><div class="bar" style="width: 13.1%;"></div></div>
-          <span class="ratio">15.3x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">stripe.com/docs</span>
-          <div class="bar-wrap"><div class="bar" style="width: 12.5%;"></div></div>
-          <span class="ratio">14.6x</span>
-        </div>
-      </div>
-
-      <h3>Token Counts</h3>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Site</th>
-            <th>HTML Tokens</th>
-            <th>SOM Tokens</th>
-            <th>Ratio</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>cloud.google.com</td><td>464,616</td><td>3,973</td><td><strong>116.9x</strong></td></tr>
-          <tr><td>linear.app</td><td>562,922</td><td>5,347</td><td><strong>105.3x</strong></td></tr>
-          <tr><td>reddit.com</td><td>121,027</td><td>1,166</td><td><strong>103.8x</strong></td></tr>
-          <tr><td>figma.com</td><td>369,124</td><td>5,806</td><td><strong>63.6x</strong></td></tr>
-          <tr><td>tailwindcss.com</td><td>233,071</td><td>4,338</td><td><strong>53.7x</strong></td></tr>
-          <tr><td>nodejs.org</td><td>115,771</td><td>2,709</td><td><strong>42.7x</strong></td></tr>
-          <tr><td>vercel.com</td><td>198,761</td><td>5,565</td><td><strong>35.7x</strong></td></tr>
-          <tr><td>wired.com</td><td>350,411</td><td>10,006</td><td><strong>35.0x</strong></td></tr>
-          <tr><td>aws.amazon.com</td><td>81,318</td><td>2,588</td><td><strong>31.4x</strong></td></tr>
-          <tr><td>mongodb.com</td><td>232,141</td><td>7,944</td><td><strong>29.2x</strong></td></tr>
-          <tr><td>typescriptlang.org</td><td>64,899</td><td>2,345</td><td><strong>27.7x</strong></td></tr>
-          <tr><td>theguardian.com</td><td>319,879</td><td>15,753</td><td><strong>20.3x</strong></td></tr>
-          <tr><td>azure.microsoft.com</td><td>134,654</td><td>8,555</td><td><strong>15.7x</strong></td></tr>
-          <tr><td>nytimes.com</td><td>48,042</td><td>3,133</td><td><strong>15.3x</strong></td></tr>
-          <tr><td>stripe.com/docs</td><td>48,378</td><td>3,305</td><td><strong>14.6x</strong></td></tr>
-        </tbody>
-      </table>
-
-      <hr>
-
-      <h2>Methodology</h2>
-
-      <ul>
-        <li>Each URL fetched once via <code>plasmate fetch &lt;url&gt;</code></li>
-        <li>HTML token count: raw HTML bytes / 4 (standard byte-to-token estimate)</li>
-        <li>SOM token count: SOM JSON output bytes / 4</li>
-        <li>Compression ratio: HTML tokens / SOM tokens</li>
-        <li>Cost calculated at published model input pricing</li>
-        <li>No caching, no warm-up, single fetch per URL</li>
-        <li>2 URLs failed (w3.org, dev.to) and were excluded</li>
-      </ul>
-
-      <h2>Reproduce</h2>
-
-      <pre><code>cargo install plasmate
-git clone https://github.com/plasmate-labs/plasmate
-cd plasmate
-./benchmarks/run-cost-analysis.sh</code></pre>
+# Semantic Object Model available
+SOM-Endpoint: https://cache.example.com/v1/som
+SOM-Format: SOM/1.0
+SOM-Scope: main-content
+SOM-Freshness: 3600
+</code></pre>
+<p>When an AI agent sees these directives, instead of fetching the full HTML page (50,000+ tokens), it can request the SOM endpoint and get a clean, structured representation (~3,000 tokens).</p>
+<h2 id="new-directives">New Directives</h2><table>
+<thead>
+<tr>
+<th>Directive</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>SOM-Endpoint</code></td>
+<td>Base URL of the SOM service. Agents append <code>?url=</code> with the target page.</td>
+</tr>
+<tr>
+<td><code>SOM-Format</code></td>
+<td>Format of the representation: <code>SOM/1.0</code>, <code>markdown</code>, <code>accessibility-tree</code></td>
+</tr>
+<tr>
+<td><code>SOM-Scope</code></td>
+<td>Content coverage: <code>full-page</code>, <code>main-content</code>, <code>article-body</code></td>
+</tr>
+<tr>
+<td><code>SOM-Freshness</code></td>
+<td>Max age in seconds of a cached SOM (default: 86400)</td>
+</tr>
+<tr>
+<td><code>SOM-Token-Budget</code></td>
+<td>Suggested max tokens, helping agents estimate costs before fetching</td>
+</tr>
+</tbody></table>
+<h2 id="why-this-matters">Why This Matters</h2><p><strong>For website owners:</strong> Control without blocking. Direct agents to a representation you control - exclude ads, paywalls, and noise. Include what you want highlighted.</p>
+<p><strong>For agent developers:</strong> 10-16x fewer tokens, better extraction quality, no headless browser needed. A single HTTP request instead of Chrome + JS execution + DOM parsing.</p>
+<p><strong>For the web ecosystem:</strong> A cooperative alternative to the current adversarial dynamic where publishers block and agents circumvent.</p>
+<h2 id="relationship-to-existing-standards">Relationship to Existing Standards</h2><p>SOM directives are purely additive to RFC 9309 (Robots Exclusion Protocol). Existing <code>User-agent</code>, <code>Allow</code>, <code>Disallow</code>, and <code>Crawl-delay</code> rules continue to work unchanged. Agents that don&#39;t understand SOM directives simply ignore them.</p>
+<p>This complements our <a href="https://github.com/schemaorg/schemaorg/issues/4786">Schema.org proposal</a> for <code>WebPageSemanticRepresentation</code> (per-page signaling) and the <a href="/som-spec">SOM specification</a> being incubated at the W3C.</p>
+<h2 id="get-involved">Get Involved</h2><p>This proposal is being developed within the <a href="https://www.w3.org/community/web-content-browser-ai/">W3C Web Content Browser for AI Agents Community Group</a>.</p>
+<ul>
+<li><a href="https://github.com/plasmate-labs/plasmate/blob/master/docs/ROBOTS-TXT-PROPOSAL.md">Full proposal</a></li>
+<li><a href="https://www.w3.org/community/web-content-browser-ai/">Join the W3C group</a></li>
+<li><a href="/som-spec">SOM Specification</a></li>
+</ul>
 
     </main>
   </div>
