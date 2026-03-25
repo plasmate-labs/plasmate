@@ -83,6 +83,72 @@ pub fn should_strip(node: &Handle) -> bool {
                     return true;
                 }
             }
+            // Strip cookie/consent/GDPR banners and overlays.
+            // These are noise for AI agents and pollute extraction.
+            let class_val = attrs
+                .iter()
+                .find(|a| a.name.local.as_ref() == "class")
+                .map(|a| a.value.to_lowercase())
+                .unwrap_or_default();
+            let id_val = attrs
+                .iter()
+                .find(|a| a.name.local.as_ref() == "id")
+                .map(|a| a.value.to_lowercase())
+                .unwrap_or_default();
+            let aria_label_val = attrs
+                .iter()
+                .find(|a| a.name.local.as_ref() == "aria-label")
+                .map(|a| a.value.to_lowercase())
+                .unwrap_or_default();
+            let role_val = attrs
+                .iter()
+                .find(|a| a.name.local.as_ref() == "role")
+                .map(|a| a.value.to_lowercase())
+                .unwrap_or_default();
+
+            // Check class and id for cookie/consent patterns
+            let consent_patterns = [
+                "cookie", "consent", "gdpr", "onetrust", "cookiebanner",
+                "cookie-banner", "cookie_banner", "cc-window", "cc-banner",
+                "privacy-banner", "privacy_banner",
+            ];
+            for pattern in &consent_patterns {
+                if class_val.contains(pattern) || id_val.contains(pattern) {
+                    return true;
+                }
+            }
+
+            // Check aria-label for consent patterns
+            if aria_label_val.contains("cookie") || aria_label_val.contains("consent") {
+                return true;
+            }
+
+            // Strip dialog/alertdialog roles (often cookie modals)
+            if role_val == "dialog" || role_val == "alertdialog" {
+                // Only strip if it looks like a consent dialog (has consent-related text in class/id)
+                // or is a generic dialog element. Be conservative: only strip if tag is div/aside/section.
+                if matches!(tag, "div" | "aside" | "section") {
+                    if class_val.contains("modal")
+                        || class_val.contains("overlay")
+                        || class_val.contains("popup")
+                        || id_val.contains("modal")
+                        || id_val.contains("overlay")
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            // Known third-party consent manager IDs
+            if id_val == "cybotcookiebotdialog"
+                || id_val == "onetrust-banner-sdk"
+                || id_val == "cookie-law-info-bar"
+                || id_val == "cookieconsent"
+                || id_val == "sp_message_container"
+            {
+                return true;
+            }
+
             // Decorative images
             if tag == "img" {
                 let is_decorative = attrs.iter().any(|a| {
