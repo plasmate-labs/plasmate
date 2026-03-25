@@ -196,6 +196,57 @@ async fn handle_websocket_connection(
 
                 let can_create = extra_targets.len() < 49;
 
+                // Intercept Target.attachToTarget before mutable routing
+                // (needs immutable access to all targets to find by targetId)
+                if req.method == "Target.attachToTarget" {
+                    let attach_target_id = req.params.get("targetId").and_then(|v| v.as_str()).unwrap_or("");
+                    // Find the session_id for the target that matches this targetId
+                    let found = if default_target.target_id == attach_target_id {
+                        Some((default_target.session_id.clone(), default_target.target_id.clone(), default_target.current_url.as_deref().unwrap_or("about:blank").to_string()))
+                    } else {
+                        extra_targets.values().find(|t| t.target_id == attach_target_id).map(|t| {
+                            (t.session_id.clone(), t.target_id.clone(), t.current_url.as_deref().unwrap_or("about:blank").to_string())
+                        })
+                    };
+                    if let Some((sid, tid, url)) = found {
+                        let events = vec![
+                            super::types::CdpEvent::new(
+                                "Target.attachedToTarget",
+                                serde_json::json!({
+                                    "sessionId": sid,
+                                    "targetInfo": {
+                                        "targetId": tid,
+                                        "type": "page",
+                                        "title": "",
+                                        "url": url,
+                                        "attached": true,
+                                        "browserContextId": "default",
+                                    },
+                                    "waitingForDebugger": false,
+                                }),
+                            ),
+                        ];
+                        let response = super::types::CdpResponse::success(
+                            req.id,
+                            serde_json::json!({"sessionId": sid}),
+                        );
+                        let response_json = serde_json::to_string(&response).unwrap_or_default();
+                        for event in events {
+                            let event_json = serde_json::to_string(&event).unwrap_or_default();
+                            if let Err(e) = sink.send(tokio_tungstenite::tungstenite::Message::Text(event_json)).await {
+                                error!(%peer, "Failed to send event: {}", e);
+                                return;
+                            }
+                        }
+                        if let Err(e) = sink.send(tokio_tungstenite::tungstenite::Message::Text(response_json)).await {
+                            error!(%peer, "Failed to send response: {}", e);
+                            return;
+                        }
+                        continue;
+                    }
+                    // If not found, fall through to normal handler
+                }
+
                 // Route by sessionId to the correct target
                 let target = if let Some(ref sid) = req.session_id {
                     if default_target.session_ids.contains(sid) {
@@ -209,7 +260,6 @@ async fn handle_websocket_connection(
                     &mut default_target
                 };
 
-                // Intercept Target.createTarget to create independent targets
                 let (response, events) = if req.method == "Target.createTarget" && can_create {
                     match CdpTarget::new_with_plugins(plugins.clone()) {
                         Ok(new_target) => {
