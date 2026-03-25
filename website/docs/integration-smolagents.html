@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Node.js SDK - Plasmate Docs | The Better Browser for AI Agents</title>
-  <meta name="description" content="Node.js SDK - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
-  <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, node.js sdk" />
-  <link rel="canonical" href="https://docs.plasmate.app/sdk-node" />
+  <title>Smolagents (HuggingFace) Integration - Plasmate Docs | The Better Browser for AI Agents</title>
+  <meta name="description" content="Smolagents (HuggingFace) Integration - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
+  <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, smolagents (huggingface) integration" />
+  <link rel="canonical" href="https://docs.plasmate.app/integration-smolagents" />
 
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
@@ -411,7 +411,7 @@
           <a href="integration-mcp">MCP (Claude/Cursor)</a>
           <div class="section-label">SDKs</div>
           <a href="sdk-python">Python</a>
-          <a href="sdk-node" class="active">Node.js</a>
+          <a href="sdk-node">Node.js</a>
           <a href="sdk-go">Go</a>
           <div class="section-label">AI Frameworks</div>
           <a href="integration-langchain">LangChain</a>
@@ -419,7 +419,7 @@
           <a href="integration-browser-use">Browser Use</a>
           <a href="integration-crewai">CrewAI</a>
           <a href="integration-autogen">AutoGen</a>
-          <a href="integration-smolagents">Smolagents</a>
+          <a href="integration-smolagents" class="active">Smolagents</a>
           <div class="section-label">Web Scraping</div>
           <a href="integration-scrapy">Scrapy</a>
           <div class="section-label">Tools</div>
@@ -442,131 +442,50 @@
       </div>
     </nav>
     <main class="content">
-      <h1 id="nodejs-sdk">Node.js SDK</h1><p>The official Node.js SDK for Plasmate, with full TypeScript types and SOM query helpers.</p>
-<h2 id="installation">Installation</h2><pre><code class="language-sh">npm install plasmate
+      <h1 id="smolagents-huggingface-integration">Smolagents (HuggingFace) Integration</h1><p>Use Plasmate as a web browsing tool in HuggingFace&#39;s smolagents framework — structured SOM output for <strong>~10x fewer tokens</strong> than raw HTML.</p>
+<p>Source: <a href="https://github.com/nicepkg/plasmate/tree/master/integrations/smolagents"><code>integrations/smolagents/</code></a></p>
+<h2 id="installation">Installation</h2><pre><code class="language-bash">pip install plasmate smolagents
 </code></pre>
-<p>Requires Node.js 18+ and the <code>plasmate</code> binary on your PATH.</p>
-<h2 id="quick-start">Quick Start</h2><pre><code class="language-typescript">import { Plasmate } from &#39;plasmate&#39;;
+<h2 id="quick-start">Quick Start</h2><pre><code class="language-python">from smolagents import CodeAgent, HfApiModel
+from plasmate.integrations.smolagents import PlasmateWebTool
 
-const client = new Plasmate();
+# Create a Plasmate browsing tool
+web_tool = PlasmateWebTool()
 
-// Fetch a page and get SOM
-const som = await client.som(&#39;https://example.com&#39;);
-console.log(som.title);       // &quot;Example Domain&quot;
-console.log(som.regions);     // semantic regions
-console.log(som.meta);        // compression stats
+# Create an agent with web access
+agent = CodeAgent(
+    tools=[web_tool],
+    model=HfApiModel(&quot;Qwen/Qwen2.5-Coder-32B-Instruct&quot;),
+)
 
-client.close();
+result = agent.run(
+    &quot;Go to https://news.ycombinator.com and list the top 3 stories&quot;
+)
+print(result)
 </code></pre>
-<h2 id="typescript-types">TypeScript Types</h2><h3 id="som">`Som`</h3><p>The top-level SOM document.</p>
-<pre><code class="language-typescript">interface Som {
-  som_version: string;
-  url: string;
-  title: string;
-  lang: string;
-  regions: SomRegion[];
-  meta: SomMeta;
-  structured_data?: StructuredData;
-}
-</code></pre>
-<h3 id="somregion">`SomRegion`</h3><p>A semantic region of the page (navigation, main content, sidebar, etc.).</p>
-<pre><code class="language-typescript">interface SomRegion {
-  id: string;
-  role: RegionRole;   // &#39;navigation&#39; | &#39;main&#39; | &#39;aside&#39; | &#39;header&#39; | &#39;footer&#39; | &#39;form&#39; | &#39;dialog&#39; | &#39;content&#39;
-  label?: string;
-  action?: string;
-  method?: string;
-  elements: SomElement[];
-}
-</code></pre>
-<h3 id="somelement">`SomElement`</h3><p>An individual element within a region.</p>
-<pre><code class="language-typescript">interface SomElement {
-  id: string;
-  role: ElementRole;  // &#39;link&#39; | &#39;button&#39; | &#39;text_input&#39; | &#39;textarea&#39; | &#39;select&#39; | &#39;checkbox&#39; | &#39;radio&#39; | &#39;heading&#39; | &#39;image&#39; | &#39;list&#39; | &#39;table&#39; | &#39;paragraph&#39; | &#39;section&#39; | &#39;separator&#39;
-  text?: string;
-  label?: string;
-  actions?: ElementAction[];
-  attrs?: SomElementAttrs;
-  children?: SomElement[];
-  hints?: SemanticHint[];
-}
-</code></pre>
-<h3 id="sommeta">`SomMeta`</h3><p>Compression and element statistics.</p>
-<pre><code class="language-typescript">interface SomMeta {
-  html_bytes: number;
-  som_bytes: number;
-  element_count: number;
-  interactive_count: number;
-}
-</code></pre>
-<h2 id="query-helpers">Query Helpers</h2><p>All query helpers accept a <code>Som</code> object and return matching elements or regions.</p>
-<h3 id="findbyrolesom-role">`findByRole(som, role)`</h3><p>Find all regions matching a given role.</p>
-<pre><code class="language-typescript">import { findByRole } from &#39;plasmate&#39;;
+<h2 id="the-tool">The Tool</h2><h3 id="plasmatewebtool">`PlasmateWebTool`</h3><p>A smolagents <code>Tool</code> that fetches a URL and returns structured SOM content.</p>
+<pre><code class="language-python">from plasmate.integrations.smolagents import PlasmateWebTool
 
-const navRegions = findByRole(som, &#39;navigation&#39;);
+tool = PlasmateWebTool(
+    binary=&quot;plasmate&quot;,   # Path to binary
+    timeout=30,          # Timeout in seconds
+    budget=None,         # Optional token budget
+)
 </code></pre>
-<h3 id="findbyidsom-id">`findById(som, id)`</h3><p>Find a single element by its stable ID.</p>
-<pre><code class="language-typescript">import { findById } from &#39;plasmate&#39;;
-
-const el = findById(som, &#39;login-btn&#39;);
-if (el) console.log(el.text);
-</code></pre>
-<h3 id="findbytagsom-tag">`findByTag(som, tag)`</h3><p>Find elements matching a tag/role string.</p>
-<pre><code class="language-typescript">import { findByTag } from &#39;plasmate&#39;;
-
-const links = findByTag(som, &#39;link&#39;);
-</code></pre>
-<h3 id="findinteractivesom">`findInteractive(som)`</h3><p>Return all interactive elements (links, buttons, inputs, selects, textareas, checkboxes, radios).</p>
-<pre><code class="language-typescript">import { findInteractive } from &#39;plasmate&#39;;
-
-const interactive = findInteractive(som);
-console.log(`${interactive.length} interactive elements`);
-</code></pre>
-<h3 id="findbytextsom-text">`findByText(som, text)`</h3><p>Find elements whose text content contains the given string (case-insensitive).</p>
-<pre><code class="language-typescript">import { findByText } from &#39;plasmate&#39;;
-
-const matches = findByText(som, &#39;Sign in&#39;);
-</code></pre>
-<h3 id="flatelementssom">`flatElements(som)`</h3><p>Flatten all elements across all regions into a single array.</p>
-<pre><code class="language-typescript">import { flatElements } from &#39;plasmate&#39;;
-
-const all = flatElements(som);
-</code></pre>
-<h3 id="gettokenestimatesom">`getTokenEstimate(som)`</h3><p>Estimate the LLM token count for the SOM (heuristic: ~4 bytes per token).</p>
-<pre><code class="language-typescript">import { getTokenEstimate } from &#39;plasmate&#39;;
-
-const tokens = getTokenEstimate(som);
-console.log(`~${tokens} tokens`);
-</code></pre>
-<h2 id="client-api">Client API</h2><h3 id="constructor">Constructor</h3><pre><code class="language-typescript">const client = new Plasmate({
-  binary: &#39;plasmate&#39;,   // path to plasmate binary (default: &#39;plasmate&#39;)
-  timeout: 30000,       // timeout in ms (default: 30000)
-});
-</code></pre>
-<h3 id="stateless-methods">Stateless Methods</h3><pre><code class="language-typescript">// Fetch a page and return SOM
-const som = await client.som(url, options?);
-
-// Alias for som()
-const som = await client.fetchPage(url, options?);
-
-// Extract plain text from a page
-const text = await client.extractText(url, options?);
-</code></pre>
-<h3 id="stateful-sessions">Stateful Sessions</h3><pre><code class="language-typescript">// Open a persistent page session
-const { sessionId, som } = await client.openPage(url);
-
-// Execute JavaScript in the session
-const result = await client.evaluate(sessionId, &#39;document.title&#39;);
-
-// Click an element and get updated SOM
-const updatedSom = await client.click(sessionId, &#39;login-btn&#39;);
-
-// Close the session
-await client.closePage(sessionId);
-</code></pre>
-<h3 id="cleanup">Cleanup</h3><pre><code class="language-typescript">client.close();
-</code></pre>
-<p>The client communicates with the <code>plasmate mcp</code> subprocess over JSON-RPC 2.0 on stdio. It auto-starts the process on first call.</p>
+<p><strong>Inputs:</strong> <code>url</code> (string) — the URL to fetch</p>
+<p><strong>Output:</strong> SOM text with indexed interactive elements</p>
+<h2 id="why-plasmate-for-smolagents">Why Plasmate for Smolagents?</h2><p>Smolagents is designed for lightweight, code-generating agents. Plasmate is a natural fit:</p>
+<ul>
+<li><strong>Compact output</strong> — SOM text fits well in smolagents&#39; code-generation context windows</li>
+<li><strong>No heavy dependencies</strong> — no Chrome, no Playwright, just the <code>plasmate</code> binary</li>
+<li><strong>Works with any model</strong> — HuggingFace Hub models, OpenAI, Anthropic, local models</li>
+<li><strong>Open source</strong> — both smolagents and Plasmate are Apache 2.0</li>
+</ul>
+<h2 id="links">Links</h2><ul>
+<li><a href="https://huggingface.co/docs/smolagents">Smolagents Docs</a></li>
+<li><a href="https://huggingface.co">HuggingFace Hub</a></li>
+<li><a href="sdk-python">Plasmate Python SDK</a></li>
+</ul>
 
     </main>
   </div>
