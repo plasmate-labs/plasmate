@@ -1,6 +1,6 @@
 # Smolagents (HuggingFace) Integration
 
-Use Plasmate as a web browsing tool in HuggingFace's smolagents framework — structured SOM output for **~10x fewer tokens** than raw HTML.
+Use Plasmate as a web browsing tool in HuggingFace's smolagents framework -  structured SOM output for **~10x fewer tokens** than raw HTML.
 
 Source: [`integrations/smolagents/`](https://github.com/nicepkg/plasmate/tree/master/integrations/smolagents)
 
@@ -47,7 +47,7 @@ tool = PlasmateWebTool(
 )
 ```
 
-**Inputs:** `url` (string) — the URL to fetch
+**Inputs:** `url` (string) -  the URL to fetch
 
 **Output:** SOM text with indexed interactive elements
 
@@ -55,10 +55,10 @@ tool = PlasmateWebTool(
 
 Smolagents is designed for lightweight, code-generating agents. Plasmate is a natural fit:
 
-- **Compact output** — SOM text fits well in smolagents' code-generation context windows
-- **No heavy dependencies** — no Chrome, no Playwright, just the `plasmate` binary
-- **Works with any model** — HuggingFace Hub models, OpenAI, Anthropic, local models
-- **Open source** — both smolagents and Plasmate are Apache 2.0
+- **Compact output** -  SOM text fits well in smolagents' code-generation context windows
+- **No heavy dependencies** -  no Chrome, no Playwright, just the `plasmate` binary
+- **Works with any model** -  HuggingFace Hub models, OpenAI, Anthropic, local models
+- **Open source** -  both smolagents and Plasmate are Apache 2.0
 
 ## Links
 

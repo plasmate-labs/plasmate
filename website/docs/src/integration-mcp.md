@@ -1,6 +1,6 @@
 # MCP Server
 
-Plasmate's MCP (Model Context Protocol) server lets AI coding assistants browse the web through Plasmate — structured SOM output instead of raw HTML.
+Plasmate's MCP (Model Context Protocol) server lets AI coding assistants browse the web through Plasmate -  structured SOM output instead of raw HTML.
 
 Source: [`plasmate-mcp`](https://github.com/nicepkg/plasmate/tree/master/integrations/mcp)
 
@@ -81,7 +81,7 @@ The server communicates over stdin/stdout using the MCP JSON-RPC protocol.
 
 | Tool | Description |
 |------|-------------|
-| `plasmate_fetch` | Stateless page fetch — returns SOM text |
+| `plasmate_fetch` | Stateless page fetch -  returns SOM text |
 | `plasmate_navigate` | Open URL in persistent session |
 | `plasmate_click` | Click element by SOM index |
 | `plasmate_type` | Type into input by SOM index |
@@ -110,7 +110,7 @@ Environment variables:
 |----------|---------|-------------|
 | `PLASMATE_BINARY` | `plasmate` | Path to plasmate binary |
 | `PLASMATE_TIMEOUT` | `30` | Request timeout in seconds |
-| `PLASMATE_BUDGET` | — | Optional SOM token budget |
+| `PLASMATE_BUDGET` | -  | Optional SOM token budget |
 
 ## Why MCP + Plasmate?
 

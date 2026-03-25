@@ -442,7 +442,7 @@
       </div>
     </nav>
     <main class="content">
-      <h1 id="langchain-integration">LangChain Integration</h1><p>LangChain tools and document loader for Plasmate — browse the web with <strong>~10x fewer tokens</strong> than raw HTML.</p>
+      <h1 id="langchain-integration">LangChain Integration</h1><p>LangChain tools and document loader for Plasmate -  browse the web with <strong>~10x fewer tokens</strong> than raw HTML.</p>
 <p>Plasmate&#39;s SOM output compiles web pages into compact, structured representations that preserve interactive elements and content hierarchy. This integration provides LangChain-native tools for stateless fetching, persistent browsing, and batch document loading.</p>
 <p>Source: <a href="https://github.com/nicepkg/plasmate/tree/master/integrations/langchain"><code>integrations/langchain/</code></a></p>
 <h2 id="installation">Installation</h2><pre><code class="language-bash">pip install langchain-plasmate
@@ -487,7 +487,7 @@ loader = PlasmateSOMLoader([
 docs = loader.load()
 
 for doc in docs:
-    print(f&quot;{doc.metadata[&#39;title&#39;]} — {doc.metadata[&#39;element_count&#39;]} elements&quot;)
+    print(f&quot;{doc.metadata[&#39;title&#39;]} -  {doc.metadata[&#39;element_count&#39;]} elements&quot;)
     print(doc.page_content[:200])
     print()
 </code></pre>

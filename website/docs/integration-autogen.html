@@ -442,7 +442,7 @@
       </div>
     </nav>
     <main class="content">
-      <h1 id="autogen-integration">AutoGen Integration</h1><p>Add structured web browsing to your Microsoft AutoGen multi-agent conversations — Plasmate delivers <strong>~10x fewer tokens</strong> than raw HTML.</p>
+      <h1 id="autogen-integration">AutoGen Integration</h1><p>Add structured web browsing to your Microsoft AutoGen multi-agent conversations -  Plasmate delivers <strong>~10x fewer tokens</strong> than raw HTML.</p>
 <p>Source: <a href="https://github.com/nicepkg/plasmate/tree/master/integrations/autogen"><code>integrations/autogen/</code></a></p>
 <h2 id="installation">Installation</h2><pre><code class="language-bash">pip install plasmate pyautogen
 </code></pre>
@@ -480,7 +480,7 @@ user_proxy.initiate_chat(
     message=&quot;Fetch https://news.ycombinator.com and summarize the top 5 stories.&quot;,
 )
 </code></pre>
-<h2 id="available-functions">Available Functions</h2><h3 id="plasmatefetchurl-str-str">`plasmate_fetch(url: str) -> str`</h3><p>Stateless fetch — returns SOM text for a single URL.</p>
+<h2 id="available-functions">Available Functions</h2><h3 id="plasmatefetchurl-str-str">`plasmate_fetch(url: str) -> str`</h3><p>Stateless fetch -  returns SOM text for a single URL.</p>
 <h3 id="plasmatebrowseurl-str-actions-list-str">`plasmate_browse(url: str, actions: list) -> str`</h3><p>Multi-step browsing session. Actions can be <code>navigate</code>, <code>click</code>, or <code>type</code>.</p>
 <pre><code class="language-python">from plasmate.integrations.autogen import plasmate_browse
 
@@ -493,10 +493,10 @@ result = plasmate_browse(
 )
 </code></pre>
 <h2 id="why-plasmate-for-autogen">Why Plasmate for AutoGen?</h2><ul>
-<li><strong>Token-efficient</strong> — multi-agent conversations amplify token costs; SOM keeps them manageable</li>
-<li><strong>Structured output</strong> — agents parse SOM content more reliably than raw HTML</li>
-<li><strong>No browser required</strong> — runs headless, perfect for server-based AutoGen deployments</li>
-<li><strong>Tool-compatible</strong> — works with AutoGen&#39;s function calling and tool registration</li>
+<li><strong>Token-efficient</strong> -  multi-agent conversations amplify token costs; SOM keeps them manageable</li>
+<li><strong>Structured output</strong> -  agents parse SOM content more reliably than raw HTML</li>
+<li><strong>No browser required</strong> -  runs headless, perfect for server-based AutoGen deployments</li>
+<li><strong>Tool-compatible</strong> -  works with AutoGen&#39;s function calling and tool registration</li>
 </ul>
 <h2 id="links">Links</h2><ul>
 <li><a href="https://microsoft.github.io/autogen/">AutoGen Docs</a></li>

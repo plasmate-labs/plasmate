@@ -1,6 +1,6 @@
 # CrewAI Integration
 
-Give your CrewAI agents web browsing superpowers — Plasmate provides structured SOM pages at **~10x fewer tokens** than raw HTML scraping.
+Give your CrewAI agents web browsing superpowers -  Plasmate provides structured SOM pages at **~10x fewer tokens** than raw HTML scraping.
 
 Source: [`integrations/crewai/`](https://github.com/nicepkg/plasmate/tree/master/integrations/crewai)
 
@@ -74,7 +74,7 @@ tool = PlasmateBrowseTool()
 | **Multi-step browsing** | ❌ | ✅ |
 | **Dependencies** | requests + beautifulsoup | `plasmate` binary |
 
-Over a typical crew run with 5-10 page loads, you save **50,000-150,000 tokens** — significant cost reduction at scale.
+Over a typical crew run with 5-10 page loads, you save **50,000-150,000 tokens** -  significant cost reduction at scale.
 
 ## Links
 

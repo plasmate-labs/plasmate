@@ -1,6 +1,6 @@
 # LangChain Integration
 
-LangChain tools and document loader for Plasmate — browse the web with **~10x fewer tokens** than raw HTML.
+LangChain tools and document loader for Plasmate -  browse the web with **~10x fewer tokens** than raw HTML.
 
 Plasmate's SOM output compiles web pages into compact, structured representations that preserve interactive elements and content hierarchy. This integration provides LangChain-native tools for stateless fetching, persistent browsing, and batch document loading.
 
@@ -68,7 +68,7 @@ loader = PlasmateSOMLoader([
 docs = loader.load()
 
 for doc in docs:
-    print(f"{doc.metadata['title']} — {doc.metadata['element_count']} elements")
+    print(f"{doc.metadata['title']} -  {doc.metadata['element_count']} elements")
     print(doc.page_content[:200])
     print()
 ```

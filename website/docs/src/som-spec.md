@@ -48,12 +48,12 @@ Each element has a `role`, stable `id`, and role-specific `attrs`.
 | `select` | Yes | `["select"]` | `<select>` |
 | `checkbox` | Yes | `["toggle"]` | `<input type="checkbox">`, `role="checkbox"` |
 | `radio` | Yes | `["select"]` | `<input type="radio">`, `role="radio"` |
-| `image` | No | — | `<img>`, `<picture>`, `role="img"` |
-| `heading` | No | — | `<h1>` through `<h6>` |
-| `paragraph` | No | — | `<p>`, bare text nodes |
-| `table` | No | — | `<table>` (data tables only) |
-| `list` | No | — | `<ul>`, `<ol>` |
-| `section` | No | — | `<section>`, `<article>` |
+| `image` | No | -  | `<img>`, `<picture>`, `role="img"` |
+| `heading` | No | -  | `<h1>` through `<h6>` |
+| `paragraph` | No | -  | `<p>`, bare text nodes |
+| `table` | No | -  | `<table>` (data tables only) |
+| `list` | No | -  | `<ul>`, `<ol>` |
+| `section` | No | -  | `<section>`, `<article>` |
 
 Interactive elements are **never** dropped by budget limits.
 

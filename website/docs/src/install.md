@@ -1,6 +1,6 @@
 # Installation
 
-Get Plasmate on your machine in seconds. Pick whichever package manager you prefer — they all install the same `plasmate` CLI.
+Get Plasmate on your machine in seconds. Pick whichever package manager you prefer -  they all install the same `plasmate` CLI.
 
 ## Quick Install
 
@@ -90,7 +90,7 @@ async fn main() -> anyhow::Result<()> {
 
 ## Next Steps
 
-- [Quick Start](quickstart) — fetch your first page
-- [MCP Setup](integration-mcp) — connect to Claude, Cursor, or Windsurf
-- [Python SDK](sdk-python) — use Plasmate from Python
-- [Node.js SDK](sdk-node) — use Plasmate from JavaScript
+- [Quick Start](quickstart) -  fetch your first page
+- [MCP Setup](integration-mcp) -  connect to Claude, Cursor, or Windsurf
+- [Python SDK](sdk-python) -  use Plasmate from Python
+- [Node.js SDK](sdk-node) -  use Plasmate from JavaScript

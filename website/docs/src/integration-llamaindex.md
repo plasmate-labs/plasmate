@@ -1,6 +1,6 @@
 # LlamaIndex Integration
 
-Use Plasmate as a document reader in your LlamaIndex RAG pipelines — structured SOM output for **10-16x fewer tokens** than raw HTML readers.
+Use Plasmate as a document reader in your LlamaIndex RAG pipelines -  structured SOM output for **10-16x fewer tokens** than raw HTML readers.
 
 Source: [`llama-index-readers-plasmate`](https://github.com/run-llama/llama_index/pull/21144)
 
@@ -32,10 +32,10 @@ response = query_engine.query("What is this page about?")
 
 Standard web readers (`SimpleWebPageReader`, `BeautifulSoupWebReader`) return raw HTML or basic text extraction. Plasmate returns structured semantic content:
 
-- **10-16x fewer tokens** per page — cheaper embeddings and queries
-- **Preserved document hierarchy** — headings, sections, lists stay structured
-- **Clean text extraction** — no scripts, styles, or layout noise
-- **Metadata included** — title, language, byte sizes, element counts
+- **10-16x fewer tokens** per page -  cheaper embeddings and queries
+- **Preserved document hierarchy** -  headings, sections, lists stay structured
+- **Clean text extraction** -  no scripts, styles, or layout noise
+- **Metadata included** -  title, language, byte sizes, element counts
 
 ## Configuration
 

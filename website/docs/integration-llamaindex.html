@@ -442,7 +442,7 @@
       </div>
     </nav>
     <main class="content">
-      <h1 id="llamaindex-integration">LlamaIndex Integration</h1><p>Use Plasmate as a document reader in your LlamaIndex RAG pipelines — structured SOM output for <strong>10-16x fewer tokens</strong> than raw HTML readers.</p>
+      <h1 id="llamaindex-integration">LlamaIndex Integration</h1><p>Use Plasmate as a document reader in your LlamaIndex RAG pipelines -  structured SOM output for <strong>10-16x fewer tokens</strong> than raw HTML readers.</p>
 <p>Source: <a href="https://github.com/run-llama/llama_index/pull/21144"><code>llama-index-readers-plasmate</code></a></p>
 <h2 id="installation">Installation</h2><pre><code class="language-bash">pip install plasmate llama-index-readers-plasmate
 </code></pre>
@@ -462,10 +462,10 @@ response = query_engine.query(&quot;What is this page about?&quot;)
 </code></pre>
 <h2 id="why-plasmate-for-rag">Why Plasmate for RAG?</h2><p>Standard web readers (<code>SimpleWebPageReader</code>, <code>BeautifulSoupWebReader</code>) return raw HTML or basic text extraction. Plasmate returns structured semantic content:</p>
 <ul>
-<li><strong>10-16x fewer tokens</strong> per page — cheaper embeddings and queries</li>
-<li><strong>Preserved document hierarchy</strong> — headings, sections, lists stay structured</li>
-<li><strong>Clean text extraction</strong> — no scripts, styles, or layout noise</li>
-<li><strong>Metadata included</strong> — title, language, byte sizes, element counts</li>
+<li><strong>10-16x fewer tokens</strong> per page -  cheaper embeddings and queries</li>
+<li><strong>Preserved document hierarchy</strong> -  headings, sections, lists stay structured</li>
+<li><strong>Clean text extraction</strong> -  no scripts, styles, or layout noise</li>
+<li><strong>Metadata included</strong> -  title, language, byte sizes, element counts</li>
 </ul>
 <h2 id="configuration">Configuration</h2><pre><code class="language-python">PlasmateWebReader(
     binary=&quot;plasmate&quot;,    # Path to plasmate binary

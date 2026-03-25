@@ -2,7 +2,7 @@
 
 Use Plasmate as the browser backend for [Browser Use](https://github.com/browser-use/browser-use), replacing Chrome + Playwright with SOM output for **~10x fewer tokens**.
 
-Browser Use is the most popular open-source AI browser agent framework. By default it feeds raw DOM trees to the LLM. Plasmate replaces this with the Semantic Object Model — compact, structured page representations that preserve all interactive elements while stripping layout noise.
+Browser Use is the most popular open-source AI browser agent framework. By default it feeds raw DOM trees to the LLM. Plasmate replaces this with the Semantic Object Model -  compact, structured page representations that preserve all interactive elements while stripping layout noise.
 
 Source: [`integrations/browser-use/`](https://github.com/nicepkg/plasmate/tree/master/integrations/browser-use)
 
@@ -105,7 +105,7 @@ PlasmateBrowser(
 | `type_text(element_index, text)` | Type into an input/textarea | `PageState` |
 | `get_state()` | Get current page state as SOM | `PageState` |
 | `screenshot()` | Returns `None` (no visual rendering) | `None` |
-| `close()` | Close session and shut down process | — |
+| `close()` | Close session and shut down process | -  |
 
 ### `PageState`
 
@@ -133,8 +133,8 @@ PlasmateBrowser(
 
 ## Known Limitations
 
-- **No screenshots** — Plasmate has no visual rendering. Agents that rely on screenshots (CAPTCHA, visual layout) should use the Playwright backend.
-- **No coordinate-based clicking** — all interactions use SOM element IDs, not pixel coordinates.
-- **No file uploads** — the `upload_file` action is not supported.
-- **No scroll position** — Plasmate renders the full page. No concept of viewport or scroll.
-- **Single tab** — each `PlasmateBrowser` instance maintains one session. Create multiple instances for multi-tab workflows.
+- **No screenshots** -  Plasmate has no visual rendering. Agents that rely on screenshots (CAPTCHA, visual layout) should use the Playwright backend.
+- **No coordinate-based clicking** -  all interactions use SOM element IDs, not pixel coordinates.
+- **No file uploads** -  the `upload_file` action is not supported.
+- **No scroll position** -  Plasmate renders the full page. No concept of viewport or scroll.
+- **Single tab** -  each `PlasmateBrowser` instance maintains one session. Create multiple instances for multi-tab workflows.

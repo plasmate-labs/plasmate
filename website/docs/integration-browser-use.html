@@ -443,7 +443,7 @@
     </nav>
     <main class="content">
       <h1 id="browser-use-integration">Browser Use Integration</h1><p>Use Plasmate as the browser backend for <a href="https://github.com/browser-use/browser-use">Browser Use</a>, replacing Chrome + Playwright with SOM output for <strong>~10x fewer tokens</strong>.</p>
-<p>Browser Use is the most popular open-source AI browser agent framework. By default it feeds raw DOM trees to the LLM. Plasmate replaces this with the Semantic Object Model — compact, structured page representations that preserve all interactive elements while stripping layout noise.</p>
+<p>Browser Use is the most popular open-source AI browser agent framework. By default it feeds raw DOM trees to the LLM. Plasmate replaces this with the Semantic Object Model -  compact, structured page representations that preserve all interactive elements while stripping layout noise.</p>
 <p>Source: <a href="https://github.com/nicepkg/plasmate/tree/master/integrations/browser-use"><code>integrations/browser-use/</code></a></p>
 <h2 id="installation">Installation</h2><pre><code class="language-bash">pip install plasmate-browser-use
 </code></pre>
@@ -609,7 +609,7 @@ asyncio.run(main())
 <tr>
 <td><code>close()</code></td>
 <td>Close session and shut down process</td>
-<td>—</td>
+<td>-</td>
 </tr>
 </tbody></table>
 <h3 id="pagestate">`PageState`</h3><table>
@@ -701,11 +701,11 @@ asyncio.run(main())
 </tr>
 </tbody></table>
 <h2 id="known-limitations">Known Limitations</h2><ul>
-<li><strong>No screenshots</strong> — Plasmate has no visual rendering. Agents that rely on screenshots (CAPTCHA, visual layout) should use the Playwright backend.</li>
-<li><strong>No coordinate-based clicking</strong> — all interactions use SOM element IDs, not pixel coordinates.</li>
-<li><strong>No file uploads</strong> — the <code>upload_file</code> action is not supported.</li>
-<li><strong>No scroll position</strong> — Plasmate renders the full page. No concept of viewport or scroll.</li>
-<li><strong>Single tab</strong> — each <code>PlasmateBrowser</code> instance maintains one session. Create multiple instances for multi-tab workflows.</li>
+<li><strong>No screenshots</strong> -  Plasmate has no visual rendering. Agents that rely on screenshots (CAPTCHA, visual layout) should use the Playwright backend.</li>
+<li><strong>No coordinate-based clicking</strong> -  all interactions use SOM element IDs, not pixel coordinates.</li>
+<li><strong>No file uploads</strong> -  the <code>upload_file</code> action is not supported.</li>
+<li><strong>No scroll position</strong> -  Plasmate renders the full page. No concept of viewport or scroll.</li>
+<li><strong>Single tab</strong> -  each <code>PlasmateBrowser</code> instance maintains one session. Create multiple instances for multi-tab workflows.</li>
 </ul>
 
     </main>
