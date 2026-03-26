@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Installation - Plasmate Docs | The Better Browser for AI Agents</title>
-  <meta name="description" content="Installation - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
-  <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, installation" />
-  <link rel="canonical" href="https://docs.plasmate.app/install" />
+  <title>Brand Assets - Plasmate Docs | The Better Browser for AI Agents</title>
+  <meta name="description" content="Brand Assets - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
+  <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, brand assets" />
+  <link rel="canonical" href="https://docs.plasmate.app/brand-assets" />
 
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
@@ -407,7 +407,7 @@
           <a href="awp">AWP Protocol</a>
           <a href="awp-mvp">AWP MVP v0.1</a>
           <div class="section-label">Install</div>
-          <a href="install" class="active">Installation Guide</a>
+          <a href="install">Installation Guide</a>
           <a href="integration-mcp">MCP (Claude/Cursor)</a>
           <div class="section-label">SDKs</div>
           <a href="sdk-python">Python</a>
@@ -436,7 +436,7 @@
           <div class="section-label">Proposals</div>
           <a href="robots-txt-proposal">Robots.txt for Agents</a>
           <div class="section-label">Brand</div>
-          <a href="brand-assets">Brand Assets</a>
+          <a href="brand-assets" class="active">Brand Assets</a>
           <a href="brand">Full Brand Guide</a>
           <div class="section-label">Updates</div>
           <a href="changelog">Changelog</a>
@@ -447,94 +447,351 @@
       </div>
     </nav>
     <main class="content">
-      <h1 id="installation">Installation</h1><p>Get Plasmate on your machine in seconds. Pick whichever package manager you prefer -  they all install the same <code>plasmate</code> CLI.</p>
-<h2 id="quick-install">Quick Install</h2><pre><code class="language-bash"># Python (recommended)
-pip install plasmate
-
-# Rust
-cargo install plasmate
-
-# Node.js
-npm install -g plasmate
-
-# macOS (Homebrew)
-brew tap plasmate-labs/plasmate
-brew install plasmate
-</code></pre>
-<h2 id="verify">Verify</h2><pre><code class="language-bash">plasmate --version
-plasmate fetch https://example.com
-</code></pre>
-<p>If you see SOM output, you&#39;re good to go.</p>
-<h2 id="mcp-server-claude-code-cursor-windsurf">MCP Server (Claude Code / Cursor / Windsurf)</h2><p>Plasmate ships an MCP server that exposes <code>fetch</code>, <code>navigate</code>, <code>click</code>, and <code>type</code> as tools for any MCP-compatible AI client.</p>
-<h3 id="claude-code-one-liner">Claude Code (one-liner)</h3><pre><code class="language-bash">claude mcp add plasmate -- npx plasmate-mcp
-</code></pre>
-<h3 id="claude-desktop-cursor-windsurf">Claude Desktop / Cursor / Windsurf</h3><p>Add to your MCP config (e.g. <code>~/.claude/settings.json</code> or the app&#39;s MCP settings):</p>
-<pre><code class="language-json">{
-  &quot;mcpServers&quot;: {
-    &quot;plasmate&quot;: {
-      &quot;command&quot;: &quot;npx&quot;,
-      &quot;args&quot;: [&quot;-y&quot;, &quot;plasmate-mcp&quot;]
-    }
-  }
-}
-</code></pre>
-<p>Works with Claude Code, Claude Desktop, Cursor, Windsurf, and any MCP client. See the <a href="integration-mcp">MCP setup guide</a> for full details.</p>
-<h2 id="all-distribution-channels">All Distribution Channels</h2><table>
+      <h1 id="brand-assets">Brand Assets</h1><p>Download official Plasmate logos, lockups, badges, and brand resources. All assets are available for use under the <a href="https://github.com/plasmate-labs/plasmate/blob/master/LICENSE">Apache 2.0 license</a>.</p>
+<hr>
+<h2 id="brandmark">Brandmark</h2><p>The Plasmate mark is a stylized &quot;P&quot; whose vertical stroke disperses into particles at the top, representing matter transitioning into plasma.</p>
+<table>
 <thead>
 <tr>
-<th>Channel</th>
-<th>Command</th>
+<th>Variant</th>
+<th>Preview</th>
+<th>Download</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>PyPI</td>
-<td><code>pip install plasmate</code></td>
+<td>Default (gradient)</td>
+<td><img src="/brand/plasmate-mark.png" width="48" alt="Plasmate mark"></td>
+<td><a href="https://github.com/plasmate-labs/plasmate/raw/master/brand/mark/plasmate-mark.svg">SVG</a> / <a href="https://github.com/plasmate-labs/plasmate/raw/master/brand/mark/plasmate-mark-512.png">PNG 512px</a></td>
 </tr>
 <tr>
-<td>crates.io</td>
-<td><code>cargo install plasmate</code></td>
+<td>On dark background</td>
+<td><img src="/brand/plasmate-mark-dark.png" width="48" alt="Plasmate mark dark"></td>
+<td><a href="https://github.com/plasmate-labs/plasmate/raw/master/brand/mark/plasmate-mark-dark-bg.png">PNG</a></td>
 </tr>
 <tr>
-<td>npm</td>
-<td><code>npm install plasmate</code></td>
+<td>On light background</td>
+<td><img src="/brand/plasmate-mark-light.png" width="48" alt="Plasmate mark light"></td>
+<td><a href="https://github.com/plasmate-labs/plasmate/raw/master/brand/mark/plasmate-mark-light-bg.png">PNG</a></td>
 </tr>
 <tr>
-<td>Homebrew</td>
-<td><code>brew tap plasmate-labs/plasmate &amp;&amp; brew install plasmate</code></td>
-</tr>
-<tr>
-<td>MCP Registry</td>
-<td><code>claude mcp add plasmate</code></td>
-</tr>
-<tr>
-<td>Docker</td>
-<td>Coming soon</td>
-</tr>
-<tr>
-<td>GitHub Releases</td>
-<td><a href="https://github.com/plasmate-labs/plasmate/releases">Download</a></td>
+<td>Transparent</td>
+<td><img src="/brand/plasmate-mark.png" width="48" alt="Plasmate mark transparent"></td>
+<td><a href="https://github.com/plasmate-labs/plasmate/raw/master/brand/mark/plasmate-mark-transparent.png">PNG</a></td>
 </tr>
 </tbody></table>
-<h2 id="using-as-a-rust-library">Using as a Rust Library</h2><p>Plasmate is a Rust crate. Add it to your <code>Cargo.toml</code>:</p>
-<pre><code class="language-toml">[dependencies]
-plasmate = &quot;0.4&quot;
+<h2 id="full-lockup">Full Lockup</h2><p>The full lockup combines the P mark with the &quot;PLASMATE&quot; wordmark in Space Grotesk SemiBold.</p>
+<table>
+<thead>
+<tr>
+<th>Variant</th>
+<th>Download</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Dark background (Ember mark + Plasma White text on Core Black)</td>
+<td><a href="/brand/lockup/plasmate-lockup-dark.svg">SVG</a></td>
+</tr>
+<tr>
+<td>Light background (Ember mark + Core Black text on Plasma White)</td>
+<td><a href="/brand/lockup/plasmate-lockup-light.svg">SVG</a></td>
+</tr>
+</tbody></table>
+<h2 id="works-with-plasmate-badge">"Works with Plasmate" Badge</h2><p>Use this badge in your README, docs, or marketing materials to indicate your project integrates with Plasmate.</p>
+<table>
+<thead>
+<tr>
+<th>Variant</th>
+<th>Preview</th>
+<th>Embed</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Dark</td>
+<td><img src="/brand/badge/works-with-plasmate-dark.svg" height="36" alt="Works with Plasmate"></td>
+<td><a href="/brand/badge/works-with-plasmate-dark.svg">SVG</a></td>
+</tr>
+<tr>
+<td>Light</td>
+<td><img src="/brand/badge/works-with-plasmate-light.svg" height="36" alt="Works with Plasmate"></td>
+<td><a href="/brand/badge/works-with-plasmate-light.svg">SVG</a></td>
+</tr>
+</tbody></table>
+<p><strong>Markdown embed:</strong></p>
+<pre><code class="language-markdown">[![Works with Plasmate](https://docs.plasmate.app/brand/badge/works-with-plasmate-dark.svg)](https://plasmate.app)
 </code></pre>
-<pre><code class="language-rust">use plasmate::Plasmate;
+<p><strong>HTML embed:</strong></p>
+<pre><code class="language-html">&lt;a href=&quot;https://plasmate.app&quot;&gt;
+  &lt;img src=&quot;https://docs.plasmate.app/brand/badge/works-with-plasmate-dark.svg&quot;
+       alt=&quot;Works with Plasmate&quot; height=&quot;36&quot;&gt;
+&lt;/a&gt;
+</code></pre>
+<hr>
+<h2 id="color-palette">Color Palette</h2><h3 id="primary">Primary</h3><table>
+<thead>
+<tr>
+<th>Swatch</th>
+<th>Name</th>
+<th>Hex</th>
+<th>RGB</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><span style="display:inline-block;width:24px;height:24px;background:#E8853A;border-radius:4px;vertical-align:middle"></span></td>
+<td><strong>Ember</strong></td>
+<td><code>#E8853A</code></td>
+<td>232, 133, 58</td>
+<td>Primary brand color. Wordmark, CTAs, key accents.</td>
+</tr>
+<tr>
+<td><span style="display:inline-block;width:24px;height:24px;background:#0D0D0D;border-radius:4px;vertical-align:middle;border:1px solid #333"></span></td>
+<td><strong>Core Black</strong></td>
+<td><code>#0D0D0D</code></td>
+<td>13, 13, 13</td>
+<td>Primary text, dark backgrounds.</td>
+</tr>
+<tr>
+<td><span style="display:inline-block;width:24px;height:24px;background:#F0EDE8;border-radius:4px;vertical-align:middle;border:1px solid #ccc"></span></td>
+<td><strong>Plasma White</strong></td>
+<td><code>#F0EDE8</code></td>
+<td>240, 237, 232</td>
+<td>Light backgrounds. Warm white.</td>
+</tr>
+</tbody></table>
+<h3 id="secondary">Secondary</h3><table>
+<thead>
+<tr>
+<th>Swatch</th>
+<th>Name</th>
+<th>Hex</th>
+<th>RGB</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><span style="display:inline-block;width:24px;height:24px;background:#3D8FD4;border-radius:4px;vertical-align:middle"></span></td>
+<td><strong>Arc</strong></td>
+<td><code>#3D8FD4</code></td>
+<td>61, 143, 212</td>
+<td>Links, interactive states, code highlights.</td>
+</tr>
+<tr>
+<td><span style="display:inline-block;width:24px;height:24px;background:#D4C5A0;border-radius:4px;vertical-align:middle"></span></td>
+<td><strong>Ion</strong></td>
+<td><code>#D4C5A0</code></td>
+<td>212, 197, 160</td>
+<td>Cards, subtle backgrounds.</td>
+</tr>
+<tr>
+<td><span style="display:inline-block;width:24px;height:24px;background:#6B6560;border-radius:4px;vertical-align:middle"></span></td>
+<td><strong>Ash</strong></td>
+<td><code>#6B6560</code></td>
+<td>107, 101, 96</td>
+<td>Muted text, captions, borders.</td>
+</tr>
+<tr>
+<td><span style="display:inline-block;width:24px;height:24px;background:#F5C842;border-radius:4px;vertical-align:middle"></span></td>
+<td><strong>Corona</strong></td>
+<td><code>#F5C842</code></td>
+<td>245, 200, 66</td>
+<td>Highlights, badges. Use sparingly.</td>
+</tr>
+</tbody></table>
+<h3 id="dark-mode">Dark Mode</h3><table>
+<thead>
+<tr>
+<th>Swatch</th>
+<th>Name</th>
+<th>Hex</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><span style="display:inline-block;width:24px;height:24px;background:#111110;border-radius:4px;vertical-align:middle;border:1px solid #333"></span></td>
+<td><strong>Void</strong></td>
+<td><code>#111110</code></td>
+<td>Dark background</td>
+</tr>
+<tr>
+<td><span style="display:inline-block;width:24px;height:24px;background:#1A1918;border-radius:4px;vertical-align:middle;border:1px solid #333"></span></td>
+<td><strong>Deep</strong></td>
+<td><code>#1A1918</code></td>
+<td>Cards, elevated surfaces</td>
+</tr>
+<tr>
+<td><span style="display:inline-block;width:24px;height:24px;background:#2A2825;border-radius:4px;vertical-align:middle;border:1px solid #444"></span></td>
+<td><strong>Smoke</strong></td>
+<td><code>#2A2825</code></td>
+<td>Borders, dividers</td>
+</tr>
+<tr>
+<td><span style="display:inline-block;width:24px;height:24px;background:#8A8480;border-radius:4px;vertical-align:middle"></span></td>
+<td><strong>Dim</strong></td>
+<td><code>#8A8480</code></td>
+<td>Muted text (dark mode)</td>
+</tr>
+</tbody></table>
+<h3 id="rules">Rules</h3><ol>
+<li><strong>Ember is the signature.</strong> Warm orange on dark = Plasmate.</li>
+<li><strong>Arc is functional.</strong> Blue is for clickable things only.</li>
+<li><strong>No gradients</strong> in UI. Flat color. The mark&#39;s gradient is the one exception.</li>
+<li><strong>Corona is rare.</strong> Reserve for moments of delight or urgency.</li>
+<li><strong>White space is structural.</strong> Content breathes.</li>
+</ol>
+<hr>
+<h2 id="typography">Typography</h2><table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Font</th>
+<th>Weight</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Display / UI</td>
+<td><strong>Space Grotesk</strong></td>
+<td>SemiBold, Medium</td>
+<td>Headlines, nav, labels, wordmark</td>
+</tr>
+<tr>
+<td>Body</td>
+<td><strong>IBM Plex Sans</strong></td>
+<td>Regular, Medium</td>
+<td>Documentation, long-form text</td>
+</tr>
+<tr>
+<td>Code</td>
+<td><strong>IBM Plex Mono</strong></td>
+<td>Regular, Medium</td>
+<td>Code blocks, CLI output, specs</td>
+</tr>
+</tbody></table>
+<pre><code class="language-css">@import url(&#39;https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap&#39;);
 
-#[tokio::main]
-async fn main() -&gt; anyhow::Result&lt;()&gt; {
-    let p = Plasmate::new()?;
-    let som = p.fetch(&quot;https://example.com&quot;).await?;
-    println!(&quot;{}&quot;, som.text());
-    Ok(())
+:root {
+  --font-display: &#39;Space Grotesk&#39;, system-ui, sans-serif;
+  --font-body: &#39;IBM Plex Sans&#39;, system-ui, sans-serif;
+  --font-mono: &#39;IBM Plex Mono&#39;, ui-monospace, monospace;
 }
 </code></pre>
-<h2 id="next-steps">Next Steps</h2><ul>
-<li><a href="quickstart">Quick Start</a> -  fetch your first page</li>
-<li><a href="integration-mcp">MCP Setup</a> -  connect to Claude, Cursor, or Windsurf</li>
-<li><a href="sdk-python">Python SDK</a> -  use Plasmate from Python</li>
-<li><a href="sdk-node">Node.js SDK</a> -  use Plasmate from JavaScript</li>
+<p><strong>Do not use:</strong> Inter, Helvetica Neue, or geometric sans-serifs.</p>
+<hr>
+<h2 id="naming-conventions">Naming Conventions</h2><table>
+<thead>
+<tr>
+<th>Thing</th>
+<th>Correct</th>
+<th>Incorrect</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>The product</td>
+<td>Plasmate</td>
+<td>plasmate, PLASMATE, The Plasmate</td>
+</tr>
+<tr>
+<td>The format</td>
+<td>SOM</td>
+<td>Som, som, Semantic Object Model (after first mention)</td>
+</tr>
+<tr>
+<td>The protocol</td>
+<td>AWP</td>
+<td>Awp, awp</td>
+</tr>
+<tr>
+<td>CLI commands</td>
+<td><code>plasmate fetch</code></td>
+<td>Plasmate Fetch</td>
+</tr>
+<tr>
+<td>The company</td>
+<td>Plasmate Labs</td>
+<td>Plasmate labs, PlasmateLabs</td>
+</tr>
+</tbody></table>
+<h2 id="taglines">Taglines</h2><table>
+<thead>
+<tr>
+<th>Context</th>
+<th>Tagline</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Primary</td>
+<td><em>The browser engine for agents.</em></td>
+</tr>
+<tr>
+<td>Technical</td>
+<td><em>HTML in. Semantic Object Model out.</em></td>
+</tr>
+<tr>
+<td>Philosophical</td>
+<td><em>The fourth state of the web.</em></td>
+</tr>
+<tr>
+<td>Developer</td>
+<td><em>Drop-in Puppeteer replacement. 10x less tokens.</em></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="logo-usage">Logo Usage</h2><h3 id="clear-space">Clear Space</h3><p>Minimum clear space: the width of the P mark on all sides.</p>
+<h3 id="minimum-size">Minimum Size</h3><ul>
+<li>Full lockup: 120px wide minimum</li>
+<li>Mark only: 16px minimum (omit particles below 16px)</li>
 </ul>
+<h3 id="do-not">Do Not</h3><ul>
+<li>Rotate the mark</li>
+<li>Apply additional gradients</li>
+<li>Change the dispersion direction (always up-right)</li>
+<li>Place on busy photography or patterns</li>
+<li>Outline the mark</li>
+<li>Stretch or distort proportions</li>
+<li>Use the mark smaller than 16px with particles</li>
+</ul>
+<hr>
+<h2 id="quick-reference">Quick Reference</h2><pre><code>COLORS
+  Ember:        #E8853A    Primary brand
+  Arc:          #3D8FD4    Links, interactive
+  Corona:       #F5C842    Highlights (rare)
+  Core Black:   #0D0D0D    Text, dark bg
+  Plasma White: #F0EDE8    Light bg
+  Ion:          #D4C5A0    Cards, subtle bg
+  Ash:          #6B6560    Muted text
+
+FONTS
+  Display/UI:   Space Grotesk (SemiBold, Medium)
+  Body:         IBM Plex Sans (Regular, Medium)
+  Code:         IBM Plex Mono (Regular, Medium)
+
+RULES
+  No gradients in UI. No purple. No Inter.
+  Ember is the signature color.
+  Direct voice. Specific claims. Honest scope.
+
+TAGLINE
+  The browser engine for agents.
+</code></pre>
+<hr>
+<h2 id="full-brand-guide">Full Brand Guide</h2><p>For the complete brand guide including origin story, voice and tone guidelines, pixie dust particle system specifications, and application examples, see the <a href="brand">full brand guide</a>.</p>
+<h2 id="download-all-assets">Download All Assets</h2><p>All brand assets are available in the <a href="https://github.com/plasmate-labs/plasmate/tree/master/brand">GitHub repository</a>:</p>
+<pre><code>brand/
+  mark/
+    plasmate-mark.svg
+    plasmate-mark-512.png
+    plasmate-mark-dark-bg.png
+    plasmate-mark-light-bg.png
+    plasmate-mark-transparent.png
+  lockup/
+    plasmate-lockup-dark.svg
+    plasmate-lockup-light.svg
+  badge/
+    works-with-plasmate-dark.svg
+    works-with-plasmate-light.svg
+</code></pre>
+<hr>
+<p><em>Plasmate Labs. Apache 2.0.</em></p>
 
     </main>
   </div>

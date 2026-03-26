@@ -49,6 +49,9 @@ const NAV = [
   { slug: 'tutorial-research-agent', label: 'Build a Research Agent' },
   { section: 'Proposals' },
   { slug: 'robots-txt-proposal', label: 'Robots.txt for Agents' },
+  { section: 'Brand' },
+  { slug: 'brand-assets', label: 'Brand Assets' },
+  { slug: 'brand', label: 'Full Brand Guide' },
   { section: 'Updates' },
   { slug: 'changelog', label: 'Changelog' },
 ];
