@@ -44,6 +44,7 @@ const NAV = [
   { slug: 'benchmark-cost', label: 'Cost Analysis' },
   { slug: 'roadmap', label: 'Roadmap' },
   { section: 'User Guides' },
+  { slug: 'guide-agent-browses-twitter', label: 'Your Agent on X/Twitter' },
   { slug: 'guide-authenticated-browsing', label: 'Authenticated Browsing' },
   { slug: 'tutorial-research-agent', label: 'Build a Research Agent' },
   { section: 'Proposals' },
