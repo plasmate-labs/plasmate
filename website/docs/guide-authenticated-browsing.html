@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Plasmate Benchmark Results (March 2026) - Plasmate Docs | The Better Browser for AI Agents</title>
-  <meta name="description" content="Plasmate Benchmark Results (March 2026) - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
-  <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, plasmate benchmark results (march 2026)" />
-  <link rel="canonical" href="https://docs.plasmate.app/benchmark-latest" />
+  <title>Authenticated Browsing for AI Agents - Plasmate Docs | The Better Browser for AI Agents</title>
+  <meta name="description" content="Authenticated Browsing for AI Agents - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
+  <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, authenticated browsing for ai agents" />
+  <link rel="canonical" href="https://docs.plasmate.app/guide-authenticated-browsing" />
 
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
@@ -430,7 +430,7 @@
           <a href="benchmark-cost">Cost Analysis</a>
           <a href="roadmap">Roadmap</a>
           <div class="section-label">User Guides</div>
-          <a href="guide-authenticated-browsing">Authenticated Browsing</a>
+          <a href="guide-authenticated-browsing" class="active">Authenticated Browsing</a>
           <a href="tutorial-research-agent">Build a Research Agent</a>
           <div class="section-label">Proposals</div>
           <a href="robots-txt-proposal">Robots.txt for Agents</a>
@@ -443,215 +443,170 @@
       </div>
     </nav>
     <main class="content">
-      <h1 id="plasmate-benchmark-results-march-2026">Plasmate Benchmark Results (March 2026)</h1><h2 id="cdp-parity-benchmark-lightpanda-campfire-commerce">CDP Parity Benchmark (Lightpanda campfire-commerce)</h2><p><strong>Test:</strong> Puppeteer script navigates to a local product page, waits for JS-rendered content (product price, reviews from XHR), extracts structured data.</p>
-<p><strong>Result:</strong> PASS - All assertions pass consistently</p>
+      <h1 id="authenticated-browsing-for-ai-agents">Authenticated Browsing for AI Agents</h1><p>Give your agent access to sites that require login, like X (Twitter), GitHub, LinkedIn, or any authenticated web app. Plasmate stores encrypted cookie profiles locally and injects them into requests so your agent can browse as you.</p>
+<h2 id="how-it-works">How It Works</h2><ol>
+<li>You log into a site normally in Chrome</li>
+<li>The Plasmate browser extension captures the auth cookies</li>
+<li>Plasmate encrypts and stores them locally on your machine</li>
+<li>Your agent uses the stored profile to make authenticated requests</li>
+</ol>
+<p>No passwords leave your machine. No tokens are sent to any server. Everything stays local.</p>
+<hr>
+<h2 id="prerequisites">Prerequisites</h2><ul>
+<li><a href="install">Plasmate CLI installed</a></li>
+<li>Google Chrome (or any Chromium-based browser)</li>
+<li>The Plasmate browser extension (<a href="https://github.com/plasmate-labs/plasmate-extension">install from GitHub</a>)</li>
+</ul>
+<h2 id="step-1-install-the-browser-extension">Step 1: Install the Browser Extension</h2><ol>
+<li>Download or clone the extension repo:<pre><code class="language-bash">git clone https://github.com/plasmate-labs/plasmate-extension.git
+</code></pre>
+</li>
+<li>Open <code>chrome://extensions</code> in Chrome</li>
+<li>Enable <strong>Developer mode</strong> (top right toggle)</li>
+<li>Click <strong>Load unpacked</strong> and select the cloned folder</li>
+<li>Pin the Plasmate extension icon to your toolbar</li>
+</ol>
+<h2 id="step-2-start-the-local-bridge">Step 2: Start the Local Bridge</h2><p>The bridge is a local HTTP server that the extension talks to. It only binds to <code>127.0.0.1</code> and never exposes anything to the network.</p>
+<pre><code class="language-bash">plasmate auth serve
+</code></pre>
+<p>You should see:</p>
+<pre><code>Auth bridge server listening on http://127.0.0.1:9271
+</code></pre>
+<p>Leave this running in a terminal tab.</p>
+<h2 id="step-3-log-into-the-target-site">Step 3: Log Into the Target Site</h2><p>Open Chrome and log into the site you want your agent to access. For this guide we will use <strong>X (Twitter)</strong> as the example:</p>
+<ol>
+<li>Go to <a href="https://x.com">x.com</a> and sign in normally</li>
+<li>Browse around briefly to make sure the session is active</li>
+</ol>
+<h2 id="step-4-push-cookies-to-plasmate">Step 4: Push Cookies to Plasmate</h2><ol>
+<li>Click the <strong>Plasmate extension icon</strong> in your toolbar</li>
+<li>It auto-detects the current site and selects the relevant auth cookies</li>
+<li>Click <strong>Push to Plasmate</strong></li>
+<li>A green confirmation appears. Done.</li>
+</ol>
+<h2 id="step-5-verify">Step 5: Verify</h2><pre><code class="language-bash">plasmate auth info x.com
+</code></pre>
+<p>You should see something like:</p>
+<pre><code>Profile: x.com
+Cookies: 4
+Created: 2026-03-26T12:00:00Z
+Status:  encrypted
+</code></pre>
+<p>The cookie values are never printed. Only metadata is shown.</p>
+<hr>
+<h2 id="using-the-profile">Using the Profile</h2><h3 id="direct-cli">Direct CLI</h3><p>Fetch any authenticated page:</p>
+<pre><code class="language-bash">plasmate fetch https://x.com/home --profile x.com
+</code></pre>
+<p>The output is a SOM JSON document with the full authenticated page content, ready for your agent to consume.</p>
+<h3 id="via-the-plasmate-server">Via the Plasmate Server</h3><p>Start the server with a profile loaded:</p>
+<pre><code class="language-bash">plasmate serve --protocol cdp --profile x.com
+</code></pre>
+<p>Now any agent that connects via CDP or AWP inherits the authenticated session.</p>
+<hr>
+<h2 id="agent-specific-setup">Agent-Specific Setup</h2><h3 id="claude-code-via-mcp">Claude Code (via MCP)</h3><p>Add Plasmate as an MCP server in your Claude Code config (<code>~/.claude/mcp.json</code> or project <code>.mcp.json</code>):</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;plasmate&quot;: {
+      &quot;command&quot;: &quot;plasmate-mcp&quot;,
+      &quot;args&quot;: [&quot;--profile&quot;, &quot;x.com&quot;]
+    }
+  }
+}
+</code></pre>
+<p>Now Claude Code can call the <code>plasmate_fetch</code> tool and it will automatically use your X session:</p>
+<pre><code>Use plasmate_fetch to get https://x.com/home and summarize my timeline
+</code></pre>
+<h3 id="openclaw">OpenClaw</h3><p>If you are running OpenClaw, add Plasmate as a tool in your agent config:</p>
+<pre><code class="language-yaml">tools:
+  plasmate:
+    command: plasmate-mcp
+    args: [&quot;--profile&quot;, &quot;x.com&quot;]
+</code></pre>
+<p>Your agent can then call <code>plasmate_fetch</code> from any conversation to browse X as you.</p>
+<h3 id="cursor-windsurf">Cursor / Windsurf</h3><p>Add to your MCP config (same format as Claude Code):</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;plasmate&quot;: {
+      &quot;command&quot;: &quot;plasmate-mcp&quot;,
+      &quot;args&quot;: [&quot;--profile&quot;, &quot;x.com&quot;]
+    }
+  }
+}
+</code></pre>
+<h3 id="custom-agents-python">Custom Agents (Python)</h3><p>Use the Python SDK:</p>
+<pre><code class="language-python">from plasmate import Plasmate
+
+browser = Plasmate(profile=&quot;x.com&quot;)
+result = browser.fetch(&quot;https://x.com/home&quot;)
+print(result[&quot;title&quot;])
+for region in result[&quot;regions&quot;]:
+    for el in region[&quot;elements&quot;]:
+        print(el.get(&quot;text&quot;, &quot;&quot;))
+</code></pre>
+<h3 id="custom-agents-nodejs">Custom Agents (Node.js)</h3><pre><code class="language-javascript">import { Plasmate } from &#39;plasmate&#39;;
+
+const browser = new Plasmate({ profile: &#39;x.com&#39; });
+const result = await browser.fetch(&#39;https://x.com/home&#39;);
+console.log(result.title);
+</code></pre>
+<hr>
+<h2 id="supported-sites">Supported Sites</h2><p>The extension auto-selects the right cookies for popular platforms:</p>
 <table>
 <thead>
 <tr>
-<th>Metric</th>
-<th>Value</th>
+<th>Site</th>
+<th>Domain</th>
+<th>Key Cookies</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>Runs</td>
-<td>10</td>
+<td>X / Twitter</td>
+<td><code>x.com</code></td>
+<td><code>auth_token</code>, <code>ct0</code></td>
 </tr>
 <tr>
-<td>Total duration</td>
-<td>3,165ms</td>
+<td>GitHub</td>
+<td><code>github.com</code></td>
+<td><code>user_session</code>, <code>__Host-user_session_same_site</code></td>
 </tr>
 <tr>
-<td>Avg run duration</td>
-<td>308ms</td>
+<td>LinkedIn</td>
+<td><code>linkedin.com</code></td>
+<td><code>li_at</code>, <code>JSESSIONID</code></td>
 </tr>
 <tr>
-<td>Min run duration</td>
-<td>275ms</td>
+<td>Reddit</td>
+<td><code>reddit.com</code></td>
+<td><code>reddit_session</code>, <code>token_v2</code></td>
 </tr>
 <tr>
-<td>Max run duration</td>
-<td>348ms</td>
+<td>YouTube</td>
+<td><code>youtube.com</code></td>
+<td><code>SID</code>, <code>HSID</code>, <code>SSID</code></td>
 </tr>
 </tbody></table>
-<p><strong>What this validates:</strong></p>
-<ul>
-<li>CDP WebSocket server compatibility with Puppeteer</li>
-<li><code>page.goto()</code> with full JS pipeline execution</li>
-<li><code>page.waitForFunction()</code> polling</li>
-<li><code>page.evaluate()</code> for DOM queries</li>
-<li>XHR/fetch requests from V8 (blocking bridge)</li>
-<li>DOM serialization with JS-mutated content</li>
+<p>For any other site, navigate there in Chrome, click the extension, and push. If you are unsure which cookies matter, push all of them.</p>
+<h2 id="managing-profiles">Managing Profiles</h2><pre><code class="language-bash"># List all stored profiles
+plasmate auth list
+
+# View profile metadata (never prints cookie values)
+plasmate auth info github.com
+
+# Delete a profile
+plasmate auth revoke x.com
+</code></pre>
+<h2 id="security-notes">Security Notes</h2><ul>
+<li>Cookie profiles are encrypted at rest using a machine-local key</li>
+<li>The bridge server binds to <code>127.0.0.1</code> only</li>
+<li>Cookie values are never logged, printed, or transmitted</li>
+<li>Profiles are stored in <code>~/.plasmate/auth/</code> (or <code>$PLASMATE_AUTH_DIR</code>)</li>
+<li>Use <code>plasmate auth revoke &lt;domain&gt;</code> to delete a profile at any time</li>
 </ul>
 <hr>
-<h2 id="major-sites-speed-test">Major Sites Speed Test</h2><p>Engine: plasmate v0.1.0
-URLs tested: 38
-Successful: 36 (95%)</p>
-<h3 id="summary">Summary</h3><table>
-<thead>
-<tr>
-<th>Metric</th>
-<th>Mean</th>
-<th>Median</th>
-<th>P95</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>HTML bytes</td>
-<td>379,656</td>
-<td>193,796</td>
-<td>1,214,266</td>
-</tr>
-<tr>
-<td>SOM bytes</td>
-<td>22,759</td>
-<td>22,034</td>
-<td>56,625</td>
-</tr>
-<tr>
-<td><strong>Compression ratio</strong></td>
-<td><strong>45.4x</strong></td>
-<td><strong>10.2x</strong></td>
-<td>105.1x</td>
-</tr>
-<tr>
-<td>HTML tokens (est)</td>
-<td>94,914</td>
-<td>48,449</td>
-<td>303,566</td>
-</tr>
-<tr>
-<td>SOM tokens (est)</td>
-<td>5,689</td>
-<td>5,508</td>
-<td>14,156</td>
-</tr>
-<tr>
-<td>Fetch time (ms)</td>
-<td>256</td>
-<td>172</td>
-<td>629</td>
-</tr>
-<tr>
-<td>Parse+SOM time (ms)</td>
-<td>20</td>
-<td>16</td>
-<td>61</td>
-</tr>
-</tbody></table>
-<h3 id="grade-distribution">Grade Distribution</h3><table>
-<thead>
-<tr>
-<th>Grade</th>
-<th>Count</th>
-<th>Criteria</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>A</td>
-<td>12</td>
-<td>&gt;15x compression</td>
-</tr>
-<tr>
-<td>B</td>
-<td>8</td>
-<td>8-15x compression</td>
-</tr>
-<tr>
-<td>C</td>
-<td>9</td>
-<td>3-8x compression</td>
-</tr>
-<tr>
-<td>D</td>
-<td>4</td>
-<td>1-3x compression</td>
-</tr>
-<tr>
-<td>F</td>
-<td>3</td>
-<td>&lt;1x or error</td>
-</tr>
-</tbody></table>
-<h3 id="highlights">Highlights</h3><table>
-<thead>
-<tr>
-<th>Site</th>
-<th>HTML</th>
-<th>SOM</th>
-<th>Compression</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>accounts.google.com</td>
-<td>1.2MB</td>
-<td>1.4KB</td>
-<td><strong>864x</strong></td>
-</tr>
-<tr>
-<td>x.com (Twitter)</td>
-<td>239KB</td>
-<td>1.5KB</td>
-<td><strong>159x</strong></td>
-</tr>
-<tr>
-<td>linear.app</td>
-<td>2.2MB</td>
-<td>21KB</td>
-<td><strong>105x</strong></td>
-</tr>
-<tr>
-<td>bing.com</td>
-<td>157KB</td>
-<td>1.7KB</td>
-<td><strong>93x</strong></td>
-</tr>
-<tr>
-<td>google.com</td>
-<td>194KB</td>
-<td>2.6KB</td>
-<td><strong>74x</strong></td>
-</tr>
-<tr>
-<td>vercel.com</td>
-<td>941KB</td>
-<td>22KB</td>
-<td><strong>43x</strong></td>
-</tr>
-<tr>
-<td>steampowered.com</td>
-<td>842KB</td>
-<td>23KB</td>
-<td><strong>36x</strong></td>
-</tr>
-<tr>
-<td>duckduckgo.com</td>
-<td>391KB</td>
-<td>12KB</td>
-<td><strong>33x</strong></td>
-</tr>
-<tr>
-<td>ebay.com</td>
-<td>831KB</td>
-<td>33KB</td>
-<td><strong>25x</strong></td>
-</tr>
-<tr>
-<td>Wikipedia (USA)</td>
-<td>1.7MB</td>
-<td>70KB</td>
-<td><strong>25x</strong></td>
-</tr>
-</tbody></table>
-<h3 id="performance-notes">Performance Notes</h3><ul>
-<li><strong>Parse+SOM time</strong>: Median 16ms for full HTML-&gt;SOM compilation</li>
-<li><strong>Heavy JS sites</strong>: Excellent compression (login pages, SPAs) due to stripping non-essential markup</li>
-<li><strong>Content-rich sites</strong>: Good compression (Wikipedia 10-25x, news sites 11-15x)</li>
-<li><strong>Text-minimal sites</strong>: Lower ratios expected (text.npr.org, example.com)</li>
-</ul>
-<h3 id="test-environment">Test Environment</h3><ul>
-<li>macOS, Apple Silicon</li>
-<li>Local network fetch (varies by site latency)</li>
-<li>No caching between runs</li>
+<h2 id="next-steps">Next Steps</h2><ul>
+<li><a href="tutorial-research-agent">Build a Research Agent</a> that uses authenticated browsing</li>
+<li><a href="som-spec">SOM Spec</a> to understand the output format</li>
+<li><a href="integration-mcp">MCP Integration</a> for Claude Code and Cursor setup</li>
 </ul>
 
     </main>
