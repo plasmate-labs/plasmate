@@ -1,0 +1,443 @@
+{
+  "som_version": "0.1",
+  "url": "https://plasmate.app/",
+  "title": "Plasmate - The Better Browser for AI Agents",
+  "lang": "en",
+  "regions": [
+    {
+      "id": "r_navigation",
+      "role": "navigation",
+      "elements": [
+        {
+          "id": "e_ff7292e80f12",
+          "role": "image",
+          "attrs": {
+            "alt": "Plasmate",
+            "src": "/brand/plasmate-mark.png"
+          }
+        },
+        {
+          "id": "e_ccc77866c659",
+          "role": "paragraph",
+          "text": "Plasmate"
+        },
+        {
+          "id": "e_b3a4ec629a61",
+          "role": "link",
+          "text": "GitHub",
+          "actions": [
+            "click"
+          ],
+          "attrs": {
+            "href": "https://github.com/plasmate-labs/plasmate"
+          },
+          "hints": [
+            "badge"
+          ]
+        },
+        {
+          "id": "e_1984dad7e882",
+          "role": "link",
+          "text": "Docs",
+          "actions": [
+            "click"
+          ],
+          "attrs": {
+            "href": "/docs/overview"
+          },
+          "hints": [
+            "badge"
+          ]
+        },
+        {
+          "id": "e_e50f0289141a",
+          "role": "link",
+          "text": "Compare",
+          "actions": [
+            "click"
+          ],
+          "attrs": {
+            "href": "/compare"
+          },
+          "hints": [
+            "badge"
+          ]
+        },
+        {
+          "id": "e_10dcc26aacf5",
+          "role": "link",
+          "text": "Install",
+          "actions": [
+            "click"
+          ],
+          "attrs": {
+            "href": "#install"
+          },
+          "hints": [
+            "badge"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "r_header",
+      "role": "header",
+      "elements": [
+        {
+          "id": "e_3554ec283162",
+          "role": "paragraph",
+          "text": "License"
+        },
+        {
+          "id": "e_97a60f98c341",
+          "role": "paragraph",
+          "text": "Apache-2.0"
+        },
+        {
+          "id": "e_8baebf3200cd",
+          "role": "paragraph",
+          "text": "v0.4.0"
+        },
+        {
+          "id": "e_b781e0d57279",
+          "role": "paragraph",
+          "text": "Rust"
+        }
+      ]
+    },
+    {
+      "id": "r_navigation_1",
+      "role": "navigation",
+      "elements": [
+        {
+          "id": "e_f3054c1f3882",
+          "role": "paragraph",
+          "text": "Plasmate Labs"
+        },
+        {
+          "id": "e_3cad7acc4b01",
+          "role": "paragraph",
+          "text": "Apache 2.0"
+        },
+        {
+          "id": "e_34c163841d77",
+          "role": "link",
+          "text": "GitHub",
+          "actions": [
+            "click"
+          ],
+          "attrs": {
+            "href": "https://github.com/plasmate-labs/plasmate"
+          }
+        },
+        {
+          "id": "e_d06f4c6648b0",
+          "role": "link",
+          "text": "Documentation",
+          "actions": [
+            "click"
+          ],
+          "attrs": {
+            "href": "/docs/overview"
+          }
+        },
+        {
+          "id": "e_9b66b338f95c",
+          "role": "link",
+          "text": "AWP Spec",
+          "actions": [
+            "click"
+          ],
+          "attrs": {
+            "href": "/docs/awp"
+          }
+        },
+        {
+          "id": "e_e55f21970e6c",
+          "role": "link",
+          "text": "SOM Reference",
+          "actions": [
+            "click"
+          ],
+          "attrs": {
+            "href": "/docs/som"
+          }
+        },
+        {
+          "id": "e_b1095f6fe014",
+          "role": "link",
+          "text": "Changelog",
+          "actions": [
+            "click"
+          ],
+          "attrs": {
+            "href": "/docs/changelog"
+          }
+        },
+        {
+          "id": "e_d07223ad35ce",
+          "role": "link",
+          "text": "Engineering Log",
+          "actions": [
+            "click"
+          ],
+          "attrs": {
+            "href": "/docs/log"
+          }
+        },
+        {
+          "id": "e_43e773b48971",
+          "role": "link",
+          "text": "Privacy",
+          "actions": [
+            "click"
+          ],
+          "attrs": {
+            "href": "/privacy"
+          }
+        }
+      ]
+    },
+    {
+      "id": "r_main",
+      "role": "main",
+      "elements": [
+        {
+          "id": "e_3bde5df57712",
+          "role": "heading",
+          "text": "The browser engine for agents.",
+          "attrs": {
+            "level": 1
+          }
+        },
+        {
+          "id": "e_064dd1d5a6ff",
+          "role": "paragraph",
+          "text": "Plasmate compiles HTML into a Semantic Object Model, a structured representation that LLMs can reason about directly. 50x faster than Chrome. 10x fewer tokens."
+        },
+        {
+          "id": "e_9efc18a25469",
+          "role": "paragraph",
+          "text": "Semantic Object Model"
+        },
+        {
+          "id": "e_6f1c2d920fb0",
+          "role": "heading",
+          "text": "The DOM was built for humans",
+          "attrs": {
+            "level": 2
+          }
+        },
+        {
+          "id": "e_9b6fed96771b",
+          "role": "paragraph",
+          "text": "The Document Object Model represents a page as a tree of elements. It include..."
+        },
+        {
+          "id": "e_4133cc75e3e4",
+          "role": "paragraph",
+          "text": "Agents don't need all of it."
+        },
+        {
+          "id": "e_f41d704ba204",
+          "role": "paragraph",
+          "text": "The Semantic Object Model extracts what matters: structure, content, and inte..."
+        },
+        {
+          "id": "e_2368e4df06d6",
+          "role": "paragraph",
+          "text": "DOM"
+        },
+        {
+          "id": "e_aa75a3e7b42b",
+          "role": "paragraph",
+          "text": "47,000 tokens"
+        },
+        {
+          "id": "e_d4cf13ac432a",
+          "role": "paragraph",
+          "text": "SOM"
+        },
+        {
+          "id": "e_14ceb544cb03",
+          "role": "paragraph",
+          "text": "4,500 tokens"
+        },
+        {
+          "id": "e_91c538ef1a71",
+          "role": "paragraph",
+          "text": "Wikipedia homepage, same page."
+        },
+        {
+          "id": "e_c378bb85cbf5",
+          "role": "heading",
+          "text": "7 methods. That's the protocol.",
+          "attrs": {
+            "level": 2
+          }
+        },
+        {
+          "id": "e_f9aad9fb46e1",
+          "role": "heading",
+          "text": "Infrastructure, not product",
+          "attrs": {
+            "level": 2
+          }
+        },
+        {
+          "id": "e_4d85c105670f",
+          "role": "heading",
+          "text": "One binary. Two modes.",
+          "attrs": {
+            "level": 2
+          }
+        },
+        {
+          "id": "e_8870965bdf2c",
+          "role": "heading",
+          "text": "What's new",
+          "attrs": {
+            "level": 2
+          }
+        },
+        {
+          "id": "e_81decfa14b99",
+          "role": "heading",
+          "text": "Performance in context",
+          "attrs": {
+            "level": 2
+          }
+        },
+        {
+          "id": "e_d7c9df62156d",
+          "role": "table",
+          "label": "Plasmate benchmark comparisons",
+          "attrs": {
+            "headers": [
+              "Engine",
+              "Per page",
+              "100 pages",
+              "Memory",
+              "Binary"
+            ],
+            "rows": [
+              [
+                "Plasmate",
+                "4-5 ms",
+                "405-512 ms",
+                "28 MB",
+                "45.8 MB"
+              ],
+              [
+                "Lightpanda",
+                "23 ms",
+                "2,300 ms",
+                "~2.4 GB",
+                "59-111 MB"
+              ],
+              [
+                "Chrome",
+                "252 ms",
+                "25,200 ms",
+                "~20 GB",
+                "300-500 MB"
+              ]
+            ]
+          }
+        },
+        {
+          "id": "e_summary_32",
+          "role": "paragraph",
+          "text": "[32 more paragraphs dropped, ~1197 chars]"
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "html_bytes": 27650,
+    "som_bytes": 6711,
+    "element_count": 38,
+    "interactive_count": 11
+  },
+  "structured_data": {
+    "json_ld": [
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "alternateName": "The Better Browser for AI Agents",
+        "applicationCategory": "DeveloperApplication",
+        "author": {
+          "@type": "Organization",
+          "name": "Plasmate Labs",
+          "url": "https://plasmate.app"
+        },
+        "description": "Plasmate is a browser engine purpose-built for AI agents. It compiles HTML into a Semantic Object Model (SOM), delivering 50x faster performance and 10x fewer tokens than Chrome-based solutions.",
+        "license": "https://www.apache.org/licenses/LICENSE-2.0",
+        "name": "Plasmate",
+        "offers": {
+          "@type": "Offer",
+          "description": "Open source under Apache 2.0",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "operatingSystem": "Linux, macOS, Windows",
+        "sameAs": [
+          "https://github.com/plasmate-labs/plasmate",
+          "https://x.com/plasmate_labs",
+          "https://www.w3.org/community/web-content-browser-ai/",
+          "https://crates.io/crates/plasmate",
+          "https://pypi.org/project/plasmate/",
+          "https://www.npmjs.com/package/plasmate"
+        ],
+        "softwareVersion": "0.4.0",
+        "url": "https://plasmate.app"
+      }
+    ],
+    "open_graph": {
+      "og:description": "The better browser for AI agents. HTML in, Semantic Object Model out. 50x faster, 10x fewer tokens. W3C Community Group member. Apache 2.0.",
+      "og:type": "website",
+      "og:url": "https://plasmate.app",
+      "og:title": "Plasmate - The Better Browser for AI Agents",
+      "og:site_name": "Plasmate"
+    },
+    "twitter_card": {
+      "twitter:card": "summary_large_image",
+      "twitter:site": "@plasmate_labs",
+      "twitter:title": "Plasmate - The Better Browser for AI Agents",
+      "twitter:description": "HTML in, Semantic Object Model out. 50x faster than Chrome, 10x fewer tokens. W3C Community Group member."
+    },
+    "meta": {
+      "keywords": "browser for AI agents, semantic object model, SOM, agent web protocol, AWP, headless browser, AI browser, web scraping, browser automation, W3C, better browser for agents, Plasmate",
+      "charset": "utf-8",
+      "description": "Plasmate is the better browser for AI agents. Compiles HTML into a Semantic Object Model (SOM) - 50x faster than Chrome, 10x fewer tokens. W3C Community Group member. Apache 2.0. One binary.",
+      "viewport": "width=device-width,initial-scale=1"
+    },
+    "links": [
+      {
+        "rel": "canonical",
+        "href": "https://plasmate.app"
+      },
+      {
+        "rel": "icon",
+        "href": "/favicon.ico"
+      },
+      {
+        "rel": "icon",
+        "href": "/favicon-32x32.png",
+        "type": "image/png"
+      },
+      {
+        "rel": "apple-touch-icon",
+        "href": "/apple-touch-icon.png"
+      },
+      {
+        "rel": "preconnect",
+        "href": "https://fonts.googleapis.com"
+      },
+      {
+        "rel": "preconnect",
+        "href": "https://fonts.gstatic.com"
+      }
+    ]
+  }
+}

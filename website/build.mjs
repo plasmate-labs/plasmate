@@ -18,6 +18,7 @@ const NAV = [
   { slug: 'som', label: 'SOM Reference' },
   { slug: 'som-spec', label: 'SOM Spec v1.0' },
   { slug: 'why-som', label: 'Why SOM' },
+  { slug: 'som-first-sites', label: 'SOM-first Websites' },
   { slug: 'awp', label: 'AWP Protocol' },
   { slug: 'awp-mvp', label: 'AWP MVP v0.1' },
   { section: 'Install' },
@@ -75,6 +76,7 @@ function template(title, body, currentSlug) {
   <meta name="description" content="${title} - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
   <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, ${title.toLowerCase()}" />
   <link rel="canonical" href="https://docs.plasmate.app/${currentSlug === 'overview' ? '' : currentSlug}" />
+  <link rel="alternate" type="application/som+json" href="/.well-known/som.json" title="SOM (Plasmate)" />
 
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />

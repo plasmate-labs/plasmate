@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Build a Web Research Agent with Plasmate - Plasmate Docs | The Better Browser for AI Agents</title>
-  <meta name="description" content="Build a Web Research Agent with Plasmate - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
-  <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, build a web research agent with plasmate" />
-  <link rel="canonical" href="https://docs.plasmate.app/tutorial-research-agent" />
+  <title>SOM-first websites - Plasmate Docs | The Better Browser for AI Agents</title>
+  <meta name="description" content="SOM-first websites - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
+  <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, som-first websites" />
+  <link rel="canonical" href="https://docs.plasmate.app/som-first-sites" />
   <link rel="alternate" type="application/som+json" href="/.well-known/som.json" title="SOM (Plasmate)" />
 
   <link rel="icon" href="/favicon.ico" sizes="any" />
@@ -405,7 +405,7 @@
           <a href="som">SOM Reference</a>
           <a href="som-spec">SOM Spec v1.0</a>
           <a href="why-som">Why SOM</a>
-          <a href="som-first-sites">SOM-first Websites</a>
+          <a href="som-first-sites" class="active">SOM-first Websites</a>
           <a href="awp">AWP Protocol</a>
           <a href="awp-mvp">AWP MVP v0.1</a>
           <div class="section-label">Install</div>
@@ -434,7 +434,7 @@
           <div class="section-label">User Guides</div>
           <a href="guide-agent-browses-twitter">Your Agent on X/Twitter</a>
           <a href="guide-authenticated-browsing">Authenticated Browsing</a>
-          <a href="tutorial-research-agent" class="active">Build a Research Agent</a>
+          <a href="tutorial-research-agent">Build a Research Agent</a>
           <div class="section-label">Proposals</div>
           <a href="robots-txt-proposal">Robots.txt for Agents</a>
           <div class="section-label">Brand</div>
@@ -449,177 +449,86 @@
       </div>
     </nav>
     <main class="content">
-      <h1 id="build-a-web-research-agent-with-plasmate">Build a Web Research Agent with Plasmate</h1><p>This tutorial walks through building a simple web research agent that uses Plasmate to read web pages. No LLM API key required - we focus on the content extraction pipeline.</p>
-<h2 id="what-were-building">What We're Building</h2><p>A Python script that:</p>
+      <h1 id="som-first-websites">SOM-first websites</h1><p>SOM is usually something agents generate by compiling a web page.</p>
+<p>A SOM-first website goes one step further. It is built so that:</p>
 <ol>
-<li>Takes a research topic</li>
-<li>Fetches relevant web pages using Plasmate</li>
-<li>Extracts structured content from each page</li>
-<li>Combines findings into a research summary</li>
-<li>Reports token usage and estimated costs</li>
+<li>The HTML and DOM compile into a high-signal SOM with minimal noise</li>
+<li>Optionally, the site publishes SOM as an official alternate representation</li>
 </ol>
-<h2 id="prerequisites">Prerequisites</h2><pre><code class="language-bash">pip install plasmate
-</code></pre>
-<p>Verify it works:</p>
-<pre><code class="language-bash">plasmate fetch https://example.com
-</code></pre>
-<p>You should see a JSON SOM (Semantic Object Model) output.</p>
-<h2 id="step-1-fetch-a-page">Step 1: Fetch a Page</h2><p>The simplest Plasmate interaction:</p>
-<pre><code class="language-python">import subprocess
-import json
-
-def fetch_page(url: str) -&gt; dict:
-    &quot;&quot;&quot;Fetch a URL with Plasmate and return the SOM.&quot;&quot;&quot;
-    result = subprocess.run(
-        [&quot;plasmate&quot;, &quot;fetch&quot;, url],
-        capture_output=True, text=True, timeout=30
-    )
-    if result.returncode != 0:
-        return None
-    return json.loads(result.stdout)
-
-# Try it
-som = fetch_page(&quot;https://en.wikipedia.org/wiki/Artificial_intelligence&quot;)
-print(f&quot;Title: {som[&#39;title&#39;]}&quot;)
-print(f&quot;Regions: {len(som[&#39;regions&#39;])}&quot;)
-</code></pre>
-<p>The SOM output is structured into <strong>regions</strong> (navigation, content, forms) containing <strong>elements</strong> (headings, paragraphs, links, tables).</p>
-<h2 id="step-2-extract-content">Step 2: Extract Content</h2><p>Pull the useful information out of the SOM:</p>
-<pre><code class="language-python">def extract_content(som: dict) -&gt; dict:
-    &quot;&quot;&quot;Extract structured content from a SOM.&quot;&quot;&quot;
-    title = som.get(&quot;title&quot;, &quot;&quot;)
-    headings = []
-    paragraphs = []
-    links = []
-
-    for region in som.get(&quot;regions&quot;, []):
-        for el in region.get(&quot;elements&quot;, []):
-            role = el.get(&quot;role&quot;, &quot;&quot;)
-            text = el.get(&quot;text&quot;, &quot;&quot;)
-
-            if role == &quot;heading&quot;:
-                level = el.get(&quot;attrs&quot;, {}).get(&quot;level&quot;, 2)
-                headings.append({&quot;level&quot;: level, &quot;text&quot;: text})
-            elif role == &quot;paragraph&quot; and text:
-                paragraphs.append(text)
-            elif role == &quot;link&quot;:
-                href = el.get(&quot;attrs&quot;, {}).get(&quot;href&quot;, &quot;&quot;)
-                if href and text:
-                    links.append({&quot;text&quot;: text, &quot;url&quot;: href})
-
-    return {
-        &quot;title&quot;: title,
-        &quot;headings&quot;: headings,
-        &quot;paragraphs&quot;: paragraphs,
-        &quot;links&quot;: links,
-        &quot;word_count&quot;: sum(len(p.split()) for p in paragraphs),
-    }
-
-content = extract_content(som)
-print(f&quot;Title: {content[&#39;title&#39;]}&quot;)
-print(f&quot;Headings: {len(content[&#39;headings&#39;])}&quot;)
-print(f&quot;Paragraphs: {len(content[&#39;paragraphs&#39;])}&quot;)
-print(f&quot;Links: {len(content[&#39;links&#39;])}&quot;)
-print(f&quot;Words: {content[&#39;word_count&#39;]}&quot;)
-</code></pre>
-<h2 id="step-3-batch-research">Step 3: Batch Research</h2><p>Fetch multiple pages about a topic:</p>
-<pre><code class="language-python">from concurrent.futures import ThreadPoolExecutor, as_completed
-
-def research_topic(urls: list, max_concurrent: int = 5) -&gt; list:
-    &quot;&quot;&quot;Fetch and extract content from multiple URLs.&quot;&quot;&quot;
-    results = []
-
-    with ThreadPoolExecutor(max_workers=max_concurrent) as executor:
-        futures = {executor.submit(fetch_page, url): url for url in urls}
-
-        for future in as_completed(futures):
-            url = futures[future]
-            try:
-                som = future.result()
-                if som:
-                    content = extract_content(som)
-                    content[&quot;url&quot;] = url
-                    results.append(content)
-                    print(f&quot;  Fetched: {content[&#39;title&#39;][:50]}&quot;)
-            except Exception as e:
-                print(f&quot;  Failed: {url} ({e})&quot;)
-
-    return results
-
-# Research &quot;AI agents&quot;
-urls = [
-    &quot;https://en.wikipedia.org/wiki/Intelligent_agent&quot;,
-    &quot;https://docs.python.org/3/library/asyncio.html&quot;,
-    &quot;https://www.anthropic.com/research&quot;,
-    &quot;https://openai.com/index/practices-for-governing-agentic-ai-systems&quot;,
-    &quot;https://www.reuters.com/technology/artificial-intelligence/&quot;,
-]
-
-print(&quot;Researching AI agents...&quot;)
-findings = research_topic(urls)
-print(f&quot;\nFetched {len(findings)} pages&quot;)
-</code></pre>
-<h2 id="step-4-summarize-findings">Step 4: Summarize Findings</h2><p>Combine the extracted content into a structured research document:</p>
-<pre><code class="language-python">def summarize_research(findings: list, topic: str) -&gt; str:
-    &quot;&quot;&quot;Create a research summary from extracted content.&quot;&quot;&quot;
-    lines = [f&quot;# Research Summary: {topic}&quot;, &quot;&quot;]
-
-    for finding in findings:
-        lines.append(f&quot;## {finding[&#39;title&#39;]}&quot;)
-        lines.append(f&quot;Source: {finding[&#39;url&#39;]}&quot;)
-        lines.append(f&quot;Words: {finding[&#39;word_count&#39;]}&quot;)
-        lines.append(&quot;&quot;)
-
-        # Include top headings as an outline
-        for h in finding[&quot;headings&quot;][:5]:
-            prefix = &quot;#&quot; * (h[&quot;level&quot;] + 1)
-            lines.append(f&quot;{prefix} {h[&#39;text&#39;]}&quot;)
-
-        # Include first 3 paragraphs
-        for p in finding[&quot;paragraphs&quot;][:3]:
-            lines.append(f&quot;\n{p[:200]}...&quot;)
-
-        lines.append(&quot;\n---\n&quot;)
-
-    # Token comparison
-    total_words = sum(f[&quot;word_count&quot;] for f in findings)
-    est_tokens = total_words * 4 // 3  # rough estimate
-    lines.append(f&quot;## Stats&quot;)
-    lines.append(f&quot;- Pages fetched: {len(findings)}&quot;)
-    lines.append(f&quot;- Total words: {total_words}&quot;)
-    lines.append(f&quot;- Estimated tokens (SOM): ~{est_tokens}&quot;)
-    lines.append(f&quot;- Estimated tokens (Chrome HTML): ~{est_tokens * 16} (16x more)&quot;)
-    lines.append(f&quot;- Estimated GPT-4 cost (SOM): ${est_tokens * 30 / 1000000:.4f}&quot;)
-    lines.append(f&quot;- Estimated GPT-4 cost (Chrome): ${est_tokens * 16 * 30 / 1000000:.4f}&quot;)
-
-    return &quot;\n&quot;.join(lines)
-
-summary = summarize_research(findings, &quot;AI Agents&quot;)
-print(summary)
-</code></pre>
-<h2 id="step-5-save-and-compare">Step 5: Save and Compare</h2><pre><code class="language-python"># Save the summary
-with open(&quot;research-summary.md&quot;, &quot;w&quot;) as f:
-    f.write(summary)
-
-print(f&quot;\nSaved to research-summary.md&quot;)
-print(f&quot;\nToken savings vs Chrome: {16}x fewer tokens&quot;)
-print(f&quot;That&#39;s the difference between $0.01 and $0.16 per research run at GPT-4 rates.&quot;)
-print(f&quot;At 1000 research runs/day: $10 vs $160.&quot;)
-</code></pre>
-<h2 id="whats-next">What's Next</h2><p>This pipeline produces clean, structured content ready to feed into any LLM. To build a full research agent:</p>
-<ol>
-<li><strong>Add an LLM</strong> - Send the extracted content to GPT-4, Claude, or a local model for synthesis</li>
-<li><strong>Add search</strong> - Use a search API to discover URLs dynamically instead of hardcoding them</li>
-<li><strong>Add follow-up</strong> - Extract links from the SOM and follow them for deeper research</li>
-<li><strong>Add caching</strong> - Use the <a href="https://cache.plasmate.app">SOM Cache</a> to avoid re-fetching pages</li>
-</ol>
-<h2 id="full-script">Full Script</h2><p>The complete script is available in our <a href="https://github.com/plasmate-labs/quickstart-python">quickstart-python</a> template.</p>
-<h2 id="links">Links</h2><ul>
-<li><a href="https://plasmate.app">Plasmate</a> - Install with <code>pip install plasmate</code></li>
-<li><a href="https://docs.plasmate.app/som-spec">SOM Specification</a> - Full format reference</li>
-<li><a href="https://github.com/plasmate-labs/notebooks">Jupyter Notebooks</a> - Interactive versions of these examples</li>
-<li><a href="https://www.w3.org/community/web-content-browser-ai/">W3C Community Group</a> - Help shape the standard</li>
+<p>This page is a best-practices guide for site owners and a checklist for Plasmate Labs properties.</p>
+<hr>
+<h2 id="goals">Goals</h2><ul>
+<li>Make pages easier for agents to understand</li>
+<li>Reduce token costs by avoiding boilerplate and duplicated content</li>
+<li>Make automation more reliable by keeping element structure stable</li>
+<li>Make caching easier by publishing stable, machine-readable representations</li>
 </ul>
+<hr>
+<h2 id="level-1-make-your-dom-som-friendly">Level 1: Make your DOM SOM-friendly</h2><p>This is the most important step. If the HTML is semantic and stable, Plasmate can compile it into a great SOM.</p>
+<h3 id="semantic-structure">Semantic structure</h3><ul>
+<li>Use <code>main</code>, <code>nav</code>, <code>header</code>, <code>footer</code>, <code>article</code>, <code>section</code> for page layout</li>
+<li>Use a single real <code>h1</code> and a correct heading hierarchy (<code>h2</code>, <code>h3</code>, ...)</li>
+<li>Use real lists and tables (<code>ul</code>, <code>ol</code>, <code>li</code>, <code>table</code>) when content is a list or table</li>
+</ul>
+<h3 id="real-interactive-elements">Real interactive elements</h3><ul>
+<li>Prefer <code>button</code>, <code>a</code>, <code>input</code>, <code>select</code>, <code>textarea</code></li>
+<li>Avoid clickable <code>div</code> elements as the primary UI control</li>
+</ul>
+<h3 id="labels-and-accessibility">Labels and accessibility</h3><ul>
+<li>Use <code>aria-label</code> and <code>aria-describedby</code> where needed</li>
+<li>Use proper <code>&lt;label for=&quot;...&quot;&gt;</code> for form fields</li>
+<li>Make link text meaningful (avoid many identical &quot;Learn more&quot; links)</li>
+</ul>
+<h3 id="server-side-rendering-for-primary-content">Server-side rendering for primary content</h3><ul>
+<li>Ensure core content exists in the initial HTML</li>
+<li>Avoid putting the primary text behind delayed client-side fetch or late hydration</li>
+</ul>
+<h3 id="stability">Stability</h3><ul>
+<li>Keep stable IDs or stable ordering for key elements</li>
+<li>Avoid reshuffling the DOM on each deploy due to random classnames or keys</li>
+</ul>
+<h3 id="reduce-noise">Reduce noise</h3><ul>
+<li>Minimize repeated nav, footer, and unrelated &quot;recommended&quot; blocks</li>
+<li>Keep cookie dialogs from injecting large amounts of duplicate text into the DOM</li>
+</ul>
+<hr>
+<h2 id="level-2-publish-som-as-an-alternate-representation">Level 2: Publish SOM as an alternate representation</h2><p>This is optional, but powerful. A site can publish a canonical SOM JSON file so agents do not need to render or compile.</p>
+<h3 id="recommended-patterns">Recommended patterns</h3><h4 id="a-a-well-known-som-url">A. A well-known SOM URL</h4><p>Publish a SOM JSON representation at:</p>
+<ul>
+<li><code>/.well-known/som.json</code></li>
+</ul>
+<p>This is easy to host on static sites.</p>
+<h4 id="b-an-explicit-alternate-link">B. An explicit alternate link</h4><p>Add an alternate link in your HTML:</p>
+<pre><code class="language-html">&lt;link
+  rel=&quot;alternate&quot;
+  type=&quot;application/som+json&quot;
+  href=&quot;/.well-known/som.json&quot;
+  title=&quot;SOM&quot;
+/&gt;
+</code></pre>
+<p>If you control HTTP headers, you can also send:</p>
+<pre><code class="language-http">Link: &lt;/.well-known/som.json&gt;; rel=&quot;alternate&quot;; type=&quot;application/som+json&quot;; title=&quot;SOM&quot;
+</code></pre>
+<h4 id="c-content-negotiation">C. Content negotiation</h4><p>If you run an application server, you can support a dedicated endpoint, for example:</p>
+<ul>
+<li><code>GET /som?url=https://example.com/page</code></li>
+<li><code>GET /page?format=som</code></li>
+</ul>
+<p>This is more complex but can be made fully automatic.</p>
+<hr>
+<h2 id="how-to-generate-a-som-file">How to generate a SOM file</h2><p>If you own the site, you can generate the SOM using Plasmate and publish it as a static file.</p>
+<p>Example:</p>
+<pre><code class="language-bash">plasmate fetch https://example.com &gt; som.json
+# publish som.json at /.well-known/som.json
+</code></pre>
+<hr>
+<h2 id="checklist-for-plasmate-labs-properties">Checklist for Plasmate Labs properties</h2><p>All Plasmate Labs properties should aim to:</p>
+<ul>
+<li>Use semantic HTML and accessible labels</li>
+<li>Avoid div-only UI for key controls</li>
+<li>Publish <code>/.well-known/som.json</code> and link it from HTML</li>
+</ul>
+<p>If a property cannot publish SOM yet, it should at least meet the Level 1 DOM guidelines.</p>
 
     </main>
   </div>
