@@ -36,6 +36,7 @@ Each task is run against:
 ```bash
 # 1. Build the corpus (fetch all pages in 3 formats)
 ./scripts/fetch_corpus.sh
+# (or: python3 scripts/fetch_corpus.py)
 
 # 2. Run evaluation (dry run first)
 python3 scripts/run_eval.py --model gpt-4o --dry-run
@@ -47,7 +48,11 @@ python3 scripts/run_eval.py --model gpt-4o --format all --runs 3
 python3 scripts/run_eval.py --model gpt-4o --category adversarial --runs 1
 
 # 5. Replicate with Claude
-python3 scripts/run_eval.py --model claude-3-5-sonnet-20241022 --format all --runs 3
+python3 scripts/run_eval.py --model claude-sonnet-4-20250514 --format all --runs 3
+
+# 6. Resume a long run
+python3 scripts/run_eval.py --model claude-sonnet-4-20250514 --format all --runs 3 \
+  --resume results/eval-claude-sonnet-4-20250514-YYYYMMDD-HHMMSS.jsonl
 ```
 
 ## File Structure

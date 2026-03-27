@@ -134,16 +134,33 @@ def run_task(task: dict, fmt: str, model: str) -> dict:
     system = SYSTEM_PROMPT_TEMPLATE.format(format_name=FORMAT_NAMES[fmt])
     user = f"Page content:\n\n{content}\n\n---\n\nQuestion: {task['question']}"
 
-    try:
-        result = call_llm(model, system, user)
-    except Exception as e:
-        return {
-            "task_id": task["id"],
-            "format": fmt,
-            "model": model,
-            "status": "error",
-            "reason": str(e),
-        }
+    max_retries = 5
+    for attempt in range(max_retries):
+        try:
+            result = call_llm(model, system, user)
+            break
+        except Exception as e:
+            err_str = str(e)
+            if "429" in err_str or "rate_limit" in err_str or "overloaded" in err_str:
+                wait = (2 ** attempt) * 5  # 5, 10, 20, 40, 80s
+                print(f"    RATE LIMITED (attempt {attempt+1}/{max_retries}), waiting {wait}s...")
+                time.sleep(wait)
+                if attempt == max_retries - 1:
+                    return {
+                        "task_id": task["id"],
+                        "format": fmt,
+                        "model": model,
+                        "status": "error",
+                        "reason": err_str,
+                    }
+            else:
+                return {
+                    "task_id": task["id"],
+                    "format": fmt,
+                    "model": model,
+                    "status": "error",
+                    "reason": err_str,
+                }
 
     return {
         "task_id": task["id"],
@@ -173,6 +190,7 @@ def main():
                         choices=["extraction", "comparison", "navigation", "summarization", "adversarial"],
                         help="Only run tasks in this category")
     parser.add_argument("--dry-run", action="store_true", help="Print plan without calling APIs")
+    parser.add_argument("--resume", default=None, help="Resume from an existing results JSONL file (append + skip completed calls)")
     args = parser.parse_args()
 
     tasks = json.loads(TASKS_FILE.read_text())
@@ -206,20 +224,55 @@ def main():
         return
 
     RESULTS_DIR.mkdir(exist_ok=True)
-    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    model_slug = args.model.replace("/", "-").replace(".", "-")
-    output_file = RESULTS_DIR / f"eval-{model_slug}-{timestamp}.jsonl"
 
-    print(f"Results -> {output_file}")
-    print()
-
+    done: set[tuple[int, str, str]] = set()
     completed = 0
-    with open(output_file, "w") as f:
+
+    if args.resume:
+        output_file = Path(args.resume)
+        if not output_file.exists():
+            raise SystemExit(f"--resume file not found: {output_file}")
+        # Load completed keys so we can skip them.
+        with open(output_file, "r") as rf:
+            for line in rf:
+                try:
+                    r = json.loads(line)
+                except Exception:
+                    continue
+                run_no = r.get("run")
+                task_id = r.get("task_id")
+                fmt = r.get("format")
+                status = r.get("status")
+                if isinstance(run_no, int) and isinstance(task_id, str) and isinstance(fmt, str):
+                    if status != "error":
+                        done.add((run_no, task_id, fmt))
+        completed = len(done)
+        print(f"Resuming -> {output_file}")
+        print(f"  Already complete: {completed}/{total_calls}")
+        print()
+        file_mode = "a"
+    else:
+        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        model_slug = args.model.replace("/", "-").replace(".", "-")
+        output_file = RESULTS_DIR / f"eval-{model_slug}-{timestamp}.jsonl"
+        print(f"Results -> {output_file}")
+        print()
+        file_mode = "w"
+
+    with open(output_file, file_mode) as f:
         for run_idx in range(args.runs):
+            run_no = run_idx + 1
             for task in tasks:
+                task_id = task["id"]
                 for fmt in formats:
+                    key = (run_no, task_id, fmt)
+                    if key in done:
+                        completed += 1
+                        print(f"  [{completed}/{total_calls}] {task_id}/{fmt}/run{run_no}: already")
+                        continue
+
                     result = run_task(task, fmt, args.model)
-                    result["run"] = run_idx + 1
+                    result["run"] = run_no
                     result["timestamp"] = datetime.now().isoformat()
                     f.write(json.dumps(result) + "\n")
                     f.flush()
@@ -229,12 +282,16 @@ def main():
                     tokens = result.get("input_tokens", 0)
                     latency = result.get("latency_s", 0)
 
-                    print(f"  [{completed}/{total_calls}] {task['id']}/{fmt}/run{run_idx+1}: "
+                    if status != "error":
+                        done.add(key)
+
+                    print(f"  [{completed}/{total_calls}] {task_id}/{fmt}/run{run_no}: "
                           f"{status} ({tokens:,} tok, {latency:.1f}s)")
 
                     # Rate limit: pause between calls
                     if status == "ok":
-                        time.sleep(0.5)
+                        delay = 3.0 if "claude" in args.model else 0.5
+                        time.sleep(delay)
 
     print(f"\nDone. Results in {output_file}")
     print(f"  Total calls: {completed}")
