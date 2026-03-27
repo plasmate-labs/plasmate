@@ -4,7 +4,9 @@
 //! Scripts share state within a page (as in a real browser).
 //! A minimal DOM shim lets common JS patterns work without a full DOM.
 
+use std::alloc::{alloc, Layout};
 use std::cell::RefCell;
+use std::path::PathBuf;
 use std::sync::Once;
 use std::time::Duration;
 
@@ -31,9 +33,67 @@ const FETCH_TIMEOUT: Duration = Duration::from_secs(5);
 
 static V8_INIT: Once = Once::new();
 
+/// Find ICU data file from PLASMATE_ICU_DATA env var or next to executable.
+fn icu_data_path() -> Option<PathBuf> {
+    if let Some(p) = std::env::var_os("PLASMATE_ICU_DATA") {
+        return Some(PathBuf::from(p));
+    }
+    let exe = std::env::current_exe().ok()?;
+    let dir = exe.parent()?;
+    for name in ["icudt74l.dat", "icudtl.dat"] {
+        let p = dir.join(name);
+        if p.exists() {
+            return Some(p);
+        }
+    }
+    None
+}
+
+/// Load ICU data into memory and register it with the ICU library.
+/// Must be called BEFORE `v8::V8::initialize()` so V8 uses our data
+/// instead of its built-in minimal ICU data.
+fn load_icu_data() {
+    let Some(path) = icu_data_path() else {
+        warn!("ICU data file not found; Intl APIs may misbehave. Set PLASMATE_ICU_DATA=/path/to/icudt74l.dat");
+        return;
+    };
+
+    let bytes = match std::fs::read(&path) {
+        Ok(b) => b,
+        Err(err) => {
+            warn!(path = %path.display(), %err, "Failed to read ICU data file");
+            return;
+        }
+    };
+
+    // Allocate 16-byte-aligned memory for ICU data (required by ICU).
+    let layout = match Layout::from_size_align(bytes.len(), 16) {
+        Ok(l) => l,
+        Err(_) => {
+            warn!("Invalid ICU data size: {}", bytes.len());
+            return;
+        }
+    };
+    let ptr = unsafe { alloc(layout) };
+    if ptr.is_null() {
+        warn!("Out of memory allocating ICU data");
+        return;
+    }
+    unsafe { std::ptr::copy_nonoverlapping(bytes.as_ptr(), ptr, bytes.len()) };
+    let data = unsafe { std::slice::from_raw_parts(ptr, bytes.len()) };
+
+    // Register the data with ICU before V8 initializes.
+    match v8::icu::set_common_data_74(data) {
+        Ok(()) => info!(path = %path.display(), bytes = data.len(), "ICU data loaded ({} MB)", data.len() / 1_048_576),
+        Err(code) => warn!(path = %path.display(), code, "ICU data load returned error code"),
+    }
+}
+
 /// Initialize V8 platform (must be called once).
 pub fn init_platform() {
     V8_INIT.call_once(|| {
+        // Load ICU data BEFORE V8 initializes so our data is used.
+        load_icu_data();
         let platform = v8::new_default_platform(0, false).make_shared();
         v8::V8::initialize_platform(platform);
         v8::V8::initialize();
@@ -90,89 +150,87 @@ var __plasmate_raf_id = 0;
 var self = globalThis;
 var window = globalThis;
 
-// URLSearchParams and URL (needed by many SPAs - NYTimes, etc.)
-// Some V8 builds expose a partial URL that is not constructible. Detect and polyfill.
-// IMPORTANT: URLSearchParams must be polyfilled BEFORE URL because URL uses it.
+// MessageChannel is used by React's scheduler.
+function MessageChannel() {
+    this.port1 = new MessagePort();
+    this.port2 = new MessagePort();
+    this.port1._other = this.port2;
+    this.port2._other = this.port1;
+}
+function MessagePort() {
+    this._listeners = [];
+    this._closed = false;
+    this.onmessage = null;
+}
+MessagePort.prototype = {
+    postMessage: function(data) {
+        if (this._closed || !this._other || this._other._closed) return;
+        var other = this._other;
+        // Post message asynchronously
+        setTimeout(function() {
+            var ev = { data: data };
+            if (typeof other.onmessage === 'function') {
+                try { other.onmessage(ev); } catch(e) {}
+            }
+            for (var i = 0; i < other._listeners.length; i++) {
+                try { other._listeners[i](ev); } catch(e) {}
+            }
+        }, 0);
+    },
+    addEventListener: function(name, fn) { if (name === 'message') this._listeners.push(fn); },
+    removeEventListener: function(name, fn) {
+        if (name !== 'message') return;
+        var i = this._listeners.indexOf(fn);
+        if (i > -1) this._listeners.splice(i, 1);
+    },
+    start: function() {},
+    close: function() { this._closed = true; if (this._other) this._other._closed = true; }
+};
+globalThis.MessageChannel = MessageChannel;
+globalThis.MessagePort = MessagePort;
 
-var __plasmate_urlsp_ok = false;
-try {
-  if (typeof URLSearchParams === 'function') new URLSearchParams('a=1');
-  __plasmate_urlsp_ok = true;
-} catch (e) { __plasmate_urlsp_ok = false; }
-
-if (!__plasmate_urlsp_ok) {
-  var URLSearchParams = function(init) {
+// Unconditionally polyfill URLSearchParams and URL to ensure a consistent,
+// standards-compliant, and *constructible* implementation. Some V8 versions
+// ship with a non-constructible `URL` function which breaks many sites.
+var URLSearchParams = function(init) {
     this._entries = [];
     if (typeof init === 'string') {
-      init = init.replace(/^\?/, '');
-      if (init) {
-        var pairs = init.split('&');
-        for (var i = 0; i < pairs.length; i++) {
-          var kv = pairs[i].split('=');
-          this._entries.push([decodeURIComponent(kv[0]), decodeURIComponent(kv.slice(1).join('='))]);
+        init = init.replace(/^\?/, '');
+        if (init) {
+            var pairs = init.split('&');
+            for (var i = 0; i < pairs.length; i++) {
+                var kv = pairs[i].split('=');
+                this._entries.push([decodeURIComponent(kv[0] || ''), decodeURIComponent(kv.slice(1).join('=') || '')]);
+            }
         }
-      }
     }
-  };
-  URLSearchParams.prototype.get = function(name) {
+};
+URLSearchParams.prototype.get = function(name) {
     for (var i = 0; i < this._entries.length; i++) {
-      if (this._entries[i][0] === name) return this._entries[i][1];
+        if (this._entries[i][0] === name) return this._entries[i][1];
     }
     return null;
-  };
-  URLSearchParams.prototype.getAll = function(name) {
-    var r = [];
+};
+URLSearchParams.prototype.append = function(name, val) { this._entries.push([name, String(val)]); };
+URLSearchParams.prototype.delete = function(name) {
     for (var i = 0; i < this._entries.length; i++) {
-      if (this._entries[i][0] === name) r.push(this._entries[i][1]);
+        if (this._entries[i][0] === name) { this._entries.splice(i, 1); i--; }
     }
-    return r;
-  };
-  URLSearchParams.prototype.has = function(name) { return this.get(name) !== null; };
-  URLSearchParams.prototype.set = function(name, val) {
-    var found = false;
-    for (var i = 0; i < this._entries.length; i++) {
-      if (this._entries[i][0] === name) {
-        if (!found) { this._entries[i][1] = String(val); found = true; }
-        else { this._entries.splice(i, 1); i--; }
-      }
-    }
-    if (!found) this._entries.push([name, String(val)]);
-  };
-  URLSearchParams.prototype.append = function(name, val) { this._entries.push([name, String(val)]); };
-  URLSearchParams.prototype.delete = function(name) {
-    for (var i = 0; i < this._entries.length; i++) {
-      if (this._entries[i][0] === name) { this._entries.splice(i, 1); i--; }
-    }
-  };
-  URLSearchParams.prototype.toString = function() {
+};
+URLSearchParams.prototype.toString = function() {
     return this._entries.map(function(e) { return encodeURIComponent(e[0]) + '=' + encodeURIComponent(e[1]); }).join('&');
-  };
-  URLSearchParams.prototype.forEach = function(cb) {
-    for (var i = 0; i < this._entries.length; i++) cb(this._entries[i][1], this._entries[i][0], this);
-  };
-  URLSearchParams.prototype.keys = function() { return this._entries.map(function(e) { return e[0]; }); };
-  URLSearchParams.prototype.values = function() { return this._entries.map(function(e) { return e[1]; }); };
-  URLSearchParams.prototype.entries = function() { return this._entries.slice(); };
-  globalThis.URLSearchParams = URLSearchParams;
-}
+};
+globalThis.URLSearchParams = URLSearchParams;
 
-// Polyfill URL if it's not a constructible function
-var __plasmate_url_ok = false;
-try {
-  if (typeof URL === 'function') new URL('https://a.com');
-  __plasmate_url_ok = true;
-} catch (e) { __plasmate_url_ok = false; }
-
-if (!__plasmate_url_ok) {
-  var URL = function(url, base) {
+var URL = function(url, base) {
     if (base && typeof base === 'string') {
-      // Simple base resolution
-      if (url.startsWith('/')) {
-        var m = base.match(/^(https?:\/\/[^\/]+)/);
-        url = m ? m[1] + url : url;
-      } else if (!url.match(/^https?:\/\//)) {
-        url = base.replace(/\/[^\/]*$/, '/') + url;
-      }
+        // Simple base resolution
+        if (url.startsWith('/')) {
+            var m = base.match(/^(https?:\/\/[^/]+)/);
+            url = m ? m[1] + url : url;
+        } else if (!url.match(/^https?:\/\//)) {
+            url = base.replace(/\/[^\/]*$/, '/') + url;
+        }
     }
     var match = String(url).match(/^(https?:)\/\/([^/:]+)(:\d+)?(\/[^?#]*)?\??([^#]*)?(#.*)?$/);
     this.href = String(url);
@@ -185,24 +243,10 @@ if (!__plasmate_url_ok) {
     this.hash = match ? (match[6] || '') : '';
     this.origin = this.protocol + '//' + this.host;
     this.searchParams = new URLSearchParams(this.search.replace(/^\?/, ''));
-    this.username = '';
-    this.password = '';
-  };
-  URL.prototype.toString = function() { return this.href; };
-  URL.prototype.toJSON = function() { return this.href; };
-  URL.createObjectURL = function() { return 'blob:null/' + Math.random().toString(36).slice(2); };
-  URL.revokeObjectURL = function() {};
-  globalThis.URL = URL;
-}
-
-// Ensure window.URL points to the constructor without creating an object stub
-if (typeof window.URL !== 'function') {
-    window.URL = globalThis.URL;
-}
-if (window.URL) {
-    window.URL.createObjectURL = window.URL.createObjectURL || function() { return 'blob:null'; };
-    window.URL.revokeObjectURL = window.URL.revokeObjectURL || function() {};
-}
+};
+URL.prototype.toString = function() { return this.href; };
+URL.prototype.toJSON = function() { return this.href; };
+globalThis.URL = URL;
 
 // XMLSerializer stub for Puppeteer's page.content()
 function XMLSerializer() {}
@@ -3087,13 +3131,34 @@ impl JsRuntime {
                 Ok(result_str)
             }
             None => {
-                let msg = tc
-                    .exception()
-                    .map(|e| e.to_rust_string_lossy(tc))
-                    .unwrap_or_else(|| "Unknown runtime error".into());
-                // Don't fail - just log and continue (like a real browser)
-                debug!(filename, error = %msg, "JS error (non-fatal)");
-                Err(JsError::Runtime(msg))
+                if let Some(exception) = tc.exception() {
+                    let msg = v8::Exception::create_message(tc, exception);
+                    let exception_string = exception.to_rust_string_lossy(tc);
+                    let source_line = msg.get_source_line(tc).map(|s| s.to_rust_string_lossy(tc)).unwrap_or_default();
+                    let line_num = msg.get_line_number(tc).unwrap_or_default();
+                    
+                    let mut full_error = format!(
+                        "{} at {}:{}\nSource: {}",
+                        exception_string, filename, line_num, source_line
+                    );
+
+                    if let Some(stack_trace) = msg.get_stack_trace(tc) {
+                        for i in 0..stack_trace.get_frame_count() {
+                            if let Some(frame) = stack_trace.get_frame(tc, i) {
+                                let func = frame.get_function_name(tc).map(|s| s.to_rust_string_lossy(tc)).unwrap_or_else(|| "[anon]".to_string());
+                                let file = frame.get_script_name(tc).map(|s| s.to_rust_string_lossy(tc)).unwrap_or_default();
+                                let line = frame.get_line_number();
+                                let col = frame.get_column();
+                                full_error.push_str(&format!("\n    at {} ({}:{}:{})", func, file, line, col));
+                            }
+                        }
+                    }
+                    debug!(filename, error = %full_error, "JS error (non-fatal)");
+                    Err(JsError::Runtime(full_error))
+                } else {
+                    debug!(filename, error = "Unknown runtime error", "JS error (non-fatal)");
+                    Err(JsError::Runtime("Unknown runtime error".into()))
+                }
             }
         }
     }
