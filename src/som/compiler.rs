@@ -1153,6 +1153,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "p" => Some(ElementRole::Paragraph),
         "section" | "article" => Some(ElementRole::Section),
         "hr" => Some(ElementRole::Separator),
+        "details" => Some(ElementRole::Details),
         _ => None,
     }
 }
@@ -1300,6 +1301,9 @@ fn build_element_attrs(
             }
         }
         "table" => {
+            if let Some(caption) = extract_table_caption(node) {
+                map.insert("caption".into(), json!(caption));
+            }
             let (headers, rows) = extract_table_data(node, ctx.config.max_table_cell_chars);
             if !headers.is_empty() {
                 map.insert("headers".into(), json!(headers));
@@ -1313,7 +1317,48 @@ fn build_element_attrs(
                 map.insert("section_label".into(), json!(label.1));
             }
         }
+        "details" => {
+            let open = attrs.iter().any(|(n, _)| n == "open");
+            map.insert("open".into(), json!(open));
+            // Extract summary text from the first <summary> child
+            let summary_text = extract_summary_text(node);
+            if let Some(st) = summary_text {
+                map.insert("summary".into(), json!(st));
+            }
+        }
         _ => {}
+    }
+
+    // ARIA state preservation: capture common ARIA state attributes
+    let aria_states: &[(&str, &str)] = &[
+        ("aria-expanded", "expanded"),
+        ("aria-selected", "selected"),
+        ("aria-checked", "checked"),
+        ("aria-disabled", "disabled"),
+        ("aria-current", "current"),
+        ("aria-pressed", "pressed"),
+        ("aria-hidden", "hidden"),
+    ];
+    let mut aria_map = serde_json::Map::new();
+    for (html_attr, som_key) in aria_states {
+        if let Some((_, val)) = attrs.iter().find(|(n, _)| n == *html_attr) {
+            // Boolean ARIA attrs: "true"/"false" -> bool; others kept as string
+            match val.as_str() {
+                "true" => {
+                    aria_map.insert((*som_key).into(), json!(true));
+                }
+                "false" => {
+                    aria_map.insert((*som_key).into(), json!(false));
+                }
+                other => {
+                    // e.g. aria-current="page", aria-checked="mixed"
+                    aria_map.insert((*som_key).into(), json!(other));
+                }
+            }
+        }
+    }
+    if !aria_map.is_empty() {
+        map.insert("aria".into(), serde_json::Value::Object(aria_map));
     }
 
     if map.is_empty() {
@@ -1338,6 +1383,22 @@ fn build_children(
         return None;
     }
     // For lists and tables, we include items/rows in attrs instead of children
+    None
+}
+
+/// Extract text from the first `<summary>` child of a `<details>` element.
+fn extract_summary_text(node: &Handle) -> Option<String> {
+    for child in node.children.borrow().iter() {
+        if let NodeData::Element { name, .. } = &child.data {
+            if name.local.as_ref() == "summary" {
+                let text = get_text_content(child);
+                let trimmed = heuristics::normalize_text(&text);
+                if !trimmed.is_empty() {
+                    return Some(trimmed);
+                }
+            }
+        }
+    }
     None
 }
 
@@ -1404,15 +1465,33 @@ fn extract_list_items_with_limit(node: &Handle, max_items: usize) -> Vec<serde_j
     items
 }
 
+fn extract_table_caption(node: &Handle) -> Option<String> {
+    for child in node.children.borrow().iter() {
+        if let NodeData::Element { name, .. } = &child.data {
+            if name.local.as_ref() == "caption" {
+                let text = heuristics::normalize_text(&get_text_content(child));
+                if !text.is_empty() {
+                    return Some(text);
+                }
+            }
+        }
+    }
+    None
+}
+
 fn extract_table_data(node: &Handle, max_cell_chars: usize) -> (Vec<String>, Vec<Vec<String>>) {
     let mut headers = Vec::new();
     let mut rows = Vec::new();
+    let max_columns = 12;
+    let max_rows = 30;
 
     fn visit_table(
         node: &Handle,
         headers: &mut Vec<String>,
         rows: &mut Vec<Vec<String>>,
         max_cell_chars: usize,
+        max_columns: usize,
+        max_rows: usize,
     ) {
         let children = node.children.borrow();
         for child in children.iter() {
@@ -1420,49 +1499,63 @@ fn extract_table_data(node: &Handle, max_cell_chars: usize) -> (Vec<String>, Vec
                 let tag = name.local.as_ref();
                 match tag {
                     "thead" | "tbody" | "tfoot" => {
-                        visit_table(child, headers, rows, max_cell_chars);
+                        visit_table(child, headers, rows, max_cell_chars, max_columns, max_rows);
                     }
                     "tr" => {
                         let cells = child.children.borrow();
                         let mut row = Vec::new();
                         let mut is_header_row = true;
                         for cell in cells.iter() {
-                            if let NodeData::Element { name, .. } = &cell.data {
+                            if let NodeData::Element { name, attrs, .. } = &cell.data {
                                 let cell_tag = name.local.as_ref();
-                                if row.len() >= 8 {
+                                if row.len() >= max_columns {
                                     break;
                                 }
+                                let cell_text = heuristics::truncate_text(
+                                    &get_text_content(cell),
+                                    max_cell_chars,
+                                );
+                                // Handle colspan: repeat the cell text for spanned columns
+                                let colspan: usize = attrs
+                                    .borrow()
+                                    .iter()
+                                    .find(|a| a.name.local.as_ref() == "colspan")
+                                    .and_then(|a| a.value.parse().ok())
+                                    .unwrap_or(1)
+                                    .min(max_columns - row.len());
                                 if cell_tag == "th" {
-                                    row.push(heuristics::truncate_text(
-                                        &get_text_content(cell),
-                                        max_cell_chars,
-                                    ));
+                                    for _ in 0..colspan {
+                                        if row.len() < max_columns {
+                                            row.push(cell_text.clone());
+                                        }
+                                    }
                                 } else if cell_tag == "td" {
                                     is_header_row = false;
-                                    row.push(heuristics::truncate_text(
-                                        &get_text_content(cell),
-                                        max_cell_chars,
-                                    ));
+                                    for _ in 0..colspan {
+                                        if row.len() < max_columns {
+                                            row.push(cell_text.clone());
+                                        }
+                                    }
                                 }
                             }
                         }
                         if !row.is_empty() {
                             if is_header_row && headers.is_empty() {
                                 headers.extend(row);
-                            } else if rows.len() < 20 {
+                            } else if rows.len() < max_rows {
                                 rows.push(row);
                             }
                         }
                     }
                     _ => {
-                        visit_table(child, headers, rows, max_cell_chars);
+                        visit_table(child, headers, rows, max_cell_chars, max_columns, max_rows);
                     }
                 }
             }
         }
     }
 
-    visit_table(node, &mut headers, &mut rows, max_cell_chars);
+    visit_table(node, &mut headers, &mut rows, max_cell_chars, max_columns, max_rows);
     (headers, rows)
 }
 

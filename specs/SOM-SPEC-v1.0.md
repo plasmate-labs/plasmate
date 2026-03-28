@@ -210,6 +210,7 @@ The `role` field MUST be one of the following string values (serialized in
 | `paragraph`   | No          | (none)                 | `<p>`, bare text nodes |
 | `section`     | No          | (none)                 | `<section>`, `<article>` |
 | `separator`   | No          | (none)                 | `<hr>` |
+| `details`     | Yes         | `["toggle"]`           | `<details>` with `<summary>` (disclosure widget) |
 
 For interactive elements, the `actions` array MUST be present and contain the
 default actions listed above. For non-interactive elements, the `actions` field
@@ -292,7 +293,8 @@ Each **Option** object:
 | Attribute | Type                    | Description |
 |-----------|-------------------------|-------------|
 | `headers` | array of string         | Column header texts (from `<th>` elements). |
-| `rows`    | array of array of string| Row data (from `<td>` elements). Limited to 20 rows, 8 columns. |
+| `rows`    | array of array of string| Row data (from `<td>` elements). Limited to 30 rows, 12 columns. |
+| `caption` | string                  | Table caption from `<caption>` element, when present. |
 
 #### `section`
 
@@ -300,7 +302,34 @@ Each **Option** object:
 |----------------|--------|-------------|
 | `section_label`| string | The `aria-label` of the section, if present. |
 
-### 4.4 Element Detection from HTML
+#### `details`
+
+| Attribute | Type    | Description |
+|-----------|---------|-------------|
+| `open`    | boolean | `true` when the `<details>` element has the `open` attribute (expanded state). |
+| `summary` | string  | The visible text from the `<summary>` child element. |
+
+### 4.4 ARIA State Preservation
+
+Implementations SHOULD capture common ARIA state attributes on any element
+and surface them in an `aria` sub-object within `attrs`. The following ARIA
+attributes SHOULD be preserved when present:
+
+| HTML Attribute   | `aria` Key  | Type            |
+|------------------|-------------|-----------------|
+| `aria-expanded`  | `expanded`  | boolean         |
+| `aria-selected`  | `selected`  | boolean         |
+| `aria-checked`   | `checked`   | boolean/string  |
+| `aria-disabled`  | `disabled`  | boolean         |
+| `aria-current`   | `current`   | boolean/string  |
+| `aria-pressed`   | `pressed`   | boolean         |
+| `aria-hidden`    | `hidden`    | boolean         |
+
+Values `"true"` and `"false"` MUST be normalized to boolean. Other string
+values (e.g. `aria-current="page"`, `aria-checked="mixed"`) MUST be preserved
+as strings.
+
+### 4.5 Element Detection from HTML
 
 Implementations MUST map HTML elements to SOM element roles as follows:
 

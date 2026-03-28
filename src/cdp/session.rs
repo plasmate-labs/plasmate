@@ -707,5 +707,6 @@ fn role_to_tag(role: &ElementRole) -> String {
         ElementRole::Table => "table".to_string(),
         ElementRole::Section => "section".to_string(),
         ElementRole::Separator => "hr".to_string(),
+        ElementRole::Details => "details".to_string(),
     }
 }

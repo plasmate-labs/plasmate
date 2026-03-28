@@ -54,6 +54,7 @@ Each element has a `role`, stable `id`, optional `html_id` (the original HTML el
 | `table` | No | -  | `<table>` (data tables only) |
 | `list` | No | -  | `<ul>`, `<ol>` |
 | `section` | No | -  | `<section>`, `<article>` |
+| `details` | Yes | `["toggle"]` | `<details>` with `<summary>` (disclosure widget) |
 
 Interactive elements are **never** dropped by budget limits.
 

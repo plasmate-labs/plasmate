@@ -95,6 +95,8 @@ pub enum ElementRole {
     Paragraph,
     Section,
     Separator,
+    /// A `<details>`/`<summary>` disclosure widget.
+    Details,
 }
 
 impl ElementRole {
@@ -109,6 +111,7 @@ impl ElementRole {
                 | ElementRole::Select
                 | ElementRole::Checkbox
                 | ElementRole::Radio
+                | ElementRole::Details
         )
     }
 
@@ -122,6 +125,7 @@ impl ElementRole {
             ElementRole::Select => vec!["select".into()],
             ElementRole::Checkbox => vec!["toggle".into()],
             ElementRole::Radio => vec!["select".into()],
+            ElementRole::Details => vec!["toggle".into()],
             _ => vec![],
         }
     }
@@ -142,6 +146,7 @@ impl ElementRole {
             ElementRole::Paragraph => "paragraph",
             ElementRole::Section => "section",
             ElementRole::Separator => "separator",
+            ElementRole::Details => "details",
         }
     }
 }

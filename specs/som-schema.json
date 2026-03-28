@@ -202,7 +202,8 @@
         "table",
         "paragraph",
         "section",
-        "separator"
+        "separator",
+        "details"
       ],
       "description": "The semantic role of an element."
     },

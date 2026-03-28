@@ -1490,6 +1490,7 @@ pub fn accessibility_get_full_ax_tree(id: u64, target: &CdpTarget) -> CdpRespons
                 ElementRole::Paragraph => "paragraph",
                 ElementRole::Section => "Section",
                 ElementRole::Separator => "separator",
+                ElementRole::Details => "group",
             };
 
             let name = element
