@@ -394,6 +394,7 @@ fn summarize_elements(
         result.push(Element {
             id: format!("e_summary_{}", total_dropped),
             role: ElementRole::Paragraph,
+            html_id: None,
             text: Some(summary_text),
             label: None,
             actions: None,
@@ -992,10 +993,12 @@ fn interactive_node_to_element(
         let element_attrs = build_element_attrs(tag, &attr_pairs, node, &dummy_ctx);
         let children = build_children(node, origin, id_tracker, dom_path, &role);
         let hints = heuristics::infer_class_hints(&attr_pairs);
+        let html_id = extract_html_id(&attr_pairs);
 
         return Some(Element {
             id,
             role,
+            html_id,
             text,
             label,
             actions,
@@ -1061,10 +1064,12 @@ fn node_to_element(
             let element_attrs = build_element_attrs(tag, &attr_pairs, node, ctx);
             let children = build_children(node, origin, id_tracker, dom_path, &role);
             let hints = heuristics::infer_class_hints(&attr_pairs);
+            let html_id = extract_html_id(&attr_pairs);
 
             Some(Element {
                 id,
                 role,
+                html_id,
                 text,
                 label,
                 actions,
@@ -1083,6 +1088,7 @@ fn node_to_element(
             Some(Element {
                 id,
                 role: ElementRole::Paragraph,
+                html_id: None,
                 text: Some(text),
                 label: None,
                 actions: None,
@@ -1499,6 +1505,15 @@ fn get_attr_pairs(node: &Handle) -> Vec<(String, String)> {
     } else {
         vec![]
     }
+}
+
+/// Extract the HTML `id` attribute from attr pairs, if present and non-empty.
+fn extract_html_id(attrs: &[(String, String)]) -> Option<String> {
+    attrs
+        .iter()
+        .find(|(k, _)| k == "id")
+        .map(|(_, v)| v.trim().to_string())
+        .filter(|v| !v.is_empty())
 }
 
 fn count_links(node: &Handle) -> usize {

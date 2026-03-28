@@ -181,6 +181,7 @@ An **Element** represents a single semantic unit within a region.
 |------------|------------------|----------|-------------|
 | `id`       | string           | REQUIRED | Stable element identifier (see Section 7.1). |
 | `role`     | ElementRole      | REQUIRED | The semantic role of this element. |
+| `html_id`  | string           | OPTIONAL | The original HTML `id` attribute from the source element, when present and non-empty. Enables agents to resolve back to the live DOM for interaction (e.g. via `document.getElementById()` or CSS selector `#id`). |
 | `text`     | string           | OPTIONAL | Visible text content of the element. |
 | `label`    | string           | OPTIONAL | Accessible label (from `aria-label`, `title`, or `placeholder`), included only when different from `text`. |
 | `actions`  | array of string  | OPTIONAL | Available actions for this element. Omitted for non-interactive elements. |

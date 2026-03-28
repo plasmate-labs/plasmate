@@ -37,7 +37,7 @@ Detection precedence: ARIA roles > HTML5 landmarks > `<form>` elements > class/I
 
 ## Element Types
 
-Each element has a `role`, stable `id`, and role-specific `attrs`.
+Each element has a `role`, stable `id`, optional `html_id` (the original HTML element ID for DOM resolution), and role-specific `attrs`.
 
 | Role | Interactive | Default Actions | HTML Sources |
 |------|-------------|-----------------|--------------|

@@ -56,6 +56,11 @@ pub enum RegionRole {
 pub struct Element {
     pub id: String,
     pub role: ElementRole,
+    /// The original HTML `id` attribute, when present on the source element.
+    /// Enables agents to resolve back to the DOM for interaction (e.g. via
+    /// `document.getElementById()` or CSS selector `#id`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub html_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

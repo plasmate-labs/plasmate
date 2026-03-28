@@ -109,6 +109,10 @@
           "type": "string",
           "description": "Stable element identifier."
         },
+        "html_id": {
+          "type": "string",
+          "description": "Original HTML id attribute from the source element, for DOM resolution."
+        },
         "role": { "$ref": "#/$defs/ElementRole" },
         "text": {
           "type": "string",
