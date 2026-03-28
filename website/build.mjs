@@ -65,8 +65,9 @@ function template(title, body, currentSlug) {
       return `<div class="section-label">${n.section}</div>`;
     }
     const active = n.slug === currentSlug ? ' class="active"' : '';
-    const href = n.slug === 'overview' ? '.' : n.slug;
-    return `<a href="${href}"${active}>${n.label}</a>`;
+    const href = n.href ? n.href : (n.slug === 'overview' ? '.' : n.slug);
+    const target = n.href ? ' target="_blank" rel="noopener"' : '';
+    return `<a href="${href}"${active}${target}>${n.label}</a>`;
   }).join('\n          ');
 
   return `<!doctype html>
