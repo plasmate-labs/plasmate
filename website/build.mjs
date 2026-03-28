@@ -56,7 +56,7 @@ const NAV = [
   { section: 'Updates' },
   { slug: 'changelog', label: 'Changelog' },
   { section: 'Blog' },
-  { slug: 'blog-html-vs-markdown-vs-som', label: 'HTML vs Markdown vs SOM' },
+  { slug: 'blog', label: 'Plasmate Blog', href: 'https://blog.plasmate.app' },
 ];
 
 function template(title, body, currentSlug) {
