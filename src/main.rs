@@ -224,6 +224,18 @@ enum Commands {
         #[arg(long)]
         full_page: bool,
     },
+    /// Compile HTML to SOM without fetching (reads from file or stdin)
+    Compile {
+        /// HTML file to compile (reads from stdin if omitted)
+        #[arg(long, short)]
+        file: Option<String>,
+        /// Page URL for stable ID generation (no network request is made)
+        #[arg(long, default_value = "https://localhost")]
+        url: String,
+        /// Output file (defaults to stdout)
+        #[arg(long, short)]
+        output: Option<String>,
+    },
     /// Start the MCP (Model Context Protocol) server over stdio
     Mcp,
     /// Manage authentication profiles for cookie-based browsing
@@ -447,12 +459,56 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         } => {
             cmd_screenshot(&url, &output, width, height, &format, quality, full_page)?;
         }
+        Commands::Compile { file, url, output } => {
+            cmd_compile(file, url, output)?;
+        }
         Commands::Mcp => {
             mcp::run_server().await?;
         }
         Commands::Auth { action } => {
             cmd_auth(action).await?;
         }
+    }
+
+    Ok(())
+}
+
+fn cmd_compile(
+    file: Option<String>,
+    url: String,
+    output: Option<String>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    use std::io::Read;
+
+    // Read HTML from file or stdin
+    let html = if let Some(path) = file {
+        std::fs::read_to_string(&path)
+            .map_err(|e| format!("Failed to read {}: {}", path, e))?
+    } else {
+        let mut buf = String::new();
+        std::io::stdin().read_to_string(&mut buf)
+            .map_err(|e| format!("Failed to read stdin: {}", e))?;
+        buf
+    };
+
+    if html.is_empty() {
+        return Err("No HTML input provided. Use --file <path> or pipe HTML to stdin.".into());
+    }
+
+    // Compile HTML to SOM
+    let compiled = som::compiler::compile(&html, &url)?;
+
+    // Serialize to JSON
+    let json = serde_json::to_string_pretty(&compiled)?;
+
+    // Write output
+    if let Some(out_path) = output {
+        std::fs::write(&out_path, &json)?;
+        eprintln!("Wrote SOM to {} ({} bytes, {:.1}x compression)",
+            out_path, compiled.meta.som_bytes,
+            compiled.meta.html_bytes as f64 / compiled.meta.som_bytes as f64);
+    } else {
+        println!("{}", json);
     }
 
     Ok(())
