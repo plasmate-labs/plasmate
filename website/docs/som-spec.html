@@ -442,6 +442,8 @@
           <a href="brand">Full Brand Guide</a>
           <div class="section-label">Updates</div>
           <a href="changelog">Changelog</a>
+          <div class="section-label">Blog</div>
+          <a href="blog-html-vs-markdown-vs-som">HTML vs Markdown vs SOM</a>
       <div class="sidebar-foot">
         <a href="https://github.com/plasmate-labs/plasmate">GitHub</a>
         <a href="https://plasmate.app">plasmate.app</a>
@@ -546,7 +548,7 @@
 </tr>
 </tbody></table>
 <p>Detection precedence: ARIA roles &gt; HTML5 landmarks &gt; <code>&lt;form&gt;</code> elements &gt; class/ID heuristics &gt; link-density heuristic &gt; fallback.</p>
-<h2 id="element-types">Element Types</h2><p>Each element has a <code>role</code>, stable <code>id</code>, and role-specific <code>attrs</code>.</p>
+<h2 id="element-types">Element Types</h2><p>Each element has a <code>role</code>, stable <code>id</code>, optional <code>html_id</code> (the original HTML element ID for DOM resolution), and role-specific <code>attrs</code>.</p>
 <table>
 <thead>
 <tr>
@@ -633,6 +635,12 @@
 <td>No</td>
 <td>-</td>
 <td><code>&lt;section&gt;</code>, <code>&lt;article&gt;</code></td>
+</tr>
+<tr>
+<td><code>details</code></td>
+<td>Yes</td>
+<td><code>[&quot;toggle&quot;]</code></td>
+<td><code>&lt;details&gt;</code> with <code>&lt;summary&gt;</code> (disclosure widget)</td>
 </tr>
 </tbody></table>
 <p>Interactive elements are <strong>never</strong> dropped by budget limits.</p>

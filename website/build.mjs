@@ -55,6 +55,8 @@ const NAV = [
   { slug: 'brand', label: 'Full Brand Guide' },
   { section: 'Updates' },
   { slug: 'changelog', label: 'Changelog' },
+  { section: 'Blog' },
+  { slug: 'blog-html-vs-markdown-vs-som', label: 'HTML vs Markdown vs SOM' },
 ];
 
 function template(title, body, currentSlug) {

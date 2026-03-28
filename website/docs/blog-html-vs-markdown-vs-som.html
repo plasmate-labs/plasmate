@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SOM Cost Analysis - Plasmate Docs | The Better Browser for AI Agents</title>
-  <meta name="description" content="SOM Cost Analysis - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
-  <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, som cost analysis" />
-  <link rel="canonical" href="https://docs.plasmate.app/benchmark-cost" />
+  <title>HTML vs Markdown vs SOM: Which Format Should Your AI Agent Use? - Plasmate Docs | The Better Browser for AI Agents</title>
+  <meta name="description" content="HTML vs Markdown vs SOM: Which Format Should Your AI Agent Use? - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
+  <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, html vs markdown vs som: which format should your ai agent use?" />
+  <link rel="canonical" href="https://docs.plasmate.app/blog-html-vs-markdown-vs-som" />
   <link rel="alternate" type="application/som+json" href="/.well-known/som.json" title="SOM (Plasmate)" />
 
   <link rel="icon" href="/favicon.ico" sizes="any" />
@@ -429,7 +429,7 @@
           <div class="section-label">Coverage & Benchmarks</div>
           <a href="coverage">Coverage (HTML)</a>
           <a href="coverage-js">Coverage (JS)</a>
-          <a href="benchmark-cost" class="active">Cost Analysis</a>
+          <a href="benchmark-cost">Cost Analysis</a>
           <a href="roadmap">Roadmap</a>
           <div class="section-label">User Guides</div>
           <a href="guide-agent-browses-twitter">Your Agent on X/Twitter</a>
@@ -443,7 +443,7 @@
           <div class="section-label">Updates</div>
           <a href="changelog">Changelog</a>
           <div class="section-label">Blog</div>
-          <a href="blog-html-vs-markdown-vs-som">HTML vs Markdown vs SOM</a>
+          <a href="blog-html-vs-markdown-vs-som" class="active">HTML vs Markdown vs SOM</a>
       <div class="sidebar-foot">
         <a href="https://github.com/plasmate-labs/plasmate">GitHub</a>
         <a href="https://plasmate.app">plasmate.app</a>
@@ -451,235 +451,260 @@
       </div>
     </nav>
     <main class="content">
-            <h1>SOM Cost Analysis</h1>
+      <h1 id="html-vs-markdown-vs-som-which-format-should-your-ai-agent-use">HTML vs Markdown vs SOM: Which Format Should Your AI Agent Use?</h1><p>Every AI agent that browses the web faces the same question: how do you represent a web page to a language model?</p>
+<p>The default answer -- raw HTML -- is expensive and slow. A typical page dumps 30,000+ tokens into your context window, most of it CSS classes and layout divs. But what are the actual alternatives? And do they work?</p>
+<p>We ran 150 benchmark tasks across GPT-4o and Claude Sonnet 4 to find out. The results surprised us.</p>
+<hr>
+<h2 id="the-three-representations">The Three Representations</h2><p>When an agent needs to understand a web page, there are three common approaches:</p>
+<h3 id="raw-html">1. Raw HTML</h3><p>The DOM as-is. Every <code>&lt;div&gt;</code>, every <code>class=&quot;sc-1234 flex items-center gap-2&quot;</code>, every inline script. This is what most agents send today.</p>
+<pre><code class="language-html">&lt;div class=&quot;sc-1234 flex items-center gap-2 px-4 py-2&quot;&gt;
+  &lt;a href=&quot;/about&quot; class=&quot;text-blue-500 hover:underline
+     font-medium tracking-tight text-sm&quot;&gt;About&lt;/a&gt;
+  &lt;span class=&quot;text-gray-400&quot;&gt;|&lt;/span&gt;
+  &lt;a href=&quot;/pricing&quot; class=&quot;text-blue-500 hover:underline
+     font-medium tracking-tight text-sm&quot;&gt;Pricing&lt;/a&gt;
+&lt;/div&gt;
+</code></pre>
+<p><strong>Pros:</strong> Complete fidelity to the DOM. No information lost.</p>
+<p><strong>Cons:</strong> 80-95% of tokens are noise (styling, scripts, tracking). Expensive. Slow.</p>
+<h3 id="markdown">2. Markdown</h3><p>Strip the HTML to readable text, preserving structure through Markdown conventions. This is what tools like Jina Reader and many scraping libraries produce.</p>
+<pre><code class="language-markdown">[About](/about) | [Pricing](/pricing)
+</code></pre>
+<p><strong>Pros:</strong> Dramatically fewer tokens. Human-readable.</p>
+<p><strong>Cons:</strong> Loses interactive elements. No way to know what&#39;s clickable. Navigation tasks become guesswork.</p>
+<h3 id="som-semantic-object-model">3. SOM (Semantic Object Model)</h3><p>A structured JSON representation that preserves meaning and interactivity while stripping presentation noise. Each element includes its semantic role and available actions.</p>
+<pre><code class="language-json">{
+  &quot;role&quot;: &quot;navigation&quot;,
+  &quot;children&quot;: [
+    { &quot;role&quot;: &quot;link&quot;, &quot;text&quot;: &quot;About&quot;, &quot;ref&quot;: &quot;e1&quot;, &quot;attrs&quot;: {&quot;href&quot;: &quot;/about&quot;}, &quot;actions&quot;: [&quot;click&quot;] },
+    { &quot;role&quot;: &quot;link&quot;, &quot;text&quot;: &quot;Pricing&quot;, &quot;ref&quot;: &quot;e2&quot;, &quot;attrs&quot;: {&quot;href&quot;: &quot;/pricing&quot;}, &quot;actions&quot;: [&quot;click&quot;] }
+  ]
+}
+</code></pre>
+<p><strong>Pros:</strong> Minimal tokens. Preserves interactivity. Clear semantic roles.</p>
+<p><strong>Cons:</strong> Requires a SOM-aware fetcher (like Plasmate).</p>
+<hr>
+<h2 id="token-cost-comparison">Token Cost Comparison</h2><p>We measured input tokens across 50 web pages (news sites, documentation, e-commerce, government sites, social platforms). The differences are stark:</p>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Avg Input Tokens</th>
+<th>vs HTML</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>HTML</td>
+<td>33,181</td>
+<td>1.0x</td>
+</tr>
+<tr>
+<td>SOM</td>
+<td>8,301</td>
+<td><strong>4.0x fewer</strong></td>
+</tr>
+<tr>
+<td>Markdown</td>
+<td>4,542</td>
+<td><strong>7.3x fewer</strong></td>
+</tr>
+</tbody></table>
+<p>Markdown wins on raw token count -- it strips everything. But tokens aren&#39;t the whole story.</p>
+<h3 id="cost-per-1000-pages-at-3m-input-tokens">Cost Per 1,000 Pages (at $3/M input tokens)</h3><table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Cost</th>
+<th>Savings vs HTML</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>HTML</td>
+<td>$99.54</td>
+<td>--</td>
+</tr>
+<tr>
+<td>SOM</td>
+<td>$24.90</td>
+<td>75%</td>
+</tr>
+<tr>
+<td>Markdown</td>
+<td>$13.63</td>
+<td>86%</td>
+</tr>
+</tbody></table>
+<p>If you&#39;re just extracting text, Markdown is cheaper. But if your agent needs to <em>interact</em> with pages -- click buttons, fill forms, navigate -- Markdown falls apart.</p>
+<hr>
+<h2 id="the-latency-surprise">The Latency Surprise</h2><p>Here&#39;s where it gets interesting. We expected Markdown to be fastest (fewest tokens = fastest inference). That&#39;s true for GPT-4o:</p>
+<h3 id="gpt-4o-latency-seconds">GPT-4o Latency (seconds)</h3><table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Avg Latency</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>HTML</td>
+<td>2.7s</td>
+</tr>
+<tr>
+<td>Markdown</td>
+<td>1.9s</td>
+</tr>
+<tr>
+<td>SOM</td>
+<td><strong>1.4s</strong></td>
+</tr>
+</tbody></table>
+<p>SOM beats both. Why? Two reasons:</p>
+<ol>
+<li><strong>Structured input parses faster.</strong> JSON with clear roles lets the model skip the &quot;what is this?&quot; step.</li>
+<li><strong>Less ambiguity = shorter reasoning chains.</strong> When a link is explicitly marked <code>&quot;role&quot;: &quot;link&quot;, &quot;actions&quot;: [&quot;click&quot;]</code>, the model doesn&#39;t need to infer interactivity from context.</li>
+</ol>
+<h3 id="claude-sonnet-4-latency-seconds">Claude Sonnet 4 Latency (seconds)</h3><table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Avg Latency</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>HTML</td>
+<td>16.2s</td>
+</tr>
+<tr>
+<td><strong>Markdown</strong></td>
+<td><strong>25.2s</strong></td>
+</tr>
+<tr>
+<td>SOM</td>
+<td><strong>8.5s</strong></td>
+</tr>
+</tbody></table>
+<p>Wait -- Markdown is <em>slower</em> than HTML on Claude? Yes. And SOM is nearly 3x faster than Markdown.</p>
+<p>Claude appears to struggle with ambiguous Markdown when the task requires interaction. The model spends more time reasoning about what elements are clickable, what actions are available, and how to express those actions. With SOM, that information is explicit.</p>
+<hr>
+<h2 id="category-breakdown">Category Breakdown</h2><p>Not all tasks are equal. We tested extraction (pull data from pages), comparison (analyze multiple items), navigation (click through to find information), and adversarial tasks (complex anti-bot pages).</p>
+<h3 id="htmlsom-token-ratio-by-category">HTML/SOM Token Ratio by Category</h3><table>
+<thead>
+<tr>
+<th>Category</th>
+<th>HTML/SOM Ratio</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Extraction</td>
+<td>3.8x</td>
+<td>SOM wins, but margin is smaller</td>
+</tr>
+<tr>
+<td>Comparison</td>
+<td>4.2x</td>
+<td>Multi-item pages benefit from structure</td>
+</tr>
+<tr>
+<td>Navigation</td>
+<td><strong>5.4x</strong></td>
+<td>Interactivity data is dense in SOM</td>
+</tr>
+<tr>
+<td>Adversarial</td>
+<td><strong>6.0x</strong></td>
+<td>Anti-bot clutter inflates HTML massively</td>
+</tr>
+</tbody></table>
+<p>For adversarial pages (Cloudflare challenges, heavy JavaScript), HTML explodes with noise while SOM stays lean. The 6x ratio means you&#39;re paying 6x more for HTML on the hardest pages.</p>
+<h3 id="where-markdown-fails">Where Markdown Fails</h3><p>Markdown works great for &quot;read this article and summarize it.&quot; It breaks down for:</p>
+<ul>
+<li><strong>Form filling</strong>: Markdown can&#39;t represent input fields, dropdowns, or submit buttons</li>
+<li><strong>Navigation</strong>: No way to know which text is a clickable link vs decorative</li>
+<li><strong>Stateful interactions</strong>: Multi-step flows (add to cart, checkout) require element references</li>
+<li><strong>Dynamic content</strong>: JavaScript-rendered content often doesn&#39;t survive Markdown conversion</li>
+</ul>
+<p>In our benchmark, Markdown tasks requiring interaction had a <strong>23% higher failure rate</strong> than SOM.</p>
+<hr>
+<h2 id="when-to-use-what">When to Use What</h2><h3 id="use-markdown-when">Use Markdown when:</h3><ul>
+<li>Pure text extraction (summarize this article)</li>
+<li>No interaction needed</li>
+<li>Budget is the only constraint</li>
+<li>You control the source (your own docs, known-good pages)</li>
+</ul>
+<h3 id="use-som-when">Use SOM when:</h3><ul>
+<li>Agents need to click, type, or navigate</li>
+<li>Multi-step workflows</li>
+<li>Unknown/adversarial pages</li>
+<li>Latency matters (SOM is fastest on both models)</li>
+<li>You want consistent structure across diverse sites</li>
+</ul>
+<h3 id="use-html-when">Use HTML when:</h3><ul>
+<li>You need pixel-perfect DOM fidelity</li>
+<li>Building a browser automation tool that maps directly to selectors</li>
+<li>Debugging what the page actually contains</li>
+<li>Never (for LLM input -- it&#39;s just wasteful)</li>
+</ul>
+<p>The honest recommendation: <strong>default to SOM</strong> unless you have a specific reason not to. It&#39;s faster, cheaper than HTML, and handles interactive tasks that Markdown can&#39;t.</p>
+<hr>
+<h2 id="getting-started-with-plasmate">Getting Started with Plasmate</h2><p>Plasmate is the reference implementation of SOM. Three ways to use it:</p>
+<h3 id="cli">1. CLI</h3><pre><code class="language-bash"># Install
+npm install -g plasmate
 
-      <p>How much does SOM compression save on LLM input costs? We tested <strong>49 real-world websites</strong> and measured the token reduction from raw HTML to Plasmate SOM output.</p>
+# Fetch a page as SOM
+plasmate fetch https://example.com
 
-      <div class="hero-stats">
-        <div class="stat-card">
-          <div class="stat-value">16.6x</div>
-          <div class="stat-label">Overall Compression</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">10.5x</div>
-          <div class="stat-label">Median Compression</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">94%</div>
-          <div class="stat-label">Token Cost Savings</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">49</div>
-          <div class="stat-label">URLs Tested</div>
-        </div>
-      </div>
+# Output formats: som (default), markdown, html
+plasmate fetch https://example.com --format markdown
+</code></pre>
+<h3 id="mcp-server-claude-desktop-cursor">2. MCP Server (Claude Desktop / Cursor)</h3><p>Add to your Claude Desktop config (<code>~/Library/Application Support/Claude/claude_desktop_config.json</code>):</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;plasmate&quot;: {
+      &quot;command&quot;: &quot;npx&quot;,
+      &quot;args&quot;: [&quot;-y&quot;, &quot;plasmate&quot;, &quot;mcp&quot;]
+    }
+  }
+}
+</code></pre>
+<p>Now Claude can browse the web using SOM directly.</p>
+<h3 id="python-sdk">3. Python SDK</h3><pre><code class="language-python">from plasmate import Plasmate
 
-      <p>Range: <strong>0.7x</strong> (example.com, tiny page) to <strong>116.9x</strong> (cloud.google.com)</p>
+client = Plasmate()
 
-      <hr>
+# Get a page as SOM
+som = client.fetch(&quot;https://news.ycombinator.com&quot;)
 
-      <h2>Cost per 1,000 Page Loads (49 URLs)</h2>
+# Access structured data
+for item in som.get_by_role(&quot;listitem&quot;):
+    title = item.get_text()
+    link = item.get_attr(&quot;href&quot;)
+    print(f&quot;{title}: {link}&quot;)
 
-      <p>What it costs to send the content of all 49 test URLs to an LLM, repeated 1,000 times:</p>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Model</th>
-            <th>HTML Cost</th>
-            <th>SOM Cost</th>
-            <th>Savings</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>GPT-4 ($10/M)</td>
-            <td>$50,397</td>
-            <td>$3,042</td>
-            <td class="savings">$47,355 (94%)</td>
-          </tr>
-          <tr>
-            <td>GPT-4o ($2.50/M)</td>
-            <td>$12,599</td>
-            <td>$761</td>
-            <td class="savings">$11,839 (94%)</td>
-          </tr>
-          <tr>
-            <td>Claude Sonnet ($3/M)</td>
-            <td>$15,119</td>
-            <td>$913</td>
-            <td class="savings">$14,207 (94%)</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <h2>At Scale: 1M Pages/Month</h2>
-
-      <p>Monthly cost for processing one million pages at the average page size from this benchmark:</p>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Model</th>
-            <th>HTML/month</th>
-            <th>SOM/month</th>
-            <th>Monthly Savings</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>GPT-4</td>
-            <td>$1,028</td>
-            <td>$62</td>
-            <td class="savings">$966</td>
-          </tr>
-          <tr>
-            <td>GPT-4o</td>
-            <td>$257</td>
-            <td>$16</td>
-            <td class="savings">$241</td>
-          </tr>
-          <tr>
-            <td>Sonnet</td>
-            <td>$308</td>
-            <td>$19</td>
-            <td class="savings">$290</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <hr>
-
-      <h2>Top 15 Compression Results</h2>
-
-      <div style="margin: 18px 0 28px;">
-        <div class="compression-row">
-          <span class="site-name">cloud.google.com</span>
-          <div class="bar-wrap"><div class="bar" style="width: 100%;"></div></div>
-          <span class="ratio">116.9x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">linear.app</span>
-          <div class="bar-wrap"><div class="bar" style="width: 90.1%;"></div></div>
-          <span class="ratio">105.3x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">reddit.com</span>
-          <div class="bar-wrap"><div class="bar" style="width: 88.8%;"></div></div>
-          <span class="ratio">103.8x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">figma.com</span>
-          <div class="bar-wrap"><div class="bar" style="width: 54.4%;"></div></div>
-          <span class="ratio">63.6x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">tailwindcss.com</span>
-          <div class="bar-wrap"><div class="bar" style="width: 45.9%;"></div></div>
-          <span class="ratio">53.7x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">nodejs.org</span>
-          <div class="bar-wrap"><div class="bar" style="width: 36.5%;"></div></div>
-          <span class="ratio">42.7x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">vercel.com</span>
-          <div class="bar-wrap"><div class="bar" style="width: 30.5%;"></div></div>
-          <span class="ratio">35.7x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">wired.com</span>
-          <div class="bar-wrap"><div class="bar" style="width: 29.9%;"></div></div>
-          <span class="ratio">35.0x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">aws.amazon.com</span>
-          <div class="bar-wrap"><div class="bar" style="width: 26.9%;"></div></div>
-          <span class="ratio">31.4x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">mongodb.com</span>
-          <div class="bar-wrap"><div class="bar" style="width: 25.0%;"></div></div>
-          <span class="ratio">29.2x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">typescriptlang.org</span>
-          <div class="bar-wrap"><div class="bar" style="width: 23.7%;"></div></div>
-          <span class="ratio">27.7x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">theguardian.com</span>
-          <div class="bar-wrap"><div class="bar" style="width: 17.4%;"></div></div>
-          <span class="ratio">20.3x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">azure.microsoft.com</span>
-          <div class="bar-wrap"><div class="bar" style="width: 13.4%;"></div></div>
-          <span class="ratio">15.7x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">nytimes.com</span>
-          <div class="bar-wrap"><div class="bar" style="width: 13.1%;"></div></div>
-          <span class="ratio">15.3x</span>
-        </div>
-        <div class="compression-row">
-          <span class="site-name">stripe.com/docs</span>
-          <div class="bar-wrap"><div class="bar" style="width: 12.5%;"></div></div>
-          <span class="ratio">14.6x</span>
-        </div>
-      </div>
-
-      <h3>Token Counts</h3>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Site</th>
-            <th>HTML Tokens</th>
-            <th>SOM Tokens</th>
-            <th>Ratio</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>cloud.google.com</td><td>464,616</td><td>3,973</td><td><strong>116.9x</strong></td></tr>
-          <tr><td>linear.app</td><td>562,922</td><td>5,347</td><td><strong>105.3x</strong></td></tr>
-          <tr><td>reddit.com</td><td>121,027</td><td>1,166</td><td><strong>103.8x</strong></td></tr>
-          <tr><td>figma.com</td><td>369,124</td><td>5,806</td><td><strong>63.6x</strong></td></tr>
-          <tr><td>tailwindcss.com</td><td>233,071</td><td>4,338</td><td><strong>53.7x</strong></td></tr>
-          <tr><td>nodejs.org</td><td>115,771</td><td>2,709</td><td><strong>42.7x</strong></td></tr>
-          <tr><td>vercel.com</td><td>198,761</td><td>5,565</td><td><strong>35.7x</strong></td></tr>
-          <tr><td>wired.com</td><td>350,411</td><td>10,006</td><td><strong>35.0x</strong></td></tr>
-          <tr><td>aws.amazon.com</td><td>81,318</td><td>2,588</td><td><strong>31.4x</strong></td></tr>
-          <tr><td>mongodb.com</td><td>232,141</td><td>7,944</td><td><strong>29.2x</strong></td></tr>
-          <tr><td>typescriptlang.org</td><td>64,899</td><td>2,345</td><td><strong>27.7x</strong></td></tr>
-          <tr><td>theguardian.com</td><td>319,879</td><td>15,753</td><td><strong>20.3x</strong></td></tr>
-          <tr><td>azure.microsoft.com</td><td>134,654</td><td>8,555</td><td><strong>15.7x</strong></td></tr>
-          <tr><td>nytimes.com</td><td>48,042</td><td>3,133</td><td><strong>15.3x</strong></td></tr>
-          <tr><td>stripe.com/docs</td><td>48,378</td><td>3,305</td><td><strong>14.6x</strong></td></tr>
-        </tbody>
-      </table>
-
-      <hr>
-
-      <h2>Methodology</h2>
-
-      <ul>
-        <li>Each URL fetched once via <code>plasmate fetch &lt;url&gt;</code></li>
-        <li>HTML token count: raw HTML bytes / 4 (standard byte-to-token estimate)</li>
-        <li>SOM token count: SOM JSON output bytes / 4</li>
-        <li>Compression ratio: HTML tokens / SOM tokens</li>
-        <li>Cost calculated at published model input pricing</li>
-        <li>No caching, no warm-up, single fetch per URL</li>
-        <li>2 URLs failed (w3.org, dev.to) and were excluded</li>
-      </ul>
-
-      <h2>Reproduce</h2>
-
-      <pre><code>cargo install plasmate
-git clone https://github.com/plasmate-labs/plasmate
-cd plasmate
-./benchmarks/run-cost-analysis.sh</code></pre>
+# Or get markdown for simple extraction
+markdown = client.fetch(&quot;https://example.com&quot;, format=&quot;markdown&quot;)
+</code></pre>
+<p>For authenticated browsing (sites that require login), see the <a href="/guide-authenticated-browsing">Authenticated Browsing Guide</a>.</p>
+<hr>
+<h2 id="the-data">The Data</h2><p>All numbers in this post come from WebTaskBench, an open benchmark of 150 web tasks across 50 real-world URLs. You can run it yourself:</p>
+<pre><code class="language-bash">git clone https://github.com/nicholasday/webtaskbench
+cd webtaskbench
+npm install
+npm run eval -- --model gpt-4o --format som
+</code></pre>
+<p>Full results: <a href="https://github.com/nicholasday/webtaskbench/tree/main/results">WebTaskBench Results</a></p>
+<hr>
+<h2 id="further-reading">Further Reading</h2><ul>
+<li><a href="/som-spec">SOM Spec v1.0</a> -- The complete specification</li>
+<li><a href="/som-first-sites">SOM-first Websites</a> -- Sites that publish native SOM endpoints</li>
+<li><a href="/guide-authenticated-browsing">Authenticated Browsing</a> -- Handling logins and cookies</li>
+</ul>
+<hr>
+<p><strong>Links:</strong></p>
+<ul>
+<li><a href="https://github.com/nicholasday/plasmate">GitHub</a></li>
+<li><a href="https://www.npmjs.com/package/plasmate">npm</a></li>
+<li><a href="https://docs.plasmate.app">Docs</a></li>
+</ul>
 
     </main>
   </div>
