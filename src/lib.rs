@@ -4,6 +4,7 @@ pub mod bench;
 pub mod cache;
 pub mod cdp;
 pub mod coverage;
+pub mod daemon;
 pub mod js;
 pub mod network;
 pub mod plugin;

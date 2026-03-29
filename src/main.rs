@@ -10,6 +10,7 @@ use plasmate::awp;
 use plasmate::bench;
 use plasmate::cdp;
 use plasmate::coverage;
+use plasmate::daemon;
 use plasmate::js;
 use plasmate::network;
 use plasmate::plugin;
@@ -224,6 +225,11 @@ enum Commands {
         #[arg(long)]
         full_page: bool,
     },
+    /// Start a persistent daemon for fast repeated fetches
+    Daemon {
+        #[command(subcommand)]
+        action: DaemonAction,
+    },
     /// Compile HTML to SOM without fetching (reads from file or stdin)
     Compile {
         /// HTML file to compile (reads from stdin if omitted)
@@ -288,6 +294,20 @@ enum AuthAction {
         #[arg(long, default_value = "9271")]
         port: u16,
     },
+}
+
+#[derive(Subcommand)]
+enum DaemonAction {
+    /// Start the daemon (keeps browser warm for fast fetches)
+    Start {
+        /// Port to listen on
+        #[arg(long, default_value = "9224")]
+        port: u16,
+    },
+    /// Stop a running daemon
+    Stop,
+    /// Check daemon status
+    Status,
 }
 
 #[tokio::main]
@@ -458,6 +478,48 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             full_page,
         } => {
             cmd_screenshot(&url, &output, width, height, &format, quality, full_page)?;
+        }
+        Commands::Daemon { action } => {
+            match action {
+                DaemonAction::Start { port } => {
+                    daemon::run_daemon(port).await?;
+                }
+                DaemonAction::Stop => {
+                    if let Some(port) = daemon::daemon_port() {
+                        let client = reqwest::Client::new();
+                        let resp = client
+                            .post(format!("http://127.0.0.1:{}/shutdown", port))
+                            .send()
+                            .await;
+                        match resp {
+                            Ok(_) => eprintln!("Daemon stopped."),
+                            Err(e) => eprintln!("Failed to stop daemon: {}", e),
+                        }
+                    } else {
+                        eprintln!("No daemon is running.");
+                    }
+                }
+                DaemonAction::Status => {
+                    if let Some(port) = daemon::daemon_port() {
+                        let client = reqwest::Client::new();
+                        match client
+                            .get(format!("http://127.0.0.1:{}/health", port))
+                            .send()
+                            .await
+                        {
+                            Ok(resp) => {
+                                let body = resp.text().await.unwrap_or_default();
+                                eprintln!("Daemon running on port {} {}", port, body);
+                            }
+                            Err(_) => {
+                                eprintln!("Daemon PID file exists but daemon is not responding on port {}.", port);
+                            }
+                        }
+                    } else {
+                        eprintln!("No daemon is running.");
+                    }
+                }
+            }
         }
         Commands::Compile { file, url, output } => {
             cmd_compile(file, url, output)?;
@@ -778,6 +840,23 @@ async fn cmd_fetch(
     profile: Option<&str>,
     mut plugins: Option<&mut plugin::PluginManager>,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    // Check if the daemon is running and delegate to it
+    if plugins.is_none() {
+        if let Some(port) = daemon::daemon_port() {
+            info!(port, "Delegating to daemon");
+            match daemon::daemon_fetch(port, url, no_js, profile).await {
+                Ok(som) => {
+                    let json = serde_json::to_string_pretty(&som)?;
+                    println!("{}", json);
+                    return Ok(());
+                }
+                Err(e) => {
+                    info!(error = %e, "Daemon fetch failed, falling back to direct fetch");
+                }
+            }
+        }
+    }
+
     let jar = Arc::new(reqwest::cookie::Jar::default());
 
     // Load auth cookies if a profile is specified
