@@ -38,6 +38,15 @@ pub struct AttrChange {
 pub struct ElementDiff {
     pub id: String,
     pub change_type: ChangeType,
+    /// For Added/Removed: the element's role (e.g. "link", "heading").
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub role: Option<String>,
+    /// For Added/Removed: the element's text content.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
+    /// For Added/Removed: the element's attributes snapshot.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub attrs: Option<serde_json::Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub text_change: Option<TextChange>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -281,8 +290,8 @@ fn diff_regions(old: &[Region], new: &[Region]) -> (Vec<RegionDiff>, DiffSummary
             // Region exists in both — check for changes.
             let role_change = if old_r.role != r.role {
                 Some(TextChange {
-                    old: format!("{:?}", old_r.role),
-                    new: format!("{:?}", r.role),
+                    old: region_role_str(&old_r.role),
+                    new: region_role_str(&r.role),
                 })
             } else {
                 None
@@ -361,6 +370,9 @@ fn diff_elements(old: &[Element], new: &[Element]) -> (Vec<ElementDiff>, (usize,
             diffs.push(ElementDiff {
                 id: e.id.clone(),
                 change_type: ChangeType::Removed,
+                role: Some(e.role.as_str().to_string()),
+                text: e.text.clone(),
+                attrs: e.attrs.clone(),
                 text_change: None,
                 role_change: None,
                 attr_changes: None,
@@ -384,6 +396,9 @@ fn diff_elements(old: &[Element], new: &[Element]) -> (Vec<ElementDiff>, (usize,
             diffs.push(ElementDiff {
                 id: e.id.clone(),
                 change_type: ChangeType::Added,
+                role: Some(e.role.as_str().to_string()),
+                text: e.text.clone(),
+                attrs: e.attrs.clone(),
                 text_change: None,
                 role_change: None,
                 attr_changes: None,
@@ -477,6 +492,9 @@ fn diff_single_element(old: &Element, new: &Element) -> Option<ElementDiff> {
                 .map(|e| ElementDiff {
                     id: e.id.clone(),
                     change_type: ChangeType::Added,
+                    role: Some(e.role.as_str().to_string()),
+                    text: e.text.clone(),
+                    attrs: e.attrs.clone(),
                     text_change: None,
                     role_change: None,
                     attr_changes: None,
@@ -493,6 +511,9 @@ fn diff_single_element(old: &Element, new: &Element) -> Option<ElementDiff> {
                 .map(|e| ElementDiff {
                     id: e.id.clone(),
                     change_type: ChangeType::Removed,
+                    role: Some(e.role.as_str().to_string()),
+                    text: e.text.clone(),
+                    attrs: e.attrs.clone(),
                     text_change: None,
                     role_change: None,
                     attr_changes: None,
@@ -520,6 +541,9 @@ fn diff_single_element(old: &Element, new: &Element) -> Option<ElementDiff> {
     Some(ElementDiff {
         id: old.id.clone(),
         change_type: ChangeType::Modified,
+        role: None,
+        text: None,
+        attrs: None,
         text_change,
         role_change,
         attr_changes,
@@ -609,13 +633,23 @@ fn diff_attrs(
 // ---------------------------------------------------------------------------
 
 /// Detect price-like patterns in text changes.
+/// Convert a RegionRole to its serde-serialized lowercase string.
+fn region_role_str(role: &RegionRole) -> String {
+    serde_json::to_value(role)
+        .ok()
+        .and_then(|v| v.as_str().map(|s| s.to_string()))
+        .unwrap_or_else(|| format!("{:?}", role))
+}
+
 /// Matches: $X.XX, $X,XXX.XX, €X.XX, £X.XX, and bare decimals that look
 /// like prices.
 fn is_price_text(text: &str) -> bool {
-    // Simple check: contains a currency symbol followed by digits, or a
-    // digit pattern like "XX.XX" near a currency symbol.
-    let price_re = regex::Regex::new(r"[$€£¥]\s*[\d,]+\.?\d*").unwrap();
-    price_re.is_match(text)
+    use std::sync::OnceLock;
+    static PRICE_RE: OnceLock<regex::Regex> = OnceLock::new();
+    let re = PRICE_RE.get_or_init(|| {
+        regex::Regex::new(r"[$€£¥]\s*[\d,]+\.?\d*").unwrap()
+    });
+    re.is_match(text)
 }
 
 fn detect_price_changes_in_regions(regions: &[RegionDiff]) -> bool {
@@ -753,10 +787,16 @@ fn render_element_diffs(out: &mut String, diffs: &[ElementDiff], indent: usize) 
     for e in diffs {
         match e.change_type {
             ChangeType::Added => {
-                out.push_str(&format!("{}[+] Element {}\n", pad, e.id));
+                let role = e.role.as_deref().unwrap_or("?");
+                let text = e.text.as_deref().unwrap_or("");
+                let preview = if text.len() > 60 { &text[..60] } else { text };
+                out.push_str(&format!("{}[+] {} {} \"{}\"\n", pad, role, e.id, preview));
             }
             ChangeType::Removed => {
-                out.push_str(&format!("{}[-] Element {}\n", pad, e.id));
+                let role = e.role.as_deref().unwrap_or("?");
+                let text = e.text.as_deref().unwrap_or("");
+                let preview = if text.len() > 60 { &text[..60] } else { text };
+                out.push_str(&format!("{}[-] {} {} \"{}\"\n", pad, role, e.id, preview));
             }
             ChangeType::Modified => {
                 out.push_str(&format!("{}[~] Element {}\n", pad, e.id));

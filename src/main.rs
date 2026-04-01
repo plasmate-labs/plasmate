@@ -627,7 +627,11 @@ fn cmd_diff(
             s.push('\n');
             s
         }
-        "json" | _ => serde_json::to_string_pretty(&diff)?,
+        "json" => serde_json::to_string_pretty(&diff)?,
+        other => {
+            eprintln!("Error: unknown format '{}'. Use: json, text, or summary", other);
+            std::process::exit(1);
+        }
     };
 
     match output {
