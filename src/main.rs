@@ -249,6 +249,22 @@ enum Commands {
         #[command(subcommand)]
         action: AuthAction,
     },
+    /// Compare two SOM snapshots and output a structured diff
+    Diff {
+        /// Path to the old (baseline) SOM JSON file
+        old: String,
+        /// Path to the new SOM JSON file
+        new: String,
+        /// Output format: json (default), text, or summary
+        #[arg(long, default_value = "json")]
+        format: String,
+        /// Skip SomMeta changes (html_bytes, som_bytes)
+        #[arg(long)]
+        ignore_meta: bool,
+        /// Write output to a file instead of stdout
+        #[arg(long, short)]
+        output: Option<String>,
+    },
 }
 
 #[derive(Subcommand)]
@@ -530,6 +546,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Auth { action } => {
             cmd_auth(action).await?;
         }
+        Commands::Diff {
+            old,
+            new,
+            format,
+            ignore_meta,
+            output,
+        } => {
+            cmd_diff(&old, &new, &format, ignore_meta, output.as_deref())?;
+        }
     }
 
     Ok(())
@@ -571,6 +596,48 @@ fn cmd_compile(
             compiled.meta.html_bytes as f64 / compiled.meta.som_bytes as f64);
     } else {
         println!("{}", json);
+    }
+
+    Ok(())
+}
+
+fn cmd_diff(
+    old_path: &str,
+    new_path: &str,
+    format: &str,
+    ignore_meta: bool,
+    output: Option<&str>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let old_json = std::fs::read_to_string(old_path)
+        .map_err(|e| format!("Failed to read {}: {}", old_path, e))?;
+    let new_json = std::fs::read_to_string(new_path)
+        .map_err(|e| format!("Failed to read {}: {}", new_path, e))?;
+
+    let old_som: som::types::Som = serde_json::from_str(&old_json)
+        .map_err(|e| format!("Failed to parse {}: {}", old_path, e))?;
+    let new_som: som::types::Som = serde_json::from_str(&new_json)
+        .map_err(|e| format!("Failed to parse {}: {}", new_path, e))?;
+
+    let diff = som::diff::diff_soms(&old_som, &new_som, ignore_meta);
+
+    let result = match format {
+        "text" => som::diff::render_text(&diff),
+        "summary" => {
+            let mut s = som::diff::render_summary(&diff.summary);
+            s.push('\n');
+            s
+        }
+        "json" | _ => serde_json::to_string_pretty(&diff)?,
+    };
+
+    match output {
+        Some(path) => {
+            std::fs::write(path, &result)?;
+            eprintln!("Diff written to {}", path);
+        }
+        None => {
+            print!("{}", result);
+        }
     }
 
     Ok(())
