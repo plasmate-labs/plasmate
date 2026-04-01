@@ -491,15 +491,90 @@ async fn handle_page_act(
             )
         }
         "scroll" => {
-            // No-op in v0.1
+            let direction = intent
+                .get("value")
+                .and_then(|v| v.as_str())
+                .unwrap_or("down");
+
+            let delta: i64 = match direction {
+                "up" => -300,
+                "down" => 300,
+                "top" => {
+                    // Reset to 0
+                    session.scroll_y = Some(0);
+                    0
+                }
+                "bottom" => {
+                    // Set a large value to represent bottom
+                    session.scroll_y = Some(i64::MAX);
+                    0
+                }
+                _ => 300,
+            };
+
+            if direction != "top" && direction != "bottom" {
+                let current = session.scroll_y.unwrap_or(0);
+                let new_y = (current + delta).max(0);
+                session.scroll_y = Some(new_y);
+            }
+
             Response::success(
                 id,
                 json!({
                     "status": "ok",
-                    "resolved": null,
+                    "resolved": {
+                        "element_id": element.id,
+                        "role": element.role,
+                        "text": element.text
+                    },
                     "effects": {
                         "navigated": false,
-                        "som_changed": false
+                        "som_changed": false,
+                        "scroll_y": session.scroll_y
+                    }
+                }),
+            )
+        }
+        "toggle" => {
+            // Toggle checkbox/radio checked state or details open state in SOM
+            if let Some(som) = &mut session.current_som {
+                toggle_element(som, &element.id);
+            }
+
+            Response::success(
+                id,
+                json!({
+                    "status": "ok",
+                    "resolved": {
+                        "element_id": element.id,
+                        "role": element.role,
+                        "text": element.text
+                    },
+                    "effects": {
+                        "navigated": false,
+                        "som_changed": true
+                    }
+                }),
+            )
+        }
+        "clear" => {
+            // Clear the element value in SOM
+            if let Some(som) = &mut session.current_som {
+                update_element_value(som, &element.id, "");
+            }
+
+            Response::success(
+                id,
+                json!({
+                    "status": "ok",
+                    "resolved": {
+                        "element_id": element.id,
+                        "role": element.role,
+                        "text": element.text
+                    },
+                    "effects": {
+                        "navigated": false,
+                        "som_changed": true
                     }
                 }),
             )
@@ -1203,6 +1278,36 @@ fn update_element_value_in_list(elements: &mut [Element], element_id: &str, valu
         }
         if let Some(children) = &mut el.children {
             update_element_value_in_list(children, element_id, value);
+        }
+    }
+}
+
+fn toggle_element(som: &mut crate::som::types::Som, element_id: &str) {
+    for region in &mut som.regions {
+        toggle_element_in_list(&mut region.elements, element_id);
+    }
+}
+
+fn toggle_element_in_list(elements: &mut [Element], element_id: &str) {
+    for el in elements.iter_mut() {
+        if el.id == element_id {
+            let attrs = el.attrs.get_or_insert_with(|| json!({}));
+            if let Some(obj) = attrs.as_object_mut() {
+                // Toggle "checked" for checkboxes/radios, "open" for details
+                if let Some(checked) = obj.get("checked").and_then(|v| v.as_bool()) {
+                    obj.insert("checked".into(), json!(!checked));
+                } else if obj.contains_key("open") {
+                    let open = obj.get("open").and_then(|v| v.as_bool()).unwrap_or(false);
+                    obj.insert("open".into(), json!(!open));
+                } else {
+                    // Default: set checked to true (first toggle)
+                    obj.insert("checked".into(), json!(true));
+                }
+            }
+            return;
+        }
+        if let Some(children) = &mut el.children {
+            toggle_element_in_list(children, element_id);
         }
     }
 }

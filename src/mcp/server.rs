@@ -260,6 +260,8 @@ fn handle_tools_list(request: &JsonRpcRequest) -> JsonRpcResponse {
         tools::type_text_definition(),
         tools::select_option_definition(),
         tools::scroll_definition(),
+        tools::toggle_definition(),
+        tools::clear_definition(),
     ];
 
     JsonRpcResponse {
@@ -328,6 +330,8 @@ async fn handle_tools_call(
         "type_text" => tools::handle_type_text(&arguments, client, sessions).await,
         "select_option" => tools::handle_select_option(&arguments, client, sessions).await,
         "scroll" => tools::handle_scroll(&arguments, client, sessions).await,
+        "toggle" => tools::handle_toggle(&arguments, client, sessions).await,
+        "clear" => tools::handle_clear(&arguments, client, sessions).await,
         _ => {
             return JsonRpcResponse {
                 jsonrpc: "2.0".to_string(),
