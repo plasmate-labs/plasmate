@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Go SDK - Plasmate Docs | The Better Browser for AI Agents</title>
-  <meta name="description" content="Go SDK - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
-  <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, go sdk" />
-  <link rel="canonical" href="https://docs.plasmate.app/sdk-go" />
+  <title>SOM Diff - Plasmate Docs | The Better Browser for AI Agents</title>
+  <meta name="description" content="SOM Diff - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
+  <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, som diff" />
+  <link rel="canonical" href="https://docs.plasmate.app/som-diff" />
   <link rel="alternate" type="application/som+json" href="/.well-known/som.json" title="SOM (Plasmate)" />
 
   <link rel="icon" href="/favicon.ico" sizes="any" />
@@ -408,14 +408,14 @@
           <a href="som-first-sites">SOM-first Websites</a>
           <a href="awp">AWP Protocol</a>
           <a href="awp-mvp">AWP MVP v0.1</a>
-          <a href="som-diff">SOM Diff</a>
+          <a href="som-diff" class="active">SOM Diff</a>
           <div class="section-label">Install</div>
           <a href="install">Installation Guide</a>
           <a href="integration-mcp">MCP (Claude/Cursor)</a>
           <div class="section-label">SDKs</div>
           <a href="sdk-python">Python</a>
           <a href="sdk-node">Node.js</a>
-          <a href="sdk-go" class="active">Go</a>
+          <a href="sdk-go">Go</a>
           <div class="section-label">AI Frameworks</div>
           <a href="integration-langchain">LangChain</a>
           <a href="integration-llamaindex">LlamaIndex</a>
@@ -454,132 +454,285 @@
       </div>
     </nav>
     <main class="content">
-      <h1 id="go-sdk">Go SDK</h1><p>The official Go SDK for Plasmate, with typed structs and SOM query functions.</p>
-<h2 id="installation">Installation</h2><pre><code class="language-sh">go get github.com/nickel-org/plasmate-go
+      <h1 id="som-diff">SOM Diff</h1><p>Compare two SOM snapshots and get a structured report of what changed. Useful for competitive monitoring, deploy regression testing, content tracking, and compliance auditing.</p>
+<h2 id="quick-start">Quick Start</h2><pre><code class="language-bash"># Capture a baseline
+plasmate fetch https://example.com/pricing &gt; baseline.json
+
+# ... time passes, the page changes ...
+
+# Capture again
+plasmate fetch https://example.com/pricing &gt; current.json
+
+# See what changed
+plasmate diff baseline.json current.json
 </code></pre>
-<p>Requires Go 1.21+ and the <code>plasmate</code> binary on your PATH.</p>
-<h2 id="quick-start">Quick Start</h2><pre><code class="language-go">package main
-
-import (
-    &quot;fmt&quot;
-    &quot;log&quot;
-
-    plasmate &quot;github.com/nickel-org/plasmate-go&quot;
-)
-
-func main() {
-    client := plasmate.NewClient()
-    defer client.Close()
-
-    som, err := client.FetchPage(&quot;https://example.com&quot;)
-    if err != nil {
-        log.Fatal(err)
+<h2 id="output-formats">Output Formats</h2><h3 id="json-default">JSON (default)</h3><p>Full structured diff, machine-readable. Pipe to <code>jq</code> or feed to another tool.</p>
+<pre><code class="language-bash">plasmate diff old.json new.json
+</code></pre>
+<pre><code class="language-json">{
+  &quot;page&quot;: {
+    &quot;title_change&quot;: { &quot;old&quot;: &quot;Pricing - Acme&quot;, &quot;new&quot;: &quot;Pricing - Acme Corp&quot; }
+  },
+  &quot;regions&quot;: [...],
+  &quot;elements&quot;: [
+    {
+      &quot;id&quot;: &quot;e_a3f2b1&quot;,
+      &quot;change_type&quot;: &quot;modified&quot;,
+      &quot;role&quot;: null,
+      &quot;text_change&quot;: { &quot;old&quot;: &quot;$49.99/mo&quot;, &quot;new&quot;: &quot;$59.99/mo&quot; }
+    },
+    {
+      &quot;id&quot;: &quot;e_b7c4d2&quot;,
+      &quot;change_type&quot;: &quot;added&quot;,
+      &quot;role&quot;: &quot;button&quot;,
+      &quot;text&quot;: &quot;Start Free Trial&quot;
     }
-
-    fmt.Println(som.Title)
-    fmt.Printf(&quot;Regions: %d, Elements: %d\n&quot;, len(som.Regions), som.Meta.ElementCount)
+  ],
+  &quot;summary&quot;: {
+    &quot;total_changes&quot;: 3,
+    &quot;elements_added&quot;: 1,
+    &quot;elements_modified&quot;: 1,
+    &quot;has_price_changes&quot;: true
+  }
 }
 </code></pre>
-<h2 id="go-structs">Go Structs</h2><h3 id="som">`Som`</h3><pre><code class="language-go">type Som struct {
-    SOMVersion     string          `json:&quot;som_version&quot;`
-    URL            string          `json:&quot;url&quot;`
-    Title          string          `json:&quot;title&quot;`
-    Lang           string          `json:&quot;lang&quot;`
-    Regions        []Region        `json:&quot;regions&quot;`
-    Meta           SomMeta         `json:&quot;meta&quot;`
-    StructuredData *StructuredData `json:&quot;structured_data,omitempty&quot;`
+<h3 id="human-readable-text">Human-readable text</h3><p>Colored diff output with content previews.</p>
+<pre><code class="language-bash">plasmate diff old.json new.json --format text
+</code></pre>
+<pre><code>Page changes:
+  Title: &quot;Pricing - Acme&quot; → &quot;Pricing - Acme Corp&quot;
+
+[~] Region r_main
+  [~] Element e_a3f2b1
+      Text: &quot;$49.99/mo&quot; → &quot;$59.99/mo&quot;
+  [+] button e_b7c4d2 &quot;Start Free Trial&quot;
+
+1 added, 0 removed, 1 modified, price change detected
+</code></pre>
+<h3 id="one-line-summary">One-line summary</h3><p>For scripts, cron output, or Slack alerts.</p>
+<pre><code class="language-bash">plasmate diff old.json new.json --format summary
+</code></pre>
+<pre><code>1 added, 0 removed, 1 modified, price change detected
+</code></pre>
+<h2 id="options">Options</h2><table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>--format json</code></td>
+<td>Full structured JSON (default)</td>
+</tr>
+<tr>
+<td><code>--format text</code></td>
+<td>Human-readable diff</td>
+</tr>
+<tr>
+<td><code>--format summary</code></td>
+<td>One-line change summary</td>
+</tr>
+<tr>
+<td><code>--ignore-meta</code></td>
+<td>Skip SomMeta changes (html_bytes, som_bytes, element counts)</td>
+</tr>
+<tr>
+<td><code>--output file</code></td>
+<td>Write to file instead of stdout</td>
+</tr>
+</tbody></table>
+<h2 id="what-it-detects">What It Detects</h2><h3 id="element-level-changes">Element-level changes</h3><table>
+<thead>
+<tr>
+<th>Change</th>
+<th>Detected</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Text modified</td>
+<td>Yes</td>
+<td>Price changed from $49.99 to $59.99</td>
+</tr>
+<tr>
+<td>Element added</td>
+<td>Yes</td>
+<td>New &quot;Free Trial&quot; button appeared</td>
+</tr>
+<tr>
+<td>Element removed</td>
+<td>Yes</td>
+<td>&quot;Sale&quot; banner was removed</td>
+</tr>
+<tr>
+<td>Role changed</td>
+<td>Yes</td>
+<td>Link became a button</td>
+</tr>
+<tr>
+<td>Attributes changed</td>
+<td>Yes</td>
+<td>href updated, new data attributes</td>
+</tr>
+<tr>
+<td>Actions changed</td>
+<td>Yes</td>
+<td>Element gained &quot;type&quot; action</td>
+</tr>
+<tr>
+<td>Hints changed</td>
+<td>Yes</td>
+<td>&quot;primary&quot; hint added</td>
+</tr>
+<tr>
+<td>Nested children</td>
+<td>Yes</td>
+<td>List items added/removed within a section</td>
+</tr>
+</tbody></table>
+<h3 id="region-level-changes">Region-level changes</h3><table>
+<thead>
+<tr>
+<th>Change</th>
+<th>Detected</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Region added</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Region removed</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Region role changed</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Region label changed</td>
+<td>Yes</td>
+</tr>
+</tbody></table>
+<h3 id="page-level-changes">Page-level changes</h3><table>
+<thead>
+<tr>
+<th>Change</th>
+<th>Detected</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Title changed</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>URL changed</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Language changed</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Element count delta</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Interactive count delta</td>
+<td>Yes</td>
+</tr>
+</tbody></table>
+<h3 id="semantic-detection">Semantic detection</h3><table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>How</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Price changes</td>
+<td>Regex matching $, EUR, GBP, JPY currency patterns in modified text</td>
+</tr>
+<tr>
+<td>Content changes</td>
+<td>Text modifications in <code>main</code> regions</td>
+</tr>
+<tr>
+<td>Structural changes</td>
+<td>Added/removed regions or elements</td>
+</tr>
+</tbody></table>
+<h2 id="use-cases">Use Cases</h2><h3 id="competitive-price-monitoring">Competitive price monitoring</h3><pre><code class="language-bash">#!/bin/bash
+# Run daily via cron
+plasmate fetch https://competitor.com/pricing &gt; /tmp/today.json
+
+if [ -f /var/data/yesterday.json ]; then
+  SUMMARY=$(plasmate diff /var/data/yesterday.json /tmp/today.json --format summary)
+  if echo &quot;$SUMMARY&quot; | grep -q &quot;price change&quot;; then
+    echo &quot;ALERT: $SUMMARY&quot; | mail -s &quot;Competitor price change&quot; team@company.com
+  fi
+fi
+
+cp /tmp/today.json /var/data/yesterday.json
+</code></pre>
+<h3 id="deploy-regression-testing">Deploy regression testing</h3><pre><code class="language-bash"># Before deploy: capture baseline
+plasmate fetch https://staging.example.com &gt; pre-deploy.json
+
+# Deploy happens...
+
+# After deploy: compare
+DIFF=$(plasmate diff pre-deploy.json &lt;(plasmate fetch https://staging.example.com) --format summary)
+if echo &quot;$DIFF&quot; | grep -q &quot;removed&quot;; then
+  echo &quot;WARNING: Content removed after deploy: $DIFF&quot;
+  exit 1
+fi
+</code></pre>
+<h3 id="terms-of-service-tracking">Terms of service tracking</h3><pre><code class="language-bash"># Weekly cron
+plasmate fetch https://service.com/terms &gt; /var/data/tos-$(date +%Y%m%d).json
+PREV=$(ls -t /var/data/tos-*.json | sed -n &#39;2p&#39;)
+if [ -n &quot;$PREV&quot; ]; then
+  plasmate diff &quot;$PREV&quot; /var/data/tos-$(date +%Y%m%d).json --format text
+fi
+</code></pre>
+<h2 id="algorithm">Algorithm</h2><p>The diff uses O(n) HashMap lookups by stable element ID. Element IDs in SOM are SHA-256 derived from the element&#39;s origin, role, accessible name, and DOM path, so the same element on the same page always has the same ID across snapshots.</p>
+<p>This means the diff correctly handles:</p>
+<ul>
+<li>Elements that moved between regions (tracked by ID, not position)</li>
+<li>Pages that reorder content (same IDs, different positions)</li>
+<li>Minor markup changes that do not affect semantic content</li>
+</ul>
+<h2 id="programmatic-usage-rust">Programmatic Usage (Rust)</h2><pre><code class="language-rust">use plasmate::som::diff::{diff_soms, render_text, render_summary};
+use plasmate::som::types::Som;
+
+let old: Som = serde_json::from_str(&amp;old_json)?;
+let new: Som = serde_json::from_str(&amp;new_json)?;
+
+let diff = diff_soms(&amp;old, &amp;new, false);
+
+// Check for price changes
+if diff.summary.has_price_changes {
+    alert(&quot;Price change detected!&quot;);
 }
-</code></pre>
-<h3 id="region">`Region`</h3><pre><code class="language-go">type Region struct {
-    ID       string    `json:&quot;id&quot;`
-    Role     string    `json:&quot;role&quot;`     // navigation, main, aside, header, footer, form, dialog, content
-    Label    *string   `json:&quot;label,omitempty&quot;`
-    Action   *string   `json:&quot;action,omitempty&quot;`
-    Method   *string   `json:&quot;method,omitempty&quot;`
-    Elements []Element `json:&quot;elements&quot;`
-}
-</code></pre>
-<h3 id="element">`Element`</h3><pre><code class="language-go">type Element struct {
-    ID       string        `json:&quot;id&quot;`
-    Role     string        `json:&quot;role&quot;`     // link, button, text_input, textarea, select, checkbox, radio, heading, image, list, table, paragraph, section, separator
-    Text     *string       `json:&quot;text,omitempty&quot;`
-    Label    *string       `json:&quot;label,omitempty&quot;`
-    Actions  []string      `json:&quot;actions,omitempty&quot;`
-    Attrs    *ElementAttrs `json:&quot;attrs,omitempty&quot;`
-    Children []Element     `json:&quot;children,omitempty&quot;`
-    Hints    []string      `json:&quot;hints,omitempty&quot;`
-}
-</code></pre>
-<h3 id="sommeta">`SomMeta`</h3><pre><code class="language-go">type SomMeta struct {
-    HTMLBytes        int `json:&quot;html_bytes&quot;`
-    SOMBytes         int `json:&quot;som_bytes&quot;`
-    ElementCount     int `json:&quot;element_count&quot;`
-    InteractiveCount int `json:&quot;interactive_count&quot;`
-}
-</code></pre>
-<h2 id="query-functions">Query Functions</h2><h3 id="parsedata">`Parse(data)`</h3><p>Parse raw JSON bytes into a <code>Som</code> struct.</p>
-<pre><code class="language-go">som, err := plasmate.Parse(jsonBytes)
-</code></pre>
-<h3 id="findbyrolesom-role">`FindByRole(som, role)`</h3><p>Find all regions matching a given role.</p>
-<pre><code class="language-go">navRegions := plasmate.FindByRole(som, &quot;navigation&quot;)
-</code></pre>
-<h3 id="findbyidsom-id">`FindByID(som, id)`</h3><p>Find a single element by its stable ID. Returns <code>nil</code> if not found.</p>
-<pre><code class="language-go">el := plasmate.FindByID(som, &quot;login-btn&quot;)
-if el != nil {
-    fmt.Println(*el.Text)
-}
-</code></pre>
-<h3 id="findbytagsom-tag">`FindByTag(som, tag)`</h3><p>Find elements matching a tag/role string.</p>
-<pre><code class="language-go">links := plasmate.FindByTag(som, &quot;link&quot;)
-</code></pre>
-<h3 id="findinteractivesom">`FindInteractive(som)`</h3><p>Return all interactive elements.</p>
-<pre><code class="language-go">interactive := plasmate.FindInteractive(som)
-fmt.Printf(&quot;%d interactive elements\n&quot;, len(interactive))
-</code></pre>
-<h3 id="findbytextsom-text">`FindByText(som, text)`</h3><p>Find elements whose text content contains the given string (case-insensitive).</p>
-<pre><code class="language-go">matches := plasmate.FindByText(som, &quot;Sign in&quot;)
-</code></pre>
-<h3 id="flatelementssom">`FlatElements(som)`</h3><p>Flatten all elements across all regions into a single slice.</p>
-<pre><code class="language-go">all := plasmate.FlatElements(som)
-</code></pre>
-<h3 id="tokenestimatesom">`TokenEstimate(som)`</h3><p>Estimate the LLM token count for the SOM (heuristic: SOMBytes / 4).</p>
-<pre><code class="language-go">tokens := plasmate.TokenEstimate(som)
-fmt.Printf(&quot;~%d tokens\n&quot;, tokens)
-</code></pre>
-<h2 id="client-usage">Client Usage</h2><h3 id="creating-a-client">Creating a Client</h3><pre><code class="language-go">// Default options
-client := plasmate.NewClient()
 
-// Custom binary path
-client := plasmate.NewClient(plasmate.WithBinary(&quot;/usr/local/bin/plasmate&quot;))
+// Get human-readable output
+println!(&quot;{}&quot;, render_text(&amp;diff));
+
+// One-liner
+println!(&quot;{}&quot;, render_summary(&amp;diff.summary));
 </code></pre>
-<h3 id="stateless-methods">Stateless Methods</h3><pre><code class="language-go">// Fetch a page and return SOM
-som, err := client.FetchPage(&quot;https://example.com&quot;)
+<h2 id="jq-recipes">jq Recipes</h2><pre><code class="language-bash"># Count changes by type
+plasmate diff old.json new.json | jq &#39;.summary&#39;
 
-// Fetch with options
-som, err := client.FetchPageWithOptions(&quot;https://example.com&quot;, plasmate.FetchOptions{
-    Budget:     8000,
-    JavaScript: true,
-})
+# List only price-related element changes
+plasmate diff old.json new.json | jq &#39;[.elements[] | select(.text_change) | select(.text_change.old | test(&quot;[$€£¥]&quot;))]&#39;
 
-// Extract plain text
-text, err := client.ExtractText(&quot;https://example.com&quot;)
+# Get all added elements with their content
+plasmate diff old.json new.json | jq &#39;[.elements[] | select(.change_type == &quot;added&quot;) | {id, role, text}]&#39;
+
+# Check if anything changed (exit code)
+plasmate diff old.json new.json | jq -e &#39;.summary.total_changes &gt; 0&#39; &gt; /dev/null
 </code></pre>
-<h3 id="stateful-sessions">Stateful Sessions</h3><pre><code class="language-go">// Open a persistent page session
-session, err := client.OpenPage(&quot;https://example.com&quot;)
-// session.SessionID, session.Som
-
-// Execute JavaScript
-result, err := client.Evaluate(session.SessionID, &quot;document.title&quot;)
-
-// Click an element and get updated SOM
-updatedSom, err := client.Click(session.SessionID, &quot;login-btn&quot;)
-
-// Close the session
-err = client.ClosePage(session.SessionID)
-</code></pre>
-<h3 id="cleanup">Cleanup</h3><pre><code class="language-go">err := client.Close()
-</code></pre>
-<p>The client is thread-safe with internal mutex protection. It communicates with the <code>plasmate mcp</code> subprocess over JSON-RPC 2.0 on stdio.</p>
 
     </main>
   </div>

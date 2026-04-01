@@ -21,6 +21,7 @@ const NAV = [
   { slug: 'som-first-sites', label: 'SOM-first Websites' },
   { slug: 'awp', label: 'AWP Protocol' },
   { slug: 'awp-mvp', label: 'AWP MVP v0.1' },
+  { slug: 'som-diff', label: 'SOM Diff' },
   { section: 'Install' },
   { slug: 'install', label: 'Installation Guide' },
   { slug: 'integration-mcp', label: 'MCP (Claude/Cursor)' },
