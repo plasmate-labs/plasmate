@@ -1014,6 +1014,715 @@ pub async fn handle_click(
     })
 }
 
+// ============================================================================
+// Phase 3: Interaction tools
+// ============================================================================
+
+/// Parameters for navigate_to tool.
+#[derive(Debug, Deserialize)]
+struct NavigateToParams {
+    session_id: String,
+    url: String,
+}
+
+/// Parameters for type_text tool.
+#[derive(Debug, Deserialize)]
+struct TypeTextParams {
+    session_id: String,
+    element_id: String,
+    text: String,
+    #[serde(default)]
+    append: bool,
+}
+
+/// Parameters for select_option tool.
+#[derive(Debug, Deserialize)]
+struct SelectOptionParams {
+    session_id: String,
+    element_id: String,
+    value: String,
+}
+
+/// Parameters for scroll tool.
+#[derive(Debug, Deserialize)]
+struct ScrollParams {
+    session_id: String,
+    #[serde(default = "default_direction")]
+    direction: String,
+    #[serde(default = "default_pixels")]
+    pixels: i32,
+    #[serde(default)]
+    element_id: Option<String>,
+}
+
+fn default_direction() -> String {
+    "down".to_string()
+}
+
+fn default_pixels() -> i32 {
+    300
+}
+
+/// Get the tool definition for navigate_to.
+pub fn navigate_to_definition() -> ToolDefinition {
+    ToolDefinition {
+        name: "navigate_to".to_string(),
+        description: "Navigate to a new URL within an existing browser session. Returns the updated page SOM.".to_string(),
+        input_schema: json!({
+            "type": "object",
+            "properties": {
+                "session_id": {
+                    "type": "string",
+                    "description": "Session ID from open_page"
+                },
+                "url": {
+                    "type": "string",
+                    "description": "URL to navigate to"
+                }
+            },
+            "required": ["session_id", "url"]
+        }),
+    }
+}
+
+/// Get the tool definition for type_text.
+pub fn type_text_definition() -> ToolDefinition {
+    ToolDefinition {
+        name: "type_text".to_string(),
+        description: "Type text into a form input or textarea by its SOM element ID. Returns the updated page SOM.".to_string(),
+        input_schema: json!({
+            "type": "object",
+            "properties": {
+                "session_id": {
+                    "type": "string",
+                    "description": "Session ID from open_page"
+                },
+                "element_id": {
+                    "type": "string",
+                    "description": "Element ID from SOM (e.g. 'e5')"
+                },
+                "text": {
+                    "type": "string",
+                    "description": "Text to type into the element"
+                },
+                "append": {
+                    "type": "boolean",
+                    "description": "If true, append to existing value instead of replacing. Default: false."
+                }
+            },
+            "required": ["session_id", "element_id", "text"]
+        }),
+    }
+}
+
+/// Get the tool definition for select_option.
+pub fn select_option_definition() -> ToolDefinition {
+    ToolDefinition {
+        name: "select_option".to_string(),
+        description: "Select an option in a <select> dropdown by element ID and option value or label. Returns the updated page SOM.".to_string(),
+        input_schema: json!({
+            "type": "object",
+            "properties": {
+                "session_id": {
+                    "type": "string",
+                    "description": "Session ID from open_page"
+                },
+                "element_id": {
+                    "type": "string",
+                    "description": "Element ID of the <select> from SOM (e.g. 'e5')"
+                },
+                "value": {
+                    "type": "string",
+                    "description": "Option value or visible text to select"
+                }
+            },
+            "required": ["session_id", "element_id", "value"]
+        }),
+    }
+}
+
+/// Get the tool definition for scroll.
+pub fn scroll_definition() -> ToolDefinition {
+    ToolDefinition {
+        name: "scroll".to_string(),
+        description: "Scroll the page or a specific element into view. Returns the updated page SOM with scroll position.".to_string(),
+        input_schema: json!({
+            "type": "object",
+            "properties": {
+                "session_id": {
+                    "type": "string",
+                    "description": "Session ID from open_page"
+                },
+                "direction": {
+                    "type": "string",
+                    "enum": ["down", "up", "top", "bottom"],
+                    "description": "Scroll direction. Default: 'down'."
+                },
+                "pixels": {
+                    "type": "integer",
+                    "description": "Number of pixels to scroll for up/down. Default: 300."
+                },
+                "element_id": {
+                    "type": "string",
+                    "description": "If provided, scroll this element into view instead of scrolling the page."
+                }
+            },
+            "required": ["session_id"]
+        }),
+    }
+}
+
+/// Handle the navigate_to tool call.
+pub async fn handle_navigate_to(
+    arguments: &Value,
+    client: &reqwest::Client,
+    sessions: &Arc<SessionManager>,
+) -> Value {
+    let params: NavigateToParams = match serde_json::from_value(arguments.clone()) {
+        Ok(p) => p,
+        Err(e) => {
+            return error_response(&format!("Invalid arguments: {}", e));
+        }
+    };
+
+    info!(session_id = %params.session_id, url = %params.url, "navigate_to");
+
+    // Verify session exists
+    let exists = sessions
+        .with_session(&params.session_id, |_session| {})
+        .await;
+    if exists.is_none() {
+        return error_response(&format!("Session not found: {}", params.session_id));
+    }
+
+    // Fetch the new URL
+    let fetch_result = match fetch::fetch_url(client, &params.url, DEFAULT_TIMEOUT_MS).await {
+        Ok(r) => r,
+        Err(e) => {
+            return error_response(&format!("Failed to fetch {}: {}", params.url, e));
+        }
+    };
+
+    let pipeline_config = PipelineConfig {
+        execute_js: true,
+        fetch_external_scripts: true,
+        ..Default::default()
+    };
+
+    let page_result = match pipeline::process_page_async(
+        &fetch_result.html,
+        &fetch_result.url,
+        &pipeline_config,
+        client,
+    )
+    .await
+    {
+        Ok(r) => r,
+        Err(e) => {
+            return error_response(&format!("Pipeline error: {}", e));
+        }
+    };
+
+    // Update session state
+    let som_json = sessions
+        .with_session(&params.session_id, |session| {
+            session.target.current_url = Some(fetch_result.url.clone());
+            session.target.current_html = Some(fetch_result.html.clone());
+            session.target.effective_html = Some(page_result.effective_html.clone());
+            session.target.current_som = Some(page_result.som.clone());
+
+            serde_json::to_value(&page_result.som).ok()
+        })
+        .await;
+
+    let som_json = match som_json.flatten() {
+        Some(v) => v,
+        None => {
+            return error_response("Failed to serialize SOM");
+        }
+    };
+
+    json!({
+        "content": [
+            {
+                "type": "text",
+                "text": json!({
+                    "session_id": params.session_id,
+                    "title": page_result.som.title,
+                    "url": fetch_result.url,
+                    "regions": som_json.get("regions")
+                }).to_string()
+            }
+        ]
+    })
+}
+
+/// Handle the type_text tool call.
+pub async fn handle_type_text(
+    arguments: &Value,
+    client: &reqwest::Client,
+    sessions: &Arc<SessionManager>,
+) -> Value {
+    let params: TypeTextParams = match serde_json::from_value(arguments.clone()) {
+        Ok(p) => p,
+        Err(e) => {
+            return error_response(&format!("Invalid arguments: {}", e));
+        }
+    };
+
+    info!(session_id = %params.session_id, element_id = %params.element_id, "type_text");
+
+    // Get session data
+    let session_data = sessions
+        .with_session(&params.session_id, |session| {
+            let effective_html = session.target.effective_html.clone();
+            let url = session.target.current_url.clone();
+            (effective_html, url)
+        })
+        .await;
+
+    let (effective_html, url) = match session_data {
+        Some((Some(html), Some(url))) => (html, url),
+        Some((None, _)) | Some((_, None)) => {
+            return error_response("No page loaded in session");
+        }
+        None => {
+            return error_response(&format!("Session not found: {}", params.session_id));
+        }
+    };
+
+    // Run JS to type text into the element
+    let element_id = params.element_id.clone();
+    let text = params.text.clone();
+    let append = params.append;
+    let url_clone = url.clone();
+    let type_result = tokio::task::spawn_blocking(move || {
+        let mut runtime = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+
+        runtime.bootstrap_dom(&effective_html, &url_clone);
+
+        let escaped_text = text
+            .replace('\\', "\\\\")
+            .replace('\'', "\\'")
+            .replace('\n', "\\n");
+
+        let type_js = format!(
+            r#"
+            (function() {{
+                var el = document.querySelector('[data-plasmate-id="{}"]');
+                if (!el) {{
+                    return JSON.stringify({{ error: 'Element not found in DOM' }});
+                }}
+                if ({}) {{
+                    el.value = (el.value || '') + '{}';
+                }} else {{
+                    el.value = '{}';
+                }}
+                var inputEvt = new Event('input', {{ bubbles: true }});
+                el.dispatchEvent(inputEvt);
+                var changeEvt = new Event('change', {{ bubbles: true }});
+                el.dispatchEvent(changeEvt);
+                return JSON.stringify({{ typed: true }});
+            }})()
+            "#,
+            element_id,
+            if append { "true" } else { "false" },
+            escaped_text,
+            escaped_text
+        );
+
+        let result = runtime.eval(&type_js).map_err(|e| e.to_string())?;
+        let updated_html = runtime
+            .eval("document.documentElement.outerHTML")
+            .map_err(|e| e.to_string())?;
+
+        Ok::<(String, String), String>((result, updated_html))
+    })
+    .await;
+
+    let (result_json, updated_html) = match type_result {
+        Ok(Ok((result, html))) => (result, html),
+        Ok(Err(e)) => {
+            return error_response(&format!("Type failed: {}", e));
+        }
+        Err(e) => {
+            return error_response(&format!("Execution error: {}", e));
+        }
+    };
+
+    // Check for errors from JS
+    let result_data: Value = serde_json::from_str(&result_json).unwrap_or(json!({}));
+    if let Some(err) = result_data.get("error").and_then(|v| v.as_str()) {
+        return error_response(err);
+    }
+
+    // Re-process the page to get updated SOM
+    let pipeline_config = PipelineConfig {
+        execute_js: true,
+        fetch_external_scripts: true,
+        ..Default::default()
+    };
+
+    let page_result =
+        match pipeline::process_page_async(&updated_html, &url, &pipeline_config, client).await {
+            Ok(r) => r,
+            Err(e) => {
+                return error_response(&format!("Pipeline error: {}", e));
+            }
+        };
+
+    // Update session
+    let som_json = sessions
+        .with_session(&params.session_id, |session| {
+            session.target.current_url = Some(url.clone());
+            session.target.current_html = Some(updated_html.clone());
+            session.target.effective_html = Some(page_result.effective_html.clone());
+            session.target.current_som = Some(page_result.som.clone());
+
+            serde_json::to_value(&page_result.som).ok()
+        })
+        .await;
+
+    let som_json = match som_json.flatten() {
+        Some(v) => v,
+        None => {
+            return error_response("Failed to serialize SOM");
+        }
+    };
+
+    json!({
+        "content": [
+            {
+                "type": "text",
+                "text": json!({
+                    "title": page_result.som.title,
+                    "url": url,
+                    "regions": som_json.get("regions")
+                }).to_string()
+            }
+        ]
+    })
+}
+
+/// Handle the select_option tool call.
+pub async fn handle_select_option(
+    arguments: &Value,
+    client: &reqwest::Client,
+    sessions: &Arc<SessionManager>,
+) -> Value {
+    let params: SelectOptionParams = match serde_json::from_value(arguments.clone()) {
+        Ok(p) => p,
+        Err(e) => {
+            return error_response(&format!("Invalid arguments: {}", e));
+        }
+    };
+
+    info!(session_id = %params.session_id, element_id = %params.element_id, value = %params.value, "select_option");
+
+    // Get session data
+    let session_data = sessions
+        .with_session(&params.session_id, |session| {
+            let effective_html = session.target.effective_html.clone();
+            let url = session.target.current_url.clone();
+            (effective_html, url)
+        })
+        .await;
+
+    let (effective_html, url) = match session_data {
+        Some((Some(html), Some(url))) => (html, url),
+        Some((None, _)) | Some((_, None)) => {
+            return error_response("No page loaded in session");
+        }
+        None => {
+            return error_response(&format!("Session not found: {}", params.session_id));
+        }
+    };
+
+    // Run JS to select option
+    let element_id = params.element_id.clone();
+    let value = params.value.clone();
+    let url_clone = url.clone();
+    let select_result = tokio::task::spawn_blocking(move || {
+        let mut runtime = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+
+        runtime.bootstrap_dom(&effective_html, &url_clone);
+
+        let escaped_value = value
+            .replace('\\', "\\\\")
+            .replace('\'', "\\'");
+
+        let select_js = format!(
+            r#"
+            (function() {{
+                var el = document.querySelector('[data-plasmate-id="{}"]');
+                if (!el) {{
+                    return JSON.stringify({{ error: 'Element not found in DOM' }});
+                }}
+                if (el.tagName !== 'SELECT') {{
+                    return JSON.stringify({{ error: 'Element is not a <select>' }});
+                }}
+                var found = false;
+                for (var i = 0; i < el.options.length; i++) {{
+                    if (el.options[i].value === '{}' || el.options[i].text === '{}') {{
+                        el.selectedIndex = i;
+                        found = true;
+                        break;
+                    }}
+                }}
+                if (!found) {{
+                    return JSON.stringify({{ error: 'Option not found: {}' }});
+                }}
+                var changeEvt = new Event('change', {{ bubbles: true }});
+                el.dispatchEvent(changeEvt);
+                return JSON.stringify({{ selected: true, value: el.value }});
+            }})()
+            "#,
+            element_id,
+            escaped_value,
+            escaped_value,
+            escaped_value
+        );
+
+        let result = runtime.eval(&select_js).map_err(|e| e.to_string())?;
+        let updated_html = runtime
+            .eval("document.documentElement.outerHTML")
+            .map_err(|e| e.to_string())?;
+
+        Ok::<(String, String), String>((result, updated_html))
+    })
+    .await;
+
+    let (result_json, updated_html) = match select_result {
+        Ok(Ok((result, html))) => (result, html),
+        Ok(Err(e)) => {
+            return error_response(&format!("Select failed: {}", e));
+        }
+        Err(e) => {
+            return error_response(&format!("Execution error: {}", e));
+        }
+    };
+
+    // Check for errors from JS
+    let result_data: Value = serde_json::from_str(&result_json).unwrap_or(json!({}));
+    if let Some(err) = result_data.get("error").and_then(|v| v.as_str()) {
+        return error_response(err);
+    }
+
+    // Re-process the page
+    let pipeline_config = PipelineConfig {
+        execute_js: true,
+        fetch_external_scripts: true,
+        ..Default::default()
+    };
+
+    let page_result =
+        match pipeline::process_page_async(&updated_html, &url, &pipeline_config, client).await {
+            Ok(r) => r,
+            Err(e) => {
+                return error_response(&format!("Pipeline error: {}", e));
+            }
+        };
+
+    // Update session
+    let som_json = sessions
+        .with_session(&params.session_id, |session| {
+            session.target.current_url = Some(url.clone());
+            session.target.current_html = Some(updated_html.clone());
+            session.target.effective_html = Some(page_result.effective_html.clone());
+            session.target.current_som = Some(page_result.som.clone());
+
+            serde_json::to_value(&page_result.som).ok()
+        })
+        .await;
+
+    let som_json = match som_json.flatten() {
+        Some(v) => v,
+        None => {
+            return error_response("Failed to serialize SOM");
+        }
+    };
+
+    json!({
+        "content": [
+            {
+                "type": "text",
+                "text": json!({
+                    "title": page_result.som.title,
+                    "url": url,
+                    "regions": som_json.get("regions")
+                }).to_string()
+            }
+        ]
+    })
+}
+
+/// Handle the scroll tool call.
+pub async fn handle_scroll(
+    arguments: &Value,
+    client: &reqwest::Client,
+    sessions: &Arc<SessionManager>,
+) -> Value {
+    let params: ScrollParams = match serde_json::from_value(arguments.clone()) {
+        Ok(p) => p,
+        Err(e) => {
+            return error_response(&format!("Invalid arguments: {}", e));
+        }
+    };
+
+    info!(session_id = %params.session_id, direction = %params.direction, "scroll");
+
+    // Get session data
+    let session_data = sessions
+        .with_session(&params.session_id, |session| {
+            let effective_html = session.target.effective_html.clone();
+            let url = session.target.current_url.clone();
+            (effective_html, url)
+        })
+        .await;
+
+    let (effective_html, url) = match session_data {
+        Some((Some(html), Some(url))) => (html, url),
+        Some((None, _)) | Some((_, None)) => {
+            return error_response("No page loaded in session");
+        }
+        None => {
+            return error_response(&format!("Session not found: {}", params.session_id));
+        }
+    };
+
+    // Run JS to scroll
+    let direction = params.direction.clone();
+    let pixels = params.pixels;
+    let element_id = params.element_id.clone();
+    let url_clone = url.clone();
+    let scroll_result = tokio::task::spawn_blocking(move || {
+        let mut runtime = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+
+        runtime.bootstrap_dom(&effective_html, &url_clone);
+
+        let scroll_js = if let Some(ref eid) = element_id {
+            format!(
+                r#"
+                (function() {{
+                    var el = document.querySelector('[data-plasmate-id="{}"]');
+                    if (!el) {{
+                        return JSON.stringify({{ error: 'Element not found in DOM' }});
+                    }}
+                    el.scrollIntoView({{ behavior: 'instant', block: 'center' }});
+                    return JSON.stringify({{ scrolled: true, scrollTop: document.documentElement.scrollTop || 0 }});
+                }})()
+                "#,
+                eid
+            )
+        } else {
+            let scroll_action = match direction.as_str() {
+                "up" => format!("window.scrollBy(0, -{})", pixels),
+                "top" => "window.scrollTo(0, 0)".to_string(),
+                "bottom" => "window.scrollTo(0, document.body.scrollHeight)".to_string(),
+                _ => format!("window.scrollBy(0, {})", pixels), // "down" is default
+            };
+            format!(
+                r#"
+                (function() {{
+                    {};
+                    return JSON.stringify({{ scrolled: true, scrollTop: document.documentElement.scrollTop || 0 }});
+                }})()
+                "#,
+                scroll_action
+            )
+        };
+
+        let result = runtime.eval(&scroll_js).map_err(|e| e.to_string())?;
+        let updated_html = runtime
+            .eval("document.documentElement.outerHTML")
+            .map_err(|e| e.to_string())?;
+
+        Ok::<(String, String), String>((result, updated_html))
+    })
+    .await;
+
+    let (result_json, updated_html) = match scroll_result {
+        Ok(Ok((result, html))) => (result, html),
+        Ok(Err(e)) => {
+            return error_response(&format!("Scroll failed: {}", e));
+        }
+        Err(e) => {
+            return error_response(&format!("Execution error: {}", e));
+        }
+    };
+
+    // Check for errors from JS
+    let result_data: Value = serde_json::from_str(&result_json).unwrap_or(json!({}));
+    if let Some(err) = result_data.get("error").and_then(|v| v.as_str()) {
+        return error_response(err);
+    }
+
+    let scroll_top = result_data
+        .get("scrollTop")
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0);
+
+    // Re-process the page
+    let pipeline_config = PipelineConfig {
+        execute_js: true,
+        fetch_external_scripts: true,
+        ..Default::default()
+    };
+
+    let page_result =
+        match pipeline::process_page_async(&updated_html, &url, &pipeline_config, client).await {
+            Ok(r) => r,
+            Err(e) => {
+                return error_response(&format!("Pipeline error: {}", e));
+            }
+        };
+
+    // Update session
+    let som_json = sessions
+        .with_session(&params.session_id, |session| {
+            session.target.current_url = Some(url.clone());
+            session.target.current_html = Some(updated_html.clone());
+            session.target.effective_html = Some(page_result.effective_html.clone());
+            session.target.current_som = Some(page_result.som.clone());
+
+            serde_json::to_value(&page_result.som).ok()
+        })
+        .await;
+
+    let som_json = match som_json.flatten() {
+        Some(v) => v,
+        None => {
+            return error_response("Failed to serialize SOM");
+        }
+    };
+
+    json!({
+        "content": [
+            {
+                "type": "text",
+                "text": json!({
+                    "title": page_result.som.title,
+                    "url": url,
+                    "scroll_position": scroll_top,
+                    "regions": som_json.get("regions")
+                }).to_string()
+            }
+        ]
+    })
+}
+
 /// Handle the close_page tool call.
 pub async fn handle_close_page(arguments: &Value, sessions: &Arc<SessionManager>) -> Value {
     // Parse arguments

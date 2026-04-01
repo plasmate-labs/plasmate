@@ -255,6 +255,11 @@ fn handle_tools_list(request: &JsonRpcRequest) -> JsonRpcResponse {
         tools::evaluate_definition(),
         tools::click_definition(),
         tools::close_page_definition(),
+        // Phase 3: Interaction tools
+        tools::navigate_to_definition(),
+        tools::type_text_definition(),
+        tools::select_option_definition(),
+        tools::scroll_definition(),
     ];
 
     JsonRpcResponse {
@@ -318,6 +323,11 @@ async fn handle_tools_call(
         "evaluate" => tools::handle_evaluate(&arguments, sessions).await,
         "click" => tools::handle_click(&arguments, client, sessions).await,
         "close_page" => tools::handle_close_page(&arguments, sessions).await,
+        // Phase 3: Interaction tools
+        "navigate_to" => tools::handle_navigate_to(&arguments, client, sessions).await,
+        "type_text" => tools::handle_type_text(&arguments, client, sessions).await,
+        "select_option" => tools::handle_select_option(&arguments, client, sessions).await,
+        "scroll" => tools::handle_scroll(&arguments, client, sessions).await,
         _ => {
             return JsonRpcResponse {
                 jsonrpc: "2.0".to_string(),
