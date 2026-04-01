@@ -41,6 +41,11 @@ struct FetchPageParams {
     budget: Option<usize>,
     #[serde(default = "default_javascript")]
     javascript: bool,
+    /// Filter SOM to a specific region role (main, nav, header, footer, aside,
+    /// form, dialog, content) or HTML id (#my-id). Reduces token count by
+    /// stripping irrelevant regions before returning the result.
+    #[serde(default)]
+    selector: Option<String>,
 }
 
 fn default_javascript() -> bool {
@@ -53,6 +58,9 @@ struct ExtractTextParams {
     url: String,
     #[serde(default)]
     max_chars: Option<usize>,
+    /// Filter to a specific region before extracting text.
+    #[serde(default)]
+    selector: Option<String>,
 }
 
 /// Get the tool definition for fetch_page.
@@ -74,6 +82,10 @@ pub fn fetch_page_definition() -> ToolDefinition {
                 "javascript": {
                     "type": "boolean",
                     "description": "Enable JavaScript execution for dynamic/SPA pages. Default: true."
+                },
+                "selector": {
+                    "type": "string",
+                    "description": "Filter to a specific page region: main, nav, header, footer, aside, content, form, dialog, or #element-id. Strips irrelevant regions to reduce tokens."
                 }
             },
             "required": ["url"]
@@ -96,6 +108,10 @@ pub fn extract_text_definition() -> ToolDefinition {
                 "max_chars": {
                     "type": "integer",
                     "description": "Maximum characters to return. Default: no limit."
+                },
+                "selector": {
+                    "type": "string",
+                    "description": "Filter to a specific page region before extracting text: main, nav, header, footer, aside, content, form, dialog, or #element-id."
                 }
             },
             "required": ["url"]
@@ -159,8 +175,15 @@ pub async fn handle_fetch_page(arguments: &Value, client: &reqwest::Client) -> V
         "SOM compiled"
     );
 
+    // Apply selector filter (if requested)
+    let som_to_serialize = if let Some(ref sel) = params.selector {
+        crate::som::filter::apply_selector(&page_result.som, sel)
+    } else {
+        page_result.som
+    };
+
     // Serialize SOM to JSON
-    let som_json = match serde_json::to_value(&page_result.som) {
+    let som_json = match serde_json::to_value(&som_to_serialize) {
         Ok(v) => v,
         Err(e) => {
             return error_response(&format!("Failed to serialize SOM: {}", e));
@@ -254,17 +277,24 @@ pub async fn handle_extract_text(arguments: &Value, client: &reqwest::Client) ->
         }
     };
 
+    // Apply selector filter (if requested)
+    let effective_som = if let Some(ref sel) = params.selector {
+        crate::som::filter::apply_selector(&page_result.som, sel)
+    } else {
+        page_result.som
+    };
+
     // Extract text from all regions
     let mut text_parts: Vec<String> = Vec::new();
 
     // Add title if present
-    if !page_result.som.title.is_empty() {
-        text_parts.push(page_result.som.title.clone());
+    if !effective_som.title.is_empty() {
+        text_parts.push(effective_som.title.clone());
         text_parts.push(String::new()); // Empty line after title
     }
 
     // Extract text from each region
-    for region in &page_result.som.regions {
+    for region in &effective_som.regions {
         for element in &region.elements {
             extract_element_text(element, &mut text_parts);
         }
@@ -320,6 +350,125 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
     if let Some(children) = &element.children {
         for child in children {
             extract_element_text(child, parts);
+        }
+    }
+}
+
+// ============================================================================
+// Extract links tool
+// ============================================================================
+
+/// Parameters for extract_links tool.
+#[derive(Debug, Deserialize)]
+struct ExtractLinksParams {
+    url: String,
+    /// Filter to a specific region before extracting links.
+    #[serde(default)]
+    selector: Option<String>,
+}
+
+/// Get the tool definition for extract_links.
+pub fn extract_links_definition() -> ToolDefinition {
+    ToolDefinition {
+        name: "extract_links".to_string(),
+        description: "Fetch a web page and return all outbound URLs found in the page, one per line, deduplicated. Useful for crawling, sitemap discovery, and finding related pages.".to_string(),
+        input_schema: json!({
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL to fetch"
+                },
+                "selector": {
+                    "type": "string",
+                    "description": "Filter to a specific page region before extracting links: main, nav, header, footer, aside, content, form, dialog, or #element-id."
+                }
+            },
+            "required": ["url"]
+        }),
+    }
+}
+
+/// Handle the extract_links tool call.
+pub async fn handle_extract_links(arguments: &Value, client: &reqwest::Client) -> Value {
+    let params: ExtractLinksParams = match serde_json::from_value(arguments.clone()) {
+        Ok(p) => p,
+        Err(e) => {
+            return error_response(&format!("Invalid arguments: {}", e));
+        }
+    };
+
+    info!(url = %params.url, "extract_links");
+
+    let fetch_result = match fetch::fetch_url(client, &params.url, DEFAULT_TIMEOUT_MS).await {
+        Ok(r) => r,
+        Err(e) => {
+            return error_response(&format!("Failed to fetch {}: {}", params.url, e));
+        }
+    };
+
+    let pipeline_config = PipelineConfig {
+        execute_js: true,
+        fetch_external_scripts: true,
+        ..Default::default()
+    };
+
+    let page_result = match pipeline::process_page_async(
+        &fetch_result.html,
+        &fetch_result.url,
+        &pipeline_config,
+        client,
+    )
+    .await
+    {
+        Ok(r) => r,
+        Err(e) => {
+            return error_response(&format!("Pipeline error: {}", e));
+        }
+    };
+
+    // Apply selector filter (if requested)
+    let effective_som = if let Some(ref sel) = params.selector {
+        crate::som::filter::apply_selector(&page_result.som, sel)
+    } else {
+        page_result.som
+    };
+
+    // Collect all link URLs, deduplicated
+    let mut urls: Vec<String> = Vec::new();
+    for region in &effective_som.regions {
+        for element in &region.elements {
+            collect_element_links(element, &mut urls);
+        }
+    }
+    // Deduplicate while preserving order
+    let mut seen = std::collections::HashSet::new();
+    urls.retain(|u| seen.insert(u.clone()));
+
+    json!({
+        "content": [
+            {
+                "type": "text",
+                "text": urls.join("\n")
+            }
+        ]
+    })
+}
+
+/// Recursively collect link URLs from a SOM element tree.
+fn collect_element_links(element: &crate::som::types::Element, urls: &mut Vec<String>) {
+    if element.role == crate::som::types::ElementRole::Link {
+        if let Some(ref attrs) = element.attrs {
+            if let Some(href) = attrs.get("href").and_then(|v| v.as_str()) {
+                if !href.is_empty() && href != "#" {
+                    urls.push(href.to_string());
+                }
+            }
+        }
+    }
+    if let Some(ref children) = element.children {
+        for child in children {
+            collect_element_links(child, urls);
         }
     }
 }

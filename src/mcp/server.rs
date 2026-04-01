@@ -248,6 +248,7 @@ fn handle_tools_list(request: &JsonRpcRequest) -> JsonRpcResponse {
         // Phase 1: Stateless tools
         tools::fetch_page_definition(),
         tools::extract_text_definition(),
+        tools::extract_links_definition(),
         // Screenshot
         tools::screenshot_page_definition(),
         // Phase 2: Stateful tools
@@ -318,6 +319,7 @@ async fn handle_tools_call(
         // Phase 1: Stateless tools
         "fetch_page" => tools::handle_fetch_page(&arguments, client).await,
         "extract_text" => tools::handle_extract_text(&arguments, client).await,
+        "extract_links" => tools::handle_extract_links(&arguments, client).await,
         // Screenshot
         "screenshot_page" => tools::handle_screenshot_page(&arguments, client).await,
         // Phase 2: Stateful tools
