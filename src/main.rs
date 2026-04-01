@@ -103,9 +103,9 @@ enum Commands {
         /// Output file (defaults to stdout)
         #[arg(long, short)]
         output: Option<String>,
-        /// Output format: "json" (default, full SOM), "text" (plain extracted text,
-        /// no JSON overhead), or "markdown" (structured Markdown with headings,
-        /// links, lists — ideal for LLM context where light structure helps)
+        /// Output format: "json" (default, full SOM), "text" (plain extracted
+        /// text), "markdown" (structured Markdown), or "links" (one URL per
+        /// line, deduplicated — for crawlers and research agents)
         #[arg(long, default_value = "json")]
         format: String,
         /// Override the default User-Agent string.
@@ -292,6 +292,12 @@ enum Commands {
         /// Write output to a file instead of stdout
         #[arg(long, short)]
         output: Option<String>,
+        /// Filter both snapshots to a specific region before diffing.
+        /// Same syntax as `plasmate fetch --selector` (e.g. `main`, `nav`,
+        /// `#my-id`). Useful for diffing only the content region and ignoring
+        /// navigation or footer churn.
+        #[arg(long)]
+        selector: Option<String>,
     },
 }
 
@@ -588,8 +594,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             format,
             ignore_meta,
             output,
+            selector,
         } => {
-            cmd_diff(&old, &new, &format, ignore_meta, output.as_deref())?;
+            cmd_diff(&old, &new, &format, ignore_meta, output.as_deref(), selector.as_deref())?;
         }
     }
 
@@ -643,6 +650,7 @@ fn cmd_diff(
     format: &str,
     ignore_meta: bool,
     output: Option<&str>,
+    selector: Option<&str>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let old_json = std::fs::read_to_string(old_path)
         .map_err(|e| format!("Failed to read {}: {}", old_path, e))?;
@@ -654,7 +662,14 @@ fn cmd_diff(
     let new_som: som::types::Som = serde_json::from_str(&new_json)
         .map_err(|e| format!("Failed to parse {}: {}", new_path, e))?;
 
-    let diff = som::diff::diff_soms(&old_som, &new_som, ignore_meta);
+    // Apply selector to both snapshots before diffing (if requested)
+    let (effective_old, effective_new) = if let Some(sel) = selector {
+        (apply_selector(&old_som, sel), apply_selector(&new_som, sel))
+    } else {
+        (old_som, new_som)
+    };
+
+    let diff = som::diff::diff_soms(&effective_old, &effective_new, ignore_meta);
 
     let result = match format {
         "text" => som::diff::render_text(&diff),
@@ -1079,6 +1094,8 @@ async fn cmd_fetch(
 /// - `"markdown"`: structured Markdown — headings, paragraphs, links, images,
 ///   lists and separators are mapped to their Markdown equivalents. Useful for
 ///   LLM context where light structure helps without full JSON overhead.
+/// - `"links"`: one URL per line, deduplicated, order-preserving. Useful for
+///   crawlers, sitemaps, and research agents that need to discover outbound links.
 fn render_som_output(
     som: &som::types::Som,
     format: &str,
@@ -1113,7 +1130,37 @@ fn render_som_output(
             }
             Ok(out)
         }
+        "links" => {
+            let mut urls: Vec<String> = Vec::new();
+            for region in &som.regions {
+                for el in &region.elements {
+                    collect_links(el, &mut urls);
+                }
+            }
+            // Deduplicate while preserving order
+            let mut seen = std::collections::HashSet::new();
+            urls.retain(|u| seen.insert(u.clone()));
+            Ok(urls.join("\n"))
+        }
         "json" | _ => Ok(serde_json::to_string_pretty(som)?),
+    }
+}
+
+/// Recursively collect link URLs from a SOM element tree.
+fn collect_links(el: &som::types::Element, urls: &mut Vec<String>) {
+    if el.role == som::types::ElementRole::Link {
+        if let Some(ref attrs) = el.attrs {
+            if let Some(href) = attrs.get("href").and_then(|v| v.as_str()) {
+                if !href.is_empty() && href != "#" {
+                    urls.push(href.to_string());
+                }
+            }
+        }
+    }
+    if let Some(ref children) = el.children {
+        for child in children {
+            collect_links(child, urls);
+        }
     }
 }
 
