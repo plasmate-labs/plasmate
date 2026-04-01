@@ -1292,88 +1292,9 @@ fn render_element_markdown(el: &som::types::Element, out: &mut String, depth: us
     }
 }
 
-/// Filter a SOM to a specific region or element by semantic selector.
-///
-/// Supported selectors:
-/// - Region roles: `main`, `nav`/`navigation`, `aside`, `header`, `footer`,
-///   `form`, `dialog`, `content`
-/// - HTML id: `#some-id` — keeps only elements whose `html_id` matches
-///
-/// Unrecognised selectors return the full SOM unchanged (with a warning).
-/// If a recognised selector matches nothing, the full SOM is returned (with
-/// a warning) so callers always get usable output.
+/// Delegate to `som::filter::apply_selector` (shared with MCP tools).
 fn apply_selector(som: &som::types::Som, selector: &str) -> som::types::Som {
-    use som::types::RegionRole;
-
-    // Try to match a region role
-    let role_opt: Option<RegionRole> = match selector.to_lowercase().as_str() {
-        "main" => Some(RegionRole::Main),
-        "nav" | "navigation" => Some(RegionRole::Navigation),
-        "aside" => Some(RegionRole::Aside),
-        "header" => Some(RegionRole::Header),
-        "footer" => Some(RegionRole::Footer),
-        "form" => Some(RegionRole::Form),
-        "dialog" => Some(RegionRole::Dialog),
-        "content" => Some(RegionRole::Content),
-        _ => None,
-    };
-
-    if let Some(role) = role_opt {
-        let filtered: Vec<_> = som
-            .regions
-            .iter()
-            .filter(|r| r.role == role)
-            .cloned()
-            .collect();
-        if filtered.is_empty() {
-            eprintln!(
-                "Warning: selector '{}' matched no regions — returning full SOM",
-                selector
-            );
-            return som.clone();
-        }
-        let mut result = som.clone();
-        result.regions = filtered;
-        return result;
-    }
-
-    // Try HTML id selector: #my-id
-    if let Some(id) = selector.strip_prefix('#') {
-        let filtered_regions: Vec<_> = som
-            .regions
-            .iter()
-            .filter_map(|r| {
-                let els: Vec<_> = r
-                    .elements
-                    .iter()
-                    .filter(|e| e.html_id.as_deref() == Some(id))
-                    .cloned()
-                    .collect();
-                if els.is_empty() {
-                    None
-                } else {
-                    let mut region = r.clone();
-                    region.elements = els;
-                    Some(region)
-                }
-            })
-            .collect();
-        if filtered_regions.is_empty() {
-            eprintln!(
-                "Warning: selector '#{id}' matched no elements — returning full SOM"
-            );
-            return som.clone();
-        }
-        let mut result = som.clone();
-        result.regions = filtered_regions;
-        return result;
-    }
-
-    eprintln!(
-        "Warning: unrecognised selector '{}' — returning full SOM",
-        selector
-    );
-    som.clone()
+    som::filter::apply_selector(som, selector)
 }
 
 async fn cmd_bench(
