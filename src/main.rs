@@ -269,6 +269,15 @@ enum Commands {
         /// Output file (defaults to stdout)
         #[arg(long, short)]
         output: Option<String>,
+        /// Output format: "json" (default, full SOM), "text" (plain extracted
+        /// text), or "markdown" (structured Markdown). Same as `plasmate fetch
+        /// --format`.
+        #[arg(long, default_value = "json")]
+        format: String,
+        /// Filter output to a specific SOM region or element — same syntax as
+        /// `plasmate fetch --selector` (e.g. `main`, `nav`, `#my-id`).
+        #[arg(long)]
+        selector: Option<String>,
     },
     /// Start the MCP (Model Context Protocol) server over stdio
     Mcp,
@@ -573,8 +582,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
         }
-        Commands::Compile { file, url, output } => {
-            cmd_compile(file, url, output)?;
+        Commands::Compile { file, url, output, format, selector } => {
+            cmd_compile(file, url, output, &format, selector.as_deref())?;
         }
         Commands::Mcp => {
             mcp::run_server().await?;
@@ -600,6 +609,8 @@ fn cmd_compile(
     file: Option<String>,
     url: String,
     output: Option<String>,
+    format: &str,
+    selector: Option<&str>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     use std::io::Read;
 
@@ -621,17 +632,26 @@ fn cmd_compile(
     // Compile HTML to SOM
     let compiled = som::compiler::compile(&html, &url)?;
 
-    // Serialize to JSON
-    let json = serde_json::to_string_pretty(&compiled)?;
+    // Apply selector filter (if requested)
+    let filtered;
+    let som_to_render = if let Some(sel) = selector {
+        filtered = apply_selector(&compiled, sel);
+        &filtered
+    } else {
+        &compiled
+    };
+
+    // Render to requested format
+    let out = render_som_output(som_to_render, format)?;
 
     // Write output
     if let Some(out_path) = output {
-        std::fs::write(&out_path, &json)?;
+        std::fs::write(&out_path, &out)?;
         eprintln!("Wrote SOM to {} ({} bytes, {:.1}x compression)",
             out_path, compiled.meta.som_bytes,
             compiled.meta.html_bytes as f64 / compiled.meta.som_bytes as f64);
     } else {
-        println!("{}", json);
+        println!("{}", out);
     }
 
     Ok(())
