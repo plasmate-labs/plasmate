@@ -103,8 +103,9 @@ enum Commands {
         /// Output file (defaults to stdout)
         #[arg(long, short)]
         output: Option<String>,
-        /// Output format: "json" (default, full SOM) or "text" (plain extracted text,
-        /// no JSON overhead — useful for already-minimal pages or plain text pipelines)
+        /// Output format: "json" (default, full SOM), "text" (plain extracted text,
+        /// no JSON overhead), or "markdown" (structured Markdown with headings,
+        /// links, lists — ideal for LLM context where light structure helps)
         #[arg(long, default_value = "json")]
         format: String,
         /// Override the default User-Agent string.
@@ -112,6 +113,24 @@ enum Commands {
         /// accept plain curl-style requests. Use this to pass a simpler UA when needed.
         #[arg(long)]
         user_agent: Option<String>,
+        /// Filter output to a specific SOM region or element.
+        ///
+        /// Accepts semantic region roles (main, nav, navigation, aside, header,
+        /// footer, form, dialog, content) or an HTML id selector (#my-id).
+        /// When a role is given, only regions of that role are included.
+        /// When an id is given, only elements whose html_id matches are kept.
+        /// Unrecognised selectors fall through gracefully (full SOM returned).
+        ///
+        /// Examples:
+        ///   --selector main            (just the main content region)
+        ///   --selector nav             (navigation links only)
+        ///   --selector "#toc"          (elements with id="toc")
+        ///   --selector main --format text   (main content as plain text)
+        #[arg(long)]
+        selector: Option<String>,
+        /// Request timeout in milliseconds (default: 30000).
+        #[arg(long, default_value = "30000")]
+        timeout: u64,
         /// Skip fetching external <script src="..."> files (inline only)
         #[arg(long)]
         no_external: bool,
@@ -353,6 +372,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             output,
             format,
             user_agent,
+            selector,
+            timeout,
             no_external,
             no_js,
             profile,
@@ -374,6 +395,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 output.as_deref(),
                 &format,
                 user_agent.as_deref(),
+                selector.as_deref(),
+                timeout,
                 !no_external,
                 no_js,
                 profile.as_deref(),
@@ -921,6 +944,8 @@ async fn cmd_fetch(
     output: Option<&str>,
     format: &str,
     user_agent: Option<&str>,
+    selector: Option<&str>,
+    timeout_ms: u64,
     external_scripts: bool,
     no_js: bool,
     profile: Option<&str>,
@@ -932,7 +957,12 @@ async fn cmd_fetch(
             info!(port, "Delegating to daemon");
             match daemon::daemon_fetch(port, url, no_js, profile).await {
                 Ok(som) => {
-                    let out = render_som_output(&som, format)?;
+                    let effective_som = if let Some(sel) = selector {
+                        apply_selector(&som, sel)
+                    } else {
+                        som
+                    };
+                    let out = render_som_output(&effective_som, format)?;
                     println!("{}", out);
                     return Ok(());
                 }
@@ -966,7 +996,7 @@ async fn cmd_fetch(
     };
 
     info!(url = %effective_url, "Fetching");
-    let result = network::fetch::fetch_url(&client, &effective_url, 30000).await?;
+    let result = network::fetch::fetch_url(&client, &effective_url, timeout_ms).await?;
     info!(
         url = %result.url,
         status = result.status,
@@ -1013,7 +1043,15 @@ async fn cmd_fetch(
         "Pipeline complete"
     );
 
-    let out = render_som_output(&page_result.som, format)?;
+    let filtered_som;
+    let som_to_render = if let Some(sel) = selector {
+        filtered_som = apply_selector(&page_result.som, sel);
+        &filtered_som
+    } else {
+        &page_result.som
+    };
+
+    let out = render_som_output(som_to_render, format)?;
 
     match output {
         Some(path) => {
@@ -1038,6 +1076,9 @@ async fn cmd_fetch(
 /// - `"text"`: plain text extracted from all regions — no JSON overhead.
 ///   Useful for already-minimal pages where the SOM structure would add more
 ///   tokens than it saves, or for piping into plain-text tools.
+/// - `"markdown"`: structured Markdown — headings, paragraphs, links, images,
+///   lists and separators are mapped to their Markdown equivalents. Useful for
+///   LLM context where light structure helps without full JSON overhead.
 fn render_som_output(
     som: &som::types::Som,
     format: &str,
@@ -1060,8 +1101,212 @@ fn render_som_output(
             }
             Ok(parts.join("\n"))
         }
+        "markdown" => {
+            let mut out = String::new();
+            if !som.title.is_empty() {
+                out.push_str(&format!("# {}\n\n", som.title));
+            }
+            for region in &som.regions {
+                for el in &region.elements {
+                    render_element_markdown(el, &mut out, 0);
+                }
+            }
+            Ok(out)
+        }
         "json" | _ => Ok(serde_json::to_string_pretty(som)?),
     }
+}
+
+/// Recursively render a SOM element to Markdown.
+fn render_element_markdown(el: &som::types::Element, out: &mut String, depth: usize) {
+    use som::types::ElementRole;
+
+    match el.role {
+        ElementRole::Heading => {
+            // Map depth to heading level: h2 at depth 0, up to h6
+            let hashes = "#".repeat((depth + 2).min(6));
+            if let Some(ref t) = el.text {
+                let trimmed = t.trim();
+                if !trimmed.is_empty() {
+                    out.push_str(&format!("{} {}\n\n", hashes, trimmed));
+                }
+            }
+        }
+        ElementRole::Paragraph => {
+            if let Some(ref t) = el.text {
+                let trimmed = t.trim();
+                if !trimmed.is_empty() {
+                    out.push_str(trimmed);
+                    out.push_str("\n\n");
+                }
+            }
+        }
+        ElementRole::Link => {
+            if let Some(ref t) = el.text {
+                let trimmed = t.trim();
+                if !trimmed.is_empty() {
+                    let href = el
+                        .attrs
+                        .as_ref()
+                        .and_then(|a| a.get("href"))
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("#");
+                    out.push_str(&format!("[{}]({})\n", trimmed, href));
+                }
+            }
+        }
+        ElementRole::Button => {
+            if let Some(ref t) = el.text {
+                let trimmed = t.trim();
+                if !trimmed.is_empty() {
+                    out.push_str(&format!("**[{}]**\n", trimmed));
+                }
+            }
+        }
+        ElementRole::Image => {
+            let alt = el
+                .label
+                .as_deref()
+                .or(el.text.as_deref())
+                .unwrap_or("");
+            let src = el
+                .attrs
+                .as_ref()
+                .and_then(|a| a.get("src"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            out.push_str(&format!("![{}]({})\n", alt, src));
+        }
+        ElementRole::List => {
+            if let Some(ref children) = el.children {
+                for child in children {
+                    if let Some(ref t) = child.text {
+                        let trimmed = t.trim();
+                        if !trimmed.is_empty() {
+                            out.push_str(&format!("- {}\n", trimmed));
+                        }
+                    }
+                }
+                out.push('\n');
+            } else if let Some(ref t) = el.text {
+                let trimmed = t.trim();
+                if !trimmed.is_empty() {
+                    out.push_str(&format!("- {}\n\n", trimmed));
+                }
+            }
+        }
+        ElementRole::Table => {
+            // Tables are complex structures; emit their text content for now
+            if let Some(ref t) = el.text {
+                let trimmed = t.trim();
+                if !trimmed.is_empty() {
+                    out.push_str(trimmed);
+                    out.push_str("\n\n");
+                }
+            }
+        }
+        ElementRole::Separator => {
+            out.push_str("---\n\n");
+        }
+        _ => {
+            if let Some(ref t) = el.text {
+                let trimmed = t.trim();
+                if !trimmed.is_empty() {
+                    out.push_str(trimmed);
+                    out.push('\n');
+                }
+            }
+            if let Some(ref children) = el.children {
+                for child in children {
+                    render_element_markdown(child, out, depth + 1);
+                }
+            }
+        }
+    }
+}
+
+/// Filter a SOM to a specific region or element by semantic selector.
+///
+/// Supported selectors:
+/// - Region roles: `main`, `nav`/`navigation`, `aside`, `header`, `footer`,
+///   `form`, `dialog`, `content`
+/// - HTML id: `#some-id` — keeps only elements whose `html_id` matches
+///
+/// Unrecognised selectors return the full SOM unchanged (with a warning).
+/// If a recognised selector matches nothing, the full SOM is returned (with
+/// a warning) so callers always get usable output.
+fn apply_selector(som: &som::types::Som, selector: &str) -> som::types::Som {
+    use som::types::RegionRole;
+
+    // Try to match a region role
+    let role_opt: Option<RegionRole> = match selector.to_lowercase().as_str() {
+        "main" => Some(RegionRole::Main),
+        "nav" | "navigation" => Some(RegionRole::Navigation),
+        "aside" => Some(RegionRole::Aside),
+        "header" => Some(RegionRole::Header),
+        "footer" => Some(RegionRole::Footer),
+        "form" => Some(RegionRole::Form),
+        "dialog" => Some(RegionRole::Dialog),
+        "content" => Some(RegionRole::Content),
+        _ => None,
+    };
+
+    if let Some(role) = role_opt {
+        let filtered: Vec<_> = som
+            .regions
+            .iter()
+            .filter(|r| r.role == role)
+            .cloned()
+            .collect();
+        if filtered.is_empty() {
+            eprintln!(
+                "Warning: selector '{}' matched no regions — returning full SOM",
+                selector
+            );
+            return som.clone();
+        }
+        let mut result = som.clone();
+        result.regions = filtered;
+        return result;
+    }
+
+    // Try HTML id selector: #my-id
+    if let Some(id) = selector.strip_prefix('#') {
+        let filtered_regions: Vec<_> = som
+            .regions
+            .iter()
+            .filter_map(|r| {
+                let els: Vec<_> = r
+                    .elements
+                    .iter()
+                    .filter(|e| e.html_id.as_deref() == Some(id))
+                    .cloned()
+                    .collect();
+                if els.is_empty() {
+                    None
+                } else {
+                    let mut region = r.clone();
+                    region.elements = els;
+                    Some(region)
+                }
+            })
+            .collect();
+        if filtered_regions.is_empty() {
+            eprintln!(
+                "Warning: selector '#{id}' matched no elements — returning full SOM"
+            );
+            return som.clone();
+        }
+        let mut result = som.clone();
+        result.regions = filtered_regions;
+        return result;
+    }
+
+    eprintln!(
+        "Warning: unrecognised selector '{}' — returning full SOM",
+        selector
+    );
+    som.clone()
 }
 
 async fn cmd_bench(
