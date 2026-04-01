@@ -36,6 +36,7 @@ const NAV = [
   { slug: 'integration-autogen', label: 'AutoGen' },
   { slug: 'integration-smolagents', label: 'Smolagents' },
   { slug: 'integration-pi', label: 'Pi / oh-my-pi' },
+  { slug: 'integration-openclaw', label: 'OpenClaw' },
   { section: 'Web Scraping' },
   { slug: 'integration-scrapy', label: 'Scrapy' },
   { section: 'Tools' },

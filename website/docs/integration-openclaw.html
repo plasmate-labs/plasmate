@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>LangChain Integration - Plasmate Docs | The Better Browser for AI Agents</title>
-  <meta name="description" content="LangChain Integration - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
-  <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, langchain integration" />
-  <link rel="canonical" href="https://docs.plasmate.app/integration-langchain" />
+  <title>OpenClaw Integration - Plasmate Docs | The Better Browser for AI Agents</title>
+  <meta name="description" content="OpenClaw Integration - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
+  <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, openclaw integration" />
+  <link rel="canonical" href="https://docs.plasmate.app/integration-openclaw" />
   <link rel="alternate" type="application/som+json" href="/.well-known/som.json" title="SOM (Plasmate)" />
 
   <link rel="icon" href="/favicon.ico" sizes="any" />
@@ -416,14 +416,14 @@
           <a href="sdk-node">Node.js</a>
           <a href="sdk-go">Go</a>
           <div class="section-label">AI Frameworks</div>
-          <a href="integration-langchain" class="active">LangChain</a>
+          <a href="integration-langchain">LangChain</a>
           <a href="integration-llamaindex">LlamaIndex</a>
           <a href="integration-browser-use">Browser Use</a>
           <a href="integration-crewai">CrewAI</a>
           <a href="integration-autogen">AutoGen</a>
           <a href="integration-smolagents">Smolagents</a>
           <a href="integration-pi">Pi / oh-my-pi</a>
-          <a href="integration-openclaw">OpenClaw</a>
+          <a href="integration-openclaw" class="active">OpenClaw</a>
           <div class="section-label">Web Scraping</div>
           <a href="integration-scrapy">Scrapy</a>
           <div class="section-label">Tools</div>
@@ -453,119 +453,100 @@
       </div>
     </nav>
     <main class="content">
-      <h1 id="langchain-integration">LangChain Integration</h1><p>LangChain tools and document loader for Plasmate -  browse the web with <strong>~10x fewer tokens</strong> than raw HTML.</p>
-<p>Plasmate&#39;s SOM output compiles web pages into compact, structured representations that preserve interactive elements and content hierarchy. This integration provides LangChain-native tools for stateless fetching, persistent browsing, and batch document loading.</p>
-<p>Source: <a href="https://github.com/nicepkg/plasmate/tree/master/integrations/langchain"><code>integrations/langchain/</code></a></p>
-<h2 id="installation">Installation</h2><pre><code class="language-bash">pip install langchain-plasmate
+      <h1 id="openclaw-integration">OpenClaw Integration</h1><p><a href="https://openclaw.ai">OpenClaw</a> integration for Plasmate — install as a skill to give any OpenClaw agent a fast, token-efficient browser engine.</p>
+<p>Skill repo: <a href="https://github.com/plasmate-labs/skill-openclaw"><code>plasmate-labs/skill-openclaw</code></a></p>
+<h2 id="installation">Installation</h2><h3 id="install-plasmate">1. Install Plasmate</h3><pre><code class="language-bash">curl -fsSL https://plasmate.app/install.sh | sh
 </code></pre>
-<p>Requires the <code>plasmate</code> binary on your PATH:</p>
-<pre><code class="language-bash">curl -fsSL https://plasmate.app/install.sh | sh
+<h3 id="install-the-skill">2. Install the skill</h3><pre><code class="language-bash">clawhub install plasmate
 </code></pre>
-<h2 id="quick-start">Quick Start</h2><h3 id="fetch-a-page-stateless">Fetch a page (stateless)</h3><pre><code class="language-python">from langchain_plasmate import PlasmateFetchTool
-
-fetch = PlasmateFetchTool()
-result = fetch.invoke(&quot;https://news.ycombinator.com&quot;)
-print(result)
+<p>Or manually copy <code>integrations/openclaw/SKILL.md</code> to <code>~/.openclaw/skills/plasmate/SKILL.md</code>.</p>
+<h3 id="install-the-pf-wrapper">3. Install the `pf` wrapper</h3><pre><code class="language-bash">cp integrations/openclaw/scripts/pf /usr/local/bin/pf
+chmod +x /usr/local/bin/pf
 </code></pre>
-<h3 id="agent-with-browsing-tools">Agent with browsing tools</h3><pre><code class="language-python">from langchain.agents import AgentExecutor, create_tool_calling_agent
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI
-from langchain_plasmate import get_plasmate_tools
+<h2 id="quick-start">Quick Start</h2><p>Replace <code>web_fetch</code> calls with <code>pf</code>:</p>
+<pre><code class="language-bash"># Before
+web_fetch https://docs.stripe.com/api
 
-tools = get_plasmate_tools()
-llm = ChatOpenAI(model=&quot;gpt-4o&quot;)
-
-prompt = ChatPromptTemplate.from_messages([
-    (&quot;system&quot;, &quot;You can browse the web using Plasmate tools.&quot;),
-    (&quot;human&quot;, &quot;{input}&quot;),
-    (&quot;placeholder&quot;, &quot;{agent_scratchpad}&quot;),
-])
-
-agent = create_tool_calling_agent(llm, tools, prompt)
-executor = AgentExecutor(agent=agent, tools=tools)
-
-result = executor.invoke({
-    &quot;input&quot;: &quot;Go to Hacker News and tell me the top 3 stories&quot;
-})
-print(result[&quot;output&quot;])
+# After — ~96% fewer tokens, stats logged automatically
+pf https://docs.stripe.com/api
 </code></pre>
-<h3 id="document-loader">Document loader</h3><pre><code class="language-python">from langchain_plasmate import PlasmateSOMLoader
-
-loader = PlasmateSOMLoader([
-    &quot;https://example.com&quot;,
-    &quot;https://news.ycombinator.com&quot;,
-])
-docs = loader.load()
-
-for doc in docs:
-    print(f&quot;{doc.metadata[&#39;title&#39;]} -  {doc.metadata[&#39;element_count&#39;]} elements&quot;)
-    print(doc.page_content[:200])
-    print()
-</code></pre>
-<h2 id="available-tools">Available Tools</h2><h3 id="plasmatefetchtool">`PlasmateFetchTool`</h3><p>Stateless page fetch. Each call creates a fresh connection, fetches the URL, and returns SOM text. Best for one-off page reads.</p>
-<pre><code class="language-python">from langchain_plasmate import PlasmateFetchTool
-
-fetch = PlasmateFetchTool()
-result = fetch.invoke(&quot;https://example.com&quot;)
-</code></pre>
-<h3 id="plasmatenavigatetool">`PlasmateNavigateTool`</h3><p>Opens a URL in a persistent browser session. Use with <code>PlasmateClickTool</code> and <code>PlasmateTypeTool</code> for multi-step browsing workflows.</p>
-<pre><code class="language-python">from langchain_plasmate import get_plasmate_tools
-
-tools = get_plasmate_tools()
-navigate, click, type_tool, fetch = tools
-</code></pre>
-<h3 id="plasmateclicktool">`PlasmateClickTool`</h3><p>Clicks an interactive element by its SOM element ID (e.g., <code>e_a1b2c3d4e5f6</code>). Requires an active session from <code>PlasmateNavigateTool</code>.</p>
-<h3 id="plasmatetypetool">`PlasmateTypeTool`</h3><p>Types text into a form input or textarea by SOM element ID. Takes <code>element_id</code> and <code>text</code> as input.</p>
-<h3 id="getplasmatetools">`get_plasmate_tools()`</h3><p>Returns all four tools with a shared Plasmate client and browser session:</p>
-<pre><code class="language-python">from langchain_plasmate import get_plasmate_tools
-from plasmate import Plasmate
-
-# Default client
-tools = get_plasmate_tools()
-
-# Custom client
-client = Plasmate(binary=&quot;/path/to/plasmate&quot;, timeout=60)
-tools = get_plasmate_tools(client=client)
-</code></pre>
-<h2 id="plasmatesomloader">PlasmateSOMLoader</h2><p>Loads web pages as LangChain <code>Document</code> objects with SOM text as <code>page_content</code>.</p>
-<pre><code class="language-python">PlasmateSOMLoader(
-    urls=[&quot;https://example.com&quot;],
-    budget=2000,          # optional token budget per page
-    javascript=True,      # enable JS execution (default)
-    client=None,          # optional Plasmate instance
-)
-</code></pre>
-<p>Document metadata includes: <code>url</code>, <code>title</code>, <code>lang</code>, <code>html_bytes</code>, <code>som_bytes</code>, <code>element_count</code>, <code>interactive_count</code>, and optionally <code>description</code>, <code>open_graph</code>, <code>json_ld</code>.</p>
-<h2 id="token-efficiency">Token Efficiency</h2><p>Compared to LangChain&#39;s <code>WebBaseLoader</code> which passes raw HTML:</p>
+<p><code>pf</code> wraps <code>plasmate fetch</code>, prints timing + token savings to stderr, and appends a stat entry to <code>~/.plasmate/fetch-stats.jsonl</code>.</p>
+<h2 id="token-savings">Token Savings</h2><p>Real-world benchmark (SOM vs raw HTML, 12 sites):</p>
 <table>
 <thead>
 <tr>
-<th>Source</th>
-<th>Hacker News</th>
-<th>Example.com</th>
-<th>News Article</th>
+<th>Site</th>
+<th>Plasmate</th>
+<th>Raw HTML</th>
+<th>Savings</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>Raw HTML (WebBaseLoader)</td>
-<td>~22,000 tokens</td>
-<td>~400 tokens</td>
-<td>~45,000 tokens</td>
+<td>Vercel docs</td>
+<td>2,206 tok</td>
+<td>556,464 tok</td>
+<td><strong>99.6%</strong></td>
 </tr>
 <tr>
-<td><strong>SOM (PlasmateSOMLoader)</strong></td>
-<td><strong>~1,500 tokens</strong></td>
-<td><strong>~80 tokens</strong></td>
-<td><strong>~3,000 tokens</strong></td>
+<td>Stripe API</td>
+<td>12,699 tok</td>
+<td>301,604 tok</td>
+<td><strong>95.8%</strong></td>
 </tr>
 <tr>
-<td><strong>Savings</strong></td>
-<td><strong>~15x</strong></td>
-<td><strong>~5x</strong></td>
-<td><strong>~15x</strong></td>
+<td>Next.js docs</td>
+<td>15,350 tok</td>
+<td>198,307 tok</td>
+<td><strong>92.3%</strong></td>
+</tr>
+<tr>
+<td>Stack Overflow</td>
+<td>41,699 tok</td>
+<td>289,090 tok</td>
+<td><strong>85.6%</strong></td>
+</tr>
+<tr>
+<td>Wikipedia</td>
+<td>25,448 tok</td>
+<td>147,538 tok</td>
+<td><strong>82.8%</strong></td>
 </tr>
 </tbody></table>
-<p>SOM preserves all interactive elements, headings, and content structure while stripping scripts, styles, hidden elements, and layout-only markup.</p>
+<p><strong>1.56M tokens saved across 10 test fetches.</strong> Plasmate is most effective on SPAs and content-heavy pages.</p>
+<h2 id="mcp-integration">MCP Integration</h2><p>For multi-step browsing, run Plasmate as an MCP server:</p>
+<pre><code class="language-bash">plasmate mcp
+</code></pre>
+<p>Add to your agent&#39;s MCP config:</p>
+<pre><code class="language-json">{
+  &quot;servers&quot;: {
+    &quot;plasmate&quot;: {
+      &quot;command&quot;: &quot;plasmate&quot;,
+      &quot;args&quot;: [&quot;mcp&quot;],
+      &quot;transport&quot;: &quot;stdio&quot;
+    }
+  }
+}
+</code></pre>
+<p>Available MCP tools: <code>fetch_page</code>, <code>extract_text</code>, <code>screenshot_page</code>, <code>open_page</code>, <code>navigate_to</code>, <code>click</code>, <code>type_text</code>, <code>select_option</code>, <code>scroll</code>, <code>toggle</code>, <code>clear</code>, <code>evaluate</code>, <code>close_page</code>.</p>
+<h2 id="cdp-mode-puppeteer-compatible">CDP Mode (Puppeteer-compatible)</h2><p>Run Plasmate as a CDP server to replace Chrome in existing Puppeteer/Playwright workflows:</p>
+<pre><code class="language-bash">plasmate serve --protocol cdp --port 9222
+export BROWSER_WS_ENDPOINT=&quot;ws://127.0.0.1:9222&quot;
+</code></pre>
+<h2 id="viewing-fetch-stats">Viewing Fetch Stats</h2><p>The <code>pf</code> wrapper logs every fetch:</p>
+<pre><code class="language-bash">python3 - &lt;&lt; &#39;EOF&#39;
+import json, os
+log = os.path.expanduser(&quot;~/.plasmate/fetch-stats.jsonl&quot;)
+entries = [json.loads(l) for l in open(log) if l.strip()]
+n = len(entries)
+saved = sum(e.get(&quot;tokens_saved_est&quot;, 0) for e in entries)
+print(f&quot;{n} fetches | {saved:,} tokens saved&quot;)
+EOF
+</code></pre>
+<h2 id="further-reading">Further Reading</h2><ul>
+<li><a href="integration-mcp">MCP Integration</a> — detailed MCP tool reference</li>
+<li><a href="awp">AWP Protocol</a> — native agent protocol</li>
+<li><a href="guide-authenticated-browsing">Authenticated Browsing</a> — cookie profiles for logged-in sites</li>
+</ul>
 
     </main>
   </div>

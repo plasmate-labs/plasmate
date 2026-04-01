@@ -77,7 +77,7 @@ Add to your agent's MCP config:
 }
 ```
 
-Available MCP tools: `fetch_page`, `extract_text`, `screenshot_page`, `open_page`, `navigate_to`, `click`, `type_text`, `select_option`, `scroll`, `evaluate`, `close_page`.
+Available MCP tools: `fetch_page`, `extract_text`, `screenshot_page`, `open_page`, `navigate_to`, `click`, `type_text`, `select_option`, `scroll`, `toggle`, `clear`, `evaluate`, `close_page`.
 
 ## CDP Mode (Puppeteer-compatible)
 
@@ -105,6 +105,6 @@ EOF
 
 ## Further Reading
 
-- [MCP Integration](./integration-mcp.md) — detailed MCP tool reference
-- [AWP Protocol](./awp-protocol.md) — native agent protocol
-- [Authenticated Browsing](./auth.md) — cookie profiles for logged-in sites
+- [MCP Integration](integration-mcp) — detailed MCP tool reference
+- [AWP Protocol](awp) — native agent protocol
+- [Authenticated Browsing](guide-authenticated-browsing) — cookie profiles for logged-in sites
