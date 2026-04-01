@@ -103,6 +103,15 @@ enum Commands {
         /// Output file (defaults to stdout)
         #[arg(long, short)]
         output: Option<String>,
+        /// Output format: "json" (default, full SOM) or "text" (plain extracted text,
+        /// no JSON overhead — useful for already-minimal pages or plain text pipelines)
+        #[arg(long, default_value = "json")]
+        format: String,
+        /// Override the default User-Agent string.
+        /// Some sites (e.g. w3.org, mysql.com) return 403 for Chrome-like UAs but
+        /// accept plain curl-style requests. Use this to pass a simpler UA when needed.
+        #[arg(long)]
+        user_agent: Option<String>,
         /// Skip fetching external <script src="..."> files (inline only)
         #[arg(long)]
         no_external: bool,
@@ -326,6 +335,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Fetch {
             url,
             output,
+            format,
+            user_agent,
             no_external,
             no_js,
             profile,
@@ -345,6 +356,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             cmd_fetch(
                 &url,
                 output.as_deref(),
+                &format,
+                user_agent.as_deref(),
                 !no_external,
                 no_js,
                 profile.as_deref(),
@@ -835,6 +848,8 @@ fn load_plugins(
 async fn cmd_fetch(
     url: &str,
     output: Option<&str>,
+    format: &str,
+    user_agent: Option<&str>,
     external_scripts: bool,
     no_js: bool,
     profile: Option<&str>,
@@ -846,8 +861,8 @@ async fn cmd_fetch(
             info!(port, "Delegating to daemon");
             match daemon::daemon_fetch(port, url, no_js, profile).await {
                 Ok(som) => {
-                    let json = serde_json::to_string_pretty(&som)?;
-                    println!("{}", json);
+                    let out = render_som_output(&som, format)?;
+                    println!("{}", out);
                     return Ok(());
                 }
                 Err(e) => {
@@ -870,7 +885,7 @@ async fn cmd_fetch(
     }
 
     let tls_config = network::tls::global();
-    let client = network::fetch::build_client_h1_fallback(None, jar, tls_config)?;
+    let client = network::fetch::build_client_h1_fallback(user_agent, jar, tls_config)?;
 
     // Plugin hook: pre_navigate
     let effective_url = if let Some(pm) = plugins.as_deref_mut() {
@@ -927,23 +942,55 @@ async fn cmd_fetch(
         "Pipeline complete"
     );
 
-    let json = serde_json::to_string_pretty(&page_result.som)?;
+    let out = render_som_output(&page_result.som, format)?;
 
     match output {
         Some(path) => {
-            std::fs::write(path, &json)?;
+            std::fs::write(path, &out)?;
             info!(
                 path,
                 som_bytes = page_result.som.meta.som_bytes,
-                "SOM written"
+                "Written"
             );
         }
         None => {
-            println!("{}", json);
+            println!("{}", out);
         }
     }
 
     Ok(())
+}
+
+/// Render a SOM to the requested output format.
+///
+/// - `"json"` (default): pretty-printed SOM JSON.
+/// - `"text"`: plain text extracted from all regions — no JSON overhead.
+///   Useful for already-minimal pages where the SOM structure would add more
+///   tokens than it saves, or for piping into plain-text tools.
+fn render_som_output(
+    som: &som::types::Som,
+    format: &str,
+) -> Result<String, Box<dyn std::error::Error>> {
+    match format {
+        "text" => {
+            let mut parts: Vec<&str> = Vec::new();
+            if !som.title.is_empty() {
+                parts.push(&som.title);
+            }
+            for region in &som.regions {
+                for el in &region.elements {
+                    if let Some(ref text) = el.text {
+                        let t = text.trim();
+                        if !t.is_empty() {
+                            parts.push(t);
+                        }
+                    }
+                }
+            }
+            Ok(parts.join("\n"))
+        }
+        "json" | _ => Ok(serde_json::to_string_pretty(som)?),
+    }
 }
 
 async fn cmd_bench(
