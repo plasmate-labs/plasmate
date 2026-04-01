@@ -3977,20 +3977,39 @@ fn fetch_bridge_callback(
 
     debug!(url = %url, method = %method, "Fetch bridge performing request");
 
-    // Perform the fetch using the thread-local client
-    let result = FETCH_CLIENT.with(|c| {
-        let client_opt = c.borrow();
-        let client = match client_opt.as_ref() {
-            Some(c) => c,
-            None => {
-                debug!("No fetch client in thread-local storage");
-                return Err("No fetch client available".to_string());
-            }
-        };
+    // Perform the fetch using the thread-local client.
+    //
+    // SAFETY: catch_unwind is mandatory here. V8 callbacks run on a C++ call
+    // stack that cannot unwind through Rust panics. Any panic that escapes into
+    // V8 triggers an illegal instruction (SIGTRAP, exit 133) and kills the whole
+    // process. We catch it and convert it to an error response instead, which
+    // the page JavaScript receives as a failed fetch — the page degrades
+    // gracefully, and SOM compilation continues on whatever HTML was already
+    // received.
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        FETCH_CLIENT.with(|c| {
+            let client_opt = c.borrow();
+            let client = match client_opt.as_ref() {
+                Some(c) => c,
+                None => {
+                    debug!("No fetch client in thread-local storage");
+                    return Err("No fetch client available".to_string());
+                }
+            };
 
-        // Always use blocking fetch - we're inside a V8 callback which is synchronous.
-        // Using handle.block_on() panics when called from within an async runtime.
-        perform_blocking_fetch(client, &url, &method, body.as_deref(), &headers)
+            // Always use blocking fetch - we're inside a V8 callback which is synchronous.
+            perform_blocking_fetch(client, &url, &method, body.as_deref(), &headers)
+        })
+    }))
+    .unwrap_or_else(|payload| {
+        let msg = if let Some(s) = payload.downcast_ref::<&str>() {
+            format!("fetch bridge panicked: {s}")
+        } else if let Some(s) = payload.downcast_ref::<String>() {
+            format!("fetch bridge panicked: {s}")
+        } else {
+            "fetch bridge panicked: unknown cause".to_string()
+        };
+        Err(msg)
     });
 
     debug!(result = ?result, "Fetch bridge result");
@@ -4094,13 +4113,51 @@ async fn perform_async_fetch(
     Ok(result.to_string())
 }
 
-/// Perform a blocking fetch request using reqwest's blocking client.
+/// Perform a blocking fetch from inside a V8 callback by offloading to a fresh OS thread.
 ///
-/// We use reqwest::blocking::Client because the async Client is tied to
-/// a specific tokio runtime and cannot be safely used from V8 callbacks
-/// which run on the main thread outside of any async context.
+/// The root cause of the SIGTRAP crash on JS-heavy pages (e.g. dev.to):
+///
+/// 1. Page JavaScript calls `fetch()` during execution.
+/// 2. V8 invokes `fetch_bridge_callback` (a synchronous Rust callback).
+/// 3. `reqwest::blocking` is called. Internally it tries to create or reuse a
+///    Tokio runtime. Because we are already running inside `#[tokio::main]`,
+///    this either deadlocks or panics with "Cannot start a runtime from within
+///    a Tokio runtime."
+/// 4. The panic tries to unwind through V8's C++ frames — which do not support
+///    Rust panics — causing SIGTRAP (exit code 133).
+///
+/// Fix: spawn a plain OS thread that has no Tokio executor. `reqwest::blocking`
+/// safely creates its own single-thread runtime there. We communicate the
+/// result back via an `mpsc` channel and block the V8 callback thread on
+/// `recv_timeout`.
 fn perform_blocking_fetch(
-    _client: &reqwest::Client, // We ignore this and create a fresh blocking client
+    _client: &reqwest::Client,
+    url: &str,
+    method: &str,
+    body: Option<&str>,
+    headers: &std::collections::HashMap<String, String>,
+) -> Result<String, String> {
+    let url = url.to_string();
+    let method = method.to_string();
+    let body = body.map(String::from);
+    let headers = headers.clone();
+
+    let (tx, rx) = std::sync::mpsc::channel::<Result<String, String>>();
+
+    std::thread::spawn(move || {
+        let result = do_fetch_on_thread(&url, &method, body.as_deref(), &headers);
+        let _ = tx.send(result);
+    });
+
+    // Block until the thread returns a result. Use a deadline slightly beyond
+    // FETCH_TIMEOUT so the thread can return its own timeout error first.
+    rx.recv_timeout(FETCH_TIMEOUT + std::time::Duration::from_secs(2))
+        .unwrap_or_else(|e| Err(format!("fetch thread did not respond: {e}")))
+}
+
+/// The actual HTTP logic — always called from a plain OS thread, never from a
+/// Tokio async context, so `reqwest::blocking` is safe to use here.
+fn do_fetch_on_thread(
     url: &str,
     method: &str,
     body: Option<&str>,
@@ -4108,10 +4165,6 @@ fn perform_blocking_fetch(
 ) -> Result<String, String> {
     use reqwest::blocking::Client as BlockingClient;
 
-    // Build a fresh blocking client for this request.
-    // This is necessary because the async reqwest::Client cannot be used
-    // from a synchronous context without an active tokio runtime, and
-    // creating a new runtime per-request causes connection pool issues.
     let client = BlockingClient::builder()
         .timeout(FETCH_TIMEOUT)
         .user_agent(crate::network::fetch::DEFAULT_USER_AGENT)
@@ -4131,7 +4184,6 @@ fn perform_blocking_fetch(
 
     let mut request = client.request(req_method, url);
 
-    // Add headers
     for (k, v) in headers {
         if let Ok(header_name) = reqwest::header::HeaderName::from_bytes(k.as_bytes()) {
             if let Ok(header_value) = reqwest::header::HeaderValue::from_str(v) {
@@ -4140,12 +4192,10 @@ fn perform_blocking_fetch(
         }
     }
 
-    // Add body if present
     if let Some(body_str) = body {
         request = request.body(body_str.to_string());
     }
 
-    // Send the request
     let response = request.send().map_err(|e| e.to_string())?;
 
     let status = response.status().as_u16();
@@ -4156,7 +4206,6 @@ fn perform_blocking_fetch(
         .to_string();
     let ok = response.status().is_success();
 
-    // Collect response headers
     let mut resp_headers = serde_json::Map::new();
     for (k, v) in response.headers() {
         if let Ok(v_str) = v.to_str() {
@@ -4164,24 +4213,21 @@ fn perform_blocking_fetch(
         }
     }
 
-    // Read the body with size limit
     let body_bytes = response.bytes().map_err(|e| e.to_string())?;
-
     let body_str = if body_bytes.len() > MAX_RESPONSE_BODY_SIZE {
         String::from_utf8_lossy(&body_bytes[..MAX_RESPONSE_BODY_SIZE]).to_string()
     } else {
         String::from_utf8_lossy(&body_bytes).to_string()
     };
 
-    let result = serde_json::json!({
+    Ok(serde_json::json!({
         "ok": ok,
         "status": status,
         "statusText": status_text,
         "headers": resp_headers,
         "body": body_str
-    });
-
-    Ok(result.to_string())
+    })
+    .to_string())
 }
 
 /// Report from executing page scripts.
