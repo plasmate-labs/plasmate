@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+"""
+pf - Plasmate Fetch wrapper for OpenClaw agents.
+
+Usage: pf <url> [extra plasmate fetch args...]
+
+Calls `plasmate fetch`, captures SOM output, estimates token savings,
+and appends a stat entry to the configured stats log for tracking.
+
+Set PF_STATS_LOG to override the default log path.
+"""
+
+import sys
+import subprocess
+import time
+import json
+import os
+
+PLASMATE = os.environ.get("PLASMATE_BIN", "plasmate")
+STATS_LOG = os.environ.get(
+    "PF_STATS_LOG",
+    os.path.expanduser("~/.plasmate/fetch-stats.jsonl"),
+)
+
+
+def estimate_tokens(text: str) -> int:
+    """Rough token estimate: ~4 chars per token."""
+    return max(1, len(text) // 4)
+
+
+def main() -> None:
+    if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
+        print("Usage: pf <url> [plasmate fetch args...]", file=sys.stderr)
+        sys.exit(0 if sys.argv[1:] else 1)
+
+    url = sys.argv[1]
+    extra_args = sys.argv[2:]
+
+    t0 = time.time()
+    try:
+        result = subprocess.run(
+            [PLASMATE, "fetch", url] + extra_args,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except subprocess.TimeoutExpired:
+        print("[pf] ERROR: plasmate fetch timed out after 30s", file=sys.stderr)
+        sys.exit(1)
+    except FileNotFoundError:
+        print(
+            f"[pf] ERROR: plasmate binary not found. "
+            f"Install: curl -fsSL https://plasmate.app/install.sh | sh",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    elapsed_ms = int((time.time() - t0) * 1000)
+
+    if result.returncode != 0:
+        sys.stderr.write(result.stderr)
+        sys.exit(result.returncode)
+
+    output = result.stdout
+    som_tokens = estimate_tokens(output)
+
+    # Conservative 10x compression baseline (real-world average is 10-50x)
+    estimated_html_tokens = som_tokens * 10
+    tokens_saved = estimated_html_tokens - som_tokens
+    reduction_pct = round((tokens_saved / estimated_html_tokens) * 100, 1)
+
+    # Write stat entry
+    entry = {
+        "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "url": url,
+        "plasmate_ms": elapsed_ms,
+        "som_bytes": len(output.encode("utf-8")),
+        "plasmate_tokens": som_tokens,
+        "html_tokens_est": estimated_html_tokens,
+        "tokens_saved_est": tokens_saved,
+        "token_reduction_pct": reduction_pct,
+    }
+
+    try:
+        os.makedirs(os.path.dirname(STATS_LOG), exist_ok=True)
+        with open(STATS_LOG, "a") as f:
+            f.write(json.dumps(entry) + "\n")
+    except Exception as e:
+        print(f"[pf] WARNING: could not write stats to {STATS_LOG}: {e}", file=sys.stderr)
+
+    print(
+        f"[pf] {url} — {elapsed_ms}ms · {som_tokens:,} tokens "
+        f"(est. {reduction_pct}% savings vs raw HTML)",
+        file=sys.stderr,
+    )
+
+    print(output, end="")
+
+
+if __name__ == "__main__":
+    main()
