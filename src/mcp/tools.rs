@@ -1043,6 +1043,20 @@ struct SelectOptionParams {
     value: String,
 }
 
+/// Parameters for toggle tool.
+#[derive(Debug, Deserialize)]
+struct ToggleParams {
+    session_id: String,
+    element_id: String,
+}
+
+/// Parameters for clear tool.
+#[derive(Debug, Deserialize)]
+struct ClearParams {
+    session_id: String,
+    element_id: String,
+}
+
 /// Parameters for scroll tool.
 #[derive(Debug, Deserialize)]
 struct ScrollParams {
@@ -1168,6 +1182,50 @@ pub fn scroll_definition() -> ToolDefinition {
                 }
             },
             "required": ["session_id"]
+        }),
+    }
+}
+
+/// Get the tool definition for toggle.
+pub fn toggle_definition() -> ToolDefinition {
+    ToolDefinition {
+        name: "toggle".to_string(),
+        description: "Toggle a checkbox, radio button, or details/summary widget by its SOM element ID. Returns the updated page SOM.".to_string(),
+        input_schema: json!({
+            "type": "object",
+            "properties": {
+                "session_id": {
+                    "type": "string",
+                    "description": "Session ID from open_page"
+                },
+                "element_id": {
+                    "type": "string",
+                    "description": "Element ID from SOM (e.g. 'e5')"
+                }
+            },
+            "required": ["session_id", "element_id"]
+        }),
+    }
+}
+
+/// Get the tool definition for clear.
+pub fn clear_definition() -> ToolDefinition {
+    ToolDefinition {
+        name: "clear".to_string(),
+        description: "Clear the value of a text input or textarea by its SOM element ID. Returns the updated page SOM.".to_string(),
+        input_schema: json!({
+            "type": "object",
+            "properties": {
+                "session_id": {
+                    "type": "string",
+                    "description": "Session ID from open_page"
+                },
+                "element_id": {
+                    "type": "string",
+                    "description": "Element ID from SOM (e.g. 'e5')"
+                }
+            },
+            "required": ["session_id", "element_id"]
         }),
     }
 }
@@ -1716,6 +1774,288 @@ pub async fn handle_scroll(
                     "title": page_result.som.title,
                     "url": url,
                     "scroll_position": scroll_top,
+                    "regions": som_json.get("regions")
+                }).to_string()
+            }
+        ]
+    })
+}
+
+/// Handle the toggle tool call.
+pub async fn handle_toggle(
+    arguments: &Value,
+    client: &reqwest::Client,
+    sessions: &Arc<SessionManager>,
+) -> Value {
+    let params: ToggleParams = match serde_json::from_value(arguments.clone()) {
+        Ok(p) => p,
+        Err(e) => {
+            return error_response(&format!("Invalid arguments: {}", e));
+        }
+    };
+
+    info!(session_id = %params.session_id, element_id = %params.element_id, "toggle");
+
+    // Get session data
+    let session_data = sessions
+        .with_session(&params.session_id, |session| {
+            let effective_html = session.target.effective_html.clone();
+            let url = session.target.current_url.clone();
+            (effective_html, url)
+        })
+        .await;
+
+    let (effective_html, url) = match session_data {
+        Some((Some(html), Some(url))) => (html, url),
+        Some((None, _)) | Some((_, None)) => {
+            return error_response("No page loaded in session");
+        }
+        None => {
+            return error_response(&format!("Session not found: {}", params.session_id));
+        }
+    };
+
+    // Run JS to toggle the element
+    let element_id = params.element_id.clone();
+    let url_clone = url.clone();
+    let toggle_result = tokio::task::spawn_blocking(move || {
+        let mut runtime = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+
+        runtime.bootstrap_dom(&effective_html, &url_clone);
+
+        let toggle_js = format!(
+            r#"
+            (function() {{
+                var el = document.querySelector('[data-plasmate-id="{}"]');
+                if (!el) {{
+                    return JSON.stringify({{ error: 'Element not found in DOM' }});
+                }}
+                var tag = el.tagName.toUpperCase();
+                if (tag === 'INPUT' && (el.type === 'checkbox' || el.type === 'radio')) {{
+                    el.checked = !el.checked;
+                    var changeEvt = new Event('change', {{ bubbles: true }});
+                    el.dispatchEvent(changeEvt);
+                    return JSON.stringify({{ toggled: true, checked: el.checked }});
+                }} else if (tag === 'DETAILS') {{
+                    el.open = !el.open;
+                    var toggleEvt = new Event('toggle', {{ bubbles: true }});
+                    el.dispatchEvent(toggleEvt);
+                    return JSON.stringify({{ toggled: true, open: el.open }});
+                }} else {{
+                    return JSON.stringify({{ error: 'Element is not a checkbox, radio button, or details element' }});
+                }}
+            }})()
+            "#,
+            element_id
+        );
+
+        let result = runtime.eval(&toggle_js).map_err(|e| e.to_string())?;
+        let updated_html = runtime
+            .eval("document.documentElement.outerHTML")
+            .map_err(|e| e.to_string())?;
+
+        Ok::<(String, String), String>((result, updated_html))
+    })
+    .await;
+
+    let (result_json, updated_html) = match toggle_result {
+        Ok(Ok((result, html))) => (result, html),
+        Ok(Err(e)) => {
+            return error_response(&format!("Toggle failed: {}", e));
+        }
+        Err(e) => {
+            return error_response(&format!("Execution error: {}", e));
+        }
+    };
+
+    // Check for errors from JS
+    let result_data: Value = serde_json::from_str(&result_json).unwrap_or(json!({}));
+    if let Some(err) = result_data.get("error").and_then(|v| v.as_str()) {
+        return error_response(err);
+    }
+
+    // Re-process the page to get updated SOM
+    let pipeline_config = PipelineConfig {
+        execute_js: true,
+        fetch_external_scripts: true,
+        ..Default::default()
+    };
+
+    let page_result =
+        match pipeline::process_page_async(&updated_html, &url, &pipeline_config, client).await {
+            Ok(r) => r,
+            Err(e) => {
+                return error_response(&format!("Pipeline error: {}", e));
+            }
+        };
+
+    // Update session
+    let som_json = sessions
+        .with_session(&params.session_id, |session| {
+            session.target.current_url = Some(url.clone());
+            session.target.current_html = Some(updated_html.clone());
+            session.target.effective_html = Some(page_result.effective_html.clone());
+            session.target.current_som = Some(page_result.som.clone());
+
+            serde_json::to_value(&page_result.som).ok()
+        })
+        .await;
+
+    let som_json = match som_json.flatten() {
+        Some(v) => v,
+        None => {
+            return error_response("Failed to serialize SOM");
+        }
+    };
+
+    json!({
+        "content": [
+            {
+                "type": "text",
+                "text": json!({
+                    "title": page_result.som.title,
+                    "url": url,
+                    "regions": som_json.get("regions")
+                }).to_string()
+            }
+        ]
+    })
+}
+
+/// Handle the clear tool call.
+pub async fn handle_clear(
+    arguments: &Value,
+    client: &reqwest::Client,
+    sessions: &Arc<SessionManager>,
+) -> Value {
+    let params: ClearParams = match serde_json::from_value(arguments.clone()) {
+        Ok(p) => p,
+        Err(e) => {
+            return error_response(&format!("Invalid arguments: {}", e));
+        }
+    };
+
+    info!(session_id = %params.session_id, element_id = %params.element_id, "clear");
+
+    // Get session data
+    let session_data = sessions
+        .with_session(&params.session_id, |session| {
+            let effective_html = session.target.effective_html.clone();
+            let url = session.target.current_url.clone();
+            (effective_html, url)
+        })
+        .await;
+
+    let (effective_html, url) = match session_data {
+        Some((Some(html), Some(url))) => (html, url),
+        Some((None, _)) | Some((_, None)) => {
+            return error_response("No page loaded in session");
+        }
+        None => {
+            return error_response(&format!("Session not found: {}", params.session_id));
+        }
+    };
+
+    // Run JS to clear the element value
+    let element_id = params.element_id.clone();
+    let url_clone = url.clone();
+    let clear_result = tokio::task::spawn_blocking(move || {
+        let mut runtime = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+
+        runtime.bootstrap_dom(&effective_html, &url_clone);
+
+        let clear_js = format!(
+            r#"
+            (function() {{
+                var el = document.querySelector('[data-plasmate-id="{}"]');
+                if (!el) {{
+                    return JSON.stringify({{ error: 'Element not found in DOM' }});
+                }}
+                el.value = '';
+                var inputEvt = new Event('input', {{ bubbles: true }});
+                el.dispatchEvent(inputEvt);
+                var changeEvt = new Event('change', {{ bubbles: true }});
+                el.dispatchEvent(changeEvt);
+                return JSON.stringify({{ cleared: true }});
+            }})()
+            "#,
+            element_id
+        );
+
+        let result = runtime.eval(&clear_js).map_err(|e| e.to_string())?;
+        let updated_html = runtime
+            .eval("document.documentElement.outerHTML")
+            .map_err(|e| e.to_string())?;
+
+        Ok::<(String, String), String>((result, updated_html))
+    })
+    .await;
+
+    let (result_json, updated_html) = match clear_result {
+        Ok(Ok((result, html))) => (result, html),
+        Ok(Err(e)) => {
+            return error_response(&format!("Clear failed: {}", e));
+        }
+        Err(e) => {
+            return error_response(&format!("Execution error: {}", e));
+        }
+    };
+
+    // Check for errors from JS
+    let result_data: Value = serde_json::from_str(&result_json).unwrap_or(json!({}));
+    if let Some(err) = result_data.get("error").and_then(|v| v.as_str()) {
+        return error_response(err);
+    }
+
+    // Re-process the page to get updated SOM
+    let pipeline_config = PipelineConfig {
+        execute_js: true,
+        fetch_external_scripts: true,
+        ..Default::default()
+    };
+
+    let page_result =
+        match pipeline::process_page_async(&updated_html, &url, &pipeline_config, client).await {
+            Ok(r) => r,
+            Err(e) => {
+                return error_response(&format!("Pipeline error: {}", e));
+            }
+        };
+
+    // Update session
+    let som_json = sessions
+        .with_session(&params.session_id, |session| {
+            session.target.current_url = Some(url.clone());
+            session.target.current_html = Some(updated_html.clone());
+            session.target.effective_html = Some(page_result.effective_html.clone());
+            session.target.current_som = Some(page_result.som.clone());
+
+            serde_json::to_value(&page_result.som).ok()
+        })
+        .await;
+
+    let som_json = match som_json.flatten() {
+        Some(v) => v,
+        None => {
+            return error_response("Failed to serialize SOM");
+        }
+    };
+
+    json!({
+        "content": [
+            {
+                "type": "text",
+                "text": json!({
+                    "title": page_result.som.title,
+                    "url": url,
                     "regions": som_json.get("regions")
                 }).to_string()
             }

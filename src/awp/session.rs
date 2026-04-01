@@ -28,6 +28,8 @@ pub struct Session {
     pub current_html: Option<String>,
     pub current_url: Option<String>,
     pub current_structured_data: Option<StructuredData>,
+    /// Current vertical scroll position.
+    pub scroll_y: Option<i64>,
     /// Navigation history (URLs visited in this session).
     pub history: Vec<HistoryEntry>,
     /// Pipeline configuration for this session.
@@ -108,6 +110,7 @@ impl Session {
             current_html: None,
             current_url: None,
             current_structured_data: None,
+            scroll_y: None,
             history: Vec::new(),
             pipeline_config: PipelineConfig {
                 execute_js: true,
