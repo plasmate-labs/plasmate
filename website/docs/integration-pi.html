@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>LlamaIndex Integration - Plasmate Docs | The Better Browser for AI Agents</title>
-  <meta name="description" content="LlamaIndex Integration - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
-  <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, llamaindex integration" />
-  <link rel="canonical" href="https://docs.plasmate.app/integration-llamaindex" />
+  <title>Pi / oh-my-pi Integration - Plasmate Docs | The Better Browser for AI Agents</title>
+  <meta name="description" content="Pi / oh-my-pi Integration - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
+  <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, pi / oh-my-pi integration" />
+  <link rel="canonical" href="https://docs.plasmate.app/integration-pi" />
   <link rel="alternate" type="application/som+json" href="/.well-known/som.json" title="SOM (Plasmate)" />
 
   <link rel="icon" href="/favicon.ico" sizes="any" />
@@ -417,12 +417,12 @@
           <a href="sdk-go">Go</a>
           <div class="section-label">AI Frameworks</div>
           <a href="integration-langchain">LangChain</a>
-          <a href="integration-llamaindex" class="active">LlamaIndex</a>
+          <a href="integration-llamaindex">LlamaIndex</a>
           <a href="integration-browser-use">Browser Use</a>
           <a href="integration-crewai">CrewAI</a>
           <a href="integration-autogen">AutoGen</a>
           <a href="integration-smolagents">Smolagents</a>
-          <a href="integration-pi">Pi / oh-my-pi</a>
+          <a href="integration-pi" class="active">Pi / oh-my-pi</a>
           <div class="section-label">Web Scraping</div>
           <a href="integration-scrapy">Scrapy</a>
           <div class="section-label">Tools</div>
@@ -452,76 +452,172 @@
       </div>
     </nav>
     <main class="content">
-      <h1 id="llamaindex-integration">LlamaIndex Integration</h1><p>Use Plasmate as a document reader in your LlamaIndex RAG pipelines -  structured SOM output for <strong>10-16x fewer tokens</strong> than raw HTML readers.</p>
-<p>Source: <a href="https://github.com/run-llama/llama_index/pull/21144"><code>llama-index-readers-plasmate</code></a></p>
-<h2 id="installation">Installation</h2><pre><code class="language-bash">pip install plasmate llama-index-readers-plasmate
+      <h1 id="pi-oh-my-pi-integration">Pi / oh-my-pi Integration</h1><p>Plasmate integrates with both <a href="https://github.com/badlogic/pi-mono">Pi</a> (the original coding agent by @mariozechner) and <a href="https://github.com/can1357/oh-my-pi">oh-my-pi</a> (the extended fork with MCP, LSP, browser, and subagent support) via MCP.</p>
+<p>Both agents discover Plasmate&#39;s 13 tools automatically through their MCP configuration.</p>
+<h2 id="quick-setup">Quick Setup</h2><h3 id="oh-my-pi-recommended">oh-my-pi (recommended)</h3><p>oh-my-pi has native MCP support via its <code>mcp/</code> discovery layer. Add Plasmate to your MCP configuration:</p>
+<pre><code class="language-json">{
+  &quot;servers&quot;: {
+    &quot;plasmate&quot;: {
+      &quot;command&quot;: &quot;plasmate&quot;,
+      &quot;args&quot;: [&quot;mcp&quot;],
+      &quot;transport&quot;: &quot;stdio&quot;
+    }
+  }
+}
 </code></pre>
-<h2 id="quick-start">Quick Start</h2><pre><code class="language-python">from llama_index.readers.plasmate import PlasmateWebReader
-
-reader = PlasmateWebReader()
-documents = reader.load_data(urls=[
-    &quot;https://example.com&quot;,
-    &quot;https://docs.python.org/3/&quot;,
-])
-
-# Use in your RAG pipeline
-from llama_index.core import VectorStoreIndex
-index = VectorStoreIndex.from_documents(documents)
-query_engine = index.as_query_engine()
-response = query_engine.query(&quot;What is this page about?&quot;)
-</code></pre>
-<h2 id="why-plasmate-for-rag">Why Plasmate for RAG?</h2><p>Standard web readers (<code>SimpleWebPageReader</code>, <code>BeautifulSoupWebReader</code>) return raw HTML or basic text extraction. Plasmate returns structured semantic content:</p>
-<ul>
-<li><strong>10-16x fewer tokens</strong> per page -  cheaper embeddings and queries</li>
-<li><strong>Preserved document hierarchy</strong> -  headings, sections, lists stay structured</li>
-<li><strong>Clean text extraction</strong> -  no scripts, styles, or layout noise</li>
-<li><strong>Metadata included</strong> -  title, language, byte sizes, element counts</li>
-</ul>
-<h2 id="configuration">Configuration</h2><pre><code class="language-python">PlasmateWebReader(
-    binary=&quot;plasmate&quot;,    # Path to plasmate binary
-    timeout=30,           # Timeout per page in seconds
-    budget=None,          # Optional SOM token budget
-    javascript=True,      # Enable JS execution
-)
-</code></pre>
-<h2 id="document-metadata">Document Metadata</h2><p>Each loaded document includes metadata:</p>
+<p>Place this in your oh-my-pi MCP config file (typically <code>~/.config/oh-my-pi/mcp.json</code> or passed via <code>--mcp-config</code>).</p>
+<p>Once configured, oh-my-pi automatically discovers all 13 Plasmate tools:</p>
 <table>
 <thead>
 <tr>
-<th>Field</th>
-<th>Description</th>
+<th>Tool</th>
+<th>What it does</th>
 </tr>
 </thead>
 <tbody><tr>
-<td><code>url</code></td>
-<td>Source URL</td>
+<td><code>fetch_page</code></td>
+<td>Fetch a URL, return SOM (structured JSON). Stateless.</td>
 </tr>
 <tr>
-<td><code>title</code></td>
-<td>Page title</td>
+<td><code>extract_text</code></td>
+<td>Fetch a URL, return plain text only. Stateless.</td>
 </tr>
 <tr>
-<td><code>html_bytes</code></td>
-<td>Original HTML size</td>
+<td><code>screenshot_page</code></td>
+<td>Capture a screenshot.</td>
 </tr>
 <tr>
-<td><code>som_bytes</code></td>
-<td>SOM output size</td>
+<td><code>open_page</code></td>
+<td>Open a URL in a persistent session. Returns session ID + SOM.</td>
 </tr>
 <tr>
-<td><code>element_count</code></td>
-<td>Total SOM elements</td>
+<td><code>navigate_to</code></td>
+<td>Navigate an existing session to a new URL.</td>
 </tr>
 <tr>
-<td><code>compression_ratio</code></td>
-<td>HTML → SOM ratio</td>
+<td><code>click</code></td>
+<td>Click an element by SOM element ID. Returns updated SOM.</td>
+</tr>
+<tr>
+<td><code>type_text</code></td>
+<td>Type into a form input or textarea by element ID.</td>
+</tr>
+<tr>
+<td><code>select_option</code></td>
+<td>Set a dropdown value by element ID + option value.</td>
+</tr>
+<tr>
+<td><code>scroll</code></td>
+<td>Scroll the viewport or a specific element into view.</td>
+</tr>
+<tr>
+<td><code>toggle</code></td>
+<td>Toggle a checkbox, radio button, or details/summary widget.</td>
+</tr>
+<tr>
+<td><code>clear</code></td>
+<td>Clear the value of a text input or textarea.</td>
+</tr>
+<tr>
+<td><code>evaluate</code></td>
+<td>Run JavaScript in the page context.</td>
+</tr>
+<tr>
+<td><code>close_page</code></td>
+<td>Close a session and free resources.</td>
 </tr>
 </tbody></table>
-<h2 id="links">Links</h2><ul>
-<li><a href="https://github.com/run-llama/llama_index/pull/21144">GitHub PR #21144</a></li>
-<li><a href="https://docs.llamaindex.ai">LlamaIndex Docs</a></li>
-<li><a href="sdk-python">Plasmate Python SDK</a></li>
-</ul>
+<h3 id="pi-original">Pi (original)</h3><p>Pi supports MCP tools through its <code>--mcp</code> flag or configuration:</p>
+<pre><code class="language-bash">pi --mcp plasmate=&quot;plasmate mcp&quot; &quot;Research the pricing on stripe.com/pricing&quot;
+</code></pre>
+<p>Or add to your Pi config file (<code>~/.config/pi/config.toml</code>):</p>
+<pre><code class="language-toml">[mcp.plasmate]
+command = &quot;plasmate&quot;
+args = [&quot;mcp&quot;]
+</code></pre>
+<h2 id="why-plasmate-with-pi">Why Plasmate with Pi?</h2><p>Pi and oh-my-pi both have built-in web browsing via their <code>web/</code> module, which typically uses headless Chrome or simple HTTP fetch + readability extraction. Plasmate replaces this with structured SOM output that uses 4x fewer tokens.</p>
+<h3 id="default-pi-web-browsing">Default Pi web browsing</h3><pre><code>User: What are the pricing tiers on stripe.com?
+
+Pi uses web_search + fetch → raw HTML or markdown
+→ ~30,000 tokens of page content in context
+→ Model reasons over noisy input
+</code></pre>
+<h3 id="with-plasmate">With Plasmate</h3><pre><code>User: What are the pricing tiers on stripe.com?
+
+Pi calls fetch_page via MCP → SOM JSON
+→ ~8,000 tokens of structured content
+→ Model receives typed regions, elements, and affordances
+</code></pre>
+<p>The token savings compound across multi-page research sessions. A 10-page research task that consumes 300,000 tokens with raw HTML uses approximately 80,000 tokens with SOM.</p>
+<h2 id="multi-step-interaction-example">Multi-step Interaction Example</h2><p>oh-my-pi&#39;s subagent and task orchestration layer works well with Plasmate&#39;s stateful session tools. A multi-step workflow:</p>
+<pre><code>1. open_page(&quot;https://example.com/login&quot;)
+   → Returns SOM with form fields: email input (e3), password input (e5), submit button (e7)
+
+2. type_text(session_id, &quot;e3&quot;, &quot;user@example.com&quot;)
+   → Returns updated SOM
+
+3. type_text(session_id, &quot;e5&quot;, &quot;password123&quot;)
+   → Returns updated SOM
+
+4. click(session_id, &quot;e7&quot;)
+   → Submits form, navigates to dashboard, returns new SOM
+
+5. navigate_to(session_id, &quot;https://example.com/settings&quot;)
+   → Returns settings page SOM with all interactive elements
+</code></pre>
+<p>Each step returns the full updated SOM, so Pi always has current page state in context without re-fetching.</p>
+<h2 id="cdp-fallback">CDP Fallback</h2><p>If you need pixel-perfect rendering or browser features that SOM does not cover (video playback, canvas interactions, WebRTC), Plasmate also exposes a CDP server:</p>
+<pre><code class="language-bash">plasmate serve --port 9222
+</code></pre>
+<p>Pi and oh-my-pi can connect via Puppeteer:</p>
+<pre><code class="language-javascript">const browser = await puppeteer.connect({
+  browserWSEndpoint: &#39;ws://127.0.0.1:9222&#39;
+});
+</code></pre>
+<p>Use MCP for structured browsing (research, data extraction, form filling). Use CDP when you need the full browser.</p>
+<h2 id="authenticated-browsing">Authenticated Browsing</h2><p>Plasmate supports cookie-based auth profiles for browsing sites the user is logged into. This works transparently with Pi:</p>
+<pre><code class="language-bash"># Set up an auth profile (one-time)
+plasmate auth create twitter
+
+# Pi automatically uses the profile when fetching authenticated pages
+pi &quot;What are the trending topics on my Twitter timeline?&quot;
+# → Plasmate serves authenticated SOM via the stored cookie profile
+</code></pre>
+<p>See the <a href="/guide-authenticated-browsing">Authenticated Browsing guide</a> for setup details.</p>
+<h2 id="performance">Performance</h2><table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Pi + raw fetch</th>
+<th>Pi + Plasmate</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Tokens per page</td>
+<td>~33,000</td>
+<td>~8,300</td>
+</tr>
+<tr>
+<td>Latency (warm)</td>
+<td>200-500ms</td>
+<td>200-400ms</td>
+</tr>
+<tr>
+<td>Multi-page (10 pages)</td>
+<td>~330K tokens</td>
+<td>~83K tokens</td>
+</tr>
+<tr>
+<td>Memory</td>
+<td>Depends on browser</td>
+<td>~30MB / 100 pages</td>
+</tr>
+<tr>
+<td>Form filling</td>
+<td>Requires Playwright/CDP</td>
+<td>Native (type_text, select_option, toggle)</td>
+</tr>
+</tbody></table>
 
     </main>
   </div>
