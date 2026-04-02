@@ -7,9 +7,47 @@ Browser Use's default DOM serialization, reducing token costs by 90%+.
 import asyncio
 import json
 import subprocess
-from typing import Optional
+from typing import Any, Optional
 
 from som_parser import parse_som, get_links, get_interactive_elements, get_text, to_markdown
+
+
+def _extract_last_json(text: str) -> Any:
+    """Extract the last complete JSON object from potentially mixed output.
+
+    Handles cases where Plasmate emits progress/log lines alongside the
+    JSON payload.  Returns None if no valid JSON object is found.
+    """
+    if not text:
+        return None
+
+    stripped = text.strip()
+
+    # Fast path: clean output
+    try:
+        return json.loads(stripped)
+    except (json.JSONDecodeError, ValueError):
+        pass
+
+    # Line scan: JSON on its own line (progress line before payload)
+    for line in reversed(stripped.splitlines()):
+        line = line.strip()
+        if line.startswith(("{", "[")):
+            try:
+                return json.loads(line)
+            except (json.JSONDecodeError, ValueError):
+                pass
+
+    # Brace walk: JSON embedded in a longer string
+    decoder = json.JSONDecoder()
+    for pos in reversed([i for i, ch in enumerate(stripped) if ch == "{"]):
+        try:
+            value, _ = decoder.raw_decode(stripped, pos)
+            return value
+        except (json.JSONDecodeError, ValueError):
+            continue
+
+    return None
 
 
 class PlasmateExtractor:
@@ -49,7 +87,12 @@ class PlasmateExtractor:
         )
         if result.returncode != 0:
             raise RuntimeError(f"plasmate fetch failed: {result.stderr}")
-        return json.loads(result.stdout)
+        som = _extract_last_json(result.stdout)
+        if som is None:
+            raise RuntimeError(
+                f"plasmate returned no valid JSON for {url}: {result.stdout[:200]}"
+            )
+        return som
 
     async def extract_async(self, url: str) -> dict:
         """Async version of extract."""
@@ -61,7 +104,12 @@ class PlasmateExtractor:
         stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30)
         if proc.returncode != 0:
             raise RuntimeError(f"plasmate fetch failed: {stderr.decode()}")
-        return json.loads(stdout.decode())
+        som = _extract_last_json(stdout.decode())
+        if som is None:
+            raise RuntimeError(
+                f"plasmate returned no valid JSON for {url}: {stdout.decode()[:200]}"
+            )
+        return som
 
     def extract_markdown(self, url: str) -> str:
         """Fetch a URL and return SOM content as markdown.

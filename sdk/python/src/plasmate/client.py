@@ -13,6 +13,58 @@ import threading
 from typing import Any, Optional
 
 
+def _extract_last_json(text: str) -> Any:
+    """Extract the last complete JSON object from text that may contain mixed output.
+
+    Three-phase approach — each phase is progressively more expensive but handles
+    messier input:
+
+    1. **Fast path** — ``json.loads`` on the stripped text directly.  Handles
+       clean output from the MCP stdio transport (the common case).
+    2. **Line scan** — try each non-empty line from the end.  Handles output
+       where a progress/info line precedes the JSON on a separate line.
+    3. **Brace walk** — scan for every ``{`` position right-to-left and call
+       ``raw_decode`` at each.  Handles JSON embedded within a longer string
+       (e.g. a log message that includes the serialised response).
+
+    Returns the parsed value (usually a ``dict``), or ``None`` if no valid JSON
+    object is found.  Malformed or absent JSON silently returns ``None`` rather
+    than raising, so callers can decide whether to fall back or surface an error.
+    """
+    if not text:
+        return None
+
+    stripped = text.strip()
+
+    # Phase 1: clean output — try the whole string first
+    try:
+        return json.loads(stripped)
+    except (json.JSONDecodeError, ValueError):
+        pass
+
+    # Phase 2: JSON on its own line (common when Plasmate emits a status line
+    # such as "Fetching …" before outputting the SOM)
+    for line in reversed(stripped.splitlines()):
+        line = line.strip()
+        if line.startswith(("{", "[")):
+            try:
+                return json.loads(line)
+            except (json.JSONDecodeError, ValueError):
+                pass
+
+    # Phase 3: JSON embedded inside a longer string — try raw_decode from each
+    # '{' position, rightmost first, so we return the *last* complete object
+    decoder = json.JSONDecoder()
+    for pos in reversed([i for i, ch in enumerate(stripped) if ch == "{"]):
+        try:
+            value, _ = decoder.raw_decode(stripped, pos)
+            return value
+        except (json.JSONDecodeError, ValueError):
+            continue
+
+    return None
+
+
 class Plasmate:
     """
     Synchronous Plasmate client.
@@ -140,10 +192,7 @@ class Plasmate:
         if not text:
             return None
 
-        try:
-            return json.loads(text)
-        except (json.JSONDecodeError, ValueError):
-            return text
+        return _extract_last_json(text)
 
     # ---- Stateless Tools ----
 
@@ -362,10 +411,7 @@ class AsyncPlasmate:
         if not text:
             return None
 
-        try:
-            return json.loads(text)
-        except (json.JSONDecodeError, ValueError):
-            return text
+        return _extract_last_json(text)
 
     async def fetch_page(self, url: str, *, budget: Optional[int] = None, javascript: bool = True) -> dict:
         """Fetch a page and return its Semantic Object Model."""
