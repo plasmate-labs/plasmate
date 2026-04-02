@@ -1662,9 +1662,7 @@ pub async fn handle_select_option(
 
         runtime.bootstrap_dom(&effective_html, &url_clone);
 
-        let escaped_value = value
-            .replace('\\', "\\\\")
-            .replace('\'', "\\'");
+        let escaped_value = value.replace('\\', "\\\\").replace('\'', "\\'");
 
         let select_js = format!(
             r#"
@@ -1692,10 +1690,7 @@ pub async fn handle_select_option(
                 return JSON.stringify({{ selected: true, value: el.value }});
             }})()
             "#,
-            element_id,
-            escaped_value,
-            escaped_value,
-            escaped_value
+            element_id, escaped_value, escaped_value, escaped_value
         );
 
         let result = runtime.eval(&select_js).map_err(|e| e.to_string())?;

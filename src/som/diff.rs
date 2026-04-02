@@ -214,11 +214,7 @@ fn diff_page(old: &Som, new: &Som) -> PageDiff {
         url_change,
         lang_change,
         element_count_delta: if ec_delta != 0 { Some(ec_delta) } else { None },
-        interactive_count_delta: if ic_delta != 0 {
-            Some(ic_delta)
-        } else {
-            None
-        },
+        interactive_count_delta: if ic_delta != 0 { Some(ic_delta) } else { None },
     }
 }
 
@@ -313,9 +309,8 @@ fn diff_regions(old: &[Region], new: &[Region]) -> (Vec<RegionDiff>, DiffSummary
             summary.elements_modified += elem_counts.2;
             summary.total_changes += elem_counts.0 + elem_counts.1 + elem_counts.2;
 
-            let has_changes = role_change.is_some()
-                || label_change.is_some()
-                || !elem_diffs.is_empty();
+            let has_changes =
+                role_change.is_some() || label_change.is_some() || !elem_diffs.is_empty();
 
             if has_changes {
                 if role_change.is_some() || label_change.is_some() {
@@ -456,16 +451,8 @@ fn diff_single_element(old: &Element, new: &Element) -> Option<ElementDiff> {
     };
 
     let hints_change = {
-        let old_hints = old
-            .hints
-            .as_ref()
-            .map(|h| h.join(","))
-            .unwrap_or_default();
-        let new_hints = new
-            .hints
-            .as_ref()
-            .map(|h| h.join(","))
-            .unwrap_or_default();
+        let old_hints = old.hints.as_ref().map(|h| h.join(",")).unwrap_or_default();
+        let new_hints = new.hints.as_ref().map(|h| h.join(",")).unwrap_or_default();
         if old_hints != new_hints {
             Some(TextChange {
                 old: old_hints,
@@ -646,9 +633,7 @@ fn region_role_str(role: &RegionRole) -> String {
 fn is_price_text(text: &str) -> bool {
     use std::sync::OnceLock;
     static PRICE_RE: OnceLock<regex::Regex> = OnceLock::new();
-    let re = PRICE_RE.get_or_init(|| {
-        regex::Regex::new(r"[$€£¥]\s*[\d,]+\.?\d*").unwrap()
-    });
+    let re = PRICE_RE.get_or_init(|| regex::Regex::new(r"[$€£¥]\s*[\d,]+\.?\d*").unwrap());
     re.is_match(text)
 }
 
@@ -834,10 +819,7 @@ fn render_element_diffs(out: &mut String, diffs: &[ElementDiff], indent: usize) 
                     ));
                 }
                 if let Some(ref hc) = e.hints_change {
-                    out.push_str(&format!(
-                        "{}    Hints: [{}] → [{}]\n",
-                        pad, hc.old, hc.new
-                    ));
+                    out.push_str(&format!("{}    Hints: [{}] → [{}]\n", pad, hc.old, hc.new));
                 }
                 if let Some(ref children) = e.children_changes {
                     render_element_diffs(out, children, indent + 4);

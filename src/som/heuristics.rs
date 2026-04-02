@@ -108,9 +108,17 @@ pub fn should_strip(node: &Handle) -> bool {
 
             // Check class and id for cookie/consent patterns
             let consent_patterns = [
-                "cookie", "consent", "gdpr", "onetrust", "cookiebanner",
-                "cookie-banner", "cookie_banner", "cc-window", "cc-banner",
-                "privacy-banner", "privacy_banner",
+                "cookie",
+                "consent",
+                "gdpr",
+                "onetrust",
+                "cookiebanner",
+                "cookie-banner",
+                "cookie_banner",
+                "cc-window",
+                "cc-banner",
+                "privacy-banner",
+                "privacy_banner",
             ];
             for pattern in &consent_patterns {
                 if class_val.contains(pattern) || id_val.contains(pattern) {

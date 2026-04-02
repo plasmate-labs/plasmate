@@ -198,10 +198,7 @@ fn test_modified_element_attributes() {
     let diff = diff_soms(&old, &new, false);
     assert_eq!(diff.summary.elements_modified, 1);
 
-    let elem_diff = &diff.regions[0]
-        .element_changes
-        .as_ref()
-        .unwrap()[0];
+    let elem_diff = &diff.regions[0].element_changes.as_ref().unwrap()[0];
     let attr_changes = elem_diff.attr_changes.as_ref().unwrap();
 
     // href changed and target added — class unchanged.
@@ -262,7 +259,11 @@ fn test_price_change_detection() {
         regions: vec![make_region(
             "r1",
             RegionRole::Main,
-            vec![make_element("e1", ElementRole::Paragraph, Some("Price: $49.99"))],
+            vec![make_element(
+                "e1",
+                ElementRole::Paragraph,
+                Some("Price: $49.99"),
+            )],
         )],
         ..empty_som()
     };
@@ -271,7 +272,11 @@ fn test_price_change_detection() {
         regions: vec![make_region(
             "r1",
             RegionRole::Main,
-            vec![make_element("e1", ElementRole::Paragraph, Some("Price: $59.99"))],
+            vec![make_element(
+                "e1",
+                ElementRole::Paragraph,
+                Some("Price: $59.99"),
+            )],
         )],
         ..empty_som()
     };
@@ -353,14 +358,15 @@ fn test_nested_children_changes() {
     // e1 is modified (children differ).
     assert_eq!(diff.summary.elements_modified, 1);
 
-    let elem_diff = &diff.regions[0]
-        .element_changes
-        .as_ref()
-        .unwrap()[0];
+    let elem_diff = &diff.regions[0].element_changes.as_ref().unwrap()[0];
     let children = elem_diff.children_changes.as_ref().unwrap();
     // c1 modified, c3 added.
-    assert!(children.iter().any(|c| c.id == "c1" && c.change_type == ChangeType::Modified));
-    assert!(children.iter().any(|c| c.id == "c3" && c.change_type == ChangeType::Added));
+    assert!(children
+        .iter()
+        .any(|c| c.id == "c1" && c.change_type == ChangeType::Modified));
+    assert!(children
+        .iter()
+        .any(|c| c.id == "c3" && c.change_type == ChangeType::Added));
 }
 
 #[test]
@@ -386,10 +392,7 @@ fn test_role_change() {
     let diff = diff_soms(&old, &new, false);
     assert_eq!(diff.summary.elements_modified, 1);
 
-    let elem_diff = &diff.regions[0]
-        .element_changes
-        .as_ref()
-        .unwrap()[0];
+    let elem_diff = &diff.regions[0].element_changes.as_ref().unwrap()[0];
     let rc = elem_diff.role_change.as_ref().unwrap();
     assert_eq!(rc.old, "paragraph");
     assert_eq!(rc.new, "heading");
@@ -415,10 +418,7 @@ fn test_actions_change() {
     let diff = diff_soms(&old, &new, false);
     assert_eq!(diff.summary.elements_modified, 1);
 
-    let elem_diff = &diff.regions[0]
-        .element_changes
-        .as_ref()
-        .unwrap()[0];
+    let elem_diff = &diff.regions[0].element_changes.as_ref().unwrap()[0];
     let ac = elem_diff.actions_change.as_ref().unwrap();
     assert_eq!(ac.old, "click");
     assert_eq!(ac.new, "click,submit");
@@ -442,10 +442,7 @@ fn test_hints_change() {
     };
 
     let diff = diff_soms(&old, &new, false);
-    let elem_diff = &diff.regions[0]
-        .element_changes
-        .as_ref()
-        .unwrap()[0];
+    let elem_diff = &diff.regions[0].element_changes.as_ref().unwrap()[0];
     let hc = elem_diff.hints_change.as_ref().unwrap();
     assert_eq!(hc.old, "primary");
     assert_eq!(hc.new, "primary,disabled");
@@ -600,8 +597,7 @@ fn test_realistic_som_diff() {
                 ],
             ),
             {
-                let mut price_elem =
-                    make_element("m3", ElementRole::Paragraph, Some("$49.99"));
+                let mut price_elem = make_element("m3", ElementRole::Paragraph, Some("$49.99"));
                 price_elem.attrs =
                     Some(serde_json::json!({"data-price": "49.99", "class": "price"}));
 
@@ -660,8 +656,7 @@ fn test_realistic_som_diff() {
                 ],
             ),
             {
-                let mut price_elem =
-                    make_element("m3", ElementRole::Paragraph, Some("$59.99"));
+                let mut price_elem = make_element("m3", ElementRole::Paragraph, Some("$59.99"));
                 price_elem.attrs =
                     Some(serde_json::json!({"data-price": "59.99", "class": "price sale"}));
 

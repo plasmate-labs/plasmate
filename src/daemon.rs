@@ -64,10 +64,7 @@ pub async fn run_daemon(port: u16) -> Result<(), Box<dyn std::error::Error>> {
     // Write PID file so `plasmate fetch` can find us
     let pid_path = daemon_pid_path();
     std::fs::create_dir_all(pid_path.parent().unwrap())?;
-    std::fs::write(
-        &pid_path,
-        format!("{}\n{}", std::process::id(), port),
-    )?;
+    std::fs::write(&pid_path, format!("{}\n{}", std::process::id(), port))?;
 
     let start = std::time::Instant::now();
     let request_count = Arc::new(std::sync::atomic::AtomicU64::new(0));
@@ -109,7 +106,10 @@ async fn handle_connection(
         if header.trim().is_empty() {
             break;
         }
-        if let Some(val) = header.strip_prefix("Content-Length: ").or_else(|| header.strip_prefix("content-length: ")) {
+        if let Some(val) = header
+            .strip_prefix("Content-Length: ")
+            .or_else(|| header.strip_prefix("content-length: "))
+        {
             content_length = val.trim().parse().unwrap_or(0);
         }
     }
@@ -147,7 +147,10 @@ async fn handle_connection(
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
         std::process::exit(0);
     } else {
-        ("404 Not Found".to_string(), r#"{"error":"not found"}"#.to_string())
+        (
+            "404 Not Found".to_string(),
+            r#"{"error":"not found"}"#.to_string(),
+        )
     };
 
     let response = format!(
@@ -162,10 +165,7 @@ async fn handle_connection(
     Ok(())
 }
 
-async fn handle_fetch(
-    client: &reqwest::Client,
-    body: &[u8],
-) -> (String, String) {
+async fn handle_fetch(client: &reqwest::Client, body: &[u8]) -> (String, String) {
     let req: FetchRequest = match serde_json::from_slice(body) {
         Ok(r) => r,
         Err(e) => {
@@ -175,7 +175,10 @@ async fn handle_fetch(
                 error: Some(format!("Invalid request: {}", e)),
                 fetch_ms: 0,
             };
-            return ("400 Bad Request".to_string(), serde_json::to_string(&resp).unwrap());
+            return (
+                "400 Bad Request".to_string(),
+                serde_json::to_string(&resp).unwrap(),
+            );
         }
     };
 
@@ -197,7 +200,10 @@ async fn handle_fetch(
                 error: Some(format!("Fetch failed: {}", e)),
                 fetch_ms: start.elapsed().as_millis() as u64,
             };
-            return ("502 Bad Gateway".to_string(), serde_json::to_string(&resp).unwrap());
+            return (
+                "502 Bad Gateway".to_string(),
+                serde_json::to_string(&resp).unwrap(),
+            );
         }
     };
 
@@ -208,40 +214,44 @@ async fn handle_fetch(
         ..Default::default()
     };
 
-    let page_result = match js::pipeline::process_page_async(
-        &result.html,
-        &result.url,
-        &pipeline_config,
-        client,
-    )
-    .await
-    {
-        Ok(r) => r,
-        Err(e) => {
-            // Graceful degradation: compile without JS
-            info!(error = %e, "JS pipeline failed, compiling without JS");
-            match som::compiler::compile(&result.html, &result.url) {
-                Ok(som) => {
-                    let resp = FetchResponse {
-                        success: true,
-                        som: Some(som),
-                        error: Some("JS execution failed, compiled from static HTML".to_string()),
-                        fetch_ms: start.elapsed().as_millis() as u64,
-                    };
-                    return ("200 OK".to_string(), serde_json::to_string(&resp).unwrap());
-                }
-                Err(e2) => {
-                    let resp = FetchResponse {
-                        success: false,
-                        som: None,
-                        error: Some(format!("Both JS and static compilation failed: {}, {}", e, e2)),
-                        fetch_ms: start.elapsed().as_millis() as u64,
-                    };
-                    return ("500 Internal Server Error".to_string(), serde_json::to_string(&resp).unwrap());
+    let page_result =
+        match js::pipeline::process_page_async(&result.html, &result.url, &pipeline_config, client)
+            .await
+        {
+            Ok(r) => r,
+            Err(e) => {
+                // Graceful degradation: compile without JS
+                info!(error = %e, "JS pipeline failed, compiling without JS");
+                match som::compiler::compile(&result.html, &result.url) {
+                    Ok(som) => {
+                        let resp = FetchResponse {
+                            success: true,
+                            som: Some(som),
+                            error: Some(
+                                "JS execution failed, compiled from static HTML".to_string(),
+                            ),
+                            fetch_ms: start.elapsed().as_millis() as u64,
+                        };
+                        return ("200 OK".to_string(), serde_json::to_string(&resp).unwrap());
+                    }
+                    Err(e2) => {
+                        let resp = FetchResponse {
+                            success: false,
+                            som: None,
+                            error: Some(format!(
+                                "Both JS and static compilation failed: {}, {}",
+                                e, e2
+                            )),
+                            fetch_ms: start.elapsed().as_millis() as u64,
+                        };
+                        return (
+                            "500 Internal Server Error".to_string(),
+                            serde_json::to_string(&resp).unwrap(),
+                        );
+                    }
                 }
             }
-        }
-    };
+        };
 
     let resp = FetchResponse {
         success: true,
@@ -315,10 +325,11 @@ pub async fn daemon_fetch(
     let resp_body: FetchResponse = serde_json::from_str(&resp_text)?;
 
     if resp_body.success {
-        resp_body
-            .som
-            .ok_or_else(|| "No SOM in response".into())
+        resp_body.som.ok_or_else(|| "No SOM in response".into())
     } else {
-        Err(resp_body.error.unwrap_or_else(|| "Unknown error".to_string()).into())
+        Err(resp_body
+            .error
+            .unwrap_or_else(|| "Unknown error".to_string())
+            .into())
     }
 }

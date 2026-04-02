@@ -71,9 +71,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             })
             .collect();
         if filtered_regions.is_empty() {
-            eprintln!(
-                "Warning: selector '#{id}' matched no elements - returning full SOM"
-            );
+            eprintln!("Warning: selector '#{id}' matched no elements - returning full SOM");
             return som.clone();
         }
         let mut result = som.clone();
@@ -169,7 +167,10 @@ mod tests {
         let filtered = apply_selector(&som, "#intro");
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
-        assert_eq!(filtered.regions[0].elements[0].html_id.as_deref(), Some("intro"));
+        assert_eq!(
+            filtered.regions[0].elements[0].html_id.as_deref(),
+            Some("intro")
+        );
     }
 
     #[test]

@@ -36,7 +36,7 @@ impl Default for ScriptFetchLimits {
         Self {
             max_external: 20,
             max_script_bytes: 3_145_728, // 3 MB - covers React/Vue/Angular SPA bundles
-            max_total_bytes: 10_485_760,  // 10 MB total
+            max_total_bytes: 10_485_760, // 10 MB total
             timeout_ms: 5000,
         }
     }

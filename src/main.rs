@@ -588,7 +588,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
         }
-        Commands::Compile { file, url, output, format, selector } => {
+        Commands::Compile {
+            file,
+            url,
+            output,
+            format,
+            selector,
+        } => {
             cmd_compile(file, url, output, &format, selector.as_deref())?;
         }
         Commands::Mcp => {
@@ -605,7 +611,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             output,
             selector,
         } => {
-            cmd_diff(&old, &new, &format, ignore_meta, output.as_deref(), selector.as_deref())?;
+            cmd_diff(
+                &old,
+                &new,
+                &format,
+                ignore_meta,
+                output.as_deref(),
+                selector.as_deref(),
+            )?;
         }
     }
 
@@ -623,11 +636,11 @@ fn cmd_compile(
 
     // Read HTML from file or stdin
     let html = if let Some(path) = file {
-        std::fs::read_to_string(&path)
-            .map_err(|e| format!("Failed to read {}: {}", path, e))?
+        std::fs::read_to_string(&path).map_err(|e| format!("Failed to read {}: {}", path, e))?
     } else {
         let mut buf = String::new();
-        std::io::stdin().read_to_string(&mut buf)
+        std::io::stdin()
+            .read_to_string(&mut buf)
             .map_err(|e| format!("Failed to read stdin: {}", e))?;
         buf
     };
@@ -654,9 +667,12 @@ fn cmd_compile(
     // Write output
     if let Some(out_path) = output {
         std::fs::write(&out_path, &out)?;
-        eprintln!("Wrote SOM to {} ({} bytes, {:.1}x compression)",
-            out_path, compiled.meta.som_bytes,
-            compiled.meta.html_bytes as f64 / compiled.meta.som_bytes as f64);
+        eprintln!(
+            "Wrote SOM to {} ({} bytes, {:.1}x compression)",
+            out_path,
+            compiled.meta.som_bytes,
+            compiled.meta.html_bytes as f64 / compiled.meta.som_bytes as f64
+        );
     } else {
         println!("{}", out);
     }
@@ -700,7 +716,10 @@ fn cmd_diff(
         }
         "json" => serde_json::to_string_pretty(&diff)?,
         other => {
-            eprintln!("Error: unknown format '{}'. Use: json, text, or summary", other);
+            eprintln!(
+                "Error: unknown format '{}'. Use: json, text, or summary",
+                other
+            );
             std::process::exit(1);
         }
     };
@@ -1091,11 +1110,7 @@ async fn cmd_fetch(
     match output {
         Some(path) => {
             std::fs::write(path, &out)?;
-            info!(
-                path,
-                som_bytes = page_result.som.meta.som_bytes,
-                "Written"
-            );
+            info!(path, som_bytes = page_result.som.meta.som_bytes, "Written");
         }
         None => {
             println!("{}", out);
@@ -1231,11 +1246,7 @@ fn render_element_markdown(el: &som::types::Element, out: &mut String, depth: us
             }
         }
         ElementRole::Image => {
-            let alt = el
-                .label
-                .as_deref()
-                .or(el.text.as_deref())
-                .unwrap_or("");
+            let alt = el.label.as_deref().or(el.text.as_deref()).unwrap_or("");
             let src = el
                 .attrs
                 .as_ref()

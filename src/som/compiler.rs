@@ -1555,7 +1555,14 @@ fn extract_table_data(node: &Handle, max_cell_chars: usize) -> (Vec<String>, Vec
         }
     }
 
-    visit_table(node, &mut headers, &mut rows, max_cell_chars, max_columns, max_rows);
+    visit_table(
+        node,
+        &mut headers,
+        &mut rows,
+        max_cell_chars,
+        max_columns,
+        max_rows,
+    );
     (headers, rows)
 }
 

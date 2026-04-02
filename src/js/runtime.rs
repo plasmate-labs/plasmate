@@ -84,7 +84,9 @@ fn load_icu_data() {
 
     // Register the data with ICU before V8 initializes.
     match v8::icu::set_common_data_74(data) {
-        Ok(()) => info!(path = %path.display(), bytes = data.len(), "ICU data loaded ({} MB)", data.len() / 1_048_576),
+        Ok(()) => {
+            info!(path = %path.display(), bytes = data.len(), "ICU data loaded ({} MB)", data.len() / 1_048_576)
+        }
         Err(code) => warn!(path = %path.display(), code, "ICU data load returned error code"),
     }
 }
@@ -3134,9 +3136,12 @@ impl JsRuntime {
                 if let Some(exception) = tc.exception() {
                     let msg = v8::Exception::create_message(tc, exception);
                     let exception_string = exception.to_rust_string_lossy(tc);
-                    let source_line = msg.get_source_line(tc).map(|s| s.to_rust_string_lossy(tc)).unwrap_or_default();
+                    let source_line = msg
+                        .get_source_line(tc)
+                        .map(|s| s.to_rust_string_lossy(tc))
+                        .unwrap_or_default();
                     let line_num = msg.get_line_number(tc).unwrap_or_default();
-                    
+
                     let mut full_error = format!(
                         "{} at {}:{}\nSource: {}",
                         exception_string, filename, line_num, source_line
@@ -3145,18 +3150,31 @@ impl JsRuntime {
                     if let Some(stack_trace) = msg.get_stack_trace(tc) {
                         for i in 0..stack_trace.get_frame_count() {
                             if let Some(frame) = stack_trace.get_frame(tc, i) {
-                                let func = frame.get_function_name(tc).map(|s| s.to_rust_string_lossy(tc)).unwrap_or_else(|| "[anon]".to_string());
-                                let file = frame.get_script_name(tc).map(|s| s.to_rust_string_lossy(tc)).unwrap_or_default();
+                                let func = frame
+                                    .get_function_name(tc)
+                                    .map(|s| s.to_rust_string_lossy(tc))
+                                    .unwrap_or_else(|| "[anon]".to_string());
+                                let file = frame
+                                    .get_script_name(tc)
+                                    .map(|s| s.to_rust_string_lossy(tc))
+                                    .unwrap_or_default();
                                 let line = frame.get_line_number();
                                 let col = frame.get_column();
-                                full_error.push_str(&format!("\n    at {} ({}:{}:{})", func, file, line, col));
+                                full_error.push_str(&format!(
+                                    "\n    at {} ({}:{}:{})",
+                                    func, file, line, col
+                                ));
                             }
                         }
                     }
                     debug!(filename, error = %full_error, "JS error (non-fatal)");
                     Err(JsError::Runtime(full_error))
                 } else {
-                    debug!(filename, error = "Unknown runtime error", "JS error (non-fatal)");
+                    debug!(
+                        filename,
+                        error = "Unknown runtime error",
+                        "JS error (non-fatal)"
+                    );
                     Err(JsError::Runtime("Unknown runtime error".into()))
                 }
             }
