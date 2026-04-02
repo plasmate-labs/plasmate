@@ -8,7 +8,10 @@ It compiles HTML into a **Semantic Object Model (SOM)** - a structured, token-ef
 
 | Document | Description |
 |----------|-------------|
-| [Quick Start](quickstart) | Install Plasmate and run your first fetch in 60 seconds |
+| [MCP Registry](https://registry.modelcontextprotocol.io/)
+Listed on the official MCP Registry. Install in Claude or Cursor with one click.
+
+[Quick Start](quickstart) | Install Plasmate and run your first fetch in 60 seconds |
 | [Product Spec](spec) | Full architecture, market analysis, and technical vision |
 | [AWP Protocol](awp) | Agent Web Protocol draft specification |
 | [AWP MVP v0.1](awp-mvp) | The 7-method subset shipped in v0.1 |

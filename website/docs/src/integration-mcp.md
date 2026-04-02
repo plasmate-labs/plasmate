@@ -1,5 +1,7 @@
 # MCP Server
 
+> **Plasmate is listed on the [official MCP Registry](https://registry.modelcontextprotocol.io/).** Claude, Cursor, and other MCP clients can discover and install it automatically.
+
 Plasmate's MCP (Model Context Protocol) server lets AI coding assistants browse the web through Plasmate -  structured SOM output instead of raw HTML.
 
 Source: [`plasmate-mcp`](https://github.com/nicepkg/plasmate/tree/master/integrations/mcp)
