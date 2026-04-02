@@ -1,0 +1,60 @@
+{
+  "name": "@plasmate/ai",
+  "version": "0.1.0",
+  "description": "Plasmate tools for the Vercel AI SDK",
+  "keywords": [
+    "plasmate",
+    "vercel-ai-sdk",
+    "mcp",
+    "browser",
+    "web-scraping",
+    "som"
+  ],
+  "homepage": "https://github.com/plasmate-labs/plasmate/tree/master/integrations/vercel-ai#readme",
+  "bugs": {
+    "url": "https://github.com/plasmate-labs/plasmate/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/plasmate-labs/plasmate.git",
+    "directory": "integrations/vercel-ai"
+  },
+  "license": "Apache-2.0",
+  "author": "Plasmate Labs",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "@ai-sdk/mcp": ">=0.0.1",
+    "ai": ">=4.0.0"
+  },
+  "devDependencies": {
+    "@ai-sdk/mcp": "^0.0.1",
+    "@types/node": "^20.0.0",
+    "ai": "^4.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
