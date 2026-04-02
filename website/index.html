@@ -26,16 +26,28 @@
     "@type": "SoftwareApplication",
     "name": "Plasmate",
     "alternateName": "The Better Browser for AI Agents",
-    "description": "Plasmate is a browser engine purpose-built for AI agents. It compiles HTML into a Semantic Object Model (SOM), delivering 50x faster performance and 10x fewer tokens than Chrome-based solutions.",
+    "description": "Open source headless browser engine for AI agents. Compiles HTML into a Semantic Object Model (SOM) with 17.5x average token compression. 13 MCP tools for full browser automation. First browser tool on the official MCP Registry. Written in Rust, Apache-2.0 licensed.",
     "applicationCategory": "DeveloperApplication",
+    "applicationSubCategory": "AI Agent Infrastructure",
     "operatingSystem": "Linux, macOS, Windows",
-    "softwareVersion": "0.4.0",
+    "softwareVersion": "0.5.0",
+    "datePublished": "2026-03-17",
+    "dateModified": "2026-04-01",
     "license": "https://www.apache.org/licenses/LICENSE-2.0",
     "url": "https://plasmate.app",
+    "downloadUrl": "https://plasmate.app/install.sh",
+    "installUrl": "https://docs.plasmate.app/install",
+    "releaseNotes": "https://github.com/plasmate-labs/plasmate/releases/tag/v0.5.0",
+    "softwareRequirements": "None (single binary)",
+    "programmingLanguage": "Rust",
+    "codeRepository": "https://github.com/plasmate-labs/plasmate",
     "sameAs": [
       "https://github.com/plasmate-labs/plasmate",
       "https://x.com/plasmate_labs",
+      "https://www.linkedin.com/company/plasmate-labs",
+      "https://www.reddit.com/r/plasmate/",
       "https://www.w3.org/community/web-content-browser-ai/",
+      "https://registry.modelcontextprotocol.io/servers/io.github.plasmate-labs%2Fplasmate",
       "https://crates.io/crates/plasmate",
       "https://pypi.org/project/plasmate/",
       "https://www.npmjs.com/package/plasmate"
@@ -43,14 +55,35 @@
     "author": {
       "@type": "Organization",
       "name": "Plasmate Labs",
-      "url": "https://plasmate.app"
+      "url": "https://plasmatelabs.com",
+      "founder": {
+        "@type": "Person",
+        "name": "David Hurley",
+        "url": "https://dbhurley.com",
+        "sameAs": [
+          "https://www.linkedin.com/in/dbhurley",
+          "https://github.com/dbhurley"
+        ]
+      }
     },
     "offers": {
       "@type": "Offer",
       "price": "0",
       "priceCurrency": "USD",
       "description": "Open source under Apache 2.0"
-    }
+    },
+    "featureList": [
+      "17.5x average token compression across 51 websites",
+      "13 MCP tools for AI agent browser automation",
+      "Semantic Object Model (SOM) structured JSON output",
+      "4ms compile time per page",
+      "200ms warm fetch with daemon mode",
+      "30MB memory for 100 pages",
+      "CDP compatible (Puppeteer/Playwright)",
+      "WASM compiler for serverless/edge deployment",
+      "Structured change detection (som-diff)",
+      "Cookie-based authenticated browsing"
+    ]
   }
   </script>
 
