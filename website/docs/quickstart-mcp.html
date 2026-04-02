@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Coverage Scorecard - Plasmate Docs | The Better Browser for AI Agents</title>
-  <meta name="description" content="Coverage Scorecard - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
-  <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, coverage scorecard" />
-  <link rel="canonical" href="https://docs.plasmate.app/coverage" />
+  <title>Install Plasmate in 30 Seconds - Plasmate Docs | The Better Browser for AI Agents</title>
+  <meta name="description" content="Install Plasmate in 30 Seconds - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
+  <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, install plasmate in 30 seconds" />
+  <link rel="canonical" href="https://docs.plasmate.app/quickstart-mcp" />
   <link rel="alternate" type="application/som+json" href="/.well-known/som.json" title="SOM (Plasmate)" />
 
   <link rel="icon" href="/favicon.ico" sizes="any" />
@@ -400,7 +400,7 @@
       <a class="sidebar-brand" href="https://plasmate.app"><img src="/brand/plasmate-mark.png" alt="" width="22" height="22" style="vertical-align: -3px;" />Plasmate</a>
       <a href=".">Overview</a>
           <a href="quickstart">Quick Start</a>
-          <a href="quickstart-mcp">30-Second Install</a>
+          <a href="quickstart-mcp" class="active">30-Second Install</a>
           <a href="spec">Product Spec</a>
           <div class="section-label">Reference</div>
           <a href="som">SOM Reference</a>
@@ -431,7 +431,7 @@
           <div class="section-label">Tools</div>
           <a href="tools">Auditing & CI/CD</a>
           <div class="section-label">Coverage & Benchmarks</div>
-          <a href="coverage" class="active">Coverage (HTML)</a>
+          <a href="coverage">Coverage (HTML)</a>
           <a href="coverage-js">Coverage (JS)</a>
           <a href="benchmark-cost">Cost Analysis</a>
           <a href="roadmap">Roadmap</a>
@@ -455,119 +455,95 @@
       </div>
     </nav>
     <main class="content">
-      <h1 id="coverage-scorecard">Coverage Scorecard</h1><p>Real-world compression across 100 agent-relevant websites. Plasmate&#39;s SOM compiler reduces HTML to a semantic representation that agents can reason about efficiently. Higher compression = fewer tokens = lower cost.</p>
+      <h1 id="install-plasmate-in-30-seconds">Install Plasmate in 30 Seconds</h1><p>One command. Your AI gets a better browser.</p>
+<h2 id="claude-code">Claude Code</h2><pre><code class="language-bash">claude mcp add plasmate -- npx plasmate-mcp
+</code></pre>
+<p>Done. Your Claude Code agent now has 13 web browsing tools.</p>
+<h2 id="cursor">Cursor</h2><pre><code class="language-bash">npx plasmate-mcp --install cursor
+</code></pre>
+<p>This auto-detects your Cursor config path and adds Plasmate. Restart Cursor.</p>
+<h2 id="claude-desktop">Claude Desktop</h2><pre><code class="language-bash">npx plasmate-mcp --install claude-desktop
+</code></pre>
+<p>This adds the MCP config to <code>~/Library/Application Support/Claude/claude_desktop_config.json</code> (macOS) or the equivalent on Linux/Windows. Restart Claude Desktop.</p>
+<h2 id="any-mcp-client">Any MCP Client</h2><p>If your client supports MCP stdio servers, add this to your config:</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;plasmate&quot;: {
+      &quot;command&quot;: &quot;npx&quot;,
+      &quot;args&quot;: [&quot;plasmate-mcp&quot;]
+    }
+  }
+}
+</code></pre>
+<h2 id="verify-it-works">Verify It Works</h2><p>Ask your AI: &quot;What are the top stories on Hacker News?&quot;</p>
+<p>It should use <code>fetch_page</code> and return structured content instead of raw HTML. If you see region names like <code>navigation</code> and <code>main</code> in the response, Plasmate is working.</p>
+<h2 id="what-your-ai-gets">What Your AI Gets</h2><table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>fetch_page</code></td>
+<td>Fetch any URL as structured JSON (17x fewer tokens than HTML)</td>
+</tr>
+<tr>
+<td><code>extract_text</code></td>
+<td>Plain text only (for reading, not interacting)</td>
+</tr>
+<tr>
+<td><code>extract_links</code></td>
+<td>All links with region context</td>
+</tr>
+<tr>
+<td><code>open_page</code></td>
+<td>Start an interactive session</td>
+</tr>
+<tr>
+<td><code>navigate_to</code></td>
+<td>Go to a new URL in an existing session</td>
+</tr>
+<tr>
+<td><code>click</code></td>
+<td>Click buttons and links</td>
+</tr>
+<tr>
+<td><code>type_text</code></td>
+<td>Fill form fields</td>
+</tr>
+<tr>
+<td><code>select_option</code></td>
+<td>Choose dropdown options</td>
+</tr>
+<tr>
+<td><code>scroll</code></td>
+<td>Scroll the page</td>
+</tr>
+<tr>
+<td><code>toggle</code></td>
+<td>Check/uncheck boxes, expand details</td>
+</tr>
+<tr>
+<td><code>clear</code></td>
+<td>Clear input fields</td>
+</tr>
+<tr>
+<td><code>evaluate</code></td>
+<td>Run JavaScript</td>
+</tr>
+<tr>
+<td><code>close_page</code></td>
+<td>End session</td>
+</tr>
+</tbody></table>
+<h2 id="what-changes-for-the-user">What Changes for the User</h2><p>Nothing visible changes. Your AI just gets better at reading the web:</p>
 <ul>
-<li>Data source: <code>coverage.json</code></li>
-<li>Generator: <code>plasmate coverage --urls bench/top100.txt --output website/docs/coverage.json</code></li>
-<li>Update cadence: scheduled GitHub Action (nightly)</li>
-<li>Current mode: HTML-only (JS disabled) until V8 heap limits are raised and the harness is hardened against fatal OOM on heavy sites</li>
-<li>JS-enabled scorecard: see the <code>Coverage (JS)</code> page in the sidebar</li>
+<li><strong>Faster</strong>: 17x fewer tokens means faster responses</li>
+<li><strong>Cheaper</strong>: 75% less token cost on web pages</li>
+<li><strong>More accurate</strong>: Structured input reduces hallucination</li>
+<li><strong>Interactive</strong>: Can fill forms, click buttons, navigate multi-step workflows</li>
 </ul>
-<div id="coverage-summary" style="margin: 16px 0; padding: 12px 14px; border: 1px solid rgba(240,237,232,0.12); border-radius: 10px; background: rgba(240,237,232,0.04);">
-  Loading coverage data...
-</div>
-
-<div style="overflow-x:auto;">
-  <table id="coverage-table">
-    <thead>
-      <tr>
-        <th>URL</th>
-        <th>HTTP</th>
-        <th>Compression</th>
-        <th>HTML bytes</th>
-        <th>SOM bytes</th>
-        <th>Elements</th>
-        <th>Interactive</th>
-        <th>Parse ms</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
-
-<script>
-(async function() {
-  const summaryEl = document.getElementById('coverage-summary');
-  const tbody = document.querySelector('#coverage-table tbody');
-
-  function esc(s) {
-    return String(s || '').replace(/[&<>\"']/g, (c) => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
-    }[c]));
-  }
-
-  function fmt(n) {
-    if (n === null || n === undefined) return '';
-    return String(n);
-  }
-
-  function fmtRatio(n) {
-    if (n === null || n === undefined) return '';
-    return n.toFixed(1) + 'x';
-  }
-
-  function statusBadge(status) {
-    const s = String(status || '');
-    if (s === 'ok') return `<span style="display:inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(240,237,232,0.18); background: rgba(240,237,232,0.04); color: #3bd4a7; font-family: var(--font-mono); font-size: 11px;">ok</span>`;
-    if (s === 'blocked') return `<span style="display:inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(240,237,232,0.18); background: rgba(240,237,232,0.04); color: #F5C842; font-family: var(--font-mono); font-size: 11px;">\uD83D\uDD12 blocked</span>`;
-    return `<span style="display:inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(240,237,232,0.18); background: rgba(240,237,232,0.04); color: #E8853A; font-family: var(--font-mono); font-size: 11px;">${esc(s)}</span>`;
-  }
-
-  try {
-    const res = await fetch('coverage.json', { cache: 'no-store' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-
-    const s = data.summary || {};
-    const parseable = (s.urls_total || 0) - (s.blocked || 0);
-    summaryEl.innerHTML = `
-      <div style="display:flex; flex-wrap:wrap; gap: 14px; align-items:baseline;">
-        <div><strong>Parsed</strong>: ${fmt(s.ok)} / ${fmt(parseable)} sites (${fmt((s.parsed_percent || 0).toFixed ? s.parsed_percent.toFixed(1) : s.parsed_percent)}%)</div>
-        <div><strong>Median compression</strong>: ${fmtRatio(s.median_ratio)}</div>
-        <div><strong>Mean compression</strong>: ${fmtRatio(s.mean_ratio)}</div>
-        <div><strong>Blocked</strong>: ${fmt(s.blocked)} <span style="color: rgba(240,237,232,0.52); font-size: 11px;">(sites that returned 403/401)</span></div>
-        <div style="color: rgba(240,237,232,0.72); font-family: var(--font-mono); font-size: 11px;">Generated: ${esc(data.generated_at_utc || '')}, version: ${esc(data.plasmate_version || '')}</div>
-      </div>
-    `;
-
-    const results = Array.isArray(data.results) ? data.results : [];
-
-    // Sort by compression ratio descending (best results first).
-    results.sort((a, b) => (b.compression_ratio || 0) - (a.compression_ratio || 0));
-
-    tbody.innerHTML = results.map(r => {
-      const url = r.final_url || r.input_url;
-      const http = r.http_status || '';
-      const parseMs = r.pipeline_ms != null ? r.pipeline_ms : r.fetch_ms;
-
-      return `
-        <tr>
-          <td style="max-width: 320px; overflow:hidden; text-overflow: ellipsis; white-space: nowrap;">
-            <a href="${esc(url)}" target="_blank" rel="noreferrer">${esc(url)}</a>
-          </td>
-          <td>${esc(http)}</td>
-          <td>${fmtRatio(r.compression_ratio)}</td>
-          <td>${esc(fmt(r.html_bytes))}</td>
-          <td>${esc(fmt(r.som_bytes))}</td>
-          <td>${esc(fmt(r.element_count))}</td>
-          <td>${esc(fmt(r.interactive_count))}</td>
-          <td>${esc(fmt(parseMs))}</td>
-          <td>${statusBadge(r.status)}</td>
-        </tr>
-      `;
-    }).join('');
-
-  } catch (e) {
-    summaryEl.innerHTML = `<strong>Failed to load coverage.json</strong><br/>${esc(e && e.message ? e.message : e)}`;
-    tbody.innerHTML = '';
-  }
-})();
-</script>
 
     </main>
   </div>

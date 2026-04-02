@@ -13,6 +13,7 @@ const OUT = join(import.meta.dirname, 'docs');
 const NAV = [
   { slug: 'overview', label: 'Overview' },
   { slug: 'quickstart', label: 'Quick Start' },
+  { slug: 'quickstart-mcp', label: '30-Second Install' },
   { slug: 'spec', label: 'Product Spec' },
   { section: 'Reference' },
   { slug: 'som', label: 'SOM Reference' },

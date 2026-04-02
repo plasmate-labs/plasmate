@@ -9,4 +9,5 @@ src/plasmate.egg-info/SOURCES.txt
 src/plasmate.egg-info/dependency_links.txt
 src/plasmate.egg-info/requires.txt
 src/plasmate.egg-info/top_level.txt
+tests/test_json_extract.py
 tests/test_query.py
