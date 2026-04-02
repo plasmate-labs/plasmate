@@ -716,20 +716,28 @@
 
           <div class="panel" id="install">
             <div class="section-label">Get Started</div>
-            <h2 class="section-title">One binary. Two modes.</h2>
-
-            <div class="install-cmd"><span class="prompt">$ </span>curl -fsSL https://plasmate.app/install.sh | sh</div>
+            <h2 class="section-title">30 seconds. Your AI gets a better browser.</h2>
 
             <div class="mode-grid">
               <div class="mode-item">
-                <div class="mode-label">Library mode</div>
-                <p class="mode-desc">Embed in your agent. Call the Rust API directly.</p>
-                <p class="mode-cmd">plasmate fetch &lt;url&gt;</p>
+                <div class="mode-label">Claude Code</div>
+                <p class="mode-desc">One command. No config files.</p>
+                <p class="mode-cmd">claude mcp add plasmate -- npx plasmate-mcp</p>
               </div>
               <div class="mode-item">
-                <div class="mode-label">Server mode</div>
-                <p class="mode-desc">Run as a service. Connect over AWP or CDP.</p>
-                <p class="mode-cmd">plasmate serve --protocol awp</p>
+                <div class="mode-label">OpenClaw</div>
+                <p class="mode-desc">One command. Skill handles everything.</p>
+                <p class="mode-cmd">clawhub install plasmate</p>
+              </div>
+              <div class="mode-item">
+                <div class="mode-label">Cursor / Claude Desktop</div>
+                <p class="mode-desc">Add to your MCP config, restart.</p>
+                <p class="mode-cmd">npx plasmate-mcp</p>
+              </div>
+              <div class="mode-item">
+                <div class="mode-label">CLI / Binary</div>
+                <p class="mode-desc">For scripts, pipelines, and direct use.</p>
+                <p class="mode-cmd">curl -fsSL https://plasmate.app/install.sh | sh</p>
               </div>
             </div>
 

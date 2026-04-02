@@ -18,26 +18,36 @@ Plasmate is an open source headless browser engine written in Rust, purpose-buil
 - SDKs: Python (PyPI), Node.js (npm), Go, Rust (crates.io), WASM (npm)
 - Integrations: LangChain, LlamaIndex, CrewAI, Browser Use, AutoGen, Smolagents, Pi/oh-my-pi, n8n, OpenClaw, Scrapy
 
-## Install
+## Install (30 seconds)
 
+Claude Code (one command, no config):
+```
+claude mcp add plasmate -- npx plasmate-mcp
+```
+
+OpenClaw (one command):
+```
+clawhub install plasmate
+```
+
+Cursor / Claude Desktop / any MCP client:
+```json
+{
+  "mcpServers": {
+    "plasmate": {
+      "command": "npx",
+      "args": ["plasmate-mcp"]
+    }
+  }
+}
+```
+
+Binary install (for CLI usage, not needed for MCP):
 ```
 curl -fsSL https://plasmate.app/install.sh | sh
 ```
 
 Or: `cargo install plasmate` | `npm install -g plasmate` | `pip install plasmate`
-
-## MCP usage (Claude, Cursor, etc.)
-
-```json
-{
-  "mcpServers": {
-    "plasmate": {
-      "command": "plasmate",
-      "args": ["mcp"]
-    }
-  }
-}
-```
 
 ## CLI usage
 
