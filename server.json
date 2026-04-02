@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.plasmate-labs/plasmate",
   "title": "Plasmate",
-  "description": "Agent-native headless browser. Converts web pages to a Semantic Object Model (SOM) with 17x average token reduction vs raw HTML. Native MCP server with fetch_page, extract_text, extract_links, and full browser automation. No API key required.",
+  "description": "Agent-native headless browser. HTML in, Semantic Object Model out. 17x token compression.",
   "repository": {
     "url": "https://github.com/plasmate-labs/plasmate",
     "source": "github"
