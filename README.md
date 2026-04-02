@@ -121,6 +121,74 @@ Example Claude Desktop config:
 }
 ```
 
+## For AI Agents
+
+Plasmate is purpose-built for AI agent pipelines. Several ways to wire it in:
+
+### MCP (Claude Desktop, Cursor, VS Code Copilot, Windsurf)
+
+Add to your MCP config and every tool call automatically uses Plasmate:
+
+```json
+{
+  "mcpServers": {
+    "plasmate": {
+      "command": "plasmate",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+Config file locations:
+- **Claude Desktop** — `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
+- **Cursor** — `~/.cursor/mcp.json`
+- **VS Code Copilot** — `.vscode/mcp.json` (workspace) or user settings
+- **Windsurf** — `~/.codeium/windsurf/mcp_config.json`
+
+Once connected, 13 tools are available: `fetch_page`, `extract_text`, `extract_links`, `open_page`, `navigate_to`, `click`, `type_text`, `select_option`, `scroll`, `toggle`, `clear`, `evaluate`, `close_page`.
+
+**Tip:** use `selector="main"` on any fetch to strip nav/footer before the LLM sees the content.
+
+### Vercel AI SDK
+
+Use Plasmate via the AI SDK's built-in MCP client (AI SDK v4+):
+
+```bash
+npm install ai @ai-sdk/openai
+```
+
+```ts
+import { experimental_createMCPClient as createMCPClient, generateText } from 'ai'
+import { Experimental_StdioMCPTransport as StdioMCPTransport } from 'ai/mcp-stdio'
+import { openai } from '@ai-sdk/openai'
+
+const mcp = await createMCPClient({
+  transport: new StdioMCPTransport({
+    command: 'plasmate',
+    args: ['mcp'],
+  }),
+})
+
+const { text } = await generateText({
+  model: openai('gpt-4o'),
+  tools: await mcp.tools(),
+  maxSteps: 5,
+  prompt: 'Summarize the top 3 stories on news.ycombinator.com',
+})
+
+await mcp.close()
+```
+
+This wires all 13 Plasmate tools directly into any Vercel AI SDK agent. See [Vercel AI SDK MCP docs](https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#mcp-tools) for details.
+
+### LLM context
+
+- Machine-readable summary: [`https://plasmate.app/llms.txt`](https://plasmate.app/llms.txt)
+- Codebase guide for AI coding agents: [`AGENTS.md`](./AGENTS.md)
+- Listed on [MCP Registry](https://registry.modelcontextprotocol.io) as the first browser/web tool
+
+
 ## What is SOM?
 
 The DOM was built for rendering. SOM was built for reasoning.
