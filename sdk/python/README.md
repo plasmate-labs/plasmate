@@ -1,3 +1,4 @@
+<!-- mcp-name: io.github.plasmate-labs/plasmate -->
 # plasmate
 
 Agent-native headless browser for Python. HTML in, Semantic Object Model out.

@@ -1,128 +1,45 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.plasmate-labs/plasmate",
-  "description": "Agent-native headless browser. HTML in, Semantic Object Model out. 10x token compression.",
+  "title": "Plasmate",
+  "description": "Agent-native headless browser. Converts web pages to a Semantic Object Model (SOM) with 17x average token reduction vs raw HTML. Native MCP server with fetch_page, extract_text, extract_links, and full browser automation. No API key required.",
   "repository": {
     "url": "https://github.com/plasmate-labs/plasmate",
     "source": "github"
   },
-  "version": "0.1.0",
+  "version": "0.4.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "plasmate",
-      "version": "0.2.0",
+      "version": "0.4.0",
+      "runtimeHint": "npx",
       "transport": {
-        "type": "stdio",
-        "args": ["mcp"]
+        "type": "stdio"
       },
-      "environmentVariables": []
-    }
-  ],
-  "tools": [
-    {
-      "name": "fetch_page",
-      "description": "Fetch a web page and return its Semantic Object Model (SOM) - a structured, token-efficient representation of the page content. Use this instead of raw HTML fetching for 10x token savings.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string",
-            "description": "URL to fetch"
-          },
-          "budget": {
-            "type": "integer",
-            "description": "Maximum output tokens. SOM will be truncated to fit."
-          },
-          "javascript": {
-            "type": "boolean",
-            "description": "Enable JavaScript execution for dynamic/SPA pages. Default: true."
-          }
-        },
-        "required": ["url"]
-      }
+      "arguments": [
+        {
+          "type": "positional",
+          "value": "mcp",
+          "isRequired": true
+        }
+      ]
     },
     {
-      "name": "extract_text",
-      "description": "Fetch a web page and return only the clean, readable text content. No HTML, no structure - just the text a human would read.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string",
-            "description": "URL to fetch"
-          },
-          "max_chars": {
-            "type": "integer",
-            "description": "Maximum characters to return."
-          }
-        },
-        "required": ["url"]
-      }
-    },
-    {
-      "name": "open_page",
-      "description": "Open a web page in a persistent browser session for multi-step interaction. Returns session_id and initial SOM.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string",
-            "description": "URL to open"
-          }
-        },
-        "required": ["url"]
-      }
-    },
-    {
-      "name": "evaluate",
-      "description": "Execute JavaScript in the page context and return the result.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "session_id": {
-            "type": "string",
-            "description": "Session ID from open_page"
-          },
-          "expression": {
-            "type": "string",
-            "description": "JavaScript expression to evaluate"
-          }
-        },
-        "required": ["session_id", "expression"]
-      }
-    },
-    {
-      "name": "click",
-      "description": "Click an element on the page by its SOM element ID. Returns updated SOM.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "session_id": {
-            "type": "string",
-            "description": "Session ID from open_page"
-          },
-          "element_id": {
-            "type": "string",
-            "description": "Element ID from SOM (e.g. 'e5')"
-          }
-        },
-        "required": ["session_id", "element_id"]
-      }
-    },
-    {
-      "name": "close_page",
-      "description": "Close a browser session and free resources.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "session_id": {
-            "type": "string",
-            "description": "Session ID to close"
-          }
-        },
-        "required": ["session_id"]
-      }
+      "registryType": "pypi",
+      "identifier": "plasmate",
+      "version": "0.4.0",
+      "runtimeHint": "uvx",
+      "transport": {
+        "type": "stdio"
+      },
+      "arguments": [
+        {
+          "type": "positional",
+          "value": "mcp",
+          "isRequired": true
+        }
+      ]
     }
   ]
 }
