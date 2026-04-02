@@ -121,6 +121,67 @@ Example Claude Desktop config:
 }
 ```
 
+## For AI Agents
+
+Plasmate is purpose-built for AI agent pipelines. Several ways to wire it in:
+
+### MCP (Claude Desktop, Cursor, VS Code Copilot, Windsurf)
+
+Add to your MCP config and every tool call automatically uses Plasmate:
+
+```json
+{
+  "mcpServers": {
+    "plasmate": {
+      "command": "plasmate",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+Config file locations:
+- **Claude Desktop** — `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
+- **Cursor** — `~/.cursor/mcp.json`
+- **VS Code Copilot** — `.vscode/mcp.json` (workspace) or user settings
+- **Windsurf** — `~/.codeium/windsurf/mcp_config.json`
+
+Once connected, 13 tools are available: `fetch_page`, `extract_text`, `extract_links`, `open_page`, `navigate_to`, `click`, `type_text`, `select_option`, `scroll`, `toggle`, `clear`, `evaluate`, `close_page`.
+
+**Tip:** use `selector="main"` on any fetch to strip nav/footer before the LLM sees the content.
+
+### Vercel AI SDK
+
+```bash
+npm install @plasmate/ai ai
+```
+
+```ts
+import { createPlasmateTools } from '@plasmate/ai'
+import { generateText } from 'ai'
+import { openai } from '@ai-sdk/openai'
+
+const { tools, close } = await createPlasmateTools()
+
+const { text } = await generateText({
+  model: openai('gpt-4o'),
+  tools,
+  maxSteps: 5,
+  prompt: 'Summarize the top 3 stories on news.ycombinator.com'
+})
+
+await close()
+```
+
+Source: [`@plasmate/ai`](https://github.com/plasmate-labs/plasmate-ai)
+
+### LLM context
+
+- Machine-readable summary: [`https://plasmate.app/llms.txt`](https://plasmate.app/llms.txt)
+- Codebase guide for AI coding agents: [`AGENTS.md`](./AGENTS.md)
+- Listed on [MCP Registry](https://registry.modelcontextprotocol.io) as the first browser/web tool
+
+
 ## What is SOM?
 
 The DOM was built for rendering. SOM was built for reasoning.
