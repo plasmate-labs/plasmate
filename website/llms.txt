@@ -1,17 +1,22 @@
 # Plasmate
 
-> The browser engine for agents. HTML in, Semantic Object Model out.
+> The browser engine for AI agents. HTML in, Semantic Object Model out.
 
-Plasmate is a Rust-based headless browser engine purpose-built for AI agents. Instead of dumping raw DOM (thousands of tokens), it produces a compact Semantic Object Model (SOM) - structured JSON with labeled regions, interactive elements, and clean text. 94% token savings across 98 sites.
+Plasmate is an open source headless browser engine written in Rust, purpose-built for AI agents. Instead of rendering pixels, it compiles web pages into a Semantic Object Model (SOM): structured JSON with typed regions, interactive elements with stable IDs, and clean text content. 17.5x average token compression across 51 real websites.
 
 ## Key facts
 
-- v0.4.0, 25K lines Rust, 230 tests, 94/98 top sites covered
-- 50x faster than Chrome (4ms vs 252ms per page)
-- Apache-2.0 licensed
-- 46MB binary, ~30MB per page (vs Chrome's ~20GB for 100 pages)
-- Puppeteer-compatible via CDP
-- Native protocol: AWP (Agent Wire Protocol) - 7 methods over WebSocket
+- Latest: v0.5.0 (March 2026)
+- 25K lines Rust, 224+ tests, Apache-2.0 licensed
+- 17.5x average token compression (benchmarked across 51 real URLs)
+- 94% token savings on content-heavy sites (Stripe docs 95.8%, Vercel docs 99.6%)
+- 4ms compile time per page, 200ms with daemon mode warm
+- 30MB memory for 100 pages (vs ~20GB for headless Chrome)
+- First browser/web tool on the official MCP Registry
+- 13 MCP tools: fetch_page, extract_text, extract_links, open_page, navigate_to, click, type_text, select_option, scroll, toggle, clear, evaluate, close_page
+- Also speaks CDP (Puppeteer/Playwright compatible) and AWP (native agent protocol)
+- SDKs: Python (PyPI), Node.js (npm), Go, Rust (crates.io), WASM (npm)
+- Integrations: LangChain, LlamaIndex, CrewAI, Browser Use, AutoGen, Smolagents, Pi/oh-my-pi, n8n, OpenClaw, Scrapy
 
 ## Install
 
@@ -19,38 +24,67 @@ Plasmate is a Rust-based headless browser engine purpose-built for AI agents. In
 curl -fsSL https://plasmate.app/install.sh | sh
 ```
 
-Or via package managers:
-- cargo install plasmate
-- npm install -g plasmate
-- pip install plasmate
-- docker run ghcr.io/plasmate-labs/plasmate:latest
+Or: `cargo install plasmate` | `npm install -g plasmate` | `pip install plasmate`
 
-## Usage
+## MCP usage (Claude, Cursor, etc.)
 
-Fetch a page as SOM:
-```
-plasmate fetch https://example.com
-```
-
-Output is JSON with regions array containing structured page content.
-
-Server mode (Puppeteer-compatible):
-```
-plasmate serve --port 9222
+```json
+{
+  "mcpServers": {
+    "plasmate": {
+      "command": "plasmate",
+      "args": ["mcp"]
+    }
+  }
+}
 ```
 
-Then connect with Puppeteer:
-```javascript
-const browser = await puppeteer.connect({ browserWSEndpoint: 'ws://127.0.0.1:9222' });
-const page = await browser.newPage();
-await page.goto('https://example.com');
-const html = await page.content();
+## CLI usage
+
+```bash
+plasmate fetch https://example.com                    # Full SOM JSON
+plasmate fetch https://example.com --format text      # Plain text
+plasmate fetch https://example.com --format markdown  # Structured markdown
+plasmate fetch https://example.com --selector main    # Just main content
+plasmate compile --file page.html                     # Offline HTML to SOM
+plasmate diff old.json new.json                       # Structured change detection
+plasmate mcp                                          # Start MCP server
+plasmate daemon start                                 # Persistent warm process (200ms fetches)
+plasmate screenshot https://example.com               # Page screenshot
 ```
+
+## What Plasmate replaces
+
+| Tool | Output | Tokens per page | Memory (100 pages) |
+|------|--------|----------------|-------------------|
+| Headless Chrome | Raw HTML | ~33,000 | ~20GB |
+| Playwright/Puppeteer | Raw HTML | ~33,000 | ~20GB |
+| Readability/Jina | Markdown | ~4,500 (loses structure) | N/A |
+| **Plasmate** | **SOM (structured JSON)** | **~8,300** | **~30MB** |
+
+## Research
+
+9 peer-review-quality papers published at https://dbhurley.com/papers:
+1. SOM Specification (token efficiency across 98 sites)
+2. The Agentic Web (three infrastructure primitives)
+3. Agent Web Protocol (7 semantic methods replacing CDP's 300+)
+4. robots.txt Extensions (cooperative content negotiation)
+5. Token Economics ($1B-$5B/year in HTML noise waste)
+6. WebTaskBench (SOM is 4x more efficient, 2x faster)
+7. Publisher Cost-Benefit (break-even analysis for SOM-first serving)
+8. Information Fidelity (accuracy and hallucination under compression)
+9. Agent Compliance (0/5 frameworks check robots.txt)
 
 ## Links
 
+- Website: https://plasmate.app
+- GitHub: https://github.com/plasmate-labs/plasmate
 - Docs: https://docs.plasmate.app
-- Source: https://github.com/plasmate-labs/plasmate
-- Comparison: https://plasmate.app/compare
-- Full reference: https://plasmate.app/llms-full.txt
-
+- Blog: https://blog.plasmate.app
+- Papers: https://dbhurley.com/papers
+- MCP Registry: https://registry.modelcontextprotocol.io
+- npm: https://www.npmjs.com/package/plasmate
+- PyPI: https://pypi.org/project/plasmate/
+- crates.io: https://crates.io/crates/plasmate
+- Reddit: https://www.reddit.com/r/plasmate/
+- Creator: David Hurley (https://dbhurley.com), previously founded Mautic (acquired by Acquia)
