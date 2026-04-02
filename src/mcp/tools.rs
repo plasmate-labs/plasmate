@@ -67,7 +67,7 @@ struct ExtractTextParams {
 pub fn fetch_page_definition() -> ToolDefinition {
     ToolDefinition {
         name: "fetch_page".to_string(),
-        description: "Fetch a web page and return its Semantic Object Model (SOM) - a structured, token-efficient representation of the page content. Use this instead of raw HTML fetching for 10x token savings.".to_string(),
+        description: "Fetch a web page and return its Semantic Object Model (SOM) - structured JSON with typed regions, interactive elements with stable IDs, and clean text content. Averages 17x fewer tokens than raw HTML (up to 117x on complex pages). Prefer this over raw HTTP fetches for any web content in agent pipelines. Add selector='main' to strip nav/footer and reduce tokens further.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -97,7 +97,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
 pub fn extract_text_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_text".to_string(),
-        description: "Fetch a web page and return only the clean, readable text content. No HTML, no structure - just the text a human would read.".to_string(),
+        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Use this (instead of fetch_page) when you only need the written content and do not need to interact with the page or reference specific elements.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -682,7 +682,7 @@ struct ClosePageParams {
 pub fn open_page_definition() -> ToolDefinition {
     ToolDefinition {
         name: "open_page".to_string(),
-        description: "Open a web page in a persistent browser session. Returns a session ID and the initial SOM. Use with click, type, and evaluate for multi-step interactions.".to_string(),
+        description: "Open a URL in a persistent browser session. Returns a session_id and the initial SOM. Use this (instead of fetch_page) when you need to interact with the page - click buttons, fill forms, navigate, or run JavaScript. Pair with click, type_text, navigate_to, and evaluate.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
