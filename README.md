@@ -152,28 +152,35 @@ Once connected, 13 tools are available: `fetch_page`, `extract_text`, `extract_l
 
 ### Vercel AI SDK
 
+Use Plasmate via the AI SDK's built-in MCP client (AI SDK v4+):
+
 ```bash
-npm install @plasmate/ai ai
+npm install ai @ai-sdk/openai
 ```
 
 ```ts
-import { createPlasmateTools } from '@plasmate/ai'
-import { generateText } from 'ai'
+import { experimental_createMCPClient as createMCPClient, generateText } from 'ai'
+import { Experimental_StdioMCPTransport as StdioMCPTransport } from 'ai/mcp-stdio'
 import { openai } from '@ai-sdk/openai'
 
-const { tools, close } = await createPlasmateTools()
+const mcp = await createMCPClient({
+  transport: new StdioMCPTransport({
+    command: 'plasmate',
+    args: ['mcp'],
+  }),
+})
 
 const { text } = await generateText({
   model: openai('gpt-4o'),
-  tools,
+  tools: await mcp.tools(),
   maxSteps: 5,
-  prompt: 'Summarize the top 3 stories on news.ycombinator.com'
+  prompt: 'Summarize the top 3 stories on news.ycombinator.com',
 })
 
-await close()
+await mcp.close()
 ```
 
-Source: [`@plasmate/ai`](https://github.com/plasmate-labs/plasmate-ai)
+This wires all 13 Plasmate tools directly into any Vercel AI SDK agent. See [Vercel AI SDK MCP docs](https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#mcp-tools) for details.
 
 ### LLM context
 
