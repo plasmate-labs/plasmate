@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://plasmate.app</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://plasmate.app/compare</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://docs.plasmate.app/overview</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://docs.plasmate.app/quickstart</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://docs.plasmate.app/som</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://docs.plasmate.app/som-spec</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://docs.plasmate.app/som-diff</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://docs.plasmate.app/awp</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://docs.plasmate.app/awp-mvp</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://docs.plasmate.app/install</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://docs.plasmate.app/integration-mcp</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://docs.plasmate.app/integration-langchain</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://docs.plasmate.app/integration-llamaindex</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://docs.plasmate.app/integration-browser-use</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://docs.plasmate.app/integration-crewai</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://docs.plasmate.app/integration-pi</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://docs.plasmate.app/integration-openclaw</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://docs.plasmate.app/why-som</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://docs.plasmate.app/robots-txt-proposal</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://docs.plasmate.app/roadmap</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://blog.plasmate.app</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://blog.plasmate.app/introducing-plasmate/</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://blog.plasmate.app/build-a-web-research-agent/</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://blog.plasmate.app/monitor-competitor-pricing/</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://blog.plasmate.app/daemon-mode/</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://blog.plasmate.app/wasm-compiler/</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://blog.plasmate.app/html-vs-markdown-vs-som/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+</urlset>
