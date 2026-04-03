@@ -137,6 +137,15 @@ enum Commands {
         /// Disable JavaScript execution entirely
         #[arg(long)]
         no_js: bool,
+        /// Add custom HTTP headers (can be specified multiple times).
+        ///
+        /// Format: "Header-Name: value"
+        ///
+        /// Examples:
+        ///   --header "Authorization: Bearer sk-..."
+        ///   --header "X-Custom: value" --header "Accept-Language: en"
+        #[arg(long, short = 'H')]
+        header: Vec<String>,
         /// Load cookies from a stored auth profile (domain name)
         #[arg(long)]
         profile: Option<String>,
@@ -391,6 +400,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             timeout,
             no_external,
             no_js,
+            header,
             profile,
             tls,
             plugin: plugin_paths,
@@ -405,6 +415,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 network::tls::set_global(tls_config);
             }
             let mut plugins = load_plugins(&plugin_paths)?;
+            // Parse custom headers
+            let extra_headers = parse_header_args(&header);
             cmd_fetch(
                 &url,
                 output.as_deref(),
@@ -415,6 +427,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 !no_external,
                 no_js,
                 profile.as_deref(),
+                &extra_headers,
                 plugins.as_mut(),
             )
             .await?;
@@ -993,6 +1006,23 @@ fn load_plugins(
     Ok(Some(pm))
 }
 
+/// Parse `--header "Key: Value"` arguments into a `HashMap`.
+fn parse_header_args(args: &[String]) -> std::collections::HashMap<String, String> {
+    let mut map = std::collections::HashMap::new();
+    for arg in args {
+        if let Some(pos) = arg.find(':') {
+            let key = arg[..pos].trim().to_string();
+            let val = arg[pos + 1..].trim().to_string();
+            if !key.is_empty() {
+                map.insert(key, val);
+            }
+        } else {
+            eprintln!("Warning: ignoring malformed header (expected 'Name: value'): {}", arg);
+        }
+    }
+    map
+}
+
 async fn cmd_fetch(
     url: &str,
     output: Option<&str>,
@@ -1003,6 +1033,7 @@ async fn cmd_fetch(
     external_scripts: bool,
     no_js: bool,
     profile: Option<&str>,
+    extra_headers: &std::collections::HashMap<String, String>,
     mut plugins: Option<&mut plugin::PluginManager>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Check if the daemon is running and delegate to it
@@ -1040,7 +1071,8 @@ async fn cmd_fetch(
     }
 
     let tls_config = network::tls::global();
-    let client = network::fetch::build_client_h1_fallback(user_agent, jar, tls_config)?;
+    let headers_opt = if extra_headers.is_empty() { None } else { Some(extra_headers) };
+    let client = network::fetch::build_client_h1_fallback_with_headers(user_agent, jar, tls_config, headers_opt)?;
 
     // Plugin hook: pre_navigate
     let effective_url = if let Some(pm) = plugins.as_deref_mut() {

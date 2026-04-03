@@ -76,8 +76,31 @@ pub fn build_client_h1_fallback(
     cookie_jar: Arc<Jar>,
     tls_config: Option<&TlsConfig>,
 ) -> Result<Client, FetchError> {
+    build_client_h1_fallback_with_headers(user_agent, cookie_jar, tls_config, None)
+}
+
+/// Build an HTTP/1.1 client with optional extra default headers.
+pub fn build_client_h1_fallback_with_headers(
+    user_agent: Option<&str>,
+    cookie_jar: Arc<Jar>,
+    tls_config: Option<&TlsConfig>,
+    extra_headers: Option<&std::collections::HashMap<String, String>>,
+) -> Result<Client, FetchError> {
+    let mut headers = reqwest::header::HeaderMap::new();
+    if let Some(eh) = extra_headers {
+        for (k, v) in eh {
+            if let (Ok(name), Ok(val)) = (
+                reqwest::header::HeaderName::from_bytes(k.as_bytes()),
+                reqwest::header::HeaderValue::from_str(v),
+            ) {
+                headers.insert(name, val);
+            }
+        }
+    }
+
     let mut builder = Client::builder()
         .user_agent(user_agent.unwrap_or(DEFAULT_USER_AGENT))
+        .default_headers(headers)
         .cookie_provider(cookie_jar)
         .redirect(reqwest::redirect::Policy::limited(10))
         .pool_max_idle_per_host(16)
