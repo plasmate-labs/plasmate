@@ -592,6 +592,51 @@
       font-family: var(--font-mono);
     }
 
+    .cost-hero {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: rgba(240,237,232,0.72);
+      margin: 16px 0 0;
+      max-width: 56ch;
+    }
+    .cost-hero strong { color: rgba(240,237,232,0.9); font-weight: 600; }
+    .cost-hero .accent { color: var(--ember); }
+
+    .trust-badges {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 36px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      border: 1px solid rgba(240,237,232,0.12);
+      border-radius: 999px;
+      background: rgba(26,25,24,0.5);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: rgba(240,237,232,0.75);
+      text-decoration: none;
+      letter-spacing: 0.02em;
+      transition: border-color 0.15s;
+    }
+
+    .badge:hover {
+      border-color: rgba(232,133,58,0.4);
+      text-decoration: none;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
     .no-motion { display: none; }
 
     @media (prefers-reduced-motion: reduce) {
@@ -629,7 +674,23 @@
         <div class="hero-section">
           <h1 class="headline">The <span class="accent">browser engine</span> for agents.</h1>
           <p class="subhead">Plasmate compiles HTML into a Semantic Object Model, a structured representation that LLMs can reason about directly. 50x faster than Chrome. 10x fewer tokens.</p>
+          <p class="cost-hero">1,000 pages/day: <strong>$99 in HTML tokens</strong> vs <strong class="accent">$5.69 in SOM</strong>. Same content. 94% less cost.</p>
           <p class="no-motion note">Reduced motion is enabled. Background particles are disabled.</p>
+        </div>
+
+        <div class="trust-badges">
+          <a href="https://www.w3.org/community/web-content-browser-ai/" target="_blank" rel="noreferrer" class="badge">
+            <span class="badge-dot" style="background: var(--arc);"></span>
+            W3C Community Group Member
+          </a>
+          <a href="https://registry.modelcontextprotocol.io" target="_blank" rel="noreferrer" class="badge">
+            <span class="badge-dot" style="background: var(--ember);"></span>
+            First browser tool on the MCP Registry
+          </a>
+          <a href="https://somordom.com" target="_blank" rel="noreferrer" class="badge">
+            <span class="badge-dot" style="background: var(--corona);"></span>
+            Try the live comparison
+          </a>
         </div>
 
         <!-- THE NUMBERS -->
@@ -650,9 +711,9 @@
             <p class="desc">Across 98 sites. Up to 1,544x on heavy SPAs. Mean 44.9x, median 9x. <a href="https://docs.plasmate.app/benchmark-cost" style="color: var(--ember);">See the benchmark</a>.</p>
           </div>
           <div class="card">
-            <div class="kicker">Binary</div>
-            <div class="value">45.8 MB</div>
-            <p class="desc">One file. No dependencies. 54 MB with plugins.</p>
+            <div class="kicker">Cost</div>
+            <div class="value" style="color: var(--ember);">$5.69 <span style="font-size: 15px; color: rgba(240,237,232,0.5);">vs $99</span></div>
+            <p class="desc">Per 1,000 pages/day with GPT-4o. SOM tokens vs raw HTML tokens. <a href="https://somordom.com" style="color: var(--ember);">Calculate yours</a>.</p>
           </div>
         </div>
 
@@ -712,6 +773,8 @@
             <p class="para">Plasmate is Apache 2.0 licensed. Use it, fork it, embed it, sell it.</p>
             <p class="para">SOM and AWP are specifications, not features. We want them implemented everywhere: in other browser engines, in agent frameworks, in production systems we'll never see.</p>
             <p class="para">The web has standards for documents, for styling, for scripting. It needs a standard for agents. This is that standard.</p>
+            <div class="rule"></div>
+            <p class="note">Member of the <a href="https://www.w3.org/community/web-content-browser-ai/" target="_blank" rel="noreferrer" style="color: var(--ember);">W3C Web Content and Browser AI Community Group</a>. SOM and AWP are being developed as open web standards.</p>
           </div>
 
           <div class="panel" id="install">
@@ -741,7 +804,32 @@
               </div>
             </div>
 
-            <p class="note" style="margin-top: 16px;">230 tests passing. 94/98 top sites covered. Actively maintained.</p>
+            <p class="note" style="margin-top: 16px;">First browser tool on the <a href="https://registry.modelcontextprotocol.io" target="_blank" rel="noreferrer" style="color: var(--ember);">official MCP Registry</a>. 230 tests passing. 94/98 top sites covered.</p>
+          </div>
+        </div>
+
+        <!-- CACHE + PUBLISHERS -->
+        <div class="content-grid" style="margin-top: 20px;">
+          <div class="panel">
+            <div class="section-label">SOM Cache</div>
+            <h2 class="section-title">No install required</h2>
+            <p class="para">Don't want to run a binary? The SOM Cache is a hosted API that compiles any URL to SOM on demand. Shared CDN, cached results, zero infrastructure on your side.</p>
+            <p class="para">When multiple agents request the same page, they share a single compilation. Less redundant fetching for publishers, lower latency for agents.</p>
+            <div class="install-cmd"><span class="prompt">$ </span>curl https://cache.plasmate.app/v1/som?url=https://example.com</div>
+            <p class="para">Works with any HTTP client, any language, any agent framework. No API key required for public pages.</p>
+            <div style="margin-top: 14px;">
+              <a class="pill" href="https://cache.plasmate.app" target="_blank" rel="noreferrer" style="display: inline-flex;"><span class="dot"></span>cache.plasmate.app</a>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="section-label">For Publishers</div>
+            <h2 class="section-title">Serve SOM alongside HTML</h2>
+            <p class="para">Publishers can pre-compute SOM for their pages and serve it at a well-known endpoint. Agents discover it automatically, just like sitemaps for search engines.</p>
+            <div class="install-cmd" style="font-size: 13px;">/.well-known/som.json</div>
+            <p class="para">This is the cooperative path: instead of blocking agents or serving them expensive raw HTML, give them a structured format designed for their consumption. Lower bandwidth costs, content control, and provenance metadata for attribution.</p>
+            <p class="para">The economics: mid-size publishers serving 1M agent requests/month save ~68% on infrastructure by serving SOM instead of HTML. <a href="https://dbhurley.com/blog/the-publishers-dilemma" style="color: var(--ember);">Read the full analysis</a>.</p>
+            <p class="note">plasmate.app and somordom.com already serve /.well-known/som.json. <a href="https://dbhurley.com/papers" style="color: var(--ember);">robots.txt extension proposal</a> in the research papers.</p>
           </div>
         </div>
 
@@ -809,6 +897,8 @@
             <a href="/docs/som">SOM Reference</a>
             <a href="/docs/changelog">Changelog</a>
             <a href="/docs/log">Engineering Log</a>
+            <a href="https://cache.plasmate.app" target="_blank" rel="noreferrer">SOM Cache</a>
+            <a href="https://somordom.com" target="_blank" rel="noreferrer">SOM vs DOM</a>
             <a href="/privacy">Privacy</a>
           </div>
         </div>
