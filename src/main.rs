@@ -140,6 +140,10 @@ enum Commands {
         /// Load cookies from a stored auth profile (domain name)
         #[arg(long)]
         profile: Option<String>,
+        /// HTTP request headers (e.g., --header "Authorization: Bearer token")
+        /// Can be specified multiple times for multiple headers.
+        #[arg(long)]
+        header: Vec<String>,
         #[command(flatten)]
         tls: TlsArgs,
         /// Load a Wasm plugin (can be specified multiple times)
@@ -392,6 +396,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             no_external,
             no_js,
             profile,
+            header,
             tls,
             plugin: plugin_paths,
         } => {
@@ -415,6 +420,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 !no_external,
                 no_js,
                 profile.as_deref(),
+                &header,
                 plugins.as_mut(),
             )
             .await?;
@@ -1003,6 +1009,7 @@ async fn cmd_fetch(
     external_scripts: bool,
     no_js: bool,
     profile: Option<&str>,
+    headers: &[String],
     mut plugins: Option<&mut plugin::PluginManager>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Check if the daemon is running and delegate to it
@@ -1042,6 +1049,19 @@ async fn cmd_fetch(
     let tls_config = network::tls::global();
     let client = network::fetch::build_client_h1_fallback(user_agent, jar, tls_config)?;
 
+    // Parse custom headers (format: "Key: Value")
+    let mut extra_headers = std::collections::HashMap::new();
+    for header_str in headers {
+        if let Some((key, value)) = header_str.split_once(':') {
+            extra_headers.insert(
+                key.trim().to_string(),
+                value.trim().to_string(),
+            );
+        } else {
+            eprintln!("Warning: invalid header format '{}', expected 'Key: Value'", header_str);
+        }
+    }
+
     // Plugin hook: pre_navigate
     let effective_url = if let Some(pm) = plugins.as_deref_mut() {
         pm.run_pre_navigate(url).map_err(|e| e.to_string())?
@@ -1050,7 +1070,11 @@ async fn cmd_fetch(
     };
 
     info!(url = %effective_url, "Fetching");
-    let result = network::fetch::fetch_url(&client, &effective_url, timeout_ms).await?;
+    let result = if extra_headers.is_empty() {
+        network::fetch::fetch_url(&client, &effective_url, timeout_ms).await?
+    } else {
+        network::fetch::fetch_url_with_headers(&client, &effective_url, timeout_ms, &extra_headers).await?
+    };
     info!(
         url = %result.url,
         status = result.status,
