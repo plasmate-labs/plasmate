@@ -21,7 +21,7 @@ use plasmate::som;
 #[derive(Parser)]
 #[command(name = "plasmate")]
 #[command(about = "Agent-native headless browser engine with Semantic Object Model")]
-#[command(version = "0.1.0")]
+#[command(version)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,

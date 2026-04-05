@@ -98,7 +98,7 @@ async fn handle_http_or_upgrade(
     let response_body = match path {
         "/json/version" | "/json/version/" => {
             serde_json::json!({
-                "Browser": "Plasmate/0.1.0",
+                "Browser": concat!("Plasmate/", env!("CARGO_PKG_VERSION")),
                 "Protocol-Version": "1.3",
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
                 "V8-Version": "12.0",

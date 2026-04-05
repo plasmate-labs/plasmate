@@ -134,7 +134,7 @@ fn handle_hello(id: &str, params: &serde_json::Value, state: &mut ConnectionStat
         json!({
             "awp_version": "0.1",
             "server_name": "plasmate",
-            "server_version": "0.1.0",
+            "server_version": env!("CARGO_PKG_VERSION"),
             "features": features
         }),
     )

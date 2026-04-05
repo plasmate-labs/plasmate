@@ -22,7 +22,7 @@ pub fn browser_get_version(id: u64) -> CdpResponse {
         id,
         json!({
             "protocolVersion": "1.3",
-            "product": "Plasmate/0.1.0",
+            "product": concat!("Plasmate/", env!("CARGO_PKG_VERSION")),
             "revision": "plasmate",
             "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
             "jsVersion": "12.0"
