@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "plasmate-browser-use"
-version = "0.3.0"
+version = "0.5.0"
 description = "Plasmate SOM integration for Browser Use - 10x fewer tokens for AI web agents"
 readme = "README.md"
 license = "Apache-2.0"
