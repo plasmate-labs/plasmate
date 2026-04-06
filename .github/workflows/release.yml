@@ -13,6 +13,9 @@ on:
 env:
   CARGO_TERM_COLOR: always
   BINARY_NAME: plasmate
+  # Proactively opt into Node 24 runtime for JS-based GitHub Actions.
+  # This avoids future breakage as GitHub deprecates Node 20 on runners.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
