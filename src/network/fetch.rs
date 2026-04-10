@@ -122,16 +122,21 @@ pub fn build_client_h1_fallback_with_headers(
 
 /// Apply TLS configuration to a reqwest ClientBuilder.
 ///
-/// Two paths:
+/// Three paths:
+/// - Default (no config): Use Chrome fingerprint to avoid JA3/JA4 bot detection
 /// - Simple: uses reqwest's built-in TLS methods (min/max version, insecure, CA certs)
 /// - Advanced: builds a custom rustls::ClientConfig for cipher suite / ALPN / group control
 fn apply_tls_config(
     builder: reqwest::ClientBuilder,
     tls_config: Option<&TlsConfig>,
 ) -> Result<reqwest::ClientBuilder, FetchError> {
+    // Use Chrome fingerprint by default to defeat TLS fingerprinting (JA3/JA4).
+    // Sites like stackoverflow.com block based on TLS fingerprint even when
+    // HTTP headers are browser-realistic.
+    let chrome_default = TlsConfig::chrome();
     let tls = match tls_config {
         Some(c) if !c.is_default() => c,
-        _ => return Ok(builder),
+        _ => &chrome_default,
     };
 
     if tls.needs_custom_rustls() {

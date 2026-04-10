@@ -99,6 +99,50 @@ pub struct TlsConfig {
 }
 
 impl TlsConfig {
+    /// Create a TLS config that mimics Chrome's TLS fingerprint.
+    ///
+    /// This configures cipher suites, supported groups, and ALPN to match
+    /// Chrome 128's ClientHello, defeating JA3/JA4 fingerprinting used by
+    /// Cloudflare and other bot-detection systems.
+    ///
+    /// Sites like stackoverflow.com block requests based on TLS fingerprint
+    /// even when HTTP headers are browser-realistic. Using this profile
+    /// makes rustls look like Chrome at the TLS layer.
+    pub fn chrome() -> Self {
+        Self {
+            // Chrome supports both TLS 1.3 and 1.2
+            min_version: Some(TlsVersion::Tls12),
+            max_version: Some(TlsVersion::Tls13),
+            // Chrome's TLS 1.3 cipher suite order
+            cipher_suites_tls13: vec![
+                "TLS13_AES_128_GCM_SHA256".to_string(),
+                "TLS13_AES_256_GCM_SHA384".to_string(),
+                "TLS13_CHACHA20_POLY1305_SHA256".to_string(),
+            ],
+            // Chrome's TLS 1.2 cipher suite order (ECDHE suites first)
+            cipher_suites_tls12: vec![
+                "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256".to_string(),
+                "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256".to_string(),
+                "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384".to_string(),
+                "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384".to_string(),
+                "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256".to_string(),
+                "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256".to_string(),
+            ],
+            // Chrome's supported groups (elliptic curves) - X25519 first
+            supported_groups: vec![
+                "X25519".to_string(),
+                "secp256r1".to_string(),
+                "secp384r1".to_string(),
+            ],
+            // Chrome's ALPN: prefer HTTP/2
+            alpn_protocols: vec!["h2".to_string(), "http/1.1".to_string()],
+            // Other defaults
+            danger_accept_invalid_certs: false,
+            ca_cert_path: None,
+            enable_sni: None,
+        }
+    }
+
     /// Returns true if no TLS options are configured.
     pub fn is_default(&self) -> bool {
         self.min_version.is_none()
@@ -506,6 +550,23 @@ mod tests {
         let config = TlsConfig::default();
         assert!(config.is_default());
         assert!(!config.needs_custom_rustls());
+    }
+
+    #[test]
+    fn test_chrome_fingerprint_profile() {
+        let config = TlsConfig::chrome();
+        // Chrome profile is not "default" - it has specific settings
+        assert!(!config.is_default());
+        // Chrome profile needs custom rustls for cipher suites and groups
+        assert!(config.needs_custom_rustls());
+        // Verify key Chrome fingerprint characteristics
+        assert!(!config.cipher_suites_tls13.is_empty());
+        assert!(!config.cipher_suites_tls12.is_empty());
+        assert!(!config.supported_groups.is_empty());
+        assert!(!config.alpn_protocols.is_empty());
+        // Should build successfully
+        let result = config.build_rustls_config();
+        assert!(result.is_ok());
     }
 
     #[test]
