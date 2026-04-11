@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plasmate: HTML vs SOM Comparison</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
+
+        .stats-bar h1 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .stats-container {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #4ade80;
+        }
+
+        .stat-value.bad {
+            color: #f87171;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .compression-arrow {
+            font-size: 32px;
+            color: #4ade80;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Comparison Container */
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: calc(100vh - 120px);
+            gap: 2px;
+            background: #333;
+        }
+
+        .panel {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 15px 20px;
+            background: #1a1a1a;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .panel-title.html {
+            color: #f87171;
+        }
+
+        .panel-title.som {
+            color: #4ade80;
+        }
+
+        .panel-badge {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .panel-badge.html {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+        }
+
+        .panel-badge.som {
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            background: #0d0d0d;
+        }
+
+        /* HTML Panel Styling */
+        .html-content {
+            color: #888;
+        }
+
+        .html-content .tag {
+            color: #f87171;
+        }
+
+        .html-content .attr {
+            color: #fbbf24;
+        }
+
+        .html-content .string {
+            color: #34d399;
+        }
+
+        /* SOM Panel Styling */
+        .som-content {
+            color: #e0e0e0;
+        }
+
+        .som-content .key {
+            color: #60a5fa;
+        }
+
+        .som-content .string {
+            color: #4ade80;
+        }
+
+        .som-content .number {
+            color: #fbbf24;
+        }
+
+        .som-content .bracket {
+            color: #888;
+        }
+
+        /* Scrollbar */
+        .panel-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .panel-content::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        .panel-content::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+
+        .panel-content::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Animation for auto-scroll effect */
+        @keyframes scroll {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-50%); }
+        }
+
+        .auto-scroll {
+            animation: scroll 30s linear infinite;
+        }
+
+        /* Footer */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 15px;
+            text-align: center;
+            border-top: 1px solid #333;
+        }
+
+        .footer code {
+            background: #0d0d0d;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-family: 'SF Mono', monospace;
+            color: #4ade80;
+        }
+    </style>
+</head>
+<body>
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <h1>Plasmate: The Browser Engine for AI Agents</h1>
+        <div class="stats-container">
+            <div class="stat">
+                <div class="stat-value bad">2.2 MB</div>
+                <div class="stat-label">Raw HTML</div>
+            </div>
+            <div class="compression-arrow">&#10132;</div>
+            <div class="stat">
+                <div class="stat-value">21 KB</div>
+                <div class="stat-label">SOM Output</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">105x</div>
+                <div class="stat-label">Compression</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">$0.007</div>
+                <div class="stat-label">Token Cost</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Side-by-Side Comparison -->
+    <div class="comparison">
+        <!-- Left: Raw HTML -->
+        <div class="panel">
+            <div class="panel-header">
+                <span class="panel-title html">Raw HTML</span>
+                <span class="panel-badge html">500K+ tokens</span>
+            </div>
+            <div class="panel-content html-content">
+<pre>&lt;!DOCTYPE html&gt;
+&lt;<span class="tag">html</span> <span class="attr">lang</span>=<span class="string">"en"</span> <span class="attr">class</span>=<span class="string">"js-focus-visible"</span> <span class="attr">data-js-focus-visible</span>=<span class="string">""</span>&gt;
+&lt;<span class="tag">head</span>&gt;
+  &lt;<span class="tag">meta</span> <span class="attr">charset</span>=<span class="string">"utf-8"</span>&gt;
+  &lt;<span class="tag">meta</span> <span class="attr">name</span>=<span class="string">"viewport"</span> <span class="attr">content</span>=<span class="string">"width=device-width,initial-scale=1"</span>&gt;
+  &lt;<span class="tag">meta</span> <span class="attr">name</span>=<span class="string">"theme-color"</span> <span class="attr">content</span>=<span class="string">"#5E6AD2"</span>&gt;
+  &lt;<span class="tag">link</span> <span class="attr">rel</span>=<span class="string">"preconnect"</span> <span class="attr">href</span>=<span class="string">"https://fonts.gstatic.com"</span>&gt;
+  &lt;<span class="tag">link</span> <span class="attr">rel</span>=<span class="string">"preload"</span> <span class="attr">href</span>=<span class="string">"/_next/static/css/b67d..."</span>&gt;
+  &lt;<span class="tag">style</span> <span class="attr">data-emotion</span>=<span class="string">"css-global"</span>&gt;
+    .css-1dbjc4n{-ms-flex-align:stretch;-webkit-...
+    -webkit-box-align:stretch;-webkit-box-direction:...
+    normal;-webkit-box-orient:vertical;align-items:...
+    border:0 solid black;box-sizing:border-box;display...
+    flex-direction:column;flex-shrink:0;margin:0;min-...
+    height:0;min-width:0;padding:0;position:relative;...
+    z-index:0}.css-1dbjc4n:focus{outline:none}
+  &lt;/<span class="tag">style</span>&gt;
+  &lt;<span class="tag">style</span> <span class="attr">data-emotion</span>=<span class="string">"css"</span>&gt;
+    .css-175oi2r{-ms-flex-align:stretch;-webkit-align...
+    .css-11aywtz{background-color:transparent;border...
+    .css-146c3p1{background-color:transparent;border...
+    .css-1qaijid{-webkit-font-smoothing:antialiased;...
+    .css-1jxf684{-webkit-text-decoration:none;color...
+  &lt;/<span class="tag">style</span>&gt;
+  &lt;<span class="tag">script</span> <span class="attr">async</span> <span class="attr">src</span>=<span class="string">"https://www.googletagmanager..."</span>&gt;&lt;/<span class="tag">script</span>&gt;
+  &lt;<span class="tag">script</span>&gt;
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  &lt;/<span class="tag">script</span>&gt;
+  &lt;<span class="tag">script</span> <span class="attr">id</span>=<span class="string">"__NEXT_DATA__"</span> <span class="attr">type</span>=<span class="string">"application/json"</span>&gt;
+    {"props":{"pageProps":{"dehydratedState":{"mutations"...
+    "queries":[{"state":{"data":{"viewer":null},"dataUpdate...
+  &lt;/<span class="tag">script</span>&gt;
+&lt;/<span class="tag">head</span>&gt;
+&lt;<span class="tag">body</span>&gt;
+  &lt;<span class="tag">div</span> <span class="attr">id</span>=<span class="string">"__next"</span>&gt;
+    &lt;<span class="tag">div</span> <span class="attr">class</span>=<span class="string">"css-175oi2r r-13awgt0 r-12vffkv"</span>&gt;
+      &lt;<span class="tag">div</span> <span class="attr">class</span>=<span class="string">"css-175oi2r r-13awgt0"</span>&gt;
+        &lt;<span class="tag">header</span> <span class="attr">class</span>=<span class="string">"css-175oi2r r-1p0dtai r-1d2f490"</span>&gt;
+          &lt;<span class="tag">div</span> <span class="attr">class</span>=<span class="string">"css-175oi2r r-1awozwy r-18u37iz"</span>&gt;
+            &lt;<span class="tag">a</span> <span class="attr">href</span>=<span class="string">"/"</span> <span class="attr">class</span>=<span class="string">"css-4rbku5 css-1dbjc4n"</span>&gt;
+              &lt;<span class="tag">div</span> <span class="attr">class</span>=<span class="string">"css-1dbjc4n r-1awozwy r-18u37iz"</span>&gt;
+                &lt;<span class="tag">svg</span> <span class="attr">viewBox</span>=<span class="string">"0 0 100 100"</span> <span class="attr">class</span>=<span class="string">"r-1p0dtai"</span>&gt;
+                  &lt;<span class="tag">path</span> <span class="attr">d</span>=<span class="string">"M50 0C22.4 0 0 22.4 0 50s22.4..."</span>&gt;&lt;/<span class="tag">path</span>&gt;
+                &lt;/<span class="tag">svg</span>&gt;
+              &lt;/<span class="tag">div</span>&gt;
+            &lt;/<span class="tag">a</span>&gt;
+            &lt;<span class="tag">nav</span> <span class="attr">class</span>=<span class="string">"css-175oi2r r-1awozwy r-18u37iz r-1w"</span>&gt;
+              &lt;<span class="tag">a</span> <span class="attr">href</span>=<span class="string">"/features"</span> <span class="attr">class</span>=<span class="string">"css-4rbku5 css-1dbjc4n"</span>&gt;
+                &lt;<span class="tag">div</span> <span class="attr">dir</span>=<span class="string">"auto"</span> <span class="attr">class</span>=<span class="string">"css-1qaijid r-bcqeeo"</span>&gt;
+                  Features
+                &lt;/<span class="tag">div</span>&gt;
+              &lt;/<span class="tag">a</span>&gt;
+              &lt;<span class="tag">a</span> <span class="attr">href</span>=<span class="string">"/method"</span> <span class="attr">class</span>=<span class="string">"css-4rbku5 css-1dbjc4n"</span>&gt;
+                &lt;<span class="tag">div</span> <span class="attr">dir</span>=<span class="string">"auto"</span> <span class="attr">class</span>=<span class="string">"css-1qaijid r-bcqeeo"</span>&gt;
+                  Method
+                &lt;/<span class="tag">div</span>&gt;
+              &lt;/<span class="tag">a</span>&gt;
+              &lt;<span class="tag">a</span> <span class="attr">href</span>=<span class="string">"/customers"</span> <span class="attr">class</span>=<span class="string">"css-4rbku5 css-1"</span>&gt;
+                &lt;<span class="tag">div</span> <span class="attr">dir</span>=<span class="string">"auto"</span> <span class="attr">class</span>=<span class="string">"css-1qaijid r-bcqeeo"</span>&gt;
+                  Customers
+                &lt;/<span class="tag">div</span>&gt;
+              &lt;/<span class="tag">a</span>&gt;
+            &lt;/<span class="tag">nav</span>&gt;
+          &lt;/<span class="tag">div</span>&gt;
+        &lt;/<span class="tag">header</span>&gt;
+        &lt;<span class="tag">main</span> <span class="attr">class</span>=<span class="string">"css-175oi2r r-13awgt0"</span>&gt;
+          &lt;<span class="tag">section</span> <span class="attr">class</span>=<span class="string">"css-175oi2r r-1p0dtai r-1d2f490"</span>&gt;
+            &lt;<span class="tag">div</span> <span class="attr">class</span>=<span class="string">"css-175oi2r r-1awozwy r-6koalj"</span>&gt;
+              &lt;<span class="tag">h1</span> <span class="attr">class</span>=<span class="string">"css-1qaijid r-1x35g6 r-b88u0q"</span>&gt;
+                Linear is a better way to build products
+              &lt;/<span class="tag">h1</span>&gt;
+              &lt;<span class="tag">p</span> <span class="attr">class</span>=<span class="string">"css-1qaijid r-1enofrn r-ubezar"</span>&gt;
+                Meet the new standard for modern software...
+              &lt;/<span class="tag">p</span>&gt;
+            &lt;/<span class="tag">div</span>&gt;
+          &lt;/<span class="tag">section</span>&gt;
+          ... (2.2MB continues) ...
+        &lt;/<span class="tag">main</span>&gt;
+      &lt;/<span class="tag">div</span>&gt;
+    &lt;/<span class="tag">div</span>&gt;
+  &lt;/<span class="tag">div</span>&gt;
+&lt;/<span class="tag">body</span>&gt;
+&lt;/<span class="tag">html</span>&gt;</pre>
+            </div>
+        </div>
+
+        <!-- Right: SOM Output -->
+        <div class="panel">
+            <div class="panel-header">
+                <span class="panel-title som">Plasmate SOM</span>
+                <span class="panel-badge som">~5K tokens</span>
+            </div>
+            <div class="panel-content som-content">
+<pre><span class="bracket">{</span>
+  <span class="key">"url"</span>: <span class="string">"https://linear.app"</span>,
+  <span class="key">"title"</span>: <span class="string">"Linear - A better way to build products"</span>,
+  <span class="key">"description"</span>: <span class="string">"Meet the new standard for modern software development."</span>,
+
+  <span class="key">"navigation"</span>: <span class="bracket">[</span>
+    <span class="bracket">{</span> <span class="key">"text"</span>: <span class="string">"Features"</span>, <span class="key">"href"</span>: <span class="string">"/features"</span> <span class="bracket">}</span>,
+    <span class="bracket">{</span> <span class="key">"text"</span>: <span class="string">"Method"</span>, <span class="key">"href"</span>: <span class="string">"/method"</span> <span class="bracket">}</span>,
+    <span class="bracket">{</span> <span class="key">"text"</span>: <span class="string">"Customers"</span>, <span class="key">"href"</span>: <span class="string">"/customers"</span> <span class="bracket">}</span>,
+    <span class="bracket">{</span> <span class="key">"text"</span>: <span class="string">"Changelog"</span>, <span class="key">"href"</span>: <span class="string">"/changelog"</span> <span class="bracket">}</span>,
+    <span class="bracket">{</span> <span class="key">"text"</span>: <span class="string">"Pricing"</span>, <span class="key">"href"</span>: <span class="string">"/pricing"</span> <span class="bracket">}</span>,
+    <span class="bracket">{</span> <span class="key">"text"</span>: <span class="string">"Sign up"</span>, <span class="key">"href"</span>: <span class="string">"/signup"</span> <span class="bracket">}</span>
+  <span class="bracket">]</span>,
+
+  <span class="key">"content"</span>: <span class="bracket">[</span>
+    <span class="bracket">{</span>
+      <span class="key">"type"</span>: <span class="string">"hero"</span>,
+      <span class="key">"heading"</span>: <span class="string">"Linear is a better way to build products"</span>,
+      <span class="key">"subheading"</span>: <span class="string">"Meet the new standard for modern software development. Streamline issues, projects, and product roadmaps."</span>,
+      <span class="key">"cta"</span>: <span class="bracket">{</span>
+        <span class="key">"text"</span>: <span class="string">"Start building"</span>,
+        <span class="key">"href"</span>: <span class="string">"/signup"</span>
+      <span class="bracket">}</span>
+    <span class="bracket">}</span>,
+    <span class="bracket">{</span>
+      <span class="key">"type"</span>: <span class="string">"section"</span>,
+      <span class="key">"heading"</span>: <span class="string">"Built for the way you work"</span>,
+      <span class="key">"features"</span>: <span class="bracket">[</span>
+        <span class="string">"Issue tracking"</span>,
+        <span class="string">"Sprint planning"</span>,
+        <span class="string">"Product roadmaps"</span>,
+        <span class="string">"Team workflows"</span>
+      <span class="bracket">]</span>
+    <span class="bracket">}</span>,
+    <span class="bracket">{</span>
+      <span class="key">"type"</span>: <span class="string">"section"</span>,
+      <span class="key">"heading"</span>: <span class="string">"Trusted by leading teams"</span>,
+      <span class="key">"logos"</span>: <span class="bracket">[</span>
+        <span class="string">"Vercel"</span>, <span class="string">"Ramp"</span>, <span class="string">"Loom"</span>,
+        <span class="string">"Retool"</span>, <span class="string">"Watershed"</span>
+      <span class="bracket">]</span>
+    <span class="bracket">}</span>,
+    <span class="bracket">{</span>
+      <span class="key">"type"</span>: <span class="string">"section"</span>,
+      <span class="key">"heading"</span>: <span class="string">"Purpose-built for product teams"</span>,
+      <span class="key">"items"</span>: <span class="bracket">[</span>
+        <span class="bracket">{</span>
+          <span class="key">"title"</span>: <span class="string">"Issue Tracking"</span>,
+          <span class="key">"description"</span>: <span class="string">"Create issues in seconds, discuss in context"</span>
+        <span class="bracket">}</span>,
+        <span class="bracket">{</span>
+          <span class="key">"title"</span>: <span class="string">"Cycles"</span>,
+          <span class="key">"description"</span>: <span class="string">"Automate sprints with intelligent scheduling"</span>
+        <span class="bracket">}</span>,
+        <span class="bracket">{</span>
+          <span class="key">"title"</span>: <span class="string">"Roadmaps"</span>,
+          <span class="key">"description"</span>: <span class="string">"Plan ahead with multi-team project views"</span>
+        <span class="bracket">}</span>
+      <span class="bracket">]</span>
+    <span class="bracket">}</span>
+  <span class="bracket">]</span>,
+
+  <span class="key">"footer"</span>: <span class="bracket">{</span>
+    <span class="key">"links"</span>: <span class="bracket">[</span>
+      <span class="string">"About"</span>, <span class="string">"Careers"</span>, <span class="string">"Blog"</span>,
+      <span class="string">"Contact"</span>, <span class="string">"Privacy"</span>, <span class="string">"Terms"</span>
+    <span class="bracket">]</span>,
+    <span class="key">"copyright"</span>: <span class="string">"2024 Linear Orbit, Inc."</span>
+  <span class="bracket">}</span>
+<span class="bracket">}</span></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer CTA -->
+    <div class="footer">
+        <code>pip install plasmate</code> or visit <code>plasmate.app</code>
+    </div>
+</body>
+</html>
