@@ -324,6 +324,22 @@ See [plasmate.app/compare](https://plasmate.app/compare) for the full comparison
 - [ ] Real-world top-100 site coverage testing
 - [ ] Web Platform Tests integration
 
+## Ecosystem
+
+Plasmate has **60+ integrations** across the AI and developer ecosystem:
+
+| Category | Integrations |
+|----------|--------------|
+| **AI Frameworks** | [LangChain](https://github.com/plasmate-labs/langchain-plasmate), [LlamaIndex](https://github.com/plasmate-labs/llamaindex-plasmate), [CrewAI](https://github.com/plasmate-labs/crewai-plasmate), [AutoGen](https://github.com/plasmate-labs/autogen-plasmate), [Haystack](https://github.com/plasmate-labs/haystack-plasmate), [DSPy](https://github.com/plasmate-labs/dspy-plasmate), [Semantic Kernel](https://github.com/plasmate-labs/semantic-kernel-plasmate), [Vercel AI](https://github.com/plasmate-labs/plasmate/tree/master/integrations/vercel-ai) |
+| **Visual Builders** | [Langflow](https://github.com/plasmate-labs/langflow-plasmate), [Flowise](https://github.com/plasmate-labs/flowise-plasmate), [Dify](https://github.com/plasmate-labs/dify-plasmate) |
+| **Automation** | [n8n](https://github.com/plasmate-labs/n8n-nodes-plasmate), [Zapier](https://github.com/plasmate-labs/zapier-plasmate), [Make.com](https://github.com/plasmate-labs/make-plasmate), [Activepieces](https://github.com/plasmate-labs/activepieces-plasmate), [Temporal](https://github.com/plasmate-labs/temporal-plasmate) |
+| **Web Scraping** | [Scrapy](https://github.com/plasmate-labs/scrapy-plasmate), [Crawl4AI](https://github.com/plasmate-labs/crawl4ai-plasmate), [Firecrawl](https://github.com/plasmate-labs/firecrawl-plasmate), [ScrapeGraphAI](https://github.com/plasmate-labs/scrapegraphai-plasmate) |
+| **Databases** | [Supabase](https://github.com/plasmate-labs/supabase-plasmate), [Prisma](https://github.com/plasmate-labs/prisma-plasmate), [PlanetScale](https://github.com/plasmate-labs/planetscale-plasmate), [Airtable](https://github.com/plasmate-labs/airtable-plasmate) |
+| **Developer Tools** | [VS Code](https://github.com/plasmate-labs/vscode-plasmate), [Cursor](https://github.com/plasmate-labs/cursor-plasmate), [Raycast](https://github.com/plasmate-labs/raycast-plasmate), [GitHub Copilot](https://github.com/plasmate-labs/copilot-plasmate) |
+| **Self-Hosted LLMs** | [Open WebUI](https://github.com/plasmate-labs/openwebui-plasmate), [OpenAI GPT Actions](https://github.com/plasmate-labs/openai-gpt-plasmate) |
+
+See [awesome-plasmate](https://github.com/plasmate-labs/awesome-plasmate) for the full list.
+
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE).
