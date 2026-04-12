@@ -2,11 +2,14 @@
 name = "plasmate"
 version = "0.5.1"
 edition = "2021"
-description = "Agent-native headless browser engine with Semantic Object Model"
+description = "Browser engine for AI agents. 10-100x fewer tokens than raw HTML. V8 JS, CDP/Puppeteer compatible, MCP server."
 license = "Apache-2.0"
 repository = "https://github.com/plasmate-labs/plasmate"
 homepage = "https://plasmate.app"
+documentation = "https://docs.plasmate.app"
 readme = "README.md"
+keywords = ["browser", "headless", "llm", "ai-agent", "web-scraping"]
+categories = ["web-programming", "development-tools", "command-line-utilities"]
 
 [features]
 default = []

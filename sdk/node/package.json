@@ -1,7 +1,7 @@
 {
   "name": "plasmate",
   "version": "0.4.0",
-  "description": "Agent-native headless browser. HTML in, Semantic Object Model out.",
+  "description": "Browser engine for AI agents. 10-100x fewer tokens than raw HTML. Web scraping with structured output for LLMs, RAG, and autonomous agents. Puppeteer/CDP compatible.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -22,14 +22,22 @@
   "keywords": [
     "browser",
     "headless",
-    "scraping",
+    "web-scraping",
     "ai",
     "llm",
     "agent",
     "mcp",
-    "semantic",
-    "dom",
-    "puppeteer"
+    "langchain",
+    "llamaindex",
+    "rag",
+    "puppeteer",
+    "playwright",
+    "token-optimization",
+    "gpt",
+    "claude",
+    "vercel-ai",
+    "crawling",
+    "automation"
   ],
   "author": "Plasmate Labs",
   "license": "Apache-2.0",

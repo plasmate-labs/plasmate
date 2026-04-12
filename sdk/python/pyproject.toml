@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "plasmate"
 version = "0.4.1"
-description = "Agent-native headless browser. HTML in, Semantic Object Model out."
+description = "Browser engine for AI agents. 10-100x fewer tokens than raw HTML. Web scraping with structured output for LLMs, RAG pipelines, and autonomous agents."
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.9"
@@ -15,13 +15,23 @@ dependencies = [
 authors = [
     {name = "Plasmate Labs", email = "hello@plasmate.app"}
 ]
-keywords = ["browser", "headless", "scraping", "ai", "llm", "agent", "mcp", "semantic"]
+keywords = [
+    "browser", "headless", "web-scraping", "ai", "llm", "agent", "mcp",
+    "langchain", "llamaindex", "rag", "token-optimization", "puppeteer",
+    "semantic", "crawling", "automation", "gpt", "claude"
+]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Internet :: WWW/HTTP :: Browsers",
     "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Text Processing :: Markup :: HTML",
 ]
 
 [project.urls]
