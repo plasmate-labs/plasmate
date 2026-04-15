@@ -263,6 +263,10 @@ fn handle_tools_list(request: &JsonRpcRequest) -> JsonRpcResponse {
         tools::scroll_definition(),
         tools::toggle_definition(),
         tools::clear_definition(),
+        // Cookie tools
+        tools::get_cookies_definition(),
+        tools::set_cookies_definition(),
+        tools::clear_cookies_definition(),
     ];
 
     JsonRpcResponse {
@@ -334,6 +338,10 @@ async fn handle_tools_call(
         "scroll" => tools::handle_scroll(&arguments, client, sessions).await,
         "toggle" => tools::handle_toggle(&arguments, client, sessions).await,
         "clear" => tools::handle_clear(&arguments, client, sessions).await,
+        // Cookie tools
+        "get_cookies" => tools::handle_get_cookies(&arguments, sessions).await,
+        "set_cookies" => tools::handle_set_cookies(&arguments, sessions).await,
+        "clear_cookies" => tools::handle_clear_cookies(&arguments, sessions).await,
         _ => {
             return JsonRpcResponse {
                 jsonrpc: "2.0".to_string(),

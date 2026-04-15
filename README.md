@@ -147,7 +147,7 @@ Config file locations:
 - **VS Code Copilot** — `.vscode/mcp.json` (workspace) or user settings
 - **Windsurf** — `~/.codeium/windsurf/mcp_config.json`
 
-Once connected, 13 tools are available: `fetch_page`, `extract_text`, `extract_links`, `open_page`, `navigate_to`, `click`, `type_text`, `select_option`, `scroll`, `toggle`, `clear`, `evaluate`, `close_page`.
+Once connected, 16 tools are available: `fetch_page`, `extract_text`, `extract_links`, `open_page`, `navigate_to`, `click`, `type_text`, `select_option`, `scroll`, `toggle`, `clear`, `evaluate`, `close_page`, `get_cookies`, `set_cookies`, `clear_cookies`.
 
 **Tip:** use `selector="main"` on any fetch to strip nav/footer before the LLM sees the content.
 
@@ -321,7 +321,7 @@ See [plasmate.app/compare](https://plasmate.app/compare) for the full comparison
 - [ ] Full V8 DOM mutation bridge (re-snapshot SOM after JS changes)
 - [ ] Network interception (Fetch domain)
 - [x] AWP cookie APIs (session.cookies.get/set/clear)
-- [ ] MCP cookie import/export tools
+- [x] MCP cookie tools (get_cookies, set_cookies, clear_cookies)
 - [ ] Proxy support (per-session config, SOCKS)
 - [ ] Real-world top-100 site coverage testing
 - [ ] Web Platform Tests integration

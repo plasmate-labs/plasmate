@@ -17,6 +17,7 @@ use serde_json::{json, Value};
 use tracing::{debug, info, warn};
 
 use super::sessions::SessionManager;
+use crate::cdp::cookies::{cookie_from_cdp_params, Cookie};
 use crate::js::pipeline::{self, PipelineConfig};
 use crate::js::runtime::{JsRuntime, RuntimeConfig};
 use crate::network::fetch;
@@ -2236,4 +2237,311 @@ pub async fn handle_close_page(arguments: &Value, sessions: &Arc<SessionManager>
     } else {
         error_response(&format!("Session not found: {}", params.session_id))
     }
+}
+
+// ============================================================================
+// Cookie Tools
+// ============================================================================
+
+/// Parameters for get_cookies tool.
+#[derive(Debug, Deserialize)]
+struct GetCookiesParams {
+    session_id: String,
+    #[serde(default)]
+    url: Option<String>,
+}
+
+/// Parameters for set_cookies tool.
+#[derive(Debug, Deserialize)]
+struct SetCookiesParams {
+    session_id: String,
+    cookies: Vec<Value>,
+}
+
+/// Parameters for clear_cookies tool.
+#[derive(Debug, Deserialize)]
+struct ClearCookiesParams {
+    session_id: String,
+    #[serde(default)]
+    name: Option<String>,
+    #[serde(default)]
+    domain: Option<String>,
+    #[serde(default)]
+    url: Option<String>,
+}
+
+/// Get the tool definition for get_cookies.
+pub fn get_cookies_definition() -> ToolDefinition {
+    ToolDefinition {
+        name: "get_cookies".to_string(),
+        description: "Get cookies from a browser session. Returns all cookies or filters by URL. Use this to check authentication state, extract session tokens, or debug cookie-based auth flows.".to_string(),
+        input_schema: json!({
+            "type": "object",
+            "properties": {
+                "session_id": {
+                    "type": "string",
+                    "description": "Session ID from open_page"
+                },
+                "url": {
+                    "type": "string",
+                    "description": "Optional URL to filter cookies by domain/path matching"
+                }
+            },
+            "required": ["session_id"]
+        }),
+    }
+}
+
+/// Get the tool definition for set_cookies.
+pub fn set_cookies_definition() -> ToolDefinition {
+    ToolDefinition {
+        name: "set_cookies".to_string(),
+        description: "Set cookies in a browser session. Use this to inject authentication cookies, set session tokens, or configure cookie-based state before navigating.".to_string(),
+        input_schema: json!({
+            "type": "object",
+            "properties": {
+                "session_id": {
+                    "type": "string",
+                    "description": "Session ID from open_page"
+                },
+                "cookies": {
+                    "type": "array",
+                    "description": "Array of cookie objects to set",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": { "type": "string", "description": "Cookie name" },
+                            "value": { "type": "string", "description": "Cookie value" },
+                            "domain": { "type": "string", "description": "Cookie domain (e.g. 'example.com')" },
+                            "path": { "type": "string", "description": "Cookie path (default: '/')" },
+                            "expires": { "type": "number", "description": "Expiration as Unix timestamp (seconds)" },
+                            "httpOnly": { "type": "boolean", "description": "HTTP-only flag" },
+                            "secure": { "type": "boolean", "description": "Secure flag (HTTPS only)" },
+                            "sameSite": { "type": "string", "enum": ["Strict", "Lax", "None"], "description": "SameSite attribute" }
+                        },
+                        "required": ["name", "value", "domain"]
+                    }
+                }
+            },
+            "required": ["session_id", "cookies"]
+        }),
+    }
+}
+
+/// Get the tool definition for clear_cookies.
+pub fn clear_cookies_definition() -> ToolDefinition {
+    ToolDefinition {
+        name: "clear_cookies".to_string(),
+        description: "Clear cookies from a browser session. Clears all cookies by default, or filter by name/domain/url. Use this to reset authentication state or test logged-out flows.".to_string(),
+        input_schema: json!({
+            "type": "object",
+            "properties": {
+                "session_id": {
+                    "type": "string",
+                    "description": "Session ID from open_page"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Only clear cookies with this name"
+                },
+                "domain": {
+                    "type": "string",
+                    "description": "Only clear cookies for this domain"
+                },
+                "url": {
+                    "type": "string",
+                    "description": "Only clear cookies matching this URL"
+                }
+            },
+            "required": ["session_id"]
+        }),
+    }
+}
+
+/// Handle the get_cookies tool call.
+pub async fn handle_get_cookies(arguments: &Value, sessions: &Arc<SessionManager>) -> Value {
+    let params: GetCookiesParams = match serde_json::from_value(arguments.clone()) {
+        Ok(p) => p,
+        Err(e) => {
+            return error_response(&format!("Invalid arguments: {}", e));
+        }
+    };
+
+    info!(session_id = %params.session_id, url = ?params.url, "get_cookies");
+
+    let result = sessions
+        .with_session(&params.session_id, |session| {
+            let cookies: Vec<Value> = if let Some(ref url) = params.url {
+                session
+                    .target
+                    .cookie_jar
+                    .get_cookies(url)
+                    .iter()
+                    .map(cookie_to_json)
+                    .collect()
+            } else {
+                session
+                    .target
+                    .cookie_jar
+                    .get_all_cookies()
+                    .iter()
+                    .map(cookie_to_json)
+                    .collect()
+            };
+            cookies
+        })
+        .await;
+
+    match result {
+        Some(cookies) => {
+            let count = cookies.len();
+            json!({
+                "content": [{
+                    "type": "text",
+                    "text": json!({
+                        "cookies": cookies,
+                        "count": count
+                    }).to_string()
+                }]
+            })
+        }
+        None => error_response(&format!("Session not found: {}", params.session_id)),
+    }
+}
+
+/// Handle the set_cookies tool call.
+pub async fn handle_set_cookies(arguments: &Value, sessions: &Arc<SessionManager>) -> Value {
+    let params: SetCookiesParams = match serde_json::from_value(arguments.clone()) {
+        Ok(p) => p,
+        Err(e) => {
+            return error_response(&format!("Invalid arguments: {}", e));
+        }
+    };
+
+    info!(session_id = %params.session_id, count = params.cookies.len(), "set_cookies");
+
+    let result = sessions
+        .with_session(&params.session_id, |session| {
+            let mut set_count = 0;
+            for cookie_params in &params.cookies {
+                if let Some(cookie) = cookie_from_cdp_params(cookie_params) {
+                    session.target.cookie_jar.set_cookie(cookie);
+                    set_count += 1;
+                } else {
+                    warn!("Skipping invalid cookie: {:?}", cookie_params);
+                }
+            }
+            set_count
+        })
+        .await;
+
+    match result {
+        Some(set_count) => {
+            json!({
+                "content": [{
+                    "type": "text",
+                    "text": json!({
+                        "set": set_count,
+                        "session_id": params.session_id
+                    }).to_string()
+                }]
+            })
+        }
+        None => error_response(&format!("Session not found: {}", params.session_id)),
+    }
+}
+
+/// Handle the clear_cookies tool call.
+pub async fn handle_clear_cookies(arguments: &Value, sessions: &Arc<SessionManager>) -> Value {
+    let params: ClearCookiesParams = match serde_json::from_value(arguments.clone()) {
+        Ok(p) => p,
+        Err(e) => {
+            return error_response(&format!("Invalid arguments: {}", e));
+        }
+    };
+
+    info!(
+        session_id = %params.session_id,
+        name = ?params.name,
+        domain = ?params.domain,
+        url = ?params.url,
+        "clear_cookies"
+    );
+
+    let result = sessions
+        .with_session(&params.session_id, |session| {
+            let cleared = if params.name.is_none() && params.domain.is_none() && params.url.is_none() {
+                // Clear all cookies
+                let count = session.target.cookie_jar.len();
+                session.target.cookie_jar.clear();
+                count
+            } else if let Some(ref cookie_name) = params.name {
+                // Delete specific cookies by name
+                session.target.cookie_jar.delete_cookies(
+                    cookie_name,
+                    params.url.as_deref(),
+                    params.domain.as_deref(),
+                    None,
+                )
+            } else {
+                // Domain/URL only filter
+                let cookies_to_check = if let Some(ref url_str) = params.url {
+                    session.target.cookie_jar.get_cookies(url_str)
+                } else {
+                    session.target.cookie_jar.get_all_cookies()
+                };
+
+                let mut cleared = 0;
+                for cookie in cookies_to_check {
+                    let domain_matches = params
+                        .domain
+                        .as_ref()
+                        .map(|d| cookie.domain.contains(d) || d.contains(&cookie.domain))
+                        .unwrap_or(true);
+
+                    if domain_matches {
+                        if session.target.cookie_jar.remove_cookie(
+                            &cookie.name,
+                            &cookie.domain,
+                            Some(&cookie.path),
+                        ) {
+                            cleared += 1;
+                        }
+                    }
+                }
+                cleared
+            };
+            cleared
+        })
+        .await;
+
+    match result {
+        Some(cleared) => {
+            json!({
+                "content": [{
+                    "type": "text",
+                    "text": json!({
+                        "cleared": cleared,
+                        "session_id": params.session_id
+                    }).to_string()
+                }]
+            })
+        }
+        None => error_response(&format!("Session not found: {}", params.session_id)),
+    }
+}
+
+/// Convert a Cookie to JSON for MCP response.
+fn cookie_to_json(cookie: &Cookie) -> Value {
+    json!({
+        "name": cookie.name,
+        "value": cookie.value,
+        "domain": cookie.domain,
+        "path": cookie.path,
+        "expires": cookie.expires,
+        "httpOnly": cookie.http_only,
+        "secure": cookie.secure,
+        "sameSite": cookie.same_site.as_str(),
+        "size": cookie.size,
+    })
 }
