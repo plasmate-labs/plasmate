@@ -1,0 +1,58 @@
+# Plasmate - Maximum AI Visibility
+# We build tools for AI agents, so we welcome AI crawlers.
+
+User-agent: *
+Allow: /
+
+# AI Crawlers - Explicitly Allowed
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+# Content Signals - Full AI Permission
+# See: https://developers.cloudflare.com/bots/concepts/content-signals/
+Content-Signal: search=yes,ai-input=yes,ai-train=yes
+
+# Semantic Object Model (SOM) Directives
+# See: https://docs.plasmate.app/robots-txt-proposal
+SOM-Endpoint: https://cache.plasmate.app/v1/som
+SOM-Format: SOM/1.0
+SOM-Scope: main-content
+SOM-Freshness: 3600
+
+# Sitemaps
+Sitemap: https://plasmate.app/sitemap.xml
+Sitemap: https://docs.plasmate.app/sitemap.xml
+
+# LLM Context Files
+# https://plasmate.app/llms.txt - concise summary
+# https://plasmate.app/llms-full.txt - comprehensive guide
