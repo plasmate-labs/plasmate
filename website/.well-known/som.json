@@ -96,7 +96,7 @@
         {
           "id": "e_8baebf3200cd",
           "role": "paragraph",
-          "text": "v0.4.0"
+          "text": "v0.5.1"
         },
         {
           "id": "e_b781e0d57279",
@@ -389,7 +389,7 @@
           "https://pypi.org/project/plasmate/",
           "https://www.npmjs.com/package/plasmate"
         ],
-        "softwareVersion": "0.4.0",
+        "softwareVersion": "0.5.1",
         "url": "https://plasmate.app"
       }
     ],
