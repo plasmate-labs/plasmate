@@ -8,7 +8,7 @@
 ## Visibility Assets (In Progress)
 
 ### Blog Post
-- [ ] "60+ Integrations: The Plasmate Ecosystem" on blog.plasmate.app
+- [x] "60+ Integrations: The Plasmate Ecosystem" on blog.plasmate.app (`website/blog/ecosystem-60-integrations.md`)
 - Target: Developer audience, SEO for "LangChain web scraping", "AI agent browser", etc.
 
 ### Social Media
@@ -45,9 +45,9 @@
    - "MCP web browsing tool"
 
 2. **Comparison pages:**
-   - Plasmate vs Firecrawl
-   - Plasmate vs Crawl4AI
-   - Plasmate vs Browser Use
+   - [x] Plasmate vs Firecrawl (`website/compare/plasmate-vs-firecrawl.md`)
+   - [x] Plasmate vs Crawl4AI (`website/compare/plasmate-vs-crawl4ai.md`)
+   - [x] Plasmate vs Browser Use (`website/compare/plasmate-vs-browser-use.md`)
 
 ### Partnerships
 1. **Vercel** - Featured in AI SDK ecosystem
@@ -70,7 +70,7 @@
 - Week 4: Hacker News launch, Reddit posts
 
 ## Quick Wins
-1. Add "60+ integrations" badge to main README
-2. Pin awesome-plasmate in GitHub org
-3. Update plasmate.app homepage with ecosystem section
-4. Cross-link all integration READMEs back to main repo
+1. [x] Add "60+ integrations" badge to main README
+2. [ ] Pin awesome-plasmate in GitHub org
+3. [ ] Update plasmate.app homepage with ecosystem section
+4. [ ] Cross-link all integration READMEs back to main repo (script: `scripts/crosslink-integrations.sh`)
