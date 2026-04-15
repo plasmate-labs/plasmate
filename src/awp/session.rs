@@ -5,6 +5,7 @@ use reqwest::cookie::Jar;
 use reqwest::Client;
 use tokio::sync::Mutex;
 
+use crate::cdp::cookies::CookieJar;
 use crate::js::pipeline::PipelineConfig;
 use crate::network::fetch;
 use crate::network::intercept::{
@@ -22,6 +23,8 @@ pub struct Session {
     pub locale: String,
     pub timeout_ms: u64,
     pub cookie_jar: Arc<Jar>,
+    /// Cookie jar with full API access (get/set/clear by domain/path).
+    pub cookies: CookieJar,
     pub client: Client,
     /// Current page state.
     pub current_som: Option<Som>,
@@ -104,6 +107,7 @@ impl Session {
             user_agent: ua,
             locale,
             timeout_ms: timeout,
+            cookies: CookieJar::new(jar.clone()),
             cookie_jar: jar,
             client,
             current_som: None,

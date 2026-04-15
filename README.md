@@ -320,7 +320,8 @@ See [plasmate.app/compare](https://plasmate.app/compare) for the full comparison
 - [x] Docker image (GHCR multi-arch)
 - [ ] Full V8 DOM mutation bridge (re-snapshot SOM after JS changes)
 - [ ] Network interception (Fetch domain)
-- [ ] Expose cookie APIs (CDP Network.getCookies/setCookies, MCP cookie import/export)
+- [x] AWP cookie APIs (session.cookies.get/set/clear)
+- [ ] MCP cookie import/export tools
 - [ ] Proxy support (per-session config, SOCKS)
 - [ ] Real-world top-100 site coverage testing
 - [ ] Web Platform Tests integration

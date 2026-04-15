@@ -8,6 +8,7 @@ use tracing::{info, warn};
 
 use super::messages::{ErrorCode, Response};
 use super::session::Session;
+use crate::cdp::cookies::{cookie_from_cdp_params, Cookie};
 use crate::network::intercept::{
     ErrorReason, FulfillParams, InterceptAction, InterceptRule, RequestOverrides, RequestPattern,
     RequestStage, ResourceType, ResponseOverrides, ResponseRule,
@@ -90,6 +91,9 @@ pub async fn handle_request(
             handle_network_get_intercepted_requests(id, params, state)
         }
         "plugin.list" => handle_plugin_list(id, state).await,
+        "session.cookies.get" => handle_cookies_get(id, params, state),
+        "session.cookies.set" => handle_cookies_set(id, params, state),
+        "session.cookies.clear" => handle_cookies_clear(id, params, state),
         _ => Response::error(
             id,
             ErrorCode::InvalidRequest,
@@ -124,6 +128,7 @@ fn handle_hello(id: &str, params: &serde_json::Value, state: &mut ConnectionStat
         "act.primitive",
         "extract",
         "network.intercept",
+        "cookies",
     ];
     if state.plugins.is_some() {
         features.push("plugins");
@@ -1048,6 +1053,208 @@ async fn handle_plugin_list(id: &str, state: &ConnectionState) -> Response {
             "count": manifests.len(),
         }),
     )
+}
+
+// ============================================================================
+// Cookie APIs (session.cookies.*)
+// ============================================================================
+
+/// Get cookies for a URL or all cookies in the session.
+///
+/// Params:
+/// - session_id (required): Session ID
+/// - url (optional): Filter cookies by URL (domain/path matching)
+///
+/// Returns: { cookies: [...], count: N }
+fn handle_cookies_get(
+    id: &str,
+    params: &serde_json::Value,
+    state: &mut ConnectionState,
+) -> Response {
+    let session_id = params
+        .get("session_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+
+    let session = match state.get_session(session_id) {
+        Some(s) => s,
+        None => {
+            return Response::error(
+                id,
+                ErrorCode::NotFound,
+                &format!("Session not found: {}", session_id),
+            )
+        }
+    };
+
+    let cookies: Vec<serde_json::Value> = if let Some(url) = params.get("url").and_then(|v| v.as_str()) {
+        // Get cookies matching the URL
+        session
+            .cookies
+            .get_cookies(url)
+            .iter()
+            .map(cookie_to_json)
+            .collect()
+    } else {
+        // Get all cookies
+        session
+            .cookies
+            .get_all_cookies()
+            .iter()
+            .map(cookie_to_json)
+            .collect()
+    };
+
+    let count = cookies.len();
+    Response::success(id, json!({ "cookies": cookies, "count": count }))
+}
+
+/// Set one or more cookies in the session.
+///
+/// Params:
+/// - session_id (required): Session ID
+/// - cookies (required): Array of cookie objects with:
+///   - name (required)
+///   - value (required)
+///   - domain (required, or url to derive from)
+///   - url (optional, used to derive domain if not specified)
+///   - path (optional, defaults to "/")
+///   - expires (optional, Unix timestamp in seconds)
+///   - httpOnly (optional, defaults to false)
+///   - secure (optional, defaults to false)
+///   - sameSite (optional, "Strict" | "Lax" | "None", defaults to "Lax")
+///
+/// Returns: { set: N }
+fn handle_cookies_set(
+    id: &str,
+    params: &serde_json::Value,
+    state: &mut ConnectionState,
+) -> Response {
+    let session_id = params
+        .get("session_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+
+    let session = match state.get_session_mut(session_id) {
+        Some(s) => s,
+        None => {
+            return Response::error(
+                id,
+                ErrorCode::NotFound,
+                &format!("Session not found: {}", session_id),
+            )
+        }
+    };
+
+    let cookies_param = match params.get("cookies") {
+        Some(c) if c.is_array() => c.as_array().unwrap(),
+        _ => {
+            return Response::error(
+                id,
+                ErrorCode::InvalidRequest,
+                "Missing or invalid 'cookies' array",
+            )
+        }
+    };
+
+    let mut set_count = 0;
+    for cookie_params in cookies_param {
+        if let Some(cookie) = cookie_from_cdp_params(cookie_params) {
+            session.cookies.set_cookie(cookie);
+            set_count += 1;
+        } else {
+            warn!("Skipping invalid cookie: {:?}", cookie_params);
+        }
+    }
+
+    info!(session_id, set_count, "Cookies set");
+    Response::success(id, json!({ "set": set_count }))
+}
+
+/// Clear cookies from the session.
+///
+/// Params:
+/// - session_id (required): Session ID
+/// - name (optional): Only delete cookies with this name
+/// - domain (optional): Only delete cookies for this domain
+/// - url (optional): Only delete cookies matching this URL
+///
+/// If no filters provided, clears all cookies.
+///
+/// Returns: { cleared: N }
+fn handle_cookies_clear(
+    id: &str,
+    params: &serde_json::Value,
+    state: &mut ConnectionState,
+) -> Response {
+    let session_id = params
+        .get("session_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+
+    let session = match state.get_session_mut(session_id) {
+        Some(s) => s,
+        None => {
+            return Response::error(
+                id,
+                ErrorCode::NotFound,
+                &format!("Session not found: {}", session_id),
+            )
+        }
+    };
+
+    let name = params.get("name").and_then(|v| v.as_str());
+    let domain = params.get("domain").and_then(|v| v.as_str());
+    let url = params.get("url").and_then(|v| v.as_str());
+
+    let cleared = if name.is_none() && domain.is_none() && url.is_none() {
+        // Clear all cookies
+        let count = session.cookies.len();
+        session.cookies.clear();
+        count
+    } else if let Some(cookie_name) = name {
+        // Delete specific cookies
+        session.cookies.delete_cookies(cookie_name, url, domain, None)
+    } else {
+        // Domain/URL only filter - need to iterate and clear matching
+        let cookies_to_check = if let Some(url_str) = url {
+            session.cookies.get_cookies(url_str)
+        } else {
+            session.cookies.get_all_cookies()
+        };
+
+        let mut cleared = 0;
+        for cookie in cookies_to_check {
+            let domain_matches = domain
+                .map(|d| cookie.domain.contains(d) || d.contains(&cookie.domain))
+                .unwrap_or(true);
+
+            if domain_matches {
+                if session.cookies.remove_cookie(&cookie.name, &cookie.domain, Some(&cookie.path)) {
+                    cleared += 1;
+                }
+            }
+        }
+        cleared
+    };
+
+    info!(session_id, cleared, "Cookies cleared");
+    Response::success(id, json!({ "cleared": cleared }))
+}
+
+/// Convert a Cookie to JSON for AWP response.
+fn cookie_to_json(cookie: &Cookie) -> serde_json::Value {
+    json!({
+        "name": cookie.name,
+        "value": cookie.value,
+        "domain": cookie.domain,
+        "path": cookie.path,
+        "expires": cookie.expires,
+        "httpOnly": cookie.http_only,
+        "secure": cookie.secure,
+        "sameSite": cookie.same_site.as_str(),
+        "size": cookie.size,
+    })
 }
 
 /// Resolve a target specification to an element in the SOM.
