@@ -322,6 +322,7 @@ See [plasmate.app/compare](https://plasmate.app/compare) for the full comparison
 - [ ] Network interception (Fetch domain)
 - [x] AWP cookie APIs (session.cookies.get/set/clear)
 - [x] MCP cookie tools (get_cookies, set_cookies, clear_cookies)
+- [x] AWP SOM mutations (page.observe mode=mutations returns diffs instead of full snapshots)
 - [ ] Proxy support (per-session config, SOCKS)
 - [ ] Real-world top-100 site coverage testing
 - [ ] Web Platform Tests integration

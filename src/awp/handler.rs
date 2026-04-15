@@ -9,6 +9,7 @@ use tracing::{info, warn};
 use super::messages::{ErrorCode, Response};
 use super::session::Session;
 use crate::cdp::cookies::{cookie_from_cdp_params, Cookie};
+use crate::som::diff::{diff_soms, SomDiff};
 use crate::network::intercept::{
     ErrorReason, FulfillParams, InterceptAction, InterceptRule, RequestOverrides, RequestPattern,
     RequestStage, ResourceType, ResponseOverrides, ResponseRule,
@@ -125,6 +126,7 @@ fn handle_hello(id: &str, params: &serde_json::Value, state: &mut ConnectionStat
 
     let mut features = vec![
         "som.snapshot",
+        "som.mutations",
         "act.primitive",
         "extract",
         "network.intercept",
@@ -322,6 +324,17 @@ fn handle_page_observe(
         .and_then(|v| v.as_str())
         .unwrap_or("");
 
+    // Mode: "snapshot" (default) or "mutations"
+    let mode = params
+        .get("mode")
+        .and_then(|v| v.as_str())
+        .unwrap_or("snapshot");
+
+    // Optional cursor for mutation mode - only return mutations after this cursor
+    let since_cursor = params
+        .get("cursor")
+        .and_then(|v| v.as_u64());
+
     let session = match state.get_session(session_id) {
         Some(s) => s,
         None => {
@@ -333,12 +346,69 @@ fn handle_page_observe(
         }
     };
 
-    match &session.current_som {
-        Some(som) => {
-            let som_json = serde_json::to_value(som).unwrap_or(json!(null));
-            Response::success(id, json!({"som": som_json}))
+    match mode {
+        "mutations" => {
+            // Return diff from previous SOM to current SOM
+            match (&session.previous_som, &session.current_som) {
+                (Some(prev), Some(curr)) => {
+                    // Check cursor - if client already has this cursor, return no changes
+                    if let Some(client_cursor) = since_cursor {
+                        if client_cursor >= session.som_cursor {
+                            return Response::success(id, json!({
+                                "mode": "mutations",
+                                "cursor": session.som_cursor,
+                                "changed": false,
+                                "diff": null
+                            }));
+                        }
+                    }
+
+                    let diff = diff_soms(prev, curr, false);
+                    let diff_json = serde_json::to_value(&diff).unwrap_or(json!(null));
+
+                    Response::success(id, json!({
+                        "mode": "mutations",
+                        "cursor": session.som_cursor,
+                        "changed": diff.summary.total_changes > 0,
+                        "diff": diff_json,
+                        "summary": {
+                            "total_changes": diff.summary.total_changes,
+                            "elements_added": diff.summary.elements_added,
+                            "elements_removed": diff.summary.elements_removed,
+                            "elements_modified": diff.summary.elements_modified,
+                            "has_price_changes": diff.summary.has_price_changes,
+                            "has_content_changes": diff.summary.has_content_changes,
+                            "has_structural_changes": diff.summary.has_structural_changes
+                        }
+                    }))
+                }
+                (None, Some(curr)) => {
+                    // No previous SOM - this is the first observation, return full snapshot
+                    let som_json = serde_json::to_value(curr).unwrap_or(json!(null));
+                    Response::success(id, json!({
+                        "mode": "snapshot",
+                        "cursor": session.som_cursor,
+                        "reason": "no_previous_som",
+                        "som": som_json
+                    }))
+                }
+                _ => Response::error(id, ErrorCode::NotFound, "No page loaded yet"),
+            }
         }
-        None => Response::error(id, ErrorCode::NotFound, "No page loaded yet"),
+        _ => {
+            // Default: return full snapshot
+            match &session.current_som {
+                Some(som) => {
+                    let som_json = serde_json::to_value(som).unwrap_or(json!(null));
+                    Response::success(id, json!({
+                        "mode": "snapshot",
+                        "cursor": session.som_cursor,
+                        "som": som_json
+                    }))
+                }
+                None => Response::error(id, ErrorCode::NotFound, "No page loaded yet"),
+            }
+        }
     }
 }
 

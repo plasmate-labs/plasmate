@@ -28,6 +28,10 @@ pub struct Session {
     pub client: Client,
     /// Current page state.
     pub current_som: Option<Som>,
+    /// Previous SOM snapshot (for computing mutations).
+    pub previous_som: Option<Som>,
+    /// Mutation cursor (increments on each SOM change).
+    pub som_cursor: u64,
     pub current_html: Option<String>,
     pub current_url: Option<String>,
     pub current_structured_data: Option<StructuredData>,
@@ -111,6 +115,8 @@ impl Session {
             cookie_jar: jar,
             client,
             current_som: None,
+            previous_som: None,
+            som_cursor: 0,
             current_html: None,
             current_url: None,
             current_structured_data: None,
@@ -201,11 +207,13 @@ impl Session {
             failed: r.failed,
         });
 
-        // Update session state
+        // Update session state - rotate previous SOM before updating current
         self.current_url = Some(final_url.clone());
         self.current_html = Some(fetch_result.html);
         self.current_structured_data = structured_data;
+        self.previous_som = self.current_som.take();
         self.current_som = Some(page_result.som);
+        self.som_cursor += 1;
         self.page_count += 1;
 
         // Add to history
@@ -281,7 +289,9 @@ impl Session {
         self.current_url = Some(final_url.clone());
         self.current_html = Some(fetch_result.html);
         self.current_structured_data = structured_data;
+        self.previous_som = self.current_som.take();
         self.current_som = Some(page_result.som);
+        self.som_cursor += 1;
         self.page_count += 1;
 
         self.history.push(HistoryEntry {
