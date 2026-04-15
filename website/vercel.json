@@ -3,6 +3,15 @@
   "trailingSlash": false,
   "headers": [
     {
+      "source": "/.well-known/som.json",
+      "headers": [
+        { "key": "content-type", "value": "application/json; charset=utf-8" },
+        { "key": "cache-control", "value": "public, max-age=3600" },
+        { "key": "access-control-allow-origin", "value": "*" },
+        { "key": "access-control-allow-methods", "value": "GET, OPTIONS" }
+      ]
+    },
+    {
       "source": "/robots.txt",
       "headers": [
         { "key": "content-type", "value": "text/plain; charset=utf-8" },
