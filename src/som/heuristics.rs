@@ -38,17 +38,47 @@ impl Default for ContentConfig {
     }
 }
 
+/// Check if a template element is a declarative shadow DOM template.
+pub fn is_declarative_shadow_template(node: &Handle) -> bool {
+    if let NodeData::Element { name, attrs, .. } = &node.data {
+        if name.local.as_ref() == "template" {
+            let attrs = attrs.borrow();
+            return attrs.iter().any(|a| {
+                a.name.local.as_ref() == "shadowrootmode" || a.name.local.as_ref() == "shadowroot"
+            });
+        }
+    }
+    false
+}
+
+/// Get the shadow root mode from a declarative shadow template.
+pub fn get_shadow_root_mode(node: &Handle) -> Option<String> {
+    if let NodeData::Element { name, attrs, .. } = &node.data {
+        if name.local.as_ref() == "template" {
+            let attrs = attrs.borrow();
+            for attr in attrs.iter() {
+                if attr.name.local.as_ref() == "shadowrootmode" || attr.name.local.as_ref() == "shadowroot" {
+                    return Some(attr.value.to_string());
+                }
+            }
+        }
+    }
+    None
+}
+
 /// Check if a node should be stripped from SOM output.
 pub fn should_strip(node: &Handle) -> bool {
     match &node.data {
         NodeData::Element { name, attrs, .. } => {
             let tag = name.local.as_ref();
-            // Strip script, style, noscript, template, comments
-            if matches!(
-                tag,
-                "script" | "style" | "noscript" | "template" | "meta" | "link"
-            ) {
+            // Strip script, style, noscript, comments, meta, link
+            // Note: templates are stripped UNLESS they are declarative shadow DOM
+            if matches!(tag, "script" | "style" | "noscript" | "meta" | "link") {
                 return true;
+            }
+            // Don't strip declarative shadow DOM templates
+            if tag == "template" {
+                return !is_declarative_shadow_template(node);
             }
             // Strip SVGs unless role=img with accessible name
             if tag == "svg" {

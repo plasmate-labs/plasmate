@@ -401,6 +401,7 @@ fn summarize_elements(
             attrs: None,
             children: None,
             hints: None,
+            shadow: None,
         });
     }
 
@@ -994,6 +995,7 @@ fn interactive_node_to_element(
         let children = build_children(node, origin, id_tracker, dom_path, &role);
         let hints = heuristics::infer_class_hints(&attr_pairs);
         let html_id = extract_html_id(&attr_pairs);
+        let shadow = extract_shadow_dom(node, origin, id_tracker, dom_path);
 
         return Some(Element {
             id,
@@ -1005,6 +1007,7 @@ fn interactive_node_to_element(
             attrs: element_attrs,
             children,
             hints,
+            shadow,
         });
     }
     None
@@ -1065,6 +1068,7 @@ fn node_to_element(
             let children = build_children(node, origin, id_tracker, dom_path, &role);
             let hints = heuristics::infer_class_hints(&attr_pairs);
             let html_id = extract_html_id(&attr_pairs);
+            let shadow = extract_shadow_dom(node, origin, id_tracker, dom_path);
 
             Some(Element {
                 id,
@@ -1076,6 +1080,7 @@ fn node_to_element(
                 attrs: element_attrs,
                 children,
                 hints,
+                shadow,
             })
         }
         NodeData::Text { contents } => {
@@ -1095,10 +1100,85 @@ fn node_to_element(
                 attrs: None,
                 children: None,
                 hints: None,
+                shadow: None,
             })
         }
         _ => None,
     }
+}
+
+/// Extract shadow DOM content from declarative shadow DOM templates.
+///
+/// Looks for `<template shadowrootmode="open|closed">` children and extracts
+/// their content as a ShadowRoot.
+fn extract_shadow_dom(
+    node: &Handle,
+    origin: &str,
+    id_tracker: &mut ElementIdTracker,
+    dom_path: &str,
+) -> Option<ShadowRoot> {
+    let children = node.children.borrow();
+
+    for (idx, child) in children.iter().enumerate() {
+        if heuristics::is_declarative_shadow_template(child) {
+            let mode = heuristics::get_shadow_root_mode(child)
+                .unwrap_or_else(|| "open".to_string());
+
+            // Extract elements from the template content
+            // Template content is in template_contents for html5ever (wrapped in RefCell)
+            let shadow_elements = if let NodeData::Element { template_contents, .. } = &child.data {
+                let content_ref = template_contents.borrow();
+                if let Some(content) = content_ref.as_ref() {
+                    let shadow_path = format!("{}#shadow", dom_path);
+                    extract_shadow_elements(content, origin, id_tracker, &shadow_path)
+                } else {
+                    // Fallback: try to get children directly
+                    let shadow_path = format!("{}#shadow/{}", dom_path, idx);
+                    extract_shadow_elements(child, origin, id_tracker, &shadow_path)
+                }
+            } else {
+                vec![]
+            };
+
+            if !shadow_elements.is_empty() {
+                return Some(ShadowRoot {
+                    mode,
+                    elements: shadow_elements,
+                });
+            }
+        }
+    }
+
+    None
+}
+
+/// Extract elements from a shadow root or template content node.
+fn extract_shadow_elements(
+    node: &Handle,
+    origin: &str,
+    id_tracker: &mut ElementIdTracker,
+    dom_path: &str,
+) -> Vec<Element> {
+    let mut elements = Vec::new();
+    let dummy_ctx = CompileContext {
+        config: ContentConfig::default(),
+        paragraph_count: Cell::new(0),
+        is_main_region: Cell::new(false),
+        css_rules: VisibilityRules::default(),
+    };
+
+    for (idx, child) in node.children.borrow().iter().enumerate() {
+        if heuristics::should_strip(child) {
+            continue;
+        }
+
+        let child_path = format!("{}/{}", dom_path, idx);
+        if let Some(element) = node_to_element(child, origin, id_tracker, &child_path, &dummy_ctx) {
+            elements.push(element);
+        }
+    }
+
+    elements
 }
 
 fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {

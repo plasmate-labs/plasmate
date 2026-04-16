@@ -37,6 +37,7 @@ fn make_element(id: &str, role: ElementRole, text: Option<&str>) -> Element {
         attrs: None,
         children: None,
         hints: None,
+        shadow: None,
     }
 }
 

@@ -114,6 +114,7 @@ mod tests {
                         attrs: None,
                         children: None,
                         hints: None,
+                        shadow: None,
                     }],
                 },
                 Region {
@@ -132,6 +133,7 @@ mod tests {
                         attrs: None,
                         children: None,
                         hints: None,
+                        shadow: None,
                     }],
                 },
             ],

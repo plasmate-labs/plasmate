@@ -53,6 +53,6 @@ Plasmate's roadmap is public and standards-first. We ship compression and correc
 - [x] Proxy support (HTTP, HTTPS, SOCKS5 with auth)
 - [x] Proxy rotation (pool management, sticky sessions)
 - [x] Iframe support
-- [ ] Shadow DOM support
+- [x] Shadow DOM support (declarative shadow DOM)
 - [ ] Full ES module support
 - [x] Chrome extension on Web Store

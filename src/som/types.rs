@@ -75,6 +75,19 @@ pub struct Element {
     /// Helps agents understand element importance without seeing raw CSS.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hints: Option<Vec<String>>,
+    /// Shadow DOM content (from declarative shadow DOM or attachShadow).
+    /// Contains elements inside the shadow root.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub shadow: Option<ShadowRoot>,
+}
+
+/// Shadow DOM root content.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ShadowRoot {
+    /// Shadow root mode: "open" or "closed"
+    pub mode: String,
+    /// Elements inside the shadow root
+    pub elements: Vec<Element>,
 }
 
 /// Element roles as defined by the SOM spec.
