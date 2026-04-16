@@ -611,3 +611,82 @@ fn test_inline_html_compiles() {
     assert!(som.regions.iter().any(|r| r.role == RegionRole::Navigation));
     assert!(som.regions.iter().any(|r| r.role == RegionRole::Main));
 }
+
+// ============================================================
+// Iframe Support Tests
+// ============================================================
+
+#[test]
+fn test_iframe_detection() {
+    let html = load_fixture("iframe_page.html");
+    let som = compiler::compile(&html, "https://example.com").unwrap();
+
+    let elems = all_elements(&som);
+    let iframes: Vec<&&Element> = elems.iter().filter(|e| e.role == ElementRole::Iframe).collect();
+
+    // Should detect at least 3 visible iframes (the hidden one may or may not be stripped)
+    assert!(
+        iframes.len() >= 3,
+        "Expected >=3 iframes, found {}",
+        iframes.len()
+    );
+}
+
+#[test]
+fn test_iframe_attributes() {
+    let html = load_fixture("iframe_page.html");
+    let som = compiler::compile(&html, "https://example.com").unwrap();
+
+    let elems = all_elements(&som);
+    let iframes: Vec<&&Element> = elems.iter().filter(|e| e.role == ElementRole::Iframe).collect();
+
+    // Check that at least one iframe has src attribute
+    let has_src = iframes.iter().any(|e| {
+        e.attrs
+            .as_ref()
+            .and_then(|a| a.get("src"))
+            .is_some()
+    });
+    assert!(has_src, "At least one iframe should have src attribute");
+
+    // Check that srcdoc iframe is detected
+    let has_srcdoc = iframes.iter().any(|e| {
+        e.attrs
+            .as_ref()
+            .and_then(|a| a.get("has_srcdoc"))
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false)
+    });
+    assert!(has_srcdoc, "Should detect iframe with srcdoc");
+
+    // Check sandbox attribute is captured
+    let has_sandbox = iframes.iter().any(|e| {
+        e.attrs
+            .as_ref()
+            .and_then(|a| a.get("sandbox"))
+            .is_some()
+    });
+    assert!(has_sandbox, "Should capture sandbox attribute");
+}
+
+#[test]
+fn test_iframe_inline() {
+    // Test inline HTML with iframe
+    let html = r#"<html><head><title>Inline Iframe</title></head><body>
+        <main>
+            <iframe src="https://embed.example.com" name="test-frame" width="640" height="480"></iframe>
+        </main>
+    </body></html>"#;
+    let som = compiler::compile(html, "https://example.com").unwrap();
+
+    let elems = all_elements(&som);
+    let iframe = elems.iter().find(|e| e.role == ElementRole::Iframe);
+    assert!(iframe.is_some(), "Should find iframe element");
+
+    let iframe = iframe.unwrap();
+    let attrs = iframe.attrs.as_ref().expect("Iframe should have attrs");
+    assert_eq!(attrs.get("src").and_then(|v| v.as_str()), Some("https://embed.example.com"));
+    assert_eq!(attrs.get("name").and_then(|v| v.as_str()), Some("test-frame"));
+    assert_eq!(attrs.get("width").and_then(|v| v.as_str()), Some("640"));
+    assert_eq!(attrs.get("height").and_then(|v| v.as_str()), Some("480"));
+}

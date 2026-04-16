@@ -97,6 +97,8 @@ pub enum ElementRole {
     Separator,
     /// A `<details>`/`<summary>` disclosure widget.
     Details,
+    /// An `<iframe>` embedded browsing context.
+    Iframe,
 }
 
 impl ElementRole {
@@ -147,6 +149,7 @@ impl ElementRole {
             ElementRole::Section => "section",
             ElementRole::Separator => "separator",
             ElementRole::Details => "details",
+            ElementRole::Iframe => "iframe",
         }
     }
 }

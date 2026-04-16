@@ -320,7 +320,7 @@ See [docs.plasmate.app/roadmap](https://docs.plasmate.app/roadmap) for the full 
 **v0.5 (current):**
 - [x] Proxy support (HTTP, HTTPS, SOCKS5 with auth)
 - [x] Proxy rotation (pool management, sticky sessions)
-- [ ] Iframe support
+- [x] Iframe support
 - [ ] Shadow DOM support
 - [ ] Full ES module support
 - [ ] Parallel sessions at scale (500+ concurrent)

@@ -1154,6 +1154,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "section" | "article" => Some(ElementRole::Section),
         "hr" => Some(ElementRole::Separator),
         "details" => Some(ElementRole::Details),
+        "iframe" => Some(ElementRole::Iframe),
         _ => None,
     }
 }
@@ -1324,6 +1325,37 @@ fn build_element_attrs(
             let summary_text = extract_summary_text(node);
             if let Some(st) = summary_text {
                 map.insert("summary".into(), json!(st));
+            }
+        }
+        "iframe" => {
+            // Core iframe attributes for agents
+            if let Some(src) = attrs.iter().find(|(n, _)| n == "src") {
+                map.insert("src".into(), json!(src.1));
+            }
+            if let Some(srcdoc) = attrs.iter().find(|(n, _)| n == "srcdoc") {
+                // For srcdoc, we just note it exists (content is inline HTML)
+                map.insert("has_srcdoc".into(), json!(true));
+                // Optionally extract a preview of the srcdoc content
+                let preview: String = srcdoc.1.chars().take(200).collect();
+                if !preview.is_empty() {
+                    map.insert("srcdoc_preview".into(), json!(preview));
+                }
+            }
+            if let Some(name) = attrs.iter().find(|(n, _)| n == "name") {
+                map.insert("name".into(), json!(name.1));
+            }
+            if let Some(sandbox) = attrs.iter().find(|(n, _)| n == "sandbox") {
+                map.insert("sandbox".into(), json!(sandbox.1));
+            }
+            if let Some(allow) = attrs.iter().find(|(n, _)| n == "allow") {
+                map.insert("allow".into(), json!(allow.1));
+            }
+            // Dimensions can be useful for understanding iframe purpose
+            if let Some(width) = attrs.iter().find(|(n, _)| n == "width") {
+                map.insert("width".into(), json!(width.1));
+            }
+            if let Some(height) = attrs.iter().find(|(n, _)| n == "height") {
+                map.insert("height".into(), json!(height.1));
             }
         }
         _ => {}

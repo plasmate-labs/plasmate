@@ -708,5 +708,6 @@ fn role_to_tag(role: &ElementRole) -> String {
         ElementRole::Section => "section".to_string(),
         ElementRole::Separator => "hr".to_string(),
         ElementRole::Details => "details".to_string(),
+        ElementRole::Iframe => "iframe".to_string(),
     }
 }
