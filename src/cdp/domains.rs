@@ -1491,6 +1491,7 @@ pub fn accessibility_get_full_ax_tree(id: u64, target: &CdpTarget) -> CdpRespons
                 ElementRole::Section => "Section",
                 ElementRole::Separator => "separator",
                 ElementRole::Details => "group",
+                ElementRole::Iframe => "Iframe",
             };
 
             let name = element

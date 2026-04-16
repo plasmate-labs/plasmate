@@ -52,7 +52,7 @@ Plasmate's roadmap is public and standards-first. We ship compression and correc
 - [ ] Parallel sessions at scale (500+ concurrent per 8GB)
 - [x] Proxy support (HTTP, HTTPS, SOCKS5 with auth)
 - [x] Proxy rotation (pool management, sticky sessions)
-- [ ] Iframe support
+- [x] Iframe support
 - [ ] Shadow DOM support
 - [ ] Full ES module support
-- [ ] Chrome extension on Web Store
+- [x] Chrome extension on Web Store

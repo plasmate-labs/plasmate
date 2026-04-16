@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Page with Iframes</title>
+</head>
+<body>
+    <main>
+        <h1>Iframe Test Page</h1>
+
+        <!-- Basic iframe with src -->
+        <iframe
+            src="https://example.com/embedded"
+            title="Embedded Content"
+            width="800"
+            height="600"
+        ></iframe>
+
+        <!-- Iframe with sandbox and name -->
+        <iframe
+            src="https://maps.example.com/embed"
+            name="map-frame"
+            sandbox="allow-scripts allow-same-origin"
+            allow="geolocation"
+        ></iframe>
+
+        <!-- Iframe with srcdoc (inline content) -->
+        <iframe
+            srcdoc="<h1>Inline Content</h1><p>This is embedded directly.</p>"
+            title="Inline Frame"
+        ></iframe>
+
+        <!-- Hidden iframe (should still be detected) -->
+        <iframe
+            src="https://analytics.example.com/pixel"
+            width="0"
+            height="0"
+            style="display:none"
+        ></iframe>
+    </main>
+</body>
+</html>
