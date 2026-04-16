@@ -9,7 +9,7 @@ use tracing::{info, warn};
 use super::messages::{ErrorCode, Response};
 use super::session::Session;
 use crate::cdp::cookies::{cookie_from_cdp_params, Cookie};
-use crate::network::proxy::proxy_from_params;
+use crate::network::proxy::{pool_from_params, proxy_from_params, ProxyPool};
 use crate::som::diff::{diff_soms, SomDiff};
 use crate::network::intercept::{
     ErrorReason, FulfillParams, InterceptAction, InterceptRule, RequestOverrides, RequestPattern,
@@ -30,6 +30,8 @@ pub struct ConnectionState {
     /// Legacy single-session field (backward compatibility).
     pub session: Option<Session>,
     pub plugins: SharedPlugins,
+    /// Proxy pool for rotation across sessions.
+    pub proxy_pool: Option<ProxyPool>,
 }
 
 impl ConnectionState {
@@ -39,6 +41,7 @@ impl ConnectionState {
             sessions: std::collections::HashMap::new(),
             session: None,
             plugins,
+            proxy_pool: None,
         }
     }
 
@@ -96,6 +99,10 @@ pub async fn handle_request(
         "session.cookies.get" => handle_cookies_get(id, params, state),
         "session.cookies.set" => handle_cookies_set(id, params, state),
         "session.cookies.clear" => handle_cookies_clear(id, params, state),
+        "proxy.pool.set" => handle_proxy_pool_set(id, params, state),
+        "proxy.pool.stats" => handle_proxy_pool_stats(id, state),
+        "proxy.pool.reportSuccess" => handle_proxy_pool_report(id, params, state, true),
+        "proxy.pool.reportFailure" => handle_proxy_pool_report(id, params, state, false),
         _ => Response::error(
             id,
             ErrorCode::InvalidRequest,
@@ -132,6 +139,7 @@ fn handle_hello(id: &str, params: &serde_json::Value, state: &mut ConnectionStat
         "extract",
         "network.intercept",
         "cookies",
+        "proxy.pool",
     ];
     if state.plugins.is_some() {
         features.push("plugins");
@@ -174,9 +182,29 @@ fn handle_session_create(
     let tls_config = parse_tls_params(params);
 
     // Parse per-session proxy configuration from params
-    let proxy_config = proxy_from_params(params);
+    // If use_pool is true and no explicit proxy, get from pool
+    let use_pool = params
+        .get("use_pool")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+
+    let proxy_config = if let Some(explicit) = proxy_from_params(params) {
+        Some(explicit)
+    } else if use_pool {
+        // Get next proxy from pool (for sticky strategy, use target domain if available)
+        let target_domain = params
+            .get("target_domain")
+            .and_then(|v| v.as_str());
+        state
+            .proxy_pool
+            .as_ref()
+            .and_then(|pool| pool.next_for_domain(target_domain).cloned())
+    } else {
+        None
+    };
 
     let has_proxy = proxy_config.as_ref().map(|p| p.is_enabled()).unwrap_or(false);
+    let from_pool = use_pool && has_proxy;
 
     match Session::new_with_proxy(
         session_id.clone(),
@@ -188,13 +216,13 @@ fn handle_session_create(
         proxy_config,
     ) {
         Ok(session) => {
-            info!(session_id = %session.id, has_proxy, "Session created");
+            info!(session_id = %session.id, has_proxy, from_pool, "Session created");
             if state.session.is_none() && state.sessions.is_empty() {
                 state.session = Some(session);
             } else {
                 state.sessions.insert(session_id.clone(), session);
             }
-            Response::success(id, json!({"session_id": session_id}))
+            Response::success(id, json!({"session_id": session_id, "from_pool": from_pool}))
         }
         Err(e) => Response::error(id, ErrorCode::Internal, &e),
     }
@@ -1670,4 +1698,88 @@ fn parse_string_array(obj: &serde_json::Value, key: &str) -> Vec<String> {
                 .collect()
         })
         .unwrap_or_default()
+}
+
+// ============================================================================
+// Proxy Pool Handlers
+// ============================================================================
+
+/// Configure the proxy pool for this connection.
+///
+/// Example params:
+/// ```json
+/// {
+///   "proxy_pool": {
+///     "proxies": ["http://p1:8080", {"url": "socks5://p2:1080", "username": "u", "password": "p"}],
+///     "strategy": "round_robin" | "random" | "sticky_per_domain"
+///   }
+/// }
+/// ```
+fn handle_proxy_pool_set(
+    id: &str,
+    params: &serde_json::Value,
+    state: &mut ConnectionState,
+) -> Response {
+    match pool_from_params(params) {
+        Some(pool) => {
+            let count = pool.len();
+            let strategy = format!("{:?}", pool.strategy);
+            info!(count, strategy = %strategy, "Proxy pool configured");
+            state.proxy_pool = Some(pool);
+            Response::success(id, json!({ "configured": true, "count": count, "strategy": strategy }))
+        }
+        None => Response::error(
+            id,
+            ErrorCode::InvalidRequest,
+            "Invalid proxy_pool params. Expected: { proxy_pool: { proxies: [...], strategy?: \"...\" } }",
+        ),
+    }
+}
+
+/// Get proxy pool statistics.
+fn handle_proxy_pool_stats(id: &str, state: &ConnectionState) -> Response {
+    match &state.proxy_pool {
+        Some(pool) => {
+            let stats = pool.stats();
+            Response::success(id, json!({
+                "total": stats.total,
+                "healthy": stats.healthy,
+                "unhealthy": stats.unhealthy,
+                "strategy": format!("{:?}", pool.strategy)
+            }))
+        }
+        None => Response::success(id, json!({
+            "total": 0,
+            "healthy": 0,
+            "unhealthy": 0,
+            "strategy": null
+        })),
+    }
+}
+
+/// Report success or failure for a proxy (updates health tracking).
+fn handle_proxy_pool_report(
+    id: &str,
+    params: &serde_json::Value,
+    state: &mut ConnectionState,
+    success: bool,
+) -> Response {
+    let proxy_url = params.get("proxy_url").and_then(|v| v.as_str());
+
+    if let (Some(pool), Some(url)) = (&state.proxy_pool, proxy_url) {
+        // Find the proxy config by URL
+        let proxy = crate::network::proxy::ProxyConfig::http(url);
+        if success {
+            pool.report_success(&proxy);
+        } else {
+            pool.report_failure(&proxy);
+        }
+        Response::success(id, json!({ "reported": true }))
+    } else {
+        Response::error(
+            id,
+            ErrorCode::InvalidRequest,
+            "Missing proxy_url or no pool configured",
+        )
+    }
 }
