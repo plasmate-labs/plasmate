@@ -9,6 +9,7 @@ use tracing::{info, warn};
 use super::messages::{ErrorCode, Response};
 use super::session::Session;
 use crate::cdp::cookies::{cookie_from_cdp_params, Cookie};
+use crate::network::proxy::proxy_from_params;
 use crate::som::diff::{diff_soms, SomDiff};
 use crate::network::intercept::{
     ErrorReason, FulfillParams, InterceptAction, InterceptRule, RequestOverrides, RequestPattern,
@@ -172,15 +173,22 @@ fn handle_session_create(
     // Parse per-session TLS configuration from params
     let tls_config = parse_tls_params(params);
 
-    match Session::new(
+    // Parse per-session proxy configuration from params
+    let proxy_config = proxy_from_params(params);
+
+    let has_proxy = proxy_config.as_ref().map(|p| p.is_enabled()).unwrap_or(false);
+
+    match Session::new_with_proxy(
         session_id.clone(),
         user_agent,
         locale,
         timeout_ms,
+        crate::auth::config::profiles(),
         tls_config,
+        proxy_config,
     ) {
         Ok(session) => {
-            info!(session_id = %session.id, "Session created");
+            info!(session_id = %session.id, has_proxy, "Session created");
             if state.session.is_none() && state.sessions.is_empty() {
                 state.session = Some(session);
             } else {

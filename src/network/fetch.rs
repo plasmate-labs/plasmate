@@ -4,6 +4,7 @@ use std::time::Instant;
 use reqwest::cookie::Jar;
 use reqwest::Client;
 
+use super::proxy::ProxyConfig;
 use super::tls::TlsConfig;
 
 /// Result of fetching a URL.
@@ -76,7 +77,7 @@ pub fn build_client_h1_fallback(
     cookie_jar: Arc<Jar>,
     tls_config: Option<&TlsConfig>,
 ) -> Result<Client, FetchError> {
-    build_client_h1_fallback_with_headers(user_agent, cookie_jar, tls_config, None)
+    build_client_with_proxy(user_agent, cookie_jar, tls_config, None, None)
 }
 
 /// Build an HTTP/1.1 client with optional extra default headers.
@@ -84,6 +85,24 @@ pub fn build_client_h1_fallback_with_headers(
     user_agent: Option<&str>,
     cookie_jar: Arc<Jar>,
     tls_config: Option<&TlsConfig>,
+    extra_headers: Option<&std::collections::HashMap<String, String>>,
+) -> Result<Client, FetchError> {
+    build_client_with_proxy(user_agent, cookie_jar, tls_config, None, extra_headers)
+}
+
+/// Build an HTTP client with optional proxy support.
+///
+/// This is the main client builder that supports all configuration options:
+/// - User agent
+/// - Cookie jar
+/// - TLS configuration (fingerprinting, certs)
+/// - Proxy configuration (HTTP, HTTPS, SOCKS5)
+/// - Extra headers
+pub fn build_client_with_proxy(
+    user_agent: Option<&str>,
+    cookie_jar: Arc<Jar>,
+    tls_config: Option<&TlsConfig>,
+    proxy_config: Option<&ProxyConfig>,
     extra_headers: Option<&std::collections::HashMap<String, String>>,
 ) -> Result<Client, FetchError> {
     let mut headers = reqwest::header::HeaderMap::new();
@@ -113,7 +132,15 @@ pub fn build_client_h1_fallback_with_headers(
         // HTTP/1.1 quirks: some servers (e.g., eBay) send malformed chunked responses
         .http1_allow_obsolete_multiline_headers_in_responses(true);
 
+    // Apply TLS configuration
     builder = apply_tls_config(builder, tls_config)?;
+
+    // Apply proxy configuration
+    if let Some(proxy) = proxy_config {
+        builder = proxy
+            .apply_to_builder(builder)
+            .map_err(FetchError::NavigationFailed)?;
+    }
 
     builder
         .build()

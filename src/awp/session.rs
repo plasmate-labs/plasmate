@@ -11,6 +11,7 @@ use crate::network::fetch;
 use crate::network::intercept::{
     InterceptAction, NetworkInterceptor, ResourceType as InterceptResourceType,
 };
+use crate::network::proxy::ProxyConfig;
 use crate::network::tls::TlsConfig;
 use crate::plugin::PluginManager;
 use crate::som::metadata::StructuredData;
@@ -69,13 +70,14 @@ impl Session {
         timeout_ms: Option<u64>,
         tls_config: Option<TlsConfig>,
     ) -> Result<Self, String> {
-        Self::new_with_profiles(
+        Self::new_with_proxy(
             id,
             user_agent,
             locale,
             timeout_ms,
             crate::auth::config::profiles(),
             tls_config,
+            None,
         )
     }
 
@@ -86,6 +88,27 @@ impl Session {
         timeout_ms: Option<u64>,
         auth_profiles: &[String],
         tls_config: Option<TlsConfig>,
+    ) -> Result<Self, String> {
+        Self::new_with_proxy(
+            id,
+            user_agent,
+            locale,
+            timeout_ms,
+            auth_profiles,
+            tls_config,
+            None,
+        )
+    }
+
+    /// Create a new session with full configuration including proxy.
+    pub fn new_with_proxy(
+        id: String,
+        user_agent: Option<String>,
+        locale: Option<String>,
+        timeout_ms: Option<u64>,
+        auth_profiles: &[String],
+        tls_config: Option<TlsConfig>,
+        proxy_config: Option<ProxyConfig>,
     ) -> Result<Self, String> {
         let ua = user_agent.unwrap_or_else(|| DEFAULT_USER_AGENT.to_string());
         let locale = locale.unwrap_or_else(|| "en-US".to_string());
@@ -103,8 +126,14 @@ impl Session {
         let effective_tls = tls_config
             .as_ref()
             .or_else(|| crate::network::tls::global());
-        let client = fetch::build_client_h1_fallback(Some(&ua), jar.clone(), effective_tls)
-            .map_err(|e| e.to_string())?;
+        let client = fetch::build_client_with_proxy(
+            Some(&ua),
+            jar.clone(),
+            effective_tls,
+            proxy_config.as_ref(),
+            None,
+        )
+        .map_err(|e| e.to_string())?;
 
         Ok(Session {
             id,
