@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Shadow DOM Test Page</title>
+</head>
+<body>
+    <main>
+        <h1>Shadow DOM Test</h1>
+
+        <!-- Custom element with declarative shadow DOM (open mode) -->
+        <custom-card>
+            <template shadowrootmode="open">
+                <style>:host { display: block; }</style>
+                <div class="card-header">
+                    <h2>Card Title</h2>
+                </div>
+                <div class="card-body">
+                    <p>This content is inside the shadow DOM.</p>
+                    <button>Shadow Button</button>
+                </div>
+            </template>
+            <!-- Light DOM content (would go in slots) -->
+            <span slot="footer">Footer content</span>
+        </custom-card>
+
+        <!-- Custom element with closed shadow DOM -->
+        <private-widget>
+            <template shadowrootmode="closed">
+                <p>This is private shadow content.</p>
+            </template>
+        </private-widget>
+
+        <!-- Regular element (no shadow DOM) -->
+        <div class="normal-div">
+            <p>Regular content outside shadow DOM.</p>
+        </div>
+
+        <!-- Web component using shadowroot attribute (older syntax) -->
+        <legacy-component>
+            <template shadowroot="open">
+                <span>Legacy shadow content</span>
+            </template>
+        </legacy-component>
+    </main>
+</body>
+</html>

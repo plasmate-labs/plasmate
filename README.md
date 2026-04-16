@@ -321,7 +321,7 @@ See [docs.plasmate.app/roadmap](https://docs.plasmate.app/roadmap) for the full 
 - [x] Proxy support (HTTP, HTTPS, SOCKS5 with auth)
 - [x] Proxy rotation (pool management, sticky sessions)
 - [x] Iframe support
-- [ ] Shadow DOM support
+- [x] Shadow DOM support (declarative shadow DOM)
 - [ ] Full ES module support
 - [ ] Parallel sessions at scale (500+ concurrent)
 
