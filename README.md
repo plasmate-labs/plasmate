@@ -315,17 +315,15 @@ See [plasmate.app/compare](https://plasmate.app/compare) for the full comparison
 
 ## Roadmap
 
-- [x] MCP server mode (`plasmate mcp` over stdio)
-- [x] MCP Phase 2: stateful tools (open_page, click, evaluate, close_page)
-- [x] Docker image (GHCR multi-arch)
-- [ ] Full V8 DOM mutation bridge (re-snapshot SOM after JS changes)
-- [ ] Network interception (Fetch domain)
-- [x] AWP cookie APIs (session.cookies.get/set/clear)
-- [x] MCP cookie tools (get_cookies, set_cookies, clear_cookies)
-- [x] AWP SOM mutations (page.observe mode=mutations returns diffs instead of full snapshots)
+See [docs.plasmate.app/roadmap](https://docs.plasmate.app/roadmap) for the full roadmap.
+
+**v0.5 (current):**
 - [x] Proxy support (HTTP, HTTPS, SOCKS5 with auth)
-- [ ] Real-world top-100 site coverage testing
-- [ ] Web Platform Tests integration
+- [ ] Proxy rotation (pool management)
+- [ ] Iframe support
+- [ ] Shadow DOM support
+- [ ] Full ES module support
+- [ ] Parallel sessions at scale (500+ concurrent)
 
 ## Ecosystem
 
