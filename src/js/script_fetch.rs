@@ -16,6 +16,8 @@ pub struct ResolvedScript {
     pub source: String,
     pub label: String,
     pub index: usize,
+    /// Whether this is an ES module.
+    pub is_module: bool,
 }
 
 /// Limits for external script fetching.
@@ -55,8 +57,8 @@ pub async fn resolve_scripts(
     let mut resolved = Vec::new();
     let mut fetch_count = 0;
 
-    // Collect external scripts that need fetching
-    let mut to_fetch: Vec<(usize, String)> = Vec::new();
+    // Collect external scripts that need fetching: (index, url, is_module)
+    let mut to_fetch: Vec<(usize, String, bool)> = Vec::new();
 
     for script in scripts {
         if script.is_inline {
@@ -64,6 +66,7 @@ pub async fn resolve_scripts(
                 source: script.source.clone(),
                 label: script.label.clone(),
                 index: script.index,
+                is_module: script.is_module,
             });
         } else if fetch_count < limits.max_external {
             // Resolve URL
@@ -82,24 +85,25 @@ pub async fn resolve_scripts(
                 continue;
             }
 
-            // Skip module scripts, TypeScript, etc.
+            // Skip TypeScript files (need transpilation)
             let lower = url.to_lowercase();
-            if lower.contains(".mjs") || lower.contains(".tsx") || lower.contains(".ts?") {
-                debug!(url, "Skipping non-JS script");
+            if lower.contains(".tsx") || lower.contains(".ts?") || lower.ends_with(".ts") {
+                debug!(url, "Skipping TypeScript file");
                 continue;
             }
 
-            to_fetch.push((script.index, url));
+            to_fetch.push((script.index, url, script.is_module));
             fetch_count += 1;
         }
     }
 
     // Fetch external scripts concurrently
     if !to_fetch.is_empty() {
-        let fetches = to_fetch.iter().map(|(idx, url)| {
+        let fetches = to_fetch.iter().map(|(idx, url, is_module)| {
             let client = client.clone();
             let url = url.clone();
             let idx = *idx;
+            let is_module = *is_module;
             async move {
                 let result = tokio::time::timeout(
                     Duration::from_millis(limits.timeout_ms),
@@ -113,11 +117,12 @@ pub async fn resolve_scripts(
                 match result {
                     Ok(Ok(resp)) if resp.status().is_success() => match resp.text().await {
                         Ok(text) if text.len() <= limits.max_script_bytes => {
-                            debug!(url, bytes = text.len(), "Fetched external script");
+                            debug!(url, bytes = text.len(), is_module, "Fetched external script");
                             Some(ResolvedScript {
                                 source: text,
                                 label: url,
                                 index: idx,
+                                is_module,
                             })
                         }
                         Ok(text) => {
@@ -184,12 +189,14 @@ mod tests {
                 label: "inline-0".to_string(),
                 is_inline: true,
                 index: 0,
+                is_module: false,
             },
             ScriptBlock {
                 source: "var y = 2;".to_string(),
                 label: "inline-1".to_string(),
                 is_inline: true,
                 index: 1,
+                is_module: false,
             },
         ];
 
@@ -216,18 +223,21 @@ mod tests {
                 label: "inline-0".to_string(),
                 is_inline: true,
                 index: 0,
+                is_module: false,
             },
             ScriptBlock {
                 source: String::new(),
                 label: "https://httpbin.org/html".to_string(), // Will fail but that's OK
                 is_inline: false,
                 index: 1,
+                is_module: false,
             },
             ScriptBlock {
                 source: "third();".to_string(),
                 label: "inline-2".to_string(),
                 is_inline: true,
                 index: 2,
+                is_module: false,
             },
         ];
 

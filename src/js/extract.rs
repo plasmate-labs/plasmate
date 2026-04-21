@@ -15,14 +15,19 @@ pub struct ScriptBlock {
     pub is_inline: bool,
     /// The script's position in document order.
     pub index: usize,
+    /// Whether this is an ES module (`type="module"`).
+    pub is_module: bool,
 }
 
 /// Extract all executable script blocks from HTML.
 ///
+/// Includes:
+/// - Classic scripts (no type or type="text/javascript")
+/// - ES modules (type="module")
+///
 /// Skips:
-/// - Scripts with type="module" (would need import resolution)
 /// - Scripts with type="application/json" or type="application/ld+json"
-/// - Scripts with src="" (external; would need fetch, handled separately)
+/// - Scripts with src="" (external; handled separately by script_fetch)
 /// - Empty scripts
 pub fn extract_scripts(html: &str) -> Vec<ScriptBlock> {
     let dom = parse_document(RcDom::default(), Default::default())
@@ -48,9 +53,12 @@ fn visit_scripts(node: &Handle, scripts: &mut Vec<ScriptBlock>, index: &mut usiz
                 .iter()
                 .any(|a| a.name.local.as_ref() == "src");
 
-            // Skip non-executable types
+            // Check if this is an ES module
+            let is_module = matches!(script_type.as_deref(), Some("module"));
+
+            // Skip non-executable types (but NOT modules)
             let skip = match script_type.as_deref() {
-                Some("module") => true,
+                Some("module") => false, // Include modules
                 Some("application/json") | Some("application/ld+json") => true,
                 Some("text/html") | Some("text/template") => true,
                 Some(t) if t != "text/javascript" && t != "application/javascript" && t != "" => {
@@ -71,6 +79,7 @@ fn visit_scripts(node: &Handle, scripts: &mut Vec<ScriptBlock>, index: &mut usiz
                         label: format!("inline-{}", *index),
                         is_inline: true,
                         index: *index,
+                        is_module,
                     });
                     *index += 1;
                 }
@@ -87,6 +96,7 @@ fn visit_scripts(node: &Handle, scripts: &mut Vec<ScriptBlock>, index: &mut usiz
                     label: src,
                     is_inline: false,
                     index: *index,
+                    is_module,
                 });
                 *index += 1;
             }
@@ -139,12 +149,22 @@ mod tests {
     }
 
     #[test]
-    fn test_skip_module() {
+    fn test_module_detected() {
         let html =
             r#"<html><head><script type="module">import x from './x';</script></head></html>"#;
         let scripts = extract_scripts(html);
         let inline: Vec<_> = scripts.iter().filter(|s| s.is_inline).collect();
-        assert_eq!(inline.len(), 0);
+        assert_eq!(inline.len(), 1, "Module scripts should be extracted");
+        assert!(inline[0].is_module, "Should be marked as module");
+        assert_eq!(inline[0].source, "import x from './x';");
+    }
+
+    #[test]
+    fn test_classic_script_not_module() {
+        let html = r#"<html><head><script>var x = 1;</script></head></html>"#;
+        let scripts = extract_scripts(html);
+        assert_eq!(scripts.len(), 1);
+        assert!(!scripts[0].is_module, "Classic script should not be marked as module");
     }
 
     #[test]
@@ -181,13 +201,12 @@ mod tests {
     }
 
     #[test]
-    fn test_skip_external_module() {
-        let html = r#"<html><head><script type="module" src="/app.js"></script></head></html>"#;
+    fn test_external_module_detected() {
+        let html = r#"<html><head><script type="module" src="/app.mjs"></script></head></html>"#;
         let scripts = extract_scripts(html);
-        assert_eq!(
-            scripts.len(),
-            0,
-            "External module scripts should be skipped"
-        );
+        assert_eq!(scripts.len(), 1, "External module scripts should be extracted");
+        assert!(scripts[0].is_module, "Should be marked as module");
+        assert!(!scripts[0].is_inline, "External scripts are not inline");
+        assert_eq!(scripts[0].label, "/app.mjs");
     }
 }
