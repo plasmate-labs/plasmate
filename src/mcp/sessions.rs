@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 //! MCP session management for stateful browser tools.
 //!
 //! Manages browser sessions with V8 runtime state. Each session holds:

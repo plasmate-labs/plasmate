@@ -10,9 +10,6 @@ use std::path::PathBuf;
 use std::sync::Once;
 use std::time::Duration;
 
-use html5ever::parse_document;
-use html5ever::tendril::TendrilSink;
-use markup5ever_rcdom::RcDom;
 
 use tracing::{debug, info, warn};
 
@@ -4055,81 +4052,6 @@ fn fetch_bridge_callback(
     }
 }
 
-/// Perform an async fetch request.
-async fn perform_async_fetch(
-    client: &reqwest::Client,
-    url: &str,
-    method: &str,
-    body: Option<&str>,
-    headers: &std::collections::HashMap<String, String>,
-) -> Result<String, String> {
-    use reqwest::Method;
-
-    let method = match method {
-        "GET" => Method::GET,
-        "POST" => Method::POST,
-        "PUT" => Method::PUT,
-        "DELETE" => Method::DELETE,
-        "PATCH" => Method::PATCH,
-        "HEAD" => Method::HEAD,
-        "OPTIONS" => Method::OPTIONS,
-        _ => Method::GET,
-    };
-
-    let mut request = client.request(method, url).timeout(FETCH_TIMEOUT);
-
-    // Add headers
-    for (k, v) in headers {
-        if let Ok(header_name) = reqwest::header::HeaderName::from_bytes(k.as_bytes()) {
-            if let Ok(header_value) = reqwest::header::HeaderValue::from_str(v) {
-                request = request.header(header_name, header_value);
-            }
-        }
-    }
-
-    // Add body if present
-    if let Some(body_str) = body {
-        request = request.body(body_str.to_string());
-    }
-
-    // Send the request
-    let response = request.send().await.map_err(|e| e.to_string())?;
-
-    let status = response.status().as_u16();
-    let status_text = response
-        .status()
-        .canonical_reason()
-        .unwrap_or("Unknown")
-        .to_string();
-    let ok = response.status().is_success();
-
-    // Collect response headers
-    let mut resp_headers = serde_json::Map::new();
-    for (k, v) in response.headers() {
-        if let Ok(v_str) = v.to_str() {
-            resp_headers.insert(k.to_string().to_lowercase(), serde_json::json!(v_str));
-        }
-    }
-
-    // Read the body with size limit
-    let body_bytes = response.bytes().await.map_err(|e| e.to_string())?;
-
-    let body_str = if body_bytes.len() > MAX_RESPONSE_BODY_SIZE {
-        String::from_utf8_lossy(&body_bytes[..MAX_RESPONSE_BODY_SIZE]).to_string()
-    } else {
-        String::from_utf8_lossy(&body_bytes).to_string()
-    };
-
-    let result = serde_json::json!({
-        "ok": ok,
-        "status": status,
-        "statusText": status_text,
-        "headers": resp_headers,
-        "body": body_str
-    });
-
-    Ok(result.to_string())
-}
 
 /// Perform a blocking fetch from inside a V8 callback by offloading to a fresh OS thread.
 ///
