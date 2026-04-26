@@ -1,0 +1,9 @@
+/* TEAM */
+Founder: David Hurley
+Site: https://dbhurley.com
+Twitter: @dbhurley
+
+/* SITE */
+Software: Rust, html5ever, V8 (rusty_v8), reqwest
+Build: Custom static site (build.mjs, marked)
+Hosting: Vercel

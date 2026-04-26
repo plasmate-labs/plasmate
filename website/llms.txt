@@ -98,3 +98,10 @@ plasmate screenshot https://example.com               # Page screenshot
 - crates.io: https://crates.io/crates/plasmate
 - Reddit: https://www.reddit.com/r/plasmate/
 - Creator: David Hurley (https://dbhurley.com), previously founded Mautic (acquired by Acquia)
+
+## Related writing by the founder
+- The Proof: https://dbhurley.com/blog/the-proof
+- The Data Advantage: https://dbhurley.com/blog/the-data-advantage
+
+## Part of the DBH Ventures portfolio
+https://dbhurley.com/startups
