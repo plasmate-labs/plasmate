@@ -499,11 +499,26 @@
 </ul>
 <h2 id="v05-scale-adoption-next">v0.5: Scale & Adoption (Next)</h2><ul>
 <li><input disabled="" type="checkbox"> Parallel sessions at scale (500+ concurrent per 8GB)</li>
-<li><input disabled="" type="checkbox"> Proxy rotation support</li>
-<li><input disabled="" type="checkbox"> Iframe support</li>
-<li><input disabled="" type="checkbox"> Shadow DOM support</li>
+<li><input checked="" disabled="" type="checkbox"> Proxy support (HTTP, HTTPS, SOCKS5 with auth)</li>
+<li><input checked="" disabled="" type="checkbox"> Proxy rotation (pool management, sticky sessions)</li>
+<li><input checked="" disabled="" type="checkbox"> Iframe support</li>
+<li><input checked="" disabled="" type="checkbox"> Shadow DOM support (declarative shadow DOM)</li>
+<li><input checked="" disabled="" type="checkbox"> SDK and parser schema parity for <code>html_id</code>, <code>details</code>, <code>iframe</code>, and shadow roots</li>
 <li><input disabled="" type="checkbox"> Full ES module support</li>
-<li><input disabled="" type="checkbox"> Chrome extension on Web Store</li>
+<li><input checked="" disabled="" type="checkbox"> Chrome extension on Web Store</li>
+</ul>
+<h2 id="market-informed-additions">Market-Informed Additions</h2><p>The 2026 browser-agent market is moving toward hybrid automation: deterministic
+Playwright/CDP for stable steps, LLM-driven recovery for variable pages, and
+structured snapshots to avoid screenshot-heavy cost. Plasmate&#39;s roadmap should
+increase stickiness by making SOM the semantic layer other agent tools can call.</p>
+<ul>
+<li><input disabled="" type="checkbox"> Playwright MCP compatibility mode: return SOM-backed structured snapshots for IDE agents that already expect accessibility-style browser state.</li>
+<li><input disabled="" type="checkbox"> Stagehand/Browserbase bridge: map observe/extract flows onto SOM so teams can prototype with Stagehand and optimize with Plasmate.</li>
+<li><input disabled="" type="checkbox"> Browser Use integration refresh: authenticated session examples, selectors, iframes, and shadow DOM traversal.</li>
+<li><input disabled="" type="checkbox"> Firecrawl-style extraction examples: schema-guided extraction from SOM with provenance back to stable element IDs.</li>
+<li><input disabled="" type="checkbox"> Skyvern-style workflow artifacts: action traces, session replay metadata, and credential-vault integration points.</li>
+<li><input disabled="" type="checkbox"> MCP hardening docs: command boundaries, allowlists, audit logs, and local-first privacy guarantees.</li>
+<li><input disabled="" type="checkbox"> Benchmark expansion: compare SOM with accessibility snapshots, markdown extraction, and screenshot/vision loops on cost and latency.</li>
 </ul>
 
     </main>

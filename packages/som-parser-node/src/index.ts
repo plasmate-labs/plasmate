@@ -13,6 +13,7 @@ export type {
   ListItem,
   LinkElement,
   StructuredData,
+  ShadowRoot,
 } from './types.js';
 
 // Parser

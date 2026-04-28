@@ -30,7 +30,9 @@ export type ElementRole =
   | 'table'
   | 'paragraph'
   | 'section'
-  | 'separator';
+  | 'separator'
+  | 'details'
+  | 'iframe';
 
 export type ElementAction = 'click' | 'type' | 'clear' | 'select' | 'toggle';
 
@@ -89,6 +91,20 @@ export interface SomElementAttrs {
   headers?: string[];
   rows?: string[][];
   section_label?: string;
+  open?: boolean;
+  summary?: string;
+  has_srcdoc?: boolean;
+  srcdoc_preview?: string;
+  name?: string;
+  sandbox?: string;
+  allow?: string;
+  width?: string;
+  height?: string;
+}
+
+export interface ShadowRoot {
+  mode: string;
+  elements: SomElement[];
 }
 
 export interface LinkElement {
@@ -103,12 +119,14 @@ export interface LinkElement {
 export interface SomElement {
   id: string;
   role: ElementRole;
+  html_id?: string;
   text?: string;
   label?: string;
   actions?: ElementAction[];
   attrs?: SomElementAttrs;
   children?: SomElement[];
   hints?: SemanticHint[];
+  shadow?: ShadowRoot;
 }
 
 export interface SomRegion {

@@ -96,13 +96,30 @@ A 10x reduction in tokens per page interaction means:
 |---|---|---|---|---|---|
 | Puppeteer/Playwright | Chrome automation | Chromium | CDP | Plugin-based | Yes |
 | Browserbase/Stagehand | Cloud browsers | Chromium | CDP + SDK | Managed | SDK open, infra closed |
+| Playwright MCP | IDE/browser tool | Chromium | MCP + accessibility snapshots | Browser-dependent | Yes |
 | Lightpanda | New engine (Zig) | Custom (Zig) | CDP-compatible | Inherent (not Chrome) | Yes (AGPL) |
 | Steel Browser | Stealth Chrome | Chromium | CDP | Deep patches | Partial |
 | Browser Use | Agent framework | Chromium | CDP + LLM | Basic | Yes |
+| Skyvern | Workflow automation | Chromium | LLM + vision + SDK/API | Managed | Yes / commercial |
+| Firecrawl | Structured extraction | Crawler/browser infra | HTTP API | Managed | Partial |
 | Manus Browser Operator | Extension overlay | Chrome | CDP + extension | None | No |
 | ChatGPT Atlas | Consumer product | Chromium-based | Proprietary | Unknown | No |
 
 **Gap:** Nobody has built a native agent protocol. Nobody outputs semantic models instead of DOM. Nobody has a Wasm skill ecosystem. Nobody has stealth at the network stack level.
+
+### 2.5 2026 Roadmap Implication
+
+The market is not waiting for one browser abstraction to replace every other
+tool. Teams are mixing deterministic Playwright steps, LLM-driven recovery,
+hosted browser fleets, structured extraction APIs, and MCP tools. Plasmate
+should therefore optimize for becoming the semantic layer that these systems
+call when token cost, local privacy, and stable element IDs matter.
+
+This changes product priority in three ways:
+
+1. Keep CDP and MCP compatibility high enough that existing agents can adopt Plasmate without rewriting their browser stack.
+2. Treat SDK/schema parity as a retention feature, not housekeeping; emitted SOM must validate and query the same way in Rust, Python, Node, Go, and parser packages.
+3. Build bridges into Browser Use, Playwright MCP-style snapshots, Stagehand observe/extract flows, and Firecrawl-style schema extraction before building a generic hosted Chrome fleet.
 
 ---
 

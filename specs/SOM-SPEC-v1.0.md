@@ -188,6 +188,7 @@ An **Element** represents a single semantic unit within a region.
 | `attrs`    | object           | OPTIONAL | Role-specific attributes (see Section 4.3). |
 | `children` | array of Element | OPTIONAL | Child elements (reserved for future use). |
 | `hints`    | array of string  | OPTIONAL | Semantic hints inferred from CSS classes (see Section 5). |
+| `shadow`   | ShadowRoot       | OPTIONAL | Declarative shadow DOM content attached to this element. |
 
 ### 4.2 ElementRole
 
@@ -211,6 +212,7 @@ The `role` field MUST be one of the following string values (serialized in
 | `section`     | No          | (none)                 | `<section>`, `<article>` |
 | `separator`   | No          | (none)                 | `<hr>` |
 | `details`     | Yes         | `["toggle"]`           | `<details>` with `<summary>` (disclosure widget) |
+| `iframe`      | No          | (none)                 | `<iframe>` embedded browsing context |
 
 For interactive elements, the `actions` array MUST be present and contain the
 default actions listed above. For non-interactive elements, the `actions` field
@@ -309,7 +311,30 @@ Each **Option** object:
 | `open`    | boolean | `true` when the `<details>` element has the `open` attribute (expanded state). |
 | `summary` | string  | The visible text from the `<summary>` child element. |
 
-### 4.4 ARIA State Preservation
+#### `iframe`
+
+| Attribute | Type    | Description |
+|-----------|---------|-------------|
+| `src`     | string  | Frame source URL. |
+| `has_srcdoc` | boolean | `true` when inline `srcdoc` content is present. |
+| `srcdoc_preview` | string | First 200 characters of inline `srcdoc` content. |
+| `name`    | string  | Frame name. |
+| `sandbox` | string  | Sandbox policy. |
+| `allow`   | string  | Permissions policy. |
+| `width`   | string  | Declared width. |
+| `height`  | string  | Declared height. |
+
+### 4.4 Shadow DOM
+
+Elements MAY include a `shadow` object when declarative shadow DOM content is
+available.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `mode` | string | Shadow root mode, `open` or `closed`. |
+| `elements` | array of Element | Semantic elements inside the shadow root. Query helpers SHOULD traverse this list after regular `children`. |
+
+### 4.5 ARIA State Preservation
 
 Implementations SHOULD capture common ARIA state attributes on any element
 and surface them in an `aria` sub-object within `attrs`. The following ARIA

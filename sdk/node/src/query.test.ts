@@ -54,6 +54,18 @@ const fixture: Som = {
         {
           id: 'e6',
           role: 'section',
+          shadow: {
+            mode: 'open',
+            elements: [
+              {
+                id: 'e_shadow',
+                role: 'button',
+                text: 'Shadow Action',
+                actions: ['click'],
+                html_id: 'shadow-button',
+              },
+            ],
+          },
           children: [
             { id: 'e7', role: 'paragraph', text: 'Nested paragraph' },
             {
@@ -78,8 +90,8 @@ const fixture: Som = {
   meta: {
     html_bytes: 8000,
     som_bytes: 2000,
-    element_count: 9,
-    interactive_count: 4,
+    element_count: 10,
+    interactive_count: 5,
   },
 };
 
@@ -108,6 +120,12 @@ describe('findById', () => {
     assert.equal(el?.text, 'Nested paragraph');
   });
 
+  it('finds a shadow DOM element', () => {
+    const el = findById(fixture, 'e_shadow');
+    assert.equal(el?.role, 'button');
+    assert.equal(el?.html_id, 'shadow-button');
+  });
+
   it('returns undefined for missing ID', () => {
     assert.equal(findById(fixture, 'e999'), undefined);
   });
@@ -119,6 +137,11 @@ describe('findByTag', () => {
     assert.equal(paragraphs.length, 3);
   });
 
+  it('finds elements by role inside shadow DOM', () => {
+    const buttons = findByTag(fixture, 'button');
+    assert.deepEqual(buttons.map((el) => el.id), ['e4', 'e_shadow']);
+  });
+
   it('returns empty for unused role', () => {
     assert.deepEqual(findByTag(fixture, 'table'), []);
   });
@@ -127,9 +150,9 @@ describe('findByTag', () => {
 describe('findInteractive', () => {
   it('returns all elements with actions', () => {
     const interactive = findInteractive(fixture);
-    assert.equal(interactive.length, 4);
+    assert.equal(interactive.length, 5);
     const ids = interactive.map((el) => el.id);
-    assert.deepEqual(ids.sort(), ['e2', 'e4', 'e5', 'e8']);
+    assert.deepEqual(ids.sort(), ['e2', 'e4', 'e5', 'e8', 'e_shadow']);
   });
 });
 
@@ -149,17 +172,22 @@ describe('findByText', () => {
   it('returns empty for no match', () => {
     assert.deepEqual(findByText(fixture, 'nonexistent'), []);
   });
+
+  it('matches shadow DOM text', () => {
+    const results = findByText(fixture, 'shadow');
+    assert.deepEqual(results.map((el) => el.id), ['e_shadow']);
+  });
 });
 
 describe('flatElements', () => {
   it('flattens all elements including nested children', () => {
     const all = flatElements(fixture);
-    assert.equal(all.length, 9);
+    assert.equal(all.length, 10);
   });
 
   it('includes nested children in order', () => {
     const ids = flatElements(fixture).map((el) => el.id);
-    assert.deepEqual(ids, ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8', 'e9']);
+    assert.deepEqual(ids, ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8', 'e_shadow', 'e9']);
   });
 });
 

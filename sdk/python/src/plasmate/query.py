@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from typing import List, Optional, Union
 
 from .types import Som, SomElement, SomRegion
@@ -63,13 +64,14 @@ def flat_elements(som: Som) -> List[SomElement]:
 def get_token_estimate(som: Union[Som, dict]) -> int:
     """Estimate the token count of a SOM document.
 
-    Uses a simple heuristic of ~4 characters per token on the JSON representation.
+    Uses a simple heuristic of ~4 bytes per token. For typed SOM objects, this
+    uses the compiler-reported `meta.som_bytes`; dicts fall back to JSON length.
     """
     if isinstance(som, Som):
-        text = som.model_dump_json()
+        return math.ceil(som.meta.som_bytes / 4)
     else:
         text = json.dumps(som)
-    return len(text) // 4
+    return math.ceil(len(text) / 4)
 
 
 # ---- Internal helpers ----
@@ -83,6 +85,11 @@ def _find_element_by_id(element: SomElement, element_id: str) -> Optional[SomEle
             result = _find_element_by_id(child, element_id)
             if result is not None:
                 return result
+    if element.shadow:
+        for child in element.shadow.elements:
+            result = _find_element_by_id(child, element_id)
+            if result is not None:
+                return result
     return None
 
 
@@ -92,6 +99,9 @@ def _collect_by_role(element: SomElement, role: str, results: List[SomElement]) 
     if element.children:
         for child in element.children:
             _collect_by_role(child, role, results)
+    if element.shadow:
+        for child in element.shadow.elements:
+            _collect_by_role(child, role, results)
 
 
 def _collect_interactive(element: SomElement, results: List[SomElement]) -> None:
@@ -99,6 +109,9 @@ def _collect_interactive(element: SomElement, results: List[SomElement]) -> None
         results.append(element)
     if element.children:
         for child in element.children:
+            _collect_interactive(child, results)
+    if element.shadow:
+        for child in element.shadow.elements:
             _collect_interactive(child, results)
 
 
@@ -108,10 +121,16 @@ def _collect_by_text(element: SomElement, lower_text: str, results: List[SomElem
     if element.children:
         for child in element.children:
             _collect_by_text(child, lower_text, results)
+    if element.shadow:
+        for child in element.shadow.elements:
+            _collect_by_text(child, lower_text, results)
 
 
 def _flatten(element: SomElement, results: List[SomElement]) -> None:
     results.append(element)
     if element.children:
         for child in element.children:
+            _flatten(child, results)
+    if element.shadow:
+        for child in element.shadow.elements:
             _flatten(child, results)

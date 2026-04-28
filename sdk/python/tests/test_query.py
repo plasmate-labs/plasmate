@@ -8,6 +8,7 @@ from plasmate.types import (
     RegionRole,
     SemanticHint,
     SelectOption,
+    ShadowRoot,
     Som,
     SomElement,
     SomMeta,
@@ -85,6 +86,18 @@ def sample_som() -> Som:
                     SomElement(
                         id="e7",
                         role=ElementRole.section,
+                        shadow=ShadowRoot(
+                            mode="open",
+                            elements=[
+                                SomElement(
+                                    id="e_shadow",
+                                    role=ElementRole.button,
+                                    text="Shadow Action",
+                                    actions=["click"],
+                                    html_id="shadow-button",
+                                )
+                            ],
+                        ),
                         children=[
                             SomElement(
                                 id="e8",
@@ -119,10 +132,10 @@ def sample_som() -> Som:
             ),
         ],
         meta=SomMeta(
-            html_bytes=5000,
-            som_bytes=2000,
-            element_count=10,
-            interactive_count=4,
+        html_bytes=5000,
+        som_bytes=2000,
+        element_count=11,
+        interactive_count=5,
         ),
     )
 
@@ -163,6 +176,11 @@ class TestFindById:
         assert el is not None
         assert el.text == "Nested paragraph"
 
+    def test_finds_shadow_element(self, sample_som: Som) -> None:
+        el = find_by_id(sample_som, "e_shadow")
+        assert el is not None
+        assert el.html_id == "shadow-button"
+
     def test_returns_none_for_missing_id(self, sample_som: Som) -> None:
         assert find_by_id(sample_som, "e999") is None
 
@@ -188,7 +206,8 @@ class TestFindInteractive:
         assert "e2" in ids  # link
         assert "e5" in ids  # button
         assert "e9" in ids  # text_input (nested)
-        assert len(ids) == 4
+        assert "e_shadow" in ids  # shadow DOM button
+        assert len(ids) == 5
 
     def test_empty_som_returns_empty(self) -> None:
         som = Som(
@@ -222,6 +241,11 @@ class TestFindByText:
         assert len(results) == 1
         assert results[0].id == "e8"
 
+    def test_finds_shadow_text(self, sample_som: Som) -> None:
+        results = find_by_text(sample_som, "Shadow")
+        assert len(results) == 1
+        assert results[0].id == "e_shadow"
+
     def test_no_match_returns_empty(self, sample_som: Som) -> None:
         assert find_by_text(sample_som, "zzz_no_match") == []
 
@@ -233,20 +257,22 @@ class TestFlatElements:
         assert "e1" in ids
         assert "e8" in ids  # nested
         assert "e9" in ids  # nested
-        assert len(ids) == 10
+        assert "e_shadow" in ids  # shadow DOM
+        assert len(ids) == 11
 
     def test_preserves_order(self, sample_som: Som) -> None:
         elements = flat_elements(sample_som)
         ids = [e.id for e in elements]
         assert ids.index("e7") < ids.index("e8")
         assert ids.index("e8") < ids.index("e9")
+        assert ids.index("e9") < ids.index("e_shadow")
 
 
 class TestGetTokenEstimate:
     def test_returns_positive_int(self, sample_som: Som) -> None:
         estimate = get_token_estimate(sample_som)
         assert isinstance(estimate, int)
-        assert estimate > 0
+        assert estimate == 500
 
     def test_accepts_dict(self) -> None:
         d = {"som_version": "1.0", "title": "Test"}

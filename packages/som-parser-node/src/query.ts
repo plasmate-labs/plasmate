@@ -8,6 +8,9 @@ function collectElements(elements: SomElement[]): SomElement[] {
     if (el.children) {
       result.push(...collectElements(el.children));
     }
+    if (el.shadow) {
+      result.push(...collectElements(el.shadow.elements));
+    }
   }
   return result;
 }

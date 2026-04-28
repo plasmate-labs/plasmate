@@ -615,6 +615,14 @@
 <td>SDK open, infra closed</td>
 </tr>
 <tr>
+<td>Playwright MCP</td>
+<td>IDE/browser tool</td>
+<td>Chromium</td>
+<td>MCP + accessibility snapshots</td>
+<td>Browser-dependent</td>
+<td>Yes</td>
+</tr>
+<tr>
 <td>Lightpanda</td>
 <td>New engine (Zig)</td>
 <td>Custom (Zig)</td>
@@ -639,6 +647,22 @@
 <td>Yes</td>
 </tr>
 <tr>
+<td>Skyvern</td>
+<td>Workflow automation</td>
+<td>Chromium</td>
+<td>LLM + vision + SDK/API</td>
+<td>Managed</td>
+<td>Yes / commercial</td>
+</tr>
+<tr>
+<td>Firecrawl</td>
+<td>Structured extraction</td>
+<td>Crawler/browser infra</td>
+<td>HTTP API</td>
+<td>Managed</td>
+<td>Partial</td>
+</tr>
+<tr>
 <td>Manus Browser Operator</td>
 <td>Extension overlay</td>
 <td>Chrome</td>
@@ -656,6 +680,17 @@
 </tr>
 </tbody></table>
 <p><strong>Gap:</strong> Nobody has built a native agent protocol. Nobody outputs semantic models instead of DOM. Nobody has a Wasm skill ecosystem. Nobody has stealth at the network stack level.</p>
+<h3 id="5-2026-roadmap-implication">2.5 2026 Roadmap Implication</h3><p>The market is not waiting for one browser abstraction to replace every other
+tool. Teams are mixing deterministic Playwright steps, LLM-driven recovery,
+hosted browser fleets, structured extraction APIs, and MCP tools. Plasmate
+should therefore optimize for becoming the semantic layer that these systems
+call when token cost, local privacy, and stable element IDs matter.</p>
+<p>This changes product priority in three ways:</p>
+<ol>
+<li>Keep CDP and MCP compatibility high enough that existing agents can adopt Plasmate without rewriting their browser stack.</li>
+<li>Treat SDK/schema parity as a retention feature, not housekeeping; emitted SOM must validate and query the same way in Rust, Python, Node, Go, and parser packages.</li>
+<li>Build bridges into Browser Use, Playwright MCP-style snapshots, Stagehand observe/extract flows, and Firecrawl-style schema extraction before building a generic hosted Chrome fleet.</li>
+</ol>
 <hr>
 <h2 id="the-vision">3. The Vision</h2><h3 id="1-the-netscape-parallel">3.1 The Netscape Parallel</h3><p>In 1994, the web existed but was unusable for most people. Netscape didn&#39;t just build a better viewer - they invented the infrastructure that made the web work:</p>
 <table>

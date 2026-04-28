@@ -34,6 +34,8 @@ class ElementRole(str, Enum):
     PARAGRAPH = "paragraph"
     SECTION = "section"
     SEPARATOR = "separator"
+    DETAILS = "details"
+    IFRAME = "iframe"
 
 
 class ElementAction(str, Enum):
@@ -98,17 +100,33 @@ class SomElementAttrs(BaseModel):
     headers: Optional[List[str]] = None
     rows: Optional[List[List[str]]] = None
     section_label: Optional[str] = None
+    open: Optional[bool] = None
+    summary: Optional[str] = None
+    has_srcdoc: Optional[bool] = None
+    srcdoc_preview: Optional[str] = None
+    name: Optional[str] = None
+    sandbox: Optional[str] = None
+    allow: Optional[str] = None
+    width: Optional[str] = None
+    height: Optional[str] = None
+
+
+class ShadowRoot(BaseModel):
+    mode: str
+    elements: List[SomElement]
 
 
 class SomElement(BaseModel):
     id: str
     role: ElementRole
+    html_id: Optional[str] = None
     text: Optional[str] = None
     label: Optional[str] = None
     actions: Optional[List[ElementAction]] = None
     attrs: Optional[SomElementAttrs] = None
     children: Optional[List[SomElement]] = None
     hints: Optional[List[SemanticHint]] = None
+    shadow: Optional[ShadowRoot] = None
 
 
 class SomRegion(BaseModel):

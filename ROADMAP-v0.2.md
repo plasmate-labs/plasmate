@@ -7,6 +7,29 @@ v0.2 makes it a drop-in replacement for Lightpanda and Chrome headless.
 
 Three pillars: **Speed**, **Memory**, **Parallelism** - all powered by SOM-native architecture.
 
+## 2026 Direction Update
+
+The browser-agent market has consolidated around three buyer expectations:
+managed browser fleets for scale, Playwright-compatible deterministic control,
+and LLM-friendly structured snapshots that avoid screenshots when possible.
+Plasmate should keep the local-first semantic engine as the core wedge and
+make it easy for the surrounding ecosystem to consume SOM.
+
+Roadmap additions from the current market review:
+
+- **SDK/schema parity as product quality**: Rust, Python, Node, Go, and parser
+  packages must accept the same SOM fields. Shadow DOM, iframes, `html_id`,
+  and disclosure widgets are now part of the compatibility surface.
+- **Playwright MCP compatibility track**: expose SOM as a structured snapshot
+  alternative for IDE agents already adopting Playwright MCP-style workflows.
+- **Stagehand/Browserbase bridge**: provide an observe/extract adapter that
+  lets teams keep Stagehand-style scripts while replacing verbose page state
+  with SOM where possible.
+- **Browser Use retention path**: keep the Browser Use integration current and
+  add examples for authenticated sessions, shadow DOM, iframes, and selectors.
+- **Trust and safety**: document MCP execution boundaries, audit logging, and
+  local-first privacy as differentiators against hosted browser APIs.
+
 ## Architecture
 
 ```

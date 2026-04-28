@@ -47,7 +47,23 @@ const FIXTURE: Som = {
           actions: ['click'],
           attrs: { href: 'https://example.org' },
         },
-        { id: 'e_6', role: 'image', attrs: { src: '/logo.png', alt: 'Logo' } },
+        {
+          id: 'e_6',
+          role: 'image',
+          html_id: 'logo',
+          attrs: { src: '/logo.png', alt: 'Logo' },
+          shadow: {
+            mode: 'open',
+            elements: [
+              {
+                id: 'e_shadow',
+                role: 'button',
+                text: 'Shadow Action',
+                actions: ['click'],
+              },
+            ],
+          },
+        },
       ],
     },
     {
@@ -70,8 +86,8 @@ const FIXTURE: Som = {
   meta: {
     html_bytes: 5000,
     som_bytes: 800,
-    element_count: 8,
-    interactive_count: 5,
+    element_count: 9,
+    interactive_count: 6,
   },
 };
 
@@ -143,8 +159,8 @@ describe('fromPlasmate', () => {
 // ---- Query tests ----
 
 describe('getAllElements', () => {
-  it('returns all 8 elements', () => {
-    expect(getAllElements(FIXTURE)).toHaveLength(8);
+  it('returns all 9 elements', () => {
+    expect(getAllElements(FIXTURE)).toHaveLength(9);
   });
 });
 
@@ -205,11 +221,12 @@ describe('findByText', () => {
 describe('getInteractiveElements', () => {
   it('returns elements with actions', () => {
     const interactive = getInteractiveElements(FIXTURE);
-    expect(interactive).toHaveLength(5);
+    expect(interactive).toHaveLength(6);
     const ids = interactive.map((e) => e.id);
     expect(ids).toContain('e_1');
     expect(ids).toContain('e_2');
     expect(ids).toContain('e_5');
+    expect(ids).toContain('e_shadow');
     expect(ids).toContain('e_7');
     expect(ids).toContain('e_8');
   });
@@ -257,6 +274,7 @@ describe('getText', () => {
     expect(text).toContain('Welcome');
     expect(text).toContain('This is a test page.');
     expect(text).toContain('Learn more');
+    expect(text).toContain('Shadow Action');
     expect(text).toContain('Search');
     expect(text).toContain('Go');
   });
@@ -327,8 +345,8 @@ describe('toMarkdown', () => {
 describe('filter', () => {
   it('filters elements by predicate', () => {
     const buttons = filter(FIXTURE, (el) => el.role === 'button');
-    expect(buttons).toHaveLength(1);
-    expect(buttons[0].text).toBe('Go');
+    expect(buttons).toHaveLength(2);
+    expect(buttons.map((b) => b.text)).toEqual(['Shadow Action', 'Go']);
   });
 
   it('returns empty for no matches', () => {

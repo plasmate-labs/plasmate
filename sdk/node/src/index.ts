@@ -43,6 +43,7 @@ export type {
   SelectOption,
   ListItem,
   LinkElement,
+  ShadowRoot,
 } from './types';
 
 // ---- SOM query helpers ----

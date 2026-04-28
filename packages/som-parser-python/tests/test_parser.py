@@ -79,7 +79,19 @@ FIXTURE_SOM = {
                 {
                     "id": "e_6",
                     "role": "image",
+                    "html_id": "logo",
                     "attrs": {"src": "/logo.png", "alt": "Logo"},
+                    "shadow": {
+                        "mode": "open",
+                        "elements": [
+                            {
+                                "id": "e_shadow",
+                                "role": "button",
+                                "text": "Shadow Action",
+                                "actions": ["click"],
+                            }
+                        ],
+                    },
                 },
             ],
         },
@@ -108,8 +120,8 @@ FIXTURE_SOM = {
     "meta": {
         "html_bytes": 5000,
         "som_bytes": 800,
-        "element_count": 8,
-        "interactive_count": 5,
+        "element_count": 9,
+        "interactive_count": 6,
     },
 }
 
@@ -167,8 +179,8 @@ class TestParseSom:
     def test_meta_parsed(self, som: Som):
         assert som.meta.html_bytes == 5000
         assert som.meta.som_bytes == 800
-        assert som.meta.element_count == 8
-        assert som.meta.interactive_count == 5
+        assert som.meta.element_count == 9
+        assert som.meta.interactive_count == 6
 
     def test_form_region_attrs(self, som: Som):
         form = som.regions[2]
@@ -214,12 +226,22 @@ class TestFromPlasmate:
 class TestGetAllElements:
     def test_count(self, som: Som):
         elements = get_all_elements(som)
-        assert len(elements) == 8
+        assert len(elements) == 9
 
     def test_all_have_ids(self, som: Som):
         elements = get_all_elements(som)
         ids = [el.id for el in elements]
-        assert ids == ["e_1", "e_2", "e_3", "e_4", "e_5", "e_6", "e_7", "e_8"]
+        assert ids == [
+            "e_1",
+            "e_2",
+            "e_3",
+            "e_4",
+            "e_5",
+            "e_6",
+            "e_shadow",
+            "e_7",
+            "e_8",
+        ]
 
 
 class TestFindByRole:
@@ -238,8 +260,8 @@ class TestFindByRole:
 
     def test_buttons(self, som: Som):
         buttons = find_by_role(som, ElementRole.BUTTON)
-        assert len(buttons) == 1
-        assert buttons[0].text == "Go"
+        assert len(buttons) == 2
+        assert {b.text for b in buttons} == {"Shadow Action", "Go"}
 
     def test_no_results(self, som: Som):
         tables = find_by_role(som, ElementRole.TABLE)
@@ -288,7 +310,7 @@ class TestFindByText:
 class TestGetInteractiveElements:
     def test_count(self, som: Som):
         interactive = get_interactive_elements(som)
-        assert len(interactive) == 5
+        assert len(interactive) == 6
 
     def test_all_have_actions(self, som: Som):
         interactive = get_interactive_elements(som)
@@ -341,6 +363,7 @@ class TestGetText:
         assert "Welcome" in text
         assert "This is a test page." in text
         assert "Learn more" in text
+        assert "Shadow Action" in text
         assert "Search" in text
         assert "Go" in text
 
@@ -414,8 +437,8 @@ class TestFilterElements:
         clickable = filter_elements(
             som, lambda el: el.actions is not None and "click" in [a.value for a in el.actions]
         )
-        assert len(clickable) == 4  # 3 links + 1 button
+        assert len(clickable) == 5  # 3 links + form button + shadow button
 
     def test_filter_by_text(self, som: Som):
         with_text = filter_elements(som, lambda el: el.text is not None)
-        assert len(with_text) == 6  # all except image and text_input
+        assert len(with_text) == 7  # all except image and text_input

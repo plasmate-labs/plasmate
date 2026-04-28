@@ -47,6 +47,16 @@ cargo check
 
 Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not hardcode version strings.
 
+## Automation State
+
+Last updated: 2026-04-28 by Plasmate Improvements automation.
+
+- Shell Git fetch/push is available again. The automation branch is `codex/plasmate-improvements-2026-04-28`, based on `origin/master`.
+- Current strategic direction: keep Plasmate local-first and SOM-centered, then increase stickiness through compatibility bridges into Browser Use, Playwright MCP-style snapshots, Stagehand/Browserbase observe/extract flows, and Firecrawl-style structured extraction.
+- Current code focus: maintain schema parity across Rust, Python, Node, Go, and parser packages so compiler output is accepted and queryable everywhere.
+- 2026-04-28 changes verified: SDK/parser support for `html_id`, `details`, `iframe`, iframe attrs, and declarative `shadow`; Python/Node query helpers traverse shadow roots; SOM selectors trim whitespace and accept `article` as a `content` alias; product docs now record market-informed roadmap updates.
+- Build/checks passed: `cargo build`, `cargo test som::filter -- --nocapture`, Python SDK tests, Python parser tests, Node SDK build, Node parser build/test, JSON schema parse, and `git diff --check`.
+
 ---
 
 ## Claude Code Guidelines

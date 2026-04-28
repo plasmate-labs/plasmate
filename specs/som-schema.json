@@ -170,7 +170,16 @@
                 "items": { "type": "string" }
               }
             },
-            "section_label": { "type": "string" }
+            "section_label": { "type": "string" },
+            "open": { "type": "boolean" },
+            "summary": { "type": "string" },
+            "has_srcdoc": { "type": "boolean" },
+            "srcdoc_preview": { "type": "string" },
+            "name": { "type": "string" },
+            "sandbox": { "type": "string" },
+            "allow": { "type": "string" },
+            "width": { "type": "string" },
+            "height": { "type": "string" }
           },
           "additionalProperties": false
         },
@@ -183,6 +192,28 @@
           "type": "array",
           "items": { "$ref": "#/$defs/SemanticHint" },
           "description": "Semantic hints inferred from CSS classes."
+        },
+        "shadow": {
+          "$ref": "#/$defs/ShadowRoot",
+          "description": "Declarative shadow DOM content attached to this element."
+        }
+      }
+    },
+    "ShadowRoot": {
+      "type": "object",
+      "description": "Shadow DOM root content.",
+      "required": ["mode", "elements"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["open", "closed"],
+          "description": "Shadow root mode."
+        },
+        "elements": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Element" },
+          "description": "Semantic elements inside the shadow root."
         }
       }
     },
@@ -203,7 +234,8 @@
         "paragraph",
         "section",
         "separator",
-        "details"
+        "details",
+        "iframe"
       ],
       "description": "The semantic role of an element."
     },

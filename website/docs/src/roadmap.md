@@ -54,5 +54,21 @@ Plasmate's roadmap is public and standards-first. We ship compression and correc
 - [x] Proxy rotation (pool management, sticky sessions)
 - [x] Iframe support
 - [x] Shadow DOM support (declarative shadow DOM)
+- [x] SDK and parser schema parity for `html_id`, `details`, `iframe`, and shadow roots
 - [ ] Full ES module support
 - [x] Chrome extension on Web Store
+
+## Market-Informed Additions
+
+The 2026 browser-agent market is moving toward hybrid automation: deterministic
+Playwright/CDP for stable steps, LLM-driven recovery for variable pages, and
+structured snapshots to avoid screenshot-heavy cost. Plasmate's roadmap should
+increase stickiness by making SOM the semantic layer other agent tools can call.
+
+- [ ] Playwright MCP compatibility mode: return SOM-backed structured snapshots for IDE agents that already expect accessibility-style browser state.
+- [ ] Stagehand/Browserbase bridge: map observe/extract flows onto SOM so teams can prototype with Stagehand and optimize with Plasmate.
+- [ ] Browser Use integration refresh: authenticated session examples, selectors, iframes, and shadow DOM traversal.
+- [ ] Firecrawl-style extraction examples: schema-guided extraction from SOM with provenance back to stable element IDs.
+- [ ] Skyvern-style workflow artifacts: action traces, session replay metadata, and credential-vault integration points.
+- [ ] MCP hardening docs: command boundaries, allowlists, audit logs, and local-first privacy guarantees.
+- [ ] Benchmark expansion: compare SOM with accessibility snapshots, markdown extraction, and screenshot/vision loops on cost and latency.

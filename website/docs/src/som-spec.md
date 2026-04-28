@@ -2,7 +2,7 @@
 
 The Semantic Object Model (SOM) is a formal, open specification for representing web pages as structured JSON documents optimized for LLM and agent consumption. SOM compiles raw HTML into compact, semantically meaningful output that preserves interactive elements and content hierarchy while stripping presentational noise.
 
-The full specification is at [`specs/SOM-SPEC-v1.0.md`](https://github.com/nicepkg/plasmate/blob/master/specs/SOM-SPEC-v1.0.md) in the repository.
+The full specification is at [`specs/SOM-SPEC-v1.0.md`](https://github.com/plasmate-labs/plasmate/blob/master/specs/SOM-SPEC-v1.0.md) in the repository.
 
 ## Document Structure
 
@@ -55,6 +55,7 @@ Each element has a `role`, stable `id`, optional `html_id` (the original HTML el
 | `list` | No | -  | `<ul>`, `<ol>` |
 | `section` | No | -  | `<section>`, `<article>` |
 | `details` | Yes | `["toggle"]` | `<details>` with `<summary>` (disclosure widget) |
+| `iframe` | No | - | `<iframe>` embedded browsing context |
 
 Interactive elements are **never** dropped by budget limits.
 
@@ -84,9 +85,16 @@ The `actions` array on interactive elements tells agents what operations are ava
 
 Non-interactive elements omit the `actions` field entirely.
 
+Elements may also include:
+
+| Field | Description |
+|-------|-------------|
+| `shadow` | Declarative shadow DOM content with `mode` and nested SOM `elements`; SDK query helpers traverse it after regular children. |
+| iframe attrs | `src`, `has_srcdoc`, `srcdoc_preview`, `name`, `sandbox`, `allow`, `width`, and `height` when present. |
+
 ## JSON Schema
 
-The formal JSON Schema is at [`specs/som-schema.json`](https://github.com/nicepkg/plasmate/blob/master/specs/som-schema.json). Use it to validate SOM output from any producer:
+The formal JSON Schema is at [`specs/som-schema.json`](https://github.com/plasmate-labs/plasmate/blob/master/specs/som-schema.json). Use it to validate SOM output from any producer:
 
 ```bash
 # Using ajv-cli

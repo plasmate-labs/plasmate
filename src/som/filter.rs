@@ -10,13 +10,15 @@ use super::types::{RegionRole, Som};
 ///
 /// Supported selectors:
 /// - Region roles: `main`, `nav`/`navigation`, `aside`, `header`, `footer`,
-///   `form`, `dialog`, `content`
+///   `form`, `dialog`, `content`/`article`
 /// - HTML id: `#some-id` - keeps only elements whose `html_id` matches
 ///
 /// Unrecognised selectors return the full SOM unchanged (with a warning to stderr).
 /// If a recognised selector matches nothing, the full SOM is returned (with a
 /// warning) so callers always get usable output.
 pub fn apply_selector(som: &Som, selector: &str) -> Som {
+    let selector = selector.trim();
+
     // Try to match a region role
     let role_opt: Option<RegionRole> = match selector.to_lowercase().as_str() {
         "main" => Some(RegionRole::Main),
@@ -26,7 +28,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         "footer" => Some(RegionRole::Footer),
         "form" => Some(RegionRole::Form),
         "dialog" => Some(RegionRole::Dialog),
-        "content" => Some(RegionRole::Content),
+        "content" | "article" => Some(RegionRole::Content),
         _ => None,
     };
 
@@ -173,6 +175,42 @@ mod tests {
             filtered.regions[0].elements[0].html_id.as_deref(),
             Some("intro")
         );
+    }
+
+    #[test]
+    fn test_selector_trims_whitespace() {
+        let som = make_test_som();
+        let filtered = apply_selector(&som, " main ");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].role, RegionRole::Main);
+    }
+
+    #[test]
+    fn test_selector_article_aliases_content() {
+        let mut som = make_test_som();
+        som.regions.push(Region {
+            id: "r3".to_string(),
+            role: RegionRole::Content,
+            label: None,
+            action: None,
+            method: None,
+            elements: vec![Element {
+                id: "e3".to_string(),
+                role: ElementRole::Paragraph,
+                html_id: None,
+                text: Some("Article body".to_string()),
+                label: None,
+                actions: None,
+                attrs: None,
+                children: None,
+                hints: None,
+                shadow: None,
+            }],
+        });
+
+        let filtered = apply_selector(&som, "article");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].role, RegionRole::Content);
     }
 
     #[test]
