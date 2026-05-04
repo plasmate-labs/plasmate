@@ -15,6 +15,7 @@ const NAV = [
   { slug: 'quickstart', label: 'Quick Start' },
   { slug: 'quickstart-mcp', label: '30-Second Install' },
   { slug: 'spec', label: 'Product Spec' },
+  { slug: 'prd', label: 'PRD' },
   { section: 'Reference' },
   { slug: 'som', label: 'SOM Reference' },
   { slug: 'som-spec', label: 'SOM Spec v1.0' },

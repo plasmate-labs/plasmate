@@ -57,7 +57,9 @@ pub fn get_shadow_root_mode(node: &Handle) -> Option<String> {
         if name.local.as_ref() == "template" {
             let attrs = attrs.borrow();
             for attr in attrs.iter() {
-                if attr.name.local.as_ref() == "shadowrootmode" || attr.name.local.as_ref() == "shadowroot" {
+                if attr.name.local.as_ref() == "shadowrootmode"
+                    || attr.name.local.as_ref() == "shadowroot"
+                {
                     return Some(attr.value.to_string());
                 }
             }
@@ -104,12 +106,8 @@ pub fn should_strip(node: &Handle) -> bool {
             }
             // Check inline style for display:none or visibility:hidden
             if let Some(style) = attrs.iter().find(|a| a.name.local.as_ref() == "style") {
-                let style_val = style.value.to_lowercase();
-                if style_val.contains("display:none")
-                    || style_val.contains("display: none")
-                    || style_val.contains("visibility:hidden")
-                    || style_val.contains("visibility: hidden")
-                {
+                let style_val = normalize_inline_style(&style.value);
+                if style_val.contains("display:none") || style_val.contains("visibility:hidden") {
                     return true;
                 }
             }
@@ -202,6 +200,14 @@ pub fn should_strip(node: &Handle) -> bool {
         NodeData::Comment { .. } => true,
         _ => false,
     }
+}
+
+fn normalize_inline_style(style: &str) -> String {
+    style
+        .chars()
+        .filter(|c| !c.is_whitespace())
+        .collect::<String>()
+        .to_lowercase()
 }
 
 /// Determine if a tag is a landmark that defines a region.
@@ -534,6 +540,18 @@ pub fn truncate_text(text: &str, max_chars: usize) -> String {
 pub fn is_collapsible_wrapper(tag: &str, node: &Handle) -> bool {
     if tag != "div" && tag != "span" {
         return false;
+    }
+
+    if let NodeData::Element { attrs, .. } = &node.data {
+        let attrs = attrs.borrow();
+        if attrs.iter().any(|a| {
+            matches!(
+                a.name.local.as_ref(),
+                "role" | "contenteditable" | "tabindex"
+            )
+        }) {
+            return false;
+        }
     }
 
     let children = node.children.borrow();

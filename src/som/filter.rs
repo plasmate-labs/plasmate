@@ -4,7 +4,7 @@
 //! elements by semantic role or HTML id. Used by both the CLI (`--selector`)
 //! and MCP tools (`selector` parameter).
 
-use super::types::{RegionRole, Som};
+use super::types::{Element, RegionRole, ShadowRoot, Som};
 
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
@@ -17,6 +17,8 @@ use super::types::{RegionRole, Som};
 /// If a recognised selector matches nothing, the full SOM is returned (with a
 /// warning) so callers always get usable output.
 pub fn apply_selector(som: &Som, selector: &str) -> Som {
+    let selector = selector.trim();
+
     // Try to match a region role
     let role_opt: Option<RegionRole> = match selector.to_lowercase().as_str() {
         "main" => Some(RegionRole::Main),
@@ -49,18 +51,21 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         return result;
     }
 
-    // Try HTML id selector: #my-id
+    // Try id selector: #my-id. Prefer documented region ids, then HTML ids
+    // on elements. If neither matches, return the full SOM as a graceful fallback.
     if let Some(id) = selector.strip_prefix('#') {
+        let region_matches: Vec<_> = som.regions.iter().filter(|r| r.id == id).cloned().collect();
+        if !region_matches.is_empty() {
+            let mut result = som.clone();
+            result.regions = region_matches;
+            return result;
+        }
+
         let filtered_regions: Vec<_> = som
             .regions
             .iter()
             .filter_map(|r| {
-                let els: Vec<_> = r
-                    .elements
-                    .iter()
-                    .filter(|e| e.html_id.as_deref() == Some(id))
-                    .cloned()
-                    .collect();
+                let els = filter_elements_by_html_id(&r.elements, id);
                 if els.is_empty() {
                     None
                 } else {
@@ -84,6 +89,44 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         selector
     );
     som.clone()
+}
+
+fn filter_elements_by_html_id(elements: &[Element], id: &str) -> Vec<Element> {
+    elements
+        .iter()
+        .filter_map(|element| {
+            let mut cloned = element.clone();
+            if let Some(children) = &element.children {
+                let filtered_children = filter_elements_by_html_id(children, id);
+                cloned.children = if filtered_children.is_empty() {
+                    None
+                } else {
+                    Some(filtered_children)
+                };
+            }
+
+            let shadow_match = if let Some(shadow) = &element.shadow {
+                let filtered_shadow_elements = filter_elements_by_html_id(&shadow.elements, id);
+                if filtered_shadow_elements.is_empty() {
+                    false
+                } else {
+                    cloned.shadow = Some(ShadowRoot {
+                        mode: shadow.mode.clone(),
+                        elements: filtered_shadow_elements,
+                    });
+                    true
+                }
+            } else {
+                false
+            };
+
+            if element.html_id.as_deref() == Some(id) || cloned.children.is_some() || shadow_match {
+                Some(cloned)
+            } else {
+                None
+            }
+        })
+        .collect()
 }
 
 #[cfg(test)]
@@ -173,6 +216,46 @@ mod tests {
             filtered.regions[0].elements[0].html_id.as_deref(),
             Some("intro")
         );
+    }
+
+    #[test]
+    fn test_selector_region_id() {
+        let som = make_test_som();
+        let filtered = apply_selector(&som, "#r2");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].id, "r2");
+    }
+
+    #[test]
+    fn test_selector_trims_whitespace() {
+        let som = make_test_som();
+        let filtered = apply_selector(&som, " main ");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].role, RegionRole::Main);
+    }
+
+    #[test]
+    fn test_selector_nested_html_id() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].children = Some(vec![Element {
+            id: "e-child".to_string(),
+            role: ElementRole::Button,
+            html_id: Some("nested-action".to_string()),
+            text: Some("Act".to_string()),
+            label: None,
+            actions: None,
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        }]);
+
+        let filtered = apply_selector(&som, "#nested-action");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        let children = filtered.regions[0].elements[0].children.as_ref().unwrap();
+        assert_eq!(children.len(), 1);
+        assert_eq!(children[0].html_id.as_deref(), Some("nested-action"));
     }
 
     #[test]

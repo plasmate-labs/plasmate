@@ -181,7 +181,7 @@ const { text } = await generateText({
 await mcp.close()
 ```
 
-This wires all 13 Plasmate tools directly into any Vercel AI SDK agent. See [Vercel AI SDK MCP docs](https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#mcp-tools) for details.
+This wires all 16 Plasmate tools directly into any Vercel AI SDK agent. See [Vercel AI SDK MCP docs](https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#mcp-tools) for details.
 
 ### LLM context
 
@@ -270,7 +270,7 @@ cargo build --release
 ./target/release/plasmate fetch https://example.com
 ```
 
-Requirements: Rust 1.75+, V8 (fetched automatically by rusty_v8).
+Requirements: Rust 1.77+, V8 (fetched automatically by rusty_v8).
 
 ## Docker
 

@@ -7,6 +7,28 @@ v0.2 makes it a drop-in replacement for Lightpanda and Chrome headless.
 
 Three pillars: **Speed**, **Memory**, **Parallelism** - all powered by SOM-native architecture.
 
+## 2026 Market Adjustment
+
+The browser-agent market is moving from raw browser control toward structured,
+repeatable context. Playwright MCP exposes accessibility snapshots without
+vision models, Firecrawl is pushing hosted MCP scraping and browser sessions,
+and Browserbase/Stagehand is making action caching a headline feature for
+latency and cost reduction. Plasmate should stay local-first and open, but the
+roadmap needs to make three sticky advantages obvious:
+
+1. **Structured snapshots agents can act on**: SOM selectors, ARIA widget parity,
+   and stable element ids should be treated as product surface, not internals.
+2. **Repeatable workflows get cheaper over time**: SOM cache and diff should be
+   positioned against Stagehand-style action caching, with page-level and
+   element-level reuse rather than cloud-hosted selector memory.
+3. **Distribution through agent ecosystems**: MCP, Browser Use, SDKs, and
+   comparison pages are growth channels. Keep adapters small, documented, and
+   conformance-tested so downstream repos do not drift.
+
+Near-term stickiness target: developers should keep Plasmate installed because
+it becomes the fastest local way to turn authenticated or repetitive web
+workflows into compact, inspectable, reusable state.
+
 ## Architecture
 
 ```
@@ -85,6 +107,9 @@ Three pillars: **Speed**, **Memory**, **Parallelism** - all powered by SOM-nativ
   return it WITHOUT fetching. Agent gets instant page understanding.
 - **Prewarming**: Background thread fetches + caches URLs the agent is likely
   to visit (based on links in current SOM)
+- **Selector-aware reuse**: Cache filtered SOM views (`main`, `form`, `#id`) so
+  repeated agent prompts can skip both full-page serialization and downstream
+  LLM token spend.
 
 ### 4. Parallel Session Manager (`src/sessions/`)
 - **Rust advantage**: tokio green threads + zero-cost async
@@ -134,6 +159,16 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 3. **SOM Cache** (the differentiator, makes us categorically faster)
 4. **Parallel session manager** (proves the concurrency story)
 5. **Network upgrades** (polish, production readiness)
+
+## Current Minor Improvements Logged
+
+- Selector handling now trims whitespace and supports documented region ids
+  (`#region-id`) while preserving HTML id selection for agent actions.
+- SOM compilation recognizes common ARIA widgets (`textbox`, `searchbox`,
+  `combobox`, `listbox`, `switch`, `menuitem`, `tab`) as actionable elements,
+  improving parity with accessibility-tree competitors.
+- Hidden inline styles now tolerate casing and whitespace variants such as
+  `DISPLAY : none`, reducing extraction noise from real-world CMS output.
 
 ## Dependencies to Add
 

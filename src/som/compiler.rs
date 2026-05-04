@@ -1121,12 +1121,15 @@ fn extract_shadow_dom(
 
     for (idx, child) in children.iter().enumerate() {
         if heuristics::is_declarative_shadow_template(child) {
-            let mode = heuristics::get_shadow_root_mode(child)
-                .unwrap_or_else(|| "open".to_string());
+            let mode =
+                heuristics::get_shadow_root_mode(child).unwrap_or_else(|| "open".to_string());
 
             // Extract elements from the template content
             // Template content is in template_contents for html5ever (wrapped in RefCell)
-            let shadow_elements = if let NodeData::Element { template_contents, .. } = &child.data {
+            let shadow_elements = if let NodeData::Element {
+                template_contents, ..
+            } = &child.data
+            {
                 let content_ref = template_contents.borrow();
                 if let Some(content) = content_ref.as_ref() {
                     let shadow_path = format!("{}#shadow", dom_path);
@@ -1189,7 +1192,11 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                 "button" => Some(ElementRole::Button),
                 "link" => Some(ElementRole::Link),
                 "checkbox" => Some(ElementRole::Checkbox),
+                "switch" => Some(ElementRole::Checkbox),
                 "radio" => Some(ElementRole::Radio),
+                "textbox" | "searchbox" => Some(ElementRole::TextInput),
+                "combobox" | "listbox" => Some(ElementRole::Select),
+                "menuitem" | "tab" => Some(ElementRole::Button),
                 "img" => Some(ElementRole::Image),
                 _ => None,
             };

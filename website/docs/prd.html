@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Let Your AI Agent Browse X (Twitter) as You - Plasmate Docs | The Better Browser for AI Agents</title>
-  <meta name="description" content="Let Your AI Agent Browse X (Twitter) as You - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
-  <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, let your ai agent browse x (twitter) as you" />
-  <link rel="canonical" href="https://docs.plasmate.app/guide-agent-browses-twitter" />
+  <title>PRD: Agent Stickiness and Roadmap Direction - Plasmate Docs | The Better Browser for AI Agents</title>
+  <meta name="description" content="PRD: Agent Stickiness and Roadmap Direction - Plasmate documentation. The better browser for AI agents, built on the Semantic Object Model (SOM). W3C Community Group member." />
+  <meta name="keywords" content="Plasmate, browser for AI agents, SOM, semantic object model, agent web protocol, AWP, W3C, prd: agent stickiness and roadmap direction" />
+  <link rel="canonical" href="https://docs.plasmate.app/prd" />
   <link rel="alternate" type="application/som+json" href="/.well-known/som.json" title="SOM (Plasmate)" />
 
   <link rel="icon" href="/favicon.ico" sizes="any" />
@@ -402,7 +402,7 @@
           <a href="quickstart">Quick Start</a>
           <a href="quickstart-mcp">30-Second Install</a>
           <a href="spec">Product Spec</a>
-          <a href="prd">PRD</a>
+          <a href="prd" class="active">PRD</a>
           <div class="section-label">Reference</div>
           <a href="som">SOM Reference</a>
           <a href="som-spec">SOM Spec v1.0</a>
@@ -437,7 +437,7 @@
           <a href="benchmark-cost">Cost Analysis</a>
           <a href="roadmap">Roadmap</a>
           <div class="section-label">User Guides</div>
-          <a href="guide-agent-browses-twitter" class="active">Your Agent on X/Twitter</a>
+          <a href="guide-agent-browses-twitter">Your Agent on X/Twitter</a>
           <a href="guide-authenticated-browsing">Authenticated Browsing</a>
           <a href="tutorial-research-agent">Build a Research Agent</a>
           <div class="section-label">Proposals</div>
@@ -456,118 +456,38 @@
       </div>
     </nav>
     <main class="content">
-      <h1 id="let-your-ai-agent-browse-x-twitter-as-you">Let Your AI Agent Browse X (Twitter) as You</h1><p>This guide is for anyone who has an AI agent set up through OpenClaw and talks to it on Telegram (or WhatsApp, Discord, etc.). You want your agent to be able to read your X/Twitter timeline, post tweets, and reply to people on your behalf.</p>
-<p>No coding required. We will walk through every step.</p>
-<hr>
-<h2 id="what-you-will-need">What You Will Need</h2><ul>
-<li><strong>A computer with Google Chrome</strong> (this is where you will install a small browser add-on)</li>
-<li><strong>Your OpenClaw agent</strong> already running and responding to you on Telegram</li>
-<li><strong>An X (Twitter) account</strong> that you can log into</li>
+      <h1 id="prd-agent-stickiness-and-roadmap-direction">PRD: Agent Stickiness and Roadmap Direction</h1><p>Last updated: 2026-05-04</p>
+<h2 id="product-thesis">Product Thesis</h2><p>Plasmate should be the local-first browser engine agents keep installed because it turns web pages into compact, stable, actionable state. The product is not a general scraper and should not compete feature-for-feature with hosted browser clouds. Its advantage is fast SOM output, predictable element ids, MCP-native tooling, and reusable page understanding without sending browsing data to a cloud API.</p>
+<h2 id="target-audience">Target Audience</h2><ul>
+<li>AI agent developers building MCP tools, coding agents, and research agents.</li>
+<li>Framework maintainers who need cheaper page context for Browser Use, LangChain, LlamaIndex, CrewAI, and adjacent stacks.</li>
+<li>Growth, sales, and ops teams that monitor authenticated or repetitive web workflows and need structured change detection.</li>
+<li>Privacy-sensitive teams that want local web extraction instead of hosted scraping APIs.</li>
 </ul>
-<p>That is it. Your agent&#39;s server (the Digital Ocean droplet or wherever it runs) does not need any changes. Everything happens through your Chrome browser and a quick message to your agent.</p>
-<hr>
-<h2 id="the-big-picture">The Big Picture</h2><p>Here is what we are doing in plain English:</p>
-<ol>
-<li>You install a tiny Chrome add-on that can copy your login cookies</li>
-<li>You log into X.com in Chrome like you normally would</li>
-<li>You click one button to securely share those login cookies with your agent</li>
-<li>You tell your agent to install the Plasmate skill (one message)</li>
-<li>Your agent can now browse X.com as if it were you</li>
-</ol>
-<p>Your password is never shared. The cookies are encrypted and stored on your agent&#39;s server. When the cookies expire, you just repeat steps 2 and 3.</p>
-<hr>
-<h2 id="step-1-add-the-plasmate-extension-to-chrome">Step 1: Add the Plasmate Extension to Chrome</h2><p>Open this link in Chrome:</p>
-<p><strong><a href="https://chromewebstore.google.com/detail/plasmate-cookie-export/biapncdddgdcjalalpkbngaabijkhheo">Plasmate Cookie Export on the Chrome Web Store</a></strong></p>
-<p>Click <strong>&quot;Add to Chrome&quot;</strong> and confirm.</p>
-<p>You will see a small Plasmate icon appear in your browser toolbar (it might be hidden behind the puzzle-piece icon; click that to pin it).</p>
-<blockquote>
-<p><strong>Is this safe?</strong> Yes. The extension only talks to your own machine (localhost). It has no analytics, no tracking, and no external servers. You can read the privacy policy right on the Chrome Web Store page.</p>
-</blockquote>
-<hr>
-<h2 id="step-2-tell-your-agent-to-install-plasmate">Step 2: Tell Your Agent to Install Plasmate</h2><p>Open your Telegram chat with your agent and send this message:</p>
-<blockquote>
-<p><strong>Install the Plasmate skill from ClawHub</strong></p>
-</blockquote>
-<p>Your agent knows how to do this. It will install the skill from <a href="https://clawhub.ai/builder-nc/plasmate">clawhub.ai/builder-nc/plasmate</a>, which gives it the ability to fetch web pages using the Plasmate browser engine.</p>
-<p>Wait for your agent to confirm the install is complete before moving on.</p>
-<blockquote>
-<p><strong>What just happened?</strong> Your agent now has a new tool called Plasmate that can read web pages much more efficiently than a regular browser. But it is not logged into anything yet.</p>
-</blockquote>
-<hr>
-<h2 id="step-3-start-the-cookie-bridge">Step 3: Start the Cookie Bridge</h2><p>You need to start a small local server on your computer so the Chrome extension can securely pass cookies to your agent. Your agent can help with this too.</p>
-<p>Send your agent this message:</p>
-<blockquote>
-<p><strong>I need to set up Plasmate auth. Can you start the auth bridge?</strong></p>
-</blockquote>
-<p>If your agent is running on a remote server, it will run <code>plasmate auth serve</code> there. If it needs you to do something on your end, it will tell you.</p>
-<p>You should see a confirmation that the bridge is running on port 9271.</p>
-<blockquote>
-<p><strong>Alternatively</strong>, if you are comfortable with a terminal, open one and type:</p>
-<pre><code>plasmate auth serve
-</code></pre>
-</blockquote>
-<hr>
-<h2 id="step-4-log-into-xcom">Step 4: Log Into X.com</h2><ol>
-<li>Open a new tab in Chrome</li>
-<li>Go to <a href="https://x.com">x.com</a></li>
-<li>Log in with your username and password, just like you normally would</li>
-<li>Make sure you can see your timeline (scroll around a bit to confirm the session is active)</li>
-</ol>
-<hr>
-<h2 id="step-5-push-your-login-to-plasmate">Step 5: Push Your Login to Plasmate</h2><p>This is the magic step:</p>
-<ol>
-<li><strong>Click the Plasmate icon</strong> in your Chrome toolbar</li>
-<li>The extension automatically detects that you are on X.com</li>
-<li>It shows you the cookies it will share (things like <code>auth_token</code> and <code>ct0</code>)</li>
-<li><strong>Click &quot;Push to Plasmate&quot;</strong></li>
-<li>You will see a green checkmark. Done!</li>
-</ol>
-<p>Your login session has been securely encrypted and stored. Your agent can now use it.</p>
-<hr>
-<h2 id="step-6-try-it-out">Step 6: Try It Out</h2><p>Go back to Telegram and send your agent a message like:</p>
-<blockquote>
-<p><strong>Browse my X timeline and tell me what people are talking about today</strong></p>
-</blockquote>
-<p>Or:</p>
-<blockquote>
-<p><strong>Check my X mentions and summarize any replies to my recent posts</strong></p>
-</blockquote>
-<p>Or even:</p>
-<blockquote>
-<p><strong>Post a tweet that says: &quot;Beautiful morning! Working on some exciting AI projects today.&quot;</strong></p>
-</blockquote>
-<p>Your agent will use Plasmate with your stored login to access X.com, read the content, and respond to you with what it found.</p>
-<hr>
-<h2 id="thats-it">That's It!</h2><p>Your agent can now browse X.com as you. Here is what to know going forward:</p>
-<h3 id="it-works-for-other-sites-too">It Works for Other Sites Too</h3><p>The same process works for any website. Want your agent to browse GitHub? LinkedIn? Reddit? Just:</p>
-<ol>
-<li>Log into that site in Chrome</li>
-<li>Click the Plasmate extension</li>
-<li>Click &quot;Push to Plasmate&quot;</li>
-<li>Tell your agent to use it</li>
-</ol>
-<h3 id="when-to-re-authenticate">When to Re-authenticate</h3><p>Login cookies expire over time (usually every few weeks for X.com). If your agent tells you it cannot access a site anymore, just repeat Steps 4 and 5: log in again in Chrome and push the cookies.</p>
-<h3 id="your-privacy">Your Privacy</h3><ul>
-<li>Your password is <strong>never</strong> shared with the agent</li>
-<li>Only session cookies are stored, and they are <strong>encrypted</strong></li>
-<li>Everything stays on your machine and your agent&#39;s server</li>
-<li>No data goes to any third party</li>
-<li>You can delete a stored login anytime by telling your agent: <em>&quot;Remove my X.com auth profile&quot;</em></li>
+<h2 id="competitive-context">Competitive Context</h2><ul>
+<li>Playwright MCP has made structured accessibility snapshots a baseline for browser-agent tools.</li>
+<li>Firecrawl is broadening from scraping into MCP search, extraction, browser sessions, and hosted deep research.</li>
+<li>Browserbase/Stagehand is emphasizing action caching and observability for repeated automation flows.</li>
+<li>Crawl4AI remains strong for open-source Python crawling and extraction, but carries Chromium/Playwright operational weight.</li>
 </ul>
-<hr>
-<h2 id="troubleshooting">Troubleshooting</h2><p><strong>&quot;My agent says it does not know about Plasmate&quot;</strong>
-Make sure Step 2 completed successfully. Ask your agent: <em>&quot;Do you have the Plasmate skill installed?&quot;</em></p>
-<p><strong>&quot;The extension says the bridge is not running&quot;</strong>
-The Plasmate auth bridge needs to be running for the extension to push cookies. Ask your agent to start it, or run <code>plasmate auth serve</code> in a terminal.</p>
-<p><strong>&quot;My agent can see X.com but the content looks like a logged-out page&quot;</strong>
-Your cookies may have expired. Repeat Steps 4 and 5 to push fresh ones.</p>
-<p><strong>&quot;I do not see the Plasmate icon in Chrome&quot;</strong>
-Click the puzzle-piece icon in Chrome&#39;s toolbar and pin the Plasmate extension.</p>
-<hr>
-<h2 id="want-to-learn-more">Want to Learn More?</h2><ul>
-<li><a href="guide-authenticated-browsing">Authenticated Browsing (Technical Guide)</a> for developers who want the full details</li>
-<li><a href="overview">Plasmate Documentation</a> to understand how the browser engine works</li>
-<li><a href="https://clawhub.ai/builder-nc/plasmate">ClawHub Plasmate Skill</a> to see what your agent can do with Plasmate</li>
+<h2 id="requirements">Requirements</h2><ol>
+<li>Preserve actionable structure: SOM must capture common accessibility roles, stable ids, labels, forms, links, state, and selectors that agents can reuse.</li>
+<li>Reduce repeated-work cost: SOM cache, SOM diff, and selector-aware cache entries should make repeat visits cheaper than first visits.</li>
+<li>Improve inspectability: expose traces, coverage scorecards, and reproducible fixtures so teams can trust extraction behavior.</li>
+<li>Keep ecosystem adapters thin: SDKs and integrations should share conformance expectations instead of forking extraction logic.</li>
+<li>Stay local-first by default: hosted competitors can own scale infrastructure; Plasmate should own local speed, privacy, and open protocol fit.</li>
+</ol>
+<h2 id="current-run-changes">Current Run Changes</h2><ul>
+<li>Added region-id selector support while keeping HTML id selection.</li>
+<li>Added common ARIA widget role mapping into actionable SOM elements.</li>
+<li>Hardened inline hidden-style stripping against spacing and casing variants.</li>
+<li>Updated roadmap direction around cached structured actions, MCP distribution, and accessibility/SOM parity.</li>
+</ul>
+<h2 id="next-steps">Next Steps</h2><ul>
+<li>Implement selector-aware SOM cache entries for <code>main</code>, <code>form</code>, and <code>#id</code> prompts.</li>
+<li>Add trace export for MCP/AWP sessions so users can debug why an agent clicked or selected an element.</li>
+<li>Add conformance cases for ARIA-heavy SaaS pages and compare output against Playwright MCP snapshots.</li>
+<li>Audit ecosystem repos for stale install docs, tool counts, and schema drift.</li>
 </ul>
 
     </main>

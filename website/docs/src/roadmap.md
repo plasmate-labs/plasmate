@@ -2,6 +2,18 @@
 
 Plasmate's roadmap is public and standards-first. We ship compression and correctness before scale.
 
+## 2026 Market Adjustment
+
+Browser-agent infrastructure is converging on structured context instead of raw page dumps. Playwright MCP has normalized accessibility snapshots, Firecrawl is packaging search/scrape/browser sessions behind MCP, and Browserbase/Stagehand is pushing cached actions to reduce repeated LLM calls.
+
+Plasmate should keep its local-first position, but the roadmap now emphasizes three sticky advantages:
+
+- **Actionable SOM snapshots**: selectors, ARIA widget parity, and stable ids are product features agents depend on.
+- **Cheaper repeated workflows**: SOM cache and diff should become the local, page-level answer to cloud selector/action caching.
+- **Ecosystem distribution**: MCP, Browser Use, SDKs, and comparison pages should remain conformance-tested so partner repos do not drift.
+
+Near-term target: make Plasmate the fastest local way to turn authenticated or repetitive web workflows into compact, inspectable, reusable state.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -54,5 +66,11 @@ Plasmate's roadmap is public and standards-first. We ship compression and correc
 - [x] Proxy rotation (pool management, sticky sessions)
 - [x] Iframe support
 - [x] Shadow DOM support (declarative shadow DOM)
-- [ ] Full ES module support
+- [x] Full ES module support
 - [x] Chrome extension on Web Store
+- [x] Selector whitespace and `#region-id` support
+- [x] Common ARIA widget roles mapped to actionable SOM elements
+- [x] Robust hidden inline-style stripping
+- [ ] Selector-aware SOM cache entries for repeated agent prompts
+- [ ] Session replay/trace export for debugging agent runs
+- [ ] WebMCP/watchlist research spike: track whether browser-native tool exposure changes SOM adapter strategy

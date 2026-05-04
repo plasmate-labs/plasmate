@@ -104,6 +104,23 @@ fn test_hidden_elements_stripped() {
 }
 
 #[test]
+fn test_hidden_inline_styles_ignore_case_and_spacing() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Hidden Style</title></head>
+<body><main>
+    <p style="DISPLAY : none">Spaced display hidden</p>
+    <p style="Visibility : hidden">Spaced visibility hidden</p>
+    <p>Visible copy</p>
+</main></body></html>"#;
+
+    let json =
+        serde_json::to_string(&compiler::compile(html, "https://example.com").unwrap()).unwrap();
+    assert!(!json.contains("Spaced display hidden"));
+    assert!(!json.contains("Spaced visibility hidden"));
+    assert!(json.contains("Visible copy"));
+}
+
+#[test]
 fn test_news_page_structure() {
     let html = load_fixture("news_page.html");
     let som = compiler::compile(&html, "https://example.com").unwrap();
@@ -148,6 +165,26 @@ fn test_som_captures_key_info() {
     );
     let json = serde_json::to_string(&som).unwrap();
     let _parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+}
+
+#[test]
+fn test_common_aria_widget_roles_map_to_interactive_elements() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>ARIA Widgets</title></head>
+<body><main>
+    <div role="textbox" aria-label="Message" contenteditable="true"></div>
+    <div role="switch" aria-label="Email alerts" aria-checked="true"></div>
+    <div role="combobox" aria-label="Country" aria-expanded="false"></div>
+    <div role="tab" aria-label="Billing"></div>
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let elems = all_elements(&som);
+    assert!(elems.iter().any(|e| e.role == ElementRole::TextInput));
+    assert!(elems.iter().any(|e| e.role == ElementRole::Checkbox));
+    assert!(elems.iter().any(|e| e.role == ElementRole::Select));
+    assert!(elems.iter().any(|e| e.role == ElementRole::Button));
+    assert_eq!(som.meta.interactive_count, 4);
 }
 
 // ============================================================
@@ -622,7 +659,10 @@ fn test_iframe_detection() {
     let som = compiler::compile(&html, "https://example.com").unwrap();
 
     let elems = all_elements(&som);
-    let iframes: Vec<&&Element> = elems.iter().filter(|e| e.role == ElementRole::Iframe).collect();
+    let iframes: Vec<&&Element> = elems
+        .iter()
+        .filter(|e| e.role == ElementRole::Iframe)
+        .collect();
 
     // Should detect at least 3 visible iframes (the hidden one may or may not be stripped)
     assert!(
@@ -638,15 +678,15 @@ fn test_iframe_attributes() {
     let som = compiler::compile(&html, "https://example.com").unwrap();
 
     let elems = all_elements(&som);
-    let iframes: Vec<&&Element> = elems.iter().filter(|e| e.role == ElementRole::Iframe).collect();
+    let iframes: Vec<&&Element> = elems
+        .iter()
+        .filter(|e| e.role == ElementRole::Iframe)
+        .collect();
 
     // Check that at least one iframe has src attribute
-    let has_src = iframes.iter().any(|e| {
-        e.attrs
-            .as_ref()
-            .and_then(|a| a.get("src"))
-            .is_some()
-    });
+    let has_src = iframes
+        .iter()
+        .any(|e| e.attrs.as_ref().and_then(|a| a.get("src")).is_some());
     assert!(has_src, "At least one iframe should have src attribute");
 
     // Check that srcdoc iframe is detected
@@ -660,12 +700,9 @@ fn test_iframe_attributes() {
     assert!(has_srcdoc, "Should detect iframe with srcdoc");
 
     // Check sandbox attribute is captured
-    let has_sandbox = iframes.iter().any(|e| {
-        e.attrs
-            .as_ref()
-            .and_then(|a| a.get("sandbox"))
-            .is_some()
-    });
+    let has_sandbox = iframes
+        .iter()
+        .any(|e| e.attrs.as_ref().and_then(|a| a.get("sandbox")).is_some());
     assert!(has_sandbox, "Should capture sandbox attribute");
 }
 
@@ -685,8 +722,14 @@ fn test_iframe_inline() {
 
     let iframe = iframe.unwrap();
     let attrs = iframe.attrs.as_ref().expect("Iframe should have attrs");
-    assert_eq!(attrs.get("src").and_then(|v| v.as_str()), Some("https://embed.example.com"));
-    assert_eq!(attrs.get("name").and_then(|v| v.as_str()), Some("test-frame"));
+    assert_eq!(
+        attrs.get("src").and_then(|v| v.as_str()),
+        Some("https://embed.example.com")
+    );
+    assert_eq!(
+        attrs.get("name").and_then(|v| v.as_str()),
+        Some("test-frame")
+    );
     assert_eq!(attrs.get("width").and_then(|v| v.as_str()), Some("640"));
     assert_eq!(attrs.get("height").and_then(|v| v.as_str()), Some("480"));
 }
@@ -724,10 +767,7 @@ fn test_declarative_shadow_dom_detection() {
     // Should detect at least one element with shadow DOM
     // Note: html5ever may or may not fully support declarative shadow DOM parsing
     // This test verifies our detection logic works when templates are present
-    assert!(
-        !som.regions.is_empty(),
-        "Should have at least one region"
-    );
+    assert!(!som.regions.is_empty(), "Should have at least one region");
 }
 
 #[test]
