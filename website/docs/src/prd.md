@@ -1,6 +1,6 @@
 # PRD: Agent Stickiness and Roadmap Direction
 
-Last updated: 2026-05-04
+Last updated: 2026-05-05
 
 ## Product Thesis
 
@@ -20,6 +20,12 @@ Plasmate should be the local-first browser engine agents keep installed because 
 - Browserbase/Stagehand is emphasizing action caching and observability for repeated automation flows.
 - Crawl4AI remains strong for open-source Python crawling and extraction, but carries Chromium/Playwright operational weight.
 
+2026-05-05 market read: the strongest retention hooks are reusable structured state, cached repeated actions, and ecosystem-native distribution. Playwright MCP returns accessibility snapshots with stable refs for interaction, Stagehand now markets action caching as an LLM-cost and latency reduction path, and Firecrawl's MCP surface combines scraping, search, browser sessions, and deep research. Plasmate should not chase hosted anti-bot infrastructure as the main wedge; it should make local SOM snapshots more complete, reusable, and easy to verify across its many adapters.
+
+## Ecosystem Surface
+
+The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
+
 ## Requirements
 
 1. Preserve actionable structure: SOM must capture common accessibility roles, stable ids, labels, forms, links, state, and selectors that agents can reuse.
@@ -30,14 +36,20 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 ## Current Run Changes
 
-- Added region-id selector support while keeping HTML id selection.
-- Added common ARIA widget role mapping into actionable SOM elements.
-- Hardened inline hidden-style stripping against spacing and casing variants.
-- Updated roadmap direction around cached structured actions, MCP distribution, and accessibility/SOM parity.
+- 2026-05-05:
+  - Cache prefetch URL extraction now walks nested SOM children and shadow-root elements, deduplicates URLs while preserving order, and excludes non-HTTP schemes.
+  - Cache URL normalization now lowercases scheme/host through URL parsing without corrupting case-sensitive paths.
+  - MCP `extract_text` and `extract_links` now include shadow-root content, so declarative web components are not invisible to agents.
+- 2026-05-04:
+  - Added region-id selector support while keeping HTML id selection.
+  - Added common ARIA widget role mapping into actionable SOM elements.
+  - Hardened inline hidden-style stripping against spacing and casing variants.
+  - Updated roadmap direction around cached structured actions, MCP distribution, and accessibility/SOM parity.
 
 ## Next Steps
 
 - Implement selector-aware SOM cache entries for `main`, `form`, and `#id` prompts.
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked or selected an element.
 - Add conformance cases for ARIA-heavy SaaS pages and compare output against Playwright MCP snapshots.
+- Add shadow-DOM and web-component cases to SDK/parser conformance tests so integrations preserve the same SOM surface as the Rust core.
 - Audit ecosystem repos for stale install docs, tool counts, and schema drift.

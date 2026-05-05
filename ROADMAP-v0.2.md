@@ -29,6 +29,25 @@ Near-term stickiness target: developers should keep Plasmate installed because
 it becomes the fastest local way to turn authenticated or repetitive web
 workflows into compact, inspectable, reusable state.
 
+### 2026-05-05 Roadmap Adjustment
+
+Current competitor pressure reinforces the same direction but raises the bar on
+completeness. Playwright MCP snapshots train agents to expect every actionable
+surface to appear in structured output, Browserbase/Stagehand caching trains
+operators to expect repeated flows to get cheaper, and Firecrawl's MCP/browser
+sessions make broad hosted extraction easy to adopt. Plasmate should answer with
+local-first depth:
+
+1. **Full-tree SOM fidelity**: nested content, shadow DOM, ARIA widgets, and
+   web-component links/text must flow through every extraction path, not only
+   the compiler.
+2. **Reusable local memory**: cache keys and prefetch discovery need to preserve
+   real URL semantics, dedupe work, and feed selector-aware cache views.
+3. **Ecosystem conformance**: the repo now spans Rust core, MCP/CDP/AWP,
+   Python/Node/Go SDKs, Browser Use, LangChain, Vercel AI, SOM parser packages,
+   generated docs, comparison pages, and marketing assets. This breadth should
+   be treated as a synchronized product surface with shared fixtures.
+
 ## Architecture
 
 ```
@@ -162,6 +181,12 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 
 ## Current Minor Improvements Logged
 
+- Cache prefetch extraction walks nested children and shadow-root elements,
+  dedupes discovered HTTP(S) URLs, and filters out non-navigation schemes.
+- Cache URL normalization now uses structured URL parsing so host casing is
+  normalized without breaking case-sensitive paths.
+- MCP `extract_text` and `extract_links` include shadow-root content, improving
+  parity for web components and declarative shadow DOM.
 - Selector handling now trims whitespace and supports documented region ids
   (`#region-id`) while preserving HTML id selection for agent actions.
 - SOM compilation recognizes common ARIA widgets (`textbox`, `searchbox`,

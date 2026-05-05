@@ -49,6 +49,37 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-05 - Plasmate Improvements Automation
+
+- Git sync: attempted `git fetch --prune origin`, but the sandbox still cannot
+  write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate7/FETCH_HEAD`. `gh` is
+  installed, but the configured token for `dbhurley` is invalid, so push/merge
+  cannot complete from this environment.
+- Market direction: Playwright MCP structured accessibility snapshots,
+  Browserbase/Stagehand action caching, and Firecrawl MCP/browser sessions
+  continue to validate Plasmate's sticky wedge: local, reusable, full-tree SOM
+  snapshots with stable agent-facing contracts.
+- Ecosystem state: the project spans Rust core protocols, Python/Node/Go SDKs,
+  Browser Use, LangChain, Vercel AI, SOM parser packages, plugin examples,
+  smoke tests, generated website docs, comparison pages, and marketing assets.
+  This is a distribution advantage, but schema and fixture conformance now need
+  to be treated as roadmap work.
+- Code changes: cache prefetch extraction now walks nested and shadow-root SOM
+  elements, dedupes HTTP(S) URLs, and ignores non-navigation schemes; cache URL
+  normalization preserves case-sensitive paths; MCP text/link extraction now
+  includes shadow-root content.
+- Docs changes: updated the PRD and roadmap with the current market read,
+  ecosystem surface risk, reasons for the changes, and next steps around
+  selector-aware cache, trace export, ARIA/SaaS parity, and shadow-DOM
+  conformance.
+- Verification: focused tests passed with the shared target cache:
+  `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo test cache::store -- --nocapture`
+  and
+  `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo test mcp::tools::tests -- --nocapture`.
+  Direct tests in the worktree target failed because `rusty_v8` attempted to
+  download its prebuilt archive and DNS/network is blocked.
+
 ### 2026-05-04 - Plasmate Improvements Automation
 
 - Git sync: attempted `git fetch --prune origin`, but the sandbox could not write shared worktree metadata at `/Users/steve/Git/plasmate/.git/worktrees/plasmate6/FETCH_HEAD`. Local detached HEAD matched the tracked `origin/master` snapshot available in this worktree.

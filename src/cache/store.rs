@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
 use tracing::{debug, info};
+use url::Url;
 
 /// A cached SOM snapshot for a URL.
 #[derive(Debug, Clone)]
@@ -187,24 +188,14 @@ impl SomCache {
 
     /// Extract all link hrefs from cached SOM JSON for prefetching.
     pub fn extract_prefetch_urls(&self, som_json: &[u8]) -> Vec<String> {
-        // Parse SOM JSON and extract link hrefs
         if let Ok(som) = serde_json::from_slice::<serde_json::Value>(som_json) {
             let mut urls = Vec::new();
+            let mut seen = std::collections::HashSet::new();
             if let Some(regions) = som.get("regions").and_then(|r| r.as_array()) {
                 for region in regions {
                     if let Some(elements) = region.get("elements").and_then(|e| e.as_array()) {
                         for element in elements {
-                            if element.get("role").and_then(|r| r.as_str()) == Some("link") {
-                                if let Some(href) = element
-                                    .get("attrs")
-                                    .and_then(|a| a.get("href"))
-                                    .and_then(|h| h.as_str())
-                                {
-                                    if href.starts_with("http") {
-                                        urls.push(href.to_string());
-                                    }
-                                }
-                            }
+                            collect_prefetch_urls(element, &mut urls, &mut seen);
                         }
                     }
                 }
@@ -230,9 +221,62 @@ impl SomCache {
 }
 
 fn normalize_url(url: &str) -> String {
-    // Strip fragment, normalize trailing slash
-    let url = url.split('#').next().unwrap_or(url);
-    url.trim_end_matches('/').to_lowercase()
+    let trimmed = url.trim();
+    if let Ok(mut parsed) = Url::parse(trimmed) {
+        parsed.set_fragment(None);
+        if parsed.path() != "/" {
+            let path = parsed.path().trim_end_matches('/').to_string();
+            parsed.set_path(&path);
+        }
+        return parsed.to_string();
+    }
+
+    trimmed
+        .split('#')
+        .next()
+        .unwrap_or(trimmed)
+        .trim_end_matches('/')
+        .to_string()
+}
+
+fn collect_prefetch_urls(
+    element: &serde_json::Value,
+    urls: &mut Vec<String>,
+    seen: &mut std::collections::HashSet<String>,
+) {
+    if element.get("role").and_then(|r| r.as_str()) == Some("link") {
+        if let Some(href) = element
+            .get("attrs")
+            .and_then(|a| a.get("href"))
+            .and_then(|h| h.as_str())
+        {
+            if is_http_url(href) && seen.insert(href.to_string()) {
+                urls.push(href.to_string());
+            }
+        }
+    }
+
+    if let Some(children) = element.get("children").and_then(|c| c.as_array()) {
+        for child in children {
+            collect_prefetch_urls(child, urls, seen);
+        }
+    }
+
+    if let Some(shadow_elements) = element
+        .get("shadow")
+        .and_then(|s| s.get("elements"))
+        .and_then(|e| e.as_array())
+    {
+        for shadow_element in shadow_elements {
+            collect_prefetch_urls(shadow_element, urls, seen);
+        }
+    }
+}
+
+fn is_http_url(href: &str) -> bool {
+    Url::parse(href)
+        .map(|url| matches!(url.scheme(), "http" | "https"))
+        .unwrap_or(false)
 }
 
 #[cfg(test)]
@@ -286,6 +330,20 @@ mod tests {
         // Should match with different casing and trailing slash
         let result = cache.lookup("https://example.com", 111);
         assert!(matches!(result, CacheLookup::Hit(_)));
+    }
+
+    #[test]
+    fn test_url_normalization_preserves_path_case() {
+        let cache = SomCache::new(CacheConfig::default());
+        cache.store(
+            "https://Example.Com/CaseSensitive",
+            111,
+            b"som".to_vec(),
+            100,
+        );
+
+        let result = cache.lookup("https://example.com/casesensitive", 111);
+        assert!(matches!(result, CacheLookup::Miss));
     }
 
     #[test]
@@ -344,5 +402,38 @@ mod tests {
         assert_eq!(urls.len(), 2);
         assert!(urls.contains(&"https://example.com/page1".to_string()));
         assert!(urls.contains(&"https://example.com/page2".to_string()));
+    }
+
+    #[test]
+    fn test_prefetch_url_extraction_walks_nested_and_shadow_elements() {
+        let cache = SomCache::new(CacheConfig::default());
+        let som = serde_json::json!({
+            "regions": [{
+                "elements": [{
+                    "role": "section",
+                    "children": [
+                        {"role": "link", "attrs": {"href": "https://example.com/nested"}},
+                        {"role": "link", "attrs": {"href": "https://example.com/nested"}}
+                    ],
+                    "shadow": {
+                        "mode": "open",
+                        "elements": [
+                            {"role": "link", "attrs": {"href": "https://example.com/shadow"}},
+                            {"role": "link", "attrs": {"href": "mailto:team@example.com"}}
+                        ]
+                    }
+                }]
+            }]
+        });
+        let json = serde_json::to_vec(&som).unwrap();
+        let urls = cache.extract_prefetch_urls(&json);
+
+        assert_eq!(
+            urls,
+            vec![
+                "https://example.com/nested".to_string(),
+                "https://example.com/shadow".to_string()
+            ]
+        );
     }
 }

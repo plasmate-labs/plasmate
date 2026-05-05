@@ -353,6 +353,12 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
             extract_element_text(child, parts);
         }
     }
+
+    if let Some(shadow) = &element.shadow {
+        for child in &shadow.elements {
+            extract_element_text(child, parts);
+        }
+    }
 }
 
 // ============================================================================
@@ -469,6 +475,11 @@ fn collect_element_links(element: &crate::som::types::Element, urls: &mut Vec<St
     }
     if let Some(ref children) = element.children {
         for child in children {
+            collect_element_links(child, urls);
+        }
+    }
+    if let Some(ref shadow) = element.shadow {
+        for child in &shadow.elements {
             collect_element_links(child, urls);
         }
     }
@@ -2544,4 +2555,80 @@ fn cookie_to_json(cookie: &Cookie) -> Value {
         "sameSite": cookie.same_site.as_str(),
         "size": cookie.size,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::som::types::{Element, ElementRole, ShadowRoot};
+
+    fn test_element(
+        id: &str,
+        role: ElementRole,
+        text: Option<&str>,
+        href: Option<&str>,
+    ) -> Element {
+        Element {
+            id: id.to_string(),
+            role,
+            html_id: None,
+            text: text.map(str::to_string),
+            label: None,
+            actions: None,
+            attrs: href.map(|href| json!({ "href": href })),
+            children: None,
+            hints: None,
+            shadow: None,
+        }
+    }
+
+    #[test]
+    fn test_extract_element_text_includes_shadow_dom() {
+        let mut host = test_element("host", ElementRole::Section, Some("Host"), None);
+        host.shadow = Some(ShadowRoot {
+            mode: "open".to_string(),
+            elements: vec![test_element(
+                "shadow-text",
+                ElementRole::Paragraph,
+                Some("Shadow text"),
+                None,
+            )],
+        });
+
+        let mut parts = Vec::new();
+        extract_element_text(&host, &mut parts);
+
+        assert_eq!(parts, vec!["Host".to_string(), "Shadow text".to_string()]);
+    }
+
+    #[test]
+    fn test_collect_element_links_includes_shadow_dom() {
+        let mut host = test_element("host", ElementRole::Section, None, None);
+        host.children = Some(vec![test_element(
+            "child-link",
+            ElementRole::Link,
+            Some("Child"),
+            Some("https://example.com/child"),
+        )]);
+        host.shadow = Some(ShadowRoot {
+            mode: "open".to_string(),
+            elements: vec![test_element(
+                "shadow-link",
+                ElementRole::Link,
+                Some("Shadow"),
+                Some("https://example.com/shadow"),
+            )],
+        });
+
+        let mut urls = Vec::new();
+        collect_element_links(&host, &mut urls);
+
+        assert_eq!(
+            urls,
+            vec![
+                "https://example.com/child".to_string(),
+                "https://example.com/shadow".to_string()
+            ]
+        );
+    }
 }
