@@ -410,17 +410,23 @@ fn summarize_elements(
 
 /// Normalize an href for deduplication purposes.
 fn normalize_href(href: &str) -> String {
+    if let Ok(mut url) = url::Url::parse(href) {
+        url.set_fragment(None);
+        let mut s = url.to_string();
+        if s.len() > 1 && s.ends_with('/') {
+            s.pop();
+        }
+        return s;
+    }
+
     let mut s = href.to_string();
-    // Strip fragment
     if let Some(pos) = s.find('#') {
         s.truncate(pos);
     }
-    // Strip trailing slash (but keep root "/")
     if s.len() > 1 && s.ends_with('/') {
         s.pop();
     }
-    // Lowercase for case-insensitive dedup
-    s.to_lowercase()
+    s
 }
 
 fn collect_regions(
@@ -1188,7 +1194,8 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
     // Check ARIA role attribute first
     for (name, value) in attrs {
         if name == "role" {
-            return match value.as_str() {
+            let role_value = value.to_ascii_lowercase();
+            return match role_value.as_str() {
                 "button" => Some(ElementRole::Button),
                 "link" => Some(ElementRole::Link),
                 "checkbox" => Some(ElementRole::Checkbox),
@@ -1219,7 +1226,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                 .find(|(n, _)| n == "type")
                 .map(|(_, v)| v.as_str())
                 .unwrap_or("text");
-            match input_type {
+            match input_type.to_ascii_lowercase().as_str() {
                 "submit" | "button" | "reset" => Some(ElementRole::Button),
                 "checkbox" => Some(ElementRole::Checkbox),
                 "radio" => Some(ElementRole::Radio),
@@ -1293,10 +1300,23 @@ fn build_element_attrs(
                 .find(|(n, _)| n == "type")
                 .map(|(_, v)| v.clone())
                 .unwrap_or_else(|| "text".to_string());
+            let input_type = input_type.to_ascii_lowercase();
 
             if matches!(
                 input_type.as_str(),
-                "text" | "email" | "password" | "search" | "tel" | "url" | "number"
+                "text"
+                    | "email"
+                    | "password"
+                    | "search"
+                    | "tel"
+                    | "url"
+                    | "number"
+                    | "date"
+                    | "time"
+                    | "datetime-local"
+                    | "month"
+                    | "week"
+                    | "color"
             ) {
                 map.insert("input_type".into(), json!(input_type));
             }
@@ -1446,6 +1466,29 @@ fn build_element_attrs(
             }
         }
         _ => {}
+    }
+
+    if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "contenteditable") {
+        let normalized = value.to_ascii_lowercase();
+        let contenteditable = match normalized.as_str() {
+            "" | "true" => json!(true),
+            "false" => json!(false),
+            _ => json!(value),
+        };
+        map.insert("contenteditable".into(), contenteditable);
+    }
+    if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "tabindex") {
+        let tabindex = value
+            .parse::<i64>()
+            .map(serde_json::Value::from)
+            .unwrap_or_else(|_| json!(value));
+        map.insert("tabindex".into(), tabindex);
+    }
+    if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "name") {
+        map.insert("name".into(), json!(value));
+    }
+    if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "autocomplete") {
+        map.insert("autocomplete".into(), json!(value));
     }
 
     // ARIA state preservation: capture common ARIA state attributes

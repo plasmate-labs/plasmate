@@ -49,6 +49,38 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-06 - Plasmate Improvements Automation
+
+- Git sync: attempted `git fetch --prune origin` in the automation worktree,
+  but shared worktree metadata is still blocked at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate8/FETCH_HEAD`. The primary
+  checkout also cannot resolve `github.com`, and `gh auth status` reports the
+  configured `dbhurley` token is invalid, so push/merge cannot complete from
+  this environment.
+- Market direction: Playwright MCP structured snapshots, Stagehand
+  `observe()`/action caching, Firecrawl MCP browser interaction, and Skyvern
+  visual workflows all point toward agent-ready page state as the sticky layer.
+  Plasmate should keep the local-first wedge and improve SOM actionability,
+  conformance, and deterministic cache/diff behavior rather than pivoting into
+  hosted browser-cloud infrastructure.
+- Ecosystem state: the project spans Rust CLI/daemon/MCP/CDP/AWP, Python/Node/Go
+  SDKs, Browser Use, LangChain, Vercel AI, SOM parser packages, plugins,
+  generated docs, comparison pages, and marketing assets. Contract drift across
+  these surfaces remains the main roadmap risk.
+- Code changes: SOM link deduplication now preserves case-sensitive paths;
+  input type and ARIA role parsing tolerates real-world casing; custom controls
+  retain `contenteditable`, `tabindex`, `name`, and `autocomplete` attrs; MCP
+  `extract_text` truncation is UTF-8 safe.
+- Docs changes: updated PRD, roadmap, and website docs source with the
+  2026-05-06 market read, rationale, completed improvements, and next steps
+  around accessible-name conformance and actionability fixtures.
+- Verification: `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo test --test som_compiler_test -- --nocapture`
+  passed 42 tests; `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo test mcp::tools::tests::test_truncate_text_to_chars_preserves_utf8_boundaries -- --nocapture`
+  passed. `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build`
+  passed. Full `cargo test` passed 245 lib tests and 5 main/MCP tests, then
+  failed only in `tests/awp_integration_test.rs` because the sandbox denied
+  local socket binding with `Operation not permitted`.
+
 ### 2026-05-05 - Plasmate Improvements Automation
 
 - Git sync: attempted `git fetch --prune origin`, but the sandbox still cannot

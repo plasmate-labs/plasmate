@@ -471,6 +471,12 @@
 <li><strong>Reusable local memory</strong>: cache keys and prefetch discovery need to preserve real URL semantics, dedupe work, and feed selector-aware cache views.</li>
 <li><strong>Ecosystem conformance</strong>: the repo now spans Rust core, MCP/CDP/AWP, Python/Node/Go SDKs, Browser Use, LangChain, Vercel AI, SOM parser packages, generated docs, comparison pages, and marketing assets. This breadth should be treated as a synchronized product surface with shared fixtures.</li>
 </ul>
+<h3 id="2026-05-06-roadmap-adjustment">2026-05-06 Roadmap Adjustment</h3><p>The market is moving from &quot;browser access&quot; toward agent-ready page state: Playwright MCP has made structured refs familiar, Stagehand&#39;s <code>observe()</code> and action caching promise deterministic repeated actions, Firecrawl&#39;s MCP surface now includes interaction/browser sessions, and Skyvern keeps differentiating on visual workflow completion. Plasmate should keep the local-first wedge and increase stickiness by making SOM output more action-complete:</p>
+<ul>
+<li><strong>Actionability metadata</strong>: preserve <code>contenteditable</code>, <code>tabindex</code>, form names, autocomplete hints, and ARIA states so agents can plan custom SaaS controls without falling back to raw DOM.</li>
+<li><strong>Correct URL semantics</strong>: cache and compiler deduplication must preserve case-sensitive paths while normalizing only the parts of URLs that are actually case-insensitive.</li>
+<li><strong>Robust MCP surfaces</strong>: helper tools should never panic on multilingual content or partial token budgets; UTF-8-safe truncation is table stakes for global web pages.</li>
+</ul>
 <h2 id="completed-v011">Completed (v0.1.1)</h2><ul>
 <li>SOM compiler with 9.4x median compression across 38 sites</li>
 <li>V8 JavaScript execution with full DOM shim</li>
@@ -525,6 +531,10 @@
 <li><input checked="" disabled="" type="checkbox"> Robust hidden inline-style stripping</li>
 <li><input checked="" disabled="" type="checkbox"> Full-tree cache prefetch extraction across nested and shadow DOM links</li>
 <li><input checked="" disabled="" type="checkbox"> Shadow-root text/link extraction in MCP helpers</li>
+<li><input checked="" disabled="" type="checkbox"> Case-preserving SOM link deduplication</li>
+<li><input checked="" disabled="" type="checkbox"> Case-tolerant input type and ARIA role parsing</li>
+<li><input checked="" disabled="" type="checkbox"> Custom-control actionability attrs (<code>contenteditable</code>, <code>tabindex</code>, <code>name</code>, <code>autocomplete</code>)</li>
+<li><input checked="" disabled="" type="checkbox"> UTF-8-safe MCP text truncation</li>
 <li><input disabled="" type="checkbox"> Selector-aware SOM cache entries for repeated agent prompts</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
 <li><input disabled="" type="checkbox"> Shared shadow-DOM and web-component fixtures across SDK/parser packages</li>

@@ -305,14 +305,7 @@ pub async fn handle_extract_text(arguments: &Value, client: &reqwest::Client) ->
 
     // Apply max_chars limit if specified
     if let Some(max_chars) = params.max_chars {
-        if text.len() > max_chars {
-            text.truncate(max_chars);
-            // Try to truncate at a word boundary
-            if let Some(last_space) = text.rfind(' ') {
-                text.truncate(last_space);
-            }
-            text.push_str("...");
-        }
+        truncate_text_to_chars(&mut text, max_chars);
     }
 
     json!({
@@ -323,6 +316,25 @@ pub async fn handle_extract_text(arguments: &Value, client: &reqwest::Client) ->
             }
         ]
     })
+}
+
+/// Truncate readable text by character count without splitting UTF-8 codepoints.
+fn truncate_text_to_chars(text: &mut String, max_chars: usize) {
+    if text.chars().count() <= max_chars {
+        return;
+    }
+
+    let truncate_at = text
+        .char_indices()
+        .nth(max_chars)
+        .map(|(idx, _)| idx)
+        .unwrap_or_else(|| text.len());
+    text.truncate(truncate_at);
+
+    if let Some(last_space) = text.rfind(char::is_whitespace) {
+        text.truncate(last_space);
+    }
+    text.push_str("...");
 }
 
 /// Recursively extract text from a SOM element.
@@ -2630,5 +2642,13 @@ mod tests {
                 "https://example.com/shadow".to_string()
             ]
         );
+    }
+
+    #[test]
+    fn test_truncate_text_to_chars_preserves_utf8_boundaries() {
+        let mut text = "Hello 😀 world".to_string();
+        truncate_text_to_chars(&mut text, 7);
+
+        assert_eq!(text, "Hello...");
     }
 }

@@ -1,6 +1,6 @@
 # Plasmate PRD: Agent Stickiness and Roadmap Direction
 
-Last updated: 2026-05-05
+Last updated: 2026-05-06
 
 ## Product Thesis
 
@@ -41,6 +41,17 @@ research. Plasmate should not chase hosted anti-bot infrastructure as the main
 wedge; it should make local SOM snapshots more complete, reusable, and easy to
 verify across its many adapters.
 
+2026-05-06 market read: competitors are converging on "agent-ready page state"
+as a retention mechanism. Playwright MCP's structured snapshots set the
+expectation that interactive elements carry stable refs, Stagehand's
+`observe()` and action caching make repeated workflows feel deterministic after
+the first run, Firecrawl's current MCP docs include interactive browser
+sessions alongside scrape/search/extract, and Skyvern continues to package
+screenshots plus DOM context for multi-step visual workflows. The clearest
+Plasmate answer is not a pivot into hosted browser clouds; it is tighter local
+SOM actionability, conformance fixtures, and deterministic cache/diff behavior
+across the many SDK and integration repos.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -66,6 +77,16 @@ and adapter docs over one-off integration logic.
 
 ## Current Run Changes
 
+- 2026-05-06:
+  - SOM link deduplication now preserves case-sensitive URL paths while still
+    stripping fragments and duplicate trailing slashes.
+  - Input type and ARIA role parsing is more tolerant of real-world casing, so
+    `type="SUBMIT"` and upper-case custom roles no longer lose actionability.
+  - Custom controls now retain `contenteditable`, `tabindex`, `name`, and
+    `autocomplete` attributes in SOM attrs, improving parity with
+    accessibility-snapshot competitors.
+  - MCP `extract_text` truncation is UTF-8 safe, preventing panics when
+    `max_chars` cuts through multibyte content.
 - 2026-05-05:
   - Cache prefetch URL extraction now walks nested SOM children and shadow-root
     elements, deduplicates URLs while preserving order, and excludes non-HTTP
@@ -89,6 +110,8 @@ and adapter docs over one-off integration logic.
   or selected an element.
 - Add conformance cases for ARIA-heavy SaaS pages and compare output against
   Playwright MCP snapshots.
+- Add accessible-name conformance for `aria-labelledby`, `<label for>`, and
+  custom controls that rely on `contenteditable`/`tabindex`.
 - Add shadow-DOM and web-component cases to SDK/parser conformance tests so
   integrations preserve the same SOM surface as the Rust core.
 - Audit ecosystem repos for stale install docs, tool counts, and schema drift.

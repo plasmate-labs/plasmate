@@ -456,7 +456,7 @@
       </div>
     </nav>
     <main class="content">
-      <h1 id="prd-agent-stickiness-and-roadmap-direction">PRD: Agent Stickiness and Roadmap Direction</h1><p>Last updated: 2026-05-05</p>
+      <h1 id="prd-agent-stickiness-and-roadmap-direction">PRD: Agent Stickiness and Roadmap Direction</h1><p>Last updated: 2026-05-06</p>
 <h2 id="product-thesis">Product Thesis</h2><p>Plasmate should be the local-first browser engine agents keep installed because it turns web pages into compact, stable, actionable state. The product is not a general scraper and should not compete feature-for-feature with hosted browser clouds. Its advantage is fast SOM output, predictable element ids, MCP-native tooling, and reusable page understanding without sending browsing data to a cloud API.</p>
 <h2 id="target-audience">Target Audience</h2><ul>
 <li>AI agent developers building MCP tools, coding agents, and research agents.</li>
@@ -471,6 +471,7 @@
 <li>Crawl4AI remains strong for open-source Python crawling and extraction, but carries Chromium/Playwright operational weight.</li>
 </ul>
 <p>2026-05-05 market read: the strongest retention hooks are reusable structured state, cached repeated actions, and ecosystem-native distribution. Playwright MCP returns accessibility snapshots with stable refs for interaction, Stagehand now markets action caching as an LLM-cost and latency reduction path, and Firecrawl&#39;s MCP surface combines scraping, search, browser sessions, and deep research. Plasmate should not chase hosted anti-bot infrastructure as the main wedge; it should make local SOM snapshots more complete, reusable, and easy to verify across its many adapters.</p>
+<p>2026-05-06 market read: competitors are converging on &quot;agent-ready page state&quot; as a retention mechanism. Playwright MCP&#39;s structured snapshots set the expectation that interactive elements carry stable refs, Stagehand&#39;s <code>observe()</code> and action caching make repeated workflows feel deterministic after the first run, Firecrawl&#39;s current MCP docs include interactive browser sessions alongside scrape/search/extract, and Skyvern continues to package screenshots plus DOM context for multi-step visual workflows. The clearest Plasmate answer is not a pivot into hosted browser clouds; it is tighter local SOM actionability, conformance fixtures, and deterministic cache/diff behavior across the many SDK and integration repos.</p>
 <h2 id="ecosystem-surface">Ecosystem Surface</h2><p>The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.</p>
 <h2 id="requirements">Requirements</h2><ol>
 <li>Preserve actionable structure: SOM must capture common accessibility roles, stable ids, labels, forms, links, state, and selectors that agents can reuse.</li>
@@ -480,6 +481,13 @@
 <li>Stay local-first by default: hosted competitors can own scale infrastructure; Plasmate should own local speed, privacy, and open protocol fit.</li>
 </ol>
 <h2 id="current-run-changes">Current Run Changes</h2><ul>
+<li>2026-05-06:<ul>
+<li>SOM link deduplication now preserves case-sensitive URL paths while still stripping fragments and duplicate trailing slashes.</li>
+<li>Input type and ARIA role parsing is more tolerant of real-world casing, so <code>type=&quot;SUBMIT&quot;</code> and upper-case custom roles no longer lose actionability.</li>
+<li>Custom controls now retain <code>contenteditable</code>, <code>tabindex</code>, <code>name</code>, and <code>autocomplete</code> attributes in SOM attrs, improving parity with accessibility-snapshot competitors.</li>
+<li>MCP <code>extract_text</code> truncation is UTF-8 safe, preventing panics when <code>max_chars</code> cuts through multibyte content.</li>
+</ul>
+</li>
 <li>2026-05-05:<ul>
 <li>Cache prefetch URL extraction now walks nested SOM children and shadow-root elements, deduplicates URLs while preserving order, and excludes non-HTTP schemes.</li>
 <li>Cache URL normalization now lowercases scheme/host through URL parsing without corrupting case-sensitive paths.</li>
@@ -498,6 +506,7 @@
 <li>Implement selector-aware SOM cache entries for <code>main</code>, <code>form</code>, and <code>#id</code> prompts.</li>
 <li>Add trace export for MCP/AWP sessions so users can debug why an agent clicked or selected an element.</li>
 <li>Add conformance cases for ARIA-heavy SaaS pages and compare output against Playwright MCP snapshots.</li>
+<li>Add accessible-name conformance for <code>aria-labelledby</code>, <code>&lt;label for&gt;</code>, and custom controls that rely on <code>contenteditable</code>/<code>tabindex</code>.</li>
 <li>Add shadow-DOM and web-component cases to SDK/parser conformance tests so integrations preserve the same SOM surface as the Rust core.</li>
 <li>Audit ecosystem repos for stale install docs, tool counts, and schema drift.</li>
 </ul>

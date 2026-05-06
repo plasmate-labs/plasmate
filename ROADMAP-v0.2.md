@@ -48,6 +48,25 @@ local-first depth:
    generated docs, comparison pages, and marketing assets. This breadth should
    be treated as a synchronized product surface with shared fixtures.
 
+### 2026-05-06 Roadmap Adjustment
+
+The market is moving from "browser access" toward agent-ready page state:
+Playwright MCP has made structured refs familiar, Stagehand's `observe()` and
+action caching promise deterministic repeated actions, Firecrawl's MCP surface
+now includes interaction/browser sessions, and Skyvern keeps differentiating on
+visual workflow completion. Plasmate should keep the local-first wedge and
+increase stickiness by making SOM output more action-complete:
+
+1. **Actionability metadata**: preserve `contenteditable`, `tabindex`, form
+   names, autocomplete hints, and ARIA states so agents can plan custom SaaS
+   controls without falling back to raw DOM.
+2. **Correct URL semantics**: cache and compiler deduplication must preserve
+   case-sensitive paths while normalizing only the parts of URLs that are
+   actually case-insensitive.
+3. **Robust MCP surfaces**: helper tools should never panic on multilingual
+   content or partial token budgets; UTF-8-safe truncation is table stakes for
+   global web pages.
+
 ## Architecture
 
 ```
@@ -187,6 +206,13 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   normalized without breaking case-sensitive paths.
 - MCP `extract_text` and `extract_links` include shadow-root content, improving
   parity for web components and declarative shadow DOM.
+- SOM link deduplication now preserves case-sensitive paths instead of
+  lowercasing complete hrefs.
+- Input type and ARIA role parsing tolerates real-world casing, preserving
+  actionability for uppercase `type`/`role` values.
+- Custom controls retain `contenteditable`, `tabindex`, `name`, and
+  `autocomplete` attrs in SOM output.
+- MCP `extract_text` truncation is UTF-8 safe for multilingual pages.
 - Selector handling now trims whitespace and supports documented region ids
   (`#region-id`) while preserving HTML id selection for agent actions.
 - SOM compilation recognizes common ARIA widgets (`textbox`, `searchbox`,

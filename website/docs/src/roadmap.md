@@ -22,6 +22,14 @@ Current competitor pressure reinforces the same direction but raises the bar on 
 - **Reusable local memory**: cache keys and prefetch discovery need to preserve real URL semantics, dedupe work, and feed selector-aware cache views.
 - **Ecosystem conformance**: the repo now spans Rust core, MCP/CDP/AWP, Python/Node/Go SDKs, Browser Use, LangChain, Vercel AI, SOM parser packages, generated docs, comparison pages, and marketing assets. This breadth should be treated as a synchronized product surface with shared fixtures.
 
+### 2026-05-06 Roadmap Adjustment
+
+The market is moving from "browser access" toward agent-ready page state: Playwright MCP has made structured refs familiar, Stagehand's `observe()` and action caching promise deterministic repeated actions, Firecrawl's MCP surface now includes interaction/browser sessions, and Skyvern keeps differentiating on visual workflow completion. Plasmate should keep the local-first wedge and increase stickiness by making SOM output more action-complete:
+
+- **Actionability metadata**: preserve `contenteditable`, `tabindex`, form names, autocomplete hints, and ARIA states so agents can plan custom SaaS controls without falling back to raw DOM.
+- **Correct URL semantics**: cache and compiler deduplication must preserve case-sensitive paths while normalizing only the parts of URLs that are actually case-insensitive.
+- **Robust MCP surfaces**: helper tools should never panic on multilingual content or partial token budgets; UTF-8-safe truncation is table stakes for global web pages.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -81,6 +89,10 @@ Current competitor pressure reinforces the same direction but raises the bar on 
 - [x] Robust hidden inline-style stripping
 - [x] Full-tree cache prefetch extraction across nested and shadow DOM links
 - [x] Shadow-root text/link extraction in MCP helpers
+- [x] Case-preserving SOM link deduplication
+- [x] Case-tolerant input type and ARIA role parsing
+- [x] Custom-control actionability attrs (`contenteditable`, `tabindex`, `name`, `autocomplete`)
+- [x] UTF-8-safe MCP text truncation
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Shared shadow-DOM and web-component fixtures across SDK/parser packages

@@ -187,6 +187,68 @@ fn test_common_aria_widget_roles_map_to_interactive_elements() {
     assert_eq!(som.meta.interactive_count, 4);
 }
 
+#[test]
+fn test_input_types_are_case_insensitive() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Inputs</title></head>
+<body><main>
+    <input type="SUBMIT" value="Save">
+    <input type="EMAIL" name="email" autocomplete="email">
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let elems = all_elements(&som);
+
+    assert!(elems.iter().any(|e| e.role == ElementRole::Button));
+    let email = elems
+        .iter()
+        .find(|e| e.role == ElementRole::TextInput)
+        .expect("email input should compile as text input");
+    let attrs = email.attrs.as_ref().expect("email input should have attrs");
+    assert_eq!(attrs["input_type"], "email");
+    assert_eq!(attrs["name"], "email");
+    assert_eq!(attrs["autocomplete"], "email");
+}
+
+#[test]
+fn test_custom_controls_keep_actionability_attrs() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Custom Controls</title></head>
+<body><main>
+    <div role="textbox" aria-label="Comment" contenteditable="true" tabindex="0"></div>
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let control = all_elements(&som)
+        .into_iter()
+        .find(|e| e.role == ElementRole::TextInput)
+        .expect("custom textbox should be preserved");
+    let attrs = control
+        .attrs
+        .as_ref()
+        .expect("custom textbox should have attrs");
+
+    assert_eq!(attrs["contenteditable"], true);
+    assert_eq!(attrs["tabindex"], 0);
+}
+
+#[test]
+fn test_link_dedup_preserves_case_sensitive_paths() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Links</title></head>
+<body><main>
+    <a href="/Docs">Docs</a>
+    <a href="/Docs#install">Docs install</a>
+    <a href="/docs">Lowercase docs</a>
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let json = serde_json::to_string(&som).unwrap();
+
+    assert_eq!(json.matches("\"/Docs\"").count(), 1);
+    assert_eq!(json.matches("\"/docs\"").count(), 1);
+}
+
 // ============================================================
 // Issue 1: Layout table detection and decomposition
 // ============================================================
