@@ -188,6 +188,7 @@ An **Element** represents a single semantic unit within a region.
 | `attrs`    | object           | OPTIONAL | Role-specific attributes (see Section 4.3). |
 | `children` | array of Element | OPTIONAL | Child elements (reserved for future use). |
 | `hints`    | array of string  | OPTIONAL | Semantic hints inferred from CSS classes (see Section 5). |
+| `shadow`   | object           | OPTIONAL | Declarative shadow DOM content attached to this element, with `mode` and nested `elements`. |
 
 ### 4.2 ElementRole
 
@@ -211,6 +212,7 @@ The `role` field MUST be one of the following string values (serialized in
 | `section`     | No          | (none)                 | `<section>`, `<article>` |
 | `separator`   | No          | (none)                 | `<hr>` |
 | `details`     | Yes         | `["toggle"]`           | `<details>` with `<summary>` (disclosure widget) |
+| `iframe`      | No          | (none)                 | `<iframe>` embedded browsing contexts |
 
 For interactive elements, the `actions` array MUST be present and contain the
 default actions listed above. For non-interactive elements, the `actions` field
@@ -308,6 +310,26 @@ Each **Option** object:
 |-----------|---------|-------------|
 | `open`    | boolean | `true` when the `<details>` element has the `open` attribute (expanded state). |
 | `summary` | string  | The visible text from the `<summary>` child element. |
+
+#### `iframe`
+
+| Attribute        | Type    | Description |
+|------------------|---------|-------------|
+| `src`            | string  | The iframe source URL. |
+| `has_srcdoc`     | boolean | `true` when inline `srcdoc` content is present. |
+| `srcdoc_preview` | string  | Short preview of inline `srcdoc` content. |
+| `name`           | string  | The iframe browsing-context name. |
+| `sandbox`        | string  | Sandbox policy tokens. |
+| `allow`          | string  | Permissions policy string. |
+| `width`          | string  | Source width attribute. |
+| `height`         | string  | Source height attribute. |
+
+#### Global actionability attributes
+
+Implementations SHOULD preserve common actionability attributes on any element:
+`contenteditable`, `tabindex`, `name`, and `autocomplete`. These attributes are
+especially important for custom controls that are exposed through ARIA roles
+instead of native form elements.
 
 ### 4.4 ARIA State Preservation
 

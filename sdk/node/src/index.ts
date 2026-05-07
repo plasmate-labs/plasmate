@@ -43,6 +43,8 @@ export type {
   SelectOption,
   ListItem,
   LinkElement,
+  AriaState,
+  SomShadowRoot,
 } from './types';
 
 // ---- SOM query helpers ----

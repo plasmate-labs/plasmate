@@ -25,6 +25,10 @@ function findElementById(elements: SomElement[], id: string): SomElement | undef
       const found = findElementById(el.children, id);
       if (found) return found;
     }
+    if (el.shadow) {
+      const found = findElementById(el.shadow.elements, id);
+      if (found) return found;
+    }
   }
   return undefined;
 }
@@ -61,6 +65,9 @@ function collectElements(elements: SomElement[], result: SomElement[]): void {
     result.push(el);
     if (el.children) {
       collectElements(el.children, result);
+    }
+    if (el.shadow) {
+      collectElements(el.shadow.elements, result);
     }
   }
 }

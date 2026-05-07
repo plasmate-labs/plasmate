@@ -12,6 +12,7 @@ from plasmate.types import (
     SomElement,
     SomMeta,
     SomRegion,
+    SomShadowRoot,
     StructuredData,
 )
 from plasmate.query import (
@@ -127,6 +128,46 @@ def sample_som() -> Som:
     )
 
 
+def _shadow_som() -> Som:
+    """Build a small SOM with declarative shadow DOM content."""
+    return Som(
+        som_version="1.0",
+        url="https://example.com/shadow",
+        title="Shadow Page",
+        lang="en",
+        regions=[
+            SomRegion(
+                id="r_main",
+                role=RegionRole.main,
+                elements=[
+                    SomElement(
+                        id="host",
+                        role=ElementRole.section,
+                        shadow=SomShadowRoot(
+                            mode="open",
+                            elements=[
+                                SomElement(
+                                    id="shadow_text",
+                                    role=ElementRole.paragraph,
+                                    text="Inside shadow root",
+                                ),
+                                SomElement(
+                                    id="shadow_button",
+                                    role=ElementRole.button,
+                                    text="Confirm",
+                                    actions=["click"],
+                                    attrs=ElementAttrs(aria={"pressed": False}),
+                                ),
+                            ],
+                        ),
+                    )
+                ],
+            )
+        ],
+        meta=SomMeta(html_bytes=1000, som_bytes=500, element_count=3, interactive_count=1),
+    )
+
+
 class TestFindByRole:
     def test_finds_matching_regions(self, sample_som: Som) -> None:
         nav = find_by_role(sample_som, "navigation")
@@ -166,6 +207,14 @@ class TestFindById:
     def test_returns_none_for_missing_id(self, sample_som: Som) -> None:
         assert find_by_id(sample_som, "e999") is None
 
+    def test_finds_shadow_root_element(self) -> None:
+        som = _shadow_som()
+        el = find_by_id(som, "shadow_button")
+        assert el is not None
+        assert el.text == "Confirm"
+        assert el.attrs is not None
+        assert el.attrs.aria == {"pressed": False}
+
 
 class TestFindByTag:
     def test_finds_all_links(self, sample_som: Som) -> None:
@@ -178,6 +227,9 @@ class TestFindByTag:
 
     def test_finds_none_for_missing_tag(self, sample_som: Som) -> None:
         assert find_by_tag(sample_som, "table") == []
+
+    def test_finds_shadow_root_roles(self) -> None:
+        assert [el.id for el in find_by_tag(_shadow_som(), "paragraph")] == ["shadow_text"]
 
 
 class TestFindInteractive:
@@ -201,6 +253,9 @@ class TestFindInteractive:
         )
         assert find_interactive(som) == []
 
+    def test_finds_shadow_root_interactive_elements(self) -> None:
+        assert [el.id for el in find_interactive(_shadow_som())] == ["shadow_button"]
+
 
 class TestFindByText:
     def test_finds_by_exact_text(self, sample_som: Som) -> None:
@@ -222,6 +277,11 @@ class TestFindByText:
         assert len(results) == 1
         assert results[0].id == "e8"
 
+    def test_finds_shadow_root_text(self) -> None:
+        results = find_by_text(_shadow_som(), "inside shadow")
+        assert len(results) == 1
+        assert results[0].id == "shadow_text"
+
     def test_no_match_returns_empty(self, sample_som: Som) -> None:
         assert find_by_text(sample_som, "zzz_no_match") == []
 
@@ -240,6 +300,10 @@ class TestFlatElements:
         ids = [e.id for e in elements]
         assert ids.index("e7") < ids.index("e8")
         assert ids.index("e8") < ids.index("e9")
+
+    def test_includes_shadow_root_elements_in_order(self) -> None:
+        ids = [e.id for e in flat_elements(_shadow_som())]
+        assert ids == ["host", "shadow_text", "shadow_button"]
 
 
 class TestGetTokenEstimate:

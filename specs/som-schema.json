@@ -170,7 +170,30 @@
                 "items": { "type": "string" }
               }
             },
-            "section_label": { "type": "string" }
+            "section_label": { "type": "string" },
+            "open": { "type": "boolean" },
+            "summary": { "type": "string" },
+            "contenteditable": {
+              "oneOf": [
+                { "type": "boolean" },
+                { "type": "string" }
+              ]
+            },
+            "tabindex": {
+              "oneOf": [
+                { "type": "integer" },
+                { "type": "string" }
+              ]
+            },
+            "name": { "type": "string" },
+            "autocomplete": { "type": "string" },
+            "aria": { "$ref": "#/$defs/AriaState" },
+            "has_srcdoc": { "type": "boolean" },
+            "srcdoc_preview": { "type": "string" },
+            "sandbox": { "type": "string" },
+            "allow": { "type": "string" },
+            "width": { "type": "string" },
+            "height": { "type": "string" }
           },
           "additionalProperties": false
         },
@@ -183,6 +206,10 @@
           "type": "array",
           "items": { "$ref": "#/$defs/SemanticHint" },
           "description": "Semantic hints inferred from CSS classes."
+        },
+        "shadow": {
+          "$ref": "#/$defs/ShadowRoot",
+          "description": "Declarative shadow DOM content attached to this element."
         }
       }
     },
@@ -203,9 +230,50 @@
         "paragraph",
         "section",
         "separator",
-        "details"
+        "details",
+        "iframe"
       ],
       "description": "The semantic role of an element."
+    },
+    "AriaState": {
+      "type": "object",
+      "description": "Common ARIA states copied from the source element.",
+      "additionalProperties": false,
+      "properties": {
+        "expanded": { "type": "boolean" },
+        "selected": { "type": "boolean" },
+        "checked": {
+          "oneOf": [
+            { "type": "boolean" },
+            { "type": "string" }
+          ]
+        },
+        "disabled": { "type": "boolean" },
+        "current": {
+          "oneOf": [
+            { "type": "boolean" },
+            { "type": "string" }
+          ]
+        },
+        "pressed": { "type": "boolean" },
+        "hidden": { "type": "boolean" }
+      }
+    },
+    "ShadowRoot": {
+      "type": "object",
+      "description": "Elements extracted from a declarative shadow root.",
+      "required": ["mode", "elements"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["open", "closed"]
+        },
+        "elements": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Element" }
+        }
+      }
     },
     "SemanticHint": {
       "type": "string",

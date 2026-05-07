@@ -77,6 +77,42 @@ const FIXTURE: Som = {
 
 const FIXTURE_JSON = JSON.stringify(FIXTURE);
 
+const SHADOW_FIXTURE: Som = {
+  ...FIXTURE,
+  regions: [
+    {
+      id: 'r_content',
+      role: 'content',
+      elements: [
+        {
+          id: 'host',
+          role: 'section',
+          text: 'Widget host',
+          shadow: {
+            mode: 'open',
+            elements: [
+              {
+                id: 'shadow_action',
+                role: 'button',
+                text: 'Shadow Save',
+                actions: ['click'],
+              },
+              {
+                id: 'shadow_link',
+                role: 'link',
+                text: 'Shadow Docs',
+                actions: ['click'],
+                attrs: { href: '/shadow-docs' },
+              },
+            ],
+          },
+        },
+      ],
+    },
+  ],
+  meta: { html_bytes: 1000, som_bytes: 500, element_count: 3, interactive_count: 2 },
+};
+
 // ---- Parser tests ----
 
 describe('parseSom', () => {
@@ -146,6 +182,14 @@ describe('getAllElements', () => {
   it('returns all 8 elements', () => {
     expect(getAllElements(FIXTURE)).toHaveLength(8);
   });
+
+  it('includes shadow-root elements', () => {
+    expect(getAllElements(SHADOW_FIXTURE).map((el) => el.id)).toEqual([
+      'host',
+      'shadow_action',
+      'shadow_link',
+    ]);
+  });
 });
 
 describe('findByRole', () => {
@@ -175,6 +219,10 @@ describe('findById', () => {
   it('returns undefined for missing id', () => {
     expect(findById(FIXTURE, 'e_999')).toBeUndefined();
   });
+
+  it('finds elements inside shadow roots', () => {
+    expect(findById(SHADOW_FIXTURE, 'shadow_action')?.text).toBe('Shadow Save');
+  });
 });
 
 describe('findByText', () => {
@@ -188,6 +236,12 @@ describe('findByText', () => {
     const results = findByText(FIXTURE, 'search');
     expect(results).toHaveLength(1);
     expect(results[0].id).toBe('e_7');
+  });
+
+  it('finds text inside shadow roots', () => {
+    const results = findByText(SHADOW_FIXTURE, 'shadow docs');
+    expect(results).toHaveLength(1);
+    expect(results[0].id).toBe('shadow_link');
   });
 
   it('finds by exact match', () => {
@@ -212,6 +266,11 @@ describe('getInteractiveElements', () => {
     expect(ids).toContain('e_5');
     expect(ids).toContain('e_7');
     expect(ids).toContain('e_8');
+  });
+
+  it('includes interactive shadow-root elements', () => {
+    const ids = getInteractiveElements(SHADOW_FIXTURE).map((e) => e.id);
+    expect(ids).toEqual(['shadow_action', 'shadow_link']);
   });
 });
 

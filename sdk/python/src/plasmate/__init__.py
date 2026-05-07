@@ -35,6 +35,7 @@ from .types import (
     SomElement,
     SomMeta,
     SomRegion,
+    SomShadowRoot,
     StructuredData,
 )
 from .query import (
@@ -63,6 +64,7 @@ __all__ = [
     "SomElement",
     "SomMeta",
     "SomRegion",
+    "SomShadowRoot",
     "StructuredData",
     # Query helpers
     "find_by_id",

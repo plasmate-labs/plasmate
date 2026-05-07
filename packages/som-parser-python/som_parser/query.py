@@ -14,6 +14,8 @@ def _collect_elements(elements: List[SomElement]) -> List[SomElement]:
         result.append(el)
         if el.children:
             result.extend(_collect_elements(el.children))
+        if el.shadow:
+            result.extend(_collect_elements(el.shadow.elements))
     return result
 
 

@@ -83,6 +83,11 @@ def _find_element_by_id(element: SomElement, element_id: str) -> Optional[SomEle
             result = _find_element_by_id(child, element_id)
             if result is not None:
                 return result
+    if element.shadow:
+        for child in element.shadow.elements:
+            result = _find_element_by_id(child, element_id)
+            if result is not None:
+                return result
     return None
 
 
@@ -92,6 +97,9 @@ def _collect_by_role(element: SomElement, role: str, results: List[SomElement]) 
     if element.children:
         for child in element.children:
             _collect_by_role(child, role, results)
+    if element.shadow:
+        for child in element.shadow.elements:
+            _collect_by_role(child, role, results)
 
 
 def _collect_interactive(element: SomElement, results: List[SomElement]) -> None:
@@ -99,6 +107,9 @@ def _collect_interactive(element: SomElement, results: List[SomElement]) -> None
         results.append(element)
     if element.children:
         for child in element.children:
+            _collect_interactive(child, results)
+    if element.shadow:
+        for child in element.shadow.elements:
             _collect_interactive(child, results)
 
 
@@ -108,10 +119,16 @@ def _collect_by_text(element: SomElement, lower_text: str, results: List[SomElem
     if element.children:
         for child in element.children:
             _collect_by_text(child, lower_text, results)
+    if element.shadow:
+        for child in element.shadow.elements:
+            _collect_by_text(child, lower_text, results)
 
 
 def _flatten(element: SomElement, results: List[SomElement]) -> None:
     results.append(element)
     if element.children:
         for child in element.children:
+            _flatten(child, results)
+    if element.shadow:
+        for child in element.shadow.elements:
             _flatten(child, results)

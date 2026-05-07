@@ -30,7 +30,9 @@ export type ElementRole =
   | 'table'
   | 'paragraph'
   | 'section'
-  | 'separator';
+  | 'separator'
+  | 'details'
+  | 'iframe';
 
 export type ElementAction = 'click' | 'type' | 'clear' | 'select' | 'toggle';
 
@@ -89,6 +91,34 @@ export interface SomElementAttrs {
   headers?: string[];
   rows?: string[][];
   section_label?: string;
+  open?: boolean;
+  summary?: string;
+  contenteditable?: boolean | string;
+  tabindex?: number | string;
+  name?: string;
+  autocomplete?: string;
+  aria?: AriaState;
+  has_srcdoc?: boolean;
+  srcdoc_preview?: string;
+  sandbox?: string;
+  allow?: string;
+  width?: string;
+  height?: string;
+}
+
+export interface AriaState {
+  expanded?: boolean;
+  selected?: boolean;
+  checked?: boolean | string;
+  disabled?: boolean;
+  current?: boolean | string;
+  pressed?: boolean;
+  hidden?: boolean;
+}
+
+export interface SomShadowRoot {
+  mode: 'open' | 'closed' | string;
+  elements: SomElement[];
 }
 
 export interface LinkElement {
@@ -109,6 +139,7 @@ export interface SomElement {
   attrs?: SomElementAttrs;
   children?: SomElement[];
   hints?: SemanticHint[];
+  shadow?: SomShadowRoot;
 }
 
 export interface SomRegion {

@@ -9,6 +9,7 @@ from som_parser import (
     RegionRole,
     Som,
     SomElement,
+    SomShadowRoot,
     filter_elements,
     find_by_id,
     find_by_role,
@@ -221,6 +222,38 @@ class TestGetAllElements:
         ids = [el.id for el in elements]
         assert ids == ["e_1", "e_2", "e_3", "e_4", "e_5", "e_6", "e_7", "e_8"]
 
+    def test_includes_shadow_root_elements(self):
+        som = parse_som(
+            {
+                **FIXTURE_SOM,
+                "regions": [
+                    {
+                        "id": "r_content",
+                        "role": "content",
+                        "elements": [
+                            {
+                                "id": "host",
+                                "role": "section",
+                                "shadow": {
+                                    "mode": "open",
+                                    "elements": [
+                                        {
+                                            "id": "shadow_action",
+                                            "role": "button",
+                                            "text": "Shadow Save",
+                                            "actions": ["click"],
+                                        }
+                                    ],
+                                },
+                            }
+                        ],
+                    }
+                ],
+            }
+        )
+        assert isinstance(som.regions[0].elements[0].shadow, SomShadowRoot)
+        assert [el.id for el in get_all_elements(som)] == ["host", "shadow_action"]
+
 
 class TestFindByRole:
     def test_links(self, som: Som):
@@ -256,6 +289,38 @@ class TestFindById:
     def test_not_found(self, som: Som):
         assert find_by_id(som, "nonexistent") is None
 
+    def test_finds_shadow_root_element(self):
+        som = parse_som(
+            {
+                **FIXTURE_SOM,
+                "regions": [
+                    {
+                        "id": "r_content",
+                        "role": "content",
+                        "elements": [
+                            {
+                                "id": "host",
+                                "role": "section",
+                                "shadow": {
+                                    "mode": "open",
+                                    "elements": [
+                                        {
+                                            "id": "shadow_link",
+                                            "role": "link",
+                                            "text": "Shadow Docs",
+                                            "actions": ["click"],
+                                            "attrs": {"href": "/shadow-docs"},
+                                        }
+                                    ],
+                                },
+                            }
+                        ],
+                    }
+                ],
+            }
+        )
+        assert find_by_id(som, "shadow_link").text == "Shadow Docs"
+
 
 class TestFindByText:
     def test_substring(self, som: Som):
@@ -284,6 +349,36 @@ class TestFindByText:
         results = find_by_text(som, "xyznonexistent")
         assert len(results) == 0
 
+    def test_finds_shadow_root_text(self):
+        som = parse_som(
+            {
+                **FIXTURE_SOM,
+                "regions": [
+                    {
+                        "id": "r_content",
+                        "role": "content",
+                        "elements": [
+                            {
+                                "id": "host",
+                                "role": "section",
+                                "shadow": {
+                                    "mode": "open",
+                                    "elements": [
+                                        {
+                                            "id": "shadow_text",
+                                            "role": "paragraph",
+                                            "text": "Inside shadow root",
+                                        }
+                                    ],
+                                },
+                            }
+                        ],
+                    }
+                ],
+            }
+        )
+        assert find_by_text(som, "inside shadow")[0].id == "shadow_text"
+
 
 class TestGetInteractiveElements:
     def test_count(self, som: Som):
@@ -295,6 +390,37 @@ class TestGetInteractiveElements:
         for el in interactive:
             assert el.actions is not None
             assert len(el.actions) > 0
+
+    def test_includes_shadow_root_actions(self):
+        som = parse_som(
+            {
+                **FIXTURE_SOM,
+                "regions": [
+                    {
+                        "id": "r_content",
+                        "role": "content",
+                        "elements": [
+                            {
+                                "id": "host",
+                                "role": "section",
+                                "shadow": {
+                                    "mode": "open",
+                                    "elements": [
+                                        {
+                                            "id": "shadow_button",
+                                            "role": "button",
+                                            "text": "Confirm",
+                                            "actions": ["click"],
+                                        }
+                                    ],
+                                },
+                            }
+                        ],
+                    }
+                ],
+            }
+        )
+        assert [el.id for el in get_interactive_elements(som)] == ["shadow_button"]
 
 
 class TestGetLinks:

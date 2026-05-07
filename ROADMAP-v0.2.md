@@ -67,6 +67,24 @@ increase stickiness by making SOM output more action-complete:
    content or partial token budgets; UTF-8-safe truncation is table stakes for
    global web pages.
 
+### 2026-05-07 Roadmap Adjustment
+
+Competitor pressure is expanding from structured snapshots into durable
+workflow memory and full browser surfaces. Playwright MCP keeps stable
+accessibility refs at the center of interaction, Stagehand v3 now makes
+`observe()` planning, action caching, and targeted iframe/shadow-root operation
+part of its core story, and Firecrawl/Browser Use are selling managed browser
+sessions and persistent cloud profiles. Plasmate should not pivot into hosted
+browser infrastructure as the main wedge. The higher-retention move is to make
+local SOM contracts complete and portable:
+
+1. **Schema parity before new adapters**: JSON Schema, parser packages, SDKs,
+   and integrations must accept the same SOM shape the Rust compiler emits.
+2. **Web-component reachability**: shadow-root elements should be discoverable
+   by id, role, text, link, and actionability helpers in every language.
+3. **Conformance as distribution**: the large repo surface is a growth asset
+   only when downstream adapters stay thin, current, and release-tested.
+
 ## Architecture
 
 ```
@@ -213,6 +231,12 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Custom controls retain `contenteditable`, `tabindex`, `name`, and
   `autocomplete` attrs in SOM output.
 - MCP `extract_text` truncation is UTF-8 safe for multilingual pages.
+- SOM Schema now includes `shadow`, `iframe`, `details`, ARIA state, and
+  actionability attrs emitted by the Rust compiler.
+- Python and Node parser packages traverse shadow-root elements in query
+  helpers and validate the newer SOM surface.
+- Python and Node SDK helpers now find shadow-root elements by id, role, text,
+  and actionability.
 - Selector handling now trims whitespace and supports documented region ids
   (`#region-id`) while preserving HTML id selection for agent actions.
 - SOM compilation recognizes common ARIA widgets (`textbox`, `searchbox`,

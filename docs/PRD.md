@@ -1,6 +1,6 @@
 # Plasmate PRD: Agent Stickiness and Roadmap Direction
 
-Last updated: 2026-05-06
+Last updated: 2026-05-07
 
 ## Product Thesis
 
@@ -52,6 +52,17 @@ Plasmate answer is not a pivot into hosted browser clouds; it is tighter local
 SOM actionability, conformance fixtures, and deterministic cache/diff behavior
 across the many SDK and integration repos.
 
+2026-05-07 market read: competitors are widening the browser-agent state
+contract. Playwright MCP documents accessibility snapshots as the default
+interaction layer with stable refs, Stagehand v3 emphasizes `observe()`
+planning, server/local action caching, and targeted operation across iframes
+and shadow roots, while Firecrawl and Browser Use package managed browser
+sessions, persistent profiles, and cloud automation for teams that do not want
+local browser operations. Plasmate should keep its local-first wedge, but
+SDK/parser parity is now product stickiness: if Rust emits shadow roots,
+iframe/details roles, or ARIA/action attrs, every adapter must be able to parse
+and query them.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -77,6 +88,13 @@ and adapter docs over one-off integration logic.
 
 ## Current Run Changes
 
+- 2026-05-07:
+  - SOM JSON Schema now accepts current Rust core output for `shadow`,
+    `iframe`, `details`, ARIA state, and actionability attrs.
+  - Python and Node parser packages now expose shadow-root types and traverse
+    `shadow.elements` in element, text, link, and interactive queries.
+  - Python and Node SDK query helpers now find shadow-root elements by id, role,
+    text, and actionability so web-component UIs stay reachable to agents.
 - 2026-05-06:
   - SOM link deduplication now preserves case-sensitive URL paths while still
     stripping fragments and duplicate trailing slashes.
@@ -112,6 +130,6 @@ and adapter docs over one-off integration logic.
   Playwright MCP snapshots.
 - Add accessible-name conformance for `aria-labelledby`, `<label for>`, and
   custom controls that rely on `contenteditable`/`tabindex`.
-- Add shadow-DOM and web-component cases to SDK/parser conformance tests so
-  integrations preserve the same SOM surface as the Rust core.
+- Promote the new SDK/parser shadow-root tests into shared conformance fixtures
+  that run against every adapter before release.
 - Audit ecosystem repos for stale install docs, tool counts, and schema drift.

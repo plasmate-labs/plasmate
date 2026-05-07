@@ -30,6 +30,14 @@ The market is moving from "browser access" toward agent-ready page state: Playwr
 - **Correct URL semantics**: cache and compiler deduplication must preserve case-sensitive paths while normalizing only the parts of URLs that are actually case-insensitive.
 - **Robust MCP surfaces**: helper tools should never panic on multilingual content or partial token budgets; UTF-8-safe truncation is table stakes for global web pages.
 
+### 2026-05-07 Roadmap Adjustment
+
+Competitor pressure is expanding from structured snapshots into durable workflow memory and full browser surfaces. Playwright MCP keeps stable accessibility refs at the center of interaction, Stagehand v3 now makes `observe()` planning, action caching, and targeted iframe/shadow-root operation part of its core story, and Firecrawl/Browser Use are selling managed browser sessions and persistent cloud profiles. Plasmate should keep the local-first wedge by making SOM contracts complete and portable across adapters.
+
+- **Schema parity before new adapters**: JSON Schema, parser packages, SDKs, and integrations must accept the same SOM shape the Rust compiler emits.
+- **Web-component reachability**: shadow-root elements should be discoverable by id, role, text, link, and actionability helpers in every language.
+- **Conformance as distribution**: the large repo surface is a growth asset only when downstream adapters stay thin, current, and release-tested.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -93,7 +101,9 @@ The market is moving from "browser access" toward agent-ready page state: Playwr
 - [x] Case-tolerant input type and ARIA role parsing
 - [x] Custom-control actionability attrs (`contenteditable`, `tabindex`, `name`, `autocomplete`)
 - [x] UTF-8-safe MCP text truncation
+- [x] SOM Schema parity for `shadow`, `iframe`, `details`, ARIA state, and actionability attrs
+- [x] Shadow-root query coverage across Python/Node SDK and parser packages
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
-- [ ] Shared shadow-DOM and web-component fixtures across SDK/parser packages
+- [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
 - [ ] WebMCP/watchlist research spike: track whether browser-native tool exposure changes SOM adapter strategy

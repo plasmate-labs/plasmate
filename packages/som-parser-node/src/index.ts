@@ -13,6 +13,8 @@ export type {
   ListItem,
   LinkElement,
   StructuredData,
+  AriaState,
+  SomShadowRoot,
 } from './types.js';
 
 // Parser

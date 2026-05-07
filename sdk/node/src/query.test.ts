@@ -83,6 +83,44 @@ const fixture: Som = {
   },
 };
 
+const shadowFixture: Som = {
+  som_version: '1.0',
+  url: 'https://example.com/shadow',
+  title: 'Shadow',
+  lang: 'en',
+  regions: [
+    {
+      id: 'r_main',
+      role: 'main',
+      elements: [
+        {
+          id: 'host',
+          role: 'section',
+          shadow: {
+            mode: 'open',
+            elements: [
+              { id: 'shadow_text', role: 'paragraph', text: 'Inside shadow root' },
+              {
+                id: 'shadow_button',
+                role: 'button',
+                text: 'Confirm',
+                actions: ['click'],
+                attrs: { aria: { pressed: false } },
+              },
+            ],
+          },
+        },
+      ],
+    },
+  ],
+  meta: {
+    html_bytes: 1000,
+    som_bytes: 500,
+    element_count: 3,
+    interactive_count: 1,
+  },
+};
+
 describe('findByRole', () => {
   it('finds regions by role', () => {
     const mains = findByRole(fixture, 'main');
@@ -108,6 +146,12 @@ describe('findById', () => {
     assert.equal(el?.text, 'Nested paragraph');
   });
 
+  it('finds an element inside a shadow root', () => {
+    const el = findById(shadowFixture, 'shadow_button');
+    assert.equal(el?.role, 'button');
+    assert.equal(el?.attrs?.aria?.pressed, false);
+  });
+
   it('returns undefined for missing ID', () => {
     assert.equal(findById(fixture, 'e999'), undefined);
   });
@@ -131,6 +175,11 @@ describe('findInteractive', () => {
     const ids = interactive.map((el) => el.id);
     assert.deepEqual(ids.sort(), ['e2', 'e4', 'e5', 'e8']);
   });
+
+  it('includes interactive elements inside shadow roots', () => {
+    const interactive = findInteractive(shadowFixture);
+    assert.deepEqual(interactive.map((el) => el.id), ['shadow_button']);
+  });
 });
 
 describe('findByText', () => {
@@ -144,6 +193,12 @@ describe('findByText', () => {
     const results = findByText(fixture, 'WELCOME');
     assert.equal(results.length, 1);
     assert.equal(results[0].id, 'e1');
+  });
+
+  it('finds text inside shadow roots', () => {
+    const results = findByText(shadowFixture, 'inside shadow');
+    assert.equal(results.length, 1);
+    assert.equal(results[0].id, 'shadow_text');
   });
 
   it('returns empty for no match', () => {
@@ -160,6 +215,11 @@ describe('flatElements', () => {
   it('includes nested children in order', () => {
     const ids = flatElements(fixture).map((el) => el.id);
     assert.deepEqual(ids, ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8', 'e9']);
+  });
+
+  it('includes shadow-root elements in order after their host', () => {
+    const ids = flatElements(shadowFixture).map((el) => el.id);
+    assert.deepEqual(ids, ['host', 'shadow_text', 'shadow_button']);
   });
 });
 

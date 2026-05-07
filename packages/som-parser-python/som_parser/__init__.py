@@ -13,6 +13,7 @@ from .types import (
     SomElementAttrs,
     SomMeta,
     SomRegion,
+    SomShadowRoot,
     StructuredData,
 )
 from .parser import from_plasmate, is_valid_som, parse_som
@@ -47,6 +48,7 @@ __all__ = [
     "SomElementAttrs",
     "SomMeta",
     "SomRegion",
+    "SomShadowRoot",
     "StructuredData",
     # Parser
     "from_plasmate",
