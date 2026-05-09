@@ -44,14 +44,17 @@ for el in find_by_role(som, "link"):
     print(el.id, el.text, el.attrs.href)
 ```
 
-### Get interactive elements
+### Plan agent actions
 
 ```python
-from som_parser import parse_som, get_interactive_elements
+from som_parser import parse_som, find_by_action, get_action_plan
 
 som = parse_som(data)
-for el in get_interactive_elements(som):
-    print(f"{el.id}: {el.role.value} - actions: {[a.value for a in el.actions]}")
+for item in get_action_plan(som):
+    print(item["id"], item["role"], item["actions"], item.get("label"))
+
+for button in find_by_action(som, "click"):
+    print(button.id, button.text or button.label)
 ```
 
 ### Convert to markdown
@@ -99,6 +102,9 @@ print(som.model_dump_json(indent=2))
 | `find_by_role(som, role) -> list[SomElement]` | Find elements by role (enum or string) |
 | `find_by_id(som, id) -> SomElement \| None` | Find a single element by its SOM id |
 | `find_by_text(som, text, exact=False) -> list[SomElement]` | Search elements by text content |
+| `find_by_action(som, action) -> list[SomElement]` | Find elements that expose a specific action |
+| `find_by_hint(som, hint) -> list[SomElement]` | Find elements tagged with a semantic hint |
+| `get_action_plan(som) -> list[dict]` | Return compact `{id, role, actions, label}` action targets |
 | `get_interactive_elements(som) -> list[SomElement]` | Get elements that have actions |
 | `get_links(som) -> list[dict]` | Extract all links as `{text, href, id}` dicts |
 | `get_forms(som) -> list[SomRegion]` | Get all form regions |

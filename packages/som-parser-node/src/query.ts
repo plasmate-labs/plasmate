@@ -1,4 +1,11 @@
-import type { Som, SomElement, SomRegion, ElementRole } from './types.js';
+import type {
+  Som,
+  SomElement,
+  SomRegion,
+  ElementAction,
+  ElementRole,
+  SemanticHint,
+} from './types.js';
 
 /** Collect elements from a tree, including nested children. */
 function collectElements(elements: SomElement[]): SomElement[] {
@@ -52,9 +59,46 @@ export function findByText(
   );
 }
 
+/** Find all elements that expose a specific action. */
+export function findByAction(som: Som, action: ElementAction): SomElement[] {
+  return getAllElements(som).filter((el) => el.actions?.includes(action));
+}
+
+/** Find all elements tagged with a specific semantic hint. */
+export function findByHint(som: Som, hint: SemanticHint): SomElement[] {
+  return getAllElements(som).filter((el) => el.hints?.includes(hint));
+}
+
 /** Get all elements that have actions (clickable, typeable, etc.). */
 export function getInteractiveElements(som: Som): SomElement[] {
   return getAllElements(som).filter((el) => el.actions && el.actions.length > 0);
+}
+
+export interface ActionPlanItem {
+  id: string;
+  role: ElementRole;
+  actions: ElementAction[];
+  label?: string;
+  href?: string;
+  name?: string;
+  input_type?: string;
+}
+
+/** Return compact action targets for agent planning. */
+export function getActionPlan(som: Som): ActionPlanItem[] {
+  return getInteractiveElements(som).map((el) => {
+    const item: ActionPlanItem = {
+      id: el.id,
+      role: el.role,
+      actions: el.actions ?? [],
+    };
+    const label = el.label ?? el.text;
+    if (label) item.label = label;
+    if (el.attrs?.href) item.href = el.attrs.href;
+    if (el.attrs?.name) item.name = el.attrs.name;
+    if (el.attrs?.input_type) item.input_type = el.attrs.input_type;
+    return item;
+  });
 }
 
 /** Extract all links with their text and URLs. */
@@ -113,7 +157,7 @@ export function getTextByRegion(
 
 /** Return html_bytes / som_bytes from meta. */
 export function getCompressionRatio(som: Som): number {
-  if (!som.meta?.som_bytes || som.meta.som_bytes === 0) return 0;
+  if (!som.meta?.som_bytes || som.meta.som_bytes === 0) return Number.POSITIVE_INFINITY;
   return som.meta.html_bytes / som.meta.som_bytes;
 }
 

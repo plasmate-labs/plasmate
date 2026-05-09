@@ -1,6 +1,6 @@
 # Plasmate PRD: Agent Stickiness and Roadmap Direction
 
-Last updated: 2026-05-07
+Last updated: 2026-05-09
 
 ## Product Thesis
 
@@ -63,6 +63,17 @@ SDK/parser parity is now product stickiness: if Rust emits shadow roots,
 iframe/details roles, or ARIA/action attrs, every adapter must be able to parse
 and query them.
 
+2026-05-09 market read: the trend has moved from "give the model page text" to
+"give the agent a reusable decision surface." Playwright MCP and Cloudflare's
+fork continue to validate structured accessibility snapshots without vision
+models, Stagehand is positioning `observe()` plus action caching as the path
+from natural-language intent to deterministic repeated actions, Firecrawl is
+bundling scrape/search/extract with agent and browser-session APIs, and Skyvern
+is selling visual workflow reliability with credential and enterprise controls.
+Plasmate should keep avoiding a hosted browser-cloud pivot. The stickier move is
+to make local SOM output easy to query as an action plan across every SDK and
+integration.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -95,6 +106,15 @@ and adapter docs over one-off integration logic.
     `shadow.elements` in element, text, link, and interactive queries.
   - Python and Node SDK query helpers now find shadow-root elements by id, role,
     text, and actionability so web-component UIs stay reachable to agents.
+- 2026-05-09:
+  - Python and Node parser packages now expose action and hint lookup helpers
+    so agents can query `click`, `type`, `required`, and similar SOM metadata
+    directly.
+  - Python and Node parser packages now expose compact action-plan helpers with
+    element ids, roles, actions, labels, hrefs, names, and input types for
+    Stagehand-style planning without re-walking the full SOM.
+  - Node parser compression-ratio handling now matches Python by returning
+    infinity when `som_bytes` is zero instead of reporting a misleading zero.
 - 2026-05-06:
   - SOM link deduplication now preserves case-sensitive URL paths while still
     stripping fragments and duplicate trailing slashes.
@@ -133,3 +153,5 @@ and adapter docs over one-off integration logic.
 - Promote the new SDK/parser shadow-root tests into shared conformance fixtures
   that run against every adapter before release.
 - Audit ecosystem repos for stale install docs, tool counts, and schema drift.
+- Promote action-plan helper parity into the Go SDK and framework integrations
+  so every adapter exposes the same compact action target contract.

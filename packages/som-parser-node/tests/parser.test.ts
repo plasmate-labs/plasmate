@@ -4,9 +4,12 @@ import {
   isValidSom,
   fromPlasmate,
   getAllElements,
+  findByAction,
+  findByHint,
   findByRole,
   findById,
   findByText,
+  getActionPlan,
   getInteractiveElements,
   getLinks,
   getForms,
@@ -61,7 +64,8 @@ const FIXTURE: Som = {
           role: 'text_input',
           label: 'Search',
           actions: ['type', 'clear'],
-          attrs: { input_type: 'text', placeholder: 'Search...' },
+          attrs: { input_type: 'text', name: 'q', placeholder: 'Search...' },
+          hints: ['required'],
         },
         { id: 'e_8', role: 'button', text: 'Go', actions: ['click'] },
       ],
@@ -274,6 +278,52 @@ describe('getInteractiveElements', () => {
   });
 });
 
+describe('findByAction', () => {
+  it('finds clickable elements', () => {
+    expect(findByAction(FIXTURE, 'click').map((el) => el.id)).toEqual([
+      'e_1',
+      'e_2',
+      'e_5',
+      'e_8',
+    ]);
+  });
+
+  it('finds typeable elements', () => {
+    expect(findByAction(FIXTURE, 'type').map((el) => el.id)).toEqual(['e_7']);
+  });
+});
+
+describe('findByHint', () => {
+  it('finds required elements', () => {
+    expect(findByHint(FIXTURE, 'required').map((el) => el.id)).toEqual(['e_7']);
+  });
+
+  it('returns empty for missing hints', () => {
+    expect(findByHint(FIXTURE, 'danger')).toEqual([]);
+  });
+});
+
+describe('getActionPlan', () => {
+  it('returns compact action targets', () => {
+    const plan = getActionPlan(FIXTURE);
+    expect(plan[0]).toEqual({
+      id: 'e_1',
+      role: 'link',
+      actions: ['click'],
+      label: 'Home',
+      href: '/',
+    });
+    expect(plan.at(-2)).toEqual({
+      id: 'e_7',
+      role: 'text_input',
+      actions: ['type', 'clear'],
+      label: 'Search',
+      name: 'q',
+      input_type: 'text',
+    });
+  });
+});
+
 describe('getLinks', () => {
   it('returns all links with text, href, id', () => {
     const links = getLinks(FIXTURE);
@@ -344,6 +394,12 @@ describe('getCompressionRatio', () => {
     const ratio = getCompressionRatio(FIXTURE);
     expect(ratio).toBe(5000 / 800);
     expect(ratio).toBeCloseTo(6.25);
+  });
+
+  it('returns infinity when som_bytes is zero', () => {
+    expect(getCompressionRatio({ ...FIXTURE, meta: { ...FIXTURE.meta, som_bytes: 0 } })).toBe(
+      Infinity,
+    );
   });
 });
 

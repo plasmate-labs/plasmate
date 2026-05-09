@@ -31,13 +31,16 @@ const links = getLinks(som);
 // [{ text: 'Home', href: '/', id: 'e_1' }, ...]
 ```
 
-### Get interactive elements
+### Plan agent actions
 
 ```typescript
-import { getInteractiveElements } from 'som-parser';
+import { findByAction, getActionPlan } from 'som-parser';
 
-const interactive = getInteractiveElements(som);
-// All elements with actions (clickable, typeable, etc.)
+const plan = getActionPlan(som);
+// Compact action targets with id, role, actions, and labels.
+
+const clickable = findByAction(som, 'click');
+// Elements that can be clicked.
 ```
 
 ### Convert to markdown
@@ -79,6 +82,9 @@ const ratio = getCompressionRatio(som);
 | `findByRole(som, role): SomElement[]` | Find elements by role (e.g., `'link'`, `'button'`, `'heading'`). |
 | `findById(som, id): SomElement \| undefined` | Find a single element by its SOM id. |
 | `findByText(som, text, options?): SomElement[]` | Find elements by text content. Case-insensitive substring by default; pass `{ exact: true }` for exact match. |
+| `findByAction(som, action): SomElement[]` | Find elements that expose a specific action. |
+| `findByHint(som, hint): SomElement[]` | Find elements tagged with a semantic hint. |
+| `getActionPlan(som): ActionPlanItem[]` | Return compact action targets for agent planning. |
 | `getInteractiveElements(som): SomElement[]` | Get all elements that have actions. |
 | `getLinks(som): Array<{ text, href, id }>` | Extract all links with text, URL, and id. |
 | `getForms(som): SomRegion[]` | Get all form regions. |

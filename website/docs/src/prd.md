@@ -1,6 +1,6 @@
 # PRD: Agent Stickiness and Roadmap Direction
 
-Last updated: 2026-05-07
+Last updated: 2026-05-09
 
 ## Product Thesis
 
@@ -26,6 +26,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-07 market read: Playwright MCP keeps accessibility snapshots and stable refs as the default interaction layer, Stagehand v3 emphasizes `observe()` planning, action caching, and targeted iframe/shadow-root operation, while Firecrawl and Browser Use package managed browser sessions and persistent cloud profiles. Plasmate should stay local-first, but SDK/parser parity is now product stickiness: every adapter must parse and query the SOM shape the Rust core emits.
 
+2026-05-09 market read: the trend has moved from "give the model page text" to "give the agent a reusable decision surface." Playwright MCP and Cloudflare's fork continue to validate structured accessibility snapshots without vision models, Stagehand is positioning `observe()` plus action caching as the path from natural-language intent to deterministic repeated actions, Firecrawl is bundling scrape/search/extract with agent and browser-session APIs, and Skyvern is selling visual workflow reliability with credential and enterprise controls. Plasmate should keep avoiding a hosted browser-cloud pivot. The stickier move is to make local SOM output easy to query as an action plan across every SDK and integration.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -44,6 +46,10 @@ The project already spans a large number of package and integration surfaces: Ru
   - SOM JSON Schema now accepts current Rust core output for `shadow`, `iframe`, `details`, ARIA state, and actionability attrs.
   - Python and Node parser packages now expose shadow-root types and traverse `shadow.elements` in element, text, link, and interactive queries.
   - Python and Node SDK query helpers now find shadow-root elements by id, role, text, and actionability.
+- 2026-05-09:
+  - Python and Node parser packages now expose action and hint lookup helpers so agents can query `click`, `type`, `required`, and similar SOM metadata directly.
+  - Python and Node parser packages now expose compact action-plan helpers with element ids, roles, actions, labels, hrefs, names, and input types for Stagehand-style planning without re-walking the full SOM.
+  - Node parser compression-ratio handling now matches Python by returning infinity when `som_bytes` is zero instead of reporting a misleading zero.
 - 2026-05-06:
   - SOM link deduplication now preserves case-sensitive URL paths while still stripping fragments and duplicate trailing slashes.
   - Input type and ARIA role parsing is more tolerant of real-world casing, so `type="SUBMIT"` and upper-case custom roles no longer lose actionability.
@@ -67,3 +73,4 @@ The project already spans a large number of package and integration surfaces: Ru
 - Add accessible-name conformance for `aria-labelledby`, `<label for>`, and custom controls that rely on `contenteditable`/`tabindex`.
 - Promote the new SDK/parser shadow-root tests into shared conformance fixtures that run against every adapter before release.
 - Audit ecosystem repos for stale install docs, tool counts, and schema drift.
+- Promote action-plan helper parity into the Go SDK and framework integrations so every adapter exposes the same compact action target contract.

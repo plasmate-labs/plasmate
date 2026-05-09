@@ -49,6 +49,31 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-09 - Plasmate Improvements Automation
+
+- Git sync: `git fetch --prune origin` is still blocked in the automation
+  worktree by shared worktree metadata permissions, and the primary checkout
+  cannot resolve `github.com`. `gh auth status` still reports the configured
+  `dbhurley` token is invalid, so PR creation and remote merge remain blocked
+  from this environment.
+- Market direction: Playwright MCP/Cloudflare structured snapshots,
+  Stagehand `observe()` plus action caching, Firecrawl agent/browser-session
+  APIs, Browser Use MCP surfaces, and Skyvern visual workflow reliability all
+  point toward reusable action surfaces as the stickiness layer. Plasmate should
+  continue to focus on local SOM action plans, conformance, and cache/diff
+  observability rather than pivoting into hosted browser-cloud infrastructure.
+- Ecosystem state: the repo surface remains broad across Rust core protocols,
+  Python/Node/Go SDKs, parser packages, Browser Use, LangChain, Vercel AI,
+  docs, generated website pages, benchmarks, and marketing. The main product
+  risk is still contract drift across those libraries.
+- Code changes: Python and Node parser packages now expose action lookup, hint
+  lookup, and compact action-plan helpers so agents can query SOM action
+  metadata without hand-walking the tree. Node compression-ratio handling now
+  matches Python by returning infinity when `som_bytes` is zero.
+- Docs changes: updated PRD, roadmap, and parser package READMEs with the
+  2026-05-09 market read, action-plan rationale, completed improvements, and
+  next steps for Go/integration parity.
+
 ### 2026-05-06 - Plasmate Improvements Automation
 
 - Git sync: attempted `git fetch --prune origin` in the automation worktree,

@@ -4,7 +4,15 @@ from __future__ import annotations
 
 from typing import Callable, Dict, List, Optional, Union
 
-from .types import ElementRole, RegionRole, Som, SomElement, SomRegion
+from .types import (
+    ElementAction,
+    ElementRole,
+    RegionRole,
+    SemanticHint,
+    Som,
+    SomElement,
+    SomRegion,
+)
 
 
 def _collect_elements(elements: List[SomElement]) -> List[SomElement]:
@@ -72,9 +80,51 @@ def find_by_text(
     return results
 
 
+def find_by_action(
+    som: Som, action: Union[ElementAction, str]
+) -> List[SomElement]:
+    """Find all elements that expose a specific action."""
+    if isinstance(action, str):
+        action = ElementAction(action)
+    return [el for el in get_all_elements(som) if el.actions and action in el.actions]
+
+
+def find_by_hint(
+    som: Som, hint: Union[SemanticHint, str]
+) -> List[SomElement]:
+    """Find all elements tagged with a specific semantic hint."""
+    if isinstance(hint, str):
+        hint = SemanticHint(hint)
+    return [el for el in get_all_elements(som) if el.hints and hint in el.hints]
+
+
 def get_interactive_elements(som: Som) -> List[SomElement]:
     """Get all elements that have actions."""
     return [el for el in get_all_elements(som) if el.actions]
+
+
+def get_action_plan(som: Som) -> List[Dict[str, object]]:
+    """Return compact action targets for agent planning."""
+    plan: List[Dict[str, object]] = []
+    for el in get_interactive_elements(som):
+        attrs = el.attrs
+        item: Dict[str, object] = {
+            "id": el.id,
+            "role": el.role.value,
+            "actions": [action.value for action in el.actions or []],
+        }
+        label = el.label or el.text
+        if label:
+            item["label"] = label
+        if attrs:
+            if attrs.href:
+                item["href"] = attrs.href
+            if attrs.name:
+                item["name"] = attrs.name
+            if attrs.input_type:
+                item["input_type"] = attrs.input_type
+        plan.append(item)
+    return plan
 
 
 def get_links(som: Som) -> List[Dict[str, Optional[str]]]:

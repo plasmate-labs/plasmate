@@ -5,16 +5,21 @@ import json
 import pytest
 
 from som_parser import (
+    ElementAction,
     ElementRole,
     RegionRole,
+    SemanticHint,
     Som,
     SomElement,
     SomShadowRoot,
     filter_elements,
+    find_by_action,
+    find_by_hint,
     find_by_id,
     find_by_role,
     find_by_text,
     from_plasmate,
+    get_action_plan,
     get_all_elements,
     get_compression_ratio,
     get_forms,
@@ -95,7 +100,8 @@ FIXTURE_SOM = {
                     "role": "text_input",
                     "label": "Search",
                     "actions": ["type", "clear"],
-                    "attrs": {"input_type": "text", "placeholder": "Search..."},
+                    "attrs": {"input_type": "text", "name": "q", "placeholder": "Search..."},
+                    "hints": ["required"],
                 },
                 {
                     "id": "e_8",
@@ -421,6 +427,45 @@ class TestGetInteractiveElements:
             }
         )
         assert [el.id for el in get_interactive_elements(som)] == ["shadow_button"]
+
+
+class TestFindByAction:
+    def test_finds_clickable_elements(self, som: Som):
+        clickable = find_by_action(som, "click")
+        assert [el.id for el in clickable] == ["e_1", "e_2", "e_5", "e_8"]
+
+    def test_finds_typed_elements(self, som: Som):
+        typed = find_by_action(som, ElementAction.TYPE)
+        assert [el.id for el in typed] == ["e_7"]
+
+
+class TestFindByHint:
+    def test_finds_required_elements(self, som: Som):
+        required = find_by_hint(som, "required")
+        assert [el.id for el in required] == ["e_7"]
+
+    def test_returns_empty_for_missing_hint(self, som: Som):
+        assert find_by_hint(som, SemanticHint.DANGER) == []
+
+
+class TestGetActionPlan:
+    def test_returns_compact_action_targets(self, som: Som):
+        plan = get_action_plan(som)
+        assert plan[0] == {
+            "id": "e_1",
+            "role": "link",
+            "actions": ["click"],
+            "label": "Home",
+            "href": "/",
+        }
+        assert plan[-2] == {
+            "id": "e_7",
+            "role": "text_input",
+            "actions": ["type", "clear"],
+            "label": "Search",
+            "name": "q",
+            "input_type": "text",
+        }
 
 
 class TestGetLinks:

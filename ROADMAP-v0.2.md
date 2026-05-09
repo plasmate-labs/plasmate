@@ -85,6 +85,27 @@ local SOM contracts complete and portable:
 3. **Conformance as distribution**: the large repo surface is a growth asset
    only when downstream adapters stay thin, current, and release-tested.
 
+### 2026-05-09 Roadmap Adjustment
+
+The highest-retention competitor features now cluster around reusable action
+surfaces. Playwright MCP and Cloudflare Browser Run normalize structured
+snapshots with action refs, Stagehand uses `observe()` and action caching to
+turn repeated workflows into deterministic low-cost actions, Firecrawl now
+packages scrape/search/extract with agent and browser-session APIs, and Skyvern
+continues to bundle visual workflow completion with credential management. The
+roadmap should increase stickiness by making SOM the local action-planning
+layer:
+
+1. **Action-plan helpers everywhere**: SDKs should expose compact action
+   targets so agents can choose from SOM ids, roles, labels, and actions without
+   bespoke tree traversal.
+2. **Hint/action conformance**: `actions` and `hints` are now public contract,
+   not incidental metadata. Shared fixtures should verify them across Rust,
+   Python, Node, Go, and integrations.
+3. **Cloud-optional workflow memory**: keep local cache/diff as the wedge, then
+   add optional trace exports and cache observability before considering hosted
+   browser infrastructure.
+
 ## Architecture
 
 ```
@@ -237,6 +258,11 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   helpers and validate the newer SOM surface.
 - Python and Node SDK helpers now find shadow-root elements by id, role, text,
   and actionability.
+- Python and Node parser packages now expose `find_by_action`/`findByAction`,
+  `find_by_hint`/`findByHint`, and compact action-plan helpers for agent
+  planning over SOM ids and action metadata.
+- Node parser compression-ratio handling now matches Python by returning
+  infinity when `som_bytes` is zero.
 - Selector handling now trims whitespace and supports documented region ids
   (`#region-id`) while preserving HTML id selection for agent actions.
 - SOM compilation recognizes common ARIA widgets (`textbox`, `searchbox`,

@@ -19,9 +19,12 @@ from .types import (
 from .parser import from_plasmate, is_valid_som, parse_som
 from .query import (
     filter_elements,
+    find_by_action,
+    find_by_hint,
     find_by_id,
     find_by_role,
     find_by_text,
+    get_action_plan,
     get_all_elements,
     get_compression_ratio,
     get_forms,
@@ -56,9 +59,12 @@ __all__ = [
     "parse_som",
     # Query
     "filter_elements",
+    "find_by_action",
+    "find_by_hint",
     "find_by_id",
     "find_by_role",
     "find_by_text",
+    "get_action_plan",
     "get_all_elements",
     "get_compression_ratio",
     "get_forms",
