@@ -31,9 +31,21 @@ export function isValidSom(input: unknown): input is Som {
  * Handles cases where the CLI may emit extra text before or after the JSON.
  */
 export function fromPlasmate(jsonOutput: string): Som {
+  const unwrap = (value: unknown): Som => {
+    if (
+      value != null &&
+      typeof value === 'object' &&
+      'som' in value &&
+      !('som_version' in value)
+    ) {
+      return parseSom((value as { som: unknown }).som as object);
+    }
+    return parseSom(value as object);
+  };
+
   // Try direct parse first
   try {
-    return parseSom(jsonOutput);
+    return unwrap(JSON.parse(jsonOutput));
   } catch {
     // Fall back: look for the first { ... } block
     const start = jsonOutput.indexOf('{');
@@ -41,6 +53,6 @@ export function fromPlasmate(jsonOutput: string): Som {
     if (start === -1 || end === -1 || end <= start) {
       throw new Error('No JSON object found in Plasmate output');
     }
-    return parseSom(jsonOutput.slice(start, end + 1));
+    return unwrap(JSON.parse(jsonOutput.slice(start, end + 1)));
   }
 }

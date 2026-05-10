@@ -52,11 +52,26 @@ def is_valid_som(input: Any) -> bool:
         return False
 
 
+def _extract_json_object(text: str) -> Any:
+    """Extract the first valid JSON object from mixed Plasmate CLI output."""
+    decoder = json.JSONDecoder()
+    for idx, char in enumerate(text):
+        if char != "{":
+            continue
+        try:
+            data, _ = decoder.raw_decode(text[idx:])
+            return data
+        except json.JSONDecodeError:
+            continue
+    raise ValueError("No JSON object found in Plasmate output")
+
+
 def from_plasmate(json_output: str) -> Som:
     """Parse raw Plasmate CLI JSON output into a Som object.
 
     Plasmate CLI outputs JSON that may be the SOM directly or wrapped
-    in a container object with a ``som`` key.
+    in a container object with a ``som`` key. It may also include progress
+    lines before or after the JSON payload.
 
     Args:
         json_output: Raw JSON string from Plasmate CLI.
@@ -67,10 +82,7 @@ def from_plasmate(json_output: str) -> Som:
     Raises:
         ValueError: If the output cannot be parsed.
     """
-    try:
-        data = json.loads(json_output)
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid JSON from Plasmate: {e}") from e
+    data = _extract_json_object(json_output)
 
     # Handle wrapped output: {"som": {...}}
     if isinstance(data, dict) and "som" in data and "som_version" not in data:

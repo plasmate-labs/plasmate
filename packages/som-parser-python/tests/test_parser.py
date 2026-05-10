@@ -210,8 +210,18 @@ class TestFromPlasmate:
         result = from_plasmate(wrapped)
         assert result.title == "Example Domain"
 
+    def test_mixed_output(self):
+        output = f"Fetching https://example.com/...\n{json.dumps(FIXTURE_SOM)}\nDone."
+        result = from_plasmate(output)
+        assert result.title == "Example Domain"
+
+    def test_wrapped_mixed_output(self):
+        output = f"Fetching...\n{json.dumps({'som': FIXTURE_SOM})}\nDone."
+        result = from_plasmate(output)
+        assert result.title == "Example Domain"
+
     def test_invalid_json(self):
-        with pytest.raises(ValueError, match="Invalid JSON"):
+        with pytest.raises(ValueError, match="No JSON object"):
             from_plasmate("not json")
 
 

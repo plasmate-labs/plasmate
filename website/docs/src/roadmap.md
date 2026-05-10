@@ -46,6 +46,14 @@ The highest-retention competitor features now cluster around reusable action sur
 - **Hint/action conformance**: `actions` and `hints` are now public contract, not incidental metadata. Shared fixtures should verify them across Rust, Python, Node, Go, and integrations.
 - **Cloud-optional workflow memory**: keep local cache/diff as the wedge, then add optional trace exports and cache observability before considering hosted browser infrastructure.
 
+### 2026-05-10 Roadmap Adjustment
+
+The browser-agent market keeps rewarding structured state that can be reused without another model call. Playwright MCP and Cloudflare Browser Run emphasize accessibility snapshots over screenshots, Stagehand centers `observe()` plus local/managed action caching, Firecrawl keeps broad hosted browser-session breadth, and Skyvern owns visual workflows. Plasmate should keep the local-first wedge by making SOM output more accurate and portable across the current repo surface.
+
+- **Accessible-name parity**: controls must carry names from `aria-labelledby` and external labels so agents can reuse plans reliably.
+- **Parser tolerance as adoption polish**: SDK/parser helpers should accept real CLI/MCP payload shapes, including wrapped SOM objects and progress lines.
+- **Conformance before breadth**: small core improvements should land with Rust, Python, Node, and docs coverage before adding more integrations.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -114,6 +122,9 @@ The highest-retention competitor features now cluster around reusable action sur
 - [x] Action and hint query helpers across Python/Node parser packages
 - [x] Compact action-plan helpers across Python/Node parser packages
 - [x] Node parser compression-ratio parity for zero-byte SOM edge cases
+- [x] Accessible-name parity for `aria-labelledby` and external `<label for>` controls
+- [x] Python parser support for mixed CLI output around SOM JSON
+- [x] Node parser support for wrapped `{ som: ... }` payloads
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures

@@ -49,6 +49,35 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-10 - Plasmate Improvements Automation
+
+- Git sync: attempted `git fetch --prune origin` and `git pull --ff-only origin
+  master` in the automation worktree, but shared worktree metadata is still
+  blocked at `/Users/steve/Git/plasmate/.git/worktrees/plasmate12/FETCH_HEAD`.
+  The primary checkout also cannot resolve `github.com`, so remote pull, push,
+  PR creation, and merge remain blocked from this environment.
+- Market direction: Playwright MCP and Cloudflare Browser Run keep validating
+  structured accessibility snapshots, Stagehand continues to push
+  `observe()`/action caching, Firecrawl is broadening hosted browser sessions,
+  and Skyvern targets visual workflow completion. Plasmate should keep the
+  local-first SOM wedge and prioritize actionability parity plus adapter
+  tolerance over hosted browser-cloud features.
+- Ecosystem state: the project still spans Rust CLI/daemon/MCP/CDP/AWP,
+  Python/Node/Go SDKs, parser packages, Browser Use, LangChain, Vercel AI,
+  generated docs, comparison pages, and marketing assets. Parser and schema
+  conformance remain the highest-leverage way to keep this surface sticky.
+- Code changes: Rust SOM compilation now resolves accessible labels from
+  `aria-labelledby` and external `<label for="...">`; Python
+  `from_plasmate()` now extracts SOM JSON from mixed CLI output; Node
+  `fromPlasmate()` now accepts wrapped `{ som: ... }` payloads in clean and
+  mixed output.
+- Docs changes: updated PRD, roadmap, website doc sources, and generated docs
+  with the 2026-05-10 market read, change rationale, completed improvements,
+  and next steps around deeper accessible-name conformance.
+- Verification: focused tests passed for `som_compiler_test` (43 tests),
+  Python parser tests (59 tests), and Node parser tests (43 tests). Rust build,
+  Node parser build, website doc generation, and `git diff --check` passed.
+
 ### 2026-05-09 - Plasmate Improvements Automation
 
 - Git sync: `git fetch --prune origin` is still blocked in the automation

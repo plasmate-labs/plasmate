@@ -169,8 +169,19 @@ describe('fromPlasmate', () => {
     expect(som.title).toBe('Example Domain');
   });
 
+  it('parses wrapped SOM JSON', () => {
+    const som = fromPlasmate(JSON.stringify({ som: FIXTURE }));
+    expect(som.title).toBe('Example Domain');
+  });
+
   it('extracts JSON from surrounding text', () => {
     const output = `Processing https://example.com/...\n${FIXTURE_JSON}\nDone.`;
+    const som = fromPlasmate(output);
+    expect(som.title).toBe('Example Domain');
+  });
+
+  it('extracts wrapped JSON from surrounding text', () => {
+    const output = `Processing...\n${JSON.stringify({ som: FIXTURE })}\nDone.`;
     const som = fromPlasmate(output);
     expect(som.title).toBe('Example Domain');
   });

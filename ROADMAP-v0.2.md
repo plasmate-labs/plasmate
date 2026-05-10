@@ -106,6 +106,27 @@ layer:
    add optional trace exports and cache observability before considering hosted
    browser infrastructure.
 
+### 2026-05-10 Roadmap Adjustment
+
+The market continues to reward structured browser state that can be reused
+without another model call. Playwright MCP and Cloudflare Browser Run have made
+accessibility snapshots the default low-cost interaction surface, Stagehand's
+current docs center `observe()` plus local and managed action caching,
+Firecrawl keeps adding hosted browser-session breadth, and Skyvern owns a
+visual workflow lane. Plasmate should not pivot into hosted browser
+infrastructure; the roadmap should make local SOM output more accurate and more
+portable across the existing repo surface.
+
+1. **Accessible-name parity**: controls must carry the names agents already see
+   in browser accessibility snapshots, including `aria-labelledby` and external
+   labels.
+2. **Parser tolerance as adoption polish**: SDK/parser helpers should accept the
+   real CLI/MCP payload shapes users paste into agents, including wrapped SOM
+   objects and progress lines.
+3. **Conformance before breadth**: every small core improvement should land
+   with Rust, Python, Node, and docs coverage before another integration is
+   added.
+
 ## Architecture
 
 ```
@@ -263,6 +284,11 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   planning over SOM ids and action metadata.
 - Node parser compression-ratio handling now matches Python by returning
   infinity when `som_bytes` is zero.
+- Rust SOM compilation resolves `aria-labelledby` and external `<label for>`
+  accessible names for controls.
+- Python `from_plasmate()` handles progress/log lines around SOM JSON.
+- Node `fromPlasmate()` accepts wrapped `{ som: ... }` payloads, including in
+  mixed CLI output.
 - Selector handling now trims whitespace and supports documented region ids
   (`#region-id`) while preserving HTML id selection for agent actions.
 - SOM compilation recognizes common ARIA widgets (`textbox`, `searchbox`,

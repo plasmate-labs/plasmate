@@ -18,6 +18,15 @@ struct CompileContext {
     is_main_region: Cell<bool>,
     /// CSS visibility rules for filtering hidden elements.
     css_rules: VisibilityRules,
+    /// Text used to resolve accessible names from ids and external labels.
+    label_index: LabelIndex,
+}
+
+/// Lookup tables for accessible-name resolution.
+#[derive(Default)]
+struct LabelIndex {
+    by_id: HashMap<String, String>,
+    by_for: HashMap<String, String>,
 }
 
 /// Tracks heading hierarchy for a region.
@@ -79,12 +88,6 @@ pub fn compile(html: &str, page_url: &str) -> Result<Som, CompileError> {
     let mut id_tracker = ElementIdTracker::new();
     let mut region_counts: HashMap<String, usize> = HashMap::new();
     let css_rules = VisibilityRules::from_html(html);
-    let ctx = CompileContext {
-        config: ContentConfig::default(),
-        paragraph_count: Cell::new(0),
-        is_main_region: Cell::new(false),
-        css_rules,
-    };
 
     // Extract structured data (JSON-LD, OpenGraph, Twitter Cards, meta)
     let structured = metadata::extract_structured_data(html);
@@ -100,15 +103,25 @@ pub fn compile(html: &str, page_url: &str) -> Result<Som, CompileError> {
 
     // Find the body node
     let body = find_body(&dom.document);
+    let label_index = body.as_ref().map(build_label_index).unwrap_or_default();
 
     let regions = match body {
-        Some(body_handle) => extract_regions(
-            &body_handle,
-            &origin,
-            &mut id_tracker,
-            &mut region_counts,
-            &ctx,
-        ),
+        Some(body_handle) => {
+            let ctx = CompileContext {
+                config: ContentConfig::default(),
+                paragraph_count: Cell::new(0),
+                is_main_region: Cell::new(false),
+                css_rules,
+                label_index,
+            };
+            extract_regions(
+                &body_handle,
+                &origin,
+                &mut id_tracker,
+                &mut region_counts,
+                &ctx,
+            )
+        }
         None => vec![],
     };
 
@@ -205,6 +218,42 @@ fn find_body(node: &Handle) -> Option<Handle> {
         }
     }
     None
+}
+
+fn build_label_index(root: &Handle) -> LabelIndex {
+    fn visit(node: &Handle, index: &mut LabelIndex) {
+        if heuristics::should_strip(node) {
+            return;
+        }
+        if let NodeData::Element { name, .. } = &node.data {
+            let tag = name.local.as_ref();
+            let attrs = get_attr_pairs(node);
+            let text = heuristics::normalize_text(&get_text_content(node));
+
+            if !text.is_empty() {
+                if let Some((_, id)) = attrs.iter().find(|(n, _)| n == "id") {
+                    if !id.trim().is_empty() {
+                        index.by_id.insert(id.trim().to_string(), text.clone());
+                    }
+                }
+                if tag == "label" {
+                    if let Some((_, target)) = attrs.iter().find(|(n, _)| n == "for") {
+                        if !target.trim().is_empty() {
+                            index.by_for.insert(target.trim().to_string(), text);
+                        }
+                    }
+                }
+            }
+        }
+
+        for child in node.children.borrow().iter() {
+            visit(child, index);
+        }
+    }
+
+    let mut index = LabelIndex::default();
+    visit(root, &mut index);
+    index
 }
 
 /// Extract regions from the body node.
@@ -636,6 +685,7 @@ fn collect_regions(
                         id_tracker,
                         &mut child_interactive,
                         &child_path,
+                        ctx,
                     );
                 }
                 if !child_interactive.is_empty() {
@@ -876,6 +926,7 @@ fn extract_elements(
                     id_tracker,
                     &mut child_interactive,
                     &child_path,
+                    ctx,
                 );
             }
             if !child_interactive.is_empty() {
@@ -940,6 +991,7 @@ fn extract_interactive_children(
     id_tracker: &mut ElementIdTracker,
     elements: &mut Vec<Element>,
     dom_path: &str,
+    ctx: &CompileContext,
 ) {
     if heuristics::should_strip(node) {
         return;
@@ -949,7 +1001,9 @@ fn extract_interactive_children(
         let attr_pairs = get_attr_pairs(node);
         if let Some(role) = tag_to_role(tag, &attr_pairs) {
             if role.is_interactive() {
-                if let Some(el) = interactive_node_to_element(node, origin, id_tracker, dom_path) {
+                if let Some(el) =
+                    interactive_node_to_element(node, origin, id_tracker, dom_path, ctx)
+                {
                     elements.push(el);
                     return;
                 }
@@ -959,7 +1013,7 @@ fn extract_interactive_children(
     let children = node.children.borrow();
     for (i, child) in children.iter().enumerate() {
         let child_path = format!("{}/{}", dom_path, i);
-        extract_interactive_children(child, origin, id_tracker, elements, &child_path);
+        extract_interactive_children(child, origin, id_tracker, elements, &child_path, ctx);
     }
 }
 
@@ -969,6 +1023,7 @@ fn interactive_node_to_element(
     origin: &str,
     id_tracker: &mut ElementIdTracker,
     dom_path: &str,
+    ctx: &CompileContext,
 ) -> Option<Element> {
     if let NodeData::Element { name, .. } = &node.data {
         let tag = name.local.as_ref();
@@ -980,7 +1035,7 @@ fn interactive_node_to_element(
         } else {
             Some(heuristics::normalize_text(&text_content))
         };
-        let label = resolve_label(tag, &attr_pairs, &text);
+        let label = resolve_label(tag, &attr_pairs, &text, &ctx.label_index);
         let accessible_name = label.as_deref().or(text.as_deref()).unwrap_or("");
         let raw_id = generate_element_id(origin, role.as_str(), accessible_name, dom_path);
         let id = id_tracker.register(raw_id);
@@ -990,14 +1045,7 @@ fn interactive_node_to_element(
         } else {
             Some(actions)
         };
-        // Use a dummy context for attrs (interactive elements don't need list/para summarization)
-        let dummy_ctx = CompileContext {
-            config: ContentConfig::default(),
-            paragraph_count: Cell::new(0),
-            is_main_region: Cell::new(false),
-            css_rules: VisibilityRules::default(),
-        };
-        let element_attrs = build_element_attrs(tag, &attr_pairs, node, &dummy_ctx);
+        let element_attrs = build_element_attrs(tag, &attr_pairs, node, ctx);
         let children = build_children(node, origin, id_tracker, dom_path, &role);
         let hints = heuristics::infer_class_hints(&attr_pairs);
         let html_id = extract_html_id(&attr_pairs);
@@ -1060,7 +1108,7 @@ fn node_to_element(
                 text = None;
             }
 
-            let label = resolve_label(tag, &attr_pairs, &text);
+            let label = resolve_label(tag, &attr_pairs, &text, &ctx.label_index);
             let accessible_name = label.as_deref().or(text.as_deref()).unwrap_or("");
             let raw_id = generate_element_id(origin, role.as_str(), accessible_name, dom_path);
             let id = id_tracker.register(raw_id);
@@ -1174,6 +1222,7 @@ fn extract_shadow_elements(
         paragraph_count: Cell::new(0),
         is_main_region: Cell::new(false),
         css_rules: VisibilityRules::default(),
+        label_index: build_label_index(node),
     };
 
     for (idx, child) in node.children.borrow().iter().enumerate() {
@@ -1253,7 +1302,12 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
     }
 }
 
-fn resolve_label(_tag: &str, attrs: &[(String, String)], text: &Option<String>) -> Option<String> {
+fn resolve_label(
+    _tag: &str,
+    attrs: &[(String, String)],
+    text: &Option<String>,
+    label_index: &LabelIndex,
+) -> Option<String> {
     // aria-label takes priority
     if let Some(label) = attrs.iter().find(|(n, _)| n == "aria-label") {
         if !label.1.is_empty() {
@@ -1261,6 +1315,26 @@ fn resolve_label(_tag: &str, attrs: &[(String, String)], text: &Option<String>) 
             // Only return if different from text content
             if text.as_deref() != Some(&normalized) {
                 return Some(normalized);
+            }
+        }
+    }
+    if let Some((_, ids)) = attrs.iter().find(|(n, _)| n == "aria-labelledby") {
+        let label = ids
+            .split_whitespace()
+            .filter_map(|id| label_index.by_id.get(id).map(String::as_str))
+            .collect::<Vec<_>>()
+            .join(" ");
+        if !label.is_empty() {
+            let normalized = heuristics::normalize_text(&label);
+            if text.as_deref() != Some(&normalized) {
+                return Some(normalized);
+            }
+        }
+    }
+    if let Some((_, id)) = attrs.iter().find(|(n, _)| n == "id") {
+        if let Some(label) = label_index.by_for.get(id) {
+            if text.as_deref() != Some(label.as_str()) {
+                return Some(label.clone());
             }
         }
     }

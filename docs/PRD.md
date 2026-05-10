@@ -1,6 +1,6 @@
 # Plasmate PRD: Agent Stickiness and Roadmap Direction
 
-Last updated: 2026-05-09
+Last updated: 2026-05-10
 
 ## Product Thesis
 
@@ -74,6 +74,17 @@ Plasmate should keep avoiding a hosted browser-cloud pivot. The stickier move is
 to make local SOM output easy to query as an action plan across every SDK and
 integration.
 
+2026-05-10 market read: the same category shift is now explicit in competitor
+messaging. Playwright MCP and Cloudflare's Browser Run fork both position
+structured accessibility snapshots as the lightweight alternative to vision
+models, Stagehand's current docs and marketing center `observe()` plus local or
+managed action caching, Firecrawl continues to bundle scrape/search/extract
+with browser sessions, and Skyvern targets end-to-end visual workflows. The
+stickiest Plasmate path is still local-first SOM, but "correct labels
+everywhere" is now part of actionability: agents cannot reliably reuse plans if
+form controls lose `aria-labelledby`, `<label for>`, or parser output hidden
+behind CLI progress lines.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -99,6 +110,15 @@ and adapter docs over one-off integration logic.
 
 ## Current Run Changes
 
+- 2026-05-10:
+  - Rust SOM compilation now resolves labels from `aria-labelledby` and
+    external `<label for="...">` controls, improving accessible-name parity
+    with Playwright-style snapshots.
+  - Python parser `from_plasmate()` now extracts SOM JSON from mixed CLI output
+    with progress/log lines while preserving support for wrapped `{ "som": ... }`
+    responses.
+  - Node parser `fromPlasmate()` now accepts wrapped `{ som: ... }` payloads in
+    clean and mixed CLI output, matching Python parser behavior.
 - 2026-05-07:
   - SOM JSON Schema now accepts current Rust core output for `shadow`,
     `iframe`, `details`, ARIA state, and actionability attrs.
@@ -148,8 +168,8 @@ and adapter docs over one-off integration logic.
   or selected an element.
 - Add conformance cases for ARIA-heavy SaaS pages and compare output against
   Playwright MCP snapshots.
-- Add accessible-name conformance for `aria-labelledby`, `<label for>`, and
-  custom controls that rely on `contenteditable`/`tabindex`.
+- Extend accessible-name conformance to nested `<label>` controls, fieldsets,
+  legends, and shadow-root label references.
 - Promote the new SDK/parser shadow-root tests into shared conformance fixtures
   that run against every adapter before release.
 - Audit ecosystem repos for stale install docs, tool counts, and schema drift.

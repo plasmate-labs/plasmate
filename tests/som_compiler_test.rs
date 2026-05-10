@@ -233,6 +233,33 @@ fn test_custom_controls_keep_actionability_attrs() {
 }
 
 #[test]
+fn test_accessible_labels_from_label_for_and_labelledby() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Labels</title></head>
+<body><main>
+    <label for="account-email">Account email</label>
+    <input id="account-email" type="email" autocomplete="email">
+    <span id="save-label">Save profile</span>
+    <button aria-labelledby="save-label"></button>
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let elems = all_elements(&som);
+
+    let email = elems
+        .iter()
+        .find(|e| e.role == ElementRole::TextInput)
+        .expect("email input should be preserved");
+    assert_eq!(email.label.as_deref(), Some("Account email"));
+
+    let button = elems
+        .iter()
+        .find(|e| e.role == ElementRole::Button)
+        .expect("button should be preserved");
+    assert_eq!(button.label.as_deref(), Some("Save profile"));
+}
+
+#[test]
 fn test_link_dedup_preserves_case_sensitive_paths() {
     let html = r#"<!DOCTYPE html>
 <html><head><title>Links</title></head>
