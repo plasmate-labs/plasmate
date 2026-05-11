@@ -187,6 +187,7 @@
             },
             "name": { "type": "string" },
             "autocomplete": { "type": "string" },
+            "description": { "type": "string" },
             "aria": { "$ref": "#/$defs/AriaState" },
             "has_srcdoc": { "type": "boolean" },
             "srcdoc_preview": { "type": "string" },

@@ -97,6 +97,7 @@ export interface SomElementAttrs {
   tabindex?: number | string;
   name?: string;
   autocomplete?: string;
+  description?: string;
   aria?: AriaState;
   has_srcdoc?: boolean;
   srcdoc_preview?: string;

@@ -106,6 +106,7 @@ class SomElementAttrs(BaseModel):
     tabindex: Optional[int | str] = None
     name: Optional[str] = None
     autocomplete: Optional[str] = None
+    description: Optional[str] = None
     aria: Optional[Dict[str, bool | str]] = None
     has_srcdoc: Optional[bool] = None
     srcdoc_preview: Optional[str] = None

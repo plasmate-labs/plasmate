@@ -49,6 +49,44 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-11 - Plasmate Improvements Automation
+
+- Git sync: attempted `git fetch origin --prune` in the automation worktree,
+  but shared worktree metadata is still blocked at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate13/FETCH_HEAD` (`Operation
+  not permitted`). The primary checkout was on the latest locally available
+  automation branch (`codex/plasmate-improvements-2026-05-09` at `1f63a47`),
+  so this run continued from that state. Remote push/merge remains blocked
+  because `gh auth status` reports the configured `dbhurley` token is invalid.
+- Market direction: Playwright MCP now documents accessibility snapshots with
+  stable refs as the primary interaction contract; Stagehand positions
+  `observe()` as planning, validation, and caching for repeated actions across
+  iframes and shadow DOM; Firecrawl and Browser Use keep pushing managed
+  browser sessions and persistent profiles. Plasmate should keep the local-first
+  wedge and improve SOM fidelity, accessible names/descriptions, full-tree
+  counts, and conformance fixtures rather than pivoting to hosted browser
+  infrastructure.
+- Ecosystem state: the project still spans Rust CLI/daemon/MCP/CDP/AWP, Python,
+  Node, and Go SDKs, Browser Use, LangChain, Vercel AI, SOM parser packages,
+  website docs, comparison pages, and marketing assets. The roadmap risk remains
+  contract drift across these many surfaces.
+- Code changes: SOM metadata now counts shadow-root elements and controls;
+  `aria-labelledby` now takes precedence over `aria-label`; SOM attrs now expose
+  descriptions from `aria-describedby` and `aria-description`; schema and
+  Python/Node types now accept `attrs.description`. Compiler tests cover label
+  precedence, accessible descriptions, and shadow-root meta counts.
+- Docs changes: updated PRD, roadmap, SOM spec/schema, website docs source, and
+  generated docs with the 2026-05-11 market read, change rationale, completed
+  improvements, and next steps around wrapped labels, fieldsets/legends,
+  description fixtures, selector-aware cache, trace export, and shared
+  conformance fixtures.
+- Verification: `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo test
+  --test som_compiler_test -- --nocapture` passed 46 tests.
+  `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build` passed.
+  Full `cargo test` passed 245 lib tests and 5 main/MCP tests, then failed only
+  in `tests/awp_integration_test.rs` because the sandbox denied local socket
+  creation with `Operation not permitted`.
+
 ### 2026-05-10 - Plasmate Improvements Automation
 
 - Git sync: attempted `git fetch --prune origin` and `git pull --ff-only origin

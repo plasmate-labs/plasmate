@@ -1,6 +1,6 @@
 # Plasmate PRD: Agent Stickiness and Roadmap Direction
 
-Last updated: 2026-05-10
+Last updated: 2026-05-11
 
 ## Product Thesis
 
@@ -85,6 +85,14 @@ everywhere" is now part of actionability: agents cannot reliably reuse plans if
 form controls lose `aria-labelledby`, `<label for>`, or parser output hidden
 behind CLI progress lines.
 
+2026-05-11 market read: official docs still point to the same sticky layer:
+Playwright MCP centers accessibility snapshots with refs, Stagehand uses
+`observe()` to plan, validate, and cache executable actions, and Firecrawl plus
+Browser Use make managed sessions and persistent profiles easy to buy. Plasmate
+should keep the local-first SOM wedge, but names, descriptions, and full-tree
+metadata must match how agents choose controls. This is a refinement, not a
+pivot: improve deterministic SOM contracts before hosted-browser features.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -110,6 +118,16 @@ and adapter docs over one-off integration logic.
 
 ## Current Run Changes
 
+- 2026-05-11:
+  - SOM metadata now counts elements and interactive controls inside shadow
+    roots, keeping reported counts aligned with the full queryable SOM tree.
+  - `aria-labelledby` now takes precedence over `aria-label` when resolving
+    element labels, matching browser accessible-name expectations more closely.
+  - SOM attrs now include accessible descriptions resolved from
+    `aria-describedby` and `aria-description`, with schema and Python/Node type
+    parity.
+  - Compiler tests now cover label precedence, accessible descriptions, and
+    shadow-root meta counts.
 - 2026-05-10:
   - Rust SOM compilation now resolves labels from `aria-labelledby` and
     external `<label for="...">` controls, improving accessible-name parity
@@ -169,7 +187,7 @@ and adapter docs over one-off integration logic.
 - Add conformance cases for ARIA-heavy SaaS pages and compare output against
   Playwright MCP snapshots.
 - Extend accessible-name conformance to nested `<label>` controls, fieldsets,
-  legends, and shadow-root label references.
+  legends, and cross-adapter description fixtures.
 - Promote the new SDK/parser shadow-root tests into shared conformance fixtures
   that run against every adapter before release.
 - Audit ecosystem repos for stale install docs, tool counts, and schema drift.

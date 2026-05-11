@@ -1,6 +1,6 @@
 # PRD: Agent Stickiness and Roadmap Direction
 
-Last updated: 2026-05-10
+Last updated: 2026-05-11
 
 ## Product Thesis
 
@@ -30,6 +30,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-10 market read: competitor messaging keeps converging on structured, reusable browser state. Playwright MCP and Cloudflare Browser Run emphasize accessibility snapshots over screenshots, Stagehand foregrounds `observe()` planning plus local/managed action caching, Firecrawl keeps broadening scrape/search/extract with browser sessions, and Skyvern focuses on end-to-end visual workflows. Plasmate should stay local-first, but accessible labels and parser tolerance are now stickiness features: agents need controls named the same way across Rust, Python, Node, CLI, and MCP output.
 
+2026-05-11 market read: official docs still point to the same sticky layer: Playwright MCP centers accessibility snapshots with refs, Stagehand uses `observe()` to plan, validate, and cache executable actions, and Firecrawl plus Browser Use make managed sessions and persistent profiles easy to buy. Plasmate should refine local-first SOM contracts around names, descriptions, and full-tree metadata before hosted-browser features.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -44,6 +46,11 @@ The project already spans a large number of package and integration surfaces: Ru
 
 ## Current Run Changes
 
+- 2026-05-11:
+  - SOM metadata now counts elements and interactive controls inside shadow roots.
+  - `aria-labelledby` now takes precedence over `aria-label` when resolving element labels.
+  - SOM attrs now include accessible descriptions from `aria-describedby` and `aria-description`.
+  - Schema and Python/Node types now accept `attrs.description`.
 - 2026-05-10:
   - Rust SOM compilation resolves `aria-labelledby` and external `<label for="...">` text for interactive controls.
   - Python `from_plasmate()` extracts SOM JSON from mixed CLI output with progress/log lines and wrapped `{ "som": ... }` responses.
@@ -76,7 +83,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Implement selector-aware SOM cache entries for `main`, `form`, and `#id` prompts.
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked or selected an element.
 - Add conformance cases for ARIA-heavy SaaS pages and compare output against Playwright MCP snapshots.
-- Extend accessible-name conformance to nested `<label>` controls, fieldsets, legends, and shadow-root label references.
+- Extend accessible-name conformance to nested `<label>` controls, fieldsets, legends, and cross-adapter description fixtures.
 - Promote the new SDK/parser shadow-root tests into shared conformance fixtures that run against every adapter before release.
 - Audit ecosystem repos for stale install docs, tool counts, and schema drift.
 - Promote action-plan helper parity into the Go SDK and framework integrations so every adapter exposes the same compact action target contract.

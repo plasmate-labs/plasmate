@@ -260,6 +260,68 @@ fn test_accessible_labels_from_label_for_and_labelledby() {
 }
 
 #[test]
+fn test_aria_labelledby_takes_precedence_over_aria_label() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Label Priority</title></head>
+<body><main>
+    <span id="primary-label">Primary action name</span>
+    <button aria-label="Fallback name" aria-labelledby="primary-label"></button>
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let button = all_elements(&som)
+        .into_iter()
+        .find(|e| e.role == ElementRole::Button)
+        .expect("button should be preserved");
+
+    assert_eq!(button.label.as_deref(), Some("Primary action name"));
+}
+
+#[test]
+fn test_aria_describedby_sets_accessible_description_attr() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Description</title></head>
+<body><main>
+    <p id="password-help">Use at least 12 characters.</p>
+    <input type="password" aria-label="Password" aria-describedby="password-help">
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let input = all_elements(&som)
+        .into_iter()
+        .find(|e| e.role == ElementRole::TextInput)
+        .expect("password input should be preserved");
+    let attrs = input.attrs.as_ref().expect("input should expose attrs");
+
+    assert_eq!(
+        attrs.get("description").and_then(|v| v.as_str()),
+        Some("Use at least 12 characters.")
+    );
+}
+
+#[test]
+fn test_shadow_root_elements_are_counted_in_meta() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Shadow Count</title></head>
+<body><main>
+    <section aria-label="Widget host">
+        <template shadowrootmode="open">
+            <p>Shadow instructions</p>
+            <button>Shadow action</button>
+        </template>
+    </section>
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+
+    assert_eq!(som.meta.interactive_count, 1);
+    assert!(
+        som.meta.element_count >= 3,
+        "host plus shadow elements should be counted"
+    );
+}
+
+#[test]
 fn test_link_dedup_preserves_case_sensitive_paths() {
     let html = r#"<!DOCTYPE html>
 <html><head><title>Links</title></head>
@@ -851,7 +913,7 @@ fn test_declarative_shadow_dom_detection() {
     let html = load_fixture("shadow_dom_page.html");
     let som = compiler::compile(&html, "https://example.com").unwrap();
 
-    let shadowed = find_elements_with_shadow(&som);
+    let _shadowed = find_elements_with_shadow(&som);
 
     // Should detect at least one element with shadow DOM
     // Note: html5ever may or may not fully support declarative shadow DOM parsing

@@ -327,9 +327,10 @@ Each **Option** object:
 #### Global actionability attributes
 
 Implementations SHOULD preserve common actionability attributes on any element:
-`contenteditable`, `tabindex`, `name`, and `autocomplete`. These attributes are
-especially important for custom controls that are exposed through ARIA roles
-instead of native form elements.
+`contenteditable`, `tabindex`, `name`, `autocomplete`, and `description`. The
+`description` value is resolved from `aria-describedby` or `aria-description`.
+These attributes are especially important for custom controls that are exposed
+through ARIA roles instead of native form elements.
 
 ### 4.4 ARIA State Preservation
 
@@ -377,9 +378,11 @@ Implementations MUST map HTML elements to SOM element roles as follows:
 The `label` field provides an accessible name for the element. Implementations
 MUST resolve labels in this priority order:
 
-1. `aria-label` attribute
-2. `title` attribute
-3. `placeholder` attribute (for form controls)
+1. `aria-labelledby` referenced text
+2. `aria-label` attribute
+3. External `<label for="...">` text
+4. `title` attribute
+5. `placeholder` attribute (for form controls)
 
 The label MUST be omitted if it is identical to the `text` content of the
 element (to avoid redundancy). All label values MUST be normalized: whitespace

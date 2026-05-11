@@ -168,6 +168,9 @@ fn count_elements_vec(elements: &[Element], total: &Cell<usize>, interactive: &C
         if let Some(children) = &el.children {
             count_elements_vec(children, total, interactive);
         }
+        if let Some(shadow) = &el.shadow {
+            count_elements_vec(&shadow.elements, total, interactive);
+        }
     }
 }
 
@@ -1308,16 +1311,6 @@ fn resolve_label(
     text: &Option<String>,
     label_index: &LabelIndex,
 ) -> Option<String> {
-    // aria-label takes priority
-    if let Some(label) = attrs.iter().find(|(n, _)| n == "aria-label") {
-        if !label.1.is_empty() {
-            let normalized = heuristics::normalize_text(&label.1);
-            // Only return if different from text content
-            if text.as_deref() != Some(&normalized) {
-                return Some(normalized);
-            }
-        }
-    }
     if let Some((_, ids)) = attrs.iter().find(|(n, _)| n == "aria-labelledby") {
         let label = ids
             .split_whitespace()
@@ -1326,6 +1319,16 @@ fn resolve_label(
             .join(" ");
         if !label.is_empty() {
             let normalized = heuristics::normalize_text(&label);
+            if text.as_deref() != Some(&normalized) {
+                return Some(normalized);
+            }
+        }
+    }
+    // aria-label takes priority over generic title/placeholder fallbacks.
+    if let Some(label) = attrs.iter().find(|(n, _)| n == "aria-label") {
+        if !label.1.is_empty() {
+            let normalized = heuristics::normalize_text(&label.1);
+            // Only return if different from text content
             if text.as_deref() != Some(&normalized) {
                 return Some(normalized);
             }
@@ -1352,6 +1355,26 @@ fn resolve_label(
         }
     }
     None
+}
+
+fn resolve_description(attrs: &[(String, String)], label_index: &LabelIndex) -> Option<String> {
+    if let Some((_, ids)) = attrs.iter().find(|(n, _)| n == "aria-describedby") {
+        let description = ids
+            .split_whitespace()
+            .filter_map(|id| label_index.by_id.get(id).map(String::as_str))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let normalized = heuristics::normalize_text(&description);
+        if !normalized.is_empty() {
+            return Some(normalized);
+        }
+    }
+
+    attrs
+        .iter()
+        .find(|(n, _)| n == "aria-description")
+        .map(|(_, value)| heuristics::normalize_text(value))
+        .filter(|value| !value.is_empty())
 }
 
 fn build_element_attrs(
@@ -1563,6 +1586,9 @@ fn build_element_attrs(
     }
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "autocomplete") {
         map.insert("autocomplete".into(), json!(value));
+    }
+    if let Some(description) = resolve_description(attrs, &ctx.label_index) {
+        map.insert("description".into(), json!(description));
     }
 
     // ARIA state preservation: capture common ARIA state attributes

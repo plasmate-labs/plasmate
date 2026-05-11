@@ -127,6 +127,24 @@ portable across the existing repo surface.
    with Rust, Python, Node, and docs coverage before another integration is
    added.
 
+### 2026-05-11 Roadmap Adjustment
+
+Current official docs reinforce that browser-agent products are competing on
+usable page state, not raw transport. Playwright MCP centers accessibility
+snapshots and stable refs, Stagehand centers `observe()` actions that can be
+validated and cached, and Firecrawl/Browser Use make cloud sessions and
+persistent profiles convenient for teams buying infrastructure. Plasmate should
+not chase the hosted browser-cloud lane first. The roadmap should make local SOM
+output more complete, deterministic, and verifiable:
+
+1. **Accessible descriptions and names**: labels and descriptions are part of
+   the action contract because agents choose controls by human-facing text.
+2. **Full-tree accounting**: metadata, cache prefetch, MCP helpers, parser
+   packages, and SDK helpers must all agree on shadow-root and nested content.
+3. **Fixture-driven trust**: ARIA-heavy SaaS forms, web components, and repeated
+   workflow pages should become shared conformance fixtures before adding more
+   adapters.
+
 ## Architecture
 
 ```
@@ -286,6 +304,12 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   infinity when `som_bytes` is zero.
 - Rust SOM compilation resolves `aria-labelledby` and external `<label for>`
   accessible names for controls.
+- Rust SOM compilation resolves accessible descriptions from
+  `aria-describedby` and `aria-description`.
+- Rust SOM compilation gives `aria-labelledby` precedence over `aria-label`.
+- SOM metadata counts shadow-root elements and controls in `element_count` and
+  `interactive_count`.
+- SOM schema and Python/Node types accept `attrs.description`.
 - Python `from_plasmate()` handles progress/log lines around SOM JSON.
 - Node `fromPlasmate()` accepts wrapped `{ som: ... }` payloads, including in
   mixed CLI output.

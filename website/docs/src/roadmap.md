@@ -54,6 +54,14 @@ The browser-agent market keeps rewarding structured state that can be reused wit
 - **Parser tolerance as adoption polish**: SDK/parser helpers should accept real CLI/MCP payload shapes, including wrapped SOM objects and progress lines.
 - **Conformance before breadth**: small core improvements should land with Rust, Python, Node, and docs coverage before adding more integrations.
 
+### 2026-05-11 Roadmap Adjustment
+
+Current official docs reinforce that browser-agent products are competing on usable page state, not raw transport. Playwright MCP centers accessibility snapshots and stable refs, Stagehand centers `observe()` actions that can be validated and cached, and Firecrawl/Browser Use make cloud sessions and persistent profiles convenient for teams buying infrastructure. Plasmate should keep the local-first lane and make SOM output more complete, deterministic, and verifiable.
+
+- **Accessible descriptions and names**: labels and descriptions are part of the action contract because agents choose controls by human-facing text.
+- **Full-tree accounting**: metadata, cache prefetch, MCP helpers, parser packages, and SDK helpers must all agree on shadow-root and nested content.
+- **Fixture-driven trust**: ARIA-heavy SaaS forms, web components, and repeated workflow pages should become shared conformance fixtures before adding more adapters.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -123,10 +131,15 @@ The browser-agent market keeps rewarding structured state that can be reused wit
 - [x] Compact action-plan helpers across Python/Node parser packages
 - [x] Node parser compression-ratio parity for zero-byte SOM edge cases
 - [x] Accessible-name parity for `aria-labelledby` and external `<label for>` controls
+- [x] Accessible descriptions from `aria-describedby` and `aria-description`
+- [x] `aria-labelledby` precedence over `aria-label`
+- [x] Shadow-root elements included in SOM metadata counts
+- [x] `attrs.description` schema and Python/Node type parity
 - [x] Python parser support for mixed CLI output around SOM JSON
 - [x] Node parser support for wrapped `{ som: ... }` payloads
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
+- [ ] Add cross-adapter accessible-description fixtures
 - [ ] Promote action-plan helper parity into the Go SDK and framework integrations
 - [ ] WebMCP/watchlist research spike: track whether browser-native tool exposure changes SOM adapter strategy
