@@ -102,6 +102,15 @@ Go should not lag Python and Node on shadow-root traversal, action/hint lookup,
 or accessible description fields because teams adopting Plasmate across
 services will judge the product by the weakest SDK surface.
 
+2026-05-11 Browser Run read: Cloudflare has rebranded Browser Rendering as
+Browser Run and is now positioning global headless browser sessions, Live View,
+recordings, human-in-loop, MCP/CDP support, and structured extraction as an AI
+agent browser platform. That makes the hosted infrastructure lane more crowded,
+not more attractive for Plasmate's near-term wedge. Plasmate should deepen the
+portable local snapshot contract: controls and regions need browser-like names,
+repeat runs need cacheable state, and every adapter should consume the same SOM
+shape without bespoke DOM recovery.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -128,6 +137,12 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-11:
+  - Rust SOM compilation now resolves nested `<label>` controls, including
+    wrapped checkboxes and selects, without leaking option text into labels.
+  - Landmark and form region labels now resolve `aria-labelledby`, aligning
+    region naming with browser accessibility snapshots.
+  - Input buttons now expose `value` as their accessible label and retain
+    normalized `attrs.input_type` for `submit`, `button`, and `reset` controls.
   - Go SDK types now parse current SOM fields for `shadow`, accessible
     descriptions, `name`, `autocomplete`, ARIA state, details, and iframe attrs.
   - Go query helpers now traverse shadow-root elements for id, role, text,
@@ -202,8 +217,8 @@ and adapter docs over one-off integration logic.
   or selected an element.
 - Add conformance cases for ARIA-heavy SaaS pages and compare output against
   Playwright MCP snapshots.
-- Extend accessible-name conformance to nested `<label>` controls, fieldsets,
-  legends, and cross-adapter description fixtures.
+- Extend accessible-name conformance to fieldsets, legends, and cross-adapter
+  description fixtures.
 - Promote the new SDK/parser shadow-root and Go action-plan tests into shared
   conformance fixtures that run against every adapter before release.
 - Audit ecosystem repos for stale install docs, tool counts, and schema drift.

@@ -231,7 +231,11 @@ fn build_label_index(root: &Handle) -> LabelIndex {
         if let NodeData::Element { name, .. } = &node.data {
             let tag = name.local.as_ref();
             let attrs = get_attr_pairs(node);
-            let text = heuristics::normalize_text(&get_text_content(node));
+            let text = if tag == "label" {
+                heuristics::normalize_text(&get_label_text(node))
+            } else {
+                heuristics::normalize_text(&get_text_content(node))
+            };
 
             if !text.is_empty() {
                 if let Some((_, id)) = attrs.iter().find(|(n, _)| n == "id") {
@@ -242,8 +246,10 @@ fn build_label_index(root: &Handle) -> LabelIndex {
                 if tag == "label" {
                     if let Some((_, target)) = attrs.iter().find(|(n, _)| n == "for") {
                         if !target.trim().is_empty() {
-                            index.by_for.insert(target.trim().to_string(), text);
+                            index.by_for.insert(target.trim().to_string(), text.clone());
                         }
+                    } else if let Some(target) = first_labelable_descendant_id(node) {
+                        index.by_for.insert(target, text.clone());
                     }
                 }
             }
@@ -257,6 +263,64 @@ fn build_label_index(root: &Handle) -> LabelIndex {
     let mut index = LabelIndex::default();
     visit(root, &mut index);
     index
+}
+
+fn first_labelable_descendant_id(node: &Handle) -> Option<String> {
+    for child in node.children.borrow().iter() {
+        if let NodeData::Element { name, .. } = &child.data {
+            let tag = name.local.as_ref();
+            if is_labelable_tag(tag) {
+                let attrs = get_attr_pairs(child);
+                if let Some((_, id)) = attrs.iter().find(|(n, _)| n == "id") {
+                    let id = id.trim();
+                    if !id.is_empty() {
+                        return Some(id.to_string());
+                    }
+                }
+            }
+        }
+
+        if let Some(id) = first_labelable_descendant_id(child) {
+            return Some(id);
+        }
+    }
+
+    None
+}
+
+fn is_labelable_tag(tag: &str) -> bool {
+    matches!(
+        tag,
+        "button" | "input" | "meter" | "output" | "progress" | "select" | "textarea"
+    )
+}
+
+fn get_label_text(node: &Handle) -> String {
+    fn visit(node: &Handle, parts: &mut Vec<String>) {
+        match &node.data {
+            NodeData::Element { name, .. } => {
+                if is_labelable_tag(name.local.as_ref()) {
+                    return;
+                }
+                for child in node.children.borrow().iter() {
+                    visit(child, parts);
+                }
+            }
+            NodeData::Text { contents } => {
+                let text = contents.borrow();
+                if !text.trim().is_empty() {
+                    parts.push(text.to_string());
+                }
+            }
+            _ => {}
+        }
+    }
+
+    let mut parts = Vec::new();
+    for child in node.children.borrow().iter() {
+        visit(child, &mut parts);
+    }
+    parts.join(" ")
 }
 
 /// Extract regions from the body node.
@@ -558,7 +622,7 @@ fn collect_regions(
             let count = region_counts.entry("form".to_string()).or_insert(0);
             let rid = generate_region_id("form", *count);
             *count += 1;
-            let label = heuristics::get_accessible_label(&attr_pairs).or_else(|| {
+            let label = resolve_region_label(&attr_pairs, &ctx.label_index).or_else(|| {
                 attr_pairs
                     .iter()
                     .find(|(n, _)| n == "name" || n == "id")
@@ -750,7 +814,7 @@ fn create_landmark_region(
     let count = region_counts.entry(role_str.to_string()).or_insert(0);
     let rid = generate_region_id(role_str, *count);
     *count += 1;
-    let label = heuristics::get_accessible_label(attr_pairs);
+    let label = resolve_region_label(attr_pairs, &ctx.label_index);
 
     // Track if we're in main region for content summarization
     let was_main = ctx.is_main_region.get();
@@ -1306,7 +1370,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
 }
 
 fn resolve_label(
-    _tag: &str,
+    tag: &str,
     attrs: &[(String, String)],
     text: &Option<String>,
     label_index: &LabelIndex,
@@ -1354,7 +1418,38 @@ fn resolve_label(
             return Some(heuristics::normalize_text(&ph.1));
         }
     }
+    if tag == "input" {
+        let input_type = attrs
+            .iter()
+            .find(|(n, _)| n == "type")
+            .map(|(_, v)| v.to_ascii_lowercase())
+            .unwrap_or_else(|| "text".to_string());
+        if matches!(input_type.as_str(), "submit" | "button" | "reset") {
+            if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "value") {
+                let normalized = heuristics::normalize_text(value);
+                if !normalized.is_empty() && text.as_deref() != Some(&normalized) {
+                    return Some(normalized);
+                }
+            }
+        }
+    }
     None
+}
+
+fn resolve_region_label(attrs: &[(String, String)], label_index: &LabelIndex) -> Option<String> {
+    if let Some((_, ids)) = attrs.iter().find(|(n, _)| n == "aria-labelledby") {
+        let label = ids
+            .split_whitespace()
+            .filter_map(|id| label_index.by_id.get(id).map(String::as_str))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let normalized = heuristics::normalize_text(&label);
+        if !normalized.is_empty() {
+            return Some(normalized);
+        }
+    }
+
+    heuristics::get_accessible_label(attrs)
 }
 
 fn resolve_description(attrs: &[(String, String)], label_index: &LabelIndex) -> Option<String> {
@@ -1399,24 +1494,7 @@ fn build_element_attrs(
                 .unwrap_or_else(|| "text".to_string());
             let input_type = input_type.to_ascii_lowercase();
 
-            if matches!(
-                input_type.as_str(),
-                "text"
-                    | "email"
-                    | "password"
-                    | "search"
-                    | "tel"
-                    | "url"
-                    | "number"
-                    | "date"
-                    | "time"
-                    | "datetime-local"
-                    | "month"
-                    | "week"
-                    | "color"
-            ) {
-                map.insert("input_type".into(), json!(input_type));
-            }
+            map.insert("input_type".into(), json!(input_type.clone()));
             if let Some(v) = attrs.iter().find(|(n, _)| n == "value") {
                 map.insert("value".into(), json!(v.1));
             }

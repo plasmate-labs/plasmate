@@ -49,6 +49,42 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-11T13:55:05Z - Plasmate Improvements Automation
+
+- Git sync: attempted the requested latest pull first. The automation worktree
+  still cannot write shared metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate15/FETCH_HEAD`
+  (`Operation not permitted`). The primary checkout fetch also failed because
+  `github.com` could not resolve, so this run continued from the locally
+  current `origin/master`/automation branch state at `16bf9d7`.
+- Market direction: Playwright MCP and Stagehand still validate structured
+  snapshots plus reusable action planning; Firecrawl continues to broaden
+  search/scrape/browser-session surfaces; Cloudflare's Browser Run launch adds
+  hosted browser sessions with Live View, recordings, human-in-loop, MCP/CDP,
+  and structured extraction. The startup direction should stay local-first and
+  deepen portable SOM correctness, traceability, and cache reuse rather than
+  pivoting into hosted browser infrastructure.
+- Ecosystem state: the repo remains broad across Rust CLI/daemon/MCP/CDP/AWP,
+  Python/Node/Go SDKs, parser packages, Browser Use, LangChain, Vercel AI,
+  generated website docs, benchmarks, and marketing. Contract drift across
+  these surfaces is still the main retention risk.
+- Code changes: Rust SOM compilation now resolves wrapped `<label>` controls
+  for checkboxes/selects without leaking nested option text; landmark and form
+  region labels now resolve `aria-labelledby`; input buttons now expose
+  value-derived labels and normalized `attrs.input_type` for `submit`,
+  `button`, and `reset`.
+- Docs changes: updated PRD, roadmap, website doc sources, and generated docs
+  with the Browser Run market read, completed accessibility-name improvements,
+  and next steps around fieldsets/legends, selector-aware cache, trace export,
+  and SaaS form conformance fixtures.
+- Verification: `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo test
+  --test som_compiler_test -- --nocapture` passed 49 tests.
+  `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build` passed.
+  `node website/build.mjs` rebuilt 39 pages. `git diff --check` passed. Full
+  `cargo test` passed 245 lib tests and 5 main/MCP tests, then failed only in
+  `tests/awp_integration_test.rs` because the sandbox denied local socket setup
+  with `Operation not permitted`.
+
 ### 2026-05-11T13:28:00Z - Plasmate Improvements Automation
 
 - Git sync: attempted the requested latest pull first. The automation worktree

@@ -260,6 +260,93 @@ fn test_accessible_labels_from_label_for_and_labelledby() {
 }
 
 #[test]
+fn test_wrapped_label_controls_get_accessible_label() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Wrapped Labels</title></head>
+<body><main>
+    <label>Remember this browser <input id="remember-browser" type="checkbox"></label>
+    <label>Support tier <select id="support-tier"><option value="pro">Pro</option></select></label>
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let elems = all_elements(&som);
+
+    let checkbox = elems
+        .iter()
+        .find(|e| e.html_id.as_deref() == Some("remember-browser"))
+        .expect("wrapped checkbox should be preserved");
+    assert_eq!(checkbox.label.as_deref(), Some("Remember this browser"));
+
+    let select = elems
+        .iter()
+        .find(|e| e.html_id.as_deref() == Some("support-tier"))
+        .expect("wrapped select should be preserved");
+    assert_eq!(select.label.as_deref(), Some("Support tier"));
+}
+
+#[test]
+fn test_region_labels_resolve_aria_labelledby() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Region Labels</title></head>
+<body>
+    <span id="primary-nav-name">Primary navigation</span>
+    <nav aria-labelledby="primary-nav-name">
+        <a href="/">Home</a>
+        <a href="/docs">Docs</a>
+        <a href="/pricing">Pricing</a>
+    </nav>
+    <span id="signup-name">Create account</span>
+    <form aria-labelledby="signup-name" action="/signup" method="post">
+        <input name="email" type="email" aria-label="Email">
+        <button>Join</button>
+    </form>
+</body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+
+    let nav = som
+        .regions
+        .iter()
+        .find(|r| r.role == RegionRole::Navigation)
+        .expect("navigation region should be preserved");
+    assert_eq!(nav.label.as_deref(), Some("Primary navigation"));
+
+    let form = som
+        .regions
+        .iter()
+        .find(|r| r.role == RegionRole::Form)
+        .expect("form region should be preserved");
+    assert_eq!(form.label.as_deref(), Some("Create account"));
+}
+
+#[test]
+fn test_input_button_values_become_labels_and_type_attrs() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Input Buttons</title></head>
+<body><main>
+    <input type="SUBMIT" value="Save changes">
+    <input type="reset" value="Clear form">
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let elems = all_elements(&som);
+
+    let save = elems
+        .iter()
+        .find(|e| e.label.as_deref() == Some("Save changes"))
+        .expect("submit input value should be exposed as label");
+    assert_eq!(save.role, ElementRole::Button);
+    assert_eq!(save.attrs.as_ref().unwrap()["input_type"], "submit");
+
+    let clear = elems
+        .iter()
+        .find(|e| e.label.as_deref() == Some("Clear form"))
+        .expect("reset input value should be exposed as label");
+    assert_eq!(clear.role, ElementRole::Button);
+    assert_eq!(clear.attrs.as_ref().unwrap()["input_type"], "reset");
+}
+
+#[test]
 fn test_aria_labelledby_takes_precedence_over_aria_label() {
     let html = r#"<!DOCTYPE html>
 <html><head><title>Label Priority</title></head>

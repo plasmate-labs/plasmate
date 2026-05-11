@@ -164,6 +164,24 @@ those services, Plasmate becomes less sticky.
    `attrs.autocomplete`, ARIA state, details attrs, iframe attrs, and `shadow`
    should be treated as public contract across all SDKs.
 
+### 2026-05-11 Browser Run and Naming Adjustment
+
+Cloudflare's Browser Run launch strengthens the trend toward browser platforms
+that pair hosted sessions with Live View, recordings, human-in-loop, MCP/CDP,
+and structured extraction. Plasmate should not chase that cloud lane as its
+first-order wedge. The stickier roadmap move is to make SOM the most trustworthy
+portable local action snapshot:
+
+1. **Browser-like names for every target**: wrapped labels, region
+   `aria-labelledby`, and input-button values should compile into the same
+   human-facing names agents see in accessibility snapshots.
+2. **Trace and cache over hosted scale**: repeated local workflows need
+   selector-aware cache views and trace exports before a managed browser cloud
+   would add durable retention.
+3. **Conformance for SaaS forms**: shared fixtures should cover labels,
+   descriptions, regions, fieldsets, and button values because form automation
+   is where repeat users feel reliability or churn.
+
 ## Architecture
 
 ```
@@ -337,6 +355,11 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Go SDK query helpers traverse shadow roots for id, role, text, interactivity,
   and flattened element queries.
 - Go SDK exposes action/hint lookup and compact action-plan helpers.
+- Rust SOM compilation resolves wrapped `<label>` controls without leaking
+  nested select option text into labels.
+- Landmark and form regions resolve `aria-labelledby` labels.
+- Input buttons expose value-derived labels and normalized `attrs.input_type`
+  for `submit`, `button`, and `reset`.
 - Selector handling now trims whitespace and supports documented region ids
   (`#region-id`) while preserving HTML id selection for agent actions.
 - SOM compilation recognizes common ARIA widgets (`textbox`, `searchbox`,

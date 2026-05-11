@@ -70,6 +70,14 @@ The repo's broad library surface is now a product promise. Python and Node alrea
 - **Shadow roots are not optional**: web-component controls must be reachable by id, role, text, interactivity, and flattened traversal in Go as well as Python and Node.
 - **Schema fields need SDK homes**: `attrs.description`, `attrs.name`, `attrs.autocomplete`, ARIA state, details attrs, iframe attrs, and `shadow` should be treated as public contract across all SDKs.
 
+### 2026-05-11 Browser Run and Naming Adjustment
+
+Cloudflare's Browser Run launch strengthens the trend toward browser platforms that pair hosted sessions with Live View, recordings, human-in-loop, MCP/CDP, and structured extraction. Plasmate should keep the local-first lane by making SOM the most trustworthy portable action snapshot.
+
+- **Browser-like names for every target**: wrapped labels, region `aria-labelledby`, and input-button values should compile into the same human-facing names agents see in accessibility snapshots.
+- **Trace and cache over hosted scale**: repeated local workflows need selector-aware cache views and trace exports before a managed browser cloud would add durable retention.
+- **Conformance for SaaS forms**: shared fixtures should cover labels, descriptions, regions, fieldsets, and button values because form automation is where repeat users feel reliability or churn.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -148,6 +156,9 @@ The repo's broad library surface is now a product promise. Python and Node alrea
 - [x] Go SDK parsing for `shadow`, accessible descriptions, ARIA state, details attrs, and iframe attrs
 - [x] Go SDK shadow-root traversal for id, role, text, interactivity, and flattened queries
 - [x] Go SDK action/hint lookup and compact action-plan helpers
+- [x] Wrapped `<label>` accessible-name support without nested option text leakage
+- [x] `aria-labelledby` labels for landmark and form regions
+- [x] Input button value-derived labels and normalized `attrs.input_type`
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
