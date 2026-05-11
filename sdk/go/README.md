@@ -40,6 +40,9 @@ func main() {
     interactive := plasmate.FindInteractive(som)
     fmt.Printf("Found %d interactive elements\n", len(interactive))
 
+    plan := plasmate.GetActionPlan(som)
+    fmt.Printf("Found %d action targets\n", len(plan))
+
     fmt.Printf("~%d tokens\n", plasmate.TokenEstimate(som))
 }
 ```
@@ -83,6 +86,9 @@ el := plasmate.FindByID(som, "e3")
 navs := plasmate.FindByRole(som, "navigation")
 buttons := plasmate.FindByTag(som, "button")
 results := plasmate.FindByText(som, "sign in")
+clickable := plasmate.FindByAction(som, "click")
+required := plasmate.FindByHint(som, "required")
+plan := plasmate.GetActionPlan(som)
 all := plasmate.FlatElements(som)
 ```
 
@@ -112,5 +118,13 @@ all := plasmate.FlatElements(som)
 | `FindByTag(som, tag)` | Find elements by role/tag |
 | `FindInteractive(som)` | Find elements with actions |
 | `FindByText(som, text)` | Case-insensitive text search |
-| `FlatElements(som)` | Flatten all elements |
+| `FindByAction(som, action)` | Find elements exposing an action |
+| `FindByHint(som, hint)` | Find elements tagged with a semantic hint |
+| `GetActionPlan(som)` | Return compact action targets for agents |
+| `FlatElements(som)` | Flatten all elements, including shadow roots |
 | `TokenEstimate(som)` | Estimate token count |
+
+The Go types include current SOM actionability fields such as
+`attrs.description`, `attrs.name`, `attrs.autocomplete`, `attrs.aria`, iframe
+attrs, and `shadow` roots so Go agents receive the same contract as the Python
+and Node parser packages.

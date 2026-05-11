@@ -37,28 +37,60 @@ type Element struct {
 	Attrs    *ElementAttrs  `json:"attrs,omitempty"`
 	Children []Element      `json:"children,omitempty"`
 	Hints    []string       `json:"hints,omitempty"`
+	Shadow   *SomShadowRoot `json:"shadow,omitempty"`
 }
 
 // ElementAttrs holds role-specific attributes for an element.
 type ElementAttrs struct {
-	Href         *string        `json:"href,omitempty"`
-	InputType    *string        `json:"input_type,omitempty"`
-	Value        *string        `json:"value,omitempty"`
-	Placeholder  *string        `json:"placeholder,omitempty"`
-	Required     *bool          `json:"required,omitempty"`
-	Disabled     *bool          `json:"disabled,omitempty"`
-	Checked      *bool          `json:"checked,omitempty"`
-	Group        *string        `json:"group,omitempty"`
-	Multiple     *bool          `json:"multiple,omitempty"`
-	Options      []SelectOption `json:"options,omitempty"`
-	Level        *int           `json:"level,omitempty"`
-	Alt          *string        `json:"alt,omitempty"`
-	Src          *string        `json:"src,omitempty"`
-	Ordered      *bool          `json:"ordered,omitempty"`
-	Items        []ListItem     `json:"items,omitempty"`
-	Headers      []string       `json:"headers,omitempty"`
-	Rows         [][]string     `json:"rows,omitempty"`
-	SectionLabel *string        `json:"section_label,omitempty"`
+	Href            *string        `json:"href,omitempty"`
+	InputType       *string        `json:"input_type,omitempty"`
+	Value           *string        `json:"value,omitempty"`
+	Placeholder     *string        `json:"placeholder,omitempty"`
+	Required        *bool          `json:"required,omitempty"`
+	Disabled        *bool          `json:"disabled,omitempty"`
+	Checked         *bool          `json:"checked,omitempty"`
+	Group           *string        `json:"group,omitempty"`
+	Multiple        *bool          `json:"multiple,omitempty"`
+	Options         []SelectOption `json:"options,omitempty"`
+	Level           *int           `json:"level,omitempty"`
+	Alt             *string        `json:"alt,omitempty"`
+	Src             *string        `json:"src,omitempty"`
+	Ordered         *bool          `json:"ordered,omitempty"`
+	Items           []ListItem     `json:"items,omitempty"`
+	Headers         []string       `json:"headers,omitempty"`
+	Rows            [][]string     `json:"rows,omitempty"`
+	SectionLabel    *string        `json:"section_label,omitempty"`
+	Open            *bool          `json:"open,omitempty"`
+	Summary         *string        `json:"summary,omitempty"`
+	ContentEditable interface{}    `json:"contenteditable,omitempty"`
+	TabIndex        interface{}    `json:"tabindex,omitempty"`
+	Name            *string        `json:"name,omitempty"`
+	Autocomplete    *string        `json:"autocomplete,omitempty"`
+	Description     *string        `json:"description,omitempty"`
+	Aria            *AriaState     `json:"aria,omitempty"`
+	HasSrcdoc       *bool          `json:"has_srcdoc,omitempty"`
+	SrcdocPreview   *string        `json:"srcdoc_preview,omitempty"`
+	Sandbox         *string        `json:"sandbox,omitempty"`
+	Allow           *string        `json:"allow,omitempty"`
+	Width           *string        `json:"width,omitempty"`
+	Height          *string        `json:"height,omitempty"`
+}
+
+// AriaState holds common ARIA state attributes emitted by SOM.
+type AriaState struct {
+	Expanded *bool       `json:"expanded,omitempty"`
+	Selected *bool       `json:"selected,omitempty"`
+	Checked  interface{} `json:"checked,omitempty"`
+	Disabled *bool       `json:"disabled,omitempty"`
+	Current  interface{} `json:"current,omitempty"`
+	Pressed  *bool       `json:"pressed,omitempty"`
+	Hidden   *bool       `json:"hidden,omitempty"`
+}
+
+// SomShadowRoot represents elements inside a web component shadow root.
+type SomShadowRoot struct {
+	Mode     string    `json:"mode"`
+	Elements []Element `json:"elements"`
 }
 
 // SelectOption represents an option within a select element.

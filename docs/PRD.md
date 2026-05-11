@@ -93,6 +93,15 @@ should keep the local-first SOM wedge, but names, descriptions, and full-tree
 metadata must match how agents choose controls. This is a refinement, not a
 pivot: improve deterministic SOM contracts before hosted-browser features.
 
+2026-05-11 Go parity read: Stagehand's action caching and Playwright MCP's
+snapshot refs both teach agent developers to expect a compact, reusable action
+surface in every language they use. Plasmate's repo already spans Rust, Python,
+Node, Go, MCP, CDP, AWP, parser packages, and framework integrations, so
+stickiness now depends on contract parity as much as core extraction quality.
+Go should not lag Python and Node on shadow-root traversal, action/hint lookup,
+or accessible description fields because teams adopting Plasmate across
+services will judge the product by the weakest SDK surface.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -119,6 +128,13 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-11:
+  - Go SDK types now parse current SOM fields for `shadow`, accessible
+    descriptions, `name`, `autocomplete`, ARIA state, details, and iframe attrs.
+  - Go query helpers now traverse shadow-root elements for id, role, text,
+    interactivity, and flattened element queries.
+  - Go now exposes `FindByAction`, `FindByHint`, and `GetActionPlan` so action
+    planning is available across Rust output, Python/Node parser packages, and
+    Go consumers.
   - SOM metadata now counts elements and interactive controls inside shadow
     roots, keeping reported counts aligned with the full queryable SOM tree.
   - `aria-labelledby` now takes precedence over `aria-label` when resolving
@@ -188,8 +204,8 @@ and adapter docs over one-off integration logic.
   Playwright MCP snapshots.
 - Extend accessible-name conformance to nested `<label>` controls, fieldsets,
   legends, and cross-adapter description fixtures.
-- Promote the new SDK/parser shadow-root tests into shared conformance fixtures
-  that run against every adapter before release.
+- Promote the new SDK/parser shadow-root and Go action-plan tests into shared
+  conformance fixtures that run against every adapter before release.
 - Audit ecosystem repos for stale install docs, tool counts, and schema drift.
-- Promote action-plan helper parity into the Go SDK and framework integrations
-  so every adapter exposes the same compact action target contract.
+- Promote action-plan helper parity into framework integrations so every
+  adapter exposes the same compact action target contract.

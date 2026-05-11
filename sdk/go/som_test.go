@@ -64,6 +64,28 @@ var testSOM = `{
           "id": "e7",
           "role": "image",
           "attrs": {"src": "/hero.png", "alt": "Hero image"}
+        },
+        {
+          "id": "e9",
+          "role": "section",
+          "text": "Search widget",
+          "shadow": {
+            "mode": "open",
+            "elements": [
+              {
+                "id": "e10",
+                "role": "button",
+                "label": "Open filters",
+                "actions": ["click"],
+                "hints": ["primary"],
+                "attrs": {
+                  "name": "filters",
+                  "description": "Shows advanced search filters",
+                  "aria": {"expanded": false}
+                }
+              }
+            ]
+          }
         }
       ]
     },
@@ -82,8 +104,8 @@ var testSOM = `{
   "meta": {
     "html_bytes": 4096,
     "som_bytes": 1200,
-    "element_count": 8,
-    "interactive_count": 4
+    "element_count": 10,
+    "interactive_count": 5
   },
   "structured_data": {
     "open_graph": {"og:title": "Example Page"},
@@ -124,11 +146,11 @@ func TestParse(t *testing.T) {
 	if som.Meta.SOMBytes != 1200 {
 		t.Errorf("Meta.SOMBytes = %d, want 1200", som.Meta.SOMBytes)
 	}
-	if som.Meta.ElementCount != 8 {
-		t.Errorf("Meta.ElementCount = %d, want 8", som.Meta.ElementCount)
+	if som.Meta.ElementCount != 10 {
+		t.Errorf("Meta.ElementCount = %d, want 10", som.Meta.ElementCount)
 	}
-	if som.Meta.InteractiveCount != 4 {
-		t.Errorf("Meta.InteractiveCount = %d, want 4", som.Meta.InteractiveCount)
+	if som.Meta.InteractiveCount != 5 {
+		t.Errorf("Meta.InteractiveCount = %d, want 5", som.Meta.InteractiveCount)
 	}
 }
 
@@ -190,6 +212,24 @@ func TestParseElementAttrs(t *testing.T) {
 	if input.Attrs.Placeholder == nil || *input.Attrs.Placeholder != "Search..." {
 		t.Errorf("placeholder = %v, want Search...", input.Attrs.Placeholder)
 	}
+
+	// Check recently added actionability attrs.
+	shadowButton := FindByID(som, "e10")
+	if shadowButton == nil {
+		t.Fatal("shadow button not found")
+	}
+	if shadowButton.Attrs == nil {
+		t.Fatal("shadow button attrs nil")
+	}
+	if shadowButton.Attrs.Name == nil || *shadowButton.Attrs.Name != "filters" {
+		t.Errorf("name = %v, want filters", shadowButton.Attrs.Name)
+	}
+	if shadowButton.Attrs.Description == nil || *shadowButton.Attrs.Description != "Shows advanced search filters" {
+		t.Errorf("description = %v, want Shows advanced search filters", shadowButton.Attrs.Description)
+	}
+	if shadowButton.Attrs.Aria == nil || shadowButton.Attrs.Aria.Expanded == nil || *shadowButton.Attrs.Aria.Expanded {
+		t.Errorf("aria.expanded = %v, want false", shadowButton.Attrs.Aria)
+	}
 }
 
 func TestParseInvalidJSON(t *testing.T) {
@@ -230,6 +270,14 @@ func TestFindByID(t *testing.T) {
 	if FindByID(som, "e999") != nil {
 		t.Error("FindByID(e999) should return nil")
 	}
+
+	shadowEl := FindByID(som, "e10")
+	if shadowEl == nil {
+		t.Fatal("FindByID(e10) should traverse shadow roots")
+	}
+	if shadowEl.Label == nil || *shadowEl.Label != "Open filters" {
+		t.Errorf("Label = %v, want Open filters", shadowEl.Label)
+	}
 }
 
 func TestFindByTag(t *testing.T) {
@@ -250,8 +298,8 @@ func TestFindInteractive(t *testing.T) {
 	som := mustParse(t)
 
 	interactive := FindInteractive(som)
-	if len(interactive) != 4 {
-		t.Fatalf("FindInteractive = %d, want 4", len(interactive))
+	if len(interactive) != 5 {
+		t.Fatalf("FindInteractive = %d, want 5", len(interactive))
 	}
 
 	// Verify all have actions
@@ -283,14 +331,68 @@ func TestFindByText(t *testing.T) {
 	if len(empty) != 0 {
 		t.Errorf("FindByText(nonexistent) = %d, want 0", len(empty))
 	}
+
+	results = FindByText(som, "filters")
+	if len(results) != 1 {
+		t.Fatalf("FindByText(filters) = %d, want 1", len(results))
+	}
+	if results[0].ID != "e10" {
+		t.Errorf("ID = %q, want e10", results[0].ID)
+	}
 }
 
 func TestFlatElements(t *testing.T) {
 	som := mustParse(t)
 
 	flat := FlatElements(som)
-	if len(flat) != 8 {
-		t.Fatalf("FlatElements = %d, want 8", len(flat))
+	if len(flat) != 10 {
+		t.Fatalf("FlatElements = %d, want 10", len(flat))
+	}
+}
+
+func TestFindByActionAndHint(t *testing.T) {
+	som := mustParse(t)
+
+	clickable := FindByAction(som, "click")
+	if len(clickable) != 5 {
+		t.Fatalf("FindByAction(click) = %d, want 5", len(clickable))
+	}
+
+	primary := FindByHint(som, "primary")
+	if len(primary) != 1 {
+		t.Fatalf("FindByHint(primary) = %d, want 1", len(primary))
+	}
+	if primary[0].ID != "e10" {
+		t.Errorf("ID = %q, want e10", primary[0].ID)
+	}
+}
+
+func TestGetActionPlan(t *testing.T) {
+	som := mustParse(t)
+
+	plan := GetActionPlan(som)
+	if len(plan) != 5 {
+		t.Fatalf("GetActionPlan = %d, want 5", len(plan))
+	}
+
+	var filters *ActionPlanItem
+	for i := range plan {
+		if plan[i].ID == "e10" {
+			filters = &plan[i]
+			break
+		}
+	}
+	if filters == nil {
+		t.Fatal("action plan missing shadow-root button")
+	}
+	if filters.Label == nil || *filters.Label != "Open filters" {
+		t.Errorf("Label = %v, want Open filters", filters.Label)
+	}
+	if filters.Name == nil || *filters.Name != "filters" {
+		t.Errorf("Name = %v, want filters", filters.Name)
+	}
+	if len(filters.Actions) != 1 || filters.Actions[0] != "click" {
+		t.Errorf("Actions = %v, want [click]", filters.Actions)
 	}
 }
 

@@ -62,6 +62,14 @@ Current official docs reinforce that browser-agent products are competing on usa
 - **Full-tree accounting**: metadata, cache prefetch, MCP helpers, parser packages, and SDK helpers must all agree on shadow-root and nested content.
 - **Fixture-driven trust**: ARIA-heavy SaaS forms, web components, and repeated workflow pages should become shared conformance fixtures before adding more adapters.
 
+### 2026-05-11 Go SDK Parity Adjustment
+
+The repo's broad library surface is now a product promise. Python and Node already expose action/hint lookup and compact action-plan helpers, while Go was still missing current SOM fields and shadow-root traversal. That gap matters because multi-service teams often adopt Go for durable workers and Python/Node for agent orchestration; if the same SOM cannot be queried consistently across those services, Plasmate becomes less sticky.
+
+- **Cross-language action plans**: Go should expose the same compact action targets as the parser packages so agents can plan from ids, roles, labels, actions, hrefs, names, and input types in any supported runtime.
+- **Shadow roots are not optional**: web-component controls must be reachable by id, role, text, interactivity, and flattened traversal in Go as well as Python and Node.
+- **Schema fields need SDK homes**: `attrs.description`, `attrs.name`, `attrs.autocomplete`, ARIA state, details attrs, iframe attrs, and `shadow` should be treated as public contract across all SDKs.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -137,9 +145,12 @@ Current official docs reinforce that browser-agent products are competing on usa
 - [x] `attrs.description` schema and Python/Node type parity
 - [x] Python parser support for mixed CLI output around SOM JSON
 - [x] Node parser support for wrapped `{ som: ... }` payloads
+- [x] Go SDK parsing for `shadow`, accessible descriptions, ARIA state, details attrs, and iframe attrs
+- [x] Go SDK shadow-root traversal for id, role, text, interactivity, and flattened queries
+- [x] Go SDK action/hint lookup and compact action-plan helpers
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
 - [ ] Add cross-adapter accessible-description fixtures
-- [ ] Promote action-plan helper parity into the Go SDK and framework integrations
+- [ ] Promote action-plan helper parity into framework integrations
 - [ ] WebMCP/watchlist research spike: track whether browser-native tool exposure changes SOM adapter strategy

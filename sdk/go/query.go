@@ -32,6 +32,11 @@ func findByIDInSlice(elements []Element, id string) *Element {
 		if el := findByIDInSlice(elements[i].Children, id); el != nil {
 			return el
 		}
+		if elements[i].Shadow != nil {
+			if el := findByIDInSlice(elements[i].Shadow.Elements, id); el != nil {
+				return el
+			}
+		}
 	}
 	return nil
 }
@@ -52,6 +57,9 @@ func collectByRole(elements []Element, role string, result *[]Element) {
 			*result = append(*result, el)
 		}
 		collectByRole(el.Children, role, result)
+		if el.Shadow != nil {
+			collectByRole(el.Shadow.Elements, role, result)
+		}
 	}
 }
 
@@ -70,11 +78,15 @@ func collectInteractive(elements []Element, result *[]Element) {
 			*result = append(*result, el)
 		}
 		collectInteractive(el.Children, result)
+		if el.Shadow != nil {
+			collectInteractive(el.Shadow.Elements, result)
+		}
 	}
 }
 
 // FindByText returns all elements whose text contains the given substring
-// (case-insensitive).
+// (case-insensitive). Labels are searched as well because many controls expose
+// their human-facing text through label instead of text.
 func FindByText(som *Som, text string) []Element {
 	lower := strings.ToLower(text)
 	var result []Element
@@ -88,13 +100,49 @@ func collectByText(elements []Element, lowerText string, result *[]Element) {
 	for _, el := range elements {
 		if el.Text != nil && strings.Contains(strings.ToLower(*el.Text), lowerText) {
 			*result = append(*result, el)
+		} else if el.Label != nil && strings.Contains(strings.ToLower(*el.Label), lowerText) {
+			*result = append(*result, el)
 		}
 		collectByText(el.Children, lowerText, result)
+		if el.Shadow != nil {
+			collectByText(el.Shadow.Elements, lowerText, result)
+		}
 	}
 }
 
+// FindByAction returns all elements that expose a specific action.
+func FindByAction(som *Som, action string) []Element {
+	var result []Element
+	for _, el := range FlatElements(som) {
+		if containsString(el.Actions, action) {
+			result = append(result, el)
+		}
+	}
+	return result
+}
+
+// FindByHint returns all elements tagged with a specific semantic hint.
+func FindByHint(som *Som, hint string) []Element {
+	var result []Element
+	for _, el := range FlatElements(som) {
+		if containsString(el.Hints, hint) {
+			result = append(result, el)
+		}
+	}
+	return result
+}
+
+func containsString(values []string, target string) bool {
+	for _, value := range values {
+		if value == target {
+			return true
+		}
+	}
+	return false
+}
+
 // FlatElements returns all elements from all regions flattened into a single slice,
-// including nested children via depth-first traversal.
+// including nested children and shadow-root elements via depth-first traversal.
 func FlatElements(som *Som) []Element {
 	var result []Element
 	for _, r := range som.Regions {
@@ -107,7 +155,45 @@ func flattenElements(elements []Element, result *[]Element) {
 	for _, el := range elements {
 		*result = append(*result, el)
 		flattenElements(el.Children, result)
+		if el.Shadow != nil {
+			flattenElements(el.Shadow.Elements, result)
+		}
 	}
+}
+
+// ActionPlanItem is a compact action target for agent planning.
+type ActionPlanItem struct {
+	ID        string   `json:"id"`
+	Role      string   `json:"role"`
+	Actions   []string `json:"actions"`
+	Label     *string  `json:"label,omitempty"`
+	Href      *string  `json:"href,omitempty"`
+	Name      *string  `json:"name,omitempty"`
+	InputType *string  `json:"input_type,omitempty"`
+}
+
+// GetActionPlan returns compact action targets for agent planning.
+func GetActionPlan(som *Som) []ActionPlanItem {
+	items := []ActionPlanItem{}
+	for _, el := range FindInteractive(som) {
+		item := ActionPlanItem{
+			ID:      el.ID,
+			Role:    el.Role,
+			Actions: append([]string(nil), el.Actions...),
+		}
+		if el.Label != nil {
+			item.Label = el.Label
+		} else if el.Text != nil {
+			item.Label = el.Text
+		}
+		if el.Attrs != nil {
+			item.Href = el.Attrs.Href
+			item.Name = el.Attrs.Name
+			item.InputType = el.Attrs.InputType
+		}
+		items = append(items, item)
+	}
+	return items
 }
 
 // TokenEstimate returns a rough estimate of the number of tokens in the SOM.

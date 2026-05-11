@@ -49,6 +49,42 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-11T13:28:00Z - Plasmate Improvements Automation
+
+- Git sync: attempted the requested latest pull first. The automation worktree
+  still cannot write shared metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate14/FETCH_HEAD`
+  (`Operation not permitted`), the primary checkout cannot resolve
+  `github.com`, and `gh auth status` still reports the configured `dbhurley`
+  token is invalid. Remote merge to `master` remains blocked by network/auth.
+- Market direction: current Playwright MCP docs reinforce accessibility
+  snapshots with refs, Browserbase/Stagehand is marketing `observe()` plus
+  local/managed action caching, and Firecrawl continues to package managed
+  browser sessions. The startup direction should stay local-first and increase
+  stickiness through cross-language SOM action contracts rather than a hosted
+  browser-cloud pivot.
+- Ecosystem state: the project spans Rust CLI/daemon/MCP/CDP/AWP, Python,
+  Node, and Go SDKs, Browser Use, LangChain, Vercel AI, SOM parser packages,
+  generated website docs, comparison pages, benchmarks, and marketing assets.
+  The most important product risk is contract drift across those repositories
+  and libraries.
+- Code changes: Go SDK types now parse `shadow`, accessible descriptions,
+  `name`, `autocomplete`, ARIA state, details attrs, and iframe attrs; Go query
+  helpers now traverse shadow roots for id, role, text, interactivity, and
+  flattened element queries; Go now exposes `FindByAction`, `FindByHint`, and
+  `GetActionPlan` for compact agent planning parity with Python/Node parser
+  packages.
+- Docs changes: updated the Go SDK README, PRD, roadmap, website docs source,
+  and generated website docs with the Go parity rationale, completed
+  improvements, and next steps around shared conformance fixtures and framework
+  integration parity.
+- Verification: `GOCACHE=/Users/steve/Git/plasmate/target/go-build go test
+  ./...` passed in `sdk/go`; `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target
+  cargo build` passed; `node website/build.mjs` rebuilt 39 docs pages;
+  `git diff --check` passed. Full `cargo test` passed 245 lib tests and 5
+  main/MCP tests, then failed only in `tests/awp_integration_test.rs` because
+  the sandbox denied local socket setup with `Operation not permitted`.
+
 ### 2026-05-11 - Plasmate Improvements Automation
 
 - Git sync: attempted `git fetch origin --prune` in the automation worktree,

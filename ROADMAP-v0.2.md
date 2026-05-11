@@ -145,6 +145,25 @@ output more complete, deterministic, and verifiable:
    workflow pages should become shared conformance fixtures before adding more
    adapters.
 
+### 2026-05-11 Go SDK Parity Adjustment
+
+The repo's broad library surface is now a product promise. Python and Node
+already expose action/hint lookup and compact action-plan helpers, while Go was
+still missing current SOM fields and shadow-root traversal. That gap matters
+because multi-service teams often adopt Go for durable workers and Python/Node
+for agent orchestration; if the same SOM cannot be queried consistently across
+those services, Plasmate becomes less sticky.
+
+1. **Cross-language action plans**: Go should expose the same compact action
+   targets as the parser packages so agents can plan from ids, roles, labels,
+   actions, hrefs, names, and input types in any supported runtime.
+2. **Shadow roots are not optional**: web-component controls must be reachable
+   by id, role, text, interactivity, and flattened traversal in Go as well as
+   Python and Node.
+3. **Schema fields need SDK homes**: `attrs.description`, `attrs.name`,
+   `attrs.autocomplete`, ARIA state, details attrs, iframe attrs, and `shadow`
+   should be treated as public contract across all SDKs.
+
 ## Architecture
 
 ```
@@ -313,6 +332,11 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Python `from_plasmate()` handles progress/log lines around SOM JSON.
 - Node `fromPlasmate()` accepts wrapped `{ som: ... }` payloads, including in
   mixed CLI output.
+- Go SDK types parse `shadow`, accessible descriptions, ARIA state, details
+  attrs, and iframe attrs emitted by the Rust compiler.
+- Go SDK query helpers traverse shadow roots for id, role, text, interactivity,
+  and flattened element queries.
+- Go SDK exposes action/hint lookup and compact action-plan helpers.
 - Selector handling now trims whitespace and supports documented region ids
   (`#region-id`) while preserving HTML id selection for agent actions.
 - SOM compilation recognizes common ARIA widgets (`textbox`, `searchbox`,
