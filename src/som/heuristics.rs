@@ -215,7 +215,7 @@ pub fn landmark_role(tag: &str, attrs: &[(String, String)]) -> Option<&'static s
     // Check ARIA role first
     for (name, value) in attrs {
         if name == "role" {
-            return match value.as_str() {
+            return match value.to_ascii_lowercase().as_str() {
                 "navigation" => Some("navigation"),
                 "main" => Some("main"),
                 "complementary" => Some("aside"),

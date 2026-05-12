@@ -49,6 +49,39 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-12T23:41:02Z - Plasmate Improvements Automation
+
+- Git sync: attempted the requested latest pull first with `git fetch --prune
+  origin`, but this sandbox cannot write the parent repository worktree
+  metadata at `/Users/steve/Git/plasmate/.git/worktrees/plasmate17/FETCH_HEAD`
+  (`Operation not permitted`). Continued from the locally known `origin/master`
+  at `d281213`.
+- Market direction: current Playwright MCP docs make accessibility snapshots
+  with interaction refs table stakes; Stagehand continues to push `observe()`
+  and local/managed action caching; Firecrawl's MCP surface now spans
+  scrape/search/extract plus browser interaction; Cloudflare Browser Run is
+  adding CDP/MCP/WebMCP around hosted sessions; and Browser Use Cloud continues
+  to package agents, profiles, CDP sessions, and managed scale. The startup
+  direction should remain local-first, with richer portable SOM action plans
+  before any hosted-browser pivot.
+- Code changes: ARIA landmark role parsing is now case-insensitive for
+  uppercase production markup, and declarative shadow DOM extraction now
+  recurses through wrapper containers so nested web-component controls are not
+  dropped.
+- SDK/parser changes: Python and Node parser packages plus the Go SDK now add
+  placeholder, description, required, disabled, and group metadata to compact
+  action-plan helpers.
+- Docs changes: updated PRD, roadmap, website docs source, generated website
+  docs, and this running state with the action-plan/WebMCP market read and next
+  steps around cross-adapter fixtures.
+- Verification: `cargo build` passed with existing warnings; focused
+  `cargo test --test som_compiler_test -- --nocapture` passed 52 tests; Python
+  parser tests passed 65 tests; Node parser tests passed 50 tests; Node parser
+  build passed; Go SDK tests passed; `node website/build.mjs` rebuilt 39 pages;
+  and `git diff --check` passed. Full `cargo test` passed 245 lib tests and 5
+  main/MCP tests, then failed only in `tests/awp_integration_test.rs` because
+  sandbox local socket setup is denied with `Operation not permitted`.
+
 ### 2026-05-12T08:50:29Z - Plasmate Improvements Automation
 
 - Git sync: attempted the requested latest pull first with `git fetch --prune

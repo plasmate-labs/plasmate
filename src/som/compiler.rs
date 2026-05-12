@@ -1309,6 +1309,15 @@ fn extract_shadow_elements(
         let child_path = format!("{}/{}", dom_path, idx);
         if let Some(element) = node_to_element(child, origin, id_tracker, &child_path, &dummy_ctx) {
             elements.push(element);
+        } else {
+            extract_elements(
+                child,
+                origin,
+                id_tracker,
+                &mut elements,
+                &child_path,
+                &dummy_ctx,
+            );
         }
     }
 

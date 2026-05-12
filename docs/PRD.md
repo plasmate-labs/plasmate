@@ -121,6 +121,17 @@ scale. The sticky counter-position is not another hosted browser fleet. It is a
 portable local action snapshot that accurately represents the form semantics
 agents need to reuse plans on SaaS pages.
 
+2026-05-12 action-plan read: the frontier has moved one level up from
+"structured page text" to "validated action menus." Playwright MCP snapshots
+teach agents to select refs from the current accessibility tree, Stagehand
+`observe()` returns executable actions that can be cached locally or on
+Browserbase, Firecrawl's MCP distribution now spans scrape/search/extract plus
+browser interaction, and Cloudflare Browser Run is adding MCP/CDP/WebMCP
+surfaces around hosted sessions. Plasmate should keep treating hosted scale as
+optional and make local SOM action plans richer: every compact target should
+carry enough state, labels, descriptions, and group context for an agent to
+reuse a plan without traversing raw DOM again.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -147,6 +158,15 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-12:
+  - ARIA landmark role parsing is now case-insensitive, so uppercase
+    `role="MAIN"` and `role="NAVIGATION"` still compile into proper SOM
+    regions.
+  - Declarative shadow DOM extraction now recurses through non-semantic wrapper
+    containers, preserving nested controls inside web components.
+  - Python/Node parser and Go SDK action-plan helpers now include compact
+    placeholder, description, required, disabled, and group metadata.
+  - Added focused tests for uppercase ARIA landmarks, nested shadow-root
+    controls, and enriched action-plan payloads.
   - Rust SOM compilation now emits labelled `group` elements for native
     `<fieldset>` controls and ARIA `group`/`radiogroup` widgets.
   - Fieldset groups now derive labels and `attrs.legend` from the first
@@ -240,6 +260,8 @@ and adapter docs over one-off integration logic.
   Playwright MCP snapshots.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.
+- Add shared conformance for nested shadow-root controls and enriched
+  action-plan metadata.
 - Promote the new SDK/parser shadow-root and Go action-plan tests into shared
   conformance fixtures that run against every adapter before release.
 - Audit ecosystem repos for stale install docs, tool counts, and schema drift.

@@ -123,6 +123,16 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["name"] = attrs.name
             if attrs.input_type:
                 item["input_type"] = attrs.input_type
+            if attrs.placeholder:
+                item["placeholder"] = attrs.placeholder
+            if attrs.description:
+                item["description"] = attrs.description
+            if attrs.required is not None:
+                item["required"] = attrs.required
+            if attrs.disabled is not None:
+                item["disabled"] = attrs.disabled
+            if attrs.group:
+                item["group"] = attrs.group
         plan.append(item)
     return plan
 

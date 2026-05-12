@@ -38,6 +38,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-12 market read: official docs continue to validate Plasmate's local SOM-first direction. Playwright MCP's snapshot model makes structured accessibility refs table stakes, Stagehand now packages `observe()` planning with local/managed action caching, Cloudflare Browser Run is selling hosted global browser sessions plus structured extraction, and Browser Use Cloud is packaging agents, direct CDP sessions, profiles, skills, proxies, and managed scale. The sticky counter-position is not another hosted browser fleet. It is a portable local action snapshot that accurately represents the form semantics agents need to reuse plans on SaaS pages.
 
+2026-05-12 action-plan read: competitors are turning page understanding into validated action menus. Playwright MCP snapshots teach agents to select refs from the current accessibility tree, Stagehand `observe()` returns executable actions that can be cached, Firecrawl's MCP surface spans scrape/search/extract plus browser interaction, and Cloudflare Browser Run is layering MCP/CDP/WebMCP onto hosted sessions. Plasmate should keep hosted scale optional and make local SOM action plans richer.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -53,6 +55,9 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-12:
+  - ARIA landmark role parsing is now case-insensitive for uppercase production markup.
+  - Declarative shadow DOM extraction now recurses through wrapper containers so nested web-component controls survive.
+  - Python/Node parser and Go SDK action-plan helpers now include placeholder, description, required, disabled, and group metadata.
   - Rust SOM compilation now emits labelled `group` elements for native `<fieldset>` controls and ARIA `group`/`radiogroup` widgets.
   - Fieldset groups now derive labels and `attrs.legend` from the first `<legend>`, and preserve `attrs.disabled` for disabled fieldsets.
   - CDP accessibility and DOM mappings now understand SOM `group` roles.
@@ -103,6 +108,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked or selected an element.
 - Add conformance cases for ARIA-heavy SaaS pages and compare output against Playwright MCP snapshots.
 - Promote fieldset/legend group semantics into shared conformance fixtures alongside cross-adapter accessible-description cases.
+- Add shared conformance for nested shadow-root controls and enriched action-plan metadata.
 - Promote the new SDK/parser shadow-root and Go action-plan tests into shared conformance fixtures that run against every adapter before release.
 - Audit ecosystem repos for stale install docs, tool counts, and schema drift.
 - Promote action-plan helper parity into framework integrations so every adapter exposes the same compact action target contract.

@@ -426,6 +426,9 @@ func TestGetActionPlan(t *testing.T) {
 	if filters.Name == nil || *filters.Name != "filters" {
 		t.Errorf("Name = %v, want filters", filters.Name)
 	}
+	if filters.Description == nil || *filters.Description != "Shows advanced search filters" {
+		t.Errorf("Description = %v, want Shows advanced search filters", filters.Description)
+	}
 	if len(filters.Actions) != 1 || filters.Actions[0] != "click" {
 		t.Errorf("Actions = %v, want [click]", filters.Actions)
 	}

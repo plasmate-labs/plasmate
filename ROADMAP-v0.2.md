@@ -200,6 +200,25 @@ buy. Plasmate's local-first answer should be stronger SaaS form semantics:
    descriptions, regions, and button values should prove Plasmate handles the
    repetitive SaaS workflows teams actually automate.
 
+### 2026-05-12 Action Plan and WebMCP Adjustment
+
+The current competitive direction is a validated action menu, not just a
+browser session. Playwright MCP snapshots make current refs the interaction
+unit, Stagehand `observe()` turns page understanding into cacheable executable
+actions, Firecrawl's MCP surface covers scraping, extraction, research, and
+browser interaction, and Cloudflare Browser Run is layering CDP/MCP/WebMCP onto
+hosted sessions. Plasmate should keep the local-first wedge and make SOM action
+plans more complete before pursuing hosted scale:
+
+1. **Compact targets need context**: action plans should include placeholders,
+   descriptions, disabled/required state, and group names so agents do not need
+   to re-walk the full SOM for routine forms.
+2. **Web components are first-class surfaces**: shadow-root extraction must
+   recurse through wrapper containers because real design systems rarely put
+   buttons and inputs directly under the template root.
+3. **Browser tolerance beats ideal markup**: ARIA roles and landmarks should be
+   parsed with the casing tolerance agents encounter on production SaaS pages.
+
 ## Architecture
 
 ```
@@ -385,6 +404,12 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   attrs, and CDP mappings accept the `group` role and `attrs.legend`.
 - Shared conformance fixture added for fieldset/legend and ARIA radiogroup
   semantics.
+- ARIA landmark role parsing is case-insensitive for uppercase production
+  markup.
+- Declarative shadow DOM extraction recurses through non-semantic wrappers so
+  nested web-component controls survive.
+- Python/Node parser and Go SDK compact action plans now include placeholder,
+  description, required, disabled, and group metadata.
 - Selector handling now trims whitespace and supports documented region ids
   (`#region-id`) while preserving HTML id selection for agent actions.
 - SOM compilation recognizes common ARIA widgets (`textbox`, `searchbox`,

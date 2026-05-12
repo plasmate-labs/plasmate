@@ -163,13 +163,18 @@ func flattenElements(elements []Element, result *[]Element) {
 
 // ActionPlanItem is a compact action target for agent planning.
 type ActionPlanItem struct {
-	ID        string   `json:"id"`
-	Role      string   `json:"role"`
-	Actions   []string `json:"actions"`
-	Label     *string  `json:"label,omitempty"`
-	Href      *string  `json:"href,omitempty"`
-	Name      *string  `json:"name,omitempty"`
-	InputType *string  `json:"input_type,omitempty"`
+	ID          string   `json:"id"`
+	Role        string   `json:"role"`
+	Actions     []string `json:"actions"`
+	Label       *string  `json:"label,omitempty"`
+	Href        *string  `json:"href,omitempty"`
+	Name        *string  `json:"name,omitempty"`
+	InputType   *string  `json:"input_type,omitempty"`
+	Placeholder *string  `json:"placeholder,omitempty"`
+	Description *string  `json:"description,omitempty"`
+	Required    *bool    `json:"required,omitempty"`
+	Disabled    *bool    `json:"disabled,omitempty"`
+	Group       *string  `json:"group,omitempty"`
 }
 
 // GetActionPlan returns compact action targets for agent planning.
@@ -190,6 +195,11 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.Href = el.Attrs.Href
 			item.Name = el.Attrs.Name
 			item.InputType = el.Attrs.InputType
+			item.Placeholder = el.Attrs.Placeholder
+			item.Description = el.Attrs.Description
+			item.Required = el.Attrs.Required
+			item.Disabled = el.Attrs.Disabled
+			item.Group = el.Attrs.Group
 		}
 		items = append(items, item)
 	}

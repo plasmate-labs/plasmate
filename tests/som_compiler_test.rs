@@ -188,6 +188,22 @@ fn test_common_aria_widget_roles_map_to_interactive_elements() {
 }
 
 #[test]
+fn test_aria_landmark_roles_are_case_insensitive() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Uppercase Roles</title></head>
+<body>
+    <div role="MAIN"><h1>Dashboard</h1></div>
+    <div role="NAVIGATION"><a href="/settings">Settings</a></div>
+</body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let roles: Vec<&RegionRole> = som.regions.iter().map(|r| &r.role).collect();
+
+    assert!(roles.contains(&&RegionRole::Main));
+    assert!(roles.contains(&&RegionRole::Navigation));
+}
+
+#[test]
 fn test_input_types_are_case_insensitive() {
     let html = r#"<!DOCTYPE html>
 <html><head><title>Inputs</title></head>
@@ -452,6 +468,38 @@ fn test_shadow_root_elements_are_counted_in_meta() {
         som.meta.element_count >= 3,
         "host plus shadow elements should be counted"
     );
+}
+
+#[test]
+fn test_shadow_root_extraction_recurses_through_containers() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Nested Shadow</title></head>
+<body><main>
+    <section aria-label="Widget host">
+        <template shadowrootmode="open">
+            <div class="toolbar">
+                <button aria-label="Refresh results"></button>
+            </div>
+        </template>
+    </section>
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let host = all_elements(&som)
+        .into_iter()
+        .find(|e| e.shadow.is_some())
+        .expect("host should expose shadow root");
+    let shadow = host.shadow.as_ref().unwrap();
+
+    assert!(
+        shadow
+            .elements
+            .iter()
+            .any(|e| e.role == ElementRole::Button
+                && e.label.as_deref() == Some("Refresh results")),
+        "nested shadow button should be extracted"
+    );
+    assert_eq!(som.meta.interactive_count, 1);
 }
 
 #[test]

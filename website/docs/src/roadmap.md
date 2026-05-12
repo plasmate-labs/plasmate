@@ -86,6 +86,14 @@ Current competitor docs keep pushing the same retention lesson: agents stick wit
 - **Contract changes must cross adapters**: new roles and attrs should land in schema, spec, parser packages, SDKs, CDP mappings, and tests together.
 - **Conformance becomes sales collateral**: shared fixtures for grouped forms, descriptions, regions, and button values should prove Plasmate handles the repetitive SaaS workflows teams actually automate.
 
+### 2026-05-12 Action Plan and WebMCP Adjustment
+
+The browser-agent category is turning structured page state into validated action menus. Playwright MCP snapshots make current refs the interaction unit, Stagehand `observe()` turns page understanding into cacheable executable actions, Firecrawl's MCP surface spans scrape/search/extract plus browser interaction, and Cloudflare Browser Run is layering CDP/MCP/WebMCP onto hosted sessions. Plasmate should keep the local-first wedge and make SOM action plans more complete before pursuing hosted scale.
+
+- **Compact targets need context**: action plans should include placeholders, descriptions, disabled/required state, and group names.
+- **Web components are first-class surfaces**: shadow-root extraction must recurse through wrapper containers.
+- **Browser tolerance beats ideal markup**: ARIA roles and landmarks should be parsed with production casing tolerance.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -171,9 +179,13 @@ Current competitor docs keep pushing the same retention lesson: agents stick wit
 - [x] Fieldset groups expose `attrs.legend` and preserve disabled group state
 - [x] SOM schema/spec, Python/Node SDK types, Python/Node parser types, Go SDK attrs, and CDP mappings accept the `group` role and `attrs.legend`
 - [x] Shared conformance fixture added for fieldset/legend and ARIA radiogroup semantics
+- [x] Case-insensitive ARIA landmark role parsing for SOM regions
+- [x] Nested declarative shadow-root extraction through non-semantic wrappers
+- [x] Enriched compact action plans with placeholder, description, required, disabled, and group metadata across Python/Node parser packages and Go SDK
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
+- [ ] Add cross-adapter fixtures for enriched compact action-plan metadata
 - [ ] Add cross-adapter accessible-description fixtures
 - [ ] Promote action-plan helper parity into framework integrations
 - [ ] WebMCP/watchlist research spike: track whether browser-native tool exposure changes SOM adapter strategy

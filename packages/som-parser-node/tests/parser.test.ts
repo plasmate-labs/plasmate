@@ -355,6 +355,7 @@ describe('getActionPlan', () => {
       label: 'Search',
       name: 'q',
       input_type: 'text',
+      placeholder: 'Search...',
     });
   });
 });
