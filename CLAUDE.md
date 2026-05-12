@@ -85,6 +85,12 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   `git diff --check` passed. Full `cargo test` passed 245 lib tests and 5
   main/MCP tests, then failed only in `tests/awp_integration_test.rs` because
   sandbox local socket setup is denied with `Operation not permitted`.
+- Commit/push state: automation worktree commit was blocked by shared worktree
+  `index.lock` permissions, so the reviewed patch was applied to the primary
+  checkout and committed with message `chore: improve SOM fieldset group
+  semantics`. Pushed branch `codex/plasmate-improvements-2026-05-12` and
+  fast-forwarded remote `master` from `34ed815`. Unrelated
+  untracked `.agents/` in the primary checkout remains untouched.
 
 ### 2026-05-11T13:55:05Z - Plasmate Improvements Automation
 
