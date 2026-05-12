@@ -1489,6 +1489,7 @@ pub fn accessibility_get_full_ax_tree(id: u64, target: &CdpTarget) -> CdpRespons
                 ElementRole::Table => "table",
                 ElementRole::Paragraph => "paragraph",
                 ElementRole::Section => "Section",
+                ElementRole::Group => "group",
                 ElementRole::Separator => "separator",
                 ElementRole::Details => "group",
                 ElementRole::Iframe => "Iframe",

@@ -182,6 +182,24 @@ portable local action snapshot:
    descriptions, regions, fieldsets, and button values because form automation
    is where repeat users feel reliability or churn.
 
+### 2026-05-12 Form Semantics Adjustment
+
+Current competitor docs keep pushing the same retention lesson: agents stick
+with browser tools that expose reusable action state, not just pixels or raw
+HTML. Playwright MCP's accessibility snapshots train agents to rely on named
+controls, Stagehand's `observe()` and caching make repeated form flows cheaper,
+and Cloudflare Browser Run plus Browser Use Cloud make hosted scale easy to
+buy. Plasmate's local-first answer should be stronger SaaS form semantics:
+
+1. **Field groups are action context**: native `<fieldset>`/`<legend>` and
+   ARIA `group`/`radiogroup` should survive in SOM so agents understand which
+   radio buttons and controls belong together.
+2. **Contract changes must cross adapters**: new roles and attrs should land in
+   schema, spec, parser packages, SDKs, CDP mappings, and tests together.
+3. **Conformance becomes sales collateral**: shared fixtures for grouped forms,
+   descriptions, regions, and button values should prove Plasmate handles the
+   repetitive SaaS workflows teams actually automate.
+
 ## Architecture
 
 ```
@@ -360,6 +378,13 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Landmark and form regions resolve `aria-labelledby` labels.
 - Input buttons expose value-derived labels and normalized `attrs.input_type`
   for `submit`, `button`, and `reset`.
+- Native `<fieldset>` controls and ARIA `group`/`radiogroup` widgets compile as
+  labelled SOM `group` elements.
+- Fieldset groups expose `attrs.legend` and preserve disabled group state.
+- SOM schema/spec, Python/Node SDK types, Python/Node parser types, Go SDK
+  attrs, and CDP mappings accept the `group` role and `attrs.legend`.
+- Shared conformance fixture added for fieldset/legend and ARIA radiogroup
+  semantics.
 - Selector handling now trims whitespace and supports documented region ids
   (`#region-id`) while preserving HTML id selection for agent actions.
 - SOM compilation recognizes common ARIA widgets (`textbox`, `searchbox`,

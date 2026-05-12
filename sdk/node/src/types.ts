@@ -30,6 +30,7 @@ export type ElementRole =
   | 'table'
   | 'paragraph'
   | 'section'
+  | 'group'
   | 'separator'
   | 'details'
   | 'iframe';
@@ -91,6 +92,7 @@ export interface SomElementAttrs {
   headers?: string[];
   rows?: string[][];
   section_label?: string;
+  legend?: string;
   open?: boolean;
   summary?: string;
   contenteditable?: boolean | string;

@@ -456,7 +456,7 @@
       </div>
     </nav>
     <main class="content">
-      <h1 id="prd-agent-stickiness-and-roadmap-direction">PRD: Agent Stickiness and Roadmap Direction</h1><p>Last updated: 2026-05-11</p>
+      <h1 id="prd-agent-stickiness-and-roadmap-direction">PRD: Agent Stickiness and Roadmap Direction</h1><p>Last updated: 2026-05-12</p>
 <h2 id="product-thesis">Product Thesis</h2><p>Plasmate should be the local-first browser engine agents keep installed because it turns web pages into compact, stable, actionable state. The product is not a general scraper and should not compete feature-for-feature with hosted browser clouds. Its advantage is fast SOM output, predictable element ids, MCP-native tooling, and reusable page understanding without sending browsing data to a cloud API.</p>
 <h2 id="target-audience">Target Audience</h2><ul>
 <li>AI agent developers building MCP tools, coding agents, and research agents.</li>
@@ -478,6 +478,7 @@
 <p>2026-05-11 market read: official docs still point to the same sticky layer: Playwright MCP centers accessibility snapshots with refs, Stagehand uses <code>observe()</code> to plan, validate, and cache executable actions, and Firecrawl plus Browser Use make managed sessions and persistent profiles easy to buy. Plasmate should refine local-first SOM contracts around names, descriptions, and full-tree metadata before hosted-browser features.</p>
 <p>2026-05-11 Go parity read: Stagehand&#39;s action caching and Playwright MCP&#39;s snapshot refs both teach agent developers to expect a compact, reusable action surface in every language they use. Plasmate&#39;s repo already spans Rust, Python, Node, Go, MCP, CDP, AWP, parser packages, and framework integrations, so stickiness now depends on contract parity as much as core extraction quality. Go should not lag Python and Node on shadow-root traversal, action/hint lookup, or accessible description fields because teams adopting Plasmate across services will judge the product by the weakest SDK surface.</p>
 <p>2026-05-11 Browser Run read: Cloudflare has rebranded Browser Rendering as Browser Run and is now positioning global headless browser sessions, Live View, recordings, human-in-loop, MCP/CDP support, and structured extraction as an AI agent browser platform. That makes the hosted infrastructure lane more crowded, not more attractive for Plasmate&#39;s near-term wedge. Plasmate should deepen the portable local snapshot contract: controls and regions need browser-like names, repeat runs need cacheable state, and every adapter should consume the same SOM shape without bespoke DOM recovery.</p>
+<p>2026-05-12 market read: official docs continue to validate Plasmate&#39;s local SOM-first direction. Playwright MCP&#39;s snapshot model makes structured accessibility refs table stakes, Stagehand now packages <code>observe()</code> planning with local/managed action caching, Cloudflare Browser Run is selling hosted global browser sessions plus structured extraction, and Browser Use Cloud is packaging agents, direct CDP sessions, profiles, skills, proxies, and managed scale. The sticky counter-position is not another hosted browser fleet. It is a portable local action snapshot that accurately represents the form semantics agents need to reuse plans on SaaS pages.</p>
 <h2 id="ecosystem-surface">Ecosystem Surface</h2><p>The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.</p>
 <h2 id="requirements">Requirements</h2><ol>
 <li>Preserve actionable structure: SOM must capture common accessibility roles, stable ids, labels, forms, links, state, and selectors that agents can reuse.</li>
@@ -487,6 +488,15 @@
 <li>Stay local-first by default: hosted competitors can own scale infrastructure; Plasmate should own local speed, privacy, and open protocol fit.</li>
 </ol>
 <h2 id="current-run-changes">Current Run Changes</h2><ul>
+<li>2026-05-12:<ul>
+<li>Rust SOM compilation now emits labelled <code>group</code> elements for native <code>&lt;fieldset&gt;</code> controls and ARIA <code>group</code>/<code>radiogroup</code> widgets.</li>
+<li>Fieldset groups now derive labels and <code>attrs.legend</code> from the first <code>&lt;legend&gt;</code>, and preserve <code>attrs.disabled</code> for disabled fieldsets.</li>
+<li>CDP accessibility and DOM mappings now understand SOM <code>group</code> roles.</li>
+<li>SOM schema, spec, Python/Node SDK types, Python/Node parser types, and Go SDK attrs now accept <code>group</code> roles and <code>attrs.legend</code>.</li>
+<li>Parser and Go tests now cover group/legend payload compatibility.</li>
+<li>Added a shared conformance fixture for fieldset/legend and ARIA radiogroup semantics.</li>
+</ul>
+</li>
 <li>2026-05-11:<ul>
 <li>Rust SOM compilation now resolves nested <code>&lt;label&gt;</code> controls, including wrapped checkboxes and selects, without leaking option text into labels.</li>
 <li>Landmark and form region labels now resolve <code>aria-labelledby</code>, aligning region naming with browser accessibility snapshots.</li>
@@ -543,7 +553,7 @@
 <li>Implement selector-aware SOM cache entries for <code>main</code>, <code>form</code>, and <code>#id</code> prompts.</li>
 <li>Add trace export for MCP/AWP sessions so users can debug why an agent clicked or selected an element.</li>
 <li>Add conformance cases for ARIA-heavy SaaS pages and compare output against Playwright MCP snapshots.</li>
-<li>Extend accessible-name conformance to fieldsets, legends, and cross-adapter description fixtures.</li>
+<li>Promote fieldset/legend group semantics into shared conformance fixtures alongside cross-adapter accessible-description cases.</li>
 <li>Promote the new SDK/parser shadow-root and Go action-plan tests into shared conformance fixtures that run against every adapter before release.</li>
 <li>Audit ecosystem repos for stale install docs, tool counts, and schema drift.</li>
 <li>Promote action-plan helper parity into framework integrations so every adapter exposes the same compact action target contract.</li>

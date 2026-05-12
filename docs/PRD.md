@@ -1,6 +1,6 @@
 # Plasmate PRD: Agent Stickiness and Roadmap Direction
 
-Last updated: 2026-05-11
+Last updated: 2026-05-12
 
 ## Product Thesis
 
@@ -111,6 +111,16 @@ portable local snapshot contract: controls and regions need browser-like names,
 repeat runs need cacheable state, and every adapter should consume the same SOM
 shape without bespoke DOM recovery.
 
+2026-05-12 market read: official docs continue to validate Plasmate's local
+SOM-first direction. Playwright MCP's snapshot model makes structured
+accessibility refs table stakes, Stagehand now packages `observe()` planning
+with local/managed action caching, Cloudflare Browser Run is selling hosted
+global browser sessions plus structured extraction, and Browser Use Cloud is
+packaging agents, direct CDP sessions, profiles, skills, proxies, and managed
+scale. The sticky counter-position is not another hosted browser fleet. It is a
+portable local action snapshot that accurately represents the form semantics
+agents need to reuse plans on SaaS pages.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -136,6 +146,17 @@ and adapter docs over one-off integration logic.
 
 ## Current Run Changes
 
+- 2026-05-12:
+  - Rust SOM compilation now emits labelled `group` elements for native
+    `<fieldset>` controls and ARIA `group`/`radiogroup` widgets.
+  - Fieldset groups now derive labels and `attrs.legend` from the first
+    `<legend>`, and preserve `attrs.disabled` for disabled fieldsets.
+  - CDP accessibility and DOM mappings now understand SOM `group` roles.
+  - SOM schema, spec, Python/Node SDK types, Python/Node parser types, and Go
+    SDK attrs now accept `group` roles and `attrs.legend`.
+  - Parser and Go tests now cover group/legend payload compatibility.
+  - Added a shared conformance fixture for fieldset/legend and ARIA radiogroup
+    semantics.
 - 2026-05-11:
   - Rust SOM compilation now resolves nested `<label>` controls, including
     wrapped checkboxes and selects, without leaking option text into labels.
@@ -217,8 +238,8 @@ and adapter docs over one-off integration logic.
   or selected an element.
 - Add conformance cases for ARIA-heavy SaaS pages and compare output against
   Playwright MCP snapshots.
-- Extend accessible-name conformance to fieldsets, legends, and cross-adapter
-  description fixtures.
+- Promote fieldset/legend group semantics into shared conformance fixtures
+  alongside cross-adapter accessible-description cases.
 - Promote the new SDK/parser shadow-root and Go action-plan tests into shared
   conformance fixtures that run against every adapter before release.
 - Audit ecosystem repos for stale install docs, tool counts, and schema drift.

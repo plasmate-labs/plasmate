@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><title>Grouped Form</title></head>
+<body>
+  <main>
+    <form action="/api/preferences" method="post" aria-label="Preferences">
+      <fieldset disabled>
+        <legend>Contact preference</legend>
+        <label><input type="radio" name="contact" value="email"> Email</label>
+        <label><input type="radio" name="contact" value="sms"> SMS</label>
+      </fieldset>
+      <div role="radiogroup" aria-label="Subscription plan">
+        <label><input type="radio" name="plan" value="team"> Team</label>
+      </div>
+      <button type="submit">Save preferences</button>
+    </form>
+  </main>
+</body>
+</html>

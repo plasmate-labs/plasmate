@@ -171,6 +171,7 @@
               }
             },
             "section_label": { "type": "string" },
+            "legend": { "type": "string" },
             "open": { "type": "boolean" },
             "summary": { "type": "string" },
             "contenteditable": {
@@ -230,6 +231,7 @@
         "table",
         "paragraph",
         "section",
+        "group",
         "separator",
         "details",
         "iframe"

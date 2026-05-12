@@ -49,6 +49,43 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-12T08:50:29Z - Plasmate Improvements Automation
+
+- Git sync: attempted the requested latest pull first with `git fetch --prune
+  origin`, but the automation worktree still cannot write shared worktree
+  metadata at `/Users/steve/Git/plasmate/.git/worktrees/plasmate16/FETCH_HEAD`
+  (`Operation not permitted`). Local `HEAD` matched the locally known
+  `origin/master` at `34ed815` before changes.
+- Market direction: current Playwright MCP docs still center structured
+  accessibility snapshots with refs; Stagehand foregrounds `observe()` plus
+  local/managed action caching; Cloudflare Browser Run and Browser Use Cloud
+  continue to make hosted browser sessions, profiles, recordings, proxies, and
+  managed scale easier to buy. Plasmate should keep the local-first wedge and
+  improve portable SOM action semantics for repeated SaaS form workflows rather
+  than pivoting into hosted browser infrastructure.
+- Ecosystem state: the project remains broad across Rust CLI/daemon/MCP/CDP/AWP,
+  Python/Node/Go SDKs, parser packages, Browser Use, LangChain, Vercel AI,
+  generated docs, comparison pages, benchmarks, and marketing. Contract drift
+  remains the main retention risk, so this run changed schema/spec, SDKs,
+  parser packages, CDP mappings, docs, and conformance together.
+- Code changes: Rust SOM compilation now emits labelled `group` elements for
+  native `<fieldset>` controls and ARIA `group`/`radiogroup`; fieldset groups
+  derive labels plus `attrs.legend` from the first `<legend>` and preserve
+  `attrs.disabled`; CDP accessibility/DOM mappings understand `group`.
+- SDK/schema changes: SOM schema/spec, Python and Node SDK types, Python and
+  Node parser types, and Go SDK attrs now accept `group` and `attrs.legend`.
+  Parser and Go tests cover group/legend payload compatibility.
+- Docs changes: updated PRD, roadmap, website docs sources, generated docs, and
+  conformance docs with the 2026-05-12 market read and fieldset/radiogroup
+  rationale. Added `specs/conformance/014-fieldset-groups.*`.
+- Verification: `cargo test --test som_compiler_test -- --nocapture` passed 50
+  tests; Python parser tests passed 65 tests; Node parser tests passed 50
+  tests after `npm ci --ignore-scripts`; Node parser build passed; Go SDK tests
+  passed; `cargo build` passed; `node website/build.mjs` rebuilt 39 pages; and
+  `git diff --check` passed. Full `cargo test` passed 245 lib tests and 5
+  main/MCP tests, then failed only in `tests/awp_integration_test.rs` because
+  sandbox local socket setup is denied with `Operation not permitted`.
+
 ### 2026-05-11T13:55:05Z - Plasmate Improvements Automation
 
 - Git sync: attempted the requested latest pull first. The automation worktree

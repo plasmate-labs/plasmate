@@ -1171,11 +1171,20 @@ fn node_to_element(
             };
 
             // Avoid duplicating massive string content for structured container roles.
-            if matches!(role, ElementRole::Table | ElementRole::List) {
+            if matches!(
+                role,
+                ElementRole::Table | ElementRole::List | ElementRole::Group
+            ) {
                 text = None;
             }
 
-            let label = resolve_label(tag, &attr_pairs, &text, &ctx.label_index);
+            let label = resolve_label(tag, &attr_pairs, &text, &ctx.label_index).or_else(|| {
+                if tag == "fieldset" {
+                    extract_legend_text(node)
+                } else {
+                    None
+                }
+            });
             let accessible_name = label.as_deref().or(text.as_deref()).unwrap_or("");
             let raw_id = generate_element_id(origin, role.as_str(), accessible_name, dom_path);
             let id = id_tracker.register(raw_id);
@@ -1321,6 +1330,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                 "combobox" | "listbox" => Some(ElementRole::Select),
                 "menuitem" | "tab" => Some(ElementRole::Button),
                 "img" => Some(ElementRole::Image),
+                "group" | "radiogroup" => Some(ElementRole::Group),
                 _ => None,
             };
         }
@@ -1362,6 +1372,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "table" => Some(ElementRole::Table),
         "p" => Some(ElementRole::Paragraph),
         "section" | "article" => Some(ElementRole::Section),
+        "fieldset" => Some(ElementRole::Group),
         "hr" => Some(ElementRole::Separator),
         "details" => Some(ElementRole::Details),
         "iframe" => Some(ElementRole::Iframe),
@@ -1600,6 +1611,14 @@ fn build_element_attrs(
                 map.insert("section_label".into(), json!(label.1));
             }
         }
+        "fieldset" => {
+            if let Some(legend) = extract_legend_text(node) {
+                map.insert("legend".into(), json!(legend));
+            }
+            if attrs.iter().any(|(n, _)| n == "disabled") {
+                map.insert("disabled".into(), json!(true));
+            }
+        }
         "details" => {
             let open = attrs.iter().any(|(n, _)| n == "open");
             map.insert("open".into(), json!(open));
@@ -1723,6 +1742,22 @@ fn build_children(
         return None;
     }
     // For lists and tables, we include items/rows in attrs instead of children
+    None
+}
+
+/// Extract text from the first `<legend>` child of a `<fieldset>` element.
+fn extract_legend_text(node: &Handle) -> Option<String> {
+    for child in node.children.borrow().iter() {
+        if let NodeData::Element { name, .. } = &child.data {
+            if name.local.as_ref() == "legend" {
+                let text = get_text_content(child);
+                let trimmed = heuristics::normalize_text(&text);
+                if !trimmed.is_empty() {
+                    return Some(trimmed);
+                }
+            }
+        }
+    }
     None
 }
 

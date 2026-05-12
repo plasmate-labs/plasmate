@@ -154,6 +154,41 @@ func TestParse(t *testing.T) {
 	}
 }
 
+func TestParseGroupAttrs(t *testing.T) {
+	payload := `{
+	  "som_version": "1.0",
+	  "url": "https://example.com",
+	  "title": "Groups",
+	  "lang": "en",
+	  "regions": [{
+	    "id": "r_form",
+	    "role": "form",
+	    "elements": [{
+	      "id": "e_group",
+	      "role": "group",
+	      "label": "Contact preference",
+	      "attrs": {"legend": "Contact preference", "disabled": true}
+	    }]
+	  }],
+	  "meta": {"html_bytes": 100, "som_bytes": 80, "element_count": 1, "interactive_count": 0}
+	}`
+
+	som, err := Parse([]byte(payload))
+	if err != nil {
+		t.Fatalf("ParseSom group payload: %v", err)
+	}
+	group := som.Regions[0].Elements[0]
+	if group.Role != "group" {
+		t.Fatalf("Role = %q, want group", group.Role)
+	}
+	if group.Attrs == nil || group.Attrs.Legend == nil || *group.Attrs.Legend != "Contact preference" {
+		t.Fatalf("Legend = %v, want Contact preference", group.Attrs)
+	}
+	if group.Attrs.Disabled == nil || !*group.Attrs.Disabled {
+		t.Fatalf("Disabled = %v, want true", group.Attrs.Disabled)
+	}
+}
+
 func TestParseStructuredData(t *testing.T) {
 	som := mustParse(t)
 

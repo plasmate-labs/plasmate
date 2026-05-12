@@ -131,6 +131,30 @@ describe('parseSom', () => {
     expect(som.url).toBe('https://example.com/');
   });
 
+  it('parses group roles and legend attrs', () => {
+    const som = parseSom({
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_form',
+          role: 'form',
+          elements: [
+            {
+              id: 'e_group',
+              role: 'group',
+              label: 'Contact preference',
+              attrs: { legend: 'Contact preference', disabled: true },
+            },
+          ],
+        },
+      ],
+    });
+    const group = som.regions[0].elements[0];
+    expect(group.role).toBe('group');
+    expect(group.attrs?.legend).toBe('Contact preference');
+    expect(group.attrs?.disabled).toBe(true);
+  });
+
   it('throws on invalid input', () => {
     expect(() => parseSom('{}')).toThrow('Invalid SOM');
     expect(() => parseSom('not json')).toThrow();

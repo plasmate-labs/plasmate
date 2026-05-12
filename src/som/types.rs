@@ -107,6 +107,8 @@ pub enum ElementRole {
     Table,
     Paragraph,
     Section,
+    /// A named control group, such as `<fieldset>` or ARIA `group`.
+    Group,
     Separator,
     /// A `<details>`/`<summary>` disclosure widget.
     Details,
@@ -160,6 +162,7 @@ impl ElementRole {
             ElementRole::Table => "table",
             ElementRole::Paragraph => "paragraph",
             ElementRole::Section => "section",
+            ElementRole::Group => "group",
             ElementRole::Separator => "separator",
             ElementRole::Details => "details",
             ElementRole::Iframe => "iframe",

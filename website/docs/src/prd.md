@@ -1,6 +1,6 @@
 # PRD: Agent Stickiness and Roadmap Direction
 
-Last updated: 2026-05-11
+Last updated: 2026-05-12
 
 ## Product Thesis
 
@@ -36,6 +36,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-11 Browser Run read: Cloudflare has rebranded Browser Rendering as Browser Run and is now positioning global headless browser sessions, Live View, recordings, human-in-loop, MCP/CDP support, and structured extraction as an AI agent browser platform. That makes the hosted infrastructure lane more crowded, not more attractive for Plasmate's near-term wedge. Plasmate should deepen the portable local snapshot contract: controls and regions need browser-like names, repeat runs need cacheable state, and every adapter should consume the same SOM shape without bespoke DOM recovery.
 
+2026-05-12 market read: official docs continue to validate Plasmate's local SOM-first direction. Playwright MCP's snapshot model makes structured accessibility refs table stakes, Stagehand now packages `observe()` planning with local/managed action caching, Cloudflare Browser Run is selling hosted global browser sessions plus structured extraction, and Browser Use Cloud is packaging agents, direct CDP sessions, profiles, skills, proxies, and managed scale. The sticky counter-position is not another hosted browser fleet. It is a portable local action snapshot that accurately represents the form semantics agents need to reuse plans on SaaS pages.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -50,6 +52,13 @@ The project already spans a large number of package and integration surfaces: Ru
 
 ## Current Run Changes
 
+- 2026-05-12:
+  - Rust SOM compilation now emits labelled `group` elements for native `<fieldset>` controls and ARIA `group`/`radiogroup` widgets.
+  - Fieldset groups now derive labels and `attrs.legend` from the first `<legend>`, and preserve `attrs.disabled` for disabled fieldsets.
+  - CDP accessibility and DOM mappings now understand SOM `group` roles.
+  - SOM schema, spec, Python/Node SDK types, Python/Node parser types, and Go SDK attrs now accept `group` roles and `attrs.legend`.
+  - Parser and Go tests now cover group/legend payload compatibility.
+  - Added a shared conformance fixture for fieldset/legend and ARIA radiogroup semantics.
 - 2026-05-11:
   - Rust SOM compilation now resolves nested `<label>` controls, including wrapped checkboxes and selects, without leaking option text into labels.
   - Landmark and form region labels now resolve `aria-labelledby`, aligning region naming with browser accessibility snapshots.
@@ -93,7 +102,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Implement selector-aware SOM cache entries for `main`, `form`, and `#id` prompts.
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked or selected an element.
 - Add conformance cases for ARIA-heavy SaaS pages and compare output against Playwright MCP snapshots.
-- Extend accessible-name conformance to fieldsets, legends, and cross-adapter description fixtures.
+- Promote fieldset/legend group semantics into shared conformance fixtures alongside cross-adapter accessible-description cases.
 - Promote the new SDK/parser shadow-root and Go action-plan tests into shared conformance fixtures that run against every adapter before release.
 - Audit ecosystem repos for stale install docs, tool counts, and schema drift.
 - Promote action-plan helper parity into framework integrations so every adapter exposes the same compact action target contract.

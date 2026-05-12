@@ -33,6 +33,7 @@ class ElementRole(str, Enum):
     TABLE = "table"
     PARAGRAPH = "paragraph"
     SECTION = "section"
+    GROUP = "group"
     SEPARATOR = "separator"
     DETAILS = "details"
     IFRAME = "iframe"
@@ -100,6 +101,7 @@ class SomElementAttrs(BaseModel):
     headers: Optional[List[str]] = None
     rows: Optional[List[List[str]]] = None
     section_label: Optional[str] = None
+    legend: Optional[str] = None
     open: Optional[bool] = None
     summary: Optional[str] = None
     contenteditable: Optional[bool | str] = None

@@ -78,6 +78,14 @@ Cloudflare's Browser Run launch strengthens the trend toward browser platforms t
 - **Trace and cache over hosted scale**: repeated local workflows need selector-aware cache views and trace exports before a managed browser cloud would add durable retention.
 - **Conformance for SaaS forms**: shared fixtures should cover labels, descriptions, regions, fieldsets, and button values because form automation is where repeat users feel reliability or churn.
 
+### 2026-05-12 Form Semantics Adjustment
+
+Current competitor docs keep pushing the same retention lesson: agents stick with browser tools that expose reusable action state, not just pixels or raw HTML. Playwright MCP's accessibility snapshots train agents to rely on named controls, Stagehand's `observe()` and caching make repeated form flows cheaper, and Cloudflare Browser Run plus Browser Use Cloud make hosted scale easy to buy. Plasmate's local-first answer should be stronger SaaS form semantics:
+
+- **Field groups are action context**: native `<fieldset>`/`<legend>` and ARIA `group`/`radiogroup` should survive in SOM so agents understand which radio buttons and controls belong together.
+- **Contract changes must cross adapters**: new roles and attrs should land in schema, spec, parser packages, SDKs, CDP mappings, and tests together.
+- **Conformance becomes sales collateral**: shared fixtures for grouped forms, descriptions, regions, and button values should prove Plasmate handles the repetitive SaaS workflows teams actually automate.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -159,6 +167,10 @@ Cloudflare's Browser Run launch strengthens the trend toward browser platforms t
 - [x] Wrapped `<label>` accessible-name support without nested option text leakage
 - [x] `aria-labelledby` labels for landmark and form regions
 - [x] Input button value-derived labels and normalized `attrs.input_type`
+- [x] Native `<fieldset>` controls and ARIA `group`/`radiogroup` widgets compile as labelled SOM `group` elements
+- [x] Fieldset groups expose `attrs.legend` and preserve disabled group state
+- [x] SOM schema/spec, Python/Node SDK types, Python/Node parser types, Go SDK attrs, and CDP mappings accept the `group` role and `attrs.legend`
+- [x] Shared conformance fixture added for fieldset/legend and ARIA radiogroup semantics
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures

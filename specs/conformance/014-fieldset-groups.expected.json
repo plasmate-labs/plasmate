@@ -1,0 +1,39 @@
+{
+  "$description": "Tests native fieldset/legend and ARIA radiogroup compilation into labelled SOM group elements while preserving grouped radio controls.",
+  "som_version": "0.1",
+  "url": "https://example.com/preferences",
+  "title": "Grouped Form",
+  "lang": "en",
+  "regions": [
+    {
+      "id": "r_main",
+      "role": "main",
+      "elements": []
+    },
+    {
+      "id": "r_form",
+      "role": "form",
+      "label": "Preferences",
+      "action": "/api/preferences",
+      "method": "POST",
+      "elements": [
+        {
+          "role": "group",
+          "label": "Contact preference",
+          "attrs": { "legend": "Contact preference", "disabled": true }
+        },
+        { "role": "radio", "label": "Email", "actions": ["select"], "attrs": { "group": "contact" } },
+        { "role": "radio", "label": "SMS", "actions": ["select"], "attrs": { "group": "contact" } },
+        {
+          "role": "group",
+          "label": "Subscription plan"
+        },
+        { "role": "radio", "label": "Team", "actions": ["select"], "attrs": { "group": "plan" } },
+        { "role": "button", "text": "Save preferences", "actions": ["click"] }
+      ]
+    }
+  ],
+  "meta": {
+    "interactive_count": 4
+  }
+}

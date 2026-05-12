@@ -171,6 +171,31 @@ class TestParseSom:
         assert nav_elements[0].role == ElementRole.LINK
         assert nav_elements[0].text == "Home"
 
+    def test_group_role_and_legend_attr_parse(self):
+        payload = {
+            **FIXTURE_SOM,
+            "regions": [
+                {
+                    "id": "r_form",
+                    "role": "form",
+                    "elements": [
+                        {
+                            "id": "e_group",
+                            "role": "group",
+                            "label": "Contact preference",
+                            "attrs": {"legend": "Contact preference", "disabled": True},
+                        }
+                    ],
+                }
+            ],
+        }
+        som = parse_som(payload)
+        group = som.regions[0].elements[0]
+        assert group.role == ElementRole.GROUP
+        assert group.attrs is not None
+        assert group.attrs.legend == "Contact preference"
+        assert group.attrs.disabled is True
+
     def test_meta_parsed(self, som: Som):
         assert som.meta.html_bytes == 5000
         assert som.meta.som_bytes == 800

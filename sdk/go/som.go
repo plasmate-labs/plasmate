@@ -60,6 +60,7 @@ type ElementAttrs struct {
 	Headers         []string       `json:"headers,omitempty"`
 	Rows            [][]string     `json:"rows,omitempty"`
 	SectionLabel    *string        `json:"section_label,omitempty"`
+	Legend          *string        `json:"legend,omitempty"`
 	Open            *bool          `json:"open,omitempty"`
 	Summary         *string        `json:"summary,omitempty"`
 	ContentEditable interface{}    `json:"contenteditable,omitempty"`

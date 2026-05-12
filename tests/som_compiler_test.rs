@@ -347,6 +347,52 @@ fn test_input_button_values_become_labels_and_type_attrs() {
 }
 
 #[test]
+fn test_fieldset_and_aria_groups_compile_with_labels() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Groups</title></head>
+<body><main>
+    <form>
+        <fieldset disabled>
+            <legend>Contact preference</legend>
+            <label><input type="radio" name="contact" value="email"> Email</label>
+            <label><input type="radio" name="contact" value="sms"> SMS</label>
+        </fieldset>
+        <div role="radiogroup" aria-label="Subscription plan">
+            <label><input type="radio" name="plan" value="team"> Team</label>
+        </div>
+    </form>
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let elems = all_elements(&som);
+
+    let fieldset = elems
+        .iter()
+        .find(|e| e.role == ElementRole::Group && e.label.as_deref() == Some("Contact preference"))
+        .expect("fieldset should compile as a labelled group");
+    let attrs = fieldset
+        .attrs
+        .as_ref()
+        .expect("fieldset should expose attrs");
+    assert_eq!(attrs["legend"], "Contact preference");
+    assert_eq!(attrs["disabled"], true);
+
+    assert!(
+        elems.iter().any(
+            |e| e.role == ElementRole::Group && e.label.as_deref() == Some("Subscription plan")
+        ),
+        "ARIA radiogroup should compile as a labelled group"
+    );
+    assert_eq!(
+        elems
+            .iter()
+            .filter(|e| e.role == ElementRole::Radio)
+            .count(),
+        3
+    );
+}
+
+#[test]
 fn test_aria_labelledby_takes_precedence_over_aria_label() {
     let html = r#"<!DOCTYPE html>
 <html><head><title>Label Priority</title></head>

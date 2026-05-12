@@ -210,6 +210,7 @@ The `role` field MUST be one of the following string values (serialized in
 | `table`       | No          | (none)                 | `<table>` (data tables only) |
 | `paragraph`   | No          | (none)                 | `<p>`, bare text nodes |
 | `section`     | No          | (none)                 | `<section>`, `<article>` |
+| `group`       | No          | (none)                 | `<fieldset>`, `role="group"`, `role="radiogroup"` |
 | `separator`   | No          | (none)                 | `<hr>` |
 | `details`     | Yes         | `["toggle"]`           | `<details>` with `<summary>` (disclosure widget) |
 | `iframe`      | No          | (none)                 | `<iframe>` embedded browsing contexts |
@@ -303,6 +304,13 @@ Each **Option** object:
 | Attribute      | Type   | Description |
 |----------------|--------|-------------|
 | `section_label`| string | The `aria-label` of the section, if present. |
+
+#### `group`
+
+| Attribute  | Type    | Description |
+|------------|---------|-------------|
+| `legend`   | string  | The first `<legend>` text for native fieldsets, if present. |
+| `disabled` | boolean | `true` when a native `<fieldset>` has the `disabled` attribute. |
 
 #### `details`
 
