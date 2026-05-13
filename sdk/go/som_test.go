@@ -426,6 +426,12 @@ func TestGetActionPlan(t *testing.T) {
 	if !filters.Enabled {
 		t.Error("Enabled = false, want true")
 	}
+	if filters.CacheKey == "" {
+		t.Error("CacheKey is empty")
+	}
+	if got := GetActionPlanCacheKey(*filters); got != filters.CacheKey {
+		t.Errorf("GetActionPlanCacheKey = %q, want %q", got, filters.CacheKey)
+	}
 	if filters.Name == nil || *filters.Name != "filters" {
 		t.Errorf("Name = %v, want filters", filters.Name)
 	}
@@ -471,6 +477,9 @@ func TestGetActionPlanDisabledTarget(t *testing.T) {
 	}
 	if item.BlockedReason == nil || *item.BlockedReason != "disabled" {
 		t.Errorf("BlockedReason = %v, want disabled", item.BlockedReason)
+	}
+	if item.CacheKey != "plasmate-action:v1:2de92b9a" {
+		t.Errorf("CacheKey = %q, want plasmate-action:v1:2de92b9a", item.CacheKey)
 	}
 }
 

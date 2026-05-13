@@ -203,6 +203,16 @@ should keep ids as the execution target, but SDK and framework action plans
 also need deterministic `cache_key` values so apps can compare, store, and
 dedupe recurring local SOM actions without cloud selector memory.
 
+2026-05-13 cache-key parity read: the current competitive pressure is not just
+to invent action memory, but to make it portable in the places developers
+already wire agents. Playwright MCP snapshots remain current-state refs,
+Stagehand/Browserbase cache resolved actions, Firecrawl Interact resumes hosted
+browser sessions, Browser Use Cloud sells CDP/profile sessions, and
+Cloudflare's WebMCP work points toward typed browser-native tools. Plasmate's
+stickier answer is local action memory with a consistent `cache_key` in Go,
+Browser Use, LangChain, Vercel AI, and parser packages so teams can reuse
+targets without switching to hosted selector storage.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -229,6 +239,17 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-13:
+  - Go SDK action plans now include deterministic `CacheKey` values plus
+    `GetActionPlanCacheKey()`, completing cache-key parity for durable worker
+    services that consume SOM outside Python/Node agent orchestration.
+  - Browser Use page contexts now render action-plan `cache_key` flags beside
+    availability state, making cached local action menus visible in prompt
+    context as well as raw `extract_action_plan()` results.
+  - LangChain SOM text now computes and renders deterministic `cache_key`
+    flags for interactive targets, keeping text-only agent prompts aligned
+    with parser package action plans.
+  - Added focused Go, Browser Use, and LangChain fixture coverage for the
+    cache-key contract across available, disabled, and grouped action targets.
   - Vercel AI compact action targets now include deterministic `cache_key`
     values, making formatted menus easier to cache, compare, and trace across
     repeated agent steps.
@@ -421,8 +442,8 @@ and adapter docs over one-off integration logic.
 - Promote the new Browser Use and LangChain adapter availability checks into a
   shared cross-adapter fixture runner that also exercises the Vercel AI
   action-plan preparation helpers.
-- Promote action-plan `cache_key` parity into Go, Browser Use, and LangChain so
-  cached local action menus stay consistent across all high-use runtimes.
+- Promote action-plan `cache_key` checks into a shared cross-adapter fixture
+  runner so future SDK/framework changes cannot drift from parser output.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched

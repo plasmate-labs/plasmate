@@ -158,6 +158,14 @@ Reusable action memory is now part of the category expectation. Playwright MCP r
 - **Parser parity first**: Python and Node parser packages should emit the same cache-key contract as framework helpers.
 - **Adapters inherit the contract**: Browser Use, LangChain, Vercel AI, and Go should converge on one compact action target shape.
 
+### 2026-05-13 Action Cache-Key Parity Adjustment
+
+Current browser-agent competitors are making action memory part of daily app code. Playwright MCP exposes fresh refs, Stagehand/Browserbase cache resolved actions, Firecrawl Interact and Browser Use Cloud make hosted browser sessions easy to reuse, and WebMCP experiments point toward typed browser-native tools. Plasmate should keep the local-first wedge by making cacheable action targets portable across all high-use SDK and framework surfaces.
+
+- **Go is part of the action contract**: durable worker services should get the same `cache_key` field and helper as Python/Node orchestration code.
+- **Prompt context should show cache identity**: Browser Use and LangChain text outputs should render cache keys beside availability so repeated workflows can dedupe targets without raw SOM recovery.
+- **Shared fixtures are the next guardrail**: cache-key parity should move from focused adapter tests into a cross-adapter fixture runner.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites

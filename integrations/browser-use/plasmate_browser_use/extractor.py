@@ -75,6 +75,8 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
             flags.append(f"blocked_reason={reason}")
     elif item.get("enabled") is True:
         flags.append("enabled")
+    if item.get("cache_key"):
+        flags.append(f"cache_key={item['cache_key']}")
     if item.get("required") is True:
         flags.append("required")
     if item.get("group"):

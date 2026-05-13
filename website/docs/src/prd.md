@@ -56,6 +56,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-13 cache-key read: reusable action memory is becoming an expectation, not a premium add-on. Playwright MCP refs remain snapshot-bound while Stagehand/Browserbase action caching pushes teams toward stored selectors and actions. Plasmate should keep local SOM ids as the execution target, but action plans also need deterministic `cache_key` values so apps can compare, dedupe, and cache recurring actions without hosted selector memory.
 
+2026-05-13 cache-key parity read: action memory needs to be portable at the framework edge. Playwright MCP snapshots remain current-state refs, Stagehand/Browserbase cache resolved actions, Firecrawl Interact resumes hosted browser sessions, Browser Use Cloud sells CDP/profile sessions, and Cloudflare WebMCP points toward typed browser-native tools. Plasmate should make local cache keys consistent in Go, Browser Use, LangChain, Vercel AI, and parser packages before pursuing hosted selector storage.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -71,6 +73,10 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-13:
+  - Go SDK action plans now include deterministic `CacheKey` values and `GetActionPlanCacheKey()`.
+  - Browser Use page contexts now render action-plan `cache_key` flags beside availability state.
+  - LangChain SOM text now computes and renders deterministic `cache_key` flags for interactive targets.
+  - Added focused Go, Browser Use, and LangChain fixture coverage for action cache keys.
   - Vercel AI compact action targets now include deterministic `cache_key` values for cached menus and trace logs.
   - Node SOM parser action plans now include `cache_key` and export `getActionPlanCacheKey()`.
   - Python SOM parser action plans now include `cache_key` and export `get_action_plan_cache_key()`.
@@ -158,7 +164,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Add conformance cases for ARIA-heavy SaaS pages, especially disabled and required custom controls, and compare output against Playwright MCP snapshots.
 - Wire `015-action-state` into cross-adapter parser/SDK conformance runners so inherited disabled state stays synchronized outside Rust.
 - Promote the shared adapter availability fixture into a cross-adapter runner that also exercises the Vercel AI action-plan preparation helpers.
-- Promote action-plan `cache_key` parity into Go, Browser Use, and LangChain so cached local action menus stay consistent across all high-use runtimes.
+- Promote action-plan `cache_key` checks into a shared cross-adapter fixture runner so future SDK/framework changes cannot drift from parser output.
 - Promote fieldset/legend group semantics into shared conformance fixtures alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched action-plan metadata.
 - Promote the new SDK/parser shadow-root and Go action-plan tests into shared conformance fixtures that run against every adapter before release.

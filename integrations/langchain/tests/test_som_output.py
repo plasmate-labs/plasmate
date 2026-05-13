@@ -22,6 +22,9 @@ def test_som_to_text_surfaces_interactive_state():
 
     assert '[e_email] input(email) "Work email"' in text
     assert "[enabled]" in text
+    assert "[cache_key=plasmate-action:v1:91875850]" in text
+    assert "[cache_key=plasmate-action:v1:4d0e8356]" in text
+    assert "[cache_key=plasmate-action:v1:54c75f00]" in text
     assert "[disabled]" in text
     assert "[blocked_reason=disabled]" in text
     assert "[required]" in text

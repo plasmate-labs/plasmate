@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 
@@ -80,7 +81,7 @@ def _element_to_text(elem: dict[str, Any], indent: int = 1) -> str:
     actions = elem.get("actions")
 
     hint_str = " " + " ".join(f"[{h}]" for h in hints) if hints else ""
-    state_str = _action_state_to_text(attrs, bool(actions))
+    state_str = _action_state_to_text(elem, bool(actions))
     if state_str:
         hint_str = f"{hint_str} {state_str}".rstrip()
 
@@ -152,13 +153,47 @@ def _element_to_text(elem: dict[str, Any], indent: int = 1) -> str:
     return ""
 
 
-def _action_state_to_text(attrs: dict[str, Any], interactive: bool = False) -> str:
+def _fnv1a32(value: str) -> str:
+    hash_value = 0x811C9DC5
+    for char in value:
+        hash_value ^= ord(char)
+        hash_value = (hash_value * 0x01000193) & 0xFFFFFFFF
+    return f"{hash_value:08x}"
+
+
+def _compact_string(value: object) -> str | None:
+    return value if isinstance(value, str) and value else None
+
+
+def _action_cache_key(elem: dict[str, Any]) -> str:
+    attrs = elem.get("attrs") or {}
+    actions = elem.get("actions")
+    action_values = sorted(actions) if isinstance(actions, list) else []
+    parts = [
+        _compact_string(elem.get("id")),
+        _compact_string(elem.get("role")),
+        _compact_string(elem.get("label") or elem.get("text")),
+        ",".join(str(action) for action in action_values) or None,
+        _compact_string(attrs.get("name")),
+        _compact_string(attrs.get("href")),
+        _compact_string(attrs.get("input_type")),
+        _compact_string(attrs.get("group")),
+        _compact_string(attrs.get("placeholder")),
+    ]
+    encoded = json.dumps(parts, separators=(",", ":"))
+    return f"plasmate-action:v1:{_fnv1a32(encoded)}"
+
+
+def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> str:
+    attrs = elem.get("attrs") or {}
     flags: list[str] = []
     if attrs.get("disabled") is True:
         flags.append("[disabled]")
         flags.append("[blocked_reason=disabled]")
     elif interactive:
         flags.append("[enabled]")
+    if interactive:
+        flags.append(f"[cache_key={_action_cache_key(elem)}]")
     if attrs.get("required") is True:
         flags.append("[required]")
     if attrs.get("group"):

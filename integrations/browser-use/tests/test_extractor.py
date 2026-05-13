@@ -21,7 +21,7 @@ def test_build_context_surfaces_action_availability():
 
     context = extractor._build_context(som)
 
-    assert '[e_email] text_input "Work email" (type) [enabled] [required] [group=Account] [type=email]' in context
-    assert '[e_save] button "Save" (click) [disabled] [blocked_reason=disabled]' in context
-    assert '[e_plan] select "Plan" (select) [enabled] [required] [group=Billing]' in context
+    assert '[e_email] text_input "Work email" (type) [enabled] [cache_key=plasmate-action:v1:91875850] [required] [group=Account] [type=email]' in context
+    assert '[e_save] button "Save" (click) [disabled] [blocked_reason=disabled] [cache_key=plasmate-action:v1:4d0e8356]' in context
+    assert '[e_plan] select "Plan" (select) [enabled] [cache_key=plasmate-action:v1:54c75f00] [required] [group=Billing]' in context
     assert "Unavailable until required fields are complete" in context

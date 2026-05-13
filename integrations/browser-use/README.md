@@ -72,18 +72,19 @@ Elements: 5 (1 interactive)
 
 ### Get an action plan
 
-Use `extract_action_plan()` when an agent needs reusable targets without the rest of the page text. Disabled controls include `enabled: false` and `blocked_reason: "disabled"` so Browser Use agents can skip unavailable actions before spending a tool call:
+Use `extract_action_plan()` when an agent needs reusable targets without the rest of the page text. Targets include `cache_key` for local action memory. Disabled controls include `enabled: false` and `blocked_reason: "disabled"` so Browser Use agents can skip unavailable actions before spending a tool call:
 
 ```python
 actions = extractor.extract_action_plan("https://example.com/settings")
 for action in actions:
     if action["enabled"]:
-        print(action["id"], action["role"], action["actions"])
+        print(action["id"], action["cache_key"], action["role"], action["actions"])
 ```
 
 Browser Use page contexts are tested against the shared
 `integrations/fixtures/action-availability.som.json` fixture so availability,
-required, group, type, and description cues stay aligned with other adapters.
+cache-key, required, group, type, and description cues stay aligned with other
+adapters.
 
 ### Markdown extraction
 

@@ -43,6 +43,7 @@ func main() {
     plan := plasmate.GetActionPlan(som)
     fmt.Printf("Found %d action targets\n", len(plan))
     for _, item := range plan {
+        fmt.Println(item.ID, item.CacheKey)
         if !item.Enabled {
             fmt.Printf("Skipping %s: %s\n", item.ID, *item.BlockedReason)
         }
@@ -125,7 +126,8 @@ all := plasmate.FlatElements(som)
 | `FindByText(som, text)` | Case-insensitive text search |
 | `FindByAction(som, action)` | Find elements exposing an action |
 | `FindByHint(som, hint)` | Find elements tagged with a semantic hint |
-| `GetActionPlan(som)` | Return compact action targets with availability state for agents |
+| `GetActionPlan(som)` | Return compact action targets with cache keys and availability state for agents |
+| `GetActionPlanCacheKey(item)` | Return a deterministic key for caching or comparing an action target |
 | `FlatElements(som)` | Flatten all elements, including shadow roots |
 | `TokenEstimate(som)` | Estimate token count |
 
@@ -134,3 +136,5 @@ The Go types include current SOM actionability fields such as
 attrs, and `shadow` roots so Go agents receive the same contract as the Python
 and Node parser packages. Action-plan items include `Enabled` and
 `BlockedReason` so agents can skip known-unavailable controls before acting.
+They also include deterministic `CacheKey` values for local action-plan caches,
+prompt dedupe, and trace correlation.

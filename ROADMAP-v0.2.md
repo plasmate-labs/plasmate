@@ -331,6 +331,23 @@ compare repeated actions without adopting hosted selector memory.
    and Go should converge on the same compact action target shape so cached
    workflows do not depend on one runtime.
 
+### 2026-05-13 Action Cache-Key Parity Adjustment
+
+Current browser-agent competitors are making action memory part of daily app
+code. Playwright MCP exposes fresh refs, Stagehand/Browserbase cache resolved
+actions, Firecrawl Interact and Browser Use Cloud make hosted browser sessions
+easy to reuse, and WebMCP experiments point toward typed browser-native tools.
+Plasmate should keep the local-first wedge by making cacheable action targets
+portable across all high-use SDK and framework surfaces.
+
+1. **Go is part of the action contract**: durable worker services should get
+   the same `cache_key` field and helper as Python/Node orchestration code.
+2. **Prompt context should show cache identity**: Browser Use and LangChain
+   text outputs should render cache keys beside availability so repeated
+   workflows can dedupe targets without raw SOM recovery.
+3. **Shared fixtures are the next guardrail**: cache-key parity should move
+   from focused adapter tests into a cross-adapter fixture runner.
+
 ## Architecture
 
 ```
@@ -567,6 +584,10 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   correlation.
 - Python and Node parser compact action plans now include deterministic
   `cache_key` fields plus helper functions for app-level cached workflows.
+- Go SDK compact action plans now include deterministic `CacheKey` values and
+  export `GetActionPlanCacheKey()` for worker-side action memory.
+- Browser Use and LangChain context renderers now include action `cache_key`
+  flags, keeping prompt text aligned with parser action plans.
 - Browser Use and LangChain package `__version__` exports now match package
   metadata.
 - Selector handling now trims whitespace and supports documented region ids

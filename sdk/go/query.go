@@ -1,6 +1,12 @@
 package plasmate
 
-import "strings"
+import (
+	"encoding/json"
+	"fmt"
+	"hash/fnv"
+	"sort"
+	"strings"
+)
 
 // FindByRole returns all regions matching the given role.
 func FindByRole(som *Som, role string) []Region {
@@ -164,6 +170,7 @@ func flattenElements(elements []Element, result *[]Element) {
 // ActionPlanItem is a compact action target for agent planning.
 type ActionPlanItem struct {
 	ID            string   `json:"id"`
+	CacheKey      string   `json:"cache_key"`
 	Role          string   `json:"role"`
 	Actions       []string `json:"actions"`
 	Enabled       bool     `json:"enabled"`
@@ -177,6 +184,45 @@ type ActionPlanItem struct {
 	Disabled      *bool    `json:"disabled,omitempty"`
 	BlockedReason *string  `json:"blocked_reason,omitempty"`
 	Group         *string  `json:"group,omitempty"`
+}
+
+func compactString(value *string) interface{} {
+	if value != nil && *value != "" {
+		return *value
+	}
+	return nil
+}
+
+func actionPlanCacheParts(item ActionPlanItem) []interface{} {
+	actions := append([]string(nil), item.Actions...)
+	sort.Strings(actions)
+	actionList := strings.Join(actions, ",")
+	var actionValue interface{}
+	if actionList != "" {
+		actionValue = actionList
+	}
+	return []interface{}{
+		item.ID,
+		item.Role,
+		compactString(item.Label),
+		actionValue,
+		compactString(item.Name),
+		compactString(item.Href),
+		compactString(item.InputType),
+		compactString(item.Group),
+		compactString(item.Placeholder),
+	}
+}
+
+// GetActionPlanCacheKey returns a deterministic key for caching or comparing an action target.
+func GetActionPlanCacheKey(item ActionPlanItem) string {
+	encoded, err := json.Marshal(actionPlanCacheParts(item))
+	if err != nil {
+		return "plasmate-action:v1:00000000"
+	}
+	hash := fnv.New32a()
+	_, _ = hash.Write(encoded)
+	return fmt.Sprintf("plasmate-action:v1:%08x", hash.Sum32())
 }
 
 // GetActionPlan returns compact action targets for agent planning.
@@ -209,6 +255,7 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			}
 			item.Group = el.Attrs.Group
 		}
+		item.CacheKey = GetActionPlanCacheKey(item)
 		items = append(items, item)
 	}
 	return items

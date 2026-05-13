@@ -49,6 +49,38 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-13T09:10:00Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first. The automation worktree
+  still cannot write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate27/FETCH_HEAD`
+  (`Operation not permitted`). Retrying from the primary checkout was blocked
+  by DNS resolution for `github.com`, so this run continued from locally known
+  `origin/master`/`HEAD` `affc41a`.
+- Market direction: current official docs continue to make reusable action
+  memory the retention layer. Playwright MCP snapshots keep refs tied to fresh
+  page state, Stagehand/Browserbase cache resolved actions, Firecrawl Interact
+  and Browser Use Cloud package reusable hosted sessions/profiles, and
+  Cloudflare WebMCP points toward typed browser-native tools. Plasmate should
+  keep the local-first SOM/action-plan wedge and make deterministic action
+  `cache_key` values portable across SDKs and framework prompt contexts.
+- Code changes: Go SDK action plans now include deterministic `CacheKey`
+  values and export `GetActionPlanCacheKey()`. Browser Use page contexts now
+  render `cache_key` flags beside availability state. LangChain SOM text now
+  computes and renders deterministic `cache_key` flags for interactive targets.
+- Docs changes: updated the Go, Browser Use, and LangChain READMEs; updated
+  PRD and roadmap source docs plus generated website docs with the cache-key
+  parity rationale and the next step to move checks into a shared
+  cross-adapter fixture runner.
+- Verification: Browser Use adapter test passed; LangChain adapter test passed
+  with the existing Python 3.14/Pydantic v1 warning from `langchain_core`; Go
+  SDK tests passed with sandbox-local `GOCACHE`; `node website/build.mjs`
+  rebuilt 39 pages after linking to the primary checkout's existing
+  `website/node_modules`; `git diff --check` passed;
+  `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build` passed with
+  existing warnings; `cargo test --lib -- --test-threads=1` passed 245 tests
+  with existing warnings.
+
 ### 2026-05-13T08:12:00Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first. The automation worktree
