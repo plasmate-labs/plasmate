@@ -156,6 +156,10 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["name"] = attrs.name
             if attrs.autocomplete:
                 item["autocomplete"] = attrs.autocomplete
+            if attrs.inputmode:
+                item["inputmode"] = attrs.inputmode
+            if attrs.enterkeyhint:
+                item["enterkeyhint"] = attrs.enterkeyhint
             if attrs.input_type:
                 item["input_type"] = attrs.input_type
             if attrs.value:
@@ -183,9 +187,16 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                     "controls",
                     "haspopup",
                     "invalid",
+                    "autocomplete",
+                    "active_descendant",
                 ):
                     if aria_key in attrs.aria:
-                        item[aria_key] = attrs.aria[aria_key]
+                        item_key = (
+                            "aria_autocomplete"
+                            if aria_key == "autocomplete"
+                            else aria_key
+                        )
+                        item[item_key] = attrs.aria[aria_key]
             if attrs.required is not None:
                 item["required"] = attrs.required
             if attrs.readonly is not None:

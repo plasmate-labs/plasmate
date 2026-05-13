@@ -254,6 +254,14 @@ The newest competitor docs keep making cached actions depend on validation state
 - **Validation constraints reduce bad retries**: `minlength`, `maxlength`, and `pattern` should travel through Rust, schema, SDKs, parser packages, and adapters so agents know what a field accepts before typing.
 - **Invalid state blocks blind replay**: `aria-invalid` should surface as compact `invalid` state without changing target `cache_key` values, letting cached plans stay stable while validation drift remains visible.
 
+### 2026-05-13 Input-Affordance Action Menu Adjustment
+
+Current browser-agent products keep making repeated actions depend on the target's current browser affordances. Playwright MCP refs still belong to a fresh accessibility snapshot, while Stagehand/Browserbase action caches only pay off when field modality and autocomplete state are visible before replay. Plasmate should keep the local-first wedge by making compact action targets carry input hints that affect credential selection, keyboard flow, and autocomplete suggestion state.
+
+- **Input modality is planning context**: `inputmode` should travel through Rust, schema, SDKs, parser packages, and adapters so agents know whether a field expects email, decimal, numeric, search, or URL-style values.
+- **Keyboard intent matters for form flow**: `enterkeyhint` should be exposed in compact menus so repeated workflows know whether Enter advances, searches, submits, or sends.
+- **Autocomplete widgets need live state**: `aria-autocomplete` and `aria-activedescendant` should surface as compact action-plan cues without changing target `cache_key` values, preserving local action memory while making suggestion drift visible.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -396,6 +404,9 @@ The newest competitor docs keep making cached actions depend on validation state
 - [x] Rust compiler and SOM schema preserve form validation constraints and ARIA invalid state
 - [x] Compact action plans expose autocomplete, minlength, maxlength, pattern, and invalid cues across parser packages, SDKs, and framework adapters
 - [x] Shared action-availability manifest asserts validation constraints without changing deterministic action cache keys
+- [x] Rust compiler and SOM schema preserve inputmode, enterkeyhint, ARIA autocomplete, and active-descendant state
+- [x] Compact action plans expose inputmode, enterkeyhint, aria_autocomplete, and active_descendant across parser packages, SDKs, and framework adapters
+- [x] Shared action-availability manifest asserts input-affordance cues without changing deterministic action cache keys
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants

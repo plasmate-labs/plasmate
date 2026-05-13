@@ -319,6 +319,16 @@ wedge by carrying input guidance and validation state in compact action menus:
 `autocomplete`, `minlength`, `maxlength`, `pattern`, and `aria-invalid` should
 mean the same thing in Rust, schema, parser packages, SDKs, and adapters.
 
+2026-05-13 input-affordance read: current browser-agent docs keep validating
+small, browser-like action menus over broad hosted pivots. Playwright MCP refs
+remain tied to the current accessibility snapshot, while Stagehand and
+Browserbase make cached actions valuable only when the cached target still
+matches the field's current affordances. Plasmate should carry input modality
+and autocomplete-widget cues (`inputmode`, `enterkeyhint`,
+`aria-autocomplete`, and `aria-activedescendant`) through the same shared
+manifest so agents can choose credential data, keyboard submit behavior, and
+active suggestion state without raw DOM recovery.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -345,6 +355,15 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-13:
+  - The Rust SOM compiler and JSON Schema now preserve `inputmode`,
+    `enterkeyhint`, `aria-autocomplete`, and `aria-activedescendant`, extending
+    validation-state work into input-affordance cues for cached form actions.
+  - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
+    AI action-plan surfaces now expose `inputmode`, `enterkeyhint`,
+    `aria_autocomplete`, and `active_descendant` without changing deterministic
+    action `cache_key` values.
+  - The shared action-availability manifest now asserts input modality and
+    autocomplete-widget state across parser, SDK, and framework outputs.
   - The Rust SOM compiler and JSON Schema now preserve form-entry constraints
     (`minlength`, `maxlength`, `pattern`) plus `aria-invalid`, extending
     current action-state fidelity into validation state.
@@ -677,6 +696,9 @@ and adapter docs over one-off integration logic.
 - Add compiler/schema conformance for form validation constraints and
   `aria-invalid`, then promote the shared manifest cases into broader parser,
   SDK, and adapter fixtures.
+- Promote input-affordance cases (`inputmode`, `enterkeyhint`, autocomplete
+  widget state, and active descendants) into broader Rust conformance fixtures
+  once the shared action manifest remains stable.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched

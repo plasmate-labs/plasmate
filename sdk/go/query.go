@@ -169,35 +169,39 @@ func flattenElements(elements []Element, result *[]Element) {
 
 // ActionPlanItem is a compact action target for agent planning.
 type ActionPlanItem struct {
-	ID            string      `json:"id"`
-	CacheKey      string      `json:"cache_key"`
-	Role          string      `json:"role"`
-	Actions       []string    `json:"actions"`
-	Enabled       bool        `json:"enabled"`
-	Label         *string     `json:"label,omitempty"`
-	Href          *string     `json:"href,omitempty"`
-	Name          *string     `json:"name,omitempty"`
-	Autocomplete  *string     `json:"autocomplete,omitempty"`
-	InputType     *string     `json:"input_type,omitempty"`
-	Value         *string     `json:"value,omitempty"`
-	Placeholder   *string     `json:"placeholder,omitempty"`
-	MinLength     interface{} `json:"minlength,omitempty"`
-	MaxLength     interface{} `json:"maxlength,omitempty"`
-	Pattern       *string     `json:"pattern,omitempty"`
-	Description   *string     `json:"description,omitempty"`
-	Checked       interface{} `json:"checked,omitempty"`
-	Expanded      *bool       `json:"expanded,omitempty"`
-	Pressed       *bool       `json:"pressed,omitempty"`
-	Selected      *bool       `json:"selected,omitempty"`
-	Current       interface{} `json:"current,omitempty"`
-	Controls      *string     `json:"controls,omitempty"`
-	HasPopup      interface{} `json:"haspopup,omitempty"`
-	Invalid       interface{} `json:"invalid,omitempty"`
-	Required      *bool       `json:"required,omitempty"`
-	Readonly      *bool       `json:"readonly,omitempty"`
-	Disabled      *bool       `json:"disabled,omitempty"`
-	BlockedReason *string     `json:"blocked_reason,omitempty"`
-	Group         *string     `json:"group,omitempty"`
+	ID               string      `json:"id"`
+	CacheKey         string      `json:"cache_key"`
+	Role             string      `json:"role"`
+	Actions          []string    `json:"actions"`
+	Enabled          bool        `json:"enabled"`
+	Label            *string     `json:"label,omitempty"`
+	Href             *string     `json:"href,omitempty"`
+	Name             *string     `json:"name,omitempty"`
+	Autocomplete     *string     `json:"autocomplete,omitempty"`
+	InputMode        *string     `json:"inputmode,omitempty"`
+	EnterKeyHint     *string     `json:"enterkeyhint,omitempty"`
+	InputType        *string     `json:"input_type,omitempty"`
+	Value            *string     `json:"value,omitempty"`
+	Placeholder      *string     `json:"placeholder,omitempty"`
+	MinLength        interface{} `json:"minlength,omitempty"`
+	MaxLength        interface{} `json:"maxlength,omitempty"`
+	Pattern          *string     `json:"pattern,omitempty"`
+	Description      *string     `json:"description,omitempty"`
+	Checked          interface{} `json:"checked,omitempty"`
+	Expanded         *bool       `json:"expanded,omitempty"`
+	Pressed          *bool       `json:"pressed,omitempty"`
+	Selected         *bool       `json:"selected,omitempty"`
+	Current          interface{} `json:"current,omitempty"`
+	Controls         *string     `json:"controls,omitempty"`
+	HasPopup         interface{} `json:"haspopup,omitempty"`
+	Invalid          interface{} `json:"invalid,omitempty"`
+	AriaAutocomplete *string     `json:"aria_autocomplete,omitempty"`
+	ActiveDescendant *string     `json:"active_descendant,omitempty"`
+	Required         *bool       `json:"required,omitempty"`
+	Readonly         *bool       `json:"readonly,omitempty"`
+	Disabled         *bool       `json:"disabled,omitempty"`
+	BlockedReason    *string     `json:"blocked_reason,omitempty"`
+	Group            *string     `json:"group,omitempty"`
 }
 
 func compactString(value *string) interface{} {
@@ -258,6 +262,8 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.Href = el.Attrs.Href
 			item.Name = el.Attrs.Name
 			item.Autocomplete = el.Attrs.Autocomplete
+			item.InputMode = el.Attrs.InputMode
+			item.EnterKeyHint = el.Attrs.EnterKeyHint
 			item.InputType = el.Attrs.InputType
 			item.Value = el.Attrs.Value
 			item.Placeholder = el.Attrs.Placeholder
@@ -278,6 +284,8 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.Controls = el.Attrs.Aria.Controls
 				item.HasPopup = el.Attrs.Aria.HasPopup
 				item.Invalid = el.Attrs.Aria.Invalid
+				item.AriaAutocomplete = el.Attrs.Aria.Autocomplete
+				item.ActiveDescendant = el.Attrs.Aria.ActiveDescendant
 			}
 			item.Required = el.Attrs.Required
 			item.Readonly = el.Attrs.Readonly

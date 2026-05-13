@@ -24,6 +24,8 @@
             "input_type": "email",
             "value": "ops@example.com",
             "autocomplete": "email",
+            "inputmode": "email",
+            "enterkeyhint": "next",
             "placeholder": "name@company.com",
             "minlength": 6,
             "maxlength": 64,
@@ -31,7 +33,9 @@
             "required": true,
             "readonly": true,
             "aria": {
-              "invalid": "grammar"
+              "invalid": "grammar",
+              "autocomplete": "list",
+              "active_descendant": "email-suggestion-1"
             },
             "description": "Use your work email",
             "group": "Account"

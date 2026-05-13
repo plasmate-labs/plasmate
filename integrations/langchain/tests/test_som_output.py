@@ -50,12 +50,26 @@ def test_som_to_text_surfaces_interactive_state():
             assert f'[value="{target["value"]}"]' in line
         if target.get("autocomplete"):
             assert f'[autocomplete="{target["autocomplete"]}"]' in line
+        if target.get("inputmode"):
+            assert f'[inputmode="{target["inputmode"]}"]' in line
+        if target.get("enterkeyhint"):
+            assert f'[enterkeyhint="{target["enterkeyhint"]}"]' in line
         for constraint_key in ("minlength", "maxlength", "pattern"):
             if constraint_key in target:
                 assert f'[{constraint_key}="{target[constraint_key]}"]' in line
         if "checked" in target:
             assert f'[checked="{target["checked"]}"]' in line
-        for state_key in ("expanded", "pressed", "selected", "current", "controls", "haspopup", "invalid"):
+        for state_key in (
+            "expanded",
+            "pressed",
+            "selected",
+            "current",
+            "controls",
+            "haspopup",
+            "invalid",
+            "aria_autocomplete",
+            "active_descendant",
+        ):
             if state_key in target:
                 assert f'[{state_key}="{target[state_key]}"]' in line
         if target.get("group"):

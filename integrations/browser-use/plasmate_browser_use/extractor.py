@@ -87,6 +87,10 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append(f"type={item['input_type']}")
     if item.get("autocomplete"):
         flags.append(f"autocomplete={item['autocomplete']}")
+    if item.get("inputmode"):
+        flags.append(f"inputmode={item['inputmode']}")
+    if item.get("enterkeyhint"):
+        flags.append(f"enterkeyhint={item['enterkeyhint']}")
     if item.get("value"):
         flags.append(f"value={item['value']}")
     for constraint_key in ("minlength", "maxlength", "pattern"):
@@ -94,7 +98,17 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
             flags.append(f"{constraint_key}={item[constraint_key]}")
     if "checked" in item:
         flags.append(f"checked={item['checked']}")
-    for state_key in ("expanded", "pressed", "selected", "current", "controls", "haspopup", "invalid"):
+    for state_key in (
+        "expanded",
+        "pressed",
+        "selected",
+        "current",
+        "controls",
+        "haspopup",
+        "invalid",
+        "aria_autocomplete",
+        "active_descendant",
+    ):
         if state_key in item:
             flags.append(f"{state_key}={item[state_key]}")
 

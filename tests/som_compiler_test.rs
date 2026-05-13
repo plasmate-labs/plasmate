@@ -359,7 +359,7 @@ fn test_form_state_values_and_readonly_are_preserved() {
     let html = r#"<!DOCTYPE html>
 <html><head><title>Form State</title></head>
 <body><main>
-    <input type="email" aria-label="Email" readonly value="ops@example.com" autocomplete="email" minlength="6" maxlength="64" pattern=".+@example\.com" aria-invalid="TRUE">
+    <input type="email" aria-label="Email" readonly value="ops@example.com" autocomplete="email" inputmode="email" enterkeyhint="next" minlength="6" maxlength="64" pattern=".+@example\.com" aria-invalid="TRUE" aria-autocomplete="list" aria-activedescendant="email-suggestion-1">
     <textarea aria-label="Notes" readonly maxlength="200">Already reviewed</textarea>
     <select aria-label="Plan">
         <option value="starter">Starter</option>
@@ -379,10 +379,17 @@ fn test_form_state_values_and_readonly_are_preserved() {
     assert_eq!(email_attrs["readonly"], true);
     assert_eq!(email_attrs["value"], "ops@example.com");
     assert_eq!(email_attrs["autocomplete"], "email");
+    assert_eq!(email_attrs["inputmode"], "email");
+    assert_eq!(email_attrs["enterkeyhint"], "next");
     assert_eq!(email_attrs["minlength"], 6);
     assert_eq!(email_attrs["maxlength"], 64);
     assert_eq!(email_attrs["pattern"], ".+@example\\.com");
     assert_eq!(email_attrs["aria"]["invalid"], true);
+    assert_eq!(email_attrs["aria"]["autocomplete"], "list");
+    assert_eq!(
+        email_attrs["aria"]["active_descendant"],
+        "email-suggestion-1"
+    );
 
     let textarea = elems
         .iter()

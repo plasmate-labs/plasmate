@@ -60,7 +60,8 @@ const { text } = await generateText({
 `plasmateActionGuidance` tells the model to honor SOM action targets with
 `cache_key`, `enabled`, `blocked_reason`, `required`, `description`,
 `placeholder`, `group`, `readonly`, `value`, `checked`, `expanded`, `pressed`, and
-`selected`, `current`, `controls`, `haspopup`, `autocomplete`, `minlength`,
+`selected`, `current`, `controls`, `haspopup`, `autocomplete`, `inputmode`,
+`enterkeyhint`, `aria_autocomplete`, `active_descendant`, `minlength`,
 `maxlength`, `pattern`, and `invalid` fields before selecting or
 reusing browser actions. Use
 `extractPlasmateActionTargets()`, `preparePlasmateActionPlan()`, or

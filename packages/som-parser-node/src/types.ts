@@ -100,6 +100,8 @@ export interface SomElementAttrs {
   tabindex?: number | string;
   name?: string;
   autocomplete?: string;
+  inputmode?: string;
+  enterkeyhint?: string;
   minlength?: number | string;
   maxlength?: number | string;
   pattern?: string;
@@ -124,6 +126,8 @@ export interface AriaState {
   controls?: string;
   haspopup?: boolean | string;
   invalid?: boolean | string;
+  autocomplete?: string;
+  active_descendant?: string;
 }
 
 export interface SomShadowRoot {

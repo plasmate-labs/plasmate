@@ -53,6 +53,8 @@ export interface ActionPlanItem {
   href?: string;
   name?: string;
   autocomplete?: string;
+  inputmode?: string;
+  enterkeyhint?: string;
   input_type?: string;
   value?: string;
   placeholder?: string;
@@ -68,6 +70,8 @@ export interface ActionPlanItem {
   controls?: string;
   haspopup?: boolean | string;
   invalid?: boolean | string;
+  aria_autocomplete?: string;
+  active_descendant?: string;
   required?: boolean;
   readonly?: boolean;
   disabled?: boolean;
@@ -121,6 +125,8 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.href) item.href = el.attrs.href;
     if (el.attrs?.name) item.name = el.attrs.name;
     if (el.attrs?.autocomplete) item.autocomplete = el.attrs.autocomplete;
+    if (el.attrs?.inputmode) item.inputmode = el.attrs.inputmode;
+    if (el.attrs?.enterkeyhint) item.enterkeyhint = el.attrs.enterkeyhint;
     if (el.attrs?.input_type) item.input_type = el.attrs.input_type;
     if (el.attrs?.value) item.value = el.attrs.value;
     if (el.attrs?.placeholder) item.placeholder = el.attrs.placeholder;
@@ -140,6 +146,8 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.aria?.controls !== undefined) item.controls = el.attrs.aria.controls;
     if (el.attrs?.aria?.haspopup !== undefined) item.haspopup = el.attrs.aria.haspopup;
     if (el.attrs?.aria?.invalid !== undefined) item.invalid = el.attrs.aria.invalid;
+    if (el.attrs?.aria?.autocomplete !== undefined) item.aria_autocomplete = el.attrs.aria.autocomplete;
+    if (el.attrs?.aria?.active_descendant !== undefined) item.active_descendant = el.attrs.aria.active_descendant;
     if (el.attrs?.required !== undefined) item.required = el.attrs.required;
     if (el.attrs?.readonly !== undefined) item.readonly = el.attrs.readonly;
     if (el.attrs?.disabled !== undefined) {

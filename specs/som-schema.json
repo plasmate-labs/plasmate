@@ -189,6 +189,8 @@
             },
             "name": { "type": "string" },
             "autocomplete": { "type": "string" },
+            "inputmode": { "type": "string" },
+            "enterkeyhint": { "type": "string" },
             "minlength": {
               "oneOf": [
                 { "type": "integer" },
@@ -286,7 +288,9 @@
             { "type": "boolean" },
             { "type": "string" }
           ]
-        }
+        },
+        "autocomplete": { "type": "string" },
+        "active_descendant": { "type": "string" }
       }
     },
     "ShadowRoot": {

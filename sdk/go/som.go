@@ -68,6 +68,8 @@ type ElementAttrs struct {
 	TabIndex        interface{}    `json:"tabindex,omitempty"`
 	Name            *string        `json:"name,omitempty"`
 	Autocomplete    *string        `json:"autocomplete,omitempty"`
+	InputMode       *string        `json:"inputmode,omitempty"`
+	EnterKeyHint    *string        `json:"enterkeyhint,omitempty"`
 	MinLength       interface{}    `json:"minlength,omitempty"`
 	MaxLength       interface{}    `json:"maxlength,omitempty"`
 	Pattern         *string        `json:"pattern,omitempty"`
@@ -83,16 +85,18 @@ type ElementAttrs struct {
 
 // AriaState holds common ARIA state attributes emitted by SOM.
 type AriaState struct {
-	Expanded *bool       `json:"expanded,omitempty"`
-	Selected *bool       `json:"selected,omitempty"`
-	Checked  interface{} `json:"checked,omitempty"`
-	Disabled *bool       `json:"disabled,omitempty"`
-	Current  interface{} `json:"current,omitempty"`
-	Pressed  *bool       `json:"pressed,omitempty"`
-	Hidden   *bool       `json:"hidden,omitempty"`
-	Controls *string     `json:"controls,omitempty"`
-	HasPopup interface{} `json:"haspopup,omitempty"`
-	Invalid  interface{} `json:"invalid,omitempty"`
+	Expanded         *bool       `json:"expanded,omitempty"`
+	Selected         *bool       `json:"selected,omitempty"`
+	Checked          interface{} `json:"checked,omitempty"`
+	Disabled         *bool       `json:"disabled,omitempty"`
+	Current          interface{} `json:"current,omitempty"`
+	Pressed          *bool       `json:"pressed,omitempty"`
+	Hidden           *bool       `json:"hidden,omitempty"`
+	Controls         *string     `json:"controls,omitempty"`
+	HasPopup         interface{} `json:"haspopup,omitempty"`
+	Invalid          interface{} `json:"invalid,omitempty"`
+	Autocomplete     *string     `json:"autocomplete,omitempty"`
+	ActiveDescendant *string     `json:"active_descendant,omitempty"`
 }
 
 // SomShadowRoot represents elements inside a web component shadow root.

@@ -1824,8 +1824,10 @@ fn build_element_attrs(
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "name") {
         map.insert("name".into(), json!(value));
     }
-    if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "autocomplete") {
-        map.insert("autocomplete".into(), json!(value));
+    for key in ["autocomplete", "inputmode", "enterkeyhint"] {
+        if let Some((_, value)) = attrs.iter().find(|(n, _)| n == key) {
+            map.insert(key.into(), json!(value));
+        }
     }
     for key in ["minlength", "maxlength"] {
         if let Some((_, value)) = attrs.iter().find(|(n, _)| n == key) {
@@ -1864,6 +1866,8 @@ fn build_element_attrs(
         ("aria-controls", "controls"),
         ("aria-haspopup", "haspopup"),
         ("aria-invalid", "invalid"),
+        ("aria-autocomplete", "autocomplete"),
+        ("aria-activedescendant", "active_descendant"),
     ];
     let mut aria_map = serde_json::Map::new();
     for (html_attr, som_key) in aria_states {

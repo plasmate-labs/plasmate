@@ -119,6 +119,8 @@ class ElementAttrs(BaseModel):
     tabindex: Optional[int | str] = None
     name: Optional[str] = None
     autocomplete: Optional[str] = None
+    inputmode: Optional[str] = None
+    enterkeyhint: Optional[str] = None
     minlength: Optional[int | str] = None
     maxlength: Optional[int | str] = None
     pattern: Optional[str] = None

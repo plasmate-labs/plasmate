@@ -132,7 +132,8 @@ all := plasmate.FlatElements(som)
 | `TokenEstimate(som)` | Estimate token count |
 
 The Go types include current SOM actionability fields such as
-`attrs.description`, `attrs.name`, `attrs.autocomplete`, `attrs.aria`, iframe
+`attrs.description`, `attrs.name`, `attrs.autocomplete`, `attrs.inputmode`,
+`attrs.enterkeyhint`, `attrs.aria`, iframe
 attrs, form validation constraints, and `shadow` roots so Go agents receive the
 same contract as the Python and Node parser packages. Action-plan items include
 `Enabled` and

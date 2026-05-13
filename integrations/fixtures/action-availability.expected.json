@@ -15,11 +15,15 @@
       "input_type": "email",
       "value": "ops@example.com",
       "autocomplete": "email",
+      "inputmode": "email",
+      "enterkeyhint": "next",
       "placeholder": "name@company.com",
       "minlength": 6,
       "maxlength": 64,
       "pattern": ".+@example\\.com",
       "invalid": "grammar",
+      "aria_autocomplete": "list",
+      "active_descendant": "email-suggestion-1",
       "description": "Use your work email"
     },
     {

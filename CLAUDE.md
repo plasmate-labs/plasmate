@@ -49,6 +49,42 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-13T22:11:17Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first. The automation worktree
+  still cannot write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate40/FETCH_HEAD`
+  (`Operation not permitted`). Retrying from the primary checkout could not
+  resolve `github.com` over SSH (`ssh: Could not resolve hostname github.com:
+  -65563`), so this run continued from locally available `master` /
+  `origin/master` state `6b8179c`.
+- Market direction: current public docs and product positioning still validate
+  Plasmate's local-first action-menu wedge. Playwright MCP centers fresh
+  accessibility snapshots/refs, Stagehand and Browserbase emphasize cached
+  observe/action replay, and Firecrawl/Browser Use keep packaging managed
+  sessions. The near-term retention move remains richer portable SOM action
+  state, not a hosted-browser pivot.
+- Code changes: Rust SOM now preserves input-affordance cues:
+  `inputmode`, `enterkeyhint`, `aria-autocomplete`, and
+  `aria-activedescendant`. Parser packages, Python/Node/Go SDKs, Browser Use,
+  LangChain, and Vercel AI action-plan surfaces now expose `inputmode`,
+  `enterkeyhint`, `aria_autocomplete`, and `active_descendant` without changing
+  deterministic `cache_key` values.
+- Fixture and docs changes: the shared action-availability SOM and expected
+  manifest now assert input modality and autocomplete-widget state across
+  parser, SDK, and framework outputs. PRD, roadmap, SOM schema/spec, adapter
+  docs, SDK docs, generated website docs, and this running state were updated
+  with the rationale and next conformance step.
+- Verification: `cargo build` passed with existing warnings;
+  `cargo test --lib -- --test-threads=1` passed 246 tests; focused
+  `cargo test --test som_compiler_test test_form_state_values_and_readonly_are_preserved
+  -- --test-threads=1` passed; `./scripts/action-manifest-conformance.sh
+  --quick` passed; `./scripts/action-manifest-conformance.sh --full` passed;
+  `node website/build.mjs` rebuilt 39 pages; `git diff --check` passed. Full
+  `cargo test -- --test-threads=1` still fails only in
+  `tests/awp_integration_test.rs` because sandboxed local listener setup
+  returns `Operation not permitted`.
+
 ### 2026-05-13T21:11:16Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first. The automation worktree

@@ -40,6 +40,8 @@ export interface PlasmateActionTarget {
   readonly?: boolean
   description?: string
   autocomplete?: string
+  inputmode?: string
+  enterkeyhint?: string
   minlength?: number | string
   maxlength?: number | string
   pattern?: string
@@ -51,6 +53,8 @@ export interface PlasmateActionTarget {
   controls?: string
   haspopup?: boolean | string
   invalid?: boolean | string
+  aria_autocomplete?: string
+  active_descendant?: string
   href?: string
   input_type?: string
   value?: string
@@ -111,7 +115,7 @@ export interface PreparePlasmateActionPlanOptions {
 export const plasmateActionGuidance =
   'Use Plasmate SOM element ids for browser actions. Treat action targets ' +
   'with enabled=false or blocked_reason as unavailable, and prefer ' +
-  'cache_key, required, readonly, value, autocomplete, pattern, minlength, maxlength, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
+  'cache_key, required, readonly, value, autocomplete, inputmode, enterkeyhint, aria_autocomplete, active_descendant, pattern, minlength, maxlength, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
 
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined
@@ -205,7 +209,7 @@ function collectSomElements(elements: readonly PlasmateSomElement[] = []) {
 function copyStringAttr(
   item: PlasmateActionTarget,
   attrs: Record<string, unknown>,
-  key: 'href' | 'input_type' | 'value' | 'name' | 'placeholder' | 'description' | 'group' | 'autocomplete' | 'pattern'
+  key: 'href' | 'input_type' | 'value' | 'name' | 'placeholder' | 'description' | 'group' | 'autocomplete' | 'inputmode' | 'enterkeyhint' | 'pattern'
 ) {
   if (typeof attrs[key] === 'string' && attrs[key].length > 0) {
     item[key] = attrs[key]
@@ -247,6 +251,8 @@ export function extractPlasmateActionTargets(
       copyStringAttr(target, attrs, 'value')
       copyStringAttr(target, attrs, 'name')
       copyStringAttr(target, attrs, 'autocomplete')
+      copyStringAttr(target, attrs, 'inputmode')
+      copyStringAttr(target, attrs, 'enterkeyhint')
       copyStringAttr(target, attrs, 'placeholder')
       copyStringOrNumberAttr(target, attrs, 'minlength')
       copyStringOrNumberAttr(target, attrs, 'maxlength')
@@ -292,6 +298,14 @@ export function extractPlasmateActionTargets(
         const invalid = (aria as Record<string, unknown>).invalid
         if (typeof invalid === 'boolean' || typeof invalid === 'string') {
           target.invalid = invalid
+        }
+        const ariaAutocomplete = (aria as Record<string, unknown>).autocomplete
+        if (typeof ariaAutocomplete === 'string' && ariaAutocomplete.length > 0) {
+          target.aria_autocomplete = ariaAutocomplete
+        }
+        const activeDescendant = (aria as Record<string, unknown>).active_descendant
+        if (typeof activeDescendant === 'string' && activeDescendant.length > 0) {
+          target.active_descendant = activeDescendant
         }
       }
 
@@ -366,6 +380,12 @@ export function formatPlasmateActionPlan(
       const autocomplete = target.autocomplete
         ? ` [autocomplete=${target.autocomplete}]`
         : ''
+      const inputmode = target.inputmode
+        ? ` [inputmode=${target.inputmode}]`
+        : ''
+      const enterkeyhint = target.enterkeyhint
+        ? ` [enterkeyhint=${target.enterkeyhint}]`
+        : ''
       const placeholder = target.placeholder
         ? ` [placeholder=${target.placeholder}]`
         : ''
@@ -389,12 +409,18 @@ export function formatPlasmateActionPlan(
         typeof target.haspopup !== 'undefined' ? ` [haspopup=${target.haspopup}]` : ''
       const invalid =
         typeof target.invalid !== 'undefined' ? ` [invalid=${target.invalid}]` : ''
+      const ariaAutocomplete = target.aria_autocomplete
+        ? ` [aria_autocomplete=${target.aria_autocomplete}]`
+        : ''
+      const activeDescendant = target.active_descendant
+        ? ` [active_descendant=${target.active_descendant}]`
+        : ''
       const group = target.group ? ` [group=${target.group}]` : ''
       const description = target.description
         ? ` [description=${target.description}]`
         : ''
 
-      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${readonly}${inputType}${value}${autocomplete}${placeholder}${minlength}${maxlength}${pattern}${checked}${expanded}${pressed}${selected}${current}${controls}${haspopup}${invalid}${group}${description}`
+      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${readonly}${inputType}${value}${autocomplete}${inputmode}${enterkeyhint}${placeholder}${minlength}${maxlength}${pattern}${checked}${expanded}${pressed}${selected}${current}${controls}${haspopup}${invalid}${ariaAutocomplete}${activeDescendant}${group}${description}`
     })
     .join('\n')
 }

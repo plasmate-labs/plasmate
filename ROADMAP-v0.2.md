@@ -555,6 +555,27 @@ type action.
    compact `invalid` state without changing target `cache_key` values, letting
    cached plans stay stable while validation drift remains visible.
 
+### 2026-05-13 Input-Affordance Action Menu Adjustment
+
+Current browser-agent products keep making repeated actions depend on the
+target's current browser affordances. Playwright MCP refs still belong to a
+fresh accessibility snapshot, while Stagehand/Browserbase action caches only
+pay off when field modality and autocomplete state are visible before replay.
+Plasmate should keep the local-first wedge by making compact action targets
+carry input hints that affect credential selection, keyboard flow, and
+autocomplete suggestion state.
+
+1. **Input modality is planning context**: `inputmode` should travel through
+   Rust, schema, SDKs, parser packages, and adapters so agents know whether a
+   field expects email, decimal, numeric, search, or URL-style values.
+2. **Keyboard intent matters for form flow**: `enterkeyhint` should be exposed
+   in compact menus so repeated workflows know whether Enter advances,
+   searches, submits, or sends.
+3. **Autocomplete widgets need live state**: `aria-autocomplete` and
+   `aria-activedescendant` should surface as compact action-plan cues without
+   changing target `cache_key` values, preserving local action memory while
+   making suggestion drift visible.
+
 ## Architecture
 
 ```

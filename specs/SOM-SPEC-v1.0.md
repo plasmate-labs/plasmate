@@ -247,6 +247,8 @@ field MUST be omitted when the object would be empty.
 | `readonly`   | boolean | Present and `true` when the field is read-only. |
 | `disabled`   | boolean | Present and `true` when the field is disabled. |
 | `autocomplete` | string | Autocomplete token, when present. |
+| `inputmode` | string | Input modality hint, when present. |
+| `enterkeyhint` | string | Enter-key action hint, when present. |
 | `minlength` | integer/string | Minimum text length constraint. Invalid source values are preserved as strings. |
 | `maxlength` | integer/string | Maximum text length constraint. Invalid source values are preserved as strings. |
 | `pattern`   | string  | Pattern constraint from the source element. |
@@ -343,8 +345,8 @@ Each **Option** object:
 #### Global actionability attributes
 
 Implementations SHOULD preserve common actionability attributes on any element:
-`contenteditable`, `tabindex`, `name`, `autocomplete`, `readonly`, and
-`description`. The
+`contenteditable`, `tabindex`, `name`, `autocomplete`, `inputmode`,
+`enterkeyhint`, `readonly`, and `description`. The
 `description` value is resolved from `aria-describedby` or `aria-description`.
 These attributes are especially important for custom controls that are exposed
 through ARIA roles instead of native form elements.
@@ -367,6 +369,8 @@ attributes SHOULD be preserved when present:
 | `aria-controls`  | `controls`  | string          |
 | `aria-haspopup`  | `haspopup`  | boolean/string  |
 | `aria-invalid`   | `invalid`   | boolean/string  |
+| `aria-autocomplete` | `autocomplete` | string      |
+| `aria-activedescendant` | `active_descendant` | string |
 
 Values `"true"` and `"false"` MUST be normalized to boolean. Other string
 values (e.g. `aria-current="page"`, `aria-checked="mixed"`, or

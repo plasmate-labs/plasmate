@@ -50,8 +50,10 @@ Interactive form controls include action-state cues such as `[enabled]`,
 `[blocked_reason=readonly]`, `[cache_key=plasmate-action:v1:...]`, `[required]`, `[group="Billing"]`,
 `[checked="true"]`, `[expanded="false"]`, `[pressed="false"]`,
 `[selected="true"]`, `[current="page"]`, `[controls="menu-id"]`,
-`[haspopup="menu"]`, `[autocomplete="email"]`, `[maxlength="64"]`,
-`[pattern="..."]`, `[invalid="grammar"]`, and `[description="..."]`. Agents should use those cues before calling
+`[haspopup="menu"]`, `[autocomplete="email"]`, `[inputmode="email"]`,
+`[enterkeyhint="next"]`, `[maxlength="64"]`, `[pattern="..."]`,
+`[invalid="grammar"]`, `[aria_autocomplete="list"]`,
+`[active_descendant="suggestion-1"]`, and `[description="..."]`. Agents should use those cues before calling
 `plasmate_click` or `plasmate_type`, and can use cache keys to dedupe repeated
 local action menus.
 
