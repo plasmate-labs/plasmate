@@ -9,19 +9,48 @@ FIXTURE_PATH = (
     / "fixtures"
     / "action-availability.som.json"
 )
+EXPECTATIONS_PATH = (
+    Path(__file__).resolve().parents[2]
+    / "fixtures"
+    / "action-availability.expected.json"
+)
 
 
 def load_action_availability_fixture():
     return json.loads(FIXTURE_PATH.read_text())
 
 
+def load_action_availability_expectations():
+    return json.loads(EXPECTATIONS_PATH.read_text())["action_targets"]
+
+
 def test_build_context_surfaces_action_availability():
     extractor = PlasmateExtractor.__new__(PlasmateExtractor)
     som = load_action_availability_fixture()
+    expected_targets = load_action_availability_expectations()
 
     context = extractor._build_context(som)
+    context_lines = context.splitlines()
 
-    assert '[e_email] text_input "Work email" (type) [enabled] [cache_key=plasmate-action:v1:91875850] [required] [group=Account] [type=email]' in context
-    assert '[e_save] button "Save" (click) [disabled] [blocked_reason=disabled] [cache_key=plasmate-action:v1:4d0e8356]' in context
-    assert '[e_plan] select "Plan" (select) [enabled] [cache_key=plasmate-action:v1:54c75f00] [required] [group=Billing]' in context
-    assert "Unavailable until required fields are complete" in context
+    for target in expected_targets:
+        line = next(line for line in context_lines if f'[{target["id"]}]' in line)
+
+        assert f'{target["role"]} "{target["label"]}"' in line
+        assert f'[cache_key={target["cache_key"]}]' in line
+        if target["enabled"]:
+            assert "[enabled]" in line
+        else:
+            assert "[disabled]" in line
+        if target.get("blocked_reason"):
+            assert f'[blocked_reason={target["blocked_reason"]}]' in line
+        if target.get("required"):
+            assert "[required]" in line
+        if target.get("group"):
+            assert f'[group={target["group"]}]' in line
+        if target.get("input_type"):
+            assert f'[type={target["input_type"]}]' in line
+        if target.get("description"):
+            assert target["description"] in line
+
+    cache_keys = [target["cache_key"] for target in expected_targets]
+    assert len(cache_keys) == len(set(cache_keys))

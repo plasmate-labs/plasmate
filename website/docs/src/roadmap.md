@@ -166,6 +166,14 @@ Current browser-agent competitors are making action memory part of daily app cod
 - **Prompt context should show cache identity**: Browser Use and LangChain text outputs should render cache keys beside availability so repeated workflows can dedupe targets without raw SOM recovery.
 - **Shared fixtures are the next guardrail**: cache-key parity should move from focused adapter tests into a cross-adapter fixture runner.
 
+### 2026-05-13 Shared Expectation Manifest Adjustment
+
+The market now rewards tools that make reusable action surfaces boringly consistent. Playwright MCP refs, Stagehand cached actions, and Browserbase or Cloudflare traces all set user expectations that the current action contract can be trusted. Plasmate's broad repo surface should turn that into an advantage by keeping adapter tests wired to a single expected action manifest.
+
+- **One fixture, one contract**: Browser Use, LangChain, and Vercel AI should consume the same expected ids, labels, availability, blocked reasons, cache keys, required flags, groups, and descriptions.
+- **Drift should fail centrally**: when action-plan semantics change, the SOM fixture and expected manifest should change together instead of silently updating hard-coded assertions in each adapter.
+- **Next release gate**: extend the manifest into parser packages and SDKs, then wrap all checks in one release command.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -273,6 +281,9 @@ Current browser-agent competitors are making action memory part of daily app cod
 - [x] Vercel AI runtime fixture test for extraction, filtering, and formatting
 - [x] Vercel AI deterministic action target cache keys
 - [x] Python and Node parser deterministic action-plan cache keys
+- [x] Go SDK deterministic action-plan cache keys
+- [x] Browser Use and LangChain action cache-key prompt rendering
+- [x] Shared action-availability expectation manifest for Browser Use, LangChain, and Vercel AI
 - [x] Browser Use and LangChain package version exports match package metadata
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
@@ -282,5 +293,6 @@ Current browser-agent competitors are making action memory part of daily app cod
 - [ ] Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners
 - [x] Promote adapter availability checks into shared cross-adapter fixtures
 - [x] Add runtime Vercel AI fixture tests once the package has a local test runner
-- [ ] Promote action-plan cache keys into Go, Browser Use, and LangChain
+- [ ] Extend shared action-availability expectations into parser-package and SDK conformance tests
+- [ ] Add one release command for Browser Use, LangChain, Vercel AI, parser-package, and SDK fixture checks
 - [ ] WebMCP/watchlist research spike: track whether browser-native tool exposure changes SOM adapter strategy

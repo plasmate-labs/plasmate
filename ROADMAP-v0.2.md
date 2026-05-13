@@ -348,6 +348,23 @@ portable across all high-use SDK and framework surfaces.
 3. **Shared fixtures are the next guardrail**: cache-key parity should move
    from focused adapter tests into a cross-adapter fixture runner.
 
+### 2026-05-13 Shared Expectation Manifest Adjustment
+
+The market now rewards tools that make reusable action surfaces boringly
+consistent. Playwright MCP refs, Stagehand cached actions, and Browserbase or
+Cloudflare traces all set user expectations that the current action contract
+can be trusted. Plasmate's broad repo surface should turn that into an
+advantage by keeping adapter tests wired to a single expected action manifest.
+
+1. **One fixture, one contract**: Browser Use, LangChain, and Vercel AI should
+   consume the same expected ids, labels, availability, blocked reasons, cache
+   keys, required flags, groups, and descriptions.
+2. **Drift should fail centrally**: when action-plan semantics change, the SOM
+   fixture and expected manifest should change together instead of silently
+   updating hard-coded assertions in each adapter.
+3. **Next release gate**: extend the manifest into parser packages and SDKs,
+   then wrap all checks in one release command.
+
 ## Architecture
 
 ```
@@ -588,6 +605,13 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   export `GetActionPlanCacheKey()` for worker-side action memory.
 - Browser Use and LangChain context renderers now include action `cache_key`
   flags, keeping prompt text aligned with parser action plans.
+- Shared adapter action-availability expectations are now centralized in
+  `integrations/fixtures/action-availability.expected.json`.
+- Browser Use, LangChain, and Vercel AI fixture tests now consume the shared
+  expectation manifest for availability, blocked reasons, required state,
+  groups, descriptions, and action cache keys.
+- Integration fixture documentation now explains how to update SOM fixtures and
+  expected action contracts together.
 - Browser Use and LangChain package `__version__` exports now match package
   metadata.
 - Selector handling now trims whitespace and supports documented region ids

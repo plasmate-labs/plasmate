@@ -49,6 +49,39 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-13T10:09:38Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first. The automation worktree
+  still cannot write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate28/FETCH_HEAD`
+  (`Operation not permitted`). Retrying from the primary checkout was blocked
+  by DNS resolution for `github.com`, so this run continued from current local
+  HEAD `c7961bb`.
+- Market direction: current official docs still validate Plasmate's local-first
+  action-contract wedge. Playwright MCP snapshots expose snapshot-bound refs,
+  Stagehand/Browserbase cache actions and selectors to reduce repeated LLM
+  calls, Firecrawl Interact and Browser Use Cloud sell managed sessions and
+  profiles, and Cloudflare Browser Run/WebMCP points toward typed
+  browser-native tools. The sticky path remains a portable local SOM action
+  surface with shared conformance checks across adapters.
+- Code changes: added
+  `integrations/fixtures/action-availability.expected.json` as the shared
+  expected compact action-target contract; Browser Use and LangChain tests now
+  validate rendered prompt context against that manifest; Vercel AI runtime
+  tests now compare extracted action targets against the same manifest and
+  verify cache-key uniqueness.
+- Docs changes: added integration fixture documentation; updated PRD and
+  roadmap source docs plus generated website docs with the fixture-manifest
+  rationale and next step to extend the manifest into parser-package and SDK
+  conformance tests.
+- Verification: Browser Use adapter test passed with repo-local
+  `som_parser`; LangChain adapter test passed with the existing Python
+  3.14/Pydantic v1 warning from `langchain_core`; Vercel AI `npm test`
+  passed; `node website/build.mjs` rebuilt 39 pages; `git diff --check`
+  passed; `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build`
+  passed with existing warnings; `cargo test --lib -- --test-threads=1`
+  passed 245 tests with existing warnings.
+
 ### 2026-05-13T09:10:00Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first. The automation worktree

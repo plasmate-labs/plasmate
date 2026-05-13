@@ -13,10 +13,30 @@ const fixtureUrl = new URL(
   '../../fixtures/action-availability.som.json',
   import.meta.url
 )
+const expectationsUrl = new URL(
+  '../../fixtures/action-availability.expected.json',
+  import.meta.url
+)
 const fixture = JSON.parse(await readFile(fixtureUrl, 'utf8'))
+const expectations = JSON.parse(await readFile(expectationsUrl, 'utf8'))
+const expectedTargets = expectations.action_targets
 const targets = extractPlasmateActionTargets(fixture)
 
-assert.equal(targets.length, 3)
+assert.equal(targets.length, expectedTargets.length)
+
+for (const expected of expectedTargets) {
+  const target = targets.find((item) => item.id === expected.id)
+  assert.ok(target, `missing ${expected.id}`)
+
+  for (const [key, value] of Object.entries(expected)) {
+    assert.deepEqual(target[key], value, `${expected.id}.${key}`)
+  }
+}
+
+assert.equal(
+  new Set(expectedTargets.map((target) => target.cache_key)).size,
+  expectedTargets.length
+)
 
 const email = targets.find((target) => target.id === 'e_email')
 assert.deepEqual(email, {

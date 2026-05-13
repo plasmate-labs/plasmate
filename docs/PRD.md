@@ -213,6 +213,15 @@ stickier answer is local action memory with a consistent `cache_key` in Go,
 Browser Use, LangChain, Vercel AI, and parser packages so teams can reuse
 targets without switching to hosted selector storage.
 
+2026-05-13 fixture-manifest read: official docs and competitor positioning keep
+raising the same adoption bar: structured refs, cacheable actions, and hosted
+session traces only retain users if the action surface is trustworthy. Plasmate
+should treat its broad repo surface as one product contract. The next
+stickiness step is a shared expectation manifest that Browser Use, LangChain,
+and Vercel AI consume directly so availability, blocked reasons, required
+state, group context, descriptions, and cache keys cannot drift in separate
+adapter tests.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -239,6 +248,19 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-13:
+  - Added `integrations/fixtures/action-availability.expected.json` as the
+    shared expected compact action-target contract for the action availability
+    SOM fixture.
+  - Browser Use adapter tests now validate rendered page context against the
+    shared expectation manifest instead of hard-coded local cache-key and
+    availability assertions.
+  - LangChain adapter tests now validate SOM text output against the same
+    expectation manifest, keeping text-only prompts aligned with Browser Use
+    and Vercel AI.
+  - Vercel AI runtime fixture tests now compare extracted action targets with
+    the shared manifest and verify cache-key uniqueness across the fixture.
+  - Added integration fixture documentation so future adapter updates know to
+    update SOM fixtures and expected action contracts together.
   - Go SDK action plans now include deterministic `CacheKey` values plus
     `GetActionPlanCacheKey()`, completing cache-key parity for durable worker
     services that consume SOM outside Python/Node agent orchestration.
@@ -439,11 +461,11 @@ and adapter docs over one-off integration logic.
   snapshots.
 - Wire `015-action-state` into cross-adapter parser/SDK conformance runners so
   inherited disabled state stays synchronized outside Rust.
-- Promote the new Browser Use and LangChain adapter availability checks into a
-  shared cross-adapter fixture runner that also exercises the Vercel AI
-  action-plan preparation helpers.
-- Promote action-plan `cache_key` checks into a shared cross-adapter fixture
-  runner so future SDK/framework changes cannot drift from parser output.
+- Extend the new shared adapter expectation manifest into parser-package, Go
+  SDK, and Python/Node SDK conformance tests so framework fixtures and SDK
+  action-plan helpers fail from the same contract.
+- Promote the shared fixture manifest into one release command that runs
+  Browser Use, LangChain, Vercel AI, parser-package, and SDK checks together.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched
