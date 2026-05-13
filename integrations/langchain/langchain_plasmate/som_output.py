@@ -191,12 +191,17 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
     if attrs.get("disabled") is True:
         flags.append("[disabled]")
         flags.append("[blocked_reason=disabled]")
+    elif attrs.get("readonly") is True:
+        flags.append("[readonly]")
+        flags.append("[blocked_reason=readonly]")
     elif interactive:
         flags.append("[enabled]")
     if interactive:
         flags.append(f"[cache_key={_action_cache_key(elem)}]")
     if attrs.get("required") is True:
         flags.append("[required]")
+    if attrs.get("readonly") is True and "[readonly]" not in flags:
+        flags.append("[readonly]")
     if attrs.get("value"):
         flags.append(f'[value="{attrs["value"]}"]')
     if "checked" in attrs:

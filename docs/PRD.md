@@ -300,6 +300,15 @@ but action menus should expose relationship state (`aria-current`,
 current, what panel a control affects, and whether an action opens a menu,
 listbox, or dialog.
 
+2026-05-13 readonly/value read: fresh official-doc review keeps reinforcing
+state validation before action reuse. Playwright MCP refs stay scoped to the
+current snapshot, Stagehand `observe()` caches need validation before replay,
+Firecrawl and Browser Use package persistent sessions around changing forms,
+and hosted browser platforms sell traces for debugging state drift. Plasmate's
+local-first answer should keep compact action menus honest by preserving
+read-only blockers and current textarea/select values, while parsing ARIA
+boolean state like production markup rather than ideal lowercase examples.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -326,6 +335,19 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-13:
+  - Native read-only input and textarea controls now preserve `attrs.readonly`;
+    parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
+    AI action-plan surfaces expose `readonly`, mark those targets unavailable,
+    and use `blocked_reason="readonly"` without changing deterministic
+    `cache_key` values.
+  - Textarea content and selected `<select>` options now surface as compact
+    target `value` fields, giving agents current form state before they reuse a
+    cached type/select plan.
+  - ARIA boolean state preservation now trims and parses `TRUE`/`FALSE`
+    case-insensitively, keeping `expanded`, `pressed`, and related cues typed
+    as booleans on messy production markup.
+  - The shared action-availability manifest now asserts read-only blockers and
+    selected-option values across parser, SDK, and framework surfaces.
   - The Rust SOM compiler and JSON Schema now preserve `aria-controls` and
     `aria-haspopup` in `attrs.aria`, joining existing `aria-current` support
     for browser-like action relationship state.
@@ -619,8 +641,8 @@ and adapter docs over one-off integration logic.
   prompts.
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked
   or selected an element.
-- Add conformance cases for ARIA-heavy SaaS pages, especially disabled and
-  required custom controls, and compare output against Playwright MCP
+- Add conformance cases for ARIA-heavy SaaS pages, especially disabled,
+  required, and read-only custom controls, and compare output against Playwright MCP
   snapshots.
 - Wire `015-action-state` into cross-adapter parser/SDK conformance runners so
   inherited disabled state stays synchronized outside Rust.

@@ -37,6 +37,7 @@ export interface PlasmateActionTarget {
   disabled?: boolean
   blocked_reason?: string
   required?: boolean
+  readonly?: boolean
   description?: string
   checked?: boolean | string
   expanded?: boolean
@@ -105,7 +106,7 @@ export interface PreparePlasmateActionPlanOptions {
 export const plasmateActionGuidance =
   'Use Plasmate SOM element ids for browser actions. Treat action targets ' +
   'with enabled=false or blocked_reason as unavailable, and prefer ' +
-  'cache_key, required, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
+  'cache_key, required, readonly, value, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
 
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined
@@ -154,6 +155,7 @@ export function isPlasmateActionTargetAvailable(
   return (
     target.enabled !== false &&
     target.disabled !== true &&
+    target.readonly !== true &&
     !target.blocked_reason
   )
 }
@@ -171,7 +173,9 @@ export function normalizePlasmateActionTarget(
     cache_key:
       target.cache_key ?? getPlasmateActionTargetCacheKey(target),
     enabled,
-    ...(enabled ? {} : { blocked_reason: target.blocked_reason ?? 'disabled' }),
+    ...(enabled
+      ? {}
+      : { blocked_reason: target.blocked_reason ?? (target.readonly ? 'readonly' : 'disabled') }),
   }
 }
 
@@ -272,12 +276,19 @@ export function extractPlasmateActionTargets(
         target.required = attrs.required
       }
 
+      if (typeof attrs.readonly === 'boolean') {
+        target.readonly = attrs.readonly
+      }
+
       if (typeof attrs.disabled === 'boolean') {
         target.disabled = attrs.disabled
         if (attrs.disabled) {
           target.enabled = false
           target.blocked_reason = 'disabled'
         }
+      } else if (attrs.readonly === true) {
+        target.enabled = false
+        target.blocked_reason = 'readonly'
       }
 
       return normalizePlasmateActionTarget(target)
@@ -326,6 +337,7 @@ export function formatPlasmateActionPlan(
         ? ` [blocked_reason=${target.blocked_reason}]`
         : ''
       const required = target.required ? ' [required]' : ''
+      const readonly = target.readonly ? ' [readonly]' : ''
       const inputType = target.input_type ? ` [type=${target.input_type}]` : ''
       const value = target.value ? ` [value=${target.value}]` : ''
       const placeholder = target.placeholder
@@ -349,7 +361,7 @@ export function formatPlasmateActionPlan(
         ? ` [description=${target.description}]`
         : ''
 
-      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${inputType}${value}${placeholder}${checked}${expanded}${pressed}${selected}${current}${controls}${haspopup}${group}${description}`
+      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${readonly}${inputType}${value}${placeholder}${checked}${expanded}${pressed}${selected}${current}${controls}${haspopup}${group}${description}`
     })
     .join('\n')
 }

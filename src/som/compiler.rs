@@ -1657,11 +1657,18 @@ fn build_element_attrs(
             }
         }
         "textarea" => {
+            let value = heuristics::normalize_text(&get_text_content(node));
+            if !value.is_empty() {
+                map.insert("value".into(), json!(value));
+            }
             if let Some(ph) = attrs.iter().find(|(n, _)| n == "placeholder") {
                 map.insert("placeholder".into(), json!(ph.1));
             }
             if has_attr(attrs, "required") {
                 map.insert("required".into(), json!(true));
+            }
+            if has_attr(attrs, "readonly") {
+                map.insert("readonly".into(), json!(true));
             }
             if inherited_disabled || has_attr(attrs, "disabled") {
                 map.insert("disabled".into(), json!(true));
@@ -1682,6 +1689,9 @@ fn build_element_attrs(
             }
             if has_attr(attrs, "required") {
                 map.insert("required".into(), json!(true));
+            }
+            if let Some(value) = selected_select_value(&options) {
+                map.insert("value".into(), json!(value));
             }
             if inherited_disabled || has_attr(attrs, "disabled") {
                 map.insert("disabled".into(), json!(true));
@@ -1817,6 +1827,9 @@ fn build_element_attrs(
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "autocomplete") {
         map.insert("autocomplete".into(), json!(value));
     }
+    if has_attr(attrs, "readonly") {
+        map.insert("readonly".into(), json!(true));
+    }
     if let Some(description) = resolve_description(attrs, &ctx.label_index) {
         map.insert("description".into(), json!(description));
     }
@@ -1843,16 +1856,17 @@ fn build_element_attrs(
     for (html_attr, som_key) in aria_states {
         if let Some((_, val)) = attrs.iter().find(|(n, _)| n == *html_attr) {
             // Boolean ARIA attrs: "true"/"false" -> bool; others kept as string
-            match val.as_str() {
+            let normalized = val.trim();
+            match normalized.to_ascii_lowercase().as_str() {
                 "true" => {
                     aria_map.insert((*som_key).into(), json!(true));
                 }
                 "false" => {
                     aria_map.insert((*som_key).into(), json!(false));
                 }
-                other => {
+                _ => {
                     // e.g. aria-current="page", aria-checked="mixed"
-                    aria_map.insert((*som_key).into(), json!(other));
+                    aria_map.insert((*som_key).into(), json!(normalized));
                 }
             }
         }
@@ -1866,6 +1880,22 @@ fn build_element_attrs(
     } else {
         Some(serde_json::Value::Object(map))
     }
+}
+
+fn selected_select_value(options: &[serde_json::Value]) -> Option<String> {
+    options.iter().find_map(|option| {
+        option
+            .get("selected")
+            .and_then(|selected| selected.as_bool())
+            .filter(|selected| *selected)
+            .and_then(|_| {
+                option
+                    .get("value")
+                    .and_then(|value| value.as_str())
+                    .or_else(|| option.get("text").and_then(|value| value.as_str()))
+            })
+            .map(str::to_string)
+    })
 }
 
 fn build_children(

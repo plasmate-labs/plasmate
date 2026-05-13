@@ -40,11 +40,13 @@ def test_build_context_surfaces_action_availability():
         if target["enabled"]:
             assert "[enabled]" in line
         else:
-            assert "[disabled]" in line
+            assert f'[{target.get("blocked_reason", "blocked")}]' in line
         if target.get("blocked_reason"):
             assert f'[blocked_reason={target["blocked_reason"]}]' in line
         if target.get("required"):
             assert "[required]" in line
+        if target.get("readonly"):
+            assert "[readonly]" in line
         if target.get("group"):
             assert f'[group={target["group"]}]' in line
         if target.get("input_type"):

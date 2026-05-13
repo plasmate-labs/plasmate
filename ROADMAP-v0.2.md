@@ -516,6 +516,25 @@ the ARIA state agents need before they choose a cached action.
    `aria-selected` should expose that state across parser packages, SDKs, and
    framework prompt renderers without changing target cache keys.
 
+### 2026-05-13 Readonly and Selected-Value Adjustment
+
+Current browser-agent products keep moving from one-off page observation to
+validated action replay. Playwright MCP refs are snapshot-scoped, Stagehand
+`observe()` caches need action validation, and Firecrawl/Browser Use sell
+persistent sessions around forms whose state can drift between runs. Plasmate's
+local-first roadmap should make compact action menus safer to reuse by carrying
+the small blockers and current values agents otherwise recover from raw DOM.
+
+1. **Read-only is an execution gate**: text inputs and textareas with
+   `readonly` should be visible in SOM and action plans as unavailable targets
+   with `blocked_reason="readonly"`.
+2. **Current values include textarea/select state**: cached plans need current
+   textarea text and selected option values, not only `value` attributes on
+   inputs.
+3. **Production ARIA is not always lowercase**: ARIA boolean preservation
+   should trim and parse casing variants so compact state remains typed and
+   comparable across SDKs.
+
 ## Architecture
 
 ```
@@ -830,6 +849,17 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   expanded/pressed/selected state alongside value and checked state.
 - The shared action-availability manifest now asserts ARIA state cues without
   changing existing deterministic action `cache_key` values.
+- Native read-only input and textarea controls now preserve `attrs.readonly`,
+  and parser/SDK/framework action-plan surfaces mark those targets unavailable
+  with `blocked_reason="readonly"` while preserving cache-key stability.
+- Textarea content and selected `<select>` options now populate compact target
+  `value` fields, extending current-control state beyond input `value`
+  attributes.
+- ARIA state preservation now trims and parses case-insensitive boolean values,
+  so `aria-expanded=" FALSE "` and `aria-pressed="TRUE"` remain typed booleans.
+- The shared action-availability manifest now asserts read-only blockers and
+  selected-option values across Browser Use, LangChain, Vercel AI, parser
+  packages, and SDKs.
 
 ## Dependencies to Add
 

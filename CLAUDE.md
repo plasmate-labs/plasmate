@@ -49,6 +49,39 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-13T20:08:54Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first. The automation worktree
+  still cannot write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate38/FETCH_HEAD`
+  (`Operation not permitted`). This run continued from locally known
+  `origin/master`/`HEAD` `0a02785`.
+- Market direction: current official docs keep validating reusable action
+  state over a hosted-browser pivot. Playwright MCP snapshots scope refs to a
+  fresh accessibility snapshot, Stagehand `observe()` and action caching need
+  validation before replay, and Firecrawl/Browser Use package persistent
+  sessions around the same form-state drift problem. Plasmate's sticky response
+  remains a local, portable SOM action contract across the broad SDK and
+  adapter surface.
+- Code changes: the Rust compiler now preserves native `readonly` state,
+  textarea values, selected `<select>` values, and case-insensitive/trimmed
+  ARIA booleans. Parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+  and Vercel AI action-plan helpers now expose `readonly`, mark those targets
+  unavailable with `blocked_reason="readonly"`, and keep deterministic
+  `cache_key` values target-focused.
+- Fixture and docs changes: the shared action-availability fixture now asserts
+  read-only blockers and selected-option values. PRD, roadmap, SOM spec,
+  integration docs, schema, and generated website docs were updated with the
+  read-only/value-state rationale and next conformance direction.
+- Verification: `./scripts/action-manifest-conformance.sh --quick` passed;
+  `./scripts/action-manifest-conformance.sh --full` passed; `node
+  website/build.mjs` rebuilt 39 pages; `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target
+  cargo build` passed with existing warnings; `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target
+  cargo test --lib -- --test-threads=1` passed 246 tests; focused
+  `cargo test --test som_compiler_test test_form_state_values_and_readonly_are_preserved
+  -- --test-threads=1` passed; `git diff --check` passed.
+- Commit/push state: pending at the time of this state entry.
+
 ### 2026-05-13T19:08:47Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first. The automation worktree

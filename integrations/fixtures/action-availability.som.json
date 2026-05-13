@@ -25,6 +25,7 @@
             "value": "ops@example.com",
             "placeholder": "name@company.com",
             "required": true,
+            "readonly": true,
             "description": "Use your work email",
             "group": "Account"
           }
@@ -46,6 +47,7 @@
           "actions": ["select"],
           "attrs": {
             "required": true,
+            "value": "team",
             "aria": {
               "expanded": false,
               "controls": "plan-options",
@@ -53,7 +55,7 @@
             },
             "options": [
               { "value": "starter", "text": "Starter" },
-              { "value": "team", "text": "Team" }
+              { "value": "team", "text": "Team", "selected": true }
             ],
             "group": "Billing"
           }

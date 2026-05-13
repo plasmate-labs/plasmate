@@ -46,8 +46,8 @@ URL: https://news.ycombinator.com
 ```
 
 Interactive form controls include action-state cues such as `[enabled]`,
-`[disabled]`, `[blocked_reason=disabled]`,
-`[cache_key=plasmate-action:v1:...]`, `[required]`, `[group="Billing"]`,
+`[disabled]`, `[readonly]`, `[blocked_reason=disabled]`,
+`[blocked_reason=readonly]`, `[cache_key=plasmate-action:v1:...]`, `[required]`, `[group="Billing"]`,
 `[checked="true"]`, `[expanded="false"]`, `[pressed="false"]`,
 `[selected="true"]`, `[current="page"]`, `[controls="menu-id"]`,
 `[haspopup="menu"]`, and `[description="..."]`. Agents should use those cues before calling

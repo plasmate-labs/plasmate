@@ -47,6 +47,7 @@ type ElementAttrs struct {
 	Value           *string        `json:"value,omitempty"`
 	Placeholder     *string        `json:"placeholder,omitempty"`
 	Required        *bool          `json:"required,omitempty"`
+	Readonly        *bool          `json:"readonly,omitempty"`
 	Disabled        *bool          `json:"disabled,omitempty"`
 	Checked         *bool          `json:"checked,omitempty"`
 	Group           *string        `json:"group,omitempty"`

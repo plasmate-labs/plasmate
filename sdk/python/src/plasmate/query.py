@@ -116,11 +116,16 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                         item[aria_key] = attrs.aria[aria_key]
             if attrs.required is not None:
                 item["required"] = attrs.required
+            if attrs.readonly is not None:
+                item["readonly"] = attrs.readonly
             if attrs.disabled is not None:
                 item["disabled"] = attrs.disabled
                 if attrs.disabled:
                     item["enabled"] = False
                     item["blocked_reason"] = "disabled"
+            elif attrs.readonly:
+                item["enabled"] = False
+                item["blocked_reason"] = "readonly"
             if attrs.group:
                 item["group"] = attrs.group
         item["cache_key"] = get_action_plan_cache_key(item)

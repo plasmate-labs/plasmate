@@ -355,6 +355,62 @@ fn test_custom_controls_keep_actionability_attrs() {
 }
 
 #[test]
+fn test_form_state_values_and_readonly_are_preserved() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Form State</title></head>
+<body><main>
+    <input type="email" aria-label="Email" readonly value="ops@example.com">
+    <textarea aria-label="Notes" readonly>Already reviewed</textarea>
+    <select aria-label="Plan">
+        <option value="starter">Starter</option>
+        <option value="team" selected>Team</option>
+    </select>
+    <button aria-label="Menu" aria-expanded=" FALSE " aria-pressed="TRUE"></button>
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let elems = all_elements(&som);
+
+    let email = elems
+        .iter()
+        .find(|e| e.role == ElementRole::TextInput && e.label.as_deref() == Some("Email"))
+        .expect("readonly input should be preserved");
+    let email_attrs = email.attrs.as_ref().expect("input attrs should exist");
+    assert_eq!(email_attrs["readonly"], true);
+    assert_eq!(email_attrs["value"], "ops@example.com");
+
+    let textarea = elems
+        .iter()
+        .find(|e| e.role == ElementRole::Textarea)
+        .expect("textarea should be preserved");
+    let textarea_attrs = textarea
+        .attrs
+        .as_ref()
+        .expect("textarea attrs should exist");
+    assert_eq!(textarea_attrs["readonly"], true);
+    assert_eq!(textarea_attrs["value"], "Already reviewed");
+
+    let select = elems
+        .iter()
+        .find(|e| e.role == ElementRole::Select)
+        .expect("select should be preserved");
+    let select_attrs = select.attrs.as_ref().expect("select attrs should exist");
+    assert_eq!(select_attrs["value"], "team");
+
+    let button = elems
+        .iter()
+        .find(|e| e.role == ElementRole::Button)
+        .expect("button should be preserved");
+    let aria = button
+        .attrs
+        .as_ref()
+        .and_then(|attrs| attrs.get("aria"))
+        .expect("button aria state should be preserved");
+    assert_eq!(aria["expanded"], false);
+    assert_eq!(aria["pressed"], true);
+}
+
+#[test]
 fn test_accessible_labels_from_label_for_and_labelledby() {
     let html = r#"<!DOCTYPE html>
 <html><head><title>Labels</title></head>

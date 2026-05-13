@@ -98,6 +98,7 @@ class ElementAttrs(BaseModel):
     value: Optional[str] = None
     placeholder: Optional[str] = None
     required: Optional[bool] = None
+    readonly: Optional[bool] = None
     disabled: Optional[bool] = None
     checked: Optional[bool] = None
     group: Optional[str] = None

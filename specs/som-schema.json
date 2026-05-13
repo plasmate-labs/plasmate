@@ -139,6 +139,7 @@
             "value": { "type": "string" },
             "placeholder": { "type": "string" },
             "required": { "type": "boolean" },
+            "readonly": { "type": "boolean" },
             "disabled": { "type": "boolean" },
             "checked": { "type": "boolean" },
             "group": { "type": "string" },

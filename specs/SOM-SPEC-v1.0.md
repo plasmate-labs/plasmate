@@ -244,6 +244,7 @@ field MUST be omitted when the object would be empty.
 | `value`      | string  | Current input value. |
 | `placeholder`| string  | Placeholder text. |
 | `required`   | boolean | Present and `true` when the field is required. |
+| `readonly`   | boolean | Present and `true` when the field is read-only. |
 | `disabled`   | boolean | Present and `true` when the field is disabled. |
 | `checked`    | boolean | For checkbox/radio: present and `true` when checked. |
 | `group`      | string  | For radio inputs: the `name` attribute identifying the radio group. |
@@ -335,7 +336,8 @@ Each **Option** object:
 #### Global actionability attributes
 
 Implementations SHOULD preserve common actionability attributes on any element:
-`contenteditable`, `tabindex`, `name`, `autocomplete`, and `description`. The
+`contenteditable`, `tabindex`, `name`, `autocomplete`, `readonly`, and
+`description`. The
 `description` value is resolved from `aria-describedby` or `aria-description`.
 These attributes are especially important for custom controls that are exposed
 through ARIA roles instead of native form elements.

@@ -189,6 +189,7 @@ type ActionPlanItem struct {
 	Controls      *string     `json:"controls,omitempty"`
 	HasPopup      interface{} `json:"haspopup,omitempty"`
 	Required      *bool       `json:"required,omitempty"`
+	Readonly      *bool       `json:"readonly,omitempty"`
 	Disabled      *bool       `json:"disabled,omitempty"`
 	BlockedReason *string     `json:"blocked_reason,omitempty"`
 	Group         *string     `json:"group,omitempty"`
@@ -269,10 +270,15 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.HasPopup = el.Attrs.Aria.HasPopup
 			}
 			item.Required = el.Attrs.Required
+			item.Readonly = el.Attrs.Readonly
 			item.Disabled = el.Attrs.Disabled
 			if el.Attrs.Disabled != nil && *el.Attrs.Disabled {
 				item.Enabled = false
 				reason := "disabled"
+				item.BlockedReason = &reason
+			} else if el.Attrs.Readonly != nil && *el.Attrs.Readonly {
+				item.Enabled = false
+				reason := "readonly"
 				item.BlockedReason = &reason
 			}
 			item.Group = el.Attrs.Group

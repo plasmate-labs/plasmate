@@ -64,8 +64,9 @@ export interface ActionPlanItem {
   controls?: string;
   haspopup?: boolean | string;
   required?: boolean;
+  readonly?: boolean;
   disabled?: boolean;
-  blocked_reason?: 'disabled';
+  blocked_reason?: 'disabled' | 'readonly';
   group?: string;
 }
 
@@ -130,12 +131,16 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.aria?.controls !== undefined) item.controls = el.attrs.aria.controls;
     if (el.attrs?.aria?.haspopup !== undefined) item.haspopup = el.attrs.aria.haspopup;
     if (el.attrs?.required !== undefined) item.required = el.attrs.required;
+    if (el.attrs?.readonly !== undefined) item.readonly = el.attrs.readonly;
     if (el.attrs?.disabled !== undefined) {
       item.disabled = el.attrs.disabled;
       if (el.attrs.disabled) {
         item.enabled = false;
         item.blocked_reason = 'disabled';
       }
+    } else if (el.attrs?.readonly) {
+      item.enabled = false;
+      item.blocked_reason = 'readonly';
     }
     if (el.attrs?.group) item.group = el.attrs.group;
     return {

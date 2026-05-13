@@ -59,7 +59,7 @@ const { text } = await generateText({
 
 `plasmateActionGuidance` tells the model to honor SOM action targets with
 `cache_key`, `enabled`, `blocked_reason`, `required`, `description`,
-`placeholder`, `group`, `value`, `checked`, `expanded`, `pressed`, and
+`placeholder`, `group`, `readonly`, `value`, `checked`, `expanded`, `pressed`, and
 `selected`, `current`, `controls`, and `haspopup` fields before selecting or
 reusing browser actions. Use
 `extractPlasmateActionTargets()`, `preparePlasmateActionPlan()`, or
@@ -87,18 +87,18 @@ Spawns `plasmate mcp` as a stdio MCP server and returns tools ready for use with
 
 A short system prompt string for Vercel AI SDK agents. Use it when browsing
 forms or cached workflows so the model skips disabled SOM targets and prefers
-required, described, and grouped controls.
+required, read-only, described, and grouped controls.
 
 ### `isPlasmateActionTargetAvailable(target)`
 
 Returns `false` for compact action targets with `enabled: false`,
-`disabled: true`, or any `blocked_reason`. Use this when trimming an action
+`disabled: true`, `readonly: true`, or any `blocked_reason`. Use this when trimming an action
 menu before a Vercel AI SDK call.
 
 ### `normalizePlasmateActionTarget(target)`
 
 Returns a copy of an action target with explicit `enabled` state. Targets with
-`disabled: true`, `enabled: false`, or any `blocked_reason` normalize to
+`disabled: true`, `readonly: true`, `enabled: false`, or any `blocked_reason` normalize to
 `enabled: false` and keep or receive a `blocked_reason`.
 
 ### `getPlasmateActionTargetCacheKey(target)`
@@ -112,7 +112,7 @@ name, href, input type, group, and placeholder.
 Flattens a raw Plasmate SOM response into compact action targets. It traverses
 nested `children` and `shadow.elements`, copies common action metadata from
 `attrs` (`href`, `name`, `input_type`, `placeholder`, `description`, `required`,
-`disabled`, and `group`), and normalizes availability plus `cache_key` state.
+`disabled`, `readonly`, and `group`), and normalizes availability plus `cache_key` state.
 
 ### `preparePlasmateActionPlan(targets, options?)`
 
