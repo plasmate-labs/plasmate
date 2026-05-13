@@ -273,6 +273,24 @@ keeps every framework aligned with the same compact SOM contract.
 3. **Helpers should filter action menus**: Vercel AI apps need a small runtime
    helper for cached action plans, not only prompt guidance.
 
+### 2026-05-13 Vercel AI Action Menu Adjustment
+
+Current competitor docs keep moving reusable page state into application-level
+workflows. Playwright MCP keeps action refs bound to fresh snapshots, Stagehand
+`observe()` plans actions that can be cached and validated, Browserbase
+foregrounds cached selectors plus observability, and Firecrawl/Browser Use keep
+making managed sessions convenient. Plasmate should keep the local-first wedge
+and make Vercel AI apps treat SOM action plans as a first-class menu before the
+model spends tokens.
+
+1. **Blocked means unavailable**: helper APIs should treat any
+   `blocked_reason` as an execution gate, not just disabled controls.
+2. **Prepare menus before prompting**: apps should normalize, filter, and cap
+   action targets before handing them to `generateText` or `streamText`.
+3. **Prompt formatting is product surface**: compact action-plan text should
+   preserve ids, roles, labels, actions, availability, required state, groups,
+   and descriptions so cached workflows do not need custom glue.
+
 ## Architecture
 
 ```
@@ -489,6 +507,13 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Vercel AI SDK integration exports `PlasmateActionTarget` and
   `isPlasmateActionTargetAvailable()` for filtering cached action menus before
   prompting.
+- Vercel AI availability checks now treat any `blocked_reason` as unavailable,
+  not only disabled controls.
+- Vercel AI SDK integration exports `normalizePlasmateActionTarget()`,
+  `preparePlasmateActionPlan()`, and `formatPlasmateActionPlan()` for
+  application-level action menu preparation.
+- Vercel AI now has fixture-style TypeScript compile coverage for availability,
+  required, group, and description action-plan metadata.
 - Browser Use and LangChain package `__version__` exports now match package
   metadata.
 - Selector handling now trims whitespace and supports documented region ids

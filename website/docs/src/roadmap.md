@@ -134,6 +134,14 @@ Current competitor pressure makes adapter consistency a retention issue. Playwri
 - **Enabled is the default action state**: adapters should mark interactive targets as enabled unless SOM explicitly blocks them.
 - **Helpers should filter action menus**: Vercel AI apps need a small runtime helper for cached action plans, not only prompt guidance.
 
+### 2026-05-13 Vercel AI Action Menu Adjustment
+
+Competitor docs keep moving reusable page state into app workflows: Playwright MCP keeps refs tied to fresh snapshots, Stagehand `observe()` plans cacheable actions, and Browserbase foregrounds cached selectors plus observability. Plasmate should keep the local-first wedge and make Vercel AI apps treat SOM action plans as a first-class menu before the model spends tokens.
+
+- **Blocked means unavailable**: helper APIs should treat any `blocked_reason` as an execution gate, not just disabled controls.
+- **Prepare menus before prompting**: apps should normalize, filter, and cap action targets before handing them to `generateText` or `streamText`.
+- **Prompt formatting is product surface**: compact action-plan text should preserve ids, roles, labels, actions, availability, required state, groups, and descriptions.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -235,6 +243,8 @@ Current competitor pressure makes adapter consistency a retention issue. Playwri
 - [x] Shared adapter action-availability fixture for Browser Use and LangChain
 - [x] LangChain enabled-state fallback for normal interactive targets
 - [x] Vercel AI action-target availability helper
+- [x] Vercel AI action-menu normalization, filtering, and formatting helpers
+- [x] Vercel AI typecheck fixture for compact action-plan helper parity
 - [x] Browser Use and LangChain package version exports match package metadata
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
@@ -243,5 +253,5 @@ Current competitor pressure makes adapter consistency a retention issue. Playwri
 - [ ] Add cross-adapter accessible-description fixtures
 - [ ] Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners
 - [x] Promote adapter availability checks into shared cross-adapter fixtures
-- [ ] Add fixture-backed Vercel AI availability helper tests once package dependencies are pinned in this repo
+- [ ] Add runtime Vercel AI fixture tests once the package has a local test runner
 - [ ] WebMCP/watchlist research spike: track whether browser-native tool exposure changes SOM adapter strategy

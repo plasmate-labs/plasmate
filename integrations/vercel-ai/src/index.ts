@@ -29,6 +29,8 @@ export interface PlasmateTools {
 export interface PlasmateActionTarget {
   id?: string
   role?: string
+  label?: string
+  text?: string
   actions?: string[]
   enabled?: boolean
   disabled?: boolean
@@ -41,6 +43,22 @@ export interface PlasmateActionTarget {
 }
 
 /**
+ * Options for preparing a compact action plan before prompting a model.
+ */
+export interface PreparePlasmateActionPlanOptions {
+  /**
+   * Keep unavailable targets in the returned menu.
+   * Defaults to false so prompts only include targets that can be acted on.
+   */
+  includeUnavailable?: boolean
+
+  /**
+   * Maximum number of action targets to return after filtering.
+   */
+  maxTargets?: number
+}
+
+/**
  * System prompt guidance for Vercel AI SDK agents using Plasmate tools.
  *
  * Plasmate SOM responses expose action targets with stable element ids and
@@ -49,7 +67,7 @@ export interface PlasmateActionTarget {
  */
 export const plasmateActionGuidance =
   'Use Plasmate SOM element ids for browser actions. Treat action targets ' +
-  'with enabled=false or blocked_reason="disabled" as unavailable, and prefer ' +
+  'with enabled=false or blocked_reason as unavailable, and prefer ' +
   'required, description, placeholder, and group fields when choosing form controls.'
 
 /**
@@ -61,8 +79,71 @@ export function isPlasmateActionTargetAvailable(
   return (
     target.enabled !== false &&
     target.disabled !== true &&
-    target.blocked_reason !== 'disabled'
+    !target.blocked_reason
   )
+}
+
+/**
+ * Normalize a compact Plasmate action target without mutating the caller value.
+ */
+export function normalizePlasmateActionTarget(
+  target: PlasmateActionTarget
+): PlasmateActionTarget {
+  const enabled = isPlasmateActionTargetAvailable(target)
+
+  return {
+    ...target,
+    enabled,
+    ...(enabled ? {} : { blocked_reason: target.blocked_reason ?? 'disabled' }),
+  }
+}
+
+/**
+ * Prepare a compact action menu for Vercel AI SDK prompts or cached workflows.
+ */
+export function preparePlasmateActionPlan(
+  targets: readonly PlasmateActionTarget[],
+  options: PreparePlasmateActionPlanOptions = {}
+): PlasmateActionTarget[] {
+  const prepared = targets
+    .map(normalizePlasmateActionTarget)
+    .filter(
+      (target) =>
+        options.includeUnavailable || isPlasmateActionTargetAvailable(target)
+    )
+
+  if (typeof options.maxTargets === 'number' && options.maxTargets >= 0) {
+    return prepared.slice(0, options.maxTargets)
+  }
+
+  return prepared
+}
+
+/**
+ * Format a compact action menu for a model prompt or trace log.
+ */
+export function formatPlasmateActionPlan(
+  targets: readonly PlasmateActionTarget[],
+  options: PreparePlasmateActionPlanOptions = {}
+): string {
+  return preparePlasmateActionPlan(targets, options)
+    .map((target) => {
+      const id = target.id ? `[${target.id}] ` : ''
+      const role = target.role ?? 'target'
+      const name = target.label ?? target.text ?? ''
+      const actions = target.actions?.length
+        ? ` (${target.actions.join(',')})`
+        : ''
+      const state = target.enabled === false ? ' [blocked]' : ' [enabled]'
+      const required = target.required ? ' [required]' : ''
+      const group = target.group ? ` [group=${target.group}]` : ''
+      const description = target.description
+        ? ` [description=${target.description}]`
+        : ''
+
+      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${required}${group}${description}`
+    })
+    .join('\n')
 }
 
 /**

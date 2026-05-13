@@ -50,6 +50,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-13 fixture read: Playwright MCP snapshots and Stagehand cached actions both make state drift costly. Plasmate should turn shared adapter fixtures into a release gate so Browser Use, LangChain, Vercel AI, parser packages, and SDKs all preserve availability, required, group, type, and description cues.
 
+2026-05-13 Vercel AI helper read: app frameworks are where reusable action menus become sticky. Stagehand `observe()` and Browserbase cached selectors normalize precomputed action menus, while Playwright MCP keeps refs tied to the current snapshot. Plasmate should make Vercel AI apps normalize, filter, limit, and format SOM action targets before the model sees them.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -65,6 +67,9 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-13:
+  - Vercel AI action-target availability now treats any `blocked_reason` as unavailable, not only `blocked_reason="disabled"`.
+  - Vercel AI SDK integration now exports `normalizePlasmateActionTarget()`, `preparePlasmateActionPlan()`, and `formatPlasmateActionPlan()` for action-menu preparation before Vercel AI SDK calls.
+  - Added fixture-style TypeScript compile coverage for Vercel AI action helpers using availability, required, group, and description metadata.
   - Added a shared adapter fixture for action availability, required fields, groups, input type, and descriptions.
   - Browser Use and LangChain adapter tests now consume the same fixture, reducing drift between framework context output and parser action plans.
   - LangChain now marks normal interactive targets as `[enabled]` when SOM omits `attrs.disabled`, and includes `[blocked_reason=disabled]` for disabled targets.
@@ -141,7 +146,8 @@ The project already spans a large number of package and integration surfaces: Ru
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked or selected an element.
 - Add conformance cases for ARIA-heavy SaaS pages, especially disabled and required custom controls, and compare output against Playwright MCP snapshots.
 - Wire `015-action-state` into cross-adapter parser/SDK conformance runners so inherited disabled state stays synchronized outside Rust.
-- Promote the shared adapter availability fixture into a cross-adapter runner that also exercises the Vercel AI availability helper once package dependencies are pinned in this repo.
+- Promote the shared adapter availability fixture into a cross-adapter runner that also exercises the Vercel AI action-plan preparation helpers.
+- Add a runtime test runner for the Vercel AI package so the typecheck fixture can become executable fixture-backed coverage.
 - Promote fieldset/legend group semantics into shared conformance fixtures alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched action-plan metadata.
 - Promote the new SDK/parser shadow-root and Go action-plan tests into shared conformance fixtures that run against every adapter before release.

@@ -49,6 +49,36 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-13T06:07:54Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first, but this automation
+  worktree still cannot write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate24/FETCH_HEAD`
+  (`Operation not permitted`). The worktree was already at locally known
+  `origin/master` `ebba72f`. `gh auth status` also reports an invalid saved
+  token, so PR/merge work must use git remotes rather than the GitHub CLI until
+  re-authenticated.
+- Market direction: current official docs still validate Plasmate's local-first
+  action-menu wedge. Playwright MCP uses accessibility snapshots with refs,
+  Stagehand/Browserbase push `observe()` and selector/action caching, and
+  Firecrawl/Browser Use keep crowding hosted browser sessions. The startup
+  direction should stay focused on portable SOM action menus in SDK and
+  framework adapters rather than a hosted browser-cloud pivot.
+- Code changes: Vercel AI now treats any `blocked_reason` as unavailable,
+  exports `normalizePlasmateActionTarget()`, exports
+  `preparePlasmateActionPlan()` for filtering/limiting compact action menus,
+  and exports `formatPlasmateActionPlan()` for prompt or trace text.
+- Tests/docs changes: added a TypeScript fixture-style compile check for the
+  Vercel AI action helpers, updated the Vercel AI README, PRD, roadmap, website
+  PRD/roadmap sources, and regenerated website docs. The next step is a runtime
+  Vercel AI fixture test runner so this compile check can become executable
+  shared adapter coverage.
+- Verification: Vercel AI `npm run typecheck` passed using the primary
+  checkout's existing `node_modules`; Vercel AI `npm run build` passed; `node
+  website/build.mjs` rebuilt 39 pages; `git diff --check` passed; and
+  `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build` passed with
+  existing warnings.
+
 ### 2026-05-13T05:08:17Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted in the automation worktree, but

@@ -60,8 +60,8 @@ const { text } = await generateText({
 `plasmateActionGuidance` tells the model to honor SOM action targets with
 `enabled`, `blocked_reason`, `required`, `description`, `placeholder`, and
 `group` fields before selecting browser actions. Use
-`isPlasmateActionTargetAvailable()` when your app filters cached or extracted
-action plans before passing them to the model.
+`preparePlasmateActionPlan()` or `formatPlasmateActionPlan()` when your app
+filters cached or extracted action plans before passing them to the model.
 
 ## API
 
@@ -89,8 +89,35 @@ required, described, and grouped controls.
 ### `isPlasmateActionTargetAvailable(target)`
 
 Returns `false` for compact action targets with `enabled: false`,
-`disabled: true`, or `blocked_reason: "disabled"`. Use this when trimming an
-action menu before a Vercel AI SDK call.
+`disabled: true`, or any `blocked_reason`. Use this when trimming an action
+menu before a Vercel AI SDK call.
+
+### `normalizePlasmateActionTarget(target)`
+
+Returns a copy of an action target with explicit `enabled` state. Targets with
+`disabled: true`, `enabled: false`, or any `blocked_reason` normalize to
+`enabled: false` and keep or receive a `blocked_reason`.
+
+### `preparePlasmateActionPlan(targets, options?)`
+
+Normalizes a list of action targets, filters unavailable targets by default,
+and optionally caps the returned menu with `maxTargets`. Pass
+`includeUnavailable: true` when you want a trace or UI to show blocked targets.
+
+### `formatPlasmateActionPlan(targets, options?)`
+
+Formats a prepared action menu as compact prompt text:
+
+```ts
+const menu = formatPlasmateActionPlan(actionTargets, { maxTargets: 20 })
+
+const { text } = await generateText({
+  model: openai('gpt-4o'),
+  tools,
+  system: `${plasmateActionGuidance}\n\nAvailable actions:\n${menu}`,
+  prompt: 'Update the billing plan if the selector is available.',
+})
+```
 
 ## Available Tools
 

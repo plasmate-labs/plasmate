@@ -175,6 +175,16 @@ make state drift costly. Plasmate should turn shared adapter fixtures into a
 release gate so Browser Use, LangChain, Vercel AI, parser packages, and SDKs
 all preserve availability, required, group, type, and description cues.
 
+2026-05-13 Vercel AI helper read: current competitor docs keep pushing action
+menus closer to app code. Stagehand documents `observe()` as a way to plan,
+cache, and validate actions; Browserbase frames repeated automation around
+cached selectors and inspectable sessions; Playwright MCP keeps fresh refs tied
+to the current snapshot; and hosted browser platforms keep making managed
+sessions easy to buy. Plasmate's sticky local-first answer is to make framework
+apps consume SOM action menus directly: Vercel AI users need a helper that
+normalizes availability, filters blocked targets, and formats compact action
+menus before the model sees them.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -201,6 +211,20 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-13:
+  - Vercel AI action-target availability now treats any `blocked_reason` as
+    unavailable, not only `blocked_reason="disabled"`, matching the broader
+    action-plan contract used by parser and SDK helpers.
+  - Vercel AI SDK integration now exports `normalizePlasmateActionTarget()` so
+    app code can make implicit enabled state explicit without mutating cached
+    action targets.
+  - Vercel AI SDK integration now exports `preparePlasmateActionPlan()` for
+    filtering unavailable targets and limiting compact action menus before a
+    `generateText` or `streamText` call.
+  - Vercel AI SDK integration now exports `formatPlasmateActionPlan()` so apps
+    can pass a small, stable action menu into prompts or trace logs.
+  - Added a TypeScript fixture-style compile check for the Vercel AI action
+    helpers using the same availability, required, group, and description shape
+    as the shared adapter fixture.
   - Added a shared adapter fixture for action availability, required fields,
     groups, input type, and descriptions.
   - Browser Use and LangChain adapter tests now consume the same fixture,
@@ -358,7 +382,9 @@ and adapter docs over one-off integration logic.
   inherited disabled state stays synchronized outside Rust.
 - Promote the new Browser Use and LangChain adapter availability checks into a
   shared cross-adapter fixture runner that also exercises the Vercel AI
-  availability helper once package dependencies are pinned in this repo.
+  action-plan preparation helpers.
+- Add a runtime test runner for the Vercel AI package so the new typecheck
+  fixture can become executable fixture-backed coverage.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched
