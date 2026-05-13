@@ -90,6 +90,11 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   website/build.mjs` rebuilt 39 pages; `./scripts/action-manifest-conformance.sh
   --quick` passed after temporarily symlinking existing primary-checkout
   `node_modules` for Node package dependencies; `git diff --check` passed.
+- Commit/push state: implementation commit `513ba86`
+  (`fix: tolerate aria fallback roles`) was pushed to
+  `codex/plasmate-improvements-2026-05-13-vercel-action-menu` and
+  fast-forwarded remote `master` from `c6f8323` to `513ba86`. This follow-up
+  state entry records the successful push result.
 
 ### 2026-05-13T15:13:58Z - Plasmate Improvements Automation
 
