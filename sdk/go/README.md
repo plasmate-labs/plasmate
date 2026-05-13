@@ -133,11 +133,12 @@ all := plasmate.FlatElements(som)
 
 The Go types include current SOM actionability fields such as
 `attrs.description`, `attrs.name`, `attrs.autocomplete`, `attrs.inputmode`,
-`attrs.enterkeyhint`, `attrs.aria`, iframe
-attrs, form validation constraints, and `shadow` roots so Go agents receive the
-same contract as the Python and Node parser packages. Action-plan items include
-`Enabled` and
-`BlockedReason` so agents can skip known-unavailable controls before acting.
+`attrs.enterkeyhint`, `attrs.accesskey`, `attrs.aria`, iframe attrs, form
+validation constraints, and `shadow` roots so Go agents receive the same
+contract as the Python and Node parser packages. Action-plan items include
+`Enabled`, `BlockedReason`, `KeyShortcuts`, and `RoleDescription` so agents can
+skip known-unavailable controls and understand keyboard/custom-role cues before
+acting.
 They also include deterministic `CacheKey` values plus `Autocomplete`,
 `MinLength`, `MaxLength`, `Pattern`, and `Invalid` cues for local action-plan
 caches, prompt dedupe, and trace correlation.

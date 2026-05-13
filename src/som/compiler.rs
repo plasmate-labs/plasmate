@@ -1821,6 +1821,9 @@ fn build_element_attrs(
             .unwrap_or_else(|_| json!(value));
         map.insert("tabindex".into(), tabindex);
     }
+    if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "accesskey") {
+        map.insert("accesskey".into(), json!(value));
+    }
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "name") {
         map.insert("name".into(), json!(value));
     }
@@ -1868,6 +1871,8 @@ fn build_element_attrs(
         ("aria-invalid", "invalid"),
         ("aria-autocomplete", "autocomplete"),
         ("aria-activedescendant", "active_descendant"),
+        ("aria-keyshortcuts", "keyshortcuts"),
+        ("aria-roledescription", "roledescription"),
     ];
     let mut aria_map = serde_json::Map::new();
     for (html_attr, som_key) in aria_states {
@@ -2395,5 +2400,30 @@ mod tests {
         let json1 = serde_json::to_string(&som1).unwrap();
         let json2 = serde_json::to_string(&som2).unwrap();
         assert_eq!(json1, json2, "Same input should produce identical SOM");
+    }
+
+    #[test]
+    fn test_keyboard_and_custom_role_action_cues_are_preserved() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Actions</title></head>
+<body>
+<main>
+  <button accesskey="s" aria-keyshortcuts="Meta+S" aria-roledescription="primary action">Save</button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.com").unwrap();
+        let button = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| element.role == ElementRole::Button)
+            .expect("button element should compile");
+        let attrs = button.attrs.as_ref().expect("button attrs should compile");
+
+        assert_eq!(attrs["accesskey"], "s");
+        assert_eq!(attrs["aria"]["keyshortcuts"], "Meta+S");
+        assert_eq!(attrs["aria"]["roledescription"], "primary action");
     }
 }

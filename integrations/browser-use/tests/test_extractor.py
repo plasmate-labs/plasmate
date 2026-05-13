@@ -57,6 +57,8 @@ def test_build_context_surfaces_action_availability():
             assert f'[inputmode={target["inputmode"]}]' in line
         if target.get("enterkeyhint"):
             assert f'[enterkeyhint={target["enterkeyhint"]}]' in line
+        if target.get("accesskey"):
+            assert f'[accesskey={target["accesskey"]}]' in line
         if target.get("value"):
             assert f'[value={target["value"]}]' in line
         for constraint_key in ("minlength", "maxlength", "pattern"):
@@ -74,6 +76,8 @@ def test_build_context_surfaces_action_availability():
             "invalid",
             "aria_autocomplete",
             "active_descendant",
+            "keyshortcuts",
+            "roledescription",
         ):
             if state_key in target:
                 assert f'[{state_key}={target[state_key]}]' in line

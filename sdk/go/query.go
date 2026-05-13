@@ -180,6 +180,7 @@ type ActionPlanItem struct {
 	Autocomplete     *string     `json:"autocomplete,omitempty"`
 	InputMode        *string     `json:"inputmode,omitempty"`
 	EnterKeyHint     *string     `json:"enterkeyhint,omitempty"`
+	AccessKey        *string     `json:"accesskey,omitempty"`
 	InputType        *string     `json:"input_type,omitempty"`
 	Value            *string     `json:"value,omitempty"`
 	Placeholder      *string     `json:"placeholder,omitempty"`
@@ -197,6 +198,8 @@ type ActionPlanItem struct {
 	Invalid          interface{} `json:"invalid,omitempty"`
 	AriaAutocomplete *string     `json:"aria_autocomplete,omitempty"`
 	ActiveDescendant *string     `json:"active_descendant,omitempty"`
+	KeyShortcuts     *string     `json:"keyshortcuts,omitempty"`
+	RoleDescription  *string     `json:"roledescription,omitempty"`
 	Required         *bool       `json:"required,omitempty"`
 	Readonly         *bool       `json:"readonly,omitempty"`
 	Disabled         *bool       `json:"disabled,omitempty"`
@@ -264,6 +267,7 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.Autocomplete = el.Attrs.Autocomplete
 			item.InputMode = el.Attrs.InputMode
 			item.EnterKeyHint = el.Attrs.EnterKeyHint
+			item.AccessKey = el.Attrs.AccessKey
 			item.InputType = el.Attrs.InputType
 			item.Value = el.Attrs.Value
 			item.Placeholder = el.Attrs.Placeholder
@@ -286,6 +290,8 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.Invalid = el.Attrs.Aria.Invalid
 				item.AriaAutocomplete = el.Attrs.Aria.Autocomplete
 				item.ActiveDescendant = el.Attrs.Aria.ActiveDescendant
+				item.KeyShortcuts = el.Attrs.Aria.KeyShortcuts
+				item.RoleDescription = el.Attrs.Aria.RoleDescription
 			}
 			item.Required = el.Attrs.Required
 			item.Readonly = el.Attrs.Readonly

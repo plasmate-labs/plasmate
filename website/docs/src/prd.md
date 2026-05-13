@@ -82,6 +82,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-13 input-affordance read: current browser-agent docs keep validating small, browser-like action menus over broad hosted pivots. Playwright MCP refs remain tied to current accessibility snapshots, while Stagehand and Browserbase cached actions are only valuable when the cached target still matches the field's affordances. Plasmate should carry input modality and autocomplete-widget cues (`inputmode`, `enterkeyhint`, `aria-autocomplete`, and `aria-activedescendant`) through the same shared manifest so agents can choose credential data, keyboard submit behavior, and active suggestion state without raw DOM recovery.
 
+2026-05-13 keyboard-affordance read: current Playwright MCP and Stagehand docs keep emphasizing fresh, validated action state before replay, while Browserbase and Browser Use sell observability around repeated workflows. Plasmate's local-first answer should include keyboard and custom-role cues in the same portable action contract: `accesskey`, `aria-keyshortcuts`, and `aria-roledescription` help agents choose and explain reusable targets without falling back to raw DOM or screenshots.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -97,6 +99,9 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-13:
+  - The Rust SOM compiler and JSON Schema now preserve native `accesskey` plus ARIA `keyshortcuts` and `roledescription`, adding keyboard/custom-role affordances to the compact action-state contract.
+  - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `accesskey`, `keyshortcuts`, and `roledescription` without changing deterministic action `cache_key` values.
+  - The shared action-availability manifest now asserts keyboard and custom-role cues across parser, SDK, and framework outputs.
   - The Rust SOM compiler and JSON Schema now preserve `inputmode`, `enterkeyhint`, `aria-autocomplete`, and `aria-activedescendant`, extending validation-state work into input-affordance cues for cached form actions.
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `inputmode`, `enterkeyhint`, `aria_autocomplete`, and `active_descendant` without changing deterministic action `cache_key` values.
   - The shared action-availability manifest now asserts input modality and autocomplete-widget state across parser, SDK, and framework outputs.
@@ -233,6 +238,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Promote ARIA relationship-state cases from the shared action availability manifest into the broader `015-action-state`/`016-action-semantics` conformance suites.
 - Add compiler/schema conformance for form validation constraints and `aria-invalid`, then promote the shared manifest cases into broader parser, SDK, and adapter fixtures.
 - Promote input-affordance cases (`inputmode`, `enterkeyhint`, autocomplete widget state, and active descendants) into broader Rust conformance fixtures once the shared action manifest remains stable.
+- Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures once the shared action manifest remains stable.
 - Promote fieldset/legend group semantics into shared conformance fixtures alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched action-plan metadata.
 - Promote the new SDK/parser shadow-root and Go action-plan tests into shared conformance fixtures that run against every adapter before release.

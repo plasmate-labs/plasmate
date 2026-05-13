@@ -49,6 +49,47 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-13T23:10:41Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first. The automation worktree
+  still cannot write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate41/FETCH_HEAD`
+  (`Operation not permitted`). Retrying from the primary checkout failed to
+  resolve `github.com` over SSH (`ssh: Could not resolve hostname github.com:
+  -65563`), so this run continued from locally available `master` /
+  `origin/master` state `08e3a0d`.
+- Market direction: current official docs and product pages still validate
+  Plasmate's local-first action-menu wedge. Playwright MCP keeps structured
+  accessibility snapshots and snapshot-scoped refs at the center of
+  interaction, Stagehand/Browserbase emphasize `observe()` plus local/server
+  action caching, and Firecrawl/Browser Use continue selling stateful browser
+  sessions. The product response remains richer portable SOM action state
+  across SDKs and adapters, not a hosted-browser pivot.
+- Code changes: Rust SOM now preserves native `accesskey` plus ARIA
+  `keyshortcuts` and `roledescription`. Parser packages, Python/Node/Go SDKs,
+  Browser Use, LangChain, and Vercel AI action-plan surfaces expose
+  `accesskey`, `keyshortcuts`, and `roledescription` without changing
+  deterministic `cache_key` values.
+- Fixture and docs changes: the shared action-availability SOM and expected
+  manifest now assert keyboard/custom-role cues across parser, SDK, and
+  framework outputs. PRD, roadmap, SOM schema/spec, adapter docs, SDK docs, and
+  this running state were updated with the rationale and next conformance step.
+- Verification: `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build`
+  passed with existing warnings; focused
+  `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo test
+  som::compiler::tests::test_keyboard_and_custom_role_action_cues_are_preserved
+  -- --nocapture` passed; `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target
+  cargo test --lib -- --test-threads=1` passed 247 tests; Python parser,
+  Python SDK, Go SDK, Browser Use, and LangChain shared-manifest checks passed.
+  `git diff --check` passed.
+- Verification gaps: the full/quick action-manifest gate could not complete
+  because Node parser tests require missing local `vitest`; `node
+  website/build.mjs` could not regenerate website docs because the local
+  `marked` package is missing. A direct worktree Rust build without the shared
+  target cache also failed because blocked DNS prevented `rusty_v8` from
+  downloading its prebuilt archive. `cargo fmt --check` reports unrelated
+  pre-existing formatting drift in Rust files outside this change.
+
 ### 2026-05-13T22:11:17Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first. The automation worktree

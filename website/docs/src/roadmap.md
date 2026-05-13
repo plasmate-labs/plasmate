@@ -262,6 +262,14 @@ Current browser-agent products keep making repeated actions depend on the target
 - **Keyboard intent matters for form flow**: `enterkeyhint` should be exposed in compact menus so repeated workflows know whether Enter advances, searches, submits, or sends.
 - **Autocomplete widgets need live state**: `aria-autocomplete` and `aria-activedescendant` should surface as compact action-plan cues without changing target `cache_key` values, preserving local action memory while making suggestion drift visible.
 
+### 2026-05-13 Keyboard-Affordance Action Menu Adjustment
+
+Current Playwright MCP and Stagehand docs keep validating action surfaces that are current, inspectable, and reusable. Browserbase, Browser Use, and Firecrawl add hosted sessions and traces around that same workflow, but Plasmate's sticky local-first wedge is still a portable action contract that carries browser-like affordances everywhere.
+
+- **Native shortcuts are action context**: `accesskey` should travel through Rust, schema, SDKs, parser packages, and adapters so agents can understand page-provided keyboard activation paths.
+- **ARIA shortcuts reduce ambiguity**: `aria-keyshortcuts` should surface as compact `keyshortcuts` state for buttons, menu items, and custom SaaS controls.
+- **Custom role descriptions help prompt selection**: `aria-roledescription` should be visible as `roledescription` without changing deterministic `cache_key` values, giving agents more human-facing context for custom widgets.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -407,6 +415,9 @@ Current browser-agent products keep making repeated actions depend on the target
 - [x] Rust compiler and SOM schema preserve inputmode, enterkeyhint, ARIA autocomplete, and active-descendant state
 - [x] Compact action plans expose inputmode, enterkeyhint, aria_autocomplete, and active_descendant across parser packages, SDKs, and framework adapters
 - [x] Shared action-availability manifest asserts input-affordance cues without changing deterministic action cache keys
+- [x] Rust compiler and SOM schema preserve accesskey, ARIA keyshortcuts, and ARIA roledescription cues
+- [x] Compact action plans expose accesskey, keyshortcuts, and roledescription across parser packages, SDKs, and framework adapters
+- [x] Shared action-availability manifest asserts keyboard/custom-role cues without changing deterministic action cache keys
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
@@ -414,6 +425,7 @@ Current browser-agent products keep making repeated actions depend on the target
 - [ ] Add cross-adapter fixtures for enriched compact action-plan metadata
 - [ ] Promote ARIA relationship-state cases into the broader action-state/action-semantics conformance suites
 - [ ] Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures
+- [ ] Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures
 - [ ] Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners
 - [x] Promote adapter availability checks into shared cross-adapter fixtures

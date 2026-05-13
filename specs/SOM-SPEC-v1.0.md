@@ -346,7 +346,7 @@ Each **Option** object:
 
 Implementations SHOULD preserve common actionability attributes on any element:
 `contenteditable`, `tabindex`, `name`, `autocomplete`, `inputmode`,
-`enterkeyhint`, `readonly`, and `description`. The
+`enterkeyhint`, `accesskey`, `readonly`, and `description`. The
 `description` value is resolved from `aria-describedby` or `aria-description`.
 These attributes are especially important for custom controls that are exposed
 through ARIA roles instead of native form elements.
@@ -371,6 +371,8 @@ attributes SHOULD be preserved when present:
 | `aria-invalid`   | `invalid`   | boolean/string  |
 | `aria-autocomplete` | `autocomplete` | string      |
 | `aria-activedescendant` | `active_descendant` | string |
+| `aria-keyshortcuts` | `keyshortcuts` | string      |
+| `aria-roledescription` | `roledescription` | string |
 
 Values `"true"` and `"false"` MUST be normalized to boolean. Other string
 values (e.g. `aria-current="page"`, `aria-checked="mixed"`, or

@@ -35,6 +35,9 @@
       "enabled": false,
       "disabled": true,
       "blocked_reason": "disabled",
+      "accesskey": "s",
+      "keyshortcuts": "Meta+S",
+      "roledescription": "primary action",
       "description": "Unavailable until required fields are complete"
     },
     {

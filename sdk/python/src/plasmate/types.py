@@ -117,6 +117,7 @@ class ElementAttrs(BaseModel):
     summary: Optional[str] = None
     contenteditable: Optional[bool | str] = None
     tabindex: Optional[int | str] = None
+    accesskey: Optional[str] = None
     name: Optional[str] = None
     autocomplete: Optional[str] = None
     inputmode: Optional[str] = None

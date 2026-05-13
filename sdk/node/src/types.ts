@@ -98,6 +98,7 @@ export interface SomElementAttrs {
   summary?: string;
   contenteditable?: boolean | string;
   tabindex?: number | string;
+  accesskey?: string;
   name?: string;
   autocomplete?: string;
   inputmode?: string;
@@ -128,6 +129,8 @@ export interface AriaState {
   invalid?: boolean | string;
   autocomplete?: string;
   active_descendant?: string;
+  keyshortcuts?: string;
+  roledescription?: string;
 }
 
 export interface SomShadowRoot {

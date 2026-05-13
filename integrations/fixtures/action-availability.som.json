@@ -47,7 +47,12 @@
           "text": "Save",
           "actions": ["click"],
           "attrs": {
+            "accesskey": "s",
             "disabled": true,
+            "aria": {
+              "keyshortcuts": "Meta+S",
+              "roledescription": "primary action"
+            },
             "description": "Unavailable until required fields are complete"
           }
         },

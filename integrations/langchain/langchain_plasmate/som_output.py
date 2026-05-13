@@ -210,6 +210,8 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append(f'[inputmode="{attrs["inputmode"]}"]')
     if attrs.get("enterkeyhint"):
         flags.append(f'[enterkeyhint="{attrs["enterkeyhint"]}"]')
+    if attrs.get("accesskey"):
+        flags.append(f'[accesskey="{attrs["accesskey"]}"]')
     for constraint_key in ("minlength", "maxlength", "pattern"):
         if constraint_key in attrs:
             flags.append(f'[{constraint_key}="{attrs[constraint_key]}"]')
@@ -228,6 +230,8 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
             "invalid",
             "autocomplete",
             "active_descendant",
+            "keyshortcuts",
+            "roledescription",
         ):
             if state_key in attrs["aria"]:
                 output_key = "aria_autocomplete" if state_key == "autocomplete" else state_key

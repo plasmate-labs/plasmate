@@ -329,6 +329,14 @@ and autocomplete-widget cues (`inputmode`, `enterkeyhint`,
 manifest so agents can choose credential data, keyboard submit behavior, and
 active suggestion state without raw DOM recovery.
 
+2026-05-13 keyboard-affordance read: current Playwright MCP and Stagehand
+docs keep emphasizing fresh, validated action state before replay, while
+Browserbase and Browser Use sell observability around repeated workflows.
+Plasmate's local-first answer should include keyboard and custom-role cues in
+the same portable action contract: `accesskey`, `aria-keyshortcuts`, and
+`aria-roledescription` help agents choose and explain reusable targets without
+falling back to raw DOM or screenshots.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -355,6 +363,15 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-13:
+  - The Rust SOM compiler and JSON Schema now preserve native `accesskey` plus
+    ARIA `keyshortcuts` and `roledescription`, adding keyboard/custom-role
+    affordances to the compact action-state contract.
+  - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
+    AI action-plan surfaces now expose `accesskey`, `keyshortcuts`, and
+    `roledescription` without changing deterministic action `cache_key`
+    values.
+  - The shared action-availability manifest now asserts keyboard and
+    custom-role cues across parser, SDK, and framework outputs.
   - The Rust SOM compiler and JSON Schema now preserve `inputmode`,
     `enterkeyhint`, `aria-autocomplete`, and `aria-activedescendant`, extending
     validation-state work into input-affordance cues for cached form actions.
@@ -698,6 +715,9 @@ and adapter docs over one-off integration logic.
   SDK, and adapter fixtures.
 - Promote input-affordance cases (`inputmode`, `enterkeyhint`, autocomplete
   widget state, and active descendants) into broader Rust conformance fixtures
+  once the shared action manifest remains stable.
+- Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and
+  `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures
   once the shared action manifest remains stable.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.

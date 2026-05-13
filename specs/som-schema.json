@@ -187,6 +187,7 @@
                 { "type": "string" }
               ]
             },
+            "accesskey": { "type": "string" },
             "name": { "type": "string" },
             "autocomplete": { "type": "string" },
             "inputmode": { "type": "string" },
@@ -290,7 +291,9 @@
           ]
         },
         "autocomplete": { "type": "string" },
-        "active_descendant": { "type": "string" }
+        "active_descendant": { "type": "string" },
+        "keyshortcuts": { "type": "string" },
+        "roledescription": { "type": "string" }
       }
     },
     "ShadowRoot": {
