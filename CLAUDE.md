@@ -88,7 +88,8 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Commit/push state: implementation commit `9ff9309`
   (`chore: expose aria action state cues`) was pushed to
   `codex/plasmate-improvements-2026-05-13-control-state` and fast-forwarded
-  remote `master` from `c9876d8` to `9ff9309`.
+  remote `master` from `c9876d8` to `9ff9309`. A follow-up state-only commit
+  records the push result and is the current pushed `master` tip.
 
 ### 2026-05-13T17:08:35Z - Plasmate Improvements Automation
 
