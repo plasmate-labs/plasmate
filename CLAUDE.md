@@ -85,6 +85,12 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   Full `cargo test -- --test-threads=1` still fails only in
   `tests/awp_integration_test.rs` because sandboxed local listener setup
   returns `Operation not permitted`.
+- Commit/push state: implementation commit `971ed7c`
+  (`chore: expose form validation action cues`) was pushed to
+  `codex/plasmate-improvements-2026-05-13-control-state`; local `master` was
+  fast-forwarded to the same commit and pushed to remote `master`. The first
+  `master` push attempt hit transient GitHub DNS failure, and the immediate
+  retry succeeded.
 
 ### 2026-05-13T20:08:54Z - Plasmate Improvements Automation
 
