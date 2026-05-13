@@ -64,7 +64,7 @@ assert.equal(save.blocked_reason, 'disabled')
 const availableTargets = preparePlasmateActionPlan(targets)
 assert.deepEqual(
   availableTargets.map((target) => target.id),
-  ['e_email', 'e_plan', 'e_compact', 'e_annual']
+  ['e_email', 'e_plan', 'e_compact', 'e_annual', 'e_billing']
 )
 
 const formatted = formatPlasmateActionPlan(targets, {
@@ -79,6 +79,9 @@ assert.match(formatted, /\[e_compact\].*\[pressed=false\]/)
 assert.match(formatted, /\[e_annual\].*\[checked=true\]/)
 assert.match(formatted, /\[e_annual\].*\[selected=true\]/)
 assert.match(formatted, /\[e_plan\].*\[expanded=false\]/)
+assert.match(formatted, /\[e_plan\].*\[controls=plan-options\]/)
+assert.match(formatted, /\[e_plan\].*\[haspopup=listbox\]/)
+assert.match(formatted, /\[e_billing\].*\[current=page\]/)
 assert.match(
   formatted,
   /\[e_save\] button "Save" \(click\) \[blocked\] \[cache_key=plasmate-action:v1:4d0e8356\] \[blocked_reason=disabled\]/

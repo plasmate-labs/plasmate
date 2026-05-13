@@ -612,6 +612,47 @@ fn test_disabled_and_aria_required_state_promoted_for_action_plans() {
 }
 
 #[test]
+fn test_aria_relationship_state_is_preserved_for_action_targets() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>ARIA Relationships</title></head>
+<body><main>
+    <button aria-label="Filters" aria-expanded="false" aria-controls="filters-panel" aria-haspopup="dialog">Filters</button>
+    <a href="/billing" aria-current="page">Billing</a>
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let elems = all_elements(&som);
+
+    let filters = elems
+        .iter()
+        .find(|e| e.text.as_deref() == Some("Filters"))
+        .expect("button should be preserved");
+    let filters_aria = filters.attrs.as_ref().unwrap()["aria"].as_object().unwrap();
+    assert_eq!(
+        filters_aria.get("expanded").and_then(|v| v.as_bool()),
+        Some(false)
+    );
+    assert_eq!(
+        filters_aria.get("controls").and_then(|v| v.as_str()),
+        Some("filters-panel")
+    );
+    assert_eq!(
+        filters_aria.get("haspopup").and_then(|v| v.as_str()),
+        Some("dialog")
+    );
+
+    let billing = elems
+        .iter()
+        .find(|e| e.text.as_deref() == Some("Billing"))
+        .expect("current link should be preserved");
+    let billing_aria = billing.attrs.as_ref().unwrap()["aria"].as_object().unwrap();
+    assert_eq!(
+        billing_aria.get("current").and_then(|v| v.as_str()),
+        Some("page")
+    );
+}
+
+#[test]
 fn test_shadow_root_elements_are_counted_in_meta() {
     let html = r#"<!DOCTYPE html>
 <html><head><title>Shadow Count</title></head>

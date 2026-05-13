@@ -49,6 +49,44 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-13T19:08:47Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first. The automation worktree
+  still cannot write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate37/FETCH_HEAD`
+  (`Operation not permitted`), and retrying from the primary checkout could
+  not resolve `github.com` over SSH (`ssh: Could not resolve hostname
+  github.com: -65563`). This run continued from locally known
+  `origin/master`/`HEAD` `66656e3`.
+- Market direction: fresh official-doc research keeps validating the
+  local-first action-menu wedge. Playwright MCP snapshots bind refs to current
+  accessibility state, Stagehand v3 documents local/Browserbase action caches
+  that need validation, Firecrawl Interact and Browser Use Cloud package
+  persistent profiles/sessions, and Cloudflare Browser Run/WebMCP is testing
+  typed page-provided tools. The product response remains richer portable SOM
+  action state, not a hosted-browser pivot.
+- Code changes: the Rust SOM compiler and JSON Schema now preserve
+  `aria-controls` and `aria-haspopup` inside `attrs.aria`, joining existing
+  `aria-current` support. Python/Node parser packages, Python/Node/Go SDKs,
+  Browser Use, LangChain, and Vercel AI action-plan helpers now expose
+  `current`, `controls`, and `haspopup` while keeping deterministic
+  `cache_key` generation target-focused.
+- Fixture and docs changes: the shared action-availability SOM fixture and
+  expected manifest now assert a current-page link plus a controlled popup
+  select target across parser, SDK, and framework surfaces. PRD, roadmap,
+  integration docs, generated website docs, SOM spec, and fixture docs now
+  describe ARIA relationship state as the next action-menu reliability step.
+- Verification: `./scripts/action-manifest-conformance.sh --quick` passed;
+  `node website/build.mjs` rebuilt 39 pages; `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target
+  cargo build` passed with existing warnings; `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target
+  cargo test --lib -- --test-threads=1` passed 246 tests; focused
+  `cargo test --test som_compiler_test test_aria_relationship_state_is_preserved_for_action_targets
+  -- --test-threads=1` passed; `git diff --check` passed. Global
+  `cargo fmt --check` still reports pre-existing formatting drift in unrelated
+  Rust files, so only the touched Rust test was formatted.
+- Commit/push state: implementation commit and remote push are pending at this
+  checkpoint.
+
 ### 2026-05-13T18:11:08Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first. The automation worktree

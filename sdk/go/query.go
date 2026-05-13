@@ -185,6 +185,9 @@ type ActionPlanItem struct {
 	Expanded      *bool       `json:"expanded,omitempty"`
 	Pressed       *bool       `json:"pressed,omitempty"`
 	Selected      *bool       `json:"selected,omitempty"`
+	Current       interface{} `json:"current,omitempty"`
+	Controls      *string     `json:"controls,omitempty"`
+	HasPopup      interface{} `json:"haspopup,omitempty"`
 	Required      *bool       `json:"required,omitempty"`
 	Disabled      *bool       `json:"disabled,omitempty"`
 	BlockedReason *string     `json:"blocked_reason,omitempty"`
@@ -261,6 +264,9 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.Expanded = el.Attrs.Aria.Expanded
 				item.Pressed = el.Attrs.Aria.Pressed
 				item.Selected = el.Attrs.Aria.Selected
+				item.Current = el.Attrs.Aria.Current
+				item.Controls = el.Attrs.Aria.Controls
+				item.HasPopup = el.Attrs.Aria.HasPopup
 			}
 			item.Required = el.Attrs.Required
 			item.Disabled = el.Attrs.Disabled

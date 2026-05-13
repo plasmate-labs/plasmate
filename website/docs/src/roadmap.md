@@ -238,6 +238,14 @@ Current competitor movement keeps raising the value of state-aware action menus.
 - **Pressed state matters for toggle buttons**: `aria-pressed` should travel with compact targets just like `checked`, because repeated workflows often need to avoid toggling an already-correct state.
 - **Selected state is reusable context**: custom tabs/options using `aria-selected` should expose that state across parser packages, SDKs, and framework prompt renderers without changing target cache keys.
 
+### 2026-05-13 ARIA Relationship-State Adjustment
+
+The newest competitor docs reinforce that reusable action menus need relationship context, not just live boolean state. Playwright MCP refs are scoped to the current snapshot, Stagehand/Browserbase cached actions need validation, Browser Use Cloud profiles/CDP sessions keep repeated workflows warm, Firecrawl Interact resumes scrape sessions, and Cloudflare Browser Run/WebMCP is pushing typed page-provided actions. Plasmate should keep the local-first action-menu wedge and expose the relationship state agents need before reusing a cached target.
+
+- **Current targets reduce redundant actions**: compact plans should surface `aria-current` so agents can avoid clicking an already-current tab, page link, or step.
+- **Controlled panels are action context**: `aria-controls` should travel into action targets so agents can connect a disclosure or filter button to the affected region.
+- **Popup type shapes the next step**: `aria-haspopup` should be visible across SDKs and prompt renderers so agents know whether a click opens a menu, listbox, tree, grid, or dialog without raw DOM recovery.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -374,12 +382,15 @@ Current competitor movement keeps raising the value of state-aware action menus.
 - [x] Compact action plans expose ARIA expanded, pressed, and selected state across parser packages, SDKs, and framework adapters
 - [x] Browser Use, LangChain, and Vercel AI prompt renderers include expanded/pressed/selected action-state cues
 - [x] Shared action-availability manifest asserts ARIA state cues without changing deterministic action cache keys
+- [x] Rust compiler and SOM schema preserve ARIA controls and haspopup relationship state
+- [x] Compact action plans expose current, controls, and haspopup cues across parser packages, SDKs, and framework adapters
+- [x] Shared action-availability manifest asserts ARIA relationship cues without changing deterministic action cache keys
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
 - [ ] Add cross-adapter fixtures for enriched compact action-plan metadata
-- [ ] Promote ARIA expanded/pressed/selected cases into Rust compiler and schema conformance fixtures
+- [ ] Promote ARIA relationship-state cases into the broader action-state/action-semantics conformance suites
 - [ ] Add cross-adapter accessible-description fixtures
 - [ ] Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners
 - [x] Promote adapter availability checks into shared cross-adapter fixtures

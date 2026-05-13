@@ -117,6 +117,8 @@ export interface AriaState {
   current?: boolean | string;
   pressed?: boolean;
   hidden?: boolean;
+  controls?: string;
+  haspopup?: boolean | string;
 }
 
 export interface SomShadowRoot {

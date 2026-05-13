@@ -86,6 +86,8 @@ type AriaState struct {
 	Current  interface{} `json:"current,omitempty"`
 	Pressed  *bool       `json:"pressed,omitempty"`
 	Hidden   *bool       `json:"hidden,omitempty"`
+	Controls *string     `json:"controls,omitempty"`
+	HasPopup interface{} `json:"haspopup,omitempty"`
 }
 
 // SomShadowRoot represents elements inside a web component shadow root.

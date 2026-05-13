@@ -48,7 +48,7 @@ def test_som_to_text_surfaces_interactive_state():
             assert f'[value="{target["value"]}"]' in line
         if "checked" in target:
             assert f'[checked="{target["checked"]}"]' in line
-        for state_key in ("expanded", "pressed", "selected"):
+        for state_key in ("expanded", "pressed", "selected", "current", "controls", "haspopup"):
             if state_key in target:
                 assert f'[{state_key}="{target[state_key]}"]' in line
         if target.get("group"):

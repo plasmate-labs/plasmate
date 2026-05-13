@@ -259,7 +259,14 @@
           ]
         },
         "pressed": { "type": "boolean" },
-        "hidden": { "type": "boolean" }
+        "hidden": { "type": "boolean" },
+        "controls": { "type": "string" },
+        "haspopup": {
+          "oneOf": [
+            { "type": "boolean" },
+            { "type": "string" }
+          ]
+        }
       }
     },
     "ShadowRoot": {

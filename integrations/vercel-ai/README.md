@@ -60,7 +60,8 @@ const { text } = await generateText({
 `plasmateActionGuidance` tells the model to honor SOM action targets with
 `cache_key`, `enabled`, `blocked_reason`, `required`, `description`,
 `placeholder`, `group`, `value`, `checked`, `expanded`, `pressed`, and
-`selected` fields before selecting or reusing browser actions. Use
+`selected`, `current`, `controls`, and `haspopup` fields before selecting or
+reusing browser actions. Use
 `extractPlasmateActionTargets()`, `preparePlasmateActionPlan()`, or
 `formatPlasmateActionPlan()` when your app filters cached or extracted action
 plans before passing them to the model.

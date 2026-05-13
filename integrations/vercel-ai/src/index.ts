@@ -42,6 +42,9 @@ export interface PlasmateActionTarget {
   expanded?: boolean
   pressed?: boolean
   selected?: boolean
+  current?: boolean | string
+  controls?: string
+  haspopup?: boolean | string
   href?: string
   input_type?: string
   value?: string
@@ -102,7 +105,7 @@ export interface PreparePlasmateActionPlanOptions {
 export const plasmateActionGuidance =
   'Use Plasmate SOM element ids for browser actions. Treat action targets ' +
   'with enabled=false or blocked_reason as unavailable, and prefer ' +
-  'cache_key, required, description, placeholder, and group fields when choosing or reusing form controls.'
+  'cache_key, required, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
 
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined
@@ -251,6 +254,18 @@ export function extractPlasmateActionTargets(
             target[stateKey] = stateValue
           }
         }
+        const current = (aria as Record<string, unknown>).current
+        if (typeof current === 'boolean' || typeof current === 'string') {
+          target.current = current
+        }
+        const controls = (aria as Record<string, unknown>).controls
+        if (typeof controls === 'string' && controls.length > 0) {
+          target.controls = controls
+        }
+        const haspopup = (aria as Record<string, unknown>).haspopup
+        if (typeof haspopup === 'boolean' || typeof haspopup === 'string') {
+          target.haspopup = haspopup
+        }
       }
 
       if (typeof attrs.required === 'boolean') {
@@ -324,12 +339,17 @@ export function formatPlasmateActionPlan(
         typeof target.pressed !== 'undefined' ? ` [pressed=${target.pressed}]` : ''
       const selected =
         typeof target.selected !== 'undefined' ? ` [selected=${target.selected}]` : ''
+      const current =
+        typeof target.current !== 'undefined' ? ` [current=${target.current}]` : ''
+      const controls = target.controls ? ` [controls=${target.controls}]` : ''
+      const haspopup =
+        typeof target.haspopup !== 'undefined' ? ` [haspopup=${target.haspopup}]` : ''
       const group = target.group ? ` [group=${target.group}]` : ''
       const description = target.description
         ? ` [description=${target.description}]`
         : ''
 
-      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${inputType}${value}${placeholder}${checked}${expanded}${pressed}${selected}${group}${description}`
+      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${inputType}${value}${placeholder}${checked}${expanded}${pressed}${selected}${current}${controls}${haspopup}${group}${description}`
     })
     .join('\n')
 }

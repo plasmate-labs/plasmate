@@ -35,6 +35,8 @@
       "enabled": true,
       "required": true,
       "expanded": false,
+      "controls": "plan-options",
+      "haspopup": "listbox",
       "group": "Billing"
     },
     {
@@ -58,6 +60,16 @@
       "checked": true,
       "selected": true,
       "group": "Billing"
+    },
+    {
+      "id": "e_billing",
+      "cache_key": "plasmate-action:v1:baee175a",
+      "role": "link",
+      "label": "Billing settings",
+      "actions": ["click"],
+      "enabled": true,
+      "href": "/billing",
+      "current": "page"
     }
   ]
 }

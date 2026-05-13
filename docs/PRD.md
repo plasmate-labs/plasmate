@@ -289,6 +289,17 @@ should stay local-first, but compact action plans need ARIA expanded, pressed,
 and selected state so agents can tell whether menus, toggle buttons, and
 selectable custom controls already match the intended workflow.
 
+2026-05-13 ARIA relationship read: current docs add one more retention signal.
+Playwright MCP still binds refs to fresh snapshots, Stagehand and Browserbase
+reward cached actions that can be validated before reuse, Browser Use Cloud
+sells profiles/CDP sessions for repeated workflows, Firecrawl Interact keeps
+browser state alive after scrape, and Cloudflare Browser Run/WebMCP is testing
+typed page-provided tools. Plasmate should not pivot into hosted execution,
+but action menus should expose relationship state (`aria-current`,
+`aria-controls`, and `aria-haspopup`) so agents know which target is already
+current, what panel a control affects, and whether an action opens a menu,
+listbox, or dialog.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -315,6 +326,15 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-13:
+  - The Rust SOM compiler and JSON Schema now preserve `aria-controls` and
+    `aria-haspopup` in `attrs.aria`, joining existing `aria-current` support
+    for browser-like action relationship state.
+  - Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+    and Vercel AI action-plan helpers now expose `current`, `controls`, and
+    `haspopup` without changing deterministic `cache_key` generation.
+  - The shared action-availability manifest now asserts current-page links,
+    controlled popup targets, and popup type cues across parser, SDK, and
+    framework surfaces.
   - Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
     and Vercel AI action-plan helpers now expose ARIA `expanded`, `pressed`,
     and `selected` cues for interactive targets while keeping deterministic
@@ -611,8 +631,9 @@ and adapter docs over one-off integration logic.
 - Wire `016-action-semantics` into parser/SDK and adapter conformance runners
   so search landmarks, fallback-token ARIA roles, menu roles, ARIA-hidden
   casing, and visibility-hidden variants stay synchronized outside Rust.
-- Promote ARIA expanded/pressed/selected cases from the shared action
-  availability manifest into Rust compiler and schema conformance fixtures.
+- Promote ARIA relationship-state cases from the shared action availability
+  manifest into the broader `015-action-state`/`016-action-semantics`
+  conformance suites.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched

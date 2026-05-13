@@ -53,7 +53,7 @@ def test_build_context_surfaces_action_availability():
             assert f'[value={target["value"]}]' in line
         if "checked" in target:
             assert f'[checked={target["checked"]}]' in line
-        for state_key in ("expanded", "pressed", "selected"):
+        for state_key in ("expanded", "pressed", "selected", "current", "controls", "haspopup"):
             if state_key in target:
                 assert f'[{state_key}={target[state_key]}]' in line
         if target.get("description"):

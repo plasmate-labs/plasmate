@@ -167,7 +167,14 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
             elif attrs.aria and "checked" in attrs.aria:
                 item["checked"] = attrs.aria["checked"]
             if attrs.aria:
-                for aria_key in ("expanded", "pressed", "selected"):
+                for aria_key in (
+                    "expanded",
+                    "pressed",
+                    "selected",
+                    "current",
+                    "controls",
+                    "haspopup",
+                ):
                     if aria_key in attrs.aria:
                         item[aria_key] = attrs.aria[aria_key]
             if attrs.required is not None:

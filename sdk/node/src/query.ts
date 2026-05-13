@@ -60,6 +60,9 @@ export interface ActionPlanItem {
   expanded?: boolean;
   pressed?: boolean;
   selected?: boolean;
+  current?: boolean | string;
+  controls?: string;
+  haspopup?: boolean | string;
   required?: boolean;
   disabled?: boolean;
   blocked_reason?: 'disabled';
@@ -123,6 +126,9 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.aria?.expanded !== undefined) item.expanded = el.attrs.aria.expanded;
     if (el.attrs?.aria?.pressed !== undefined) item.pressed = el.attrs.aria.pressed;
     if (el.attrs?.aria?.selected !== undefined) item.selected = el.attrs.aria.selected;
+    if (el.attrs?.aria?.current !== undefined) item.current = el.attrs.aria.current;
+    if (el.attrs?.aria?.controls !== undefined) item.controls = el.attrs.aria.controls;
+    if (el.attrs?.aria?.haspopup !== undefined) item.haspopup = el.attrs.aria.haspopup;
     if (el.attrs?.required !== undefined) item.required = el.attrs.required;
     if (el.attrs?.disabled !== undefined) {
       item.disabled = el.attrs.disabled;

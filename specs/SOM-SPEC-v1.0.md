@@ -355,10 +355,12 @@ attributes SHOULD be preserved when present:
 | `aria-current`   | `current`   | boolean/string  |
 | `aria-pressed`   | `pressed`   | boolean         |
 | `aria-hidden`    | `hidden`    | boolean         |
+| `aria-controls`  | `controls`  | string          |
+| `aria-haspopup`  | `haspopup`  | boolean/string  |
 
 Values `"true"` and `"false"` MUST be normalized to boolean. Other string
-values (e.g. `aria-current="page"`, `aria-checked="mixed"`) MUST be preserved
-as strings.
+values (e.g. `aria-current="page"`, `aria-checked="mixed"`, or
+`aria-haspopup="menu"`) MUST be preserved as strings.
 
 ### 4.5 Element Detection from HTML
 
