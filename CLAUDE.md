@@ -91,7 +91,9 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Commit/push state: implementation commit `ae86c9e`
   (`chore: expose action control state`) was pushed to
   `codex/plasmate-improvements-2026-05-13-control-state` and fast-forwarded
-  remote `master` from `51fccb5` to `ae86c9e`.
+  remote `master` from `51fccb5` to `ae86c9e`. A follow-up state-only commit
+  on the same branch records the push outcome and is the current pushed
+  `master` tip.
 
 ### 2026-05-13T16:11:57Z - Plasmate Improvements Automation
 
