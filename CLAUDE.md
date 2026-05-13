@@ -80,8 +80,11 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   download from GitHub in the sandbox, then
   `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build` passed with
   existing warnings.
-- Commit/push state: pending final commit and push after applying the reviewed
-  patch to a writable checkout.
+- Commit/push state: committed `6df8c78` as
+  `chore: expose action plan availability`, pushed review branch
+  `codex/plasmate-improvements-2026-05-13-action-availability`, and
+  fast-forwarded remote `master` from `9497429` to `6df8c78`. A follow-up
+  state-only commit records this final push state.
 
 ### 2026-05-13T02:08:23Z - Plasmate Improvements Automation
 
