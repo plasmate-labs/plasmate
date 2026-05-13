@@ -126,6 +126,14 @@ The current market keeps pushing action planning toward the framework edge: Play
 - **Prompt helpers reduce misuse**: Vercel AI users should get a small exported guidance string that tells models to honor SOM `enabled` and `blocked_reason` fields.
 - **Next conformance step**: shared adapter fixtures should verify that framework output does not regress from the parser/SDK action-plan contract.
 
+### 2026-05-13 Cross-Adapter Fixture Adjustment
+
+Current competitor pressure makes adapter consistency a retention issue. Playwright MCP snapshots, Stagehand action caching, and hosted browser traces all teach users to expect the current action surface to be trustworthy. Plasmate's local-first answer should be a shared adapter fixture suite that keeps every framework aligned with the same compact SOM contract.
+
+- **Fixtures beat prose**: Browser Use, LangChain, Vercel AI, parser packages, and SDKs should test availability, required, group, type, and description fields against the same SOM fixture.
+- **Enabled is the default action state**: adapters should mark interactive targets as enabled unless SOM explicitly blocks them.
+- **Helpers should filter action menus**: Vercel AI apps need a small runtime helper for cached action plans, not only prompt guidance.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -224,11 +232,16 @@ The current market keeps pushing action planning toward the framework edge: Play
 - [x] Browser Use action-plan helper and availability-aware page context
 - [x] LangChain availability-aware SOM text output
 - [x] Vercel AI action availability guidance helper
+- [x] Shared adapter action-availability fixture for Browser Use and LangChain
+- [x] LangChain enabled-state fallback for normal interactive targets
+- [x] Vercel AI action-target availability helper
+- [x] Browser Use and LangChain package version exports match package metadata
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
 - [ ] Add cross-adapter fixtures for enriched compact action-plan metadata
 - [ ] Add cross-adapter accessible-description fixtures
 - [ ] Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners
-- [ ] Promote adapter availability checks into shared cross-adapter fixtures
+- [x] Promote adapter availability checks into shared cross-adapter fixtures
+- [ ] Add fixture-backed Vercel AI availability helper tests once package dependencies are pinned in this repo
 - [ ] WebMCP/watchlist research spike: track whether browser-native tool exposure changes SOM adapter strategy

@@ -80,7 +80,7 @@ def _element_to_text(elem: dict[str, Any], indent: int = 1) -> str:
     actions = elem.get("actions")
 
     hint_str = " " + " ".join(f"[{h}]" for h in hints) if hints else ""
-    state_str = _action_state_to_text(attrs)
+    state_str = _action_state_to_text(attrs, bool(actions))
     if state_str:
         hint_str = f"{hint_str} {state_str}".rstrip()
 
@@ -152,11 +152,12 @@ def _element_to_text(elem: dict[str, Any], indent: int = 1) -> str:
     return ""
 
 
-def _action_state_to_text(attrs: dict[str, Any]) -> str:
+def _action_state_to_text(attrs: dict[str, Any], interactive: bool = False) -> str:
     flags: list[str] = []
     if attrs.get("disabled") is True:
         flags.append("[disabled]")
-    elif attrs.get("disabled") is False:
+        flags.append("[blocked_reason=disabled]")
+    elif interactive:
         flags.append("[enabled]")
     if attrs.get("required") is True:
         flags.append("[required]")

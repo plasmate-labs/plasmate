@@ -49,6 +49,39 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-13T05:08:17Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted in the automation worktree, but
+  shared worktree metadata writes are still denied at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate23/FETCH_HEAD`
+  (`Operation not permitted`). Retried from the primary checkout, but
+  `github.com` DNS resolution failed. Continued from locally known
+  `origin/master` at `4c39aa0`.
+- Market direction: current docs continue to favor structured, reusable action
+  state over a hosted browser-cloud pivot. Playwright MCP makes accessibility
+  snapshots with refs the baseline, Stagehand/Browserbase are foregrounding
+  cached deterministic actions and observability, and managed browser vendors
+  keep crowding the hosted sessions lane. Plasmate should keep deepening
+  local-first SOM/action-plan parity across adapters.
+- Code changes: added shared
+  `integrations/fixtures/action-availability.som.json`; Browser Use and
+  LangChain tests now consume the same fixture; LangChain now marks normal
+  interactive targets as `[enabled]` when `attrs.disabled` is omitted and emits
+  `[blocked_reason=disabled]` for disabled targets; Vercel AI now exports
+  `PlasmateActionTarget` plus `isPlasmateActionTargetAvailable()`; Browser Use
+  and LangChain `__version__` exports now match package metadata.
+- Docs changes: updated Browser Use, LangChain, and Vercel AI READMEs; updated
+  docs/PRD.md, ROADMAP-v0.2.md, website PRD/roadmap sources, and regenerated
+  website docs with the fixture-driven conformance rationale and next step.
+- Verification: Browser Use adapter test passed; LangChain adapter test passed
+  with the existing Python 3.14/Pydantic v1 warning from `langchain_core`;
+  Vercel AI `npm run typecheck` passed; `node website/build.mjs` rebuilt 39
+  pages; `git diff --check` passed; `cargo build` passed with existing
+  warnings.
+- Commit/push state: automation worktree still cannot write its Git index, so
+  the reviewed patch was mirrored into `/Users/steve/Git/plasmate` for commit
+  and push.
+
 ### 2026-05-13T04:08:53Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted in the automation worktree, but

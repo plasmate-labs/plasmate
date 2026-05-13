@@ -38,4 +38,4 @@ __all__ = [
     "get_plasmate_tools",
     "som_to_text",
 ]
-__version__ = "0.1.0"
+__version__ = "0.5.0"

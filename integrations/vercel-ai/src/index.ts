@@ -24,6 +24,23 @@ export interface PlasmateTools {
 }
 
 /**
+ * Compact action target shape emitted by Plasmate SOM action-plan helpers.
+ */
+export interface PlasmateActionTarget {
+  id?: string
+  role?: string
+  actions?: string[]
+  enabled?: boolean
+  disabled?: boolean
+  blocked_reason?: string
+  required?: boolean
+  description?: string
+  placeholder?: string
+  group?: string
+  [key: string]: unknown
+}
+
+/**
  * System prompt guidance for Vercel AI SDK agents using Plasmate tools.
  *
  * Plasmate SOM responses expose action targets with stable element ids and
@@ -34,6 +51,19 @@ export const plasmateActionGuidance =
   'Use Plasmate SOM element ids for browser actions. Treat action targets ' +
   'with enabled=false or blocked_reason="disabled" as unavailable, and prefer ' +
   'required, description, placeholder, and group fields when choosing form controls.'
+
+/**
+ * Return whether a compact Plasmate action target is safe to offer for action.
+ */
+export function isPlasmateActionTargetAvailable(
+  target: PlasmateActionTarget
+): boolean {
+  return (
+    target.enabled !== false &&
+    target.disabled !== true &&
+    target.blocked_reason !== 'disabled'
+  )
+}
 
 /**
  * Create Plasmate browser tools for use with the Vercel AI SDK.

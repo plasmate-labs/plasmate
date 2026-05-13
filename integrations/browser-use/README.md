@@ -81,6 +81,10 @@ for action in actions:
         print(action["id"], action["role"], action["actions"])
 ```
 
+Browser Use page contexts are tested against the shared
+`integrations/fixtures/action-availability.som.json` fixture so availability,
+required, group, type, and description cues stay aligned with other adapters.
+
 ### Markdown extraction
 
 ```python

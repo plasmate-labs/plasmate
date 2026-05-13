@@ -48,6 +48,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-13 adapter read: current docs keep validating the framework edge as a retention surface. Playwright MCP tells agents to act from structured snapshots with fresh refs, Stagehand `observe()` turns page state into cacheable actions, Firecrawl Interact and Browser Use Cloud package managed browser sessions, profiles, and CDP access, and Cloudflare Browser Run is widening hosted MCP/CDP/WebMCP distribution. Plasmate should still avoid a hosted-infra pivot; the stickier move is to make Browser Use, LangChain, and Vercel AI adapters surface the same local action availability cues already present in parser/SDK helpers.
 
+2026-05-13 fixture read: Playwright MCP snapshots and Stagehand cached actions both make state drift costly. Plasmate should turn shared adapter fixtures into a release gate so Browser Use, LangChain, Vercel AI, parser packages, and SDKs all preserve availability, required, group, type, and description cues.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -63,6 +65,11 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-13:
+  - Added a shared adapter fixture for action availability, required fields, groups, input type, and descriptions.
+  - Browser Use and LangChain adapter tests now consume the same fixture, reducing drift between framework context output and parser action plans.
+  - LangChain now marks normal interactive targets as `[enabled]` when SOM omits `attrs.disabled`, and includes `[blocked_reason=disabled]` for disabled targets.
+  - Vercel AI SDK integration now exports `PlasmateActionTarget` and `isPlasmateActionTargetAvailable()` so apps can filter cached action menus before prompting.
+  - Browser Use and LangChain package `__version__` exports now match their `pyproject.toml` versions.
   - Browser Use integration page contexts now render compact action-plan targets with `enabled`, disabled `blocked_reason`, required, type, group, and description context.
   - Browser Use integration now exposes sync and async `extract_action_plan` helpers so agents can ask directly for reusable SOM action targets.
   - LangChain SOM text output now marks disabled, enabled, required, group, and description state on interactive elements before click/type planning.
@@ -134,7 +141,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked or selected an element.
 - Add conformance cases for ARIA-heavy SaaS pages, especially disabled and required custom controls, and compare output against Playwright MCP snapshots.
 - Wire `015-action-state` into cross-adapter parser/SDK conformance runners so inherited disabled state stays synchronized outside Rust.
-- Promote the new Browser Use and LangChain adapter availability checks into a shared cross-adapter fixture runner, and add an executable Vercel AI example once package dependencies are pinned in this repo.
+- Promote the shared adapter availability fixture into a cross-adapter runner that also exercises the Vercel AI availability helper once package dependencies are pinned in this repo.
 - Promote fieldset/legend group semantics into shared conformance fixtures alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched action-plan metadata.
 - Promote the new SDK/parser shadow-root and Go action-plan tests into shared conformance fixtures that run against every adapter before release.

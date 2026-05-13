@@ -21,4 +21,4 @@ __all__ = [
     "token_count_comparison",
     "estimate_tokens",
 ]
-__version__ = "0.3.0"
+__version__ = "0.5.0"

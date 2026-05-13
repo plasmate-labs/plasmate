@@ -59,7 +59,9 @@ const { text } = await generateText({
 
 `plasmateActionGuidance` tells the model to honor SOM action targets with
 `enabled`, `blocked_reason`, `required`, `description`, `placeholder`, and
-`group` fields before selecting browser actions.
+`group` fields before selecting browser actions. Use
+`isPlasmateActionTargetAvailable()` when your app filters cached or extracted
+action plans before passing them to the model.
 
 ## API
 
@@ -83,6 +85,12 @@ Spawns `plasmate mcp` as a stdio MCP server and returns tools ready for use with
 A short system prompt string for Vercel AI SDK agents. Use it when browsing
 forms or cached workflows so the model skips disabled SOM targets and prefers
 required, described, and grouped controls.
+
+### `isPlasmateActionTargetAvailable(target)`
+
+Returns `false` for compact action targets with `enabled: false`,
+`disabled: true`, or `blocked_reason: "disabled"`. Use this when trimming an
+action menu before a Vercel AI SDK call.
 
 ## Available Tools
 

@@ -257,6 +257,22 @@ state visible before an agent spends a tool call on a dead control.
 3. **Next conformance step**: shared adapter fixtures should verify that
    framework output does not regress from the parser/SDK action-plan contract.
 
+### 2026-05-13 Cross-Adapter Fixture Adjustment
+
+Current competitor pressure makes adapter consistency a retention issue.
+Playwright MCP snapshots, Stagehand action caching, and hosted browser traces
+all teach users to expect the current action surface to be trustworthy.
+Plasmate's local-first answer should be a shared adapter fixture suite that
+keeps every framework aligned with the same compact SOM contract.
+
+1. **Fixtures beat prose**: Browser Use, LangChain, Vercel AI, parser packages,
+   and SDKs should test availability, required, group, type, and description
+   fields against the same SOM fixture.
+2. **Enabled is the default action state**: adapters should mark interactive
+   targets as enabled unless SOM explicitly blocks them.
+3. **Helpers should filter action menus**: Vercel AI apps need a small runtime
+   helper for cached action plans, not only prompt guidance.
+
 ## Architecture
 
 ```
@@ -465,6 +481,16 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   description state on interactive targets.
 - Vercel AI SDK integration exports `plasmateActionGuidance` so agents are
   explicitly told to honor SOM availability fields.
+- Shared adapter action-availability fixture now keeps Browser Use and
+  LangChain context tests aligned on enabled, disabled, required, group, type,
+  and description cues.
+- LangChain now treats omitted `attrs.disabled` as enabled for interactive
+  targets and prints disabled `blocked_reason` state.
+- Vercel AI SDK integration exports `PlasmateActionTarget` and
+  `isPlasmateActionTargetAvailable()` for filtering cached action menus before
+  prompting.
+- Browser Use and LangChain package `__version__` exports now match package
+  metadata.
 - Selector handling now trims whitespace and supports documented region ids
   (`#region-id`) while preserving HTML id selection for agent actions.
 - SOM compilation recognizes common ARIA widgets (`textbox`, `searchbox`,

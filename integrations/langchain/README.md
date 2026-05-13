@@ -45,10 +45,10 @@ URL: https://news.ycombinator.com
 87,234 → 4,521 bytes (19.3x) | 156 elements, 89 interactive
 ```
 
-Interactive form controls include action-state cues such as `[disabled]`,
-`[enabled]`, `[required]`, `[group="Billing"]`, and
-`[description="..."]` when Plasmate emits those SOM attrs. Agents should use
-those cues before calling `plasmate_click` or `plasmate_type`.
+Interactive form controls include action-state cues such as `[enabled]`,
+`[disabled]`, `[blocked_reason=disabled]`, `[required]`,
+`[group="Billing"]`, and `[description="..."]`. Agents should use those cues
+before calling `plasmate_click` or `plasmate_type`.
 
 ### Agent with browsing tools
 

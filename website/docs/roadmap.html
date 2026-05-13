@@ -549,6 +549,12 @@
 <li><strong>Prompt helpers reduce misuse</strong>: Vercel AI users should get a small exported guidance string that tells models to honor SOM <code>enabled</code> and <code>blocked_reason</code> fields.</li>
 <li><strong>Next conformance step</strong>: shared adapter fixtures should verify that framework output does not regress from the parser/SDK action-plan contract.</li>
 </ul>
+<h3 id="2026-05-13-cross-adapter-fixture-adjustment">2026-05-13 Cross-Adapter Fixture Adjustment</h3><p>Current competitor pressure makes adapter consistency a retention issue. Playwright MCP snapshots, Stagehand action caching, and hosted browser traces all teach users to expect the current action surface to be trustworthy. Plasmate&#39;s local-first answer should be a shared adapter fixture suite that keeps every framework aligned with the same compact SOM contract.</p>
+<ul>
+<li><strong>Fixtures beat prose</strong>: Browser Use, LangChain, Vercel AI, parser packages, and SDKs should test availability, required, group, type, and description fields against the same SOM fixture.</li>
+<li><strong>Enabled is the default action state</strong>: adapters should mark interactive targets as enabled unless SOM explicitly blocks them.</li>
+<li><strong>Helpers should filter action menus</strong>: Vercel AI apps need a small runtime helper for cached action plans, not only prompt guidance.</li>
+</ul>
 <h2 id="completed-v011">Completed (v0.1.1)</h2><ul>
 <li>SOM compiler with 9.4x median compression across 38 sites</li>
 <li>V8 JavaScript execution with full DOM shim</li>
@@ -642,13 +648,18 @@
 <li><input checked="" disabled="" type="checkbox"> Browser Use action-plan helper and availability-aware page context</li>
 <li><input checked="" disabled="" type="checkbox"> LangChain availability-aware SOM text output</li>
 <li><input checked="" disabled="" type="checkbox"> Vercel AI action availability guidance helper</li>
+<li><input checked="" disabled="" type="checkbox"> Shared adapter action-availability fixture for Browser Use and LangChain</li>
+<li><input checked="" disabled="" type="checkbox"> LangChain enabled-state fallback for normal interactive targets</li>
+<li><input checked="" disabled="" type="checkbox"> Vercel AI action-target availability helper</li>
+<li><input checked="" disabled="" type="checkbox"> Browser Use and LangChain package version exports match package metadata</li>
 <li><input disabled="" type="checkbox"> Selector-aware SOM cache entries for repeated agent prompts</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
 <li><input disabled="" type="checkbox"> Promote shadow-DOM and web-component cases into shared cross-adapter fixtures</li>
 <li><input disabled="" type="checkbox"> Add cross-adapter fixtures for enriched compact action-plan metadata</li>
 <li><input disabled="" type="checkbox"> Add cross-adapter accessible-description fixtures</li>
 <li><input disabled="" type="checkbox"> Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners</li>
-<li><input disabled="" type="checkbox"> Promote adapter availability checks into shared cross-adapter fixtures</li>
+<li><input checked="" disabled="" type="checkbox"> Promote adapter availability checks into shared cross-adapter fixtures</li>
+<li><input disabled="" type="checkbox"> Add fixture-backed Vercel AI availability helper tests once package dependencies are pinned in this repo</li>
 <li><input disabled="" type="checkbox"> WebMCP/watchlist research spike: track whether browser-native tool exposure changes SOM adapter strategy</li>
 </ul>
 

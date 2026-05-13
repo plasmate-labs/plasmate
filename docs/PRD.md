@@ -168,6 +168,13 @@ the stickier move is to make Browser Use, LangChain, and Vercel AI adapters
 surface the same local action availability cues already present in parser/SDK
 helpers.
 
+2026-05-13 fixture read: the near-term competitive gap is no longer whether an
+adapter can show a page; it is whether every framework shows the same reusable
+action contract. Playwright MCP snapshots and Stagehand cached actions both
+make state drift costly. Plasmate should turn shared adapter fixtures into a
+release gate so Browser Use, LangChain, Vercel AI, parser packages, and SDKs
+all preserve availability, required, group, type, and description cues.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -194,6 +201,18 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-13:
+  - Added a shared adapter fixture for action availability, required fields,
+    groups, input type, and descriptions.
+  - Browser Use and LangChain adapter tests now consume the same fixture,
+    reducing drift between framework context output and parser action plans.
+  - LangChain now marks normal interactive targets as `[enabled]` even when
+    SOM omits `attrs.disabled`, and includes `[blocked_reason=disabled]` for
+    disabled targets.
+  - Vercel AI SDK integration now exports `PlasmateActionTarget` and
+    `isPlasmateActionTargetAvailable()` so apps can filter cached action menus
+    before prompting.
+  - Browser Use and LangChain package `__version__` exports now match their
+    `pyproject.toml` versions.
   - Browser Use integration page contexts now render compact action-plan
     targets with `enabled`, disabled `blocked_reason`, required, type, group,
     and description context.
@@ -338,8 +357,8 @@ and adapter docs over one-off integration logic.
 - Wire `015-action-state` into cross-adapter parser/SDK conformance runners so
   inherited disabled state stays synchronized outside Rust.
 - Promote the new Browser Use and LangChain adapter availability checks into a
-  shared cross-adapter fixture runner, and add an executable Vercel AI example
-  once package dependencies are pinned in this repo.
+  shared cross-adapter fixture runner that also exercises the Vercel AI
+  availability helper once package dependencies are pinned in this repo.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched
