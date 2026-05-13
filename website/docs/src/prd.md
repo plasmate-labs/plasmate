@@ -54,6 +54,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-13 Vercel AI extraction read: official docs continue to reward application-level action menus. Playwright MCP snapshots expose fresh refs, Stagehand v3 `observe()` returns cacheable structured actions, Firecrawl Interact resumes scraped browser sessions, Browser Use Cloud sells CDP sessions with profile state, and Cloudflare Browser Run/WebMCP is experimenting with typed browser-native tools. Plasmate should keep the local-first wedge but make raw SOM responses directly consumable by framework apps, so Vercel AI projects can extract, filter, and format action menus without reimplementing parser logic.
 
+2026-05-13 cache-key read: reusable action memory is becoming an expectation, not a premium add-on. Playwright MCP refs remain snapshot-bound while Stagehand/Browserbase action caching pushes teams toward stored selectors and actions. Plasmate should keep local SOM ids as the execution target, but action plans also need deterministic `cache_key` values so apps can compare, dedupe, and cache recurring actions without hosted selector memory.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -69,6 +71,10 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-13:
+  - Vercel AI compact action targets now include deterministic `cache_key` values for cached menus and trace logs.
+  - Node SOM parser action plans now include `cache_key` and export `getActionPlanCacheKey()`.
+  - Python SOM parser action plans now include `cache_key` and export `get_action_plan_cache_key()`.
+  - Added focused Vercel AI, Node parser, and Python parser coverage for deterministic action cache keys.
   - Vercel AI SDK integration now exports `extractPlasmateActionTargets()` for deriving compact action targets directly from raw SOM responses, including nested children and shadow-root elements.
   - Vercel AI prompt formatting now includes blocked reasons, input type, and placeholder metadata so cached action menus carry parser-equivalent field-selection cues.
   - Added an executable Vercel AI fixture test that builds the package and validates extraction, availability filtering, and prompt formatting against the shared adapter SOM fixture.
@@ -152,7 +158,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Add conformance cases for ARIA-heavy SaaS pages, especially disabled and required custom controls, and compare output against Playwright MCP snapshots.
 - Wire `015-action-state` into cross-adapter parser/SDK conformance runners so inherited disabled state stays synchronized outside Rust.
 - Promote the shared adapter availability fixture into a cross-adapter runner that also exercises the Vercel AI action-plan preparation helpers.
-- Add a runtime test runner for the Vercel AI package so the typecheck fixture can become executable fixture-backed coverage.
+- Promote action-plan `cache_key` parity into Go, Browser Use, and LangChain so cached local action menus stay consistent across all high-use runtimes.
 - Promote fieldset/legend group semantics into shared conformance fixtures alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched action-plan metadata.
 - Promote the new SDK/parser shadow-root and Go action-plan tests into shared conformance fixtures that run against every adapter before release.

@@ -10,6 +10,7 @@ import {
   findById,
   findByText,
   getActionPlan,
+  getActionPlanCacheKey,
   getInteractiveElements,
   getLinks,
   getForms,
@@ -343,6 +344,7 @@ describe('getActionPlan', () => {
     const plan = getActionPlan(FIXTURE);
     expect(plan[0]).toEqual({
       id: 'e_1',
+      cache_key: 'plasmate-action:v1:4f5af432',
       role: 'link',
       actions: ['click'],
       enabled: true,
@@ -351,6 +353,7 @@ describe('getActionPlan', () => {
     });
     expect(plan.at(-2)).toEqual({
       id: 'e_7',
+      cache_key: 'plasmate-action:v1:0b6b537f',
       role: 'text_input',
       actions: ['type', 'clear'],
       enabled: true,
@@ -385,6 +388,7 @@ describe('getActionPlan', () => {
     expect(getActionPlan(disabledSom)).toEqual([
       {
         id: 'locked',
+        cache_key: 'plasmate-action:v1:2de92b9a',
         role: 'button',
         actions: ['click'],
         enabled: false,
@@ -393,6 +397,21 @@ describe('getActionPlan', () => {
         blocked_reason: 'disabled',
       },
     ]);
+  });
+
+  it('returns deterministic cache keys for equivalent action targets', () => {
+    expect(
+      getActionPlanCacheKey({
+        id: 'e_7',
+        role: 'text_input',
+        actions: ['type', 'clear'],
+        enabled: true,
+        label: 'Search',
+        name: 'q',
+        input_type: 'text',
+        placeholder: 'Search...',
+      }),
+    ).toBe('plasmate-action:v1:0b6b537f');
   });
 });
 

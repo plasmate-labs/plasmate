@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises'
 import {
   extractPlasmateActionTargets,
   formatPlasmateActionPlan,
+  getPlasmateActionTargetCacheKey,
   isPlasmateActionTargetAvailable,
   preparePlasmateActionPlan,
 } from '../dist/index.js'
@@ -20,6 +21,7 @@ assert.equal(targets.length, 3)
 const email = targets.find((target) => target.id === 'e_email')
 assert.deepEqual(email, {
   id: 'e_email',
+  cache_key: 'plasmate-action:v1:91875850',
   role: 'text_input',
   actions: ['type'],
   enabled: true,
@@ -33,6 +35,7 @@ assert.deepEqual(email, {
 
 const save = targets.find((target) => target.id === 'e_save')
 assert.equal(isPlasmateActionTargetAvailable(save), false)
+assert.equal(getPlasmateActionTargetCacheKey(save), save.cache_key)
 assert.equal(save.enabled, false)
 assert.equal(save.disabled, true)
 assert.equal(save.blocked_reason, 'disabled')
@@ -48,9 +51,9 @@ const formatted = formatPlasmateActionPlan(targets, {
 })
 assert.match(
   formatted,
-  /\[e_email\] text_input "Work email" \(type\) \[enabled\] \[required\] \[type=email\] \[placeholder=name@company\.com\] \[group=Account\]/
+  /\[e_email\] text_input "Work email" \(type\) \[enabled\] \[cache_key=plasmate-action:v1:91875850\] \[required\] \[type=email\] \[placeholder=name@company\.com\] \[group=Account\]/
 )
 assert.match(
   formatted,
-  /\[e_save\] button "Save" \(click\) \[blocked\] \[blocked_reason=disabled\]/
+  /\[e_save\] button "Save" \(click\) \[blocked\] \[cache_key=plasmate-action:v1:4d0e8356\] \[blocked_reason=disabled\]/
 )

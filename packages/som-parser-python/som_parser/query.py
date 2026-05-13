@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import Callable, Dict, List, Optional, Union
 
 from .types import (
@@ -103,6 +104,37 @@ def get_interactive_elements(som: Som) -> List[SomElement]:
     return [el for el in get_all_elements(som) if el.actions]
 
 
+def _fnv1a32(value: str) -> str:
+    hash_value = 0x811C9DC5
+    for char in value:
+        hash_value ^= ord(char)
+        hash_value = (hash_value * 0x01000193) & 0xFFFFFFFF
+    return f"{hash_value:08x}"
+
+
+def _compact_string(value: object) -> Optional[str]:
+    return value if isinstance(value, str) and value else None
+
+
+def get_action_plan_cache_key(item: Dict[str, object]) -> str:
+    """Return a deterministic key for caching or comparing an action target."""
+    actions = item.get("actions")
+    action_values = sorted(actions) if isinstance(actions, list) else []
+    parts = [
+        _compact_string(item.get("id")),
+        _compact_string(item.get("role")),
+        _compact_string(item.get("label")),
+        ",".join(str(action) for action in action_values) or None,
+        _compact_string(item.get("name")),
+        _compact_string(item.get("href")),
+        _compact_string(item.get("input_type")),
+        _compact_string(item.get("group")),
+        _compact_string(item.get("placeholder")),
+    ]
+    encoded = json.dumps(parts, separators=(",", ":"))
+    return f"plasmate-action:v1:{_fnv1a32(encoded)}"
+
+
 def get_action_plan(som: Som) -> List[Dict[str, object]]:
     """Return compact action targets for agent planning."""
     plan: List[Dict[str, object]] = []
@@ -137,6 +169,7 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                     item["blocked_reason"] = "disabled"
             if attrs.group:
                 item["group"] = attrs.group
+        item["cache_key"] = get_action_plan_cache_key(item)
         plan.append(item)
     return plan
 

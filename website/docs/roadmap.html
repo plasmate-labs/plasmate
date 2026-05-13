@@ -567,6 +567,12 @@
 <li><strong>Shadow roots count at the framework edge</strong>: extraction helpers should traverse <code>children</code> and <code>shadow.elements</code>.</li>
 <li><strong>Runtime fixture coverage is a release gate</strong>: Vercel AI should test extraction, filtering, and prompt formatting against the shared adapter fixture.</li>
 </ul>
+<h3 id="2026-05-13-deterministic-action-cache-key-adjustment">2026-05-13 Deterministic Action Cache-Key Adjustment</h3><p>Reusable action memory is now part of the category expectation. Playwright MCP refs stay tied to fresh snapshots, while Stagehand/Browserbase action caching makes repeated workflows cheaper after first observation. Plasmate should keep local SOM ids as execution targets and add deterministic action keys so apps can cache, dedupe, and compare repeated actions without hosted selector memory.</p>
+<ul>
+<li><strong>Cache keys complement ids</strong>: <code>cache_key</code> gives apps a stable value for local action-plan storage, prompt dedupe, and trace correlation.</li>
+<li><strong>Parser parity first</strong>: Python and Node parser packages should emit the same cache-key contract as framework helpers.</li>
+<li><strong>Adapters inherit the contract</strong>: Browser Use, LangChain, Vercel AI, and Go should converge on one compact action target shape.</li>
+</ul>
 <h2 id="completed-v011">Completed (v0.1.1)</h2><ul>
 <li>SOM compiler with 9.4x median compression across 38 sites</li>
 <li>V8 JavaScript execution with full DOM shim</li>
@@ -667,6 +673,8 @@
 <li><input checked="" disabled="" type="checkbox"> Vercel AI typecheck fixture for compact action-plan helper parity</li>
 <li><input checked="" disabled="" type="checkbox"> Vercel AI SOM-to-action-target extraction helper</li>
 <li><input checked="" disabled="" type="checkbox"> Vercel AI runtime fixture test for extraction, filtering, and formatting</li>
+<li><input checked="" disabled="" type="checkbox"> Vercel AI deterministic action target cache keys</li>
+<li><input checked="" disabled="" type="checkbox"> Python and Node parser deterministic action-plan cache keys</li>
 <li><input checked="" disabled="" type="checkbox"> Browser Use and LangChain package version exports match package metadata</li>
 <li><input disabled="" type="checkbox"> Selector-aware SOM cache entries for repeated agent prompts</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
@@ -676,6 +684,7 @@
 <li><input disabled="" type="checkbox"> Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners</li>
 <li><input checked="" disabled="" type="checkbox"> Promote adapter availability checks into shared cross-adapter fixtures</li>
 <li><input checked="" disabled="" type="checkbox"> Add runtime Vercel AI fixture tests once the package has a local test runner</li>
+<li><input disabled="" type="checkbox"> Promote action-plan cache keys into Go, Browser Use, and LangChain</li>
 <li><input disabled="" type="checkbox"> WebMCP/watchlist research spike: track whether browser-native tool exposure changes SOM adapter strategy</li>
 </ul>
 

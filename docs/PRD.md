@@ -195,6 +195,14 @@ raw SOM responses directly consumable by framework apps, so Vercel AI projects
 can extract, filter, and format action menus without reimplementing parser
 logic.
 
+2026-05-13 cache-key read: current browser-agent products are teaching teams
+to expect reusable action memory, not only a fresh page snapshot. Playwright MCP
+keeps refs bound to the current accessibility snapshot, while Stagehand and
+Browserbase emphasize cached actions/selectors for repeated workflows. Plasmate
+should keep ids as the execution target, but SDK and framework action plans
+also need deterministic `cache_key` values so apps can compare, store, and
+dedupe recurring local SOM actions without cloud selector memory.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -221,6 +229,17 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-13:
+  - Vercel AI compact action targets now include deterministic `cache_key`
+    values, making formatted menus easier to cache, compare, and trace across
+    repeated agent steps.
+  - Node SOM parser action plans now include the same `cache_key` field and
+    export `getActionPlanCacheKey()` for app code that builds cached workflows
+    from compact targets.
+  - Python SOM parser action plans now include `cache_key` and export
+    `get_action_plan_cache_key()`, keeping Python agent code aligned with the
+    Node and Vercel AI surfaces.
+  - Added focused Vercel AI, Node parser, and Python parser tests for the
+    deterministic cache-key contract.
   - Vercel AI SDK integration now exports `extractPlasmateActionTargets()` for
     deriving compact action targets directly from raw SOM responses, including
     nested children and shadow-root elements.
@@ -402,8 +421,8 @@ and adapter docs over one-off integration logic.
 - Promote the new Browser Use and LangChain adapter availability checks into a
   shared cross-adapter fixture runner that also exercises the Vercel AI
   action-plan preparation helpers.
-- Add a runtime test runner for the Vercel AI package so the new typecheck
-  fixture can become executable fixture-backed coverage.
+- Promote action-plan `cache_key` parity into Go, Browser Use, and LangChain so
+  cached local action menus stay consistent across all high-use runtimes.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched

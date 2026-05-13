@@ -28,6 +28,7 @@ export interface PlasmateTools {
  */
 export interface PlasmateActionTarget {
   id?: string
+  cache_key?: string
   role?: string
   label?: string
   text?: string
@@ -96,7 +97,45 @@ export interface PreparePlasmateActionPlanOptions {
 export const plasmateActionGuidance =
   'Use Plasmate SOM element ids for browser actions. Treat action targets ' +
   'with enabled=false or blocked_reason as unavailable, and prefer ' +
-  'required, description, placeholder, and group fields when choosing form controls.'
+  'cache_key, required, description, placeholder, and group fields when choosing or reusing form controls.'
+
+function compactString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.length > 0 ? value : undefined
+}
+
+function stableActionTargetParts(target: PlasmateActionTarget) {
+  return [
+    compactString(target.id),
+    compactString(target.role),
+    compactString(target.label ?? target.text),
+    [...(target.actions ?? [])].sort().join(',') || undefined,
+    compactString(target.name),
+    compactString(target.href),
+    compactString(target.input_type),
+    compactString(target.group),
+    compactString(target.placeholder),
+  ]
+}
+
+function fnv1a32(input: string): string {
+  let hash = 0x811c9dc5
+
+  for (let index = 0; index < input.length; index += 1) {
+    hash ^= input.charCodeAt(index)
+    hash = Math.imul(hash, 0x01000193)
+  }
+
+  return (hash >>> 0).toString(16).padStart(8, '0')
+}
+
+/**
+ * Return a deterministic key for caching or comparing action targets.
+ */
+export function getPlasmateActionTargetCacheKey(
+  target: PlasmateActionTarget
+): string {
+  return `plasmate-action:v1:${fnv1a32(JSON.stringify(stableActionTargetParts(target)))}`
+}
 
 /**
  * Return whether a compact Plasmate action target is safe to offer for action.
@@ -121,6 +160,8 @@ export function normalizePlasmateActionTarget(
 
   return {
     ...target,
+    cache_key:
+      target.cache_key ?? getPlasmateActionTargetCacheKey(target),
     enabled,
     ...(enabled ? {} : { blocked_reason: target.blocked_reason ?? 'disabled' }),
   }
@@ -228,6 +269,7 @@ export function formatPlasmateActionPlan(
   return preparePlasmateActionPlan(targets, options)
     .map((target) => {
       const id = target.id ? `[${target.id}] ` : ''
+      const cacheKey = target.cache_key ? ` [cache_key=${target.cache_key}]` : ''
       const role = target.role ?? 'target'
       const name = target.label ?? target.text ?? ''
       const actions = target.actions?.length
@@ -247,7 +289,7 @@ export function formatPlasmateActionPlan(
         ? ` [description=${target.description}]`
         : ''
 
-      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${blockedReason}${required}${inputType}${placeholder}${group}${description}`
+      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${inputType}${placeholder}${group}${description}`
     })
     .join('\n')
 }

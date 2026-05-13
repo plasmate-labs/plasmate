@@ -49,6 +49,39 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-13T08:12:00Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first. The automation worktree
+  still cannot write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate26/FETCH_HEAD`
+  (`Operation not permitted`), and the primary checkout could not resolve
+  `github.com` over SSH. Continued from the newest local primary checkout,
+  which already contained the prior two unpushed Vercel AI action-menu commits.
+- Market direction: competitor docs continue to favor reusable action memory
+  over a hosted-browser pivot. Playwright MCP keeps refs bound to fresh
+  snapshots, while Stagehand/Browserbase-style action caching and hosted trace
+  tooling make repeated workflows cheaper after first observation. Plasmate's
+  best retention path remains local-first SOM action plans with deterministic
+  ids, availability, and now cache keys across SDK/framework surfaces.
+- Code changes: Vercel AI compact action targets now include deterministic
+  `cache_key` values and export `getPlasmateActionTargetCacheKey()`. Node SOM
+  parser action plans now include `cache_key` and export
+  `getActionPlanCacheKey()`. Python SOM parser action plans now include
+  `cache_key` and export `get_action_plan_cache_key()`.
+- Docs changes: updated the Vercel AI README, Python/Node parser READMEs, PRD,
+  roadmap, website PRD/roadmap sources, and regenerated website docs with the
+  cache-key rationale and next step to push parity into Go, Browser Use, and
+  LangChain.
+- Verification: Vercel AI `npm run typecheck` passed; Vercel AI `npm test`
+  passed; Node parser `npm run build && npm test` passed 52 tests; Python
+  parser `python3 -m pytest tests/test_parser.py -q` passed 67 tests; `node
+  website/build.mjs` rebuilt 39 pages; `git diff --check` passed;
+  `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build` passed with
+  existing warnings. Default parallel `cargo test --lib` hit the existing
+  auth-store HOME race once, but the focused auth test passed and
+  `cargo test --lib -- --test-threads=1` passed 245 tests with existing
+  warnings.
+
 ### 2026-05-13T07:10:00Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first, but this automation

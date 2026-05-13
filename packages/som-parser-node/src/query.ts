@@ -76,6 +76,7 @@ export function getInteractiveElements(som: Som): SomElement[] {
 
 export interface ActionPlanItem {
   id: string;
+  cache_key: string;
   role: ElementRole;
   actions: ElementAction[];
   enabled: boolean;
@@ -91,10 +92,42 @@ export interface ActionPlanItem {
   group?: string;
 }
 
+function compactString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
+function stableActionPlanParts(item: Omit<ActionPlanItem, 'cache_key'> | ActionPlanItem) {
+  return [
+    compactString(item.id),
+    compactString(item.role),
+    compactString(item.label),
+    [...item.actions].sort().join(',') || undefined,
+    compactString(item.name),
+    compactString(item.href),
+    compactString(item.input_type),
+    compactString(item.group),
+    compactString(item.placeholder),
+  ];
+}
+
+function fnv1a32(input: string): string {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < input.length; index += 1) {
+    hash ^= input.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
+
+/** Return a deterministic key for caching or comparing an action target. */
+export function getActionPlanCacheKey(item: Omit<ActionPlanItem, 'cache_key'> | ActionPlanItem): string {
+  return `plasmate-action:v1:${fnv1a32(JSON.stringify(stableActionPlanParts(item)))}`;
+}
+
 /** Return compact action targets for agent planning. */
 export function getActionPlan(som: Som): ActionPlanItem[] {
   return getInteractiveElements(som).map((el) => {
-    const item: ActionPlanItem = {
+    const item: Omit<ActionPlanItem, 'cache_key'> = {
       id: el.id,
       role: el.role,
       actions: el.actions ?? [],
@@ -116,7 +149,10 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
       }
     }
     if (el.attrs?.group) item.group = el.attrs.group;
-    return item;
+    return {
+      ...item,
+      cache_key: getActionPlanCacheKey(item),
+    };
   });
 }
 

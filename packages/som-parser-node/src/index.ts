@@ -29,6 +29,7 @@ export {
   findById,
   findByText,
   getActionPlan,
+  getActionPlanCacheKey,
   getInteractiveElements,
   getLinks,
   getForms,

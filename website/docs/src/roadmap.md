@@ -150,6 +150,14 @@ Official docs keep validating action menus as the retention layer: Playwright MC
 - **Shadow roots count at the framework edge**: extraction helpers should traverse `children` and `shadow.elements`.
 - **Runtime fixture coverage is a release gate**: Vercel AI should test extraction, filtering, and prompt formatting against the shared adapter fixture.
 
+### 2026-05-13 Deterministic Action Cache-Key Adjustment
+
+Reusable action memory is now part of the category expectation. Playwright MCP refs stay tied to fresh snapshots, while Stagehand/Browserbase action caching makes repeated workflows cheaper after first observation. Plasmate should keep local SOM ids as execution targets and add deterministic action keys so apps can cache, dedupe, and compare repeated actions without hosted selector memory.
+
+- **Cache keys complement ids**: `cache_key` gives apps a stable value for local action-plan storage, prompt dedupe, and trace correlation.
+- **Parser parity first**: Python and Node parser packages should emit the same cache-key contract as framework helpers.
+- **Adapters inherit the contract**: Browser Use, LangChain, Vercel AI, and Go should converge on one compact action target shape.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -255,6 +263,8 @@ Official docs keep validating action menus as the retention layer: Playwright MC
 - [x] Vercel AI typecheck fixture for compact action-plan helper parity
 - [x] Vercel AI SOM-to-action-target extraction helper
 - [x] Vercel AI runtime fixture test for extraction, filtering, and formatting
+- [x] Vercel AI deterministic action target cache keys
+- [x] Python and Node parser deterministic action-plan cache keys
 - [x] Browser Use and LangChain package version exports match package metadata
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
@@ -264,4 +274,5 @@ Official docs keep validating action menus as the retention layer: Playwright MC
 - [ ] Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners
 - [x] Promote adapter availability checks into shared cross-adapter fixtures
 - [x] Add runtime Vercel AI fixture tests once the package has a local test runner
+- [ ] Promote action-plan cache keys into Go, Browser Use, and LangChain
 - [ ] WebMCP/watchlist research spike: track whether browser-native tool exposure changes SOM adapter strategy

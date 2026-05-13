@@ -20,6 +20,7 @@ from som_parser import (
     find_by_text,
     from_plasmate,
     get_action_plan,
+    get_action_plan_cache_key,
     get_all_elements,
     get_compression_ratio,
     get_forms,
@@ -493,6 +494,7 @@ class TestGetActionPlan:
             "enabled": True,
             "label": "Home",
             "href": "/",
+            "cache_key": "plasmate-action:v1:4f5af432",
         }
         assert plan[-2] == {
             "id": "e_7",
@@ -503,6 +505,7 @@ class TestGetActionPlan:
             "name": "q",
             "input_type": "text",
             "placeholder": "Search...",
+            "cache_key": "plasmate-action:v1:0b6b537f",
         }
 
     def test_marks_disabled_targets_unavailable(self):
@@ -542,8 +545,26 @@ class TestGetActionPlan:
                 "label": "Archive",
                 "disabled": True,
                 "blocked_reason": "disabled",
+                "cache_key": "plasmate-action:v1:2de92b9a",
             }
         ]
+
+    def test_returns_deterministic_cache_keys(self):
+        assert (
+            get_action_plan_cache_key(
+                {
+                    "id": "e_7",
+                    "role": "text_input",
+                    "actions": ["type", "clear"],
+                    "enabled": True,
+                    "label": "Search",
+                    "name": "q",
+                    "input_type": "text",
+                    "placeholder": "Search...",
+                }
+            )
+            == "plasmate-action:v1:0b6b537f"
+        )
 
 
 class TestGetLinks:

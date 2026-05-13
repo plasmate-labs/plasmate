@@ -312,6 +312,25 @@ directly useful in app code.
    app-level helpers do not drift from Browser Use, LangChain, and parser
    contracts.
 
+### 2026-05-13 Deterministic Action Cache-Key Adjustment
+
+Reusable action memory is now part of the category expectation. Playwright MCP
+keeps refs bound to fresh snapshots, while Stagehand/Browserbase action caching
+and hosted trace tooling make repeated workflows cheaper after the first
+observation. Plasmate should preserve its local-first execution model and add
+deterministic action keys to compact SOM targets so apps can cache, dedupe, and
+compare repeated actions without adopting hosted selector memory.
+
+1. **Cache keys complement ids**: SOM ids remain the execution target, while
+   `cache_key` gives agent apps a stable value for local action-plan storage,
+   prompt dedupe, and trace correlation.
+2. **Parser parity first**: Python and Node parser packages should emit the
+   same cache-key contract as framework helpers before new hosted workflow
+   features are considered.
+3. **Adapters should inherit the contract**: Browser Use, LangChain, Vercel AI,
+   and Go should converge on the same compact action target shape so cached
+   workflows do not depend on one runtime.
+
 ## Architecture
 
 ```
@@ -543,6 +562,11 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Vercel AI now has an executable fixture test that builds the package and
   validates SOM extraction, availability filtering, and formatting against the
   shared adapter fixture.
+- Vercel AI compact action targets now include deterministic `cache_key` values
+  and export `getPlasmateActionTargetCacheKey()` for cached menus and trace
+  correlation.
+- Python and Node parser compact action plans now include deterministic
+  `cache_key` fields plus helper functions for app-level cached workflows.
 - Browser Use and LangChain package `__version__` exports now match package
   metadata.
 - Selector handling now trims whitespace and supports documented region ids
