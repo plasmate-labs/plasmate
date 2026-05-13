@@ -84,8 +84,10 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   -- --test-threads=1` passed; `git diff --check` passed. Global
   `cargo fmt --check` still reports pre-existing formatting drift in unrelated
   Rust files, so only the touched Rust test was formatted.
-- Commit/push state: implementation commit and remote push are pending at this
-  checkpoint.
+- Commit/push state: implementation commit `b359020`
+  (`chore: expose aria relationship action cues`) was pushed to
+  `codex/plasmate-improvements-2026-05-13-control-state` and fast-forwarded
+  remote `master` from `66656e3` to `b359020`.
 
 ### 2026-05-13T18:11:08Z - Plasmate Improvements Automation
 
