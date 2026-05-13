@@ -89,9 +89,11 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   `src/awp/handler.rs`, `src/network/proxy.rs`, `src/main.rs`, and
   `src/mcp/tools.rs`; touched Rust files were formatted directly with
   `rustfmt`.
-- Commit/push state: commit creation and remote push are attempted after this
-  state entry. Remote push/merge may remain blocked until `github.com` DNS
-  resolution is available.
+- Commit/push state: implementation commit `66cad78`
+  (`fix: improve semantic action fidelity`) was pushed to
+  `codex/plasmate-improvements-2026-05-13-vercel-action-menu` and
+  fast-forwarded remote `master` from `6b10133` to `66cad78`. A follow-up
+  state commit records that push result.
 
 ### 2026-05-13T13:08:36Z - Plasmate Improvements Automation
 
