@@ -80,6 +80,11 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   primary-checkout `node_modules`; `node website/build.mjs` rebuilt 39 pages;
   `git diff --check` passed; `cargo build` passed with existing warnings; and
   `cargo test --lib` passed 245 tests with existing warnings.
+- Commit/push state: committed `469478f` as
+  `chore: surface action availability in adapters`, pushed review branch
+  `codex/plasmate-improvements-2026-05-13-adapter-availability`, and
+  fast-forwarded remote `master` from `62de9d3` to `469478f`. A follow-up
+  state-only commit records this final push state.
 
 ### 2026-05-13T03:09:11Z - Plasmate Improvements Automation
 
