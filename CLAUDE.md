@@ -90,7 +90,8 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   `codex/plasmate-improvements-2026-05-13-control-state`; local `master` was
   fast-forwarded to the same commit and pushed to remote `master`. The first
   `master` push attempt hit transient GitHub DNS failure, and the immediate
-  retry succeeded.
+  retry succeeded. A follow-up state-only commit records the final push state
+  and was pushed to both remote `master` and the automation branch.
 
 ### 2026-05-13T20:08:54Z - Plasmate Improvements Automation
 
