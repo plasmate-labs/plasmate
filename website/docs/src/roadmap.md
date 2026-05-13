@@ -142,6 +142,14 @@ Competitor docs keep moving reusable page state into app workflows: Playwright M
 - **Prepare menus before prompting**: apps should normalize, filter, and cap action targets before handing them to `generateText` or `streamText`.
 - **Prompt formatting is product surface**: compact action-plan text should preserve ids, roles, labels, actions, availability, required state, groups, and descriptions.
 
+### 2026-05-13 Vercel AI SOM Extraction Adjustment
+
+Official docs keep validating action menus as the retention layer: Playwright MCP snapshots return fresh refs, Stagehand v3 `observe()` creates cacheable structured actions, Firecrawl Interact and Browser Use Cloud package managed sessions, and Cloudflare Browser Run/WebMCP is testing typed browser-native tools. Plasmate should keep the local-first wedge but make raw SOM responses directly useful in app code.
+
+- **Raw SOM should become an action menu**: Vercel AI apps should derive compact targets from SOM without hand-walking nested regions.
+- **Shadow roots count at the framework edge**: extraction helpers should traverse `children` and `shadow.elements`.
+- **Runtime fixture coverage is a release gate**: Vercel AI should test extraction, filtering, and prompt formatting against the shared adapter fixture.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -245,6 +253,8 @@ Competitor docs keep moving reusable page state into app workflows: Playwright M
 - [x] Vercel AI action-target availability helper
 - [x] Vercel AI action-menu normalization, filtering, and formatting helpers
 - [x] Vercel AI typecheck fixture for compact action-plan helper parity
+- [x] Vercel AI SOM-to-action-target extraction helper
+- [x] Vercel AI runtime fixture test for extraction, filtering, and formatting
 - [x] Browser Use and LangChain package version exports match package metadata
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
@@ -253,5 +263,5 @@ Competitor docs keep moving reusable page state into app workflows: Playwright M
 - [ ] Add cross-adapter accessible-description fixtures
 - [ ] Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners
 - [x] Promote adapter availability checks into shared cross-adapter fixtures
-- [ ] Add runtime Vercel AI fixture tests once the package has a local test runner
+- [x] Add runtime Vercel AI fixture tests once the package has a local test runner
 - [ ] WebMCP/watchlist research spike: track whether browser-native tool exposure changes SOM adapter strategy

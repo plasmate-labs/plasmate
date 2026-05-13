@@ -185,6 +185,16 @@ apps consume SOM action menus directly: Vercel AI users need a helper that
 normalizes availability, filters blocked targets, and formats compact action
 menus before the model sees them.
 
+2026-05-13 Vercel AI extraction read: official docs continue to reward
+application-level action menus. Playwright MCP snapshots expose fresh refs,
+Stagehand v3 `observe()` returns cacheable structured actions, Firecrawl
+Interact resumes scraped browser sessions, Browser Use Cloud sells CDP sessions
+with profile state, and Cloudflare Browser Run/WebMCP is experimenting with
+typed browser-native tools. Plasmate should keep the local-first wedge but make
+raw SOM responses directly consumable by framework apps, so Vercel AI projects
+can extract, filter, and format action menus without reimplementing parser
+logic.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -211,6 +221,15 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-13:
+  - Vercel AI SDK integration now exports `extractPlasmateActionTargets()` for
+    deriving compact action targets directly from raw SOM responses, including
+    nested children and shadow-root elements.
+  - Vercel AI prompt formatting now includes blocked reasons, input type, and
+    placeholder metadata so cached action menus carry the same field-selection
+    cues exposed by parser action plans.
+  - Added an executable Vercel AI fixture test that builds the package and
+    validates extraction, availability filtering, and prompt formatting against
+    the shared adapter SOM fixture.
   - Vercel AI action-target availability now treats any `blocked_reason` as
     unavailable, not only `blocked_reason="disabled"`, matching the broader
     action-plan contract used by parser and SDK helpers.

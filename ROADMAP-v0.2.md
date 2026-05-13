@@ -291,6 +291,27 @@ model spends tokens.
    preserve ids, roles, labels, actions, availability, required state, groups,
    and descriptions so cached workflows do not need custom glue.
 
+### 2026-05-13 Vercel AI SOM Extraction Adjustment
+
+Current competitor docs keep validating action menus as the layer that creates
+retention. Playwright MCP snapshots return fresh refs after actions, Stagehand
+v3 `observe()` creates cacheable structured actions, Firecrawl Interact and
+Browser Use Cloud package managed sessions, and Cloudflare Browser Run/WebMCP
+is testing typed browser-native tools. Plasmate should not pivot into hosted
+browser infrastructure, but framework integrations must make raw SOM responses
+directly useful in app code.
+
+1. **Raw SOM should become an action menu**: Vercel AI apps should be able to
+   derive compact targets from a SOM response without importing parser packages
+   or hand-walking nested regions.
+2. **Shadow roots count at the framework edge**: extraction helpers should
+   traverse `children` and `shadow.elements` because modern SaaS controls often
+   live inside web components.
+3. **Runtime fixture coverage is a release gate**: Vercel AI needs an
+   executable fixture test for extraction, filtering, and prompt formatting so
+   app-level helpers do not drift from Browser Use, LangChain, and parser
+   contracts.
+
 ## Architecture
 
 ```
@@ -514,6 +535,14 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   application-level action menu preparation.
 - Vercel AI now has fixture-style TypeScript compile coverage for availability,
   required, group, and description action-plan metadata.
+- Vercel AI SDK integration exports `extractPlasmateActionTargets()` to derive
+  compact action targets from raw SOM responses, including nested children and
+  shadow-root elements.
+- Vercel AI action-plan formatting now preserves blocked reasons, input type,
+  and placeholder metadata for model prompts and trace logs.
+- Vercel AI now has an executable fixture test that builds the package and
+  validates SOM extraction, availability filtering, and formatting against the
+  shared adapter fixture.
 - Browser Use and LangChain package `__version__` exports now match package
   metadata.
 - Selector handling now trims whitespace and supports documented region ids

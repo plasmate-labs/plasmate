@@ -37,9 +37,37 @@ export interface PlasmateActionTarget {
   blocked_reason?: string
   required?: boolean
   description?: string
+  href?: string
+  input_type?: string
+  name?: string
   placeholder?: string
   group?: string
   [key: string]: unknown
+}
+
+/**
+ * Minimal SOM element shape needed to derive Vercel AI action menus.
+ */
+export interface PlasmateSomElement {
+  id?: string
+  role?: string
+  label?: string
+  text?: string
+  actions?: string[]
+  attrs?: Record<string, unknown>
+  children?: PlasmateSomElement[]
+  shadow?: {
+    elements?: PlasmateSomElement[]
+  }
+}
+
+/**
+ * Minimal SOM shape accepted by extractPlasmateActionTargets().
+ */
+export interface PlasmateSom {
+  regions?: Array<{
+    elements?: PlasmateSomElement[]
+  }>
 }
 
 /**
@@ -98,6 +126,77 @@ export function normalizePlasmateActionTarget(
   }
 }
 
+function collectSomElements(elements: readonly PlasmateSomElement[] = []) {
+  const collected: PlasmateSomElement[] = []
+
+  for (const element of elements) {
+    collected.push(element)
+
+    if (element.children?.length) {
+      collected.push(...collectSomElements(element.children))
+    }
+
+    if (element.shadow?.elements?.length) {
+      collected.push(...collectSomElements(element.shadow.elements))
+    }
+  }
+
+  return collected
+}
+
+function copyStringAttr(
+  item: PlasmateActionTarget,
+  attrs: Record<string, unknown>,
+  key: 'href' | 'input_type' | 'name' | 'placeholder' | 'description' | 'group'
+) {
+  if (typeof attrs[key] === 'string' && attrs[key].length > 0) {
+    item[key] = attrs[key]
+  }
+}
+
+/**
+ * Extract compact action targets from a raw Plasmate SOM response.
+ */
+export function extractPlasmateActionTargets(
+  som: PlasmateSom
+): PlasmateActionTarget[] {
+  return (som.regions ?? [])
+    .flatMap((region) => collectSomElements(region.elements ?? []))
+    .filter((element) => element.actions?.length)
+    .map((element) => {
+      const attrs = element.attrs ?? {}
+      const target: PlasmateActionTarget = {
+        id: element.id,
+        role: element.role,
+        actions: element.actions,
+        enabled: true,
+      }
+      const label = element.label ?? element.text
+
+      if (label) target.label = label
+      copyStringAttr(target, attrs, 'href')
+      copyStringAttr(target, attrs, 'input_type')
+      copyStringAttr(target, attrs, 'name')
+      copyStringAttr(target, attrs, 'placeholder')
+      copyStringAttr(target, attrs, 'description')
+      copyStringAttr(target, attrs, 'group')
+
+      if (typeof attrs.required === 'boolean') {
+        target.required = attrs.required
+      }
+
+      if (typeof attrs.disabled === 'boolean') {
+        target.disabled = attrs.disabled
+        if (attrs.disabled) {
+          target.enabled = false
+          target.blocked_reason = 'disabled'
+        }
+      }
+
+      return normalizePlasmateActionTarget(target)
+    })
+}
+
 /**
  * Prepare a compact action menu for Vercel AI SDK prompts or cached workflows.
  */
@@ -135,13 +234,20 @@ export function formatPlasmateActionPlan(
         ? ` (${target.actions.join(',')})`
         : ''
       const state = target.enabled === false ? ' [blocked]' : ' [enabled]'
+      const blockedReason = target.blocked_reason
+        ? ` [blocked_reason=${target.blocked_reason}]`
+        : ''
       const required = target.required ? ' [required]' : ''
+      const inputType = target.input_type ? ` [type=${target.input_type}]` : ''
+      const placeholder = target.placeholder
+        ? ` [placeholder=${target.placeholder}]`
+        : ''
       const group = target.group ? ` [group=${target.group}]` : ''
       const description = target.description
         ? ` [description=${target.description}]`
         : ''
 
-      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${required}${group}${description}`
+      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${blockedReason}${required}${inputType}${placeholder}${group}${description}`
     })
     .join('\n')
 }

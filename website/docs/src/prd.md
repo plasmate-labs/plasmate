@@ -52,6 +52,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-13 Vercel AI helper read: app frameworks are where reusable action menus become sticky. Stagehand `observe()` and Browserbase cached selectors normalize precomputed action menus, while Playwright MCP keeps refs tied to the current snapshot. Plasmate should make Vercel AI apps normalize, filter, limit, and format SOM action targets before the model sees them.
 
+2026-05-13 Vercel AI extraction read: official docs continue to reward application-level action menus. Playwright MCP snapshots expose fresh refs, Stagehand v3 `observe()` returns cacheable structured actions, Firecrawl Interact resumes scraped browser sessions, Browser Use Cloud sells CDP sessions with profile state, and Cloudflare Browser Run/WebMCP is experimenting with typed browser-native tools. Plasmate should keep the local-first wedge but make raw SOM responses directly consumable by framework apps, so Vercel AI projects can extract, filter, and format action menus without reimplementing parser logic.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -67,6 +69,9 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-13:
+  - Vercel AI SDK integration now exports `extractPlasmateActionTargets()` for deriving compact action targets directly from raw SOM responses, including nested children and shadow-root elements.
+  - Vercel AI prompt formatting now includes blocked reasons, input type, and placeholder metadata so cached action menus carry parser-equivalent field-selection cues.
+  - Added an executable Vercel AI fixture test that builds the package and validates extraction, availability filtering, and prompt formatting against the shared adapter SOM fixture.
   - Vercel AI action-target availability now treats any `blocked_reason` as unavailable, not only `blocked_reason="disabled"`.
   - Vercel AI SDK integration now exports `normalizePlasmateActionTarget()`, `preparePlasmateActionPlan()`, and `formatPlasmateActionPlan()` for action-menu preparation before Vercel AI SDK calls.
   - Added fixture-style TypeScript compile coverage for Vercel AI action helpers using availability, required, group, and description metadata.

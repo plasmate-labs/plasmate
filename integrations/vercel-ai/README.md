@@ -60,8 +60,9 @@ const { text } = await generateText({
 `plasmateActionGuidance` tells the model to honor SOM action targets with
 `enabled`, `blocked_reason`, `required`, `description`, `placeholder`, and
 `group` fields before selecting browser actions. Use
-`preparePlasmateActionPlan()` or `formatPlasmateActionPlan()` when your app
-filters cached or extracted action plans before passing them to the model.
+`extractPlasmateActionTargets()`, `preparePlasmateActionPlan()`, or
+`formatPlasmateActionPlan()` when your app filters cached or extracted action
+plans before passing them to the model.
 
 ## API
 
@@ -98,6 +99,13 @@ Returns a copy of an action target with explicit `enabled` state. Targets with
 `disabled: true`, `enabled: false`, or any `blocked_reason` normalize to
 `enabled: false` and keep or receive a `blocked_reason`.
 
+### `extractPlasmateActionTargets(som)`
+
+Flattens a raw Plasmate SOM response into compact action targets. It traverses
+nested `children` and `shadow.elements`, copies common action metadata from
+`attrs` (`href`, `name`, `input_type`, `placeholder`, `description`, `required`,
+`disabled`, and `group`), and normalizes availability state.
+
 ### `preparePlasmateActionPlan(targets, options?)`
 
 Normalizes a list of action targets, filters unavailable targets by default,
@@ -109,6 +117,7 @@ and optionally caps the returned menu with `maxTargets`. Pass
 Formats a prepared action menu as compact prompt text:
 
 ```ts
+const actionTargets = extractPlasmateActionTargets(som)
 const menu = formatPlasmateActionPlan(actionTargets, { maxTargets: 20 })
 
 const { text } = await generateText({

@@ -49,6 +49,39 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-13T07:10:00Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first, but this automation
+  worktree still cannot write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate25/FETCH_HEAD`
+  (`Operation not permitted`). Continued from locally known `origin/master`
+  `fde71a8`, which matched current `HEAD` before edits.
+- Market direction: official docs still favor structured, reusable action
+  surfaces over hosted-browser parity chasing. Playwright MCP snapshots expose
+  current refs, Stagehand v3 `observe()` returns cacheable structured actions,
+  Firecrawl Interact resumes scraped browser sessions, and Cloudflare Browser
+  Run/WebMCP is moving typed website tools closer to browser-native agent
+  workflows. Plasmate should keep the local-first wedge and make raw SOM
+  output easier for framework apps to turn into compact action menus.
+- Code changes: Vercel AI now exports `extractPlasmateActionTargets()` for
+  deriving compact action targets directly from raw SOM responses, including
+  nested children and shadow-root elements. `formatPlasmateActionPlan()` now
+  preserves blocked reasons, input type, and placeholder metadata in prompt
+  text. The package now has an executable fixture test script that builds and
+  checks extraction, filtering, and formatting against the shared adapter
+  fixture.
+- Docs changes: updated the Vercel AI README, PRD, roadmap, website PRD/roadmap
+  sources, and regenerated website docs with the SOM-to-action-menu rationale
+  and the completed runtime fixture step.
+- Verification: Vercel AI `npm run typecheck` passed using the primary
+  checkout's existing `node_modules`; Vercel AI `npm test` passed; `node
+  website/build.mjs` rebuilt 39 pages; `git diff --check` passed;
+  `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build` passed with
+  existing warnings; and `cargo test --lib` passed 245 tests with existing
+  warnings.
+- Commit/push state: pending at time of this note; commit, push, and remote
+  master fast-forward are the next steps after staging the verified changes.
+
 ### 2026-05-13T06:07:54Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first, but this automation

@@ -1,8 +1,10 @@
 import {
+  extractPlasmateActionTargets,
   formatPlasmateActionPlan,
   isPlasmateActionTargetAvailable,
   normalizePlasmateActionTarget,
   preparePlasmateActionPlan,
+  type PlasmateSom,
   type PlasmateActionTarget,
 } from './index'
 
@@ -39,10 +41,35 @@ const availableOnly = preparePlasmateActionPlan(fixtureTargets)
 const visiblePromptMenu = formatPlasmateActionPlan(fixtureTargets, {
   maxTargets: 2,
 })
+const fixtureSom: PlasmateSom = {
+  regions: [
+    {
+      elements: [
+        {
+          id: 'e_shadow',
+          role: 'custom_element',
+          shadow: {
+            elements: [
+              {
+                id: 'e_shadow_button',
+                role: 'button',
+                text: 'Shadow save',
+                actions: ['click'],
+                attrs: { disabled: false },
+              },
+            ],
+          },
+        },
+      ],
+    },
+  ],
+}
+const extractedFromSom = extractPlasmateActionTargets(fixtureSom)
 
 const shouldBeBoolean: boolean =
   isPlasmateActionTargetAvailable(normalized) &&
-  availableOnly.every(isPlasmateActionTargetAvailable)
+  availableOnly.every(isPlasmateActionTargetAvailable) &&
+  extractedFromSom.every(isPlasmateActionTargetAvailable)
 const shouldBeString: string = visiblePromptMenu
 
 void shouldBeBoolean
