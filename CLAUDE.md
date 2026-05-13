@@ -85,6 +85,11 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   partially blocked until dependencies were installed, and Vercel AI tests
   could not run because `npm install` for `@ai-sdk/mcp` failed with
   `ENOTFOUND registry.npmjs.org`.
+- Commit/push state: implementation commit `bc8aef5`
+  (`chore: add action semantics fixture coverage`) was pushed to
+  `codex/plasmate-improvements-2026-05-13-vercel-action-menu` and
+  fast-forwarded remote `master` from `0929a23` to `bc8aef5`. This follow-up
+  state entry records that push result.
 
 ### 2026-05-13T14:05:53Z - Plasmate Improvements Automation
 
