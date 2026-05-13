@@ -79,8 +79,11 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build` passed with
   existing warnings; and `cargo test --lib` passed 245 tests with existing
   warnings.
-- Commit/push state: pending at time of this note; commit, push, and remote
-  master fast-forward are the next steps after staging the verified changes.
+- Commit/push state: committed `6c9c57e` as
+  `chore: add Vercel AI SOM action extraction` from the primary checkout
+  because the automation worktree could not create Git locks. Final fetch,
+  branch push, and remote `master` fast-forward are blocked by DNS resolution
+  for `github.com` (`ssh: Could not resolve hostname github.com: -65563`).
 
 ### 2026-05-13T06:07:54Z - Plasmate Improvements Automation
 
