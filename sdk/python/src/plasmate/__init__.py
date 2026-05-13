@@ -45,6 +45,8 @@ from .query import (
     find_by_text,
     find_interactive,
     flat_elements,
+    get_action_plan,
+    get_action_plan_cache_key,
     get_token_estimate,
 )
 
@@ -73,6 +75,8 @@ __all__ = [
     "find_by_text",
     "find_interactive",
     "flat_elements",
+    "get_action_plan",
+    "get_action_plan_cache_key",
     "get_token_estimate",
 ]
 __version__ = "0.3.0"

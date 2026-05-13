@@ -119,6 +119,28 @@ interactive = find_interactive(som)
 print(f"{len(interactive)} interactive elements")
 ```
 
+### `get_action_plan(som)`
+
+Return compact action targets with stable ids, deterministic `cache_key` values, labels, action lists, and availability state.
+
+```python
+from plasmate.query import get_action_plan
+
+for target in get_action_plan(som):
+    if target["enabled"]:
+        print(target["id"], target["cache_key"], target["actions"], target.get("label"))
+```
+
+### `get_action_plan_cache_key(item)`
+
+Return the same deterministic cache key used by `get_action_plan()` for a compact target.
+
+```python
+from plasmate.query import get_action_plan_cache_key
+
+cache_key = get_action_plan_cache_key(target)
+```
+
 ### `find_by_text(som, text)`
 
 Find elements whose text content contains the given string (case-insensitive).

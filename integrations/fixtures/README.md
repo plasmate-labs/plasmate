@@ -11,7 +11,7 @@ by the Rust core and parser packages.
   payload: ids, roles, labels, actions, availability, blocked reasons, cache
   keys, required state, group context, input metadata, and descriptions.
 
-Browser Use, LangChain, and Vercel AI tests consume the expectation file
-directly. When action-plan semantics change, update the SOM fixture and the
-expectation file together so adapters fail consistently instead of drifting via
-hard-coded assertions.
+Browser Use, LangChain, Vercel AI, Python parser, Node parser, Python SDK, and
+Go SDK tests consume the expectation file directly. When action-plan semantics
+change, update the SOM fixture and the expectation file together so adapters
+and SDKs fail consistently instead of drifting via hard-coded assertions.

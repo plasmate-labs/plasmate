@@ -1,6 +1,7 @@
 """Tests for som-parser package."""
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -120,6 +121,15 @@ FIXTURE_SOM = {
         "interactive_count": 5,
     },
 }
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+
+
+def _load_action_availability_fixture():
+    fixture_dir = REPO_ROOT / "integrations" / "fixtures"
+    som_payload = json.loads((fixture_dir / "action-availability.som.json").read_text())
+    expected = json.loads((fixture_dir / "action-availability.expected.json").read_text())
+    return parse_som(som_payload), expected["action_targets"]
 
 
 @pytest.fixture
@@ -565,6 +575,11 @@ class TestGetActionPlan:
             )
             == "plasmate-action:v1:0b6b537f"
         )
+
+    def test_matches_shared_action_availability_manifest(self):
+        som, expected_targets = _load_action_availability_fixture()
+
+        assert get_action_plan(som) == expected_targets
 
 
 class TestGetLinks:

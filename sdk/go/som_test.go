@@ -2,6 +2,8 @@ package plasmate
 
 import (
 	"encoding/json"
+	"os"
+	"reflect"
 	"testing"
 )
 
@@ -480,6 +482,41 @@ func TestGetActionPlanDisabledTarget(t *testing.T) {
 	}
 	if item.CacheKey != "plasmate-action:v1:2de92b9a" {
 		t.Errorf("CacheKey = %q, want plasmate-action:v1:2de92b9a", item.CacheKey)
+	}
+}
+
+func TestGetActionPlanMatchesSharedAvailabilityManifest(t *testing.T) {
+	somBytes, err := os.ReadFile("../../integrations/fixtures/action-availability.som.json")
+	if err != nil {
+		t.Fatalf("ReadFile SOM fixture failed: %v", err)
+	}
+	som, err := Parse(somBytes)
+	if err != nil {
+		t.Fatalf("Parse fixture failed: %v", err)
+	}
+
+	expectedBytes, err := os.ReadFile("../../integrations/fixtures/action-availability.expected.json")
+	if err != nil {
+		t.Fatalf("ReadFile expected fixture failed: %v", err)
+	}
+	var expected struct {
+		ActionTargets []map[string]interface{} `json:"action_targets"`
+	}
+	if err := json.Unmarshal(expectedBytes, &expected); err != nil {
+		t.Fatalf("Unmarshal expected fixture failed: %v", err)
+	}
+
+	actualBytes, err := json.Marshal(GetActionPlan(som))
+	if err != nil {
+		t.Fatalf("Marshal action plan failed: %v", err)
+	}
+	var actual []map[string]interface{}
+	if err := json.Unmarshal(actualBytes, &actual); err != nil {
+		t.Fatalf("Unmarshal action plan failed: %v", err)
+	}
+
+	if !reflect.DeepEqual(actual, expected.ActionTargets) {
+		t.Errorf("GetActionPlan() = %#v, want %#v", actual, expected.ActionTargets)
 	}
 }
 

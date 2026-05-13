@@ -92,7 +92,7 @@ The SDK includes query helpers for searching and traversing SOM documents:
 ```typescript
 import {
   findByRole, findById, findByTag, findInteractive,
-  findByText, flatElements, getTokenEstimate,
+  findByText, flatElements, getActionPlan, getTokenEstimate,
 } from 'plasmate';
 
 const browser = new Plasmate();
@@ -109,6 +109,10 @@ const links = findByTag(som, 'link');
 
 // Get all interactive elements (those with actions)
 const interactive = findInteractive(som);
+
+// Get compact action targets for cached agent workflows
+const actionPlan = getActionPlan(som).filter((target) => target.enabled);
+console.log(actionPlan.map((target) => [target.id, target.cache_key, target.actions]));
 
 // Search by visible text (case-insensitive)
 const matches = findByText(som, 'sign in');
@@ -129,6 +133,8 @@ browser.close();
 | `findById(som, id)` | `SomElement \| undefined` | Find element by stable ID |
 | `findByTag(som, tag)` | `SomElement[]` | Find elements by element role |
 | `findInteractive(som)` | `SomElement[]` | All elements with actions |
+| `getActionPlan(som)` | `ActionPlanItem[]` | Compact action targets with cache keys and availability |
+| `getActionPlanCacheKey(item)` | `string` | Deterministic key for caching or comparing action targets |
 | `findByText(som, text)` | `SomElement[]` | Case-insensitive text search |
 | `flatElements(som)` | `SomElement[]` | Flatten all elements |
 | `getTokenEstimate(som)` | `number` | Estimate token count (~4 bytes/token) |

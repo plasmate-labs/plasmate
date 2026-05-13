@@ -108,7 +108,8 @@ Search and traverse SOM documents:
 
 ```python
 from plasmate import Som, find_by_role, find_by_id, find_by_tag
-from plasmate import find_interactive, find_by_text, flat_elements, get_token_estimate
+from plasmate import find_interactive, find_by_text, flat_elements
+from plasmate import get_action_plan, get_action_plan_cache_key, get_token_estimate
 
 # Find all navigation regions
 navs = find_by_role(som, "navigation")
@@ -124,6 +125,11 @@ links = find_by_tag(som, "link")
 # Get all interactive elements (buttons, inputs, etc.)
 for el in find_interactive(som):
     print(f"{el.id}: {el.role} - {el.text}")
+
+# Get compact action targets for cached agent workflows
+for target in get_action_plan(som):
+    if target["enabled"]:
+        print(target["id"], target["cache_key"], target["actions"], target.get("label"))
 
 # Search by text content (case-insensitive)
 results = find_by_text(som, "sign up")

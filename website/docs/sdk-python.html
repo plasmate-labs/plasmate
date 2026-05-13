@@ -524,6 +524,18 @@ links = find_by_tag(som, &quot;link&quot;)
 interactive = find_interactive(som)
 print(f&quot;{len(interactive)} interactive elements&quot;)
 </code></pre>
+<h3 id="getactionplansom">`get_action_plan(som)`</h3><p>Return compact action targets with stable ids, deterministic <code>cache_key</code> values, labels, action lists, and availability state.</p>
+<pre><code class="language-python">from plasmate.query import get_action_plan
+
+for target in get_action_plan(som):
+    if target[&quot;enabled&quot;]:
+        print(target[&quot;id&quot;], target[&quot;cache_key&quot;], target[&quot;actions&quot;], target.get(&quot;label&quot;))
+</code></pre>
+<h3 id="getactionplancachekeyitem">`get_action_plan_cache_key(item)`</h3><p>Return the same deterministic cache key used by <code>get_action_plan()</code> for a compact target.</p>
+<pre><code class="language-python">from plasmate.query import get_action_plan_cache_key
+
+cache_key = get_action_plan_cache_key(target)
+</code></pre>
 <h3 id="findbytextsom-text">`find_by_text(som, text)`</h3><p>Find elements whose text content contains the given string (case-insensitive).</p>
 <pre><code class="language-python">from plasmate.query import find_by_text
 

@@ -60,6 +60,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-13 fixture-manifest read: structured refs, cacheable actions, and hosted session traces only retain users if the action surface is trustworthy. Plasmate should treat its broad repo surface as one product contract. The next stickiness step is a shared expectation manifest that Browser Use, LangChain, and Vercel AI consume directly so availability, blocked reasons, required state, group context, descriptions, and cache keys cannot drift in separate adapter tests.
 
+2026-05-13 SDK-manifest read: browser-agent products are turning reusable action state into an audited contract, not a helper detail. Plasmate should extend the shared expectation manifest into parser packages and SDKs so local action memory remains portable across app code, framework prompts, and durable workers.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -76,6 +78,9 @@ The project already spans a large number of package and integration surfaces: Ru
 
 - 2026-05-13:
   - Added `integrations/fixtures/action-availability.expected.json` as the shared expected compact action-target contract for the action availability SOM fixture.
+  - Python SDK query helpers now expose `get_action_plan()` and `get_action_plan_cache_key()`.
+  - Node SDK query helpers now expose `getActionPlan()` and `getActionPlanCacheKey()`.
+  - Python parser, Node parser, Go SDK, Python SDK, and Node SDK tests now consume the shared action availability manifest.
   - Browser Use adapter tests now validate rendered page context against the shared expectation manifest instead of hard-coded local cache-key and availability assertions.
   - LangChain adapter tests now validate SOM text output against the same expectation manifest, keeping text-only prompts aligned with Browser Use and Vercel AI.
   - Vercel AI runtime fixture tests now compare extracted action targets with the shared manifest and verify cache-key uniqueness across the fixture.
@@ -170,8 +175,8 @@ The project already spans a large number of package and integration surfaces: Ru
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked or selected an element.
 - Add conformance cases for ARIA-heavy SaaS pages, especially disabled and required custom controls, and compare output against Playwright MCP snapshots.
 - Wire `015-action-state` into cross-adapter parser/SDK conformance runners so inherited disabled state stays synchronized outside Rust.
-- Extend the new shared adapter expectation manifest into parser-package, Go SDK, and Python/Node SDK conformance tests so framework fixtures and SDK action-plan helpers fail from the same contract.
 - Promote the shared fixture manifest into one release command that runs Browser Use, LangChain, Vercel AI, parser-package, and SDK checks together.
+- Add Node SDK action-plan fixture tests to the package's normal npm test script so TypeScript client parity is enforced outside ad hoc compilation.
 - Promote fieldset/legend group semantics into shared conformance fixtures alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched action-plan metadata.
 - Promote the new SDK/parser shadow-root and Go action-plan tests into shared conformance fixtures that run against every adapter before release.

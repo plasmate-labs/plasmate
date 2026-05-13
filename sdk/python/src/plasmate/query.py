@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from .types import Som, SomElement, SomRegion
 
@@ -39,6 +39,76 @@ def find_interactive(som: Som) -> List[SomElement]:
         for element in region.elements:
             _collect_interactive(element, results)
     return results
+
+
+def _fnv1a32(value: str) -> str:
+    hash_value = 0x811C9DC5
+    for char in value:
+        hash_value ^= ord(char)
+        hash_value = (hash_value * 0x01000193) & 0xFFFFFFFF
+    return f"{hash_value:08x}"
+
+
+def _compact_string(value: object) -> Optional[str]:
+    return value if isinstance(value, str) and value else None
+
+
+def get_action_plan_cache_key(item: Dict[str, object]) -> str:
+    """Return a deterministic key for caching or comparing an action target."""
+    actions = item.get("actions")
+    action_values = sorted(actions) if isinstance(actions, list) else []
+    parts = [
+        _compact_string(item.get("id")),
+        _compact_string(item.get("role")),
+        _compact_string(item.get("label")),
+        ",".join(str(action) for action in action_values) or None,
+        _compact_string(item.get("name")),
+        _compact_string(item.get("href")),
+        _compact_string(item.get("input_type")),
+        _compact_string(item.get("group")),
+        _compact_string(item.get("placeholder")),
+    ]
+    encoded = json.dumps(parts, separators=(",", ":"))
+    return f"plasmate-action:v1:{_fnv1a32(encoded)}"
+
+
+def get_action_plan(som: Som) -> List[Dict[str, object]]:
+    """Return compact action targets for agent planning."""
+    plan: List[Dict[str, object]] = []
+    for element in find_interactive(som):
+        attrs = element.attrs
+        item: Dict[str, object] = {
+            "id": element.id,
+            "role": element.role.value,
+            "actions": element.actions or [],
+            "enabled": True,
+        }
+        label = element.label or element.text
+        if label:
+            item["label"] = label
+        if attrs:
+            if attrs.href:
+                item["href"] = attrs.href
+            if attrs.name:
+                item["name"] = attrs.name
+            if attrs.input_type:
+                item["input_type"] = attrs.input_type
+            if attrs.placeholder:
+                item["placeholder"] = attrs.placeholder
+            if attrs.description:
+                item["description"] = attrs.description
+            if attrs.required is not None:
+                item["required"] = attrs.required
+            if attrs.disabled is not None:
+                item["disabled"] = attrs.disabled
+                if attrs.disabled:
+                    item["enabled"] = False
+                    item["blocked_reason"] = "disabled"
+            if attrs.group:
+                item["group"] = attrs.group
+        item["cache_key"] = get_action_plan_cache_key(item)
+        plan.append(item)
+    return plan
 
 
 def find_by_text(som: Som, text: str) -> List[SomElement]:

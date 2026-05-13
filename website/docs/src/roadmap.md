@@ -174,6 +174,14 @@ The market now rewards tools that make reusable action surfaces boringly consist
 - **Drift should fail centrally**: when action-plan semantics change, the SOM fixture and expected manifest should change together instead of silently updating hard-coded assertions in each adapter.
 - **Next release gate**: extend the manifest into parser packages and SDKs, then wrap all checks in one release command.
 
+### 2026-05-13 SDK Manifest Conformance Adjustment
+
+Competitors are making reusable action state inspectable and cacheable at the application edge. Plasmate should turn its local action surface into a cross-language contract before adding more workflow-memory features.
+
+- **SDKs should plan actions too**: Python and Node client SDKs need compact action-plan helpers because many apps consume SOM directly from MCP calls.
+- **The manifest must cover runtimes**: parser packages, Go SDK, Python SDK, and Node SDK should read the same expected action target manifest as framework adapters.
+- **Release automation is now the bottleneck**: after manifest parity lands, the next sticky step is one command that runs adapter, parser, and SDK fixture checks together.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -285,6 +293,9 @@ The market now rewards tools that make reusable action surfaces boringly consist
 - [x] Browser Use and LangChain action cache-key prompt rendering
 - [x] Shared action-availability expectation manifest for Browser Use, LangChain, and Vercel AI
 - [x] Browser Use and LangChain package version exports match package metadata
+- [x] Python SDK compact action-plan helpers with deterministic cache keys
+- [x] Node SDK compact action-plan helpers with deterministic cache keys
+- [x] Shared action-availability expectation manifest for Python parser, Node parser, Go SDK, Python SDK, and Node SDK
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
@@ -293,6 +304,6 @@ The market now rewards tools that make reusable action surfaces boringly consist
 - [ ] Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners
 - [x] Promote adapter availability checks into shared cross-adapter fixtures
 - [x] Add runtime Vercel AI fixture tests once the package has a local test runner
-- [ ] Extend shared action-availability expectations into parser-package and SDK conformance tests
+- [x] Extend shared action-availability expectations into parser-package and SDK conformance tests
 - [ ] Add one release command for Browser Use, LangChain, Vercel AI, parser-package, and SDK fixture checks
 - [ ] WebMCP/watchlist research spike: track whether browser-native tool exposure changes SOM adapter strategy

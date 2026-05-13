@@ -1,5 +1,7 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import type { Som } from './types';
 import {
   findByRole,
@@ -8,6 +10,8 @@ import {
   findInteractive,
   findByText,
   flatElements,
+  getActionPlan,
+  getActionPlanCacheKey,
   getTokenEstimate,
 } from './query';
 
@@ -121,6 +125,16 @@ const shadowFixture: Som = {
   },
 };
 
+function loadActionAvailabilityFixture(): { som: Som; action_targets: unknown[] } {
+  const fixtureDir = resolve(process.cwd(), '../../integrations/fixtures');
+  return {
+    som: JSON.parse(readFileSync(resolve(fixtureDir, 'action-availability.som.json'), 'utf8')),
+    action_targets: JSON.parse(
+      readFileSync(resolve(fixtureDir, 'action-availability.expected.json'), 'utf8'),
+    ).action_targets,
+  };
+}
+
 describe('findByRole', () => {
   it('finds regions by role', () => {
     const mains = findByRole(fixture, 'main');
@@ -203,6 +217,55 @@ describe('findByText', () => {
 
   it('returns empty for no match', () => {
     assert.deepEqual(findByText(fixture, 'nonexistent'), []);
+  });
+});
+
+describe('getActionPlan', () => {
+  it('returns compact action targets', () => {
+    const plan = getActionPlan(fixture);
+
+    assert.deepEqual(plan[0], {
+      id: 'e2',
+      cache_key: 'plasmate-action:v1:da48f406',
+      role: 'link',
+      actions: ['click'],
+      enabled: true,
+      label: 'Home',
+      href: '/',
+    });
+    assert.deepEqual(plan[2], {
+      id: 'e5',
+      cache_key: 'plasmate-action:v1:f08859f9',
+      role: 'text_input',
+      actions: ['type', 'clear'],
+      enabled: true,
+      label: 'Email',
+      input_type: 'email',
+      placeholder: 'you@example.com',
+      required: true,
+    });
+  });
+
+  it('matches the shared action availability manifest', () => {
+    const { som, action_targets } = loadActionAvailabilityFixture();
+
+    assert.deepEqual(getActionPlan(som), action_targets);
+  });
+
+  it('returns deterministic cache keys for equivalent targets', () => {
+    assert.equal(
+      getActionPlanCacheKey({
+        id: 'e5',
+        role: 'text_input',
+        actions: ['type', 'clear'],
+        enabled: true,
+        label: 'Email',
+        input_type: 'email',
+        placeholder: 'you@example.com',
+        required: true,
+      }),
+      'plasmate-action:v1:f08859f9',
+    );
   });
 });
 

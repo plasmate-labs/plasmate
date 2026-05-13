@@ -49,6 +49,50 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-13T11:12:00Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first. The automation worktree
+  still cannot write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate29/FETCH_HEAD`
+  (`Operation not permitted`). Retrying from the primary checkout was blocked
+  by DNS resolution for `github.com`, so this run continued from the current
+  local primary branch, which already contained the shared adapter expectation
+  manifest commit `a117a70` on top of locally known `origin/master` `c7961bb`.
+- Market direction: current official docs continue to validate Plasmate's
+  local-first action-contract wedge. Playwright MCP exposes structured
+  accessibility snapshots with snapshot-bound refs, Stagehand/Browserbase
+  foreground `observe()` and action caching, Firecrawl Interact and Browser Use
+  Cloud make managed reusable sessions easy to buy, and Cloudflare Browser Run
+  is adding Live View, session recordings, human-in-loop, CDP/MCP, and WebMCP.
+  The startup direction should remain portable SOM/action memory rather than a
+  hosted browser-infrastructure pivot.
+- Code changes: Python SDK now exports `get_action_plan()` and
+  `get_action_plan_cache_key()`; Node SDK now exports `getActionPlan()` and
+  `getActionPlanCacheKey()`; Python parser, Node parser, Go SDK, Python SDK,
+  and Node SDK fixture tests now consume
+  `integrations/fixtures/action-availability.expected.json` so availability,
+  blocked reasons, required state, groups, descriptions, placeholders, and
+  cache keys share one expected contract.
+- Docs changes: updated Python/Node SDK docs, integration fixture docs,
+  PRD/roadmap source docs, and regenerated website docs with the SDK-manifest
+  conformance rationale. The next step is to add one release command that runs
+  Browser Use, LangChain, Vercel AI, parser-package, and SDK fixture checks
+  together; Node SDK's fixture test should also move into a normal npm test
+  script instead of an ad hoc compile/run command.
+- Verification: Python parser tests passed; Node parser tests passed; Go SDK
+  tests passed with sandbox-local `GOCACHE`; Python SDK query tests passed;
+  Node SDK `npm run build` passed; Node SDK query tests passed via explicit
+  TypeScript compile plus `node:test`; `node website/build.mjs` rebuilt 39
+  pages; `git diff --check` passed;
+  `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build` passed with
+  existing warnings; `cargo test --lib -- --test-threads=1` passed 245 tests
+  with existing warnings. `cargo clippy --all-targets --all-features` was
+  blocked by sandbox permissions because Cargo could not create
+  `/Users/steve/.cargo/registry/src/.../addr2line-0.24.2`.
+- Commit/push state: local commit and remote fast-forward are pending after
+  this state update; remote operations may still be blocked by the current DNS
+  failure for `github.com`.
+
 ### 2026-05-13T10:09:38Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first. The automation worktree

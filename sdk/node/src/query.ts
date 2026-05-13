@@ -2,7 +2,7 @@
  * SOM query helpers for searching and traversing Semantic Object Model documents.
  */
 
-import type { Som, SomRegion, SomElement, RegionRole, ElementRole } from './types';
+import type { Som, SomRegion, SomElement, RegionRole, ElementRole, ElementAction } from './types';
 
 /** Find all regions matching a given role. */
 export function findByRole(som: Som, role: RegionRole): SomRegion[] {
@@ -41,6 +41,88 @@ export function findByTag(som: Som, tag: ElementRole): SomElement[] {
 /** Return all interactive elements (those with a non-empty `actions` array). */
 export function findInteractive(som: Som): SomElement[] {
   return flatElements(som).filter((el) => el.actions && el.actions.length > 0);
+}
+
+export interface ActionPlanItem {
+  id: string;
+  cache_key: string;
+  role: ElementRole;
+  actions: ElementAction[];
+  enabled: boolean;
+  label?: string;
+  href?: string;
+  name?: string;
+  input_type?: string;
+  placeholder?: string;
+  description?: string;
+  required?: boolean;
+  disabled?: boolean;
+  blocked_reason?: 'disabled';
+  group?: string;
+}
+
+function compactString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
+function stableActionPlanParts(item: Omit<ActionPlanItem, 'cache_key'> | ActionPlanItem) {
+  return [
+    compactString(item.id),
+    compactString(item.role),
+    compactString(item.label),
+    [...item.actions].sort().join(',') || undefined,
+    compactString(item.name),
+    compactString(item.href),
+    compactString(item.input_type),
+    compactString(item.group),
+    compactString(item.placeholder),
+  ];
+}
+
+function fnv1a32(input: string): string {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < input.length; index += 1) {
+    hash ^= input.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
+
+/** Return a deterministic key for caching or comparing an action target. */
+export function getActionPlanCacheKey(item: Omit<ActionPlanItem, 'cache_key'> | ActionPlanItem): string {
+  return `plasmate-action:v1:${fnv1a32(JSON.stringify(stableActionPlanParts(item)))}`;
+}
+
+/** Return compact action targets for agent planning. */
+export function getActionPlan(som: Som): ActionPlanItem[] {
+  return findInteractive(som).map((el) => {
+    const item: Omit<ActionPlanItem, 'cache_key'> = {
+      id: el.id,
+      role: el.role,
+      actions: el.actions ?? [],
+      enabled: true,
+    };
+    const label = el.label ?? el.text;
+    if (label) item.label = label;
+    if (el.attrs?.href) item.href = el.attrs.href;
+    if (el.attrs?.name) item.name = el.attrs.name;
+    if (el.attrs?.input_type) item.input_type = el.attrs.input_type;
+    if (el.attrs?.placeholder) item.placeholder = el.attrs.placeholder;
+    if (el.attrs?.description) item.description = el.attrs.description;
+    if (el.attrs?.required !== undefined) item.required = el.attrs.required;
+    if (el.attrs?.disabled !== undefined) {
+      item.disabled = el.attrs.disabled;
+      if (el.attrs.disabled) {
+        item.enabled = false;
+        item.blocked_reason = 'disabled';
+      }
+    }
+    if (el.attrs?.group) item.group = el.attrs.group;
+    return {
+      ...item,
+      cache_key: getActionPlanCacheKey(item),
+    };
+  });
 }
 
 /** Find all elements containing the given text (case-insensitive substring match). */

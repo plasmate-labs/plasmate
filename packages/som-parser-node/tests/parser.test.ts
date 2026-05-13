@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
 import {
   parseSom,
@@ -81,6 +84,17 @@ const FIXTURE: Som = {
 };
 
 const FIXTURE_JSON = JSON.stringify(FIXTURE);
+const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
+
+function loadActionAvailabilityFixture(): { som: Som; action_targets: unknown[] } {
+  const fixtureDir = resolve(REPO_ROOT, 'integrations/fixtures');
+  return {
+    som: JSON.parse(readFileSync(resolve(fixtureDir, 'action-availability.som.json'), 'utf8')),
+    action_targets: JSON.parse(
+      readFileSync(resolve(fixtureDir, 'action-availability.expected.json'), 'utf8'),
+    ).action_targets,
+  };
+}
 
 const SHADOW_FIXTURE: Som = {
   ...FIXTURE,
@@ -412,6 +426,12 @@ describe('getActionPlan', () => {
         placeholder: 'Search...',
       }),
     ).toBe('plasmate-action:v1:0b6b537f');
+  });
+
+  it('matches the shared action availability manifest', () => {
+    const { som, action_targets } = loadActionAvailabilityFixture();
+
+    expect(getActionPlan(som)).toEqual(action_targets);
   });
 });
 

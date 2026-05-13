@@ -1,5 +1,8 @@
 """Tests for SOM query helpers."""
 
+import json
+from pathlib import Path
+
 import pytest
 
 from plasmate.types import (
@@ -22,8 +25,12 @@ from plasmate.query import (
     find_by_text,
     find_interactive,
     flat_elements,
+    get_action_plan,
+    get_action_plan_cache_key,
     get_token_estimate,
 )
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 @pytest.fixture
@@ -255,6 +262,60 @@ class TestFindInteractive:
 
     def test_finds_shadow_root_interactive_elements(self) -> None:
         assert [el.id for el in find_interactive(_shadow_som())] == ["shadow_button"]
+
+
+class TestGetActionPlan:
+    def test_returns_compact_action_targets(self, sample_som: Som) -> None:
+        plan = get_action_plan(sample_som)
+
+        assert plan[0] == {
+            "id": "e1",
+            "role": "link",
+            "actions": ["click"],
+            "enabled": True,
+            "label": "Home",
+            "href": "/",
+            "cache_key": "plasmate-action:v1:04ca84bb",
+        }
+        assert plan[-1] == {
+            "id": "e9",
+            "role": "text_input",
+            "actions": ["click", "type", "clear"],
+            "enabled": True,
+            "label": "Email",
+            "input_type": "email",
+            "placeholder": "you@example.com",
+            "required": True,
+            "cache_key": "plasmate-action:v1:5b218ab1",
+        }
+
+    def test_matches_shared_action_availability_manifest(self) -> None:
+        fixture_dir = REPO_ROOT / "integrations" / "fixtures"
+        som = Som.model_validate(
+            json.loads((fixture_dir / "action-availability.som.json").read_text())
+        )
+        expected = json.loads(
+            (fixture_dir / "action-availability.expected.json").read_text()
+        )["action_targets"]
+
+        assert get_action_plan(som) == expected
+
+    def test_returns_deterministic_cache_keys(self) -> None:
+        assert (
+            get_action_plan_cache_key(
+                {
+                    "id": "e9",
+                    "role": "text_input",
+                    "actions": ["click", "type", "clear"],
+                    "enabled": True,
+                    "label": "Email",
+                    "input_type": "email",
+                    "placeholder": "you@example.com",
+                    "required": True,
+                }
+            )
+            == "plasmate-action:v1:5b218ab1"
+        )
 
 
 class TestFindByText:

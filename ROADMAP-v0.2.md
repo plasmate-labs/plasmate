@@ -365,6 +365,25 @@ advantage by keeping adapter tests wired to a single expected action manifest.
 3. **Next release gate**: extend the manifest into parser packages and SDKs,
    then wrap all checks in one release command.
 
+### 2026-05-13 SDK Manifest Conformance Adjustment
+
+Competitors are making reusable action state inspectable and cacheable at the
+application edge. Playwright MCP refs stay tied to the current snapshot,
+Stagehand/Browserbase depend on validated action caches, and Cloudflare Browser
+Run recordings make run drift visible after the fact. Plasmate should turn its
+local action surface into a cross-language contract before adding more
+workflow-memory features.
+
+1. **SDKs should plan actions too**: Python and Node client SDKs need compact
+   action-plan helpers, not only parser packages, because many apps consume SOM
+   directly from MCP calls.
+2. **The manifest must cover runtimes**: parser packages, Go SDK, Python SDK,
+   and Node SDK should read the same expected action target manifest as
+   framework adapters.
+3. **Release automation is now the bottleneck**: after manifest parity lands,
+   the next sticky step is one command that runs adapter, parser, and SDK
+   fixture checks together.
+
 ## Architecture
 
 ```
@@ -612,6 +631,12 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   groups, descriptions, and action cache keys.
 - Integration fixture documentation now explains how to update SOM fixtures and
   expected action contracts together.
+- Python SDK query helpers now expose compact action-plan helpers plus
+  deterministic cache-key generation for direct client consumers.
+- Node SDK query helpers now expose compact action-plan helpers plus
+  deterministic cache-key generation for TypeScript app code.
+- Python parser, Node parser, Go SDK, Python SDK, and Node SDK tests now consume
+  the shared action-availability manifest.
 - Browser Use and LangChain package `__version__` exports now match package
   metadata.
 - Selector handling now trims whitespace and supports documented region ids

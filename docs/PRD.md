@@ -222,6 +222,15 @@ and Vercel AI consume directly so availability, blocked reasons, required
 state, group context, descriptions, and cache keys cannot drift in separate
 adapter tests.
 
+2026-05-13 SDK-manifest read: current browser-agent positioning keeps moving
+trust from isolated helpers into repeatable conformance. Playwright MCP refs
+are snapshot-scoped, Stagehand action caching depends on validated reusable
+targets, and Browserbase/Cloudflare traces make drift inspectable after a run.
+Plasmate's local-first response is to make the shared action manifest a
+cross-language contract: parser packages and SDKs should prove they emit the
+same compact action targets as framework adapters before action memory becomes
+a release claim.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -251,6 +260,16 @@ and adapter docs over one-off integration logic.
   - Added `integrations/fixtures/action-availability.expected.json` as the
     shared expected compact action-target contract for the action availability
     SOM fixture.
+  - Python SDK query helpers now expose `get_action_plan()` and
+    `get_action_plan_cache_key()`, closing the action-plan parity gap between
+    the client SDK and Python parser package.
+  - Node SDK query helpers now expose `getActionPlan()` and
+    `getActionPlanCacheKey()`, giving TypeScript app code the same compact
+    local action memory surface as the parser package.
+  - Python parser, Node parser, Go SDK, Python SDK, and Node SDK tests now
+    consume the shared action availability manifest so cache keys,
+    availability, required flags, groups, placeholders, and descriptions fail
+    from one expected contract.
   - Browser Use adapter tests now validate rendered page context against the
     shared expectation manifest instead of hard-coded local cache-key and
     availability assertions.
@@ -461,11 +480,10 @@ and adapter docs over one-off integration logic.
   snapshots.
 - Wire `015-action-state` into cross-adapter parser/SDK conformance runners so
   inherited disabled state stays synchronized outside Rust.
-- Extend the new shared adapter expectation manifest into parser-package, Go
-  SDK, and Python/Node SDK conformance tests so framework fixtures and SDK
-  action-plan helpers fail from the same contract.
 - Promote the shared fixture manifest into one release command that runs
   Browser Use, LangChain, Vercel AI, parser-package, and SDK checks together.
+- Add Node SDK action-plan fixture tests to the package's normal npm test
+  script so TypeScript client parity is enforced outside ad hoc compilation.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched

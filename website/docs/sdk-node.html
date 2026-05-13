@@ -536,6 +536,16 @@ const links = findByTag(som, &#39;link&#39;);
 const interactive = findInteractive(som);
 console.log(`${interactive.length} interactive elements`);
 </code></pre>
+<h3 id="getactionplansom">`getActionPlan(som)`</h3><p>Return compact action targets with stable ids, deterministic <code>cache_key</code> values, labels, action lists, and availability state.</p>
+<pre><code class="language-typescript">import { getActionPlan } from &#39;plasmate&#39;;
+
+const availableTargets = getActionPlan(som).filter((target) =&gt; target.enabled);
+</code></pre>
+<h3 id="getactionplancachekeyitem">`getActionPlanCacheKey(item)`</h3><p>Return the same deterministic cache key used by <code>getActionPlan()</code> for a compact target.</p>
+<pre><code class="language-typescript">import { getActionPlanCacheKey } from &#39;plasmate&#39;;
+
+const cacheKey = getActionPlanCacheKey(target);
+</code></pre>
 <h3 id="findbytextsom-text">`findByText(som, text)`</h3><p>Find elements whose text content contains the given string (case-insensitive).</p>
 <pre><code class="language-typescript">import { findByText } from &#39;plasmate&#39;;
 

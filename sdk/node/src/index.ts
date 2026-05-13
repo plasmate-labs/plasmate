@@ -56,6 +56,8 @@ export {
   findInteractive,
   findByText,
   flatElements,
+  getActionPlan,
+  getActionPlanCacheKey,
   getTokenEstimate,
 } from './query';
 

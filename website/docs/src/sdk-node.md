@@ -135,6 +135,26 @@ const interactive = findInteractive(som);
 console.log(`${interactive.length} interactive elements`);
 ```
 
+### `getActionPlan(som)`
+
+Return compact action targets with stable ids, deterministic `cache_key` values, labels, action lists, and availability state.
+
+```typescript
+import { getActionPlan } from 'plasmate';
+
+const availableTargets = getActionPlan(som).filter((target) => target.enabled);
+```
+
+### `getActionPlanCacheKey(item)`
+
+Return the same deterministic cache key used by `getActionPlan()` for a compact target.
+
+```typescript
+import { getActionPlanCacheKey } from 'plasmate';
+
+const cacheKey = getActionPlanCacheKey(target);
+```
+
 ### `findByText(som, text)`
 
 Find elements whose text content contains the given string (case-insensitive).
