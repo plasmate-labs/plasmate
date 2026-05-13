@@ -85,9 +85,10 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   network could not download the `rusty_v8` archive. Full `cargo test --
   --test-threads=1` still fails only in `tests/awp_integration_test.rs` because
   sandboxed local listener setup returns `Operation not permitted`.
-- Commit/push state: pending at the time of this state entry. Next step is to
-  commit the ARIA state-cues work and attempt to push/fast-forward remote
-  `master` if network access is available.
+- Commit/push state: implementation commit `9ff9309`
+  (`chore: expose aria action state cues`) was pushed to
+  `codex/plasmate-improvements-2026-05-13-control-state` and fast-forwarded
+  remote `master` from `c9876d8` to `9ff9309`.
 
 ### 2026-05-13T17:08:35Z - Plasmate Improvements Automation
 
