@@ -418,6 +418,26 @@ make cross-runtime conformance cheap enough to run continuously.
 3. **Next leverage is caching**: once the quick gate is stable, tune dependency
    caches and promote more shared fixtures without making CI adoption painful.
 
+### 2026-05-13 Semantic Fidelity Polish Adjustment
+
+Competitor docs keep turning browser state into reusable action contracts:
+Playwright MCP snapshots expose accessibility roles and refs, Stagehand
+`observe()` plus action caching rewards stable target descriptions, Firecrawl
+Browser Sandbox and Browser Use Cloud package managed execution, Crawl4AI is
+moving open-source crawling toward cloud extraction, and Cloudflare WebMCP is
+testing typed website-provided tools. Plasmate should keep the local-first
+wedge, but small semantics now determine whether an agent trusts SOM without
+raw DOM recovery.
+
+1. **Search is a landmark, not generic content**: ARIA `role="search"` should
+   compile into a labelled region so agents can scope query tasks reliably.
+2. **Menus carry actionable state**: ARIA `menuitemcheckbox` and
+   `menuitemradio` should map to checkbox/radio action targets before
+   framework adapters consume the page.
+3. **Noise stripping must tolerate production CSS**: visibility parsing should
+   ignore casing and arbitrary whitespace in stylesheet declarations, matching
+   the inline-style hardening already shipped.
+
 ## Architecture
 
 ```
@@ -692,6 +712,14 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   improving parity with accessibility-tree competitors.
 - Hidden inline styles now tolerate casing and whitespace variants such as
   `DISPLAY : none`, reducing extraction noise from real-world CMS output.
+- ARIA `role="search"` now compiles into a labelled navigation region, keeping
+  search landmarks available as scoped SOM regions.
+- ARIA `menuitemcheckbox` and `menuitemradio` now compile as actionable
+  checkbox/radio targets for custom menu widgets.
+- Stylesheet hidden-rule parsing now ignores arbitrary declaration whitespace
+  and casing, so `DISPLAY\t:\nnone` is treated like `display:none`.
+- The SOM improvements test suite now asserts case-sensitive URL path
+  preservation, matching the compiler's public deduplication contract.
 
 ## Dependencies to Add
 

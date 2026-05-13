@@ -198,6 +198,14 @@ The latest competitor read keeps pointing to one durable retention hook: agents 
 - **Fast and full gates serve different jobs**: quick mode should prove the single manifest contract on every change, while full mode remains the local pre-release check for broader action-plan behavior.
 - **Next leverage is caching**: once the quick gate is stable, tune dependency caches and promote more shared fixtures without making CI adoption painful.
 
+### 2026-05-13 Semantic Fidelity Polish Adjustment
+
+Competitor docs keep turning browser state into reusable action contracts: Playwright MCP snapshots expose accessibility roles and refs, Stagehand `observe()` plus action caching rewards stable target descriptions, Firecrawl Browser Sandbox and Browser Use Cloud package managed execution, Crawl4AI is moving open-source crawling toward cloud extraction, and Cloudflare WebMCP is testing typed website-provided tools. Plasmate should keep the local-first wedge, but small semantics now determine whether an agent trusts SOM without raw DOM recovery.
+
+- **Search is a landmark, not generic content**: ARIA `role="search"` should compile into a labelled region so agents can scope query tasks reliably.
+- **Menus carry actionable state**: ARIA `menuitemcheckbox` and `menuitemradio` should map to checkbox/radio action targets before framework adapters consume the page.
+- **Noise stripping must tolerate production CSS**: visibility parsing should ignore casing and arbitrary whitespace in stylesheet declarations, matching the inline-style hardening already shipped.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -317,6 +325,10 @@ The latest competitor read keeps pointing to one durable retention hook: agents 
 - [x] Root and fixture docs advertise the shared action-manifest release gate
 - [x] Quick/full modes for the shared action-manifest release gate
 - [x] GitHub Actions conformance job for the quick action-manifest gate
+- [x] ARIA search landmarks compile into labelled SOM navigation regions
+- [x] ARIA menuitem checkbox/radio roles compile into actionable controls
+- [x] Stylesheet hidden-rule parsing tolerates arbitrary whitespace and casing
+- [x] Case-sensitive URL path dedup contract covered by integration tests
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures

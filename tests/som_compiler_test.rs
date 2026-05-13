@@ -176,6 +176,8 @@ fn test_common_aria_widget_roles_map_to_interactive_elements() {
     <div role="switch" aria-label="Email alerts" aria-checked="true"></div>
     <div role="combobox" aria-label="Country" aria-expanded="false"></div>
     <div role="tab" aria-label="Billing"></div>
+    <div role="menuitemcheckbox" aria-label="Compact mode" aria-checked="false"></div>
+    <div role="menuitemradio" aria-label="Annual billing" aria-checked="true"></div>
 </main></body></html>"#;
 
     let som = compiler::compile(html, "https://example.com").unwrap();
@@ -184,7 +186,10 @@ fn test_common_aria_widget_roles_map_to_interactive_elements() {
     assert!(elems.iter().any(|e| e.role == ElementRole::Checkbox));
     assert!(elems.iter().any(|e| e.role == ElementRole::Select));
     assert!(elems.iter().any(|e| e.role == ElementRole::Button));
-    assert_eq!(som.meta.interactive_count, 4);
+    assert!(elems
+        .iter()
+        .any(|e| { e.role == ElementRole::Radio && e.label.as_deref() == Some("Annual billing") }));
+    assert_eq!(som.meta.interactive_count, 6);
 }
 
 #[test]
@@ -201,6 +206,31 @@ fn test_aria_landmark_roles_are_case_insensitive() {
 
     assert!(roles.contains(&&RegionRole::Main));
     assert!(roles.contains(&&RegionRole::Navigation));
+}
+
+#[test]
+fn test_aria_search_landmark_maps_to_navigation_region() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Search Landmark</title></head>
+<body>
+    <div role="search" aria-label="Product search">
+        <input type="search" aria-label="Query">
+        <button>Search</button>
+    </div>
+    <main><p>Visible content</p></main>
+</body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let search_region = som
+        .regions
+        .iter()
+        .find(|r| r.role == RegionRole::Navigation && r.label.as_deref() == Some("Product search"))
+        .expect("ARIA search landmark should compile as a labelled navigation region");
+
+    assert!(search_region
+        .elements
+        .iter()
+        .any(|e| e.role == ElementRole::TextInput));
 }
 
 #[test]

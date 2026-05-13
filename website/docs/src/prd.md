@@ -66,6 +66,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-13 CI gate read: reusable action state is only sticky when developers can trust it before release. Playwright MCP refs, Stagehand cached actions, Firecrawl Interact sessions, Browser Use Cloud profiles, and Cloudflare WebMCP all push toward action surfaces that behave like infrastructure. Plasmate should make its local action manifest cheap to verify in CI and keep the full release gate available for semantic changes.
 
+2026-05-13 semantics-polish read: current docs keep compressing the category around reusable action surfaces. Playwright MCP snapshots expose roles and refs from the accessibility tree, Stagehand `observe()` and caching reward stable action descriptions, Firecrawl Browser Sandbox sells managed browser execution, Crawl4AI is broadening LLM-friendly crawling toward cloud scale, and Cloudflare WebMCP points toward typed website-provided tools. Plasmate should keep its local-first SOM wedge, but small semantic gaps now hurt stickiness: search landmarks, ARIA menu item variants, CSS-hidden content, and case-sensitive URL contracts need to behave like browser accessibility state without forcing agents back to raw DOM.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -81,6 +83,10 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-13:
+  - ARIA `role="search"` now compiles into a labelled navigation region, preserving search landmarks that agents commonly use before selecting a query field.
+  - ARIA `menuitemcheckbox` and `menuitemradio` now map to actionable checkbox and radio SOM roles, improving custom menu parity with browser accessibility snapshots.
+  - Stylesheet visibility parsing now ignores all declaration whitespace and casing, so `DISPLAY\t:\nnone` and similar CMS output is stripped like simpler `display:none` rules.
+  - A stale integration test now matches the case-sensitive URL path contract: `/Page`, `/page`, and `/PAGE` remain distinct while fragments and trailing duplicate slashes are still deduped.
   - Added `integrations/fixtures/action-availability.expected.json` as the shared expected compact action-target contract for the action availability SOM fixture.
   - Added `scripts/action-manifest-conformance.sh` to run Browser Use, LangChain, Vercel AI, parser-package, and SDK fixture checks from one release command.
   - Added quick/full modes to the action-manifest conformance script so CI can run focused shared-manifest checks while local releases can run the full gate.
@@ -187,6 +193,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Wire `015-action-state` into cross-adapter parser/SDK conformance runners so inherited disabled state stays synchronized outside Rust.
 - Promote the GitHub Actions action-manifest job from quick shared-manifest checks to full conformance once runtime and dependency caching are stable.
 - Add dependency-cache tuning for the action-manifest job so cross-runtime conformance stays cheap enough to keep required.
+- Promote search landmarks, ARIA menuitem checkbox/radio roles, and stylesheet hidden-state whitespace cases into shared fixtures so parser and adapter outputs prove the same semantics outside Rust.
 - Promote fieldset/legend group semantics into shared conformance fixtures alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched action-plan metadata.
 - Promote the new SDK/parser shadow-root and Go action-plan tests into shared conformance fixtures that run against every adapter before release.

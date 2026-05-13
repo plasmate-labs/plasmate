@@ -78,8 +78,11 @@ impl VisibilityRules {
     }
 
     fn process_rule(&mut self, selector: &str, declarations: &str) {
-        let decl_lower = declarations.to_lowercase();
-        let decl_lower = decl_lower.replace(' ', "");
+        let decl_lower: String = declarations
+            .chars()
+            .filter(|c| !c.is_whitespace())
+            .flat_map(|c| c.to_lowercase())
+            .collect();
 
         let is_hidden = decl_lower.contains("display:none")
             || decl_lower.contains("visibility:hidden")
@@ -329,5 +332,20 @@ mod tests {
         // Element has multiple classes, one of which is hidden
         assert!(rules.is_hidden("div", "card mb-3 hidden", ""));
         assert!(!rules.is_hidden("div", "card mb-3 visible", ""));
+    }
+
+    #[test]
+    fn test_visibility_declarations_ignore_all_whitespace_and_case() {
+        let html = r#"<html><head><style>
+            .spaced {
+                DISPLAY	:
+                    none;
+            }
+            .collapsed { VISIBILITY
+                : HIDDEN; }
+        </style></head><body></body></html>"#;
+        let rules = VisibilityRules::from_html(html);
+        assert!(rules.is_hidden("div", "spaced", ""));
+        assert!(rules.is_hidden("div", "collapsed", ""));
     }
 }

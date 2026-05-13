@@ -49,6 +49,50 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-13T14:05:53Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first. The automation worktree
+  still cannot write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate32/FETCH_HEAD`
+  (`Operation not permitted`), and the primary checkout could not resolve
+  `github.com` over SSH (`ssh: Could not resolve hostname github.com: -65563`).
+  This run continued from the local primary checkout branch
+  `codex/plasmate-improvements-2026-05-13-vercel-action-menu`, which was
+  already one commit ahead of its remote branch.
+- Market direction: current docs reinforce that browser-agent retention is
+  moving toward trustworthy reusable action state. Playwright MCP snapshots
+  expose accessibility roles and snapshot-scoped refs; Stagehand `observe()`
+  and action caching reward stable target descriptions; Firecrawl Browser
+  Sandbox, Browser Use Cloud, and Cloudflare Browser Run/WebMCP make managed
+  browser sessions and typed website tools convenient; Crawl4AI is pushing
+  LLM-friendly crawling toward cloud extraction. Plasmate should not pivot into
+  hosted browser infrastructure first. The sticky wedge remains local SOM
+  fidelity plus adapter conformance.
+- Code changes: ARIA `role="search"` now compiles into a labelled navigation
+  region; ARIA `menuitemcheckbox` and `menuitemradio` now compile as actionable
+  checkbox/radio controls; stylesheet hidden-rule parsing now ignores arbitrary
+  declaration whitespace and casing; a stale SOM improvements test now matches
+  the case-sensitive URL path deduplication contract.
+- Docs changes: updated the PRD and roadmap source docs plus generated website
+  docs with the semantic-fidelity market read, completed improvement log, and
+  next step to promote search/menuitem/stylesheet-hidden cases into shared
+  parser and adapter fixtures.
+- Verification: `node website/build.mjs` rebuilt 39 pages; `cargo build`
+  passed with existing warnings; `cargo test --lib -- --test-threads=1` passed
+  246 tests; `cargo test --test som_compiler_test --test som_improvements_test
+  -- --test-threads=1` passed 74 tests; `./scripts/action-manifest-conformance.sh
+  --quick` passed; `git diff --check` passed; `cargo clippy --all-targets`
+  passed with existing warnings. Full `cargo test -- --test-threads=1` still
+  failed only in `tests/awp_integration_test.rs` because sandboxed local
+  listener setup returned `Operation not permitted`. `cargo fmt --all --check`
+  still reports pre-existing formatting drift in unrelated files such as
+  `src/awp/handler.rs`, `src/network/proxy.rs`, `src/main.rs`, and
+  `src/mcp/tools.rs`; touched Rust files were formatted directly with
+  `rustfmt`.
+- Commit/push state: commit creation and remote push are attempted after this
+  state entry. Remote push/merge may remain blocked until `github.com` DNS
+  resolution is available.
+
 ### 2026-05-13T13:08:36Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first. The automation worktree

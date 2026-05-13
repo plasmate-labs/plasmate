@@ -240,6 +240,17 @@ profiles. Plasmate should keep the local-first wedge and make release
 conformance the retention feature: broad SDK and adapter coverage matters only
 if one command proves the action menu contract has not drifted.
 
+2026-05-13 semantics-polish read: current docs keep compressing the category
+around reusable action surfaces. Playwright MCP snapshots expose roles and refs
+from the accessibility tree, Stagehand `observe()` and caching reward stable
+action descriptions, Firecrawl Browser Sandbox sells managed browser
+execution, Crawl4AI is broadening LLM-friendly crawling toward cloud scale,
+and Cloudflare WebMCP points toward typed website-provided tools. Plasmate
+should keep its local-first SOM wedge, but small semantic gaps now hurt
+stickiness: search landmarks, ARIA menu item variants, CSS-hidden content, and
+case-sensitive URL contracts need to behave like browser accessibility state
+without forcing agents back to raw DOM.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -266,6 +277,18 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-13:
+  - ARIA `role="search"` now compiles into a labelled navigation region,
+    preserving search landmarks that agents commonly use before selecting a
+    query field.
+  - ARIA `menuitemcheckbox` and `menuitemradio` now map to actionable checkbox
+    and radio SOM roles, improving custom menu parity with browser
+    accessibility snapshots.
+  - Stylesheet visibility parsing now ignores all declaration whitespace and
+    casing, so `DISPLAY\t:\nnone` and similar CMS output is stripped like
+    simpler `display:none` rules.
+  - A stale integration test now matches the case-sensitive URL path contract:
+    `/Page`, `/page`, and `/PAGE` remain distinct while fragments and trailing
+    duplicate slashes are still deduped.
   - Added `integrations/fixtures/action-availability.expected.json` as the
     shared expected compact action-target contract for the action availability
     SOM fixture.
@@ -509,6 +532,9 @@ and adapter docs over one-off integration logic.
   checks to full conformance once runtime and dependency caching are stable.
 - Add dependency-cache tuning for the action-manifest job so cross-runtime
   conformance stays cheap enough to keep required.
+- Promote search landmarks, ARIA menuitem checkbox/radio roles, and stylesheet
+  hidden-state whitespace cases into shared fixtures so parser and adapter
+  outputs prove the same semantics outside Rust.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched

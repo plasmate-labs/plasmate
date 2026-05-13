@@ -67,7 +67,7 @@ fn test_dedup_preserves_first_occurrence() {
 }
 
 #[test]
-fn test_dedup_case_insensitive() {
+fn test_dedup_preserves_case_sensitive_paths() {
     let html = r#"<!DOCTYPE html>
 <html><head><title>Case Test</title></head>
 <body><main>
@@ -79,9 +79,9 @@ fn test_dedup_case_insensitive() {
     let som = compiler::compile(html, "https://example.com").unwrap();
     let json = serde_json::to_string_pretty(&som).unwrap();
 
-    // All three point to the same URL (case-insensitive), so only first should survive
+    // URL paths are case-sensitive, so each distinct path should survive.
     let link_count = json.matches("\"role\": \"link\"").count();
-    assert_eq!(link_count, 1, "Case-insensitive dedup should keep only one");
+    assert_eq!(link_count, 3, "Case-sensitive paths should not be merged");
 }
 
 // ============================================================
