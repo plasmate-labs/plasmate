@@ -49,6 +49,48 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-13T16:11:57Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first. The automation worktree
+  still cannot write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate34/FETCH_HEAD`
+  (`Operation not permitted`), and retrying from the primary checkout could
+  not resolve `github.com` over SSH (`ssh: Could not resolve hostname
+  github.com: -65563`). This run continued from locally known
+  `origin/master`/`HEAD` `c6f8323`.
+- Market direction: fresh official-doc research still favors reusable action
+  surfaces over a hosted-browser pivot. Playwright MCP snapshots expose
+  accessibility refs scoped to the current snapshot, Stagehand documents
+  `observe()` plus local/server action caching, Firecrawl Interact resumes
+  scraped browser sessions with prompt/code actions and persistent profiles,
+  Browser Use Cloud sells stateful sessions/profiles, and Crawl4AI is moving
+  LLM-friendly crawling toward cloud scale. Plasmate's sticky wedge remains a
+  browser-like local SOM/action contract across the broad repo surface.
+- Code changes: ARIA landmark parsing now honors space-separated fallback role
+  tokens, so `role="utility search"` still produces a labelled
+  search/navigation region. ARIA widget role parsing now honors fallback tokens,
+  preserving menu checkbox/radio action targets when unknown role tokens
+  precede known roles. Hidden stripping now treats uppercase
+  `aria-hidden="TRUE"` and inline `opacity: 0` as hidden state, matching the
+  existing stylesheet visibility behavior.
+- Fixture and test changes: `specs/conformance/016-action-semantics.html` and
+  its expected partial output now cover fallback-token search/menu roles,
+  uppercase ARIA-hidden state, and inline opacity hiding. Rust compiler tests
+  assert fallback-token landmark parsing, fallback-token widget parsing,
+  uppercase ARIA-hidden stripping, inline opacity stripping, and the expanded
+  `016-action-semantics` fixture.
+- Docs changes: updated PRD and roadmap source docs plus generated website docs
+  with the role-fallback/visibility market read, completed improvement log, and
+  next step to promote `016-action-semantics` into parser/SDK and adapter
+  conformance runners for fallback roles and hidden-state variants.
+- Verification: `cargo build` passed using
+  `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target` with existing warnings;
+  `cargo test --test som_compiler_test -- --test-threads=1` passed 57 tests;
+  `cargo test --lib -- --test-threads=1` passed 246 tests; `node
+  website/build.mjs` rebuilt 39 pages; `./scripts/action-manifest-conformance.sh
+  --quick` passed after temporarily symlinking existing primary-checkout
+  `node_modules` for Node package dependencies; `git diff --check` passed.
+
 ### 2026-05-13T15:13:58Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first. The automation worktree

@@ -10,17 +10,19 @@
   </style>
 </head>
 <body>
-  <div role="search" aria-label="Product search">
+  <div role="unknown search" aria-label="Product search">
     <input type="search" aria-label="Query" name="q" />
     <button type="submit">Search</button>
   </div>
   <main>
     <h1>Preferences</h1>
     <div role="menu" aria-label="Display options">
-      <div role="menuitemcheckbox" aria-label="Compact mode" aria-checked="false"></div>
-      <div role="menuitemradio" aria-label="Annual billing" aria-checked="true"></div>
+      <div role="unknown menuitemcheckbox" aria-label="Compact mode" aria-checked="false"></div>
+      <div role="unknown menuitemradio" aria-label="Annual billing" aria-checked="true"></div>
     </div>
     <p class="layout-hidden">Hidden stylesheet copy</p>
+    <p aria-hidden="TRUE">Hidden uppercase ARIA copy</p>
+    <p style="opacity: 0">Hidden inline opacity copy</p>
     <p>Visible preferences copy</p>
   </main>
 </body>

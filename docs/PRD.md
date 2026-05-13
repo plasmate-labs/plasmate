@@ -260,6 +260,17 @@ that pressure into a release habit: every newly supported browser semantic
 needs a shared fixture or manifest entry before it is treated as a durable
 product contract.
 
+2026-05-13 role-fallback read: fresh official-doc review keeps pointing to
+the same retention layer. Playwright MCP snapshots expose current refs from
+accessibility state, Stagehand documents `observe()` as a planning and caching
+surface, Firecrawl Interact combines scrape sessions with prompt/code
+interaction and persistent profiles, Browser Use Cloud sells CDP browser
+sessions with profile state, and Crawl4AI is expanding LLM-friendly crawling
+toward cloud scale. Plasmate should continue avoiding a hosted-browser pivot
+and instead make the local SOM compiler behave more like browser
+accessibility state on messy production markup, including fallback ARIA role
+tokens and hidden-state variants.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -286,6 +297,18 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-13:
+  - ARIA landmark role parsing now honors space-separated fallback tokens, so
+    `role="utility search"` still compiles into a labelled search/navigation
+    region instead of falling back to generic content.
+  - ARIA widget role parsing now honors fallback tokens, preserving
+    `menuitemcheckbox` and `menuitemradio` action targets when production
+    markup includes unknown role tokens before the known role.
+  - Hidden-element stripping now treats uppercase `aria-hidden="TRUE"` and
+    inline `opacity: 0` as hidden state, aligning inline visibility handling
+    with the stylesheet visibility parser.
+  - The `016-action-semantics` conformance fixture now covers role fallback
+    tokens, uppercase ARIA-hidden state, and inline opacity hiding alongside
+    search landmarks, menu action targets, and stylesheet whitespace/casing.
   - Shared action-availability fixtures now include ARIA menu checkbox and
     radio targets so Browser Use, LangChain, Vercel AI, parser packages, and
     SDKs prove the same menu action contract.
@@ -549,10 +572,9 @@ and adapter docs over one-off integration logic.
   checks to full conformance once runtime and dependency caching are stable.
 - Add dependency-cache tuning for the action-manifest job so cross-runtime
   conformance stays cheap enough to keep required.
-- Promote search landmarks, ARIA menuitem checkbox/radio roles, and stylesheet
 - Wire `016-action-semantics` into parser/SDK and adapter conformance runners
-  so search landmarks, ARIA menu roles, and stylesheet-hidden whitespace stay
-  synchronized outside Rust.
+  so search landmarks, fallback-token ARIA roles, menu roles, ARIA-hidden
+  casing, and visibility-hidden variants stay synchronized outside Rust.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched

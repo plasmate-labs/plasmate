@@ -214,6 +214,14 @@ Current browser-agent comparisons keep confirming that reusable action state is 
 - **Search and visibility need one fixture**: search landmarks and stylesheet-hidden whitespace are common SaaS cases that should be tested together with action targets.
 - **Docs fixtures need executable guards**: conformance fixtures should have focused Rust coverage first, then graduate into parser, SDK, and adapter release gates.
 
+### 2026-05-13 ARIA Fallback and Visibility Adjustment
+
+Official docs and current competitor positioning continue to reward compact, browser-like action surfaces over raw DOM access. Playwright MCP snapshots use fresh accessibility refs, Stagehand `observe()` returns actions that can be cached locally or on Browserbase, Firecrawl Interact resumes scrape sessions for prompt/code actions with profiles, Browser Use Cloud exposes CDP browser sessions with profile state, and Crawl4AI is broadening LLM-friendly crawling toward cloud extraction. Plasmate should keep the local-first wedge and close the small production-markup gaps that force agents back to raw DOM recovery.
+
+- **ARIA roles need fallback-token tolerance**: landmark and widget roles should honor the first known role in a space-separated `role` list.
+- **Hidden state should match browser intent**: uppercase ARIA booleans and inline opacity/zero-size hiding should be stripped like equivalent stylesheet rules.
+- **Conformance fixtures should absorb semantic polish**: every production tolerance fix should be attached to `016-action-semantics` or another shared fixture before adapter release gates consume it.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -340,9 +348,13 @@ Current browser-agent comparisons keep confirming that reusable action state is 
 - [x] Shared action-availability manifest covers ARIA menu checkbox/radio targets
 - [x] Shared conformance fixture covers search landmarks, ARIA menu targets, and stylesheet hidden whitespace
 - [x] Rust compiler test loads the action-semantics conformance fixture
+- [x] ARIA landmark fallback role tokens compile into labelled search/navigation regions
+- [x] ARIA widget fallback role tokens preserve menu checkbox/radio action targets
+- [x] Uppercase `aria-hidden="TRUE"` and inline `opacity: 0` are stripped as hidden state
+- [x] Action-semantics conformance covers role fallback tokens and inline/ARIA hidden variants
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
-- [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners
+- [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
 - [ ] Add cross-adapter fixtures for enriched compact action-plan metadata
 - [ ] Add cross-adapter accessible-description fixtures

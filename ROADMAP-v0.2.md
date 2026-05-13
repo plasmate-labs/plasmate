@@ -457,6 +457,26 @@ promote semantic fixes into shared fixtures as soon as they land.
    focused Rust coverage first, then graduate into parser, SDK, and adapter
    release gates.
 
+### 2026-05-13 ARIA Fallback and Visibility Adjustment
+
+Official docs and current competitor positioning continue to reward compact,
+browser-like action surfaces over raw DOM access. Playwright MCP snapshots use
+fresh accessibility refs, Stagehand `observe()` returns actions that can be
+cached locally or on Browserbase, Firecrawl Interact resumes scrape sessions
+for prompt/code actions with profiles, Browser Use Cloud exposes CDP browser
+sessions with profile state, and Crawl4AI is broadening LLM-friendly crawling
+toward cloud extraction. Plasmate should keep the local-first wedge and close
+the small production-markup gaps that force agents back to raw DOM recovery.
+
+1. **ARIA roles need fallback-token tolerance**: landmark and widget roles
+   should honor the first known role in a space-separated `role` list.
+2. **Hidden state should match browser intent**: uppercase ARIA booleans and
+   inline opacity/zero-size hiding should be stripped like equivalent
+   stylesheet rules.
+3. **Conformance fixtures should absorb semantic polish**: every production
+   tolerance fix should be attached to `016-action-semantics` or another shared
+   fixture before adapter release gates consume it.
+
 ## Architecture
 
 ```
@@ -747,6 +767,15 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   whitespace/casing.
 - Rust compiler tests now load the `016-action-semantics` fixture directly so
   those semantics have executable coverage before adapter promotion.
+- ARIA landmark role parsing now honors fallback-token role lists, keeping
+  `role="utility search"` available as a labelled navigation/search region.
+- ARIA widget role parsing now honors fallback-token role lists, keeping custom
+  menu checkbox/radio targets actionable when unknown roles precede known
+  roles.
+- Inline and ARIA hidden stripping now covers uppercase `aria-hidden="TRUE"`
+  and inline `opacity: 0`, matching common production visibility variants.
+- The `016-action-semantics` fixture now guards role fallback tokens, uppercase
+  ARIA-hidden state, and inline opacity hiding alongside menu/search semantics.
 
 ## Dependencies to Add
 

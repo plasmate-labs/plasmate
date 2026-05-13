@@ -98,16 +98,15 @@ pub fn should_strip(node: &Handle) -> bool {
             if attrs.iter().any(|a| a.name.local.as_ref() == "hidden") {
                 return true;
             }
-            if attrs
-                .iter()
-                .any(|a| a.name.local.as_ref() == "aria-hidden" && a.value.as_ref() == "true")
-            {
+            if attrs.iter().any(|a| {
+                a.name.local.as_ref() == "aria-hidden" && a.value.eq_ignore_ascii_case("true")
+            }) {
                 return true;
             }
             // Check inline style for display:none or visibility:hidden
             if let Some(style) = attrs.iter().find(|a| a.name.local.as_ref() == "style") {
                 let style_val = normalize_inline_style(&style.value);
-                if style_val.contains("display:none") || style_val.contains("visibility:hidden") {
+                if inline_style_hides_element(&style_val) {
                     return true;
                 }
             }
@@ -210,21 +209,34 @@ fn normalize_inline_style(style: &str) -> String {
         .to_lowercase()
 }
 
+fn inline_style_hides_element(style: &str) -> bool {
+    style.contains("display:none")
+        || style.contains("visibility:hidden")
+        || style.contains("opacity:0")
+        || style.contains("font-size:0")
+        || (style.contains("clip:rect(0") && style.contains("position:absolute"))
+        || (style.contains("height:0") && style.contains("overflow:hidden"))
+        || (style.contains("width:0") && style.contains("overflow:hidden"))
+        || (style.contains("max-height:0") && style.contains("overflow:hidden"))
+}
+
 /// Determine if a tag is a landmark that defines a region.
 pub fn landmark_role(tag: &str, attrs: &[(String, String)]) -> Option<&'static str> {
     // Check ARIA role first
     for (name, value) in attrs {
         if name == "role" {
-            return match value.to_ascii_lowercase().as_str() {
-                "navigation" => Some("navigation"),
-                "main" => Some("main"),
-                "complementary" => Some("aside"),
-                "banner" => Some("header"),
-                "contentinfo" => Some("footer"),
-                "dialog" | "alertdialog" => Some("dialog"),
-                "search" => Some("search"),
-                _ => None,
-            };
+            for role in value.split_whitespace() {
+                match role.to_ascii_lowercase().as_str() {
+                    "navigation" => return Some("navigation"),
+                    "main" => return Some("main"),
+                    "complementary" => return Some("aside"),
+                    "banner" => return Some("header"),
+                    "contentinfo" => return Some("footer"),
+                    "dialog" | "alertdialog" => return Some("dialog"),
+                    "search" => return Some("search"),
+                    _ => {}
+                }
+            }
         }
     }
     // Then HTML5 landmarks

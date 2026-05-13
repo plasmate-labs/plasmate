@@ -1422,22 +1422,24 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
     // Check ARIA role attribute first
     for (name, value) in attrs {
         if name == "role" {
-            let role_value = value.to_ascii_lowercase();
-            return match role_value.as_str() {
-                "button" => Some(ElementRole::Button),
-                "link" => Some(ElementRole::Link),
-                "checkbox" => Some(ElementRole::Checkbox),
-                "switch" => Some(ElementRole::Checkbox),
-                "menuitemcheckbox" => Some(ElementRole::Checkbox),
-                "radio" => Some(ElementRole::Radio),
-                "menuitemradio" => Some(ElementRole::Radio),
-                "textbox" | "searchbox" => Some(ElementRole::TextInput),
-                "combobox" | "listbox" => Some(ElementRole::Select),
-                "menuitem" | "tab" => Some(ElementRole::Button),
-                "img" => Some(ElementRole::Image),
-                "group" | "radiogroup" => Some(ElementRole::Group),
-                _ => None,
-            };
+            for role in value.split_whitespace() {
+                match role.to_ascii_lowercase().as_str() {
+                    "button" => return Some(ElementRole::Button),
+                    "link" => return Some(ElementRole::Link),
+                    "checkbox" => return Some(ElementRole::Checkbox),
+                    "switch" => return Some(ElementRole::Checkbox),
+                    "menuitemcheckbox" => return Some(ElementRole::Checkbox),
+                    "radio" => return Some(ElementRole::Radio),
+                    "menuitemradio" => return Some(ElementRole::Radio),
+                    "textbox" | "searchbox" => return Some(ElementRole::TextInput),
+                    "combobox" | "listbox" => return Some(ElementRole::Select),
+                    "menuitem" | "tab" => return Some(ElementRole::Button),
+                    "img" => return Some(ElementRole::Image),
+                    "group" | "radiogroup" => return Some(ElementRole::Group),
+                    _ => {}
+                }
+            }
+            return None;
         }
     }
 

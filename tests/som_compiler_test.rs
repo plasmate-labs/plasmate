@@ -110,6 +110,8 @@ fn test_hidden_inline_styles_ignore_case_and_spacing() {
 <body><main>
     <p style="DISPLAY : none">Spaced display hidden</p>
     <p style="Visibility : hidden">Spaced visibility hidden</p>
+    <p style="Opacity : 0">Opacity hidden</p>
+    <p aria-hidden="TRUE">Uppercase aria hidden</p>
     <p>Visible copy</p>
 </main></body></html>"#;
 
@@ -117,6 +119,8 @@ fn test_hidden_inline_styles_ignore_case_and_spacing() {
         serde_json::to_string(&compiler::compile(html, "https://example.com").unwrap()).unwrap();
     assert!(!json.contains("Spaced display hidden"));
     assert!(!json.contains("Spaced visibility hidden"));
+    assert!(!json.contains("Opacity hidden"));
+    assert!(!json.contains("Uppercase aria hidden"));
     assert!(json.contains("Visible copy"));
 }
 
@@ -209,6 +213,23 @@ fn test_aria_landmark_roles_are_case_insensitive() {
 }
 
 #[test]
+fn test_aria_landmark_role_fallback_tokens_are_respected() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Fallback Roles</title></head>
+<body>
+    <div role="utility search" aria-label="Global search">
+        <input type="search" aria-label="Query">
+    </div>
+</body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+
+    assert!(som.regions.iter().any(|region| {
+        region.role == RegionRole::Navigation && region.label.as_deref() == Some("Global search")
+    }));
+}
+
+#[test]
 fn test_aria_search_landmark_maps_to_navigation_region() {
     let html = r#"<!DOCTYPE html>
 <html><head><title>Search Landmark</title></head>
@@ -262,8 +283,30 @@ fn test_action_semantics_conformance_fixture() {
         "menuitemradio should compile into an actionable radio target"
     );
     assert!(!json.contains("Hidden stylesheet copy"));
+    assert!(!json.contains("Hidden uppercase ARIA copy"));
+    assert!(!json.contains("Hidden inline opacity copy"));
     assert!(json.contains("Visible preferences copy"));
     assert_eq!(som.meta.interactive_count, 4);
+}
+
+#[test]
+fn test_aria_widget_role_fallback_tokens_are_respected() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Fallback Widgets</title></head>
+<body><main>
+    <div role="widget menuitemcheckbox" aria-label="Compact mode"></div>
+    <div role="widget menuitemradio" aria-label="Annual billing"></div>
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let elems = all_elements(&som);
+
+    assert!(elems.iter().any(|e| {
+        e.role == ElementRole::Checkbox && e.label.as_deref() == Some("Compact mode")
+    }));
+    assert!(elems
+        .iter()
+        .any(|e| { e.role == ElementRole::Radio && e.label.as_deref() == Some("Annual billing") }));
 }
 
 #[test]
