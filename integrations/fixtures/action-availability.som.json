@@ -22,6 +22,7 @@
           "actions": ["type"],
           "attrs": {
             "input_type": "email",
+            "value": "ops@example.com",
             "placeholder": "name@company.com",
             "required": true,
             "description": "Use your work email",
@@ -58,6 +59,7 @@
           "label": "Compact mode",
           "actions": ["toggle"],
           "attrs": {
+            "checked": false,
             "group": "Preferences"
           }
         },
@@ -67,7 +69,10 @@
           "label": "Annual billing",
           "actions": ["select"],
           "attrs": {
-            "group": "Billing"
+            "group": "Billing",
+            "aria": {
+              "checked": true
+            }
           }
         }
       ]

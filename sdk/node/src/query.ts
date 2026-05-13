@@ -53,8 +53,10 @@ export interface ActionPlanItem {
   href?: string;
   name?: string;
   input_type?: string;
+  value?: string;
   placeholder?: string;
   description?: string;
+  checked?: boolean | string;
   required?: boolean;
   disabled?: boolean;
   blocked_reason?: 'disabled';
@@ -107,8 +109,14 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.href) item.href = el.attrs.href;
     if (el.attrs?.name) item.name = el.attrs.name;
     if (el.attrs?.input_type) item.input_type = el.attrs.input_type;
+    if (el.attrs?.value) item.value = el.attrs.value;
     if (el.attrs?.placeholder) item.placeholder = el.attrs.placeholder;
     if (el.attrs?.description) item.description = el.attrs.description;
+    if (el.attrs?.checked !== undefined) {
+      item.checked = el.attrs.checked;
+    } else if (el.attrs?.aria?.checked !== undefined) {
+      item.checked = el.attrs.aria.checked;
+    }
     if (el.attrs?.required !== undefined) item.required = el.attrs.required;
     if (el.attrs?.disabled !== undefined) {
       item.disabled = el.attrs.disabled;

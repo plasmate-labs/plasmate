@@ -49,6 +49,46 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-13T17:08:35Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first. The automation worktree
+  still cannot write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate35/FETCH_HEAD`
+  (`Operation not permitted`), and retrying from the primary checkout could
+  not resolve `github.com` over SSH (`ssh: Could not resolve hostname
+  github.com: -65563`). This run continued from locally known
+  `origin/master`/`HEAD` `51fccb5`. Creating a branch in the automation
+  worktree was also blocked by `HEAD.lock`, so implementation and commit
+  staging used the primary checkout on
+  `codex/plasmate-improvements-2026-05-13-control-state`.
+- Market direction: current official docs still point toward reusable action
+  state rather than a hosted-browser pivot. Playwright MCP snapshots keep refs
+  scoped to current accessibility state, Stagehand `observe()` and action
+  caching depend on validating state before acting, and Firecrawl/Browser Use
+  package managed sessions around forms that change between runs. Plasmate's
+  sticky local-first response is to carry live control state in compact SOM
+  action menus while preserving deterministic local cache keys.
+- Code changes: Python/Node parser packages, Python/Node/Go SDKs, Browser Use,
+  LangChain, and Vercel AI action-plan surfaces now preserve non-empty control
+  `value` fields. Compact targets now normalize native `attrs.checked` and
+  ARIA `aria.checked` into one shared `checked` field. Browser Use, LangChain,
+  and Vercel AI prompt renderers now include value/checked state in action
+  menu text.
+- Fixture and test changes: `integrations/fixtures/action-availability.*` now
+  asserts current input value, native unchecked checkbox state, and ARIA
+  checked radio/menu state while keeping existing deterministic `cache_key`
+  values unchanged. Adapter tests now verify those fields in rendered prompt
+  contexts.
+- Docs changes: updated PRD and roadmap source docs plus generated website
+  source docs with the control-state market read, completed improvement log,
+  and next step to extend compact action-plan state with ARIA expanded,
+  pressed, and selected cues.
+- Verification: `./scripts/action-manifest-conformance.sh --quick` passed;
+  `./scripts/action-manifest-conformance.sh --full` passed; `node
+  website/build.mjs` rebuilt 39 pages; `cargo build` passed with existing
+  warnings; `cargo test --lib -- --test-threads=1` passed 246 tests; `git
+  diff --check` passed.
+
 ### 2026-05-13T16:11:57Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first. The automation worktree

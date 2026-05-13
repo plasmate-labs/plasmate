@@ -271,6 +271,15 @@ and instead make the local SOM compiler behave more like browser
 accessibility state on messy production markup, including fallback ARIA role
 tokens and hidden-state variants.
 
+2026-05-13 control-state read: official docs continue to make action menus
+the durable product layer. Playwright MCP refs are useful only when they match
+current accessibility state, Stagehand's `observe()` cache is valuable only
+when reused actions still reflect page state, and managed browser platforms
+are selling session continuity around the same problem. Plasmate's local-first
+answer is to make compact action targets carry enough live control state
+(`value`, `checked`, and ARIA checked state) for agents to reuse cached plans
+without re-reading raw DOM.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -297,6 +306,15 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-13:
+  - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
+    AI action-plan helpers now preserve current control `value` fields for
+    interactive targets without changing deterministic `cache_key` values.
+  - Compact action targets now expose `checked` state from native
+    `attrs.checked` and ARIA `aria.checked`, covering both checkbox/radio
+    inputs and custom menu widgets.
+  - The shared action-availability manifest now asserts value and checked
+    state so framework prompt renderers cannot drift from parser/SDK action
+    plans.
   - ARIA landmark role parsing now honors space-separated fallback tokens, so
     `role="utility search"` still compiles into a labelled search/navigation
     region instead of falling back to generic content.
@@ -575,6 +593,8 @@ and adapter docs over one-off integration logic.
 - Wire `016-action-semantics` into parser/SDK and adapter conformance runners
   so search landmarks, fallback-token ARIA roles, menu roles, ARIA-hidden
   casing, and visibility-hidden variants stay synchronized outside Rust.
+- Extend compact action-plan state with ARIA `expanded`, `pressed`, and
+  `selected` cues once the shared value/checked manifest proves stable.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched

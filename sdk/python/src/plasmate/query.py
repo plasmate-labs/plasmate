@@ -93,10 +93,16 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["name"] = attrs.name
             if attrs.input_type:
                 item["input_type"] = attrs.input_type
+            if attrs.value:
+                item["value"] = attrs.value
             if attrs.placeholder:
                 item["placeholder"] = attrs.placeholder
             if attrs.description:
                 item["description"] = attrs.description
+            if attrs.checked is not None:
+                item["checked"] = attrs.checked
+            elif attrs.aria and "checked" in attrs.aria:
+                item["checked"] = attrs.aria["checked"]
             if attrs.required is not None:
                 item["required"] = attrs.required
             if attrs.disabled is not None:

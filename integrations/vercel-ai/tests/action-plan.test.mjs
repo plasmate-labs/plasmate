@@ -47,6 +47,7 @@ assert.deepEqual(email, {
   enabled: true,
   label: 'Work email',
   input_type: 'email',
+  value: 'ops@example.com',
   placeholder: 'name@company.com',
   description: 'Use your work email',
   required: true,
@@ -71,8 +72,10 @@ const formatted = formatPlasmateActionPlan(targets, {
 })
 assert.match(
   formatted,
-  /\[e_email\] text_input "Work email" \(type\) \[enabled\] \[cache_key=plasmate-action:v1:91875850\] \[required\] \[type=email\] \[placeholder=name@company\.com\] \[group=Account\]/
+  /\[e_email\] text_input "Work email" \(type\) \[enabled\] \[cache_key=plasmate-action:v1:91875850\] \[required\] \[type=email\] \[value=ops@example\.com\] \[placeholder=name@company\.com\] \[group=Account\]/
 )
+assert.match(formatted, /\[e_compact\].*\[checked=false\]/)
+assert.match(formatted, /\[e_annual\].*\[checked=true\]/)
 assert.match(
   formatted,
   /\[e_save\] button "Save" \(click\) \[blocked\] \[cache_key=plasmate-action:v1:4d0e8356\] \[blocked_reason=disabled\]/

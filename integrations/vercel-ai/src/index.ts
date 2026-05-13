@@ -38,8 +38,10 @@ export interface PlasmateActionTarget {
   blocked_reason?: string
   required?: boolean
   description?: string
+  checked?: boolean | string
   href?: string
   input_type?: string
+  value?: string
   name?: string
   placeholder?: string
   group?: string
@@ -188,7 +190,7 @@ function collectSomElements(elements: readonly PlasmateSomElement[] = []) {
 function copyStringAttr(
   item: PlasmateActionTarget,
   attrs: Record<string, unknown>,
-  key: 'href' | 'input_type' | 'name' | 'placeholder' | 'description' | 'group'
+  key: 'href' | 'input_type' | 'value' | 'name' | 'placeholder' | 'description' | 'group'
 ) {
   if (typeof attrs[key] === 'string' && attrs[key].length > 0) {
     item[key] = attrs[key]
@@ -217,10 +219,27 @@ export function extractPlasmateActionTargets(
       if (label) target.label = label
       copyStringAttr(target, attrs, 'href')
       copyStringAttr(target, attrs, 'input_type')
+      copyStringAttr(target, attrs, 'value')
       copyStringAttr(target, attrs, 'name')
       copyStringAttr(target, attrs, 'placeholder')
       copyStringAttr(target, attrs, 'description')
       copyStringAttr(target, attrs, 'group')
+
+      if (typeof attrs.checked === 'boolean') {
+        target.checked = attrs.checked
+      } else {
+        const aria = attrs.aria
+        if (
+          aria &&
+          typeof aria === 'object' &&
+          'checked' in aria
+        ) {
+          const checked = (aria as Record<string, unknown>).checked
+          if (typeof checked === 'boolean' || typeof checked === 'string') {
+            target.checked = checked
+          }
+        }
+      }
 
       if (typeof attrs.required === 'boolean') {
         target.required = attrs.required
@@ -281,15 +300,18 @@ export function formatPlasmateActionPlan(
         : ''
       const required = target.required ? ' [required]' : ''
       const inputType = target.input_type ? ` [type=${target.input_type}]` : ''
+      const value = target.value ? ` [value=${target.value}]` : ''
       const placeholder = target.placeholder
         ? ` [placeholder=${target.placeholder}]`
         : ''
+      const checked =
+        typeof target.checked !== 'undefined' ? ` [checked=${target.checked}]` : ''
       const group = target.group ? ` [group=${target.group}]` : ''
       const description = target.description
         ? ` [description=${target.description}]`
         : ''
 
-      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${inputType}${placeholder}${group}${description}`
+      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${inputType}${value}${placeholder}${checked}${group}${description}`
     })
     .join('\n')
 }

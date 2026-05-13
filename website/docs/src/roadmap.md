@@ -222,6 +222,14 @@ Official docs and current competitor positioning continue to reward compact, bro
 - **Hidden state should match browser intent**: uppercase ARIA booleans and inline opacity/zero-size hiding should be stripped like equivalent stylesheet rules.
 - **Conformance fixtures should absorb semantic polish**: every production tolerance fix should be attached to `016-action-semantics` or another shared fixture before adapter release gates consume it.
 
+### 2026-05-13 Control-State Action Menu Adjustment
+
+The latest docs keep reinforcing that reusable actions are only sticky when state is current. Playwright MCP refs are scoped to fresh accessibility snapshots, Stagehand's `observe()` cache has to validate before acting, and Firecrawl/Browser Use sell browser/session continuity around forms that change between runs. Plasmate should keep the local-first action memory wedge, but compact targets need enough live state to keep cached plans honest.
+
+- **Current values are planning context**: text inputs and selects should surface non-empty `value` fields in action plans and prompt renderers so agents know whether a form is already filled.
+- **Checked state must cross custom controls**: native `checked` attrs and ARIA `checked` state should normalize into one compact action-plan field for checkbox, radio, menuitemcheckbox, and menuitemradio targets.
+- **Cache keys stay target-focused**: live value/checked state should be visible to agents without changing deterministic target `cache_key` values, preserving local action memory while still exposing state drift.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -352,11 +360,15 @@ Official docs and current competitor positioning continue to reward compact, bro
 - [x] ARIA widget fallback role tokens preserve menu checkbox/radio action targets
 - [x] Uppercase `aria-hidden="TRUE"` and inline `opacity: 0` are stripped as hidden state
 - [x] Action-semantics conformance covers role fallback tokens and inline/ARIA hidden variants
+- [x] Compact action plans expose non-empty control `value` fields across parser packages, SDKs, and framework adapters
+- [x] Compact action plans normalize native and ARIA checked state across parser packages, SDKs, and framework adapters
+- [x] Shared action-availability manifest asserts value and checked state without changing deterministic action cache keys
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
 - [ ] Add cross-adapter fixtures for enriched compact action-plan metadata
+- [ ] Extend compact action-plan state with ARIA expanded, pressed, and selected cues
 - [ ] Add cross-adapter accessible-description fixtures
 - [ ] Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners
 - [x] Promote adapter availability checks into shared cross-adapter fixtures

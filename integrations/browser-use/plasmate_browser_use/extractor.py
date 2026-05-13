@@ -83,6 +83,10 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append(f"group={item['group']}")
     if item.get("input_type"):
         flags.append(f"type={item['input_type']}")
+    if item.get("value"):
+        flags.append(f"value={item['value']}")
+    if "checked" in item:
+        flags.append(f"checked={item['checked']}")
 
     if flags:
         parts.append(" ".join(f"[{flag}]" for flag in flags))

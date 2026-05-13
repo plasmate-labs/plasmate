@@ -477,6 +477,25 @@ the small production-markup gaps that force agents back to raw DOM recovery.
    tolerance fix should be attached to `016-action-semantics` or another shared
    fixture before adapter release gates consume it.
 
+### 2026-05-13 Control-State Action Menu Adjustment
+
+The latest docs keep reinforcing that reusable actions are only sticky when
+state is current. Playwright MCP refs are scoped to fresh accessibility
+snapshots, Stagehand's `observe()` cache has to validate before acting, and
+Firecrawl/Browser Use sell browser/session continuity around forms that change
+between runs. Plasmate should keep the local-first action memory wedge, but
+compact targets need enough live state to keep cached plans honest.
+
+1. **Current values are planning context**: text inputs and selects should
+   surface non-empty `value` fields in action plans and prompt renderers so
+   agents know whether a form is already filled.
+2. **Checked state must cross custom controls**: native `checked` attrs and
+   ARIA `checked` state should normalize into one compact action-plan field for
+   checkbox, radio, menuitemcheckbox, and menuitemradio targets.
+3. **Cache keys stay target-focused**: live value/checked state should be
+   visible to agents without changing deterministic target `cache_key` values,
+   preserving local action memory while still exposing state drift.
+
 ## Architecture
 
 ```
@@ -776,6 +795,14 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   and inline `opacity: 0`, matching common production visibility variants.
 - The `016-action-semantics` fixture now guards role fallback tokens, uppercase
   ARIA-hidden state, and inline opacity hiding alongside menu/search semantics.
+- Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+  and Vercel AI action-plan surfaces now expose non-empty control `value`
+  fields for interactive targets.
+- Compact action targets now normalize native `attrs.checked` and ARIA
+  `aria.checked` into a shared `checked` field across parser, SDK, and
+  framework adapter outputs.
+- The shared action-availability manifest now asserts `value` and `checked`
+  state while keeping existing deterministic action `cache_key` values stable.
 
 ## Dependencies to Add
 

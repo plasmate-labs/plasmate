@@ -44,6 +44,10 @@ def test_som_to_text_surfaces_interactive_state():
             assert f'[blocked_reason={target["blocked_reason"]}]' in line
         if target.get("required"):
             assert "[required]" in line
+        if target.get("value"):
+            assert f'[value="{target["value"]}"]' in line
+        if "checked" in target:
+            assert f'[checked="{target["checked"]}"]' in line
         if target.get("group"):
             assert f'[group="{target["group"]}"]' in line
         if target.get("description"):

@@ -169,21 +169,23 @@ func flattenElements(elements []Element, result *[]Element) {
 
 // ActionPlanItem is a compact action target for agent planning.
 type ActionPlanItem struct {
-	ID            string   `json:"id"`
-	CacheKey      string   `json:"cache_key"`
-	Role          string   `json:"role"`
-	Actions       []string `json:"actions"`
-	Enabled       bool     `json:"enabled"`
-	Label         *string  `json:"label,omitempty"`
-	Href          *string  `json:"href,omitempty"`
-	Name          *string  `json:"name,omitempty"`
-	InputType     *string  `json:"input_type,omitempty"`
-	Placeholder   *string  `json:"placeholder,omitempty"`
-	Description   *string  `json:"description,omitempty"`
-	Required      *bool    `json:"required,omitempty"`
-	Disabled      *bool    `json:"disabled,omitempty"`
-	BlockedReason *string  `json:"blocked_reason,omitempty"`
-	Group         *string  `json:"group,omitempty"`
+	ID            string      `json:"id"`
+	CacheKey      string      `json:"cache_key"`
+	Role          string      `json:"role"`
+	Actions       []string    `json:"actions"`
+	Enabled       bool        `json:"enabled"`
+	Label         *string     `json:"label,omitempty"`
+	Href          *string     `json:"href,omitempty"`
+	Name          *string     `json:"name,omitempty"`
+	InputType     *string     `json:"input_type,omitempty"`
+	Value         *string     `json:"value,omitempty"`
+	Placeholder   *string     `json:"placeholder,omitempty"`
+	Description   *string     `json:"description,omitempty"`
+	Checked       interface{} `json:"checked,omitempty"`
+	Required      *bool       `json:"required,omitempty"`
+	Disabled      *bool       `json:"disabled,omitempty"`
+	BlockedReason *string     `json:"blocked_reason,omitempty"`
+	Group         *string     `json:"group,omitempty"`
 }
 
 func compactString(value *string) interface{} {
@@ -244,8 +246,14 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.Href = el.Attrs.Href
 			item.Name = el.Attrs.Name
 			item.InputType = el.Attrs.InputType
+			item.Value = el.Attrs.Value
 			item.Placeholder = el.Attrs.Placeholder
 			item.Description = el.Attrs.Description
+			if el.Attrs.Checked != nil {
+				item.Checked = *el.Attrs.Checked
+			} else if el.Attrs.Aria != nil && el.Attrs.Aria.Checked != nil {
+				item.Checked = el.Attrs.Aria.Checked
+			}
 			item.Required = el.Attrs.Required
 			item.Disabled = el.Attrs.Disabled
 			if el.Attrs.Disabled != nil && *el.Attrs.Disabled {

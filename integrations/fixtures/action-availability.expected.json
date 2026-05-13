@@ -11,6 +11,7 @@
       "required": true,
       "group": "Account",
       "input_type": "email",
+      "value": "ops@example.com",
       "placeholder": "name@company.com",
       "description": "Use your work email"
     },
@@ -42,6 +43,7 @@
       "label": "Compact mode",
       "actions": ["toggle"],
       "enabled": true,
+      "checked": false,
       "group": "Preferences"
     },
     {
@@ -51,6 +53,7 @@
       "label": "Annual billing",
       "actions": ["select"],
       "enabled": true,
+      "checked": true,
       "group": "Billing"
     }
   ]

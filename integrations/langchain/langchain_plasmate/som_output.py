@@ -125,7 +125,8 @@ def _element_to_text(elem: dict[str, Any], indent: int = 1) -> str:
             desc = f'radio "{label or text}"'
             if attrs.get("group"):
                 desc += f" group={attrs['group']}"
-            if attrs.get("checked"):
+            aria = attrs.get("aria") or {}
+            if attrs.get("checked") or aria.get("checked") is True:
                 desc += " (selected)"
             return f"{prefix}[{eid}] {desc}{hint_str}"
         return f'{prefix}[{eid}] {role} "{display}"{hint_str}'
@@ -196,6 +197,12 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append(f"[cache_key={_action_cache_key(elem)}]")
     if attrs.get("required") is True:
         flags.append("[required]")
+    if attrs.get("value"):
+        flags.append(f'[value="{attrs["value"]}"]')
+    if "checked" in attrs:
+        flags.append(f'[checked="{attrs["checked"]}"]')
+    elif isinstance(attrs.get("aria"), dict) and "checked" in attrs["aria"]:
+        flags.append(f'[checked="{attrs["aria"]["checked"]}"]')
     if attrs.get("group"):
         flags.append(f'[group="{attrs["group"]}"]')
     if attrs.get("description"):

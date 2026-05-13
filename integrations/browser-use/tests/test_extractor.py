@@ -49,6 +49,10 @@ def test_build_context_surfaces_action_availability():
             assert f'[group={target["group"]}]' in line
         if target.get("input_type"):
             assert f'[type={target["input_type"]}]' in line
+        if target.get("value"):
+            assert f'[value={target["value"]}]' in line
+        if "checked" in target:
+            assert f'[checked={target["checked"]}]' in line
         if target.get("description"):
             assert target["description"] in line
 
