@@ -345,6 +345,7 @@ describe('getActionPlan', () => {
       id: 'e_1',
       role: 'link',
       actions: ['click'],
+      enabled: true,
       label: 'Home',
       href: '/',
     });
@@ -352,11 +353,46 @@ describe('getActionPlan', () => {
       id: 'e_7',
       role: 'text_input',
       actions: ['type', 'clear'],
+      enabled: true,
       label: 'Search',
       name: 'q',
       input_type: 'text',
       placeholder: 'Search...',
     });
+  });
+
+  it('marks disabled targets unavailable', () => {
+    const disabledSom: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_form',
+          role: 'form',
+          elements: [
+            {
+              id: 'locked',
+              role: 'button',
+              text: 'Archive',
+              actions: ['click'],
+              attrs: { disabled: true },
+            },
+          ],
+        },
+      ],
+      meta: { html_bytes: 100, som_bytes: 50, element_count: 1, interactive_count: 1 },
+    };
+
+    expect(getActionPlan(disabledSom)).toEqual([
+      {
+        id: 'locked',
+        role: 'button',
+        actions: ['click'],
+        enabled: false,
+        label: 'Archive',
+        disabled: true,
+        blocked_reason: 'disabled',
+      },
+    ]);
   });
 });
 

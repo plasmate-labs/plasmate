@@ -151,6 +151,13 @@ platforms sell traces for post-run debugging. Plasmate's local-first response
 should be to make disabled and required state portable enough that agents do
 not need raw DOM recovery before reusing a cached plan.
 
+2026-05-13 availability read: official Playwright MCP docs still make fresh
+structured snapshots with refs the interaction unit, Stagehand v3 documents
+`observe()` as a cacheable action menu, and Firecrawl/Browser Use keep
+expanding managed browser sessions. Plasmate should not pivot into hosted
+session infrastructure; the higher-stickiness move is to make local action
+plans safer by surfacing an explicit availability gate across SDKs.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -177,6 +184,14 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-13:
+  - Python SOM parser action plans now include `enabled` and
+    `blocked_reason`, so agents can skip disabled targets without re-walking
+    attrs.
+  - Node SOM parser action plans now expose the same availability contract in
+    `ActionPlanItem`.
+  - Go SDK action plans now expose `Enabled` and `BlockedReason`, keeping
+    durable worker services aligned with Python and Node planners.
+  - Parser and Go tests now cover disabled action-plan targets.
   - Disabled native `<fieldset>` state now propagates to descendant native
     controls, so radios, textareas, selects, and buttons inside locked groups
     expose `attrs.disabled` directly.
@@ -301,6 +316,8 @@ and adapter docs over one-off integration logic.
   snapshots.
 - Wire `015-action-state` into cross-adapter parser/SDK conformance runners so
   inherited disabled state stays synchronized outside Rust.
+- Promote action-plan availability into Browser Use, LangChain, and Vercel AI
+  adapters so disabled controls are skipped consistently at the framework edge.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched

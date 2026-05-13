@@ -537,6 +537,12 @@
 <li><strong>Fixtures are adapter glue</strong>: shared conformance cases should cover native inheritance and ARIA promotion so parser packages, SDKs, and integrations can test the same action surface.</li>
 <li><strong>Plan reuse beats raw DOM recovery</strong>: compact action targets should carry enough state for agents to skip unavailable controls without asking for a full DOM traversal.</li>
 </ul>
+<h3 id="2026-05-13-action-plan-availability-adjustment">2026-05-13 Action-Plan Availability Adjustment</h3><p>Current competitor docs make action menus the retention surface. Playwright MCP refs are only valid against the current snapshot, Stagehand <code>observe()</code> returns actions that teams cache and validate, and Firecrawl/Browser Use are broadening managed browser sessions around that workflow. Plasmate&#39;s wedge remains local SOM portability, so compact action plans should expose availability directly in every SDK.</p>
+<ul>
+<li><strong>Availability is a first-class plan field</strong>: action targets should include <code>enabled</code> and <code>blocked_reason</code> so agents can gate execution without bespoke attrs checks.</li>
+<li><strong>Cross-language parity reduces churn</strong>: Python, Node, and Go planners should return the same shape for disabled targets because teams mix these runtimes in real agent systems.</li>
+<li><strong>Framework adapters are next</strong>: Browser Use, LangChain, and Vercel AI integrations should forward availability state instead of making downstream agents rediscover it.</li>
+</ul>
 <h2 id="completed-v011">Completed (v0.1.1)</h2><ul>
 <li>SOM compiler with 9.4x median compression across 38 sites</li>
 <li>V8 JavaScript execution with full DOM shim</li>
@@ -626,6 +632,7 @@
 <li><input checked="" disabled="" type="checkbox"> <code>aria-disabled=&quot;true&quot;</code> promotes <code>attrs.disabled</code> for custom controls while retaining ARIA state</li>
 <li><input checked="" disabled="" type="checkbox"> Disabled native fieldset state propagates to descendant native controls</li>
 <li><input checked="" disabled="" type="checkbox"> Shared conformance fixture added for disabled/required action state</li>
+<li><input checked="" disabled="" type="checkbox"> Action-plan availability fields across Python parser, Node parser, and Go SDK</li>
 <li><input disabled="" type="checkbox"> Selector-aware SOM cache entries for repeated agent prompts</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
 <li><input disabled="" type="checkbox"> Promote shadow-DOM and web-component cases into shared cross-adapter fixtures</li>

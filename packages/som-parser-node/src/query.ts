@@ -78,6 +78,7 @@ export interface ActionPlanItem {
   id: string;
   role: ElementRole;
   actions: ElementAction[];
+  enabled: boolean;
   label?: string;
   href?: string;
   name?: string;
@@ -86,6 +87,7 @@ export interface ActionPlanItem {
   description?: string;
   required?: boolean;
   disabled?: boolean;
+  blocked_reason?: 'disabled';
   group?: string;
 }
 
@@ -96,6 +98,7 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
       id: el.id,
       role: el.role,
       actions: el.actions ?? [],
+      enabled: true,
     };
     const label = el.label ?? el.text;
     if (label) item.label = label;
@@ -105,7 +108,13 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.placeholder) item.placeholder = el.attrs.placeholder;
     if (el.attrs?.description) item.description = el.attrs.description;
     if (el.attrs?.required !== undefined) item.required = el.attrs.required;
-    if (el.attrs?.disabled !== undefined) item.disabled = el.attrs.disabled;
+    if (el.attrs?.disabled !== undefined) {
+      item.disabled = el.attrs.disabled;
+      if (el.attrs.disabled) {
+        item.enabled = false;
+        item.blocked_reason = 'disabled';
+      }
+    }
     if (el.attrs?.group) item.group = el.attrs.group;
     return item;
   });

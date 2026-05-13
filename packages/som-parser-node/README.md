@@ -37,7 +37,8 @@ const links = getLinks(som);
 import { findByAction, getActionPlan } from 'som-parser';
 
 const plan = getActionPlan(som);
-// Compact action targets with id, role, actions, and labels.
+// Compact action targets with id, role, actions, enabled, and labels.
+const available = plan.filter((item) => item.enabled);
 
 const clickable = findByAction(som, 'click');
 // Elements that can be clicked.
@@ -84,7 +85,7 @@ const ratio = getCompressionRatio(som);
 | `findByText(som, text, options?): SomElement[]` | Find elements by text content. Case-insensitive substring by default; pass `{ exact: true }` for exact match. |
 | `findByAction(som, action): SomElement[]` | Find elements that expose a specific action. |
 | `findByHint(som, hint): SomElement[]` | Find elements tagged with a semantic hint. |
-| `getActionPlan(som): ActionPlanItem[]` | Return compact action targets for agent planning. |
+| `getActionPlan(som): ActionPlanItem[]` | Return compact action targets with availability state for agent planning. |
 | `getInteractiveElements(som): SomElement[]` | Get all elements that have actions. |
 | `getLinks(som): Array<{ text, href, id }>` | Extract all links with text, URL, and id. |
 | `getForms(som): SomRegion[]` | Get all form regions. |

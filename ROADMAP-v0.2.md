@@ -219,6 +219,25 @@ plans more complete before pursuing hosted scale:
 3. **Browser tolerance beats ideal markup**: ARIA roles and landmarks should be
    parsed with the casing tolerance agents encounter on production SaaS pages.
 
+### 2026-05-13 Action-Plan Availability Adjustment
+
+Current competitor docs make action menus the retention surface. Playwright MCP
+refs are only valid against the current snapshot, Stagehand `observe()` returns
+actions that teams cache and validate, and Firecrawl/Browser Use are broadening
+managed browser sessions around that workflow. Plasmate's wedge remains local
+SOM portability, so compact action plans should expose availability directly in
+every SDK.
+
+1. **Availability is a first-class plan field**: action targets should include
+   `enabled` and `blocked_reason` so agents can gate execution without bespoke
+   attrs checks.
+2. **Cross-language parity reduces churn**: Python, Node, and Go planners should
+   return the same shape for disabled targets because teams mix these runtimes in
+   real agent systems.
+3. **Framework adapters are next**: Browser Use, LangChain, and Vercel AI
+   integrations should forward availability state instead of making downstream
+   agents rediscover it.
+
 ## Architecture
 
 ```
@@ -418,6 +437,9 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   directly.
 - Shared conformance fixture `015-action-state` now covers disabled fieldset
   inheritance and ARIA required/disabled state promotion.
+- Python parser, Node parser, and Go SDK compact action plans now expose
+  `enabled` plus disabled `blocked_reason` fields so agents can skip known
+  unavailable targets before acting.
 - Selector handling now trims whitespace and supports documented region ids
   (`#region-id`) while preserving HTML id selection for agent actions.
 - SOM compilation recognizes common ARIA widgets (`textbox`, `searchbox`,

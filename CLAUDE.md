@@ -49,6 +49,40 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-13T03:09:11Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted in the automation worktree, but
+  shared worktree metadata writes are still denied at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate21/FETCH_HEAD`
+  (`Operation not permitted`). Retried from the primary checkout, but
+  `github.com` DNS resolution failed. Continued from the locally known
+  `origin/master` at `9497429`.
+- Market direction: current official docs continue to push browser-agent
+  products toward structured action menus. Playwright MCP uses accessibility
+  snapshots with refs as the interaction unit, Stagehand v3 `observe()` returns
+  cacheable/validated actions, and Firecrawl plus Browser Use keep expanding
+  managed browser sessions. The startup direction should remain local-first SOM
+  portability, with safer reusable action plans before hosted browser scale.
+- Code changes: Python SOM parser, Node SOM parser, and Go SDK compact
+  action-plan helpers now expose explicit availability state. Enabled targets
+  include `enabled: true`; disabled targets include `enabled: false` plus a
+  disabled `blocked_reason` while preserving the existing `disabled` attr.
+- Tests/docs changes: added parser and Go coverage for disabled action-plan
+  targets, updated package/SDK READMEs, updated PRD and roadmap source docs,
+  and rebuilt generated website PRD/roadmap pages. The next adapter step is to
+  forward availability through Browser Use, LangChain, and Vercel AI.
+- Verification: Python parser tests passed 66 tests; Node parser tests passed
+  51 tests using the primary checkout's existing `vitest`; Node `tsc --noEmit`
+  passed; Go SDK tests passed with `GOCACHE=/private/tmp/plasmate-go-cache`;
+  `node website/build.mjs` rebuilt 39 pages through a temporary symlink to the
+  primary checkout's existing website dependencies; `git diff --check` passed.
+  A default cold `cargo build` failed only because `rusty_v8` could not
+  download from GitHub in the sandbox, then
+  `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build` passed with
+  existing warnings.
+- Commit/push state: pending final commit and push after applying the reviewed
+  patch to a writable checkout.
+
 ### 2026-05-13T02:08:23Z - Plasmate Improvements Automation
 
 - Git sync: attempted the requested latest pull in the automation worktree

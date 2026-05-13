@@ -163,18 +163,20 @@ func flattenElements(elements []Element, result *[]Element) {
 
 // ActionPlanItem is a compact action target for agent planning.
 type ActionPlanItem struct {
-	ID          string   `json:"id"`
-	Role        string   `json:"role"`
-	Actions     []string `json:"actions"`
-	Label       *string  `json:"label,omitempty"`
-	Href        *string  `json:"href,omitempty"`
-	Name        *string  `json:"name,omitempty"`
-	InputType   *string  `json:"input_type,omitempty"`
-	Placeholder *string  `json:"placeholder,omitempty"`
-	Description *string  `json:"description,omitempty"`
-	Required    *bool    `json:"required,omitempty"`
-	Disabled    *bool    `json:"disabled,omitempty"`
-	Group       *string  `json:"group,omitempty"`
+	ID            string   `json:"id"`
+	Role          string   `json:"role"`
+	Actions       []string `json:"actions"`
+	Enabled       bool     `json:"enabled"`
+	Label         *string  `json:"label,omitempty"`
+	Href          *string  `json:"href,omitempty"`
+	Name          *string  `json:"name,omitempty"`
+	InputType     *string  `json:"input_type,omitempty"`
+	Placeholder   *string  `json:"placeholder,omitempty"`
+	Description   *string  `json:"description,omitempty"`
+	Required      *bool    `json:"required,omitempty"`
+	Disabled      *bool    `json:"disabled,omitempty"`
+	BlockedReason *string  `json:"blocked_reason,omitempty"`
+	Group         *string  `json:"group,omitempty"`
 }
 
 // GetActionPlan returns compact action targets for agent planning.
@@ -185,6 +187,7 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			ID:      el.ID,
 			Role:    el.Role,
 			Actions: append([]string(nil), el.Actions...),
+			Enabled: true,
 		}
 		if el.Label != nil {
 			item.Label = el.Label
@@ -199,6 +202,11 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.Description = el.Attrs.Description
 			item.Required = el.Attrs.Required
 			item.Disabled = el.Attrs.Disabled
+			if el.Attrs.Disabled != nil && *el.Attrs.Disabled {
+				item.Enabled = false
+				reason := "disabled"
+				item.BlockedReason = &reason
+			}
 			item.Group = el.Attrs.Group
 		}
 		items = append(items, item)

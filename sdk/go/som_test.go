@@ -423,6 +423,9 @@ func TestGetActionPlan(t *testing.T) {
 	if filters.Label == nil || *filters.Label != "Open filters" {
 		t.Errorf("Label = %v, want Open filters", filters.Label)
 	}
+	if !filters.Enabled {
+		t.Error("Enabled = false, want true")
+	}
 	if filters.Name == nil || *filters.Name != "filters" {
 		t.Errorf("Name = %v, want filters", filters.Name)
 	}
@@ -431,6 +434,43 @@ func TestGetActionPlan(t *testing.T) {
 	}
 	if len(filters.Actions) != 1 || filters.Actions[0] != "click" {
 		t.Errorf("Actions = %v, want [click]", filters.Actions)
+	}
+}
+
+func TestGetActionPlanDisabledTarget(t *testing.T) {
+	disabled := true
+	text := "Archive"
+	som := &Som{
+		Regions: []Region{
+			{
+				ID:   "r_form",
+				Role: "form",
+				Elements: []Element{
+					{
+						ID:      "locked",
+						Role:    "button",
+						Text:    &text,
+						Actions: []string{"click"},
+						Attrs:   &ElementAttrs{Disabled: &disabled},
+					},
+				},
+			},
+		},
+	}
+
+	plan := GetActionPlan(som)
+	if len(plan) != 1 {
+		t.Fatalf("GetActionPlan = %d, want 1", len(plan))
+	}
+	item := plan[0]
+	if item.Enabled {
+		t.Error("Enabled = true, want false")
+	}
+	if item.Disabled == nil || !*item.Disabled {
+		t.Errorf("Disabled = %v, want true", item.Disabled)
+	}
+	if item.BlockedReason == nil || *item.BlockedReason != "disabled" {
+		t.Errorf("BlockedReason = %v, want disabled", item.BlockedReason)
 	}
 }
 

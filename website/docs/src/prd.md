@@ -44,6 +44,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-13 conformance read: current competitor positioning raises the bar from "structured output exists" to "the action surface is safe to reuse." Playwright MCP snapshots expose refs after each action, Stagehand 3.3 adds strict structured outputs and clearer upload/action state, and managed browser platforms sell traces for post-run debugging. Plasmate's local-first response should be to make disabled and required state portable enough that agents do not need raw DOM recovery before reusing a cached plan.
 
+2026-05-13 availability read: official Playwright MCP docs still make fresh structured snapshots with refs the interaction unit, Stagehand v3 documents `observe()` as a cacheable action menu, and Firecrawl/Browser Use keep expanding managed browser sessions. Plasmate should not pivot into hosted session infrastructure; the higher-stickiness move is to make local action plans safer by surfacing an explicit availability gate across SDKs.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -59,6 +61,10 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-13:
+  - Python SOM parser action plans now include `enabled` and `blocked_reason`, so agents can skip disabled targets without re-walking attrs.
+  - Node SOM parser action plans now expose the same availability contract in `ActionPlanItem`.
+  - Go SDK action plans now expose `Enabled` and `BlockedReason`, keeping durable worker services aligned with Python and Node planners.
+  - Parser and Go tests now cover disabled action-plan targets.
   - Disabled native `<fieldset>` state now propagates to descendant native controls.
   - Added shared conformance fixture `015-action-state` for disabled fieldset inheritance plus ARIA required/disabled promotion.
   - Updated the conformance index so adapter maintainers can promote action-state checks into release tests.
@@ -121,6 +127,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked or selected an element.
 - Add conformance cases for ARIA-heavy SaaS pages, especially disabled and required custom controls, and compare output against Playwright MCP snapshots.
 - Wire `015-action-state` into cross-adapter parser/SDK conformance runners so inherited disabled state stays synchronized outside Rust.
+- Promote action-plan availability into Browser Use, LangChain, and Vercel AI adapters so disabled controls are skipped consistently at the framework edge.
 - Promote fieldset/legend group semantics into shared conformance fixtures alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched action-plan metadata.
 - Promote the new SDK/parser shadow-root and Go action-plan tests into shared conformance fixtures that run against every adapter before release.

@@ -112,6 +112,7 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
             "id": el.id,
             "role": el.role.value,
             "actions": [action.value for action in el.actions or []],
+            "enabled": True,
         }
         label = el.label or el.text
         if label:
@@ -131,6 +132,9 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["required"] = attrs.required
             if attrs.disabled is not None:
                 item["disabled"] = attrs.disabled
+                if attrs.disabled:
+                    item["enabled"] = False
+                    item["blocked_reason"] = "disabled"
             if attrs.group:
                 item["group"] = attrs.group
         plan.append(item)

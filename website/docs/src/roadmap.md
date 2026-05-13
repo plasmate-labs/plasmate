@@ -110,6 +110,14 @@ The latest Browserbase/Stagehand and Playwright MCP messaging makes action state
 - **Fixtures are adapter glue**: shared conformance cases should cover native inheritance and ARIA promotion so parser packages, SDKs, and integrations can test the same action surface.
 - **Plan reuse beats raw DOM recovery**: compact action targets should carry enough state for agents to skip unavailable controls without asking for a full DOM traversal.
 
+### 2026-05-13 Action-Plan Availability Adjustment
+
+Current competitor docs make action menus the retention surface. Playwright MCP refs are only valid against the current snapshot, Stagehand `observe()` returns actions that teams cache and validate, and Firecrawl/Browser Use are broadening managed browser sessions around that workflow. Plasmate's wedge remains local SOM portability, so compact action plans should expose availability directly in every SDK.
+
+- **Availability is a first-class plan field**: action targets should include `enabled` and `blocked_reason` so agents can gate execution without bespoke attrs checks.
+- **Cross-language parity reduces churn**: Python, Node, and Go planners should return the same shape for disabled targets because teams mix these runtimes in real agent systems.
+- **Framework adapters are next**: Browser Use, LangChain, and Vercel AI integrations should forward availability state instead of making downstream agents rediscover it.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -204,6 +212,7 @@ The latest Browserbase/Stagehand and Playwright MCP messaging makes action state
 - [x] `aria-disabled="true"` promotes `attrs.disabled` for custom controls while retaining ARIA state
 - [x] Disabled native fieldset state propagates to descendant native controls
 - [x] Shared conformance fixture added for disabled/required action state
+- [x] Action-plan availability fields across Python parser, Node parser, and Go SDK
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures

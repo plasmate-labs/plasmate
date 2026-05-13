@@ -490,6 +490,7 @@ class TestGetActionPlan:
             "id": "e_1",
             "role": "link",
             "actions": ["click"],
+            "enabled": True,
             "label": "Home",
             "href": "/",
         }
@@ -497,11 +498,52 @@ class TestGetActionPlan:
             "id": "e_7",
             "role": "text_input",
             "actions": ["type", "clear"],
+            "enabled": True,
             "label": "Search",
             "name": "q",
             "input_type": "text",
             "placeholder": "Search...",
         }
+
+    def test_marks_disabled_targets_unavailable(self):
+        disabled_som = parse_som(
+            {
+                **FIXTURE_SOM,
+                "regions": [
+                    {
+                        "id": "r_form",
+                        "role": "form",
+                        "elements": [
+                            {
+                                "id": "locked",
+                                "role": "button",
+                                "text": "Archive",
+                                "actions": ["click"],
+                                "attrs": {"disabled": True},
+                            }
+                        ],
+                    }
+                ],
+                "meta": {
+                    "html_bytes": 100,
+                    "som_bytes": 50,
+                    "element_count": 1,
+                    "interactive_count": 1,
+                },
+            }
+        )
+
+        assert get_action_plan(disabled_som) == [
+            {
+                "id": "locked",
+                "role": "button",
+                "actions": ["click"],
+                "enabled": False,
+                "label": "Archive",
+                "disabled": True,
+                "blocked_reason": "disabled",
+            }
+        ]
 
 
 class TestGetLinks:
