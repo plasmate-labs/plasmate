@@ -182,6 +182,14 @@ Competitors are making reusable action state inspectable and cacheable at the ap
 - **The manifest must cover runtimes**: parser packages, Go SDK, Python SDK, and Node SDK should read the same expected action target manifest as framework adapters.
 - **Release automation is now the bottleneck**: after manifest parity lands, the next sticky step is one command that runs adapter, parser, and SDK fixture checks together.
 
+### 2026-05-13 Action Manifest Release-Gate Adjustment
+
+Playwright MCP, Stagehand, and Firecrawl all reinforce that reusable action state must be trustworthy at the moment an agent acts. Plasmate should make local conformance a release feature: one command should prove Browser Use, LangChain, Vercel AI, parser packages, and SDKs still agree on the shared action manifest.
+
+- **One command should prove the contract**: adapters and SDKs need a shared release gate for the action availability manifest.
+- **Package tests must include fixture parity**: Node SDK action-plan tests should run from `npm test`.
+- **CI is the next guardrail**: after dependency setup, the release command should become a required workflow job.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -296,6 +304,9 @@ Competitors are making reusable action state inspectable and cacheable at the ap
 - [x] Python SDK compact action-plan helpers with deterministic cache keys
 - [x] Node SDK compact action-plan helpers with deterministic cache keys
 - [x] Shared action-availability expectation manifest for Python parser, Node parser, Go SDK, Python SDK, and Node SDK
+- [x] One release command for Browser Use, LangChain, Vercel AI, parser-package, and SDK fixture checks
+- [x] Node SDK `npm test` runs action-plan fixture coverage
+- [x] Root and fixture docs advertise the shared action-manifest release gate
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
@@ -305,5 +316,5 @@ Competitors are making reusable action state inspectable and cacheable at the ap
 - [x] Promote adapter availability checks into shared cross-adapter fixtures
 - [x] Add runtime Vercel AI fixture tests once the package has a local test runner
 - [x] Extend shared action-availability expectations into parser-package and SDK conformance tests
-- [ ] Add one release command for Browser Use, LangChain, Vercel AI, parser-package, and SDK fixture checks
+- [ ] Add a GitHub Actions conformance job for the shared action-manifest release command
 - [ ] WebMCP/watchlist research spike: track whether browser-native tool exposure changes SOM adapter strategy

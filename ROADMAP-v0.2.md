@@ -384,6 +384,23 @@ workflow-memory features.
    the next sticky step is one command that runs adapter, parser, and SDK
    fixture checks together.
 
+### 2026-05-13 Action Manifest Release-Gate Adjustment
+
+Official docs keep putting reusable page state on the critical path.
+Playwright MCP snapshots provide snapshot-scoped refs, Stagehand v3 `observe()`
+returns structured actions that can be cached and validated, and Firecrawl
+Interact keeps browser state alive after scraping. Plasmate should answer with
+a local conformance gate that proves broad SDK and adapter support behaves like
+one product surface before a release goes out.
+
+1. **One command should prove the contract**: Browser Use, LangChain, Vercel
+   AI, parser packages, and SDKs need a shared release command for the action
+   availability manifest.
+2. **Package tests must include fixture parity**: Node SDK action-plan tests
+   should run from `npm test`, not only ad hoc TypeScript build commands.
+3. **CI is the next adoption guardrail**: once dependencies are installed in
+   Actions, the release command should become a required conformance job.
+
 ## Architecture
 
 ```
@@ -637,6 +654,13 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   deterministic cache-key generation for TypeScript app code.
 - Python parser, Node parser, Go SDK, Python SDK, and Node SDK tests now consume
   the shared action-availability manifest.
+- Added `scripts/action-manifest-conformance.sh` to run the shared
+  action-availability manifest checks across Browser Use, LangChain, Vercel AI,
+  parser packages, and SDKs from one release command.
+- Node SDK `npm test` now builds the package and runs the action-plan fixture
+  tests against the shared manifest.
+- Root and fixture documentation now advertise the shared action-manifest
+  release gate for maintainers changing action-plan semantics.
 - Browser Use and LangChain package `__version__` exports now match package
   metadata.
 - Selector handling now trims whitespace and supports documented region ids

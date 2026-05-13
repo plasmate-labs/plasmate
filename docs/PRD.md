@@ -231,6 +231,15 @@ cross-language contract: parser packages and SDKs should prove they emit the
 same compact action targets as framework adapters before action memory becomes
 a release claim.
 
+2026-05-13 release-gate read: current official docs sharpen the same lesson.
+Playwright MCP documents accessibility snapshots as the interaction surface
+with refs stable only inside the current snapshot, Stagehand v3 frames
+`observe()` as a way to plan, validate, and cache executable actions, and
+Firecrawl Interact resumes scraped browser sessions with optional persistent
+profiles. Plasmate should keep the local-first wedge and make release
+conformance the retention feature: broad SDK and adapter coverage matters only
+if one command proves the action menu contract has not drifted.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -260,6 +269,14 @@ and adapter docs over one-off integration logic.
   - Added `integrations/fixtures/action-availability.expected.json` as the
     shared expected compact action-target contract for the action availability
     SOM fixture.
+  - Added `scripts/action-manifest-conformance.sh`, a release-gate command
+    that runs the shared manifest checks across Browser Use, LangChain, Vercel
+    AI, Python/Node parser packages, and Go/Python/Node SDKs.
+  - Node SDK `npm test` now builds and runs the action-plan fixture tests,
+    making TypeScript client parity part of the package's normal test path.
+  - Root and fixture docs now point maintainers at the shared release command
+    so action-plan semantics changes update the SOM fixture and expectation
+    manifest together.
   - Python SDK query helpers now expose `get_action_plan()` and
     `get_action_plan_cache_key()`, closing the action-plan parity gap between
     the client SDK and Python parser package.
@@ -480,10 +497,10 @@ and adapter docs over one-off integration logic.
   snapshots.
 - Wire `015-action-state` into cross-adapter parser/SDK conformance runners so
   inherited disabled state stays synchronized outside Rust.
-- Promote the shared fixture manifest into one release command that runs
-  Browser Use, LangChain, Vercel AI, parser-package, and SDK checks together.
-- Add Node SDK action-plan fixture tests to the package's normal npm test
-  script so TypeScript client parity is enforced outside ad hoc compilation.
+- Add a GitHub Actions release/conformance job that runs
+  `scripts/action-manifest-conformance.sh` after dependency installation.
+- Split the action manifest release gate into focused quick/full modes if CI
+  runtime becomes a bottleneck.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched

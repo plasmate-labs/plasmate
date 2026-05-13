@@ -49,6 +49,46 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-13T12:07:41Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first. The automation worktree
+  could not write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate30/FETCH_HEAD`
+  (`Operation not permitted`), and the primary checkout could not resolve
+  `github.com` over SSH (`ssh: Could not resolve hostname github.com: -65563`).
+  This run continued from the locally known primary checkout state where
+  `origin/master`, `origin/HEAD`, and the automation branch all pointed at
+  `2ebe5b6`.
+- Market direction: current official docs continue to validate Plasmate's
+  local-first action-contract wedge. Playwright MCP uses structured
+  accessibility snapshots with refs scoped to the current snapshot, Stagehand
+  v3 `observe()` is positioned as a cacheable action-planning and validation
+  surface, and Firecrawl Interact resumes scraped browser sessions with
+  optional persistent profiles. The project should still avoid a hosted browser
+  infrastructure pivot and instead make broad local SDK/adapter conformance a
+  release feature.
+- Code changes: added `scripts/action-manifest-conformance.sh`, a shared
+  release-gate command that runs the action-availability expectation manifest
+  across Python/Node parser packages, Go/Python/Node SDKs, Browser Use,
+  LangChain, and Vercel AI. Node SDK `npm test` now builds and runs the
+  action-plan fixture tests, moving TypeScript client parity out of an ad hoc
+  command. Root and fixture docs now advertise the shared release gate.
+- Docs changes: updated PRD and roadmap source docs plus generated website
+  docs with the release-gate rationale, completed minor-improvement log, and
+  next steps to wire the new command into GitHub Actions and split quick/full
+  modes if runtime becomes a bottleneck.
+- Verification: `./scripts/action-manifest-conformance.sh` passed across all
+  manifest consumers; `node website/build.mjs` rebuilt 39 pages; `git diff
+  --check` passed; `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo
+  build` passed with existing warnings; `cargo test --lib -- --test-threads=1`
+  passed 245 tests; `cargo test --bin plasmate` passed 5 tests; `cargo clippy
+  --all-targets` passed with existing warnings. Full `cargo test` was blocked
+  in `tests/awp_integration_test.rs` because sandboxed `TcpListener::bind("127.0.0.1:0")`
+  returned `Operation not permitted`; unit coverage passed separately.
+- Commit/push state: pending commit and remote push attempt after this state
+  update. If DNS remains unavailable, the commit will stay local until GitHub
+  SSH resolution returns.
+
 ### 2026-05-13T11:12:00Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first. The automation worktree

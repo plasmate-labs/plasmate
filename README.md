@@ -295,6 +295,7 @@ docker run --rm -p 9222:9222 plasmate
 
 ```bash
 cargo test --workspace    # 252 tests
+./scripts/action-manifest-conformance.sh
 ```
 
 ## Benchmarks

@@ -62,6 +62,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-13 SDK-manifest read: browser-agent products are turning reusable action state into an audited contract, not a helper detail. Plasmate should extend the shared expectation manifest into parser packages and SDKs so local action memory remains portable across app code, framework prompts, and durable workers.
 
+2026-05-13 release-gate read: Playwright MCP snapshots keep refs scoped to the current page state, Stagehand v3 `observe()` turns page state into cacheable actions, and Firecrawl Interact resumes browser sessions after scraping. Plasmate should make release conformance the local-first retention feature: one command should prove the broad SDK and adapter action-menu contract has not drifted.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -78,6 +80,9 @@ The project already spans a large number of package and integration surfaces: Ru
 
 - 2026-05-13:
   - Added `integrations/fixtures/action-availability.expected.json` as the shared expected compact action-target contract for the action availability SOM fixture.
+  - Added `scripts/action-manifest-conformance.sh` to run Browser Use, LangChain, Vercel AI, parser-package, and SDK fixture checks from one release command.
+  - Node SDK `npm test` now builds and runs the action-plan fixture tests against the shared manifest.
+  - Root and fixture docs now point maintainers at the shared action-manifest release gate.
   - Python SDK query helpers now expose `get_action_plan()` and `get_action_plan_cache_key()`.
   - Node SDK query helpers now expose `getActionPlan()` and `getActionPlanCacheKey()`.
   - Python parser, Node parser, Go SDK, Python SDK, and Node SDK tests now consume the shared action availability manifest.
@@ -175,8 +180,8 @@ The project already spans a large number of package and integration surfaces: Ru
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked or selected an element.
 - Add conformance cases for ARIA-heavy SaaS pages, especially disabled and required custom controls, and compare output against Playwright MCP snapshots.
 - Wire `015-action-state` into cross-adapter parser/SDK conformance runners so inherited disabled state stays synchronized outside Rust.
-- Promote the shared fixture manifest into one release command that runs Browser Use, LangChain, Vercel AI, parser-package, and SDK checks together.
-- Add Node SDK action-plan fixture tests to the package's normal npm test script so TypeScript client parity is enforced outside ad hoc compilation.
+- Add a GitHub Actions release/conformance job that runs `scripts/action-manifest-conformance.sh` after dependency installation.
+- Split the action manifest release gate into focused quick/full modes if CI runtime becomes a bottleneck.
 - Promote fieldset/legend group semantics into shared conformance fixtures alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched action-plan metadata.
 - Promote the new SDK/parser shadow-root and Go action-plan tests into shared conformance fixtures that run against every adapter before release.
