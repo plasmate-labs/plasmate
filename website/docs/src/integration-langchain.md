@@ -4,6 +4,11 @@ LangChain tools and document loader for Plasmate -  browse the web with **~10x f
 
 Plasmate's SOM output compiles web pages into compact, structured representations that preserve interactive elements and content hierarchy. This integration provides LangChain-native tools for stateless fetching, persistent browsing, and batch document loading.
 
+Interactive form controls include action-state cues such as `[disabled]`,
+`[enabled]`, `[required]`, `[group="Billing"]`, and `[description="..."]`
+when Plasmate emits those SOM attrs. Agents should use those cues before
+calling `plasmate_click` or `plasmate_type`.
+
 Source: [`integrations/langchain/`](https://github.com/nicepkg/plasmate/tree/master/integrations/langchain)
 
 ## Installation

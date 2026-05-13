@@ -49,6 +49,38 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-13T04:08:53Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted in the automation worktree, but
+  shared worktree metadata writes are still denied at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate22/FETCH_HEAD`
+  (`Operation not permitted`). Retried from the primary checkout, but
+  `github.com` DNS resolution failed. Continued from locally known
+  `origin/master` at `62de9d3`.
+- Market direction: current docs continue to crowd the hosted browser lane.
+  Playwright MCP uses structured accessibility snapshots with refs, Stagehand
+  v3 `observe()` and action caching turn page state into reusable actions,
+  Firecrawl Interact and Browser Use Cloud sell managed browsers/profiles/CDP,
+  and Cloudflare Browser Run is expanding hosted MCP/CDP/WebMCP distribution.
+  Plasmate should keep its local-first SOM/action-plan wedge and push
+  availability cues through framework adapters.
+- Code changes: Browser Use integration now exposes sync/async
+  `extract_action_plan` helpers and renders `enabled`, disabled
+  `blocked_reason`, required, type, group, and description state in page
+  context; LangChain SOM text output now marks disabled/enabled/required/group
+  and description state on interactive targets; Vercel AI SDK integration now
+  exports `plasmateActionGuidance` for system prompts.
+- Tests/docs changes: added focused Browser Use and LangChain adapter tests,
+  updated adapter READMEs, updated PRD and roadmap source docs plus generated
+  website docs. Next step is to promote adapter availability checks into shared
+  cross-adapter conformance fixtures.
+- Verification: Browser Use adapter test passed; LangChain adapter test passed
+  with an existing Python 3.14/Pydantic v1 warning from `langchain_core`;
+  Vercel AI `npm run typecheck` passed after temporarily symlinking existing
+  primary-checkout `node_modules`; `node website/build.mjs` rebuilt 39 pages;
+  `git diff --check` passed; `cargo build` passed with existing warnings; and
+  `cargo test --lib` passed 245 tests with existing warnings.
+
 ### 2026-05-13T03:09:11Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted in the automation worktree, but

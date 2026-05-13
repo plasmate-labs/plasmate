@@ -80,6 +80,9 @@ def _element_to_text(elem: dict[str, Any], indent: int = 1) -> str:
     actions = elem.get("actions")
 
     hint_str = " " + " ".join(f"[{h}]" for h in hints) if hints else ""
+    state_str = _action_state_to_text(attrs)
+    if state_str:
+        hint_str = f"{hint_str} {state_str}".rstrip()
 
     # Interactive elements: show ID so the agent can reference them
     if actions:
@@ -97,8 +100,6 @@ def _element_to_text(elem: dict[str, Any], indent: int = 1) -> str:
                 parts.append(f'placeholder="{attrs["placeholder"]}"')
             if attrs.get("value"):
                 parts.append(f'value="{attrs["value"]}"')
-            if attrs.get("required"):
-                parts.append("[required]")
             return f"{prefix}[{eid}] {' '.join(parts)}{hint_str}"
         if role == "textarea":
             parts = ["textarea"]
@@ -149,6 +150,21 @@ def _element_to_text(elem: dict[str, Any], indent: int = 1) -> str:
     if text:
         return f"{prefix}{role}: {text}"
     return ""
+
+
+def _action_state_to_text(attrs: dict[str, Any]) -> str:
+    flags: list[str] = []
+    if attrs.get("disabled") is True:
+        flags.append("[disabled]")
+    elif attrs.get("disabled") is False:
+        flags.append("[enabled]")
+    if attrs.get("required") is True:
+        flags.append("[required]")
+    if attrs.get("group"):
+        flags.append(f'[group="{attrs["group"]}"]')
+    if attrs.get("description"):
+        flags.append(f'[description="{attrs["description"]}"]')
+    return " ".join(flags)
 
 
 def _list_to_text(attrs: dict[str, Any], prefix: str) -> str:

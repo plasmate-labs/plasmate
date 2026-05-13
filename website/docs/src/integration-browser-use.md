@@ -74,6 +74,13 @@ SOM replaces DOM screenshots with structured text. Instead of parsing a raw DOM 
 [SOM] 87,234 -> 4,521 bytes (19.3x) | 156 elements, 89 interactive
 ```
 
+The lightweight extractor package also exposes `extract_action_plan()` and
+`extract_action_plan_async()` for agents that want only reusable action
+targets. Those targets carry `enabled`, disabled `blocked_reason`, `required`,
+`description`, `placeholder`, and `group` context when Plasmate emits it, so
+Browser Use agents can skip unavailable controls before spending a browser
+action.
+
 ## Token Savings
 
 | Site | HTML tokens | SOM tokens | Savings |

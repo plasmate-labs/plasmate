@@ -46,6 +46,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-13 availability read: official Playwright MCP docs still make fresh structured snapshots with refs the interaction unit, Stagehand v3 documents `observe()` as a cacheable action menu, and Firecrawl/Browser Use keep expanding managed browser sessions. Plasmate should not pivot into hosted session infrastructure; the higher-stickiness move is to make local action plans safer by surfacing an explicit availability gate across SDKs.
 
+2026-05-13 adapter read: current docs keep validating the framework edge as a retention surface. Playwright MCP tells agents to act from structured snapshots with fresh refs, Stagehand `observe()` turns page state into cacheable actions, Firecrawl Interact and Browser Use Cloud package managed browser sessions, profiles, and CDP access, and Cloudflare Browser Run is widening hosted MCP/CDP/WebMCP distribution. Plasmate should still avoid a hosted-infra pivot; the stickier move is to make Browser Use, LangChain, and Vercel AI adapters surface the same local action availability cues already present in parser/SDK helpers.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -61,6 +63,11 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-13:
+  - Browser Use integration page contexts now render compact action-plan targets with `enabled`, disabled `blocked_reason`, required, type, group, and description context.
+  - Browser Use integration now exposes sync and async `extract_action_plan` helpers so agents can ask directly for reusable SOM action targets.
+  - LangChain SOM text output now marks disabled, enabled, required, group, and description state on interactive elements before click/type planning.
+  - Vercel AI SDK integration now exports `plasmateActionGuidance`, a concise system-prompt helper that tells agents to honor SOM availability fields.
+  - Added focused adapter tests for Browser Use and LangChain availability rendering.
   - Python SOM parser action plans now include `enabled` and `blocked_reason`, so agents can skip disabled targets without re-walking attrs.
   - Node SOM parser action plans now expose the same availability contract in `ActionPlanItem`.
   - Go SDK action plans now expose `Enabled` and `BlockedReason`, keeping durable worker services aligned with Python and Node planners.
@@ -127,7 +134,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked or selected an element.
 - Add conformance cases for ARIA-heavy SaaS pages, especially disabled and required custom controls, and compare output against Playwright MCP snapshots.
 - Wire `015-action-state` into cross-adapter parser/SDK conformance runners so inherited disabled state stays synchronized outside Rust.
-- Promote action-plan availability into Browser Use, LangChain, and Vercel AI adapters so disabled controls are skipped consistently at the framework edge.
+- Promote the new Browser Use and LangChain adapter availability checks into a shared cross-adapter fixture runner, and add an executable Vercel AI example once package dependencies are pinned in this repo.
 - Promote fieldset/legend group semantics into shared conformance fixtures alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched action-plan metadata.
 - Promote the new SDK/parser shadow-root and Go action-plan tests into shared conformance fixtures that run against every adapter before release.

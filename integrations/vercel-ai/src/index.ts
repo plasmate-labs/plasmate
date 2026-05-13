@@ -24,6 +24,18 @@ export interface PlasmateTools {
 }
 
 /**
+ * System prompt guidance for Vercel AI SDK agents using Plasmate tools.
+ *
+ * Plasmate SOM responses expose action targets with stable element ids and
+ * availability fields. Add this to your system prompt when your agent will
+ * browse forms or reuse action plans across steps.
+ */
+export const plasmateActionGuidance =
+  'Use Plasmate SOM element ids for browser actions. Treat action targets ' +
+  'with enabled=false or blocked_reason="disabled" as unavailable, and prefer ' +
+  'required, description, placeholder, and group fields when choosing form controls.'
+
+/**
  * Create Plasmate browser tools for use with the Vercel AI SDK.
  *
  * Spawns `plasmate mcp` as a stdio MCP server and returns the tool set

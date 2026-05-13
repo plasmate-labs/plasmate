@@ -9,7 +9,7 @@ import json
 import subprocess
 from typing import Any, Optional
 
-from som_parser import parse_som, get_links, get_interactive_elements, get_text, to_markdown
+from som_parser import parse_som, get_action_plan, get_links, get_text, to_markdown
 
 
 def _extract_last_json(text: str) -> Any:
@@ -48,6 +48,46 @@ def _extract_last_json(text: str) -> Any:
             continue
 
     return None
+
+
+def _format_action_plan_item(item: dict[str, object]) -> str:
+    """Render one compact action target for LLM page context."""
+    actions = ", ".join(str(action) for action in item.get("actions", []))
+    role = str(item.get("role", ""))
+    element_id = str(item.get("id", ""))
+    label = str(
+        item.get("label")
+        or item.get("placeholder")
+        or item.get("name")
+        or item.get("href")
+        or ""
+    )
+
+    parts = [f'  [{element_id}] {role} "{label}"']
+    if actions:
+        parts.append(f"({actions})")
+
+    flags: list[str] = []
+    if item.get("enabled") is False:
+        reason = item.get("blocked_reason")
+        flags.append("disabled")
+        if reason:
+            flags.append(f"blocked_reason={reason}")
+    elif item.get("enabled") is True:
+        flags.append("enabled")
+    if item.get("required") is True:
+        flags.append("required")
+    if item.get("group"):
+        flags.append(f"group={item['group']}")
+    if item.get("input_type"):
+        flags.append(f"type={item['input_type']}")
+
+    if flags:
+        parts.append(" ".join(f"[{flag}]" for flag in flags))
+    if item.get("description"):
+        parts.append(f'- {item["description"]}')
+
+    return " ".join(parts)
 
 
 class PlasmateExtractor:
@@ -127,6 +167,22 @@ class PlasmateExtractor:
         som = parse_som(som_data)
         return to_markdown(som)
 
+    def extract_action_plan(self, url: str) -> list[dict[str, object]]:
+        """Fetch a URL and return compact action targets.
+
+        Each target includes the SOM id, role, actions, label/context fields,
+        and availability fields such as ``enabled`` and ``blocked_reason``.
+        """
+        som_data = self.extract(url)
+        som = parse_som(som_data)
+        return get_action_plan(som)
+
+    async def extract_action_plan_async(self, url: str) -> list[dict[str, object]]:
+        """Async version of extract_action_plan."""
+        som_data = await self.extract_async(url)
+        som = parse_som(som_data)
+        return get_action_plan(som)
+
     def get_page_context(self, url: str) -> str:
         """Get a token-efficient page context string for LLM consumption.
 
@@ -155,13 +211,11 @@ class PlasmateExtractor:
         lines.append("")
 
         # Interactive elements
-        interactive = get_interactive_elements(som)
-        if interactive:
-            lines.append(f"## Interactive Elements ({len(interactive)})")
-            for el in interactive:
-                actions = ", ".join(el.actions) if el.actions else ""
-                label = el.text or el.label or (el.attrs.get("placeholder", "") if el.attrs else "")
-                lines.append(f'  [{el.id}] {el.role} "{label}" ({actions})')
+        action_plan = get_action_plan(som)
+        if action_plan:
+            lines.append(f"## Interactive Elements ({len(action_plan)})")
+            for item in action_plan:
+                lines.append(_format_action_plan_item(item))
             lines.append("")
 
         # Links

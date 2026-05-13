@@ -118,6 +118,14 @@ Current competitor docs make action menus the retention surface. Playwright MCP 
 - **Cross-language parity reduces churn**: Python, Node, and Go planners should return the same shape for disabled targets because teams mix these runtimes in real agent systems.
 - **Framework adapters are next**: Browser Use, LangChain, and Vercel AI integrations should forward availability state instead of making downstream agents rediscover it.
 
+### 2026-05-13 Framework Adapter Availability Adjustment
+
+The current market keeps pushing action planning toward the framework edge: Playwright MCP snapshots expose current refs, Stagehand action caches reward stable target descriptions, Firecrawl Interact and Browser Use Cloud make hosted browsers easy, and Cloudflare Browser Run is adding MCP/CDP/WebMCP distribution around managed sessions. Plasmate's retention path remains local-first portability, so adapters should make disabled and required action state visible before an agent spends a tool call on a dead control.
+
+- **Adapters are product surface**: Browser Use and LangChain context strings should render the same availability, description, group, and required fields exposed by parser action plans.
+- **Prompt helpers reduce misuse**: Vercel AI users should get a small exported guidance string that tells models to honor SOM `enabled` and `blocked_reason` fields.
+- **Next conformance step**: shared adapter fixtures should verify that framework output does not regress from the parser/SDK action-plan contract.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -213,11 +221,14 @@ Current competitor docs make action menus the retention surface. Playwright MCP 
 - [x] Disabled native fieldset state propagates to descendant native controls
 - [x] Shared conformance fixture added for disabled/required action state
 - [x] Action-plan availability fields across Python parser, Node parser, and Go SDK
+- [x] Browser Use action-plan helper and availability-aware page context
+- [x] LangChain availability-aware SOM text output
+- [x] Vercel AI action availability guidance helper
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
 - [ ] Add cross-adapter fixtures for enriched compact action-plan metadata
 - [ ] Add cross-adapter accessible-description fixtures
 - [ ] Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners
-- [ ] Promote action-plan helper parity into framework integrations
+- [ ] Promote adapter availability checks into shared cross-adapter fixtures
 - [ ] WebMCP/watchlist research spike: track whether browser-native tool exposure changes SOM adapter strategy

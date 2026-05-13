@@ -39,6 +39,28 @@ console.log(text)
 await close()
 ```
 
+### Action availability guidance
+
+```ts
+import { createPlasmateTools, plasmateActionGuidance } from '@plasmate/ai'
+import { generateText } from 'ai'
+import { openai } from '@ai-sdk/openai'
+
+const { tools, close } = await createPlasmateTools()
+
+const { text } = await generateText({
+  model: openai('gpt-4o'),
+  tools,
+  system: plasmateActionGuidance,
+  maxSteps: 5,
+  prompt: 'Open the settings page and update the required fields only.',
+})
+```
+
+`plasmateActionGuidance` tells the model to honor SOM action targets with
+`enabled`, `blocked_reason`, `required`, `description`, `placeholder`, and
+`group` fields before selecting browser actions.
+
 ## API
 
 ### `createPlasmateTools(options?)`
@@ -55,6 +77,12 @@ Spawns `plasmate mcp` as a stdio MCP server and returns tools ready for use with
 
 - `tools` — `Record<string, CoreTool>` ready to pass directly to `generateText` / `streamText`
 - `close()` — Call this when done to terminate the MCP subprocess
+
+### `plasmateActionGuidance`
+
+A short system prompt string for Vercel AI SDK agents. Use it when browsing
+forms or cached workflows so the model skips disabled SOM targets and prefers
+required, described, and grouped controls.
 
 ## Available Tools
 

@@ -60,7 +60,7 @@ URL: https://example.com
 Language: en
 
 ## Interactive Elements (1)
-  [e1] link "More information..." (click)
+  [e1] link "More information..." (click) [enabled]
 
 ## Content
 This domain is for use in illustrative examples in documents...
@@ -68,6 +68,17 @@ This domain is for use in illustrative examples in documents...
 ---
 Compression: 15.2x (1256 HTML bytes -> 83 SOM bytes)
 Elements: 5 (1 interactive)
+```
+
+### Get an action plan
+
+Use `extract_action_plan()` when an agent needs reusable targets without the rest of the page text. Disabled controls include `enabled: false` and `blocked_reason: "disabled"` so Browser Use agents can skip unavailable actions before spending a tool call:
+
+```python
+actions = extractor.extract_action_plan("https://example.com/settings")
+for action in actions:
+    if action["enabled"]:
+        print(action["id"], action["role"], action["actions"])
 ```
 
 ### Markdown extraction
