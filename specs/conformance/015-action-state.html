@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><title>Action State</title></head>
+<body>
+  <main>
+    <form action="/api/review" method="post" aria-label="Review workflow">
+      <fieldset disabled>
+        <legend>Locked settings</legend>
+        <label><input type="radio" name="mode" value="auto"> Automatic</label>
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes" placeholder="Internal note"></textarea>
+        <label for="plan">Plan</label>
+        <select id="plan" name="plan">
+          <option value="team" selected>Team</option>
+        </select>
+      </fieldset>
+      <div role="textbox" aria-label="Approval code" aria-required="true"></div>
+      <div role="button" aria-label="Archive" aria-disabled="true"></div>
+    </form>
+  </main>
+</body>
+</html>

@@ -481,6 +481,7 @@
 <p>2026-05-12 market read: official docs continue to validate Plasmate&#39;s local SOM-first direction. Playwright MCP&#39;s snapshot model makes structured accessibility refs table stakes, Stagehand now packages <code>observe()</code> planning with local/managed action caching, Cloudflare Browser Run is selling hosted global browser sessions plus structured extraction, and Browser Use Cloud is packaging agents, direct CDP sessions, profiles, skills, proxies, and managed scale. The sticky counter-position is not another hosted browser fleet. It is a portable local action snapshot that accurately represents the form semantics agents need to reuse plans on SaaS pages.</p>
 <p>2026-05-12 action-plan read: competitors are turning page understanding into validated action menus. Playwright MCP snapshots teach agents to select refs from the current accessibility tree, Stagehand <code>observe()</code> returns executable actions that can be cached, Firecrawl&#39;s MCP surface spans scrape/search/extract plus browser interaction, and Cloudflare Browser Run is layering MCP/CDP/WebMCP onto hosted sessions. Plasmate should keep hosted scale optional and make local SOM action plans richer.</p>
 <p>2026-05-13 state-fidelity read: 2026 browser-agent commentary keeps converging on deterministic execution plus selective AI planning. Playwright/Playwright MCP owns stable execution and snapshots, Stagehand-style <code>observe()</code> APIs make ambiguous state cacheable, Browserbase/Browser Use/Skyvern compete on managed sessions and traces, and WebMCP remains a standards watch item. Plasmate should stay local-first and make the portable SOM action-state contract more exact across disabled, required, grouped, described, and shadow-root controls.</p>
+<p>2026-05-13 conformance read: current competitor positioning raises the bar from &quot;structured output exists&quot; to &quot;the action surface is safe to reuse.&quot; Playwright MCP snapshots expose refs after each action, Stagehand 3.3 adds strict structured outputs and clearer upload/action state, and managed browser platforms sell traces for post-run debugging. Plasmate&#39;s local-first response should be to make disabled and required state portable enough that agents do not need raw DOM recovery before reusing a cached plan.</p>
 <h2 id="ecosystem-surface">Ecosystem Surface</h2><p>The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.</p>
 <h2 id="requirements">Requirements</h2><ol>
 <li>Preserve actionable structure: SOM must capture common accessibility roles, stable ids, labels, forms, links, state, and selectors that agents can reuse.</li>
@@ -491,6 +492,9 @@
 </ol>
 <h2 id="current-run-changes">Current Run Changes</h2><ul>
 <li>2026-05-13:<ul>
+<li>Disabled native <code>&lt;fieldset&gt;</code> state now propagates to descendant native controls.</li>
+<li>Added shared conformance fixture <code>015-action-state</code> for disabled fieldset inheritance plus ARIA required/disabled promotion.</li>
+<li>Updated the conformance index so adapter maintainers can promote action-state checks into release tests.</li>
 <li>Native <code>&lt;textarea disabled&gt;</code> controls now preserve <code>attrs.disabled</code>.</li>
 <li>Native <code>&lt;select disabled&gt;</code> controls now preserve <code>attrs.disabled</code>.</li>
 <li>ARIA widgets with <code>aria-required=&quot;true&quot;</code> now promote <code>attrs.required</code> for action-plan parity with native controls.</li>
@@ -566,6 +570,7 @@
 <li>Implement selector-aware SOM cache entries for <code>main</code>, <code>form</code>, and <code>#id</code> prompts.</li>
 <li>Add trace export for MCP/AWP sessions so users can debug why an agent clicked or selected an element.</li>
 <li>Add conformance cases for ARIA-heavy SaaS pages, especially disabled and required custom controls, and compare output against Playwright MCP snapshots.</li>
+<li>Wire <code>015-action-state</code> into cross-adapter parser/SDK conformance runners so inherited disabled state stays synchronized outside Rust.</li>
 <li>Promote fieldset/legend group semantics into shared conformance fixtures alongside cross-adapter accessible-description cases.</li>
 <li>Add shared conformance for nested shadow-root controls and enriched action-plan metadata.</li>
 <li>Promote the new SDK/parser shadow-root and Go action-plan tests into shared conformance fixtures that run against every adapter before release.</li>

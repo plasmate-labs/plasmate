@@ -410,6 +410,14 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   nested web-component controls survive.
 - Python/Node parser and Go SDK compact action plans now include placeholder,
   description, required, disabled, and group metadata.
+- Disabled native `<textarea>` and `<select>` controls preserve
+  `attrs.disabled`, and ARIA `aria-required`/`aria-disabled` widgets promote
+  top-level action-state attrs while retaining nested ARIA state.
+- Disabled native `<fieldset>` state now propagates to descendant controls, so
+  locked radio, textarea, select, and button targets expose `attrs.disabled`
+  directly.
+- Shared conformance fixture `015-action-state` now covers disabled fieldset
+  inheritance and ARIA required/disabled state promotion.
 - Selector handling now trims whitespace and supports documented region ids
   (`#region-id`) while preserving HTML id selection for agent actions.
 - SOM compilation recognizes common ARIA widgets (`textbox`, `searchbox`,

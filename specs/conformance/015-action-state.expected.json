@@ -1,0 +1,61 @@
+{
+  "$description": "Tests native disabled fieldset inheritance plus ARIA required/disabled promotion for compact action-state contracts.",
+  "som_version": "0.1",
+  "url": "https://example.com/review",
+  "title": "Action State",
+  "lang": "en",
+  "regions": [
+    {
+      "id": "r_main",
+      "role": "main",
+      "elements": []
+    },
+    {
+      "id": "r_form",
+      "role": "form",
+      "label": "Review workflow",
+      "action": "/api/review",
+      "method": "POST",
+      "elements": [
+        {
+          "role": "group",
+          "label": "Locked settings",
+          "attrs": { "legend": "Locked settings", "disabled": true }
+        },
+        {
+          "role": "radio",
+          "label": "Automatic",
+          "actions": ["select"],
+          "attrs": { "group": "mode", "disabled": true }
+        },
+        {
+          "role": "textarea",
+          "label": "Notes",
+          "actions": ["type", "clear"],
+          "attrs": { "name": "notes", "placeholder": "Internal note", "disabled": true }
+        },
+        {
+          "role": "select",
+          "label": "Plan",
+          "actions": ["select"],
+          "attrs": { "name": "plan", "disabled": true }
+        },
+        {
+          "role": "text_input",
+          "label": "Approval code",
+          "actions": ["type", "clear"],
+          "attrs": { "required": true }
+        },
+        {
+          "role": "button",
+          "label": "Archive",
+          "actions": ["click"],
+          "attrs": { "disabled": true, "aria": { "disabled": true } }
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "interactive_count": 5
+  }
+}

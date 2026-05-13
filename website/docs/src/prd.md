@@ -42,6 +42,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-13 state-fidelity read: 2026 browser-agent commentary keeps converging on deterministic execution plus selective AI planning. Playwright/Playwright MCP owns stable execution and snapshots, Stagehand-style `observe()` APIs make ambiguous state cacheable, Browserbase/Browser Use/Skyvern compete on managed sessions and traces, and WebMCP remains a standards watch item. Plasmate should stay local-first and make the portable SOM action-state contract more exact across disabled, required, grouped, described, and shadow-root controls.
 
+2026-05-13 conformance read: current competitor positioning raises the bar from "structured output exists" to "the action surface is safe to reuse." Playwright MCP snapshots expose refs after each action, Stagehand 3.3 adds strict structured outputs and clearer upload/action state, and managed browser platforms sell traces for post-run debugging. Plasmate's local-first response should be to make disabled and required state portable enough that agents do not need raw DOM recovery before reusing a cached plan.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -57,6 +59,9 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-13:
+  - Disabled native `<fieldset>` state now propagates to descendant native controls.
+  - Added shared conformance fixture `015-action-state` for disabled fieldset inheritance plus ARIA required/disabled promotion.
+  - Updated the conformance index so adapter maintainers can promote action-state checks into release tests.
   - Native `<textarea disabled>` controls now preserve `attrs.disabled`.
   - Native `<select disabled>` controls now preserve `attrs.disabled`.
   - ARIA widgets with `aria-required="true"` now promote `attrs.required` for action-plan parity with native controls.
@@ -115,6 +120,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Implement selector-aware SOM cache entries for `main`, `form`, and `#id` prompts.
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked or selected an element.
 - Add conformance cases for ARIA-heavy SaaS pages, especially disabled and required custom controls, and compare output against Playwright MCP snapshots.
+- Wire `015-action-state` into cross-adapter parser/SDK conformance runners so inherited disabled state stays synchronized outside Rust.
 - Promote fieldset/legend group semantics into shared conformance fixtures alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched action-plan metadata.
 - Promote the new SDK/parser shadow-root and Go action-plan tests into shared conformance fixtures that run against every adapter before release.

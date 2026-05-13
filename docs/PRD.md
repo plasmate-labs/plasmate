@@ -143,6 +143,14 @@ portable SOM/action state contract, and the next reliability gains are in small
 state fidelity fixes: disabled, required, grouped, described, and shadow-root
 controls must mean the same thing to Rust, MCP, SDKs, parsers, and integrations.
 
+2026-05-13 conformance read: current competitor positioning raises the bar from
+"structured output exists" to "the action surface is safe to reuse." Playwright
+MCP snapshots expose refs after each action, Stagehand 3.3 adds strict
+structured outputs and clearer upload/action state, and managed browser
+platforms sell traces for post-run debugging. Plasmate's local-first response
+should be to make disabled and required state portable enough that agents do
+not need raw DOM recovery before reusing a cached plan.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -169,6 +177,13 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-13:
+  - Disabled native `<fieldset>` state now propagates to descendant native
+    controls, so radios, textareas, selects, and buttons inside locked groups
+    expose `attrs.disabled` directly.
+  - Added shared conformance fixture `015-action-state` covering disabled
+    fieldset inheritance plus ARIA required/disabled promotion.
+  - Updated the conformance index so adapter maintainers can promote
+    action-state checks into SDK/parser release tests.
   - Native `<textarea disabled>` controls now preserve `attrs.disabled`, so
     compact action plans can avoid suggesting type/clear work on unavailable
     fields.
@@ -284,6 +299,8 @@ and adapter docs over one-off integration logic.
 - Add conformance cases for ARIA-heavy SaaS pages, especially disabled and
   required custom controls, and compare output against Playwright MCP
   snapshots.
+- Wire `015-action-state` into cross-adapter parser/SDK conformance runners so
+  inherited disabled state stays synchronized outside Rust.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched

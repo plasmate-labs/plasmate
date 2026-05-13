@@ -637,7 +637,15 @@ fn collect_regions(
                 .find(|(n, _)| n == "method")
                 .map(|(_, v)| v.to_uppercase());
             let mut elements = Vec::new();
-            extract_elements(node, origin, id_tracker, &mut elements, dom_path, ctx);
+            extract_elements(
+                node,
+                origin,
+                id_tracker,
+                &mut elements,
+                dom_path,
+                ctx,
+                false,
+            );
             if !elements.is_empty() {
                 regions.push(Region {
                     id: rid,
@@ -699,7 +707,15 @@ fn collect_regions(
                 let rid = generate_region_id("navigation", *count);
                 *count += 1;
                 let mut elements = Vec::new();
-                extract_elements(node, origin, id_tracker, &mut elements, dom_path, ctx);
+                extract_elements(
+                    node,
+                    origin,
+                    id_tracker,
+                    &mut elements,
+                    dom_path,
+                    ctx,
+                    false,
+                );
                 if !elements.is_empty() {
                     regions.push(Region {
                         id: rid,
@@ -723,7 +739,15 @@ fn collect_regions(
             let rid = generate_region_id("footer", *count);
             *count += 1;
             let mut elements = Vec::new();
-            extract_elements(node, origin, id_tracker, &mut elements, dom_path, ctx);
+            extract_elements(
+                node,
+                origin,
+                id_tracker,
+                &mut elements,
+                dom_path,
+                ctx,
+                false,
+            );
             if !elements.is_empty() {
                 regions.push(Region {
                     id: rid,
@@ -739,10 +763,11 @@ fn collect_regions(
 
         // Not a region - try to convert this element to a SOM element
         // (e.g., <a>, <button>, <input>, <h1>, <p>, <img>, etc.)
-        if let Some(el) = node_to_element(node, origin, id_tracker, dom_path, ctx) {
+        if let Some(el) = node_to_element(node, origin, id_tracker, dom_path, ctx, false) {
             // For non-interactive elements, also extract interactive children
             if !el.role.is_interactive() {
                 let mut child_interactive = Vec::new();
+                let disabled_context = is_disabled_fieldset(node);
                 let children = node.children.borrow();
                 for (i, child) in children.iter().enumerate() {
                     let child_path = format!("{}/{}", dom_path, i);
@@ -753,6 +778,7 @@ fn collect_regions(
                         &mut child_interactive,
                         &child_path,
                         ctx,
+                        disabled_context,
                     );
                 }
                 if !child_interactive.is_empty() {
@@ -784,7 +810,7 @@ fn collect_regions(
     }
 
     // For non-element nodes (text, etc.), try to extract
-    if let Some(el) = node_to_element(node, origin, id_tracker, dom_path, ctx) {
+    if let Some(el) = node_to_element(node, origin, id_tracker, dom_path, ctx, false) {
         unassigned.push(el);
     }
 }
@@ -944,6 +970,7 @@ fn extract_elements(
     elements: &mut Vec<Element>,
     dom_path: &str,
     ctx: &CompileContext,
+    inherited_disabled: bool,
 ) {
     if heuristics::should_strip(node) {
         return;
@@ -973,13 +1000,23 @@ fn extract_elements(
     if let NodeData::Element { name, .. } = &node.data {
         if name.local.as_ref() == "table" && heuristics::is_layout_table(node) {
             // Decompose layout table
-            extract_layout_table_elements(node, origin, id_tracker, elements, dom_path, ctx);
+            extract_layout_table_elements(
+                node,
+                origin,
+                id_tracker,
+                elements,
+                dom_path,
+                ctx,
+                inherited_disabled,
+            );
             return;
         }
     }
 
+    let disabled_context = inherited_disabled || is_disabled_fieldset(node);
+
     // Try to convert this node into an element
-    if let Some(el) = node_to_element(node, origin, id_tracker, dom_path, ctx) {
+    if let Some(el) = node_to_element(node, origin, id_tracker, dom_path, ctx, inherited_disabled) {
         // For non-interactive container elements (paragraph, section, list),
         // also extract any interactive children they contain
         if !el.role.is_interactive() {
@@ -994,6 +1031,7 @@ fn extract_elements(
                     &mut child_interactive,
                     &child_path,
                     ctx,
+                    disabled_context,
                 );
             }
             if !child_interactive.is_empty() {
@@ -1011,7 +1049,15 @@ fn extract_elements(
     let children = node.children.borrow();
     for (i, child) in children.iter().enumerate() {
         let child_path = format!("{}/{}", dom_path, i);
-        extract_elements(child, origin, id_tracker, elements, &child_path, ctx);
+        extract_elements(
+            child,
+            origin,
+            id_tracker,
+            elements,
+            &child_path,
+            ctx,
+            disabled_context,
+        );
     }
 }
 
@@ -1023,6 +1069,7 @@ fn extract_layout_table_elements(
     elements: &mut Vec<Element>,
     dom_path: &str,
     ctx: &CompileContext,
+    inherited_disabled: bool,
 ) {
     fn visit(
         node: &Handle,
@@ -1031,7 +1078,9 @@ fn extract_layout_table_elements(
         elements: &mut Vec<Element>,
         dom_path: &str,
         ctx: &CompileContext,
+        inherited_disabled: bool,
     ) {
+        let disabled_context = inherited_disabled || is_disabled_fieldset(node);
         let children = node.children.borrow();
         for (i, child) in children.iter().enumerate() {
             let child_path = format!("{}/{}", dom_path, i);
@@ -1039,16 +1088,40 @@ fn extract_layout_table_elements(
                 let tag = name.local.as_ref();
                 match tag {
                     "table" | "tbody" | "thead" | "tfoot" | "tr" | "td" | "th" => {
-                        visit(child, origin, id_tracker, elements, &child_path, ctx);
+                        visit(
+                            child,
+                            origin,
+                            id_tracker,
+                            elements,
+                            &child_path,
+                            ctx,
+                            disabled_context,
+                        );
                     }
                     _ => {
-                        extract_elements(child, origin, id_tracker, elements, &child_path, ctx);
+                        extract_elements(
+                            child,
+                            origin,
+                            id_tracker,
+                            elements,
+                            &child_path,
+                            ctx,
+                            disabled_context,
+                        );
                     }
                 }
             }
         }
     }
-    visit(node, origin, id_tracker, elements, dom_path, ctx);
+    visit(
+        node,
+        origin,
+        id_tracker,
+        elements,
+        dom_path,
+        ctx,
+        inherited_disabled,
+    );
 }
 
 /// Extract only interactive elements from a subtree (for finding links inside paragraphs, etc.)
@@ -1059,18 +1132,25 @@ fn extract_interactive_children(
     elements: &mut Vec<Element>,
     dom_path: &str,
     ctx: &CompileContext,
+    inherited_disabled: bool,
 ) {
     if heuristics::should_strip(node) {
         return;
     }
+    let disabled_context = inherited_disabled || is_disabled_fieldset(node);
     if let NodeData::Element { name, .. } = &node.data {
         let tag = name.local.as_ref();
         let attr_pairs = get_attr_pairs(node);
         if let Some(role) = tag_to_role(tag, &attr_pairs) {
             if role.is_interactive() {
-                if let Some(el) =
-                    interactive_node_to_element(node, origin, id_tracker, dom_path, ctx)
-                {
+                if let Some(el) = interactive_node_to_element(
+                    node,
+                    origin,
+                    id_tracker,
+                    dom_path,
+                    ctx,
+                    inherited_disabled,
+                ) {
                     elements.push(el);
                     return;
                 }
@@ -1080,7 +1160,15 @@ fn extract_interactive_children(
     let children = node.children.borrow();
     for (i, child) in children.iter().enumerate() {
         let child_path = format!("{}/{}", dom_path, i);
-        extract_interactive_children(child, origin, id_tracker, elements, &child_path, ctx);
+        extract_interactive_children(
+            child,
+            origin,
+            id_tracker,
+            elements,
+            &child_path,
+            ctx,
+            disabled_context,
+        );
     }
 }
 
@@ -1091,6 +1179,7 @@ fn interactive_node_to_element(
     id_tracker: &mut ElementIdTracker,
     dom_path: &str,
     ctx: &CompileContext,
+    inherited_disabled: bool,
 ) -> Option<Element> {
     if let NodeData::Element { name, .. } = &node.data {
         let tag = name.local.as_ref();
@@ -1112,7 +1201,7 @@ fn interactive_node_to_element(
         } else {
             Some(actions)
         };
-        let element_attrs = build_element_attrs(tag, &attr_pairs, node, ctx);
+        let element_attrs = build_element_attrs(tag, &attr_pairs, node, ctx, inherited_disabled);
         let children = build_children(node, origin, id_tracker, dom_path, &role);
         let hints = heuristics::infer_class_hints(&attr_pairs);
         let html_id = extract_html_id(&attr_pairs);
@@ -1140,6 +1229,7 @@ fn node_to_element(
     id_tracker: &mut ElementIdTracker,
     dom_path: &str,
     ctx: &CompileContext,
+    inherited_disabled: bool,
 ) -> Option<Element> {
     match &node.data {
         NodeData::Element { name, .. } => {
@@ -1194,7 +1284,8 @@ fn node_to_element(
             } else {
                 Some(actions)
             };
-            let element_attrs = build_element_attrs(tag, &attr_pairs, node, ctx);
+            let element_attrs =
+                build_element_attrs(tag, &attr_pairs, node, ctx, inherited_disabled);
             let children = build_children(node, origin, id_tracker, dom_path, &role);
             let hints = heuristics::infer_class_hints(&attr_pairs);
             let html_id = extract_html_id(&attr_pairs);
@@ -1307,7 +1398,9 @@ fn extract_shadow_elements(
         }
 
         let child_path = format!("{}/{}", dom_path, idx);
-        if let Some(element) = node_to_element(child, origin, id_tracker, &child_path, &dummy_ctx) {
+        if let Some(element) =
+            node_to_element(child, origin, id_tracker, &child_path, &dummy_ctx, false)
+        {
             elements.push(element);
         } else {
             extract_elements(
@@ -1317,6 +1410,7 @@ fn extract_shadow_elements(
                 &mut elements,
                 &child_path,
                 &dummy_ctx,
+                false,
             );
         }
     }
@@ -1502,11 +1596,21 @@ fn has_aria_true(attrs: &[(String, String)], name: &str) -> bool {
         .any(|(n, v)| n == name && v.eq_ignore_ascii_case("true"))
 }
 
+fn is_disabled_fieldset(node: &Handle) -> bool {
+    if let NodeData::Element { name, .. } = &node.data {
+        if name.local.as_ref() == "fieldset" {
+            return has_attr(&get_attr_pairs(node), "disabled");
+        }
+    }
+    false
+}
+
 fn build_element_attrs(
     tag: &str,
     attrs: &[(String, String)],
     node: &Handle,
     ctx: &CompileContext,
+    inherited_disabled: bool,
 ) -> Option<serde_json::Value> {
     let mut map = serde_json::Map::new();
 
@@ -1534,7 +1638,7 @@ fn build_element_attrs(
             if has_attr(attrs, "required") {
                 map.insert("required".into(), json!(true));
             }
-            if has_attr(attrs, "disabled") {
+            if inherited_disabled || has_attr(attrs, "disabled") {
                 map.insert("disabled".into(), json!(true));
             }
             if input_type == "checkbox" || input_type == "radio" {
@@ -1555,12 +1659,12 @@ fn build_element_attrs(
             if has_attr(attrs, "required") {
                 map.insert("required".into(), json!(true));
             }
-            if has_attr(attrs, "disabled") {
+            if inherited_disabled || has_attr(attrs, "disabled") {
                 map.insert("disabled".into(), json!(true));
             }
         }
         "button" => {
-            if has_attr(attrs, "disabled") {
+            if inherited_disabled || has_attr(attrs, "disabled") {
                 map.insert("disabled".into(), json!(true));
             }
         }
@@ -1575,7 +1679,7 @@ fn build_element_attrs(
             if has_attr(attrs, "required") {
                 map.insert("required".into(), json!(true));
             }
-            if has_attr(attrs, "disabled") {
+            if inherited_disabled || has_attr(attrs, "disabled") {
                 map.insert("disabled".into(), json!(true));
             }
         }
@@ -1640,7 +1744,7 @@ fn build_element_attrs(
             if let Some(legend) = extract_legend_text(node) {
                 map.insert("legend".into(), json!(legend));
             }
-            if has_attr(attrs, "disabled") {
+            if inherited_disabled || has_attr(attrs, "disabled") {
                 map.insert("disabled".into(), json!(true));
             }
         }

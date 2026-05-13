@@ -102,6 +102,14 @@ Current trend research reinforces a conservative wedge: production teams want de
 - **Action menus should avoid dead controls**: compact targets are stickier when unavailable fields and dropdowns are obvious without raw DOM recovery.
 - **Conformance should chase SaaS edge cases**: disabled selects/textareas, ARIA required widgets, ARIA disabled widgets, field groups, and descriptions should become shared fixtures across SDKs and integrations.
 
+### 2026-05-13 Action-State Conformance Adjustment
+
+The latest Browserbase/Stagehand and Playwright MCP messaging makes action state a retention feature: agents need the current snapshot to tell them which controls are usable before they reuse a plan. Plasmate should treat inherited native disabled state as part of the same public contract as ARIA state.
+
+- **Inherited disabled state matters**: controls inside disabled fieldsets should expose `attrs.disabled` directly, not only through a parent group.
+- **Fixtures are adapter glue**: shared conformance cases should cover native inheritance and ARIA promotion so parser packages, SDKs, and integrations can test the same action surface.
+- **Plan reuse beats raw DOM recovery**: compact action targets should carry enough state for agents to skip unavailable controls without asking for a full DOM traversal.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -194,11 +202,13 @@ Current trend research reinforces a conservative wedge: production teams want de
 - [x] Disabled native select controls preserve `attrs.disabled`
 - [x] `aria-required="true"` promotes `attrs.required` for custom controls
 - [x] `aria-disabled="true"` promotes `attrs.disabled` for custom controls while retaining ARIA state
+- [x] Disabled native fieldset state propagates to descendant native controls
+- [x] Shared conformance fixture added for disabled/required action state
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
 - [ ] Add cross-adapter fixtures for enriched compact action-plan metadata
 - [ ] Add cross-adapter accessible-description fixtures
-- [ ] Add cross-adapter fixtures for disabled/required ARIA and native form state
+- [ ] Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners
 - [ ] Promote action-plan helper parity into framework integrations
 - [ ] WebMCP/watchlist research spike: track whether browser-native tool exposure changes SOM adapter strategy

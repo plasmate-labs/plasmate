@@ -406,6 +406,24 @@ fn test_fieldset_and_aria_groups_compile_with_labels() {
             .count(),
         3
     );
+    let contact_radios: Vec<_> = elems
+        .iter()
+        .filter(|e| {
+            e.role == ElementRole::Radio
+                && e.attrs
+                    .as_ref()
+                    .and_then(|attrs| attrs.get("group"))
+                    .and_then(|group| group.as_str())
+                    == Some("contact")
+        })
+        .collect();
+    assert_eq!(contact_radios.len(), 2);
+    assert!(
+        contact_radios
+            .iter()
+            .all(|radio| radio.attrs.as_ref().unwrap()["disabled"] == true),
+        "disabled fieldsets should mark descendant native controls disabled"
+    );
 }
 
 #[test]

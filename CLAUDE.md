@@ -49,6 +49,43 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-13T02:08:23Z - Plasmate Improvements Automation
+
+- Git sync: attempted the requested latest pull in the automation worktree
+  first, but shared worktree metadata writes are still denied at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate20/FETCH_HEAD`
+  (`Operation not permitted`). Retried from the primary checkout, but
+  `git fetch --prune origin` failed because `github.com` could not resolve.
+  Continued from the locally known `origin/master` at `74363bc`.
+- Market direction: current 2026 competitor docs still validate local,
+  structured action state as Plasmate's wedge. Playwright MCP snapshots make
+  accessibility refs the deterministic interaction unit; Stagehand 3.3 adds
+  verified agent identity, strict structured outputs, metrics, and clearer file
+  upload/action state; Browserbase, Browser Use, Skyvern, Firecrawl, and
+  Cloudflare Browser Run continue to compete on hosted sessions, profiles,
+  traces, and managed scale. Plasmate should keep prioritizing portable
+  SOM/action-state correctness and conformance before any hosted-browser pivot.
+- Code changes: Rust SOM compilation now propagates disabled native
+  `<fieldset>` state to descendant native controls, so radios, textareas,
+  selects, and buttons inside locked field groups expose `attrs.disabled`
+  directly instead of requiring agents to inspect parent group state.
+- Conformance/docs changes: added shared `specs/conformance/015-action-state.*`
+  fixture for disabled fieldset inheritance plus ARIA required/disabled
+  promotion, updated the conformance index, and updated PRD/roadmap source plus
+  generated website docs with the conformance rationale and next adapter-runner
+  step.
+- Verification: `rustfmt --check src/som/compiler.rs
+  tests/som_compiler_test.rs` passed; focused disabled/ARIA and fieldset tests
+  passed; `cargo test --test som_compiler_test -- --nocapture` passed 53 tests;
+  `cargo build` passed with existing warnings; `node website/build.mjs` rebuilt
+  39 pages; `git diff --check` passed. Full `cargo test` passed 245 lib tests
+  and 5 main/MCP tests, then failed only in `tests/awp_integration_test.rs`
+  because sandbox local socket setup is denied with `Operation not permitted`,
+  matching prior automation runs.
+- Commit/push state: prepared on a new automation branch from locally known
+  `origin/master`; remote push and merge are expected to remain blocked until
+  GitHub DNS resolution is available in this environment.
+
 ### 2026-05-13T00:47:00Z - Plasmate Improvements Automation
 
 - Git sync: attempted the requested latest pull first with `git fetch --prune
