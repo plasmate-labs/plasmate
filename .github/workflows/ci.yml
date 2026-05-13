@@ -86,3 +86,36 @@ jobs:
               exit(1)
           print('  PASS')
           "
+
+  action-manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: sdk/go/go.mod
+
+      - name: Install Python manifest dependencies
+        run: python3 -m pip install pytest pydantic langchain-core
+
+      - name: Install Node manifest dependencies
+        run: |
+          npm ci --prefix packages/som-parser-node
+          npm ci --prefix sdk/node
+          npm install --prefix integrations/vercel-ai
+
+      - name: Action manifest conformance
+        run: ./scripts/action-manifest-conformance.sh --quick

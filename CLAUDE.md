@@ -49,6 +49,50 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-13T13:08:36Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first. The automation worktree
+  could not write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate31/FETCH_HEAD`
+  (`Operation not permitted`), and the primary checkout could not resolve
+  `github.com` over SSH (`ssh: Could not resolve hostname github.com: -65563`).
+  This run continued from locally known `origin/master`/`HEAD` `6b10133`.
+- Market direction: current docs still validate the local-first action
+  contract wedge. Playwright MCP uses snapshot-scoped structured refs,
+  Stagehand `observe()` and Browserbase caching make repeated actions cheaper,
+  Firecrawl Interact and Browser Use Cloud make managed sessions convenient,
+  Crawl4AI remains strong for LLM-friendly crawling, Skyvern owns a visual
+  workflow lane, and Cloudflare WebMCP points toward typed browser-native
+  actions. Plasmate should keep avoiding a hosted-browser pivot and make its
+  broad local SOM/action-plan contract continuously verifiable.
+- Code changes: `scripts/action-manifest-conformance.sh` now supports
+  `--quick` for focused shared-manifest checks and `--full` for the complete
+  release gate. GitHub Actions now has a dedicated `action-manifest` job that
+  installs Python, Node, and Go dependencies and runs the quick conformance
+  gate on pushes and pull requests. Fixture docs now explain quick vs full
+  usage.
+- Docs changes: updated PRD and roadmap source docs plus generated website
+  docs with the CI action-manifest rationale, completed minor-improvement log,
+  and next steps to tune dependency caching and eventually promote CI from the
+  quick gate to full conformance.
+- Verification: `./scripts/action-manifest-conformance.sh --quick` passed;
+  `./scripts/action-manifest-conformance.sh --full` passed; `node
+  website/build.mjs` rebuilt 39 pages; `git diff --check` passed;
+  `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build` passed with
+  existing warnings; `cargo test --lib -- --test-threads=1` passed 245 tests;
+  `cargo test --bin plasmate -- --test-threads=1` passed 5 tests; `cargo
+  clippy --all-targets` passed with existing warnings. Full `cargo test --
+  --test-threads=1` reached integration tests and then failed only because
+  sandboxed `TcpListener` setup in `tests/awp_integration_test.rs` returned
+  `Operation not permitted`. `cargo fmt --all --check` still reports
+  pre-existing formatting drift in unrelated Rust files; this run did not
+  apply a repo-wide formatting change.
+- Commit/push state: committed locally on
+  `codex/plasmate-improvements-2026-05-13-vercel-action-menu`. Push attempts
+  for both the review branch and `HEAD:master` failed because the environment
+  could not resolve `github.com` over SSH, so remote merge to `master` is still
+  blocked outside this machine.
+
 ### 2026-05-13T12:07:41Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first. The automation worktree

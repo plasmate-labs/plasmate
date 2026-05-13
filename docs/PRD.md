@@ -272,6 +272,14 @@ and adapter docs over one-off integration logic.
   - Added `scripts/action-manifest-conformance.sh`, a release-gate command
     that runs the shared manifest checks across Browser Use, LangChain, Vercel
     AI, Python/Node parser packages, and Go/Python/Node SDKs.
+  - Added `--quick` and `--full` modes to the action-manifest release gate,
+    giving CI a narrow shared-manifest check while preserving the full local
+    release command for semantic contract changes.
+  - Added a GitHub Actions action-manifest job that installs Python, Node, and
+    Go dependencies and runs the quick conformance gate on pushes and pull
+    requests.
+  - Fixture documentation now explains quick vs full release-gate usage and
+    makes the shared manifest a pre-release check for action-plan semantics.
   - Node SDK `npm test` now builds and runs the action-plan fixture tests,
     making TypeScript client parity part of the package's normal test path.
   - Root and fixture docs now point maintainers at the shared release command
@@ -497,10 +505,10 @@ and adapter docs over one-off integration logic.
   snapshots.
 - Wire `015-action-state` into cross-adapter parser/SDK conformance runners so
   inherited disabled state stays synchronized outside Rust.
-- Add a GitHub Actions release/conformance job that runs
-  `scripts/action-manifest-conformance.sh` after dependency installation.
-- Split the action manifest release gate into focused quick/full modes if CI
-  runtime becomes a bottleneck.
+- Promote the GitHub Actions action-manifest job from quick shared-manifest
+  checks to full conformance once runtime and dependency caching are stable.
+- Add dependency-cache tuning for the action-manifest job so cross-runtime
+  conformance stays cheap enough to keep required.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched

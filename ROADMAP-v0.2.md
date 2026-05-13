@@ -401,6 +401,23 @@ one product surface before a release goes out.
 3. **CI is the next adoption guardrail**: once dependencies are installed in
    Actions, the release command should become a required conformance job.
 
+### 2026-05-13 CI Action-Manifest Adjustment
+
+The latest competitor read keeps pointing to one durable retention hook:
+agents stay with browser tools when action state is safe to reuse. Playwright
+MCP refs, Stagehand local/server action caches, Firecrawl Interact sessions,
+Browser Use Cloud profiles, and Cloudflare WebMCP all make the action surface
+feel like product infrastructure. Plasmate's local-first answer should be to
+make cross-runtime conformance cheap enough to run continuously.
+
+1. **CI should catch contract drift early**: the shared action manifest now
+   needs a required pull-request path, not only a maintainer release command.
+2. **Fast and full gates serve different jobs**: quick mode should prove the
+   single manifest contract on every change, while full mode remains the local
+   pre-release check for broader action-plan behavior.
+3. **Next leverage is caching**: once the quick gate is stable, tune dependency
+   caches and promote more shared fixtures without making CI adoption painful.
+
 ## Architecture
 
 ```
@@ -657,10 +674,15 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Added `scripts/action-manifest-conformance.sh` to run the shared
   action-availability manifest checks across Browser Use, LangChain, Vercel AI,
   parser packages, and SDKs from one release command.
+- `scripts/action-manifest-conformance.sh` now supports `--quick` for focused
+  shared-manifest checks and `--full` for the complete local release gate.
+- GitHub Actions now runs a dedicated action-manifest conformance job that
+  installs Python, Node, and Go dependencies before executing the quick gate.
 - Node SDK `npm test` now builds the package and runs the action-plan fixture
   tests against the shared manifest.
 - Root and fixture documentation now advertise the shared action-manifest
-  release gate for maintainers changing action-plan semantics.
+  release gate, including quick/full guidance, for maintainers changing
+  action-plan semantics.
 - Browser Use and LangChain package `__version__` exports now match package
   metadata.
 - Selector handling now trims whitespace and supports documented region ids

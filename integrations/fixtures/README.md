@@ -22,6 +22,14 @@ Run the full cross-runtime release gate with:
 ./scripts/action-manifest-conformance.sh
 ```
 
+For faster pre-merge feedback, run the narrow shared-manifest checks with:
+
+```bash
+./scripts/action-manifest-conformance.sh --quick
+```
+
 The script checks the Python and Node parser packages, Go/Python/Node SDKs, and
 Browser Use, LangChain, and Vercel AI adapters against the same expectation
-manifest.
+manifest. CI runs the quick gate on pull requests and pushes; maintainers should
+use the full gate before changing action-plan semantics or publishing SDK and
+adapter releases.

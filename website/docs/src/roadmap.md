@@ -190,6 +190,14 @@ Playwright MCP, Stagehand, and Firecrawl all reinforce that reusable action stat
 - **Package tests must include fixture parity**: Node SDK action-plan tests should run from `npm test`.
 - **CI is the next guardrail**: after dependency setup, the release command should become a required workflow job.
 
+### 2026-05-13 CI Action-Manifest Adjustment
+
+The latest competitor read keeps pointing to one durable retention hook: agents stay with browser tools when action state is safe to reuse. Playwright MCP refs, Stagehand local/server action caches, Firecrawl Interact sessions, Browser Use Cloud profiles, and Cloudflare WebMCP all make the action surface feel like product infrastructure. Plasmate's local-first answer should be to make cross-runtime conformance cheap enough to run continuously.
+
+- **CI should catch contract drift early**: the shared action manifest now needs a required pull-request path, not only a maintainer release command.
+- **Fast and full gates serve different jobs**: quick mode should prove the single manifest contract on every change, while full mode remains the local pre-release check for broader action-plan behavior.
+- **Next leverage is caching**: once the quick gate is stable, tune dependency caches and promote more shared fixtures without making CI adoption painful.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -307,6 +315,8 @@ Playwright MCP, Stagehand, and Firecrawl all reinforce that reusable action stat
 - [x] One release command for Browser Use, LangChain, Vercel AI, parser-package, and SDK fixture checks
 - [x] Node SDK `npm test` runs action-plan fixture coverage
 - [x] Root and fixture docs advertise the shared action-manifest release gate
+- [x] Quick/full modes for the shared action-manifest release gate
+- [x] GitHub Actions conformance job for the quick action-manifest gate
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
@@ -316,5 +326,5 @@ Playwright MCP, Stagehand, and Firecrawl all reinforce that reusable action stat
 - [x] Promote adapter availability checks into shared cross-adapter fixtures
 - [x] Add runtime Vercel AI fixture tests once the package has a local test runner
 - [x] Extend shared action-availability expectations into parser-package and SDK conformance tests
-- [ ] Add a GitHub Actions conformance job for the shared action-manifest release command
+- [ ] Promote the action-manifest CI job from quick checks to full conformance after dependency-cache tuning
 - [ ] WebMCP/watchlist research spike: track whether browser-native tool exposure changes SOM adapter strategy
