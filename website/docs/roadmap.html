@@ -609,6 +609,12 @@
 <li><strong>Menus carry actionable state</strong>: ARIA <code>menuitemcheckbox</code> and <code>menuitemradio</code> should map to checkbox/radio action targets before framework adapters consume the page.</li>
 <li><strong>Noise stripping must tolerate production CSS</strong>: visibility parsing should ignore casing and arbitrary whitespace in stylesheet declarations, matching the inline-style hardening already shipped.</li>
 </ul>
+<h3 id="2026-05-13-action-semantics-fixture-adjustment">2026-05-13 Action-Semantics Fixture Adjustment</h3><p>Current browser-agent comparisons keep confirming that reusable action state is only sticky when downstream app code can trust it without engine-specific knowledge. Browser Use and Stagehand make action menus developer-facing, Playwright MCP makes structured refs the interaction unit, and hosted browser tools sell traces and session reuse around the same contract. Plasmate should promote semantic fixes into shared fixtures as soon as they land.</p>
+<ul>
+<li><strong>Menu widgets belong in the manifest</strong>: ARIA menu checkbox/radio targets should appear in the shared action-availability fixture before adapters treat them as reusable actions.</li>
+<li><strong>Search and visibility need one fixture</strong>: search landmarks and stylesheet-hidden whitespace are common SaaS cases that should be tested together with action targets.</li>
+<li><strong>Docs fixtures need executable guards</strong>: conformance fixtures should have focused Rust coverage first, then graduate into parser, SDK, and adapter release gates.</li>
+</ul>
 <h2 id="completed-v011">Completed (v0.1.1)</h2><ul>
 <li>SOM compiler with 9.4x median compression across 38 sites</li>
 <li>V8 JavaScript execution with full DOM shim</li>
@@ -727,8 +733,12 @@
 <li><input checked="" disabled="" type="checkbox"> ARIA menuitem checkbox/radio roles compile into actionable controls</li>
 <li><input checked="" disabled="" type="checkbox"> Stylesheet hidden-rule parsing tolerates arbitrary whitespace and casing</li>
 <li><input checked="" disabled="" type="checkbox"> Case-sensitive URL path dedup contract covered by integration tests</li>
+<li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest covers ARIA menu checkbox/radio targets</li>
+<li><input checked="" disabled="" type="checkbox"> Shared conformance fixture covers search landmarks, ARIA menu targets, and stylesheet hidden whitespace</li>
+<li><input checked="" disabled="" type="checkbox"> Rust compiler test loads the action-semantics conformance fixture</li>
 <li><input disabled="" type="checkbox"> Selector-aware SOM cache entries for repeated agent prompts</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
+<li><input disabled="" type="checkbox"> Wire <code>016-action-semantics</code> into parser/SDK and adapter conformance runners</li>
 <li><input disabled="" type="checkbox"> Promote shadow-DOM and web-component cases into shared cross-adapter fixtures</li>
 <li><input disabled="" type="checkbox"> Add cross-adapter fixtures for enriched compact action-plan metadata</li>
 <li><input disabled="" type="checkbox"> Add cross-adapter accessible-description fixtures</li>

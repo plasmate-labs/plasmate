@@ -63,7 +63,7 @@ assert.equal(save.blocked_reason, 'disabled')
 const availableTargets = preparePlasmateActionPlan(targets)
 assert.deepEqual(
   availableTargets.map((target) => target.id),
-  ['e_email', 'e_plan']
+  ['e_email', 'e_plan', 'e_compact', 'e_annual']
 )
 
 const formatted = formatPlasmateActionPlan(targets, {

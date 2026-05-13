@@ -34,6 +34,24 @@
       "enabled": true,
       "required": true,
       "group": "Billing"
+    },
+    {
+      "id": "e_compact",
+      "cache_key": "plasmate-action:v1:ee02ffd1",
+      "role": "checkbox",
+      "label": "Compact mode",
+      "actions": ["toggle"],
+      "enabled": true,
+      "group": "Preferences"
+    },
+    {
+      "id": "e_annual",
+      "cache_key": "plasmate-action:v1:c0a21614",
+      "role": "radio",
+      "label": "Annual billing",
+      "actions": ["select"],
+      "enabled": true,
+      "group": "Billing"
     }
   ]
 }

@@ -206,6 +206,14 @@ Competitor docs keep turning browser state into reusable action contracts: Playw
 - **Menus carry actionable state**: ARIA `menuitemcheckbox` and `menuitemradio` should map to checkbox/radio action targets before framework adapters consume the page.
 - **Noise stripping must tolerate production CSS**: visibility parsing should ignore casing and arbitrary whitespace in stylesheet declarations, matching the inline-style hardening already shipped.
 
+### 2026-05-13 Action-Semantics Fixture Adjustment
+
+Current browser-agent comparisons keep confirming that reusable action state is only sticky when downstream app code can trust it without engine-specific knowledge. Browser Use and Stagehand make action menus developer-facing, Playwright MCP makes structured refs the interaction unit, and hosted browser tools sell traces and session reuse around the same contract. Plasmate should promote semantic fixes into shared fixtures as soon as they land.
+
+- **Menu widgets belong in the manifest**: ARIA menu checkbox/radio targets should appear in the shared action-availability fixture before adapters treat them as reusable actions.
+- **Search and visibility need one fixture**: search landmarks and stylesheet-hidden whitespace are common SaaS cases that should be tested together with action targets.
+- **Docs fixtures need executable guards**: conformance fixtures should have focused Rust coverage first, then graduate into parser, SDK, and adapter release gates.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -329,8 +337,12 @@ Competitor docs keep turning browser state into reusable action contracts: Playw
 - [x] ARIA menuitem checkbox/radio roles compile into actionable controls
 - [x] Stylesheet hidden-rule parsing tolerates arbitrary whitespace and casing
 - [x] Case-sensitive URL path dedup contract covered by integration tests
+- [x] Shared action-availability manifest covers ARIA menu checkbox/radio targets
+- [x] Shared conformance fixture covers search landmarks, ARIA menu targets, and stylesheet hidden whitespace
+- [x] Rust compiler test loads the action-semantics conformance fixture
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
+- [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
 - [ ] Add cross-adapter fixtures for enriched compact action-plan metadata
 - [ ] Add cross-adapter accessible-description fixtures

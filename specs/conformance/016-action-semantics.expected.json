@@ -1,0 +1,38 @@
+{
+  "$description": "Tests ARIA search landmarks, ARIA menuitem checkbox/radio action targets, and stylesheet hidden-rule parsing with production whitespace/casing.",
+  "som_version": "0.1",
+  "url": "https://example.com/action-semantics",
+  "title": "Action Semantics",
+  "lang": "en",
+  "regions": [
+    {
+      "role": "navigation",
+      "label": "Product search",
+      "elements": [
+        {
+          "role": "text_input",
+          "label": "Query",
+          "actions": ["type", "clear"],
+          "attrs": { "input_type": "search", "name": "q" }
+        },
+        {
+          "role": "button",
+          "text": "Search",
+          "actions": ["click"]
+        }
+      ]
+    },
+    {
+      "role": "main",
+      "elements": [
+        { "role": "heading", "text": "Preferences", "attrs": { "level": 1 } },
+        { "role": "checkbox", "label": "Compact mode", "actions": ["toggle"] },
+        { "role": "radio", "label": "Annual billing", "actions": ["select"] },
+        { "role": "paragraph", "text": "Visible preferences copy" }
+      ]
+    }
+  ],
+  "meta": {
+    "interactive_count": 4
+  }
+}

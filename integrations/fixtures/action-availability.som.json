@@ -6,8 +6,8 @@
   "meta": {
     "html_bytes": 1200,
     "som_bytes": 300,
-    "element_count": 3,
-    "interactive_count": 3
+    "element_count": 5,
+    "interactive_count": 5
   },
   "regions": [
     {
@@ -49,6 +49,24 @@
               { "value": "starter", "text": "Starter" },
               { "value": "team", "text": "Team" }
             ],
+            "group": "Billing"
+          }
+        },
+        {
+          "id": "e_compact",
+          "role": "checkbox",
+          "label": "Compact mode",
+          "actions": ["toggle"],
+          "attrs": {
+            "group": "Preferences"
+          }
+        },
+        {
+          "id": "e_annual",
+          "role": "radio",
+          "label": "Annual billing",
+          "actions": ["select"],
+          "attrs": {
             "group": "Billing"
           }
         }

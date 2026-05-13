@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Action Semantics</title>
+  <style>
+    .layout-hidden {
+      DISPLAY	:
+        none;
+    }
+  </style>
+</head>
+<body>
+  <div role="search" aria-label="Product search">
+    <input type="search" aria-label="Query" name="q" />
+    <button type="submit">Search</button>
+  </div>
+  <main>
+    <h1>Preferences</h1>
+    <div role="menu" aria-label="Display options">
+      <div role="menuitemcheckbox" aria-label="Compact mode" aria-checked="false"></div>
+      <div role="menuitemradio" aria-label="Annual billing" aria-checked="true"></div>
+    </div>
+    <p class="layout-hidden">Hidden stylesheet copy</p>
+    <p>Visible preferences copy</p>
+  </main>
+</body>
+</html>

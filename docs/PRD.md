@@ -251,6 +251,15 @@ stickiness: search landmarks, ARIA menu item variants, CSS-hidden content, and
 case-sensitive URL contracts need to behave like browser accessibility state
 without forcing agents back to raw DOM.
 
+2026-05-13 fixture-contract read: current competitor comparisons keep
+rewarding tools that make action state reusable in normal app code, not only
+inside the browser engine. Browser Use, Stagehand, Playwright MCP,
+Browserbase, and Firecrawl all compete on whether agents can trust compact
+targets after the first observation. Plasmate's broad repo surface should turn
+that pressure into a release habit: every newly supported browser semantic
+needs a shared fixture or manifest entry before it is treated as a durable
+product contract.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -277,6 +286,14 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-13:
+  - Shared action-availability fixtures now include ARIA menu checkbox and
+    radio targets so Browser Use, LangChain, Vercel AI, parser packages, and
+    SDKs prove the same menu action contract.
+  - Added `specs/conformance/016-action-semantics.html` and expected output to
+    cover labelled search landmarks, menuitem checkbox/radio targets, and
+    stylesheet hidden-rule whitespace/casing in one reusable fixture.
+  - Added Rust compiler regression coverage for the new action-semantics
+    fixture so the shared fixture cannot drift as documentation-only coverage.
   - ARIA `role="search"` now compiles into a labelled navigation region,
     preserving search landmarks that agents commonly use before selecting a
     query field.
@@ -533,8 +550,9 @@ and adapter docs over one-off integration logic.
 - Add dependency-cache tuning for the action-manifest job so cross-runtime
   conformance stays cheap enough to keep required.
 - Promote search landmarks, ARIA menuitem checkbox/radio roles, and stylesheet
-  hidden-state whitespace cases into shared fixtures so parser and adapter
-  outputs prove the same semantics outside Rust.
+- Wire `016-action-semantics` into parser/SDK and adapter conformance runners
+  so search landmarks, ARIA menu roles, and stylesheet-hidden whitespace stay
+  synchronized outside Rust.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched

@@ -234,6 +234,39 @@ fn test_aria_search_landmark_maps_to_navigation_region() {
 }
 
 #[test]
+fn test_action_semantics_conformance_fixture() {
+    let html = std::fs::read_to_string("specs/conformance/016-action-semantics.html")
+        .expect("action semantics fixture should load");
+    let som = compiler::compile(&html, "https://example.com/action-semantics").unwrap();
+    let json = serde_json::to_string(&som).unwrap();
+
+    assert!(
+        som.regions.iter().any(|region| {
+            region.role == RegionRole::Navigation
+                && region.label.as_deref() == Some("Product search")
+        }),
+        "search landmark should compile into a labelled navigation region"
+    );
+    assert!(
+        all_elements(&som)
+            .iter()
+            .any(|elem| elem.role == ElementRole::Checkbox
+                && elem.label.as_deref() == Some("Compact mode")),
+        "menuitemcheckbox should compile into an actionable checkbox"
+    );
+    assert!(
+        all_elements(&som)
+            .iter()
+            .any(|elem| elem.role == ElementRole::Radio
+                && elem.label.as_deref() == Some("Annual billing")),
+        "menuitemradio should compile into an actionable radio target"
+    );
+    assert!(!json.contains("Hidden stylesheet copy"));
+    assert!(json.contains("Visible preferences copy"));
+    assert_eq!(som.meta.interactive_count, 4);
+}
+
+#[test]
 fn test_input_types_are_case_insensitive() {
     let html = r#"<!DOCTYPE html>
 <html><head><title>Inputs</title></head>

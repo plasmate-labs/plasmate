@@ -46,6 +46,7 @@ validates.
 | 013 | no-landmarks | Fallback content region when no landmarks exist |
 | 014 | fieldset-groups | Native fieldset/legend and ARIA radiogroup group semantics |
 | 015 | action-state | Disabled fieldset inheritance and ARIA required/disabled action state |
+| 016 | action-semantics | Search landmarks, ARIA menuitem checkbox/radio targets, stylesheet hidden whitespace |
 
 ## Running Tests
 

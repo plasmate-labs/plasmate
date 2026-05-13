@@ -438,6 +438,25 @@ raw DOM recovery.
    ignore casing and arbitrary whitespace in stylesheet declarations, matching
    the inline-style hardening already shipped.
 
+### 2026-05-13 Action-Semantics Fixture Adjustment
+
+Current browser-agent comparisons keep confirming that reusable action state is
+only sticky when downstream app code can trust it without engine-specific
+knowledge. Browser Use and Stagehand make action menus developer-facing,
+Playwright MCP makes structured refs the interaction unit, and hosted browser
+tools sell traces and session reuse around the same contract. Plasmate should
+promote semantic fixes into shared fixtures as soon as they land.
+
+1. **Menu widgets belong in the manifest**: ARIA menu checkbox/radio targets
+   should appear in the shared action-availability fixture before adapters
+   treat them as reusable actions.
+2. **Search and visibility need one fixture**: search landmarks and
+   stylesheet-hidden whitespace are common SaaS cases that should be tested
+   together with action targets.
+3. **Docs fixtures need executable guards**: conformance fixtures should have
+   focused Rust coverage first, then graduate into parser, SDK, and adapter
+   release gates.
+
 ## Architecture
 
 ```
@@ -720,6 +739,14 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   and casing, so `DISPLAY\t:\nnone` is treated like `display:none`.
 - The SOM improvements test suite now asserts case-sensitive URL path
   preservation, matching the compiler's public deduplication contract.
+- Shared action-availability expectations now include ARIA menu checkbox and
+  radio targets, keeping parser, SDK, and framework action menus aligned on
+  custom menu controls.
+- Added conformance fixture `016-action-semantics` for labelled search
+  landmarks, ARIA menuitem checkbox/radio targets, and stylesheet hidden-rule
+  whitespace/casing.
+- Rust compiler tests now load the `016-action-semantics` fixture directly so
+  those semantics have executable coverage before adapter promotion.
 
 ## Dependencies to Add
 

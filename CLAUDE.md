@@ -49,6 +49,43 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-13T15:13:58Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first. The automation worktree
+  still cannot write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate33/FETCH_HEAD`
+  (`Operation not permitted`). This run continued from locally known
+  `origin/master`/`HEAD` `0929a23`, which matched the current detached worktree.
+- Market direction: current trend research still favors reusable action state
+  over raw browser access. Playwright MCP-style structured snapshots,
+  Stagehand/Browserbase action caching, Browser Use framework workflows, and
+  Firecrawl managed browser/session features all reinforce Plasmate's
+  local-first wedge: keep action semantics portable across the broad repo
+  surface instead of pivoting into hosted browser infrastructure first.
+- Code and fixture changes: the shared action-availability SOM fixture now
+  includes ARIA menu checkbox/radio targets with deterministic cache keys; the
+  Vercel AI fixture test expectation now includes those available targets; and
+  `specs/conformance/016-action-semantics.html` plus expected output capture
+  labelled search landmarks, ARIA menuitem checkbox/radio targets, and
+  stylesheet hidden-rule whitespace/casing.
+- Test coverage changes: `tests/som_compiler_test.rs` now loads the new
+  `016-action-semantics` fixture directly and asserts search-region,
+  menuitemcheckbox, menuitemradio, hidden stylesheet copy, visible copy, and
+  interactive-count behavior.
+- Docs changes: updated PRD and roadmap source docs plus generated website
+  docs with the action-semantics fixture rationale, current run changes, and
+  next step to wire `016-action-semantics` into parser/SDK and adapter
+  conformance runners.
+- Verification: `cargo build` passed using
+  `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target` with existing warnings;
+  `cargo test --test som_compiler_test -- --test-threads=1` passed 55 tests;
+  Python parser, Python SDK, Browser Use, LangChain, Go SDK, Node parser, and
+  Node SDK shared-manifest checks passed; `node website/build.mjs` rebuilt 39
+  pages; `git diff --check` passed. The full quick action-manifest script was
+  partially blocked until dependencies were installed, and Vercel AI tests
+  could not run because `npm install` for `@ai-sdk/mcp` failed with
+  `ENOTFOUND registry.npmjs.org`.
+
 ### 2026-05-13T14:05:53Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first. The automation worktree
