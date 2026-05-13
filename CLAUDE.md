@@ -89,6 +89,9 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   target cache also failed because blocked DNS prevented `rusty_v8` from
   downloading its prebuilt archive. `cargo fmt --check` reports unrelated
   pre-existing formatting drift in Rust files outside this change.
+- Commit/push state: implementation commit `e2f6ff6`
+  (`chore: expose keyboard action cues`) was pushed to remote `master`. There
+  is no `main` branch in this repo; `origin/HEAD` points at `origin/master`.
 
 ### 2026-05-13T22:11:17Z - Plasmate Improvements Automation
 
