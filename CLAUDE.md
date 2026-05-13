@@ -82,7 +82,11 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   Full `cargo test` passed 245 lib tests and 5 main/MCP tests, then failed only
   in `tests/awp_integration_test.rs` because sandbox local socket setup is
   denied with `Operation not permitted`.
-- Commit/push state: pending commit and remote update from this run.
+- Commit/push state: committed `30787d3` as
+  `chore: improve SOM action state fidelity`, pushed review branch
+  `codex/plasmate-improvements-2026-05-13-state-fidelity`, and
+  fast-forwarded remote `master` from `d0caf2c` to `30787d3`. A follow-up
+  state-only commit records this final push state.
 
 ### 2026-05-12T23:41:02Z - Plasmate Improvements Automation
 
