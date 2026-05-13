@@ -78,6 +78,11 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   website/build.mjs` rebuilt 39 pages; `git diff --check` passed; and
   `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build` passed with
   existing warnings.
+- Commit/push state: automation worktree Git metadata still cannot create
+  locks, so the reviewed patch was mirrored to `/Users/steve/Git/plasmate`.
+  Committed `0903bd1` as `chore: add Vercel AI action menu helpers`, pushed
+  review branch `codex/plasmate-improvements-2026-05-13-vercel-action-menu`,
+  and fast-forwarded remote `master` from `ebba72f` to `0903bd1`.
 
 ### 2026-05-13T05:08:17Z - Plasmate Improvements Automation
 
