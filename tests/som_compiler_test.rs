@@ -359,8 +359,8 @@ fn test_form_state_values_and_readonly_are_preserved() {
     let html = r#"<!DOCTYPE html>
 <html><head><title>Form State</title></head>
 <body><main>
-    <input type="email" aria-label="Email" readonly value="ops@example.com">
-    <textarea aria-label="Notes" readonly>Already reviewed</textarea>
+    <input type="email" aria-label="Email" readonly value="ops@example.com" autocomplete="email" minlength="6" maxlength="64" pattern=".+@example\.com" aria-invalid="TRUE">
+    <textarea aria-label="Notes" readonly maxlength="200">Already reviewed</textarea>
     <select aria-label="Plan">
         <option value="starter">Starter</option>
         <option value="team" selected>Team</option>
@@ -378,6 +378,11 @@ fn test_form_state_values_and_readonly_are_preserved() {
     let email_attrs = email.attrs.as_ref().expect("input attrs should exist");
     assert_eq!(email_attrs["readonly"], true);
     assert_eq!(email_attrs["value"], "ops@example.com");
+    assert_eq!(email_attrs["autocomplete"], "email");
+    assert_eq!(email_attrs["minlength"], 6);
+    assert_eq!(email_attrs["maxlength"], 64);
+    assert_eq!(email_attrs["pattern"], ".+@example\\.com");
+    assert_eq!(email_attrs["aria"]["invalid"], true);
 
     let textarea = elems
         .iter()
@@ -389,6 +394,7 @@ fn test_form_state_values_and_readonly_are_preserved() {
         .expect("textarea attrs should exist");
     assert_eq!(textarea_attrs["readonly"], true);
     assert_eq!(textarea_attrs["value"], "Already reviewed");
+    assert_eq!(textarea_attrs["maxlength"], 200);
 
     let select = elems
         .iter()

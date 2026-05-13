@@ -51,11 +51,16 @@ def test_build_context_surfaces_action_availability():
             assert f'[group={target["group"]}]' in line
         if target.get("input_type"):
             assert f'[type={target["input_type"]}]' in line
+        if target.get("autocomplete"):
+            assert f'[autocomplete={target["autocomplete"]}]' in line
         if target.get("value"):
             assert f'[value={target["value"]}]' in line
+        for constraint_key in ("minlength", "maxlength", "pattern"):
+            if constraint_key in target:
+                assert f'[{constraint_key}={target[constraint_key]}]' in line
         if "checked" in target:
             assert f'[checked={target["checked"]}]' in line
-        for state_key in ("expanded", "pressed", "selected", "current", "controls", "haspopup"):
+        for state_key in ("expanded", "pressed", "selected", "current", "controls", "haspopup", "invalid"):
             if state_key in target:
                 assert f'[{state_key}={target[state_key]}]' in line
         if target.get("description"):

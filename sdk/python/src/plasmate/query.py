@@ -91,12 +91,20 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["href"] = attrs.href
             if attrs.name:
                 item["name"] = attrs.name
+            if attrs.autocomplete:
+                item["autocomplete"] = attrs.autocomplete
             if attrs.input_type:
                 item["input_type"] = attrs.input_type
             if attrs.value:
                 item["value"] = attrs.value
             if attrs.placeholder:
                 item["placeholder"] = attrs.placeholder
+            if attrs.minlength is not None:
+                item["minlength"] = attrs.minlength
+            if attrs.maxlength is not None:
+                item["maxlength"] = attrs.maxlength
+            if attrs.pattern:
+                item["pattern"] = attrs.pattern
             if attrs.description:
                 item["description"] = attrs.description
             if attrs.checked is not None:
@@ -111,6 +119,7 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                     "current",
                     "controls",
                     "haspopup",
+                    "invalid",
                 ):
                     if aria_key in attrs.aria:
                         item[aria_key] = attrs.aria[aria_key]

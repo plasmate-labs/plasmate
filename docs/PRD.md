@@ -309,6 +309,16 @@ local-first answer should keep compact action menus honest by preserving
 read-only blockers and current textarea/select values, while parsing ARIA
 boolean state like production markup rather than ideal lowercase examples.
 
+2026-05-13 validation-constraint read: current browser-agent docs keep making
+the same distinction: refs and cached actions are only useful when they carry
+enough live form context to validate before replay. Playwright MCP snapshots
+are fresh accessibility state, Stagehand `observe()` actions can be cached
+locally or on Browserbase, and Browser Use/Firecrawl keep selling stateful
+sessions around repetitive form workflows. Plasmate should keep the local-first
+wedge by carrying input guidance and validation state in compact action menus:
+`autocomplete`, `minlength`, `maxlength`, `pattern`, and `aria-invalid` should
+mean the same thing in Rust, schema, parser packages, SDKs, and adapters.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -335,6 +345,14 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-13:
+  - The Rust SOM compiler and JSON Schema now preserve form-entry constraints
+    (`minlength`, `maxlength`, `pattern`) plus `aria-invalid`, extending
+    current action-state fidelity into validation state.
+  - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
+    AI action-plan surfaces now expose `autocomplete`, length constraints,
+    `pattern`, and `invalid` without changing deterministic `cache_key` values.
+  - The shared action-availability manifest now asserts validation constraints
+    and invalid state across parser, SDK, and framework outputs.
   - Native read-only input and textarea controls now preserve `attrs.readonly`;
     parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
     AI action-plan surfaces expose `readonly`, mark those targets unavailable,
@@ -656,6 +674,9 @@ and adapter docs over one-off integration logic.
 - Promote ARIA relationship-state cases from the shared action availability
   manifest into the broader `015-action-state`/`016-action-semantics`
   conformance suites.
+- Add compiler/schema conformance for form validation constraints and
+  `aria-invalid`, then promote the shared manifest cases into broader parser,
+  SDK, and adapter fixtures.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched

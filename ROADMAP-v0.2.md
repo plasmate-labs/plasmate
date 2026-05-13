@@ -535,6 +535,26 @@ the small blockers and current values agents otherwise recover from raw DOM.
    should trim and parse casing variants so compact state remains typed and
    comparable across SDKs.
 
+### 2026-05-13 Validation-Constraint Action Menu Adjustment
+
+The newest competitor docs keep making cached actions depend on validation
+state, not just target identity. Playwright MCP refs are current-snapshot
+handles, Stagehand can cache `observe()`/action results locally or on
+Browserbase, and Browser Use/Firecrawl package session continuity around
+repetitive forms. Plasmate should keep the local-first wedge by making compact
+action plans carry the field constraints agents need before reusing a cached
+type action.
+
+1. **Autocomplete is planning context**: action targets should expose
+   `autocomplete` tokens so agents can pick the right credential/profile data
+   without re-walking SOM attrs.
+2. **Validation constraints reduce bad retries**: `minlength`, `maxlength`,
+   and `pattern` should travel through Rust, schema, SDKs, parser packages, and
+   adapters so agents know what a field accepts before typing.
+3. **Invalid state blocks blind replay**: `aria-invalid` should surface as
+   compact `invalid` state without changing target `cache_key` values, letting
+   cached plans stay stable while validation drift remains visible.
+
 ## Architecture
 
 ```

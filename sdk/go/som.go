@@ -68,6 +68,9 @@ type ElementAttrs struct {
 	TabIndex        interface{}    `json:"tabindex,omitempty"`
 	Name            *string        `json:"name,omitempty"`
 	Autocomplete    *string        `json:"autocomplete,omitempty"`
+	MinLength       interface{}    `json:"minlength,omitempty"`
+	MaxLength       interface{}    `json:"maxlength,omitempty"`
+	Pattern         *string        `json:"pattern,omitempty"`
 	Description     *string        `json:"description,omitempty"`
 	Aria            *AriaState     `json:"aria,omitempty"`
 	HasSrcdoc       *bool          `json:"has_srcdoc,omitempty"`
@@ -89,6 +92,7 @@ type AriaState struct {
 	Hidden   *bool       `json:"hidden,omitempty"`
 	Controls *string     `json:"controls,omitempty"`
 	HasPopup interface{} `json:"haspopup,omitempty"`
+	Invalid  interface{} `json:"invalid,omitempty"`
 }
 
 // SomShadowRoot represents elements inside a web component shadow root.

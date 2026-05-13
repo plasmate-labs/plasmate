@@ -133,7 +133,7 @@ browser.close();
 | `findById(som, id)` | `SomElement \| undefined` | Find element by stable ID |
 | `findByTag(som, tag)` | `SomElement[]` | Find elements by element role |
 | `findInteractive(som)` | `SomElement[]` | All elements with actions |
-| `getActionPlan(som)` | `ActionPlanItem[]` | Compact action targets with cache keys and availability |
+| `getActionPlan(som)` | `ActionPlanItem[]` | Compact action targets with cache keys, availability, validation constraints, and live state cues |
 | `getActionPlanCacheKey(item)` | `string` | Deterministic key for caching or comparing action targets |
 | `findByText(som, text)` | `SomElement[]` | Case-insensitive text search |
 | `flatElements(som)` | `SomElement[]` | Flatten all elements |

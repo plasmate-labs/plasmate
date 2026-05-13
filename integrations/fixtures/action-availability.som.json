@@ -23,9 +23,16 @@
           "attrs": {
             "input_type": "email",
             "value": "ops@example.com",
+            "autocomplete": "email",
             "placeholder": "name@company.com",
+            "minlength": 6,
+            "maxlength": 64,
+            "pattern": ".+@example\\.com",
             "required": true,
             "readonly": true,
+            "aria": {
+              "invalid": "grammar"
+            },
             "description": "Use your work email",
             "group": "Account"
           }

@@ -48,7 +48,12 @@ assert.deepEqual(email, {
   label: 'Work email',
   input_type: 'email',
   value: 'ops@example.com',
+  autocomplete: 'email',
   placeholder: 'name@company.com',
+  minlength: 6,
+  maxlength: 64,
+  pattern: '.+@example\\.com',
+  invalid: 'grammar',
   description: 'Use your work email',
   readonly: true,
   blocked_reason: 'readonly',
@@ -74,7 +79,7 @@ const formatted = formatPlasmateActionPlan(targets, {
 })
 assert.match(
   formatted,
-  /\[e_email\] text_input "Work email" \(type\) \[blocked\] \[cache_key=plasmate-action:v1:91875850\] \[blocked_reason=readonly\] \[required\] \[readonly\] \[type=email\] \[value=ops@example\.com\] \[placeholder=name@company\.com\] \[group=Account\]/
+  /\[e_email\] text_input "Work email" \(type\) \[blocked\] \[cache_key=plasmate-action:v1:91875850\] \[blocked_reason=readonly\] \[required\] \[readonly\] \[type=email\] \[value=ops@example\.com\] \[autocomplete=email\] \[placeholder=name@company\.com\] \[minlength=6\] \[maxlength=64\] \[pattern=\.\+@example\\\.com\] \[invalid=grammar\] \[group=Account\]/
 )
 assert.match(formatted, /\[e_compact\].*\[checked=false\]/)
 assert.match(formatted, /\[e_compact\].*\[pressed=false\]/)

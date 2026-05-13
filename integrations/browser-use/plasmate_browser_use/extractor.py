@@ -85,11 +85,16 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append(f"group={item['group']}")
     if item.get("input_type"):
         flags.append(f"type={item['input_type']}")
+    if item.get("autocomplete"):
+        flags.append(f"autocomplete={item['autocomplete']}")
     if item.get("value"):
         flags.append(f"value={item['value']}")
+    for constraint_key in ("minlength", "maxlength", "pattern"):
+        if constraint_key in item:
+            flags.append(f"{constraint_key}={item[constraint_key]}")
     if "checked" in item:
         flags.append(f"checked={item['checked']}")
-    for state_key in ("expanded", "pressed", "selected", "current", "controls", "haspopup"):
+    for state_key in ("expanded", "pressed", "selected", "current", "controls", "haspopup", "invalid"):
         if state_key in item:
             flags.append(f"{state_key}={item[state_key]}")
 

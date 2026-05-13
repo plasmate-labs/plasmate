@@ -1827,6 +1827,18 @@ fn build_element_attrs(
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "autocomplete") {
         map.insert("autocomplete".into(), json!(value));
     }
+    for key in ["minlength", "maxlength"] {
+        if let Some((_, value)) = attrs.iter().find(|(n, _)| n == key) {
+            let parsed = value
+                .parse::<i64>()
+                .map(serde_json::Value::from)
+                .unwrap_or_else(|_| json!(value));
+            map.insert(key.into(), parsed);
+        }
+    }
+    if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "pattern") {
+        map.insert("pattern".into(), json!(value));
+    }
     if has_attr(attrs, "readonly") {
         map.insert("readonly".into(), json!(true));
     }
@@ -1851,6 +1863,7 @@ fn build_element_attrs(
         ("aria-hidden", "hidden"),
         ("aria-controls", "controls"),
         ("aria-haspopup", "haspopup"),
+        ("aria-invalid", "invalid"),
     ];
     let mut aria_map = serde_json::Map::new();
     for (html_attr, som_key) in aria_states {

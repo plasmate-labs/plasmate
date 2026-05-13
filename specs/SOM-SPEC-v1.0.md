@@ -246,6 +246,10 @@ field MUST be omitted when the object would be empty.
 | `required`   | boolean | Present and `true` when the field is required. |
 | `readonly`   | boolean | Present and `true` when the field is read-only. |
 | `disabled`   | boolean | Present and `true` when the field is disabled. |
+| `autocomplete` | string | Autocomplete token, when present. |
+| `minlength` | integer/string | Minimum text length constraint. Invalid source values are preserved as strings. |
+| `maxlength` | integer/string | Maximum text length constraint. Invalid source values are preserved as strings. |
+| `pattern`   | string  | Pattern constraint from the source element. |
 | `checked`    | boolean | For checkbox/radio: present and `true` when checked. |
 | `group`      | string  | For radio inputs: the `name` attribute identifying the radio group. |
 
@@ -255,6 +259,9 @@ field MUST be omitted when the object would be empty.
 |--------------|---------|-------------|
 | `placeholder`| string  | Placeholder text. |
 | `required`   | boolean | Present and `true` when required. |
+| `readonly`   | boolean | Present and `true` when read-only. |
+| `disabled`   | boolean | Present and `true` when disabled. |
+| `maxlength` | integer/string | Maximum text length constraint. Invalid source values are preserved as strings. |
 
 #### `select`
 
@@ -359,6 +366,7 @@ attributes SHOULD be preserved when present:
 | `aria-hidden`    | `hidden`    | boolean         |
 | `aria-controls`  | `controls`  | string          |
 | `aria-haspopup`  | `haspopup`  | boolean/string  |
+| `aria-invalid`   | `invalid`   | boolean/string  |
 
 Values `"true"` and `"false"` MUST be normalized to boolean. Other string
 values (e.g. `aria-current="page"`, `aria-checked="mixed"`, or

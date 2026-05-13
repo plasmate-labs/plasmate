@@ -177,9 +177,13 @@ type ActionPlanItem struct {
 	Label         *string     `json:"label,omitempty"`
 	Href          *string     `json:"href,omitempty"`
 	Name          *string     `json:"name,omitempty"`
+	Autocomplete  *string     `json:"autocomplete,omitempty"`
 	InputType     *string     `json:"input_type,omitempty"`
 	Value         *string     `json:"value,omitempty"`
 	Placeholder   *string     `json:"placeholder,omitempty"`
+	MinLength     interface{} `json:"minlength,omitempty"`
+	MaxLength     interface{} `json:"maxlength,omitempty"`
+	Pattern       *string     `json:"pattern,omitempty"`
 	Description   *string     `json:"description,omitempty"`
 	Checked       interface{} `json:"checked,omitempty"`
 	Expanded      *bool       `json:"expanded,omitempty"`
@@ -188,6 +192,7 @@ type ActionPlanItem struct {
 	Current       interface{} `json:"current,omitempty"`
 	Controls      *string     `json:"controls,omitempty"`
 	HasPopup      interface{} `json:"haspopup,omitempty"`
+	Invalid       interface{} `json:"invalid,omitempty"`
 	Required      *bool       `json:"required,omitempty"`
 	Readonly      *bool       `json:"readonly,omitempty"`
 	Disabled      *bool       `json:"disabled,omitempty"`
@@ -252,9 +257,13 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 		if el.Attrs != nil {
 			item.Href = el.Attrs.Href
 			item.Name = el.Attrs.Name
+			item.Autocomplete = el.Attrs.Autocomplete
 			item.InputType = el.Attrs.InputType
 			item.Value = el.Attrs.Value
 			item.Placeholder = el.Attrs.Placeholder
+			item.MinLength = el.Attrs.MinLength
+			item.MaxLength = el.Attrs.MaxLength
+			item.Pattern = el.Attrs.Pattern
 			item.Description = el.Attrs.Description
 			if el.Attrs.Checked != nil {
 				item.Checked = *el.Attrs.Checked
@@ -268,6 +277,7 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.Current = el.Attrs.Aria.Current
 				item.Controls = el.Attrs.Aria.Controls
 				item.HasPopup = el.Attrs.Aria.HasPopup
+				item.Invalid = el.Attrs.Aria.Invalid
 			}
 			item.Required = el.Attrs.Required
 			item.Readonly = el.Attrs.Readonly

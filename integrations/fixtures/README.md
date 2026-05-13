@@ -11,7 +11,9 @@ by the Rust core and parser packages.
   payload: ids, roles, labels, actions, availability, blocked reasons, cache
   keys, required state, group context, input metadata, descriptions, value and
   checked state, ARIA expanded/pressed/selected cues, ARIA current/controls/
-  haspopup relationship cues, and ARIA menu checkbox/radio targets.
+  haspopup relationship cues, validation constraints (`autocomplete`,
+  `minlength`, `maxlength`, `pattern`, `invalid`), and ARIA menu
+  checkbox/radio targets.
 
 Browser Use, LangChain, Vercel AI, Python parser, Node parser, Python SDK, and
 Go SDK tests consume the expectation file directly. When action-plan semantics

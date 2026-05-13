@@ -204,12 +204,17 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append("[readonly]")
     if attrs.get("value"):
         flags.append(f'[value="{attrs["value"]}"]')
+    if attrs.get("autocomplete"):
+        flags.append(f'[autocomplete="{attrs["autocomplete"]}"]')
+    for constraint_key in ("minlength", "maxlength", "pattern"):
+        if constraint_key in attrs:
+            flags.append(f'[{constraint_key}="{attrs[constraint_key]}"]')
     if "checked" in attrs:
         flags.append(f'[checked="{attrs["checked"]}"]')
     elif isinstance(attrs.get("aria"), dict) and "checked" in attrs["aria"]:
         flags.append(f'[checked="{attrs["aria"]["checked"]}"]')
     if isinstance(attrs.get("aria"), dict):
-        for state_key in ("expanded", "pressed", "selected", "current", "controls", "haspopup"):
+        for state_key in ("expanded", "pressed", "selected", "current", "controls", "haspopup", "invalid"):
             if state_key in attrs["aria"]:
                 flags.append(f'[{state_key}="{attrs["aria"][state_key]}"]')
     if attrs.get("group"):

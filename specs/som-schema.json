@@ -189,6 +189,19 @@
             },
             "name": { "type": "string" },
             "autocomplete": { "type": "string" },
+            "minlength": {
+              "oneOf": [
+                { "type": "integer" },
+                { "type": "string" }
+              ]
+            },
+            "maxlength": {
+              "oneOf": [
+                { "type": "integer" },
+                { "type": "string" }
+              ]
+            },
+            "pattern": { "type": "string" },
             "description": { "type": "string" },
             "aria": { "$ref": "#/$defs/AriaState" },
             "has_srcdoc": { "type": "boolean" },
@@ -263,6 +276,12 @@
         "hidden": { "type": "boolean" },
         "controls": { "type": "string" },
         "haspopup": {
+          "oneOf": [
+            { "type": "boolean" },
+            { "type": "string" }
+          ]
+        },
+        "invalid": {
           "oneOf": [
             { "type": "boolean" },
             { "type": "string" }

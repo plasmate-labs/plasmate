@@ -100,6 +100,9 @@ export interface SomElementAttrs {
   tabindex?: number | string;
   name?: string;
   autocomplete?: string;
+  minlength?: number | string;
+  maxlength?: number | string;
+  pattern?: string;
   description?: string;
   aria?: AriaState;
   has_srcdoc?: boolean;
@@ -120,6 +123,7 @@ export interface AriaState {
   hidden?: boolean;
   controls?: string;
   haspopup?: boolean | string;
+  invalid?: boolean | string;
 }
 
 export interface SomShadowRoot {

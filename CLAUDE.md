@@ -49,6 +49,43 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-13T21:11:16Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first. The automation worktree
+  still cannot write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate39/FETCH_HEAD`
+  (`Operation not permitted`). Retrying from the primary checkout could not
+  resolve `github.com` over SSH (`ssh: Could not resolve hostname github.com:
+  -65563`), so this run continued from locally available branch state
+  `codex/plasmate-improvements-2026-05-13-control-state` at `c6d39a7`.
+- Market direction: current official docs and product pages still validate
+  Plasmate's local-first action-state wedge. Playwright MCP snapshots expose
+  fresh accessibility refs, Stagehand documents `observe()` and local/server
+  action caching, Browserbase sells cached selectors plus observability, and
+  Browser Use/Firecrawl continue to package browser sessions for repeated form
+  work. The product response remains richer portable SOM/action menus, not a
+  hosted-browser pivot.
+- Code changes: Rust SOM now preserves form validation constraints
+  (`minlength`, `maxlength`, `pattern`) and `aria-invalid`. Python/Node parser
+  packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI action
+  plans now expose `autocomplete`, length constraints, `pattern`, and
+  `invalid` without changing deterministic `cache_key` values.
+- Fixture and docs changes: the shared action-availability SOM and expected
+  manifest now assert autocomplete, length constraints, pattern, and invalid
+  state across parser, SDK, and framework outputs. PRD, roadmap, SOM schema,
+  SOM spec, adapter docs, SDK docs, generated website docs, and this running
+  state were updated with the validation-state rationale and next conformance
+  step.
+- Verification: `cargo build` passed with existing warnings;
+  `cargo test --lib -- --test-threads=1` passed 246 tests; focused
+  `cargo test --test som_compiler_test test_form_state_values_and_readonly_are_preserved
+  -- --test-threads=1` passed; `./scripts/action-manifest-conformance.sh
+  --quick` passed; `./scripts/action-manifest-conformance.sh --full` passed;
+  `node website/build.mjs` rebuilt 39 pages; `git diff --check` passed.
+  Full `cargo test -- --test-threads=1` still fails only in
+  `tests/awp_integration_test.rs` because sandboxed local listener setup
+  returns `Operation not permitted`.
+
 ### 2026-05-13T20:08:54Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first. The automation worktree

@@ -52,9 +52,13 @@ export interface ActionPlanItem {
   label?: string;
   href?: string;
   name?: string;
+  autocomplete?: string;
   input_type?: string;
   value?: string;
   placeholder?: string;
+  minlength?: number | string;
+  maxlength?: number | string;
+  pattern?: string;
   description?: string;
   checked?: boolean | string;
   expanded?: boolean;
@@ -63,6 +67,7 @@ export interface ActionPlanItem {
   current?: boolean | string;
   controls?: string;
   haspopup?: boolean | string;
+  invalid?: boolean | string;
   required?: boolean;
   readonly?: boolean;
   disabled?: boolean;
@@ -115,9 +120,13 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (label) item.label = label;
     if (el.attrs?.href) item.href = el.attrs.href;
     if (el.attrs?.name) item.name = el.attrs.name;
+    if (el.attrs?.autocomplete) item.autocomplete = el.attrs.autocomplete;
     if (el.attrs?.input_type) item.input_type = el.attrs.input_type;
     if (el.attrs?.value) item.value = el.attrs.value;
     if (el.attrs?.placeholder) item.placeholder = el.attrs.placeholder;
+    if (el.attrs?.minlength !== undefined) item.minlength = el.attrs.minlength;
+    if (el.attrs?.maxlength !== undefined) item.maxlength = el.attrs.maxlength;
+    if (el.attrs?.pattern) item.pattern = el.attrs.pattern;
     if (el.attrs?.description) item.description = el.attrs.description;
     if (el.attrs?.checked !== undefined) {
       item.checked = el.attrs.checked;
@@ -130,6 +139,7 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.aria?.current !== undefined) item.current = el.attrs.aria.current;
     if (el.attrs?.aria?.controls !== undefined) item.controls = el.attrs.aria.controls;
     if (el.attrs?.aria?.haspopup !== undefined) item.haspopup = el.attrs.aria.haspopup;
+    if (el.attrs?.aria?.invalid !== undefined) item.invalid = el.attrs.aria.invalid;
     if (el.attrs?.required !== undefined) item.required = el.attrs.required;
     if (el.attrs?.readonly !== undefined) item.readonly = el.attrs.readonly;
     if (el.attrs?.disabled !== undefined) {

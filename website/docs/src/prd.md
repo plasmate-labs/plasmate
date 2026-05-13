@@ -78,6 +78,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-13 ARIA relationship read: current docs add one more retention signal. Playwright MCP still binds refs to fresh snapshots, Stagehand and Browserbase reward cached actions that can be validated before reuse, Browser Use Cloud sells profiles/CDP sessions for repeated workflows, Firecrawl Interact keeps browser state alive after scrape, and Cloudflare Browser Run/WebMCP is testing typed page-provided tools. Plasmate should not pivot into hosted execution, but action menus should expose relationship state (`aria-current`, `aria-controls`, and `aria-haspopup`) so agents know which target is already current, what panel a control affects, and whether an action opens a menu, listbox, or dialog.
 
+2026-05-13 validation-constraint read: current browser-agent docs keep making the same distinction: refs and cached actions are only useful when they carry enough live form context to validate before replay. Playwright MCP snapshots are fresh accessibility state, Stagehand `observe()` actions can be cached locally or on Browserbase, and Browser Use/Firecrawl keep selling stateful sessions around repetitive form workflows. Plasmate should keep the local-first wedge by carrying input guidance and validation state in compact action menus: `autocomplete`, `minlength`, `maxlength`, `pattern`, and `aria-invalid` should mean the same thing in Rust, schema, parser packages, SDKs, and adapters.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -93,6 +95,9 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-13:
+  - The Rust SOM compiler and JSON Schema now preserve form-entry constraints (`minlength`, `maxlength`, `pattern`) plus `aria-invalid`, extending current action-state fidelity into validation state.
+  - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `autocomplete`, length constraints, `pattern`, and `invalid` without changing deterministic `cache_key` values.
+  - The shared action-availability manifest now asserts validation constraints and invalid state across parser, SDK, and framework outputs.
   - The Rust SOM compiler and JSON Schema now preserve `aria-controls` and `aria-haspopup` in `attrs.aria`, joining existing `aria-current` support for browser-like action relationship state.
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan helpers now expose `current`, `controls`, and `haspopup` cues without changing deterministic `cache_key` generation.
   - The shared action-availability manifest now asserts current-page links, controlled popup targets, and popup type cues across parser, SDK, and framework surfaces.
@@ -221,6 +226,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Add dependency-cache tuning for the action-manifest job so cross-runtime conformance stays cheap enough to keep required.
 - Wire `016-action-semantics` into parser/SDK and adapter conformance runners so search landmarks, fallback-token ARIA roles, menu roles, ARIA-hidden casing, and visibility-hidden variants stay synchronized outside Rust.
 - Promote ARIA relationship-state cases from the shared action availability manifest into the broader `015-action-state`/`016-action-semantics` conformance suites.
+- Add compiler/schema conformance for form validation constraints and `aria-invalid`, then promote the shared manifest cases into broader parser, SDK, and adapter fixtures.
 - Promote fieldset/legend group semantics into shared conformance fixtures alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched action-plan metadata.
 - Promote the new SDK/parser shadow-root and Go action-plan tests into shared conformance fixtures that run against every adapter before release.

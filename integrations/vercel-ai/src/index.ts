@@ -39,6 +39,10 @@ export interface PlasmateActionTarget {
   required?: boolean
   readonly?: boolean
   description?: string
+  autocomplete?: string
+  minlength?: number | string
+  maxlength?: number | string
+  pattern?: string
   checked?: boolean | string
   expanded?: boolean
   pressed?: boolean
@@ -46,6 +50,7 @@ export interface PlasmateActionTarget {
   current?: boolean | string
   controls?: string
   haspopup?: boolean | string
+  invalid?: boolean | string
   href?: string
   input_type?: string
   value?: string
@@ -106,7 +111,7 @@ export interface PreparePlasmateActionPlanOptions {
 export const plasmateActionGuidance =
   'Use Plasmate SOM element ids for browser actions. Treat action targets ' +
   'with enabled=false or blocked_reason as unavailable, and prefer ' +
-  'cache_key, required, readonly, value, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
+  'cache_key, required, readonly, value, autocomplete, pattern, minlength, maxlength, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
 
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined
@@ -200,9 +205,19 @@ function collectSomElements(elements: readonly PlasmateSomElement[] = []) {
 function copyStringAttr(
   item: PlasmateActionTarget,
   attrs: Record<string, unknown>,
-  key: 'href' | 'input_type' | 'value' | 'name' | 'placeholder' | 'description' | 'group'
+  key: 'href' | 'input_type' | 'value' | 'name' | 'placeholder' | 'description' | 'group' | 'autocomplete' | 'pattern'
 ) {
   if (typeof attrs[key] === 'string' && attrs[key].length > 0) {
+    item[key] = attrs[key]
+  }
+}
+
+function copyStringOrNumberAttr(
+  item: PlasmateActionTarget,
+  attrs: Record<string, unknown>,
+  key: 'minlength' | 'maxlength'
+) {
+  if (typeof attrs[key] === 'string' || typeof attrs[key] === 'number') {
     item[key] = attrs[key]
   }
 }
@@ -231,7 +246,11 @@ export function extractPlasmateActionTargets(
       copyStringAttr(target, attrs, 'input_type')
       copyStringAttr(target, attrs, 'value')
       copyStringAttr(target, attrs, 'name')
+      copyStringAttr(target, attrs, 'autocomplete')
       copyStringAttr(target, attrs, 'placeholder')
+      copyStringOrNumberAttr(target, attrs, 'minlength')
+      copyStringOrNumberAttr(target, attrs, 'maxlength')
+      copyStringAttr(target, attrs, 'pattern')
       copyStringAttr(target, attrs, 'description')
       copyStringAttr(target, attrs, 'group')
 
@@ -269,6 +288,10 @@ export function extractPlasmateActionTargets(
         const haspopup = (aria as Record<string, unknown>).haspopup
         if (typeof haspopup === 'boolean' || typeof haspopup === 'string') {
           target.haspopup = haspopup
+        }
+        const invalid = (aria as Record<string, unknown>).invalid
+        if (typeof invalid === 'boolean' || typeof invalid === 'string') {
+          target.invalid = invalid
         }
       }
 
@@ -340,9 +363,17 @@ export function formatPlasmateActionPlan(
       const readonly = target.readonly ? ' [readonly]' : ''
       const inputType = target.input_type ? ` [type=${target.input_type}]` : ''
       const value = target.value ? ` [value=${target.value}]` : ''
+      const autocomplete = target.autocomplete
+        ? ` [autocomplete=${target.autocomplete}]`
+        : ''
       const placeholder = target.placeholder
         ? ` [placeholder=${target.placeholder}]`
         : ''
+      const minlength =
+        typeof target.minlength !== 'undefined' ? ` [minlength=${target.minlength}]` : ''
+      const maxlength =
+        typeof target.maxlength !== 'undefined' ? ` [maxlength=${target.maxlength}]` : ''
+      const pattern = target.pattern ? ` [pattern=${target.pattern}]` : ''
       const checked =
         typeof target.checked !== 'undefined' ? ` [checked=${target.checked}]` : ''
       const expanded =
@@ -356,12 +387,14 @@ export function formatPlasmateActionPlan(
       const controls = target.controls ? ` [controls=${target.controls}]` : ''
       const haspopup =
         typeof target.haspopup !== 'undefined' ? ` [haspopup=${target.haspopup}]` : ''
+      const invalid =
+        typeof target.invalid !== 'undefined' ? ` [invalid=${target.invalid}]` : ''
       const group = target.group ? ` [group=${target.group}]` : ''
       const description = target.description
         ? ` [description=${target.description}]`
         : ''
 
-      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${readonly}${inputType}${value}${placeholder}${checked}${expanded}${pressed}${selected}${current}${controls}${haspopup}${group}${description}`
+      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${readonly}${inputType}${value}${autocomplete}${placeholder}${minlength}${maxlength}${pattern}${checked}${expanded}${pressed}${selected}${current}${controls}${haspopup}${invalid}${group}${description}`
     })
     .join('\n')
 }

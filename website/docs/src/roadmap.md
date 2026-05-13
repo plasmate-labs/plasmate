@@ -246,6 +246,14 @@ The newest competitor docs reinforce that reusable action menus need relationshi
 - **Controlled panels are action context**: `aria-controls` should travel into action targets so agents can connect a disclosure or filter button to the affected region.
 - **Popup type shapes the next step**: `aria-haspopup` should be visible across SDKs and prompt renderers so agents know whether a click opens a menu, listbox, tree, grid, or dialog without raw DOM recovery.
 
+### 2026-05-13 Validation-Constraint Action Menu Adjustment
+
+The newest competitor docs keep making cached actions depend on validation state, not just target identity. Playwright MCP refs are current-snapshot handles, Stagehand can cache `observe()`/action results locally or on Browserbase, and Browser Use/Firecrawl package session continuity around repetitive forms. Plasmate should keep the local-first wedge by making compact action plans carry the field constraints agents need before reusing a cached type action.
+
+- **Autocomplete is planning context**: action targets should expose `autocomplete` tokens so agents can pick the right credential/profile data without re-walking SOM attrs.
+- **Validation constraints reduce bad retries**: `minlength`, `maxlength`, and `pattern` should travel through Rust, schema, SDKs, parser packages, and adapters so agents know what a field accepts before typing.
+- **Invalid state blocks blind replay**: `aria-invalid` should surface as compact `invalid` state without changing target `cache_key` values, letting cached plans stay stable while validation drift remains visible.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -385,12 +393,16 @@ The newest competitor docs reinforce that reusable action menus need relationshi
 - [x] Rust compiler and SOM schema preserve ARIA controls and haspopup relationship state
 - [x] Compact action plans expose current, controls, and haspopup cues across parser packages, SDKs, and framework adapters
 - [x] Shared action-availability manifest asserts ARIA relationship cues without changing deterministic action cache keys
+- [x] Rust compiler and SOM schema preserve form validation constraints and ARIA invalid state
+- [x] Compact action plans expose autocomplete, minlength, maxlength, pattern, and invalid cues across parser packages, SDKs, and framework adapters
+- [x] Shared action-availability manifest asserts validation constraints without changing deterministic action cache keys
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
 - [ ] Add cross-adapter fixtures for enriched compact action-plan metadata
 - [ ] Promote ARIA relationship-state cases into the broader action-state/action-semantics conformance suites
+- [ ] Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures
 - [ ] Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners
 - [x] Promote adapter availability checks into shared cross-adapter fixtures
