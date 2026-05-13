@@ -85,9 +85,11 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   --all-targets` passed with existing warnings. Full `cargo test` was blocked
   in `tests/awp_integration_test.rs` because sandboxed `TcpListener::bind("127.0.0.1:0")`
   returned `Operation not permitted`; unit coverage passed separately.
-- Commit/push state: pending commit and remote push attempt after this state
-  update. If DNS remains unavailable, the commit will stay local until GitHub
-  SSH resolution returns.
+- Commit/push state: committed `429d73a`
+  (`chore: add action manifest release gate`), pushed review branch
+  `codex/plasmate-improvements-2026-05-13-vercel-action-menu`, and
+  fast-forwarded remote `master` to `429d73a`. A follow-up docs-state commit
+  will record this successful push in `CLAUDE.md`.
 
 ### 2026-05-13T11:12:00Z - Plasmate Improvements Automation
 
