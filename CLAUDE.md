@@ -80,7 +80,11 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   cargo test --lib -- --test-threads=1` passed 246 tests; focused
   `cargo test --test som_compiler_test test_form_state_values_and_readonly_are_preserved
   -- --test-threads=1` passed; `git diff --check` passed.
-- Commit/push state: pending at the time of this state entry.
+- Commit/push state: implementation commit `8a817ad`
+  (`chore: preserve readonly action state`) was pushed to
+  `codex/plasmate-improvements-2026-05-13-control-state` and fast-forwarded
+  remote `master` from `0a02785` to `8a817ad`. A follow-up state-only commit
+  records the successful push result.
 
 ### 2026-05-13T19:08:47Z - Plasmate Improvements Automation
 
