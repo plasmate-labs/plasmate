@@ -449,6 +449,45 @@ fn test_aria_describedby_sets_accessible_description_attr() {
 }
 
 #[test]
+fn test_disabled_and_aria_required_state_promoted_for_action_plans() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Action State</title></head>
+<body><main>
+    <textarea aria-label="Notes" disabled></textarea>
+    <select aria-label="Plan" disabled><option>Team</option></select>
+    <div role="textbox" aria-label="Approval code" aria-required="true"></div>
+    <div role="button" aria-label="Archive" aria-disabled="true"></div>
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let elems = all_elements(&som);
+
+    let notes = elems
+        .iter()
+        .find(|e| e.role == ElementRole::Textarea)
+        .expect("textarea should be preserved");
+    assert_eq!(notes.attrs.as_ref().unwrap()["disabled"], true);
+
+    let plan = elems
+        .iter()
+        .find(|e| e.role == ElementRole::Select)
+        .expect("select should be preserved");
+    assert_eq!(plan.attrs.as_ref().unwrap()["disabled"], true);
+
+    let approval = elems
+        .iter()
+        .find(|e| e.label.as_deref() == Some("Approval code"))
+        .expect("ARIA textbox should be preserved");
+    assert_eq!(approval.attrs.as_ref().unwrap()["required"], true);
+
+    let archive = elems
+        .iter()
+        .find(|e| e.label.as_deref() == Some("Archive"))
+        .expect("ARIA button should be preserved");
+    assert_eq!(archive.attrs.as_ref().unwrap()["disabled"], true);
+}
+
+#[test]
 fn test_shadow_root_elements_are_counted_in_meta() {
     let html = r#"<!DOCTYPE html>
 <html><head><title>Shadow Count</title></head>

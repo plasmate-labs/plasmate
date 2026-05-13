@@ -1,6 +1,6 @@
 # PRD: Agent Stickiness and Roadmap Direction
 
-Last updated: 2026-05-12
+Last updated: 2026-05-13
 
 ## Product Thesis
 
@@ -40,6 +40,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-12 action-plan read: competitors are turning page understanding into validated action menus. Playwright MCP snapshots teach agents to select refs from the current accessibility tree, Stagehand `observe()` returns executable actions that can be cached, Firecrawl's MCP surface spans scrape/search/extract plus browser interaction, and Cloudflare Browser Run is layering MCP/CDP/WebMCP onto hosted sessions. Plasmate should keep hosted scale optional and make local SOM action plans richer.
 
+2026-05-13 state-fidelity read: 2026 browser-agent commentary keeps converging on deterministic execution plus selective AI planning. Playwright/Playwright MCP owns stable execution and snapshots, Stagehand-style `observe()` APIs make ambiguous state cacheable, Browserbase/Browser Use/Skyvern compete on managed sessions and traces, and WebMCP remains a standards watch item. Plasmate should stay local-first and make the portable SOM action-state contract more exact across disabled, required, grouped, described, and shadow-root controls.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -54,6 +56,12 @@ The project already spans a large number of package and integration surfaces: Ru
 
 ## Current Run Changes
 
+- 2026-05-13:
+  - Native `<textarea disabled>` controls now preserve `attrs.disabled`.
+  - Native `<select disabled>` controls now preserve `attrs.disabled`.
+  - ARIA widgets with `aria-required="true"` now promote `attrs.required` for action-plan parity with native controls.
+  - ARIA widgets with `aria-disabled="true"` now promote `attrs.disabled` while preserving nested `attrs.aria.disabled`.
+  - Added focused compiler coverage for disabled textarea/select controls and ARIA required/disabled custom controls.
 - 2026-05-12:
   - ARIA landmark role parsing is now case-insensitive for uppercase production markup.
   - Declarative shadow DOM extraction now recurses through wrapper containers so nested web-component controls survive.
@@ -106,7 +114,7 @@ The project already spans a large number of package and integration surfaces: Ru
 
 - Implement selector-aware SOM cache entries for `main`, `form`, and `#id` prompts.
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked or selected an element.
-- Add conformance cases for ARIA-heavy SaaS pages and compare output against Playwright MCP snapshots.
+- Add conformance cases for ARIA-heavy SaaS pages, especially disabled and required custom controls, and compare output against Playwright MCP snapshots.
 - Promote fieldset/legend group semantics into shared conformance fixtures alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched action-plan metadata.
 - Promote the new SDK/parser shadow-root and Go action-plan tests into shared conformance fixtures that run against every adapter before release.

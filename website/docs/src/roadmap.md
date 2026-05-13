@@ -94,6 +94,14 @@ The browser-agent category is turning structured page state into validated actio
 - **Web components are first-class surfaces**: shadow-root extraction must recurse through wrapper containers.
 - **Browser tolerance beats ideal markup**: ARIA roles and landmarks should be parsed with production casing tolerance.
 
+### 2026-05-13 State Fidelity Adjustment
+
+Current trend research reinforces a conservative wedge: production teams want deterministic browser execution with selective AI planning, structured snapshots, persistent state, and traceability. Playwright/Playwright MCP, Stagehand, Browserbase, Browser Use, Skyvern, Firecrawl, and emerging WebMCP work all validate the same direction for Plasmate: richer local SOM/action state before hosted scale.
+
+- **State flags are action contracts**: disabled and required state must land in the same top-level attrs no matter whether markup is native HTML or ARIA-heavy SaaS UI.
+- **Action menus should avoid dead controls**: compact targets are stickier when unavailable fields and dropdowns are obvious without raw DOM recovery.
+- **Conformance should chase SaaS edge cases**: disabled selects/textareas, ARIA required widgets, ARIA disabled widgets, field groups, and descriptions should become shared fixtures across SDKs and integrations.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -182,10 +190,15 @@ The browser-agent category is turning structured page state into validated actio
 - [x] Case-insensitive ARIA landmark role parsing for SOM regions
 - [x] Nested declarative shadow-root extraction through non-semantic wrappers
 - [x] Enriched compact action plans with placeholder, description, required, disabled, and group metadata across Python/Node parser packages and Go SDK
+- [x] Disabled native textarea controls preserve `attrs.disabled`
+- [x] Disabled native select controls preserve `attrs.disabled`
+- [x] `aria-required="true"` promotes `attrs.required` for custom controls
+- [x] `aria-disabled="true"` promotes `attrs.disabled` for custom controls while retaining ARIA state
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
 - [ ] Add cross-adapter fixtures for enriched compact action-plan metadata
 - [ ] Add cross-adapter accessible-description fixtures
+- [ ] Add cross-adapter fixtures for disabled/required ARIA and native form state
 - [ ] Promote action-plan helper parity into framework integrations
 - [ ] WebMCP/watchlist research spike: track whether browser-native tool exposure changes SOM adapter strategy

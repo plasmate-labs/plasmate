@@ -1,6 +1,6 @@
 # Plasmate PRD: Agent Stickiness and Roadmap Direction
 
-Last updated: 2026-05-12
+Last updated: 2026-05-13
 
 ## Product Thesis
 
@@ -132,6 +132,17 @@ optional and make local SOM action plans richer: every compact target should
 carry enough state, labels, descriptions, and group context for an agent to
 reuse a plan without traversing raw DOM again.
 
+2026-05-13 state-fidelity read: 2026 browser-agent commentary keeps converging
+on the same split. Playwright and Playwright MCP remain the deterministic
+execution layer, Stagehand-style `observe()` APIs turn ambiguous page state into
+cacheable actions, Browserbase/Browser Use/Skyvern compete on managed sessions,
+profiles, CAPTCHA/proxy support, and traces, while WebMCP-style structured tool
+exposure is emerging as a standardization watch item. Plasmate should not pivot
+into managed browser infrastructure. The sticky wedge is still a local,
+portable SOM/action state contract, and the next reliability gains are in small
+state fidelity fixes: disabled, required, grouped, described, and shadow-root
+controls must mean the same thing to Rust, MCP, SDKs, parsers, and integrations.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -157,6 +168,20 @@ and adapter docs over one-off integration logic.
 
 ## Current Run Changes
 
+- 2026-05-13:
+  - Native `<textarea disabled>` controls now preserve `attrs.disabled`, so
+    compact action plans can avoid suggesting type/clear work on unavailable
+    fields.
+  - Native `<select disabled>` controls now preserve `attrs.disabled`, keeping
+    dropdown availability visible to SDK/parser action-plan helpers.
+  - ARIA widgets with `aria-required="true"` now promote `attrs.required`,
+    making custom SaaS controls queryable by the same state contract as native
+    required inputs.
+  - ARIA widgets with `aria-disabled="true"` now promote `attrs.disabled`
+    while still preserving the nested `attrs.aria.disabled` state for
+    accessibility parity.
+  - Added focused compiler coverage for disabled textarea/select controls and
+    ARIA required/disabled custom controls.
 - 2026-05-12:
   - ARIA landmark role parsing is now case-insensitive, so uppercase
     `role="MAIN"` and `role="NAVIGATION"` still compile into proper SOM
@@ -256,8 +281,9 @@ and adapter docs over one-off integration logic.
   prompts.
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked
   or selected an element.
-- Add conformance cases for ARIA-heavy SaaS pages and compare output against
-  Playwright MCP snapshots.
+- Add conformance cases for ARIA-heavy SaaS pages, especially disabled and
+  required custom controls, and compare output against Playwright MCP
+  snapshots.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched

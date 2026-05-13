@@ -49,6 +49,41 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-13T00:47:00Z - Plasmate Improvements Automation
+
+- Git sync: attempted the requested latest pull first with `git fetch --prune
+  origin`, but this sandbox cannot write the parent repository worktree
+  metadata at `/Users/steve/Git/plasmate/.git/worktrees/plasmate19/FETCH_HEAD`
+  (`Operation not permitted`). Continued from the locally known `origin/master`
+  at `d0caf2c`.
+- Market direction: 2026 browser-agent research still points to hybrid
+  deterministic execution plus selective AI planning. Playwright/Playwright MCP
+  anchor structured snapshots and stable execution, Stagehand-style
+  `observe()` APIs turn ambiguous state into cacheable actions, Browserbase,
+  Browser Use, Skyvern, and Firecrawl compete on managed sessions, profiles,
+  proxies/CAPTCHA, and traces, and WebMCP remains a standards watch item. The
+  Plasmate direction should remain local-first SOM/action state fidelity rather
+  than hosted browser infrastructure.
+- Code changes: Rust SOM compilation now preserves `attrs.disabled` for native
+  disabled `<textarea>` and `<select>` controls, promotes
+  `aria-required="true"` to top-level `attrs.required`, and promotes
+  `aria-disabled="true"` to top-level `attrs.disabled` while retaining nested
+  `attrs.aria.disabled`.
+- Tests/docs changes: added compiler coverage for disabled textarea/select
+  controls and ARIA required/disabled custom controls. Updated PRD, roadmap,
+  website docs source, and generated website docs with the state-fidelity
+  market read and next conformance priorities.
+- Verification: targeted `rustfmt --check src/som/compiler.rs
+  tests/som_compiler_test.rs` passed; `cargo build` passed with existing
+  warnings; focused state test passed; full `cargo test --test
+  som_compiler_test -- --nocapture` passed 53 tests; `node website/build.mjs`
+  rebuilt 39 pages after temporarily pointing this worktree at the primary
+  checkout's existing `website/node_modules`; and `git diff --check` passed.
+  Full `cargo test` passed 245 lib tests and 5 main/MCP tests, then failed only
+  in `tests/awp_integration_test.rs` because sandbox local socket setup is
+  denied with `Operation not permitted`.
+- Commit/push state: pending commit and remote update from this run.
+
 ### 2026-05-12T23:41:02Z - Plasmate Improvements Automation
 
 - Git sync: attempted the requested latest pull first with `git fetch --prune

@@ -1492,6 +1492,16 @@ fn resolve_description(attrs: &[(String, String)], label_index: &LabelIndex) -> 
         .filter(|value| !value.is_empty())
 }
 
+fn has_attr(attrs: &[(String, String)], name: &str) -> bool {
+    attrs.iter().any(|(n, _)| n == name)
+}
+
+fn has_aria_true(attrs: &[(String, String)], name: &str) -> bool {
+    attrs
+        .iter()
+        .any(|(n, v)| n == name && v.eq_ignore_ascii_case("true"))
+}
+
 fn build_element_attrs(
     tag: &str,
     attrs: &[(String, String)],
@@ -1521,14 +1531,14 @@ fn build_element_attrs(
             if let Some(ph) = attrs.iter().find(|(n, _)| n == "placeholder") {
                 map.insert("placeholder".into(), json!(ph.1));
             }
-            if attrs.iter().any(|(n, _)| n == "required") {
+            if has_attr(attrs, "required") {
                 map.insert("required".into(), json!(true));
             }
-            if attrs.iter().any(|(n, _)| n == "disabled") {
+            if has_attr(attrs, "disabled") {
                 map.insert("disabled".into(), json!(true));
             }
             if input_type == "checkbox" || input_type == "radio" {
-                if attrs.iter().any(|(n, _)| n == "checked") {
+                if has_attr(attrs, "checked") {
                     map.insert("checked".into(), json!(true));
                 }
             }
@@ -1542,12 +1552,15 @@ fn build_element_attrs(
             if let Some(ph) = attrs.iter().find(|(n, _)| n == "placeholder") {
                 map.insert("placeholder".into(), json!(ph.1));
             }
-            if attrs.iter().any(|(n, _)| n == "required") {
+            if has_attr(attrs, "required") {
                 map.insert("required".into(), json!(true));
+            }
+            if has_attr(attrs, "disabled") {
+                map.insert("disabled".into(), json!(true));
             }
         }
         "button" => {
-            if attrs.iter().any(|(n, _)| n == "disabled") {
+            if has_attr(attrs, "disabled") {
                 map.insert("disabled".into(), json!(true));
             }
         }
@@ -1556,11 +1569,14 @@ fn build_element_attrs(
             if !options.is_empty() {
                 map.insert("options".into(), json!(options));
             }
-            if attrs.iter().any(|(n, _)| n == "multiple") {
+            if has_attr(attrs, "multiple") {
                 map.insert("multiple".into(), json!(true));
             }
-            if attrs.iter().any(|(n, _)| n == "required") {
+            if has_attr(attrs, "required") {
                 map.insert("required".into(), json!(true));
+            }
+            if has_attr(attrs, "disabled") {
+                map.insert("disabled".into(), json!(true));
             }
         }
         "h1" => {
@@ -1624,12 +1640,12 @@ fn build_element_attrs(
             if let Some(legend) = extract_legend_text(node) {
                 map.insert("legend".into(), json!(legend));
             }
-            if attrs.iter().any(|(n, _)| n == "disabled") {
+            if has_attr(attrs, "disabled") {
                 map.insert("disabled".into(), json!(true));
             }
         }
         "details" => {
-            let open = attrs.iter().any(|(n, _)| n == "open");
+            let open = has_attr(attrs, "open");
             map.insert("open".into(), json!(open));
             // Extract summary text from the first <summary> child
             let summary_text = extract_summary_text(node);
@@ -1695,6 +1711,12 @@ fn build_element_attrs(
     }
     if let Some(description) = resolve_description(attrs, &ctx.label_index) {
         map.insert("description".into(), json!(description));
+    }
+    if has_aria_true(attrs, "aria-required") {
+        map.insert("required".into(), json!(true));
+    }
+    if has_aria_true(attrs, "aria-disabled") {
+        map.insert("disabled".into(), json!(true));
     }
 
     // ARIA state preservation: capture common ARIA state attributes
