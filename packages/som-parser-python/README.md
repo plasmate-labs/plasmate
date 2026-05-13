@@ -107,7 +107,7 @@ print(som.model_dump_json(indent=2))
 | `find_by_text(som, text, exact=False) -> list[SomElement]` | Search elements by text content |
 | `find_by_action(som, action) -> list[SomElement]` | Find elements that expose a specific action |
 | `find_by_hint(som, hint) -> list[SomElement]` | Find elements tagged with a semantic hint |
-| `get_action_plan(som) -> list[dict]` | Return compact `{id, cache_key, role, actions, enabled, label}` action targets |
+| `get_action_plan(som) -> list[dict]` | Return compact `{id, cache_key, role, actions, enabled, label}` action targets with availability and live state cues |
 | `get_action_plan_cache_key(item) -> str` | Return a deterministic key for caching or comparing an action target |
 | `get_interactive_elements(som) -> list[SomElement]` | Get elements that have actions |
 | `get_links(som) -> list[dict]` | Extract all links as `{text, href, id}` dicts |

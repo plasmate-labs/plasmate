@@ -230,6 +230,14 @@ The latest docs keep reinforcing that reusable actions are only sticky when stat
 - **Checked state must cross custom controls**: native `checked` attrs and ARIA `checked` state should normalize into one compact action-plan field for checkbox, radio, menuitemcheckbox, and menuitemradio targets.
 - **Cache keys stay target-focused**: live value/checked state should be visible to agents without changing deterministic target `cache_key` values, preserving local action memory while still exposing state drift.
 
+### 2026-05-13 ARIA State-Cues Adjustment
+
+Current competitor movement keeps raising the value of state-aware action menus. Playwright MCP snapshots are valid only against the current page, Stagehand v3 action caches need local or Browserbase validation before reuse, Browser Run/WebMCP points toward typed page actions, and hosted browser platforms sell traces and persistent sessions around the same drift problem. Plasmate should keep the local-first wedge by making compact SOM targets carry the ARIA state agents need before they choose a cached action.
+
+- **Expanded state prevents stale menu actions**: action plans should surface `aria-expanded` so agents know whether disclosure menus and comboboxes already expose the target content.
+- **Pressed state matters for toggle buttons**: `aria-pressed` should travel with compact targets just like `checked`, because repeated workflows often need to avoid toggling an already-correct state.
+- **Selected state is reusable context**: custom tabs/options using `aria-selected` should expose that state across parser packages, SDKs, and framework prompt renderers without changing target cache keys.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -363,12 +371,15 @@ The latest docs keep reinforcing that reusable actions are only sticky when stat
 - [x] Compact action plans expose non-empty control `value` fields across parser packages, SDKs, and framework adapters
 - [x] Compact action plans normalize native and ARIA checked state across parser packages, SDKs, and framework adapters
 - [x] Shared action-availability manifest asserts value and checked state without changing deterministic action cache keys
+- [x] Compact action plans expose ARIA expanded, pressed, and selected state across parser packages, SDKs, and framework adapters
+- [x] Browser Use, LangChain, and Vercel AI prompt renderers include expanded/pressed/selected action-state cues
+- [x] Shared action-availability manifest asserts ARIA state cues without changing deterministic action cache keys
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
 - [ ] Add cross-adapter fixtures for enriched compact action-plan metadata
-- [ ] Extend compact action-plan state with ARIA expanded, pressed, and selected cues
+- [ ] Promote ARIA expanded/pressed/selected cases into Rust compiler and schema conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures
 - [ ] Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners
 - [x] Promote adapter availability checks into shared cross-adapter fixtures

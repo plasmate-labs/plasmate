@@ -83,8 +83,8 @@ for action in actions:
 
 Browser Use page contexts are tested against the shared
 `integrations/fixtures/action-availability.som.json` fixture so availability,
-cache-key, required, group, type, and description cues stay aligned with other
-adapters.
+cache-key, required, group, type, value, checked, expanded, pressed, selected,
+and description cues stay aligned with other adapters.
 
 ### Markdown extraction
 

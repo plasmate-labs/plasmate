@@ -49,6 +49,46 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-13T18:11:08Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first. The automation worktree
+  still cannot write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate36/FETCH_HEAD`
+  (`Operation not permitted`), and retrying from the primary checkout could
+  not resolve `github.com` over SSH (`ssh: Could not resolve hostname
+  github.com: -65563`). This run continued from locally known
+  `origin/master`/`HEAD` `c9876d8`.
+- Market direction: current docs continue to favor state-aware reusable action
+  menus over a hosted-browser pivot. Playwright MCP snapshots are valid only
+  against fresh page state, Stagehand v3 documents local and Browserbase action
+  caches that need validation, Firecrawl/Browser Use sell persistent sessions
+  around changing forms, and Cloudflare Browser Run/WebMCP is pushing typed
+  website actions. Plasmate's sticky response remains local-first SOM action
+  state with cross-adapter conformance.
+- Code changes: Python/Node parser packages, Python/Node/Go SDKs, Browser Use,
+  LangChain, and Vercel AI action-plan helpers now expose ARIA `expanded`,
+  `pressed`, and `selected` cues for interactive targets without changing
+  deterministic action `cache_key` values. Browser Use, LangChain, and Vercel
+  AI prompt renderers now include those state cues alongside value and checked
+  state.
+- Fixture and docs changes: the shared action-availability SOM fixture and
+  expected manifest now assert expanded, pressed, and selected state across
+  parser, SDK, and framework surfaces. Updated PRD, roadmap, website generated
+  docs, adapter docs, SDK docs, and fixture docs with the state-cues rationale
+  and next step to promote these cases into Rust compiler/schema conformance.
+- Verification: `./scripts/action-manifest-conformance.sh --quick` passed;
+  `./scripts/action-manifest-conformance.sh --full` passed; `node
+  website/build.mjs` rebuilt 39 pages; `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target
+  cargo build` passed with existing warnings; `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target
+  cargo test --lib -- --test-threads=1` passed 246 tests; `git diff --check`
+  passed. A default-target Rust build/test attempt failed because restricted
+  network could not download the `rusty_v8` archive. Full `cargo test --
+  --test-threads=1` still fails only in `tests/awp_integration_test.rs` because
+  sandboxed local listener setup returns `Operation not permitted`.
+- Commit/push state: pending at the time of this state entry. Next step is to
+  commit the ARIA state-cues work and attempt to push/fast-forward remote
+  `master` if network access is available.
+
 ### 2026-05-13T17:08:35Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first. The automation worktree

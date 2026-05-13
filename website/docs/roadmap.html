@@ -627,6 +627,12 @@
 <li><strong>Checked state must cross custom controls</strong>: native <code>checked</code> attrs and ARIA <code>checked</code> state should normalize into one compact action-plan field for checkbox, radio, menuitemcheckbox, and menuitemradio targets.</li>
 <li><strong>Cache keys stay target-focused</strong>: live value/checked state should be visible to agents without changing deterministic target <code>cache_key</code> values, preserving local action memory while still exposing state drift.</li>
 </ul>
+<h3 id="2026-05-13-aria-state-cues-adjustment">2026-05-13 ARIA State-Cues Adjustment</h3><p>Current competitor movement keeps raising the value of state-aware action menus. Playwright MCP snapshots are valid only against the current page, Stagehand v3 action caches need local or Browserbase validation before reuse, Browser Run/WebMCP points toward typed page actions, and hosted browser platforms sell traces and persistent sessions around the same drift problem. Plasmate should keep the local-first wedge by making compact SOM targets carry the ARIA state agents need before they choose a cached action.</p>
+<ul>
+<li><strong>Expanded state prevents stale menu actions</strong>: action plans should surface <code>aria-expanded</code> so agents know whether disclosure menus and comboboxes already expose the target content.</li>
+<li><strong>Pressed state matters for toggle buttons</strong>: <code>aria-pressed</code> should travel with compact targets just like <code>checked</code>, because repeated workflows often need to avoid toggling an already-correct state.</li>
+<li><strong>Selected state is reusable context</strong>: custom tabs/options using <code>aria-selected</code> should expose that state across parser packages, SDKs, and framework prompt renderers without changing target cache keys.</li>
+</ul>
 <h2 id="completed-v011">Completed (v0.1.1)</h2><ul>
 <li>SOM compiler with 9.4x median compression across 38 sites</li>
 <li>V8 JavaScript execution with full DOM shim</li>
@@ -755,12 +761,15 @@
 <li><input checked="" disabled="" type="checkbox"> Compact action plans expose non-empty control <code>value</code> fields across parser packages, SDKs, and framework adapters</li>
 <li><input checked="" disabled="" type="checkbox"> Compact action plans normalize native and ARIA checked state across parser packages, SDKs, and framework adapters</li>
 <li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest asserts value and checked state without changing deterministic action cache keys</li>
+<li><input checked="" disabled="" type="checkbox"> Compact action plans expose ARIA expanded, pressed, and selected state across parser packages, SDKs, and framework adapters</li>
+<li><input checked="" disabled="" type="checkbox"> Browser Use, LangChain, and Vercel AI prompt renderers include expanded/pressed/selected action-state cues</li>
+<li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest asserts ARIA state cues without changing deterministic action cache keys</li>
 <li><input disabled="" type="checkbox"> Selector-aware SOM cache entries for repeated agent prompts</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
 <li><input disabled="" type="checkbox"> Wire <code>016-action-semantics</code> into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants</li>
 <li><input disabled="" type="checkbox"> Promote shadow-DOM and web-component cases into shared cross-adapter fixtures</li>
 <li><input disabled="" type="checkbox"> Add cross-adapter fixtures for enriched compact action-plan metadata</li>
-<li><input disabled="" type="checkbox"> Extend compact action-plan state with ARIA expanded, pressed, and selected cues</li>
+<li><input disabled="" type="checkbox"> Promote ARIA expanded/pressed/selected cases into Rust compiler and schema conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Add cross-adapter accessible-description fixtures</li>
 <li><input disabled="" type="checkbox"> Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners</li>
 <li><input checked="" disabled="" type="checkbox"> Promote adapter availability checks into shared cross-adapter fixtures</li>

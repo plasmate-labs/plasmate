@@ -88,6 +88,9 @@ export interface ActionPlanItem {
   placeholder?: string;
   description?: string;
   checked?: boolean | string;
+  expanded?: boolean;
+  pressed?: boolean;
+  selected?: boolean;
   required?: boolean;
   disabled?: boolean;
   blocked_reason?: 'disabled';
@@ -148,6 +151,9 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     } else if (el.attrs?.aria?.checked !== undefined) {
       item.checked = el.attrs.aria.checked;
     }
+    if (el.attrs?.aria?.expanded !== undefined) item.expanded = el.attrs.aria.expanded;
+    if (el.attrs?.aria?.pressed !== undefined) item.pressed = el.attrs.aria.pressed;
+    if (el.attrs?.aria?.selected !== undefined) item.selected = el.attrs.aria.selected;
     if (el.attrs?.required !== undefined) item.required = el.attrs.required;
     if (el.attrs?.disabled !== undefined) {
       item.disabled = el.attrs.disabled;

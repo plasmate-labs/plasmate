@@ -87,6 +87,9 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append(f"value={item['value']}")
     if "checked" in item:
         flags.append(f"checked={item['checked']}")
+    for state_key in ("expanded", "pressed", "selected"):
+        if state_key in item:
+            flags.append(f"{state_key}={item[state_key]}")
 
     if flags:
         parts.append(" ".join(f"[{flag}]" for flag in flags))

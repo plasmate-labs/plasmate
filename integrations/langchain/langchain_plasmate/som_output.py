@@ -203,6 +203,10 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append(f'[checked="{attrs["checked"]}"]')
     elif isinstance(attrs.get("aria"), dict) and "checked" in attrs["aria"]:
         flags.append(f'[checked="{attrs["aria"]["checked"]}"]')
+    if isinstance(attrs.get("aria"), dict):
+        for state_key in ("expanded", "pressed", "selected"):
+            if state_key in attrs["aria"]:
+                flags.append(f'[{state_key}="{attrs["aria"][state_key]}"]')
     if attrs.get("group"):
         flags.append(f'[group="{attrs["group"]}"]')
     if attrs.get("description"):

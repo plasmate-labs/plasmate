@@ -47,8 +47,9 @@ URL: https://news.ycombinator.com
 
 Interactive form controls include action-state cues such as `[enabled]`,
 `[disabled]`, `[blocked_reason=disabled]`,
-`[cache_key=plasmate-action:v1:...]`, `[required]`, `[group="Billing"]`, and
-`[description="..."]`. Agents should use those cues before calling
+`[cache_key=plasmate-action:v1:...]`, `[required]`, `[group="Billing"]`,
+`[checked="true"]`, `[expanded="false"]`, `[pressed="false"]`,
+`[selected="true"]`, and `[description="..."]`. Agents should use those cues before calling
 `plasmate_click` or `plasmate_type`, and can use cache keys to dedupe repeated
 local action menus.
 

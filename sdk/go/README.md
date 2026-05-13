@@ -126,7 +126,7 @@ all := plasmate.FlatElements(som)
 | `FindByText(som, text)` | Case-insensitive text search |
 | `FindByAction(som, action)` | Find elements exposing an action |
 | `FindByHint(som, hint)` | Find elements tagged with a semantic hint |
-| `GetActionPlan(som)` | Return compact action targets with cache keys and availability state for agents |
+| `GetActionPlan(som)` | Return compact action targets with cache keys, availability, and live state cues for agents |
 | `GetActionPlanCacheKey(item)` | Return a deterministic key for caching or comparing an action target |
 | `FlatElements(som)` | Flatten all elements, including shadow roots |
 | `TokenEstimate(som)` | Estimate token count |

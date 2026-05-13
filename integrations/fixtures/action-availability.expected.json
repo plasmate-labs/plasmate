@@ -34,6 +34,7 @@
       "actions": ["select"],
       "enabled": true,
       "required": true,
+      "expanded": false,
       "group": "Billing"
     },
     {
@@ -44,6 +45,7 @@
       "actions": ["toggle"],
       "enabled": true,
       "checked": false,
+      "pressed": false,
       "group": "Preferences"
     },
     {
@@ -54,6 +56,7 @@
       "actions": ["select"],
       "enabled": true,
       "checked": true,
+      "selected": true,
       "group": "Billing"
     }
   ]

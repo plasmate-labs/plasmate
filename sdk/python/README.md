@@ -129,7 +129,7 @@ for el in find_interactive(som):
 # Get compact action targets for cached agent workflows
 for target in get_action_plan(som):
     if target["enabled"]:
-        print(target["id"], target["cache_key"], target["actions"], target.get("label"))
+        print(target["id"], target["cache_key"], target["actions"], target.get("expanded"))
 
 # Search by text content (case-insensitive)
 results = find_by_text(som, "sign up")

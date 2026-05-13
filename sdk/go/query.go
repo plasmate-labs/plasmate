@@ -182,6 +182,9 @@ type ActionPlanItem struct {
 	Placeholder   *string     `json:"placeholder,omitempty"`
 	Description   *string     `json:"description,omitempty"`
 	Checked       interface{} `json:"checked,omitempty"`
+	Expanded      *bool       `json:"expanded,omitempty"`
+	Pressed       *bool       `json:"pressed,omitempty"`
+	Selected      *bool       `json:"selected,omitempty"`
 	Required      *bool       `json:"required,omitempty"`
 	Disabled      *bool       `json:"disabled,omitempty"`
 	BlockedReason *string     `json:"blocked_reason,omitempty"`
@@ -253,6 +256,11 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.Checked = *el.Attrs.Checked
 			} else if el.Attrs.Aria != nil && el.Attrs.Aria.Checked != nil {
 				item.Checked = el.Attrs.Aria.Checked
+			}
+			if el.Attrs.Aria != nil {
+				item.Expanded = el.Attrs.Aria.Expanded
+				item.Pressed = el.Attrs.Aria.Pressed
+				item.Selected = el.Attrs.Aria.Selected
 			}
 			item.Required = el.Attrs.Required
 			item.Disabled = el.Attrs.Disabled

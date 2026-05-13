@@ -496,6 +496,26 @@ compact targets need enough live state to keep cached plans honest.
    visible to agents without changing deterministic target `cache_key` values,
    preserving local action memory while still exposing state drift.
 
+### 2026-05-13 ARIA State-Cues Adjustment
+
+Current competitor movement keeps raising the value of state-aware action
+menus. Playwright MCP snapshots are valid only against the current page,
+Stagehand v3 action caches need local or Browserbase validation before reuse,
+Browser Run/WebMCP points toward typed page actions, and hosted browser
+platforms sell traces and persistent sessions around the same drift problem.
+Plasmate should keep the local-first wedge by making compact SOM targets carry
+the ARIA state agents need before they choose a cached action.
+
+1. **Expanded state prevents stale menu actions**: action plans should surface
+   `aria-expanded` so agents know whether disclosure menus and comboboxes
+   already expose the target content.
+2. **Pressed state matters for toggle buttons**: `aria-pressed` should travel
+   with compact targets just like `checked`, because repeated workflows often
+   need to avoid toggling an already-correct state.
+3. **Selected state is reusable context**: custom tabs/options using
+   `aria-selected` should expose that state across parser packages, SDKs, and
+   framework prompt renderers without changing target cache keys.
+
 ## Architecture
 
 ```
@@ -803,6 +823,13 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   framework adapter outputs.
 - The shared action-availability manifest now asserts `value` and `checked`
   state while keeping existing deterministic action `cache_key` values stable.
+- Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+  and Vercel AI action-plan surfaces now expose ARIA `expanded`, `pressed`,
+  and `selected` cues for interactive targets.
+- Browser Use, LangChain, and Vercel AI prompt renderers now include
+  expanded/pressed/selected state alongside value and checked state.
+- The shared action-availability manifest now asserts ARIA state cues without
+  changing existing deterministic action `cache_key` values.
 
 ## Dependencies to Add
 

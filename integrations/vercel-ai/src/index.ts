@@ -39,6 +39,9 @@ export interface PlasmateActionTarget {
   required?: boolean
   description?: string
   checked?: boolean | string
+  expanded?: boolean
+  pressed?: boolean
+  selected?: boolean
   href?: string
   input_type?: string
   value?: string
@@ -240,6 +243,15 @@ export function extractPlasmateActionTargets(
           }
         }
       }
+      const aria = attrs.aria
+      if (aria && typeof aria === 'object') {
+        for (const stateKey of ['expanded', 'pressed', 'selected'] as const) {
+          const stateValue = (aria as Record<string, unknown>)[stateKey]
+          if (typeof stateValue === 'boolean') {
+            target[stateKey] = stateValue
+          }
+        }
+      }
 
       if (typeof attrs.required === 'boolean') {
         target.required = attrs.required
@@ -306,12 +318,18 @@ export function formatPlasmateActionPlan(
         : ''
       const checked =
         typeof target.checked !== 'undefined' ? ` [checked=${target.checked}]` : ''
+      const expanded =
+        typeof target.expanded !== 'undefined' ? ` [expanded=${target.expanded}]` : ''
+      const pressed =
+        typeof target.pressed !== 'undefined' ? ` [pressed=${target.pressed}]` : ''
+      const selected =
+        typeof target.selected !== 'undefined' ? ` [selected=${target.selected}]` : ''
       const group = target.group ? ` [group=${target.group}]` : ''
       const description = target.description
         ? ` [description=${target.description}]`
         : ''
 
-      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${inputType}${value}${placeholder}${checked}${group}${description}`
+      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${inputType}${value}${placeholder}${checked}${expanded}${pressed}${selected}${group}${description}`
     })
     .join('\n')
 }

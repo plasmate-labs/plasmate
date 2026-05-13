@@ -112,7 +112,7 @@ const interactive = findInteractive(som);
 
 // Get compact action targets for cached agent workflows
 const actionPlan = getActionPlan(som).filter((target) => target.enabled);
-console.log(actionPlan.map((target) => [target.id, target.cache_key, target.actions]));
+console.log(actionPlan.map((target) => [target.id, target.cache_key, target.actions, target.expanded]));
 
 // Search by visible text (case-insensitive)
 const matches = findByText(som, 'sign in');

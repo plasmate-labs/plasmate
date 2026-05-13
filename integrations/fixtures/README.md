@@ -9,8 +9,9 @@ by the Rust core and parser packages.
   action-target availability checks.
 - `action-availability.expected.json` is the expected adapter contract for that
   payload: ids, roles, labels, actions, availability, blocked reasons, cache
-  keys, required state, group context, input metadata, descriptions, and ARIA
-  menu checkbox/radio targets.
+  keys, required state, group context, input metadata, descriptions, value and
+  checked state, ARIA expanded/pressed/selected cues, and ARIA menu
+  checkbox/radio targets.
 
 Browser Use, LangChain, Vercel AI, Python parser, Node parser, Python SDK, and
 Go SDK tests consume the expectation file directly. When action-plan semantics

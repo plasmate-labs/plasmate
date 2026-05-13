@@ -280,6 +280,15 @@ answer is to make compact action targets carry enough live control state
 (`value`, `checked`, and ARIA checked state) for agents to reuse cached plans
 without re-reading raw DOM.
 
+2026-05-13 ARIA state-cues read: the newest competitor docs sharpen the same
+lesson. Playwright MCP snapshots require agents to act from current page state,
+Stagehand v3 documents local and Browserbase action caches that must validate
+before reuse, Cloudflare Browser Run/WebMCP pushes typed website actions, and
+hosted browser products keep selling persistent sessions and traces. Plasmate
+should stay local-first, but compact action plans need ARIA expanded, pressed,
+and selected state so agents can tell whether menus, toggle buttons, and
+selectable custom controls already match the intended workflow.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -306,6 +315,15 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-13:
+  - Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+    and Vercel AI action-plan helpers now expose ARIA `expanded`, `pressed`,
+    and `selected` cues for interactive targets while keeping deterministic
+    `cache_key` generation target-focused.
+  - Prompt renderers for Browser Use, LangChain, and Vercel AI now include
+    expanded/pressed/selected state alongside value and checked state so agents
+    can reuse cached action menus without recovering raw DOM state.
+  - The shared action-availability manifest now asserts ARIA expanded,
+    pressed, and selected state across parser, SDK, and framework surfaces.
   - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
     AI action-plan helpers now preserve current control `value` fields for
     interactive targets without changing deterministic `cache_key` values.
@@ -593,8 +611,8 @@ and adapter docs over one-off integration logic.
 - Wire `016-action-semantics` into parser/SDK and adapter conformance runners
   so search landmarks, fallback-token ARIA roles, menu roles, ARIA-hidden
   casing, and visibility-hidden variants stay synchronized outside Rust.
-- Extend compact action-plan state with ARIA `expanded`, `pressed`, and
-  `selected` cues once the shared value/checked manifest proves stable.
+- Promote ARIA expanded/pressed/selected cases from the shared action
+  availability manifest into Rust compiler and schema conformance fixtures.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched
