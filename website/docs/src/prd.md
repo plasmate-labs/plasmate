@@ -139,7 +139,7 @@ The project already spans a large number of package and integration surfaces: Ru
   - The Rust SOM compiler and JSON Schema now preserve form submission context: `target`, `enctype`, `novalidate`, `accept-charset`, and form-level `autocomplete`, alongside existing `action` and `method`.
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `form_action`, `form_method`, `form_target`, `form_enctype`, `form_novalidate`, `form_accept_charset`, and `form_autocomplete` without changing deterministic action `cache_key` values.
   - The shared action-availability manifest now asserts form submission context across parser, SDK, and framework outputs.
-  - The Rust SOM compiler now preserves submit-button override cues: `button_type`, `formaction`, `formmethod`, `formenctype`, `formtarget`, and `formnovalidate`.
+  - The Rust SOM compiler now preserves submit-button override cues, and JSON Schema/SOM spec docs accept them: `button_type`, `formaction`, `formmethod`, `formenctype`, `formtarget`, and `formnovalidate`.
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose submit override cues so cached submit actions can validate endpoint, method, encoding, target, and validation mode before replay.
   - The shared action-availability manifest now asserts submit-button override context across parser, SDK, and framework outputs.
   - The Rust SOM compiler and JSON Schema now preserve ARIA relationship cues: `aria-owns`, `aria-flowto`, and `aria-details`.
