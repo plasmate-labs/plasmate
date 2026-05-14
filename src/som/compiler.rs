@@ -1872,7 +1872,7 @@ fn build_element_attrs(
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "pattern") {
         map.insert("pattern".into(), json!(value));
     }
-    if has_attr(attrs, "readonly") {
+    if has_attr(attrs, "readonly") || has_aria_true(attrs, "aria-readonly") {
         map.insert("readonly".into(), json!(true));
     }
     if let Some(description) = resolve_description(attrs, &ctx.label_index) {
@@ -1890,6 +1890,7 @@ fn build_element_attrs(
         ("aria-expanded", "expanded"),
         ("aria-selected", "selected"),
         ("aria-checked", "checked"),
+        ("aria-readonly", "readonly"),
         ("aria-disabled", "disabled"),
         ("aria-current", "current"),
         ("aria-pressed", "pressed"),
@@ -1909,6 +1910,8 @@ fn build_element_attrs(
         ("aria-owns", "owns"),
         ("aria-flowto", "flowto"),
         ("aria-details", "details"),
+        ("aria-multiline", "multiline"),
+        ("aria-multiselectable", "multiselectable"),
         ("aria-orientation", "orientation"),
         ("aria-sort", "sort"),
         ("aria-valuemin", "valuemin"),
@@ -2679,5 +2682,45 @@ mod tests {
             .expect("sort button should compile");
         let attrs = sort.attrs.as_ref().expect("sort attrs should compile");
         assert_eq!(attrs["aria"]["sort"], "ascending");
+    }
+
+    #[test]
+    fn test_aria_widget_state_cues_are_preserved() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Widgets</title></head>
+<body>
+<main>
+  <label for="notes">Release notes</label>
+  <textarea id="notes" aria-readonly="true" aria-multiline="true">Draft</textarea>
+  <label for="segments">Segments</label>
+  <select id="segments" aria-multiselectable="true">
+    <option>Enterprise</option>
+  </select>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.com").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let notes = elements
+            .iter()
+            .find(|element| element.role == ElementRole::Textarea)
+            .expect("textarea should compile");
+        let attrs = notes.attrs.as_ref().expect("textarea attrs should compile");
+        assert_eq!(attrs["readonly"], true);
+        assert_eq!(attrs["aria"]["readonly"], true);
+        assert_eq!(attrs["aria"]["multiline"], true);
+
+        let select = elements
+            .iter()
+            .find(|element| element.role == ElementRole::Select)
+            .expect("select should compile");
+        let attrs = select.attrs.as_ref().expect("select attrs should compile");
+        assert_eq!(attrs["aria"]["multiselectable"], true);
     }
 }

@@ -473,6 +473,9 @@ Current Playwright MCP and Stagehand docs keep validating action surfaces that a
 - [x] Rust compiler and SOM schema preserve range constraints plus ARIA orientation, sort, and value cues
 - [x] Compact action plans expose min, max, step, orientation, sort, valuemin, valuemax, valuenow, and valuetext across parser packages, SDKs, and framework adapters
 - [x] Shared action-availability manifest asserts range/orientation/value cues without changing deterministic action cache keys
+- [x] Rust compiler and SOM schema preserve ARIA readonly, multiline, and multiselectable widget cues
+- [x] Compact action plans expose readonly, multiline, and multiselectable across parser packages, SDKs, and framework adapters
+- [x] Shared action-availability manifest asserts ARIA readonly gating and widget affordances without changing deterministic action cache keys
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
@@ -480,6 +483,7 @@ Current Playwright MCP and Stagehand docs keep validating action surfaces that a
 - [ ] Add cross-adapter fixtures for enriched compact action-plan metadata
 - [ ] Promote ARIA relationship-state cases, including owns/flowto/details, into the broader action-state/action-semantics conformance suites
 - [ ] Promote range and orientation cases into broader parser, SDK, and adapter conformance fixtures
+- [ ] Promote ARIA widget affordance cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures

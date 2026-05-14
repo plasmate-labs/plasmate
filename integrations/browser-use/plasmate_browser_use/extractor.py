@@ -139,6 +139,8 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         "owns",
         "flowto",
         "details",
+        "multiline",
+        "multiselectable",
         "orientation",
         "sort",
         "valuemin",

@@ -10,6 +10,7 @@
       "enabled": false,
       "readonly": true,
       "blocked_reason": "readonly",
+      "multiline": true,
       "required": true,
       "group": "Account",
       "input_type": "email",
@@ -66,6 +67,7 @@
       "expanded": false,
       "controls": "plan-options",
       "haspopup": "listbox",
+      "multiselectable": true,
       "group": "Billing"
     },
     {

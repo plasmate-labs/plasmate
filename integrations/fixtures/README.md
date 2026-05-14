@@ -17,9 +17,9 @@ by the Rust core and parser packages.
   `command`, `accesskey`, `errormessage`, `keyshortcuts`,
   `roledescription`, `busy`, `live`, `atomic`, `relevant`, `owns`, `flowto`,
   `details`, `orientation`, `sort`, `valuemin`, `valuemax`, `valuenow`,
-  `valuetext`, `minlength`, `maxlength`, `min`, `max`, `step`, `pattern`,
-  `invalid`), and ARIA menu
-  checkbox/radio targets.
+  `valuetext`, `multiline`, `multiselectable`, `minlength`, `maxlength`,
+  `min`, `max`, `step`, `pattern`, `invalid`), ARIA `readonly` availability
+  gating, and ARIA menu checkbox/radio targets.
 
 Browser Use, LangChain, Vercel AI, Python parser, Node parser, Python SDK, and
 Go SDK tests consume the expectation file directly. When action-plan semantics

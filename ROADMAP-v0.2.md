@@ -1027,6 +1027,19 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   `download` without changing deterministic action `cache_key` values.
 - The shared action-availability manifest now asserts link target/rel/download
   cues across parser, SDK, and framework adapter outputs.
+- Rust SOM compilation and the JSON Schema now preserve ARIA widget affordance
+  state with `aria-readonly`, `aria-multiline`, and
+  `aria-multiselectable`.
+- Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+  and Vercel AI action-plan surfaces now expose `readonly`, `multiline`, and
+  `multiselectable`; ARIA read-only targets are unavailable with
+  `blocked_reason="readonly"` while deterministic action `cache_key` values
+  stay stable.
+- The shared action-availability manifest now asserts ARIA read-only gating,
+  multiline text entry, and multiselectable widget cues across parser, SDK,
+  and framework adapter outputs.
+- Next conformance step: promote ARIA widget affordance cases into broader
+  Rust/parser/SDK and adapter fixtures alongside range and orientation cases.
 
 ## Dependencies to Add
 

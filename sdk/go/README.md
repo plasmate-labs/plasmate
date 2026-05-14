@@ -126,7 +126,7 @@ all := plasmate.FlatElements(som)
 | `FindByText(som, text)` | Case-insensitive text search |
 | `FindByAction(som, action)` | Find elements exposing an action |
 | `FindByHint(som, hint)` | Find elements tagged with a semantic hint |
-| `GetActionPlan(som)` | Return compact action targets with cache keys, availability, link target/rel/download cues, popover/command relationship cues, ARIA live-region cues, ARIA owns/flowto/details relationships, range constraints, and orientation/sort/value state for agents |
+| `GetActionPlan(som)` | Return compact action targets with cache keys, availability, link target/rel/download cues, popover/command relationship cues, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, range constraints, and orientation/sort/value state for agents |
 | `GetActionPlanCacheKey(item)` | Return a deterministic key for caching or comparing an action target |
 | `FlatElements(som)` | Flatten all elements, including shadow roots |
 | `TokenEstimate(som)` | Estimate token count |
@@ -139,9 +139,10 @@ The Go types include current SOM actionability fields such as
 Go agents receive the same
 contract as the Python and Node parser packages. Action-plan items include
 `Enabled`, `BlockedReason`, `PopoverTarget`, `CommandFor`, `KeyShortcuts`, and
-`RoleDescription`, `Owns`, `FlowTo`, and `Details` so agents can skip
+`RoleDescription`, `Owns`, `FlowTo`, `Details`, `Multiline`, and
+`MultiSelectable` so agents can skip
 known-unavailable controls and understand popover, command, keyboard,
-custom-role, and ARIA relationship cues before acting.
+custom-role, ARIA relationship, and widget affordance cues before acting.
 They also include deterministic `CacheKey` values plus `Autocomplete`,
 `MinLength`, `MaxLength`, `Pattern`, and `Invalid` cues for local action-plan
 caches, prompt dedupe, and trace correlation.

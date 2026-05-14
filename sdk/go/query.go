@@ -205,6 +205,8 @@ type ActionPlanItem struct {
 	Expanded         *bool       `json:"expanded,omitempty"`
 	Pressed          *bool       `json:"pressed,omitempty"`
 	Selected         *bool       `json:"selected,omitempty"`
+	Multiline        *bool       `json:"multiline,omitempty"`
+	MultiSelectable  *bool       `json:"multiselectable,omitempty"`
 	Current          interface{} `json:"current,omitempty"`
 	Controls         *string     `json:"controls,omitempty"`
 	HasPopup         interface{} `json:"haspopup,omitempty"`
@@ -322,6 +324,9 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			}
 			if el.Attrs.Aria != nil {
 				item.Expanded = el.Attrs.Aria.Expanded
+				if item.Readonly == nil {
+					item.Readonly = el.Attrs.Aria.Readonly
+				}
 				item.Pressed = el.Attrs.Aria.Pressed
 				item.Selected = el.Attrs.Aria.Selected
 				item.Current = el.Attrs.Aria.Current
@@ -340,6 +345,8 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.Owns = el.Attrs.Aria.Owns
 				item.FlowTo = el.Attrs.Aria.FlowTo
 				item.Details = el.Attrs.Aria.Details
+				item.Multiline = el.Attrs.Aria.Multiline
+				item.MultiSelectable = el.Attrs.Aria.MultiSelectable
 				item.Orientation = el.Attrs.Aria.Orientation
 				item.Sort = el.Attrs.Aria.Sort
 				item.ValueMin = el.Attrs.Aria.ValueMin
@@ -348,13 +355,15 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.ValueText = el.Attrs.Aria.ValueText
 			}
 			item.Required = el.Attrs.Required
-			item.Readonly = el.Attrs.Readonly
+			if el.Attrs.Readonly != nil {
+				item.Readonly = el.Attrs.Readonly
+			}
 			item.Disabled = el.Attrs.Disabled
 			if el.Attrs.Disabled != nil && *el.Attrs.Disabled {
 				item.Enabled = false
 				reason := "disabled"
 				item.BlockedReason = &reason
-			} else if el.Attrs.Readonly != nil && *el.Attrs.Readonly {
+			} else if item.Readonly != nil && *item.Readonly {
 				item.Enabled = false
 				reason := "readonly"
 				item.BlockedReason = &reason

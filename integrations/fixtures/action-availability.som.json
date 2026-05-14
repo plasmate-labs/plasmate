@@ -33,8 +33,9 @@
             "maxlength": 64,
             "pattern": ".+@example\\.com",
             "required": true,
-            "readonly": true,
             "aria": {
+              "readonly": true,
+              "multiline": true,
               "invalid": "grammar",
               "autocomplete": "list",
               "active_descendant": "email-suggestion-1",
@@ -81,7 +82,8 @@
             "aria": {
               "expanded": false,
               "controls": "plan-options",
-              "haspopup": "listbox"
+              "haspopup": "listbox",
+              "multiselectable": true
             },
             "options": [
               { "value": "starter", "text": "Starter" },

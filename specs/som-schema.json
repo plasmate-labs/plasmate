@@ -296,6 +296,7 @@
             { "type": "string" }
           ]
         },
+        "readonly": { "type": "boolean" },
         "disabled": { "type": "boolean" },
         "current": {
           "oneOf": [
@@ -330,6 +331,8 @@
         "owns": { "type": "string" },
         "flowto": { "type": "string" },
         "details": { "type": "string" },
+        "multiline": { "type": "boolean" },
+        "multiselectable": { "type": "boolean" },
         "orientation": { "type": "string" },
         "sort": { "type": "string" },
         "valuemin": { "type": "string" },

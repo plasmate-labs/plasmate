@@ -389,6 +389,15 @@ action. Plasmate should keep cache keys target-focused while exposing `min`,
 `aria-valuetext`, `aria-orientation`, and `aria-sort` as compact action-plan
 context.
 
+2026-05-14 widget-affordance read: current browser-agent products keep moving
+from element identity toward current, validated widget state before replay.
+ARIA textboxes, listboxes, and custom inputs often expose read-only,
+multiline, and multiselectable affordances without native HTML equivalents.
+Plasmate should keep cache keys stable while surfacing `aria-readonly`,
+`aria-multiline`, and `aria-multiselectable` in compact action targets so
+agents avoid typing into read-only custom controls and choose the right
+selection strategy for composite widgets.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -432,6 +441,16 @@ and adapter docs over one-off integration logic.
     changing deterministic action `cache_key` values.
   - The shared action-availability manifest now asserts range and ARIA
     orientation/value cues across parser, SDK, and framework outputs.
+  - The Rust SOM compiler and JSON Schema now preserve ARIA widget affordance
+    cues: `aria-readonly`, `aria-multiline`, and `aria-multiselectable`.
+  - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
+    AI action-plan surfaces now expose `readonly`, `multiline`, and
+    `multiselectable`; ARIA read-only targets are marked unavailable with
+    `blocked_reason="readonly"` without changing deterministic action
+    `cache_key` values.
+  - The shared action-availability manifest now asserts ARIA read-only gating
+    plus multiline and multiselectable widget cues across parser, SDK, and
+    framework outputs.
   - The Rust SOM compiler and JSON Schema now preserve ARIA relationship cues:
     `aria-owns`, `aria-flowto`, and `aria-details`.
   - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
@@ -819,6 +838,9 @@ and adapter docs over one-off integration logic.
 - Promote range and orientation cases (`min`, `max`, `step`,
   `aria-orientation`, `aria-sort`, and ARIA value state) into broader
   Rust/parser/SDK and adapter conformance fixtures.
+- Promote ARIA widget affordance cases (`aria-readonly`, `aria-multiline`, and
+  `aria-multiselectable`) into broader Rust/parser/SDK and adapter
+  conformance fixtures.
 - Add compiler/schema conformance for form validation constraints and
   `aria-invalid`, then promote the shared manifest cases into broader parser,
   SDK, and adapter fixtures.

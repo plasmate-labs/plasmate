@@ -209,6 +209,7 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
             if attrs.aria:
                 for aria_key in (
                     "expanded",
+                    "readonly",
                     "pressed",
                     "selected",
                     "current",
@@ -227,6 +228,8 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                     "owns",
                     "flowto",
                     "details",
+                    "multiline",
+                    "multiselectable",
                     "orientation",
                     "sort",
                     "valuemin",
@@ -245,12 +248,14 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["required"] = attrs.required
             if attrs.readonly is not None:
                 item["readonly"] = attrs.readonly
+            elif attrs.aria and attrs.aria.get("readonly") is not None:
+                item["readonly"] = attrs.aria["readonly"]
             if attrs.disabled is not None:
                 item["disabled"] = attrs.disabled
                 if attrs.disabled:
                     item["enabled"] = False
                     item["blocked_reason"] = "disabled"
-            elif attrs.readonly:
+            elif item.get("readonly") is True:
                 item["enabled"] = False
                 item["blocked_reason"] = "readonly"
             if attrs.group:

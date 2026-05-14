@@ -372,6 +372,7 @@ attributes SHOULD be preserved when present:
 | `aria-expanded`  | `expanded`  | boolean         |
 | `aria-selected`  | `selected`  | boolean         |
 | `aria-checked`   | `checked`   | boolean/string  |
+| `aria-readonly`  | `readonly`  | boolean         |
 | `aria-disabled`  | `disabled`  | boolean         |
 | `aria-current`   | `current`   | boolean/string  |
 | `aria-pressed`   | `pressed`   | boolean         |
@@ -391,6 +392,8 @@ attributes SHOULD be preserved when present:
 | `aria-owns`      | `owns`      | string          |
 | `aria-flowto`    | `flowto`    | string          |
 | `aria-details`   | `details`   | string          |
+| `aria-multiline` | `multiline` | boolean         |
+| `aria-multiselectable` | `multiselectable` | boolean |
 | `aria-orientation` | `orientation` | string       |
 | `aria-sort`      | `sort`      | string          |
 | `aria-valuemin`  | `valuemin`  | string          |

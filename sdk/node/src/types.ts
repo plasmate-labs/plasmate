@@ -133,6 +133,7 @@ export interface AriaState {
   expanded?: boolean;
   selected?: boolean;
   checked?: boolean | string;
+  readonly?: boolean;
   disabled?: boolean;
   current?: boolean | string;
   pressed?: boolean;
@@ -152,6 +153,8 @@ export interface AriaState {
   owns?: string;
   flowto?: string;
   details?: string;
+  multiline?: boolean;
+  multiselectable?: boolean;
   orientation?: string;
   sort?: string;
   valuemin?: string;

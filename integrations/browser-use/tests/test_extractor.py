@@ -102,6 +102,8 @@ def test_build_context_surfaces_action_availability():
             "owns",
             "flowto",
             "details",
+            "multiline",
+            "multiselectable",
             "orientation",
             "sort",
             "valuemin",

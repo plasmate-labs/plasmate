@@ -60,6 +60,8 @@ export interface PlasmateActionTarget {
   expanded?: boolean
   pressed?: boolean
   selected?: boolean
+  multiline?: boolean
+  multiselectable?: boolean
   current?: boolean | string
   controls?: string
   haspopup?: boolean | string
@@ -145,7 +147,7 @@ export interface PreparePlasmateActionPlanOptions {
 export const plasmateActionGuidance =
   'Use Plasmate SOM element ids for browser actions. Treat action targets ' +
   'with enabled=false or blocked_reason as unavailable, and prefer ' +
-  'cache_key, required, readonly, value, target, rel, download, autocomplete, inputmode, enterkeyhint, form, list, popovertarget, popovertargetaction, commandfor, command, accesskey, aria_autocomplete, active_descendant, errormessage, keyshortcuts, roledescription, busy, live, atomic, relevant, owns, flowto, details, orientation, sort, valuemin, valuemax, valuenow, valuetext, pattern, minlength, maxlength, min, max, step, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
+  'cache_key, required, readonly, value, target, rel, download, autocomplete, inputmode, enterkeyhint, form, list, popovertarget, popovertargetaction, commandfor, command, accesskey, aria_autocomplete, active_descendant, errormessage, keyshortcuts, roledescription, busy, live, atomic, relevant, owns, flowto, details, multiline, multiselectable, orientation, sort, valuemin, valuemax, valuenow, valuetext, pattern, minlength, maxlength, min, max, step, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
 
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined
@@ -331,11 +333,15 @@ export function extractPlasmateActionTargets(
       }
       const aria = attrs.aria
       if (aria && typeof aria === 'object') {
-        for (const stateKey of ['expanded', 'pressed', 'selected'] as const) {
+        for (const stateKey of ['expanded', 'pressed', 'selected', 'multiline', 'multiselectable'] as const) {
           const stateValue = (aria as Record<string, unknown>)[stateKey]
           if (typeof stateValue === 'boolean') {
             target[stateKey] = stateValue
           }
+        }
+        const ariaReadonly = (aria as Record<string, unknown>).readonly
+        if (typeof ariaReadonly === 'boolean' && typeof attrs.readonly !== 'boolean') {
+          target.readonly = ariaReadonly
         }
         const current = (aria as Record<string, unknown>).current
         if (typeof current === 'boolean' || typeof current === 'string') {
@@ -532,6 +538,10 @@ export function formatPlasmateActionPlan(
         typeof target.pressed !== 'undefined' ? ` [pressed=${target.pressed}]` : ''
       const selected =
         typeof target.selected !== 'undefined' ? ` [selected=${target.selected}]` : ''
+      const multiline =
+        typeof target.multiline !== 'undefined' ? ` [multiline=${target.multiline}]` : ''
+      const multiselectable =
+        typeof target.multiselectable !== 'undefined' ? ` [multiselectable=${target.multiselectable}]` : ''
       const current =
         typeof target.current !== 'undefined' ? ` [current=${target.current}]` : ''
       const controls = target.controls ? ` [controls=${target.controls}]` : ''
@@ -574,7 +584,7 @@ export function formatPlasmateActionPlan(
         ? ` [description=${target.description}]`
         : ''
 
-      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${readonly}${linkTarget}${rel}${download}${inputType}${value}${autocomplete}${inputmode}${enterkeyhint}${form}${list}${popovertarget}${popovertargetaction}${commandfor}${command}${popover}${accesskey}${placeholder}${minlength}${maxlength}${min}${max}${step}${pattern}${checked}${expanded}${pressed}${selected}${current}${controls}${haspopup}${invalid}${ariaAutocomplete}${activeDescendant}${errorMessage}${keyshortcuts}${roledescription}${busy}${live}${atomic}${relevant}${owns}${flowto}${details}${orientation}${sort}${valuemin}${valuemax}${valuenow}${valuetext}${group}${description}`
+      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${readonly}${linkTarget}${rel}${download}${inputType}${value}${autocomplete}${inputmode}${enterkeyhint}${form}${list}${popovertarget}${popovertargetaction}${commandfor}${command}${popover}${accesskey}${placeholder}${minlength}${maxlength}${min}${max}${step}${pattern}${checked}${expanded}${pressed}${selected}${multiline}${multiselectable}${current}${controls}${haspopup}${invalid}${ariaAutocomplete}${activeDescendant}${errorMessage}${keyshortcuts}${roledescription}${busy}${live}${atomic}${relevant}${owns}${flowto}${details}${orientation}${sort}${valuemin}${valuemax}${valuenow}${valuetext}${group}${description}`
     })
     .join('\n')
 }

@@ -188,10 +188,12 @@ def _action_cache_key(elem: dict[str, Any]) -> str:
 def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> str:
     attrs = elem.get("attrs") or {}
     flags: list[str] = []
+    aria = attrs.get("aria") if isinstance(attrs.get("aria"), dict) else {}
+    readonly = attrs.get("readonly") is True or aria.get("readonly") is True
     if attrs.get("disabled") is True:
         flags.append("[disabled]")
         flags.append("[blocked_reason=disabled]")
-    elif attrs.get("readonly") is True:
+    elif readonly:
         flags.append("[readonly]")
         flags.append("[blocked_reason=readonly]")
     elif interactive:
@@ -200,7 +202,7 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append(f"[cache_key={_action_cache_key(elem)}]")
     if attrs.get("required") is True:
         flags.append("[required]")
-    if attrs.get("readonly") is True and "[readonly]" not in flags:
+    if readonly and "[readonly]" not in flags:
         flags.append("[readonly]")
     if attrs.get("value"):
         flags.append(f'[value="{attrs["value"]}"]')
@@ -238,7 +240,7 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append(f'[checked="{attrs["checked"]}"]')
     elif isinstance(attrs.get("aria"), dict) and "checked" in attrs["aria"]:
         flags.append(f'[checked="{attrs["aria"]["checked"]}"]')
-    if isinstance(attrs.get("aria"), dict):
+    if aria:
         for state_key in (
             "expanded",
             "pressed",
@@ -259,6 +261,8 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
             "owns",
             "flowto",
             "details",
+            "multiline",
+            "multiselectable",
             "orientation",
             "sort",
             "valuemin",
@@ -266,9 +270,9 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
             "valuenow",
             "valuetext",
         ):
-            if state_key in attrs["aria"]:
+            if state_key in aria:
                 output_key = "aria_autocomplete" if state_key == "autocomplete" else state_key
-                flags.append(f'[{output_key}="{attrs["aria"][state_key]}"]')
+                flags.append(f'[{output_key}="{aria[state_key]}"]')
     if attrs.get("group"):
         flags.append(f'[group="{attrs["group"]}"]')
     if attrs.get("description"):

@@ -88,8 +88,9 @@ selected, current, controls, haspopup, autocomplete, inputmode, enterkeyhint,
 link target/rel/download cues, form, list, popover/command relationships, accesskey, ARIA
 autocomplete/active-descendant/error-message state, keyshortcuts,
 roledescription, live-region state, ARIA owns/flowto/details relationships,
-orientation/sort/value state, validation constraints, range constraints,
-invalid state, and description cues
+ARIA readonly/multiline/multiselectable widget state, orientation/sort/value
+state, validation constraints, range constraints, invalid state, and
+description cues
 stay aligned with other adapters.
 
 ### Markdown extraction

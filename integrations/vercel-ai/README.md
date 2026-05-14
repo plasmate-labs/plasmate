@@ -65,8 +65,9 @@ const { text } = await generateText({
 `commandfor`, `command`, `accesskey`, `aria_autocomplete`,
 `active_descendant`, `errormessage`,
 `keyshortcuts`, `roledescription`, `busy`, `live`, `atomic`, `relevant`,
-`owns`, `flowto`, `details`, `orientation`, `sort`, `valuemin`, `valuemax`,
-`valuenow`, `valuetext`, `minlength`, `maxlength`, `min`, `max`, `step`,
+`owns`, `flowto`, `details`, `multiline`, `multiselectable`, `orientation`,
+`sort`, `valuemin`, `valuemax`, `valuenow`, `valuetext`, `minlength`,
+`maxlength`, `min`, `max`, `step`,
 `pattern`, and `invalid` fields before selecting or
 reusing browser actions. Use
 `extractPlasmateActionTargets()`, `preparePlasmateActionPlan()`, or

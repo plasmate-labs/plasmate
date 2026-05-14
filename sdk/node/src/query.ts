@@ -80,6 +80,8 @@ export interface ActionPlanItem {
   expanded?: boolean;
   pressed?: boolean;
   selected?: boolean;
+  multiline?: boolean;
+  multiselectable?: boolean;
   current?: boolean | string;
   controls?: string;
   haspopup?: boolean | string;
@@ -184,6 +186,7 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
       item.checked = el.attrs.aria.checked;
     }
     if (el.attrs?.aria?.expanded !== undefined) item.expanded = el.attrs.aria.expanded;
+    if (el.attrs?.aria?.readonly !== undefined && el.attrs?.readonly === undefined) item.readonly = el.attrs.aria.readonly;
     if (el.attrs?.aria?.pressed !== undefined) item.pressed = el.attrs.aria.pressed;
     if (el.attrs?.aria?.selected !== undefined) item.selected = el.attrs.aria.selected;
     if (el.attrs?.aria?.current !== undefined) item.current = el.attrs.aria.current;
@@ -202,6 +205,8 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.aria?.owns !== undefined) item.owns = el.attrs.aria.owns;
     if (el.attrs?.aria?.flowto !== undefined) item.flowto = el.attrs.aria.flowto;
     if (el.attrs?.aria?.details !== undefined) item.details = el.attrs.aria.details;
+    if (el.attrs?.aria?.multiline !== undefined) item.multiline = el.attrs.aria.multiline;
+    if (el.attrs?.aria?.multiselectable !== undefined) item.multiselectable = el.attrs.aria.multiselectable;
     if (el.attrs?.aria?.orientation !== undefined) item.orientation = el.attrs.aria.orientation;
     if (el.attrs?.aria?.sort !== undefined) item.sort = el.attrs.aria.sort;
     if (el.attrs?.aria?.valuemin !== undefined) item.valuemin = el.attrs.aria.valuemin;
@@ -216,7 +221,7 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
         item.enabled = false;
         item.blocked_reason = 'disabled';
       }
-    } else if (el.attrs?.readonly) {
+    } else if (item.readonly) {
       item.enabled = false;
       item.blocked_reason = 'readonly';
     }

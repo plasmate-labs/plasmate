@@ -97,6 +97,8 @@ def test_som_to_text_surfaces_interactive_state():
             "owns",
             "flowto",
             "details",
+            "multiline",
+            "multiselectable",
             "orientation",
             "sort",
             "valuemin",

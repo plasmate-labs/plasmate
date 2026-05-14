@@ -102,6 +102,7 @@ type AriaState struct {
 	Expanded         *bool       `json:"expanded,omitempty"`
 	Selected         *bool       `json:"selected,omitempty"`
 	Checked          interface{} `json:"checked,omitempty"`
+	Readonly         *bool       `json:"readonly,omitempty"`
 	Disabled         *bool       `json:"disabled,omitempty"`
 	Current          interface{} `json:"current,omitempty"`
 	Pressed          *bool       `json:"pressed,omitempty"`
@@ -121,6 +122,8 @@ type AriaState struct {
 	Owns             *string     `json:"owns,omitempty"`
 	FlowTo           *string     `json:"flowto,omitempty"`
 	Details          *string     `json:"details,omitempty"`
+	Multiline        *bool       `json:"multiline,omitempty"`
+	MultiSelectable  *bool       `json:"multiselectable,omitempty"`
 	Orientation      *string     `json:"orientation,omitempty"`
 	Sort             *string     `json:"sort,omitempty"`
 	ValueMin         *string     `json:"valuemin,omitempty"`
