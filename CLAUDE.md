@@ -139,8 +139,16 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   subprocess (`Operation not permitted`) in `tests/awp_integration_test.rs`.
   The library and SOM compiler suites passed before/after that sandbox-only
   failure.
-- Commit/push state: pending at the time of this note; changes are staged for
-  an upload-affordance implementation/docs commit once final status is clean.
+- Commit/push state: local commit `9457ab2` (`chore: expose upload action
+  cues`) was created and pushed to branch `codex/upload-action-cues`. Direct
+  push to `origin/master` was rejected because remote `master` advanced by one
+  coverage scorecard commit (`a5a44a9`), and local `git fetch`/`pull --rebase`
+  remained blocked by DNS resolution for `github.com`. GitHub connector compare
+  confirmed the branches only diverge by that coverage-file commit plus this
+  upload-affordance commit. PR creation through the connector failed with
+  `403 Resource not accessible by integration`, and `gh pr create` could not
+  reach `api.github.com`, so merge to `master` remains blocked outside the
+  pushed branch.
 
 ### 2026-05-14T08:14:37Z - Plasmate Improvements Automation
 
