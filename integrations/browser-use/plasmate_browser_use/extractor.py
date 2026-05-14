@@ -101,6 +101,10 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append(f"capture={item['capture']}")
     if "multiple" in item:
         flags.append(f"multiple={item['multiple']}")
+    if item.get("selected_values"):
+        flags.append(f"selected_values={','.join(item['selected_values'])}")
+    if "size" in item:
+        flags.append(f"size={item['size']}")
     if item.get("autocomplete"):
         flags.append(f"autocomplete={item['autocomplete']}")
     if item.get("inputmode"):

@@ -381,6 +381,7 @@ Current competitor direction keeps validating cached action plans against the cu
 - **Option values should match browsers**: when an `<option>` omits `value`, SOM should expose the visible option text as the submitted value.
 - **Unavailable choices need to be visible**: disabled options should remain in the compact menu with `disabled=true` so agents can explain why they did not select them.
 - **Grouped and multi-select menus need current state**: optgroup labels and `selected_values` should become shared action-plan context before this lands in adapter conformance.
+- **Schema and SDK parity decide stickiness**: option groups, disabled option state, implicit single-select values, and select `size` need to validate in the public schema and flow through parser/SDK action plans before agents can safely cache menu choices across runtimes.
 
 ## Completed (v0.1.1)
 
@@ -570,6 +571,9 @@ Current competitor direction keeps validating cached action plans against the cu
 - [x] Compact action plans expose inert availability gating across parser packages, SDKs, and framework adapters
 - [x] Shared action-state and action-availability fixtures assert inert targets without changing deterministic action cache keys
 - [x] Rust compiler maps graphical submit inputs to actionable buttons, resolves alt labels, and preserves button_type, alt, and src context
+- [x] Single-select controls infer the browser-default first selected option when markup omits `selected`
+- [x] Disabled optgroups propagate disabled state to child option summaries
+- [x] SOM schema/spec, parser packages, SDKs, Browser Use, LangChain, and Vercel AI carry selected_values and select size context
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants

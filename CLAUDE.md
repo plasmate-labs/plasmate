@@ -49,6 +49,44 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T18:08:19Z - Plasmate Improvements Automation
+
+- Git sync: latest pull was retried from the automation worktree and failed
+  because the linked worktree cannot open `FETCH_HEAD`. Retrying from
+  `/Users/steve/Git/plasmate` failed DNS for `github.com`, so work continued
+  from local `HEAD` `3227d52`.
+- Market direction: current official docs still validate Plasmate's
+  local-first action-state wedge. Playwright MCP keeps structured
+  accessibility snapshots/ref selection central, Browserbase/Stagehand keeps
+  pushing validated cached actions, and Cloudflare Browser Run/WebMCP keeps
+  broadening hosted browser interaction surfaces. The roadmap should continue
+  improving portable SOM/action fidelity across the existing repo surface
+  before pursuing hosted browser infrastructure.
+- Code changes: Rust SOM select extraction now marks the browser-default first
+  option as selected for single-select controls without explicit `selected`,
+  propagates disabled `<optgroup>` state to child option summaries, and
+  preserves explicit select `size`.
+- Contract changes: JSON Schema/SOM spec, Python/Node parser package types,
+  Python/Node/Go SDK types, action-plan helpers, Browser Use, LangChain, and
+  Vercel AI prompt renderers now carry select `selected_values` and `size`;
+  option summaries now validate `disabled` and optgroup `group`.
+- Docs changes: PRD, roadmap, website doc sources, and this running state now
+  record the select-parity rationale and the next step to promote
+  select-option parser/SDK/adapter parity into shared conformance fixtures.
+- Verification: touched-file `rustfmt --check` passed; focused
+  `test_select_option_state_and_groups_are_preserved` passed; full
+  `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo test --test
+  som_compiler_test -- --test-threads=1` passed 66 tests; `cargo build` with
+  the shared target passed; Python parser tests passed 68 tests; Python SDK
+  query tests passed 36 tests; Go SDK tests passed; JSON schema parse,
+  touched Python syntax compile, and `git diff --check` passed.
+- Verification gaps: whole-crate `cargo fmt --check` still reports unrelated
+  pre-existing formatting drift outside the touched files; Node package tests
+  were unavailable because local `node_modules` directories are absent; and
+  `node website/build.mjs` remains blocked because `marked` is not installed.
+- Commit/push state: pending in this worktree at the time of this note; remote
+  merge may remain blocked until GitHub DNS/fetch/API access works.
+
 ### 2026-05-14T17:06:29Z - Plasmate Improvements Automation
 
 - Git sync: latest pull was retried from the automation worktree and failed

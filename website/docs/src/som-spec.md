@@ -58,6 +58,11 @@ Each element has a `role`, stable `id`, optional `html_id` (the original HTML el
 
 Interactive elements are **never** dropped by budget limits.
 
+Select controls preserve browser-relevant menu state in `attrs`: `options`,
+current `value`, multi-select `selected_values`, `multiple`, `size`,
+`required`, `disabled`, and `inert`. Option summaries include `value`, `text`,
+optional `selected`, optional `disabled`, and optional optgroup `group`.
+
 ## Stable Element IDs
 
 Every element gets a deterministic ID derived from its semantic identity:

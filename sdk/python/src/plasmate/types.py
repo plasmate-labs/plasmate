@@ -78,6 +78,8 @@ class SelectOption(BaseModel):
     value: str
     text: str
     selected: Optional[bool] = None
+    disabled: Optional[bool] = None
+    group: Optional[str] = None
 
 
 class ListItem(BaseModel):
@@ -108,6 +110,8 @@ class ElementAttrs(BaseModel):
     group: Optional[str] = None
     multiple: Optional[bool] = None
     options: Optional[List[SelectOption]] = None
+    selected_values: Optional[List[str]] = None
+    size: Optional[int | str] = None
     level: Optional[int] = Field(default=None, ge=1, le=6)
     alt: Optional[str] = None
     src: Optional[str] = None

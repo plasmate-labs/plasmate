@@ -76,6 +76,8 @@ class SelectOption(BaseModel):
     value: str
     text: str
     selected: Optional[bool] = None
+    disabled: Optional[bool] = None
+    group: Optional[str] = None
 
 
 class ListItem(BaseModel):
@@ -98,6 +100,8 @@ class SomElementAttrs(BaseModel):
     group: Optional[str] = None
     multiple: Optional[bool] = None
     options: Optional[List[SelectOption]] = None
+    selected_values: Optional[List[str]] = None
+    size: Optional[int | str] = None
     level: Optional[int] = None
     alt: Optional[str] = None
     src: Optional[str] = None

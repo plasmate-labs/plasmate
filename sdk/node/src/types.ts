@@ -67,6 +67,8 @@ export interface SelectOption {
   value: string;
   text: string;
   selected?: boolean;
+  disabled?: boolean;
+  group?: string;
 }
 
 export interface ListItem {
@@ -89,6 +91,8 @@ export interface SomElementAttrs {
   group?: string;
   multiple?: boolean;
   options?: SelectOption[];
+  selected_values?: string[];
+  size?: number | string;
   level?: number;
   alt?: string;
   src?: string;
