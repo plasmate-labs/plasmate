@@ -461,6 +461,16 @@ availability gate in the local action contract: agents should still see the
 target for planning and explanation, but compact action menus must mark it
 unavailable with `blocked_reason="inert"` before replay.
 
+2026-05-14 image submitter read: official Playwright MCP docs continue to make
+fresh structured snapshots the interaction unit, while Browserbase/Stagehand
+now market cached action validation as a cost and latency win and Cloudflare
+Browser Run is widening CDP/MCP distribution for hosted browser sessions.
+Plasmate should keep the local-first action contract precise on ordinary HTML
+submitters before chasing hosted infrastructure. Graphical submit inputs are a
+small but sticky SaaS gap: `input type="image"` should be a clickable submitter
+with `button_type`, `alt`, and `src` context so cached submit plans can still
+recognize branded/icon-only buttons.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -577,6 +587,14 @@ and adapter docs over one-off integration logic.
   - The `015-action-state` conformance fixture and shared
     action-availability manifest now assert inert availability gating across
     Rust, parser, SDK, and framework surfaces.
+  - The Rust SOM compiler now maps `input type="image"` to an actionable
+    button instead of a text input.
+  - Input-backed submitters (`submit`, `button`, `reset`, and `image`) now
+    expose `button_type`, giving cached submit plans the same native action
+    cue already used for `<button>`.
+  - Graphical submit inputs now resolve labels from `alt` and preserve `alt`
+    plus `src`, so agents can identify icon-only submitters without falling
+    back to raw DOM or screenshots.
   - The Rust SOM compiler and JSON Schema now preserve ARIA relationship cues:
     `aria-owns`, `aria-flowto`, and `aria-details`.
   - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
@@ -984,6 +1002,9 @@ and adapter docs over one-off integration logic.
 - Promote submit-button override cases (`button_type`, `formaction`,
   `formmethod`, `formenctype`, `formtarget`, and `formnovalidate`) into
   broader Rust/parser/SDK and adapter conformance fixtures.
+- Promote graphical submitter cases (`input type="image"`, `button_type`,
+  `alt`, and `src`) into the shared action manifest so parser, SDK, and
+  adapter outputs prove parity with Rust.
 - Promote inert availability cases into broader parser, SDK, and adapter
   conformance fixtures so blocked local action targets stay synchronized.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and

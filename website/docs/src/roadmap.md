@@ -358,6 +358,14 @@ Current action-replay products keep validating whether a target is safe before r
 - **Cache keys stay target-focused**: inert state should not alter deterministic `cache_key` values, so local action memory can still compare the same target while seeing current availability drift.
 - **Shared fixtures prevent adapter drift**: `015-action-state` and the action-availability manifest should assert inert gating across Rust, parser packages, SDKs, and framework prompt renderers.
 
+### 2026-05-14 Graphical Submitter Adjustment
+
+Browser-agent products keep turning repeated form work into validated action replay: Playwright MCP refs are fresh snapshot handles, Stagehand/Browserbase cache observed actions after state validation, and Browser Run is broadening hosted MCP/CDP browser access. Plasmate should keep closing local HTML submitter gaps before considering hosted infrastructure.
+
+- **Image submitters are buttons**: `input type="image"` should compile as an actionable button because it submits forms on click.
+- **Input submitters need button identity**: input-backed `submit`, `button`, `reset`, and `image` controls should expose `button_type`.
+- **Icon-only submitters need context**: graphical submitters should resolve labels from `alt` and preserve `alt` plus `src` so agents can recognize branded/icon-only actions without raw DOM recovery.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -545,6 +553,7 @@ Current action-replay products keep validating whether a target is safe before r
 - [x] Rust compiler and SOM schema preserve inherited inert state for action targets
 - [x] Compact action plans expose inert availability gating across parser packages, SDKs, and framework adapters
 - [x] Shared action-state and action-availability fixtures assert inert targets without changing deterministic action cache keys
+- [x] Rust compiler maps graphical submit inputs to actionable buttons, resolves alt labels, and preserves button_type, alt, and src context
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
@@ -558,6 +567,7 @@ Current action-replay products keep validating whether a target is safe before r
 - [ ] Promote upload-affordance cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote form-submission context cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote submit-button override cases into broader Rust/parser/SDK and adapter conformance fixtures
+- [ ] Promote graphical submitter cases into the shared action manifest and adapter conformance fixtures
 - [ ] Promote inert availability cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures

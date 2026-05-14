@@ -49,6 +49,35 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T14:05:23Z - Plasmate Improvements Automation
+
+- Git sync: latest pull was retried from the automation worktree and failed
+  because the sandbox cannot open the primary checkout worktree `FETCH_HEAD`.
+  Retrying from the primary checkout reached SSH DNS and still failed with
+  `ssh: Could not resolve hostname github.com: -65563`. Local `master`
+  remains ahead of stale `origin/master`; remote push and merge are still
+  blocked until GitHub DNS/API access works.
+- Market direction: current docs still favor local-first action-state fidelity
+  over a hosted browser-cloud pivot. Playwright MCP uses structured
+  accessibility snapshots with snapshot-scoped refs, Stagehand/Browserbase is
+  marketing cached action validation for repeated workflows, and Cloudflare
+  Browser Run/WebMCP is widening hosted MCP/CDP browser access. The sticky
+  Plasmate move remains exact, portable SOM action menus.
+- Code changes: Rust SOM now maps `input type="image"` to an actionable
+  button instead of a text input, adds `button_type` to input-backed
+  submitters (`submit`, `button`, `reset`, and `image`), resolves graphical
+  submitter labels from `alt`, and preserves `alt`/`src` context for
+  icon-only form buttons.
+- Docs changes: PRD and roadmap docs now record the graphical submitter
+  rationale and next step to promote these cases into shared manifest and
+  adapter conformance. Website doc sources were updated alongside root docs.
+- Verification: `rustfmt --check src/som/compiler.rs tests/som_compiler_test.rs`
+  passed; focused graphical submitter test passed; full `som_compiler_test`
+  suite passed 61 tests; `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build`
+  passed with existing warnings; `node website/build.mjs` rebuilt 39 docs
+  pages; `git diff --check` passed. Whole-crate `cargo fmt --check` still
+  reports unrelated pre-existing formatting drift in AWP/proxy/main files.
+
 ### 2026-05-14T13:16:38Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was retried from the automation worktree and

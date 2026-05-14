@@ -110,6 +110,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-14 inert-availability read: current action-replay products keep validating whether a target is safe before reuse. Playwright MCP refs are snapshot-scoped, Stagehand/Browserbase cache actions only when page state still matches, and Browser Run/WebMCP is making typed interaction contracts more prominent. Plasmate should keep inert targets visible for planning while marking them unavailable with `blocked_reason="inert"` in compact action menus.
 
+2026-05-14 image submitter read: current Playwright MCP, Stagehand, and Browser Run docs keep pushing browser-agent work toward fresh structured snapshots plus validated replay. Plasmate should keep the local HTML action contract exact: graphical submit inputs should compile as clickable submitters with `button_type`, `alt` labels, and `src` context so cached plans can recognize icon-only form buttons without raw DOM recovery.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -152,6 +154,7 @@ The project already spans a large number of package and integration surfaces: Ru
   - The Rust SOM compiler and JSON Schema now preserve native `inert` state, including inherited inert context for nested interactive controls.
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `inert`, mark inert targets unavailable with `blocked_reason="inert"`, and keep deterministic action `cache_key` values target-focused.
   - The `015-action-state` conformance fixture and shared action-availability manifest now assert inert availability gating across Rust, parser, SDK, and framework surfaces.
+  - The Rust SOM compiler now maps `input type="image"` to an actionable button, adds `button_type` to input-backed submitters, resolves graphical submitter labels from `alt`, and preserves `alt`/`src` context.
   - The Rust SOM compiler and JSON Schema now preserve ARIA relationship cues: `aria-owns`, `aria-flowto`, and `aria-details`.
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `owns`, `flowto`, and `details` without changing deterministic action `cache_key` values.
   - The shared action-availability manifest now asserts ARIA owns/flowto/details relationship cues across parser, SDK, and framework outputs.
@@ -308,6 +311,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Promote upload-affordance cases (`accept`, `capture`, `multiple`, and stable field `name`) into broader Rust/parser/SDK and adapter conformance fixtures.
 - Promote form-submission context cases (`form_action`, `form_method`, `form_target`, `form_enctype`, `form_novalidate`, `form_accept_charset`, and `form_autocomplete`) into broader Rust/parser/SDK and adapter conformance fixtures.
 - Promote submit-button override cases (`button_type`, `formaction`, `formmethod`, `formenctype`, `formtarget`, and `formnovalidate`) into broader Rust/parser/SDK and adapter conformance fixtures.
+- Promote graphical submitter cases (`input type="image"`, `button_type`, `alt`, and `src`) into the shared action manifest and adapter conformance fixtures.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures once the shared action manifest remains stable.
 - Promote form-relation cases (`form`, `list`, and `aria-errormessage`) into broader parser, SDK, and adapter conformance fixtures.
 - Promote live-region cases (`aria-busy`, `aria-live`, `aria-atomic`, and `aria-relevant`) into broader Rust/parser/SDK conformance fixtures.

@@ -628,6 +628,7 @@ fn test_input_button_values_become_labels_and_type_attrs() {
 <body><main>
     <input type="SUBMIT" value="Save changes">
     <input type="reset" value="Clear form">
+    <input type="image" src="/save.png" alt="Save with icon">
 </main></body></html>"#;
 
     let som = compiler::compile(html, "https://example.com").unwrap();
@@ -639,6 +640,7 @@ fn test_input_button_values_become_labels_and_type_attrs() {
         .expect("submit input value should be exposed as label");
     assert_eq!(save.role, ElementRole::Button);
     assert_eq!(save.attrs.as_ref().unwrap()["input_type"], "submit");
+    assert_eq!(save.attrs.as_ref().unwrap()["button_type"], "submit");
 
     let clear = elems
         .iter()
@@ -646,6 +648,19 @@ fn test_input_button_values_become_labels_and_type_attrs() {
         .expect("reset input value should be exposed as label");
     assert_eq!(clear.role, ElementRole::Button);
     assert_eq!(clear.attrs.as_ref().unwrap()["input_type"], "reset");
+    assert_eq!(clear.attrs.as_ref().unwrap()["button_type"], "reset");
+
+    let image = elems
+        .iter()
+        .find(|e| e.label.as_deref() == Some("Save with icon"))
+        .expect("image submit input alt should be exposed as label");
+    assert_eq!(image.role, ElementRole::Button);
+    assert_eq!(image.actions.as_ref().unwrap(), &vec!["click".to_string()]);
+    let image_attrs = image.attrs.as_ref().expect("image input attrs");
+    assert_eq!(image_attrs["input_type"], "image");
+    assert_eq!(image_attrs["button_type"], "image");
+    assert_eq!(image_attrs["src"], "/save.png");
+    assert_eq!(image_attrs["alt"], "Save with icon");
 }
 
 #[test]
