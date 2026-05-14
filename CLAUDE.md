@@ -81,6 +81,12 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   passed.
 - Known gaps: whole-crate `cargo fmt --check` still reports unrelated
   pre-existing formatting drift in AWP/proxy/main/MCP files.
+- Commit/push state: implementation commit `06703cb` was created from the
+  primary checkout and pushed to `origin/codex/native-input-shape-cues`.
+  Direct `origin/master` push was rejected with `fetch first`;
+  `git fetch origin master` failed DNS for `github.com`; `gh pr create` failed
+  because `api.github.com` is unreachable. Remote merge remains blocked until
+  fetch/API access works.
 
 ### 2026-05-14T19:02:44Z - Plasmate Improvements Automation
 
