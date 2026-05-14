@@ -84,8 +84,14 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   pre-existing formatting drift outside the touched files; Node package tests
   were unavailable because local `node_modules` directories are absent; and
   `node website/build.mjs` remains blocked because `marked` is not installed.
-- Commit/push state: pending in this worktree at the time of this note; remote
-  merge may remain blocked until GitHub DNS/fetch/API access works.
+- Commit/push state: worktree commit was blocked by the linked-worktree
+  `index.lock`, so the exact patch was applied and committed from
+  `/Users/steve/Git/plasmate` as `def6534` (`chore: tighten select action
+  parity`). Direct `origin/master` push was rejected with `fetch first`;
+  `git fetch origin master` failed DNS for `github.com`; review branch
+  `codex/select-action-parity` was pushed successfully; `gh pr create` failed
+  because `api.github.com` is unreachable. Remote merge remains blocked until
+  fetch/API access works.
 
 ### 2026-05-14T17:06:29Z - Plasmate Improvements Automation
 
