@@ -152,6 +152,18 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["command"] = attrs.command
             if attrs.popover:
                 item["popover"] = attrs.popover
+            if attrs.button_type:
+                item["button_type"] = attrs.button_type
+            if attrs.formaction:
+                item["formaction"] = attrs.formaction
+            if attrs.formmethod:
+                item["formmethod"] = attrs.formmethod
+            if attrs.formenctype:
+                item["formenctype"] = attrs.formenctype
+            if attrs.formtarget:
+                item["formtarget"] = attrs.formtarget
+            if attrs.formnovalidate is not None:
+                item["formnovalidate"] = attrs.formnovalidate
             if attrs.accesskey:
                 item["accesskey"] = attrs.accesskey
             if attrs.spellcheck is not None:

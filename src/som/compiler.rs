@@ -1739,6 +1739,12 @@ fn build_element_attrs(
             }
         }
         "button" => {
+            let button_type = attrs
+                .iter()
+                .find(|(n, _)| n == "type")
+                .map(|(_, v)| v.to_ascii_lowercase())
+                .unwrap_or_else(|| "submit".to_string());
+            map.insert("button_type".into(), json!(button_type));
             if inherited_disabled || has_attr(attrs, "disabled") {
                 map.insert("disabled".into(), json!(true));
             }
@@ -1916,6 +1922,10 @@ fn build_element_attrs(
         "autocapitalize",
         "dirname",
         "form",
+        "formaction",
+        "formmethod",
+        "formenctype",
+        "formtarget",
         "list",
         "popovertarget",
         "popovertargetaction",
@@ -1926,6 +1936,9 @@ fn build_element_attrs(
         if let Some((_, value)) = attrs.iter().find(|(n, _)| n == key) {
             map.insert(key.into(), json!(value));
         }
+    }
+    if has_attr(attrs, "formnovalidate") {
+        map.insert("formnovalidate".into(), json!(true));
     }
     for key in ["minlength", "maxlength", "min", "max"] {
         if let Some((_, value)) = attrs.iter().find(|(n, _)| n == key) {
@@ -2609,7 +2622,7 @@ mod tests {
 <html><head><title>Actions</title></head>
 <body>
 <main>
-  <button popovertarget="filters" popovertargetaction="show">Open filters</button>
+  <button type="submit" formaction="/filters" formmethod="post" formenctype="multipart/form-data" formtarget="_blank" formnovalidate popovertarget="filters" popovertargetaction="show">Open filters</button>
   <button commandfor="filters" command="hide-popover">Close filters</button>
   <section id="filters" popover="auto">Filter options</section>
 </main>
@@ -2629,6 +2642,12 @@ mod tests {
             .attrs
             .as_ref()
             .expect("open button attrs should compile");
+        assert_eq!(open_attrs["button_type"], "submit");
+        assert_eq!(open_attrs["formaction"], "/filters");
+        assert_eq!(open_attrs["formmethod"], "post");
+        assert_eq!(open_attrs["formenctype"], "multipart/form-data");
+        assert_eq!(open_attrs["formtarget"], "_blank");
+        assert_eq!(open_attrs["formnovalidate"], true);
         assert_eq!(open_attrs["popovertarget"], "filters");
         assert_eq!(open_attrs["popovertargetaction"], "show");
 

@@ -131,9 +131,16 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         "commandfor",
         "command",
         "popover",
+        "button_type",
+        "formaction",
+        "formmethod",
+        "formenctype",
+        "formtarget",
     ):
         if item.get(command_key):
             flags.append(f"{command_key}={item[command_key]}")
+    if "formnovalidate" in item:
+        flags.append(f"formnovalidate={item['formnovalidate']}")
     if item.get("accesskey"):
         flags.append(f"accesskey={item['accesskey']}")
     if "spellcheck" in item:

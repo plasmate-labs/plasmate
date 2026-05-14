@@ -118,6 +118,12 @@ export interface SomElementAttrs {
   commandfor?: string;
   command?: string;
   popover?: string;
+  button_type?: string;
+  formaction?: string;
+  formmethod?: string;
+  formenctype?: string;
+  formtarget?: string;
+  formnovalidate?: boolean;
   minlength?: number | string;
   maxlength?: number | string;
   min?: number | string;

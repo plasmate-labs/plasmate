@@ -137,6 +137,12 @@ class ElementAttrs(BaseModel):
     commandfor: Optional[str] = None
     command: Optional[str] = None
     popover: Optional[str] = None
+    button_type: Optional[str] = None
+    formaction: Optional[str] = None
+    formmethod: Optional[str] = None
+    formenctype: Optional[str] = None
+    formtarget: Optional[str] = None
+    formnovalidate: Optional[bool] = None
     minlength: Optional[int | str] = None
     maxlength: Optional[int | str] = None
     min: Optional[int | str] = None

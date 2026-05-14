@@ -634,6 +634,21 @@ same workflow.
    `autocomplete` should surface across SDKs and adapters so local action
    memory can be checked before a browser action is spent.
 
+### 2026-05-14 Submitter Override Adjustment
+
+Repeated SaaS forms often contain several submit buttons with different
+endpoints or validation behavior. Browser-agent competitors keep teaching users
+to validate cached actions against the current structured state before replay,
+so Plasmate should preserve the button-level submission contract as compact
+target context.
+
+1. **Submit buttons need identity beyond label**: `button_type` should expose
+   whether a button submits, resets, or acts as a plain command.
+2. **Button overrides can change destination**: `formaction`, `formmethod`,
+   `formenctype`, and `formtarget` should travel with the action target.
+3. **Validation mode is replay context**: `formnovalidate` should be visible so
+   cached submit actions do not assume browser validation will run.
+
 ### 2026-05-14 Form-Relation Action Menu Adjustment
 
 Current browser-agent products keep turning page state into reusable action
@@ -1124,9 +1139,18 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   and `form_autocomplete` without changing deterministic cache keys.
 - The shared action-availability manifest now asserts form submission context
   across parser, SDK, and framework adapter outputs.
-- Next conformance step: promote upload-affordance and form-submission
-  context cases into broader Rust/parser/SDK and adapter fixtures alongside
-  text-entry, ARIA widget, range, and set-position cases.
+- Rust SOM compilation and the JSON Schema now preserve submit-button override cues with
+  `button_type`, `formaction`, `formmethod`, `formenctype`, `formtarget`, and
+  `formnovalidate`, matching the existing schema/spec contract.
+- Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+  and Vercel AI action-plan surfaces now expose those submit override cues so
+  cached submit actions can validate endpoint, method, encoding, target, and
+  validation mode before replay.
+- The shared action-availability manifest now asserts submit-button override
+  context across parser, SDK, and framework adapter outputs.
+- Next conformance step: promote upload-affordance, form-submission context,
+  and submit-button override cases into broader Rust/parser/SDK and adapter
+  fixtures alongside text-entry, ARIA widget, range, and set-position cases.
 
 ## Dependencies to Add
 

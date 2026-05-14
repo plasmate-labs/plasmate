@@ -434,6 +434,15 @@ one input. Plasmate should surface form-level `action`, `method`, `target`,
 action-plan context so agents can distinguish upload, checkout, and settings
 forms before reusing local action memory.
 
+2026-05-14 submitter-override read: current browser-agent docs keep
+validating action replay against fresh structured state, and SaaS pages often
+route different submit buttons from the same form to different endpoints,
+methods, targets, or validation modes. Plasmate should expose native submitter
+override cues (`button_type`, `formaction`, `formmethod`, `formenctype`,
+`formtarget`, and `formnovalidate`) across the shared action manifest so local
+cached submit actions can verify the exact submission path without raw DOM
+recovery.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -521,6 +530,16 @@ and adapter docs over one-off integration logic.
     `form_accept_charset`, and `form_autocomplete` without changing
     deterministic action `cache_key` values.
   - The shared action-availability manifest now asserts form submission
+    context across parser, SDK, and framework outputs.
+  - The Rust SOM compiler now preserves submit-button override cues:
+    `button_type`, `formaction`, `formmethod`, `formenctype`, `formtarget`,
+    and `formnovalidate`, and JSON Schema/SOM spec docs accept those
+    button-level form overrides.
+  - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
+    AI action-plan surfaces now expose those submit override cues so cached
+    submit actions can validate the exact endpoint, method, encoding, target,
+    and validation mode before replay.
+  - The shared action-availability manifest now asserts submit-button override
     context across parser, SDK, and framework outputs.
   - The Rust SOM compiler and JSON Schema now preserve ARIA relationship cues:
     `aria-owns`, `aria-flowto`, and `aria-details`.
@@ -926,6 +945,9 @@ and adapter docs over one-off integration logic.
   `form_target`, `form_enctype`, `form_novalidate`, `form_accept_charset`,
   and `form_autocomplete`) into broader Rust/parser/SDK and adapter
   conformance fixtures.
+- Promote submit-button override cases (`button_type`, `formaction`,
+  `formmethod`, `formenctype`, `formtarget`, and `formnovalidate`) into
+  broader Rust/parser/SDK and adapter conformance fixtures.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and
   `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures
   once the shared action manifest remains stable.

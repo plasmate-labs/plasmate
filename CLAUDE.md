@@ -49,6 +49,31 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T11:07:00Z - Plasmate Improvements Automation
+
+- Local continuation: after the upload-affordance branch push, additional
+  submit-button override edits were present in the working tree. They align
+  with the existing form-submission-context direction, so they were preserved
+  and carried forward rather than reverted.
+- Code changes: Rust SOM now preserves submit-button override cues:
+  normalized `button_type`, `formaction`, `formmethod`, `formenctype`,
+  `formtarget`, and boolean `formnovalidate`.
+- Parser/SDK/adapter changes: Python/Node parser packages, Python/Node/Go
+  SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces expose the
+  submit override cues so cached submit actions can validate endpoint, method,
+  encoding, target, and validation mode before replay.
+- Fixture and docs changes: the shared action-availability SOM/expected
+  manifest now asserts submit-button override context. PRD, roadmap, generated
+  website docs, and this running state were updated with the next broader
+  conformance step.
+- Verification: JSON validation passed; `rustfmt --check src/som/compiler.rs
+  tests/som_compiler_test.rs` passed; `gofmt` was applied to touched Go files;
+  `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build` passed with
+  existing warnings; `cargo test --test som_compiler_test -- --test-threads=1`
+  passed 61 tests; `./scripts/action-manifest-conformance.sh --quick` and
+  `--full` passed; Node parser, Node SDK, and Vercel AI builds passed; `node
+  website/build.mjs` rebuilt 39 pages; `git diff --check` passed.
+
 ### 2026-05-14T10:13:09Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted from the primary checkout, but

@@ -366,8 +366,9 @@ Each **Option** object:
 Implementations SHOULD preserve common actionability attributes on any element:
 `contenteditable`, `tabindex`, `name`, `accept`, `capture`, `autocomplete`, `inputmode`,
 `enterkeyhint`, `form`, `list`, `popovertarget`, `popovertargetaction`,
-`commandfor`, `command`, `popover`, `accesskey`, `readonly`, `min`, `max`,
-`step`, and `description`. The
+`commandfor`, `command`, `popover`, `button_type`, `formaction`,
+`formmethod`, `formenctype`, `formtarget`, `formnovalidate`, `accesskey`,
+`readonly`, `min`, `max`, `step`, and `description`. The
 `description` value is resolved from `aria-describedby` or `aria-description`.
 These attributes are especially important for custom controls that are exposed
 through ARIA roles instead of native form elements.
