@@ -86,8 +86,9 @@ Browser Use page contexts are tested against the shared
 cache-key, required, readonly, inert, group, type, value, checked, expanded, pressed,
 selected, current, controls, haspopup, name, accept, capture, multiple,
 autocomplete, inputmode, enterkeyhint, autocapitalize, dirname, spellcheck,
-link target/rel/download cues, form plus form submission context,
-submitter override cues, list, popover/command relationships, accesskey, ARIA
+link target/rel/download cues, graphical submitter alt/src cues, form plus
+form submission context, submitter override cues, select selected_values/size
+context, list, popover/command relationships, accesskey, ARIA
 placeholder/autocomplete/active-descendant/error-message state, keyshortcuts,
 roledescription, live-region state, ARIA owns/flowto/details relationships,
 ARIA readonly/multiline/multiselectable widget state, orientation/sort/value

@@ -107,7 +107,7 @@ assert.equal(preview.blocked_reason, 'inert')
 const availableTargets = preparePlasmateActionPlan(targets)
 assert.deepEqual(
   availableTargets.map((target) => target.id),
-  ['e_upload', 'e_plan', 'e_compact', 'e_annual', 'e_quota', 'e_billing']
+  ['e_upload', 'e_image_submit', 'e_plan', 'e_compact', 'e_annual', 'e_quota', 'e_billing']
 )
 
 const formatted = formatPlasmateActionPlan(targets, {
@@ -121,6 +121,10 @@ assert.match(
   formatted,
   /\[e_upload\].*\[type=file\].*\[name=evidence\].*\[accept=image\/png,\.\pdf\].*\[capture=environment\].*\[multiple=true\]/
 )
+assert.match(
+  formatted,
+  /\[e_image_submit\].*\[alt=Upload receipt\].*\[src=\/assets\/upload-receipt\.svg\].*\[type=image\].*\[value=receipt\].*\[name=intent\].*\[button_type=submit\]/
+)
 assert.match(formatted, /\[e_compact\].*\[checked=false\]/)
 assert.match(formatted, /\[e_compact\].*\[pressed=false\]/)
 assert.match(formatted, /\[e_annual\].*\[checked=true\]/)
@@ -129,6 +133,8 @@ assert.match(formatted, /\[e_plan\].*\[expanded=false\]/)
 assert.match(formatted, /\[e_plan\].*\[controls=plan-options\]/)
 assert.match(formatted, /\[e_plan\].*\[haspopup=listbox\]/)
 assert.match(formatted, /\[e_plan\].*\[multiple=true\]/)
+assert.match(formatted, /\[e_plan\].*\[selected_values=team\]/)
+assert.match(formatted, /\[e_plan\].*\[size=4\]/)
 assert.match(formatted, /\[e_plan\].*\[multiselectable=true\]/)
 assert.match(formatted, /\[e_plan\].*\[level=2\].*\[posinset=1\].*\[setsize=3\]/)
 assert.match(formatted, /\[e_quota\].*\[min=1\].*\[max=100\].*\[step=5\]/)

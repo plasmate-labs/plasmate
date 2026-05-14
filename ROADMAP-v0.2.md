@@ -835,6 +835,24 @@ for repeated SaaS workflows without raw DOM recovery.
    the public schema and flow through parser/SDK action plans before agents can
    safely cache menu choices across runtimes.
 
+### 2026-05-14 Shared Manifest Parity Adjustment
+
+Current competitor movement keeps confirming that action memory is only sticky
+when the observed target is portable. Playwright MCP refs are snapshot-scoped,
+Stagehand/Browserbase cache validated actions, and Firecrawl/Browser Use make
+managed sessions easy for teams that want infrastructure. Plasmate should keep
+the local-first wedge by making small native cues fail centrally across the
+existing parser, SDK, and framework surfaces.
+
+1. **Image submitters need media context in plans**: `alt` and `src` should
+   travel with actionable graphical submitters so agents can identify icon-only
+   submit buttons without screenshots.
+2. **Select current state belongs in the manifest**: `selected_values` and
+   `size` should be asserted by the shared action fixture before broader
+   conformance promotion.
+3. **Cache keys stay stable**: media and live menu state should inform replay
+   validation without changing deterministic target identity.
+
 ## Architecture
 
 ```
@@ -1268,6 +1286,11 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Python/Node parser packages, Python/Node/Go SDK types, action-plan helpers,
   Browser Use, LangChain, and Vercel AI prompt renderers now carry
   `selected_values` and `size` as compact menu-planning context.
+- Shared action-availability fixtures now assert graphical submitter `alt` and
+  `src`, image-submit `button_type`/`input_type`, select `selected_values`, and
+  select `size` across parser packages, SDKs, and framework adapters.
+- Compact action-plan helpers now expose actionable media `alt`/`src` context
+  without changing deterministic action cache keys.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   and select-option parser/SDK/adaptor parity cases into broader fixtures

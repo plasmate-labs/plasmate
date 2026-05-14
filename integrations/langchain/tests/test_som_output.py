@@ -58,6 +58,10 @@ def test_som_to_text_surfaces_interactive_state():
             assert f'[capture="{target["capture"]}"]' in line
         if "multiple" in target:
             assert f'[multiple="{target["multiple"]}"]' in line
+        if target.get("selected_values"):
+            assert f'[selected_values="{",".join(target["selected_values"])}"]' in line
+        if "size" in target:
+            assert f'[size="{target["size"]}"]' in line
         if target.get("autocomplete"):
             assert f'[autocomplete="{target["autocomplete"]}"]' in line
         if target.get("inputmode"):
@@ -75,6 +79,9 @@ def test_som_to_text_surfaces_interactive_state():
         for link_key in ("target", "rel", "download"):
             if link_key in target:
                 assert f'[{link_key}="{target[link_key]}"]' in line
+        for media_key in ("alt", "src"):
+            if media_key in target:
+                assert f'[{media_key}="{target[media_key]}"]' in line
         for command_key in (
             "popovertarget",
             "popovertargetaction",
@@ -125,6 +132,9 @@ def test_som_to_text_surfaces_interactive_state():
             "multiselectable",
             "orientation",
             "sort",
+            "level",
+            "posinset",
+            "setsize",
             "valuemin",
             "valuemax",
             "valuenow",

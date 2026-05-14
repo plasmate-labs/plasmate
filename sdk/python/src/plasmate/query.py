@@ -120,6 +120,10 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["rel"] = attrs.rel
             if attrs.download is not None:
                 item["download"] = attrs.download
+            if attrs.alt:
+                item["alt"] = attrs.alt
+            if attrs.src:
+                item["src"] = attrs.src
             if attrs.name:
                 item["name"] = attrs.name
             if attrs.accept:

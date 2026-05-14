@@ -504,6 +504,15 @@ option `group`, option `disabled`, and `selected_values` should move through
 schema, parser packages, SDKs, and prompt renderers so cached menu plans remain
 portable across the project's broad integration surface.
 
+2026-05-14 shared-manifest parity read: current Playwright MCP snapshots,
+Stagehand/Browserbase action caching, and Firecrawl/Browser Use managed
+sessions all reinforce the same retention mechanism: action state is only
+sticky when downstream app code trusts it without adapter-specific recovery.
+Plasmate's broad repo surface should keep turning small native HTML cues into
+shared manifest expectations. Graphical submitter `alt`/`src`, image-submit
+`button_type`, and select `selected_values`/`size` are now compact target
+contract fields rather than parser-only details.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -545,6 +554,15 @@ and adapter docs over one-off integration logic.
   - JSON Schema/SOM spec, Python/Node parser packages, Python/Node/Go SDKs,
     Browser Use, LangChain, and Vercel AI now accept or render
     `selected_values`, select `size`, option `disabled`, and option `group`.
+  - The shared action-availability manifest now includes an image submitter
+    with `button_type`, `input_type=image`, `alt`, `src`, `name`, and `value`,
+    proving graphical submitter context across parser packages, SDKs, Browser
+    Use, LangChain, and Vercel AI.
+  - Compact action-plan helpers now expose `alt` and `src` for actionable
+    graphical targets without changing deterministic `cache_key` values.
+  - The shared manifest now asserts select `selected_values` and `size`,
+    moving menu current-state parity from documentation into cross-runtime
+    fixture coverage.
   - The Rust SOM compiler and JSON Schema now preserve link navigation cues:
     `target`, `rel`, and `download`.
   - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
@@ -1071,18 +1089,19 @@ and adapter docs over one-off integration logic.
 - Promote submit-button override cases (`button_type`, `formaction`,
   `formmethod`, `formenctype`, `formtarget`, and `formnovalidate`) into
   broader Rust/parser/SDK and adapter conformance fixtures.
-- Promote graphical submitter cases (`input type="image"`, `button_type`,
-  `alt`, and `src`) into the shared action manifest so parser, SDK, and
-  adapter outputs prove parity with Rust.
+- Promote graphical submitter cases from the shared action manifest into
+  broader Rust/parser/SDK and adapter conformance fixtures so icon-only submit
+  buttons stay synchronized outside the compact action-plan fixture.
 - Promote inert availability cases into broader parser, SDK, and adapter
   conformance fixtures so blocked local action targets stay synchronized.
 - Promote native button `value`, invalid button-type normalization,
   stylesheet-hidden nested actions, inert shadow-host inheritance, and hidden
   descendant text filtering into shared fixtures that cover parent text,
   labels, select options, lists, and tables.
-- Promote select-option state (`value` fallback text, optgroup `group`,
-  option `disabled`, and multi-select `selected_values`) into shared
-  Rust/parser/SDK and adapter fixtures.
+- Promote remaining select-option state (`value` fallback text, optgroup
+  `group`, option `disabled`, and default single-select selection) into broader
+  Rust/parser/SDK and adapter fixtures now that `selected_values` and `size`
+  are covered by the shared action manifest.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and
   `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures
   once the shared action manifest remains stable.

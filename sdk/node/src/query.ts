@@ -54,6 +54,8 @@ export interface ActionPlanItem {
   target?: string;
   rel?: string;
   download?: boolean | string;
+  alt?: string;
+  src?: string;
   name?: string;
   accept?: string;
   capture?: boolean | string;
@@ -205,6 +207,8 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.target) item.target = el.attrs.target;
     if (el.attrs?.rel) item.rel = el.attrs.rel;
     if (el.attrs?.download !== undefined) item.download = el.attrs.download;
+    if (el.attrs?.alt) item.alt = el.attrs.alt;
+    if (el.attrs?.src) item.src = el.attrs.src;
     if (el.attrs?.name) item.name = el.attrs.name;
     if (el.attrs?.accept) item.accept = el.attrs.accept;
     if (el.attrs?.capture !== undefined) item.capture = el.attrs.capture;

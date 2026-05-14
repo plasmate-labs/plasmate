@@ -6,8 +6,8 @@
   "meta": {
     "html_bytes": 1200,
     "som_bytes": 300,
-    "element_count": 8,
-    "interactive_count": 8
+    "element_count": 10,
+    "interactive_count": 10
   },
   "regions": [
     {
@@ -115,6 +115,21 @@
           }
         },
         {
+          "id": "e_image_submit",
+          "role": "button",
+          "label": "Upload receipt",
+          "actions": ["click"],
+          "attrs": {
+            "input_type": "image",
+            "button_type": "submit",
+            "name": "intent",
+            "value": "receipt",
+            "alt": "Upload receipt",
+            "src": "/assets/upload-receipt.svg",
+            "description": "Icon-only image submitter"
+          }
+        },
+        {
           "id": "e_plan",
           "role": "select",
           "label": "Plan",
@@ -123,6 +138,8 @@
             "required": true,
             "value": "team",
             "multiple": true,
+            "selected_values": ["team"],
+            "size": 4,
             "aria": {
               "expanded": false,
               "controls": "plan-options",

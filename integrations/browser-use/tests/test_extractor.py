@@ -78,6 +78,9 @@ def test_build_context_surfaces_action_availability():
         for link_key in ("target", "rel", "download"):
             if link_key in target:
                 assert f'[{link_key}={target[link_key]}]' in line
+        for media_key in ("alt", "src"):
+            if media_key in target:
+                assert f'[{media_key}={target[media_key]}]' in line
         for command_key in (
             "popovertarget",
             "popovertargetaction",

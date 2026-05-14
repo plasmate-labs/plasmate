@@ -571,9 +571,11 @@ Current competitor direction keeps validating cached action plans against the cu
 - [x] Compact action plans expose inert availability gating across parser packages, SDKs, and framework adapters
 - [x] Shared action-state and action-availability fixtures assert inert targets without changing deterministic action cache keys
 - [x] Rust compiler maps graphical submit inputs to actionable buttons, resolves alt labels, and preserves button_type, alt, and src context
+- [x] Shared action manifest asserts graphical submitter alt/src context across parser packages, SDKs, and framework adapters
 - [x] Single-select controls infer the browser-default first selected option when markup omits `selected`
 - [x] Disabled optgroups propagate disabled state to child option summaries
 - [x] SOM schema/spec, parser packages, SDKs, Browser Use, LangChain, and Vercel AI carry selected_values and select size context
+- [x] Shared action manifest asserts select selected_values and size as compact menu-planning context
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants

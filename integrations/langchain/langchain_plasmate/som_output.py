@@ -251,6 +251,10 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append(f'[rel="{attrs["rel"]}"]')
     if "download" in attrs:
         flags.append(f'[download="{attrs["download"]}"]')
+    if attrs.get("alt"):
+        flags.append(f'[alt="{attrs["alt"]}"]')
+    if attrs.get("src"):
+        flags.append(f'[src="{attrs["src"]}"]')
     for command_key in (
         "popovertarget",
         "popovertargetaction",

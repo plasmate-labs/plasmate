@@ -179,6 +179,8 @@ type ActionPlanItem struct {
 	Target            *string     `json:"target,omitempty"`
 	Rel               *string     `json:"rel,omitempty"`
 	Download          interface{} `json:"download,omitempty"`
+	Alt               *string     `json:"alt,omitempty"`
+	Src               *string     `json:"src,omitempty"`
 	Name              *string     `json:"name,omitempty"`
 	Accept            *string     `json:"accept,omitempty"`
 	Capture           interface{} `json:"capture,omitempty"`
@@ -329,6 +331,8 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.Target = el.Attrs.Target
 			item.Rel = el.Attrs.Rel
 			item.Download = el.Attrs.Download
+			item.Alt = el.Attrs.Alt
+			item.Src = el.Attrs.Src
 			item.Name = el.Attrs.Name
 			item.Accept = el.Attrs.Accept
 			item.Capture = el.Attrs.Capture
