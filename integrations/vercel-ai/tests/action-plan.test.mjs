@@ -91,6 +91,12 @@ assert.equal(save.popovertarget, 'save-status')
 assert.equal(save.popovertargetaction, 'show')
 assert.equal(save.commandfor, 'save-status')
 assert.equal(save.command, 'toggle-popover')
+assert.equal(save.button_type, 'submit')
+assert.equal(save.formaction, '/settings/save')
+assert.equal(save.formmethod, 'post')
+assert.equal(save.formenctype, 'application/x-www-form-urlencoded')
+assert.equal(save.formtarget, '_top')
+assert.equal(save.formnovalidate, true)
 
 const availableTargets = preparePlasmateActionPlan(targets)
 assert.deepEqual(
@@ -130,5 +136,5 @@ assert.match(formatted, /\[e_billing\].*\[rel=noopener\]/)
 assert.match(formatted, /\[e_billing\].*\[download=billing\.csv\]/)
 assert.match(
   formatted,
-  /\[e_save\] button "Save" \(click\) \[blocked\] \[cache_key=plasmate-action:v1:4d0e8356\] \[blocked_reason=disabled\].*\[popovertarget=save-status\].*\[popovertargetaction=show\].*\[commandfor=save-status\].*\[command=toggle-popover\]/
+  /\[e_save\] button "Save" \(click\) \[blocked\] \[cache_key=plasmate-action:v1:4d0e8356\] \[blocked_reason=disabled\].*\[popovertarget=save-status\].*\[popovertargetaction=show\].*\[commandfor=save-status\].*\[command=toggle-popover\].*\[button_type=submit\].*\[formaction=\/settings\/save\].*\[formmethod=post\].*\[formenctype=application\/x-www-form-urlencoded\].*\[formtarget=_top\].*\[formnovalidate=true\]/
 )

@@ -248,9 +248,16 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         "commandfor",
         "command",
         "popover",
+        "button_type",
+        "formaction",
+        "formmethod",
+        "formenctype",
+        "formtarget",
     ):
         if attrs.get(command_key):
             flags.append(f'[{command_key}="{attrs[command_key]}"]')
+    if "formnovalidate" in attrs:
+        flags.append(f'[formnovalidate="{attrs["formnovalidate"]}"]')
     if attrs.get("accesskey"):
         flags.append(f'[accesskey="{attrs["accesskey"]}"]')
     if "spellcheck" in attrs:

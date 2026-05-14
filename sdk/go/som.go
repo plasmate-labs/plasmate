@@ -91,6 +91,12 @@ type ElementAttrs struct {
 	CommandFor      *string        `json:"commandfor,omitempty"`
 	Command         *string        `json:"command,omitempty"`
 	Popover         *string        `json:"popover,omitempty"`
+	ButtonType      *string        `json:"button_type,omitempty"`
+	FormAction      *string        `json:"formaction,omitempty"`
+	FormMethod      *string        `json:"formmethod,omitempty"`
+	FormEnctype     *string        `json:"formenctype,omitempty"`
+	FormTarget      *string        `json:"formtarget,omitempty"`
+	FormNoValidate  *bool          `json:"formnovalidate,omitempty"`
 	MinLength       interface{}    `json:"minlength,omitempty"`
 	MaxLength       interface{}    `json:"maxlength,omitempty"`
 	Min             interface{}    `json:"min,omitempty"`

@@ -310,6 +310,14 @@ Validated action menus are only sticky when they include the submission contract
 - **Encoding changes artifacts**: `enctype` and `accept-charset` should be visible before file uploads or internationalized form submissions are replayed.
 - **Validation and autofill change readiness**: `novalidate` and form-level `autocomplete` should surface across SDKs and adapters so local action memory can be checked before a browser action is spent.
 
+### 2026-05-14 Submitter Override Adjustment
+
+Repeated SaaS forms often contain several submit buttons with different endpoints or validation behavior. Browser-agent competitors keep teaching users to validate cached actions against the current structured state before replay, so Plasmate should preserve the button-level submission contract as compact target context.
+
+- **Submit buttons need identity beyond label**: `button_type` should expose whether a button submits, resets, or acts as a plain command.
+- **Button overrides can change destination**: `formaction`, `formmethod`, `formenctype`, and `formtarget` should travel with the action target.
+- **Validation mode is replay context**: `formnovalidate` should be visible so cached submit actions do not assume browser validation will run.
+
 ### 2026-05-14 Popover and Command Relationship Adjustment
 
 Browser-native action relationships are becoming more important for agents that replay cached plans on modern app UIs. The Popover API gives buttons a declarative target and action, and `commandfor`/`command` generalize that model for popovers, dialogs, and custom commands. Plasmate should preserve those relationships as compact target context instead of forcing agents to rediscover them from raw DOM.
@@ -512,6 +520,9 @@ Current Playwright MCP and Stagehand docs keep validating action surfaces that a
 - [x] Rust compiler and SOM schema preserve form target, enctype, novalidate, accept-charset, and autocomplete context
 - [x] Compact action plans expose form_action, form_method, form_target, form_enctype, form_novalidate, form_accept_charset, and form_autocomplete across parser packages, SDKs, and framework adapters
 - [x] Shared action-availability manifest asserts form submission context for cacheable action targets
+- [x] Rust compiler and SOM schema preserve submit-button override cues with button_type, formaction, formmethod, formenctype, formtarget, and formnovalidate
+- [x] Compact action plans expose submit-button override cues across parser packages, SDKs, and framework adapters
+- [x] Shared action-availability manifest asserts submit-button override context for cacheable action targets
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
@@ -524,6 +535,7 @@ Current Playwright MCP and Stagehand docs keep validating action surfaces that a
 - [ ] Promote text-entry affordance cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote upload-affordance cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote form-submission context cases into broader Rust/parser/SDK and adapter conformance fixtures
+- [ ] Promote submit-button override cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures

@@ -82,9 +82,16 @@ def test_build_context_surfaces_action_availability():
             "commandfor",
             "command",
             "popover",
+            "button_type",
+            "formaction",
+            "formmethod",
+            "formenctype",
+            "formtarget",
         ):
             if target.get(command_key):
                 assert f'[{command_key}={target[command_key]}]' in line
+        if "formnovalidate" in target:
+            assert f'[formnovalidate={target["formnovalidate"]}]' in line
         if target.get("accesskey"):
             assert f'[accesskey={target["accesskey"]}]' in line
         if "spellcheck" in target:

@@ -242,6 +242,12 @@
             "commandfor": { "type": "string" },
             "command": { "type": "string" },
             "popover": { "type": "string" },
+            "button_type": { "type": "string" },
+            "formaction": { "type": "string" },
+            "formmethod": { "type": "string" },
+            "formenctype": { "type": "string" },
+            "formtarget": { "type": "string" },
+            "formnovalidate": { "type": "boolean" },
             "minlength": {
               "oneOf": [
                 { "type": "integer" },

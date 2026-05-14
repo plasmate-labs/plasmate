@@ -87,7 +87,7 @@ cache-key, required, readonly, group, type, value, checked, expanded, pressed,
 selected, current, controls, haspopup, name, accept, capture, multiple,
 autocomplete, inputmode, enterkeyhint, autocapitalize, dirname, spellcheck,
 link target/rel/download cues, form plus form submission context,
-list, popover/command relationships, accesskey, ARIA
+submitter override cues, list, popover/command relationships, accesskey, ARIA
 placeholder/autocomplete/active-descendant/error-message state, keyshortcuts,
 roledescription, live-region state, ARIA owns/flowto/details relationships,
 ARIA readonly/multiline/multiselectable widget state, orientation/sort/value

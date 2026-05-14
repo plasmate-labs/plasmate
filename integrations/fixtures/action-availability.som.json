@@ -83,6 +83,12 @@
             "popovertargetaction": "show",
             "commandfor": "save-status",
             "command": "toggle-popover",
+            "button_type": "submit",
+            "formaction": "/settings/save",
+            "formmethod": "post",
+            "formenctype": "application/x-www-form-urlencoded",
+            "formtarget": "_top",
+            "formnovalidate": true,
             "disabled": true,
             "aria": {
               "keyshortcuts": "Meta+S",
