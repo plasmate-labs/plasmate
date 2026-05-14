@@ -49,6 +49,44 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T23:09:32Z - Plasmate Improvements Automation
+
+- Git sync: initial fetch from the automation worktree failed because the
+  linked worktree still cannot open `FETCH_HEAD`. Retrying from
+  `/Users/steve/Git/plasmate` failed DNS for `github.com`, so work continued
+  from the latest locally pushed automation branch
+  `codex/action-manifest-media-select` at `476349d`. After commit, the review
+  branch push succeeded, but `git fetch origin master` still failed DNS.
+- Market direction: current competitor research still favors Plasmate's
+  local-first, portable action-state wedge. Playwright MCP keeps refs bound to
+  fresh structured snapshots, Stagehand/Browserbase makes cached actions depend
+  on target validation, and Firecrawl/Browser Use keep selling managed browser
+  sessions for teams that want infrastructure. The roadmap should keep turning
+  native/ARIA context into shared compact-target contracts rather than pivoting
+  into hosted browser fleets.
+- Code changes: Rust SOM now preserves native `title` help text plus source
+  `aria-labelledby` and `aria-describedby` IDREFs as `attrs.title`,
+  `attrs.labelledby`, and `attrs.describedby`.
+- Contract changes: JSON Schema/SOM spec, Python/Node parser packages,
+  Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI action-plan
+  surfaces now carry `title`, `labelledby`, and `describedby` without changing
+  deterministic `cache_key` values.
+- Fixture/docs changes: the shared action-availability fixture now asserts
+  relationship-context cues on the email target; PRD, roadmap, website
+  generated docs, SDK/adapter READMEs, and this running state record the
+  relationship-context rationale and next broader conformance step.
+- Verification: focused Rust ARIA compiler tests passed; `cargo build` passed
+  with existing warnings; Python parser tests passed 68 tests; Python SDK query
+  tests passed 36 tests; Node parser, Node SDK, Go SDK (with repo-local
+  `GOCACHE`), Browser Use, LangChain, Vercel AI, and
+  `./scripts/action-manifest-conformance.sh --quick` passed; JSON validation,
+  `node website/build.mjs`, and `git diff --check` passed.
+- Commit/push state: committed `07da1e3` (`chore: expose action relationship
+  context`) and pushed `origin/codex/action-relationship-context-2026-05-14`.
+  Direct push to `origin/master` was rejected with `fetch first`, and
+  `gh pr create` failed because `api.github.com` is unreachable, so remote
+  merge remains blocked until GitHub fetch/API access works.
+
 ### 2026-05-14T22:12:54Z - Plasmate Improvements Automation
 
 - Git sync: latest pull/fetch from the automation worktree failed because the
