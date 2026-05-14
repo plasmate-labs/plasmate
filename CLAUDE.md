@@ -82,7 +82,8 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   `./scripts/action-manifest-conformance.sh --quick` passed; JSON validation,
   `node website/build.mjs`, and `git diff --check` passed.
 - Commit/push state: committed `07da1e3` (`chore: expose action relationship
-  context`) and pushed `origin/codex/action-relationship-context-2026-05-14`.
+  context`) plus follow-up running-state docs on
+  `origin/codex/action-relationship-context-2026-05-14`.
   Direct push to `origin/master` was rejected with `fetch first`, and
   `gh pr create` failed because `api.github.com` is unreachable, so remote
   merge remains blocked until GitHub fetch/API access works.
