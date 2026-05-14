@@ -227,6 +227,10 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append(f'[capture="{attrs["capture"]}"]')
     if "multiple" in attrs:
         flags.append(f'[multiple="{attrs["multiple"]}"]')
+    if attrs.get("selected_values"):
+        flags.append(f'[selected_values="{",".join(attrs["selected_values"])}"]')
+    if "size" in attrs:
+        flags.append(f'[size="{attrs["size"]}"]')
     if attrs.get("autocomplete"):
         flags.append(f'[autocomplete="{attrs["autocomplete"]}"]')
     if attrs.get("inputmode"):

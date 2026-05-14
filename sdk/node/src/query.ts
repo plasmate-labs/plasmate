@@ -58,6 +58,8 @@ export interface ActionPlanItem {
   accept?: string;
   capture?: boolean | string;
   multiple?: boolean;
+  selected_values?: string[];
+  size?: number | string;
   autocomplete?: string;
   inputmode?: string;
   enterkeyhint?: string;
@@ -207,6 +209,8 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.accept) item.accept = el.attrs.accept;
     if (el.attrs?.capture !== undefined) item.capture = el.attrs.capture;
     if (el.attrs?.multiple !== undefined) item.multiple = el.attrs.multiple;
+    if (el.attrs?.selected_values?.length) item.selected_values = el.attrs.selected_values;
+    if (el.attrs?.size !== undefined) item.size = el.attrs.size;
     if (el.attrs?.autocomplete) item.autocomplete = el.attrs.autocomplete;
     if (el.attrs?.inputmode) item.inputmode = el.attrs.inputmode;
     if (el.attrs?.enterkeyhint) item.enterkeyhint = el.attrs.enterkeyhint;

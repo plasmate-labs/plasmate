@@ -116,6 +116,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-14 select-option state read: current Playwright MCP docs still bind actions to fresh structured snapshots, Browserbase/Stagehand now emphasizes validated action caching, and Browser Run/WebMCP is expanding hosted browser interaction contracts. Plasmate should keep the local-first wedge by making ordinary select menus browser-accurate in SOM: default option values, disabled options, optgroup labels, and multi-select state let cached local plans validate menu choices without raw DOM recovery.
 
+2026-05-14 select parity read: the sticky product promise is not just that Rust emits better select state; every public contract has to accept and reuse it. Single-select default values, disabled optgroup inheritance, select `size`, option `group`, option `disabled`, and `selected_values` should move through schema, parser packages, SDKs, and prompt renderers so cached menu plans remain portable across the project's broad integration surface.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -134,6 +136,9 @@ The project already spans a large number of package and integration surfaces: Ru
   - Rust SOM select extraction now follows browser default option-value semantics when an `<option>` omits `value`.
   - Select option summaries now preserve disabled option state and optgroup labels, giving agents enough context to avoid unavailable choices and explain grouped menus.
   - Multi-select controls now expose `attrs.selected_values` alongside the existing first selected `value`, so cached action plans can validate multiple current choices.
+  - Single-select controls without explicit `selected` markup now mark the browser-default first option as selected and expose that value.
+  - Disabled `<optgroup>` elements now propagate `disabled=true` to child option summaries, and explicit select `size` is preserved.
+  - JSON Schema/SOM spec, Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI now accept or render `selected_values`, select `size`, option `disabled`, and option `group`.
   - The Rust SOM compiler and JSON Schema now preserve native range/value constraints (`min`, `max`, and `step`) plus ARIA range, orientation, and sort cues (`aria-valuemin`, `aria-valuemax`, `aria-valuenow`, `aria-valuetext`, `aria-orientation`, and `aria-sort`).
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `min`, `max`, `step`, `orientation`, `sort`, `valuemin`, `valuemax`, `valuenow`, and `valuetext` without changing deterministic action `cache_key` values.
   - The shared action-availability manifest now asserts range and ARIA orientation/value cues across parser, SDK, and framework outputs.

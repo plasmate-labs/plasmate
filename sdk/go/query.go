@@ -183,6 +183,8 @@ type ActionPlanItem struct {
 	Accept            *string     `json:"accept,omitempty"`
 	Capture           interface{} `json:"capture,omitempty"`
 	Multiple          *bool       `json:"multiple,omitempty"`
+	SelectedValues    []string    `json:"selected_values,omitempty"`
+	Size              interface{} `json:"size,omitempty"`
 	Autocomplete      *string     `json:"autocomplete,omitempty"`
 	InputMode         *string     `json:"inputmode,omitempty"`
 	EnterKeyHint      *string     `json:"enterkeyhint,omitempty"`
@@ -331,6 +333,8 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.Accept = el.Attrs.Accept
 			item.Capture = el.Attrs.Capture
 			item.Multiple = el.Attrs.Multiple
+			item.SelectedValues = el.Attrs.SelectedValues
+			item.Size = el.Attrs.Size
 			item.Autocomplete = el.Attrs.Autocomplete
 			item.InputMode = el.Attrs.InputMode
 			item.EnterKeyHint = el.Attrs.EnterKeyHint

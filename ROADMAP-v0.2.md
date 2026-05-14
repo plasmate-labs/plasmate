@@ -830,6 +830,10 @@ for repeated SaaS workflows without raw DOM recovery.
 3. **Grouped and multi-select menus need current state**: optgroup labels and
    `selected_values` should become shared action-plan context before this
    lands in adapter conformance.
+4. **Schema and SDK parity decide stickiness**: option groups, disabled option
+   state, implicit single-select values, and select `size` need to validate in
+   the public schema and flow through parser/SDK action plans before agents can
+   safely cache menu choices across runtimes.
 
 ## Architecture
 
@@ -1255,10 +1259,19 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - The SOM compiler regression suite now asserts that stylesheet-hidden
   descendants are excluded from visible text surfaces while visible copy,
   labels, options, lists, and table values remain present.
+- Rust SOM select extraction now marks the browser-default first option as
+  selected for single-select controls without an explicit selected option,
+  propagates disabled optgroup state to child options, and preserves explicit
+  select `size`.
+- JSON Schema and SOM spec now accept `attrs.selected_values`, select `size`,
+  option `disabled`, and option `group`, matching the Rust compiler output.
+- Python/Node parser packages, Python/Node/Go SDK types, action-plan helpers,
+  Browser Use, LangChain, and Vercel AI prompt renderers now carry
+  `selected_values` and `size` as compact menu-planning context.
 - Next conformance step: promote upload-affordance, form-submission context,
-  submit-button override, expanded ARIA action-role, and hidden descendant
-  text cases into broader Rust/parser/SDK and adapter fixtures alongside
-  text-entry, ARIA widget, range, and set-position cases.
+  submit-button override, expanded ARIA action-role, hidden descendant text,
+  and select-option parser/SDK/adaptor parity cases into broader fixtures
+  alongside text-entry, ARIA widget, range, and set-position cases.
 
 ## Dependencies to Add
 

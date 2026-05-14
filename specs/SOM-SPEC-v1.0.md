@@ -292,8 +292,13 @@ field MUST be omitted when the object would be empty.
 | Attribute  | Type             | Description |
 |------------|------------------|-------------|
 | `options`  | array of Option  | The available options. |
+| `value`    | string           | The currently selected value. For single selects with no explicit `selected`, this is the browser-default first option value. |
+| `selected_values` | array of string | Current values for a multi-select when one or more options are selected. |
 | `multiple` | boolean          | Present and `true` when multiple selection is allowed. |
+| `size`     | integer/string   | Visible row count from `size`. Invalid source values are preserved as strings. |
 | `required` | boolean          | Present and `true` when required. |
+| `disabled` | boolean          | Present and `true` when disabled. |
+| `inert`    | boolean          | Present and `true` when the select or an ancestor is inert. |
 
 Each **Option** object:
 
@@ -302,6 +307,8 @@ Each **Option** object:
 | `value`    | string  | REQUIRED | The option value. |
 | `text`     | string  | REQUIRED | The option display text. |
 | `selected` | boolean | OPTIONAL | Present and `true` when this option is selected. |
+| `disabled` | boolean | OPTIONAL | Present and `true` when the option or parent optgroup is disabled. |
+| `group`    | string  | OPTIONAL | Parent optgroup label, when present. |
 
 #### `heading`
 

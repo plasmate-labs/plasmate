@@ -177,6 +177,16 @@
               "type": "array",
               "items": { "$ref": "#/$defs/SelectOption" }
             },
+            "selected_values": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "size": {
+              "oneOf": [
+                { "type": "integer" },
+                { "type": "string" }
+              ]
+            },
             "level": {
               "type": "integer",
               "minimum": 1,
@@ -447,6 +457,14 @@
         "selected": {
           "type": "boolean",
           "description": "Whether this option is selected."
+        },
+        "disabled": {
+          "type": "boolean",
+          "description": "Whether this option is disabled directly or by a disabled optgroup."
+        },
+        "group": {
+          "type": "string",
+          "description": "The parent optgroup label, when present."
         }
       }
     },

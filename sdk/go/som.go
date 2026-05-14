@@ -62,6 +62,8 @@ type ElementAttrs struct {
 	Group           *string        `json:"group,omitempty"`
 	Multiple        *bool          `json:"multiple,omitempty"`
 	Options         []SelectOption `json:"options,omitempty"`
+	SelectedValues  []string       `json:"selected_values,omitempty"`
+	Size            interface{}    `json:"size,omitempty"`
 	Level           *int           `json:"level,omitempty"`
 	Alt             *string        `json:"alt,omitempty"`
 	Src             *string        `json:"src,omitempty"`
@@ -164,6 +166,8 @@ type SelectOption struct {
 	Value    string `json:"value"`
 	Text     string `json:"text"`
 	Selected *bool  `json:"selected,omitempty"`
+	Disabled *bool  `json:"disabled,omitempty"`
+	Group    *string `json:"group,omitempty"`
 }
 
 // ListItem represents an item within a list element.

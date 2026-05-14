@@ -565,12 +565,18 @@ fn test_select_option_state_and_groups_are_preserved() {
             <option value="trial" selected>Trial</option>
         </optgroup>
     </select>
+    <select aria-label="Tier" size="7">
+        <option value="starter">Starter</option>
+        <optgroup label="Unavailable" disabled>
+            <option value="legacy">Legacy</option>
+        </optgroup>
+    </select>
 </main></body></html>"#;
 
     let som = compiler::compile(html, "https://example.com").unwrap();
     let select = all_elements(&som)
         .into_iter()
-        .find(|e| e.role == ElementRole::Select)
+        .find(|e| e.role == ElementRole::Select && e.label.as_deref() == Some("Segments"))
         .expect("select should be preserved");
     let attrs = select.attrs.as_ref().expect("select attrs should exist");
 
@@ -598,6 +604,24 @@ fn test_select_option_state_and_groups_are_preserved() {
         .expect("disabled option should compile");
     assert_eq!(mid_market["group"], "Revenue");
     assert_eq!(mid_market["disabled"], true);
+
+    let tier = all_elements(&som)
+        .into_iter()
+        .find(|e| e.role == ElementRole::Select && e.label.as_deref() == Some("Tier"))
+        .expect("single select should be preserved");
+    let tier_attrs = tier.attrs.as_ref().expect("tier select attrs should exist");
+    assert_eq!(tier_attrs["value"], "starter");
+    assert_eq!(tier_attrs["size"], 7);
+    let tier_options = tier_attrs["options"]
+        .as_array()
+        .expect("tier select options should be an array");
+    assert_eq!(tier_options[0]["selected"], true);
+    let legacy = tier_options
+        .iter()
+        .find(|option| option["value"] == "legacy")
+        .expect("disabled optgroup option should compile");
+    assert_eq!(legacy["group"], "Unavailable");
+    assert_eq!(legacy["disabled"], true);
 }
 
 #[test]

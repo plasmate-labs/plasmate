@@ -188,6 +188,10 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["capture"] = attrs.capture
             if attrs.multiple is not None:
                 item["multiple"] = attrs.multiple
+            if attrs.selected_values:
+                item["selected_values"] = attrs.selected_values
+            if attrs.size is not None:
+                item["size"] = attrs.size
             if attrs.autocomplete:
                 item["autocomplete"] = attrs.autocomplete
             if attrs.inputmode:

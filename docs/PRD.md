@@ -497,6 +497,13 @@ making ordinary select menus browser-accurate in SOM: default option values,
 disabled options, optgroup labels, and multi-select state let cached local
 plans validate menu choices without raw DOM recovery.
 
+2026-05-14 select parity read: the sticky product promise is not just that Rust
+emits better select state; every public contract has to accept and reuse it.
+Single-select default values, disabled optgroup inheritance, select `size`,
+option `group`, option `disabled`, and `selected_values` should move through
+schema, parser packages, SDKs, and prompt renderers so cached menu plans remain
+portable across the project's broad integration surface.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -531,6 +538,13 @@ and adapter docs over one-off integration logic.
   - Multi-select controls now expose `attrs.selected_values` alongside the
     existing first selected `value`, so cached action plans can validate
     multiple current choices.
+  - Single-select controls without explicit `selected` markup now mark the
+    browser-default first option as selected and expose that value.
+  - Disabled `<optgroup>` elements now propagate `disabled=true` to child option
+    summaries, and explicit select `size` is preserved.
+  - JSON Schema/SOM spec, Python/Node parser packages, Python/Node/Go SDKs,
+    Browser Use, LangChain, and Vercel AI now accept or render
+    `selected_values`, select `size`, option `disabled`, and option `group`.
   - The Rust SOM compiler and JSON Schema now preserve link navigation cues:
     `target`, `rel`, and `download`.
   - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
