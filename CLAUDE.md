@@ -83,8 +83,14 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   package tests are blocked because local `vitest`, `tsc`, and `tsup`
   binaries are unavailable; `node website/build.mjs` remains blocked because
   `marked` is not installed.
-- Commit/push state: pending at the time this state entry was written; direct
-  remote merge may remain blocked until GitHub fetch/API access works.
+- Commit/push state: automation worktree commit was blocked by the linked
+  worktree `index.lock`, so the exact patch was applied and committed from
+  `/Users/steve/Git/plasmate` as `2deb1be` (`chore: preserve native input
+  shape cues`). Branch `codex/native-input-shape-cues` pushed successfully.
+  Direct `origin/master` push was rejected with `fetch first`; `git fetch
+  origin master` failed DNS for `github.com`; `gh pr create` failed because
+  `api.github.com` is unreachable and the configured `gh` token is invalid.
+  Remote merge remains blocked until fetch/API access works.
 
 ### 2026-05-14T18:08:19Z - Plasmate Improvements Automation
 
