@@ -286,6 +286,14 @@ Browser-native action relationships are becoming more important for agents that 
 - **Native action verbs reduce guesswork**: `popovertargetaction` and `command` should travel through action plans so cached clicks can be validated as show, hide, toggle, or custom commands.
 - **Command ownership complements ARIA controls**: `commandfor` should sit alongside `aria-controls` as a native relationship cue without changing deterministic `cache_key` values.
 
+### 2026-05-14 ARIA Relationship Context Adjustment
+
+Current browser-agent products reward action menus that explain why a target is safe to reuse, not just that it is clickable. Playwright MCP keeps refs scoped to the fresh accessibility snapshot, Stagehand caches observed actions only when the page still validates, and hosted browser products make traces easy to inspect. Plasmate should make local compact targets carry more relationship context before users need those hosted traces.
+
+- **Custom ownership is action context**: `aria-owns` should surface as `owns` so agents understand menu, listbox, and composite-widget ownership.
+- **Guided flow order should be portable**: `aria-flowto` should surface as `flowto` for multi-step forms and custom onboarding flows.
+- **Detailed help can stay out of raw DOM**: `aria-details` should surface as `details` so agents can locate extended help or validation panels without changing deterministic `cache_key` values.
+
 ### 2026-05-13 Keyboard-Affordance Action Menu Adjustment
 
 Current Playwright MCP and Stagehand docs keep validating action surfaces that are current, inspectable, and reusable. Browserbase, Browser Use, and Firecrawl add hosted sessions and traces around that same workflow, but Plasmate's sticky local-first wedge is still a portable action contract that carries browser-like affordances everywhere.
@@ -451,12 +459,15 @@ Current Playwright MCP and Stagehand docs keep validating action surfaces that a
 - [x] Rust compiler and SOM schema preserve popover and command relationship cues
 - [x] Compact action plans expose popovertarget, popovertargetaction, commandfor, and command across parser packages, SDKs, and framework adapters
 - [x] Shared action-availability manifest asserts popover/command cues without changing deterministic action cache keys
+- [x] Rust compiler and SOM schema preserve ARIA owns, flowto, and details relationship cues
+- [x] Compact action plans expose owns, flowto, and details across parser packages, SDKs, and framework adapters
+- [x] Shared action-availability manifest asserts ARIA owns/flowto/details cues without changing deterministic action cache keys
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
 - [ ] Add cross-adapter fixtures for enriched compact action-plan metadata
-- [ ] Promote ARIA relationship-state cases into the broader action-state/action-semantics conformance suites
+- [ ] Promote ARIA relationship-state cases, including owns/flowto/details, into the broader action-state/action-semantics conformance suites
 - [ ] Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures

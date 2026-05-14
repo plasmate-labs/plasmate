@@ -90,6 +90,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-14 popover-command read: browser action surfaces are expanding beyond ARIA-only state. MDN now documents Popover API invoker relationships and the newer `commandfor`/`command` button attributes, while Chrome positions command buttons as a declarative replacement path for popover-specific controls. Plasmate should carry these native relationships in SOM action menus so agents can tell which button opens, hides, or toggles which panel before replaying a cached local action.
 
+2026-05-14 relationship-context read: official Playwright MCP docs continue to make current structured snapshots and refs the agent interaction unit, while Stagehand and Browserbase emphasize cached action replay only after validating the target still matches. Plasmate's sticky local-first answer is richer relationship context in compact targets: `aria-owns`, `aria-flowto`, and `aria-details` let agents understand custom widget ownership, guided workflow order, and detailed help panels without pulling raw DOM back into the prompt.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -105,6 +107,9 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-14:
+  - The Rust SOM compiler and JSON Schema now preserve ARIA relationship cues: `aria-owns`, `aria-flowto`, and `aria-details`.
+  - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `owns`, `flowto`, and `details` without changing deterministic action `cache_key` values.
+  - The shared action-availability manifest now asserts ARIA owns/flowto/details relationship cues across parser, SDK, and framework outputs.
   - The Rust SOM compiler and JSON Schema now preserve native popover and command relationships: `popovertarget`, `popovertargetaction`, `commandfor`, `command`, and `popover`.
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `popovertarget`, `popovertargetaction`, `commandfor`, and `command` without changing deterministic action `cache_key` values.
   - The shared action-availability manifest now asserts popover/command relationship cues across parser, SDK, and framework outputs.
@@ -250,7 +255,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Promote the GitHub Actions action-manifest job from quick shared-manifest checks to full conformance once runtime and dependency caching are stable.
 - Add dependency-cache tuning for the action-manifest job so cross-runtime conformance stays cheap enough to keep required.
 - Wire `016-action-semantics` into parser/SDK and adapter conformance runners so search landmarks, fallback-token ARIA roles, menu roles, ARIA-hidden casing, and visibility-hidden variants stay synchronized outside Rust.
-- Promote ARIA relationship-state cases from the shared action availability manifest into the broader `015-action-state`/`016-action-semantics` conformance suites.
+- Promote ARIA relationship-state cases (`aria-controls`, `aria-haspopup`, `aria-owns`, `aria-flowto`, and `aria-details`) from the shared action availability manifest into the broader `015-action-state`/`016-action-semantics` conformance suites.
 - Add compiler/schema conformance for form validation constraints and `aria-invalid`, then promote the shared manifest cases into broader parser, SDK, and adapter fixtures.
 - Promote input-affordance cases (`inputmode`, `enterkeyhint`, autocomplete widget state, and active descendants) into broader Rust conformance fixtures once the shared action manifest remains stable.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures once the shared action manifest remains stable.

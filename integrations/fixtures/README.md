@@ -15,8 +15,9 @@ by the Rust core and parser packages.
   `inputmode`, `enterkeyhint`, `aria_autocomplete`, `active_descendant`,
   `form`, `list`, `popovertarget`, `popovertargetaction`, `commandfor`,
   `command`, `accesskey`, `errormessage`, `keyshortcuts`,
-  `roledescription`, `busy`, `live`, `atomic`, `relevant`, `minlength`,
-  `maxlength`, `pattern`, `invalid`), and ARIA menu checkbox/radio targets.
+  `roledescription`, `busy`, `live`, `atomic`, `relevant`, `owns`, `flowto`,
+  `details`, `minlength`, `maxlength`, `pattern`, `invalid`), and ARIA menu
+  checkbox/radio targets.
 
 Browser Use, LangChain, Vercel AI, Python parser, Node parser, Python SDK, and
 Go SDK tests consume the expectation file directly. When action-plan semantics

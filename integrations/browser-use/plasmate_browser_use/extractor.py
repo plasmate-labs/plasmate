@@ -130,6 +130,9 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         "live",
         "atomic",
         "relevant",
+        "owns",
+        "flowto",
+        "details",
     ):
         if state_key in item:
             flags.append(f"{state_key}={item[state_key]}")

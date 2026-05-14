@@ -87,7 +87,7 @@ cache-key, required, readonly, group, type, value, checked, expanded, pressed,
 selected, current, controls, haspopup, autocomplete, inputmode, enterkeyhint,
 form, list, popover/command relationships, accesskey, ARIA
 autocomplete/active-descendant/error-message state, keyshortcuts,
-roledescription, live-region state, validation
+roledescription, live-region state, ARIA owns/flowto/details relationships, validation
 constraints, invalid state, and description cues
 stay aligned with other adapters.
 

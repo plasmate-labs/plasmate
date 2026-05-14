@@ -118,6 +118,9 @@ export interface ActionPlanItem {
   live?: string;
   atomic?: boolean;
   relevant?: string;
+  owns?: string;
+  flowto?: string;
+  details?: string;
   required?: boolean;
   readonly?: boolean;
   disabled?: boolean;
@@ -209,6 +212,9 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.aria?.live !== undefined) item.live = el.attrs.aria.live;
     if (el.attrs?.aria?.atomic !== undefined) item.atomic = el.attrs.aria.atomic;
     if (el.attrs?.aria?.relevant !== undefined) item.relevant = el.attrs.aria.relevant;
+    if (el.attrs?.aria?.owns !== undefined) item.owns = el.attrs.aria.owns;
+    if (el.attrs?.aria?.flowto !== undefined) item.flowto = el.attrs.aria.flowto;
+    if (el.attrs?.aria?.details !== undefined) item.details = el.attrs.aria.details;
     if (el.attrs?.required !== undefined) item.required = el.attrs.required;
     if (el.attrs?.readonly !== undefined) item.readonly = el.attrs.readonly;
     if (el.attrs?.disabled !== undefined) {

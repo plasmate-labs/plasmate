@@ -629,6 +629,23 @@ them from raw DOM.
    alongside `aria-controls` as a native relationship cue without changing
    deterministic `cache_key` values.
 
+### 2026-05-14 ARIA Relationship Context Adjustment
+
+Current browser-agent products reward action menus that explain why a target is
+safe to reuse, not just that it is clickable. Playwright MCP keeps refs scoped
+to the fresh accessibility snapshot, Stagehand caches observed actions only
+when the page still validates, and hosted browser products make traces easy to
+inspect. Plasmate should make local compact targets carry more relationship
+context before users need those hosted traces.
+
+1. **Custom ownership is action context**: `aria-owns` should surface as
+   `owns` so agents understand menu, listbox, and composite-widget ownership.
+2. **Guided flow order should be portable**: `aria-flowto` should surface as
+   `flowto` for multi-step forms and custom onboarding flows.
+3. **Detailed help can stay out of raw DOM**: `aria-details` should surface as
+   `details` so agents can locate extended help or validation panels without
+   changing deterministic `cache_key` values.
+
 ## Architecture
 
 ```
@@ -978,6 +995,13 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   deterministic action `cache_key` values.
 - The shared action-availability manifest now asserts popover/command cues
   across parser, SDK, and framework adapter outputs.
+- Rust SOM compilation and the JSON Schema now preserve ARIA relationship
+  context with `aria-owns`, `aria-flowto`, and `aria-details`.
+- Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+  and Vercel AI action-plan surfaces now expose `owns`, `flowto`, and
+  `details` without changing deterministic action `cache_key` values.
+- The shared action-availability manifest now asserts ARIA owns/flowto/details
+  cues across parser, SDK, and framework adapter outputs.
 
 ## Dependencies to Add
 

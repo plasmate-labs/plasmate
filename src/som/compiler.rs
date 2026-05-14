@@ -1889,6 +1889,9 @@ fn build_element_attrs(
         ("aria-live", "live"),
         ("aria-atomic", "atomic"),
         ("aria-relevant", "relevant"),
+        ("aria-owns", "owns"),
+        ("aria-flowto", "flowto"),
+        ("aria-details", "details"),
     ];
     let mut aria_map = serde_json::Map::new();
     for (html_attr, som_key) in aria_states {
@@ -2547,5 +2550,30 @@ mod tests {
             .as_ref()
             .expect("popover section attrs should compile");
         assert_eq!(section_attrs["popover"], "auto");
+    }
+
+    #[test]
+    fn test_aria_relationship_action_cues_are_preserved() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Actions</title></head>
+<body>
+<main>
+  <button aria-owns="owned-menu" aria-flowto="next-step" aria-details="save-details">Save</button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.com").unwrap();
+        let button = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| element.role == ElementRole::Button)
+            .expect("button element should compile");
+        let attrs = button.attrs.as_ref().expect("button attrs should compile");
+
+        assert_eq!(attrs["aria"]["owns"], "owned-menu");
+        assert_eq!(attrs["aria"]["flowto"], "next-step");
+        assert_eq!(attrs["aria"]["details"], "save-details");
     }
 }

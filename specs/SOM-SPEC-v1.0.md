@@ -381,6 +381,9 @@ attributes SHOULD be preserved when present:
 | `aria-live`      | `live`      | string          |
 | `aria-atomic`    | `atomic`    | boolean         |
 | `aria-relevant`  | `relevant`  | string          |
+| `aria-owns`      | `owns`      | string          |
+| `aria-flowto`    | `flowto`    | string          |
+| `aria-details`   | `details`   | string          |
 
 Values `"true"` and `"false"` MUST be normalized to boolean. Other string
 values (e.g. `aria-current="page"`, `aria-checked="mixed"`, or

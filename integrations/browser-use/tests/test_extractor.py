@@ -96,6 +96,9 @@ def test_build_context_surfaces_action_availability():
             "live",
             "atomic",
             "relevant",
+            "owns",
+            "flowto",
+            "details",
         ):
             if state_key in target:
                 assert f'[{state_key}={target[state_key]}]' in line

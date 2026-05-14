@@ -112,6 +112,9 @@ type AriaState struct {
 	Live             *string     `json:"live,omitempty"`
 	Atomic           *bool       `json:"atomic,omitempty"`
 	Relevant         *string     `json:"relevant,omitempty"`
+	Owns             *string     `json:"owns,omitempty"`
+	FlowTo           *string     `json:"flowto,omitempty"`
+	Details          *string     `json:"details,omitempty"`
 }
 
 // SomShadowRoot represents elements inside a web component shadow root.

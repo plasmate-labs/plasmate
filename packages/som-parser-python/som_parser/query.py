@@ -212,6 +212,9 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                     "live",
                     "atomic",
                     "relevant",
+                    "owns",
+                    "flowto",
+                    "details",
                 ):
                     if aria_key in attrs.aria:
                         item_key = (

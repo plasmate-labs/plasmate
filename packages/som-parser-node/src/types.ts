@@ -143,6 +143,9 @@ export interface AriaState {
   live?: string;
   atomic?: boolean;
   relevant?: string;
+  owns?: string;
+  flowto?: string;
+  details?: string;
 }
 
 export interface SomShadowRoot {

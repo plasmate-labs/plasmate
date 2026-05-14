@@ -212,6 +212,9 @@ type ActionPlanItem struct {
 	Live             *string     `json:"live,omitempty"`
 	Atomic           *bool       `json:"atomic,omitempty"`
 	Relevant         *string     `json:"relevant,omitempty"`
+	Owns             *string     `json:"owns,omitempty"`
+	FlowTo           *string     `json:"flowto,omitempty"`
+	Details          *string     `json:"details,omitempty"`
 	Required         *bool       `json:"required,omitempty"`
 	Readonly         *bool       `json:"readonly,omitempty"`
 	Disabled         *bool       `json:"disabled,omitempty"`
@@ -316,6 +319,9 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.Live = el.Attrs.Aria.Live
 				item.Atomic = el.Attrs.Aria.Atomic
 				item.Relevant = el.Attrs.Aria.Relevant
+				item.Owns = el.Attrs.Aria.Owns
+				item.FlowTo = el.Attrs.Aria.FlowTo
+				item.Details = el.Attrs.Aria.Details
 			}
 			item.Required = el.Attrs.Required
 			item.Readonly = el.Attrs.Readonly

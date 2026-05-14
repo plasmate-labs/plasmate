@@ -59,7 +59,8 @@ Interactive form controls include action-state cues such as `[enabled]`,
 `[active_descendant="suggestion-1"]`, `[errormessage="email-error"]`,
 `[keyshortcuts="Meta+S"]`,
 `[roledescription="primary action"]`, `[busy="true"]`, `[live="polite"]`,
-`[atomic="false"]`, `[relevant="additions text"]`, and `[description="..."]`. Agents should use those cues before calling
+`[atomic="false"]`, `[relevant="additions text"]`, `[owns="menu-id"]`,
+`[flowto="next-step"]`, `[details="details-id"]`, and `[description="..."]`. Agents should use those cues before calling
 `plasmate_click` or `plasmate_type`, and can use cache keys to dedupe repeated
 local action menus.
 

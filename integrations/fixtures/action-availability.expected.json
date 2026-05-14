@@ -49,6 +49,9 @@
       "live": "polite",
       "atomic": false,
       "relevant": "additions text",
+      "owns": "save-menu",
+      "flowto": "save-confirmation",
+      "details": "save-details",
       "description": "Unavailable until required fields are complete"
     },
     {

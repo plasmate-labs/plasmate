@@ -305,7 +305,10 @@
         "busy": { "type": "boolean" },
         "live": { "type": "string" },
         "atomic": { "type": "boolean" },
-        "relevant": { "type": "string" }
+        "relevant": { "type": "string" },
+        "owns": { "type": "string" },
+        "flowto": { "type": "string" },
+        "details": { "type": "string" }
       }
     },
     "ShadowRoot": {

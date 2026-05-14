@@ -70,6 +70,9 @@ export interface PlasmateActionTarget {
   live?: string
   atomic?: boolean
   relevant?: string
+  owns?: string
+  flowto?: string
+  details?: string
   href?: string
   input_type?: string
   value?: string
@@ -130,7 +133,7 @@ export interface PreparePlasmateActionPlanOptions {
 export const plasmateActionGuidance =
   'Use Plasmate SOM element ids for browser actions. Treat action targets ' +
   'with enabled=false or blocked_reason as unavailable, and prefer ' +
-  'cache_key, required, readonly, value, autocomplete, inputmode, enterkeyhint, form, list, popovertarget, popovertargetaction, commandfor, command, accesskey, aria_autocomplete, active_descendant, errormessage, keyshortcuts, roledescription, busy, live, atomic, relevant, pattern, minlength, maxlength, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
+  'cache_key, required, readonly, value, autocomplete, inputmode, enterkeyhint, form, list, popovertarget, popovertargetaction, commandfor, command, accesskey, aria_autocomplete, active_descendant, errormessage, keyshortcuts, roledescription, busy, live, atomic, relevant, owns, flowto, details, pattern, minlength, maxlength, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
 
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined
@@ -358,6 +361,18 @@ export function extractPlasmateActionTargets(
         if (typeof relevant === 'string' && relevant.length > 0) {
           target.relevant = relevant
         }
+        const owns = (aria as Record<string, unknown>).owns
+        if (typeof owns === 'string' && owns.length > 0) {
+          target.owns = owns
+        }
+        const flowto = (aria as Record<string, unknown>).flowto
+        if (typeof flowto === 'string' && flowto.length > 0) {
+          target.flowto = flowto
+        }
+        const details = (aria as Record<string, unknown>).details
+        if (typeof details === 'string' && details.length > 0) {
+          target.details = details
+        }
       }
 
       if (typeof attrs.required === 'boolean') {
@@ -497,12 +512,15 @@ export function formatPlasmateActionPlan(
       const atomic =
         typeof target.atomic !== 'undefined' ? ` [atomic=${target.atomic}]` : ''
       const relevant = target.relevant ? ` [relevant=${target.relevant}]` : ''
+      const owns = target.owns ? ` [owns=${target.owns}]` : ''
+      const flowto = target.flowto ? ` [flowto=${target.flowto}]` : ''
+      const details = target.details ? ` [details=${target.details}]` : ''
       const group = target.group ? ` [group=${target.group}]` : ''
       const description = target.description
         ? ` [description=${target.description}]`
         : ''
 
-      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${readonly}${inputType}${value}${autocomplete}${inputmode}${enterkeyhint}${form}${list}${popovertarget}${popovertargetaction}${commandfor}${command}${popover}${accesskey}${placeholder}${minlength}${maxlength}${pattern}${checked}${expanded}${pressed}${selected}${current}${controls}${haspopup}${invalid}${ariaAutocomplete}${activeDescendant}${errorMessage}${keyshortcuts}${roledescription}${busy}${live}${atomic}${relevant}${group}${description}`
+      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${readonly}${inputType}${value}${autocomplete}${inputmode}${enterkeyhint}${form}${list}${popovertarget}${popovertargetaction}${commandfor}${command}${popover}${accesskey}${placeholder}${minlength}${maxlength}${pattern}${checked}${expanded}${pressed}${selected}${current}${controls}${haspopup}${invalid}${ariaAutocomplete}${activeDescendant}${errorMessage}${keyshortcuts}${roledescription}${busy}${live}${atomic}${relevant}${owns}${flowto}${details}${group}${description}`
     })
     .join('\n')
 }
