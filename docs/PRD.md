@@ -398,6 +398,14 @@ Plasmate should keep cache keys stable while surfacing `aria-readonly`,
 agents avoid typing into read-only custom controls and choose the right
 selection strategy for composite widgets.
 
+2026-05-14 set-position read: current Playwright MCP and Stagehand docs keep
+making fresh structured state and cache validation the action surface. Tree,
+menu, and listbox widgets need ordinal context as much as current value state:
+`aria-level`, `aria-posinset`, and `aria-setsize` tell agents whether a target
+is nested, where it sits in a collection, and whether a cached navigation plan
+still points at the expected item. Plasmate should surface these cues without
+changing deterministic action cache keys.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -451,6 +459,13 @@ and adapter docs over one-off integration logic.
   - The shared action-availability manifest now asserts ARIA read-only gating
     plus multiline and multiselectable widget cues across parser, SDK, and
     framework outputs.
+  - The Rust SOM compiler and JSON Schema now preserve ARIA set-position cues:
+    `aria-level`, `aria-posinset`, and `aria-setsize`.
+  - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
+    AI action-plan surfaces now expose `level`, `posinset`, and `setsize`
+    without changing deterministic action `cache_key` values.
+  - The shared action-availability manifest now asserts ARIA set-position
+    cues across parser, SDK, and framework outputs.
   - The Rust SOM compiler and JSON Schema now preserve ARIA relationship cues:
     `aria-owns`, `aria-flowto`, and `aria-details`.
   - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel

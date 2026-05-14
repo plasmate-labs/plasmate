@@ -396,6 +396,9 @@ attributes SHOULD be preserved when present:
 | `aria-multiselectable` | `multiselectable` | boolean |
 | `aria-orientation` | `orientation` | string       |
 | `aria-sort`      | `sort`      | string          |
+| `aria-level`     | `level`     | string          |
+| `aria-posinset`  | `posinset`  | string          |
+| `aria-setsize`   | `setsize`   | string          |
 | `aria-valuemin`  | `valuemin`  | string          |
 | `aria-valuemax`  | `valuemax`  | string          |
 | `aria-valuenow`  | `valuenow`  | string          |

@@ -80,6 +80,9 @@ export interface PlasmateActionTarget {
   details?: string
   orientation?: string
   sort?: string
+  level?: string
+  posinset?: string
+  setsize?: string
   valuemin?: string
   valuemax?: string
   valuenow?: string
@@ -147,7 +150,7 @@ export interface PreparePlasmateActionPlanOptions {
 export const plasmateActionGuidance =
   'Use Plasmate SOM element ids for browser actions. Treat action targets ' +
   'with enabled=false or blocked_reason as unavailable, and prefer ' +
-  'cache_key, required, readonly, value, target, rel, download, autocomplete, inputmode, enterkeyhint, form, list, popovertarget, popovertargetaction, commandfor, command, accesskey, aria_autocomplete, active_descendant, errormessage, keyshortcuts, roledescription, busy, live, atomic, relevant, owns, flowto, details, multiline, multiselectable, orientation, sort, valuemin, valuemax, valuenow, valuetext, pattern, minlength, maxlength, min, max, step, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
+  'cache_key, required, readonly, value, target, rel, download, autocomplete, inputmode, enterkeyhint, form, list, popovertarget, popovertargetaction, commandfor, command, accesskey, aria_autocomplete, active_descendant, errormessage, keyshortcuts, roledescription, busy, live, atomic, relevant, owns, flowto, details, multiline, multiselectable, orientation, sort, level, posinset, setsize, valuemin, valuemax, valuenow, valuetext, pattern, minlength, maxlength, min, max, step, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
 
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined
@@ -410,6 +413,9 @@ export function extractPlasmateActionTargets(
         for (const stateKey of [
           'orientation',
           'sort',
+          'level',
+          'posinset',
+          'setsize',
           'valuemin',
           'valuemax',
           'valuenow',
@@ -575,6 +581,9 @@ export function formatPlasmateActionPlan(
       const details = target.details ? ` [details=${target.details}]` : ''
       const orientation = target.orientation ? ` [orientation=${target.orientation}]` : ''
       const sort = target.sort ? ` [sort=${target.sort}]` : ''
+      const level = target.level ? ` [level=${target.level}]` : ''
+      const posinset = target.posinset ? ` [posinset=${target.posinset}]` : ''
+      const setsize = target.setsize ? ` [setsize=${target.setsize}]` : ''
       const valuemin = target.valuemin ? ` [valuemin=${target.valuemin}]` : ''
       const valuemax = target.valuemax ? ` [valuemax=${target.valuemax}]` : ''
       const valuenow = target.valuenow ? ` [valuenow=${target.valuenow}]` : ''
@@ -584,7 +593,7 @@ export function formatPlasmateActionPlan(
         ? ` [description=${target.description}]`
         : ''
 
-      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${readonly}${linkTarget}${rel}${download}${inputType}${value}${autocomplete}${inputmode}${enterkeyhint}${form}${list}${popovertarget}${popovertargetaction}${commandfor}${command}${popover}${accesskey}${placeholder}${minlength}${maxlength}${min}${max}${step}${pattern}${checked}${expanded}${pressed}${selected}${multiline}${multiselectable}${current}${controls}${haspopup}${invalid}${ariaAutocomplete}${activeDescendant}${errorMessage}${keyshortcuts}${roledescription}${busy}${live}${atomic}${relevant}${owns}${flowto}${details}${orientation}${sort}${valuemin}${valuemax}${valuenow}${valuetext}${group}${description}`
+      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${readonly}${linkTarget}${rel}${download}${inputType}${value}${autocomplete}${inputmode}${enterkeyhint}${form}${list}${popovertarget}${popovertargetaction}${commandfor}${command}${popover}${accesskey}${placeholder}${minlength}${maxlength}${min}${max}${step}${pattern}${checked}${expanded}${pressed}${selected}${multiline}${multiselectable}${current}${controls}${haspopup}${invalid}${ariaAutocomplete}${activeDescendant}${errorMessage}${keyshortcuts}${roledescription}${busy}${live}${atomic}${relevant}${owns}${flowto}${details}${orientation}${sort}${level}${posinset}${setsize}${valuemin}${valuemax}${valuenow}${valuetext}${group}${description}`
     })
     .join('\n')
 }

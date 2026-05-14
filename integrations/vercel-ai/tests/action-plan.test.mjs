@@ -101,6 +101,7 @@ assert.match(formatted, /\[e_plan\].*\[expanded=false\]/)
 assert.match(formatted, /\[e_plan\].*\[controls=plan-options\]/)
 assert.match(formatted, /\[e_plan\].*\[haspopup=listbox\]/)
 assert.match(formatted, /\[e_plan\].*\[multiselectable=true\]/)
+assert.match(formatted, /\[e_plan\].*\[level=2\].*\[posinset=1\].*\[setsize=3\]/)
 assert.match(formatted, /\[e_quota\].*\[min=1\].*\[max=100\].*\[step=5\]/)
 assert.match(
   formatted,

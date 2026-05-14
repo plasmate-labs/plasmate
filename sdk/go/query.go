@@ -225,6 +225,9 @@ type ActionPlanItem struct {
 	Details          *string     `json:"details,omitempty"`
 	Orientation      *string     `json:"orientation,omitempty"`
 	Sort             *string     `json:"sort,omitempty"`
+	Level            *string     `json:"level,omitempty"`
+	PosInSet         *string     `json:"posinset,omitempty"`
+	SetSize          *string     `json:"setsize,omitempty"`
 	ValueMin         *string     `json:"valuemin,omitempty"`
 	ValueMax         *string     `json:"valuemax,omitempty"`
 	ValueNow         *string     `json:"valuenow,omitempty"`
@@ -349,6 +352,9 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.MultiSelectable = el.Attrs.Aria.MultiSelectable
 				item.Orientation = el.Attrs.Aria.Orientation
 				item.Sort = el.Attrs.Aria.Sort
+				item.Level = el.Attrs.Aria.Level
+				item.PosInSet = el.Attrs.Aria.PosInSet
+				item.SetSize = el.Attrs.Aria.SetSize
 				item.ValueMin = el.Attrs.Aria.ValueMin
 				item.ValueMax = el.Attrs.Aria.ValueMax
 				item.ValueNow = el.Attrs.Aria.ValueNow

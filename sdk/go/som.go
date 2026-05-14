@@ -126,6 +126,9 @@ type AriaState struct {
 	MultiSelectable  *bool       `json:"multiselectable,omitempty"`
 	Orientation      *string     `json:"orientation,omitempty"`
 	Sort             *string     `json:"sort,omitempty"`
+	Level            *string     `json:"level,omitempty"`
+	PosInSet         *string     `json:"posinset,omitempty"`
+	SetSize          *string     `json:"setsize,omitempty"`
 	ValueMin         *string     `json:"valuemin,omitempty"`
 	ValueMax         *string     `json:"valuemax,omitempty"`
 	ValueNow         *string     `json:"valuenow,omitempty"`

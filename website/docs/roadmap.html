@@ -669,6 +669,12 @@
 <li><strong>ARIA value state explains drift</strong>: <code>aria-valuemin</code>, <code>aria-valuemax</code>, <code>aria-valuenow</code>, and <code>aria-valuetext</code> should surface as compact value cues without changing target <code>cache_key</code> values.</li>
 <li><strong>Orientation and sort guide action choice</strong>: <code>aria-orientation</code> and <code>aria-sort</code> should remain visible so agents can distinguish vertical/horizontal controls and already-sorted columns.</li>
 </ul>
+<h3 id="2026-05-14-aria-set-position-action-menu-adjustment">2026-05-14 ARIA Set-Position Action Menu Adjustment</h3><p>Current structured-browser tools make agents choose from the current page state, while action caches only stay useful when the target still has the expected context. Tree, menu, and listbox widgets often expose position through ARIA instead of visible text. Plasmate should preserve that ordinal context locally so repeated navigation plans can validate the same item without raw DOM recovery.</p>
+<ul>
+<li><strong>Nested depth is action context</strong>: <code>aria-level</code> should surface as <code>level</code> so agents know whether a target is nested under the expected branch.</li>
+<li><strong>Ordinal position reduces ambiguity</strong>: <code>aria-posinset</code> should surface as <code>posinset</code> for menu, tree, and listbox items that share labels or repeated actions.</li>
+<li><strong>Collection size helps validate drift</strong>: <code>aria-setsize</code> should surface as <code>setsize</code> so cached plans can tell when a list has grown, shrunk, or reordered.</li>
+</ul>
 <h3 id="2026-05-14-popover-and-command-relationship-adjustment">2026-05-14 Popover and Command Relationship Adjustment</h3><p>Browser-native action relationships are becoming more important for agents that replay cached plans on modern app UIs. The Popover API gives buttons a declarative target and action, and <code>commandfor</code>/<code>command</code> generalize that model for popovers, dialogs, and custom commands. Plasmate should preserve those relationships as compact target context instead of forcing agents to rediscover them from raw DOM.</p>
 <ul>
 <li><strong>Invoker targets are replay context</strong>: <code>popovertarget</code> should surface so an agent knows which panel a button affects.</li>
@@ -848,6 +854,9 @@
 <li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve ARIA readonly, multiline, and multiselectable widget cues</li>
 <li><input checked="" disabled="" type="checkbox"> Compact action plans expose readonly, multiline, and multiselectable across parser packages, SDKs, and framework adapters</li>
 <li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest asserts ARIA readonly gating and widget affordances without changing deterministic action cache keys</li>
+<li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve ARIA level, posinset, and setsize cues</li>
+<li><input checked="" disabled="" type="checkbox"> Compact action plans expose level, posinset, and setsize across parser packages, SDKs, and framework adapters</li>
+<li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest asserts ARIA set-position cues without changing deterministic action cache keys</li>
 <li><input disabled="" type="checkbox"> Selector-aware SOM cache entries for repeated agent prompts</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
 <li><input disabled="" type="checkbox"> Wire <code>016-action-semantics</code> into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants</li>
@@ -856,6 +865,7 @@
 <li><input disabled="" type="checkbox"> Promote ARIA relationship-state cases, including owns/flowto/details, into the broader action-state/action-semantics conformance suites</li>
 <li><input disabled="" type="checkbox"> Promote range and orientation cases into broader parser, SDK, and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote ARIA widget affordance cases into broader parser, SDK, and adapter conformance fixtures</li>
+<li><input disabled="" type="checkbox"> Promote ARIA set-position cases into broader Rust/parser/SDK and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Add cross-adapter accessible-description fixtures</li>

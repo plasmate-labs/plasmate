@@ -66,8 +66,8 @@ const { text } = await generateText({
 `active_descendant`, `errormessage`,
 `keyshortcuts`, `roledescription`, `busy`, `live`, `atomic`, `relevant`,
 `owns`, `flowto`, `details`, `multiline`, `multiselectable`, `orientation`,
-`sort`, `valuemin`, `valuemax`, `valuenow`, `valuetext`, `minlength`,
-`maxlength`, `min`, `max`, `step`,
+`sort`, `level`, `posinset`, `setsize`, `valuemin`, `valuemax`, `valuenow`,
+`valuetext`, `minlength`, `maxlength`, `min`, `max`, `step`,
 `pattern`, and `invalid` fields before selecting or
 reusing browser actions. Use
 `extractPlasmateActionTargets()`, `preparePlasmateActionPlan()`, or

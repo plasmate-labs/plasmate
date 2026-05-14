@@ -1914,6 +1914,9 @@ fn build_element_attrs(
         ("aria-multiselectable", "multiselectable"),
         ("aria-orientation", "orientation"),
         ("aria-sort", "sort"),
+        ("aria-level", "level"),
+        ("aria-posinset", "posinset"),
+        ("aria-setsize", "setsize"),
         ("aria-valuemin", "valuemin"),
         ("aria-valuemax", "valuemax"),
         ("aria-valuenow", "valuenow"),
@@ -2722,5 +2725,29 @@ mod tests {
             .expect("select should compile");
         let attrs = select.attrs.as_ref().expect("select attrs should compile");
         assert_eq!(attrs["aria"]["multiselectable"], true);
+    }
+
+    #[test]
+    fn test_aria_set_position_cues_are_preserved() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Tree</title></head>
+<body>
+<main>
+  <button aria-label="Billing" aria-level="2" aria-posinset="1" aria-setsize="3">Billing</button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.com").unwrap();
+        let button = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| element.role == ElementRole::Button)
+            .expect("tree item button should compile");
+        let attrs = button.attrs.as_ref().expect("button attrs should compile");
+        assert_eq!(attrs["aria"]["level"], "2");
+        assert_eq!(attrs["aria"]["posinset"], "1");
+        assert_eq!(attrs["aria"]["setsize"], "3");
     }
 }

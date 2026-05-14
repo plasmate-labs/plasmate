@@ -157,6 +157,9 @@ export interface AriaState {
   multiselectable?: boolean;
   orientation?: string;
   sort?: string;
+  level?: string;
+  posinset?: string;
+  setsize?: string;
   valuemin?: string;
   valuemax?: string;
   valuenow?: string;

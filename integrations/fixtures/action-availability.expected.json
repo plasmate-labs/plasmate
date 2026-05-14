@@ -68,6 +68,9 @@
       "controls": "plan-options",
       "haspopup": "listbox",
       "multiselectable": true,
+      "level": "2",
+      "posinset": "1",
+      "setsize": "3",
       "group": "Billing"
     },
     {

@@ -96,6 +96,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-14 widget-affordance read: current browser-agent products keep moving from element identity toward current, validated widget state before replay. ARIA textboxes, listboxes, and custom inputs often expose read-only, multiline, and multiselectable affordances without native HTML equivalents. Plasmate should keep cache keys stable while surfacing `aria-readonly`, `aria-multiline`, and `aria-multiselectable` in compact action targets so agents avoid typing into read-only custom controls and choose the right selection strategy for composite widgets.
 
+2026-05-14 set-position read: current Playwright MCP and Stagehand docs keep making fresh structured state and cache validation the action surface. Tree, menu, and listbox widgets need ordinal context as much as current value state: `aria-level`, `aria-posinset`, and `aria-setsize` tell agents whether a target is nested, where it sits in a collection, and whether a cached navigation plan still points at the expected item. Plasmate should surface these cues without changing deterministic action cache keys.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -117,6 +119,9 @@ The project already spans a large number of package and integration surfaces: Ru
   - The Rust SOM compiler and JSON Schema now preserve ARIA widget affordance cues: `aria-readonly`, `aria-multiline`, and `aria-multiselectable`.
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `readonly`, `multiline`, and `multiselectable`; ARIA read-only targets are marked unavailable with `blocked_reason="readonly"` without changing deterministic action `cache_key` values.
   - The shared action-availability manifest now asserts ARIA read-only gating plus multiline and multiselectable widget cues across parser, SDK, and framework outputs.
+  - The Rust SOM compiler and JSON Schema now preserve ARIA set-position cues: `aria-level`, `aria-posinset`, and `aria-setsize`.
+  - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `level`, `posinset`, and `setsize` without changing deterministic action `cache_key` values.
+  - The shared action-availability manifest now asserts ARIA set-position cues across parser, SDK, and framework outputs.
   - The Rust SOM compiler and JSON Schema now preserve ARIA relationship cues: `aria-owns`, `aria-flowto`, and `aria-details`.
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `owns`, `flowto`, and `details` without changing deterministic action `cache_key` values.
   - The shared action-availability manifest now asserts ARIA owns/flowto/details relationship cues across parser, SDK, and framework outputs.

@@ -131,6 +131,9 @@ export interface ActionPlanItem {
   details?: string;
   orientation?: string;
   sort?: string;
+  level?: string;
+  posinset?: string;
+  setsize?: string;
   valuemin?: string;
   valuemax?: string;
   valuenow?: string;
@@ -240,6 +243,9 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.aria?.multiselectable !== undefined) item.multiselectable = el.attrs.aria.multiselectable;
     if (el.attrs?.aria?.orientation !== undefined) item.orientation = el.attrs.aria.orientation;
     if (el.attrs?.aria?.sort !== undefined) item.sort = el.attrs.aria.sort;
+    if (el.attrs?.aria?.level !== undefined) item.level = el.attrs.aria.level;
+    if (el.attrs?.aria?.posinset !== undefined) item.posinset = el.attrs.aria.posinset;
+    if (el.attrs?.aria?.setsize !== undefined) item.setsize = el.attrs.aria.setsize;
     if (el.attrs?.aria?.valuemin !== undefined) item.valuemin = el.attrs.aria.valuemin;
     if (el.attrs?.aria?.valuemax !== undefined) item.valuemax = el.attrs.aria.valuemax;
     if (el.attrs?.aria?.valuenow !== undefined) item.valuenow = el.attrs.aria.valuenow;

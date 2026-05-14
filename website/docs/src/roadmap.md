@@ -286,6 +286,14 @@ Current browser-agent tools keep turning cached actions into validated replay. R
 - **ARIA value state explains drift**: `aria-valuemin`, `aria-valuemax`, `aria-valuenow`, and `aria-valuetext` should surface as compact value cues without changing target `cache_key` values.
 - **Orientation and sort guide action choice**: `aria-orientation` and `aria-sort` should remain visible so agents can distinguish vertical/horizontal controls and already-sorted columns.
 
+### 2026-05-14 ARIA Set-Position Action Menu Adjustment
+
+Current structured-browser tools make agents choose from the current page state, while action caches only stay useful when the target still has the expected context. Tree, menu, and listbox widgets often expose position through ARIA instead of visible text. Plasmate should preserve that ordinal context locally so repeated navigation plans can validate the same item without raw DOM recovery.
+
+- **Nested depth is action context**: `aria-level` should surface as `level` so agents know whether a target is nested under the expected branch.
+- **Ordinal position reduces ambiguity**: `aria-posinset` should surface as `posinset` for menu, tree, and listbox items that share labels or repeated actions.
+- **Collection size helps validate drift**: `aria-setsize` should surface as `setsize` so cached plans can tell when a list has grown, shrunk, or reordered.
+
 ### 2026-05-14 Popover and Command Relationship Adjustment
 
 Browser-native action relationships are becoming more important for agents that replay cached plans on modern app UIs. The Popover API gives buttons a declarative target and action, and `commandfor`/`command` generalize that model for popovers, dialogs, and custom commands. Plasmate should preserve those relationships as compact target context instead of forcing agents to rediscover them from raw DOM.
@@ -476,6 +484,9 @@ Current Playwright MCP and Stagehand docs keep validating action surfaces that a
 - [x] Rust compiler and SOM schema preserve ARIA readonly, multiline, and multiselectable widget cues
 - [x] Compact action plans expose readonly, multiline, and multiselectable across parser packages, SDKs, and framework adapters
 - [x] Shared action-availability manifest asserts ARIA readonly gating and widget affordances without changing deterministic action cache keys
+- [x] Rust compiler and SOM schema preserve ARIA level, posinset, and setsize cues
+- [x] Compact action plans expose level, posinset, and setsize across parser packages, SDKs, and framework adapters
+- [x] Shared action-availability manifest asserts ARIA set-position cues without changing deterministic action cache keys
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
@@ -484,6 +495,7 @@ Current Playwright MCP and Stagehand docs keep validating action surfaces that a
 - [ ] Promote ARIA relationship-state cases, including owns/flowto/details, into the broader action-state/action-semantics conformance suites
 - [ ] Promote range and orientation cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote ARIA widget affordance cases into broader parser, SDK, and adapter conformance fixtures
+- [ ] Promote ARIA set-position cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures
