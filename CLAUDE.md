@@ -55,8 +55,11 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   because the sandbox cannot open the primary checkout worktree `FETCH_HEAD`.
   Retrying from the primary checkout reached SSH DNS and still failed with
   `ssh: Could not resolve hostname github.com: -65563`. Local `master`
-  remains ahead of stale `origin/master`; remote push and merge are still
-  blocked until GitHub DNS/API access works.
+  remains ahead of stale `origin/master`; direct `origin/master` push reached
+  GitHub but was rejected with `fetch first`. Review branch
+  `codex/graphical-submitter-action-cues` was pushed successfully at
+  `ec77fd4`; `gh pr create` failed because `api.github.com` is unreachable.
+  Remote merge remains blocked until GitHub fetch/API access works.
 - Market direction: current docs still favor local-first action-state fidelity
   over a hosted browser-cloud pivot. Playwright MCP uses structured
   accessibility snapshots with snapshot-scoped refs, Stagehand/Browserbase is
