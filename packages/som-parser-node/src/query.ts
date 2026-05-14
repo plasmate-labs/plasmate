@@ -86,6 +86,9 @@ export interface ActionPlanItem {
   rel?: string;
   download?: boolean | string;
   name?: string;
+  test_id?: string;
+  test?: string;
+  qa?: string;
   accept?: string;
   capture?: boolean | string;
   multiple?: boolean;
@@ -236,6 +239,9 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.rel) item.rel = el.attrs.rel;
     if (el.attrs?.download !== undefined) item.download = el.attrs.download;
     if (el.attrs?.name) item.name = el.attrs.name;
+    if (el.attrs?.test_id) item.test_id = el.attrs.test_id;
+    if (el.attrs?.test) item.test = el.attrs.test;
+    if (el.attrs?.qa) item.qa = el.attrs.qa;
     if (el.attrs?.accept) item.accept = el.attrs.accept;
     if (el.attrs?.capture !== undefined) item.capture = el.attrs.capture;
     if (el.attrs?.multiple !== undefined) item.multiple = el.attrs.multiple;

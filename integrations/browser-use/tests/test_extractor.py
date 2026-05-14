@@ -55,6 +55,9 @@ def test_build_context_surfaces_action_availability():
             assert f'[type={target["input_type"]}]' in line
         if target.get("name"):
             assert f'[name={target["name"]}]' in line
+        for test_key in ("test_id", "test", "qa"):
+            if target.get(test_key):
+                assert f'[{test_key}={target[test_key]}]' in line
         if target.get("accept"):
             assert f'[accept={target["accept"]}]' in line
         if "capture" in target:

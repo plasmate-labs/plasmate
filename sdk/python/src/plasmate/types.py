@@ -129,6 +129,9 @@ class ElementAttrs(BaseModel):
     autofocus: Optional[bool] = None
     spellcheck: Optional[bool | str] = None
     name: Optional[str] = None
+    test_id: Optional[str] = None
+    test: Optional[str] = None
+    qa: Optional[str] = None
     accept: Optional[str] = None
     capture: Optional[bool | str] = None
     autocomplete: Optional[str] = None

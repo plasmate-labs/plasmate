@@ -384,6 +384,14 @@ Current competitor direction keeps validating cached action plans against the cu
 - **Grouped and multi-select menus need current state**: optgroup labels and `selected_values` should become shared action-plan context before this lands in adapter conformance.
 - **Schema and SDK parity decide stickiness**: option groups, disabled option state, implicit single-select values, and select `size` need to validate in the public schema and flow through parser/SDK action plans before agents can safely cache menu choices across runtimes.
 
+### 2026-05-14 Test Selector Hint Adjustment
+
+Current browser-agent products keep moving from raw DOM traversal toward validated action handles. Playwright MCP refs are snapshot-scoped, and Stagehand/Browserbase action caches pay off only when a repeated target can be recognized cheaply. Plasmate's local-first roadmap should preserve app-owned test selector hints as optional action context rather than forcing users to recover them from raw HTML.
+
+- **Test selectors are durable app contracts**: `data-testid`, `data-test`, and `data-qa` should compile into `test_id`, `test`, and `qa` attrs.
+- **Selectors belong at the framework edge**: parser packages, SDKs, Browser Use, LangChain, and Vercel AI should expose those hints in compact action plans for trace correlation and repeated internal workflows.
+- **Cache keys stay semantic**: selector hints should help validate and debug actions without changing deterministic `cache_key` values, which remain target-focused.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -578,6 +586,9 @@ Current competitor direction keeps validating cached action plans against the cu
 - [x] Single-select controls infer the browser-default first selected option when markup omits `selected`
 - [x] Disabled optgroups propagate disabled state to child option summaries
 - [x] SOM schema/spec, parser packages, SDKs, Browser Use, LangChain, and Vercel AI carry selected_values and select size context
+- [x] Rust compiler and SOM schema preserve `data-testid`, `data-test`, and `data-qa` as `test_id`, `test`, and `qa`
+- [x] Compact action plans expose test selector hints across parser packages, SDKs, and framework adapters without changing cache keys
+- [x] Shared action-availability manifest asserts test selector hint parity
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants

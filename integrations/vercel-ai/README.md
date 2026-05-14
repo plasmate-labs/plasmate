@@ -60,7 +60,7 @@ const { text } = await generateText({
 `plasmateActionGuidance` tells the model to honor SOM action targets with
 `cache_key`, `enabled`, `blocked_reason`, `required`, `description`,
 `placeholder`, `group`, `readonly`, `inert`, `value`, `checked`, `expanded`, `pressed`, and
-`selected`, `current`, `controls`, `haspopup`, `name`, `accept`, `capture`,
+`selected`, `current`, `controls`, `haspopup`, `name`, `test_id`, `test`, `qa`, `accept`, `capture`,
 `multiple`, `autofocus`, `autocomplete`, `inputmode`, `enterkeyhint`, `autocapitalize`,
 `dirname`, `spellcheck`, `target`, `rel`,
 `download`, `form`, `list`, `popovertarget`, `popovertargetaction`,

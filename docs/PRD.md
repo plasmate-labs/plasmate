@@ -513,6 +513,15 @@ text-entry shape: invalid input types should normalize to `text`, native
 `size` should survive as compact field width context, and `autofocus` should
 move through SDKs and adapters without changing target-focused cache keys.
 
+2026-05-14 test-selector read: current Playwright MCP and Stagehand docs keep
+the action surface tied to fresh structured state, while Browserbase-style
+action caching rewards stable handles for repeated internal workflows.
+Production SaaS and customer apps often expose `data-testid`, `data-test`, and
+`data-qa` specifically as durable automation selectors. Plasmate should preserve
+those hints as compact action-plan context so local cached actions can correlate
+with test suites, traces, and app-owned selectors without raw DOM recovery or
+hosted selector memory.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -554,6 +563,14 @@ and adapter docs over one-off integration logic.
   - JSON Schema/SOM spec, Python/Node parser packages, Python/Node/Go SDKs,
     Browser Use, LangChain, and Vercel AI now accept or render
     `selected_values`, select `size`, option `disabled`, and option `group`.
+  - The Rust SOM compiler and JSON Schema now preserve stable test selector
+    hints: `data-testid` as `test_id`, `data-test` as `test`, and `data-qa` as
+    `qa`.
+  - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan
+    surfaces now expose `test_id`, `test`, and `qa` without changing
+    deterministic action `cache_key` values.
+  - The shared action-availability manifest now asserts test selector hint
+    parity across parser, SDK, and framework outputs.
   - The Rust SOM compiler and JSON Schema now preserve link navigation cues:
     `target`, `rel`, and `download`.
   - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel

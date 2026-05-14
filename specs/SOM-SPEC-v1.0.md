@@ -378,7 +378,7 @@ Each **Option** object:
 #### Global actionability attributes
 
 Implementations SHOULD preserve common actionability attributes on any element:
-`contenteditable`, `tabindex`, `name`, `accept`, `capture`, `autocomplete`, `inputmode`,
+`contenteditable`, `tabindex`, `name`, `test_id`, `test`, `qa`, `accept`, `capture`, `autocomplete`, `inputmode`,
 `enterkeyhint`, `form`, `list`, `popovertarget`, `popovertargetaction`,
 `commandfor`, `command`, `popover`, `button_type`, `formaction`,
 `formmethod`, `formenctype`, `formtarget`, `formnovalidate`, `accesskey`,
@@ -386,6 +386,9 @@ Implementations SHOULD preserve common actionability attributes on any element:
 `description` value is resolved from `aria-describedby` or `aria-description`.
 These attributes are especially important for custom controls that are exposed
 through ARIA roles instead of native form elements.
+The `test_id`, `test`, and `qa` fields preserve stable `data-testid`,
+`data-test`, and `data-qa` selector hints for local action-plan replay and
+trace correlation.
 
 ### 4.4 ARIA State Preservation
 

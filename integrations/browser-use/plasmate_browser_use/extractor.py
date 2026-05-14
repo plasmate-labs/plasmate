@@ -97,6 +97,9 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append("autofocus")
     if item.get("name"):
         flags.append(f"name={item['name']}")
+    for test_key in ("test_id", "test", "qa"):
+        if item.get(test_key):
+            flags.append(f"{test_key}={item[test_key]}")
     if item.get("accept"):
         flags.append(f"accept={item['accept']}")
     if "capture" in item:

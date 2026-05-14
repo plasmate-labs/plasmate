@@ -649,6 +649,14 @@
 </tr>
 </tbody></table>
 <p>Interactive elements are <strong>never</strong> dropped by budget limits.</p>
+<p>Select controls preserve browser-relevant menu state in <code>attrs</code>: <code>options</code>,
+current <code>value</code>, multi-select <code>selected_values</code>, <code>multiple</code>, <code>size</code>,
+<code>required</code>, <code>disabled</code>, and <code>inert</code>. Option summaries include <code>value</code>, <code>text</code>,
+optional <code>selected</code>, optional <code>disabled</code>, and optional optgroup <code>group</code>.</p>
+<p>Text-entry controls preserve replay cues such as browser-normalized
+<code>input_type</code>, <code>size</code>, <code>autofocus</code>, <code>spellcheck</code>, <code>autocapitalize</code>, <code>dirname</code>,
+and ARIA placeholder state so cached typing plans can validate the field shape
+before reuse.</p>
 <h2 id="stable-element-ids">Stable Element IDs</h2><p>Every element gets a deterministic ID derived from its semantic identity:</p>
 <pre><code>element_id = &quot;e_&quot; + hex(sha256(origin + &quot;|&quot; + role + &quot;|&quot; + name + &quot;|&quot; + dom_path))[0..12]
 </code></pre>

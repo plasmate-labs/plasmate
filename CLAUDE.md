@@ -49,6 +49,39 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T20:12:36Z - Plasmate Improvements Automation
+
+- Git sync: latest pull was retried from the automation worktree and again
+  failed because the linked worktree cannot open `FETCH_HEAD`; retrying
+  `git fetch origin` from `/Users/steve/Git/plasmate` failed DNS for
+  `github.com`. Work continued from the latest available local/pushed branch
+  head `5b9a6a9` on `codex/native-input-shape-cues`.
+- Market direction: current official docs still reinforce Plasmate's
+  local-first action-state wedge. Playwright MCP uses fresh accessibility
+  snapshots with scoped refs, Browserbase/Stagehand emphasizes validated
+  observe/action caching, and Cloudflare Browser Run/WebMCP is widening hosted
+  browser interaction surfaces. The roadmap should keep improving portable SOM
+  action fidelity before a hosted browser pivot.
+- Code changes: Rust SOM compilation now preserves stable app-owned selector
+  hints: `data-testid` as `attrs.test_id`, `data-test` as `attrs.test`, and
+  `data-qa` as `attrs.qa`.
+- Contract changes: JSON Schema/SOM spec, Python/Node parser packages,
+  Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI action-plan
+  surfaces now expose `test_id`, `test`, and `qa` without changing
+  deterministic action `cache_key` values.
+- Fixture/docs changes: the shared action-availability SOM and expected
+  manifest now assert selector hint parity; PRD, roadmap, website docs, and
+  integration docs record the rationale and next conformance step.
+- Verification: touched-file `rustfmt --check` passed; focused selector
+  compiler test passed; full `som_compiler_test` suite passed 66 tests;
+  `cargo build` passed; Python parser tests passed 68 tests; Python SDK query
+  tests passed 36 tests; Go SDK tests passed; Browser Use, LangChain, and the
+  full quick action-manifest conformance gate passed; website docs rebuilt 39
+  pages; JSON validation, Python syntax compile, and `git diff --check`
+  passed.
+- Known gaps: whole-crate `cargo fmt --check` still reports unrelated
+  pre-existing formatting drift in AWP/proxy/main/MCP files.
+
 ### 2026-05-14T19:02:44Z - Plasmate Improvements Automation
 
 - Git sync: latest pull was retried from the automation worktree and failed

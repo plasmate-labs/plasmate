@@ -81,6 +81,9 @@ type ElementAttrs struct {
 	Autofocus       *bool          `json:"autofocus,omitempty"`
 	Spellcheck      interface{}    `json:"spellcheck,omitempty"`
 	Name            *string        `json:"name,omitempty"`
+	TestID          *string        `json:"test_id,omitempty"`
+	Test            *string        `json:"test,omitempty"`
+	QA              *string        `json:"qa,omitempty"`
 	Accept          *string        `json:"accept,omitempty"`
 	Capture         interface{}    `json:"capture,omitempty"`
 	Autocomplete    *string        `json:"autocomplete,omitempty"`

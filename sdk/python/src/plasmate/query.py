@@ -122,6 +122,12 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["download"] = attrs.download
             if attrs.name:
                 item["name"] = attrs.name
+            if attrs.test_id:
+                item["test_id"] = attrs.test_id
+            if attrs.test:
+                item["test"] = attrs.test
+            if attrs.qa:
+                item["qa"] = attrs.qa
             if attrs.accept:
                 item["accept"] = attrs.accept
             if attrs.capture is not None:

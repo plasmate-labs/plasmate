@@ -110,6 +110,9 @@ export interface SomElementAttrs {
   autofocus?: boolean;
   spellcheck?: boolean | string;
   name?: string;
+  test_id?: string;
+  test?: string;
+  qa?: string;
   accept?: string;
   capture?: boolean | string;
   autocomplete?: string;

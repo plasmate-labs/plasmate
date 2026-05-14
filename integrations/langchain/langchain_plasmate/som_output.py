@@ -223,6 +223,9 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append("[autofocus]")
     if attrs.get("name"):
         flags.append(f'[name="{attrs["name"]}"]')
+    for test_key in ("test_id", "test", "qa"):
+        if attrs.get(test_key):
+            flags.append(f'[{test_key}="{attrs[test_key]}"]')
     if attrs.get("accept"):
         flags.append(f'[accept="{attrs["accept"]}"]')
     if "capture" in attrs:

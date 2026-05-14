@@ -680,6 +680,7 @@
 <li><strong>Typing behavior is replay context</strong>: <code>spellcheck</code> and <code>autocapitalize</code> should travel through Rust, schema, SDKs, parser packages, and adapters so agents understand language and virtual-keyboard behavior.</li>
 <li><strong>Direction capture matters for global forms</strong>: <code>dirname</code> should be exposed as compact target context for bidirectional text-entry workflows.</li>
 <li><strong>Custom textboxes need prompt text</strong>: <code>aria-placeholder</code> should surface as <code>aria_placeholder</code> without changing target <code>cache_key</code> values, preserving local action memory while making custom-field prompt drift visible.</li>
+<li><strong>Native field shape should match browsers</strong>: invalid input types should normalize to <code>text</code>, native input <code>size</code> should survive as field-width context, and <code>autofocus</code> should flow through SDK and adapter action plans without becoming part of the target cache identity.</li>
 </ul>
 <h3 id="2026-05-14-form-submission-context-adjustment">2026-05-14 Form Submission Context Adjustment</h3><p>Validated action menus are only sticky when they include the submission contract around the target. Playwright MCP keeps refs scoped to a current snapshot, while Stagehand/Browserbase action caches need the page state to match before replay. Plasmate should preserve the form-level metadata agents need to tell whether a cached type, upload, or submit step still belongs to the same workflow.</p>
 <ul>
@@ -728,6 +729,25 @@
 <li><strong>Image submitters are buttons</strong>: <code>input type=&quot;image&quot;</code> should compile as an actionable button because it submits forms on click.</li>
 <li><strong>Input submitters need button identity</strong>: input-backed <code>submit</code>, <code>button</code>, <code>reset</code>, and <code>image</code> controls should expose <code>button_type</code>.</li>
 <li><strong>Icon-only submitters need context</strong>: graphical submitters should resolve labels from <code>alt</code> and preserve <code>alt</code> plus <code>src</code> so agents can recognize branded/icon-only actions without raw DOM recovery.</li>
+</ul>
+<h3 id="2026-05-14-hidden-descendant-text-adjustment">2026-05-14 Hidden Descendant Text Adjustment</h3><p>Current browser-agent products keep tying replay to fresh structured state: Playwright MCP refs belong to the current accessibility snapshot, Stagehand/Browserbase cache actions after validating the page still matches, and Browser Run/WebMCP is widening hosted interaction contracts. Plasmate should make local SOM text match visible page state across the same surfaces agents use for action planning.</p>
+<ul>
+<li><strong>Visible parent text must stay visible</strong>: stylesheet-hidden descendants should not leak into paragraph or button text.</li>
+<li><strong>Labels are cache evidence</strong>: <code>label for</code> and <code>aria-labelledby</code> indexes should skip hidden fragments so cached form plans compare against visible names.</li>
+<li><strong>Structured summaries need parity</strong>: select options, list items, table captions, and table cells should ignore hidden descendants.</li>
+</ul>
+<h3 id="2026-05-14-select-option-state-adjustment">2026-05-14 Select Option State Adjustment</h3><p>Current competitor direction keeps validating cached action plans against the current structured page state. Playwright MCP snapshots are fresh interaction surfaces, Stagehand/Browserbase cache actions only after state checks, and Browser Run/WebMCP is widening hosted browser contracts. Plasmate&#39;s local-first roadmap should make native select menus precise enough for repeated SaaS workflows without raw DOM recovery.</p>
+<ul>
+<li><strong>Option values should match browsers</strong>: when an <code>&lt;option&gt;</code> omits <code>value</code>, SOM should expose the visible option text as the submitted value.</li>
+<li><strong>Unavailable choices need to be visible</strong>: disabled options should remain in the compact menu with <code>disabled=true</code> so agents can explain why they did not select them.</li>
+<li><strong>Grouped and multi-select menus need current state</strong>: optgroup labels and <code>selected_values</code> should become shared action-plan context before this lands in adapter conformance.</li>
+<li><strong>Schema and SDK parity decide stickiness</strong>: option groups, disabled option state, implicit single-select values, and select <code>size</code> need to validate in the public schema and flow through parser/SDK action plans before agents can safely cache menu choices across runtimes.</li>
+</ul>
+<h3 id="2026-05-14-test-selector-hint-adjustment">2026-05-14 Test Selector Hint Adjustment</h3><p>Current browser-agent products keep moving from raw DOM traversal toward validated action handles. Playwright MCP refs are snapshot-scoped, and Stagehand/Browserbase action caches pay off only when a repeated target can be recognized cheaply. Plasmate&#39;s local-first roadmap should preserve app-owned test selector hints as optional action context rather than forcing users to recover them from raw HTML.</p>
+<ul>
+<li><strong>Test selectors are durable app contracts</strong>: <code>data-testid</code>, <code>data-test</code>, and <code>data-qa</code> should compile into <code>test_id</code>, <code>test</code>, and <code>qa</code> attrs.</li>
+<li><strong>Selectors belong at the framework edge</strong>: parser packages, SDKs, Browser Use, LangChain, and Vercel AI should expose those hints in compact action plans for trace correlation and repeated internal workflows.</li>
+<li><strong>Cache keys stay semantic</strong>: selector hints should help validate and debug actions without changing deterministic <code>cache_key</code> values, which remain target-focused.</li>
 </ul>
 <h2 id="completed-v011">Completed (v0.1.1)</h2><ul>
 <li>SOM compiler with 9.4x median compression across 38 sites</li>
@@ -896,6 +916,9 @@
 <li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve spellcheck, autocapitalize, dirname, and ARIA placeholder cues</li>
 <li><input checked="" disabled="" type="checkbox"> Compact action plans expose spellcheck, autocapitalize, dirname, and aria_placeholder across parser packages, SDKs, and framework adapters</li>
 <li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest and 016-action-semantics fixture assert text-entry affordance cues without changing deterministic action cache keys</li>
+<li><input checked="" disabled="" type="checkbox"> Rust compiler normalizes invalid input types to text and preserves input size plus autofocus</li>
+<li><input checked="" disabled="" type="checkbox"> Compact action plans expose autofocus across parser packages, SDKs, and framework adapters</li>
+<li><input checked="" disabled="" type="checkbox"> Shared fixtures assert autofocus, input size, and invalid input-type normalization without changing deterministic action cache keys</li>
 <li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve upload constraints with accept, capture, and native multiple state</li>
 <li><input checked="" disabled="" type="checkbox"> Compact action plans expose name, accept, capture, and multiple across parser packages, SDKs, and framework adapters</li>
 <li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest asserts upload constraints and multiple-selection state for cacheable action targets</li>
@@ -912,6 +935,12 @@
 <li><input checked="" disabled="" type="checkbox"> Compact action plans expose inert availability gating across parser packages, SDKs, and framework adapters</li>
 <li><input checked="" disabled="" type="checkbox"> Shared action-state and action-availability fixtures assert inert targets without changing deterministic action cache keys</li>
 <li><input checked="" disabled="" type="checkbox"> Rust compiler maps graphical submit inputs to actionable buttons, resolves alt labels, and preserves button_type, alt, and src context</li>
+<li><input checked="" disabled="" type="checkbox"> Single-select controls infer the browser-default first selected option when markup omits <code>selected</code></li>
+<li><input checked="" disabled="" type="checkbox"> Disabled optgroups propagate disabled state to child option summaries</li>
+<li><input checked="" disabled="" type="checkbox"> SOM schema/spec, parser packages, SDKs, Browser Use, LangChain, and Vercel AI carry selected_values and select size context</li>
+<li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve <code>data-testid</code>, <code>data-test</code>, and <code>data-qa</code> as <code>test_id</code>, <code>test</code>, and <code>qa</code></li>
+<li><input checked="" disabled="" type="checkbox"> Compact action plans expose test selector hints across parser packages, SDKs, and framework adapters without changing cache keys</li>
+<li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest asserts test selector hint parity</li>
 <li><input disabled="" type="checkbox"> Selector-aware SOM cache entries for repeated agent prompts</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
 <li><input disabled="" type="checkbox"> Wire <code>016-action-semantics</code> into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants</li>
@@ -921,7 +950,7 @@
 <li><input disabled="" type="checkbox"> Promote range and orientation cases into broader parser, SDK, and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote ARIA widget affordance cases into broader parser, SDK, and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote ARIA set-position cases into broader Rust/parser/SDK and adapter conformance fixtures</li>
-<li><input disabled="" type="checkbox"> Promote text-entry affordance cases into broader parser, SDK, and adapter conformance fixtures</li>
+<li><input disabled="" type="checkbox"> Promote text-entry and native input-shape cases into broader parser, SDK, and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote upload-affordance cases into broader Rust/parser/SDK and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote form-submission context cases into broader Rust/parser/SDK and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote submit-button override cases into broader Rust/parser/SDK and adapter conformance fixtures</li>

@@ -120,6 +120,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-14 native input-shape read: current official docs keep pushing action menus toward validated replay: Playwright MCP refs are scoped to fresh accessibility snapshots, Stagehand now documents local and managed action caches, and Browser Run/WebMCP is making typed browser interaction more visible. Plasmate should match browser-native text-entry shape by normalizing invalid input types to `text`, preserving input `size`, and carrying `autofocus` through SDKs and adapters without changing target-focused cache keys.
 
+2026-05-14 test-selector read: current Playwright MCP and Stagehand docs keep the action surface tied to fresh structured state, while Browserbase-style action caching rewards stable handles for repeated internal workflows. Production SaaS and customer apps often expose `data-testid`, `data-test`, and `data-qa` specifically as durable automation selectors. Plasmate should preserve those hints as compact action-plan context so local cached actions can correlate with test suites, traces, and app-owned selectors without raw DOM recovery or hosted selector memory.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -141,6 +143,9 @@ The project already spans a large number of package and integration surfaces: Ru
   - Single-select controls without explicit `selected` markup now mark the browser-default first option as selected and expose that value.
   - Disabled `<optgroup>` elements now propagate `disabled=true` to child option summaries, and explicit select `size` is preserved.
   - JSON Schema/SOM spec, Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI now accept or render `selected_values`, select `size`, option `disabled`, and option `group`.
+  - The Rust SOM compiler and JSON Schema now preserve stable test selector hints: `data-testid` as `test_id`, `data-test` as `test`, and `data-qa` as `qa`.
+  - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `test_id`, `test`, and `qa` without changing deterministic action `cache_key` values.
+  - The shared action-availability manifest now asserts test selector hint parity across parser, SDK, and framework outputs.
   - The Rust SOM compiler and JSON Schema now preserve native range/value constraints (`min`, `max`, and `step`) plus ARIA range, orientation, and sort cues (`aria-valuemin`, `aria-valuemax`, `aria-valuenow`, `aria-valuetext`, `aria-orientation`, and `aria-sort`).
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `min`, `max`, `step`, `orientation`, `sort`, `valuemin`, `valuemax`, `valuenow`, and `valuetext` without changing deterministic action `cache_key` values.
   - The shared action-availability manifest now asserts range and ARIA orientation/value cues across parser, SDK, and framework outputs.

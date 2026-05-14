@@ -235,6 +235,9 @@
               ]
             },
             "name": { "type": "string" },
+            "test_id": { "type": "string" },
+            "test": { "type": "string" },
+            "qa": { "type": "string" },
             "accept": { "type": "string" },
             "capture": {
               "oneOf": [

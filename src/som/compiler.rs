@@ -2082,6 +2082,17 @@ fn build_element_attrs(
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "name") {
         map.insert("name".into(), json!(value));
     }
+    for (html_attr, som_key) in [
+        ("data-testid", "test_id"),
+        ("data-test", "test"),
+        ("data-qa", "qa"),
+    ] {
+        if let Some((_, value)) = attrs.iter().find(|(n, _)| n == html_attr) {
+            if !value.trim().is_empty() {
+                map.insert(som_key.into(), json!(value));
+            }
+        }
+    }
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "capture") {
         let capture = if value.is_empty() {
             json!(true)
@@ -3101,6 +3112,50 @@ mod tests {
             .as_ref()
             .expect("download attrs should compile");
         assert_eq!(attrs["download"], true);
+    }
+
+    #[test]
+    fn test_test_selector_action_cues_are_preserved() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Selectors</title></head>
+<body>
+<main>
+  <button data-testid="save-settings" data-test="primary-save" data-qa="settings-submit">Save</button>
+  <label for="email">Email</label>
+  <input id="email" data-testid="email-field" data-test="email-input" data-qa="account-email">
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.com").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let save = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Save"))
+            .expect("button should compile");
+        let attrs = save
+            .attrs
+            .as_ref()
+            .expect("button selector attrs should compile");
+        assert_eq!(attrs["test_id"], "save-settings");
+        assert_eq!(attrs["test"], "primary-save");
+        assert_eq!(attrs["qa"], "settings-submit");
+
+        let email = elements
+            .iter()
+            .find(|element| element.label.as_deref() == Some("Email"))
+            .expect("input should compile");
+        let attrs = email
+            .attrs
+            .as_ref()
+            .expect("input selector attrs should compile");
+        assert_eq!(attrs["test_id"], "email-field");
+        assert_eq!(attrs["test"], "email-input");
+        assert_eq!(attrs["qa"], "account-email");
     }
 
     #[test]
