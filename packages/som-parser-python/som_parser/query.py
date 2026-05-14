@@ -160,6 +160,12 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["download"] = attrs.download
             if attrs.name:
                 item["name"] = attrs.name
+            if attrs.accept:
+                item["accept"] = attrs.accept
+            if attrs.capture is not None:
+                item["capture"] = attrs.capture
+            if attrs.multiple is not None:
+                item["multiple"] = attrs.multiple
             if attrs.autocomplete:
                 item["autocomplete"] = attrs.autocomplete
             if attrs.inputmode:

@@ -161,8 +161,9 @@ those services, Plasmate becomes less sticky.
    by id, role, text, interactivity, and flattened traversal in Go as well as
    Python and Node.
 3. **Schema fields need SDK homes**: `attrs.description`, `attrs.name`,
-   `attrs.autocomplete`, ARIA state, details attrs, iframe attrs, and `shadow`
-   should be treated as public contract across all SDKs.
+   `attrs.accept`, `attrs.capture`, `attrs.multiple`, `attrs.autocomplete`,
+   ARIA state, details attrs, iframe attrs, and `shadow` should be treated as
+   public contract across all SDKs.
 
 ### 2026-05-11 Browser Run and Naming Adjustment
 
@@ -594,6 +595,25 @@ surfacing small text-entry cues across the shared manifest.
 3. **Custom textboxes need prompt text**: `aria-placeholder` should surface as
    `aria_placeholder` without changing target `cache_key` values, preserving
    local action memory while making custom-field prompt drift visible.
+
+### 2026-05-14 Upload Affordance Adjustment
+
+Current browser-agent products keep making repeat workflows depend on compact,
+validated action targets. File inputs are a sticky SaaS case because agents
+cannot safely reuse an upload plan unless they know the field identity, allowed
+file/media types, capture hint, and multi-file state before replay. Plasmate
+should keep the local-first wedge by making upload controls as explicit as
+text fields across the shared manifest.
+
+1. **Field identity affects cacheability**: `name` should stay visible in
+   compact targets so action caches distinguish similarly labelled upload
+   controls inside enterprise forms.
+2. **Upload constraints prevent wrong-file prompts**: `accept` and `capture`
+   should travel through Rust, schema, SDKs, parser packages, and adapters so
+   agents can ask for the right artifact before invoking an upload flow.
+3. **Multi-select state changes the plan**: native `multiple` should surface in
+   action plans for file and select controls without changing deterministic
+   target ids.
 
 ### 2026-05-14 Form-Relation Action Menu Adjustment
 
@@ -1067,9 +1087,18 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - The shared action-availability manifest and `016-action-semantics`
   conformance fixture now assert text-entry affordance cues across Rust,
   parser, SDK, and framework adapter outputs.
-- Next conformance step: promote text-entry affordance cases into broader
-  parser/SDK and adapter fixtures alongside ARIA widget, range, and
-  set-position cases.
+- Rust SOM compilation and the JSON Schema now preserve upload action cues
+  with native `accept`, `capture`, and input `multiple`, and the shared action
+  manifest now asserts `name` as field identity for cacheable targets.
+- Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+  and Vercel AI action-plan surfaces now expose `name`, `accept`, `capture`,
+  and `multiple` for upload and multi-select workflows.
+- The shared action-availability manifest now asserts upload constraints and
+  native multiple-selection state across parser, SDK, and framework adapter
+  outputs.
+- Next conformance step: promote upload-affordance cases into broader
+  Rust/parser/SDK and adapter fixtures alongside text-entry, ARIA widget,
+  range, and set-position cases.
 
 ## Dependencies to Add
 

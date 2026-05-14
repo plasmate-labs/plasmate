@@ -1664,6 +1664,9 @@ fn build_element_attrs(
                     map.insert("checked".into(), json!(true));
                 }
             }
+            if has_attr(attrs, "multiple") {
+                map.insert("multiple".into(), json!(true));
+            }
             if input_type == "radio" {
                 if let Some(name) = attrs.iter().find(|(n, _)| n == "name") {
                     map.insert("group".into(), json!(name.1));
@@ -1850,7 +1853,16 @@ fn build_element_attrs(
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "name") {
         map.insert("name".into(), json!(value));
     }
+    if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "capture") {
+        let capture = if value.is_empty() {
+            json!(true)
+        } else {
+            json!(value)
+        };
+        map.insert("capture".into(), capture);
+    }
     for key in [
+        "accept",
         "autocomplete",
         "inputmode",
         "enterkeyhint",

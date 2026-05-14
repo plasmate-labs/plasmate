@@ -49,6 +49,48 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T09:13:38Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted from the primary checkout, but
+  SSH DNS still could not resolve `github.com` (`ssh: Could not resolve
+  hostname github.com: -65563`). This run continued from local `master`
+  commit `f7af658`; the repo has no `main` branch and `origin/HEAD` points at
+  `origin/master`.
+- Market direction: current Playwright MCP, Browserbase/Stagehand, and Browser
+  Use direction still favors compact, fresh, replay-validated action targets.
+  Production SaaS stickiness increasingly depends on forms that include file
+  evidence, screenshots, resumes, and media uploads, so Plasmate should deepen
+  portable local action metadata rather than pivoting into hosted browser
+  infrastructure.
+- Code changes: Rust SOM now preserves upload action cues: native `accept`,
+  `capture`, and input `multiple`. Empty `capture` compiles as `true`, and
+  JSON Schema/SOM spec docs accept `attrs.accept`, `attrs.capture`, and
+  `attrs.multiple`.
+- Parser/SDK/adapter changes: Python/Node parser packages, Python/Node/Go
+  SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose
+  `name`, `accept`, `capture`, and `multiple`. Field `name` remains part of
+  deterministic `cache_key` inputs so similarly labelled upload controls do
+  not collapse into the same cached action target.
+- Fixture and docs changes: the shared action-availability SOM/expected
+  manifest now asserts upload constraints and native multiple-selection state.
+  PRD, roadmap, SOM spec/schema, adapter docs, generated website docs, and
+  this running state were updated with rationale and next conformance steps.
+- Verification: JSON validation passed; `rustfmt --check src/som/compiler.rs
+  tests/som_compiler_test.rs` passed; `gofmt` was applied to touched Go files;
+  focused Rust upload test passed; `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build`
+  passed with existing warnings; `cargo test --lib -- --test-threads=1`
+  passed 256 tests; `cargo test --test som_compiler_test -- --test-threads=1`
+  passed 60 tests; `./scripts/action-manifest-conformance.sh --quick` and
+  `--full` passed; Node parser, Node SDK, and Vercel AI builds passed; `node
+  website/build.mjs` rebuilt 39 pages; `git diff --check` passed.
+- Verification gap: full `cargo test -- --test-threads=1` reached the AWP
+  integration suite and failed because this sandbox cannot spawn the test
+  subprocess (`Operation not permitted`) in `tests/awp_integration_test.rs`.
+  The library and SOM compiler suites passed before/after that sandbox-only
+  failure.
+- Commit/push state: pending at the time of this note; changes are staged for
+  an upload-affordance implementation/docs commit once final status is clean.
+
 ### 2026-05-14T08:14:37Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted from the primary checkout, but

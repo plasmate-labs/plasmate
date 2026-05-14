@@ -51,6 +51,14 @@ def test_build_context_surfaces_action_availability():
             assert f'[group={target["group"]}]' in line
         if target.get("input_type"):
             assert f'[type={target["input_type"]}]' in line
+        if target.get("name"):
+            assert f'[name={target["name"]}]' in line
+        if target.get("accept"):
+            assert f'[accept={target["accept"]}]' in line
+        if "capture" in target:
+            assert f'[capture={target["capture"]}]' in line
+        if "multiple" in target:
+            assert f'[multiple={target["multiple"]}]' in line
         if target.get("autocomplete"):
             assert f'[autocomplete={target["autocomplete"]}]' in line
         if target.get("inputmode"):

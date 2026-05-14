@@ -68,7 +68,7 @@ The repo's broad library surface is now a product promise. Python and Node alrea
 
 - **Cross-language action plans**: Go should expose the same compact action targets as the parser packages so agents can plan from ids, roles, labels, actions, hrefs, names, and input types in any supported runtime.
 - **Shadow roots are not optional**: web-component controls must be reachable by id, role, text, interactivity, and flattened traversal in Go as well as Python and Node.
-- **Schema fields need SDK homes**: `attrs.description`, `attrs.name`, `attrs.autocomplete`, ARIA state, details attrs, iframe attrs, and `shadow` should be treated as public contract across all SDKs.
+- **Schema fields need SDK homes**: `attrs.description`, `attrs.name`, `attrs.accept`, `attrs.capture`, `attrs.multiple`, `attrs.autocomplete`, ARIA state, details attrs, iframe attrs, and `shadow` should be treated as public contract across all SDKs.
 
 ### 2026-05-11 Browser Run and Naming Adjustment
 
@@ -498,6 +498,9 @@ Current Playwright MCP and Stagehand docs keep validating action surfaces that a
 - [x] Rust compiler and SOM schema preserve spellcheck, autocapitalize, dirname, and ARIA placeholder cues
 - [x] Compact action plans expose spellcheck, autocapitalize, dirname, and aria_placeholder across parser packages, SDKs, and framework adapters
 - [x] Shared action-availability manifest and 016-action-semantics fixture assert text-entry affordance cues without changing deterministic action cache keys
+- [x] Rust compiler and SOM schema preserve upload constraints with accept, capture, and native multiple state
+- [x] Compact action plans expose name, accept, capture, and multiple across parser packages, SDKs, and framework adapters
+- [x] Shared action-availability manifest asserts upload constraints and multiple-selection state for cacheable action targets
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
@@ -508,6 +511,7 @@ Current Playwright MCP and Stagehand docs keep validating action surfaces that a
 - [ ] Promote ARIA widget affordance cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote ARIA set-position cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote text-entry affordance cases into broader parser, SDK, and adapter conformance fixtures
+- [ ] Promote upload-affordance cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures

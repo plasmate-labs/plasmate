@@ -55,6 +55,9 @@ export interface ActionPlanItem {
   rel?: string;
   download?: boolean | string;
   name?: string;
+  accept?: string;
+  capture?: boolean | string;
+  multiple?: boolean;
   autocomplete?: string;
   inputmode?: string;
   enterkeyhint?: string;
@@ -166,6 +169,9 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.rel) item.rel = el.attrs.rel;
     if (el.attrs?.download !== undefined) item.download = el.attrs.download;
     if (el.attrs?.name) item.name = el.attrs.name;
+    if (el.attrs?.accept) item.accept = el.attrs.accept;
+    if (el.attrs?.capture !== undefined) item.capture = el.attrs.capture;
+    if (el.attrs?.multiple !== undefined) item.multiple = el.attrs.multiple;
     if (el.attrs?.autocomplete) item.autocomplete = el.attrs.autocomplete;
     if (el.attrs?.inputmode) item.inputmode = el.attrs.inputmode;
     if (el.attrs?.enterkeyhint) item.enterkeyhint = el.attrs.enterkeyhint;
