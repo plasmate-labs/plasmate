@@ -49,6 +49,43 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T07:12:56Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted from the primary checkout, but
+  SSH DNS could not resolve `github.com` (`ssh: Could not resolve hostname
+  github.com: -65563`). This run continued from the locally available shared
+  `master` / `origin/master` / detached automation HEAD state `ce747ce`.
+- Market direction: current Playwright MCP docs still make structured
+  accessibility snapshots with snapshot-scoped refs the interaction unit, while
+  Stagehand/Browserbase emphasize `observe()` plus local/server action caching
+  and session observability. Plasmate should keep deepening the local
+  SOM/action-menu contract rather than pivoting into hosted browser
+  infrastructure.
+- Code changes: Rust SOM now preserves ARIA set-position cues:
+  `aria-level`, `aria-posinset`, and `aria-setsize`; JSON Schema and SOM spec
+  docs accept the corresponding `attrs.aria.level`, `posinset`, and `setsize`
+  keys.
+- Parser/SDK/adapter changes: Python/Node parser packages, Python/Node/Go
+  SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose
+  `level`, `posinset`, and `setsize` without changing deterministic
+  `cache_key` values.
+- Fixture and docs changes: the shared action-availability SOM and expected
+  manifest now assert set-position cues. PRD, roadmap, SDK/adapter docs,
+  generated website docs, and this running state were updated with rationale
+  and next conformance steps.
+- Verification: JSON validation passed; `rustfmt --check src/som/compiler.rs`
+  passed; focused Rust set-position test passed; `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build`
+  passed with existing warnings; `cargo test --lib -- --test-threads=1`
+  passed 255 tests; `./scripts/action-manifest-conformance.sh --quick`
+  passed; `./scripts/action-manifest-conformance.sh --full` passed; `node
+  website/build.mjs` rebuilt 39 pages; `git diff --check` passed. Temporary
+  Node dependency symlinks to the primary checkout were removed after
+  verification.
+- Commit/push state: implementation/docs commit `0b06233`
+  (`chore: expose aria set position cues`) was created locally. Push is still
+  pending at this point. There is no `main` branch in this repo; `origin/HEAD`
+  points at `origin/master`.
+
 ### 2026-05-14T06:14:32Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first from the automation
