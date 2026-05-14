@@ -81,9 +81,9 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   website HTML was not refreshed.
 - Commit/push state: implementation commit `595454b` was created from the
   primary checkout and pushed to
-  `origin/codex/select-option-action-state`; documentation commits now leave
-  that review branch at `b0ae07d`. Direct `origin/master` push was rejected
-  with `fetch first`; follow-up `git fetch origin master` failed DNS for
+  `origin/codex/select-option-action-state`; follow-up documentation commits
+  were pushed to the same branch. Direct `origin/master` push was rejected with
+  `fetch first`; follow-up `git fetch origin master` failed DNS for
   `github.com`, and `gh pr create` could not reach `api.github.com`. Remote
   merge remains blocked until fetch/API access works.
 
