@@ -79,6 +79,12 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Verification gap: `node website/build.mjs` is still blocked because this
   worktree lacks the `marked` package (`ERR_MODULE_NOT_FOUND`), so generated
   website HTML was not refreshed.
+- Commit/push state: implementation commit `595454b` was created from the
+  primary checkout and pushed to
+  `origin/codex/select-option-action-state`. Direct `origin/master` push was
+  rejected with `fetch first`; follow-up `git fetch origin master` failed DNS
+  for `github.com`, and `gh pr create` could not reach `api.github.com`.
+  Remote merge remains blocked until fetch/API access works.
 
 ### 2026-05-14T16:04:26Z - Plasmate Improvements Automation
 
