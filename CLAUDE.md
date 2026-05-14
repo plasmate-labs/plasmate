@@ -49,6 +49,37 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T17:06:29Z - Plasmate Improvements Automation
+
+- Git sync: latest pull was retried from the automation worktree and failed
+  because the sandbox cannot open the linked primary checkout `FETCH_HEAD`.
+  Retrying `git fetch --all --prune` from `/Users/steve/Git/plasmate` failed
+  DNS for `github.com` (`ssh: Could not resolve hostname github.com: -65563`),
+  so work continued from local `HEAD` `8b78d48`.
+- Market direction: current docs and trend research still favor Plasmate's
+  local-first action-state wedge. Playwright MCP uses structured
+  accessibility snapshots with snapshot-scoped refs, Browserbase/Stagehand is
+  pushing validated action caching, and Cloudflare Browser Run/WebMCP is
+  widening hosted MCP/CDP/browser-native interaction. The roadmap should keep
+  improving compact local SOM/action fidelity before hosted browser scale.
+- Code changes: Rust SOM select extraction now follows browser option-value
+  defaults when an `<option>` omits `value`, preserves disabled option state,
+  preserves optgroup labels on option summaries, and exposes
+  `attrs.selected_values` for multi-select controls while keeping the existing
+  first selected `attrs.value`.
+- Docs changes: PRD, roadmap, and website doc sources now record the
+  select-option state rationale and next step to promote option value fallback,
+  option disabled state, optgroup grouping, and multi-select values into shared
+  Rust/parser/SDK and adapter fixtures.
+- Verification: `rustfmt --check src/som/compiler.rs tests/som_compiler_test.rs`
+  passed; focused `test_select_option_state_and_groups_are_preserved` passed;
+  full `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo test --test
+  som_compiler_test -- --test-threads=1` passed 66 tests; `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build`
+  passed with existing warnings; and `git diff --check` passed.
+- Verification gap: `node website/build.mjs` is still blocked because this
+  worktree lacks the `marked` package (`ERR_MODULE_NOT_FOUND`), so generated
+  website HTML was not refreshed.
+
 ### 2026-05-14T16:04:26Z - Plasmate Improvements Automation
 
 - Git sync: latest pull was retried from the automation worktree and still

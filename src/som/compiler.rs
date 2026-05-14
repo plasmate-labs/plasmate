@@ -1908,7 +1908,8 @@ fn build_element_attrs(
             if !options.is_empty() {
                 map.insert("options".into(), json!(options));
             }
-            if has_attr(attrs, "multiple") {
+            let multiple = has_attr(attrs, "multiple");
+            if multiple {
                 map.insert("multiple".into(), json!(true));
             }
             if has_attr(attrs, "required") {
@@ -1916,6 +1917,12 @@ fn build_element_attrs(
             }
             if let Some(value) = selected_select_value(&options) {
                 map.insert("value".into(), json!(value));
+            }
+            if multiple {
+                let values = selected_select_values(&options);
+                if !values.is_empty() {
+                    map.insert("selected_values".into(), json!(values));
+                }
             }
             if inherited_disabled || has_attr(attrs, "disabled") {
                 map.insert("disabled".into(), json!(true));
@@ -2212,6 +2219,25 @@ fn selected_select_value(options: &[serde_json::Value]) -> Option<String> {
     })
 }
 
+fn selected_select_values(options: &[serde_json::Value]) -> Vec<String> {
+    options
+        .iter()
+        .filter_map(|option| {
+            option
+                .get("selected")
+                .and_then(|selected| selected.as_bool())
+                .filter(|selected| *selected)
+                .and_then(|_| {
+                    option
+                        .get("value")
+                        .and_then(|value| value.as_str())
+                        .or_else(|| option.get("text").and_then(|value| value.as_str()))
+                })
+                .map(str::to_string)
+        })
+        .collect()
+}
+
 fn normalize_button_type(value: &str) -> String {
     match value.trim().to_ascii_lowercase().as_str() {
         "button" => "button".to_string(),
@@ -2278,35 +2304,60 @@ fn extract_summary_text(node: &Handle, css_rules: &VisibilityRules) -> Option<St
 
 fn extract_select_options(node: &Handle, css_rules: &VisibilityRules) -> Vec<serde_json::Value> {
     let mut options = Vec::new();
-    let children = node.children.borrow();
-    for child in children.iter() {
-        if heuristics::should_strip(child) || is_css_hidden_element(child, css_rules) {
-            continue;
-        }
-        if let NodeData::Element { name, attrs, .. } = &child.data {
-            if name.local.as_ref() == "option" {
-                let attrs = attrs.borrow();
-                let value = attrs
-                    .iter()
-                    .find(|a| a.name.local.as_ref() == "value")
-                    .map(|a| a.value.to_string())
-                    .unwrap_or_default();
-                let text = get_visible_text_content(child, css_rules);
-                let selected = attrs.iter().any(|a| a.name.local.as_ref() == "selected");
-                let mut opt = serde_json::Map::new();
-                opt.insert("value".into(), json!(value));
-                opt.insert("text".into(), json!(heuristics::normalize_text(&text)));
-                if selected {
-                    opt.insert("selected".into(), json!(true));
+
+    fn visit_options(
+        node: &Handle,
+        css_rules: &VisibilityRules,
+        group_label: Option<&str>,
+        options: &mut Vec<serde_json::Value>,
+    ) {
+        let children = node.children.borrow();
+        for child in children.iter() {
+            if heuristics::should_strip(child) || is_css_hidden_element(child, css_rules) {
+                continue;
+            }
+            if let NodeData::Element { name, attrs, .. } = &child.data {
+                let tag = name.local.as_ref();
+                if tag == "option" {
+                    let attrs = attrs.borrow();
+                    let text =
+                        heuristics::normalize_text(&get_visible_text_content(child, css_rules));
+                    let value = attrs
+                        .iter()
+                        .find(|a| a.name.local.as_ref() == "value")
+                        .map(|a| a.value.to_string())
+                        .unwrap_or_else(|| text.clone());
+                    let selected = attrs.iter().any(|a| a.name.local.as_ref() == "selected");
+                    let disabled = attrs.iter().any(|a| a.name.local.as_ref() == "disabled");
+                    let mut opt = serde_json::Map::new();
+                    opt.insert("value".into(), json!(value));
+                    opt.insert("text".into(), json!(text));
+                    if let Some(group) = group_label {
+                        if !group.is_empty() {
+                            opt.insert("group".into(), json!(group));
+                        }
+                    }
+                    if selected {
+                        opt.insert("selected".into(), json!(true));
+                    }
+                    if disabled {
+                        opt.insert("disabled".into(), json!(true));
+                    }
+                    options.push(serde_json::Value::Object(opt));
+                } else if tag == "optgroup" {
+                    let attrs = attrs.borrow();
+                    let label = attrs
+                        .iter()
+                        .find(|a| a.name.local.as_ref() == "label")
+                        .map(|a| a.value.to_string())
+                        .unwrap_or_default();
+                    visit_options(child, css_rules, Some(label.as_str()), options);
                 }
-                options.push(serde_json::Value::Object(opt));
-            } else if name.local.as_ref() == "optgroup" {
-                // Recurse into optgroup
-                let group_opts = extract_select_options(child, css_rules);
-                options.extend(group_opts);
             }
         }
     }
+
+    visit_options(node, css_rules, None, &mut options);
     options
 }
 
