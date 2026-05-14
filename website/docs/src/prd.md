@@ -88,6 +88,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-14 live-region read: current official docs make validation-before-replay even more important. Playwright MCP refs are scoped to the current accessibility snapshot, Stagehand caches only pay off when the observed page state still matches, and Browser Use/CDP sessions keep dynamic app state alive for repeated workflows. Plasmate should expose lightweight ARIA live-region state in compact targets: `aria-busy`, `aria-live`, `aria-atomic`, and `aria-relevant` tell agents whether a control or result region is updating and how status feedback will announce without forcing raw DOM recovery.
 
+2026-05-14 popover-command read: browser action surfaces are expanding beyond ARIA-only state. MDN now documents Popover API invoker relationships and the newer `commandfor`/`command` button attributes, while Chrome positions command buttons as a declarative replacement path for popover-specific controls. Plasmate should carry these native relationships in SOM action menus so agents can tell which button opens, hides, or toggles which panel before replaying a cached local action.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -103,6 +105,9 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-14:
+  - The Rust SOM compiler and JSON Schema now preserve native popover and command relationships: `popovertarget`, `popovertargetaction`, `commandfor`, `command`, and `popover`.
+  - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `popovertarget`, `popovertargetaction`, `commandfor`, and `command` without changing deterministic action `cache_key` values.
+  - The shared action-availability manifest now asserts popover/command relationship cues across parser, SDK, and framework outputs.
   - The Rust SOM compiler and JSON Schema now preserve ARIA live-region cues: `aria-busy`, `aria-live`, `aria-atomic`, and `aria-relevant`.
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `busy`, `live`, `atomic`, and `relevant` without changing deterministic action `cache_key` values.
   - The shared action-availability manifest now asserts live-region state across parser, SDK, and framework outputs.

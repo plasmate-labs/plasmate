@@ -114,6 +114,11 @@ class SomElementAttrs(BaseModel):
     enterkeyhint: Optional[str] = None
     form: Optional[str] = None
     list: Optional[str] = None
+    popovertarget: Optional[str] = None
+    popovertargetaction: Optional[str] = None
+    commandfor: Optional[str] = None
+    command: Optional[str] = None
+    popover: Optional[str] = None
     minlength: Optional[int | str] = None
     maxlength: Optional[int | str] = None
     pattern: Optional[str] = None

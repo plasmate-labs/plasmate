@@ -73,6 +73,11 @@ type ElementAttrs struct {
 	EnterKeyHint    *string        `json:"enterkeyhint,omitempty"`
 	Form            *string        `json:"form,omitempty"`
 	List            *string        `json:"list,omitempty"`
+	PopoverTarget   *string        `json:"popovertarget,omitempty"`
+	PopoverAction   *string        `json:"popovertargetaction,omitempty"`
+	CommandFor      *string        `json:"commandfor,omitempty"`
+	Command         *string        `json:"command,omitempty"`
+	Popover         *string        `json:"popover,omitempty"`
 	MinLength       interface{}    `json:"minlength,omitempty"`
 	MaxLength       interface{}    `json:"maxlength,omitempty"`
 	Pattern         *string        `json:"pattern,omitempty"`

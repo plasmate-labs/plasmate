@@ -356,6 +356,14 @@ state in compact targets: `aria-busy`, `aria-live`, `aria-atomic`, and
 `aria-relevant` tell agents whether a control or result region is updating and
 how status feedback will announce without forcing raw DOM recovery.
 
+2026-05-14 popover-command read: browser action surfaces are expanding beyond
+ARIA-only state. MDN now documents Popover API invoker relationships and the
+newer `commandfor`/`command` button attributes, while Chrome positions command
+buttons as a declarative replacement path for popover-specific controls.
+Plasmate should carry these native relationships in SOM action menus so agents
+can tell which button opens, hides, or toggles which panel before replaying a
+cached local action.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -382,6 +390,15 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-14:
+  - The Rust SOM compiler and JSON Schema now preserve native popover and
+    command relationships: `popovertarget`, `popovertargetaction`,
+    `commandfor`, `command`, and `popover`.
+  - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
+    AI action-plan surfaces now expose `popovertarget`,
+    `popovertargetaction`, `commandfor`, and `command` without changing
+    deterministic action `cache_key` values.
+  - The shared action-availability manifest now asserts popover/command
+    relationship cues across parser, SDK, and framework outputs.
   - The Rust SOM compiler and JSON Schema now preserve ARIA live-region cues:
     `aria-busy`, `aria-live`, `aria-atomic`, and `aria-relevant`.
   - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
@@ -758,6 +775,9 @@ and adapter docs over one-off integration logic.
   broader parser, SDK, and adapter conformance fixtures.
 - Promote live-region cases (`aria-busy`, `aria-live`, `aria-atomic`, and
   `aria-relevant`) into broader Rust/parser/SDK conformance fixtures.
+- Promote popover/command relationship cases (`popovertarget`,
+  `popovertargetaction`, `commandfor`, and `command`) into broader
+  Rust/parser/SDK conformance fixtures.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched

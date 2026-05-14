@@ -1827,7 +1827,18 @@ fn build_element_attrs(
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "name") {
         map.insert("name".into(), json!(value));
     }
-    for key in ["autocomplete", "inputmode", "enterkeyhint", "form", "list"] {
+    for key in [
+        "autocomplete",
+        "inputmode",
+        "enterkeyhint",
+        "form",
+        "list",
+        "popovertarget",
+        "popovertargetaction",
+        "commandfor",
+        "command",
+        "popover",
+    ] {
         if let Some((_, value)) = attrs.iter().find(|(n, _)| n == key) {
             map.insert(key.into(), json!(value));
         }
@@ -2487,5 +2498,54 @@ mod tests {
         assert_eq!(attrs["aria"]["live"], "polite");
         assert_eq!(attrs["aria"]["atomic"], false);
         assert_eq!(attrs["aria"]["relevant"], "additions text");
+    }
+
+    #[test]
+    fn test_popover_and_command_action_cues_are_preserved() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Actions</title></head>
+<body>
+<main>
+  <button popovertarget="filters" popovertargetaction="show">Open filters</button>
+  <button commandfor="filters" command="hide-popover">Close filters</button>
+  <section id="filters" popover="auto">Filter options</section>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.com").unwrap();
+        let buttons: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .filter(|element| element.role == ElementRole::Button)
+            .collect();
+        assert_eq!(buttons.len(), 2);
+
+        let open_attrs = buttons[0]
+            .attrs
+            .as_ref()
+            .expect("open button attrs should compile");
+        assert_eq!(open_attrs["popovertarget"], "filters");
+        assert_eq!(open_attrs["popovertargetaction"], "show");
+
+        let close_attrs = buttons[1]
+            .attrs
+            .as_ref()
+            .expect("close button attrs should compile");
+        assert_eq!(close_attrs["commandfor"], "filters");
+        assert_eq!(close_attrs["command"], "hide-popover");
+
+        let section = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| element.role == ElementRole::Section)
+            .expect("popover section should compile");
+        let section_attrs = section
+            .attrs
+            .as_ref()
+            .expect("popover section attrs should compile");
+        assert_eq!(section_attrs["popover"], "auto");
     }
 }

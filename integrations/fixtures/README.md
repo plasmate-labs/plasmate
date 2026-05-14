@@ -13,7 +13,8 @@ by the Rust core and parser packages.
   checked state, ARIA expanded/pressed/selected cues, ARIA current/controls/
   haspopup relationship cues, validation constraints (`autocomplete`,
   `inputmode`, `enterkeyhint`, `aria_autocomplete`, `active_descendant`,
-  `form`, `list`, `accesskey`, `errormessage`, `keyshortcuts`,
+  `form`, `list`, `popovertarget`, `popovertargetaction`, `commandfor`,
+  `command`, `accesskey`, `errormessage`, `keyshortcuts`,
   `roledescription`, `busy`, `live`, `atomic`, `relevant`, `minlength`,
   `maxlength`, `pattern`, `invalid`), and ARIA menu checkbox/radio targets.
 

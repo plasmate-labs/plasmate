@@ -61,6 +61,15 @@ def test_build_context_surfaces_action_availability():
             assert f'[form={target["form"]}]' in line
         if target.get("list"):
             assert f'[list={target["list"]}]' in line
+        for command_key in (
+            "popovertarget",
+            "popovertargetaction",
+            "commandfor",
+            "command",
+            "popover",
+        ):
+            if target.get(command_key):
+                assert f'[{command_key}={target[command_key]}]' in line
         if target.get("accesskey"):
             assert f'[accesskey={target["accesskey"]}]' in line
         if target.get("value"):

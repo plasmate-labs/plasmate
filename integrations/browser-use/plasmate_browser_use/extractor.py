@@ -95,6 +95,15 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append(f"form={item['form']}")
     if item.get("list"):
         flags.append(f"list={item['list']}")
+    for command_key in (
+        "popovertarget",
+        "popovertargetaction",
+        "commandfor",
+        "command",
+        "popover",
+    ):
+        if item.get(command_key):
+            flags.append(f"{command_key}={item[command_key]}")
     if item.get("accesskey"):
         flags.append(f"accesskey={item['accesskey']}")
     if item.get("value"):

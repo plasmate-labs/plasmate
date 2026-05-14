@@ -51,6 +51,10 @@
           "actions": ["click"],
           "attrs": {
             "accesskey": "s",
+            "popovertarget": "save-status",
+            "popovertargetaction": "show",
+            "commandfor": "save-status",
+            "command": "toggle-popover",
             "disabled": true,
             "aria": {
               "keyshortcuts": "Meta+S",

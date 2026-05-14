@@ -194,6 +194,11 @@
             "enterkeyhint": { "type": "string" },
             "form": { "type": "string" },
             "list": { "type": "string" },
+            "popovertarget": { "type": "string" },
+            "popovertargetaction": { "type": "string" },
+            "commandfor": { "type": "string" },
+            "command": { "type": "string" },
+            "popover": { "type": "string" },
             "minlength": {
               "oneOf": [
                 { "type": "integer" },

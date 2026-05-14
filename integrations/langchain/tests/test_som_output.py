@@ -58,6 +58,15 @@ def test_som_to_text_surfaces_interactive_state():
             assert f'[form="{target["form"]}"]' in line
         if target.get("list"):
             assert f'[list="{target["list"]}"]' in line
+        for command_key in (
+            "popovertarget",
+            "popovertargetaction",
+            "commandfor",
+            "command",
+            "popover",
+        ):
+            if target.get(command_key):
+                assert f'[{command_key}="{target[command_key]}"]' in line
         if target.get("accesskey"):
             assert f'[accesskey="{target["accesskey"]}"]' in line
         for constraint_key in ("minlength", "maxlength", "pattern"):

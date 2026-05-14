@@ -182,6 +182,11 @@ type ActionPlanItem struct {
 	EnterKeyHint     *string     `json:"enterkeyhint,omitempty"`
 	Form             *string     `json:"form,omitempty"`
 	List             *string     `json:"list,omitempty"`
+	PopoverTarget    *string     `json:"popovertarget,omitempty"`
+	PopoverAction    *string     `json:"popovertargetaction,omitempty"`
+	CommandFor       *string     `json:"commandfor,omitempty"`
+	Command          *string     `json:"command,omitempty"`
+	Popover          *string     `json:"popover,omitempty"`
 	AccessKey        *string     `json:"accesskey,omitempty"`
 	InputType        *string     `json:"input_type,omitempty"`
 	Value            *string     `json:"value,omitempty"`
@@ -276,6 +281,11 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.EnterKeyHint = el.Attrs.EnterKeyHint
 			item.Form = el.Attrs.Form
 			item.List = el.Attrs.List
+			item.PopoverTarget = el.Attrs.PopoverTarget
+			item.PopoverAction = el.Attrs.PopoverAction
+			item.CommandFor = el.Attrs.CommandFor
+			item.Command = el.Attrs.Command
+			item.Popover = el.Attrs.Popover
 			item.AccessKey = el.Attrs.AccessKey
 			item.InputType = el.Attrs.InputType
 			item.Value = el.Attrs.Value

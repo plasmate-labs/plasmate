@@ -278,6 +278,14 @@ Current browser-agent docs keep making repeated actions depend on current page s
 - **Live politeness shapes waiting**: `aria-live` should travel as `live` so agents can distinguish polite status updates from urgent alert feedback.
 - **Announcement scope explains drift**: `aria-atomic` and `aria-relevant` should surface as `atomic` and `relevant` without changing deterministic `cache_key` values.
 
+### 2026-05-14 Popover and Command Relationship Adjustment
+
+Browser-native action relationships are becoming more important for agents that replay cached plans on modern app UIs. The Popover API gives buttons a declarative target and action, and `commandfor`/`command` generalize that model for popovers, dialogs, and custom commands. Plasmate should preserve those relationships as compact target context instead of forcing agents to rediscover them from raw DOM.
+
+- **Invoker targets are replay context**: `popovertarget` should surface so an agent knows which panel a button affects.
+- **Native action verbs reduce guesswork**: `popovertargetaction` and `command` should travel through action plans so cached clicks can be validated as show, hide, toggle, or custom commands.
+- **Command ownership complements ARIA controls**: `commandfor` should sit alongside `aria-controls` as a native relationship cue without changing deterministic `cache_key` values.
+
 ### 2026-05-13 Keyboard-Affordance Action Menu Adjustment
 
 Current Playwright MCP and Stagehand docs keep validating action surfaces that are current, inspectable, and reusable. Browserbase, Browser Use, and Firecrawl add hosted sessions and traces around that same workflow, but Plasmate's sticky local-first wedge is still a portable action contract that carries browser-like affordances everywhere.
@@ -440,6 +448,9 @@ Current Playwright MCP and Stagehand docs keep validating action surfaces that a
 - [x] Rust compiler and SOM schema preserve ARIA busy, live, atomic, and relevant cues
 - [x] Compact action plans expose busy, live, atomic, and relevant across parser packages, SDKs, and framework adapters
 - [x] Shared action-availability manifest asserts live-region cues without changing deterministic action cache keys
+- [x] Rust compiler and SOM schema preserve popover and command relationship cues
+- [x] Compact action plans expose popovertarget, popovertargetaction, commandfor, and command across parser packages, SDKs, and framework adapters
+- [x] Shared action-availability manifest asserts popover/command cues without changing deterministic action cache keys
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants

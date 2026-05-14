@@ -164,6 +164,16 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["form"] = attrs.form
             if attrs.list:
                 item["list"] = attrs.list
+            if attrs.popovertarget:
+                item["popovertarget"] = attrs.popovertarget
+            if attrs.popovertargetaction:
+                item["popovertargetaction"] = attrs.popovertargetaction
+            if attrs.commandfor:
+                item["commandfor"] = attrs.commandfor
+            if attrs.command:
+                item["command"] = attrs.command
+            if attrs.popover:
+                item["popover"] = attrs.popover
             if attrs.accesskey:
                 item["accesskey"] = attrs.accesskey
             if attrs.input_type:

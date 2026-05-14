@@ -214,6 +214,15 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append(f'[form="{attrs["form"]}"]')
     if attrs.get("list"):
         flags.append(f'[list="{attrs["list"]}"]')
+    for command_key in (
+        "popovertarget",
+        "popovertargetaction",
+        "commandfor",
+        "command",
+        "popover",
+    ):
+        if attrs.get(command_key):
+            flags.append(f'[{command_key}="{attrs[command_key]}"]')
     if attrs.get("accesskey"):
         flags.append(f'[accesskey="{attrs["accesskey"]}"]')
     for constraint_key in ("minlength", "maxlength", "pattern"):

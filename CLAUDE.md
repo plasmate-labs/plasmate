@@ -49,6 +49,48 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T02:16:00Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first. The automation worktree
+  still cannot write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate44/FETCH_HEAD`
+  (`Operation not permitted`). Retrying from the primary checkout could not
+  resolve `github.com` over SSH (`ssh: Could not resolve hostname github.com:
+  -65563`), so this run continued from locally available `master` /
+  `origin/master` state `c39fdf9`.
+- Market direction: current docs and product launches still validate the
+  local-first action-menu wedge. Playwright MCP exposes structured
+  accessibility snapshots with snapshot-scoped refs, Firecrawl Interact turns
+  scrape sessions into stateful browser interaction, Browser Use/AWS browser
+  profiles make persistent hosted sessions easier to buy, and MDN/Chrome now
+  document native Popover API and `commandfor`/`command` relationships. The
+  sticky Plasmate move remains richer portable SOM action state, not a hosted
+  browser pivot.
+- Code changes: Rust SOM now preserves native popover and declarative command
+  cues: `popovertarget`, `popovertargetaction`, `commandfor`, `command`, and
+  `popover`. Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and
+  Vercel AI action-plan surfaces expose `popovertarget`,
+  `popovertargetaction`, `commandfor`, and `command` without changing
+  deterministic `cache_key` values.
+- Fixture and docs changes: the shared action-availability SOM and expected
+  manifest now assert popover/command cues across parser, SDK, and framework
+  outputs. PRD, roadmap, SOM schema/spec, adapter docs, SDK docs, generated
+  website docs, and this running state were updated with rationale and next
+  conformance steps.
+- Verification: `cargo build` passed with existing warnings; focused Rust
+  popover/command test passed; JSON/schema validation passed; `rustfmt --check
+  src/som/compiler.rs` passed; `cargo test --lib -- --test-threads=1` passed
+  250 tests; `./scripts/action-manifest-conformance.sh --quick` passed;
+  `./scripts/action-manifest-conformance.sh --full` passed; `node
+  website/build.mjs` rebuilt 39 pages; `git diff --check` passed.
+- Verification gap: full `cargo test -- --test-threads=1` still fails only in
+  `tests/awp_integration_test.rs` because sandboxed local listener setup
+  returns `Operation not permitted`, matching the existing environment
+  limitation from prior runs.
+- Commit/push state: changes are staged for a local `master` commit after this
+  state update. There is no `main` branch in this repo; `origin/HEAD` points at
+  `origin/master`.
+
 ### 2026-05-14T01:11:14Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first. The automation worktree

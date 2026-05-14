@@ -105,6 +105,11 @@ export interface SomElementAttrs {
   enterkeyhint?: string;
   form?: string;
   list?: string;
+  popovertarget?: string;
+  popovertargetaction?: string;
+  commandfor?: string;
+  command?: string;
+  popover?: string;
   minlength?: number | string;
   maxlength?: number | string;
   pattern?: string;

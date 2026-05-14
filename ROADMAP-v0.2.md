@@ -611,6 +611,24 @@ target contract.
    should surface as `atomic` and `relevant` without changing deterministic
    `cache_key` values.
 
+### 2026-05-14 Popover and Command Relationship Adjustment
+
+Browser-native action relationships are becoming more important for agents
+that replay cached plans on modern app UIs. The Popover API gives buttons a
+declarative target and action, and `commandfor`/`command` generalize that model
+for popovers, dialogs, and custom commands. Plasmate should preserve those
+relationships as compact target context instead of forcing agents to rediscover
+them from raw DOM.
+
+1. **Invoker targets are replay context**: `popovertarget` should surface so an
+   agent knows which panel a button affects.
+2. **Native action verbs reduce guesswork**: `popovertargetaction` and
+   `command` should travel through action plans so cached clicks can be
+   validated as show, hide, toggle, or custom commands.
+3. **Command ownership complements ARIA controls**: `commandfor` should sit
+   alongside `aria-controls` as a native relationship cue without changing
+   deterministic `cache_key` values.
+
 ## Architecture
 
 ```
@@ -951,6 +969,15 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   `relevant` without changing deterministic action `cache_key` values.
 - The shared action-availability manifest now asserts live-region cues across
   parser, SDK, and framework adapter outputs.
+- Rust SOM compilation and the JSON Schema now preserve native popover/command
+  relationship state with `popovertarget`, `popovertargetaction`,
+  `commandfor`, `command`, and `popover`.
+- Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and
+  Vercel AI action-plan surfaces now expose `popovertarget`,
+  `popovertargetaction`, `commandfor`, and `command` without changing
+  deterministic action `cache_key` values.
+- The shared action-availability manifest now asserts popover/command cues
+  across parser, SDK, and framework adapter outputs.
 
 ## Dependencies to Add
 
