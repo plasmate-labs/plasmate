@@ -82,9 +82,11 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   JSON validation, Python syntax compile, and `git diff --check` passed.
 - Known gaps: whole-crate `cargo fmt --check` still reports unrelated
   pre-existing formatting drift in AWP/proxy/main/MCP files.
-- Commit/push state: implementation is ready on local branch
-  `codex/broad-selector-hints`; push and remote merge are attempted after this
-  entry.
+- Commit/push state: implementation commit `053aa0a` was pushed to
+  `origin/codex/broad-selector-hints`. `gh pr create` failed because
+  `api.github.com` is unreachable. Direct push to `origin/master` was rejected
+  with `fetch first`; `git fetch origin master` failed DNS for `github.com`, so
+  remote merge remains blocked until fetch/API access works.
 
 ### 2026-05-14T20:12:36Z - Plasmate Improvements Automation
 
