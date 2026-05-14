@@ -168,6 +168,46 @@ fn test_css_hidden_nested_interactive_children_are_stripped() {
 }
 
 #[test]
+fn test_css_hidden_descendant_text_is_stripped_from_visible_surfaces() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Hidden Descendant Text</title>
+<style>.secret { display: none; }</style>
+</head>
+<body><main>
+    <p>Visible copy <span class="secret">Hidden paragraph copy</span></p>
+    <button>Save <span class="secret">Hidden button copy</span></button>
+    <label for="email">Email <span class="secret">Hidden label copy</span></label>
+    <input id="email" type="email">
+    <select aria-label="Plan">
+        <option selected>Public <span class="secret">Hidden option copy</span></option>
+        <option class="secret">Hidden option node</option>
+    </select>
+    <ul><li>Shown item <span class="secret">Hidden list copy</span></li></ul>
+    <table><tr><th>Plan <span class="secret">Hidden header copy</span></th></tr>
+           <tr><td>Pro <span class="secret">Hidden cell copy</span></td></tr></table>
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let json = serde_json::to_string(&som).unwrap();
+
+    assert!(!json.contains("Hidden paragraph copy"));
+    assert!(!json.contains("Hidden button copy"));
+    assert!(!json.contains("Hidden label copy"));
+    assert!(!json.contains("Hidden option copy"));
+    assert!(!json.contains("Hidden option node"));
+    assert!(!json.contains("Hidden list copy"));
+    assert!(!json.contains("Hidden header copy"));
+    assert!(!json.contains("Hidden cell copy"));
+    assert!(json.contains("Visible copy"));
+    assert!(json.contains("Save"));
+    assert!(json.contains("Email"));
+    assert!(json.contains("Public"));
+    assert!(json.contains("Shown item"));
+    assert!(json.contains("Plan"));
+    assert!(json.contains("Pro"));
+}
+
+#[test]
 fn test_news_page_structure() {
     let html = load_fixture("news_page.html");
     let som = compiler::compile(&html, "https://example.com").unwrap();

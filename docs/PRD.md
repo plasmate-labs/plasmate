@@ -480,6 +480,15 @@ surfaces. Plasmate should keep tightening local SOM semantics: native
 controls, and inert shadow-root actions are small reliability gaps that matter
 when teams replay the same SaaS form workflow hundreds of times.
 
+2026-05-14 hidden-descendant text read: current browser-agent products make
+fresh structured state the action source, while Stagehand/Browserbase action
+caching only works when observed targets still match the current page.
+Plasmate's local SOM contract should therefore filter hidden descendants from
+every visible surface, not only from standalone elements. Hidden copy leaking
+into parent paragraphs, button names, labels, select options, lists, or table
+cells weakens cache validation and makes agents choose actions based on text a
+human cannot see.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -616,6 +625,15 @@ and adapter docs over one-off integration logic.
   - Shadow-root actions under an inert host now inherit `attrs.inert`, so
     reusable action plans mark those targets unavailable instead of treating
     them as active web-component controls.
+  - Descendant text extraction is now stylesheet-visibility aware for
+    paragraphs and interactive names, preventing hidden nested copy from
+    leaking into visible parent text or button labels.
+  - Accessible label indexing now skips stylesheet-hidden fragments, so
+    hidden label text no longer pollutes `label for` / `aria-labelledby`
+    control names.
+  - Structured select options, list items, table captions, and table cells now
+    use the same visible-text filter, keeping compact content summaries aligned
+    with what users and browser accessibility snapshots expose.
   - The Rust SOM compiler and JSON Schema now preserve ARIA relationship cues:
     `aria-owns`, `aria-flowto`, and `aria-details`.
   - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
@@ -1029,9 +1047,9 @@ and adapter docs over one-off integration logic.
 - Promote inert availability cases into broader parser, SDK, and adapter
   conformance fixtures so blocked local action targets stay synchronized.
 - Promote native button `value`, invalid button-type normalization,
-  stylesheet-hidden nested actions, and inert shadow-host inheritance into the
-  shared action manifest, then extend stylesheet visibility filtering to
-  descendant text extraction so hidden copy cannot leak through parent text.
+  stylesheet-hidden nested actions, inert shadow-host inheritance, and hidden
+  descendant text filtering into shared fixtures that cover parent text,
+  labels, select options, lists, and tables.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and
   `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures
   once the shared action manifest remains stable.
