@@ -49,6 +49,42 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T00:11:36Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first. The automation worktree
+  still cannot write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate42/FETCH_HEAD`
+  (`Operation not permitted`). Retrying from the primary checkout could not
+  resolve `github.com` over SSH, so this run continued from local
+  `master`/`origin/master` state `4947076`; the final push later succeeded.
+- Market direction: current docs still validate Plasmate's local-first action
+  contract rather than a hosted-browser pivot. Playwright MCP keeps
+  snapshot-scoped accessibility refs, Stagehand and Browserbase emphasize
+  `observe()` plus action caching, and Firecrawl/Browser Use keep packaging
+  persistent browser sessions. The sticky move remains richer portable SOM
+  action state across SDKs and adapters.
+- Code changes: Rust SOM now preserves `form`, `list`, and
+  `aria-errormessage` as form ownership, datalist, and error-message
+  relationship cues. Parser packages, Python/Node/Go SDKs, Browser Use,
+  LangChain, and Vercel AI action-plan surfaces expose `form`, `list`, and
+  `errormessage` without changing deterministic `cache_key` values.
+- Fixture and docs changes: the shared action-availability SOM and expected
+  manifest now assert form-relation cues across parser, SDK, and framework
+  outputs. PRD, roadmap, SOM schema/spec, adapter docs, SDK docs, generated
+  website docs, and this running state were updated with rationale and next
+  conformance steps.
+- Verification: `cargo build` passed; focused Rust compiler test passed;
+  `cargo test --lib -- --test-threads=1` passed 248 tests; Python parser,
+  Python SDK, Browser Use, LangChain, Go SDK, Node parser, Node SDK, Vercel AI,
+  website docs build, `./scripts/action-manifest-conformance.sh --quick`, and
+  `git diff --check` passed. Node/website checks used temporary symlinks to
+  dependency installs in `/Users/steve/Git/plasmate`, then the symlinks were
+  removed.
+- Commit/push state: implementation commit `d7fddf2`
+  (`chore: expose form relation action cues`) was pushed to remote `master`.
+  There is no `main` branch in this repo; `origin/HEAD` points at
+  `origin/master`.
+
 ### 2026-05-13T23:10:41Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first. The automation worktree
