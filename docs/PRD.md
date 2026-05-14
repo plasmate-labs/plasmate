@@ -471,6 +471,15 @@ small but sticky SaaS gap: `input type="image"` should be a clickable submitter
 with `button_type`, `alt`, and `src` context so cached submit plans can still
 recognize branded/icon-only buttons.
 
+2026-05-14 submitter-fidelity read: current competitor docs keep rewarding
+validated action menus over raw browser control. Playwright MCP refs are
+snapshot-scoped, Stagehand/Browserbase caches observed actions after state
+validation, and Cloudflare Browser Run/WebMCP is growing hosted interaction
+surfaces. Plasmate should keep tightening local SOM semantics: native
+`<button>` values, browser-default button type normalization, hidden nested
+controls, and inert shadow-root actions are small reliability gaps that matter
+when teams replay the same SaaS form workflow hundreds of times.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -595,6 +604,18 @@ and adapter docs over one-off integration logic.
   - Graphical submit inputs now resolve labels from `alt` and preserve `alt`
     plus `src`, so agents can identify icon-only submitters without falling
     back to raw DOM or screenshots.
+  - Native `<button>` submitters now preserve `attrs.value`, so cached submit
+    plans can distinguish multiple same-name submit intents without raw DOM
+    recovery.
+  - Invalid native `<button type>` values now normalize to `button_type:
+    "submit"`, matching browser default behavior for malformed production
+    markup.
+  - Stylesheet-hidden nested controls are no longer extracted as interactive
+    child actions, preventing invisible controls from entering compact action
+    menus.
+  - Shadow-root actions under an inert host now inherit `attrs.inert`, so
+    reusable action plans mark those targets unavailable instead of treating
+    them as active web-component controls.
   - The Rust SOM compiler and JSON Schema now preserve ARIA relationship cues:
     `aria-owns`, `aria-flowto`, and `aria-details`.
   - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
@@ -1007,6 +1028,10 @@ and adapter docs over one-off integration logic.
   adapter outputs prove parity with Rust.
 - Promote inert availability cases into broader parser, SDK, and adapter
   conformance fixtures so blocked local action targets stay synchronized.
+- Promote native button `value`, invalid button-type normalization,
+  stylesheet-hidden nested actions, and inert shadow-host inheritance into the
+  shared action manifest, then extend stylesheet visibility filtering to
+  descendant text extraction so hidden copy cannot leak through parent text.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and
   `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures
   once the shared action manifest remains stable.

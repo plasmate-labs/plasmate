@@ -1235,6 +1235,24 @@ fn extract_interactive_children(
         return;
     }
     let attr_pairs = get_attr_pairs(node);
+
+    if let NodeData::Element { name, .. } = &node.data {
+        let tag = name.local.as_ref();
+        let class = attr_pairs
+            .iter()
+            .find(|(n, _)| n == "class")
+            .map(|(_, value)| value.as_str())
+            .unwrap_or_default();
+        let id = attr_pairs
+            .iter()
+            .find(|(n, _)| n == "id")
+            .map(|(_, value)| value.as_str())
+            .unwrap_or_default();
+        if ctx.css_rules.is_hidden(tag, class, id) {
+            return;
+        }
+    }
+
     let disabled_context = inherited_disabled || is_disabled_fieldset(node);
     let inert_context = inherited_inert || has_attr(&attr_pairs, "inert");
     if let NodeData::Element { name, .. } = &node.data {
@@ -1313,7 +1331,13 @@ fn interactive_node_to_element(
         let children = build_children(node, origin, id_tracker, dom_path, &role);
         let hints = heuristics::infer_class_hints(&attr_pairs);
         let html_id = extract_html_id(&attr_pairs);
-        let shadow = extract_shadow_dom(node, origin, id_tracker, dom_path, inherited_inert);
+        let shadow = extract_shadow_dom(
+            node,
+            origin,
+            id_tracker,
+            dom_path,
+            inherited_inert || has_attr(&attr_pairs, "inert"),
+        );
 
         return Some(Element {
             id,
@@ -1404,7 +1428,13 @@ fn node_to_element(
             let children = build_children(node, origin, id_tracker, dom_path, &role);
             let hints = heuristics::infer_class_hints(&attr_pairs);
             let html_id = extract_html_id(&attr_pairs);
-            let shadow = extract_shadow_dom(node, origin, id_tracker, dom_path, inherited_inert);
+            let shadow = extract_shadow_dom(
+                node,
+                origin,
+                id_tracker,
+                dom_path,
+                inherited_inert || has_attr(&attr_pairs, "inert"),
+            );
 
             Some(Element {
                 id,
@@ -1853,9 +1883,12 @@ fn build_element_attrs(
             let button_type = attrs
                 .iter()
                 .find(|(n, _)| n == "type")
-                .map(|(_, v)| v.to_ascii_lowercase())
+                .map(|(_, v)| normalize_button_type(v))
                 .unwrap_or_else(|| "submit".to_string());
             map.insert("button_type".into(), json!(button_type));
+            if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "value") {
+                map.insert("value".into(), json!(value));
+            }
             if inherited_disabled || has_attr(attrs, "disabled") {
                 map.insert("disabled".into(), json!(true));
             }
@@ -2164,6 +2197,14 @@ fn selected_select_value(options: &[serde_json::Value]) -> Option<String> {
             })
             .map(str::to_string)
     })
+}
+
+fn normalize_button_type(value: &str) -> String {
+    match value.trim().to_ascii_lowercase().as_str() {
+        "button" => "button".to_string(),
+        "reset" => "reset".to_string(),
+        _ => "submit".to_string(),
+    }
 }
 
 fn build_children(

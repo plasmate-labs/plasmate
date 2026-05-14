@@ -11,6 +11,26 @@ fn all_elements(som: &Som) -> Vec<&Element> {
     som.regions.iter().flat_map(|r| r.elements.iter()).collect()
 }
 
+fn shadow_elements(element: &Element) -> Vec<&Element> {
+    fn collect<'a>(elements: &'a [Element], result: &mut Vec<&'a Element>) {
+        for element in elements {
+            result.push(element);
+            if let Some(children) = &element.children {
+                collect(children, result);
+            }
+            if let Some(shadow) = &element.shadow {
+                collect(&shadow.elements, result);
+            }
+        }
+    }
+
+    let mut result = Vec::new();
+    if let Some(shadow) = &element.shadow {
+        collect(&shadow.elements, &mut result);
+    }
+    result
+}
+
 // ============================================================
 // Original 9 tests (preserved from initial codebase)
 // ============================================================
@@ -122,6 +142,29 @@ fn test_hidden_inline_styles_ignore_case_and_spacing() {
     assert!(!json.contains("Opacity hidden"));
     assert!(!json.contains("Uppercase aria hidden"));
     assert!(json.contains("Visible copy"));
+}
+
+#[test]
+fn test_css_hidden_nested_interactive_children_are_stripped() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Hidden Nested Action</title>
+<style>.visually-hidden-action { display: none; }</style>
+</head>
+<body><main>
+    <p>Visible copy <span class="visually-hidden-action"><button>Hidden action</button></span></p>
+    <button>Visible action</button>
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let hidden_action = all_elements(&som).into_iter().any(|element| {
+        element.role == ElementRole::Button && element.text.as_deref() == Some("Hidden action")
+    });
+
+    assert!(!hidden_action);
+    assert!(all_elements(&som).into_iter().any(|element| {
+        element.role == ElementRole::Button && element.text.as_deref() == Some("Visible action")
+    }));
+    assert_eq!(som.meta.interactive_count, 1);
 }
 
 #[test]
@@ -664,6 +707,45 @@ fn test_input_button_values_become_labels_and_type_attrs() {
 }
 
 #[test]
+fn test_native_button_value_and_type_semantics_are_preserved() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Button Semantics</title></head>
+<body><main>
+    <button name="intent" value="publish" type="SUBMIT">Publish</button>
+    <button name="intent" value="preview" type="menu">Preview</button>
+    <button name="intent" value="clear" type="reset">Clear</button>
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let elems = all_elements(&som);
+
+    let publish = elems
+        .iter()
+        .find(|e| e.text.as_deref() == Some("Publish"))
+        .expect("submit button should be preserved");
+    let publish_attrs = publish.attrs.as_ref().unwrap();
+    assert_eq!(publish_attrs["name"], "intent");
+    assert_eq!(publish_attrs["value"], "publish");
+    assert_eq!(publish_attrs["button_type"], "submit");
+
+    let preview = elems
+        .iter()
+        .find(|e| e.text.as_deref() == Some("Preview"))
+        .expect("invalid button type should still compile");
+    let preview_attrs = preview.attrs.as_ref().unwrap();
+    assert_eq!(preview_attrs["value"], "preview");
+    assert_eq!(preview_attrs["button_type"], "submit");
+
+    let clear = elems
+        .iter()
+        .find(|e| e.text.as_deref() == Some("Clear"))
+        .expect("reset button should be preserved");
+    let clear_attrs = clear.attrs.as_ref().unwrap();
+    assert_eq!(clear_attrs["value"], "clear");
+    assert_eq!(clear_attrs["button_type"], "reset");
+}
+
+#[test]
 fn test_fieldset_and_aria_groups_compile_with_labels() {
     let html = r#"<!DOCTYPE html>
 <html><head><title>Groups</title></head>
@@ -906,6 +988,31 @@ fn test_shadow_root_extraction_recurses_through_containers() {
         "nested shadow button should be extracted"
     );
     assert_eq!(som.meta.interactive_count, 1);
+}
+
+#[test]
+fn test_inert_shadow_host_marks_shadow_actions_unavailable() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Inert Shadow</title></head>
+<body><main>
+    <section aria-label="Widget host" inert>
+        <template shadowrootmode="open">
+            <button aria-label="Shadow save"></button>
+        </template>
+    </section>
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let host = all_elements(&som)
+        .into_iter()
+        .find(|e| e.shadow.is_some())
+        .expect("host should expose shadow root");
+    let shadow_button = shadow_elements(host)
+        .into_iter()
+        .find(|e| e.label.as_deref() == Some("Shadow save"))
+        .expect("shadow button should be preserved");
+
+    assert_eq!(shadow_button.attrs.as_ref().unwrap()["inert"], true);
 }
 
 #[test]
