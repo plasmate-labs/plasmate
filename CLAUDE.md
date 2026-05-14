@@ -84,10 +84,10 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   passed; `./scripts/action-manifest-conformance.sh --full` passed; `git diff
   --check` passed. Temporary Node dependency symlinks to the primary checkout
   were removed after verification.
-- Commit/push state: pending at the time of this note. This worktree is
-  detached while `master` is checked out in `/Users/steve/Git/plasmate`, so the
-  verified patch will be mirrored there for commit/push. There is no `main`
-  branch in this repo; `origin/HEAD` points at `origin/master`.
+- Commit/push state: implementation commit `959a9f0`
+  (`chore: expose link navigation action cues`) was pushed to remote `master`.
+  There is no `main` branch in this repo; `origin/HEAD` points at
+  `origin/master`.
 
 ### 2026-05-14T03:08:42Z - Plasmate Improvements Automation
 
