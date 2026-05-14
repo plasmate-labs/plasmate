@@ -59,7 +59,7 @@ const { text } = await generateText({
 
 `plasmateActionGuidance` tells the model to honor SOM action targets with
 `cache_key`, `enabled`, `blocked_reason`, `required`, `description`,
-`placeholder`, `group`, `readonly`, `value`, `checked`, `expanded`, `pressed`, and
+`placeholder`, `group`, `readonly`, `inert`, `value`, `checked`, `expanded`, `pressed`, and
 `selected`, `current`, `controls`, `haspopup`, `name`, `accept`, `capture`,
 `multiple`, `autocomplete`, `inputmode`, `enterkeyhint`, `autocapitalize`,
 `dirname`, `spellcheck`, `target`, `rel`,
@@ -103,13 +103,13 @@ required, read-only, described, and grouped controls.
 ### `isPlasmateActionTargetAvailable(target)`
 
 Returns `false` for compact action targets with `enabled: false`,
-`disabled: true`, `readonly: true`, or any `blocked_reason`. Use this when trimming an action
+`disabled: true`, `inert: true`, `readonly: true`, or any `blocked_reason`. Use this when trimming an action
 menu before a Vercel AI SDK call.
 
 ### `normalizePlasmateActionTarget(target)`
 
 Returns a copy of an action target with explicit `enabled` state. Targets with
-`disabled: true`, `readonly: true`, `enabled: false`, or any `blocked_reason` normalize to
+`disabled: true`, `inert: true`, `readonly: true`, `enabled: false`, or any `blocked_reason` normalize to
 `enabled: false` and keep or receive a `blocked_reason`.
 
 ### `getPlasmateActionTargetCacheKey(target)`
@@ -123,7 +123,7 @@ name, href, input type, group, and placeholder.
 Flattens a raw Plasmate SOM response into compact action targets. It traverses
 nested `children` and `shadow.elements`, copies common action metadata from
 `attrs` (`href`, `name`, `input_type`, `placeholder`, `description`, `required`,
-`disabled`, `readonly`, and `group`), and normalizes availability plus `cache_key` state.
+`disabled`, `inert`, `readonly`, and `group`), and normalizes availability plus `cache_key` state.
 
 ### `preparePlasmateActionPlan(targets, options?)`
 

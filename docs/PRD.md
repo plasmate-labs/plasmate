@@ -452,6 +452,15 @@ hosted infrastructure work. `slider`, `spinbutton`, and `option` are small but
 sticky action-role gaps because agents need to adjust numeric settings and
 choose custom listbox options without falling back to raw DOM recovery.
 
+2026-05-14 inert-availability read: current docs and competitor positioning
+keep moving action replay toward validated current state. Playwright MCP refs
+are fresh-snapshot handles, Stagehand/Browserbase cache actions only after
+state validation, and Cloudflare Browser Run/WebMCP makes typed interaction
+contracts more visible. Plasmate should treat native `inert` as an
+availability gate in the local action contract: agents should still see the
+target for planning and explanation, but compact action menus must mark it
+unavailable with `blocked_reason="inert"` before replay.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -559,6 +568,15 @@ and adapter docs over one-off integration logic.
   - SOM spec and generated docs now document the expanded ARIA action-role
     mapping so SDK and adapter maintainers know these roles are product
     surface, not incidental compiler behavior.
+  - The Rust SOM compiler and JSON Schema now preserve native `inert` state,
+    including inherited inert context for nested interactive controls.
+  - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
+    AI action-plan surfaces now expose `inert`, mark inert targets unavailable
+    with `blocked_reason="inert"`, and keep deterministic action `cache_key`
+    values target-focused.
+  - The `015-action-state` conformance fixture and shared
+    action-availability manifest now assert inert availability gating across
+    Rust, parser, SDK, and framework surfaces.
   - The Rust SOM compiler and JSON Schema now preserve ARIA relationship cues:
     `aria-owns`, `aria-flowto`, and `aria-details`.
   - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
@@ -966,6 +984,8 @@ and adapter docs over one-off integration logic.
 - Promote submit-button override cases (`button_type`, `formaction`,
   `formmethod`, `formenctype`, `formtarget`, and `formnovalidate`) into
   broader Rust/parser/SDK and adapter conformance fixtures.
+- Promote inert availability cases into broader parser, SDK, and adapter
+  conformance fixtures so blocked local action targets stay synchronized.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and
   `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures
   once the shared action manifest remains stable.

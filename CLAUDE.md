@@ -49,6 +49,41 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T13:16:38Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was retried from the automation worktree and
+  still failed because the sandbox cannot open the primary checkout worktree
+  `FETCH_HEAD`. `gh` is installed, but the configured token is invalid, so PR
+  creation and remote merge remain blocked until GitHub auth/network access is
+  repaired.
+- Market direction: current docs still validate local action-state fidelity as
+  the sticky wedge. Playwright MCP uses accessibility snapshots with
+  snapshot-scoped refs, Stagehand `observe()` returns cacheable actions, and
+  Browserbase/Cloudflare Browser Run/WebMCP continue pushing validated action
+  replay and typed browser interaction. Plasmate should keep making local SOM
+  action menus safer to reuse instead of pivoting into hosted browser fleets.
+- Code changes: Rust SOM now preserves native `inert` state and inherited
+  inert context for nested interactive controls. Python/Node parser packages,
+  Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI action-plan
+  surfaces expose `inert`, mark inert targets unavailable with
+  `blocked_reason="inert"`, and keep deterministic `cache_key` values stable.
+- Fixture and docs changes: `015-action-state` and the shared
+  action-availability manifest now assert inert gating. SOM schema/spec,
+  integration docs, PRD, roadmap, website docs, and this running state were
+  updated with the rationale and next step to promote inert cases into broader
+  conformance.
+- Verification: JSON validation passed; Python parser, Python SDK, Browser
+  Use, LangChain, and Go SDK focused manifest tests passed; `rustfmt --check`
+  on the touched Rust files passed; focused SOM compiler test passed;
+  `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build` passed; and
+  `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo test --lib` passed
+  256 tests.
+- Verification gaps: the full action-manifest script stopped at Node parser
+  setup because `vitest` is not installed and local Node `node_modules`
+  directories are absent. `node website/build.mjs` also failed because
+  `marked` is not installed. A first cargo run without the shared target failed
+  trying to download `rusty_v8` while DNS/network access was unavailable.
+
 ### 2026-05-14T12:08:02Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted from the automation worktree

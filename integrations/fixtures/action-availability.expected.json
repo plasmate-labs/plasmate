@@ -103,6 +103,24 @@
       "description": "Unavailable until required fields are complete"
     },
     {
+      "id": "e_preview",
+      "cache_key": "plasmate-action:v1:a7067d8d",
+      "role": "button",
+      "label": "Preview changes",
+      "actions": ["click"],
+      "enabled": false,
+      "inert": true,
+      "blocked_reason": "inert",
+      "form_action": "/settings",
+      "form_method": "POST",
+      "form_target": "_self",
+      "form_enctype": "multipart/form-data",
+      "form_novalidate": true,
+      "form_accept_charset": "UTF-8",
+      "form_autocomplete": "off",
+      "description": "Preview is unavailable while the form is locked"
+    },
+    {
       "id": "e_plan",
       "cache_key": "plasmate-action:v1:54c75f00",
       "role": "select",

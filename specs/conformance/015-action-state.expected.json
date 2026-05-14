@@ -41,6 +41,12 @@
           "attrs": { "name": "plan", "disabled": true }
         },
         {
+          "role": "button",
+          "text": "Preview changes",
+          "actions": ["click"],
+          "attrs": { "button_type": "submit", "inert": true }
+        },
+        {
           "role": "text_input",
           "label": "Approval code",
           "actions": ["type", "clear"],

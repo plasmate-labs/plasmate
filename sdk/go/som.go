@@ -57,6 +57,7 @@ type ElementAttrs struct {
 	Required        *bool          `json:"required,omitempty"`
 	Readonly        *bool          `json:"readonly,omitempty"`
 	Disabled        *bool          `json:"disabled,omitempty"`
+	Inert           *bool          `json:"inert,omitempty"`
 	Checked         *bool          `json:"checked,omitempty"`
 	Group           *string        `json:"group,omitempty"`
 	Multiple        *bool          `json:"multiple,omitempty"`

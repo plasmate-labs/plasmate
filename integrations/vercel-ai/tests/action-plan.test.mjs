@@ -98,6 +98,12 @@ assert.equal(save.formenctype, 'application/x-www-form-urlencoded')
 assert.equal(save.formtarget, '_top')
 assert.equal(save.formnovalidate, true)
 
+const preview = targets.find((target) => target.id === 'e_preview')
+assert.equal(isPlasmateActionTargetAvailable(preview), false)
+assert.equal(preview.enabled, false)
+assert.equal(preview.inert, true)
+assert.equal(preview.blocked_reason, 'inert')
+
 const availableTargets = preparePlasmateActionPlan(targets)
 assert.deepEqual(
   availableTargets.map((target) => target.id),
@@ -137,4 +143,8 @@ assert.match(formatted, /\[e_billing\].*\[download=billing\.csv\]/)
 assert.match(
   formatted,
   /\[e_save\] button "Save" \(click\) \[blocked\] \[cache_key=plasmate-action:v1:4d0e8356\] \[blocked_reason=disabled\].*\[popovertarget=save-status\].*\[popovertargetaction=show\].*\[commandfor=save-status\].*\[command=toggle-popover\].*\[button_type=submit\].*\[formaction=\/settings\/save\].*\[formmethod=post\].*\[formenctype=application\/x-www-form-urlencoded\].*\[formtarget=_top\].*\[formnovalidate=true\]/
+)
+assert.match(
+  formatted,
+  /\[e_preview\] button "Preview changes" \(click\) \[blocked\] \[cache_key=plasmate-action:v1:a7067d8d\] \[blocked_reason=inert\] \[inert\]/
 )

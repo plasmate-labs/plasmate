@@ -76,7 +76,7 @@ SOM replaces DOM screenshots with structured text. Instead of parsing a raw DOM 
 
 The lightweight extractor package also exposes `extract_action_plan()` and
 `extract_action_plan_async()` for agents that want only reusable action
-targets. Those targets carry `enabled`, disabled `blocked_reason`, `required`,
+targets. Those targets carry `enabled`, disabled/inert `blocked_reason`, `required`,
 `description`, `placeholder`, `group`, `current`, `controls`, and `haspopup`
 context when Plasmate emits it, so Browser Use agents can skip unavailable
 controls and understand popup/controlled-panel targets before spending a

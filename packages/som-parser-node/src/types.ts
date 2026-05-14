@@ -84,6 +84,7 @@ export interface SomElementAttrs {
   required?: boolean;
   readonly?: boolean;
   disabled?: boolean;
+  inert?: boolean;
   checked?: boolean;
   group?: string;
   multiple?: boolean;

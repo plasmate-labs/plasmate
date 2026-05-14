@@ -759,6 +759,7 @@ fn test_disabled_and_aria_required_state_promoted_for_action_plans() {
 <body><main>
     <textarea aria-label="Notes" disabled></textarea>
     <select aria-label="Plan" disabled><option>Team</option></select>
+    <section inert><button>Preview changes</button></section>
     <div role="textbox" aria-label="Approval code" aria-required="true"></div>
     <div role="button" aria-label="Archive" aria-disabled="true"></div>
 </main></body></html>"#;
@@ -777,6 +778,12 @@ fn test_disabled_and_aria_required_state_promoted_for_action_plans() {
         .find(|e| e.role == ElementRole::Select)
         .expect("select should be preserved");
     assert_eq!(plan.attrs.as_ref().unwrap()["disabled"], true);
+
+    let preview = elems
+        .iter()
+        .find(|e| e.text.as_deref() == Some("Preview changes"))
+        .expect("button inside inert section should be preserved");
+    assert_eq!(preview.attrs.as_ref().unwrap()["inert"], true);
 
     let approval = elems
         .iter()

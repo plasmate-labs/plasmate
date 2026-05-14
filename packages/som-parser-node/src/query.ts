@@ -161,7 +161,8 @@ export interface ActionPlanItem {
   required?: boolean;
   readonly?: boolean;
   disabled?: boolean;
-  blocked_reason?: 'disabled' | 'readonly';
+  inert?: boolean;
+  blocked_reason?: 'disabled' | 'readonly' | 'inert';
   group?: string;
 }
 
@@ -310,7 +311,14 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
         item.enabled = false;
         item.blocked_reason = 'disabled';
       }
-    } else if (item.readonly) {
+    }
+    if (el.attrs?.inert !== undefined) {
+      item.inert = el.attrs.inert;
+      if (el.attrs.inert) {
+        item.enabled = false;
+        item.blocked_reason = 'inert';
+      }
+    } else if (item.readonly && item.enabled !== false) {
       item.enabled = false;
       item.blocked_reason = 'readonly';
     }

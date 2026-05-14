@@ -169,6 +169,7 @@
             "required": { "type": "boolean" },
             "readonly": { "type": "boolean" },
             "disabled": { "type": "boolean" },
+            "inert": { "type": "boolean" },
             "checked": { "type": "boolean" },
             "group": { "type": "string" },
             "multiple": { "type": "boolean" },

@@ -81,6 +81,8 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append("required")
     if item.get("readonly") is True:
         flags.append("readonly")
+    if item.get("inert") is True:
+        flags.append("inert")
     if item.get("group"):
         flags.append(f"group={item['group']}")
     if item.get("target"):

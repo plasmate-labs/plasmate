@@ -346,8 +346,8 @@ SOM Output (JSON / MessagePack)
 | Type | HTML Sources | Properties | Actions |
 |---|---|---|---|
 | `link` | `<a>`, `[role=link]` | text, href, target | click |
-| `button` | `<button>`, `<input[type=submit]>`, `[role=button]` | text, disabled, primary | click |
-| `text_input` | `<input[type=text\|email\|password\|...]>` | placeholder, value, required, pattern | type, clear, submit |
+| `button` | `<button>`, `<input[type=submit]>`, `[role=button]` | text, disabled, inert, primary | click |
+| `text_input` | `<input[type=text\|email\|password\|...]>` | placeholder, value, required, inert, pattern | type, clear, submit |
 | `textarea` | `<textarea>` | placeholder, value, maxlength | type, clear |
 | `select` | `<select>`, `[role=listbox]` | options[], selected, multiple | select |
 | `checkbox` | `<input[type=checkbox]>`, `[role=checkbox]` | label, checked | toggle |
