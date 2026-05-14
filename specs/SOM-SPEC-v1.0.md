@@ -105,6 +105,11 @@ organizational unit of a SOM document.
 | `label`    | string           | OPTIONAL | Accessible label for the region (from `aria-label`, `title`). |
 | `action`   | string           | OPTIONAL | Form action URL (only for `form` regions). |
 | `method`   | string           | OPTIONAL | Form method, uppercased (only for `form` regions, e.g., `"GET"`, `"POST"`). |
+| `target`   | string           | OPTIONAL | Form target browsing context (only for `form` regions). |
+| `enctype`  | string           | OPTIONAL | Form encoding type, e.g. `"multipart/form-data"` (only for `form` regions). |
+| `novalidate` | boolean        | OPTIONAL | `true` when native form validation is disabled before submit. |
+| `accept_charset` | string    | OPTIONAL | Form accepted character encodings from `accept-charset`. |
+| `autocomplete` | string       | OPTIONAL | Form-level autocomplete policy. |
 | `elements` | array of Element | REQUIRED | The semantic elements within this region. |
 
 Empty regions (no elements after compilation) MUST be excluded from the output.
@@ -136,8 +141,9 @@ Implementations MUST detect regions using the following precedence:
 2. **HTML5 landmark elements**: `<nav>`, `<main>`, `<aside>`, `<header>`,
    `<footer>`, `<dialog>`.
 
-3. **Form elements**: `<form>` tags are promoted to `form` regions. The `action`
-   and `method` attributes are captured. The label is resolved from
+3. **Form elements**: `<form>` tags are promoted to `form` regions. The `action`,
+   `method`, `target`, `enctype`, `novalidate`, `accept-charset`, and
+   `autocomplete` attributes are captured. The label is resolved from
    `aria-label`, `title`, or the `name`/`id` attribute.
 
 4. **Class/ID heuristics**: For `<div>`, `<section>`, `<article>`, `<ul>`, and

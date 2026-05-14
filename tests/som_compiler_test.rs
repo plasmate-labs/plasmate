@@ -473,6 +473,35 @@ fn test_file_upload_action_cues_are_preserved() {
 }
 
 #[test]
+fn test_form_submission_context_is_preserved() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Checkout</title></head>
+<body>
+    <form aria-label="Checkout" action="/checkout" method="post" target="_blank" enctype="multipart/form-data" novalidate accept-charset="UTF-8" autocomplete="off">
+        <label for="receipt">Receipt</label>
+        <input id="receipt" name="receipt" type="file">
+        <button type="submit">Submit</button>
+    </form>
+</body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let form = som
+        .regions
+        .iter()
+        .find(|r| r.role == RegionRole::Form)
+        .expect("form region should be preserved");
+
+    assert_eq!(form.label.as_deref(), Some("Checkout"));
+    assert_eq!(form.action.as_deref(), Some("/checkout"));
+    assert_eq!(form.method.as_deref(), Some("POST"));
+    assert_eq!(form.target.as_deref(), Some("_blank"));
+    assert_eq!(form.enctype.as_deref(), Some("multipart/form-data"));
+    assert_eq!(form.novalidate, Some(true));
+    assert_eq!(form.accept_charset.as_deref(), Some("UTF-8"));
+    assert_eq!(form.autocomplete.as_deref(), Some("off"));
+}
+
+#[test]
 fn test_accessible_labels_from_label_for_and_labelledby() {
     let html = r#"<!DOCTYPE html>
 <html><head><title>Labels</title></head>

@@ -111,6 +111,18 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append(f"dirname={item['dirname']}")
     if item.get("form"):
         flags.append(f"form={item['form']}")
+    for form_key in (
+        "form_action",
+        "form_method",
+        "form_target",
+        "form_enctype",
+        "form_accept_charset",
+        "form_autocomplete",
+    ):
+        if item.get(form_key):
+            flags.append(f"{form_key}={item[form_key]}")
+    if "form_novalidate" in item:
+        flags.append(f"form_novalidate={item['form_novalidate']}")
     if item.get("list"):
         flags.append(f"list={item['list']}")
     for command_key in (

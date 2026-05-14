@@ -48,6 +48,11 @@ fn make_region(id: &str, role: RegionRole, elements: Vec<Element>) -> Region {
         label: None,
         action: None,
         method: None,
+        target: None,
+        enctype: None,
+        novalidate: None,
+        accept_charset: None,
+        autocomplete: None,
         elements,
     }
 }

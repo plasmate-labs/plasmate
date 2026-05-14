@@ -34,6 +34,16 @@ pub struct Region {
     pub action: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub method: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enctype: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub novalidate: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub accept_charset: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub autocomplete: Option<String>,
     pub elements: Vec<Element>,
 }
 

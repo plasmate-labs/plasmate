@@ -14,6 +14,13 @@
       "id": "r_settings",
       "role": "form",
       "label": "Settings form",
+      "action": "/settings",
+      "method": "POST",
+      "target": "_self",
+      "enctype": "multipart/form-data",
+      "novalidate": true,
+      "accept_charset": "UTF-8",
+      "autocomplete": "off",
       "elements": [
         {
           "id": "e_email",

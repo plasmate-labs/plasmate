@@ -615,6 +615,25 @@ text fields across the shared manifest.
    action plans for file and select controls without changing deterministic
    target ids.
 
+### 2026-05-14 Form Submission Context Adjustment
+
+Validated action menus are only sticky when they include the submission
+contract around the target. Playwright MCP keeps refs scoped to a current
+snapshot, while Stagehand/Browserbase action caches need the page state to
+match before replay. Plasmate should preserve the form-level metadata agents
+need to tell whether a cached type, upload, or submit step still belongs to the
+same workflow.
+
+1. **Destination changes risk**: `action`, `method`, and `target` should
+   travel into compact targets as form context so agents can distinguish
+   settings, checkout, and background-submit flows.
+2. **Encoding changes artifacts**: `enctype` and `accept-charset` should be
+   visible before file uploads or internationalized form submissions are
+   replayed.
+3. **Validation and autofill change readiness**: `novalidate` and form-level
+   `autocomplete` should surface across SDKs and adapters so local action
+   memory can be checked before a browser action is spent.
+
 ### 2026-05-14 Form-Relation Action Menu Adjustment
 
 Current browser-agent products keep turning page state into reusable action
@@ -1096,9 +1115,18 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - The shared action-availability manifest now asserts upload constraints and
   native multiple-selection state across parser, SDK, and framework adapter
   outputs.
-- Next conformance step: promote upload-affordance cases into broader
-  Rust/parser/SDK and adapter fixtures alongside text-entry, ARIA widget,
-  range, and set-position cases.
+- Rust SOM compilation and the JSON Schema now preserve form submission
+  context with form `target`, `enctype`, `novalidate`, `accept-charset`, and
+  form-level `autocomplete` alongside existing `action` and `method`.
+- Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+  and Vercel AI action-plan surfaces now expose `form_action`, `form_method`,
+  `form_target`, `form_enctype`, `form_novalidate`, `form_accept_charset`,
+  and `form_autocomplete` without changing deterministic cache keys.
+- The shared action-availability manifest now asserts form submission context
+  across parser, SDK, and framework adapter outputs.
+- Next conformance step: promote upload-affordance and form-submission
+  context cases into broader Rust/parser/SDK and adapter fixtures alongside
+  text-entry, ARIA widget, range, and set-position cases.
 
 ## Dependencies to Add
 

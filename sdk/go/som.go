@@ -19,12 +19,17 @@ type Som struct {
 
 // Region represents a semantic region within the page.
 type Region struct {
-	ID       string    `json:"id"`
-	Role     string    `json:"role"`
-	Label    *string   `json:"label,omitempty"`
-	Action   *string   `json:"action,omitempty"`
-	Method   *string   `json:"method,omitempty"`
-	Elements []Element `json:"elements"`
+	ID            string    `json:"id"`
+	Role          string    `json:"role"`
+	Label         *string   `json:"label,omitempty"`
+	Action        *string   `json:"action,omitempty"`
+	Method        *string   `json:"method,omitempty"`
+	Target        *string   `json:"target,omitempty"`
+	Enctype       *string   `json:"enctype,omitempty"`
+	NoValidate    *bool     `json:"novalidate,omitempty"`
+	AcceptCharset *string   `json:"accept_charset,omitempty"`
+	Autocomplete  *string   `json:"autocomplete,omitempty"`
+	Elements      []Element `json:"elements"`
 }
 
 // Element represents a semantic element within a region.

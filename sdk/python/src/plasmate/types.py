@@ -188,6 +188,11 @@ class SomRegion(BaseModel):
     label: Optional[str] = None
     action: Optional[str] = None
     method: Optional[str] = None
+    target: Optional[str] = None
+    enctype: Optional[str] = None
+    novalidate: Optional[bool] = None
+    accept_charset: Optional[str] = None
+    autocomplete: Optional[str] = None
     elements: List[SomElement]
 
 

@@ -95,6 +95,13 @@ export interface ActionPlanItem {
   autocapitalize?: string;
   dirname?: string;
   form?: string;
+  form_action?: string;
+  form_method?: string;
+  form_target?: string;
+  form_enctype?: string;
+  form_novalidate?: boolean;
+  form_accept_charset?: string;
+  form_autocomplete?: string;
   list?: string;
   popovertarget?: string;
   popovertargetaction?: string;
@@ -184,8 +191,27 @@ export function getActionPlanCacheKey(item: Omit<ActionPlanItem, 'cache_key'> | 
   return `plasmate-action:v1:${fnv1a32(JSON.stringify(stableActionPlanParts(item)))}`;
 }
 
+function copyFormContext(item: Omit<ActionPlanItem, 'cache_key'>, region: SomRegion): void {
+  if (region.action) item.form_action = region.action;
+  if (region.method) item.form_method = region.method;
+  if (region.target) item.form_target = region.target;
+  if (region.enctype) item.form_enctype = region.enctype;
+  if (region.novalidate !== undefined) item.form_novalidate = region.novalidate;
+  if (region.accept_charset) item.form_accept_charset = region.accept_charset;
+  if (region.autocomplete) item.form_autocomplete = region.autocomplete;
+}
+
 /** Return compact action targets for agent planning. */
 export function getActionPlan(som: Som): ActionPlanItem[] {
+  const formContextById = new Map<string, SomRegion>();
+  for (const region of som.regions) {
+    for (const el of collectElements(region.elements)) {
+      if (el.actions?.length) {
+        formContextById.set(el.id, region);
+      }
+    }
+  }
+
   return getInteractiveElements(som).map((el) => {
     const item: Omit<ActionPlanItem, 'cache_key'> = {
       id: el.id,
@@ -277,6 +303,8 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
       item.blocked_reason = 'readonly';
     }
     if (el.attrs?.group) item.group = el.attrs.group;
+    const formContext = formContextById.get(el.id);
+    if (formContext) copyFormContext(item, formContext);
     return {
       ...item,
       cache_key: getActionPlanCacheKey(item),

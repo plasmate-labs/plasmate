@@ -10,7 +10,8 @@ by the Rust core and parser packages.
 - `action-availability.expected.json` is the expected adapter contract for that
   payload: ids, roles, labels, actions, availability, blocked reasons, cache
   keys, required state, group context, link target/rel/download cues, upload
-  constraints (`name`, `accept`, `capture`, `multiple`), input metadata, descriptions, value and
+  constraints (`name`, `accept`, `capture`, `multiple`), form submission
+  context, input metadata, descriptions, value and
   checked state, ARIA expanded/pressed/selected cues, ARIA current/controls/
   haspopup relationship cues, validation constraints (`autocomplete`,
   `inputmode`, `enterkeyhint`, `autocapitalize`, `dirname`, `spellcheck`,
