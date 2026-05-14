@@ -687,6 +687,12 @@
 <li><strong>Encoding changes artifacts</strong>: <code>enctype</code> and <code>accept-charset</code> should be visible before file uploads or internationalized form submissions are replayed.</li>
 <li><strong>Validation and autofill change readiness</strong>: <code>novalidate</code> and form-level <code>autocomplete</code> should surface across SDKs and adapters so local action memory can be checked before a browser action is spent.</li>
 </ul>
+<h3 id="2026-05-14-submitter-override-adjustment">2026-05-14 Submitter Override Adjustment</h3><p>Repeated SaaS forms often contain several submit buttons with different endpoints or validation behavior. Browser-agent competitors keep teaching users to validate cached actions against the current structured state before replay, so Plasmate should preserve the button-level submission contract as compact target context.</p>
+<ul>
+<li><strong>Submit buttons need identity beyond label</strong>: <code>button_type</code> should expose whether a button submits, resets, or acts as a plain command.</li>
+<li><strong>Button overrides can change destination</strong>: <code>formaction</code>, <code>formmethod</code>, <code>formenctype</code>, and <code>formtarget</code> should travel with the action target.</li>
+<li><strong>Validation mode is replay context</strong>: <code>formnovalidate</code> should be visible so cached submit actions do not assume browser validation will run.</li>
+</ul>
 <h3 id="2026-05-14-popover-and-command-relationship-adjustment">2026-05-14 Popover and Command Relationship Adjustment</h3><p>Browser-native action relationships are becoming more important for agents that replay cached plans on modern app UIs. The Popover API gives buttons a declarative target and action, and <code>commandfor</code>/<code>command</code> generalize that model for popovers, dialogs, and custom commands. Plasmate should preserve those relationships as compact target context instead of forcing agents to rediscover them from raw DOM.</p>
 <ul>
 <li><strong>Invoker targets are replay context</strong>: <code>popovertarget</code> should surface so an agent knows which panel a button affects.</li>
@@ -878,7 +884,7 @@
 <li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve form target, enctype, novalidate, accept-charset, and autocomplete context</li>
 <li><input checked="" disabled="" type="checkbox"> Compact action plans expose form_action, form_method, form_target, form_enctype, form_novalidate, form_accept_charset, and form_autocomplete across parser packages, SDKs, and framework adapters</li>
 <li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest asserts form submission context for cacheable action targets</li>
-<li><input checked="" disabled="" type="checkbox"> Rust compiler preserves submit-button override cues with button_type, formaction, formmethod, formenctype, formtarget, and formnovalidate</li>
+<li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve submit-button override cues with button_type, formaction, formmethod, formenctype, formtarget, and formnovalidate</li>
 <li><input checked="" disabled="" type="checkbox"> Compact action plans expose submit-button override cues across parser packages, SDKs, and framework adapters</li>
 <li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest asserts submit-button override context for cacheable action targets</li>
 <li><input disabled="" type="checkbox"> Selector-aware SOM cache entries for repeated agent prompts</li>
