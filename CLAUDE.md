@@ -51,6 +51,13 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ### 2026-05-14T11:07:00Z - Plasmate Improvements Automation
 
+- Git sync: requested latest pull was retried from the primary checkout, but
+  SSH DNS again could not resolve `github.com` (`ssh: Could not resolve
+  hostname github.com: -65563`). A direct `git push origin master` reached
+  GitHub and was rejected with `fetch first`, confirming remote `master` has
+  work not available locally. This repo still has no `main` branch; local
+  `master` is ahead of stale `origin/master` by the automation commits, and
+  remote push/merge remains blocked until `git fetch` can complete.
 - Local continuation: after the upload-affordance branch push, additional
   submit-button override edits were present in the working tree. They align
   with the existing form-submission-context direction, so they were preserved
@@ -73,6 +80,9 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   passed 61 tests; `./scripts/action-manifest-conformance.sh --quick` and
   `--full` passed; Node parser, Node SDK, and Vercel AI builds passed; `node
   website/build.mjs` rebuilt 39 pages; `git diff --check` passed.
+- Commit state: local commits through `3fc9773` (`docs: refresh submit
+  override website docs`) are present on `master`; checkout is clean except
+  pre-existing untracked `.agents/`.
 
 ### 2026-05-14T10:13:09Z - Plasmate Improvements Automation
 
