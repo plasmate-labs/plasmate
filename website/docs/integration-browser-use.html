@@ -542,7 +542,7 @@ asyncio.run(main())
 </code></pre>
 <p>The lightweight extractor package also exposes <code>extract_action_plan()</code> and
 <code>extract_action_plan_async()</code> for agents that want only reusable action
-targets. Those targets carry <code>enabled</code>, disabled <code>blocked_reason</code>, <code>required</code>,
+targets. Those targets carry <code>enabled</code>, disabled/inert <code>blocked_reason</code>, <code>required</code>,
 <code>description</code>, <code>placeholder</code>, <code>group</code>, <code>current</code>, <code>controls</code>, and <code>haspopup</code>
 context when Plasmate emits it, so Browser Use agents can skip unavailable
 controls and understand popup/controlled-panel targets before spending a

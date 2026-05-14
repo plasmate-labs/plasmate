@@ -717,6 +717,18 @@
 <li><strong>Listbox options are choices</strong>: ARIA <code>option</code> should map to an actionable target with selected state preserved, giving custom selects parity with native select options.</li>
 <li><strong>Conformance keeps adapters thin</strong>: the <code>016-action-semantics</code> fixture should cover these roles so parser, SDK, and framework work can promote the same role contract without bespoke DOM recovery.</li>
 </ul>
+<h3 id="2026-05-14-inert-availability-adjustment">2026-05-14 Inert Availability Adjustment</h3><p>Current action-replay products keep validating whether a target is safe before reuse. Playwright MCP refs are snapshot-scoped, Stagehand/Browserbase cache actions only when page state still matches, and Browser Run/WebMCP is making typed interaction contracts more prominent. Plasmate should make native inert state part of the portable local action contract.</p>
+<ul>
+<li><strong>Inert blocks replay</strong>: controls inside an <code>inert</code> subtree should remain visible in SOM but surface <code>inert</code> and <code>blocked_reason=inert</code> in compact action plans.</li>
+<li><strong>Cache keys stay target-focused</strong>: inert state should not alter deterministic <code>cache_key</code> values, so local action memory can still compare the same target while seeing current availability drift.</li>
+<li><strong>Shared fixtures prevent adapter drift</strong>: <code>015-action-state</code> and the action-availability manifest should assert inert gating across Rust, parser packages, SDKs, and framework prompt renderers.</li>
+</ul>
+<h3 id="2026-05-14-graphical-submitter-adjustment">2026-05-14 Graphical Submitter Adjustment</h3><p>Browser-agent products keep turning repeated form work into validated action replay: Playwright MCP refs are fresh snapshot handles, Stagehand/Browserbase cache observed actions after state validation, and Browser Run is broadening hosted MCP/CDP browser access. Plasmate should keep closing local HTML submitter gaps before considering hosted infrastructure.</p>
+<ul>
+<li><strong>Image submitters are buttons</strong>: <code>input type=&quot;image&quot;</code> should compile as an actionable button because it submits forms on click.</li>
+<li><strong>Input submitters need button identity</strong>: input-backed <code>submit</code>, <code>button</code>, <code>reset</code>, and <code>image</code> controls should expose <code>button_type</code>.</li>
+<li><strong>Icon-only submitters need context</strong>: graphical submitters should resolve labels from <code>alt</code> and preserve <code>alt</code> plus <code>src</code> so agents can recognize branded/icon-only actions without raw DOM recovery.</li>
+</ul>
 <h2 id="completed-v011">Completed (v0.1.1)</h2><ul>
 <li>SOM compiler with 9.4x median compression across 38 sites</li>
 <li>V8 JavaScript execution with full DOM shim</li>
@@ -896,6 +908,10 @@
 <li><input checked="" disabled="" type="checkbox"> ARIA slider and spinbutton roles compile into actionable text-input targets</li>
 <li><input checked="" disabled="" type="checkbox"> ARIA option roles compile into actionable button targets with selected state</li>
 <li><input checked="" disabled="" type="checkbox"> Action-semantics conformance covers slider, spinbutton, and option action roles</li>
+<li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve inherited inert state for action targets</li>
+<li><input checked="" disabled="" type="checkbox"> Compact action plans expose inert availability gating across parser packages, SDKs, and framework adapters</li>
+<li><input checked="" disabled="" type="checkbox"> Shared action-state and action-availability fixtures assert inert targets without changing deterministic action cache keys</li>
+<li><input checked="" disabled="" type="checkbox"> Rust compiler maps graphical submit inputs to actionable buttons, resolves alt labels, and preserves button_type, alt, and src context</li>
 <li><input disabled="" type="checkbox"> Selector-aware SOM cache entries for repeated agent prompts</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
 <li><input disabled="" type="checkbox"> Wire <code>016-action-semantics</code> into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants</li>
@@ -909,6 +925,8 @@
 <li><input disabled="" type="checkbox"> Promote upload-affordance cases into broader Rust/parser/SDK and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote form-submission context cases into broader Rust/parser/SDK and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote submit-button override cases into broader Rust/parser/SDK and adapter conformance fixtures</li>
+<li><input disabled="" type="checkbox"> Promote graphical submitter cases into the shared action manifest and adapter conformance fixtures</li>
+<li><input disabled="" type="checkbox"> Promote inert availability cases into broader parser, SDK, and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Add cross-adapter accessible-description fixtures</li>

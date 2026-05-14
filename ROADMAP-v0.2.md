@@ -755,6 +755,24 @@ role-parity gaps before chasing hosted browser infrastructure.
    should cover these roles so parser, SDK, and framework work can promote the
    same role contract without bespoke DOM recovery.
 
+### 2026-05-14 Graphical Submitter Adjustment
+
+Current browser-agent competitors keep monetizing validated action replay:
+Playwright MCP refs are bound to fresh structured snapshots, Stagehand and
+Browserbase cache observed actions only after page-state validation, and
+Cloudflare Browser Run is widening hosted MCP/CDP distribution. Plasmate
+should keep improving the local HTML action contract before any hosted pivot.
+
+1. **Image submitters are buttons**: `input type="image"` should compile as an
+   actionable button, not as a text input, because it submits forms on click.
+2. **Input submitters need button identity**: input-backed `submit`, `button`,
+   `reset`, and `image` controls should expose `button_type` just like
+   `<button>` so cached submit plans can validate the current target.
+3. **Icon-only submitters need labels and media context**: graphical submit
+   controls should resolve labels from `alt` and preserve `alt` plus `src` so
+   agents can recognize branded or icon-only submitters without raw DOM
+   recovery.
+
 ## Architecture
 
 ```

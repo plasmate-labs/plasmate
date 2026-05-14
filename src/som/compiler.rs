@@ -1598,7 +1598,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                 .map(|(_, v)| v.as_str())
                 .unwrap_or("text");
             match input_type.to_ascii_lowercase().as_str() {
-                "submit" | "button" | "reset" => Some(ElementRole::Button),
+                "submit" | "button" | "reset" | "image" => Some(ElementRole::Button),
                 "checkbox" => Some(ElementRole::Checkbox),
                 "radio" => Some(ElementRole::Radio),
                 "hidden" => None,
@@ -1680,6 +1680,14 @@ fn resolve_label(
             .find(|(n, _)| n == "type")
             .map(|(_, v)| v.to_ascii_lowercase())
             .unwrap_or_else(|| "text".to_string());
+        if input_type == "image" {
+            if let Some((_, alt)) = attrs.iter().find(|(n, _)| n == "alt") {
+                let normalized = heuristics::normalize_text(alt);
+                if !normalized.is_empty() && text.as_deref() != Some(&normalized) {
+                    return Some(normalized);
+                }
+            }
+        }
         if matches!(input_type.as_str(), "submit" | "button" | "reset") {
             if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "value") {
                 let normalized = heuristics::normalize_text(value);
@@ -1786,8 +1794,19 @@ fn build_element_attrs(
             let input_type = input_type.to_ascii_lowercase();
 
             map.insert("input_type".into(), json!(input_type.clone()));
+            if matches!(input_type.as_str(), "submit" | "button" | "reset" | "image") {
+                map.insert("button_type".into(), json!(input_type.clone()));
+            }
             if let Some(v) = attrs.iter().find(|(n, _)| n == "value") {
                 map.insert("value".into(), json!(v.1));
+            }
+            if input_type == "image" {
+                if let Some(alt) = attrs.iter().find(|(n, _)| n == "alt") {
+                    map.insert("alt".into(), json!(alt.1));
+                }
+                if let Some(src) = attrs.iter().find(|(n, _)| n == "src") {
+                    map.insert("src".into(), json!(src.1));
+                }
             }
             if let Some(ph) = attrs.iter().find(|(n, _)| n == "placeholder") {
                 map.insert("placeholder".into(), json!(ph.1));
