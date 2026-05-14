@@ -124,6 +124,9 @@ class SomElementAttrs(BaseModel):
     popover: Optional[str] = None
     minlength: Optional[int | str] = None
     maxlength: Optional[int | str] = None
+    min: Optional[int | str] = None
+    max: Optional[int | str] = None
+    step: Optional[str] = None
     pattern: Optional[str] = None
     description: Optional[str] = None
     aria: Optional[Dict[str, bool | str]] = None

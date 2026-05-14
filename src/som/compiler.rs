@@ -1857,7 +1857,7 @@ fn build_element_attrs(
             map.insert(key.into(), json!(value));
         }
     }
-    for key in ["minlength", "maxlength"] {
+    for key in ["minlength", "maxlength", "min", "max"] {
         if let Some((_, value)) = attrs.iter().find(|(n, _)| n == key) {
             let parsed = value
                 .parse::<i64>()
@@ -1865,6 +1865,9 @@ fn build_element_attrs(
                 .unwrap_or_else(|_| json!(value));
             map.insert(key.into(), parsed);
         }
+    }
+    if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "step") {
+        map.insert("step".into(), json!(value));
     }
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "pattern") {
         map.insert("pattern".into(), json!(value));
@@ -1906,6 +1909,12 @@ fn build_element_attrs(
         ("aria-owns", "owns"),
         ("aria-flowto", "flowto"),
         ("aria-details", "details"),
+        ("aria-orientation", "orientation"),
+        ("aria-sort", "sort"),
+        ("aria-valuemin", "valuemin"),
+        ("aria-valuemax", "valuemax"),
+        ("aria-valuenow", "valuenow"),
+        ("aria-valuetext", "valuetext"),
     ];
     let mut aria_map = serde_json::Map::new();
     for (html_attr, som_key) in aria_states {
@@ -2628,5 +2637,47 @@ mod tests {
             .as_ref()
             .expect("download attrs should compile");
         assert_eq!(attrs["download"], true);
+    }
+
+    #[test]
+    fn test_range_and_sort_action_cues_are_preserved() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Controls</title></head>
+<body>
+<main>
+  <label for="quota">Seat quota</label>
+  <input id="quota" type="range" min="1" max="100" step="5" value="40" aria-valuemin="1" aria-valuemax="100" aria-valuenow="40" aria-valuetext="40 seats" aria-orientation="horizontal">
+  <button aria-sort="ascending">Sort by name</button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.com").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let range = elements
+            .iter()
+            .find(|element| element.role == ElementRole::TextInput)
+            .expect("range input should compile");
+        let attrs = range.attrs.as_ref().expect("range attrs should compile");
+        assert_eq!(attrs["min"], 1);
+        assert_eq!(attrs["max"], 100);
+        assert_eq!(attrs["step"], "5");
+        assert_eq!(attrs["aria"]["valuemin"], "1");
+        assert_eq!(attrs["aria"]["valuemax"], "100");
+        assert_eq!(attrs["aria"]["valuenow"], "40");
+        assert_eq!(attrs["aria"]["valuetext"], "40 seats");
+        assert_eq!(attrs["aria"]["orientation"], "horizontal");
+
+        let sort = elements
+            .iter()
+            .find(|element| element.role == ElementRole::Button)
+            .expect("sort button should compile");
+        let attrs = sort.attrs.as_ref().expect("sort attrs should compile");
+        assert_eq!(attrs["aria"]["sort"], "ascending");
     }
 }

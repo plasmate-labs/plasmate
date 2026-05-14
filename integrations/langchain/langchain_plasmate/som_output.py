@@ -231,7 +231,7 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
             flags.append(f'[{command_key}="{attrs[command_key]}"]')
     if attrs.get("accesskey"):
         flags.append(f'[accesskey="{attrs["accesskey"]}"]')
-    for constraint_key in ("minlength", "maxlength", "pattern"):
+    for constraint_key in ("minlength", "maxlength", "min", "max", "step", "pattern"):
         if constraint_key in attrs:
             flags.append(f'[{constraint_key}="{attrs[constraint_key]}"]')
     if "checked" in attrs:
@@ -259,6 +259,12 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
             "owns",
             "flowto",
             "details",
+            "orientation",
+            "sort",
+            "valuemin",
+            "valuemax",
+            "valuenow",
+            "valuetext",
         ):
             if state_key in attrs["aria"]:
                 output_key = "aria_autocomplete" if state_key == "autocomplete" else state_key

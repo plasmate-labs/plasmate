@@ -115,6 +115,9 @@ export interface SomElementAttrs {
   popover?: string;
   minlength?: number | string;
   maxlength?: number | string;
+  min?: number | string;
+  max?: number | string;
+  step?: string;
   pattern?: string;
   description?: string;
   aria?: AriaState;
@@ -149,6 +152,12 @@ export interface AriaState {
   owns?: string;
   flowto?: string;
   details?: string;
+  orientation?: string;
+  sort?: string;
+  valuemin?: string;
+  valuemax?: string;
+  valuenow?: string;
+  valuetext?: string;
 }
 
 export interface SomShadowRoot {

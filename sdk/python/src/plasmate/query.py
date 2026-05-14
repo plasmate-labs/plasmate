@@ -129,6 +129,12 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["minlength"] = attrs.minlength
             if attrs.maxlength is not None:
                 item["maxlength"] = attrs.maxlength
+            if attrs.min is not None:
+                item["min"] = attrs.min
+            if attrs.max is not None:
+                item["max"] = attrs.max
+            if attrs.step:
+                item["step"] = attrs.step
             if attrs.pattern:
                 item["pattern"] = attrs.pattern
             if attrs.description:
@@ -158,6 +164,12 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                     "owns",
                     "flowto",
                     "details",
+                    "orientation",
+                    "sort",
+                    "valuemin",
+                    "valuemax",
+                    "valuenow",
+                    "valuetext",
                 ):
                     if aria_key in attrs.aria:
                         item_key = (

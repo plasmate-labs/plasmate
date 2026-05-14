@@ -82,7 +82,7 @@ assert.equal(save.command, 'toggle-popover')
 const availableTargets = preparePlasmateActionPlan(targets)
 assert.deepEqual(
   availableTargets.map((target) => target.id),
-  ['e_plan', 'e_compact', 'e_annual', 'e_billing']
+  ['e_plan', 'e_compact', 'e_annual', 'e_quota', 'e_billing']
 )
 
 const formatted = formatPlasmateActionPlan(targets, {
@@ -99,6 +99,11 @@ assert.match(formatted, /\[e_annual\].*\[selected=true\]/)
 assert.match(formatted, /\[e_plan\].*\[expanded=false\]/)
 assert.match(formatted, /\[e_plan\].*\[controls=plan-options\]/)
 assert.match(formatted, /\[e_plan\].*\[haspopup=listbox\]/)
+assert.match(formatted, /\[e_quota\].*\[min=1\].*\[max=100\].*\[step=5\]/)
+assert.match(
+  formatted,
+  /\[e_quota\].*\[orientation=horizontal\].*\[valuemin=1\].*\[valuemax=100\].*\[valuenow=40\].*\[valuetext=40 seats\]/
+)
 assert.match(formatted, /\[e_billing\].*\[current=page\]/)
 assert.match(formatted, /\[e_billing\].*\[target=_blank\]/)
 assert.match(formatted, /\[e_billing\].*\[rel=noopener\]/)

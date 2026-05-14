@@ -114,7 +114,7 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append(f"accesskey={item['accesskey']}")
     if item.get("value"):
         flags.append(f"value={item['value']}")
-    for constraint_key in ("minlength", "maxlength", "pattern"):
+    for constraint_key in ("minlength", "maxlength", "min", "max", "step", "pattern"):
         if constraint_key in item:
             flags.append(f"{constraint_key}={item[constraint_key]}")
     if "checked" in item:
@@ -139,6 +139,12 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         "owns",
         "flowto",
         "details",
+        "orientation",
+        "sort",
+        "valuemin",
+        "valuemax",
+        "valuenow",
+        "valuetext",
     ):
         if state_key in item:
             flags.append(f"{state_key}={item[state_key]}")

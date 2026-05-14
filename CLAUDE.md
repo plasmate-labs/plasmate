@@ -49,6 +49,47 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T05:13:35Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first. The detached automation
+  worktree could not write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate47/FETCH_HEAD`
+  (`Operation not permitted`). Retrying from the primary checkout failed DNS
+  for `github.com` over SSH (`ssh: Could not resolve hostname github.com:
+  -65563`), so this run continued from locally available `master` /
+  `origin/master` state `201bc2e`.
+- Market direction: current competitor docs continue to validate Plasmate's
+  local-first action-menu wedge. Playwright MCP centers fresh structured
+  accessibility snapshots with refs, Stagehand/Browserbase keep emphasizing
+  observable cached actions, and Firecrawl/Browser Use keep selling managed
+  browser sessions and profiles. The product should deepen portable local SOM
+  action state rather than pivot into hosted browser infrastructure.
+- Code changes: Rust SOM now preserves native range/value constraints
+  (`min`, `max`, `step`) plus ARIA range/orientation/sort cues
+  (`aria-valuemin`, `aria-valuemax`, `aria-valuenow`, `aria-valuetext`,
+  `aria-orientation`, `aria-sort`). Parser packages, Python/Node/Go SDKs,
+  Browser Use, LangChain, and Vercel AI action-plan surfaces expose `min`,
+  `max`, `step`, `orientation`, `sort`, `valuemin`, `valuemax`, `valuenow`,
+  and `valuetext` without changing deterministic `cache_key` values.
+- Fixture and docs changes: the shared action-availability SOM and expected
+  manifest now assert a range target with bounds and ARIA value state. PRD,
+  roadmap, SOM schema/spec, SDK docs, adapter docs, generated website docs,
+  and this running state were updated with rationale and next conformance
+  steps.
+- Verification: JSON validation for schema and shared fixtures passed;
+  `rustfmt --check src/som/compiler.rs` passed; focused Rust range/sort test
+  passed; `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build`
+  passed with existing warnings; `cargo test --lib -- --test-threads=1`
+  passed 253 tests; Python parser tests passed 68 tests; Python SDK query
+  tests passed 36 tests; `./scripts/action-manifest-conformance.sh --quick`
+  passed; `./scripts/action-manifest-conformance.sh --full` passed; `node
+  website/build.mjs` rebuilt 39 pages; `git diff --check` passed.
+- Verification gaps: full `cargo fmt --check` still reports pre-existing
+  formatting drift in unrelated Rust files (`src/awp/handler.rs`,
+  `src/bench/runner.rs`, `src/network/proxy.rs`, `src/main.rs`, and
+  `src/mcp/tools.rs`). Temporary Node dependency symlinks to the primary
+  checkout were removed after verification.
+
 ### 2026-05-14T04:10:30Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first. The automation worktree

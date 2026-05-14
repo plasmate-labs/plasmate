@@ -219,6 +219,19 @@
                 { "type": "string" }
               ]
             },
+            "min": {
+              "oneOf": [
+                { "type": "integer" },
+                { "type": "string" }
+              ]
+            },
+            "max": {
+              "oneOf": [
+                { "type": "integer" },
+                { "type": "string" }
+              ]
+            },
+            "step": { "type": "string" },
             "pattern": { "type": "string" },
             "description": { "type": "string" },
             "aria": { "$ref": "#/$defs/AriaState" },
@@ -316,7 +329,13 @@
         "relevant": { "type": "string" },
         "owns": { "type": "string" },
         "flowto": { "type": "string" },
-        "details": { "type": "string" }
+        "details": { "type": "string" },
+        "orientation": { "type": "string" },
+        "sort": { "type": "string" },
+        "valuemin": { "type": "string" },
+        "valuemax": { "type": "string" },
+        "valuenow": { "type": "string" },
+        "valuetext": { "type": "string" }
       }
     },
     "ShadowRoot": {

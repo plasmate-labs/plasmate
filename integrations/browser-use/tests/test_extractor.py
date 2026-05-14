@@ -77,7 +77,7 @@ def test_build_context_surfaces_action_availability():
             assert f'[accesskey={target["accesskey"]}]' in line
         if target.get("value"):
             assert f'[value={target["value"]}]' in line
-        for constraint_key in ("minlength", "maxlength", "pattern"):
+        for constraint_key in ("minlength", "maxlength", "min", "max", "step", "pattern"):
             if constraint_key in target:
                 assert f'[{constraint_key}={target[constraint_key]}]' in line
         if "checked" in target:
@@ -102,6 +102,12 @@ def test_build_context_surfaces_action_availability():
             "owns",
             "flowto",
             "details",
+            "orientation",
+            "sort",
+            "valuemin",
+            "valuemax",
+            "valuenow",
+            "valuetext",
         ):
             if state_key in target:
                 assert f'[{state_key}={target[state_key]}]' in line

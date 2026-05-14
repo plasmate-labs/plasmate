@@ -278,6 +278,14 @@ Current browser-agent docs keep making repeated actions depend on current page s
 - **Live politeness shapes waiting**: `aria-live` should travel as `live` so agents can distinguish polite status updates from urgent alert feedback.
 - **Announcement scope explains drift**: `aria-atomic` and `aria-relevant` should surface as `atomic` and `relevant` without changing deterministic `cache_key` values.
 
+### 2026-05-14 Range and Orientation Action Menu Adjustment
+
+Current browser-agent tools keep turning cached actions into validated replay. Range inputs, sliders, sortable tables, and oriented menus are common SaaS controls where agents need bounds and current value state before acting. Plasmate should expose those cues locally instead of forcing raw DOM recovery.
+
+- **Range constraints bound replay**: `min`, `max`, and `step` should travel through Rust, schema, SDKs, parser packages, and adapters so agents know valid values before typing or dragging.
+- **ARIA value state explains drift**: `aria-valuemin`, `aria-valuemax`, `aria-valuenow`, and `aria-valuetext` should surface as compact value cues without changing target `cache_key` values.
+- **Orientation and sort guide action choice**: `aria-orientation` and `aria-sort` should remain visible so agents can distinguish vertical/horizontal controls and already-sorted columns.
+
 ### 2026-05-14 Popover and Command Relationship Adjustment
 
 Browser-native action relationships are becoming more important for agents that replay cached plans on modern app UIs. The Popover API gives buttons a declarative target and action, and `commandfor`/`command` generalize that model for popovers, dialogs, and custom commands. Plasmate should preserve those relationships as compact target context instead of forcing agents to rediscover them from raw DOM.
@@ -462,12 +470,16 @@ Current Playwright MCP and Stagehand docs keep validating action surfaces that a
 - [x] Rust compiler and SOM schema preserve ARIA owns, flowto, and details relationship cues
 - [x] Compact action plans expose owns, flowto, and details across parser packages, SDKs, and framework adapters
 - [x] Shared action-availability manifest asserts ARIA owns/flowto/details cues without changing deterministic action cache keys
+- [x] Rust compiler and SOM schema preserve range constraints plus ARIA orientation, sort, and value cues
+- [x] Compact action plans expose min, max, step, orientation, sort, valuemin, valuemax, valuenow, and valuetext across parser packages, SDKs, and framework adapters
+- [x] Shared action-availability manifest asserts range/orientation/value cues without changing deterministic action cache keys
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
 - [ ] Add cross-adapter fixtures for enriched compact action-plan metadata
 - [ ] Promote ARIA relationship-state cases, including owns/flowto/details, into the broader action-state/action-semantics conformance suites
+- [ ] Promote range and orientation cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures

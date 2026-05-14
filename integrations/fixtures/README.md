@@ -16,7 +16,9 @@ by the Rust core and parser packages.
   `form`, `list`, `popovertarget`, `popovertargetaction`, `commandfor`,
   `command`, `accesskey`, `errormessage`, `keyshortcuts`,
   `roledescription`, `busy`, `live`, `atomic`, `relevant`, `owns`, `flowto`,
-  `details`, `minlength`, `maxlength`, `pattern`, `invalid`), and ARIA menu
+  `details`, `orientation`, `sort`, `valuemin`, `valuemax`, `valuenow`,
+  `valuetext`, `minlength`, `maxlength`, `min`, `max`, `step`, `pattern`,
+  `invalid`), and ARIA menu
   checkbox/radio targets.
 
 Browser Use, LangChain, Vercel AI, Python parser, Node parser, Python SDK, and

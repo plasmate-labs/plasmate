@@ -65,7 +65,9 @@ const { text } = await generateText({
 `commandfor`, `command`, `accesskey`, `aria_autocomplete`,
 `active_descendant`, `errormessage`,
 `keyshortcuts`, `roledescription`, `busy`, `live`, `atomic`, `relevant`,
-`owns`, `flowto`, `details`, `minlength`, `maxlength`, `pattern`, and `invalid` fields before selecting or
+`owns`, `flowto`, `details`, `orientation`, `sort`, `valuemin`, `valuemax`,
+`valuenow`, `valuetext`, `minlength`, `maxlength`, `min`, `max`, `step`,
+`pattern`, and `invalid` fields before selecting or
 reusing browser actions. Use
 `extractPlasmateActionTargets()`, `preparePlasmateActionPlan()`, or
 `formatPlasmateActionPlan()` when your app filters cached or extracted action

@@ -102,6 +102,9 @@ export interface ActionPlanItem {
   placeholder?: string;
   minlength?: number | string;
   maxlength?: number | string;
+  min?: number | string;
+  max?: number | string;
+  step?: string;
   pattern?: string;
   description?: string;
   checked?: boolean | string;
@@ -124,6 +127,12 @@ export interface ActionPlanItem {
   owns?: string;
   flowto?: string;
   details?: string;
+  orientation?: string;
+  sort?: string;
+  valuemin?: string;
+  valuemax?: string;
+  valuenow?: string;
+  valuetext?: string;
   required?: boolean;
   readonly?: boolean;
   disabled?: boolean;
@@ -195,6 +204,9 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.placeholder) item.placeholder = el.attrs.placeholder;
     if (el.attrs?.minlength !== undefined) item.minlength = el.attrs.minlength;
     if (el.attrs?.maxlength !== undefined) item.maxlength = el.attrs.maxlength;
+    if (el.attrs?.min !== undefined) item.min = el.attrs.min;
+    if (el.attrs?.max !== undefined) item.max = el.attrs.max;
+    if (el.attrs?.step) item.step = el.attrs.step;
     if (el.attrs?.pattern) item.pattern = el.attrs.pattern;
     if (el.attrs?.description) item.description = el.attrs.description;
     if (el.attrs?.checked !== undefined) {
@@ -221,6 +233,12 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.aria?.owns !== undefined) item.owns = el.attrs.aria.owns;
     if (el.attrs?.aria?.flowto !== undefined) item.flowto = el.attrs.aria.flowto;
     if (el.attrs?.aria?.details !== undefined) item.details = el.attrs.aria.details;
+    if (el.attrs?.aria?.orientation !== undefined) item.orientation = el.attrs.aria.orientation;
+    if (el.attrs?.aria?.sort !== undefined) item.sort = el.attrs.aria.sort;
+    if (el.attrs?.aria?.valuemin !== undefined) item.valuemin = el.attrs.aria.valuemin;
+    if (el.attrs?.aria?.valuemax !== undefined) item.valuemax = el.attrs.aria.valuemax;
+    if (el.attrs?.aria?.valuenow !== undefined) item.valuenow = el.attrs.aria.valuenow;
+    if (el.attrs?.aria?.valuetext !== undefined) item.valuetext = el.attrs.aria.valuetext;
     if (el.attrs?.required !== undefined) item.required = el.attrs.required;
     if (el.attrs?.readonly !== undefined) item.readonly = el.attrs.readonly;
     if (el.attrs?.disabled !== undefined) {

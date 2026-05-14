@@ -196,6 +196,9 @@ type ActionPlanItem struct {
 	Placeholder      *string     `json:"placeholder,omitempty"`
 	MinLength        interface{} `json:"minlength,omitempty"`
 	MaxLength        interface{} `json:"maxlength,omitempty"`
+	Min              interface{} `json:"min,omitempty"`
+	Max              interface{} `json:"max,omitempty"`
+	Step             *string     `json:"step,omitempty"`
 	Pattern          *string     `json:"pattern,omitempty"`
 	Description      *string     `json:"description,omitempty"`
 	Checked          interface{} `json:"checked,omitempty"`
@@ -218,6 +221,12 @@ type ActionPlanItem struct {
 	Owns             *string     `json:"owns,omitempty"`
 	FlowTo           *string     `json:"flowto,omitempty"`
 	Details          *string     `json:"details,omitempty"`
+	Orientation      *string     `json:"orientation,omitempty"`
+	Sort             *string     `json:"sort,omitempty"`
+	ValueMin         *string     `json:"valuemin,omitempty"`
+	ValueMax         *string     `json:"valuemax,omitempty"`
+	ValueNow         *string     `json:"valuenow,omitempty"`
+	ValueText        *string     `json:"valuetext,omitempty"`
 	Required         *bool       `json:"required,omitempty"`
 	Readonly         *bool       `json:"readonly,omitempty"`
 	Disabled         *bool       `json:"disabled,omitempty"`
@@ -301,6 +310,9 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.Placeholder = el.Attrs.Placeholder
 			item.MinLength = el.Attrs.MinLength
 			item.MaxLength = el.Attrs.MaxLength
+			item.Min = el.Attrs.Min
+			item.Max = el.Attrs.Max
+			item.Step = el.Attrs.Step
 			item.Pattern = el.Attrs.Pattern
 			item.Description = el.Attrs.Description
 			if el.Attrs.Checked != nil {
@@ -328,6 +340,12 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.Owns = el.Attrs.Aria.Owns
 				item.FlowTo = el.Attrs.Aria.FlowTo
 				item.Details = el.Attrs.Aria.Details
+				item.Orientation = el.Attrs.Aria.Orientation
+				item.Sort = el.Attrs.Aria.Sort
+				item.ValueMin = el.Attrs.Aria.ValueMin
+				item.ValueMax = el.Attrs.Aria.ValueMax
+				item.ValueNow = el.Attrs.Aria.ValueNow
+				item.ValueText = el.Attrs.Aria.ValueText
 			}
 			item.Required = el.Attrs.Required
 			item.Readonly = el.Attrs.Readonly

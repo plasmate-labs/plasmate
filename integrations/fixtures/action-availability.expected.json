@@ -91,6 +91,25 @@
       "group": "Billing"
     },
     {
+      "id": "e_quota",
+      "cache_key": "plasmate-action:v1:1cbe7e8e",
+      "role": "text_input",
+      "label": "Seat quota",
+      "actions": ["type", "clear"],
+      "enabled": true,
+      "input_type": "range",
+      "value": "40",
+      "min": 1,
+      "max": 100,
+      "step": "5",
+      "orientation": "horizontal",
+      "valuemin": "1",
+      "valuemax": "100",
+      "valuenow": "40",
+      "valuetext": "40 seats",
+      "group": "Billing"
+    },
+    {
       "id": "e_billing",
       "cache_key": "plasmate-action:v1:baee175a",
       "role": "link",

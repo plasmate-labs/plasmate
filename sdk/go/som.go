@@ -83,6 +83,9 @@ type ElementAttrs struct {
 	Popover         *string        `json:"popover,omitempty"`
 	MinLength       interface{}    `json:"minlength,omitempty"`
 	MaxLength       interface{}    `json:"maxlength,omitempty"`
+	Min             interface{}    `json:"min,omitempty"`
+	Max             interface{}    `json:"max,omitempty"`
+	Step            *string        `json:"step,omitempty"`
 	Pattern         *string        `json:"pattern,omitempty"`
 	Description     *string        `json:"description,omitempty"`
 	Aria            *AriaState     `json:"aria,omitempty"`
@@ -118,6 +121,12 @@ type AriaState struct {
 	Owns             *string     `json:"owns,omitempty"`
 	FlowTo           *string     `json:"flowto,omitempty"`
 	Details          *string     `json:"details,omitempty"`
+	Orientation      *string     `json:"orientation,omitempty"`
+	Sort             *string     `json:"sort,omitempty"`
+	ValueMin         *string     `json:"valuemin,omitempty"`
+	ValueMax         *string     `json:"valuemax,omitempty"`
+	ValueNow         *string     `json:"valuenow,omitempty"`
+	ValueText        *string     `json:"valuetext,omitempty"`
 }
 
 // SomShadowRoot represents elements inside a web component shadow root.

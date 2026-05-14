@@ -256,6 +256,9 @@ field MUST be omitted when the object would be empty.
 | `list` | string | Associated datalist id, when an input uses the `list` attribute. |
 | `minlength` | integer/string | Minimum text length constraint. Invalid source values are preserved as strings. |
 | `maxlength` | integer/string | Maximum text length constraint. Invalid source values are preserved as strings. |
+| `min`       | integer/string | Minimum range/value constraint. Invalid source values are preserved as strings. |
+| `max`       | integer/string | Maximum range/value constraint. Invalid source values are preserved as strings. |
+| `step`      | string  | Step granularity constraint, when present. |
 | `pattern`   | string  | Pattern constraint from the source element. |
 | `checked`    | boolean | For checkbox/radio: present and `true` when checked. |
 | `group`      | string  | For radio inputs: the `name` attribute identifying the radio group. |
@@ -352,7 +355,8 @@ Each **Option** object:
 Implementations SHOULD preserve common actionability attributes on any element:
 `contenteditable`, `tabindex`, `name`, `autocomplete`, `inputmode`,
 `enterkeyhint`, `form`, `list`, `popovertarget`, `popovertargetaction`,
-`commandfor`, `command`, `popover`, `accesskey`, `readonly`, and `description`. The
+`commandfor`, `command`, `popover`, `accesskey`, `readonly`, `min`, `max`,
+`step`, and `description`. The
 `description` value is resolved from `aria-describedby` or `aria-description`.
 These attributes are especially important for custom controls that are exposed
 through ARIA roles instead of native form elements.
@@ -387,6 +391,12 @@ attributes SHOULD be preserved when present:
 | `aria-owns`      | `owns`      | string          |
 | `aria-flowto`    | `flowto`    | string          |
 | `aria-details`   | `details`   | string          |
+| `aria-orientation` | `orientation` | string       |
+| `aria-sort`      | `sort`      | string          |
+| `aria-valuemin`  | `valuemin`  | string          |
+| `aria-valuemax`  | `valuemax`  | string          |
+| `aria-valuenow`  | `valuenow`  | string          |
+| `aria-valuetext` | `valuetext` | string          |
 
 Values `"true"` and `"false"` MUST be normalized to boolean. Other string
 values (e.g. `aria-current="page"`, `aria-checked="mixed"`, or

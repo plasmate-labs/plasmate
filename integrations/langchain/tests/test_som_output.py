@@ -72,7 +72,7 @@ def test_som_to_text_surfaces_interactive_state():
                 assert f'[{command_key}="{target[command_key]}"]' in line
         if target.get("accesskey"):
             assert f'[accesskey="{target["accesskey"]}"]' in line
-        for constraint_key in ("minlength", "maxlength", "pattern"):
+        for constraint_key in ("minlength", "maxlength", "min", "max", "step", "pattern"):
             if constraint_key in target:
                 assert f'[{constraint_key}="{target[constraint_key]}"]' in line
         if "checked" in target:
@@ -97,6 +97,12 @@ def test_som_to_text_surfaces_interactive_state():
             "owns",
             "flowto",
             "details",
+            "orientation",
+            "sort",
+            "valuemin",
+            "valuemax",
+            "valuenow",
+            "valuetext",
         ):
             if state_key in target:
                 assert f'[{state_key}="{target[state_key]}"]' in line
