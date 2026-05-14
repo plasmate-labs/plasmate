@@ -93,6 +93,7 @@ class SomElementAttrs(BaseModel):
     required: Optional[bool] = None
     readonly: Optional[bool] = None
     disabled: Optional[bool] = None
+    inert: Optional[bool] = None
     checked: Optional[bool] = None
     group: Optional[str] = None
     multiple: Optional[bool] = None

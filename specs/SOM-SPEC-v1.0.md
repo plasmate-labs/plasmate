@@ -244,6 +244,7 @@ field MUST be omitted when the object would be empty.
 | Attribute  | Type    | Description |
 |------------|---------|-------------|
 | `disabled` | boolean | Present and `true` when the button is disabled. |
+| `inert` | boolean | Present and `true` when the button or an ancestor is inert. |
 
 #### `text_input`
 
@@ -255,6 +256,7 @@ field MUST be omitted when the object would be empty.
 | `required`   | boolean | Present and `true` when the field is required. |
 | `readonly`   | boolean | Present and `true` when the field is read-only. |
 | `disabled`   | boolean | Present and `true` when the field is disabled. |
+| `inert`      | boolean | Present and `true` when the field or an ancestor is inert. |
 | `autocomplete` | string | Autocomplete token, when present. |
 | `inputmode` | string | Input modality hint, when present. |
 | `enterkeyhint` | string | Enter-key action hint, when present. |
@@ -282,6 +284,7 @@ field MUST be omitted when the object would be empty.
 | `required`   | boolean | Present and `true` when required. |
 | `readonly`   | boolean | Present and `true` when read-only. |
 | `disabled`   | boolean | Present and `true` when disabled. |
+| `inert`      | boolean | Present and `true` when the textarea or an ancestor is inert. |
 | `maxlength` | integer/string | Maximum text length constraint. Invalid source values are preserved as strings. |
 
 #### `select`
@@ -368,7 +371,7 @@ Implementations SHOULD preserve common actionability attributes on any element:
 `enterkeyhint`, `form`, `list`, `popovertarget`, `popovertargetaction`,
 `commandfor`, `command`, `popover`, `button_type`, `formaction`,
 `formmethod`, `formenctype`, `formtarget`, `formnovalidate`, `accesskey`,
-`readonly`, `min`, `max`, `step`, and `description`. The
+`readonly`, `inert`, `min`, `max`, `step`, and `description`. The
 `description` value is resolved from `aria-describedby` or `aria-description`.
 These attributes are especially important for custom controls that are exposed
 through ARIA roles instead of native form elements.

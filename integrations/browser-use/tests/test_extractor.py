@@ -47,6 +47,8 @@ def test_build_context_surfaces_action_availability():
             assert "[required]" in line
         if target.get("readonly"):
             assert "[readonly]" in line
+        if target.get("inert"):
+            assert "[inert]" in line
         if target.get("group"):
             assert f'[group={target["group"]}]' in line
         if target.get("input_type"):

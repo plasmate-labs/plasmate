@@ -105,6 +105,16 @@
           }
         },
         {
+          "id": "e_preview",
+          "role": "button",
+          "text": "Preview changes",
+          "actions": ["click"],
+          "attrs": {
+            "inert": true,
+            "description": "Preview is unavailable while the form is locked"
+          }
+        },
+        {
           "id": "e_plan",
           "role": "select",
           "label": "Plan",

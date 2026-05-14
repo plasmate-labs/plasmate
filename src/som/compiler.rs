@@ -344,6 +344,7 @@ fn extract_regions(
         &mut unassigned_elements,
         "0",
         ctx,
+        false,
     );
 
     // If no landmarks found, wrap everything in a single content region
@@ -564,6 +565,7 @@ fn collect_regions(
     unassigned: &mut Vec<Element>,
     dom_path: &str,
     ctx: &CompileContext,
+    inherited_inert: bool,
 ) {
     if heuristics::should_strip(node) {
         return;
@@ -592,6 +594,7 @@ fn collect_regions(
     if let NodeData::Element { name, .. } = &node.data {
         let tag = name.local.as_ref();
         let attr_pairs = get_attr_pairs(node);
+        let inert_context = inherited_inert || has_attr(&attr_pairs, "inert");
 
         // Check for landmark / form region (HTML5 and ARIA)
         if let Some(role_str) = heuristics::landmark_role(tag, &attr_pairs) {
@@ -605,6 +608,7 @@ fn collect_regions(
                 dom_path,
                 ctx,
                 &attr_pairs,
+                inert_context,
             );
             return;
         }
@@ -622,6 +626,7 @@ fn collect_regions(
                     dom_path,
                     ctx,
                     &attr_pairs,
+                    inert_context,
                 );
                 return;
             }
@@ -672,6 +677,7 @@ fn collect_regions(
                 dom_path,
                 ctx,
                 false,
+                inert_context,
             );
             if !elements.is_empty() {
                 regions.push(Region {
@@ -703,6 +709,7 @@ fn collect_regions(
                 unassigned,
                 dom_path,
                 ctx,
+                inert_context,
             );
             return;
         }
@@ -721,6 +728,7 @@ fn collect_regions(
                     unassigned,
                     &child_path,
                     ctx,
+                    inert_context,
                 );
             }
             return;
@@ -747,6 +755,7 @@ fn collect_regions(
                     dom_path,
                     ctx,
                     false,
+                    inert_context,
                 );
                 if !elements.is_empty() {
                     regions.push(Region {
@@ -784,6 +793,7 @@ fn collect_regions(
                 dom_path,
                 ctx,
                 false,
+                inert_context,
             );
             if !elements.is_empty() {
                 regions.push(Region {
@@ -805,7 +815,15 @@ fn collect_regions(
 
         // Not a region - try to convert this element to a SOM element
         // (e.g., <a>, <button>, <input>, <h1>, <p>, <img>, etc.)
-        if let Some(el) = node_to_element(node, origin, id_tracker, dom_path, ctx, false) {
+        if let Some(el) = node_to_element(
+            node,
+            origin,
+            id_tracker,
+            dom_path,
+            ctx,
+            false,
+            inert_context,
+        ) {
             // For non-interactive elements, also extract interactive children
             if !el.role.is_interactive() {
                 let mut child_interactive = Vec::new();
@@ -821,6 +839,7 @@ fn collect_regions(
                         &child_path,
                         ctx,
                         disabled_context,
+                        inert_context,
                     );
                 }
                 if !child_interactive.is_empty() {
@@ -846,13 +865,14 @@ fn collect_regions(
                 unassigned,
                 &child_path,
                 ctx,
+                inert_context,
             );
         }
         return;
     }
 
     // For non-element nodes (text, etc.), try to extract
-    if let Some(el) = node_to_element(node, origin, id_tracker, dom_path, ctx, false) {
+    if let Some(el) = node_to_element(node, origin, id_tracker, dom_path, ctx, false, false) {
         unassigned.push(el);
     }
 }
@@ -868,6 +888,7 @@ fn create_landmark_region(
     dom_path: &str,
     ctx: &CompileContext,
     attr_pairs: &[(String, String)],
+    inherited_inert: bool,
 ) {
     let region_role = match role_str {
         "navigation" => RegionRole::Navigation,
@@ -905,6 +926,7 @@ fn create_landmark_region(
             &mut sub_elements,
             &child_path,
             ctx,
+            inherited_inert,
         );
     }
 
@@ -937,6 +959,7 @@ fn extract_layout_table_contents(
     unassigned: &mut Vec<Element>,
     dom_path: &str,
     ctx: &CompileContext,
+    inherited_inert: bool,
 ) {
     // Recursively process table contents, extracting semantic elements
     fn visit_layout_table(
@@ -948,6 +971,7 @@ fn extract_layout_table_contents(
         unassigned: &mut Vec<Element>,
         dom_path: &str,
         ctx: &CompileContext,
+        inherited_inert: bool,
     ) {
         let children = node.children.borrow();
         for (i, child) in children.iter().enumerate() {
@@ -966,6 +990,7 @@ fn extract_layout_table_contents(
                             unassigned,
                             &child_path,
                             ctx,
+                            inherited_inert,
                         );
                     }
                     _ => {
@@ -979,6 +1004,7 @@ fn extract_layout_table_contents(
                             unassigned,
                             &child_path,
                             ctx,
+                            inherited_inert,
                         );
                     }
                 }
@@ -993,6 +1019,7 @@ fn extract_layout_table_contents(
                     unassigned,
                     &child_path,
                     ctx,
+                    inherited_inert,
                 );
             }
         }
@@ -1007,6 +1034,7 @@ fn extract_layout_table_contents(
         unassigned,
         dom_path,
         ctx,
+        inherited_inert,
     );
 }
 
@@ -1018,6 +1046,7 @@ fn extract_elements(
     dom_path: &str,
     ctx: &CompileContext,
     inherited_disabled: bool,
+    inherited_inert: bool,
 ) {
     if heuristics::should_strip(node) {
         return;
@@ -1055,15 +1084,26 @@ fn extract_elements(
                 dom_path,
                 ctx,
                 inherited_disabled,
+                inherited_inert,
             );
             return;
         }
     }
 
+    let attr_pairs = get_attr_pairs(node);
     let disabled_context = inherited_disabled || is_disabled_fieldset(node);
+    let inert_context = inherited_inert || has_attr(&attr_pairs, "inert");
 
     // Try to convert this node into an element
-    if let Some(el) = node_to_element(node, origin, id_tracker, dom_path, ctx, inherited_disabled) {
+    if let Some(el) = node_to_element(
+        node,
+        origin,
+        id_tracker,
+        dom_path,
+        ctx,
+        inherited_disabled,
+        inert_context,
+    ) {
         // For non-interactive container elements (paragraph, section, list),
         // also extract any interactive children they contain
         if !el.role.is_interactive() {
@@ -1079,6 +1119,7 @@ fn extract_elements(
                     &child_path,
                     ctx,
                     disabled_context,
+                    inert_context,
                 );
             }
             if !child_interactive.is_empty() {
@@ -1104,6 +1145,7 @@ fn extract_elements(
             &child_path,
             ctx,
             disabled_context,
+            inert_context,
         );
     }
 }
@@ -1117,6 +1159,7 @@ fn extract_layout_table_elements(
     dom_path: &str,
     ctx: &CompileContext,
     inherited_disabled: bool,
+    inherited_inert: bool,
 ) {
     fn visit(
         node: &Handle,
@@ -1126,8 +1169,11 @@ fn extract_layout_table_elements(
         dom_path: &str,
         ctx: &CompileContext,
         inherited_disabled: bool,
+        inherited_inert: bool,
     ) {
+        let attr_pairs = get_attr_pairs(node);
         let disabled_context = inherited_disabled || is_disabled_fieldset(node);
+        let inert_context = inherited_inert || has_attr(&attr_pairs, "inert");
         let children = node.children.borrow();
         for (i, child) in children.iter().enumerate() {
             let child_path = format!("{}/{}", dom_path, i);
@@ -1143,6 +1189,7 @@ fn extract_layout_table_elements(
                             &child_path,
                             ctx,
                             disabled_context,
+                            inert_context,
                         );
                     }
                     _ => {
@@ -1154,6 +1201,7 @@ fn extract_layout_table_elements(
                             &child_path,
                             ctx,
                             disabled_context,
+                            inert_context,
                         );
                     }
                 }
@@ -1168,6 +1216,7 @@ fn extract_layout_table_elements(
         dom_path,
         ctx,
         inherited_disabled,
+        inherited_inert,
     );
 }
 
@@ -1180,14 +1229,16 @@ fn extract_interactive_children(
     dom_path: &str,
     ctx: &CompileContext,
     inherited_disabled: bool,
+    inherited_inert: bool,
 ) {
     if heuristics::should_strip(node) {
         return;
     }
+    let attr_pairs = get_attr_pairs(node);
     let disabled_context = inherited_disabled || is_disabled_fieldset(node);
+    let inert_context = inherited_inert || has_attr(&attr_pairs, "inert");
     if let NodeData::Element { name, .. } = &node.data {
         let tag = name.local.as_ref();
-        let attr_pairs = get_attr_pairs(node);
         if let Some(role) = tag_to_role(tag, &attr_pairs) {
             if role.is_interactive() {
                 if let Some(el) = interactive_node_to_element(
@@ -1197,6 +1248,7 @@ fn extract_interactive_children(
                     dom_path,
                     ctx,
                     inherited_disabled,
+                    inert_context,
                 ) {
                     elements.push(el);
                     return;
@@ -1215,6 +1267,7 @@ fn extract_interactive_children(
             &child_path,
             ctx,
             disabled_context,
+            inert_context,
         );
     }
 }
@@ -1227,6 +1280,7 @@ fn interactive_node_to_element(
     dom_path: &str,
     ctx: &CompileContext,
     inherited_disabled: bool,
+    inherited_inert: bool,
 ) -> Option<Element> {
     if let NodeData::Element { name, .. } = &node.data {
         let tag = name.local.as_ref();
@@ -1248,11 +1302,18 @@ fn interactive_node_to_element(
         } else {
             Some(actions)
         };
-        let element_attrs = build_element_attrs(tag, &attr_pairs, node, ctx, inherited_disabled);
+        let element_attrs = build_element_attrs(
+            tag,
+            &attr_pairs,
+            node,
+            ctx,
+            inherited_disabled,
+            inherited_inert,
+        );
         let children = build_children(node, origin, id_tracker, dom_path, &role);
         let hints = heuristics::infer_class_hints(&attr_pairs);
         let html_id = extract_html_id(&attr_pairs);
-        let shadow = extract_shadow_dom(node, origin, id_tracker, dom_path);
+        let shadow = extract_shadow_dom(node, origin, id_tracker, dom_path, inherited_inert);
 
         return Some(Element {
             id,
@@ -1277,6 +1338,7 @@ fn node_to_element(
     dom_path: &str,
     ctx: &CompileContext,
     inherited_disabled: bool,
+    inherited_inert: bool,
 ) -> Option<Element> {
     match &node.data {
         NodeData::Element { name, .. } => {
@@ -1331,12 +1393,18 @@ fn node_to_element(
             } else {
                 Some(actions)
             };
-            let element_attrs =
-                build_element_attrs(tag, &attr_pairs, node, ctx, inherited_disabled);
+            let element_attrs = build_element_attrs(
+                tag,
+                &attr_pairs,
+                node,
+                ctx,
+                inherited_disabled,
+                inherited_inert,
+            );
             let children = build_children(node, origin, id_tracker, dom_path, &role);
             let hints = heuristics::infer_class_hints(&attr_pairs);
             let html_id = extract_html_id(&attr_pairs);
-            let shadow = extract_shadow_dom(node, origin, id_tracker, dom_path);
+            let shadow = extract_shadow_dom(node, origin, id_tracker, dom_path, inherited_inert);
 
             Some(Element {
                 id,
@@ -1384,6 +1452,7 @@ fn extract_shadow_dom(
     origin: &str,
     id_tracker: &mut ElementIdTracker,
     dom_path: &str,
+    inherited_inert: bool,
 ) -> Option<ShadowRoot> {
     let children = node.children.borrow();
 
@@ -1401,11 +1470,23 @@ fn extract_shadow_dom(
                 let content_ref = template_contents.borrow();
                 if let Some(content) = content_ref.as_ref() {
                     let shadow_path = format!("{}#shadow", dom_path);
-                    extract_shadow_elements(content, origin, id_tracker, &shadow_path)
+                    extract_shadow_elements(
+                        content,
+                        origin,
+                        id_tracker,
+                        &shadow_path,
+                        inherited_inert,
+                    )
                 } else {
                     // Fallback: try to get children directly
                     let shadow_path = format!("{}#shadow/{}", dom_path, idx);
-                    extract_shadow_elements(child, origin, id_tracker, &shadow_path)
+                    extract_shadow_elements(
+                        child,
+                        origin,
+                        id_tracker,
+                        &shadow_path,
+                        inherited_inert,
+                    )
                 }
             } else {
                 vec![]
@@ -1429,6 +1510,7 @@ fn extract_shadow_elements(
     origin: &str,
     id_tracker: &mut ElementIdTracker,
     dom_path: &str,
+    inherited_inert: bool,
 ) -> Vec<Element> {
     let mut elements = Vec::new();
     let dummy_ctx = CompileContext {
@@ -1445,9 +1527,15 @@ fn extract_shadow_elements(
         }
 
         let child_path = format!("{}/{}", dom_path, idx);
-        if let Some(element) =
-            node_to_element(child, origin, id_tracker, &child_path, &dummy_ctx, false)
-        {
+        if let Some(element) = node_to_element(
+            child,
+            origin,
+            id_tracker,
+            &child_path,
+            &dummy_ctx,
+            false,
+            inherited_inert,
+        ) {
             elements.push(element);
         } else {
             extract_elements(
@@ -1458,6 +1546,7 @@ fn extract_shadow_elements(
                 &child_path,
                 &dummy_ctx,
                 false,
+                inherited_inert,
             );
         }
     }
@@ -1664,6 +1753,7 @@ fn build_element_attrs(
     node: &Handle,
     ctx: &CompileContext,
     inherited_disabled: bool,
+    inherited_inert: bool,
 ) -> Option<serde_json::Value> {
     let mut map = serde_json::Map::new();
 
@@ -1885,6 +1975,9 @@ fn build_element_attrs(
             _ => json!(value),
         };
         map.insert("contenteditable".into(), contenteditable);
+    }
+    if inherited_inert || has_attr(attrs, "inert") {
+        map.insert("inert".into(), json!(true));
     }
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "tabindex") {
         let tabindex = value

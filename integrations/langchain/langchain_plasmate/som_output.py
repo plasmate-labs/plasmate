@@ -201,6 +201,9 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
     if attrs.get("disabled") is True:
         flags.append("[disabled]")
         flags.append("[blocked_reason=disabled]")
+    elif attrs.get("inert") is True:
+        flags.append("[inert]")
+        flags.append("[blocked_reason=inert]")
     elif readonly:
         flags.append("[readonly]")
         flags.append("[blocked_reason=readonly]")
@@ -212,6 +215,8 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append("[required]")
     if readonly and "[readonly]" not in flags:
         flags.append("[readonly]")
+    if attrs.get("inert") is True and "[inert]" not in flags:
+        flags.append("[inert]")
     if attrs.get("value"):
         flags.append(f'[value="{attrs["value"]}"]')
     if attrs.get("name"):

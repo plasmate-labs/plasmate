@@ -350,6 +350,14 @@ Current browser-agent products are teaching developers to treat accessibility st
 - **Listbox options are choices**: ARIA `option` should map to an actionable target with selected state preserved, giving custom selects parity with native select options.
 - **Conformance keeps adapters thin**: the `016-action-semantics` fixture should cover these roles so parser, SDK, and framework work can promote the same role contract without bespoke DOM recovery.
 
+### 2026-05-14 Inert Availability Adjustment
+
+Current action-replay products keep validating whether a target is safe before reuse. Playwright MCP refs are snapshot-scoped, Stagehand/Browserbase cache actions only when page state still matches, and Browser Run/WebMCP is making typed interaction contracts more prominent. Plasmate should make native inert state part of the portable local action contract.
+
+- **Inert blocks replay**: controls inside an `inert` subtree should remain visible in SOM but surface `inert` and `blocked_reason=inert` in compact action plans.
+- **Cache keys stay target-focused**: inert state should not alter deterministic `cache_key` values, so local action memory can still compare the same target while seeing current availability drift.
+- **Shared fixtures prevent adapter drift**: `015-action-state` and the action-availability manifest should assert inert gating across Rust, parser packages, SDKs, and framework prompt renderers.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -534,6 +542,9 @@ Current browser-agent products are teaching developers to treat accessibility st
 - [x] ARIA slider and spinbutton roles compile into actionable text-input targets
 - [x] ARIA option roles compile into actionable button targets with selected state
 - [x] Action-semantics conformance covers slider, spinbutton, and option action roles
+- [x] Rust compiler and SOM schema preserve inherited inert state for action targets
+- [x] Compact action plans expose inert availability gating across parser packages, SDKs, and framework adapters
+- [x] Shared action-state and action-availability fixtures assert inert targets without changing deterministic action cache keys
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
@@ -547,6 +558,7 @@ Current browser-agent products are teaching developers to treat accessibility st
 - [ ] Promote upload-affordance cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote form-submission context cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote submit-button override cases into broader Rust/parser/SDK and adapter conformance fixtures
+- [ ] Promote inert availability cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures

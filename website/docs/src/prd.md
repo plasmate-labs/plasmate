@@ -108,6 +108,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-14 ARIA action-role read: current Playwright MCP docs keep structured accessibility refs as the interaction surface, while Stagehand v3 documents `observe()` as a way to discover, validate, and cache executable actions. Production SaaS apps often expose controls through ARIA-only roles instead of native elements, so Plasmate should continue widening local role parity before hosted infrastructure work. `slider`, `spinbutton`, and `option` are small but sticky action-role gaps because agents need to adjust numeric settings and choose custom listbox options without falling back to raw DOM recovery.
 
+2026-05-14 inert-availability read: current action-replay products keep validating whether a target is safe before reuse. Playwright MCP refs are snapshot-scoped, Stagehand/Browserbase cache actions only when page state still matches, and Browser Run/WebMCP is making typed interaction contracts more prominent. Plasmate should keep inert targets visible for planning while marking them unavailable with `blocked_reason="inert"` in compact action menus.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -147,6 +149,9 @@ The project already spans a large number of package and integration surfaces: Ru
   - The Rust SOM compiler now maps ARIA `slider` and `spinbutton` roles to actionable `text_input` targets and maps ARIA `option` to an actionable `button` target.
   - The `016-action-semantics` conformance fixture now asserts `slider`, `spinbutton`, and `option` action-role coverage, including current ARIA value and selected state.
   - SOM spec and generated docs now document the expanded ARIA action-role mapping so SDK and adapter maintainers know these roles are product surface.
+  - The Rust SOM compiler and JSON Schema now preserve native `inert` state, including inherited inert context for nested interactive controls.
+  - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `inert`, mark inert targets unavailable with `blocked_reason="inert"`, and keep deterministic action `cache_key` values target-focused.
+  - The `015-action-state` conformance fixture and shared action-availability manifest now assert inert availability gating across Rust, parser, SDK, and framework surfaces.
   - The Rust SOM compiler and JSON Schema now preserve ARIA relationship cues: `aria-owns`, `aria-flowto`, and `aria-details`.
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `owns`, `flowto`, and `details` without changing deterministic action `cache_key` values.
   - The shared action-availability manifest now asserts ARIA owns/flowto/details relationship cues across parser, SDK, and framework outputs.

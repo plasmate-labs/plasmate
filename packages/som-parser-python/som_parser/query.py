@@ -307,7 +307,12 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 if attrs.disabled:
                     item["enabled"] = False
                     item["blocked_reason"] = "disabled"
-            elif item.get("readonly") is True:
+            if attrs.inert is not None:
+                item["inert"] = attrs.inert
+                if attrs.inert:
+                    item["enabled"] = False
+                    item["blocked_reason"] = "inert"
+            elif item.get("readonly") is True and item.get("enabled") is not False:
                 item["enabled"] = False
                 item["blocked_reason"] = "readonly"
             if attrs.group:

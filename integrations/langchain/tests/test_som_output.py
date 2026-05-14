@@ -46,6 +46,8 @@ def test_som_to_text_surfaces_interactive_state():
             assert "[required]" in line
         if target.get("readonly"):
             assert "[readonly]" in line
+        if target.get("inert"):
+            assert "[inert]" in line
         if target.get("value"):
             assert f'[value="{target["value"]}"]' in line
         if target.get("name"):

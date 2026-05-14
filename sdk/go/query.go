@@ -255,6 +255,7 @@ type ActionPlanItem struct {
 	Required          *bool       `json:"required,omitempty"`
 	Readonly          *bool       `json:"readonly,omitempty"`
 	Disabled          *bool       `json:"disabled,omitempty"`
+	Inert             *bool       `json:"inert,omitempty"`
 	BlockedReason     *string     `json:"blocked_reason,omitempty"`
 	Group             *string     `json:"group,omitempty"`
 }
@@ -410,7 +411,13 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.Enabled = false
 				reason := "disabled"
 				item.BlockedReason = &reason
-			} else if item.Readonly != nil && *item.Readonly {
+			}
+			item.Inert = el.Attrs.Inert
+			if el.Attrs.Inert != nil && *el.Attrs.Inert {
+				item.Enabled = false
+				reason := "inert"
+				item.BlockedReason = &reason
+			} else if item.Enabled && item.Readonly != nil && *item.Readonly {
 				item.Enabled = false
 				reason := "readonly"
 				item.BlockedReason = &reason
