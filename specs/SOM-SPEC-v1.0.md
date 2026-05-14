@@ -204,8 +204,8 @@ The `role` field MUST be one of the following string values (serialized in
 | Role          | Interactive | Default Actions        | HTML Sources |
 |---------------|-------------|------------------------|--------------|
 | `link`        | Yes         | `["click"]`            | `<a href>`, `role="link"` |
-| `button`      | Yes         | `["click"]`            | `<button>`, `<input type="submit\|button\|reset">`, `role="button"` |
-| `text_input`  | Yes         | `["type", "clear"]`    | `<input type="text\|email\|password\|search\|tel\|url\|number\|date\|time\|datetime-local\|month\|week\|color">` |
+| `button`      | Yes         | `["click"]`            | `<button>`, `<input type="submit\|button\|reset">`, `role="button"`, `role="option"` |
+| `text_input`  | Yes         | `["type", "clear"]`    | `<input type="text\|email\|password\|search\|tel\|url\|number\|date\|time\|datetime-local\|month\|week\|color">`, `role="textbox"`, `role="searchbox"`, `role="slider"`, `role="spinbutton"` |
 | `textarea`    | Yes         | `["type", "clear"]`    | `<textarea>` |
 | `select`      | Yes         | `["select"]`           | `<select>` |
 | `checkbox`    | Yes         | `["toggle"]`           | `<input type="checkbox">`, `role="checkbox"` |
@@ -427,7 +427,9 @@ Implementations MUST map HTML elements to SOM element roles as follows:
 
 1. **ARIA `role` attribute** takes precedence: `role="button"` -> `button`,
    `role="link"` -> `link`, `role="checkbox"` -> `checkbox`,
-   `role="radio"` -> `radio`, `role="img"` -> `image`.
+   `role="radio"` -> `radio`, `role="textbox"`/`role="searchbox"`/
+   `role="slider"`/`role="spinbutton"` -> `text_input`,
+   `role="option"` -> `button`, `role="img"` -> `image`.
 
 2. **`<a>` elements** MUST only become `link` elements if they have an `href`
    attribute. Anchor elements without `href` are ignored.

@@ -42,8 +42,8 @@ Each element has a `role`, stable `id`, optional `html_id` (the original HTML el
 | Role | Interactive | Default Actions | HTML Sources |
 |------|-------------|-----------------|--------------|
 | `link` | Yes | `["click"]` | `<a href>`, `role="link"` |
-| `button` | Yes | `["click"]` | `<button>`, `<input type="submit">`, `role="button"` |
-| `text_input` | Yes | `["type", "clear"]` | `<input type="text\|email\|password\|search\|...">` |
+| `button` | Yes | `["click"]` | `<button>`, `<input type="submit">`, `role="button"`, `role="option"` |
+| `text_input` | Yes | `["type", "clear"]` | `<input type="text\|email\|password\|search\|...">`, `role="textbox"`, `role="searchbox"`, `role="slider"`, `role="spinbutton"` |
 | `textarea` | Yes | `["type", "clear"]` | `<textarea>` |
 | `select` | Yes | `["select"]` | `<select>` |
 | `checkbox` | Yes | `["toggle"]` | `<input type="checkbox">`, `role="checkbox"` |

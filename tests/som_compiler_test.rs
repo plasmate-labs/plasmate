@@ -182,6 +182,9 @@ fn test_common_aria_widget_roles_map_to_interactive_elements() {
     <div role="tab" aria-label="Billing"></div>
     <div role="menuitemcheckbox" aria-label="Compact mode" aria-checked="false"></div>
     <div role="menuitemradio" aria-label="Annual billing" aria-checked="true"></div>
+    <div role="slider" aria-label="Seats" aria-valuemin="1" aria-valuemax="100" aria-valuenow="25"></div>
+    <div role="spinbutton" aria-label="Approvals" aria-valuemin="0" aria-valuemax="10" aria-valuenow="2"></div>
+    <div role="option" aria-label="Enterprise" aria-selected="true"></div>
 </main></body></html>"#;
 
     let som = compiler::compile(html, "https://example.com").unwrap();
@@ -193,7 +196,16 @@ fn test_common_aria_widget_roles_map_to_interactive_elements() {
     assert!(elems
         .iter()
         .any(|e| { e.role == ElementRole::Radio && e.label.as_deref() == Some("Annual billing") }));
-    assert_eq!(som.meta.interactive_count, 6);
+    assert!(elems
+        .iter()
+        .any(|e| { e.role == ElementRole::TextInput && e.label.as_deref() == Some("Seats") }));
+    assert!(elems
+        .iter()
+        .any(|e| { e.role == ElementRole::TextInput && e.label.as_deref() == Some("Approvals") }));
+    assert!(elems
+        .iter()
+        .any(|e| { e.role == ElementRole::Button && e.label.as_deref() == Some("Enterprise") }));
+    assert_eq!(som.meta.interactive_count, 9);
 }
 
 #[test]
@@ -282,6 +294,27 @@ fn test_action_semantics_conformance_fixture() {
                 && elem.label.as_deref() == Some("Annual billing")),
         "menuitemradio should compile into an actionable radio target"
     );
+    assert!(
+        all_elements(&som)
+            .iter()
+            .any(|elem| elem.role == ElementRole::TextInput
+                && elem.label.as_deref() == Some("Seat count")),
+        "slider should compile into an actionable text-input target"
+    );
+    assert!(
+        all_elements(&som)
+            .iter()
+            .any(|elem| elem.role == ElementRole::TextInput
+                && elem.label.as_deref() == Some("Approval limit")),
+        "spinbutton should compile into an actionable text-input target"
+    );
+    assert!(
+        all_elements(&som)
+            .iter()
+            .any(|elem| elem.role == ElementRole::Button
+                && elem.label.as_deref() == Some("Enterprise plan")),
+        "option should compile into an actionable button target"
+    );
     let reply = all_elements(&som)
         .into_iter()
         .find(|elem| elem.role == ElementRole::TextInput && elem.label.as_deref() == Some("Reply"))
@@ -298,7 +331,7 @@ fn test_action_semantics_conformance_fixture() {
     assert!(!json.contains("Hidden uppercase ARIA copy"));
     assert!(!json.contains("Hidden inline opacity copy"));
     assert!(json.contains("Visible preferences copy"));
-    assert_eq!(som.meta.interactive_count, 5);
+    assert_eq!(som.meta.interactive_count, 8);
 }
 
 #[test]

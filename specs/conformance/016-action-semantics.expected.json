@@ -1,5 +1,5 @@
 {
-  "$description": "Tests fallback-token ARIA search landmarks, fallback-token ARIA menuitem checkbox/radio action targets, stylesheet hidden-rule parsing with production whitespace/casing, uppercase aria-hidden, and inline opacity hiding.",
+  "$description": "Tests fallback-token ARIA search landmarks, fallback-token ARIA menuitem checkbox/radio action targets, ARIA slider/spinbutton/option action roles, stylesheet hidden-rule parsing with production whitespace/casing, uppercase aria-hidden, and inline opacity hiding.",
   "som_version": "0.1",
   "url": "https://example.com/action-semantics",
   "title": "Action Semantics",
@@ -30,6 +30,37 @@
         { "role": "radio", "label": "Annual billing", "actions": ["select"] },
         {
           "role": "text_input",
+          "label": "Seat count",
+          "actions": ["type", "clear"],
+          "attrs": {
+            "aria": {
+              "valuemin": "1",
+              "valuemax": "100",
+              "valuenow": "25",
+              "valuetext": "25 seats"
+            }
+          }
+        },
+        {
+          "role": "text_input",
+          "label": "Approval limit",
+          "actions": ["type", "clear"],
+          "attrs": {
+            "aria": {
+              "valuemin": "0",
+              "valuemax": "10",
+              "valuenow": "2"
+            }
+          }
+        },
+        {
+          "role": "button",
+          "label": "Enterprise plan",
+          "actions": ["click"],
+          "attrs": { "aria": { "selected": true } }
+        },
+        {
+          "role": "text_input",
           "label": "Reply",
           "actions": ["type", "clear"],
           "attrs": {
@@ -45,6 +76,6 @@
     }
   ],
   "meta": {
-    "interactive_count": 5
+    "interactive_count": 8
   }
 }

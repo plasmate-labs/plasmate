@@ -443,6 +443,15 @@ override cues (`button_type`, `formaction`, `formmethod`, `formenctype`,
 cached submit actions can verify the exact submission path without raw DOM
 recovery.
 
+2026-05-14 ARIA action-role read: current Playwright MCP docs keep structured
+accessibility refs as the interaction surface, while Stagehand v3 documents
+`observe()` as a way to discover, validate, and cache executable actions.
+Production SaaS apps often expose controls through ARIA-only roles instead of
+native elements, so Plasmate should continue widening local role parity before
+hosted infrastructure work. `slider`, `spinbutton`, and `option` are small but
+sticky action-role gaps because agents need to adjust numeric settings and
+choose custom listbox options without falling back to raw DOM recovery.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -541,6 +550,15 @@ and adapter docs over one-off integration logic.
     and validation mode before replay.
   - The shared action-availability manifest now asserts submit-button override
     context across parser, SDK, and framework outputs.
+  - The Rust SOM compiler now maps ARIA `slider` and `spinbutton` roles to
+    actionable `text_input` targets and maps ARIA `option` to an actionable
+    `button` target, covering custom numeric controls and listbox choices.
+  - The `016-action-semantics` conformance fixture now asserts `slider`,
+    `spinbutton`, and `option` action-role coverage, including current ARIA
+    value and selected state.
+  - SOM spec and generated docs now document the expanded ARIA action-role
+    mapping so SDK and adapter maintainers know these roles are product
+    surface, not incidental compiler behavior.
   - The Rust SOM compiler and JSON Schema now preserve ARIA relationship cues:
     `aria-owns`, `aria-flowto`, and `aria-details`.
   - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
