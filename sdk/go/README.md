@@ -126,7 +126,7 @@ all := plasmate.FlatElements(som)
 | `FindByText(som, text)` | Case-insensitive text search |
 | `FindByAction(som, action)` | Find elements exposing an action |
 | `FindByHint(som, hint)` | Find elements tagged with a semantic hint |
-| `GetActionPlan(som)` | Return compact action targets with cache keys, availability, link target/rel/download cues, graphical submitter alt/src cues, form submission context, submitter override cues, select selected_values/size context, text-entry/input-affordance cues, popover/command relationship cues, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, range constraints, orientation/sort/value state, and set-position cues for agents |
+| `GetActionPlan(som)` | Return compact action targets with cache keys, availability, link target/rel/download cues, graphical submitter alt/src cues, form submission context, submitter override cues, select selected_values/size context, text-entry/input-affordance cues, popover/command relationship cues, title/label/description ID relationships, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, range constraints, orientation/sort/value state, and set-position cues for agents |
 | `GetActionPlanCacheKey(item)` | Return a deterministic key for caching or comparing an action target |
 | `FlatElements(som)` | Flatten all elements, including shadow roots |
 | `TokenEstimate(som)` | Estimate token count |

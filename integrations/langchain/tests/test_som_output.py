@@ -100,6 +100,9 @@ def test_som_to_text_surfaces_interactive_state():
             assert f'[formnovalidate="{target["formnovalidate"]}"]' in line
         if target.get("accesskey"):
             assert f'[accesskey="{target["accesskey"]}"]' in line
+        for relation_key in ("title", "labelledby", "describedby"):
+            if target.get(relation_key):
+                assert f'[{relation_key}="{target[relation_key]}"]' in line
         if "spellcheck" in target:
             assert f'[spellcheck="{target["spellcheck"]}"]' in line
         for constraint_key in ("minlength", "maxlength", "min", "max", "step", "pattern"):

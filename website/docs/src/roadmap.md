@@ -383,6 +383,14 @@ Current competitor direction keeps validating cached action plans against the cu
 - **Grouped and multi-select menus need current state**: optgroup labels and `selected_values` should become shared action-plan context before this lands in adapter conformance.
 - **Schema and SDK parity decide stickiness**: option groups, disabled option state, implicit single-select values, and select `size` need to validate in the public schema and flow through parser/SDK action plans before agents can safely cache menu choices across runtimes.
 
+### 2026-05-14 Relationship Context Adjustment
+
+Current browser-agent competitors keep making cached action replay depend on target validation against fresh structured state. Plasmate should preserve small provenance cues that explain why a target is named or described.
+
+- **Tooltip help belongs in compact targets**: native `title` should travel with action targets so agents can reuse browser-visible help text.
+- **Label provenance aids validation**: source `aria-labelledby` IDs should remain available as `labelledby` alongside the resolved label.
+- **Description provenance reduces raw DOM recovery**: source `aria-describedby` IDs should remain available as `describedby` while `description` carries resolved text.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -576,6 +584,9 @@ Current competitor direction keeps validating cached action plans against the cu
 - [x] Disabled optgroups propagate disabled state to child option summaries
 - [x] SOM schema/spec, parser packages, SDKs, Browser Use, LangChain, and Vercel AI carry selected_values and select size context
 - [x] Shared action manifest asserts select selected_values and size as compact menu-planning context
+- [x] Rust compiler and SOM schema preserve title, labelledby, and describedby relationship context
+- [x] Compact action plans expose title, labelledby, and describedby across parser packages, SDKs, and framework adapters
+- [x] Shared action manifest asserts relationship-context cues without changing deterministic action cache keys
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
@@ -590,6 +601,7 @@ Current competitor direction keeps validating cached action plans against the cu
 - [ ] Promote form-submission context cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote submit-button override cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote graphical submitter cases into the shared action manifest and adapter conformance fixtures
+- [ ] Promote relationship-context cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote inert availability cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures

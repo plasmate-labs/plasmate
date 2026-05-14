@@ -2068,6 +2068,9 @@ fn build_element_attrs(
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "accesskey") {
         map.insert("accesskey".into(), json!(value));
     }
+    if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "title") {
+        map.insert("title".into(), json!(value));
+    }
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "spellcheck") {
         let normalized = value.trim().to_ascii_lowercase();
         let spellcheck = match normalized.as_str() {
@@ -2106,9 +2109,16 @@ fn build_element_attrs(
         "commandfor",
         "command",
         "popover",
+        "aria-labelledby",
+        "aria-describedby",
     ] {
         if let Some((_, value)) = attrs.iter().find(|(n, _)| n == key) {
-            map.insert(key.into(), json!(value));
+            let som_key = match key {
+                "aria-labelledby" => "labelledby",
+                "aria-describedby" => "describedby",
+                _ => key,
+            };
+            map.insert(som_key.into(), json!(value));
         }
     }
     if has_attr(attrs, "formnovalidate") {

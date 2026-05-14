@@ -174,6 +174,12 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["formnovalidate"] = attrs.formnovalidate
             if attrs.accesskey:
                 item["accesskey"] = attrs.accesskey
+            if attrs.title:
+                item["title"] = attrs.title
+            if attrs.labelledby:
+                item["labelledby"] = attrs.labelledby
+            if attrs.describedby:
+                item["describedby"] = attrs.describedby
             if attrs.spellcheck is not None:
                 item["spellcheck"] = attrs.spellcheck
             if attrs.input_type:

@@ -853,6 +853,23 @@ existing parser, SDK, and framework surfaces.
 3. **Cache keys stay stable**: media and live menu state should inform replay
    validation without changing deterministic target identity.
 
+### 2026-05-14 Relationship Context Adjustment
+
+Current browser-agent competitors keep making cached action replay depend on
+target validation against fresh structured state. Playwright MCP refs are
+snapshot-scoped, Stagehand/Browserbase action caches are only useful when the
+observed target still matches, and managed browser products sell sessions
+around the same drift problem. Plasmate should keep the local-first wedge and
+preserve small provenance cues that explain why a target is named or described.
+
+1. **Tooltip help belongs in compact targets**: native `title` should travel
+   with action targets so agents can reuse browser-visible help text.
+2. **Label provenance aids validation**: source `aria-labelledby` IDs should
+   remain available as `labelledby` alongside the resolved label.
+3. **Description provenance reduces raw DOM recovery**: source
+   `aria-describedby` IDs should remain available as `describedby` while
+   `description` carries resolved human-facing text.
+
 ## Architecture
 
 ```
@@ -1291,10 +1308,19 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   select `size` across parser packages, SDKs, and framework adapters.
 - Compact action-plan helpers now expose actionable media `alt`/`src` context
   without changing deterministic action cache keys.
+- Rust SOM now preserves native `title` plus `aria-labelledby` and
+  `aria-describedby` source IDREFs as `attrs.title`, `attrs.labelledby`, and
+  `attrs.describedby`.
+- Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI
+  action-plan surfaces now expose `title`, `labelledby`, and `describedby`
+  without changing deterministic action cache keys.
+- The shared action-availability fixture now asserts these relationship-context
+  cues so label and description provenance stays synchronized across runtimes.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
-  and select-option parser/SDK/adaptor parity cases into broader fixtures
-  alongside text-entry, ARIA widget, range, and set-position cases.
+  select-option parser/SDK/adaptor parity, and relationship-context cases into
+  broader fixtures alongside text-entry, ARIA widget, range, and set-position
+  cases.
 
 ## Dependencies to Add
 

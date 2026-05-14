@@ -78,6 +78,9 @@ type ElementAttrs struct {
 	ContentEditable interface{}    `json:"contenteditable,omitempty"`
 	TabIndex        interface{}    `json:"tabindex,omitempty"`
 	AccessKey       *string        `json:"accesskey,omitempty"`
+	Title           *string        `json:"title,omitempty"`
+	LabelledBy      *string        `json:"labelledby,omitempty"`
+	DescribedBy     *string        `json:"describedby,omitempty"`
 	Spellcheck      interface{}    `json:"spellcheck,omitempty"`
 	Name            *string        `json:"name,omitempty"`
 	Accept          *string        `json:"accept,omitempty"`
@@ -163,10 +166,10 @@ type SomShadowRoot struct {
 
 // SelectOption represents an option within a select element.
 type SelectOption struct {
-	Value    string `json:"value"`
-	Text     string `json:"text"`
-	Selected *bool  `json:"selected,omitempty"`
-	Disabled *bool  `json:"disabled,omitempty"`
+	Value    string  `json:"value"`
+	Text     string  `json:"text"`
+	Selected *bool   `json:"selected,omitempty"`
+	Disabled *bool   `json:"disabled,omitempty"`
 	Group    *string `json:"group,omitempty"`
 }
 

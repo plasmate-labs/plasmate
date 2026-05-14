@@ -513,6 +513,16 @@ shared manifest expectations. Graphical submitter `alt`/`src`, image-submit
 `button_type`, and select `selected_values`/`size` are now compact target
 contract fields rather than parser-only details.
 
+2026-05-14 relationship-context read: fresh competitor review still points to
+validated current-state action replay rather than a hosted-browser pivot.
+Playwright MCP keeps refs tied to the current structured snapshot,
+Stagehand/Browserbase makes cached actions valuable only after target
+validation, and Firecrawl/Browser Use keep packaging managed sessions for teams
+buying infrastructure. Plasmate should keep making local compact targets more
+explainable: native `title` help text plus `aria-labelledby`/`aria-describedby`
+ID relationships let agents verify why a control is named or described the way
+it is without re-reading raw DOM.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -539,6 +549,16 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-14:
+  - Rust SOM now preserves native `title` help text plus source
+    `aria-labelledby` and `aria-describedby` IDREF relationships as
+    `attrs.title`, `attrs.labelledby`, and `attrs.describedby`.
+  - JSON Schema/SOM spec, Python/Node parser packages, Python/Node/Go SDKs,
+    Browser Use, LangChain, and Vercel AI now carry `title`, `labelledby`, and
+    `describedby` through compact action-plan output without changing
+    deterministic `cache_key` values.
+  - The shared action-availability manifest now asserts relationship-context
+    cues on the email target, keeping parser, SDK, and framework surfaces
+    synchronized for label/description provenance.
   - Rust SOM select extraction now follows browser default option-value
     semantics when an `<option>` omits `value`.
   - Select option summaries now preserve disabled option state and optgroup

@@ -273,6 +273,9 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append(f'[formnovalidate="{attrs["formnovalidate"]}"]')
     if attrs.get("accesskey"):
         flags.append(f'[accesskey="{attrs["accesskey"]}"]')
+    for relation_key in ("title", "labelledby", "describedby"):
+        if attrs.get(relation_key):
+            flags.append(f'[{relation_key}="{attrs[relation_key]}"]')
     if "spellcheck" in attrs:
         flags.append(f'[spellcheck="{attrs["spellcheck"]}"]')
     for constraint_key in ("minlength", "maxlength", "min", "max", "step", "pattern"):

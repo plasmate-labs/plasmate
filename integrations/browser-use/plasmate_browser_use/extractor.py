@@ -153,6 +153,9 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append(f"formnovalidate={item['formnovalidate']}")
     if item.get("accesskey"):
         flags.append(f"accesskey={item['accesskey']}")
+    for relation_key in ("title", "labelledby", "describedby"):
+        if item.get(relation_key):
+            flags.append(f"{relation_key}={item[relation_key]}")
     if "spellcheck" in item:
         flags.append(f"spellcheck={item['spellcheck']}")
     if item.get("value"):

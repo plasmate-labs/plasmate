@@ -938,6 +938,15 @@ fn test_aria_labelledby_takes_precedence_over_aria_label() {
         .expect("button should be preserved");
 
     assert_eq!(button.label.as_deref(), Some("Primary action name"));
+    assert_eq!(
+        button
+            .attrs
+            .as_ref()
+            .unwrap()
+            .get("labelledby")
+            .and_then(|v| v.as_str()),
+        Some("primary-label")
+    );
 }
 
 #[test]
@@ -946,7 +955,7 @@ fn test_aria_describedby_sets_accessible_description_attr() {
 <html><head><title>Description</title></head>
 <body><main>
     <p id="password-help">Use at least 12 characters.</p>
-    <input type="password" aria-label="Password" aria-describedby="password-help">
+    <input type="password" aria-label="Password" aria-describedby="password-help" title="Credential field">
 </main></body></html>"#;
 
     let som = compiler::compile(html, "https://example.com").unwrap();
@@ -959,6 +968,14 @@ fn test_aria_describedby_sets_accessible_description_attr() {
     assert_eq!(
         attrs.get("description").and_then(|v| v.as_str()),
         Some("Use at least 12 characters.")
+    );
+    assert_eq!(
+        attrs.get("describedby").and_then(|v| v.as_str()),
+        Some("password-help")
+    );
+    assert_eq!(
+        attrs.get("title").and_then(|v| v.as_str()),
+        Some("Credential field")
     );
 }
 

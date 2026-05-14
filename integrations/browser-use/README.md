@@ -89,8 +89,9 @@ autocomplete, inputmode, enterkeyhint, autocapitalize, dirname, spellcheck,
 link target/rel/download cues, graphical submitter alt/src cues, form plus
 form submission context, submitter override cues, select selected_values/size
 context, list, popover/command relationships, accesskey, ARIA
-placeholder/autocomplete/active-descendant/error-message state, keyshortcuts,
-roledescription, live-region state, ARIA owns/flowto/details relationships,
+placeholder/autocomplete/active-descendant/error-message state, title,
+labelledby/describedby relationship refs, keyshortcuts, roledescription,
+live-region state, ARIA owns/flowto/details relationships,
 ARIA readonly/multiline/multiselectable widget state, orientation/sort/value
 state, ARIA set-position cues, validation constraints, range constraints, invalid state, and
 description cues

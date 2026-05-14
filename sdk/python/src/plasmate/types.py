@@ -126,6 +126,9 @@ class ElementAttrs(BaseModel):
     contenteditable: Optional[bool | str] = None
     tabindex: Optional[int | str] = None
     accesskey: Optional[str] = None
+    title: Optional[str] = None
+    labelledby: Optional[str] = None
+    describedby: Optional[str] = None
     spellcheck: Optional[bool | str] = None
     name: Optional[str] = None
     accept: Optional[str] = None

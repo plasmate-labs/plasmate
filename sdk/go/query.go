@@ -213,6 +213,9 @@ type ActionPlanItem struct {
 	SubmitFormTarget  *string     `json:"formtarget,omitempty"`
 	SubmitNoValidate  *bool       `json:"formnovalidate,omitempty"`
 	AccessKey         *string     `json:"accesskey,omitempty"`
+	Title             *string     `json:"title,omitempty"`
+	LabelledBy        *string     `json:"labelledby,omitempty"`
+	DescribedBy       *string     `json:"describedby,omitempty"`
 	Spellcheck        interface{} `json:"spellcheck,omitempty"`
 	InputType         *string     `json:"input_type,omitempty"`
 	Value             *string     `json:"value,omitempty"`
@@ -358,6 +361,9 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.SubmitFormTarget = el.Attrs.FormTarget
 			item.SubmitNoValidate = el.Attrs.FormNoValidate
 			item.AccessKey = el.Attrs.AccessKey
+			item.Title = el.Attrs.Title
+			item.LabelledBy = el.Attrs.LabelledBy
+			item.DescribedBy = el.Attrs.DescribedBy
 			item.Spellcheck = el.Attrs.Spellcheck
 			item.InputType = el.Attrs.InputType
 			item.Value = el.Attrs.Value

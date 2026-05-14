@@ -378,8 +378,11 @@ Implementations SHOULD preserve common actionability attributes on any element:
 `enterkeyhint`, `form`, `list`, `popovertarget`, `popovertargetaction`,
 `commandfor`, `command`, `popover`, `button_type`, `formaction`,
 `formmethod`, `formenctype`, `formtarget`, `formnovalidate`, `accesskey`,
-`readonly`, `inert`, `min`, `max`, `step`, and `description`. The
-`description` value is resolved from `aria-describedby` or `aria-description`.
+`title`, `labelledby`, `describedby`, `readonly`, `inert`, `min`, `max`,
+`step`, and `description`. The `title` value preserves native tooltip/help
+text. `labelledby` and `describedby` preserve the source `aria-labelledby` and
+`aria-describedby` IDREFs while `description` resolves referenced text from
+`aria-describedby` or falls back to `aria-description`.
 These attributes are especially important for custom controls that are exposed
 through ARIA roles instead of native form elements.
 

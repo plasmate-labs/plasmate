@@ -227,6 +227,9 @@
               ]
             },
             "accesskey": { "type": "string" },
+            "title": { "type": "string" },
+            "labelledby": { "type": "string" },
+            "describedby": { "type": "string" },
             "spellcheck": {
               "oneOf": [
                 { "type": "boolean" },
