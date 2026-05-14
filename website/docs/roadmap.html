@@ -745,7 +745,7 @@
 </ul>
 <h3 id="2026-05-14-test-selector-hint-adjustment">2026-05-14 Test Selector Hint Adjustment</h3><p>Current browser-agent products keep moving from raw DOM traversal toward validated action handles. Playwright MCP refs are snapshot-scoped, and Stagehand/Browserbase action caches pay off only when a repeated target can be recognized cheaply. Plasmate&#39;s local-first roadmap should preserve app-owned test selector hints as optional action context rather than forcing users to recover them from raw HTML.</p>
 <ul>
-<li><strong>Test selectors are durable app contracts</strong>: <code>data-testid</code>, <code>data-test</code>, and <code>data-qa</code> should compile into <code>test_id</code>, <code>test</code>, and <code>qa</code> attrs.</li>
+<li><strong>Test selectors are durable app contracts</strong>: <code>data-testid</code>/<code>data-test-id</code>, <code>data-test</code>, <code>data-qa</code>, <code>data-cy</code>, <code>data-e2e</code>, and <code>data-automation-id</code> should compile into <code>test_id</code>, <code>test</code>, <code>qa</code>, <code>cy</code>, <code>e2e</code>, and <code>automation_id</code> attrs.</li>
 <li><strong>Selectors belong at the framework edge</strong>: parser packages, SDKs, Browser Use, LangChain, and Vercel AI should expose those hints in compact action plans for trace correlation and repeated internal workflows.</li>
 <li><strong>Cache keys stay semantic</strong>: selector hints should help validate and debug actions without changing deterministic <code>cache_key</code> values, which remain target-focused.</li>
 </ul>
@@ -938,9 +938,9 @@
 <li><input checked="" disabled="" type="checkbox"> Single-select controls infer the browser-default first selected option when markup omits <code>selected</code></li>
 <li><input checked="" disabled="" type="checkbox"> Disabled optgroups propagate disabled state to child option summaries</li>
 <li><input checked="" disabled="" type="checkbox"> SOM schema/spec, parser packages, SDKs, Browser Use, LangChain, and Vercel AI carry selected_values and select size context</li>
-<li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve <code>data-testid</code>, <code>data-test</code>, and <code>data-qa</code> as <code>test_id</code>, <code>test</code>, and <code>qa</code></li>
-<li><input checked="" disabled="" type="checkbox"> Compact action plans expose test selector hints across parser packages, SDKs, and framework adapters without changing cache keys</li>
-<li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest asserts test selector hint parity</li>
+<li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve <code>data-testid</code>, <code>data-test-id</code>, <code>data-test</code>, <code>data-qa</code>, <code>data-cy</code>, <code>data-e2e</code>, and <code>data-automation-id</code></li>
+<li><input checked="" disabled="" type="checkbox"> Compact action plans expose broad selector hints across parser packages, SDKs, and framework adapters without changing cache keys</li>
+<li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest asserts broad selector hint parity</li>
 <li><input disabled="" type="checkbox"> Selector-aware SOM cache entries for repeated agent prompts</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
 <li><input disabled="" type="checkbox"> Wire <code>016-action-semantics</code> into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants</li>

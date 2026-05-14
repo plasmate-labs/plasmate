@@ -183,6 +183,9 @@ type ActionPlanItem struct {
 	TestID            *string     `json:"test_id,omitempty"`
 	Test              *string     `json:"test,omitempty"`
 	QA                *string     `json:"qa,omitempty"`
+	CY                *string     `json:"cy,omitempty"`
+	E2E               *string     `json:"e2e,omitempty"`
+	AutomationID      *string     `json:"automation_id,omitempty"`
 	Accept            *string     `json:"accept,omitempty"`
 	Capture           interface{} `json:"capture,omitempty"`
 	Multiple          *bool       `json:"multiple,omitempty"`
@@ -337,6 +340,9 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.TestID = el.Attrs.TestID
 			item.Test = el.Attrs.Test
 			item.QA = el.Attrs.QA
+			item.CY = el.Attrs.CY
+			item.E2E = el.Attrs.E2E
+			item.AutomationID = el.Attrs.AutomationID
 			item.Accept = el.Attrs.Accept
 			item.Capture = el.Attrs.Capture
 			item.Multiple = el.Attrs.Multiple

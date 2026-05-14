@@ -848,8 +848,10 @@ recognized cheaply. Plasmate's local-first roadmap should preserve app-owned
 test selector hints as optional action context rather than forcing users to
 recover them from raw HTML.
 
-1. **Test selectors are durable app contracts**: `data-testid`, `data-test`,
-   and `data-qa` should compile into `test_id`, `test`, and `qa` attrs.
+1. **Test selectors are durable app contracts**: `data-testid`/`data-test-id`,
+   `data-test`, `data-qa`, `data-cy`, `data-e2e`, and `data-automation-id`
+   should compile into `test_id`, `test`, `qa`, `cy`, `e2e`, and
+   `automation_id` attrs.
 2. **Selectors belong at the framework edge**: parser packages, SDKs, Browser
    Use, LangChain, and Vercel AI should expose those hints in compact action
    plans for trace correlation and repeated internal workflows.
@@ -1300,13 +1302,15 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   Browser Use, LangChain, and Vercel AI prompt renderers now carry
   `selected_values` and `size` as compact menu-planning context.
 - Rust SOM compilation and the JSON Schema now preserve stable test selector
-  hints: `data-testid` as `test_id`, `data-test` as `test`, and `data-qa` as
-  `qa`.
+  hints: `data-testid` and `data-test-id` as `test_id`, `data-test` as
+  `test`, `data-qa` as `qa`, `data-cy` as `cy`, `data-e2e` as `e2e`, and
+  `data-automation-id` as `automation_id`.
 - Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
-  and Vercel AI action-plan surfaces now expose `test_id`, `test`, and `qa`
-  while leaving deterministic `cache_key` generation target-focused.
-- The shared action-availability manifest now asserts test selector hint parity
-  across parser, SDK, and framework adapter outputs.
+  and Vercel AI action-plan surfaces now expose `test_id`, `test`, `qa`, `cy`,
+  `e2e`, and `automation_id` while leaving deterministic `cache_key`
+  generation target-focused.
+- The shared action-availability manifest now asserts broader selector hint
+  parity across parser, SDK, and framework adapter outputs.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   native input-shape, select-option parser/SDK/adapter parity, and

@@ -238,6 +238,9 @@
             "test_id": { "type": "string" },
             "test": { "type": "string" },
             "qa": { "type": "string" },
+            "cy": { "type": "string" },
+            "e2e": { "type": "string" },
+            "automation_id": { "type": "string" },
             "accept": { "type": "string" },
             "capture": {
               "oneOf": [

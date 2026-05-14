@@ -2084,11 +2084,15 @@ fn build_element_attrs(
     }
     for (html_attr, som_key) in [
         ("data-testid", "test_id"),
+        ("data-test-id", "test_id"),
         ("data-test", "test"),
         ("data-qa", "qa"),
+        ("data-cy", "cy"),
+        ("data-e2e", "e2e"),
+        ("data-automation-id", "automation_id"),
     ] {
         if let Some((_, value)) = attrs.iter().find(|(n, _)| n == html_attr) {
-            if !value.trim().is_empty() {
+            if !value.trim().is_empty() && !map.contains_key(som_key) {
                 map.insert(som_key.into(), json!(value));
             }
         }
@@ -3120,9 +3124,9 @@ mod tests {
 <html><head><title>Selectors</title></head>
 <body>
 <main>
-  <button data-testid="save-settings" data-test="primary-save" data-qa="settings-submit">Save</button>
+  <button data-testid="save-settings" data-test-id="save-settings-dashed" data-test="primary-save" data-qa="settings-submit" data-cy="save-button" data-e2e="settings-save" data-automation-id="save-settings-action">Save</button>
   <label for="email">Email</label>
-  <input id="email" data-testid="email-field" data-test="email-input" data-qa="account-email">
+  <input id="email" data-test-id="email-field" data-test="email-input" data-qa="account-email" data-cy="email-field" data-e2e="account-email" data-automation-id="email-input-action">
 </main>
 </body>
 </html>"#;
@@ -3144,6 +3148,9 @@ mod tests {
         assert_eq!(attrs["test_id"], "save-settings");
         assert_eq!(attrs["test"], "primary-save");
         assert_eq!(attrs["qa"], "settings-submit");
+        assert_eq!(attrs["cy"], "save-button");
+        assert_eq!(attrs["e2e"], "settings-save");
+        assert_eq!(attrs["automation_id"], "save-settings-action");
 
         let email = elements
             .iter()
@@ -3156,6 +3163,9 @@ mod tests {
         assert_eq!(attrs["test_id"], "email-field");
         assert_eq!(attrs["test"], "email-input");
         assert_eq!(attrs["qa"], "account-email");
+        assert_eq!(attrs["cy"], "email-field");
+        assert_eq!(attrs["e2e"], "account-email");
+        assert_eq!(attrs["automation_id"], "email-input-action");
     }
 
     #[test]

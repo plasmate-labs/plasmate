@@ -188,6 +188,12 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["test"] = attrs.test
             if attrs.qa:
                 item["qa"] = attrs.qa
+            if attrs.cy:
+                item["cy"] = attrs.cy
+            if attrs.e2e:
+                item["e2e"] = attrs.e2e
+            if attrs.automation_id:
+                item["automation_id"] = attrs.automation_id
             if attrs.accept:
                 item["accept"] = attrs.accept
             if attrs.capture is not None:

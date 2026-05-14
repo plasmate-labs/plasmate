@@ -516,11 +516,12 @@ move through SDKs and adapters without changing target-focused cache keys.
 2026-05-14 test-selector read: current Playwright MCP and Stagehand docs keep
 the action surface tied to fresh structured state, while Browserbase-style
 action caching rewards stable handles for repeated internal workflows.
-Production SaaS and customer apps often expose `data-testid`, `data-test`, and
-`data-qa` specifically as durable automation selectors. Plasmate should preserve
-those hints as compact action-plan context so local cached actions can correlate
-with test suites, traces, and app-owned selectors without raw DOM recovery or
-hosted selector memory.
+Production SaaS and customer apps often expose `data-testid`, `data-test-id`,
+`data-test`, `data-qa`, `data-cy`, `data-e2e`, and `data-automation-id`
+specifically as durable automation selectors. Plasmate should preserve those
+hints as compact action-plan context so local cached actions can correlate with
+test suites, traces, and app-owned selectors without raw DOM recovery or hosted
+selector memory.
 
 ## Ecosystem Surface
 
@@ -564,12 +565,13 @@ and adapter docs over one-off integration logic.
     Browser Use, LangChain, and Vercel AI now accept or render
     `selected_values`, select `size`, option `disabled`, and option `group`.
   - The Rust SOM compiler and JSON Schema now preserve stable test selector
-    hints: `data-testid` as `test_id`, `data-test` as `test`, and `data-qa` as
-    `qa`.
+    hints: `data-testid` and `data-test-id` as `test_id`, `data-test` as
+    `test`, `data-qa` as `qa`, `data-cy` as `cy`, `data-e2e` as `e2e`, and
+    `data-automation-id` as `automation_id`.
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan
-    surfaces now expose `test_id`, `test`, and `qa` without changing
-    deterministic action `cache_key` values.
-  - The shared action-availability manifest now asserts test selector hint
+    surfaces now expose `test_id`, `test`, `qa`, `cy`, `e2e`, and
+    `automation_id` without changing deterministic action `cache_key` values.
+  - The shared action-availability manifest now asserts broader selector hint
     parity across parser, SDK, and framework outputs.
   - The Rust SOM compiler and JSON Schema now preserve link navigation cues:
     `target`, `rel`, and `download`.

@@ -49,6 +49,43 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T21:09:29Z - Plasmate Improvements Automation
+
+- Git sync: latest pull was retried from the automation worktree and failed
+  because the linked worktree cannot open `FETCH_HEAD`; retrying
+  `git fetch origin --prune` from `/Users/steve/Git/plasmate` failed DNS for
+  `github.com`. Work continued from latest available local branch head
+  `c4a6c15` and moved to local branch `codex/broad-selector-hints`.
+- Market direction: current docs still support Plasmate's local-first
+  action-state wedge. Playwright MCP keeps fresh structured snapshots central,
+  Browserbase/Stagehand emphasizes validated cached actions, and Cloudflare
+  Browser Run/WebMCP is broadening hosted browser interaction. The roadmap
+  should keep making the local SOM action contract richer and more portable,
+  not pivot into hosted browser fleets.
+- Code changes: Rust SOM now preserves broader app-owned selector hooks:
+  `data-test-id` as a `test_id` alias, plus `data-cy`, `data-e2e`, and
+  `data-automation-id` as `cy`, `e2e`, and `automation_id`.
+- Contract changes: JSON Schema/SOM spec, Python/Node parser packages,
+  Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI action-plan
+  surfaces now carry `cy`, `e2e`, and `automation_id` alongside the existing
+  `test_id`, `test`, and `qa` hints without changing deterministic action
+  `cache_key` values.
+- Fixture/docs changes: the shared action-availability SOM and expected
+  manifest now assert broader selector-hint parity; PRD, roadmap, website docs,
+  and integration docs record the rationale.
+- Verification: touched-file `rustfmt --check` passed; focused selector
+  compiler test passed; full `som_compiler_test` suite passed 66 tests;
+  `cargo build` passed; Python parser tests passed 68 tests; Python SDK query
+  tests passed 36 tests; Go SDK tests passed with local `GOCACHE`; Node parser
+  and Node SDK tests passed; Browser Use and LangChain fixture tests passed;
+  full quick action-manifest conformance passed; website docs rebuilt 39 pages;
+  JSON validation, Python syntax compile, and `git diff --check` passed.
+- Known gaps: whole-crate `cargo fmt --check` still reports unrelated
+  pre-existing formatting drift in AWP/proxy/main/MCP files.
+- Commit/push state: implementation is ready on local branch
+  `codex/broad-selector-hints`; push and remote merge are attempted after this
+  entry.
+
 ### 2026-05-14T20:12:36Z - Plasmate Improvements Automation
 
 - Git sync: latest pull was retried from the automation worktree and again

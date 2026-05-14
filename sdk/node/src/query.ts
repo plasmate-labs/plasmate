@@ -58,6 +58,9 @@ export interface ActionPlanItem {
   test_id?: string;
   test?: string;
   qa?: string;
+  cy?: string;
+  e2e?: string;
+  automation_id?: string;
   accept?: string;
   capture?: boolean | string;
   multiple?: boolean;
@@ -213,6 +216,9 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.test_id) item.test_id = el.attrs.test_id;
     if (el.attrs?.test) item.test = el.attrs.test;
     if (el.attrs?.qa) item.qa = el.attrs.qa;
+    if (el.attrs?.cy) item.cy = el.attrs.cy;
+    if (el.attrs?.e2e) item.e2e = el.attrs.e2e;
+    if (el.attrs?.automation_id) item.automation_id = el.attrs.automation_id;
     if (el.attrs?.accept) item.accept = el.attrs.accept;
     if (el.attrs?.capture !== undefined) item.capture = el.attrs.capture;
     if (el.attrs?.multiple !== undefined) item.multiple = el.attrs.multiple;

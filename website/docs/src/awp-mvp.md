@@ -580,7 +580,7 @@ SOM v0.1 omits:
 - SVG content (except `<svg>` with `role=img` and an accessible name)
 - `<meta>`, `<link>` (consumed for page metadata, not output)
 - Inline styles and CSS classes
-- `data-*` attributes (except `data-testid` which is preserved for fallback targeting)
+- `data-*` attributes (except stable selector hints such as `data-testid`, `data-test-id`, `data-test`, `data-qa`, `data-cy`, `data-e2e`, and `data-automation-id`, which are preserved for fallback targeting)
 - Empty elements (no text, no interactive role, no children with content)
 - Decorative images (`alt=""` or `role=presentation`)
 

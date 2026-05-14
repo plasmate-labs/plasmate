@@ -122,6 +122,9 @@ class SomElementAttrs(BaseModel):
     test_id: Optional[str] = None
     test: Optional[str] = None
     qa: Optional[str] = None
+    cy: Optional[str] = None
+    e2e: Optional[str] = None
+    automation_id: Optional[str] = None
     accept: Optional[str] = None
     capture: Optional[bool | str] = None
     autocomplete: Optional[str] = None

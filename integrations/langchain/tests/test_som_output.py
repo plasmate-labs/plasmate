@@ -52,7 +52,7 @@ def test_som_to_text_surfaces_interactive_state():
             assert f'[value="{target["value"]}"]' in line
         if target.get("name"):
             assert f'[name="{target["name"]}"]' in line
-        for test_key in ("test_id", "test", "qa"):
+        for test_key in ("test_id", "test", "qa", "cy", "e2e", "automation_id"):
             if target.get(test_key):
                 assert f'[{test_key}="{target[test_key]}"]' in line
         if target.get("accept"):

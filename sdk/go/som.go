@@ -84,6 +84,9 @@ type ElementAttrs struct {
 	TestID          *string        `json:"test_id,omitempty"`
 	Test            *string        `json:"test,omitempty"`
 	QA              *string        `json:"qa,omitempty"`
+	CY              *string        `json:"cy,omitempty"`
+	E2E             *string        `json:"e2e,omitempty"`
+	AutomationID    *string        `json:"automation_id,omitempty"`
 	Accept          *string        `json:"accept,omitempty"`
 	Capture         interface{}    `json:"capture,omitempty"`
 	Autocomplete    *string        `json:"autocomplete,omitempty"`

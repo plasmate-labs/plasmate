@@ -113,6 +113,9 @@ export interface SomElementAttrs {
   test_id?: string;
   test?: string;
   qa?: string;
+  cy?: string;
+  e2e?: string;
+  automation_id?: string;
   accept?: string;
   capture?: boolean | string;
   autocomplete?: string;

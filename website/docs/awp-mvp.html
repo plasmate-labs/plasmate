@@ -1123,7 +1123,7 @@
 <li>SVG content (except <code>&lt;svg&gt;</code> with <code>role=img</code> and an accessible name)</li>
 <li><code>&lt;meta&gt;</code>, <code>&lt;link&gt;</code> (consumed for page metadata, not output)</li>
 <li>Inline styles and CSS classes</li>
-<li><code>data-*</code> attributes (except <code>data-testid</code> which is preserved for fallback targeting)</li>
+<li><code>data-*</code> attributes (except stable selector hints such as <code>data-testid</code>, <code>data-test-id</code>, <code>data-test</code>, <code>data-qa</code>, <code>data-cy</code>, <code>data-e2e</code>, and <code>data-automation-id</code>, which are preserved for fallback targeting)</li>
 <li>Empty elements (no text, no interactive role, no children with content)</li>
 <li>Decorative images (<code>alt=&quot;&quot;</code> or <code>role=presentation</code>)</li>
 </ul>
