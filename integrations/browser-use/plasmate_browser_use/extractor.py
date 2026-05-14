@@ -83,6 +83,12 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append("readonly")
     if item.get("group"):
         flags.append(f"group={item['group']}")
+    if item.get("target"):
+        flags.append(f"target={item['target']}")
+    if item.get("rel"):
+        flags.append(f"rel={item['rel']}")
+    if "download" in item:
+        flags.append(f"download={item['download']}")
     if item.get("input_type"):
         flags.append(f"type={item['input_type']}")
     if item.get("autocomplete"):

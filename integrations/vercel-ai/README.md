@@ -61,7 +61,7 @@ const { text } = await generateText({
 `cache_key`, `enabled`, `blocked_reason`, `required`, `description`,
 `placeholder`, `group`, `readonly`, `value`, `checked`, `expanded`, `pressed`, and
 `selected`, `current`, `controls`, `haspopup`, `autocomplete`, `inputmode`,
-`enterkeyhint`, `form`, `list`, `popovertarget`, `popovertargetaction`,
+`enterkeyhint`, `target`, `rel`, `download`, `form`, `list`, `popovertarget`, `popovertargetaction`,
 `commandfor`, `command`, `accesskey`, `aria_autocomplete`,
 `active_descendant`, `errormessage`,
 `keyshortcuts`, `roledescription`, `busy`, `live`, `atomic`, `relevant`,

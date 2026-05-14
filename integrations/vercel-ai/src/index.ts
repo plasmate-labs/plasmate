@@ -74,6 +74,9 @@ export interface PlasmateActionTarget {
   flowto?: string
   details?: string
   href?: string
+  target?: string
+  rel?: string
+  download?: boolean | string
   input_type?: string
   value?: string
   name?: string
@@ -133,7 +136,7 @@ export interface PreparePlasmateActionPlanOptions {
 export const plasmateActionGuidance =
   'Use Plasmate SOM element ids for browser actions. Treat action targets ' +
   'with enabled=false or blocked_reason as unavailable, and prefer ' +
-  'cache_key, required, readonly, value, autocomplete, inputmode, enterkeyhint, form, list, popovertarget, popovertargetaction, commandfor, command, accesskey, aria_autocomplete, active_descendant, errormessage, keyshortcuts, roledescription, busy, live, atomic, relevant, owns, flowto, details, pattern, minlength, maxlength, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
+  'cache_key, required, readonly, value, target, rel, download, autocomplete, inputmode, enterkeyhint, form, list, popovertarget, popovertargetaction, commandfor, command, accesskey, aria_autocomplete, active_descendant, errormessage, keyshortcuts, roledescription, busy, live, atomic, relevant, owns, flowto, details, pattern, minlength, maxlength, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
 
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined
@@ -227,9 +230,19 @@ function collectSomElements(elements: readonly PlasmateSomElement[] = []) {
 function copyStringAttr(
   item: PlasmateActionTarget,
   attrs: Record<string, unknown>,
-  key: 'href' | 'input_type' | 'value' | 'name' | 'placeholder' | 'description' | 'group' | 'autocomplete' | 'inputmode' | 'enterkeyhint' | 'form' | 'list' | 'popovertarget' | 'popovertargetaction' | 'commandfor' | 'command' | 'popover' | 'accesskey' | 'pattern'
+  key: 'href' | 'target' | 'rel' | 'input_type' | 'value' | 'name' | 'placeholder' | 'description' | 'group' | 'autocomplete' | 'inputmode' | 'enterkeyhint' | 'form' | 'list' | 'popovertarget' | 'popovertargetaction' | 'commandfor' | 'command' | 'popover' | 'accesskey' | 'pattern'
 ) {
   if (typeof attrs[key] === 'string' && attrs[key].length > 0) {
+    item[key] = attrs[key]
+  }
+}
+
+function copyStringOrBooleanAttr(
+  item: PlasmateActionTarget,
+  attrs: Record<string, unknown>,
+  key: 'download'
+) {
+  if (typeof attrs[key] === 'string' || typeof attrs[key] === 'boolean') {
     item[key] = attrs[key]
   }
 }
@@ -265,6 +278,9 @@ export function extractPlasmateActionTargets(
 
       if (label) target.label = label
       copyStringAttr(target, attrs, 'href')
+      copyStringAttr(target, attrs, 'target')
+      copyStringAttr(target, attrs, 'rel')
+      copyStringOrBooleanAttr(target, attrs, 'download')
       copyStringAttr(target, attrs, 'input_type')
       copyStringAttr(target, attrs, 'value')
       copyStringAttr(target, attrs, 'name')
@@ -441,6 +457,10 @@ export function formatPlasmateActionPlan(
         : ''
       const required = target.required ? ' [required]' : ''
       const readonly = target.readonly ? ' [readonly]' : ''
+      const linkTarget = target.target ? ` [target=${target.target}]` : ''
+      const rel = target.rel ? ` [rel=${target.rel}]` : ''
+      const download =
+        typeof target.download !== 'undefined' ? ` [download=${target.download}]` : ''
       const inputType = target.input_type ? ` [type=${target.input_type}]` : ''
       const value = target.value ? ` [value=${target.value}]` : ''
       const autocomplete = target.autocomplete
@@ -520,7 +540,7 @@ export function formatPlasmateActionPlan(
         ? ` [description=${target.description}]`
         : ''
 
-      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${readonly}${inputType}${value}${autocomplete}${inputmode}${enterkeyhint}${form}${list}${popovertarget}${popovertargetaction}${commandfor}${command}${popover}${accesskey}${placeholder}${minlength}${maxlength}${pattern}${checked}${expanded}${pressed}${selected}${current}${controls}${haspopup}${invalid}${ariaAutocomplete}${activeDescendant}${errorMessage}${keyshortcuts}${roledescription}${busy}${live}${atomic}${relevant}${owns}${flowto}${details}${group}${description}`
+      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${readonly}${linkTarget}${rel}${download}${inputType}${value}${autocomplete}${inputmode}${enterkeyhint}${form}${list}${popovertarget}${popovertargetaction}${commandfor}${command}${popover}${accesskey}${placeholder}${minlength}${maxlength}${pattern}${checked}${expanded}${pressed}${selected}${current}${controls}${haspopup}${invalid}${ariaAutocomplete}${activeDescendant}${errorMessage}${keyshortcuts}${roledescription}${busy}${live}${atomic}${relevant}${owns}${flowto}${details}${group}${description}`
     })
     .join('\n')
 }

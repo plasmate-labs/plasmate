@@ -176,6 +176,9 @@ type ActionPlanItem struct {
 	Enabled          bool        `json:"enabled"`
 	Label            *string     `json:"label,omitempty"`
 	Href             *string     `json:"href,omitempty"`
+	Target           *string     `json:"target,omitempty"`
+	Rel              *string     `json:"rel,omitempty"`
+	Download         interface{} `json:"download,omitempty"`
 	Name             *string     `json:"name,omitempty"`
 	Autocomplete     *string     `json:"autocomplete,omitempty"`
 	InputMode        *string     `json:"inputmode,omitempty"`
@@ -278,6 +281,9 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 		}
 		if el.Attrs != nil {
 			item.Href = el.Attrs.Href
+			item.Target = el.Attrs.Target
+			item.Rel = el.Attrs.Rel
+			item.Download = el.Attrs.Download
 			item.Name = el.Attrs.Name
 			item.Autocomplete = el.Attrs.Autocomplete
 			item.InputMode = el.Attrs.InputMode

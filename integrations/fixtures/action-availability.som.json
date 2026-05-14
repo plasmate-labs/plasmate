@@ -123,6 +123,9 @@
           "actions": ["click"],
           "attrs": {
             "href": "/billing",
+            "target": "_blank",
+            "rel": "noopener",
+            "download": "billing.csv",
             "aria": {
               "current": "page"
             }

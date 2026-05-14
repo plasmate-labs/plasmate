@@ -9,7 +9,7 @@ by the Rust core and parser packages.
   action-target availability checks.
 - `action-availability.expected.json` is the expected adapter contract for that
   payload: ids, roles, labels, actions, availability, blocked reasons, cache
-  keys, required state, group context, input metadata, descriptions, value and
+  keys, required state, group context, link target/rel/download cues, input metadata, descriptions, value and
   checked state, ARIA expanded/pressed/selected cues, ARIA current/controls/
   haspopup relationship cues, validation constraints (`autocomplete`,
   `inputmode`, `enterkeyhint`, `aria_autocomplete`, `active_descendant`,

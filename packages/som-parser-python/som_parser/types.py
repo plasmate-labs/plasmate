@@ -84,6 +84,9 @@ class ListItem(BaseModel):
 
 class SomElementAttrs(BaseModel):
     href: Optional[str] = None
+    target: Optional[str] = None
+    rel: Optional[str] = None
+    download: Optional[bool | str] = None
     input_type: Optional[str] = None
     value: Optional[str] = None
     placeholder: Optional[str] = None

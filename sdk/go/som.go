@@ -43,6 +43,9 @@ type Element struct {
 // ElementAttrs holds role-specific attributes for an element.
 type ElementAttrs struct {
 	Href            *string        `json:"href,omitempty"`
+	Target          *string        `json:"target,omitempty"`
+	Rel             *string        `json:"rel,omitempty"`
+	Download        interface{}    `json:"download,omitempty"`
 	InputType       *string        `json:"input_type,omitempty"`
 	Value           *string        `json:"value,omitempty"`
 	Placeholder     *string        `json:"placeholder,omitempty"`

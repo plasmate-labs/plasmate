@@ -229,6 +229,9 @@ field MUST be omitted when the object would be empty.
 | Attribute | Type   | Description |
 |-----------|--------|-------------|
 | `href`    | string | The link destination URL. |
+| `target`  | string | The browsing context target, such as `_blank`, when present. |
+| `rel`     | string | Link relationship tokens, such as `noopener`, when present. |
+| `download` | boolean/string | `true` for a boolean download attribute, or the suggested filename when provided. |
 
 #### `button`
 

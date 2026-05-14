@@ -58,6 +58,9 @@ def test_som_to_text_surfaces_interactive_state():
             assert f'[form="{target["form"]}"]' in line
         if target.get("list"):
             assert f'[list="{target["list"]}"]' in line
+        for link_key in ("target", "rel", "download"):
+            if link_key in target:
+                assert f'[{link_key}="{target[link_key]}"]' in line
         for command_key in (
             "popovertarget",
             "popovertargetaction",

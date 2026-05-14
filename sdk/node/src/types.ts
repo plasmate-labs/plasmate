@@ -75,6 +75,9 @@ export interface ListItem {
 
 export interface SomElementAttrs {
   href?: string;
+  target?: string;
+  rel?: string;
+  download?: boolean | string;
   input_type?: string;
   value?: string;
   placeholder?: string;

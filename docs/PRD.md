@@ -372,6 +372,14 @@ relationship context in compact targets: `aria-owns`, `aria-flowto`, and
 `aria-details` let agents understand custom widget ownership, guided workflow
 order, and detailed help panels without pulling raw DOM back into the prompt.
 
+2026-05-14 link-navigation read: official Playwright MCP docs still teach
+agents to act from fresh structured refs, while Stagehand action caching and
+managed browser-session products make replay validation the retention layer.
+Links are action targets too: Plasmate should preserve `target`, `rel`, and
+`download` so local cached clicks can distinguish same-tab navigation,
+new-context opens, relationship hints, and download side effects without
+falling back to raw DOM inspection.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -398,6 +406,13 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-14:
+  - The Rust SOM compiler and JSON Schema now preserve link navigation cues:
+    `target`, `rel`, and `download`.
+  - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
+    AI action-plan surfaces now expose `target`, `rel`, and `download`
+    without changing deterministic action `cache_key` values.
+  - The shared action-availability manifest now asserts link
+    target/rel/download cues across parser, SDK, and framework outputs.
   - The Rust SOM compiler and JSON Schema now preserve ARIA relationship cues:
     `aria-owns`, `aria-flowto`, and `aria-details`.
   - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
@@ -779,6 +794,9 @@ and adapter docs over one-off integration logic.
   `aria-owns`, `aria-flowto`, and `aria-details`) from the shared action
   availability manifest into the broader `015-action-state` /
   `016-action-semantics` conformance suites.
+- Promote link navigation cases (`target`, `rel`, and `download`) from the
+  shared action availability manifest into broader Rust/parser/SDK and adapter
+  conformance fixtures.
 - Add compiler/schema conformance for form validation constraints and
   `aria-invalid`, then promote the shared manifest cases into broader parser,
   SDK, and adapter fixtures.

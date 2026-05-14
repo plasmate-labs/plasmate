@@ -135,6 +135,14 @@
           "description": "Role-specific attributes.",
           "properties": {
             "href": { "type": "string" },
+            "target": { "type": "string" },
+            "rel": { "type": "string" },
+            "download": {
+              "oneOf": [
+                { "type": "boolean" },
+                { "type": "string" }
+              ]
+            },
             "input_type": { "type": "string" },
             "value": { "type": "string" },
             "placeholder": { "type": "string" },

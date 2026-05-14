@@ -49,6 +49,46 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T04:10:30Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first. The automation worktree
+  could not write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate46/FETCH_HEAD`
+  (`Operation not permitted`). Retrying from the primary checkout could not
+  resolve `github.com` over SSH (`ssh: Could not resolve hostname github.com:
+  -65563`), so this run continued from locally available `master` /
+  `origin/master` state `85792a3` plus local unpushed master commits through
+  `2e08931`.
+- Market direction: current official docs continue to validate Plasmate's
+  local-first action-menu wedge. Playwright MCP centers structured
+  accessibility snapshots with snapshot-scoped refs, Stagehand v3 documents
+  `observe()` planning plus local/server action caching, Firecrawl packages
+  managed browser sandboxes through API/CLI/SDK/MCP, and Browser Use Cloud
+  sells profiles plus direct CDP sessions. The product should keep avoiding a
+  hosted-browser pivot and make local compact targets richer and easier to
+  validate.
+- Code changes: Rust SOM now preserves link navigation cues: `target`, `rel`,
+  and `download`. Parser packages, Python/Node/Go SDKs, Browser Use,
+  LangChain, and Vercel AI action-plan surfaces expose those fields without
+  changing deterministic `cache_key` values.
+- Fixture and docs changes: the shared action-availability SOM and expected
+  manifest now assert link target/rel/download cues across parser, SDK, and
+  framework outputs. PRD, roadmap, SOM schema/spec, adapter docs, SDK docs,
+  and this running state were updated with rationale and next conformance
+  steps.
+- Verification: JSON validation for the schema and shared fixtures passed;
+  `rustfmt --check src/som/compiler.rs` passed; focused Rust link navigation
+  test passed; `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build`
+  passed with existing warnings; `cargo test --lib -- --test-threads=1`
+  passed 252 tests; `./scripts/action-manifest-conformance.sh --quick`
+  passed; `./scripts/action-manifest-conformance.sh --full` passed; `git diff
+  --check` passed. Temporary Node dependency symlinks to the primary checkout
+  were removed after verification.
+- Commit/push state: pending at the time of this note. This worktree is
+  detached while `master` is checked out in `/Users/steve/Git/plasmate`, so the
+  verified patch will be mirrored there for commit/push. There is no `main`
+  branch in this repo; `origin/HEAD` points at `origin/master`.
+
 ### 2026-05-14T03:08:42Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first. The automation worktree

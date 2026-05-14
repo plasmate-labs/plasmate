@@ -85,7 +85,7 @@ Browser Use page contexts are tested against the shared
 `integrations/fixtures/action-availability.som.json` fixture so availability,
 cache-key, required, readonly, group, type, value, checked, expanded, pressed,
 selected, current, controls, haspopup, autocomplete, inputmode, enterkeyhint,
-form, list, popover/command relationships, accesskey, ARIA
+link target/rel/download cues, form, list, popover/command relationships, accesskey, ARIA
 autocomplete/active-descendant/error-message state, keyshortcuts,
 roledescription, live-region state, ARIA owns/flowto/details relationships, validation
 constraints, invalid state, and description cues

@@ -98,6 +98,9 @@
       "actions": ["click"],
       "enabled": true,
       "href": "/billing",
+      "target": "_blank",
+      "rel": "noopener",
+      "download": "billing.csv",
       "current": "page"
     }
   ]

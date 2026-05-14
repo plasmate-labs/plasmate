@@ -94,6 +94,9 @@ class ElementAttrs(BaseModel):
     model_config = {"extra": "forbid"}
 
     href: Optional[str] = None
+    target: Optional[str] = None
+    rel: Optional[str] = None
+    download: Optional[bool | str] = None
     input_type: Optional[str] = None
     value: Optional[str] = None
     placeholder: Optional[str] = None

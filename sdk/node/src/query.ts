@@ -51,6 +51,9 @@ export interface ActionPlanItem {
   enabled: boolean;
   label?: string;
   href?: string;
+  target?: string;
+  rel?: string;
+  download?: boolean | string;
   name?: string;
   autocomplete?: string;
   inputmode?: string;
@@ -141,6 +144,9 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     const label = el.label ?? el.text;
     if (label) item.label = label;
     if (el.attrs?.href) item.href = el.attrs.href;
+    if (el.attrs?.target) item.target = el.attrs.target;
+    if (el.attrs?.rel) item.rel = el.attrs.rel;
+    if (el.attrs?.download !== undefined) item.download = el.attrs.download;
     if (el.attrs?.name) item.name = el.attrs.name;
     if (el.attrs?.autocomplete) item.autocomplete = el.attrs.autocomplete;
     if (el.attrs?.inputmode) item.inputmode = el.attrs.inputmode;

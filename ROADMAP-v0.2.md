@@ -646,6 +646,24 @@ context before users need those hosted traces.
    `details` so agents can locate extended help or validation panels without
    changing deterministic `cache_key` values.
 
+### 2026-05-14 Link Navigation Cue Adjustment
+
+Current browser-agent products make replay safer by validating action targets
+against current page state. Links remain common agent actions, but `href` alone
+does not tell an agent whether the click opens a new browsing context, carries
+relationship tokens, or triggers a download. Plasmate should preserve those
+native link cues in compact targets while keeping cache keys focused on the
+stable target identity.
+
+1. **New contexts are replay context**: `target` should travel through Rust,
+   schema, SDKs, parser packages, and adapters so agents know when a link is
+   likely to open outside the current page.
+2. **Relationship tokens reduce unsafe assumptions**: `rel` should surface for
+   cues such as `noopener`, `noreferrer`, `sponsored`, or `nofollow`.
+3. **Downloads are action side effects**: `download` should be exposed as
+   boolean/string compact target state without changing deterministic
+   `cache_key` values.
+
 ## Architecture
 
 ```
@@ -1001,6 +1019,13 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   and Vercel AI action-plan surfaces now expose `owns`, `flowto`, and
   `details` without changing deterministic action `cache_key` values.
 - The shared action-availability manifest now asserts ARIA owns/flowto/details
+  cues across parser, SDK, and framework adapter outputs.
+- Rust SOM compilation and the JSON Schema now preserve link navigation cues
+  with `target`, `rel`, and `download`.
+- Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+  and Vercel AI action-plan surfaces now expose `target`, `rel`, and
+  `download` without changing deterministic action `cache_key` values.
+- The shared action-availability manifest now asserts link target/rel/download
   cues across parser, SDK, and framework adapter outputs.
 
 ## Dependencies to Add

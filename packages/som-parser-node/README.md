@@ -37,7 +37,7 @@ const links = getLinks(som);
 import { findByAction, getActionPlan } from 'som-parser';
 
 const plan = getActionPlan(som);
-// Compact action targets with id, cache_key, role, actions, enabled, labels, form/list and popover/command relation cues, input hints, validation cues, and ARIA owns/flowto/details relationships.
+// Compact action targets with id, cache_key, role, actions, enabled, labels, link target/rel/download cues, form/list and popover/command relation cues, input hints, validation cues, and ARIA owns/flowto/details relationships.
 const available = plan.filter((item) => item.enabled);
 
 const clickable = findByAction(som, 'click');
@@ -85,7 +85,7 @@ const ratio = getCompressionRatio(som);
 | `findByText(som, text, options?): SomElement[]` | Find elements by text content. Case-insensitive substring by default; pass `{ exact: true }` for exact match. |
 | `findByAction(som, action): SomElement[]` | Find elements that expose a specific action. |
 | `findByHint(som, hint): SomElement[]` | Find elements tagged with a semantic hint. |
-| `getActionPlan(som): ActionPlanItem[]` | Return compact action targets with cache keys, availability, form/list and popover/command relation cues, input-affordance cues, validation constraints, ARIA live-region cues, and ARIA owns/flowto/details relationships for agent planning. |
+| `getActionPlan(som): ActionPlanItem[]` | Return compact action targets with cache keys, availability, link target/rel/download cues, form/list and popover/command relation cues, input-affordance cues, validation constraints, ARIA live-region cues, and ARIA owns/flowto/details relationships for agent planning. |
 | `getActionPlanCacheKey(item): string` | Return a deterministic key for caching or comparing an action target. |
 | `getInteractiveElements(som): SomElement[]` | Get all elements that have actions. |
 | `getLinks(som): Array<{ text, href, id }>` | Extract all links with text, URL, and id. |

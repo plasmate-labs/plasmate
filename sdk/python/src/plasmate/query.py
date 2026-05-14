@@ -89,6 +89,12 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
         if attrs:
             if attrs.href:
                 item["href"] = attrs.href
+            if attrs.target:
+                item["target"] = attrs.target
+            if attrs.rel:
+                item["rel"] = attrs.rel
+            if attrs.download is not None:
+                item["download"] = attrs.download
             if attrs.name:
                 item["name"] = attrs.name
             if attrs.autocomplete:

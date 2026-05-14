@@ -1623,6 +1623,20 @@ fn build_element_attrs(
             if let Some(href) = attrs.iter().find(|(n, _)| n == "href") {
                 map.insert("href".into(), json!(href.1));
             }
+            if let Some((_, target)) = attrs.iter().find(|(n, _)| n == "target") {
+                map.insert("target".into(), json!(target));
+            }
+            if let Some((_, rel)) = attrs.iter().find(|(n, _)| n == "rel") {
+                map.insert("rel".into(), json!(rel));
+            }
+            if let Some((_, download)) = attrs.iter().find(|(n, _)| n == "download") {
+                let download = if download.is_empty() {
+                    json!(true)
+                } else {
+                    json!(download)
+                };
+                map.insert("download".into(), download);
+            }
         }
         "input" => {
             let input_type = attrs
@@ -2575,5 +2589,44 @@ mod tests {
         assert_eq!(attrs["aria"]["owns"], "owned-menu");
         assert_eq!(attrs["aria"]["flowto"], "next-step");
         assert_eq!(attrs["aria"]["details"], "save-details");
+    }
+
+    #[test]
+    fn test_link_action_navigation_cues_are_preserved() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Links</title></head>
+<body>
+<main>
+  <a href="/report.csv" target="_blank" rel="noopener sponsored" download="report.csv">Download report</a>
+  <a href="/invoice.pdf" download>Invoice</a>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.com").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let report = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Download report"))
+            .expect("download report link should compile");
+        let attrs = report.attrs.as_ref().expect("link attrs should compile");
+        assert_eq!(attrs["href"], "/report.csv");
+        assert_eq!(attrs["target"], "_blank");
+        assert_eq!(attrs["rel"], "noopener sponsored");
+        assert_eq!(attrs["download"], "report.csv");
+
+        let invoice = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Invoice"))
+            .expect("invoice link should compile");
+        let attrs = invoice
+            .attrs
+            .as_ref()
+            .expect("download attrs should compile");
+        assert_eq!(attrs["download"], true);
     }
 }

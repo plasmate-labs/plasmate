@@ -100,6 +100,9 @@ assert.match(formatted, /\[e_plan\].*\[expanded=false\]/)
 assert.match(formatted, /\[e_plan\].*\[controls=plan-options\]/)
 assert.match(formatted, /\[e_plan\].*\[haspopup=listbox\]/)
 assert.match(formatted, /\[e_billing\].*\[current=page\]/)
+assert.match(formatted, /\[e_billing\].*\[target=_blank\]/)
+assert.match(formatted, /\[e_billing\].*\[rel=noopener\]/)
+assert.match(formatted, /\[e_billing\].*\[download=billing\.csv\]/)
 assert.match(
   formatted,
   /\[e_save\] button "Save" \(click\) \[blocked\] \[cache_key=plasmate-action:v1:4d0e8356\] \[blocked_reason=disabled\].*\[popovertarget=save-status\].*\[popovertargetaction=show\].*\[commandfor=save-status\].*\[command=toggle-popover\]/

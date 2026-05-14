@@ -214,6 +214,12 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append(f'[form="{attrs["form"]}"]')
     if attrs.get("list"):
         flags.append(f'[list="{attrs["list"]}"]')
+    if attrs.get("target"):
+        flags.append(f'[target="{attrs["target"]}"]')
+    if attrs.get("rel"):
+        flags.append(f'[rel="{attrs["rel"]}"]')
+    if "download" in attrs:
+        flags.append(f'[download="{attrs["download"]}"]')
     for command_key in (
         "popovertarget",
         "popovertargetaction",
