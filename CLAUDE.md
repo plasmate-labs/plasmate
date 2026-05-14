@@ -49,6 +49,36 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T15:05:46Z - Plasmate Improvements Automation
+
+- Git sync: latest pull was retried from the automation worktree and failed
+  before network access because the sandbox cannot open the primary checkout
+  worktree `FETCH_HEAD`. Work continued from local `HEAD` `86df582`.
+- Market direction: current docs still favor reusable structured action menus
+  over a hosted-browser pivot. Playwright MCP uses accessibility snapshots
+  with snapshot-scoped refs, Stagehand/Browserbase emphasize validated cached
+  actions, and Cloudflare Browser Run/WebMCP is expanding hosted MCP/CDP
+  browser surfaces. Plasmate's sticky wedge remains precise local SOM action
+  fidelity.
+- Code changes: Rust SOM now preserves native `<button value>` for submitter
+  identity, normalizes invalid native `<button type>` values to browser-default
+  `submit`, prevents stylesheet-hidden nested controls from entering the
+  interactive child action surface, and propagates inert host state into
+  shadow-root actions.
+- Docs changes: PRD and roadmap now record the submitter-fidelity/hidden-action
+  rationale plus the next conformance step. A follow-up is documented to apply
+  stylesheet visibility filtering to descendant text extraction, because this
+  run found hidden descendant text can still appear inside parent paragraph
+  text even though the hidden control is no longer actionable.
+- Verification: `rustfmt --check src/som/compiler.rs tests/som_compiler_test.rs`
+  passed; `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo test
+  --test som_compiler_test -- --test-threads=1` passed 64 tests with existing
+  warnings; `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build`
+  passed with existing warnings; and `git diff --check` passed.
+- Verification gap: `node website/build.mjs` could not run because this
+  worktree lacks the `marked` package (`ERR_MODULE_NOT_FOUND`), so generated
+  website docs were not refreshed in this run.
+
 ### 2026-05-14T14:05:23Z - Plasmate Improvements Automation
 
 - Git sync: latest pull was retried from the automation worktree and failed

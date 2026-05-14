@@ -773,6 +773,27 @@ should keep improving the local HTML action contract before any hosted pivot.
    agents can recognize branded or icon-only submitters without raw DOM
    recovery.
 
+### 2026-05-14 Submitter Fidelity and Hidden Action Adjustment
+
+Current browser-agent products are converging on reusable action menus:
+Playwright MCP exposes snapshot-scoped refs, Stagehand validates and caches
+observed actions, and Cloudflare Browser Run/WebMCP is widening hosted
+browser-control surfaces. Plasmate should keep winning the local-first lane by
+making ordinary HTML semantics precise enough that cached SOM actions do not
+need selector recovery.
+
+1. **Native submitters need complete payload identity**: `<button>` submitters
+   should preserve `value` alongside `name` and normalized `button_type` so
+   repeated form actions know which intent is being submitted.
+2. **Browser defaults matter for cache validation**: invalid `<button type>`
+   values should normalize to `submit`, matching browser behavior and avoiding
+   stale action-plan branches for malformed SaaS markup.
+3. **Hidden controls should not be actionable**: stylesheet-hidden nested
+   controls must be excluded from the compact action surface, and inert shadow
+   hosts must mark shadow-root actions unavailable. A remaining follow-up is to
+   apply stylesheet visibility filtering to descendant text extraction too, so
+   hidden copy cannot leak into parent paragraph text.
+
 ## Architecture
 
 ```
