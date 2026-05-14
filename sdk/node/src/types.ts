@@ -204,6 +204,11 @@ export interface SomRegion {
   label?: string;
   action?: string;
   method?: string;
+  target?: string;
+  enctype?: string;
+  novalidate?: boolean;
+  accept_charset?: string;
+  autocomplete?: string;
   elements: SomElement[];
 }
 

@@ -169,81 +169,88 @@ func flattenElements(elements []Element, result *[]Element) {
 
 // ActionPlanItem is a compact action target for agent planning.
 type ActionPlanItem struct {
-	ID               string      `json:"id"`
-	CacheKey         string      `json:"cache_key"`
-	Role             string      `json:"role"`
-	Actions          []string    `json:"actions"`
-	Enabled          bool        `json:"enabled"`
-	Label            *string     `json:"label,omitempty"`
-	Href             *string     `json:"href,omitempty"`
-	Target           *string     `json:"target,omitempty"`
-	Rel              *string     `json:"rel,omitempty"`
-	Download         interface{} `json:"download,omitempty"`
-	Name             *string     `json:"name,omitempty"`
-	Accept           *string     `json:"accept,omitempty"`
-	Capture          interface{} `json:"capture,omitempty"`
-	Multiple         *bool       `json:"multiple,omitempty"`
-	Autocomplete     *string     `json:"autocomplete,omitempty"`
-	InputMode        *string     `json:"inputmode,omitempty"`
-	EnterKeyHint     *string     `json:"enterkeyhint,omitempty"`
-	AutoCapitalize   *string     `json:"autocapitalize,omitempty"`
-	DirName          *string     `json:"dirname,omitempty"`
-	Form             *string     `json:"form,omitempty"`
-	List             *string     `json:"list,omitempty"`
-	PopoverTarget    *string     `json:"popovertarget,omitempty"`
-	PopoverAction    *string     `json:"popovertargetaction,omitempty"`
-	CommandFor       *string     `json:"commandfor,omitempty"`
-	Command          *string     `json:"command,omitempty"`
-	Popover          *string     `json:"popover,omitempty"`
-	AccessKey        *string     `json:"accesskey,omitempty"`
-	Spellcheck       interface{} `json:"spellcheck,omitempty"`
-	InputType        *string     `json:"input_type,omitempty"`
-	Value            *string     `json:"value,omitempty"`
-	Placeholder      *string     `json:"placeholder,omitempty"`
-	MinLength        interface{} `json:"minlength,omitempty"`
-	MaxLength        interface{} `json:"maxlength,omitempty"`
-	Min              interface{} `json:"min,omitempty"`
-	Max              interface{} `json:"max,omitempty"`
-	Step             *string     `json:"step,omitempty"`
-	Pattern          *string     `json:"pattern,omitempty"`
-	Description      *string     `json:"description,omitempty"`
-	Checked          interface{} `json:"checked,omitempty"`
-	Expanded         *bool       `json:"expanded,omitempty"`
-	Pressed          *bool       `json:"pressed,omitempty"`
-	Selected         *bool       `json:"selected,omitempty"`
-	Multiline        *bool       `json:"multiline,omitempty"`
-	MultiSelectable  *bool       `json:"multiselectable,omitempty"`
-	Current          interface{} `json:"current,omitempty"`
-	Controls         *string     `json:"controls,omitempty"`
-	HasPopup         interface{} `json:"haspopup,omitempty"`
-	Invalid          interface{} `json:"invalid,omitempty"`
-	AriaPlaceholder  *string     `json:"aria_placeholder,omitempty"`
-	AriaAutocomplete *string     `json:"aria_autocomplete,omitempty"`
-	ActiveDescendant *string     `json:"active_descendant,omitempty"`
-	ErrorMessage     *string     `json:"errormessage,omitempty"`
-	KeyShortcuts     *string     `json:"keyshortcuts,omitempty"`
-	RoleDescription  *string     `json:"roledescription,omitempty"`
-	Busy             *bool       `json:"busy,omitempty"`
-	Live             *string     `json:"live,omitempty"`
-	Atomic           *bool       `json:"atomic,omitempty"`
-	Relevant         *string     `json:"relevant,omitempty"`
-	Owns             *string     `json:"owns,omitempty"`
-	FlowTo           *string     `json:"flowto,omitempty"`
-	Details          *string     `json:"details,omitempty"`
-	Orientation      *string     `json:"orientation,omitempty"`
-	Sort             *string     `json:"sort,omitempty"`
-	Level            *string     `json:"level,omitempty"`
-	PosInSet         *string     `json:"posinset,omitempty"`
-	SetSize          *string     `json:"setsize,omitempty"`
-	ValueMin         *string     `json:"valuemin,omitempty"`
-	ValueMax         *string     `json:"valuemax,omitempty"`
-	ValueNow         *string     `json:"valuenow,omitempty"`
-	ValueText        *string     `json:"valuetext,omitempty"`
-	Required         *bool       `json:"required,omitempty"`
-	Readonly         *bool       `json:"readonly,omitempty"`
-	Disabled         *bool       `json:"disabled,omitempty"`
-	BlockedReason    *string     `json:"blocked_reason,omitempty"`
-	Group            *string     `json:"group,omitempty"`
+	ID                string      `json:"id"`
+	CacheKey          string      `json:"cache_key"`
+	Role              string      `json:"role"`
+	Actions           []string    `json:"actions"`
+	Enabled           bool        `json:"enabled"`
+	Label             *string     `json:"label,omitempty"`
+	Href              *string     `json:"href,omitempty"`
+	Target            *string     `json:"target,omitempty"`
+	Rel               *string     `json:"rel,omitempty"`
+	Download          interface{} `json:"download,omitempty"`
+	Name              *string     `json:"name,omitempty"`
+	Accept            *string     `json:"accept,omitempty"`
+	Capture           interface{} `json:"capture,omitempty"`
+	Multiple          *bool       `json:"multiple,omitempty"`
+	Autocomplete      *string     `json:"autocomplete,omitempty"`
+	InputMode         *string     `json:"inputmode,omitempty"`
+	EnterKeyHint      *string     `json:"enterkeyhint,omitempty"`
+	AutoCapitalize    *string     `json:"autocapitalize,omitempty"`
+	DirName           *string     `json:"dirname,omitempty"`
+	Form              *string     `json:"form,omitempty"`
+	FormAction        *string     `json:"form_action,omitempty"`
+	FormMethod        *string     `json:"form_method,omitempty"`
+	FormTarget        *string     `json:"form_target,omitempty"`
+	FormEnctype       *string     `json:"form_enctype,omitempty"`
+	FormNoValidate    *bool       `json:"form_novalidate,omitempty"`
+	FormAcceptCharset *string     `json:"form_accept_charset,omitempty"`
+	FormAutocomplete  *string     `json:"form_autocomplete,omitempty"`
+	List              *string     `json:"list,omitempty"`
+	PopoverTarget     *string     `json:"popovertarget,omitempty"`
+	PopoverAction     *string     `json:"popovertargetaction,omitempty"`
+	CommandFor        *string     `json:"commandfor,omitempty"`
+	Command           *string     `json:"command,omitempty"`
+	Popover           *string     `json:"popover,omitempty"`
+	AccessKey         *string     `json:"accesskey,omitempty"`
+	Spellcheck        interface{} `json:"spellcheck,omitempty"`
+	InputType         *string     `json:"input_type,omitempty"`
+	Value             *string     `json:"value,omitempty"`
+	Placeholder       *string     `json:"placeholder,omitempty"`
+	MinLength         interface{} `json:"minlength,omitempty"`
+	MaxLength         interface{} `json:"maxlength,omitempty"`
+	Min               interface{} `json:"min,omitempty"`
+	Max               interface{} `json:"max,omitempty"`
+	Step              *string     `json:"step,omitempty"`
+	Pattern           *string     `json:"pattern,omitempty"`
+	Description       *string     `json:"description,omitempty"`
+	Checked           interface{} `json:"checked,omitempty"`
+	Expanded          *bool       `json:"expanded,omitempty"`
+	Pressed           *bool       `json:"pressed,omitempty"`
+	Selected          *bool       `json:"selected,omitempty"`
+	Multiline         *bool       `json:"multiline,omitempty"`
+	MultiSelectable   *bool       `json:"multiselectable,omitempty"`
+	Current           interface{} `json:"current,omitempty"`
+	Controls          *string     `json:"controls,omitempty"`
+	HasPopup          interface{} `json:"haspopup,omitempty"`
+	Invalid           interface{} `json:"invalid,omitempty"`
+	AriaPlaceholder   *string     `json:"aria_placeholder,omitempty"`
+	AriaAutocomplete  *string     `json:"aria_autocomplete,omitempty"`
+	ActiveDescendant  *string     `json:"active_descendant,omitempty"`
+	ErrorMessage      *string     `json:"errormessage,omitempty"`
+	KeyShortcuts      *string     `json:"keyshortcuts,omitempty"`
+	RoleDescription   *string     `json:"roledescription,omitempty"`
+	Busy              *bool       `json:"busy,omitempty"`
+	Live              *string     `json:"live,omitempty"`
+	Atomic            *bool       `json:"atomic,omitempty"`
+	Relevant          *string     `json:"relevant,omitempty"`
+	Owns              *string     `json:"owns,omitempty"`
+	FlowTo            *string     `json:"flowto,omitempty"`
+	Details           *string     `json:"details,omitempty"`
+	Orientation       *string     `json:"orientation,omitempty"`
+	Sort              *string     `json:"sort,omitempty"`
+	Level             *string     `json:"level,omitempty"`
+	PosInSet          *string     `json:"posinset,omitempty"`
+	SetSize           *string     `json:"setsize,omitempty"`
+	ValueMin          *string     `json:"valuemin,omitempty"`
+	ValueMax          *string     `json:"valuemax,omitempty"`
+	ValueNow          *string     `json:"valuenow,omitempty"`
+	ValueText         *string     `json:"valuetext,omitempty"`
+	Required          *bool       `json:"required,omitempty"`
+	Readonly          *bool       `json:"readonly,omitempty"`
+	Disabled          *bool       `json:"disabled,omitempty"`
+	BlockedReason     *string     `json:"blocked_reason,omitempty"`
+	Group             *string     `json:"group,omitempty"`
 }
 
 func compactString(value *string) interface{} {
@@ -288,6 +295,14 @@ func GetActionPlanCacheKey(item ActionPlanItem) string {
 // GetActionPlan returns compact action targets for agent planning.
 func GetActionPlan(som *Som) []ActionPlanItem {
 	items := []ActionPlanItem{}
+	formContextByID := map[string]Region{}
+	for _, region := range som.Regions {
+		for _, el := range flattenRegionElements(region.Elements) {
+			if len(el.Actions) > 0 {
+				formContextByID[el.ID] = region
+			}
+		}
+	}
 	for _, el := range FindInteractive(som) {
 		item := ActionPlanItem{
 			ID:      el.ID,
@@ -390,10 +405,29 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			}
 			item.Group = el.Attrs.Group
 		}
+		if region, ok := formContextByID[el.ID]; ok {
+			copyFormContext(&item, region)
+		}
 		item.CacheKey = GetActionPlanCacheKey(item)
 		items = append(items, item)
 	}
 	return items
+}
+
+func flattenRegionElements(elements []Element) []Element {
+	var result []Element
+	flattenElements(elements, &result)
+	return result
+}
+
+func copyFormContext(item *ActionPlanItem, region Region) {
+	item.FormAction = region.Action
+	item.FormMethod = region.Method
+	item.FormTarget = region.Target
+	item.FormEnctype = region.Enctype
+	item.FormNoValidate = region.NoValidate
+	item.FormAcceptCharset = region.AcceptCharset
+	item.FormAutocomplete = region.Autocomplete
 }
 
 // TokenEstimate returns a rough estimate of the number of tokens in the SOM.

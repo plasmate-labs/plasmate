@@ -80,7 +80,7 @@ import type { RegionRole, ElementRole, SemanticHint, ElementAction } from 'plasm
 Key types:
 
 - **`Som`** - Root document: `som_version`, `url`, `title`, `lang`, `regions`, `meta`, `structured_data?`
-- **`SomRegion`** - Semantic region with `id`, `role` (navigation, main, aside, header, footer, form, dialog, content), `elements`
+- **`SomRegion`** - Semantic region with `id`, `role` (navigation, main, aside, header, footer, form, dialog, content), form submission metadata, and `elements`
 - **`SomElement`** - Element with `id`, `role` (link, button, text\_input, etc.), `text?`, `actions?`, `attrs?`, `children?`, `hints?`
 - **`SomMeta`** - Metadata: `html_bytes`, `som_bytes`, `element_count`, `interactive_count`
 - **`StructuredData`** - Extracted JSON-LD, OpenGraph, Twitter Cards, meta tags, and links
@@ -133,7 +133,7 @@ browser.close();
 | `findById(som, id)` | `SomElement \| undefined` | Find element by stable ID |
 | `findByTag(som, tag)` | `SomElement[]` | Find elements by element role |
 | `findInteractive(som)` | `SomElement[]` | All elements with actions |
-| `getActionPlan(som)` | `ActionPlanItem[]` | Compact action targets with cache keys, availability, link target/rel/download cues, form/list and popover/command relation cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues |
+| `getActionPlan(som)` | `ActionPlanItem[]` | Compact action targets with cache keys, availability, link target/rel/download cues, form/list and form submission context, popover/command relation cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues |
 | `getActionPlanCacheKey(item)` | `string` | Deterministic key for caching or comparing action targets |
 | `findByText(som, text)` | `SomElement[]` | Case-insensitive text search |
 | `flatElements(som)` | `SomElement[]` | Flatten all elements |

@@ -302,6 +302,14 @@ Current browser-agent docs and recent developer commentary keep validating the s
 - **Direction capture matters for global forms**: `dirname` should be exposed as compact target context for bidirectional text-entry workflows.
 - **Custom textboxes need prompt text**: `aria-placeholder` should surface as `aria_placeholder` without changing target `cache_key` values, preserving local action memory while making custom-field prompt drift visible.
 
+### 2026-05-14 Form Submission Context Adjustment
+
+Validated action menus are only sticky when they include the submission contract around the target. Playwright MCP keeps refs scoped to a current snapshot, while Stagehand/Browserbase action caches need the page state to match before replay. Plasmate should preserve the form-level metadata agents need to tell whether a cached type, upload, or submit step still belongs to the same workflow.
+
+- **Destination changes risk**: `action`, `method`, and `target` should travel into compact targets as form context so agents can distinguish settings, checkout, and background-submit flows.
+- **Encoding changes artifacts**: `enctype` and `accept-charset` should be visible before file uploads or internationalized form submissions are replayed.
+- **Validation and autofill change readiness**: `novalidate` and form-level `autocomplete` should surface across SDKs and adapters so local action memory can be checked before a browser action is spent.
+
 ### 2026-05-14 Popover and Command Relationship Adjustment
 
 Browser-native action relationships are becoming more important for agents that replay cached plans on modern app UIs. The Popover API gives buttons a declarative target and action, and `commandfor`/`command` generalize that model for popovers, dialogs, and custom commands. Plasmate should preserve those relationships as compact target context instead of forcing agents to rediscover them from raw DOM.
@@ -501,6 +509,9 @@ Current Playwright MCP and Stagehand docs keep validating action surfaces that a
 - [x] Rust compiler and SOM schema preserve upload constraints with accept, capture, and native multiple state
 - [x] Compact action plans expose name, accept, capture, and multiple across parser packages, SDKs, and framework adapters
 - [x] Shared action-availability manifest asserts upload constraints and multiple-selection state for cacheable action targets
+- [x] Rust compiler and SOM schema preserve form target, enctype, novalidate, accept-charset, and autocomplete context
+- [x] Compact action plans expose form_action, form_method, form_target, form_enctype, form_novalidate, form_accept_charset, and form_autocomplete across parser packages, SDKs, and framework adapters
+- [x] Shared action-availability manifest asserts form submission context for cacheable action targets
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
@@ -512,6 +523,7 @@ Current Playwright MCP and Stagehand docs keep validating action surfaces that a
 - [ ] Promote ARIA set-position cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote text-entry affordance cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote upload-affordance cases into broader Rust/parser/SDK and adapter conformance fixtures
+- [ ] Promote form-submission context cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures

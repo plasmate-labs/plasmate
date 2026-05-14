@@ -375,6 +375,8 @@ describe('getActionPlan', () => {
       name: 'q',
       input_type: 'text',
       placeholder: 'Search...',
+      form_action: '/search',
+      form_method: 'GET',
     });
   });
 

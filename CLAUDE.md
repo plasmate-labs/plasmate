@@ -49,6 +49,57 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T10:13:09Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted from the primary checkout, but
+  SSH DNS still could not resolve `github.com` (`ssh: Could not resolve
+  hostname github.com: -65563`). This run continued from local `master`, which
+  was already ahead of `origin/master` by the prior upload-affordance commit.
+  The repo still has no `main` branch; `origin/HEAD` points at
+  `origin/master`.
+- Market direction: current Playwright MCP docs keep structured accessibility
+  snapshots and snapshot-scoped refs as the action unit, while Stagehand and
+  Browserbase docs emphasize `observe()` planning, local/server action
+  caching, DOM-hash validation, and session replay. The startup direction
+  remains local-first SOM/action-state fidelity rather than a hosted browser
+  infrastructure pivot. The new sticky gap is submission-context validation:
+  cached SaaS actions need to know whether a target still belongs to the same
+  checkout, upload, or settings form before replay.
+- Code changes: Rust SOM form regions now preserve submission context:
+  `target`, `enctype`, `novalidate`, `accept-charset`, and form-level
+  `autocomplete`, alongside existing `action` and `method`. JSON Schema and
+  the SOM spec accept those fields.
+- Parser/SDK/adapter changes: Python/Node parser packages, Python/Node/Go
+  SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose
+  `form_action`, `form_method`, `form_target`, `form_enctype`,
+  `form_novalidate`, `form_accept_charset`, and `form_autocomplete` without
+  changing deterministic `cache_key` inputs.
+- Fixture and docs changes: the shared action-availability SOM/expected
+  manifest now asserts form submission context across parser, SDK, and
+  framework outputs. PRD, roadmap, SOM spec/schema, adapter docs, SDK/parser
+  docs, generated website docs, and this running state were updated with the
+  rationale and next conformance step.
+- Verification: JSON validation passed through the conformance tests;
+  `rustfmt --check src/som/compiler.rs src/som/types.rs src/som/filter.rs
+  src/som/diff_tests.rs tests/som_compiler_test.rs` passed; `gofmt` was
+  applied to touched Go files; Python syntax checks passed; focused Rust form
+  submission test passed; `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build`
+  passed with existing warnings; `cargo test --lib -- --test-threads=1`
+  passed 256 tests; `cargo test --test som_compiler_test -- --test-threads=1`
+  passed 61 tests; `./scripts/action-manifest-conformance.sh --quick` and
+  `--full` passed; `node website/build.mjs` rebuilt 39 pages; `git diff
+  --check` passed.
+- Verification gap: full `cargo test -- --test-threads=1` again reached the
+  AWP integration suite and failed because this sandbox cannot spawn the test
+  subprocess (`Operation not permitted`) in `tests/awp_integration_test.rs`.
+  The library, SOM compiler, build, and cross-adapter manifest suites passed.
+- Commit/push state: local implementation/docs commit was created from the
+  primary checkout. A push attempt reached GitHub but was rejected because the
+  remote contains work not yet fetched (`fetch first`); follow-up fetch/pull
+  attempts were blocked by intermittent `github.com` DNS resolution. Push and
+  merge to the remote default branch remain blocked until the remote can be
+  fetched and rebased.
+
 ### 2026-05-14T09:13:38Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted from the primary checkout, but

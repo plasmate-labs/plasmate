@@ -67,6 +67,14 @@ def _region_header(region: dict[str, Any]) -> str:
     if region.get("action"):
         method = region.get("method", "GET")
         header += f" -> {region['action']} [{method}]"
+    form_flags = []
+    for key in ("target", "enctype", "accept_charset", "autocomplete"):
+        if region.get(key):
+            form_flags.append(f"{key}={region[key]}")
+    if region.get("novalidate") is True:
+        form_flags.append("novalidate=true")
+    if form_flags:
+        header += " " + " ".join(f"[{flag}]" for flag in form_flags)
     return header
 
 

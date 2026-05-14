@@ -425,6 +425,15 @@ adapters. The practical retention reason is simple: agents can validate that a
 cached upload plan still targets the right field and file type before asking a
 user or toolchain for a file.
 
+2026-05-14 form-submission-context read: Playwright MCP refs remain scoped to
+the current snapshot, while Stagehand and Browserbase make cached action replay
+dependent on validating that the current target still matches the stored plan.
+For SaaS workflows, the target is often the whole submission contract, not only
+one input. Plasmate should surface form-level `action`, `method`, `target`,
+`enctype`, `novalidate`, `accept-charset`, and `autocomplete` as compact
+action-plan context so agents can distinguish upload, checkout, and settings
+forms before reusing local action memory.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -503,6 +512,16 @@ and adapter docs over one-off integration logic.
     `multiple` for upload and multi-select workflows.
   - The shared action-availability manifest now asserts upload constraints and
     native multiple-selection state across parser, SDK, and framework outputs.
+  - The Rust SOM compiler and JSON Schema now preserve form submission context:
+    `target`, `enctype`, `novalidate`, `accept-charset`, and form-level
+    `autocomplete`, alongside existing `action` and `method`.
+  - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
+    AI action-plan surfaces now expose `form_action`, `form_method`,
+    `form_target`, `form_enctype`, `form_novalidate`,
+    `form_accept_charset`, and `form_autocomplete` without changing
+    deterministic action `cache_key` values.
+  - The shared action-availability manifest now asserts form submission
+    context across parser, SDK, and framework outputs.
   - The Rust SOM compiler and JSON Schema now preserve ARIA relationship cues:
     `aria-owns`, `aria-flowto`, and `aria-details`.
   - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
@@ -903,6 +922,10 @@ and adapter docs over one-off integration logic.
 - Promote upload-affordance cases (`accept`, `capture`, `multiple`, and
   stable field `name`) into broader Rust/parser/SDK and adapter conformance
   fixtures.
+- Promote form-submission context cases (`form_action`, `form_method`,
+  `form_target`, `form_enctype`, `form_novalidate`, `form_accept_charset`,
+  and `form_autocomplete`) into broader Rust/parser/SDK and adapter
+  conformance fixtures.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and
   `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures
   once the shared action manifest remains stable.

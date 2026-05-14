@@ -515,6 +515,8 @@ class TestGetActionPlan:
             "name": "q",
             "input_type": "text",
             "placeholder": "Search...",
+            "form_action": "/search",
+            "form_method": "GET",
             "cache_key": "plasmate-action:v1:0b6b537f",
         }
 

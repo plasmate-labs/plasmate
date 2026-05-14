@@ -135,9 +135,31 @@ def get_action_plan_cache_key(item: Dict[str, object]) -> str:
     return f"plasmate-action:v1:{_fnv1a32(encoded)}"
 
 
+def _copy_form_context(item: Dict[str, object], region: SomRegion) -> None:
+    if region.action:
+        item["form_action"] = region.action
+    if region.method:
+        item["form_method"] = region.method
+    if region.target:
+        item["form_target"] = region.target
+    if region.enctype:
+        item["form_enctype"] = region.enctype
+    if region.novalidate is not None:
+        item["form_novalidate"] = region.novalidate
+    if region.accept_charset:
+        item["form_accept_charset"] = region.accept_charset
+    if region.autocomplete:
+        item["form_autocomplete"] = region.autocomplete
+
+
 def get_action_plan(som: Som) -> List[Dict[str, object]]:
     """Return compact action targets for agent planning."""
     plan: List[Dict[str, object]] = []
+    form_context_by_id: Dict[str, SomRegion] = {}
+    for region in som.regions:
+        for el in _collect_elements(region.elements):
+            if el.actions:
+                form_context_by_id[el.id] = region
     for el in get_interactive_elements(som):
         attrs = el.attrs
         item: Dict[str, object] = {
@@ -278,6 +300,8 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["blocked_reason"] = "readonly"
             if attrs.group:
                 item["group"] = attrs.group
+        if el.id in form_context_by_id:
+            _copy_form_context(item, form_context_by_id[el.id])
         item["cache_key"] = get_action_plan_cache_key(item)
         plan.append(item)
     return plan

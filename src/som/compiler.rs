@@ -357,6 +357,11 @@ fn extract_regions(
             label: None,
             action: None,
             method: None,
+            target: None,
+            enctype: None,
+            novalidate: None,
+            accept_charset: None,
+            autocomplete: None,
             elements: summarize_elements(unassigned_elements, ctx, false),
         });
     } else if !unassigned_elements.is_empty() {
@@ -370,6 +375,11 @@ fn extract_regions(
             label: None,
             action: None,
             method: None,
+            target: None,
+            enctype: None,
+            novalidate: None,
+            accept_charset: None,
+            autocomplete: None,
             elements: summarize_elements(unassigned_elements, ctx, false),
         });
     }
@@ -636,6 +646,23 @@ fn collect_regions(
                 .iter()
                 .find(|(n, _)| n == "method")
                 .map(|(_, v)| v.to_uppercase());
+            let form_target = attr_pairs
+                .iter()
+                .find(|(n, _)| n == "target")
+                .map(|(_, v)| v.clone());
+            let form_enctype = attr_pairs
+                .iter()
+                .find(|(n, _)| n == "enctype")
+                .map(|(_, v)| v.clone());
+            let form_novalidate = attr_pairs.iter().any(|(n, _)| n == "novalidate");
+            let form_accept_charset = attr_pairs
+                .iter()
+                .find(|(n, _)| n == "accept-charset")
+                .map(|(_, v)| v.clone());
+            let form_autocomplete = attr_pairs
+                .iter()
+                .find(|(n, _)| n == "autocomplete")
+                .map(|(_, v)| v.clone());
             let mut elements = Vec::new();
             extract_elements(
                 node,
@@ -653,6 +680,11 @@ fn collect_regions(
                     label,
                     action: form_action,
                     method: form_method,
+                    target: form_target,
+                    enctype: form_enctype,
+                    novalidate: if form_novalidate { Some(true) } else { None },
+                    accept_charset: form_accept_charset,
+                    autocomplete: form_autocomplete,
                     elements: summarize_elements(elements, ctx, false),
                 });
             }
@@ -723,6 +755,11 @@ fn collect_regions(
                         label: None,
                         action: None,
                         method: None,
+                        target: None,
+                        enctype: None,
+                        novalidate: None,
+                        accept_charset: None,
+                        autocomplete: None,
                         elements: summarize_elements(elements, ctx, true),
                     });
                 }
@@ -755,6 +792,11 @@ fn collect_regions(
                     label: None,
                     action: None,
                     method: None,
+                    target: None,
+                    enctype: None,
+                    novalidate: None,
+                    accept_charset: None,
+                    autocomplete: None,
                     elements: summarize_elements(elements, ctx, false),
                 });
             }
@@ -875,6 +917,11 @@ fn create_landmark_region(
             label,
             action: None,
             method: None,
+            target: None,
+            enctype: None,
+            novalidate: None,
+            accept_charset: None,
+            autocomplete: None,
             elements: summarize_elements(sub_elements, ctx, region_role == RegionRole::Navigation),
         });
     }

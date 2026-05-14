@@ -87,6 +87,26 @@
           "type": "string",
           "description": "Form method, uppercased (form regions only)."
         },
+        "target": {
+          "type": "string",
+          "description": "Form target browsing context (form regions only)."
+        },
+        "enctype": {
+          "type": "string",
+          "description": "Form encoding type (form regions only)."
+        },
+        "novalidate": {
+          "type": "boolean",
+          "description": "Whether form validation is disabled before submit."
+        },
+        "accept_charset": {
+          "type": "string",
+          "description": "Form accepted character encodings."
+        },
+        "autocomplete": {
+          "type": "string",
+          "description": "Form-level autocomplete policy."
+        },
         "elements": {
           "type": "array",
           "description": "Semantic elements within this region.",

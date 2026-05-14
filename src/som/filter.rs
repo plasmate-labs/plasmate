@@ -147,6 +147,11 @@ mod tests {
                     label: None,
                     action: None,
                     method: None,
+                    target: None,
+                    enctype: None,
+                    novalidate: None,
+                    accept_charset: None,
+                    autocomplete: None,
                     elements: vec![Element {
                         id: "e1".to_string(),
                         role: ElementRole::Link,
@@ -166,6 +171,11 @@ mod tests {
                     label: None,
                     action: None,
                     method: None,
+                    target: None,
+                    enctype: None,
+                    novalidate: None,
+                    accept_charset: None,
+                    autocomplete: None,
                     elements: vec![Element {
                         id: "e2".to_string(),
                         role: ElementRole::Paragraph,
