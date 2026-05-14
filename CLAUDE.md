@@ -83,8 +83,10 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   website/build.mjs` rebuilt 39 pages; `rustfmt --check src/som/compiler.rs`
   passed; `git diff --check` passed. Full `cargo fmt --check` still reports
   pre-existing formatting drift in unrelated Rust files.
-- Commit/push state: pending at this point. There is no `main` branch in this
-  repo; `origin/HEAD` points at `origin/master`.
+- Commit/push state: implementation commit `98acb34`
+  (`chore: expose live region action cues`) was pushed to remote `master`.
+  There is no `main` branch in this repo; `origin/HEAD` points at
+  `origin/master`.
 
 ### 2026-05-14T00:11:36Z - Plasmate Improvements Automation
 
