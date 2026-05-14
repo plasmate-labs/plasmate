@@ -87,8 +87,9 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   `tests/awp_integration_test.rs` because sandboxed local listener setup
   returns `Operation not permitted`, matching the existing environment
   limitation from prior runs.
-- Commit/push state: changes are staged for a local `master` commit after this
-  state update. There is no `main` branch in this repo; `origin/HEAD` points at
+- Commit/push state: implementation commit `d91d6b4`
+  (`chore: expose popover command action cues`) was pushed to remote `master`.
+  There is no `main` branch in this repo; `origin/HEAD` points at
   `origin/master`.
 
 ### 2026-05-14T01:11:14Z - Plasmate Improvements Automation
