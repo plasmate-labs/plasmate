@@ -49,6 +49,45 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T22:12:54Z - Plasmate Improvements Automation
+
+- Git sync: latest pull/fetch from the automation worktree failed because the
+  linked Git worktree cannot open `FETCH_HEAD`; retrying from
+  `/Users/steve/Git/plasmate` failed DNS for `github.com`. Work continued from
+  local `HEAD` `4fabe19`, which is ahead of the stale `origin/master` ref.
+- Market direction: current docs and competitor messaging still favor
+  Plasmate's local-first action-state wedge. Playwright MCP uses structured
+  accessibility snapshots with snapshot-scoped refs; Stagehand/Browserbase
+  emphasize validated action caching and observability; Firecrawl and Browser
+  Use keep expanding hosted browser/session surfaces. Plasmate should keep
+  making compact local SOM targets more portable across its broad repo surface
+  rather than pivoting into hosted browser infrastructure.
+- Code changes: compact action-plan helpers in Python parser, Python SDK, Node
+  parser, Node SDK, Go SDK, Browser Use, LangChain, and Vercel AI now expose
+  actionable graphical target `alt` and `src` context without changing
+  deterministic `cache_key` values.
+- Fixture changes: the shared action-availability SOM/expected manifest now
+  includes an image submitter with `button_type`, `input_type=image`, `alt`,
+  `src`, `name`, and `value`, and now asserts select `selected_values` plus
+  `size` across parser, SDK, and framework outputs.
+- Docs changes: PRD, roadmap, website source/generated docs, and SDK/adapter
+  READMEs now record the shared-manifest rationale and the next step to promote
+  graphical submitter and remaining select-option cases into broader
+  conformance fixtures.
+- Verification: `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build`
+  passed with existing warnings; `./scripts/action-manifest-conformance.sh
+  --quick` passed using temporary symlinks to the primary checkout's existing
+  Node dependencies; Python parser tests passed 68 tests; Python SDK query
+  tests passed 36 tests; Browser Use and LangChain fixture tests passed;
+  `node website/build.mjs` rebuilt 39 pages; JSON validation and
+  `git diff --check` passed.
+- Commit/push state: implementation commit `ab3d2b7` (`chore: promote action
+  manifest media cues`) was created from `/Users/steve/Git/plasmate` and pushed
+  to `origin/codex/action-manifest-media-select`. Direct fast-forward push to
+  `origin/master` was rejected with `fetch first`, and `gh pr create` failed
+  because `api.github.com` is unreachable. Remote merge remains blocked until
+  GitHub fetch/API access is restored.
+
 ### 2026-05-14T18:08:19Z - Plasmate Improvements Automation
 
 - Git sync: latest pull was retried from the automation worktree and failed
