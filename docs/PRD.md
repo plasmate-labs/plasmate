@@ -489,6 +489,14 @@ into parent paragraphs, button names, labels, select options, lists, or table
 cells weakens cache validation and makes agents choose actions based on text a
 human cannot see.
 
+2026-05-14 select-option state read: current Playwright MCP docs still bind
+actions to fresh structured snapshots, Browserbase/Stagehand now emphasizes
+validated action caching, and Cloudflare Browser Run/WebMCP is expanding hosted
+browser interaction contracts. Plasmate should keep the local-first wedge by
+making ordinary select menus browser-accurate in SOM: default option values,
+disabled options, optgroup labels, and multi-select state let cached local
+plans validate menu choices without raw DOM recovery.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -515,6 +523,14 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-14:
+  - Rust SOM select extraction now follows browser default option-value
+    semantics when an `<option>` omits `value`.
+  - Select option summaries now preserve disabled option state and optgroup
+    labels, giving agents enough context to avoid unavailable choices and
+    explain grouped menus.
+  - Multi-select controls now expose `attrs.selected_values` alongside the
+    existing first selected `value`, so cached action plans can validate
+    multiple current choices.
   - The Rust SOM compiler and JSON Schema now preserve link navigation cues:
     `target`, `rel`, and `download`.
   - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
@@ -1050,6 +1066,9 @@ and adapter docs over one-off integration logic.
   stylesheet-hidden nested actions, inert shadow-host inheritance, and hidden
   descendant text filtering into shared fixtures that cover parent text,
   labels, select options, lists, and tables.
+- Promote select-option state (`value` fallback text, optgroup `group`,
+  option `disabled`, and multi-select `selected_values`) into shared
+  Rust/parser/SDK and adapter fixtures.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and
   `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures
   once the shared action manifest remains stable.

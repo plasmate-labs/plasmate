@@ -552,6 +552,55 @@ fn test_form_state_values_and_readonly_are_preserved() {
 }
 
 #[test]
+fn test_select_option_state_and_groups_are_preserved() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Select State</title></head>
+<body><main>
+    <select aria-label="Segments" multiple>
+        <optgroup label="Revenue">
+            <option selected>Enterprise</option>
+            <option value="mid-market" disabled>Mid market</option>
+        </optgroup>
+        <optgroup label="Lifecycle">
+            <option value="trial" selected>Trial</option>
+        </optgroup>
+    </select>
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let select = all_elements(&som)
+        .into_iter()
+        .find(|e| e.role == ElementRole::Select)
+        .expect("select should be preserved");
+    let attrs = select.attrs.as_ref().expect("select attrs should exist");
+
+    assert_eq!(attrs["multiple"], true);
+    assert_eq!(attrs["value"], "Enterprise");
+    assert_eq!(
+        attrs["selected_values"],
+        serde_json::json!(["Enterprise", "trial"])
+    );
+
+    let options = attrs["options"]
+        .as_array()
+        .expect("select options should be an array");
+    let enterprise = options
+        .iter()
+        .find(|option| option["text"] == "Enterprise")
+        .expect("text-value option should compile");
+    assert_eq!(enterprise["value"], "Enterprise");
+    assert_eq!(enterprise["group"], "Revenue");
+    assert_eq!(enterprise["selected"], true);
+
+    let mid_market = options
+        .iter()
+        .find(|option| option["value"] == "mid-market")
+        .expect("disabled option should compile");
+    assert_eq!(mid_market["group"], "Revenue");
+    assert_eq!(mid_market["disabled"], true);
+}
+
+#[test]
 fn test_file_upload_action_cues_are_preserved() {
     let html = r#"<!DOCTYPE html>
 <html><head><title>Uploads</title></head>

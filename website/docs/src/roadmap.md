@@ -374,6 +374,14 @@ Current browser-agent products keep tying replay to fresh structured state: Play
 - **Labels are cache evidence**: `label for` and `aria-labelledby` indexes should skip hidden fragments so cached form plans compare against visible names.
 - **Structured summaries need parity**: select options, list items, table captions, and table cells should ignore hidden descendants.
 
+### 2026-05-14 Select Option State Adjustment
+
+Current competitor direction keeps validating cached action plans against the current structured page state. Playwright MCP snapshots are fresh interaction surfaces, Stagehand/Browserbase cache actions only after state checks, and Browser Run/WebMCP is widening hosted browser contracts. Plasmate's local-first roadmap should make native select menus precise enough for repeated SaaS workflows without raw DOM recovery.
+
+- **Option values should match browsers**: when an `<option>` omits `value`, SOM should expose the visible option text as the submitted value.
+- **Unavailable choices need to be visible**: disabled options should remain in the compact menu with `disabled=true` so agents can explain why they did not select them.
+- **Grouped and multi-select menus need current state**: optgroup labels and `selected_values` should become shared action-plan context before this lands in adapter conformance.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
