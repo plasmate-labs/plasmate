@@ -49,6 +49,43 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T19:02:44Z - Plasmate Improvements Automation
+
+- Git sync: latest pull was retried from the automation worktree and failed
+  because the linked worktree cannot open `FETCH_HEAD`. Retrying
+  `git fetch --all --prune` from `/Users/steve/Git/plasmate` failed DNS for
+  `github.com`, so work continued from local `HEAD` `4fabe19`.
+- Market direction: current official docs still favor Plasmate's local-first
+  action-state wedge. Playwright MCP uses fresh accessibility snapshots with
+  refs, Stagehand/Browserbase now document local and managed action caching,
+  and Cloudflare Browser Run/WebMCP is widening typed browser interaction.
+  The roadmap should keep improving portable SOM/action fidelity across the
+  existing repo surface rather than pivoting into hosted browser infrastructure.
+- Code changes: Rust SOM input extraction now normalizes invalid native input
+  `type` values to browser-default `input_type: "text"`, preserves native
+  input `size`, and exposes `autofocus`.
+- Contract changes: JSON Schema/SOM spec, Python/Node parser package types,
+  Python/Node/Go SDK types, action-plan helpers, Browser Use, LangChain, and
+  Vercel AI now accept or render `autofocus`; existing `size` action-plan
+  fields now cover native text inputs as well as selects.
+- Docs changes: PRD, roadmap, website doc sources, and this running state now
+  record the native input-shape rationale and next step to promote
+  text-entry/native input-shape parity into broader parser/SDK/adapter
+  conformance fixtures.
+- Verification: touched-file `rustfmt --check` passed; focused
+  `test_input_types_are_case_insensitive` passed; full
+  `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo test --test
+  som_compiler_test -- --test-threads=1` passed 66 tests; `cargo build` with
+  the shared target passed; Python parser tests passed 68 tests; Python SDK
+  query tests passed 36 tests; Go SDK tests passed; JSON validation, touched
+  Python syntax compile, and `git diff --check` passed.
+- Verification gaps: Node parser/action-manifest, Node SDK, and Vercel AI
+  package tests are blocked because local `vitest`, `tsc`, and `tsup`
+  binaries are unavailable; `node website/build.mjs` remains blocked because
+  `marked` is not installed.
+- Commit/push state: pending at the time this state entry was written; direct
+  remote merge may remain blocked until GitHub fetch/API access works.
+
 ### 2026-05-14T18:08:19Z - Plasmate Improvements Automation
 
 - Git sync: latest pull was retried from the automation worktree and failed

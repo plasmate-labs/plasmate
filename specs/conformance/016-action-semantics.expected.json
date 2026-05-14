@@ -68,14 +68,22 @@
             "spellcheck": false,
             "autocapitalize": "sentences",
             "dirname": "reply.dir",
+            "size": 42,
+            "autofocus": true,
             "aria": { "placeholder": "Write a response" }
           }
+        },
+        {
+          "role": "text_input",
+          "label": "Fallback input",
+          "actions": ["type", "clear"],
+          "attrs": { "input_type": "text" }
         },
         { "role": "paragraph", "text": "Visible preferences copy" }
       ]
     }
   ],
   "meta": {
-    "interactive_count": 8
+    "interactive_count": 9
   }
 }

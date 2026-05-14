@@ -116,6 +116,7 @@ class SomElementAttrs(BaseModel):
     contenteditable: Optional[bool | str] = None
     tabindex: Optional[int | str] = None
     accesskey: Optional[str] = None
+    autofocus: Optional[bool] = None
     spellcheck: Optional[bool | str] = None
     name: Optional[str] = None
     accept: Optional[str] = None

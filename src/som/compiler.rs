@@ -1829,9 +1829,8 @@ fn build_element_attrs(
             let input_type = attrs
                 .iter()
                 .find(|(n, _)| n == "type")
-                .map(|(_, v)| v.clone())
+                .map(|(_, v)| normalize_input_type(v))
                 .unwrap_or_else(|| "text".to_string());
-            let input_type = input_type.to_ascii_lowercase();
 
             map.insert("input_type".into(), json!(input_type.clone()));
             if matches!(input_type.as_str(), "submit" | "button" | "reset" | "image") {
@@ -2068,6 +2067,9 @@ fn build_element_attrs(
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "accesskey") {
         map.insert("accesskey".into(), json!(value));
     }
+    if has_attr(attrs, "autofocus") {
+        map.insert("autofocus".into(), json!(true));
+    }
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "spellcheck") {
         let normalized = value.trim().to_ascii_lowercase();
         let spellcheck = match normalized.as_str() {
@@ -2114,7 +2116,7 @@ fn build_element_attrs(
     if has_attr(attrs, "formnovalidate") {
         map.insert("formnovalidate".into(), json!(true));
     }
-    for key in ["minlength", "maxlength", "min", "max"] {
+    for key in ["minlength", "maxlength", "min", "max", "size"] {
         if let Some((_, value)) = attrs.iter().find(|(n, _)| n == key) {
             let parsed = value
                 .parse::<i64>()
@@ -2251,6 +2253,35 @@ fn normalize_button_type(value: &str) -> String {
         "reset" => "reset".to_string(),
         _ => "submit".to_string(),
     }
+}
+
+fn normalize_input_type(value: &str) -> String {
+    match value.trim().to_ascii_lowercase().as_str() {
+        "button" => "button",
+        "checkbox" => "checkbox",
+        "color" => "color",
+        "date" => "date",
+        "datetime-local" => "datetime-local",
+        "email" => "email",
+        "file" => "file",
+        "hidden" => "hidden",
+        "image" => "image",
+        "month" => "month",
+        "number" => "number",
+        "password" => "password",
+        "radio" => "radio",
+        "range" => "range",
+        "reset" => "reset",
+        "search" => "search",
+        "submit" => "submit",
+        "tel" => "tel",
+        "text" => "text",
+        "time" => "time",
+        "url" => "url",
+        "week" => "week",
+        _ => "text",
+    }
+    .to_string()
 }
 
 fn build_children(

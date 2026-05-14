@@ -250,9 +250,11 @@ field MUST be omitted when the object would be empty.
 
 | Attribute    | Type    | Description |
 |--------------|---------|-------------|
-| `input_type` | string  | The input type (e.g., `"email"`, `"password"`). Only included for specific types: `text`, `email`, `password`, `search`, `tel`, `url`, `number`. |
+| `input_type` | string  | Browser-normalized input type (e.g., `"email"`, `"password"`). Invalid source values are emitted as `"text"`. |
 | `value`      | string  | Current input value. |
 | `placeholder`| string  | Placeholder text. |
+| `size`      | integer/string | Visible text field width hint from `size`. Invalid source values are preserved as strings. |
+| `autofocus` | boolean | Present and `true` when the control requests initial focus. |
 | `required`   | boolean | Present and `true` when the field is required. |
 | `readonly`   | boolean | Present and `true` when the field is read-only. |
 | `disabled`   | boolean | Present and `true` when the field is disabled. |
@@ -281,6 +283,7 @@ field MUST be omitted when the object would be empty.
 | Attribute    | Type    | Description |
 |--------------|---------|-------------|
 | `placeholder`| string  | Placeholder text. |
+| `autofocus` | boolean | Present and `true` when the textarea requests initial focus. |
 | `required`   | boolean | Present and `true` when required. |
 | `readonly`   | boolean | Present and `true` when read-only. |
 | `disabled`   | boolean | Present and `true` when disabled. |
@@ -296,6 +299,7 @@ field MUST be omitted when the object would be empty.
 | `selected_values` | array of string | Current values for a multi-select when one or more options are selected. |
 | `multiple` | boolean          | Present and `true` when multiple selection is allowed. |
 | `size`     | integer/string   | Visible row count from `size`. Invalid source values are preserved as strings. |
+| `autofocus` | boolean         | Present and `true` when the select requests initial focus. |
 | `required` | boolean          | Present and `true` when required. |
 | `disabled` | boolean          | Present and `true` when disabled. |
 | `inert`    | boolean          | Present and `true` when the select or an ancestor is inert. |

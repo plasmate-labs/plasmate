@@ -219,6 +219,8 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append("[inert]")
     if attrs.get("value"):
         flags.append(f'[value="{attrs["value"]}"]')
+    if attrs.get("autofocus") is True:
+        flags.append("[autofocus]")
     if attrs.get("name"):
         flags.append(f'[name="{attrs["name"]}"]')
     if attrs.get("accept"):

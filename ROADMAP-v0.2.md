@@ -595,6 +595,10 @@ surfacing small text-entry cues across the shared manifest.
 3. **Custom textboxes need prompt text**: `aria-placeholder` should surface as
    `aria_placeholder` without changing target `cache_key` values, preserving
    local action memory while making custom-field prompt drift visible.
+4. **Native field shape should match browsers**: invalid input types should
+   normalize to `text`, native input `size` should survive as field-width
+   context, and `autofocus` should flow through SDK and adapter action plans
+   without becoming part of the target cache identity.
 
 ### 2026-05-14 Upload Affordance Adjustment
 
@@ -1219,6 +1223,15 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - The shared action-availability manifest and `016-action-semantics`
   conformance fixture now assert text-entry affordance cues across Rust,
   parser, SDK, and framework adapter outputs.
+- Rust SOM compilation now normalizes invalid native input types to
+  `input_type: "text"` and preserves native input `size` plus `autofocus`.
+- JSON Schema/SOM spec, parser packages, Python/Node/Go SDKs, Browser Use,
+  LangChain, and Vercel AI action-plan surfaces now accept or render
+  `autofocus`; existing `size` action-plan fields now cover native text inputs
+  as well as selects.
+- The shared action-availability manifest and `016-action-semantics`
+  conformance fixture now assert `autofocus`, input `size`, and invalid
+  input-type normalization without changing deterministic action cache keys.
 - Rust SOM compilation and the JSON Schema now preserve upload action cues
   with native `accept`, `capture`, and input `multiple`, and the shared action
   manifest now asserts `name` as field identity for cacheable targets.
@@ -1270,8 +1283,9 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   `selected_values` and `size` as compact menu-planning context.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
-  and select-option parser/SDK/adaptor parity cases into broader fixtures
-  alongside text-entry, ARIA widget, range, and set-position cases.
+  native input-shape, and select-option parser/SDK/adaptor parity cases into
+  broader fixtures alongside text-entry, ARIA widget, range, and set-position
+  cases.
 
 ## Dependencies to Add
 

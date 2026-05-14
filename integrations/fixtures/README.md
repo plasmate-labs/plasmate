@@ -14,7 +14,7 @@ by the Rust core and parser packages.
   context, input metadata, descriptions, value and
   checked state, ARIA expanded/pressed/selected cues, ARIA current/controls/
   haspopup relationship cues, validation constraints (`autocomplete`,
-  `inputmode`, `enterkeyhint`, `autocapitalize`, `dirname`, `spellcheck`,
+  `inputmode`, `enterkeyhint`, `autocapitalize`, `dirname`, `autofocus`, `spellcheck`,
   `aria_placeholder`, `aria_autocomplete`, `active_descendant`,
   `form`, `list`, `popovertarget`, `popovertargetaction`, `commandfor`,
   `command`, `button_type`, `formaction`, `formmethod`, `formenctype`,

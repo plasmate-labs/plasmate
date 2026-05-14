@@ -107,6 +107,7 @@ export interface SomElementAttrs {
   contenteditable?: boolean | string;
   tabindex?: number | string;
   accesskey?: string;
+  autofocus?: boolean;
   spellcheck?: boolean | string;
   name?: string;
   accept?: string;

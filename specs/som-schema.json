@@ -227,6 +227,7 @@
               ]
             },
             "accesskey": { "type": "string" },
+            "autofocus": { "type": "boolean" },
             "spellcheck": {
               "oneOf": [
                 { "type": "boolean" },

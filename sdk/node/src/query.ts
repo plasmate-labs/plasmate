@@ -86,6 +86,7 @@ export interface ActionPlanItem {
   formtarget?: string;
   formnovalidate?: boolean;
   accesskey?: string;
+  autofocus?: boolean;
   spellcheck?: boolean | string;
   input_type?: string;
   value?: string;
@@ -230,6 +231,7 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.formtarget) item.formtarget = el.attrs.formtarget;
     if (el.attrs?.formnovalidate !== undefined) item.formnovalidate = el.attrs.formnovalidate;
     if (el.attrs?.accesskey) item.accesskey = el.attrs.accesskey;
+    if (el.attrs?.autofocus !== undefined) item.autofocus = el.attrs.autofocus;
     if (el.attrs?.spellcheck !== undefined) item.spellcheck = el.attrs.spellcheck;
     if (el.attrs?.input_type) item.input_type = el.attrs.input_type;
     if (el.attrs?.value) item.value = el.attrs.value;

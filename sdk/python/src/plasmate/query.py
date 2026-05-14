@@ -170,6 +170,8 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["formnovalidate"] = attrs.formnovalidate
             if attrs.accesskey:
                 item["accesskey"] = attrs.accesskey
+            if attrs.autofocus is not None:
+                item["autofocus"] = attrs.autofocus
             if attrs.spellcheck is not None:
                 item["spellcheck"] = attrs.spellcheck
             if attrs.input_type:

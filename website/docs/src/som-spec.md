@@ -63,6 +63,11 @@ current `value`, multi-select `selected_values`, `multiple`, `size`,
 `required`, `disabled`, and `inert`. Option summaries include `value`, `text`,
 optional `selected`, optional `disabled`, and optional optgroup `group`.
 
+Text-entry controls preserve replay cues such as browser-normalized
+`input_type`, `size`, `autofocus`, `spellcheck`, `autocapitalize`, `dirname`,
+and ARIA placeholder state so cached typing plans can validate the field shape
+before reuse.
+
 ## Stable Element IDs
 
 Every element gets a deterministic ID derived from its semantic identity:

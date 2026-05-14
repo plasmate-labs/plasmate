@@ -409,12 +409,22 @@ fn test_action_semantics_conformance_fixture() {
     assert_eq!(attrs["spellcheck"], false);
     assert_eq!(attrs["autocapitalize"], "sentences");
     assert_eq!(attrs["dirname"], "reply.dir");
+    assert_eq!(attrs["size"], 42);
+    assert_eq!(attrs["autofocus"], true);
     assert_eq!(attrs["aria"]["placeholder"], "Write a response");
+    assert!(
+        all_elements(&som).iter().any(|elem| {
+            elem.role == ElementRole::TextInput
+                && elem.label.as_deref() == Some("Fallback input")
+                && elem.attrs.as_ref().unwrap()["input_type"] == "text"
+        }),
+        "invalid native input type should normalize to text"
+    );
     assert!(!json.contains("Hidden stylesheet copy"));
     assert!(!json.contains("Hidden uppercase ARIA copy"));
     assert!(!json.contains("Hidden inline opacity copy"));
     assert!(json.contains("Visible preferences copy"));
-    assert_eq!(som.meta.interactive_count, 8);
+    assert_eq!(som.meta.interactive_count, 9);
 }
 
 #[test]
@@ -444,6 +454,7 @@ fn test_input_types_are_case_insensitive() {
 <body><main>
     <input type="SUBMIT" value="Save">
     <input type="EMAIL" name="email" autocomplete="email">
+    <input type="not-a-real-type" aria-label="Fallback" size="42" autofocus>
 </main></body></html>"#;
 
     let som = compiler::compile(html, "https://example.com").unwrap();
@@ -458,6 +469,18 @@ fn test_input_types_are_case_insensitive() {
     assert_eq!(attrs["input_type"], "email");
     assert_eq!(attrs["name"], "email");
     assert_eq!(attrs["autocomplete"], "email");
+
+    let fallback = elems
+        .iter()
+        .find(|e| e.role == ElementRole::TextInput && e.label.as_deref() == Some("Fallback"))
+        .expect("invalid input type should compile as text input");
+    let attrs = fallback
+        .attrs
+        .as_ref()
+        .expect("fallback input should have attrs");
+    assert_eq!(attrs["input_type"], "text");
+    assert_eq!(attrs["size"], 42);
+    assert_eq!(attrs["autofocus"], true);
 }
 
 #[test]

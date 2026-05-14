@@ -504,6 +504,15 @@ option `group`, option `disabled`, and `selected_values` should move through
 schema, parser packages, SDKs, and prompt renderers so cached menu plans remain
 portable across the project's broad integration surface.
 
+2026-05-14 native input-shape read: current official docs keep pushing action
+menus toward validated replay: Playwright MCP refs are scoped to fresh
+accessibility snapshots, Stagehand now documents local and managed action
+caches, and Browser Run/WebMCP is making typed browser interaction more
+visible. Plasmate should keep the local-first wedge by matching browser-native
+text-entry shape: invalid input types should normalize to `text`, native
+`size` should survive as compact field width context, and `autofocus` should
+move through SDKs and adapters without changing target-focused cache keys.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -589,6 +598,16 @@ and adapter docs over one-off integration logic.
   - The shared action-availability manifest and `016-action-semantics`
     conformance fixture now assert these text-entry affordance cues across
     Rust, parser, SDK, and framework outputs.
+  - Native text inputs now normalize invalid `type` values to browser-default
+    `input_type: "text"`, preserve input `size`, and expose `autofocus`.
+  - JSON Schema/SOM spec, parser packages, Python/Node/Go SDKs, Browser Use,
+    LangChain, and Vercel AI action-plan surfaces now accept or render
+    `autofocus`; existing `size` action-plan fields now cover native text
+    inputs as well as selects.
+  - The shared action-availability manifest and `016-action-semantics`
+    conformance fixture now assert `autofocus`, input `size`, and invalid
+    input-type normalization while keeping deterministic action cache keys
+    target-focused.
   - The Rust SOM compiler and JSON Schema now preserve upload action cues:
     native `accept`, `capture`, and input `multiple`, while the shared manifest
     now includes field `name` identity for deterministic target caching.
@@ -1059,8 +1078,9 @@ and adapter docs over one-off integration logic.
   SDK, and adapter fixtures.
 - Promote input-affordance cases (`inputmode`, `enterkeyhint`, autocomplete
   widget state, active descendants, `spellcheck`, `autocapitalize`,
-  `dirname`, and `aria-placeholder`) into broader parser, SDK, and adapter
-  conformance fixtures once the shared action manifest remains stable.
+  `dirname`, `autofocus`, input `size`, invalid input-type normalization, and
+  `aria-placeholder`) into broader parser, SDK, and adapter conformance
+  fixtures once the shared action manifest remains stable.
 - Promote upload-affordance cases (`accept`, `capture`, `multiple`, and
   stable field `name`) into broader Rust/parser/SDK and adapter conformance
   fixtures.

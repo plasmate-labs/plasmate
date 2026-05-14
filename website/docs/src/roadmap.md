@@ -301,6 +301,7 @@ Current browser-agent docs and recent developer commentary keep validating the s
 - **Typing behavior is replay context**: `spellcheck` and `autocapitalize` should travel through Rust, schema, SDKs, parser packages, and adapters so agents understand language and virtual-keyboard behavior.
 - **Direction capture matters for global forms**: `dirname` should be exposed as compact target context for bidirectional text-entry workflows.
 - **Custom textboxes need prompt text**: `aria-placeholder` should surface as `aria_placeholder` without changing target `cache_key` values, preserving local action memory while making custom-field prompt drift visible.
+- **Native field shape should match browsers**: invalid input types should normalize to `text`, native input `size` should survive as field-width context, and `autofocus` should flow through SDK and adapter action plans without becoming part of the target cache identity.
 
 ### 2026-05-14 Form Submission Context Adjustment
 
@@ -555,6 +556,9 @@ Current competitor direction keeps validating cached action plans against the cu
 - [x] Rust compiler and SOM schema preserve spellcheck, autocapitalize, dirname, and ARIA placeholder cues
 - [x] Compact action plans expose spellcheck, autocapitalize, dirname, and aria_placeholder across parser packages, SDKs, and framework adapters
 - [x] Shared action-availability manifest and 016-action-semantics fixture assert text-entry affordance cues without changing deterministic action cache keys
+- [x] Rust compiler normalizes invalid input types to text and preserves input size plus autofocus
+- [x] Compact action plans expose autofocus across parser packages, SDKs, and framework adapters
+- [x] Shared fixtures assert autofocus, input size, and invalid input-type normalization without changing deterministic action cache keys
 - [x] Rust compiler and SOM schema preserve upload constraints with accept, capture, and native multiple state
 - [x] Compact action plans expose name, accept, capture, and multiple across parser packages, SDKs, and framework adapters
 - [x] Shared action-availability manifest asserts upload constraints and multiple-selection state for cacheable action targets
@@ -583,7 +587,7 @@ Current competitor direction keeps validating cached action plans against the cu
 - [ ] Promote range and orientation cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote ARIA widget affordance cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote ARIA set-position cases into broader Rust/parser/SDK and adapter conformance fixtures
-- [ ] Promote text-entry affordance cases into broader parser, SDK, and adapter conformance fixtures
+- [ ] Promote text-entry and native input-shape cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote upload-affordance cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote form-submission context cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote submit-button override cases into broader Rust/parser/SDK and adapter conformance fixtures

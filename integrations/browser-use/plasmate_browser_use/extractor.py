@@ -93,6 +93,8 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append(f"download={item['download']}")
     if item.get("input_type"):
         flags.append(f"type={item['input_type']}")
+    if item.get("autofocus") is True:
+        flags.append("autofocus")
     if item.get("name"):
         flags.append(f"name={item['name']}")
     if item.get("accept"):
