@@ -49,6 +49,54 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T03:08:42Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first. The automation worktree
+  could not write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate45/FETCH_HEAD`
+  (`Operation not permitted`), so this run continued from local
+  `master` / `origin/master` state `85792a3`. The linked automation worktree
+  also could not create its git `index.lock`, so the patch was mirrored into
+  the primary checkout for committing.
+- Market direction: current official docs still validate the local action-menu
+  wedge. Playwright MCP keeps structured accessibility snapshots and
+  snapshot-scoped refs as the interaction unit, Stagehand v3 documents
+  `observe()` actions plus local/server caching for repeated workflows,
+  Firecrawl packages managed browser sandbox/session execution through API,
+  CLI, SDKs, and MCP, and Browser Use Cloud sells persistent profiles plus
+  direct CDP sessions. Plasmate should keep avoiding a hosted-browser pivot
+  and deepen portable local SOM relationship context.
+- Code changes: Rust SOM now preserves ARIA relationship cues:
+  `aria-owns`, `aria-flowto`, and `aria-details`. Parser packages,
+  Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI action-plan
+  surfaces expose `owns`, `flowto`, and `details` without changing
+  deterministic `cache_key` values.
+- Fixture and docs changes: the shared action-availability SOM and expected
+  manifest now assert owns/flowto/details cues across parser, SDK, and
+  framework outputs. PRD, roadmap, SOM schema/spec, adapter docs, SDK docs,
+  generated website docs, and this running state were updated with rationale
+  and next conformance steps.
+- Verification: `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo
+  build` passed with existing warnings; focused Rust ARIA relationship test
+  passed; `cargo test --lib -- --test-threads=1` passed 251 tests;
+  `./scripts/action-manifest-conformance.sh --quick` passed;
+  `./scripts/action-manifest-conformance.sh --full` passed; `node
+  website/build.mjs` rebuilt 39 pages; JSON parsing for the schema and shared
+  fixtures passed; `rustfmt --check src/som/compiler.rs` passed; `git diff
+  --check` passed. Temporary Node dependency symlinks to the primary checkout
+  were removed after verification.
+- Verification gaps: direct Rust test/build without the shared target cache
+  failed because sandboxed DNS could not download the `rusty_v8` archive. Full
+  `cargo test -- --test-threads=1` still fails only in
+  `tests/awp_integration_test.rs` because sandboxed local listener setup
+  returns `Operation not permitted`, matching prior runs. Full `cargo fmt
+  --check` still reports pre-existing formatting drift in unrelated Rust files.
+- Commit/push state: implementation commit `d9f66a2`
+  (`chore: expose aria relationship action cues`) was created locally in
+  `/Users/steve/Git/plasmate`. Push to `origin/master` failed because SSH could
+  not resolve `github.com` (`-65563`). There is no `main` branch in this repo;
+  `origin/HEAD` points at `origin/master`.
+
 ### 2026-05-14T02:16:00Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first. The automation worktree
