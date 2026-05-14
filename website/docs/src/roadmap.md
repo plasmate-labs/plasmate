@@ -366,6 +366,14 @@ Browser-agent products keep turning repeated form work into validated action rep
 - **Input submitters need button identity**: input-backed `submit`, `button`, `reset`, and `image` controls should expose `button_type`.
 - **Icon-only submitters need context**: graphical submitters should resolve labels from `alt` and preserve `alt` plus `src` so agents can recognize branded/icon-only actions without raw DOM recovery.
 
+### 2026-05-14 Hidden Descendant Text Adjustment
+
+Current browser-agent products keep tying replay to fresh structured state: Playwright MCP refs belong to the current accessibility snapshot, Stagehand/Browserbase cache actions after validating the page still matches, and Browser Run/WebMCP is widening hosted interaction contracts. Plasmate should make local SOM text match visible page state across the same surfaces agents use for action planning.
+
+- **Visible parent text must stay visible**: stylesheet-hidden descendants should not leak into paragraph or button text.
+- **Labels are cache evidence**: `label for` and `aria-labelledby` indexes should skip hidden fragments so cached form plans compare against visible names.
+- **Structured summaries need parity**: select options, list items, table captions, and table cells should ignore hidden descendants.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites

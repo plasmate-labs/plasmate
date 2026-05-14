@@ -103,7 +103,10 @@ pub fn compile(html: &str, page_url: &str) -> Result<Som, CompileError> {
 
     // Find the body node
     let body = find_body(&dom.document);
-    let label_index = body.as_ref().map(build_label_index).unwrap_or_default();
+    let label_index = body
+        .as_ref()
+        .map(|body| build_label_index(body, &css_rules))
+        .unwrap_or_default();
 
     let regions = match body {
         Some(body_handle) => {
@@ -223,18 +226,21 @@ fn find_body(node: &Handle) -> Option<Handle> {
     None
 }
 
-fn build_label_index(root: &Handle) -> LabelIndex {
-    fn visit(node: &Handle, index: &mut LabelIndex) {
+fn build_label_index(root: &Handle, css_rules: &VisibilityRules) -> LabelIndex {
+    fn visit(node: &Handle, index: &mut LabelIndex, css_rules: &VisibilityRules) {
         if heuristics::should_strip(node) {
+            return;
+        }
+        if is_css_hidden_element(node, css_rules) {
             return;
         }
         if let NodeData::Element { name, .. } = &node.data {
             let tag = name.local.as_ref();
             let attrs = get_attr_pairs(node);
             let text = if tag == "label" {
-                heuristics::normalize_text(&get_label_text(node))
+                heuristics::normalize_text(&get_visible_label_text(node, css_rules))
             } else {
-                heuristics::normalize_text(&get_text_content(node))
+                heuristics::normalize_text(&get_visible_text_content(node, css_rules))
             };
 
             if !text.is_empty() {
@@ -256,12 +262,12 @@ fn build_label_index(root: &Handle) -> LabelIndex {
         }
 
         for child in node.children.borrow().iter() {
-            visit(child, index);
+            visit(child, index, css_rules);
         }
     }
 
     let mut index = LabelIndex::default();
-    visit(root, &mut index);
+    visit(root, &mut index, css_rules);
     index
 }
 
@@ -295,15 +301,18 @@ fn is_labelable_tag(tag: &str) -> bool {
     )
 }
 
-fn get_label_text(node: &Handle) -> String {
-    fn visit(node: &Handle, parts: &mut Vec<String>) {
+fn get_visible_label_text(node: &Handle, css_rules: &VisibilityRules) -> String {
+    fn visit(node: &Handle, parts: &mut Vec<String>, css_rules: &VisibilityRules) {
+        if heuristics::should_strip(node) || is_css_hidden_element(node, css_rules) {
+            return;
+        }
         match &node.data {
             NodeData::Element { name, .. } => {
                 if is_labelable_tag(name.local.as_ref()) {
                     return;
                 }
                 for child in node.children.borrow().iter() {
-                    visit(child, parts);
+                    visit(child, parts, css_rules);
                 }
             }
             NodeData::Text { contents } => {
@@ -318,7 +327,7 @@ fn get_label_text(node: &Handle) -> String {
 
     let mut parts = Vec::new();
     for child in node.children.borrow().iter() {
-        visit(child, &mut parts);
+        visit(child, &mut parts, css_rules);
     }
     parts.join(" ")
 }
@@ -1304,7 +1313,7 @@ fn interactive_node_to_element(
         let tag = name.local.as_ref();
         let attr_pairs = get_attr_pairs(node);
         let role = tag_to_role(tag, &attr_pairs)?;
-        let text_content = get_text_content(node);
+        let text_content = get_visible_text_content(node, &ctx.css_rules);
         let text = if text_content.is_empty() {
             None
         } else {
@@ -1375,7 +1384,7 @@ fn node_to_element(
             }
 
             let role = tag_to_role(tag, &attr_pairs)?;
-            let text_content = get_text_content(node);
+            let text_content = get_visible_text_content(node, &ctx.css_rules);
 
             // Apply summarization for paragraphs based on position
             let mut text = if text_content.is_empty() {
@@ -1403,7 +1412,7 @@ fn node_to_element(
 
             let label = resolve_label(tag, &attr_pairs, &text, &ctx.label_index).or_else(|| {
                 if tag == "fieldset" {
-                    extract_legend_text(node)
+                    extract_legend_text(node, &ctx.css_rules)
                 } else {
                     None
                 }
@@ -1543,12 +1552,13 @@ fn extract_shadow_elements(
     inherited_inert: bool,
 ) -> Vec<Element> {
     let mut elements = Vec::new();
+    let css_rules = VisibilityRules::default();
     let dummy_ctx = CompileContext {
         config: ContentConfig::default(),
         paragraph_count: Cell::new(0),
         is_main_region: Cell::new(false),
-        css_rules: VisibilityRules::default(),
-        label_index: build_label_index(node),
+        label_index: build_label_index(node, &css_rules),
+        css_rules,
     };
 
     for (idx, child) in node.children.borrow().iter().enumerate() {
@@ -1862,7 +1872,7 @@ fn build_element_attrs(
             }
         }
         "textarea" => {
-            let value = heuristics::normalize_text(&get_text_content(node));
+            let value = heuristics::normalize_text(&get_visible_text_content(node, &ctx.css_rules));
             if !value.is_empty() {
                 map.insert("value".into(), json!(value));
             }
@@ -1894,7 +1904,7 @@ fn build_element_attrs(
             }
         }
         "select" => {
-            let options = extract_select_options(node);
+            let options = extract_select_options(node, &ctx.css_rules);
             if !options.is_empty() {
                 map.insert("options".into(), json!(options));
             }
@@ -1939,23 +1949,26 @@ fn build_element_attrs(
         }
         "ul" => {
             map.insert("ordered".into(), json!(false));
-            let items = extract_list_items_with_limit(node, ctx.config.max_list_items);
+            let items =
+                extract_list_items_with_limit(node, ctx.config.max_list_items, &ctx.css_rules);
             if !items.is_empty() {
                 map.insert("items".into(), json!(items));
             }
         }
         "ol" => {
             map.insert("ordered".into(), json!(true));
-            let items = extract_list_items_with_limit(node, ctx.config.max_list_items);
+            let items =
+                extract_list_items_with_limit(node, ctx.config.max_list_items, &ctx.css_rules);
             if !items.is_empty() {
                 map.insert("items".into(), json!(items));
             }
         }
         "table" => {
-            if let Some(caption) = extract_table_caption(node) {
+            if let Some(caption) = extract_table_caption(node, &ctx.css_rules) {
                 map.insert("caption".into(), json!(caption));
             }
-            let (headers, rows) = extract_table_data(node, ctx.config.max_table_cell_chars);
+            let (headers, rows) =
+                extract_table_data(node, ctx.config.max_table_cell_chars, &ctx.css_rules);
             if !headers.is_empty() {
                 map.insert("headers".into(), json!(headers));
             }
@@ -1969,7 +1982,7 @@ fn build_element_attrs(
             }
         }
         "fieldset" => {
-            if let Some(legend) = extract_legend_text(node) {
+            if let Some(legend) = extract_legend_text(node, &ctx.css_rules) {
                 map.insert("legend".into(), json!(legend));
             }
             if inherited_disabled || has_attr(attrs, "disabled") {
@@ -1980,7 +1993,7 @@ fn build_element_attrs(
             let open = has_attr(attrs, "open");
             map.insert("open".into(), json!(open));
             // Extract summary text from the first <summary> child
-            let summary_text = extract_summary_text(node);
+            let summary_text = extract_summary_text(node, &ctx.css_rules);
             if let Some(st) = summary_text {
                 map.insert("summary".into(), json!(st));
             }
@@ -2226,11 +2239,14 @@ fn build_children(
 }
 
 /// Extract text from the first `<legend>` child of a `<fieldset>` element.
-fn extract_legend_text(node: &Handle) -> Option<String> {
+fn extract_legend_text(node: &Handle, css_rules: &VisibilityRules) -> Option<String> {
     for child in node.children.borrow().iter() {
+        if heuristics::should_strip(child) || is_css_hidden_element(child, css_rules) {
+            continue;
+        }
         if let NodeData::Element { name, .. } = &child.data {
             if name.local.as_ref() == "legend" {
-                let text = get_text_content(child);
+                let text = get_visible_text_content(child, css_rules);
                 let trimmed = heuristics::normalize_text(&text);
                 if !trimmed.is_empty() {
                     return Some(trimmed);
@@ -2242,11 +2258,14 @@ fn extract_legend_text(node: &Handle) -> Option<String> {
 }
 
 /// Extract text from the first `<summary>` child of a `<details>` element.
-fn extract_summary_text(node: &Handle) -> Option<String> {
+fn extract_summary_text(node: &Handle, css_rules: &VisibilityRules) -> Option<String> {
     for child in node.children.borrow().iter() {
+        if heuristics::should_strip(child) || is_css_hidden_element(child, css_rules) {
+            continue;
+        }
         if let NodeData::Element { name, .. } = &child.data {
             if name.local.as_ref() == "summary" {
-                let text = get_text_content(child);
+                let text = get_visible_text_content(child, css_rules);
                 let trimmed = heuristics::normalize_text(&text);
                 if !trimmed.is_empty() {
                     return Some(trimmed);
@@ -2257,10 +2276,13 @@ fn extract_summary_text(node: &Handle) -> Option<String> {
     None
 }
 
-fn extract_select_options(node: &Handle) -> Vec<serde_json::Value> {
+fn extract_select_options(node: &Handle, css_rules: &VisibilityRules) -> Vec<serde_json::Value> {
     let mut options = Vec::new();
     let children = node.children.borrow();
     for child in children.iter() {
+        if heuristics::should_strip(child) || is_css_hidden_element(child, css_rules) {
+            continue;
+        }
         if let NodeData::Element { name, attrs, .. } = &child.data {
             if name.local.as_ref() == "option" {
                 let attrs = attrs.borrow();
@@ -2269,7 +2291,7 @@ fn extract_select_options(node: &Handle) -> Vec<serde_json::Value> {
                     .find(|a| a.name.local.as_ref() == "value")
                     .map(|a| a.value.to_string())
                     .unwrap_or_default();
-                let text = get_text_content(child);
+                let text = get_visible_text_content(child, css_rules);
                 let selected = attrs.iter().any(|a| a.name.local.as_ref() == "selected");
                 let mut opt = serde_json::Map::new();
                 opt.insert("value".into(), json!(value));
@@ -2280,7 +2302,7 @@ fn extract_select_options(node: &Handle) -> Vec<serde_json::Value> {
                 options.push(serde_json::Value::Object(opt));
             } else if name.local.as_ref() == "optgroup" {
                 // Recurse into optgroup
-                let group_opts = extract_select_options(child);
+                let group_opts = extract_select_options(child, css_rules);
                 options.extend(group_opts);
             }
         }
@@ -2288,15 +2310,22 @@ fn extract_select_options(node: &Handle) -> Vec<serde_json::Value> {
     options
 }
 
-fn extract_list_items_with_limit(node: &Handle, max_items: usize) -> Vec<serde_json::Value> {
+fn extract_list_items_with_limit(
+    node: &Handle,
+    max_items: usize,
+    css_rules: &VisibilityRules,
+) -> Vec<serde_json::Value> {
     let mut items = Vec::new();
     let mut total_count = 0;
     let children = node.children.borrow();
 
     for child in children.iter() {
+        if heuristics::should_strip(child) || is_css_hidden_element(child, css_rules) {
+            continue;
+        }
         if let NodeData::Element { name, .. } = &child.data {
             if name.local.as_ref() == "li" {
-                let text = get_text_content(child);
+                let text = get_visible_text_content(child, css_rules);
                 if !text.trim().is_empty() {
                     total_count += 1;
                     if items.len() < max_items {
@@ -2320,11 +2349,14 @@ fn extract_list_items_with_limit(node: &Handle, max_items: usize) -> Vec<serde_j
     items
 }
 
-fn extract_table_caption(node: &Handle) -> Option<String> {
+fn extract_table_caption(node: &Handle, css_rules: &VisibilityRules) -> Option<String> {
     for child in node.children.borrow().iter() {
+        if heuristics::should_strip(child) || is_css_hidden_element(child, css_rules) {
+            continue;
+        }
         if let NodeData::Element { name, .. } = &child.data {
             if name.local.as_ref() == "caption" {
-                let text = heuristics::normalize_text(&get_text_content(child));
+                let text = heuristics::normalize_text(&get_visible_text_content(child, css_rules));
                 if !text.is_empty() {
                     return Some(text);
                 }
@@ -2334,7 +2366,11 @@ fn extract_table_caption(node: &Handle) -> Option<String> {
     None
 }
 
-fn extract_table_data(node: &Handle, max_cell_chars: usize) -> (Vec<String>, Vec<Vec<String>>) {
+fn extract_table_data(
+    node: &Handle,
+    max_cell_chars: usize,
+    css_rules: &VisibilityRules,
+) -> (Vec<String>, Vec<Vec<String>>) {
     let mut headers = Vec::new();
     let mut rows = Vec::new();
     let max_columns = 12;
@@ -2347,27 +2383,44 @@ fn extract_table_data(node: &Handle, max_cell_chars: usize) -> (Vec<String>, Vec
         max_cell_chars: usize,
         max_columns: usize,
         max_rows: usize,
+        css_rules: &VisibilityRules,
     ) {
         let children = node.children.borrow();
         for child in children.iter() {
+            if heuristics::should_strip(child) || is_css_hidden_element(child, css_rules) {
+                continue;
+            }
             if let NodeData::Element { name, .. } = &child.data {
                 let tag = name.local.as_ref();
                 match tag {
                     "thead" | "tbody" | "tfoot" => {
-                        visit_table(child, headers, rows, max_cell_chars, max_columns, max_rows);
+                        visit_table(
+                            child,
+                            headers,
+                            rows,
+                            max_cell_chars,
+                            max_columns,
+                            max_rows,
+                            css_rules,
+                        );
                     }
                     "tr" => {
                         let cells = child.children.borrow();
                         let mut row = Vec::new();
                         let mut is_header_row = true;
                         for cell in cells.iter() {
+                            if heuristics::should_strip(cell)
+                                || is_css_hidden_element(cell, css_rules)
+                            {
+                                continue;
+                            }
                             if let NodeData::Element { name, attrs, .. } = &cell.data {
                                 let cell_tag = name.local.as_ref();
                                 if row.len() >= max_columns {
                                     break;
                                 }
                                 let cell_text = heuristics::truncate_text(
-                                    &get_text_content(cell),
+                                    &get_visible_text_content(cell, css_rules),
                                     max_cell_chars,
                                 );
                                 // Handle colspan: repeat the cell text for spanned columns
@@ -2403,7 +2456,15 @@ fn extract_table_data(node: &Handle, max_cell_chars: usize) -> (Vec<String>, Vec
                         }
                     }
                     _ => {
-                        visit_table(child, headers, rows, max_cell_chars, max_columns, max_rows);
+                        visit_table(
+                            child,
+                            headers,
+                            rows,
+                            max_cell_chars,
+                            max_columns,
+                            max_rows,
+                            css_rules,
+                        );
                     }
                 }
             }
@@ -2417,8 +2478,51 @@ fn extract_table_data(node: &Handle, max_cell_chars: usize) -> (Vec<String>, Vec
         max_cell_chars,
         max_columns,
         max_rows,
+        css_rules,
     );
     (headers, rows)
+}
+
+fn get_visible_text_content(node: &Handle, css_rules: &VisibilityRules) -> String {
+    let mut text = String::new();
+    collect_visible_text(node, &mut text, css_rules);
+    text
+}
+
+fn collect_visible_text(node: &Handle, buf: &mut String, css_rules: &VisibilityRules) {
+    if heuristics::should_strip(node) || is_css_hidden_element(node, css_rules) {
+        return;
+    }
+
+    match &node.data {
+        NodeData::Text { contents } => {
+            buf.push_str(&contents.borrow());
+        }
+        _ => {
+            for child in node.children.borrow().iter() {
+                collect_visible_text(child, buf, css_rules);
+            }
+        }
+    }
+}
+
+fn is_css_hidden_element(node: &Handle, css_rules: &VisibilityRules) -> bool {
+    if let NodeData::Element { name, .. } = &node.data {
+        let tag = name.local.as_ref();
+        let attrs = get_attr_pairs(node);
+        let class = attrs
+            .iter()
+            .find(|(n, _)| n == "class")
+            .map(|(_, value)| value.as_str())
+            .unwrap_or_default();
+        let id = attrs
+            .iter()
+            .find(|(n, _)| n == "id")
+            .map(|(_, value)| value.as_str())
+            .unwrap_or_default();
+        return css_rules.is_hidden(tag, class, id);
+    }
+    false
 }
 
 /// Get text content from a node, recursively collecting all text nodes.

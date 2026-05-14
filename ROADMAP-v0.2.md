@@ -794,6 +794,25 @@ need selector recovery.
    apply stylesheet visibility filtering to descendant text extraction too, so
    hidden copy cannot leak into parent paragraph text.
 
+### 2026-05-14 Hidden Descendant Text Adjustment
+
+Current browser-agent products keep tying replay to fresh structured state:
+Playwright MCP refs belong to the current accessibility snapshot,
+Stagehand/Browserbase cache actions only after validating the page still
+matches, and Cloudflare Browser Run/WebMCP is widening hosted interaction
+contracts. Plasmate should make local SOM text match visible page state across
+the same surfaces agents use for action planning.
+
+1. **Visible parent text must stay visible**: stylesheet-hidden descendants
+   should not leak into paragraph or button text because agents reuse those
+   strings as action evidence.
+2. **Labels are part of cache validation**: `label for` and `aria-labelledby`
+   indexes should skip hidden fragments so cached form plans compare against
+   the name a human sees.
+3. **Structured summaries need the same filter**: select options, list items,
+   table captions, and table cells should ignore hidden descendants so compact
+   SOM content remains aligned with browser accessibility snapshots.
+
 ## Architecture
 
 ```
@@ -1212,10 +1231,16 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   spinbutton, and option action-role coverage with ARIA value/selected state.
 - SOM spec and generated docs now document these ARIA action-role mappings so
   SDK and adapter promotion can treat them as product contract.
+- Rust SOM text extraction is now stylesheet-visibility aware for visible
+  parent text, interactive names, accessible label indexing, select options,
+  list items, table captions, and table cells.
+- The SOM compiler regression suite now asserts that stylesheet-hidden
+  descendants are excluded from visible text surfaces while visible copy,
+  labels, options, lists, and table values remain present.
 - Next conformance step: promote upload-affordance, form-submission context,
-  submit-button override, and expanded ARIA action-role cases into broader
-  Rust/parser/SDK and adapter fixtures alongside text-entry, ARIA widget,
-  range, and set-position cases.
+  submit-button override, expanded ARIA action-role, and hidden descendant
+  text cases into broader Rust/parser/SDK and adapter fixtures alongside
+  text-entry, ARIA widget, range, and set-position cases.
 
 ## Dependencies to Add
 

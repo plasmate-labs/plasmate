@@ -49,6 +49,35 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T16:04:26Z - Plasmate Improvements Automation
+
+- Git sync: latest pull was retried from the automation worktree and still
+  failed because the sandbox cannot open the linked primary checkout
+  `FETCH_HEAD`. Retrying from `/Users/steve/Git/plasmate` failed DNS for
+  `github.com`, so work continued from local `HEAD` `0413345`.
+- Market direction: Playwright MCP still centers structured accessibility
+  snapshots with snapshot-scoped refs, Browserbase/Stagehand is emphasizing
+  validated action caching, and Cloudflare Browser Run/WebMCP is widening
+  hosted MCP/CDP surfaces. Plasmate should keep deepening local SOM fidelity
+  rather than pivoting into hosted browser infrastructure.
+- Code changes: Rust SOM text extraction is now stylesheet-visibility aware
+  for visible parent text, interactive names, accessible label indexing,
+  select options, list items, table captions, and table cells. This closes the
+  hidden-descendant follow-up from the prior run.
+- Docs changes: PRD, roadmap, and website doc sources now record the
+  hidden-descendant rationale and the next conformance step: promote these
+  cases into parser/SDK and adapter fixtures so hidden text filtering stays
+  synchronized outside Rust.
+- Verification: `rustfmt --check src/som/compiler.rs tests/som_compiler_test.rs`
+  passed; focused hidden-descendant SOM test passed; full
+  `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo test --test
+  som_compiler_test -- --test-threads=1` passed 65 tests; and
+  `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build` passed with
+  existing warnings.
+- Verification gap: whole-crate `cargo fmt --check` still reports unrelated
+  pre-existing formatting drift in AWP/proxy/main/MCP files, matching earlier
+  automation runs.
+
 ### 2026-05-14T15:05:46Z - Plasmate Improvements Automation
 
 - Git sync: latest pull was retried from the automation worktree and failed
