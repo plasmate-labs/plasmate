@@ -1874,6 +1874,10 @@ fn build_element_attrs(
         ("aria-errormessage", "errormessage"),
         ("aria-keyshortcuts", "keyshortcuts"),
         ("aria-roledescription", "roledescription"),
+        ("aria-busy", "busy"),
+        ("aria-live", "live"),
+        ("aria-atomic", "atomic"),
+        ("aria-relevant", "relevant"),
     ];
     let mut aria_map = serde_json::Map::new();
     for (html_attr, som_key) in aria_states {
@@ -2457,5 +2461,31 @@ mod tests {
         assert_eq!(attrs["accesskey"], "s");
         assert_eq!(attrs["aria"]["keyshortcuts"], "Meta+S");
         assert_eq!(attrs["aria"]["roledescription"], "primary action");
+    }
+
+    #[test]
+    fn test_live_region_action_cues_are_preserved() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Actions</title></head>
+<body>
+<main>
+  <button aria-busy="true" aria-live="polite" aria-atomic="false" aria-relevant="additions text">Refresh results</button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.com").unwrap();
+        let button = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| element.role == ElementRole::Button)
+            .expect("button element should compile");
+        let attrs = button.attrs.as_ref().expect("button attrs should compile");
+
+        assert_eq!(attrs["aria"]["busy"], true);
+        assert_eq!(attrs["aria"]["live"], "polite");
+        assert_eq!(attrs["aria"]["atomic"], false);
+        assert_eq!(attrs["aria"]["relevant"], "additions text");
     }
 }

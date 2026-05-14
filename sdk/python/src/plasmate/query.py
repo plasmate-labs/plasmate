@@ -135,6 +135,10 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                     "errormessage",
                     "keyshortcuts",
                     "roledescription",
+                    "busy",
+                    "live",
+                    "atomic",
+                    "relevant",
                 ):
                     if aria_key in attrs.aria:
                         item_key = (

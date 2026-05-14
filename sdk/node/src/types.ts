@@ -134,6 +134,10 @@ export interface AriaState {
   errormessage?: string;
   keyshortcuts?: string;
   roledescription?: string;
+  busy?: boolean;
+  live?: string;
+  atomic?: boolean;
+  relevant?: string;
 }
 
 export interface SomShadowRoot {

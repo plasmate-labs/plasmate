@@ -376,6 +376,10 @@ attributes SHOULD be preserved when present:
 | `aria-errormessage` | `errormessage` | string     |
 | `aria-keyshortcuts` | `keyshortcuts` | string      |
 | `aria-roledescription` | `roledescription` | string |
+| `aria-busy`      | `busy`      | boolean         |
+| `aria-live`      | `live`      | string          |
+| `aria-atomic`    | `atomic`    | boolean         |
+| `aria-relevant`  | `relevant`  | string          |
 
 Values `"true"` and `"false"` MUST be normalized to boolean. Other string
 values (e.g. `aria-current="page"`, `aria-checked="mixed"`, or

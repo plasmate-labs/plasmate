@@ -594,6 +594,23 @@ targets carry the relationships agents need before typing or submitting.
    `aria-errormessage` should surface as compact `errormessage` state without
    changing target `cache_key` values.
 
+### 2026-05-14 Live-Region Action Menu Adjustment
+
+Current browser-agent docs keep making repeated actions depend on current page
+state. Playwright MCP refs expire when the snapshot changes, Stagehand caching
+validates page state before replay, and Browser Use/CDP sessions preserve
+dynamic app state for long-running workflows. Plasmate should keep the
+local-first wedge by surfacing live-region state in the same portable compact
+target contract.
+
+1. **Busy state gates replay**: `aria-busy` should surface as compact `busy`
+   state so agents know whether results or controls are still updating.
+2. **Live politeness shapes waiting**: `aria-live` should travel as `live` so
+   agents can distinguish polite status updates from urgent alert feedback.
+3. **Announcement scope explains drift**: `aria-atomic` and `aria-relevant`
+   should surface as `atomic` and `relevant` without changing deterministic
+   `cache_key` values.
+
 ## Architecture
 
 ```
@@ -926,6 +943,13 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   Vercel AI action-plan surfaces now expose `form`, `list`, and `errormessage`
   without changing deterministic action `cache_key` values.
 - The shared action-availability manifest now asserts form-relation cues across
+  parser, SDK, and framework adapter outputs.
+- Rust SOM compilation and the JSON Schema now preserve ARIA live-region state
+  with `aria-busy`, `aria-live`, `aria-atomic`, and `aria-relevant`.
+- Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and
+  Vercel AI action-plan surfaces now expose `busy`, `live`, `atomic`, and
+  `relevant` without changing deterministic action `cache_key` values.
+- The shared action-availability manifest now asserts live-region cues across
   parser, SDK, and framework adapter outputs.
 
 ## Dependencies to Add

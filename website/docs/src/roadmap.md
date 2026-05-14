@@ -270,6 +270,14 @@ Current browser-agent products keep turning page state into reusable action menu
 - **Datalist references shape value choice**: `list` should surface in action plans so agents know when an input is backed by a suggestion source.
 - **Error-message relationships explain invalid state**: `aria-errormessage` should surface as compact `errormessage` state without changing target `cache_key` values.
 
+### 2026-05-14 Live-Region Action Menu Adjustment
+
+Current browser-agent docs keep making repeated actions depend on current page state. Playwright MCP refs expire when the snapshot changes, Stagehand caching validates page state before replay, and Browser Use/CDP sessions preserve dynamic app state for long-running workflows. Plasmate should keep the local-first wedge by surfacing live-region state in the same portable compact target contract.
+
+- **Busy state gates replay**: `aria-busy` should surface as compact `busy` state so agents know whether results or controls are still updating.
+- **Live politeness shapes waiting**: `aria-live` should travel as `live` so agents can distinguish polite status updates from urgent alert feedback.
+- **Announcement scope explains drift**: `aria-atomic` and `aria-relevant` should surface as `atomic` and `relevant` without changing deterministic `cache_key` values.
+
 ### 2026-05-13 Keyboard-Affordance Action Menu Adjustment
 
 Current Playwright MCP and Stagehand docs keep validating action surfaces that are current, inspectable, and reusable. Browserbase, Browser Use, and Firecrawl add hosted sessions and traces around that same workflow, but Plasmate's sticky local-first wedge is still a portable action contract that carries browser-like affordances everywhere.
@@ -429,6 +437,9 @@ Current Playwright MCP and Stagehand docs keep validating action surfaces that a
 - [x] Rust compiler and SOM schema preserve form, list, and ARIA errormessage relationship cues
 - [x] Compact action plans expose form, list, and errormessage across parser packages, SDKs, and framework adapters
 - [x] Shared action-availability manifest asserts form-relation cues without changing deterministic action cache keys
+- [x] Rust compiler and SOM schema preserve ARIA busy, live, atomic, and relevant cues
+- [x] Compact action plans expose busy, live, atomic, and relevant across parser packages, SDKs, and framework adapters
+- [x] Shared action-availability manifest asserts live-region cues without changing deterministic action cache keys
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants

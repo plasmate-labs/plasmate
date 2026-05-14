@@ -86,8 +86,8 @@ Browser Use page contexts are tested against the shared
 cache-key, required, readonly, group, type, value, checked, expanded, pressed,
 selected, current, controls, haspopup, autocomplete, inputmode, enterkeyhint,
 form, list, accesskey, ARIA autocomplete/active-descendant/error-message
-state, keyshortcuts, roledescription, validation constraints, invalid state,
-and description cues
+state, keyshortcuts, roledescription, live-region state, validation
+constraints, invalid state, and description cues
 stay aligned with other adapters.
 
 ### Markdown extraction

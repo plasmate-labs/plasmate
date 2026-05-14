@@ -203,6 +203,10 @@ type ActionPlanItem struct {
 	ErrorMessage     *string     `json:"errormessage,omitempty"`
 	KeyShortcuts     *string     `json:"keyshortcuts,omitempty"`
 	RoleDescription  *string     `json:"roledescription,omitempty"`
+	Busy             *bool       `json:"busy,omitempty"`
+	Live             *string     `json:"live,omitempty"`
+	Atomic           *bool       `json:"atomic,omitempty"`
+	Relevant         *string     `json:"relevant,omitempty"`
 	Required         *bool       `json:"required,omitempty"`
 	Readonly         *bool       `json:"readonly,omitempty"`
 	Disabled         *bool       `json:"disabled,omitempty"`
@@ -298,6 +302,10 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.ErrorMessage = el.Attrs.Aria.ErrorMessage
 				item.KeyShortcuts = el.Attrs.Aria.KeyShortcuts
 				item.RoleDescription = el.Attrs.Aria.RoleDescription
+				item.Busy = el.Attrs.Aria.Busy
+				item.Live = el.Attrs.Aria.Live
+				item.Atomic = el.Attrs.Aria.Atomic
+				item.Relevant = el.Attrs.Aria.Relevant
 			}
 			item.Required = el.Attrs.Required
 			item.Readonly = el.Attrs.Readonly

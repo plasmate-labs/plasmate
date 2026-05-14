@@ -85,7 +85,7 @@ const ratio = getCompressionRatio(som);
 | `findByText(som, text, options?): SomElement[]` | Find elements by text content. Case-insensitive substring by default; pass `{ exact: true }` for exact match. |
 | `findByAction(som, action): SomElement[]` | Find elements that expose a specific action. |
 | `findByHint(som, hint): SomElement[]` | Find elements tagged with a semantic hint. |
-| `getActionPlan(som): ActionPlanItem[]` | Return compact action targets with cache keys, availability, form/list relation cues, input-affordance cues, validation constraints, and live state cues for agent planning. |
+| `getActionPlan(som): ActionPlanItem[]` | Return compact action targets with cache keys, availability, form/list relation cues, input-affordance cues, validation constraints, and ARIA live-region cues for agent planning. |
 | `getActionPlanCacheKey(item): string` | Return a deterministic key for caching or comparing an action target. |
 | `getInteractiveElements(som): SomElement[]` | Get all elements that have actions. |
 | `getLinks(som): Array<{ text, href, id }>` | Extract all links with text, URL, and id. |

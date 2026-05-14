@@ -296,7 +296,11 @@
         "active_descendant": { "type": "string" },
         "errormessage": { "type": "string" },
         "keyshortcuts": { "type": "string" },
-        "roledescription": { "type": "string" }
+        "roledescription": { "type": "string" },
+        "busy": { "type": "boolean" },
+        "live": { "type": "string" },
+        "atomic": { "type": "boolean" },
+        "relevant": { "type": "string" }
       }
     },
     "ShadowRoot": {

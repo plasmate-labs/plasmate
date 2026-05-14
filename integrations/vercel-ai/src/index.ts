@@ -61,6 +61,10 @@ export interface PlasmateActionTarget {
   errormessage?: string
   keyshortcuts?: string
   roledescription?: string
+  busy?: boolean
+  live?: string
+  atomic?: boolean
+  relevant?: string
   href?: string
   input_type?: string
   value?: string
@@ -121,7 +125,7 @@ export interface PreparePlasmateActionPlanOptions {
 export const plasmateActionGuidance =
   'Use Plasmate SOM element ids for browser actions. Treat action targets ' +
   'with enabled=false or blocked_reason as unavailable, and prefer ' +
-  'cache_key, required, readonly, value, autocomplete, inputmode, enterkeyhint, form, list, accesskey, aria_autocomplete, active_descendant, errormessage, keyshortcuts, roledescription, pattern, minlength, maxlength, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
+  'cache_key, required, readonly, value, autocomplete, inputmode, enterkeyhint, form, list, accesskey, aria_autocomplete, active_descendant, errormessage, keyshortcuts, roledescription, busy, live, atomic, relevant, pattern, minlength, maxlength, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
 
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined
@@ -328,6 +332,22 @@ export function extractPlasmateActionTargets(
         if (typeof roledescription === 'string' && roledescription.length > 0) {
           target.roledescription = roledescription
         }
+        const busy = (aria as Record<string, unknown>).busy
+        if (typeof busy === 'boolean') {
+          target.busy = busy
+        }
+        const live = (aria as Record<string, unknown>).live
+        if (typeof live === 'string' && live.length > 0) {
+          target.live = live
+        }
+        const atomic = (aria as Record<string, unknown>).atomic
+        if (typeof atomic === 'boolean') {
+          target.atomic = atomic
+        }
+        const relevant = (aria as Record<string, unknown>).relevant
+        if (typeof relevant === 'string' && relevant.length > 0) {
+          target.relevant = relevant
+        }
       }
 
       if (typeof attrs.required === 'boolean') {
@@ -450,12 +470,18 @@ export function formatPlasmateActionPlan(
       const roledescription = target.roledescription
         ? ` [roledescription=${target.roledescription}]`
         : ''
+      const busy =
+        typeof target.busy !== 'undefined' ? ` [busy=${target.busy}]` : ''
+      const live = target.live ? ` [live=${target.live}]` : ''
+      const atomic =
+        typeof target.atomic !== 'undefined' ? ` [atomic=${target.atomic}]` : ''
+      const relevant = target.relevant ? ` [relevant=${target.relevant}]` : ''
       const group = target.group ? ` [group=${target.group}]` : ''
       const description = target.description
         ? ` [description=${target.description}]`
         : ''
 
-      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${readonly}${inputType}${value}${autocomplete}${inputmode}${enterkeyhint}${form}${list}${accesskey}${placeholder}${minlength}${maxlength}${pattern}${checked}${expanded}${pressed}${selected}${current}${controls}${haspopup}${invalid}${ariaAutocomplete}${activeDescendant}${errorMessage}${keyshortcuts}${roledescription}${group}${description}`
+      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${readonly}${inputType}${value}${autocomplete}${inputmode}${enterkeyhint}${form}${list}${accesskey}${placeholder}${minlength}${maxlength}${pattern}${checked}${expanded}${pressed}${selected}${current}${controls}${haspopup}${invalid}${ariaAutocomplete}${activeDescendant}${errorMessage}${keyshortcuts}${roledescription}${busy}${live}${atomic}${relevant}${group}${description}`
     })
     .join('\n')
 }

@@ -103,6 +103,10 @@ type AriaState struct {
 	ErrorMessage     *string     `json:"errormessage,omitempty"`
 	KeyShortcuts     *string     `json:"keyshortcuts,omitempty"`
 	RoleDescription  *string     `json:"roledescription,omitempty"`
+	Busy             *bool       `json:"busy,omitempty"`
+	Live             *string     `json:"live,omitempty"`
+	Atomic           *bool       `json:"atomic,omitempty"`
+	Relevant         *string     `json:"relevant,omitempty"`
 }
 
 // SomShadowRoot represents elements inside a web component shadow root.

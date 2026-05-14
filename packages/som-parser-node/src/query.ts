@@ -109,6 +109,10 @@ export interface ActionPlanItem {
   errormessage?: string;
   keyshortcuts?: string;
   roledescription?: string;
+  busy?: boolean;
+  live?: string;
+  atomic?: boolean;
+  relevant?: string;
   required?: boolean;
   readonly?: boolean;
   disabled?: boolean;
@@ -191,6 +195,10 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.aria?.errormessage !== undefined) item.errormessage = el.attrs.aria.errormessage;
     if (el.attrs?.aria?.keyshortcuts !== undefined) item.keyshortcuts = el.attrs.aria.keyshortcuts;
     if (el.attrs?.aria?.roledescription !== undefined) item.roledescription = el.attrs.aria.roledescription;
+    if (el.attrs?.aria?.busy !== undefined) item.busy = el.attrs.aria.busy;
+    if (el.attrs?.aria?.live !== undefined) item.live = el.attrs.aria.live;
+    if (el.attrs?.aria?.atomic !== undefined) item.atomic = el.attrs.aria.atomic;
+    if (el.attrs?.aria?.relevant !== undefined) item.relevant = el.attrs.aria.relevant;
     if (el.attrs?.required !== undefined) item.required = el.attrs.required;
     if (el.attrs?.readonly !== undefined) item.readonly = el.attrs.readonly;
     if (el.attrs?.disabled !== undefined) {

@@ -657,6 +657,12 @@
 <li><strong>Datalist references shape value choice</strong>: <code>list</code> should surface in action plans so agents know when an input is backed by a suggestion source.</li>
 <li><strong>Error-message relationships explain invalid state</strong>: <code>aria-errormessage</code> should surface as compact <code>errormessage</code> state without changing target <code>cache_key</code> values.</li>
 </ul>
+<h3 id="2026-05-14-live-region-action-menu-adjustment">2026-05-14 Live-Region Action Menu Adjustment</h3><p>Current browser-agent docs keep making repeated actions depend on current page state. Playwright MCP refs expire when the snapshot changes, Stagehand caching validates page state before replay, and Browser Use/CDP sessions preserve dynamic app state for long-running workflows. Plasmate should keep the local-first wedge by surfacing live-region state in the same portable compact target contract.</p>
+<ul>
+<li><strong>Busy state gates replay</strong>: <code>aria-busy</code> should surface as compact <code>busy</code> state so agents know whether results or controls are still updating.</li>
+<li><strong>Live politeness shapes waiting</strong>: <code>aria-live</code> should travel as <code>live</code> so agents can distinguish polite status updates from urgent alert feedback.</li>
+<li><strong>Announcement scope explains drift</strong>: <code>aria-atomic</code> and <code>aria-relevant</code> should surface as <code>atomic</code> and <code>relevant</code> without changing deterministic <code>cache_key</code> values.</li>
+</ul>
 <h3 id="2026-05-13-keyboard-affordance-action-menu-adjustment">2026-05-13 Keyboard-Affordance Action Menu Adjustment</h3><p>Current Playwright MCP and Stagehand docs keep validating action surfaces that are current, inspectable, and reusable. Browserbase, Browser Use, and Firecrawl add hosted sessions and traces around that same workflow, but Plasmate&#39;s sticky local-first wedge is still a portable action contract that carries browser-like affordances everywhere.</p>
 <ul>
 <li><strong>Native shortcuts are action context</strong>: <code>accesskey</code> should travel through Rust, schema, SDKs, parser packages, and adapters so agents can understand page-provided keyboard activation paths.</li>
@@ -809,6 +815,9 @@
 <li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve form, list, and ARIA errormessage relationship cues</li>
 <li><input checked="" disabled="" type="checkbox"> Compact action plans expose form, list, and errormessage across parser packages, SDKs, and framework adapters</li>
 <li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest asserts form-relation cues without changing deterministic action cache keys</li>
+<li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve ARIA busy, live, atomic, and relevant cues</li>
+<li><input checked="" disabled="" type="checkbox"> Compact action plans expose busy, live, atomic, and relevant across parser packages, SDKs, and framework adapters</li>
+<li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest asserts live-region cues without changing deterministic action cache keys</li>
 <li><input disabled="" type="checkbox"> Selector-aware SOM cache entries for repeated agent prompts</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
 <li><input disabled="" type="checkbox"> Wire <code>016-action-semantics</code> into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants</li>

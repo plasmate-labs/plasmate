@@ -117,6 +117,10 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         "errormessage",
         "keyshortcuts",
         "roledescription",
+        "busy",
+        "live",
+        "atomic",
+        "relevant",
     ):
         if state_key in item:
             flags.append(f"{state_key}={item[state_key]}")

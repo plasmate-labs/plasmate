@@ -347,6 +347,15 @@ preserving form association and error relationships in compact targets:
 scope, understand datalist suggestions, and explain invalid fields without
 raw DOM recovery.
 
+2026-05-14 live-region read: current official docs make validation-before-replay
+even more important. Playwright MCP refs are scoped to the current
+accessibility snapshot, Stagehand caches only pay off when the observed page
+state still matches, and Browser Use/CDP sessions keep dynamic app state alive
+for repeated workflows. Plasmate should expose lightweight ARIA live-region
+state in compact targets: `aria-busy`, `aria-live`, `aria-atomic`, and
+`aria-relevant` tell agents whether a control or result region is updating and
+how status feedback will announce without forcing raw DOM recovery.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -373,6 +382,13 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-14:
+  - The Rust SOM compiler and JSON Schema now preserve ARIA live-region cues:
+    `aria-busy`, `aria-live`, `aria-atomic`, and `aria-relevant`.
+  - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
+    AI action-plan surfaces now expose `busy`, `live`, `atomic`, and
+    `relevant` without changing deterministic action `cache_key` values.
+  - The shared action-availability manifest now asserts live-region state
+    across parser, SDK, and framework outputs.
   - The Rust SOM compiler and JSON Schema now preserve `form`, `list`, and
     `aria-errormessage`, adding form ownership, datalist, and error-message
     relationships to the compact action-state contract.
@@ -740,6 +756,8 @@ and adapter docs over one-off integration logic.
   once the shared action manifest remains stable.
 - Promote form-relation cases (`form`, `list`, and `aria-errormessage`) into
   broader parser, SDK, and adapter conformance fixtures.
+- Promote live-region cases (`aria-busy`, `aria-live`, `aria-atomic`, and
+  `aria-relevant`) into broader Rust/parser/SDK conformance fixtures.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched

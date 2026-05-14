@@ -78,6 +78,10 @@ def test_som_to_text_surfaces_interactive_state():
             "errormessage",
             "keyshortcuts",
             "roledescription",
+            "busy",
+            "live",
+            "atomic",
+            "relevant",
         ):
             if state_key in target:
                 assert f'[{state_key}="{target[state_key]}"]' in line

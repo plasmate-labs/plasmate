@@ -41,6 +41,10 @@
       "accesskey": "s",
       "keyshortcuts": "Meta+S",
       "roledescription": "primary action",
+      "busy": true,
+      "live": "polite",
+      "atomic": false,
+      "relevant": "additions text",
       "description": "Unavailable until required fields are complete"
     },
     {

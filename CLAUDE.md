@@ -49,6 +49,43 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T01:11:14Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first. The automation worktree
+  still cannot write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate43/FETCH_HEAD`
+  (`Operation not permitted`), so this run continued from local
+  `master`/`origin/master` state `9a04205`. Direct network-backed Cargo builds
+  also could not resolve GitHub for the `rusty_v8` archive, so verification
+  used the shared primary checkout target cache.
+- Market direction: current docs still validate Plasmate's local-first action
+  contract rather than a hosted-browser pivot. Playwright MCP keeps
+  accessibility refs scoped to fresh snapshots, Stagehand emphasizes
+  `observe()` plus local/server action caching, and Firecrawl/Browser Use keep
+  selling persistent browser sessions and CDP/profile state. The sticky move
+  remains richer portable SOM action state across SDKs and adapters.
+- Code changes: Rust SOM now preserves ARIA live-region cues:
+  `aria-busy`, `aria-live`, `aria-atomic`, and `aria-relevant`. Parser
+  packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI
+  action-plan surfaces expose `busy`, `live`, `atomic`, and `relevant` without
+  changing deterministic `cache_key` values.
+- Fixture and docs changes: the shared action-availability SOM and expected
+  manifest now assert live-region cues across parser, SDK, and framework
+  outputs. PRD, roadmap, SOM schema/spec, adapter docs, SDK docs, generated
+  website docs, and this running state were updated with rationale and next
+  conformance steps.
+- Verification: `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build`
+  passed with existing warnings; focused
+  `cargo test som::compiler::tests::test_live_region_action_cues_are_preserved`
+  passed; `cargo test --lib -- --test-threads=1` passed 249 tests;
+  `./scripts/action-manifest-conformance.sh --quick` passed;
+  `./scripts/action-manifest-conformance.sh --full` passed; `node
+  website/build.mjs` rebuilt 39 pages; `rustfmt --check src/som/compiler.rs`
+  passed; `git diff --check` passed. Full `cargo fmt --check` still reports
+  pre-existing formatting drift in unrelated Rust files.
+- Commit/push state: pending at this point. There is no `main` branch in this
+  repo; `origin/HEAD` points at `origin/master`.
+
 ### 2026-05-14T00:11:36Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first. The automation worktree

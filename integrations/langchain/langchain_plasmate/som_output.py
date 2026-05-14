@@ -237,6 +237,10 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
             "errormessage",
             "keyshortcuts",
             "roledescription",
+            "busy",
+            "live",
+            "atomic",
+            "relevant",
         ):
             if state_key in attrs["aria"]:
                 output_key = "aria_autocomplete" if state_key == "autocomplete" else state_key
