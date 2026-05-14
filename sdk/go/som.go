@@ -72,6 +72,8 @@ type ElementAttrs struct {
 	AccessKey       *string        `json:"accesskey,omitempty"`
 	Spellcheck      interface{}    `json:"spellcheck,omitempty"`
 	Name            *string        `json:"name,omitempty"`
+	Accept          *string        `json:"accept,omitempty"`
+	Capture         interface{}    `json:"capture,omitempty"`
 	Autocomplete    *string        `json:"autocomplete,omitempty"`
 	InputMode       *string        `json:"inputmode,omitempty"`
 	EnterKeyHint    *string        `json:"enterkeyhint,omitempty"`

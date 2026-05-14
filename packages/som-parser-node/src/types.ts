@@ -104,6 +104,8 @@ export interface SomElementAttrs {
   accesskey?: string;
   spellcheck?: boolean | string;
   name?: string;
+  accept?: string;
+  capture?: boolean | string;
   autocomplete?: string;
   inputmode?: string;
   enterkeyhint?: string;

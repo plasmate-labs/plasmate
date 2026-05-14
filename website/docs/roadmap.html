@@ -505,7 +505,7 @@
 <ul>
 <li><strong>Cross-language action plans</strong>: Go should expose the same compact action targets as the parser packages so agents can plan from ids, roles, labels, actions, hrefs, names, and input types in any supported runtime.</li>
 <li><strong>Shadow roots are not optional</strong>: web-component controls must be reachable by id, role, text, interactivity, and flattened traversal in Go as well as Python and Node.</li>
-<li><strong>Schema fields need SDK homes</strong>: <code>attrs.description</code>, <code>attrs.name</code>, <code>attrs.autocomplete</code>, ARIA state, details attrs, iframe attrs, and <code>shadow</code> should be treated as public contract across all SDKs.</li>
+<li><strong>Schema fields need SDK homes</strong>: <code>attrs.description</code>, <code>attrs.name</code>, <code>attrs.accept</code>, <code>attrs.capture</code>, <code>attrs.multiple</code>, <code>attrs.autocomplete</code>, ARIA state, details attrs, iframe attrs, and <code>shadow</code> should be treated as public contract across all SDKs.</li>
 </ul>
 <h3 id="2026-05-11-browser-run-and-naming-adjustment">2026-05-11 Browser Run and Naming Adjustment</h3><p>Cloudflare&#39;s Browser Run launch strengthens the trend toward browser platforms that pair hosted sessions with Live View, recordings, human-in-loop, MCP/CDP, and structured extraction. Plasmate should keep the local-first lane by making SOM the most trustworthy portable action snapshot.</p>
 <ul>
@@ -866,6 +866,9 @@
 <li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve spellcheck, autocapitalize, dirname, and ARIA placeholder cues</li>
 <li><input checked="" disabled="" type="checkbox"> Compact action plans expose spellcheck, autocapitalize, dirname, and aria_placeholder across parser packages, SDKs, and framework adapters</li>
 <li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest and 016-action-semantics fixture assert text-entry affordance cues without changing deterministic action cache keys</li>
+<li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve upload constraints with accept, capture, and native multiple state</li>
+<li><input checked="" disabled="" type="checkbox"> Compact action plans expose name, accept, capture, and multiple across parser packages, SDKs, and framework adapters</li>
+<li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest asserts upload constraints and multiple-selection state for cacheable action targets</li>
 <li><input disabled="" type="checkbox"> Selector-aware SOM cache entries for repeated agent prompts</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
 <li><input disabled="" type="checkbox"> Wire <code>016-action-semantics</code> into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants</li>
@@ -876,6 +879,7 @@
 <li><input disabled="" type="checkbox"> Promote ARIA widget affordance cases into broader parser, SDK, and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote ARIA set-position cases into broader Rust/parser/SDK and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote text-entry affordance cases into broader parser, SDK, and adapter conformance fixtures</li>
+<li><input disabled="" type="checkbox"> Promote upload-affordance cases into broader Rust/parser/SDK and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Add cross-adapter accessible-description fixtures</li>

@@ -123,6 +123,8 @@ class ElementAttrs(BaseModel):
     accesskey: Optional[str] = None
     spellcheck: Optional[bool | str] = None
     name: Optional[str] = None
+    accept: Optional[str] = None
+    capture: Optional[bool | str] = None
     autocomplete: Optional[str] = None
     inputmode: Optional[str] = None
     enterkeyhint: Optional[str] = None

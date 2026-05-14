@@ -91,6 +91,14 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append(f"download={item['download']}")
     if item.get("input_type"):
         flags.append(f"type={item['input_type']}")
+    if item.get("name"):
+        flags.append(f"name={item['name']}")
+    if item.get("accept"):
+        flags.append(f"accept={item['accept']}")
+    if "capture" in item:
+        flags.append(f"capture={item['capture']}")
+    if "multiple" in item:
+        flags.append(f"multiple={item['multiple']}")
     if item.get("autocomplete"):
         flags.append(f"autocomplete={item['autocomplete']}")
     if item.get("inputmode"):

@@ -436,6 +436,43 @@ fn test_form_state_values_and_readonly_are_preserved() {
 }
 
 #[test]
+fn test_file_upload_action_cues_are_preserved() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Uploads</title></head>
+<body><main>
+    <label for="evidence">Evidence files</label>
+    <input id="evidence" name="evidence" type="file" accept="image/png,.pdf" capture="environment" multiple required>
+    <input aria-label="Profile photo" type="file" accept="image/*" capture>
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let elems = all_elements(&som);
+
+    let evidence = elems
+        .iter()
+        .find(|e| e.role == ElementRole::TextInput && e.label.as_deref() == Some("Evidence files"))
+        .expect("file input should compile as an action target");
+    let evidence_attrs = evidence
+        .attrs
+        .as_ref()
+        .expect("file input attrs should exist");
+    assert_eq!(evidence_attrs["input_type"], "file");
+    assert_eq!(evidence_attrs["name"], "evidence");
+    assert_eq!(evidence_attrs["accept"], "image/png,.pdf");
+    assert_eq!(evidence_attrs["capture"], "environment");
+    assert_eq!(evidence_attrs["multiple"], true);
+    assert_eq!(evidence_attrs["required"], true);
+
+    let photo = elems
+        .iter()
+        .find(|e| e.role == ElementRole::TextInput && e.label.as_deref() == Some("Profile photo"))
+        .expect("boolean capture input should compile");
+    let photo_attrs = photo.attrs.as_ref().expect("photo attrs should exist");
+    assert_eq!(photo_attrs["accept"], "image/*");
+    assert_eq!(photo_attrs["capture"], true);
+}
+
+#[test]
 fn test_accessible_labels_from_label_for_and_labelledby() {
     let html = r#"<!DOCTYPE html>
 <html><head><title>Labels</title></head>

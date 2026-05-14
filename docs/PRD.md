@@ -416,6 +416,15 @@ small but practical text-entry cues such as `spellcheck`, `autocapitalize`,
 keyboard behavior, language direction capture, and custom textbox prompt text
 without changing deterministic cache keys.
 
+2026-05-14 upload-affordance read: current browser-agent products keep
+converging on replayable action menus, but production SaaS workflows often
+block on file evidence, screenshots, resumes, and media uploads. Plasmate
+should treat upload controls as first-class local action targets by surfacing
+`name`, `accept`, `capture`, and native `multiple` state across SDKs and
+adapters. The practical retention reason is simple: agents can validate that a
+cached upload plan still targets the right field and file type before asking a
+user or toolchain for a file.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -486,6 +495,14 @@ and adapter docs over one-off integration logic.
   - The shared action-availability manifest and `016-action-semantics`
     conformance fixture now assert these text-entry affordance cues across
     Rust, parser, SDK, and framework outputs.
+  - The Rust SOM compiler and JSON Schema now preserve upload action cues:
+    native `accept`, `capture`, and input `multiple`, while the shared manifest
+    now includes field `name` identity for deterministic target caching.
+  - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
+    AI action-plan surfaces now expose `name`, `accept`, `capture`, and
+    `multiple` for upload and multi-select workflows.
+  - The shared action-availability manifest now asserts upload constraints and
+    native multiple-selection state across parser, SDK, and framework outputs.
   - The Rust SOM compiler and JSON Schema now preserve ARIA relationship cues:
     `aria-owns`, `aria-flowto`, and `aria-details`.
   - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
@@ -883,6 +900,9 @@ and adapter docs over one-off integration logic.
   widget state, active descendants, `spellcheck`, `autocapitalize`,
   `dirname`, and `aria-placeholder`) into broader parser, SDK, and adapter
   conformance fixtures once the shared action manifest remains stable.
+- Promote upload-affordance cases (`accept`, `capture`, `multiple`, and
+  stable field `name`) into broader Rust/parser/SDK and adapter conformance
+  fixtures.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and
   `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures
   once the shared action manifest remains stable.

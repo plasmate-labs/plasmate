@@ -6,8 +6,8 @@
   "meta": {
     "html_bytes": 1200,
     "som_bytes": 300,
-    "element_count": 7,
-    "interactive_count": 7
+    "element_count": 8,
+    "interactive_count": 8
   },
   "regions": [
     {
@@ -22,6 +22,7 @@
           "actions": ["type"],
           "attrs": {
             "input_type": "email",
+            "name": "email",
             "value": "ops@example.com",
             "autocomplete": "email",
             "inputmode": "email",
@@ -47,6 +48,21 @@
             },
             "description": "Use your work email",
             "group": "Account"
+          }
+        },
+        {
+          "id": "e_upload",
+          "role": "text_input",
+          "label": "Evidence files",
+          "actions": ["type"],
+          "attrs": {
+            "input_type": "file",
+            "name": "evidence",
+            "accept": "image/png,.pdf",
+            "capture": "environment",
+            "multiple": true,
+            "required": true,
+            "description": "Attach screenshots or PDFs"
           }
         },
         {
@@ -83,6 +99,7 @@
           "attrs": {
             "required": true,
             "value": "team",
+            "multiple": true,
             "aria": {
               "expanded": false,
               "controls": "plan-options",

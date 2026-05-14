@@ -255,6 +255,8 @@ field MUST be omitted when the object would be empty.
 | `autocapitalize` | string | Capitalization hint for virtual keyboards, when present. |
 | `spellcheck` | boolean/string | Spellcheck state. Invalid source values are preserved as strings. |
 | `dirname` | string | Directionality submission field name, when present. |
+| `accept` | string | Accepted file/media types for upload controls. |
+| `capture` | boolean/string | Capture source hint for upload controls. Empty `capture` is emitted as `true`. |
 | `form` | string | Associated form id, when a form-associated control uses the `form` attribute. |
 | `list` | string | Associated datalist id, when an input uses the `list` attribute. |
 | `minlength` | integer/string | Minimum text length constraint. Invalid source values are preserved as strings. |
@@ -356,7 +358,7 @@ Each **Option** object:
 #### Global actionability attributes
 
 Implementations SHOULD preserve common actionability attributes on any element:
-`contenteditable`, `tabindex`, `name`, `autocomplete`, `inputmode`,
+`contenteditable`, `tabindex`, `name`, `accept`, `capture`, `autocomplete`, `inputmode`,
 `enterkeyhint`, `form`, `list`, `popovertarget`, `popovertargetaction`,
 `commandfor`, `command`, `popover`, `accesskey`, `readonly`, `min`, `max`,
 `step`, and `description`. The

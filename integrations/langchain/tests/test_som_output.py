@@ -48,6 +48,14 @@ def test_som_to_text_surfaces_interactive_state():
             assert "[readonly]" in line
         if target.get("value"):
             assert f'[value="{target["value"]}"]' in line
+        if target.get("name"):
+            assert f'[name="{target["name"]}"]' in line
+        if target.get("accept"):
+            assert f'[accept="{target["accept"]}"]' in line
+        if "capture" in target:
+            assert f'[capture="{target["capture"]}"]' in line
+        if "multiple" in target:
+            assert f'[multiple="{target["multiple"]}"]' in line
         if target.get("autocomplete"):
             assert f'[autocomplete="{target["autocomplete"]}"]' in line
         if target.get("inputmode"):

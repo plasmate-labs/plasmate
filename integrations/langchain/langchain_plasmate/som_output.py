@@ -206,6 +206,14 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append("[readonly]")
     if attrs.get("value"):
         flags.append(f'[value="{attrs["value"]}"]')
+    if attrs.get("name"):
+        flags.append(f'[name="{attrs["name"]}"]')
+    if attrs.get("accept"):
+        flags.append(f'[accept="{attrs["accept"]}"]')
+    if "capture" in attrs:
+        flags.append(f'[capture="{attrs["capture"]}"]')
+    if "multiple" in attrs:
+        flags.append(f'[multiple="{attrs["multiple"]}"]')
     if attrs.get("autocomplete"):
         flags.append(f'[autocomplete="{attrs["autocomplete"]}"]')
     if attrs.get("inputmode"):

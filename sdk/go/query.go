@@ -180,6 +180,9 @@ type ActionPlanItem struct {
 	Rel              *string     `json:"rel,omitempty"`
 	Download         interface{} `json:"download,omitempty"`
 	Name             *string     `json:"name,omitempty"`
+	Accept           *string     `json:"accept,omitempty"`
+	Capture          interface{} `json:"capture,omitempty"`
+	Multiple         *bool       `json:"multiple,omitempty"`
 	Autocomplete     *string     `json:"autocomplete,omitempty"`
 	InputMode        *string     `json:"inputmode,omitempty"`
 	EnterKeyHint     *string     `json:"enterkeyhint,omitempty"`
@@ -303,6 +306,9 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.Rel = el.Attrs.Rel
 			item.Download = el.Attrs.Download
 			item.Name = el.Attrs.Name
+			item.Accept = el.Attrs.Accept
+			item.Capture = el.Attrs.Capture
+			item.Multiple = el.Attrs.Multiple
 			item.Autocomplete = el.Attrs.Autocomplete
 			item.InputMode = el.Attrs.InputMode
 			item.EnterKeyHint = el.Attrs.EnterKeyHint

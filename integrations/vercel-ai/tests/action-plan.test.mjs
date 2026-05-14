@@ -41,12 +41,13 @@ assert.equal(
 const email = targets.find((target) => target.id === 'e_email')
 assert.deepEqual(email, {
   id: 'e_email',
-  cache_key: 'plasmate-action:v1:91875850',
+  cache_key: 'plasmate-action:v1:b0c57191',
   role: 'text_input',
   actions: ['type'],
   enabled: false,
   label: 'Work email',
   input_type: 'email',
+  name: 'email',
   value: 'ops@example.com',
   autocomplete: 'email',
   inputmode: 'email',
@@ -87,7 +88,7 @@ assert.equal(save.command, 'toggle-popover')
 const availableTargets = preparePlasmateActionPlan(targets)
 assert.deepEqual(
   availableTargets.map((target) => target.id),
-  ['e_plan', 'e_compact', 'e_annual', 'e_quota', 'e_billing']
+  ['e_upload', 'e_plan', 'e_compact', 'e_annual', 'e_quota', 'e_billing']
 )
 
 const formatted = formatPlasmateActionPlan(targets, {
@@ -95,7 +96,11 @@ const formatted = formatPlasmateActionPlan(targets, {
 })
 assert.match(
   formatted,
-  /\[e_email\] text_input "Work email" \(type\) \[blocked\] \[cache_key=plasmate-action:v1:91875850\] \[blocked_reason=readonly\] \[required\] \[readonly\] \[type=email\] \[value=ops@example\.com\] \[autocomplete=email\] \[inputmode=email\] \[enterkeyhint=next\] \[autocapitalize=none\] \[dirname=email\.dir\] \[form=settings-form\] \[list=email-suggestions\].*\[spellcheck=false\] \[placeholder=name@company\.com\].*\[invalid=grammar\] \[aria_placeholder=Work email address\] \[aria_autocomplete=list\] \[active_descendant=email-suggestion-1\] \[errormessage=email-error\] \[group=Account\]/
+  /\[e_email\] text_input "Work email" \(type\) \[blocked\] \[cache_key=plasmate-action:v1:b0c57191\] \[blocked_reason=readonly\] \[required\] \[readonly\] \[type=email\] \[value=ops@example\.com\] \[name=email\] \[autocomplete=email\] \[inputmode=email\] \[enterkeyhint=next\] \[autocapitalize=none\] \[dirname=email\.dir\] \[form=settings-form\] \[list=email-suggestions\].*\[spellcheck=false\] \[placeholder=name@company\.com\].*\[invalid=grammar\] \[aria_placeholder=Work email address\] \[aria_autocomplete=list\] \[active_descendant=email-suggestion-1\] \[errormessage=email-error\] \[group=Account\]/
+)
+assert.match(
+  formatted,
+  /\[e_upload\].*\[type=file\].*\[name=evidence\].*\[accept=image\/png,\.\pdf\].*\[capture=environment\].*\[multiple=true\]/
 )
 assert.match(formatted, /\[e_compact\].*\[checked=false\]/)
 assert.match(formatted, /\[e_compact\].*\[pressed=false\]/)
@@ -104,6 +109,7 @@ assert.match(formatted, /\[e_annual\].*\[selected=true\]/)
 assert.match(formatted, /\[e_plan\].*\[expanded=false\]/)
 assert.match(formatted, /\[e_plan\].*\[controls=plan-options\]/)
 assert.match(formatted, /\[e_plan\].*\[haspopup=listbox\]/)
+assert.match(formatted, /\[e_plan\].*\[multiple=true\]/)
 assert.match(formatted, /\[e_plan\].*\[multiselectable=true\]/)
 assert.match(formatted, /\[e_plan\].*\[level=2\].*\[posinset=1\].*\[setsize=3\]/)
 assert.match(formatted, /\[e_quota\].*\[min=1\].*\[max=100\].*\[step=5\]/)

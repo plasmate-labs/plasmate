@@ -3,7 +3,7 @@
   "action_targets": [
     {
       "id": "e_email",
-      "cache_key": "plasmate-action:v1:91875850",
+      "cache_key": "plasmate-action:v1:b0c57191",
       "role": "text_input",
       "label": "Work email",
       "actions": ["type"],
@@ -14,6 +14,7 @@
       "required": true,
       "group": "Account",
       "input_type": "email",
+      "name": "email",
       "value": "ops@example.com",
       "autocomplete": "email",
       "inputmode": "email",
@@ -33,6 +34,21 @@
       "active_descendant": "email-suggestion-1",
       "errormessage": "email-error",
       "description": "Use your work email"
+    },
+    {
+      "id": "e_upload",
+      "cache_key": "plasmate-action:v1:4bb2fdde",
+      "role": "text_input",
+      "label": "Evidence files",
+      "actions": ["type"],
+      "enabled": true,
+      "required": true,
+      "input_type": "file",
+      "name": "evidence",
+      "accept": "image/png,.pdf",
+      "capture": "environment",
+      "multiple": true,
+      "description": "Attach screenshots or PDFs"
     },
     {
       "id": "e_save",
@@ -68,6 +84,7 @@
       "enabled": true,
       "required": true,
       "value": "team",
+      "multiple": true,
       "expanded": false,
       "controls": "plan-options",
       "haspopup": "listbox",

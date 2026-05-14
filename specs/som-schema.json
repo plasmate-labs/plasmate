@@ -203,6 +203,13 @@
               ]
             },
             "name": { "type": "string" },
+            "accept": { "type": "string" },
+            "capture": {
+              "oneOf": [
+                { "type": "boolean" },
+                { "type": "string" }
+              ]
+            },
             "autocomplete": { "type": "string" },
             "inputmode": { "type": "string" },
             "enterkeyhint": { "type": "string" },
