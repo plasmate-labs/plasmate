@@ -49,6 +49,43 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T12:08:02Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted from the automation worktree
+  and failed before network access because the sandbox could not open the
+  worktree `FETCH_HEAD` under the primary checkout. Retrying from the primary
+  checkout reached SSH resolution and failed with `ssh: Could not resolve
+  hostname github.com: -65563`. The repo still has no `main` branch; local
+  `master` remains ahead of stale `origin/master`, and remote merge is blocked
+  until GitHub fetch/push works.
+- Market direction: current official docs continue to reinforce local
+  action-menu fidelity as the sticky wedge. Playwright MCP uses accessibility
+  snapshots and snapshot-scoped refs; Stagehand v3 documents `observe()` for
+  discovering, validating, and caching executable actions; Browser Use Cloud
+  and AWS AgentCore emphasize managed sessions, profiles, proxies, and replay.
+  Plasmate should keep deepening portable local SOM/action state rather than
+  pivoting into hosted browser infrastructure.
+- Code changes: Rust SOM now maps ARIA `slider` and `spinbutton` roles to
+  actionable `text_input` targets and ARIA `option` to an actionable `button`
+  target, closing three custom-control gaps for SaaS numeric settings and
+  listbox choices.
+- Fixture and docs changes: `016-action-semantics` now asserts slider,
+  spinbutton, and option action-role coverage with ARIA value/selected state.
+  SOM spec, generated website docs, PRD, roadmap, and this running state were
+  updated with the rationale and next conformance step.
+- Verification: `rustfmt --check src/som/compiler.rs tests/som_compiler_test.rs`
+  passed; focused SOM role tests passed; `cargo test --test som_compiler_test
+  -- --test-threads=1` passed 61 tests; `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build`
+  passed with existing warnings; `cargo test --lib -- --test-threads=1`
+  passed 256 tests; `./scripts/action-manifest-conformance.sh --quick` and
+  `--full` passed; `node website/build.mjs` rebuilt 39 pages; `git diff
+  --check` passed.
+- Verification gap: full `cargo test -- --test-threads=1` again reached
+  `tests/awp_integration_test.rs` and failed because this sandbox cannot spawn
+  the test subprocess (`Operation not permitted`). The failure matches the
+  known environment restriction from earlier runs; the changed SOM/compiler and
+  shared adapter surfaces passed.
+
 ### 2026-05-14T11:07:00Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was retried from the primary checkout, but

@@ -342,6 +342,14 @@ Current Playwright MCP and Stagehand docs keep validating action surfaces that a
 - **ARIA shortcuts reduce ambiguity**: `aria-keyshortcuts` should surface as compact `keyshortcuts` state for buttons, menu items, and custom SaaS controls.
 - **Custom role descriptions help prompt selection**: `aria-roledescription` should be visible as `roledescription` without changing deterministic `cache_key` values, giving agents more human-facing context for custom widgets.
 
+### 2026-05-14 ARIA Action Role Coverage Adjustment
+
+Current browser-agent products are teaching developers to treat accessibility state as the action menu. Playwright MCP exposes interaction refs from current accessibility snapshots, while Stagehand v3 `observe()` returns structured actions that teams validate and cache. Plasmate should keep closing small local role-parity gaps before chasing hosted browser infrastructure.
+
+- **Numeric widgets need actions**: ARIA `slider` and `spinbutton` should map to actionable `text_input` targets so agents can adjust SaaS quotas, limits, and settings from local SOM.
+- **Listbox options are choices**: ARIA `option` should map to an actionable target with selected state preserved, giving custom selects parity with native select options.
+- **Conformance keeps adapters thin**: the `016-action-semantics` fixture should cover these roles so parser, SDK, and framework work can promote the same role contract without bespoke DOM recovery.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -523,6 +531,9 @@ Current Playwright MCP and Stagehand docs keep validating action surfaces that a
 - [x] Rust compiler and SOM schema preserve submit-button override cues with button_type, formaction, formmethod, formenctype, formtarget, and formnovalidate
 - [x] Compact action plans expose submit-button override cues across parser packages, SDKs, and framework adapters
 - [x] Shared action-availability manifest asserts submit-button override context for cacheable action targets
+- [x] ARIA slider and spinbutton roles compile into actionable text-input targets
+- [x] ARIA option roles compile into actionable button targets with selected state
+- [x] Action-semantics conformance covers slider, spinbutton, and option action roles
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants

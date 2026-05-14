@@ -737,6 +737,24 @@ stable target identity.
    boolean/string compact target state without changing deterministic
    `cache_key` values.
 
+### 2026-05-14 ARIA Action Role Coverage Adjustment
+
+Current browser-agent products are teaching developers to treat accessibility
+state as the action menu. Playwright MCP exposes interaction refs from current
+accessibility snapshots, while Stagehand v3 `observe()` returns structured
+actions that teams validate and cache. Plasmate should keep closing small local
+role-parity gaps before chasing hosted browser infrastructure.
+
+1. **Numeric widgets need actions**: ARIA `slider` and `spinbutton` should map
+   to actionable `text_input` targets so agents can adjust SaaS quotas, limits,
+   and settings from local SOM.
+2. **Listbox options are choices**: ARIA `option` should map to an actionable
+   target with selected state preserved, giving custom selects parity with
+   native select options.
+3. **Conformance keeps adapters thin**: the `016-action-semantics` fixture
+   should cover these roles so parser, SDK, and framework work can promote the
+   same role contract without bespoke DOM recovery.
+
 ## Architecture
 
 ```
@@ -1148,9 +1166,17 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   validation mode before replay.
 - The shared action-availability manifest now asserts submit-button override
   context across parser, SDK, and framework adapter outputs.
+- Rust SOM compilation now maps ARIA `slider` and `spinbutton` roles to
+  actionable text-input targets and maps ARIA `option` to an actionable button
+  target, closing three common custom-control role gaps.
+- The `016-action-semantics` conformance fixture now asserts slider,
+  spinbutton, and option action-role coverage with ARIA value/selected state.
+- SOM spec and generated docs now document these ARIA action-role mappings so
+  SDK and adapter promotion can treat them as product contract.
 - Next conformance step: promote upload-affordance, form-submission context,
-  and submit-button override cases into broader Rust/parser/SDK and adapter
-  fixtures alongside text-entry, ARIA widget, range, and set-position cases.
+  submit-button override, and expanded ARIA action-role cases into broader
+  Rust/parser/SDK and adapter fixtures alongside text-entry, ARIA widget,
+  range, and set-position cases.
 
 ## Dependencies to Add
 

@@ -1478,9 +1478,11 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                     "menuitemcheckbox" => return Some(ElementRole::Checkbox),
                     "radio" => return Some(ElementRole::Radio),
                     "menuitemradio" => return Some(ElementRole::Radio),
-                    "textbox" | "searchbox" => return Some(ElementRole::TextInput),
+                    "textbox" | "searchbox" | "slider" | "spinbutton" => {
+                        return Some(ElementRole::TextInput)
+                    }
                     "combobox" | "listbox" => return Some(ElementRole::Select),
-                    "menuitem" | "tab" => return Some(ElementRole::Button),
+                    "menuitem" | "tab" | "option" => return Some(ElementRole::Button),
                     "img" => return Some(ElementRole::Image),
                     "group" | "radiogroup" => return Some(ElementRole::Group),
                     _ => {}

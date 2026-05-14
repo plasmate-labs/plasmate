@@ -106,6 +106,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-14 submitter-override read: current browser-agent docs keep validating action replay against fresh structured state, and SaaS pages often route different submit buttons from the same form to different endpoints, methods, targets, or validation modes. Plasmate should expose native submitter override cues (`button_type`, `formaction`, `formmethod`, `formenctype`, `formtarget`, and `formnovalidate`) across the shared action manifest so local cached submit actions can verify the exact submission path without raw DOM recovery.
 
+2026-05-14 ARIA action-role read: current Playwright MCP docs keep structured accessibility refs as the interaction surface, while Stagehand v3 documents `observe()` as a way to discover, validate, and cache executable actions. Production SaaS apps often expose controls through ARIA-only roles instead of native elements, so Plasmate should continue widening local role parity before hosted infrastructure work. `slider`, `spinbutton`, and `option` are small but sticky action-role gaps because agents need to adjust numeric settings and choose custom listbox options without falling back to raw DOM recovery.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -142,6 +144,9 @@ The project already spans a large number of package and integration surfaces: Ru
   - The Rust SOM compiler now preserves submit-button override cues, and JSON Schema/SOM spec docs accept them: `button_type`, `formaction`, `formmethod`, `formenctype`, `formtarget`, and `formnovalidate`.
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose submit override cues so cached submit actions can validate endpoint, method, encoding, target, and validation mode before replay.
   - The shared action-availability manifest now asserts submit-button override context across parser, SDK, and framework outputs.
+  - The Rust SOM compiler now maps ARIA `slider` and `spinbutton` roles to actionable `text_input` targets and maps ARIA `option` to an actionable `button` target.
+  - The `016-action-semantics` conformance fixture now asserts `slider`, `spinbutton`, and `option` action-role coverage, including current ARIA value and selected state.
+  - SOM spec and generated docs now document the expanded ARIA action-role mapping so SDK and adapter maintainers know these roles are product surface.
   - The Rust SOM compiler and JSON Schema now preserve ARIA relationship cues: `aria-owns`, `aria-flowto`, and `aria-details`.
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `owns`, `flowto`, and `details` without changing deterministic action `cache_key` values.
   - The shared action-availability manifest now asserts ARIA owns/flowto/details relationship cues across parser, SDK, and framework outputs.
