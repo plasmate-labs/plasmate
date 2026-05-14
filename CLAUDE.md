@@ -49,6 +49,47 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T06:14:32Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted first from the automation
+  worktree, but the sandbox could not write shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate48/FETCH_HEAD`
+  (`Operation not permitted`). A primary-checkout fetch also intermittently
+  failed DNS for `github.com` over SSH, so this run continued from local
+  `master` / `origin/master` state `1bf2ca7`. The final push to remote
+  `master` succeeded.
+- Market direction: current browser-agent positioning still validates
+  Plasmate's local-first action-menu wedge. Playwright MCP-style structured
+  snapshots, Stagehand/Browserbase cached actions, and Firecrawl/Browser Use
+  managed sessions all reward compact state that can be validated before
+  replay. The product should keep deepening portable SOM/action state rather
+  than pivoting into hosted browser infrastructure.
+- Code changes: Rust SOM now preserves ARIA widget affordance cues:
+  `aria-readonly`, `aria-multiline`, and `aria-multiselectable`. ARIA
+  read-only also promotes top-level `attrs.readonly` so custom read-only
+  textboxes are treated like native read-only controls.
+- Parser/SDK/adapter changes: Python/Node parser packages, Python/Node/Go
+  SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose
+  `readonly`, `multiline`, and `multiselectable`; ARIA read-only targets are
+  unavailable with `blocked_reason="readonly"` while deterministic action
+  `cache_key` values stay stable.
+- Fixture and docs changes: the shared action-availability SOM and expected
+  manifest now assert ARIA read-only gating, multiline text entry, and
+  multiselectable widget cues. PRD, roadmap, schema/spec docs, adapter docs,
+  SDK docs, generated website docs, and this running state were updated with
+  rationale and next conformance steps.
+- Verification: JSON validation passed; focused Rust widget-state test passed;
+  `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build` passed with
+  existing warnings; `cargo test --lib -- --test-threads=1` passed 254 tests;
+  `./scripts/action-manifest-conformance.sh --quick` passed;
+  `./scripts/action-manifest-conformance.sh --full` passed; Vercel AI
+  `npm test` passed; `node website/build.mjs` rebuilt 39 pages; `git diff
+  --check` passed.
+- Commit/push state: commit `8aae908` (`chore: expose aria widget action
+  cues`) was pushed to remote `master`. There is no `main` branch in this
+  repo; `origin/HEAD` points at `origin/master`. The unrelated untracked
+  `.agents/` directory in the primary checkout was left untouched.
+
 ### 2026-05-14T05:13:35Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted first. The detached automation
