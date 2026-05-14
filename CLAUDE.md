@@ -49,6 +49,47 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-14T08:14:37Z - Plasmate Improvements Automation
+
+- Git sync: requested latest pull was attempted from the primary checkout, but
+  SSH DNS still could not resolve `github.com` (`ssh: Could not resolve
+  hostname github.com: -65563`). This run continued from local `master`
+  commit `f518449`; the repo has no `main` branch and `origin/HEAD` points at
+  `origin/master`.
+- Market direction: current Playwright MCP docs still center fresh structured
+  accessibility snapshots and snapshot-scoped refs, while Browserbase/
+  Stagehand emphasize `observe()` plus cached repeatable actions. Recent
+  browser-agent commentary also continues to favor compact DOM/accessibility
+  action menus over full-DOM prompts. Plasmate should keep deepening portable,
+  local SOM action state rather than pivoting into hosted browser
+  infrastructure.
+- Code changes: Rust SOM now preserves text-entry affordance cues:
+  `spellcheck`, `autocapitalize`, `dirname`, and ARIA `aria-placeholder`.
+  JSON Schema and SOM spec docs accept the corresponding `attrs.spellcheck`,
+  `attrs.autocapitalize`, `attrs.dirname`, and `attrs.aria.placeholder`
+  fields.
+- Parser/SDK/adapter changes: Python/Node parser packages, Python/Node/Go
+  SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose
+  `spellcheck`, `autocapitalize`, `dirname`, and `aria_placeholder` without
+  changing deterministic `cache_key` values.
+- Fixture and docs changes: the shared action-availability manifest and
+  `016-action-semantics` conformance fixture now assert text-entry affordance
+  cues. PRD, roadmap, adapter docs, SDK/parser docs, generated website docs,
+  and this running state were updated with rationale and next conformance
+  steps.
+- Verification: JSON validation passed; `rustfmt --check src/som/compiler.rs
+  tests/som_compiler_test.rs` passed; focused Rust text-entry and
+  action-semantics tests passed; `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build`
+  passed with existing warnings; `cargo test --lib -- --test-threads=1`
+  passed 256 tests; `./scripts/action-manifest-conformance.sh --quick` and
+  `--full` passed; `node website/build.mjs` rebuilt 39 pages; `git diff
+  --check` passed. Temporary Node dependency symlinks to the primary checkout
+  were removed after verification.
+- Commit/push state: pending at time of this note because GitHub DNS remained
+  unavailable during the initial fetch. The intended commit should be
+  fast-forwarded onto local `master` from this detached worktree and pushed to
+  `origin/master` when network resolution is available.
+
 ### 2026-05-14T07:12:56Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted from the primary checkout, but

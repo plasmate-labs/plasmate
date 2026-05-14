@@ -1838,6 +1838,15 @@ fn build_element_attrs(
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "accesskey") {
         map.insert("accesskey".into(), json!(value));
     }
+    if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "spellcheck") {
+        let normalized = value.trim().to_ascii_lowercase();
+        let spellcheck = match normalized.as_str() {
+            "" | "true" => json!(true),
+            "false" => json!(false),
+            _ => json!(value),
+        };
+        map.insert("spellcheck".into(), spellcheck);
+    }
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "name") {
         map.insert("name".into(), json!(value));
     }
@@ -1845,6 +1854,8 @@ fn build_element_attrs(
         "autocomplete",
         "inputmode",
         "enterkeyhint",
+        "autocapitalize",
+        "dirname",
         "form",
         "list",
         "popovertarget",
@@ -1898,6 +1909,7 @@ fn build_element_attrs(
         ("aria-controls", "controls"),
         ("aria-haspopup", "haspopup"),
         ("aria-invalid", "invalid"),
+        ("aria-placeholder", "placeholder"),
         ("aria-autocomplete", "autocomplete"),
         ("aria-activedescendant", "active_descendant"),
         ("aria-errormessage", "errormessage"),
@@ -2749,5 +2761,30 @@ mod tests {
         assert_eq!(attrs["aria"]["level"], "2");
         assert_eq!(attrs["aria"]["posinset"], "1");
         assert_eq!(attrs["aria"]["setsize"], "3");
+    }
+
+    #[test]
+    fn test_text_entry_affordance_cues_are_preserved() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Reply</title></head>
+<body>
+<main>
+  <input aria-label="Reply" spellcheck="false" autocapitalize="sentences" dirname="reply.dir" aria-placeholder="Write a response">
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.com").unwrap();
+        let input = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| element.role == ElementRole::TextInput)
+            .expect("text input should compile");
+        let attrs = input.attrs.as_ref().expect("input attrs should compile");
+        assert_eq!(attrs["spellcheck"], false);
+        assert_eq!(attrs["autocapitalize"], "sentences");
+        assert_eq!(attrs["dirname"], "reply.dir");
+        assert_eq!(attrs["aria"]["placeholder"], "Write a response");
     }
 }

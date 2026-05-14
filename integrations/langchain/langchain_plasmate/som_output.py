@@ -212,6 +212,10 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append(f'[inputmode="{attrs["inputmode"]}"]')
     if attrs.get("enterkeyhint"):
         flags.append(f'[enterkeyhint="{attrs["enterkeyhint"]}"]')
+    if attrs.get("autocapitalize"):
+        flags.append(f'[autocapitalize="{attrs["autocapitalize"]}"]')
+    if attrs.get("dirname"):
+        flags.append(f'[dirname="{attrs["dirname"]}"]')
     if attrs.get("form"):
         flags.append(f'[form="{attrs["form"]}"]')
     if attrs.get("list"):
@@ -233,6 +237,8 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
             flags.append(f'[{command_key}="{attrs[command_key]}"]')
     if attrs.get("accesskey"):
         flags.append(f'[accesskey="{attrs["accesskey"]}"]')
+    if "spellcheck" in attrs:
+        flags.append(f'[spellcheck="{attrs["spellcheck"]}"]')
     for constraint_key in ("minlength", "maxlength", "min", "max", "step", "pattern"):
         if constraint_key in attrs:
             flags.append(f'[{constraint_key}="{attrs[constraint_key]}"]')
@@ -249,6 +255,7 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
             "controls",
             "haspopup",
             "invalid",
+            "placeholder",
             "autocomplete",
             "active_descendant",
             "errormessage",
@@ -274,7 +281,13 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
             "valuetext",
         ):
             if state_key in aria:
-                output_key = "aria_autocomplete" if state_key == "autocomplete" else state_key
+                output_key = (
+                    "aria_autocomplete"
+                    if state_key == "autocomplete"
+                    else "aria_placeholder"
+                    if state_key == "placeholder"
+                    else state_key
+                )
                 flags.append(f'[{output_key}="{aria[state_key]}"]')
     if attrs.get("group"):
         flags.append(f'[group="{attrs["group"]}"]')

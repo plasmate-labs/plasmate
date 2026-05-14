@@ -28,11 +28,23 @@
         { "role": "heading", "text": "Preferences", "attrs": { "level": 1 } },
         { "role": "checkbox", "label": "Compact mode", "actions": ["toggle"] },
         { "role": "radio", "label": "Annual billing", "actions": ["select"] },
+        {
+          "role": "text_input",
+          "label": "Reply",
+          "actions": ["type", "clear"],
+          "attrs": {
+            "input_type": "text",
+            "spellcheck": false,
+            "autocapitalize": "sentences",
+            "dirname": "reply.dir",
+            "aria": { "placeholder": "Write a response" }
+          }
+        },
         { "role": "paragraph", "text": "Visible preferences copy" }
       ]
     }
   ],
   "meta": {
-    "interactive_count": 4
+    "interactive_count": 5
   }
 }

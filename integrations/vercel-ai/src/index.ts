@@ -42,6 +42,8 @@ export interface PlasmateActionTarget {
   autocomplete?: string
   inputmode?: string
   enterkeyhint?: string
+  autocapitalize?: string
+  dirname?: string
   form?: string
   list?: string
   popovertarget?: string
@@ -50,6 +52,7 @@ export interface PlasmateActionTarget {
   command?: string
   popover?: string
   accesskey?: string
+  spellcheck?: boolean | string
   minlength?: number | string
   maxlength?: number | string
   min?: number | string
@@ -66,6 +69,7 @@ export interface PlasmateActionTarget {
   controls?: string
   haspopup?: boolean | string
   invalid?: boolean | string
+  aria_placeholder?: string
   aria_autocomplete?: string
   active_descendant?: string
   errormessage?: string
@@ -150,7 +154,7 @@ export interface PreparePlasmateActionPlanOptions {
 export const plasmateActionGuidance =
   'Use Plasmate SOM element ids for browser actions. Treat action targets ' +
   'with enabled=false or blocked_reason as unavailable, and prefer ' +
-  'cache_key, required, readonly, value, target, rel, download, autocomplete, inputmode, enterkeyhint, form, list, popovertarget, popovertargetaction, commandfor, command, accesskey, aria_autocomplete, active_descendant, errormessage, keyshortcuts, roledescription, busy, live, atomic, relevant, owns, flowto, details, multiline, multiselectable, orientation, sort, level, posinset, setsize, valuemin, valuemax, valuenow, valuetext, pattern, minlength, maxlength, min, max, step, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
+  'cache_key, required, readonly, value, target, rel, download, autocomplete, inputmode, enterkeyhint, autocapitalize, dirname, spellcheck, form, list, popovertarget, popovertargetaction, commandfor, command, accesskey, aria_placeholder, aria_autocomplete, active_descendant, errormessage, keyshortcuts, roledescription, busy, live, atomic, relevant, owns, flowto, details, multiline, multiselectable, orientation, sort, level, posinset, setsize, valuemin, valuemax, valuenow, valuetext, pattern, minlength, maxlength, min, max, step, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
 
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined
@@ -244,7 +248,7 @@ function collectSomElements(elements: readonly PlasmateSomElement[] = []) {
 function copyStringAttr(
   item: PlasmateActionTarget,
   attrs: Record<string, unknown>,
-  key: 'href' | 'target' | 'rel' | 'input_type' | 'value' | 'name' | 'placeholder' | 'description' | 'group' | 'autocomplete' | 'inputmode' | 'enterkeyhint' | 'form' | 'list' | 'popovertarget' | 'popovertargetaction' | 'commandfor' | 'command' | 'popover' | 'accesskey' | 'pattern' | 'step'
+  key: 'href' | 'target' | 'rel' | 'input_type' | 'value' | 'name' | 'placeholder' | 'description' | 'group' | 'autocomplete' | 'inputmode' | 'enterkeyhint' | 'autocapitalize' | 'dirname' | 'form' | 'list' | 'popovertarget' | 'popovertargetaction' | 'commandfor' | 'command' | 'popover' | 'accesskey' | 'pattern' | 'step'
 ) {
   if (typeof attrs[key] === 'string' && attrs[key].length > 0) {
     item[key] = attrs[key]
@@ -254,7 +258,7 @@ function copyStringAttr(
 function copyStringOrBooleanAttr(
   item: PlasmateActionTarget,
   attrs: Record<string, unknown>,
-  key: 'download'
+  key: 'download' | 'spellcheck'
 ) {
   if (typeof attrs[key] === 'string' || typeof attrs[key] === 'boolean') {
     item[key] = attrs[key]
@@ -301,6 +305,8 @@ export function extractPlasmateActionTargets(
       copyStringAttr(target, attrs, 'autocomplete')
       copyStringAttr(target, attrs, 'inputmode')
       copyStringAttr(target, attrs, 'enterkeyhint')
+      copyStringAttr(target, attrs, 'autocapitalize')
+      copyStringAttr(target, attrs, 'dirname')
       copyStringAttr(target, attrs, 'form')
       copyStringAttr(target, attrs, 'list')
       copyStringAttr(target, attrs, 'popovertarget')
@@ -309,6 +315,7 @@ export function extractPlasmateActionTargets(
       copyStringAttr(target, attrs, 'command')
       copyStringAttr(target, attrs, 'popover')
       copyStringAttr(target, attrs, 'accesskey')
+      copyStringOrBooleanAttr(target, attrs, 'spellcheck')
       copyStringAttr(target, attrs, 'placeholder')
       copyStringOrNumberAttr(target, attrs, 'minlength')
       copyStringOrNumberAttr(target, attrs, 'maxlength')
@@ -361,6 +368,10 @@ export function extractPlasmateActionTargets(
         const invalid = (aria as Record<string, unknown>).invalid
         if (typeof invalid === 'boolean' || typeof invalid === 'string') {
           target.invalid = invalid
+        }
+        const ariaPlaceholder = (aria as Record<string, unknown>).placeholder
+        if (typeof ariaPlaceholder === 'string' && ariaPlaceholder.length > 0) {
+          target.aria_placeholder = ariaPlaceholder
         }
         const ariaAutocomplete = (aria as Record<string, unknown>).autocomplete
         if (typeof ariaAutocomplete === 'string' && ariaAutocomplete.length > 0) {
@@ -509,6 +520,10 @@ export function formatPlasmateActionPlan(
       const enterkeyhint = target.enterkeyhint
         ? ` [enterkeyhint=${target.enterkeyhint}]`
         : ''
+      const autocapitalize = target.autocapitalize
+        ? ` [autocapitalize=${target.autocapitalize}]`
+        : ''
+      const dirname = target.dirname ? ` [dirname=${target.dirname}]` : ''
       const form = target.form ? ` [form=${target.form}]` : ''
       const list = target.list ? ` [list=${target.list}]` : ''
       const popovertarget = target.popovertarget
@@ -525,6 +540,8 @@ export function formatPlasmateActionPlan(
       const accesskey = target.accesskey
         ? ` [accesskey=${target.accesskey}]`
         : ''
+      const spellcheck =
+        typeof target.spellcheck !== 'undefined' ? ` [spellcheck=${target.spellcheck}]` : ''
       const placeholder = target.placeholder
         ? ` [placeholder=${target.placeholder}]`
         : ''
@@ -557,6 +574,9 @@ export function formatPlasmateActionPlan(
         typeof target.invalid !== 'undefined' ? ` [invalid=${target.invalid}]` : ''
       const ariaAutocomplete = target.aria_autocomplete
         ? ` [aria_autocomplete=${target.aria_autocomplete}]`
+        : ''
+      const ariaPlaceholder = target.aria_placeholder
+        ? ` [aria_placeholder=${target.aria_placeholder}]`
         : ''
       const activeDescendant = target.active_descendant
         ? ` [active_descendant=${target.active_descendant}]`
@@ -593,7 +613,7 @@ export function formatPlasmateActionPlan(
         ? ` [description=${target.description}]`
         : ''
 
-      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${readonly}${linkTarget}${rel}${download}${inputType}${value}${autocomplete}${inputmode}${enterkeyhint}${form}${list}${popovertarget}${popovertargetaction}${commandfor}${command}${popover}${accesskey}${placeholder}${minlength}${maxlength}${min}${max}${step}${pattern}${checked}${expanded}${pressed}${selected}${multiline}${multiselectable}${current}${controls}${haspopup}${invalid}${ariaAutocomplete}${activeDescendant}${errorMessage}${keyshortcuts}${roledescription}${busy}${live}${atomic}${relevant}${owns}${flowto}${details}${orientation}${sort}${level}${posinset}${setsize}${valuemin}${valuemax}${valuenow}${valuetext}${group}${description}`
+      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${readonly}${linkTarget}${rel}${download}${inputType}${value}${autocomplete}${inputmode}${enterkeyhint}${autocapitalize}${dirname}${form}${list}${popovertarget}${popovertargetaction}${commandfor}${command}${popover}${accesskey}${spellcheck}${placeholder}${minlength}${maxlength}${min}${max}${step}${pattern}${checked}${expanded}${pressed}${selected}${multiline}${multiselectable}${current}${controls}${haspopup}${invalid}${ariaPlaceholder}${ariaAutocomplete}${activeDescendant}${errorMessage}${keyshortcuts}${roledescription}${busy}${live}${atomic}${relevant}${owns}${flowto}${details}${orientation}${sort}${level}${posinset}${setsize}${valuemin}${valuemax}${valuenow}${valuetext}${group}${description}`
     })
     .join('\n')
 }

@@ -89,6 +89,8 @@ export interface ActionPlanItem {
   autocomplete?: string;
   inputmode?: string;
   enterkeyhint?: string;
+  autocapitalize?: string;
+  dirname?: string;
   form?: string;
   list?: string;
   popovertarget?: string;
@@ -97,6 +99,7 @@ export interface ActionPlanItem {
   command?: string;
   popover?: string;
   accesskey?: string;
+  spellcheck?: boolean | string;
   input_type?: string;
   value?: string;
   placeholder?: string;
@@ -117,6 +120,7 @@ export interface ActionPlanItem {
   controls?: string;
   haspopup?: boolean | string;
   invalid?: boolean | string;
+  aria_placeholder?: string;
   aria_autocomplete?: string;
   active_descendant?: string;
   errormessage?: string;
@@ -196,6 +200,8 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.autocomplete) item.autocomplete = el.attrs.autocomplete;
     if (el.attrs?.inputmode) item.inputmode = el.attrs.inputmode;
     if (el.attrs?.enterkeyhint) item.enterkeyhint = el.attrs.enterkeyhint;
+    if (el.attrs?.autocapitalize) item.autocapitalize = el.attrs.autocapitalize;
+    if (el.attrs?.dirname) item.dirname = el.attrs.dirname;
     if (el.attrs?.form) item.form = el.attrs.form;
     if (el.attrs?.list) item.list = el.attrs.list;
     if (el.attrs?.popovertarget) item.popovertarget = el.attrs.popovertarget;
@@ -204,6 +210,7 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.command) item.command = el.attrs.command;
     if (el.attrs?.popover) item.popover = el.attrs.popover;
     if (el.attrs?.accesskey) item.accesskey = el.attrs.accesskey;
+    if (el.attrs?.spellcheck !== undefined) item.spellcheck = el.attrs.spellcheck;
     if (el.attrs?.input_type) item.input_type = el.attrs.input_type;
     if (el.attrs?.value) item.value = el.attrs.value;
     if (el.attrs?.placeholder) item.placeholder = el.attrs.placeholder;
@@ -227,6 +234,7 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.aria?.controls !== undefined) item.controls = el.attrs.aria.controls;
     if (el.attrs?.aria?.haspopup !== undefined) item.haspopup = el.attrs.aria.haspopup;
     if (el.attrs?.aria?.invalid !== undefined) item.invalid = el.attrs.aria.invalid;
+    if (el.attrs?.aria?.placeholder !== undefined) item.aria_placeholder = el.attrs.aria.placeholder;
     if (el.attrs?.aria?.autocomplete !== undefined) item.aria_autocomplete = el.attrs.aria.autocomplete;
     if (el.attrs?.aria?.active_descendant !== undefined) item.active_descendant = el.attrs.aria.active_descendant;
     if (el.attrs?.aria?.errormessage !== undefined) item.errormessage = el.attrs.aria.errormessage;

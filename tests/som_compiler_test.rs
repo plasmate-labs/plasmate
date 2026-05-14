@@ -282,11 +282,23 @@ fn test_action_semantics_conformance_fixture() {
                 && elem.label.as_deref() == Some("Annual billing")),
         "menuitemradio should compile into an actionable radio target"
     );
+    let reply = all_elements(&som)
+        .into_iter()
+        .find(|elem| elem.role == ElementRole::TextInput && elem.label.as_deref() == Some("Reply"))
+        .expect("text-entry affordance target should compile");
+    let attrs = reply
+        .attrs
+        .as_ref()
+        .expect("text-entry target should have attrs");
+    assert_eq!(attrs["spellcheck"], false);
+    assert_eq!(attrs["autocapitalize"], "sentences");
+    assert_eq!(attrs["dirname"], "reply.dir");
+    assert_eq!(attrs["aria"]["placeholder"], "Write a response");
     assert!(!json.contains("Hidden stylesheet copy"));
     assert!(!json.contains("Hidden uppercase ARIA copy"));
     assert!(!json.contains("Hidden inline opacity copy"));
     assert!(json.contains("Visible preferences copy"));
-    assert_eq!(som.meta.interactive_count, 4);
+    assert_eq!(som.meta.interactive_count, 5);
 }
 
 #[test]

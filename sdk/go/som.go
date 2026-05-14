@@ -70,10 +70,13 @@ type ElementAttrs struct {
 	ContentEditable interface{}    `json:"contenteditable,omitempty"`
 	TabIndex        interface{}    `json:"tabindex,omitempty"`
 	AccessKey       *string        `json:"accesskey,omitempty"`
+	Spellcheck      interface{}    `json:"spellcheck,omitempty"`
 	Name            *string        `json:"name,omitempty"`
 	Autocomplete    *string        `json:"autocomplete,omitempty"`
 	InputMode       *string        `json:"inputmode,omitempty"`
 	EnterKeyHint    *string        `json:"enterkeyhint,omitempty"`
+	AutoCapitalize  *string        `json:"autocapitalize,omitempty"`
+	DirName         *string        `json:"dirname,omitempty"`
 	Form            *string        `json:"form,omitempty"`
 	List            *string        `json:"list,omitempty"`
 	PopoverTarget   *string        `json:"popovertarget,omitempty"`
@@ -110,6 +113,7 @@ type AriaState struct {
 	Controls         *string     `json:"controls,omitempty"`
 	HasPopup         interface{} `json:"haspopup,omitempty"`
 	Invalid          interface{} `json:"invalid,omitempty"`
+	Placeholder      *string     `json:"placeholder,omitempty"`
 	Autocomplete     *string     `json:"autocomplete,omitempty"`
 	ActiveDescendant *string     `json:"active_descendant,omitempty"`
 	ErrorMessage     *string     `json:"errormessage,omitempty"`

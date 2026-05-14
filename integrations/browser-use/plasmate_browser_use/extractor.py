@@ -97,6 +97,10 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append(f"inputmode={item['inputmode']}")
     if item.get("enterkeyhint"):
         flags.append(f"enterkeyhint={item['enterkeyhint']}")
+    if item.get("autocapitalize"):
+        flags.append(f"autocapitalize={item['autocapitalize']}")
+    if item.get("dirname"):
+        flags.append(f"dirname={item['dirname']}")
     if item.get("form"):
         flags.append(f"form={item['form']}")
     if item.get("list"):
@@ -112,6 +116,8 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
             flags.append(f"{command_key}={item[command_key]}")
     if item.get("accesskey"):
         flags.append(f"accesskey={item['accesskey']}")
+    if "spellcheck" in item:
+        flags.append(f"spellcheck={item['spellcheck']}")
     if item.get("value"):
         flags.append(f"value={item['value']}")
     for constraint_key in ("minlength", "maxlength", "min", "max", "step", "pattern"):
@@ -127,6 +133,7 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         "controls",
         "haspopup",
         "invalid",
+        "aria_placeholder",
         "aria_autocomplete",
         "active_descendant",
         "errormessage",

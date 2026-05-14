@@ -183,6 +183,8 @@ type ActionPlanItem struct {
 	Autocomplete     *string     `json:"autocomplete,omitempty"`
 	InputMode        *string     `json:"inputmode,omitempty"`
 	EnterKeyHint     *string     `json:"enterkeyhint,omitempty"`
+	AutoCapitalize   *string     `json:"autocapitalize,omitempty"`
+	DirName          *string     `json:"dirname,omitempty"`
 	Form             *string     `json:"form,omitempty"`
 	List             *string     `json:"list,omitempty"`
 	PopoverTarget    *string     `json:"popovertarget,omitempty"`
@@ -191,6 +193,7 @@ type ActionPlanItem struct {
 	Command          *string     `json:"command,omitempty"`
 	Popover          *string     `json:"popover,omitempty"`
 	AccessKey        *string     `json:"accesskey,omitempty"`
+	Spellcheck       interface{} `json:"spellcheck,omitempty"`
 	InputType        *string     `json:"input_type,omitempty"`
 	Value            *string     `json:"value,omitempty"`
 	Placeholder      *string     `json:"placeholder,omitempty"`
@@ -211,6 +214,7 @@ type ActionPlanItem struct {
 	Controls         *string     `json:"controls,omitempty"`
 	HasPopup         interface{} `json:"haspopup,omitempty"`
 	Invalid          interface{} `json:"invalid,omitempty"`
+	AriaPlaceholder  *string     `json:"aria_placeholder,omitempty"`
 	AriaAutocomplete *string     `json:"aria_autocomplete,omitempty"`
 	ActiveDescendant *string     `json:"active_descendant,omitempty"`
 	ErrorMessage     *string     `json:"errormessage,omitempty"`
@@ -302,6 +306,8 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.Autocomplete = el.Attrs.Autocomplete
 			item.InputMode = el.Attrs.InputMode
 			item.EnterKeyHint = el.Attrs.EnterKeyHint
+			item.AutoCapitalize = el.Attrs.AutoCapitalize
+			item.DirName = el.Attrs.DirName
 			item.Form = el.Attrs.Form
 			item.List = el.Attrs.List
 			item.PopoverTarget = el.Attrs.PopoverTarget
@@ -310,6 +316,7 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.Command = el.Attrs.Command
 			item.Popover = el.Attrs.Popover
 			item.AccessKey = el.Attrs.AccessKey
+			item.Spellcheck = el.Attrs.Spellcheck
 			item.InputType = el.Attrs.InputType
 			item.Value = el.Attrs.Value
 			item.Placeholder = el.Attrs.Placeholder
@@ -336,6 +343,7 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.Controls = el.Attrs.Aria.Controls
 				item.HasPopup = el.Attrs.Aria.HasPopup
 				item.Invalid = el.Attrs.Aria.Invalid
+				item.AriaPlaceholder = el.Attrs.Aria.Placeholder
 				item.AriaAutocomplete = el.Attrs.Aria.Autocomplete
 				item.ActiveDescendant = el.Attrs.Aria.ActiveDescendant
 				item.ErrorMessage = el.Attrs.Aria.ErrorMessage

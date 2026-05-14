@@ -111,10 +111,13 @@ class SomElementAttrs(BaseModel):
     contenteditable: Optional[bool | str] = None
     tabindex: Optional[int | str] = None
     accesskey: Optional[str] = None
+    spellcheck: Optional[bool | str] = None
     name: Optional[str] = None
     autocomplete: Optional[str] = None
     inputmode: Optional[str] = None
     enterkeyhint: Optional[str] = None
+    autocapitalize: Optional[str] = None
+    dirname: Optional[str] = None
     form: Optional[str] = None
     list: Optional[str] = None
     popovertarget: Optional[str] = None

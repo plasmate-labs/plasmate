@@ -98,6 +98,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-14 set-position read: current Playwright MCP and Stagehand docs keep making fresh structured state and cache validation the action surface. Tree, menu, and listbox widgets need ordinal context as much as current value state: `aria-level`, `aria-posinset`, and `aria-setsize` tell agents whether a target is nested, where it sits in a collection, and whether a cached navigation plan still points at the expected item. Plasmate should surface these cues without changing deterministic action cache keys.
 
+2026-05-14 text-entry-affordance read: current competitor docs and developer commentary keep validating compact, fresh action menus over full-DOM recovery. Stagehand-style cached actions only stay useful when the field's typing affordances have not drifted, and Playwright MCP-style snapshots make the current accessibility state the selection surface. Plasmate should preserve small but practical text-entry cues such as `spellcheck`, `autocapitalize`, `dirname`, and `aria-placeholder` across the same manifest so agents understand keyboard behavior, language direction capture, and custom textbox prompt text without changing deterministic cache keys.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -122,6 +124,9 @@ The project already spans a large number of package and integration surfaces: Ru
   - The Rust SOM compiler and JSON Schema now preserve ARIA set-position cues: `aria-level`, `aria-posinset`, and `aria-setsize`.
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `level`, `posinset`, and `setsize` without changing deterministic action `cache_key` values.
   - The shared action-availability manifest now asserts ARIA set-position cues across parser, SDK, and framework outputs.
+  - The Rust SOM compiler and JSON Schema now preserve text-entry affordance cues: native `spellcheck`, `autocapitalize`, `dirname`, and ARIA `aria-placeholder`.
+  - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `spellcheck`, `autocapitalize`, `dirname`, and `aria_placeholder` without changing deterministic action `cache_key` values.
+  - The shared action-availability manifest and `016-action-semantics` conformance fixture now assert these text-entry affordance cues across Rust, parser, SDK, and framework outputs.
   - The Rust SOM compiler and JSON Schema now preserve ARIA relationship cues: `aria-owns`, `aria-flowto`, and `aria-details`.
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `owns`, `flowto`, and `details` without changing deterministic action `cache_key` values.
   - The shared action-availability manifest now asserts ARIA owns/flowto/details relationship cues across parser, SDK, and framework outputs.
@@ -274,7 +279,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Promote range and orientation cases (`min`, `max`, `step`, `aria-orientation`, `aria-sort`, and ARIA value state) into broader Rust/parser/SDK and adapter conformance fixtures.
 - Promote ARIA widget affordance cases (`aria-readonly`, `aria-multiline`, and `aria-multiselectable`) into broader Rust/parser/SDK and adapter conformance fixtures.
 - Add compiler/schema conformance for form validation constraints and `aria-invalid`, then promote the shared manifest cases into broader parser, SDK, and adapter fixtures.
-- Promote input-affordance cases (`inputmode`, `enterkeyhint`, autocomplete widget state, and active descendants) into broader Rust conformance fixtures once the shared action manifest remains stable.
+- Promote input-affordance cases (`inputmode`, `enterkeyhint`, autocomplete widget state, active descendants, `spellcheck`, `autocapitalize`, `dirname`, and `aria-placeholder`) into broader parser, SDK, and adapter conformance fixtures once the shared action manifest remains stable.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures once the shared action manifest remains stable.
 - Promote form-relation cases (`form`, `list`, and `aria-errormessage`) into broader parser, SDK, and adapter conformance fixtures.
 - Promote live-region cases (`aria-busy`, `aria-live`, `aria-atomic`, and `aria-relevant`) into broader Rust/parser/SDK conformance fixtures.

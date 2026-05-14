@@ -576,6 +576,25 @@ autocomplete suggestion state.
    changing target `cache_key` values, preserving local action memory while
    making suggestion drift visible.
 
+### 2026-05-14 Text-Entry Affordance Adjustment
+
+Current browser-agent docs and recent developer commentary keep validating the
+same retention surface: compact action menus must expose the current field
+state before a cached typing plan is replayed. Playwright MCP keeps interaction
+tied to fresh accessibility snapshots, while Stagehand/Browserbase action
+caching only remains trustworthy when a field's keyboard and prompt affordances
+still match the cached target. Plasmate should keep the local-first wedge by
+surfacing small text-entry cues across the shared manifest.
+
+1. **Typing behavior is replay context**: `spellcheck` and
+   `autocapitalize` should travel through Rust, schema, SDKs, parser packages,
+   and adapters so agents understand language and virtual-keyboard behavior.
+2. **Direction capture matters for global forms**: `dirname` should be exposed
+   as compact target context for bidirectional text-entry workflows.
+3. **Custom textboxes need prompt text**: `aria-placeholder` should surface as
+   `aria_placeholder` without changing target `cache_key` values, preserving
+   local action memory while making custom-field prompt drift visible.
+
 ### 2026-05-14 Form-Relation Action Menu Adjustment
 
 Current browser-agent products keep turning page state into reusable action
@@ -1038,8 +1057,19 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - The shared action-availability manifest now asserts ARIA read-only gating,
   multiline text entry, and multiselectable widget cues across parser, SDK,
   and framework adapter outputs.
-- Next conformance step: promote ARIA widget affordance cases into broader
-  Rust/parser/SDK and adapter fixtures alongside range and orientation cases.
+- Rust SOM compilation and the JSON Schema now preserve text-entry affordance
+  cues with native `spellcheck`, `autocapitalize`, `dirname`, and ARIA
+  `aria-placeholder`.
+- Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+  and Vercel AI action-plan surfaces now expose `spellcheck`,
+  `autocapitalize`, `dirname`, and `aria_placeholder` without changing
+  deterministic action `cache_key` values.
+- The shared action-availability manifest and `016-action-semantics`
+  conformance fixture now assert text-entry affordance cues across Rust,
+  parser, SDK, and framework adapter outputs.
+- Next conformance step: promote text-entry affordance cases into broader
+  parser/SDK and adapter fixtures alongside ARIA widget, range, and
+  set-position cases.
 
 ## Dependencies to Add
 

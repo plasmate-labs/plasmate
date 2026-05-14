@@ -103,6 +103,10 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["inputmode"] = attrs.inputmode
             if attrs.enterkeyhint:
                 item["enterkeyhint"] = attrs.enterkeyhint
+            if attrs.autocapitalize:
+                item["autocapitalize"] = attrs.autocapitalize
+            if attrs.dirname:
+                item["dirname"] = attrs.dirname
             if attrs.form:
                 item["form"] = attrs.form
             if attrs.list:
@@ -119,6 +123,8 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["popover"] = attrs.popover
             if attrs.accesskey:
                 item["accesskey"] = attrs.accesskey
+            if attrs.spellcheck is not None:
+                item["spellcheck"] = attrs.spellcheck
             if attrs.input_type:
                 item["input_type"] = attrs.input_type
             if attrs.value:
@@ -153,6 +159,7 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                     "controls",
                     "haspopup",
                     "invalid",
+                    "placeholder",
                     "autocomplete",
                     "active_descendant",
                     "errormessage",
@@ -181,6 +188,8 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                         item_key = (
                             "aria_autocomplete"
                             if aria_key == "autocomplete"
+                            else "aria_placeholder"
+                            if aria_key == "placeholder"
                             else aria_key
                         )
                         item[item_key] = attrs.aria[aria_key]

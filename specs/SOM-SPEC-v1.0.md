@@ -252,6 +252,9 @@ field MUST be omitted when the object would be empty.
 | `autocomplete` | string | Autocomplete token, when present. |
 | `inputmode` | string | Input modality hint, when present. |
 | `enterkeyhint` | string | Enter-key action hint, when present. |
+| `autocapitalize` | string | Capitalization hint for virtual keyboards, when present. |
+| `spellcheck` | boolean/string | Spellcheck state. Invalid source values are preserved as strings. |
+| `dirname` | string | Directionality submission field name, when present. |
 | `form` | string | Associated form id, when a form-associated control uses the `form` attribute. |
 | `list` | string | Associated datalist id, when an input uses the `list` attribute. |
 | `minlength` | integer/string | Minimum text length constraint. Invalid source values are preserved as strings. |
@@ -380,6 +383,7 @@ attributes SHOULD be preserved when present:
 | `aria-controls`  | `controls`  | string          |
 | `aria-haspopup`  | `haspopup`  | boolean/string  |
 | `aria-invalid`   | `invalid`   | boolean/string  |
+| `aria-placeholder` | `placeholder` | string        |
 | `aria-autocomplete` | `autocomplete` | string      |
 | `aria-activedescendant` | `active_descendant` | string |
 | `aria-errormessage` | `errormessage` | string     |

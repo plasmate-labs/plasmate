@@ -196,10 +196,18 @@
               ]
             },
             "accesskey": { "type": "string" },
+            "spellcheck": {
+              "oneOf": [
+                { "type": "boolean" },
+                { "type": "string" }
+              ]
+            },
             "name": { "type": "string" },
             "autocomplete": { "type": "string" },
             "inputmode": { "type": "string" },
             "enterkeyhint": { "type": "string" },
+            "autocapitalize": { "type": "string" },
+            "dirname": { "type": "string" },
             "form": { "type": "string" },
             "list": { "type": "string" },
             "popovertarget": { "type": "string" },
@@ -319,6 +327,7 @@
             { "type": "string" }
           ]
         },
+        "placeholder": { "type": "string" },
         "autocomplete": { "type": "string" },
         "active_descendant": { "type": "string" },
         "errormessage": { "type": "string" },

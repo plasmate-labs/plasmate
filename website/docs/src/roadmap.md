@@ -294,6 +294,14 @@ Current structured-browser tools make agents choose from the current page state,
 - **Ordinal position reduces ambiguity**: `aria-posinset` should surface as `posinset` for menu, tree, and listbox items that share labels or repeated actions.
 - **Collection size helps validate drift**: `aria-setsize` should surface as `setsize` so cached plans can tell when a list has grown, shrunk, or reordered.
 
+### 2026-05-14 Text-Entry Affordance Adjustment
+
+Current browser-agent docs and recent developer commentary keep validating the same retention surface: compact action menus must expose the current field state before a cached typing plan is replayed. Playwright MCP keeps interaction tied to fresh accessibility snapshots, while Stagehand/Browserbase action caching only remains trustworthy when a field's keyboard and prompt affordances still match the cached target. Plasmate should keep the local-first wedge by surfacing small text-entry cues across the shared manifest.
+
+- **Typing behavior is replay context**: `spellcheck` and `autocapitalize` should travel through Rust, schema, SDKs, parser packages, and adapters so agents understand language and virtual-keyboard behavior.
+- **Direction capture matters for global forms**: `dirname` should be exposed as compact target context for bidirectional text-entry workflows.
+- **Custom textboxes need prompt text**: `aria-placeholder` should surface as `aria_placeholder` without changing target `cache_key` values, preserving local action memory while making custom-field prompt drift visible.
+
 ### 2026-05-14 Popover and Command Relationship Adjustment
 
 Browser-native action relationships are becoming more important for agents that replay cached plans on modern app UIs. The Popover API gives buttons a declarative target and action, and `commandfor`/`command` generalize that model for popovers, dialogs, and custom commands. Plasmate should preserve those relationships as compact target context instead of forcing agents to rediscover them from raw DOM.
@@ -487,6 +495,9 @@ Current Playwright MCP and Stagehand docs keep validating action surfaces that a
 - [x] Rust compiler and SOM schema preserve ARIA level, posinset, and setsize cues
 - [x] Compact action plans expose level, posinset, and setsize across parser packages, SDKs, and framework adapters
 - [x] Shared action-availability manifest asserts ARIA set-position cues without changing deterministic action cache keys
+- [x] Rust compiler and SOM schema preserve spellcheck, autocapitalize, dirname, and ARIA placeholder cues
+- [x] Compact action plans expose spellcheck, autocapitalize, dirname, and aria_placeholder across parser packages, SDKs, and framework adapters
+- [x] Shared action-availability manifest and 016-action-semantics fixture assert text-entry affordance cues without changing deterministic action cache keys
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
@@ -496,6 +507,7 @@ Current Playwright MCP and Stagehand docs keep validating action surfaces that a
 - [ ] Promote range and orientation cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote ARIA widget affordance cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote ARIA set-position cases into broader Rust/parser/SDK and adapter conformance fixtures
+- [ ] Promote text-entry affordance cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures

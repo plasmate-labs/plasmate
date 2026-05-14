@@ -54,6 +54,10 @@ def test_som_to_text_surfaces_interactive_state():
             assert f'[inputmode="{target["inputmode"]}"]' in line
         if target.get("enterkeyhint"):
             assert f'[enterkeyhint="{target["enterkeyhint"]}"]' in line
+        if target.get("autocapitalize"):
+            assert f'[autocapitalize="{target["autocapitalize"]}"]' in line
+        if target.get("dirname"):
+            assert f'[dirname="{target["dirname"]}"]' in line
         if target.get("form"):
             assert f'[form="{target["form"]}"]' in line
         if target.get("list"):
@@ -72,6 +76,8 @@ def test_som_to_text_surfaces_interactive_state():
                 assert f'[{command_key}="{target[command_key]}"]' in line
         if target.get("accesskey"):
             assert f'[accesskey="{target["accesskey"]}"]' in line
+        if "spellcheck" in target:
+            assert f'[spellcheck="{target["spellcheck"]}"]' in line
         for constraint_key in ("minlength", "maxlength", "min", "max", "step", "pattern"):
             if constraint_key in target:
                 assert f'[{constraint_key}="{target[constraint_key]}"]' in line
@@ -85,6 +91,7 @@ def test_som_to_text_surfaces_interactive_state():
             "controls",
             "haspopup",
             "invalid",
+            "aria_placeholder",
             "aria_autocomplete",
             "active_descendant",
             "errormessage",

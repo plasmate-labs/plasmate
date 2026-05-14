@@ -102,10 +102,13 @@ export interface SomElementAttrs {
   contenteditable?: boolean | string;
   tabindex?: number | string;
   accesskey?: string;
+  spellcheck?: boolean | string;
   name?: string;
   autocomplete?: string;
   inputmode?: string;
   enterkeyhint?: string;
+  autocapitalize?: string;
+  dirname?: string;
   form?: string;
   list?: string;
   popovertarget?: string;
@@ -141,6 +144,7 @@ export interface AriaState {
   controls?: string;
   haspopup?: boolean | string;
   invalid?: boolean | string;
+  placeholder?: string;
   autocomplete?: string;
   active_descendant?: string;
   errormessage?: string;
