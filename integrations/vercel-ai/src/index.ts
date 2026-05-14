@@ -42,6 +42,8 @@ export interface PlasmateActionTarget {
   autocomplete?: string
   inputmode?: string
   enterkeyhint?: string
+  form?: string
+  list?: string
   accesskey?: string
   minlength?: number | string
   maxlength?: number | string
@@ -56,6 +58,7 @@ export interface PlasmateActionTarget {
   invalid?: boolean | string
   aria_autocomplete?: string
   active_descendant?: string
+  errormessage?: string
   keyshortcuts?: string
   roledescription?: string
   href?: string
@@ -118,7 +121,7 @@ export interface PreparePlasmateActionPlanOptions {
 export const plasmateActionGuidance =
   'Use Plasmate SOM element ids for browser actions. Treat action targets ' +
   'with enabled=false or blocked_reason as unavailable, and prefer ' +
-  'cache_key, required, readonly, value, autocomplete, inputmode, enterkeyhint, accesskey, aria_autocomplete, active_descendant, keyshortcuts, roledescription, pattern, minlength, maxlength, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
+  'cache_key, required, readonly, value, autocomplete, inputmode, enterkeyhint, form, list, accesskey, aria_autocomplete, active_descendant, errormessage, keyshortcuts, roledescription, pattern, minlength, maxlength, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
 
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined
@@ -212,7 +215,7 @@ function collectSomElements(elements: readonly PlasmateSomElement[] = []) {
 function copyStringAttr(
   item: PlasmateActionTarget,
   attrs: Record<string, unknown>,
-  key: 'href' | 'input_type' | 'value' | 'name' | 'placeholder' | 'description' | 'group' | 'autocomplete' | 'inputmode' | 'enterkeyhint' | 'accesskey' | 'pattern'
+  key: 'href' | 'input_type' | 'value' | 'name' | 'placeholder' | 'description' | 'group' | 'autocomplete' | 'inputmode' | 'enterkeyhint' | 'form' | 'list' | 'accesskey' | 'pattern'
 ) {
   if (typeof attrs[key] === 'string' && attrs[key].length > 0) {
     item[key] = attrs[key]
@@ -256,6 +259,8 @@ export function extractPlasmateActionTargets(
       copyStringAttr(target, attrs, 'autocomplete')
       copyStringAttr(target, attrs, 'inputmode')
       copyStringAttr(target, attrs, 'enterkeyhint')
+      copyStringAttr(target, attrs, 'form')
+      copyStringAttr(target, attrs, 'list')
       copyStringAttr(target, attrs, 'accesskey')
       copyStringAttr(target, attrs, 'placeholder')
       copyStringOrNumberAttr(target, attrs, 'minlength')
@@ -310,6 +315,10 @@ export function extractPlasmateActionTargets(
         const activeDescendant = (aria as Record<string, unknown>).active_descendant
         if (typeof activeDescendant === 'string' && activeDescendant.length > 0) {
           target.active_descendant = activeDescendant
+        }
+        const errorMessage = (aria as Record<string, unknown>).errormessage
+        if (typeof errorMessage === 'string' && errorMessage.length > 0) {
+          target.errormessage = errorMessage
         }
         const keyshortcuts = (aria as Record<string, unknown>).keyshortcuts
         if (typeof keyshortcuts === 'string' && keyshortcuts.length > 0) {
@@ -398,6 +407,8 @@ export function formatPlasmateActionPlan(
       const enterkeyhint = target.enterkeyhint
         ? ` [enterkeyhint=${target.enterkeyhint}]`
         : ''
+      const form = target.form ? ` [form=${target.form}]` : ''
+      const list = target.list ? ` [list=${target.list}]` : ''
       const accesskey = target.accesskey
         ? ` [accesskey=${target.accesskey}]`
         : ''
@@ -430,6 +441,9 @@ export function formatPlasmateActionPlan(
       const activeDescendant = target.active_descendant
         ? ` [active_descendant=${target.active_descendant}]`
         : ''
+      const errorMessage = target.errormessage
+        ? ` [errormessage=${target.errormessage}]`
+        : ''
       const keyshortcuts = target.keyshortcuts
         ? ` [keyshortcuts=${target.keyshortcuts}]`
         : ''
@@ -441,7 +455,7 @@ export function formatPlasmateActionPlan(
         ? ` [description=${target.description}]`
         : ''
 
-      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${readonly}${inputType}${value}${autocomplete}${inputmode}${enterkeyhint}${accesskey}${placeholder}${minlength}${maxlength}${pattern}${checked}${expanded}${pressed}${selected}${current}${controls}${haspopup}${invalid}${ariaAutocomplete}${activeDescendant}${keyshortcuts}${roledescription}${group}${description}`
+      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${readonly}${inputType}${value}${autocomplete}${inputmode}${enterkeyhint}${form}${list}${accesskey}${placeholder}${minlength}${maxlength}${pattern}${checked}${expanded}${pressed}${selected}${current}${controls}${haspopup}${invalid}${ariaAutocomplete}${activeDescendant}${errorMessage}${keyshortcuts}${roledescription}${group}${description}`
     })
     .join('\n')
 }

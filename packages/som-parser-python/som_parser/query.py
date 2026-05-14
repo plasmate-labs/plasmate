@@ -160,6 +160,10 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["inputmode"] = attrs.inputmode
             if attrs.enterkeyhint:
                 item["enterkeyhint"] = attrs.enterkeyhint
+            if attrs.form:
+                item["form"] = attrs.form
+            if attrs.list:
+                item["list"] = attrs.list
             if attrs.accesskey:
                 item["accesskey"] = attrs.accesskey
             if attrs.input_type:
@@ -191,6 +195,7 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                     "invalid",
                     "autocomplete",
                     "active_descendant",
+                    "errormessage",
                     "keyshortcuts",
                     "roledescription",
                 ):

@@ -54,6 +54,10 @@ def test_som_to_text_surfaces_interactive_state():
             assert f'[inputmode="{target["inputmode"]}"]' in line
         if target.get("enterkeyhint"):
             assert f'[enterkeyhint="{target["enterkeyhint"]}"]' in line
+        if target.get("form"):
+            assert f'[form="{target["form"]}"]' in line
+        if target.get("list"):
+            assert f'[list="{target["list"]}"]' in line
         if target.get("accesskey"):
             assert f'[accesskey="{target["accesskey"]}"]' in line
         for constraint_key in ("minlength", "maxlength", "pattern"):
@@ -71,6 +75,7 @@ def test_som_to_text_surfaces_interactive_state():
             "invalid",
             "aria_autocomplete",
             "active_descendant",
+            "errormessage",
             "keyshortcuts",
             "roledescription",
         ):

@@ -249,6 +249,8 @@ field MUST be omitted when the object would be empty.
 | `autocomplete` | string | Autocomplete token, when present. |
 | `inputmode` | string | Input modality hint, when present. |
 | `enterkeyhint` | string | Enter-key action hint, when present. |
+| `form` | string | Associated form id, when a form-associated control uses the `form` attribute. |
+| `list` | string | Associated datalist id, when an input uses the `list` attribute. |
 | `minlength` | integer/string | Minimum text length constraint. Invalid source values are preserved as strings. |
 | `maxlength` | integer/string | Maximum text length constraint. Invalid source values are preserved as strings. |
 | `pattern`   | string  | Pattern constraint from the source element. |
@@ -346,7 +348,7 @@ Each **Option** object:
 
 Implementations SHOULD preserve common actionability attributes on any element:
 `contenteditable`, `tabindex`, `name`, `autocomplete`, `inputmode`,
-`enterkeyhint`, `accesskey`, `readonly`, and `description`. The
+`enterkeyhint`, `form`, `list`, `accesskey`, `readonly`, and `description`. The
 `description` value is resolved from `aria-describedby` or `aria-description`.
 These attributes are especially important for custom controls that are exposed
 through ARIA roles instead of native form elements.
@@ -371,6 +373,7 @@ attributes SHOULD be preserved when present:
 | `aria-invalid`   | `invalid`   | boolean/string  |
 | `aria-autocomplete` | `autocomplete` | string      |
 | `aria-activedescendant` | `active_descendant` | string |
+| `aria-errormessage` | `errormessage` | string     |
 | `aria-keyshortcuts` | `keyshortcuts` | string      |
 | `aria-roledescription` | `roledescription` | string |
 

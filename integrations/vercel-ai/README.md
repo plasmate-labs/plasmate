@@ -61,7 +61,8 @@ const { text } = await generateText({
 `cache_key`, `enabled`, `blocked_reason`, `required`, `description`,
 `placeholder`, `group`, `readonly`, `value`, `checked`, `expanded`, `pressed`, and
 `selected`, `current`, `controls`, `haspopup`, `autocomplete`, `inputmode`,
-`enterkeyhint`, `accesskey`, `aria_autocomplete`, `active_descendant`,
+`enterkeyhint`, `form`, `list`, `accesskey`, `aria_autocomplete`,
+`active_descendant`, `errormessage`,
 `keyshortcuts`, `roledescription`, `minlength`, `maxlength`, `pattern`, and
 `invalid` fields before selecting or
 reusing browser actions. Use

@@ -1827,7 +1827,7 @@ fn build_element_attrs(
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "name") {
         map.insert("name".into(), json!(value));
     }
-    for key in ["autocomplete", "inputmode", "enterkeyhint"] {
+    for key in ["autocomplete", "inputmode", "enterkeyhint", "form", "list"] {
         if let Some((_, value)) = attrs.iter().find(|(n, _)| n == key) {
             map.insert(key.into(), json!(value));
         }
@@ -1871,6 +1871,7 @@ fn build_element_attrs(
         ("aria-invalid", "invalid"),
         ("aria-autocomplete", "autocomplete"),
         ("aria-activedescendant", "active_descendant"),
+        ("aria-errormessage", "errormessage"),
         ("aria-keyshortcuts", "keyshortcuts"),
         ("aria-roledescription", "roledescription"),
     ];
@@ -2400,6 +2401,37 @@ mod tests {
         let json1 = serde_json::to_string(&som1).unwrap();
         let json2 = serde_json::to_string(&som2).unwrap();
         assert_eq!(json1, json2, "Same input should produce identical SOM");
+    }
+
+    #[test]
+    fn test_form_relation_and_error_action_cues_are_preserved() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Actions</title></head>
+<body>
+<main>
+  <form id="settings-form">
+    <label for="email">Work email</label>
+    <input id="email" type="email" form="settings-form" list="email-suggestions" aria-invalid="true" aria-errormessage="email-error">
+    <datalist id="email-suggestions"><option value="ops@example.com"></option></datalist>
+    <p id="email-error">Use a company email address</p>
+  </form>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.com").unwrap();
+        let input = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| element.role == ElementRole::TextInput)
+            .expect("input element should compile");
+        let attrs = input.attrs.as_ref().expect("input attrs should compile");
+
+        assert_eq!(attrs["form"], "settings-form");
+        assert_eq!(attrs["list"], "email-suggestions");
+        assert_eq!(attrs["aria"]["invalid"], true);
+        assert_eq!(attrs["aria"]["errormessage"], "email-error");
     }
 
     #[test]

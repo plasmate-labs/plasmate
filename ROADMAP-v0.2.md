@@ -576,6 +576,24 @@ autocomplete suggestion state.
    changing target `cache_key` values, preserving local action memory while
    making suggestion drift visible.
 
+### 2026-05-14 Form-Relation Action Menu Adjustment
+
+Current browser-agent products keep turning page state into reusable action
+menus. Playwright MCP refs remain valid only for the current snapshot,
+Stagehand local/server caches need page-state validation before replay, and
+Firecrawl plus Browser Use keep monetizing persistent sessions for repeated
+form workflows. Plasmate should keep the local-first wedge by making compact
+targets carry the relationships agents need before typing or submitting.
+
+1. **Form ownership prevents wrong-submit actions**: `form` should travel
+   through Rust, schema, SDKs, parser packages, and adapters so controls
+   outside a `<form>` still show which submission scope owns them.
+2. **Datalist references shape value choice**: `list` should surface in action
+   plans so agents know when an input is backed by a suggestion source.
+3. **Error-message relationships explain invalid state**:
+   `aria-errormessage` should surface as compact `errormessage` state without
+   changing target `cache_key` values.
+
 ## Architecture
 
 ```
@@ -901,6 +919,14 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - The shared action-availability manifest now asserts read-only blockers and
   selected-option values across Browser Use, LangChain, Vercel AI, parser
   packages, and SDKs.
+- Rust SOM compilation and the JSON Schema now preserve form ownership,
+  datalist, and error-message relationships with `form`, `list`, and
+  `aria-errormessage`.
+- Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and
+  Vercel AI action-plan surfaces now expose `form`, `list`, and `errormessage`
+  without changing deterministic action `cache_key` values.
+- The shared action-availability manifest now asserts form-relation cues across
+  parser, SDK, and framework adapter outputs.
 
 ## Dependencies to Add
 

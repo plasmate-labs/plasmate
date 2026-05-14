@@ -71,6 +71,8 @@ type ElementAttrs struct {
 	Autocomplete    *string        `json:"autocomplete,omitempty"`
 	InputMode       *string        `json:"inputmode,omitempty"`
 	EnterKeyHint    *string        `json:"enterkeyhint,omitempty"`
+	Form            *string        `json:"form,omitempty"`
+	List            *string        `json:"list,omitempty"`
 	MinLength       interface{}    `json:"minlength,omitempty"`
 	MaxLength       interface{}    `json:"maxlength,omitempty"`
 	Pattern         *string        `json:"pattern,omitempty"`
@@ -98,6 +100,7 @@ type AriaState struct {
 	Invalid          interface{} `json:"invalid,omitempty"`
 	Autocomplete     *string     `json:"autocomplete,omitempty"`
 	ActiveDescendant *string     `json:"active_descendant,omitempty"`
+	ErrorMessage     *string     `json:"errormessage,omitempty"`
 	KeyShortcuts     *string     `json:"keyshortcuts,omitempty"`
 	RoleDescription  *string     `json:"roledescription,omitempty"`
 }

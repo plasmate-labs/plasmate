@@ -91,6 +91,10 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append(f"inputmode={item['inputmode']}")
     if item.get("enterkeyhint"):
         flags.append(f"enterkeyhint={item['enterkeyhint']}")
+    if item.get("form"):
+        flags.append(f"form={item['form']}")
+    if item.get("list"):
+        flags.append(f"list={item['list']}")
     if item.get("accesskey"):
         flags.append(f"accesskey={item['accesskey']}")
     if item.get("value"):
@@ -110,6 +114,7 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         "invalid",
         "aria_autocomplete",
         "active_descendant",
+        "errormessage",
         "keyshortcuts",
         "roledescription",
     ):

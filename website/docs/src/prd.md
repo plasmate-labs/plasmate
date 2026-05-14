@@ -84,6 +84,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-13 keyboard-affordance read: current Playwright MCP and Stagehand docs keep emphasizing fresh, validated action state before replay, while Browserbase and Browser Use sell observability around repeated workflows. Plasmate's local-first answer should include keyboard and custom-role cues in the same portable action contract: `accesskey`, `aria-keyshortcuts`, and `aria-roledescription` help agents choose and explain reusable targets without falling back to raw DOM or screenshots.
 
+2026-05-14 form-relation read: current official docs continue to reward action menus that can be validated before replay. Playwright MCP refs remain snapshot-scoped, Stagehand `observe()` and action caches depend on matching current page state, and Firecrawl plus Browser Use sell persistent sessions around repeated form work. Plasmate should keep the local-first wedge by preserving form association and error relationships in compact targets: `form`, `list`, and `aria-errormessage` let agents choose the right submit scope, understand datalist suggestions, and explain invalid fields without raw DOM recovery.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -99,6 +101,9 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-13:
+  - The Rust SOM compiler and JSON Schema now preserve `form`, `list`, and `aria-errormessage`, adding form ownership, datalist, and error-message relationships to the compact action-state contract.
+  - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `form`, `list`, and `errormessage` without changing deterministic action `cache_key` values.
+  - The shared action-availability manifest now asserts form-relation and error-message cues across parser, SDK, and framework outputs.
   - The Rust SOM compiler and JSON Schema now preserve native `accesskey` plus ARIA `keyshortcuts` and `roledescription`, adding keyboard/custom-role affordances to the compact action-state contract.
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `accesskey`, `keyshortcuts`, and `roledescription` without changing deterministic action `cache_key` values.
   - The shared action-availability manifest now asserts keyboard and custom-role cues across parser, SDK, and framework outputs.
@@ -239,6 +244,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Add compiler/schema conformance for form validation constraints and `aria-invalid`, then promote the shared manifest cases into broader parser, SDK, and adapter fixtures.
 - Promote input-affordance cases (`inputmode`, `enterkeyhint`, autocomplete widget state, and active descendants) into broader Rust conformance fixtures once the shared action manifest remains stable.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures once the shared action manifest remains stable.
+- Promote form-relation cases (`form`, `list`, and `aria-errormessage`) into broader parser, SDK, and adapter conformance fixtures.
 - Promote fieldset/legend group semantics into shared conformance fixtures alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched action-plan metadata.
 - Promote the new SDK/parser shadow-root and Go action-plan tests into shared conformance fixtures that run against every adapter before release.

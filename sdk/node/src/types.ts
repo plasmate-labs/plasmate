@@ -103,6 +103,8 @@ export interface SomElementAttrs {
   autocomplete?: string;
   inputmode?: string;
   enterkeyhint?: string;
+  form?: string;
+  list?: string;
   minlength?: number | string;
   maxlength?: number | string;
   pattern?: string;
@@ -129,6 +131,7 @@ export interface AriaState {
   invalid?: boolean | string;
   autocomplete?: string;
   active_descendant?: string;
+  errormessage?: string;
   keyshortcuts?: string;
   roledescription?: string;
 }

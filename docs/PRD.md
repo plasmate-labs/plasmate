@@ -1,6 +1,6 @@
 # Plasmate PRD: Agent Stickiness and Roadmap Direction
 
-Last updated: 2026-05-13
+Last updated: 2026-05-14
 
 ## Product Thesis
 
@@ -337,6 +337,16 @@ the same portable action contract: `accesskey`, `aria-keyshortcuts`, and
 `aria-roledescription` help agents choose and explain reusable targets without
 falling back to raw DOM or screenshots.
 
+2026-05-14 form-relation read: current official docs continue to reward
+action menus that can be validated before replay. Playwright MCP refs remain
+snapshot-scoped, Stagehand `observe()` and action caches depend on matching
+current page state, and Firecrawl plus Browser Use sell persistent sessions
+around repeated form work. Plasmate should keep the local-first wedge by
+preserving form association and error relationships in compact targets:
+`form`, `list`, and `aria-errormessage` let agents choose the right submit
+scope, understand datalist suggestions, and explain invalid fields without
+raw DOM recovery.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -362,6 +372,15 @@ and adapter docs over one-off integration logic.
 
 ## Current Run Changes
 
+- 2026-05-14:
+  - The Rust SOM compiler and JSON Schema now preserve `form`, `list`, and
+    `aria-errormessage`, adding form ownership, datalist, and error-message
+    relationships to the compact action-state contract.
+  - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
+    AI action-plan surfaces now expose `form`, `list`, and `errormessage`
+    without changing deterministic action `cache_key` values.
+  - The shared action-availability manifest now asserts form-relation and
+    error-message cues across parser, SDK, and framework outputs.
 - 2026-05-13:
   - The Rust SOM compiler and JSON Schema now preserve native `accesskey` plus
     ARIA `keyshortcuts` and `roledescription`, adding keyboard/custom-role
@@ -719,6 +738,8 @@ and adapter docs over one-off integration logic.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and
   `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures
   once the shared action manifest remains stable.
+- Promote form-relation cases (`form`, `list`, and `aria-errormessage`) into
+  broader parser, SDK, and adapter conformance fixtures.
 - Promote fieldset/legend group semantics into shared conformance fixtures
   alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched

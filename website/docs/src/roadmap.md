@@ -262,6 +262,14 @@ Current browser-agent products keep making repeated actions depend on the target
 - **Keyboard intent matters for form flow**: `enterkeyhint` should be exposed in compact menus so repeated workflows know whether Enter advances, searches, submits, or sends.
 - **Autocomplete widgets need live state**: `aria-autocomplete` and `aria-activedescendant` should surface as compact action-plan cues without changing target `cache_key` values, preserving local action memory while making suggestion drift visible.
 
+### 2026-05-14 Form-Relation Action Menu Adjustment
+
+Current browser-agent products keep turning page state into reusable action menus. Playwright MCP refs remain valid only for the current snapshot, Stagehand local/server caches need page-state validation before replay, and Firecrawl plus Browser Use keep monetizing persistent sessions for repeated form workflows. Plasmate should keep the local-first wedge by making compact targets carry the relationships agents need before typing or submitting.
+
+- **Form ownership prevents wrong-submit actions**: `form` should travel through Rust, schema, SDKs, parser packages, and adapters so controls outside a `<form>` still show which submission scope owns them.
+- **Datalist references shape value choice**: `list` should surface in action plans so agents know when an input is backed by a suggestion source.
+- **Error-message relationships explain invalid state**: `aria-errormessage` should surface as compact `errormessage` state without changing target `cache_key` values.
+
 ### 2026-05-13 Keyboard-Affordance Action Menu Adjustment
 
 Current Playwright MCP and Stagehand docs keep validating action surfaces that are current, inspectable, and reusable. Browserbase, Browser Use, and Firecrawl add hosted sessions and traces around that same workflow, but Plasmate's sticky local-first wedge is still a portable action contract that carries browser-like affordances everywhere.
@@ -418,6 +426,9 @@ Current Playwright MCP and Stagehand docs keep validating action surfaces that a
 - [x] Rust compiler and SOM schema preserve accesskey, ARIA keyshortcuts, and ARIA roledescription cues
 - [x] Compact action plans expose accesskey, keyshortcuts, and roledescription across parser packages, SDKs, and framework adapters
 - [x] Shared action-availability manifest asserts keyboard/custom-role cues without changing deterministic action cache keys
+- [x] Rust compiler and SOM schema preserve form, list, and ARIA errormessage relationship cues
+- [x] Compact action plans expose form, list, and errormessage across parser packages, SDKs, and framework adapters
+- [x] Shared action-availability manifest asserts form-relation cues without changing deterministic action cache keys
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants

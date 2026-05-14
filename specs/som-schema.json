@@ -192,6 +192,8 @@
             "autocomplete": { "type": "string" },
             "inputmode": { "type": "string" },
             "enterkeyhint": { "type": "string" },
+            "form": { "type": "string" },
+            "list": { "type": "string" },
             "minlength": {
               "oneOf": [
                 { "type": "integer" },
@@ -292,6 +294,7 @@
         },
         "autocomplete": { "type": "string" },
         "active_descendant": { "type": "string" },
+        "errormessage": { "type": "string" },
         "keyshortcuts": { "type": "string" },
         "roledescription": { "type": "string" }
       }
