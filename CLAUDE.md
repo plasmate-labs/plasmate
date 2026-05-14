@@ -82,9 +82,12 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   Node dependency symlinks to the primary checkout were removed after
   verification.
 - Commit/push state: implementation/docs commit `0b06233`
-  (`chore: expose aria set position cues`) was created locally. Push is still
-  pending at this point. There is no `main` branch in this repo; `origin/HEAD`
-  points at `origin/master`.
+  (`chore: expose aria set position cues`), running-state commit `1b9cb2f`
+  (`docs: record aria set position state`), and this push-block note commit
+  were created locally in the primary checkout. Push to `origin/master` was
+  attempted four times and is blocked by DNS resolution for `github.com`.
+  There is no `main` branch in this repo; `origin/HEAD` points at
+  `origin/master`.
 
 ### 2026-05-14T06:14:32Z - Plasmate Improvements Automation
 
