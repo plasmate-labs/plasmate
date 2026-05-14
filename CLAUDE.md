@@ -85,10 +85,10 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   `--full` passed; `node website/build.mjs` rebuilt 39 pages; `git diff
   --check` passed. Temporary Node dependency symlinks to the primary checkout
   were removed after verification.
-- Commit/push state: pending at time of this note because GitHub DNS remained
-  unavailable during the initial fetch. The intended commit should be
-  fast-forwarded onto local `master` from this detached worktree and pushed to
-  `origin/master` when network resolution is available.
+- Commit/push state: implementation/docs commit `72b0ff5`
+  (`chore: expose text entry action cues`) was created from the primary
+  checkout and pushed to `origin/master` after verification. There is no
+  `main` branch in this repo; `origin/HEAD` points at `origin/master`.
 
 ### 2026-05-14T07:12:56Z - Plasmate Improvements Automation
 
