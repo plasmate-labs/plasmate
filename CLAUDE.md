@@ -86,7 +86,7 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Commit/push state: automation worktree commit was blocked by the linked
   worktree `index.lock`, so the exact patch was applied and committed from
   `/Users/steve/Git/plasmate` as `2deb1be` (`chore: preserve native input
-  shape cues`) plus follow-up state commit `19356d7`. Branch
+  shape cues`) plus follow-up running-state commits. Branch
   `codex/native-input-shape-cues` pushed successfully. Direct `origin/master`
   push was rejected with `fetch first`; `git fetch origin master` failed DNS
   for `github.com`; `gh pr create` failed because `api.github.com` is
