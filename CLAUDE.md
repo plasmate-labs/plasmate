@@ -159,9 +159,12 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   passed 61 tests; `./scripts/action-manifest-conformance.sh --quick` and
   `--full` passed; Node parser, Node SDK, and Vercel AI builds passed; `node
   website/build.mjs` rebuilt 39 pages; `git diff --check` passed.
-- Commit state: local commits through `3fc9773` (`docs: refresh submit
-  override website docs`) are present on `master`; checkout is clean except
-  pre-existing untracked `.agents/`.
+- Commit/push state: local commits through `1641d0b` (`docs: record submit
+  override push block`) are present on `master` and were pushed to remote
+  branch `codex/upload-action-cues`. Direct push to `master` is still rejected
+  with `fetch first`; GitHub connector PR creation returned 403 (`Resource not
+  accessible by integration`), and `gh pr create` could not reach
+  `api.github.com`. Checkout is clean except pre-existing untracked `.agents/`.
 
 ### 2026-05-14T10:13:09Z - Plasmate Improvements Automation
 
