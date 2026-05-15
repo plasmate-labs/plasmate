@@ -49,6 +49,45 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-15T18:09:46Z - Plasmate Improvements Automation
+
+- Git sync: required pull was retried from the automation worktree and still
+  failed before network access because the linked worktree cannot open
+  `FETCH_HEAD`. Retrying from `/Users/steve/Git/plasmate` reached SSH but DNS
+  resolution for `github.com` failed, so work continued from local branch
+  `codex/plasmate-improvements-2026-05-15-cache-key-lookup`.
+- Market direction: current docs continue to favor validated replay over raw
+  browser access. Playwright MCP keeps action refs scoped to fresh
+  accessibility snapshots, Stagehand/Browserbase emphasize cached observed
+  actions and replay observability, Firecrawl Interact resumes browser
+  sessions after scraping, and Browser Use Cloud exposes CDP-backed sessions
+  and profiles. Plasmate should keep deepening local SOM replay validation
+  before considering hosted browser infrastructure.
+- Code changes: Rust SOM now normalizes present form `enctype` values and
+  submitter `formenctype` overrides to browser submission encodings, defaulting
+  invalid values to `application/x-www-form-urlencoded`. Submitter
+  `formmethod` overrides now share form-region method normalization, so valid
+  `post`/`dialog` values and invalid GET defaults match browser behavior.
+- Tests/docs: focused compiler coverage now asserts form encoding
+  normalization plus submitter method/encoding override normalization. PRD,
+  roadmap, website doc sources, generated website docs, and this running state
+  record the submit-default rationale and next conformance step.
+- Verification: `node website/build.mjs`, `git diff --check`,
+  touched-file `rustfmt --check`, `cargo build`, focused SOM form tests, full
+  `som_compiler_test` (70 tests), focused internal popover/command test, and
+  `cargo test --lib --bin plasmate` (257 lib tests + 5 main/MCP tests) passed.
+  Existing Rust warnings remain unrelated. Whole-crate `cargo fmt --check`
+  still reports unrelated pre-existing formatting drift in AWP/proxy/main/MCP
+  files.
+- Commit/push state: committed as `chore: normalize submit defaults` and
+  pushed to
+  `origin/codex/plasmate-improvements-2026-05-15-cache-key-lookup`. Direct
+  `HEAD:master` push was rejected with `fetch first`; targeted
+  `git fetch origin master` still fails DNS for `github.com`; `gh pr create`
+  cannot reach `api.github.com` and `gh auth status` reports an invalid token.
+  Remote merge remains blocked until GitHub fetch/API access is repaired or
+  the pushed branch is merged elsewhere.
+
 ### 2026-05-15T17:11:47Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch origin --prune` still fails in the linked

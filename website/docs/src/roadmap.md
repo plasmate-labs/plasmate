@@ -406,7 +406,16 @@ Current browser-agent products keep making the current structured page state the
 - **Wrapped labels should not require ids**: controls nested in `<label>` need human-facing labels even when production markup omits explicit `id` attributes.
 - **Input type should follow browsers**: unknown or malformed native input types should compile as `text`, while known types should be trimmed and normalized.
 - **Form methods are submission context**: missing and invalid form methods should surface as `GET`, and `method="dialog"` should remain visible for dialog workflows.
+- **Encoding overrides are submission context**: present form `enctype` and submitter `formenctype` values should normalize to browser submission encodings, and submitter `formmethod` should share form method defaults.
 - **Next guardrail is conformance**: these browser-default cases should graduate from focused Rust tests into shared parser, SDK, and adapter fixtures before broader workflow-memory claims.
+
+### 2026-05-15 Submit Default Normalization Adjustment
+
+Current competitor docs keep rewarding validated replay over raw browser access. Playwright MCP keeps refs valid only for the current accessibility snapshot, Stagehand/Browserbase cache actions after matching current page state, Firecrawl Interact resumes browser sessions after scraping, and Browser Use Cloud exposes CDP-backed sessions and profiles. Plasmate should keep closing browser-default gaps in local SOM so cached SaaS submit actions can validate the real submission contract before replay.
+
+- **Encoding is form state**: present form `enctype` should normalize to browser submission encodings so invalid production markup does not leak into cached action validation.
+- **Submitter overrides need browser defaults**: `formmethod` should share the same GET/POST/DIALOG normalization as form regions, and `formenctype` should normalize to the same valid encoding set.
+- **Conformance should cover submission contracts**: browser-default form fixtures should include labels, input types, methods, encodings, and submitter overrides before form replay is marketed as durable workflow memory.
 
 ### 2026-05-14 Relationship Context Adjustment
 
@@ -698,6 +707,8 @@ Current browser-agent products keep making reusable action memory depend on curr
 - [x] Rust compiler resolves id-less wrapped-label controls by DOM path
 - [x] Rust compiler normalizes invalid native input types to browser-default text
 - [x] Rust compiler emits browser-default form method semantics for missing, invalid, and dialog methods
+- [x] Rust compiler normalizes present form enctype values to browser submission encodings
+- [x] Rust compiler normalizes submitter formmethod and formenctype override values before replay validation
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
@@ -719,7 +730,7 @@ Current browser-agent products keep making reusable action memory depend on curr
 - [ ] Promote replay-summary provenance coverage into the shared action-manifest conformance gate
 - [ ] Promote replay-ambiguity index buckets into the shared action-manifest conformance gate
 - [ ] Promote replay-provenance cases into broader Rust/parser/SDK and adapter conformance fixtures
-- [ ] Promote browser-default form fidelity cases into shared parser, SDK, and adapter conformance fixtures
+- [ ] Promote browser-default form fidelity cases, including enctype and submitter override normalization, into shared parser, SDK, and adapter conformance fixtures
 - [ ] Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures

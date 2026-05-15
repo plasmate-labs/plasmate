@@ -1125,6 +1125,27 @@ have enough stable anchors to replay safely.
    and Vercel AI summaries should report the same replay coverage as parser
    packages and SDKs so framework users do not fork validation logic.
 
+### 2026-05-15 Submit Default Normalization Adjustment
+
+Current competitor docs keep rewarding validated replay over raw browser
+access. Playwright MCP keeps refs valid only for the current accessibility
+snapshot, Stagehand/Browserbase cache actions after matching current page
+state, Firecrawl Interact resumes browser sessions after scraping, and Browser
+Use Cloud exposes CDP-backed sessions and profiles. Plasmate should keep
+closing browser-default gaps in local SOM so cached SaaS submit actions can
+validate the real submission contract before replay.
+
+1. **Encoding is form state**: present form `enctype` should normalize to
+   browser submission encodings so invalid production markup does not leak into
+   cached action validation.
+2. **Submitter overrides need browser defaults**: `formmethod` should share the
+   same GET/POST/DIALOG normalization as form regions, and `formenctype` should
+   normalize to the same valid encoding set.
+3. **Conformance should cover submission contracts**: browser-default form
+   fixtures should include labels, input types, methods, encodings, and
+   submitter overrides before form replay is marketed as durable workflow
+   memory.
+
 ## Architecture
 
 ```
@@ -1642,6 +1663,15 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Deterministic action cache keys stay unchanged for existing targets without
   provenance, while targets with `test_id` or `data_action` include those
   anchors for more precise local replay memory.
+- Rust SOM compilation now normalizes present form `enctype` values and
+  submitter `formenctype` overrides to browser encodings, defaulting invalid
+  values to `application/x-www-form-urlencoded`.
+- Submitter `formmethod` overrides now share form-region method normalization,
+  so valid `post`/`dialog` values and invalid GET defaults match browser
+  behavior before cached submit replay.
+- Focused Rust compiler tests now cover form encoding normalization and
+  submitter method/encoding override normalization as browser-default form
+  fidelity cases.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, relationship-context,
@@ -1649,9 +1679,9 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   id lookup, enabled-only direct lookup, enabled-plan filtering, action-plan
   index, replay-ambiguity index buckets, framework replay index,
   action-plan fingerprint, framework fingerprint/summary, replay-coverage
-  summary, replay-summary provenance coverage, and replay-provenance cases
-  into broader fixtures alongside text-entry, ARIA widget, range, and
-  set-position cases.
+  summary, replay-summary provenance coverage, replay-provenance, and
+  submit-default normalization cases into broader fixtures alongside
+  text-entry, ARIA widget, range, and set-position cases.
 
 ## Dependencies to Add
 

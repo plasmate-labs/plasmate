@@ -692,7 +692,7 @@ fn collect_regions(
             let form_enctype = attr_pairs
                 .iter()
                 .find(|(n, _)| n == "enctype")
-                .map(|(_, v)| v.clone());
+                .map(|(_, v)| normalize_form_enctype(v));
             let form_novalidate = attr_pairs.iter().any(|(n, _)| n == "novalidate");
             let form_accept_charset = attr_pairs
                 .iter()
@@ -1791,6 +1791,14 @@ fn normalize_form_method(value: &str) -> String {
     }
 }
 
+fn normalize_form_enctype(value: &str) -> String {
+    match value.trim().to_ascii_lowercase().as_str() {
+        "multipart/form-data" => "multipart/form-data".to_string(),
+        "text/plain" => "text/plain".to_string(),
+        _ => "application/x-www-form-urlencoded".to_string(),
+    }
+}
+
 fn resolve_region_label(attrs: &[(String, String)], label_index: &LabelIndex) -> Option<String> {
     if let Some((_, ids)) = attrs.iter().find(|(n, _)| n == "aria-labelledby") {
         let label = ids
@@ -2177,8 +2185,6 @@ fn build_element_attrs(
         "lang",
         "form",
         "formaction",
-        "formmethod",
-        "formenctype",
         "formtarget",
         "list",
         "popovertarget",
@@ -2204,6 +2210,12 @@ fn build_element_attrs(
     }
     if has_attr(attrs, "formnovalidate") {
         map.insert("formnovalidate".into(), json!(true));
+    }
+    if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "formmethod") {
+        map.insert("formmethod".into(), json!(normalize_form_method(value)));
+    }
+    if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "formenctype") {
+        map.insert("formenctype".into(), json!(normalize_form_enctype(value)));
     }
     for key in ["minlength", "maxlength", "min", "max"] {
         if let Some((_, value)) = attrs.iter().find(|(n, _)| n == key) {
@@ -3073,7 +3085,7 @@ mod tests {
             .expect("open button attrs should compile");
         assert_eq!(open_attrs["button_type"], "submit");
         assert_eq!(open_attrs["formaction"], "/filters");
-        assert_eq!(open_attrs["formmethod"], "post");
+        assert_eq!(open_attrs["formmethod"], "POST");
         assert_eq!(open_attrs["formenctype"], "multipart/form-data");
         assert_eq!(open_attrs["formtarget"], "_blank");
         assert_eq!(open_attrs["formnovalidate"], true);

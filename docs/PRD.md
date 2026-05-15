@@ -666,6 +666,16 @@ whether current targets still expose unambiguous source DOM ids and app-owned
 provenance anchors (`test_id`, `data_action`, `data_state`) before a cached
 plan reaches execution.
 
+2026-05-15 submit-default read: current docs and competitor positioning keep
+validating "observe, validate, replay" as the sticky loop. Playwright MCP refs
+remain snapshot-scoped, Stagehand documents cached observed actions and
+server/local cache paths, Browserbase sells replay/observability around cached
+actions, Firecrawl Interact resumes browser sessions after scraping, and
+Browser Use Cloud exposes CDP-backed sessions and profiles. Plasmate should
+keep its local-first wedge by making submit contracts browser-accurate:
+normalized `method`, `enctype`, `formmethod`, and `formenctype` values let
+cached SaaS submit actions validate what the browser will actually send.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -692,6 +702,18 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-15:
+  - Rust SOM compilation now normalizes form `enctype` values to browser
+    behavior when present: valid multipart/text encodings are lowercased, and
+    invalid values compile as `application/x-www-form-urlencoded`.
+  - Submitter override `formmethod` values now compile through the same
+    browser-default method normalization as form regions, so invalid overrides
+    validate as `GET` and valid `post`/`dialog` values stay typed.
+  - Submitter override `formenctype` values now normalize to the browser
+    submission encoding contract, preventing cached submit actions from
+    trusting raw invalid markup.
+  - Focused Rust compiler coverage now asserts form encoding normalization and
+    submitter method/encoding override normalization as the next shared
+    conformance promotion target.
   - Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
     and Vercel AI action-plan summaries now report replay coverage:
     `with_cache_key` / `withCacheKey`, `unique_cache_keys` /
@@ -1415,8 +1437,9 @@ and adapter docs over one-off integration logic.
   from the shared action-availability manifest into broader Rust/parser/SDK
   and adapter fixtures.
 - Promote browser-default form fidelity cases (id-less wrapped labels,
-  invalid input-type fallback, and default/invalid form method normalization)
-  into shared Rust/parser/SDK and adapter fixtures.
+  invalid input-type fallback, default/invalid form method normalization, form
+  encoding normalization, and submitter method/encoding override
+  normalization) into shared Rust/parser/SDK and adapter fixtures.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and
   `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures
   once the shared action manifest remains stable.

@@ -730,7 +730,7 @@ fn test_form_submission_context_is_preserved() {
     let html = r#"<!DOCTYPE html>
 <html><head><title>Checkout</title></head>
 <body>
-    <form aria-label="Checkout" action="/checkout" method="post" target="_blank" enctype="multipart/form-data" novalidate accept-charset="UTF-8" autocomplete="off">
+    <form aria-label="Checkout" action="/checkout" method="post" target="_blank" enctype=" Multipart/Form-Data " novalidate accept-charset="UTF-8" autocomplete="off">
         <label for="receipt">Receipt</label>
         <input id="receipt" name="receipt" type="file">
         <button type="submit">Submit</button>
@@ -796,6 +796,42 @@ fn test_form_method_defaults_and_invalid_values_follow_browser_behavior() {
         .find(|form| form.label.as_deref() == Some("Dialog close"))
         .expect("dialog form method should compile");
     assert_eq!(dialog.method.as_deref(), Some("DIALOG"));
+}
+
+#[test]
+fn test_form_enctype_invalid_values_follow_browser_behavior() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Form Enctype</title></head>
+<body>
+    <form aria-label="Default encoding" enctype="json">
+        <button>Submit</button>
+    </form>
+    <form aria-label="Plain text" enctype=" Text/Plain ">
+        <button>Submit</button>
+    </form>
+</body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let forms: Vec<&Region> = som
+        .regions
+        .iter()
+        .filter(|r| r.role == RegionRole::Form)
+        .collect();
+
+    let default = forms
+        .iter()
+        .find(|form| form.label.as_deref() == Some("Default encoding"))
+        .expect("form with invalid enctype should compile");
+    assert_eq!(
+        default.enctype.as_deref(),
+        Some("application/x-www-form-urlencoded")
+    );
+
+    let plain = forms
+        .iter()
+        .find(|form| form.label.as_deref() == Some("Plain text"))
+        .expect("form with text/plain enctype should compile");
+    assert_eq!(plain.enctype.as_deref(), Some("text/plain"));
 }
 
 #[test]
@@ -939,8 +975,8 @@ fn test_native_button_value_and_type_semantics_are_preserved() {
     let html = r#"<!DOCTYPE html>
 <html><head><title>Button Semantics</title></head>
 <body><main>
-    <button name="intent" value="publish" type="SUBMIT">Publish</button>
-    <button name="intent" value="preview" type="menu">Preview</button>
+    <button name="intent" value="publish" type="SUBMIT" formmethod=" Post " formenctype=" Multipart/Form-Data ">Publish</button>
+    <button name="intent" value="preview" type="menu" formmethod="patch" formenctype="json">Preview</button>
     <button name="intent" value="clear" type="reset">Clear</button>
 </main></body></html>"#;
 
@@ -955,6 +991,8 @@ fn test_native_button_value_and_type_semantics_are_preserved() {
     assert_eq!(publish_attrs["name"], "intent");
     assert_eq!(publish_attrs["value"], "publish");
     assert_eq!(publish_attrs["button_type"], "submit");
+    assert_eq!(publish_attrs["formmethod"], "POST");
+    assert_eq!(publish_attrs["formenctype"], "multipart/form-data");
 
     let preview = elems
         .iter()
@@ -963,6 +1001,11 @@ fn test_native_button_value_and_type_semantics_are_preserved() {
     let preview_attrs = preview.attrs.as_ref().unwrap();
     assert_eq!(preview_attrs["value"], "preview");
     assert_eq!(preview_attrs["button_type"], "submit");
+    assert_eq!(preview_attrs["formmethod"], "GET");
+    assert_eq!(
+        preview_attrs["formenctype"],
+        "application/x-www-form-urlencoded"
+    );
 
     let clear = elems
         .iter()
