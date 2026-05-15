@@ -85,6 +85,15 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   standalone check was skipped because `tsc` is not installed. Whole-crate
   `cargo fmt --check` still reports unrelated pre-existing Rust formatting
   drift outside touched files.
+- Commit/push state: the linked worktree blocked normal `git commit` by
+  denying creation of `.git/worktrees/plasmate81/index.lock`, so the commit was
+  created with a temporary index as `efbdccf` (`chore: tighten aria action
+  availability`) and pushed to
+  `origin/codex/plasmate-improvements-2026-05-15-aria-availability`. Direct
+  `origin/master` push was rejected with `fetch first`; retrying
+  `git fetch origin master` was blocked by the same `FETCH_HEAD` permission
+  issue, and `gh pr create` could not reach `api.github.com`. Remote merge
+  remains blocked until fetch/API access works.
 
 ### 2026-05-14T18:08:19Z - Plasmate Improvements Automation
 
