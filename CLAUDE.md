@@ -79,9 +79,9 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Verification gaps: Node SDK and Node parser tests remain blocked because
   local dev dependencies are absent (`tsc` and `vitest` not found).
 - Commit/push state: created code commit `39ad726` (`chore: add action target
-  replay lookup`) plus running-state follow-up `b0389b2`; branch
-  `codex/action-target-replay-lookup` was pushed to GitHub at `b0389b2`.
-  Direct push to `master` was rejected with `fetch first`; retrying
+  replay lookup`) plus running-state follow-ups; branch
+  `codex/action-target-replay-lookup` was pushed to GitHub. Direct push to
+  `master` was rejected with `fetch first`; retrying
   `git fetch origin master` from `/Users/steve/Git/plasmate` failed DNS for
   `github.com`, and `gh pr create` failed to reach `api.github.com`. Remote
   merge remains blocked until fetch/API access works.
