@@ -132,7 +132,7 @@ all := plasmate.FlatElements(som)
 | `FindByTextExact(som, text)` | Case-sensitive exact text and label search |
 | `FindByAction(som, action)` | Find elements exposing an action |
 | `FindByHint(som, hint)` | Find elements tagged with a semantic hint |
-| `GetActionPlan(som)` | Return compact action targets with cache keys, availability, original `html_id` bridge cues, link target/rel/download cues, graphical submitter alt/src cues, form submission context, submitter override cues, select selected_values/size context, text-entry/input-affordance cues, popover/command relationship cues, title/label/description ID relationships, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, range constraints, orientation/sort/value state, and set-position cues for agents |
+| `GetActionPlan(som)` | Return compact action targets with cache keys, availability, original `html_id` bridge cues, link target/rel/download cues, graphical submitter alt/src cues, form submission context, submitter override cues, select options/selected_values/size context, text-entry/input-affordance cues, popover/command relationship cues, title/label/description ID relationships, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, range constraints, orientation/sort/value state, and set-position cues for agents |
 | `EnabledActionPlan(som)` | Return compact action targets whose `enabled` field is true |
 | `GetActionPlanCacheKey(item)` | Return a deterministic key for caching or comparing an action target |
 | `GetActionPlanIndex(som, enabledOnly...)` | Index compact action targets by `ByID`, `ByCacheKey`, and `ByHTMLID` for replay validation |

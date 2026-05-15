@@ -120,6 +120,8 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append(f"capture={item['capture']}")
     if "multiple" in item:
         flags.append(f"multiple={item['multiple']}")
+    if item.get("options"):
+        flags.append(f"options={_format_select_options(item['options'])}")
     if item.get("selected_values"):
         flags.append(f"selected_values={','.join(item['selected_values'])}")
     if "size" in item:
@@ -226,6 +228,28 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         parts.append(f'- {item["description"]}')
 
     return " ".join(parts)
+
+
+def _format_select_options(options: object) -> str:
+    if not isinstance(options, list):
+        return ""
+    rendered: list[str] = []
+    for option in options:
+        if not isinstance(option, dict):
+            continue
+        value = option.get("value")
+        text = option.get("text")
+        if not isinstance(value, str) or not isinstance(text, str):
+            continue
+        flags = []
+        if option.get("selected") is True:
+            flags.append("selected")
+        if option.get("disabled") is True:
+            flags.append("disabled")
+        if isinstance(option.get("group"), str) and option["group"]:
+            flags.append(f"group:{option['group']}")
+        rendered.append(f"{value}:{text}{'(' + '|'.join(flags) + ')' if flags else ''}")
+    return "|".join(rendered)
 
 
 class PlasmateExtractor:

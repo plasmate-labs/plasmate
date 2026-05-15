@@ -742,6 +742,12 @@
 <li><strong>Grouped and multi-select menus need current state</strong>: optgroup labels and <code>selected_values</code> should become shared action-plan context before this lands in adapter conformance.</li>
 <li><strong>Schema and SDK parity decide stickiness</strong>: option groups, disabled option state, implicit single-select values, and select <code>size</code> need to validate in the public schema and flow through parser/SDK action plans before agents can safely cache menu choices across runtimes.</li>
 </ul>
+<h3 id="2026-05-15-select-action-plan-adjustment">2026-05-15 Select Action-Plan Adjustment</h3><p>Current official docs continue to make validated action replay the retention surface. Playwright MCP refs are snapshot-scoped, Stagehand/Browserbase action caches depend on current-state checks, and Browser Run/WebMCP points toward typed browser-native action contracts. Plasmate should make local select menus replayable from compact action plans, not only from full SOM attrs.</p>
+<ul>
+<li><strong>Choices belong in action plans</strong>: compact select targets should carry <code>options</code> with submitted values, visible labels, selected flags, disabled flags, and group labels.</li>
+<li><strong>Cache keys stay target-focused</strong>: option lists should validate replay context without changing deterministic <code>cache_key</code> generation for the same target.</li>
+<li><strong>Prompt surfaces need choice previews</strong>: Browser Use and Vercel AI should render concise option menus so agents can choose or explain select actions without reloading raw DOM/SOM.</li>
+</ul>
 <h3 id="2026-05-15-replay-provenance-adjustment">2026-05-15 Replay Provenance Adjustment</h3><p>The current market keeps rewarding validated reuse rather than raw browser access. Playwright MCP refs are scoped to a fresh snapshot, Stagehand and Browserbase cache resolved actions only after matching current page state, and Browser Use Cloud packages profiles/sessions around repeated workflows. Plasmate should make local replay more dependable by preserving app-owned anchors that teams already put in production markup.</p>
 <ul>
 <li><strong>Stable app selectors are product context</strong>: <code>data-testid</code>, <code>data-test</code>, <code>data-cy</code>, and <code>data-qa</code> should normalize into <code>test_id</code> so cached local action plans can survive label or layout drift.</li>
@@ -989,7 +995,8 @@ apps can resolve &quot;Email&quot; or &quot;Search&quot; controls without raw DO
 <li><input checked="" disabled="" type="checkbox"> Single-select controls infer the browser-default first selected option when markup omits <code>selected</code></li>
 <li><input checked="" disabled="" type="checkbox"> Disabled optgroups propagate disabled state to child option summaries</li>
 <li><input checked="" disabled="" type="checkbox"> SOM schema/spec, parser packages, SDKs, Browser Use, LangChain, and Vercel AI carry selected_values and select size context</li>
-<li><input checked="" disabled="" type="checkbox"> Shared action manifest asserts select selected_values and size as compact menu-planning context</li>
+<li><input checked="" disabled="" type="checkbox"> Parser packages and SDK action plans carry select options with selected, disabled, and group state</li>
+<li><input checked="" disabled="" type="checkbox"> Shared action manifest asserts select options, selected_values, and size as compact menu-planning context</li>
 <li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve title, labelledby, and describedby relationship context</li>
 <li><input checked="" disabled="" type="checkbox"> Compact action plans expose title, labelledby, and describedby across parser packages, SDKs, and framework adapters</li>
 <li><input checked="" disabled="" type="checkbox"> Shared action manifest asserts relationship-context cues without changing deterministic action cache keys</li>

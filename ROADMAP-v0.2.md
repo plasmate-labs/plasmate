@@ -872,6 +872,24 @@ existing parser, SDK, and framework surfaces.
 3. **Cache keys stay stable**: media and live menu state should inform replay
    validation without changing deterministic target identity.
 
+### 2026-05-15 Select Action-Plan Adjustment
+
+Current official docs continue to make validated action replay the retention
+surface. Playwright MCP refs are snapshot-scoped, Stagehand/Browserbase action
+caches depend on current-state checks, and Cloudflare Browser Run/WebMCP points
+toward typed browser-native action contracts. Plasmate should make local select
+menus replayable from compact action plans, not only from full SOM attrs.
+
+1. **Choices belong in action plans**: compact select targets should carry
+   `options` with submitted values, visible labels, selected flags, disabled
+   flags, and group labels.
+2. **Cache keys stay target-focused**: option lists should validate replay
+   context without changing deterministic `cache_key` generation for the same
+   target.
+3. **Prompt surfaces need choice previews**: Browser Use and Vercel AI should
+   render concise option menus so agents can choose or explain select actions
+   without reloading raw DOM/SOM.
+
 ### 2026-05-14 Relationship Context Adjustment
 
 Current browser-agent competitors keep making cached action replay depend on
@@ -1483,9 +1501,16 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Python/Node parser packages, Python/Node/Go SDK types, action-plan helpers,
   Browser Use, LangChain, and Vercel AI prompt renderers now carry
   `selected_values` and `size` as compact menu-planning context.
+- Python/Node parser packages and Python/Node/Go SDK action-plan helpers now
+  include native select `options`, preserving option value, text, selected
+  state, disabled state, and optgroup labels.
+- Browser Use and Vercel AI prompt renderers now expose concise select option
+  menus alongside `selected_values` and `size` while leaving deterministic
+  action `cache_key` inputs unchanged.
 - Shared action-availability fixtures now assert graphical submitter `alt` and
-  `src`, image-submit `button_type`/`input_type`, select `selected_values`, and
-  select `size` across parser packages, SDKs, and framework adapters.
+  `src`, image-submit `button_type`/`input_type`, select `options`,
+  `selected_values`, and select `size` across parser packages, SDKs, and
+  framework adapters.
 - Compact action-plan helpers now expose actionable media `alt`/`src` context
   without changing deterministic action cache keys.
 - Rust SOM now preserves native `title` plus `aria-labelledby` and

@@ -49,6 +49,43 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-15T13:10:19Z - Plasmate Improvements Automation
+
+- Git sync: `git fetch origin --prune` from the linked automation worktree
+  failed because the worktree could not open `FETCH_HEAD`; branch creation in
+  that worktree also failed on `HEAD.lock`. The exact patch was mirrored into
+  the primary checkout on
+  `codex/plasmate-improvements-2026-05-15-cache-key-lookup`.
+- Market direction: current official docs still reinforce validated structured
+  action replay as the retention surface. Playwright MCP uses snapshot-scoped
+  accessibility refs, Stagehand/Browserbase cache observed actions after state
+  checks, Firecrawl is broadening hosted MCP/browser sandbox surfaces, and
+  Cloudflare Browser Run/WebMCP points toward typed browser-native tools.
+  Plasmate should keep deepening local SOM action plans across its parser,
+  SDK, and adapter surface before pursuing hosted browser infrastructure.
+- Code changes: Python and Node parser action plans, Python/Node/Go SDK action
+  plans, Browser Use formatting, and Vercel AI extraction/formatting now carry
+  native select `options` with value/text/selected/disabled/group state
+  alongside `selected_values` and `size`. Deterministic `cache_key` inputs
+  remain target-focused and unchanged.
+- Fixture/docs changes: the shared action-availability SOM and expectation
+  manifest now assert select options, disabled/grouped choices, selected
+  multi-values, and select `size`; PRD, roadmap, website doc sources, fixture
+  docs, SDK READMEs, integration READMEs, and this running state document the
+  rationale and next conformance step.
+- Verification in the automation worktree: Python parser tests passed 68
+  tests; Python SDK query tests passed 36 tests; Browser Use fixture test
+  passed; LangChain fixture test passed with one existing Python 3.14/Pydantic
+  warning; Go SDK tests passed with
+  `GOCACHE=/private/tmp/plasmate-go-cache`; `cargo build` passed with existing
+  warnings; touched Python syntax compile and `git diff --check` passed.
+- Verification gaps: `./scripts/action-manifest-conformance.sh --quick`
+  stopped after the Python parser slice because `vitest` is not installed;
+  `packages/som-parser-node`, `sdk/node`, and `integrations/vercel-ai` lack
+  `node_modules`; `node website/build.mjs` was blocked by missing `marked`;
+  full `cargo fmt --check` still reports unrelated pre-existing formatting
+  drift in AWP/proxy/main/MCP files.
+
 ### 2026-05-15T12:13:55Z - Plasmate Improvements Automation
 
 - Git sync: required latest pull was retried from the automation worktree and

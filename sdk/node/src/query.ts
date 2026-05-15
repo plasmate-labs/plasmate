@@ -2,7 +2,7 @@
  * SOM query helpers for searching and traversing Semantic Object Model documents.
  */
 
-import type { Som, SomRegion, SomElement, RegionRole, ElementRole, ElementAction } from './types';
+import type { Som, SomRegion, SomElement, RegionRole, ElementRole, ElementAction, SelectOption } from './types';
 
 /** Find all regions matching a given role. */
 export function findByRole(som: Som, role: RegionRole): SomRegion[] {
@@ -66,6 +66,7 @@ export interface ActionPlanItem {
   accept?: string;
   capture?: boolean | string;
   multiple?: boolean;
+  options?: SelectOption[];
   selected_values?: string[];
   size?: number | string;
   autocomplete?: string;
@@ -254,6 +255,7 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.accept) item.accept = el.attrs.accept;
     if (el.attrs?.capture !== undefined) item.capture = el.attrs.capture;
     if (el.attrs?.multiple !== undefined) item.multiple = el.attrs.multiple;
+    if (el.attrs?.options?.length) item.options = el.attrs.options;
     if (el.attrs?.selected_values?.length) item.selected_values = el.attrs.selected_values;
     if (el.attrs?.size !== undefined) item.size = el.attrs.size;
     if (el.attrs?.autocomplete) item.autocomplete = el.attrs.autocomplete;

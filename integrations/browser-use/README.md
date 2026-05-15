@@ -72,7 +72,7 @@ Elements: 5 (1 interactive)
 
 ### Get an action plan
 
-Use `extract_action_plan()` when an agent needs reusable targets without the rest of the page text. Targets include `cache_key` for local action memory. Disabled, inert, and read-only controls include `enabled: false` plus `blocked_reason` so Browser Use agents can skip unavailable actions before spending a tool call:
+Use `extract_action_plan()` when an agent needs reusable targets without the rest of the page text. Targets include `cache_key` for local action memory, plus select `options`/`selected_values`/`size` for cached menu choices. Disabled, inert, and read-only controls include `enabled: false` plus `blocked_reason` so Browser Use agents can skip unavailable actions before spending a tool call:
 
 ```python
 actions = extractor.extract_action_plan("https://example.com/settings")
@@ -106,7 +106,7 @@ cache-key, required, readonly, inert, group, type, value, checked, expanded, pre
 selected, current, controls, haspopup, name, accept, capture, multiple,
 autocomplete, inputmode, enterkeyhint, autocapitalize, dirname, dir, lang, spellcheck,
 link target/rel/download cues, graphical submitter alt/src cues, form plus
-form submission context, submitter override cues, select selected_values/size
+form submission context, submitter override cues, select options/selected_values/size
 context, original `html_id` bridge cues, list, popover/command relationships, accesskey, ARIA
 placeholder/autocomplete/active-descendant/error-message state, title,
 aria_label/aria_description source text, labelledby/describedby relationship refs, keyshortcuts, roledescription,

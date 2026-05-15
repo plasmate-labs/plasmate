@@ -148,6 +148,8 @@ for target in action_plan:
         target["cache_key"],
         target["actions"],
         target.get("html_id"),
+        target.get("options"),
+        target.get("selected_values"),
         target.get("aria_label"),
         target.get("dir"),
         target.get("lang"),

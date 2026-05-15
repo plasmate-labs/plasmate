@@ -206,6 +206,10 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["capture"] = attrs.capture
             if attrs.multiple is not None:
                 item["multiple"] = attrs.multiple
+            if attrs.options:
+                item["options"] = [
+                    option.model_dump(exclude_none=True) for option in attrs.options
+                ]
             if attrs.selected_values:
                 item["selected_values"] = attrs.selected_values
             if attrs.size is not None:

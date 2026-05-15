@@ -201,7 +201,11 @@ assert.match(formatted, /\[e_plan\].*\[expanded=false\]/)
 assert.match(formatted, /\[e_plan\].*\[controls=plan-options\]/)
 assert.match(formatted, /\[e_plan\].*\[haspopup=listbox\]/)
 assert.match(formatted, /\[e_plan\].*\[multiple=true\]/)
-assert.match(formatted, /\[e_plan\].*\[selected_values=team\]/)
+assert.match(
+  formatted,
+  /\[e_plan\].*\[options=starter:Starter\|team:Team\(selected\)\|enterprise:Enterprise\(disabled\|group:Growth\)\|agency:Agency\(selected\|group:Growth\)\]/
+)
+assert.match(formatted, /\[e_plan\].*\[selected_values=team,agency\]/)
 assert.match(formatted, /\[e_plan\].*\[size=4\]/)
 assert.match(formatted, /\[e_plan\].*\[multiselectable=true\]/)
 assert.match(formatted, /\[e_plan\].*\[level=2\].*\[posinset=1\].*\[setsize=3\]/)

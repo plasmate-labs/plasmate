@@ -383,6 +383,14 @@ Current competitor direction keeps validating cached action plans against the cu
 - **Grouped and multi-select menus need current state**: optgroup labels and `selected_values` should become shared action-plan context before this lands in adapter conformance.
 - **Schema and SDK parity decide stickiness**: option groups, disabled option state, implicit single-select values, and select `size` need to validate in the public schema and flow through parser/SDK action plans before agents can safely cache menu choices across runtimes.
 
+### 2026-05-15 Select Action-Plan Adjustment
+
+Current official docs continue to make validated action replay the retention surface. Playwright MCP refs are snapshot-scoped, Stagehand/Browserbase action caches depend on current-state checks, and Browser Run/WebMCP points toward typed browser-native action contracts. Plasmate should make local select menus replayable from compact action plans, not only from full SOM attrs.
+
+- **Choices belong in action plans**: compact select targets should carry `options` with submitted values, visible labels, selected flags, disabled flags, and group labels.
+- **Cache keys stay target-focused**: option lists should validate replay context without changing deterministic `cache_key` generation for the same target.
+- **Prompt surfaces need choice previews**: Browser Use and Vercel AI should render concise option menus so agents can choose or explain select actions without reloading raw DOM/SOM.
+
 ### 2026-05-15 Replay Provenance Adjustment
 
 The current market keeps rewarding validated reuse rather than raw browser access. Playwright MCP refs are scoped to a fresh snapshot, Stagehand and Browserbase cache resolved actions only after matching current page state, and Browser Use Cloud packages profiles/sessions around repeated workflows. Plasmate should make local replay more dependable by preserving app-owned anchors that teams already put in production markup.
@@ -653,7 +661,8 @@ Current Playwright MCP, Stagehand/Browserbase, Browserbase observability, and Fi
 - [x] Single-select controls infer the browser-default first selected option when markup omits `selected`
 - [x] Disabled optgroups propagate disabled state to child option summaries
 - [x] SOM schema/spec, parser packages, SDKs, Browser Use, LangChain, and Vercel AI carry selected_values and select size context
-- [x] Shared action manifest asserts select selected_values and size as compact menu-planning context
+- [x] Parser packages and SDK action plans carry select options with selected, disabled, and group state
+- [x] Shared action manifest asserts select options, selected_values, and size as compact menu-planning context
 - [x] Rust compiler and SOM schema preserve title, labelledby, and describedby relationship context
 - [x] Compact action plans expose title, labelledby, and describedby across parser packages, SDKs, and framework adapters
 - [x] Shared action manifest asserts relationship-context cues without changing deterministic action cache keys

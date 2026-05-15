@@ -152,8 +152,6 @@
             "required": true,
             "value": "team",
             "multiple": true,
-            "selected_values": ["team"],
-            "size": 4,
             "aria": {
               "expanded": false,
               "controls": "plan-options",
@@ -165,8 +163,12 @@
             },
             "options": [
               { "value": "starter", "text": "Starter" },
-              { "value": "team", "text": "Team", "selected": true }
+              { "value": "team", "text": "Team", "selected": true },
+              { "value": "enterprise", "text": "Enterprise", "disabled": true, "group": "Growth" },
+              { "value": "agency", "text": "Agency", "selected": true, "group": "Growth" }
             ],
+            "selected_values": ["team", "agency"],
+            "size": 4,
             "group": "Billing"
           }
         },

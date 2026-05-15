@@ -513,6 +513,15 @@ shared manifest expectations. Graphical submitter `alt`/`src`, image-submit
 `button_type`, and select `selected_values`/`size` are now compact target
 contract fields rather than parser-only details.
 
+2026-05-15 select action-plan read: current official docs still make validated
+replay the retention surface. Playwright MCP refs are scoped to the current
+snapshot, Stagehand/Browserbase action caches depend on current-state checks,
+and Cloudflare Browser Run/WebMCP points toward typed browser-native tools.
+Plasmate should make local select menus replayable from compact action plans,
+not only full SOM attrs: `options` should travel with value, text, selected,
+disabled, and group state while deterministic target `cache_key` inputs stay
+unchanged.
+
 2026-05-14 relationship-context read: fresh competitor review still points to
 validated current-state action replay rather than a hosted-browser pivot.
 Playwright MCP keeps refs tied to the current structured snapshot,
@@ -808,6 +817,15 @@ and adapter docs over one-off integration logic.
   - The shared manifest now asserts select `selected_values` and `size`,
     moving menu current-state parity from documentation into cross-runtime
     fixture coverage.
+  - Parser packages and Python/Node/Go SDK action-plan helpers now include
+    native select `options` with value, text, selected, disabled, and group
+    state while keeping deterministic `cache_key` inputs unchanged.
+  - Browser Use and Vercel AI prompt renderers now show concise select option
+    menus alongside `selected_values` and `size`, so agents can choose or
+    explain menu actions without raw DOM recovery.
+  - The shared action-availability manifest now asserts select option menus,
+    grouped/disabled choices, selected multi-values, and `size` across parser,
+    SDK, and framework outputs.
   - The Rust SOM compiler and JSON Schema now preserve link navigation cues:
     `target`, `rel`, and `download`.
   - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
