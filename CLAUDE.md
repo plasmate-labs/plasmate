@@ -78,7 +78,8 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   `cargo test --lib --bin plasmate` passed 257 lib tests and 5 main/MCP tests;
   `git diff --check` passed.
 - Commit/push state: committed `36238cf`
-  (`chore: expose replay coverage summaries`) and pushed
+  (`chore: expose replay coverage summaries`) plus running-state follow-up
+  `ac43fb2` (`docs: record replay coverage push state`) and pushed
   `origin/codex/plasmate-improvements-2026-05-15-cache-key-lookup`. Direct
   `HEAD:master` push was rejected with `fetch first`; targeted
   `git fetch origin master` failed DNS for `github.com`; and `gh pr create`
