@@ -104,6 +104,49 @@ assert.equal(preview.enabled, false)
 assert.equal(preview.inert, true)
 assert.equal(preview.blocked_reason, 'inert')
 
+const ariaTargets = extractPlasmateActionTargets({
+  regions: [
+    {
+      id: 'r_form',
+      role: 'form',
+      elements: [
+        {
+          id: 'aria_disabled',
+          role: 'button',
+          text: 'Publish',
+          actions: ['click'],
+          attrs: { aria: { disabled: true } },
+        },
+        {
+          id: 'aria_hidden',
+          role: 'button',
+          text: 'Internal',
+          actions: ['click'],
+          attrs: { aria: { hidden: true } },
+        },
+        {
+          id: 'readonly_with_inert_false',
+          role: 'text_input',
+          label: 'Reference',
+          actions: ['type'],
+          attrs: { readonly: true, inert: false },
+        },
+      ],
+    },
+  ],
+})
+const ariaById = Object.fromEntries(ariaTargets.map((target) => [target.id, target]))
+assert.equal(ariaById.aria_disabled.enabled, false)
+assert.equal(ariaById.aria_disabled.disabled, true)
+assert.equal(ariaById.aria_disabled.blocked_reason, 'disabled')
+assert.equal(ariaById.aria_hidden.enabled, false)
+assert.equal(ariaById.aria_hidden.hidden, true)
+assert.equal(ariaById.aria_hidden.blocked_reason, 'hidden')
+assert.equal(ariaById.readonly_with_inert_false.enabled, false)
+assert.equal(ariaById.readonly_with_inert_false.inert, false)
+assert.equal(ariaById.readonly_with_inert_false.readonly, true)
+assert.equal(ariaById.readonly_with_inert_false.blocked_reason, 'readonly')
+
 const availableTargets = preparePlasmateActionPlan(targets)
 assert.deepEqual(
   availableTargets.map((target) => target.id),

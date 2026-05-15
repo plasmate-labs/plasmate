@@ -383,6 +383,14 @@ Current competitor direction keeps validating cached action plans against the cu
 - **Grouped and multi-select menus need current state**: optgroup labels and `selected_values` should become shared action-plan context before this lands in adapter conformance.
 - **Schema and SDK parity decide stickiness**: option groups, disabled option state, implicit single-select values, and select `size` need to validate in the public schema and flow through parser/SDK action plans before agents can safely cache menu choices across runtimes.
 
+### 2026-05-15 ARIA Availability Adjustment
+
+Current competitor direction keeps validating cached actions against fresh structured state. Playwright MCP snapshots make accessibility-hidden targets disappear from the normal interaction surface, Stagehand/Browserbase action caching depends on availability rechecks, and Cloudflare WebMCP keeps moving typed browser actions toward page-provided semantics. Plasmate's roadmap should keep local action menus conservative and portable.
+
+- **ARIA-disabled is an execution gate**: parser packages, SDKs, and framework helpers should block `aria.disabled=true` targets even when native `disabled` is absent.
+- **ARIA-hidden targets should not be replay choices**: compact action plans should expose `hidden=true` and mark those targets unavailable so model prompts match accessibility-snapshot expectations.
+- **Availability ordering must be deterministic**: explicit `inert=false` should not prevent read-only gating, and existing deterministic `cache_key` inputs should stay target-focused.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -574,9 +582,13 @@ Current competitor direction keeps validating cached action plans against the cu
 - [x] Single-select controls infer the browser-default first selected option when markup omits `selected`
 - [x] Disabled optgroups propagate disabled state to child option summaries
 - [x] SOM schema/spec, parser packages, SDKs, Browser Use, LangChain, and Vercel AI carry selected_values and select size context
+- [x] Compact action plans block ARIA-only disabled targets across parser packages, SDKs, and Vercel AI extraction
+- [x] Compact action plans expose ARIA hidden state and block hidden targets before replay
+- [x] Read-only availability still gates targets when payloads explicitly carry inert=false
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
+- [ ] Promote ARIA availability-ordering cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
 - [ ] Add cross-adapter fixtures for enriched compact action-plan metadata
 - [ ] Promote ARIA relationship-state cases, including owns/flowto/details, into the broader action-state/action-semantics conformance suites

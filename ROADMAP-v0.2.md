@@ -835,6 +835,25 @@ for repeated SaaS workflows without raw DOM recovery.
    the public schema and flow through parser/SDK action plans before agents can
    safely cache menu choices across runtimes.
 
+### 2026-05-15 ARIA Availability Adjustment
+
+Current competitor direction keeps validating cached actions against fresh
+structured state. Playwright MCP snapshots make accessibility-hidden targets
+disappear from the normal interaction surface, Stagehand/Browserbase action
+caching depends on availability rechecks, and Cloudflare WebMCP keeps moving
+typed browser actions toward page-provided semantics. Plasmate's roadmap should
+keep local action menus conservative and portable.
+
+1. **ARIA-disabled is an execution gate**: parser packages, SDKs, and
+   framework helpers should block `aria.disabled=true` targets even when native
+   `disabled` is absent.
+2. **ARIA-hidden targets should not be replay choices**: compact action plans
+   should expose `hidden=true` and mark those targets unavailable so model
+   prompts match accessibility-snapshot expectations.
+3. **Availability ordering must be deterministic**: explicit `inert=false`
+   should not prevent read-only gating, and existing deterministic
+   `cache_key` inputs should stay target-focused.
+
 ## Architecture
 
 ```
@@ -1268,10 +1287,20 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Python/Node parser packages, Python/Node/Go SDK types, action-plan helpers,
   Browser Use, LangChain, and Vercel AI prompt renderers now carry
   `selected_values` and `size` as compact menu-planning context.
+- Python/Node parser packages, Python/Node/Go SDKs, and Vercel AI action-plan
+  extraction now block ARIA-only disabled targets with
+  `blocked_reason="disabled"`.
+- Compact action plans now expose ARIA `hidden` state and mark hidden targets
+  unavailable with `blocked_reason="hidden"` across parser, SDK, and prompt
+  helper surfaces.
+- Read-only targets remain blocked even when an incoming SOM payload carries
+  `inert=false`, preserving availability fidelity without changing
+  deterministic action `cache_key` values.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
-  and select-option parser/SDK/adaptor parity cases into broader fixtures
-  alongside text-entry, ARIA widget, range, and set-position cases.
+  select-option parser/SDK/adaptor parity, and ARIA availability-ordering
+  cases into broader fixtures alongside text-entry, ARIA widget, range, and
+  set-position cases.
 
 ## Dependencies to Add
 

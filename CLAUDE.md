@@ -49,6 +49,43 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-15T15:11:52Z - Plasmate Improvements Automation
+
+- Git sync: latest `git fetch origin --prune` was retried from the automation
+  worktree and failed before network access because the linked worktree cannot
+  open `/Users/steve/Git/plasmate/.git/worktrees/plasmate81/FETCH_HEAD`
+  (`Operation not permitted`). Work continued from local detached `HEAD`
+  `4fabe19`, with already-fetched `origin/master` visible at `f7af658`.
+- Market direction: current official docs still support Plasmate's
+  local-first action-state wedge. Playwright MCP uses accessibility snapshots
+  with refs scoped to the current snapshot; Stagehand/Browserbase-style action
+  caching depends on validating targets before replay; Cloudflare WebMCP is
+  moving typed browser interactions toward page semantics; and Firecrawl keeps
+  bundling MCP scraping/search/extraction with managed browser capabilities.
+- Code changes: Python/Node parser packages, Python/Node/Go SDKs, and Vercel
+  AI action-target extraction now treat ARIA-only disabled targets as
+  unavailable with `blocked_reason="disabled"`.
+- Code changes: compact action plans now expose ARIA `hidden=true` as
+  `hidden=true` and block those targets with `blocked_reason="hidden"`; Browser
+  Use, LangChain, and Vercel AI prompt renderers now include hidden
+  availability cues.
+- Code changes: read-only action targets remain unavailable even when an input
+  SOM payload explicitly carries `inert=false`, closing an availability-order
+  bug without changing deterministic action `cache_key` inputs.
+- Docs changes: PRD, roadmap, website doc sources, and integration READMEs now
+  record the ARIA availability rationale and the next conformance step to
+  promote ARIA-disabled, ARIA-hidden, and inert-false/read-only cases into
+  broader parser/SDK/adapter fixtures.
+- Verification: Python parser tests passed 69 tests; Python SDK query tests
+  passed 37 tests; Browser Use extractor tests passed; LangChain SOM output
+  tests passed with one existing Python 3.14/Pydantic warning; Go SDK tests
+  passed with `GOCACHE=/private/tmp/plasmate-go-cache`; Python syntax compile,
+  `git diff --check`, and `cargo build` passed. Node parser/SDK tests were
+  skipped because local `node_modules` directories are absent; TypeScript
+  standalone check was skipped because `tsc` is not installed. Whole-crate
+  `cargo fmt --check` still reports unrelated pre-existing Rust formatting
+  drift outside touched files.
+
 ### 2026-05-14T18:08:19Z - Plasmate Improvements Automation
 
 - Git sync: latest pull was retried from the automation worktree and failed

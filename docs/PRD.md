@@ -1,6 +1,6 @@
 # Plasmate PRD: Agent Stickiness and Roadmap Direction
 
-Last updated: 2026-05-14
+Last updated: 2026-05-15
 
 ## Product Thesis
 
@@ -504,6 +504,15 @@ option `group`, option `disabled`, and `selected_values` should move through
 schema, parser packages, SDKs, and prompt renderers so cached menu plans remain
 portable across the project's broad integration surface.
 
+2026-05-15 ARIA availability read: current browser-agent products keep
+anchoring replay in fresh structured state. Playwright MCP snapshots hide
+`aria-hidden` controls from the accessibility tree, Stagehand/Browserbase
+style action caches only work when target availability is revalidated, and
+Cloudflare WebMCP keeps pushing typed browser interactions closer to page
+semantics. Plasmate should keep local action menus strict: ARIA-disabled and
+ARIA-hidden targets should be unavailable across parser packages, SDKs, and
+framework helpers, while explicit `inert=false` must not mask read-only state.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -528,6 +537,22 @@ and adapter docs over one-off integration logic.
    Plasmate should own local speed, privacy, and open protocol fit.
 
 ## Current Run Changes
+
+- 2026-05-15:
+  - Python/Node parser packages, Python/Node/Go SDKs, and Vercel AI action
+    target extraction now treat ARIA-only `disabled=true` as unavailable with
+    `blocked_reason="disabled"`.
+  - Compact action targets now surface ARIA `hidden=true` as `hidden=true` and
+    mark those targets unavailable with `blocked_reason="hidden"`, matching
+    accessibility-snapshot expectations for hidden controls.
+  - Read-only targets remain unavailable even when a SOM payload explicitly
+    carries `inert=false`, closing a small availability-ordering bug in local
+    action-plan helpers.
+  - Browser Use, LangChain, and Vercel AI prompt renderers now include hidden
+    availability cues so agent prompts do not offer hidden targets for replay.
+  - Focused parser/SDK tests now cover ARIA-disabled, ARIA-hidden, and
+    inert-false/read-only cases without changing deterministic action
+    `cache_key` inputs.
 
 - 2026-05-14:
   - Rust SOM select extraction now follows browser default option-value

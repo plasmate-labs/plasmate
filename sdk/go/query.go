@@ -226,6 +226,7 @@ type ActionPlanItem struct {
 	Expanded          *bool       `json:"expanded,omitempty"`
 	Pressed           *bool       `json:"pressed,omitempty"`
 	Selected          *bool       `json:"selected,omitempty"`
+	Hidden            *bool       `json:"hidden,omitempty"`
 	Multiline         *bool       `json:"multiline,omitempty"`
 	MultiSelectable   *bool       `json:"multiselectable,omitempty"`
 	Current           interface{} `json:"current,omitempty"`
@@ -377,6 +378,7 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				}
 				item.Pressed = el.Attrs.Aria.Pressed
 				item.Selected = el.Attrs.Aria.Selected
+				item.Hidden = el.Attrs.Aria.Hidden
 				item.Current = el.Attrs.Aria.Current
 				item.Controls = el.Attrs.Aria.Controls
 				item.HasPopup = el.Attrs.Aria.HasPopup
@@ -415,13 +417,26 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.Enabled = false
 				reason := "disabled"
 				item.BlockedReason = &reason
+			} else if el.Attrs.Disabled == nil && el.Attrs.Aria != nil && el.Attrs.Aria.Disabled != nil {
+				item.Disabled = el.Attrs.Aria.Disabled
+				if *el.Attrs.Aria.Disabled && item.Enabled {
+					item.Enabled = false
+					reason := "disabled"
+					item.BlockedReason = &reason
+				}
 			}
 			item.Inert = el.Attrs.Inert
 			if el.Attrs.Inert != nil && *el.Attrs.Inert {
 				item.Enabled = false
 				reason := "inert"
 				item.BlockedReason = &reason
-			} else if item.Enabled && item.Readonly != nil && *item.Readonly {
+			}
+			if item.Enabled && item.Hidden != nil && *item.Hidden {
+				item.Enabled = false
+				reason := "hidden"
+				item.BlockedReason = &reason
+			}
+			if item.Enabled && item.Readonly != nil && *item.Readonly {
 				item.Enabled = false
 				reason := "readonly"
 				item.BlockedReason = &reason

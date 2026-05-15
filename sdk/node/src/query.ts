@@ -101,6 +101,7 @@ export interface ActionPlanItem {
   expanded?: boolean;
   pressed?: boolean;
   selected?: boolean;
+  hidden?: boolean;
   multiline?: boolean;
   multiselectable?: boolean;
   current?: boolean | string;
@@ -133,7 +134,7 @@ export interface ActionPlanItem {
   readonly?: boolean;
   disabled?: boolean;
   inert?: boolean;
-  blocked_reason?: 'disabled' | 'readonly' | 'inert';
+  blocked_reason?: 'disabled' | 'readonly' | 'inert' | 'hidden';
   group?: string;
 }
 
@@ -250,6 +251,7 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.aria?.readonly !== undefined && el.attrs?.readonly === undefined) item.readonly = el.attrs.aria.readonly;
     if (el.attrs?.aria?.pressed !== undefined) item.pressed = el.attrs.aria.pressed;
     if (el.attrs?.aria?.selected !== undefined) item.selected = el.attrs.aria.selected;
+    if (el.attrs?.aria?.hidden !== undefined) item.hidden = el.attrs.aria.hidden;
     if (el.attrs?.aria?.current !== undefined) item.current = el.attrs.aria.current;
     if (el.attrs?.aria?.controls !== undefined) item.controls = el.attrs.aria.controls;
     if (el.attrs?.aria?.haspopup !== undefined) item.haspopup = el.attrs.aria.haspopup;
@@ -282,18 +284,29 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.readonly !== undefined) item.readonly = el.attrs.readonly;
     if (el.attrs?.disabled !== undefined) {
       item.disabled = el.attrs.disabled;
-      if (el.attrs.disabled) {
+      if (el.attrs.disabled && item.enabled !== false) {
+        item.enabled = false;
+        item.blocked_reason = 'disabled';
+      }
+    } else if (el.attrs?.aria?.disabled !== undefined) {
+      item.disabled = el.attrs.aria.disabled;
+      if (el.attrs.aria.disabled === true && item.enabled !== false) {
         item.enabled = false;
         item.blocked_reason = 'disabled';
       }
     }
     if (el.attrs?.inert !== undefined) {
       item.inert = el.attrs.inert;
-      if (el.attrs.inert) {
+      if (el.attrs.inert && item.enabled !== false) {
         item.enabled = false;
         item.blocked_reason = 'inert';
       }
-    } else if (item.readonly && item.enabled !== false) {
+    }
+    if (item.hidden === true && item.enabled !== false) {
+      item.enabled = false;
+      item.blocked_reason = 'hidden';
+    }
+    if (item.readonly && item.enabled !== false) {
       item.enabled = false;
       item.blocked_reason = 'readonly';
     }

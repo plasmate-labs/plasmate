@@ -415,6 +415,54 @@ describe('getActionPlan', () => {
     ]);
   });
 
+  it('marks ARIA and inert-false readonly targets unavailable', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_form',
+          role: 'form',
+          elements: [
+            {
+              id: 'aria_disabled',
+              role: 'button',
+              text: 'Publish',
+              actions: ['click'],
+              attrs: { aria: { disabled: true } },
+            },
+            {
+              id: 'aria_hidden',
+              role: 'button',
+              text: 'Internal',
+              actions: ['click'],
+              attrs: { aria: { hidden: true } },
+            },
+            {
+              id: 'readonly_with_inert_false',
+              role: 'text_input',
+              label: 'Reference',
+              actions: ['type'],
+              attrs: { readonly: true, inert: false },
+            },
+          ],
+        },
+      ],
+      meta: { html_bytes: 100, som_bytes: 50, element_count: 3, interactive_count: 3 },
+    };
+
+    const plan = Object.fromEntries(getActionPlan(som).map((item) => [item.id, item]));
+    expect(plan.aria_disabled.enabled).toBe(false);
+    expect(plan.aria_disabled.disabled).toBe(true);
+    expect(plan.aria_disabled.blocked_reason).toBe('disabled');
+    expect(plan.aria_hidden.enabled).toBe(false);
+    expect(plan.aria_hidden.hidden).toBe(true);
+    expect(plan.aria_hidden.blocked_reason).toBe('hidden');
+    expect(plan.readonly_with_inert_false.enabled).toBe(false);
+    expect(plan.readonly_with_inert_false.inert).toBe(false);
+    expect(plan.readonly_with_inert_false.readonly).toBe(true);
+    expect(plan.readonly_with_inert_false.blocked_reason).toBe('readonly');
+  });
+
   it('returns deterministic cache keys for equivalent action targets', () => {
     expect(
       getActionPlanCacheKey({

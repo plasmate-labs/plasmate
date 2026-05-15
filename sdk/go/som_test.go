@@ -485,6 +485,63 @@ func TestGetActionPlanDisabledTarget(t *testing.T) {
 	}
 }
 
+func TestGetActionPlanAriaAvailabilityTargets(t *testing.T) {
+	trueValue := true
+	falseValue := false
+	publish := "Publish"
+	internal := "Internal"
+	reference := "Reference"
+	som := &Som{
+		Regions: []Region{
+			{
+				ID:   "r_form",
+				Role: "form",
+				Elements: []Element{
+					{
+						ID:      "aria_disabled",
+						Role:    "button",
+						Text:    &publish,
+						Actions: []string{"click"},
+						Attrs:   &ElementAttrs{Aria: &AriaState{Disabled: &trueValue}},
+					},
+					{
+						ID:      "aria_hidden",
+						Role:    "button",
+						Text:    &internal,
+						Actions: []string{"click"},
+						Attrs:   &ElementAttrs{Aria: &AriaState{Hidden: &trueValue}},
+					},
+					{
+						ID:      "readonly_with_inert_false",
+						Role:    "text_input",
+						Label:   &reference,
+						Actions: []string{"type"},
+						Attrs:   &ElementAttrs{Readonly: &trueValue, Inert: &falseValue},
+					},
+				},
+			},
+		},
+	}
+
+	plan := GetActionPlan(som)
+	if len(plan) != 3 {
+		t.Fatalf("GetActionPlan = %d, want 3", len(plan))
+	}
+	byID := map[string]ActionPlanItem{}
+	for _, item := range plan {
+		byID[item.ID] = item
+	}
+	if byID["aria_disabled"].Enabled || byID["aria_disabled"].Disabled == nil || !*byID["aria_disabled"].Disabled || byID["aria_disabled"].BlockedReason == nil || *byID["aria_disabled"].BlockedReason != "disabled" {
+		t.Errorf("aria_disabled availability = %+v, want disabled", byID["aria_disabled"])
+	}
+	if byID["aria_hidden"].Enabled || byID["aria_hidden"].Hidden == nil || !*byID["aria_hidden"].Hidden || byID["aria_hidden"].BlockedReason == nil || *byID["aria_hidden"].BlockedReason != "hidden" {
+		t.Errorf("aria_hidden availability = %+v, want hidden", byID["aria_hidden"])
+	}
+	if byID["readonly_with_inert_false"].Enabled || byID["readonly_with_inert_false"].Inert == nil || *byID["readonly_with_inert_false"].Inert || byID["readonly_with_inert_false"].Readonly == nil || !*byID["readonly_with_inert_false"].Readonly || byID["readonly_with_inert_false"].BlockedReason == nil || *byID["readonly_with_inert_false"].BlockedReason != "readonly" {
+		t.Errorf("readonly availability = %+v, want readonly with inert=false", byID["readonly_with_inert_false"])
+	}
+}
+
 func TestGetActionPlanMatchesSharedAvailabilityManifest(t *testing.T) {
 	somBytes, err := os.ReadFile("../../integrations/fixtures/action-availability.som.json")
 	if err != nil {

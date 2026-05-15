@@ -252,6 +252,54 @@ describe('getActionPlan', () => {
     assert.deepEqual(getActionPlan(som), action_targets);
   });
 
+  it('marks ARIA and inert-false readonly targets unavailable', () => {
+    const som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_form',
+          role: 'form',
+          elements: [
+            {
+              id: 'aria_disabled',
+              role: 'button',
+              text: 'Publish',
+              actions: ['click'],
+              attrs: { aria: { disabled: true } },
+            },
+            {
+              id: 'aria_hidden',
+              role: 'button',
+              text: 'Internal',
+              actions: ['click'],
+              attrs: { aria: { hidden: true } },
+            },
+            {
+              id: 'readonly_with_inert_false',
+              role: 'text_input',
+              label: 'Reference',
+              actions: ['type'],
+              attrs: { readonly: true, inert: false },
+            },
+          ],
+        },
+      ],
+      meta: { html_bytes: 100, som_bytes: 50, element_count: 3, interactive_count: 3 },
+    };
+
+    const plan = Object.fromEntries(getActionPlan(som).map((item) => [item.id, item]));
+    assert.equal(plan.aria_disabled.enabled, false);
+    assert.equal(plan.aria_disabled.disabled, true);
+    assert.equal(plan.aria_disabled.blocked_reason, 'disabled');
+    assert.equal(plan.aria_hidden.enabled, false);
+    assert.equal(plan.aria_hidden.hidden, true);
+    assert.equal(plan.aria_hidden.blocked_reason, 'hidden');
+    assert.equal(plan.readonly_with_inert_false.enabled, false);
+    assert.equal(plan.readonly_with_inert_false.inert, false);
+    assert.equal(plan.readonly_with_inert_false.readonly, true);
+    assert.equal(plan.readonly_with_inert_false.blocked_reason, 'readonly');
+  });
+
   it('returns deterministic cache keys for equivalent targets', () => {
     assert.equal(
       getActionPlanCacheKey({

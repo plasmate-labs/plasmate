@@ -198,12 +198,17 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
     flags: list[str] = []
     aria = attrs.get("aria") if isinstance(attrs.get("aria"), dict) else {}
     readonly = attrs.get("readonly") is True or aria.get("readonly") is True
-    if attrs.get("disabled") is True:
+    disabled = attrs.get("disabled") is True or aria.get("disabled") is True
+    hidden = aria.get("hidden") is True
+    if disabled:
         flags.append("[disabled]")
         flags.append("[blocked_reason=disabled]")
     elif attrs.get("inert") is True:
         flags.append("[inert]")
         flags.append("[blocked_reason=inert]")
+    elif hidden:
+        flags.append("[hidden]")
+        flags.append("[blocked_reason=hidden]")
     elif readonly:
         flags.append("[readonly]")
         flags.append("[blocked_reason=readonly]")
@@ -217,6 +222,8 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append("[readonly]")
     if attrs.get("inert") is True and "[inert]" not in flags:
         flags.append("[inert]")
+    if hidden and "[hidden]" not in flags:
+        flags.append("[hidden]")
     if attrs.get("value"):
         flags.append(f'[value="{attrs["value"]}"]')
     if attrs.get("name"):

@@ -300,6 +300,56 @@ class TestGetActionPlan:
 
         assert get_action_plan(som) == expected
 
+    def test_marks_aria_and_readonly_targets_unavailable(self) -> None:
+        som = Som(
+            som_version="1.0",
+            url="https://example.com",
+            title="T",
+            lang="en",
+            regions=[
+                SomRegion(
+                    id="r",
+                    role="form",
+                    elements=[
+                        SomElement(
+                            id="aria_disabled",
+                            role="button",
+                            text="Publish",
+                            actions=["click"],
+                            attrs=ElementAttrs(aria={"disabled": True}),
+                        ),
+                        SomElement(
+                            id="aria_hidden",
+                            role="button",
+                            text="Internal",
+                            actions=["click"],
+                            attrs=ElementAttrs(aria={"hidden": True}),
+                        ),
+                        SomElement(
+                            id="readonly_with_inert_false",
+                            role="text_input",
+                            label="Reference",
+                            actions=["type"],
+                            attrs=ElementAttrs(readonly=True, inert=False),
+                        ),
+                    ],
+                )
+            ],
+            meta=SomMeta(html_bytes=0, som_bytes=0, element_count=3, interactive_count=3),
+        )
+
+        plan = {item["id"]: item for item in get_action_plan(som)}
+        assert plan["aria_disabled"]["enabled"] is False
+        assert plan["aria_disabled"]["disabled"] is True
+        assert plan["aria_disabled"]["blocked_reason"] == "disabled"
+        assert plan["aria_hidden"]["enabled"] is False
+        assert plan["aria_hidden"]["hidden"] is True
+        assert plan["aria_hidden"]["blocked_reason"] == "hidden"
+        assert plan["readonly_with_inert_false"]["enabled"] is False
+        assert plan["readonly_with_inert_false"]["inert"] is False
+        assert plan["readonly_with_inert_false"]["readonly"] is True
+        assert plan["readonly_with_inert_false"]["blocked_reason"] == "readonly"
+
     def test_returns_deterministic_cache_keys(self) -> None:
         assert (
             get_action_plan_cache_key(

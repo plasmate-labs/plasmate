@@ -39,6 +39,7 @@ export interface PlasmateActionTarget {
   blocked_reason?: string
   required?: boolean
   readonly?: boolean
+  hidden?: boolean
   description?: string
   autocomplete?: string
   inputmode?: string
@@ -180,7 +181,7 @@ export interface PreparePlasmateActionPlanOptions {
 export const plasmateActionGuidance =
   'Use Plasmate SOM element ids for browser actions. Treat action targets ' +
   'with enabled=false or blocked_reason as unavailable, and prefer ' +
-  'cache_key, required, readonly, inert, value, target, rel, download, name, accept, capture, multiple, selected_values, size, autocomplete, inputmode, enterkeyhint, autocapitalize, dirname, spellcheck, form, form_action, form_method, form_target, form_enctype, form_novalidate, form_accept_charset, form_autocomplete, button_type, formaction, formmethod, formenctype, formtarget, formnovalidate, list, popovertarget, popovertargetaction, commandfor, command, accesskey, aria_placeholder, aria_autocomplete, active_descendant, errormessage, keyshortcuts, roledescription, busy, live, atomic, relevant, owns, flowto, details, multiline, multiselectable, orientation, sort, level, posinset, setsize, valuemin, valuemax, valuenow, valuetext, pattern, minlength, maxlength, min, max, step, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
+  'cache_key, required, readonly, inert, hidden, value, target, rel, download, name, accept, capture, multiple, selected_values, size, autocomplete, inputmode, enterkeyhint, autocapitalize, dirname, spellcheck, form, form_action, form_method, form_target, form_enctype, form_novalidate, form_accept_charset, form_autocomplete, button_type, formaction, formmethod, formenctype, formtarget, formnovalidate, list, popovertarget, popovertargetaction, commandfor, command, accesskey, aria_placeholder, aria_autocomplete, active_descendant, errormessage, keyshortcuts, roledescription, busy, live, atomic, relevant, owns, flowto, details, multiline, multiselectable, orientation, sort, level, posinset, setsize, valuemin, valuemax, valuenow, valuetext, pattern, minlength, maxlength, min, max, step, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
 
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined
@@ -228,10 +229,11 @@ export function isPlasmateActionTargetAvailable(
 ): boolean {
   return (
     target.enabled !== false &&
-    target.disabled !== true &&
-    target.inert !== true &&
-    target.readonly !== true &&
-    !target.blocked_reason
+  target.disabled !== true &&
+  target.inert !== true &&
+  target.readonly !== true &&
+  target.hidden !== true &&
+  !target.blocked_reason
   )
 }
 
@@ -250,7 +252,7 @@ export function normalizePlasmateActionTarget(
     enabled,
     ...(enabled
       ? {}
-      : { blocked_reason: target.blocked_reason ?? (target.inert ? 'inert' : target.readonly ? 'readonly' : 'disabled') }),
+      : { blocked_reason: target.blocked_reason ?? (target.inert ? 'inert' : target.hidden ? 'hidden' : target.readonly ? 'readonly' : 'disabled') }),
   }
 }
 
@@ -398,7 +400,7 @@ export function extractPlasmateActionTargets(
       }
       const aria = attrs.aria
       if (aria && typeof aria === 'object') {
-        for (const stateKey of ['expanded', 'pressed', 'selected', 'multiline', 'multiselectable'] as const) {
+        for (const stateKey of ['expanded', 'pressed', 'selected', 'hidden', 'multiline', 'multiselectable'] as const) {
           const stateValue = (aria as Record<string, unknown>)[stateKey]
           if (typeof stateValue === 'boolean') {
             target[stateKey] = stateValue
@@ -507,18 +509,34 @@ export function extractPlasmateActionTargets(
 
       if (typeof attrs.disabled === 'boolean') {
         target.disabled = attrs.disabled
-        if (attrs.disabled) {
+        if (attrs.disabled && target.enabled !== false) {
           target.enabled = false
           target.blocked_reason = 'disabled'
+        }
+      } else {
+        const ariaDisabled = aria && typeof aria === 'object'
+          ? (aria as Record<string, unknown>).disabled
+          : undefined
+        if (typeof ariaDisabled === 'boolean') {
+          target.disabled = ariaDisabled
+          if (ariaDisabled && target.enabled !== false) {
+            target.enabled = false
+            target.blocked_reason = 'disabled'
+          }
         }
       }
       if (typeof attrs.inert === 'boolean') {
         target.inert = attrs.inert
-        if (attrs.inert) {
+        if (attrs.inert && target.enabled !== false) {
           target.enabled = false
           target.blocked_reason = 'inert'
         }
-      } else if (target.enabled !== false && attrs.readonly === true) {
+      }
+      if (target.hidden === true && target.enabled !== false) {
+        target.enabled = false
+        target.blocked_reason = 'hidden'
+      }
+      if (target.enabled !== false && target.readonly === true) {
         target.enabled = false
         target.blocked_reason = 'readonly'
       }
@@ -571,6 +589,7 @@ export function formatPlasmateActionPlan(
       const required = target.required ? ' [required]' : ''
       const readonly = target.readonly ? ' [readonly]' : ''
       const inert = target.inert ? ' [inert]' : ''
+      const hidden = target.hidden ? ' [hidden]' : ''
       const linkTarget = target.target ? ` [target=${target.target}]` : ''
       const rel = target.rel ? ` [rel=${target.rel}]` : ''
       const download =
@@ -708,7 +727,7 @@ export function formatPlasmateActionPlan(
         ? ` [description=${target.description}]`
         : ''
 
-      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${readonly}${inert}${linkTarget}${rel}${download}${inputType}${value}${nameAttr}${accept}${capture}${multiple}${selectedValues}${size}${autocomplete}${inputmode}${enterkeyhint}${autocapitalize}${dirname}${form}${formAction}${formMethod}${formTarget}${formEnctype}${formNoValidate}${formAcceptCharset}${formAutocomplete}${list}${popovertarget}${popovertargetaction}${commandfor}${command}${popover}${buttonType}${submitFormAction}${submitFormMethod}${submitFormEnctype}${submitFormTarget}${submitNoValidate}${accesskey}${spellcheck}${placeholder}${minlength}${maxlength}${min}${max}${step}${pattern}${checked}${expanded}${pressed}${selected}${multiline}${multiselectable}${current}${controls}${haspopup}${invalid}${ariaPlaceholder}${ariaAutocomplete}${activeDescendant}${errorMessage}${keyshortcuts}${roledescription}${busy}${live}${atomic}${relevant}${owns}${flowto}${details}${orientation}${sort}${level}${posinset}${setsize}${valuemin}${valuemax}${valuenow}${valuetext}${group}${description}`
+      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${readonly}${inert}${hidden}${linkTarget}${rel}${download}${inputType}${value}${nameAttr}${accept}${capture}${multiple}${selectedValues}${size}${autocomplete}${inputmode}${enterkeyhint}${autocapitalize}${dirname}${form}${formAction}${formMethod}${formTarget}${formEnctype}${formNoValidate}${formAcceptCharset}${formAutocomplete}${list}${popovertarget}${popovertargetaction}${commandfor}${command}${popover}${buttonType}${submitFormAction}${submitFormMethod}${submitFormEnctype}${submitFormTarget}${submitNoValidate}${accesskey}${spellcheck}${placeholder}${minlength}${maxlength}${min}${max}${step}${pattern}${checked}${expanded}${pressed}${selected}${multiline}${multiselectable}${current}${controls}${haspopup}${invalid}${ariaPlaceholder}${ariaAutocomplete}${activeDescendant}${errorMessage}${keyshortcuts}${roledescription}${busy}${live}${atomic}${relevant}${owns}${flowto}${details}${orientation}${sort}${level}${posinset}${setsize}${valuemin}${valuemax}${valuenow}${valuetext}${group}${description}`
     })
     .join('\n')
 }

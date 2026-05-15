@@ -202,6 +202,7 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                     "readonly",
                     "pressed",
                     "selected",
+                    "hidden",
                     "current",
                     "controls",
                     "haspopup",
@@ -248,15 +249,23 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["readonly"] = attrs.aria["readonly"]
             if attrs.disabled is not None:
                 item["disabled"] = attrs.disabled
-                if attrs.disabled:
+                if attrs.disabled and item.get("enabled") is not False:
+                    item["enabled"] = False
+                    item["blocked_reason"] = "disabled"
+            elif attrs.aria and attrs.aria.get("disabled") is not None:
+                item["disabled"] = attrs.aria["disabled"]
+                if attrs.aria["disabled"] is True and item.get("enabled") is not False:
                     item["enabled"] = False
                     item["blocked_reason"] = "disabled"
             if attrs.inert is not None:
                 item["inert"] = attrs.inert
-                if attrs.inert:
+                if attrs.inert and item.get("enabled") is not False:
                     item["enabled"] = False
                     item["blocked_reason"] = "inert"
-            elif item.get("readonly") is True and item.get("enabled") is not False:
+            if item.get("hidden") is True and item.get("enabled") is not False:
+                item["enabled"] = False
+                item["blocked_reason"] = "hidden"
+            if item.get("readonly") is True and item.get("enabled") is not False:
                 item["enabled"] = False
                 item["blocked_reason"] = "readonly"
             if attrs.group:
