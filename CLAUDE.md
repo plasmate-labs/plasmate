@@ -78,8 +78,14 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Verification gap: full `cargo test` passed 256 lib tests and 5 main/MCP
   tests, then failed only in `tests/awp_integration_test.rs` because the
   sandbox denied local socket binding with `Operation not permitted`.
-- Commit/push state: changes are ready to commit. Remote merge may remain
-  blocked until GitHub DNS/API access works.
+- Commit/push state: committed `cba1846`
+  (`chore: add framework replay indexes`) and pushed
+  `origin/codex/plasmate-improvements-2026-05-15-cache-key-lookup`. Direct
+  push to `origin/master` was rejected with `fetch first`; retrying
+  `git fetch origin master` failed DNS for `github.com`, and `gh pr create`
+  could not connect to `api.github.com`. Remote merge remains blocked until
+  GitHub fetch/API access works or the pushed branch is merged from another
+  environment.
 
 ### 2026-05-15T04:08:45Z - Plasmate Improvements Automation
 
