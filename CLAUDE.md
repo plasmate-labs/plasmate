@@ -70,10 +70,19 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Docs changes: PRD and roadmap sources now record the browser-default
   fidelity rationale and next step to promote these focused Rust cases into
   shared parser, SDK, and adapter conformance fixtures.
-- Verification in progress: focused Rust compiler tests for the three new
-  cases passed in the automation worktree before this patch was mirrored into
-  the primary checkout. Primary checkout build/test, website docs generation,
-  commit, push, and merge status are still pending for this run.
+- Verification: focused Rust compiler tests for the three new cases passed in
+  the automation worktree before this patch was mirrored into the primary
+  checkout. Primary checkout verification also passed: touched-file
+  `rustfmt --check`, full `som_compiler_test` (69 tests), `node
+  website/build.mjs`, `cargo build`, `cargo test --lib --bin plasmate` (257
+  lib tests and 5 main/MCP tests), and `git diff --check`.
+- Commit/push state: committed `115aba6`
+  (`chore: align form browser defaults`) and pushed
+  `origin/codex/plasmate-improvements-2026-05-15-cache-key-lookup`. Direct
+  `HEAD:master` push was rejected with `fetch first`; `git fetch origin
+  master` failed DNS for `github.com`; and `gh pr create` could not connect to
+  `api.github.com`. Remote merge remains blocked until GitHub fetch/API access
+  works or the pushed branch is merged elsewhere.
 
 ### 2026-05-15T11:21:53Z - Plasmate Improvements Automation
 
