@@ -283,6 +283,13 @@ type ActionPlanItem struct {
 	Group             *string     `json:"group,omitempty"`
 }
 
+// ActionPlanIndex groups compact action targets for O(1) replay lookups.
+type ActionPlanIndex struct {
+	ByID       map[string]ActionPlanItem `json:"by_id"`
+	ByCacheKey map[string]ActionPlanItem `json:"by_cache_key"`
+	ByHTMLID   map[string]ActionPlanItem `json:"by_html_id"`
+}
+
 func compactString(value *string) interface{} {
 	if value != nil && *value != "" {
 		return *value
@@ -488,6 +495,34 @@ func EnabledActionPlan(som *Som) []ActionPlanItem {
 		}
 	}
 	return result
+}
+
+// GetActionPlanIndex returns action targets indexed by SOM id, cache key, and original HTML id.
+func GetActionPlanIndex(som *Som, enabledOnly ...bool) ActionPlanIndex {
+	onlyEnabled := len(enabledOnly) > 0 && enabledOnly[0]
+	plan := GetActionPlan(som)
+	if onlyEnabled {
+		plan = EnabledActionPlan(som)
+	}
+	index := ActionPlanIndex{
+		ByID:       map[string]ActionPlanItem{},
+		ByCacheKey: map[string]ActionPlanItem{},
+		ByHTMLID:   map[string]ActionPlanItem{},
+	}
+	for _, item := range plan {
+		if _, ok := index.ByID[item.ID]; !ok {
+			index.ByID[item.ID] = item
+		}
+		if _, ok := index.ByCacheKey[item.CacheKey]; !ok {
+			index.ByCacheKey[item.CacheKey] = item
+		}
+		if item.HTMLID != nil {
+			if _, ok := index.ByHTMLID[*item.HTMLID]; !ok {
+				index.ByHTMLID[*item.HTMLID] = item
+			}
+		}
+	}
+	return index
 }
 
 // FindActionTargetByID returns the compact action target matching a SOM element id.

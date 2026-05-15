@@ -301,6 +301,29 @@ def get_enabled_action_plan(som: Som) -> List[Dict[str, object]]:
     return [item for item in get_action_plan(som) if item.get("enabled") is not False]
 
 
+def get_action_plan_index(
+    som: Som, *, enabled_only: bool = False
+) -> Dict[str, Dict[str, Dict[str, object]]]:
+    """Return action targets indexed by SOM id, cache key, and original HTML id."""
+    plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
+    index: Dict[str, Dict[str, Dict[str, object]]] = {
+        "by_id": {},
+        "by_cache_key": {},
+        "by_html_id": {},
+    }
+    for item in plan:
+        target_id = item.get("id")
+        if isinstance(target_id, str) and target_id not in index["by_id"]:
+            index["by_id"][target_id] = item
+        cache_key = item.get("cache_key")
+        if isinstance(cache_key, str) and cache_key not in index["by_cache_key"]:
+            index["by_cache_key"][cache_key] = item
+        html_id = item.get("html_id")
+        if isinstance(html_id, str) and html_id not in index["by_html_id"]:
+            index["by_html_id"][html_id] = item
+    return index
+
+
 def find_action_target_by_id(
     som: Som, target_id: str
 ) -> Optional[Dict[str, object]]:

@@ -457,6 +457,13 @@ func TestGetActionPlan(t *testing.T) {
 	if got := FindActionTargetByCacheKey(som, "missing"); got != nil {
 		t.Errorf("FindActionTargetByCacheKey missing = %v, want nil", got)
 	}
+	index := GetActionPlanIndex(som)
+	if got := index.ByID[filters.ID]; got.CacheKey != filters.CacheKey {
+		t.Errorf("GetActionPlanIndex ByID = %v, want cache key %s", got, filters.CacheKey)
+	}
+	if got := index.ByCacheKey[filters.CacheKey]; got.ID != filters.ID {
+		t.Errorf("GetActionPlanIndex ByCacheKey = %v, want id %s", got, filters.ID)
+	}
 	if got := FindActionTargetByID(som, filters.ID); got == nil || got.CacheKey != filters.CacheKey {
 		t.Errorf("FindActionTargetByID = %v, want %s", got, filters.CacheKey)
 	}
@@ -552,6 +559,17 @@ func TestGetActionPlanMatchesSharedAvailabilityManifest(t *testing.T) {
 	}
 	if got := FindActionTargetByHTMLID(som, "missing"); got != nil {
 		t.Errorf("FindActionTargetByHTMLID missing = %v, want nil", got)
+	}
+	index := GetActionPlanIndex(som)
+	if got := index.ByHTMLID["save-settings"]; got.ID != "e_save" {
+		t.Errorf("GetActionPlanIndex ByHTMLID = %v, want e_save", got)
+	}
+	enabledIndex := GetActionPlanIndex(som, true)
+	if _, ok := enabledIndex.ByID["e_disabled"]; ok {
+		t.Errorf("GetActionPlanIndex enabled-only included e_disabled")
+	}
+	if _, ok := enabledIndex.ByHTMLID["disabled-control"]; ok {
+		t.Errorf("GetActionPlanIndex enabled-only included disabled-control")
 	}
 
 	enabledBytes, err := json.Marshal(EnabledActionPlan(som))

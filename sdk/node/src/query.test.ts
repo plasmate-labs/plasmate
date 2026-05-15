@@ -17,6 +17,7 @@ import {
   flatElements,
   getActionPlan,
   getActionPlanCacheKey,
+  getActionPlanIndex,
   getEnabledActionPlan,
   getTokenEstimate,
 } from './query';
@@ -309,6 +310,19 @@ describe('getActionPlan', () => {
       getEnabledActionPlan(som),
       action_targets.filter((target) => target.enabled),
     );
+  });
+
+  it('indexes action targets for replay lookups', () => {
+    const { som, action_targets } = loadActionAvailabilityFixture();
+    const index = getActionPlanIndex(som);
+
+    assert.deepEqual(index.byId.e_save, findActionTargetById(som, 'e_save'));
+    assert.deepEqual(index.byCacheKey[action_targets[0].cache_key], action_targets[0]);
+    assert.equal(index.byHtmlId['save-settings'].id, 'e_save');
+
+    const enabledIndex = getActionPlanIndex(som, { enabledOnly: true });
+    assert.equal(enabledIndex.byId.e_disabled, undefined);
+    assert.equal(enabledIndex.byHtmlId['disabled-control'], undefined);
   });
 });
 

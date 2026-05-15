@@ -34,6 +34,7 @@ export {
   findByText,
   getActionPlan,
   getActionPlanCacheKey,
+  getActionPlanIndex,
   getEnabledActionPlan,
   getInteractiveElements,
   getLinks,

@@ -31,6 +31,7 @@ from plasmate.query import (
     flat_elements,
     get_action_plan,
     get_action_plan_cache_key,
+    get_action_plan_index,
     get_enabled_action_plan,
     get_token_estimate,
 )
@@ -368,6 +369,24 @@ class TestGetActionPlan:
         assert get_enabled_action_plan(som) == [
             target for target in expected if target["enabled"]
         ]
+
+    def test_indexes_action_plan_for_replay_lookups(self) -> None:
+        fixture_dir = REPO_ROOT / "integrations" / "fixtures"
+        som = Som.model_validate(
+            json.loads((fixture_dir / "action-availability.som.json").read_text())
+        )
+        expected = json.loads(
+            (fixture_dir / "action-availability.expected.json").read_text()
+        )["action_targets"]
+        index = get_action_plan_index(som)
+
+        assert index["by_id"]["e_save"] == find_action_target_by_id(som, "e_save")
+        assert index["by_cache_key"][expected[0]["cache_key"]] == expected[0]
+        assert index["by_html_id"]["save-settings"]["id"] == "e_save"
+
+        enabled_index = get_action_plan_index(som, enabled_only=True)
+        assert "e_disabled" not in enabled_index["by_id"]
+        assert "disabled-control" not in enabled_index["by_html_id"]
 
 
 class TestFindByText:

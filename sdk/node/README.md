@@ -93,7 +93,8 @@ The SDK includes query helpers for searching and traversing SOM documents:
 import {
   findActionTargetByCacheKey, findActionTargetByHtmlId, findActionTargetById,
   findByRole, findById, findByHtmlId, findByTag, findInteractive,
-  findByText, flatElements, getActionPlan, getEnabledActionPlan, getTokenEstimate,
+  findByText, flatElements, getActionPlan, getActionPlanIndex,
+  getEnabledActionPlan, getTokenEstimate,
 } from 'plasmate';
 
 const browser = new Plasmate();
@@ -120,6 +121,8 @@ console.log(actionPlan.map((target) => [target.id, target.cache_key, target.acti
 const cachedTarget = findActionTargetByCacheKey(som, actionPlan[0].cache_key);
 const sameTarget = findActionTargetById(som, actionPlan[0].id);
 const domTarget = findActionTargetByHtmlId(som, 'login-button');
+const targetIndex = getActionPlanIndex(som, { enabledOnly: true });
+const readyTarget = targetIndex.byCacheKey[actionPlan[0].cache_key];
 
 // Search by visible text (case-insensitive)
 const matches = findByText(som, 'sign in');
@@ -144,6 +147,7 @@ browser.close();
 | `getActionPlan(som)` | `ActionPlanItem[]` | Compact action targets with cache keys, availability, original `html_id` bridge cues, link target/rel/download cues, graphical submitter alt/src cues, form/list and form submission context, submitter override cues, select selected_values/size context, popover/command relation cues, title/label/description ID relationships, ARIA source text plus locale/direction cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues |
 | `getEnabledActionPlan(som)` | `ActionPlanItem[]` | Compact action targets whose `enabled` field is not false |
 | `getActionPlanCacheKey(item)` | `string` | Deterministic key for caching or comparing action targets |
+| `getActionPlanIndex(som, { enabledOnly })` | `ActionPlanIndex` | Index compact action targets by `byId`, `byCacheKey`, and `byHtmlId` for replay validation |
 | `findActionTargetByCacheKey(som, cacheKey)` | `ActionPlanItem \| undefined` | Resolve a cached action target from the current SOM action plan |
 | `findActionTargetById(som, id)` | `ActionPlanItem \| undefined` | Resolve an action target by stable SOM id |
 | `findActionTargetByHtmlId(som, htmlId)` | `ActionPlanItem \| undefined` | Resolve an action target by original HTML id |

@@ -97,6 +97,7 @@ const ratio = getCompressionRatio(som);
 | `getActionPlan(som): ActionPlanItem[]` | Return compact action targets with cache keys, availability, original DOM-id bridge cues, link target/rel/download cues, graphical submitter alt/src cues, form/list and form submission context, submitter override cues, select selected_values/size context, popover/command relation cues, title/label/description ID relationships, ARIA source text plus locale/direction cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues for agent planning. |
 | `getEnabledActionPlan(som): ActionPlanItem[]` | Return compact action targets whose `enabled` field is not false. |
 | `getActionPlanCacheKey(item): string` | Return a deterministic key for caching or comparing an action target. |
+| `getActionPlanIndex(som, { enabledOnly }): ActionPlanIndex` | Index compact action targets by `byId`, `byCacheKey`, and `byHtmlId` for replay validation. |
 | `findActionTargetByCacheKey(som, cacheKey): ActionPlanItem \| undefined` | Resolve a cached action target from the current SOM action plan. |
 | `findActionTargetById(som, id): ActionPlanItem \| undefined` | Resolve an action target by stable SOM id. |
 | `findActionTargetByHtmlId(som, htmlId): ActionPlanItem \| undefined` | Resolve an action target by original HTML id. |

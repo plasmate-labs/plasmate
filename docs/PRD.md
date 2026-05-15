@@ -559,6 +559,15 @@ answer is to make the local action menu cheap to use in normal app code:
 resolve by SOM id, resolve by original DOM id, and filter available targets
 without every SDK user hand-scanning the compact plan.
 
+2026-05-15 action-index read: current competitor surfaces keep optimizing the
+replay loop after the first observation. Playwright MCP refs are refreshed with
+the page state, Stagehand/Browserbase cached actions depend on validating the
+current target, Firecrawl is broadening agentic extraction, and Crawl4AI is
+pressuring open-source crawler breadth. Plasmate should make the local action
+menu indexable by the identifiers developers already store: stable SOM id,
+deterministic `cache_key`, and original `html_id`, with an enabled-only index
+for prompt-safe menus.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -600,6 +609,15 @@ and adapter docs over one-off integration logic.
     stored plans, live selectors, and current SOM state without raw DOM scans.
   - Python/Node parser packages and Python/Node/Go SDKs now expose enabled-only
     action-plan helpers for the common "show the model usable targets" path.
+  - Python/Node parser packages and Python/Node/Go SDKs now expose compact
+    action-plan indexes keyed by SOM id, deterministic `cache_key`, and
+    original `html_id`, giving replay validators O(1) target lookup without
+    changing compact target identity.
+  - Action-plan index helpers support enabled-only indexing so apps can build
+    prompt menus and replay gates from the same current SOM plan.
+  - Parser/SDK tests and docs now cover action-plan indexes across Python,
+    Node, and Go, keeping lookup ergonomics synchronized across orchestration
+    and durable worker runtimes.
   - Focused parser and SDK tests now cover id lookup, `html_id` lookup, and
     enabled-plan filtering against the shared action availability manifest.
   - Python/Node parser packages and Python/Node/Go SDK types now accept the
@@ -1216,3 +1234,5 @@ and adapter docs over one-off integration logic.
 - Audit ecosystem repos for stale install docs, tool counts, and schema drift.
 - Promote action-plan helper parity into framework integrations so every
   adapter exposes the same compact action target contract.
+- Promote action-plan index helpers into shared conformance so id, cache-key,
+  `html_id`, and enabled-only replay indexes cannot drift across runtimes.

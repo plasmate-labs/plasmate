@@ -937,6 +937,25 @@ application code needed to use local SOM plans.
    improve planning and validation without changing deterministic
    action-cache-key inputs.
 
+### 2026-05-15 Action-Plan Index Adjustment
+
+The current competitive pattern is not just a compact observation; it is a
+fast validation step before replay. Playwright MCP keeps refs tied to the
+current snapshot, Stagehand/Browserbase cached actions validate against page
+state, and Firecrawl/Crawl4AI continue expanding extraction breadth. Plasmate's
+local-first action memory should make current-target validation cheap in every
+runtime.
+
+1. **Indexes should match stored identifiers**: parser packages and SDKs should
+   expose action-plan indexes by SOM id, deterministic `cache_key`, and
+   original `html_id`.
+2. **Prompt menus should share the index path**: enabled-only index variants
+   should power model-facing menus and replay gates without a separate filter
+   implementation.
+3. **Conformance should cover ergonomics**: the shared action manifest should
+   keep id lookup, cache-key lookup, HTML-id lookup, enabled filtering, and
+   indexed replay helpers synchronized across Python, Node, and Go.
+
 ## Architecture
 
 ```
@@ -1400,12 +1419,15 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Python/Node parser packages and Python/Node/Go SDKs now expose compact action
   target lookup by SOM id and original DOM id, plus enabled-only action-plan
   helpers, keeping app-level replay validation small and consistent.
+- Python/Node parser packages and Python/Node/Go SDKs now expose action-plan
+  indexes keyed by SOM id, deterministic `cache_key`, and original `html_id`,
+  with enabled-only variants for prompt-safe replay menus.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, relationship-context,
   target-provenance/locale, `html_id` bridge, cache-key lookup, action-target
-  id lookup, and enabled-plan filtering cases into broader fixtures alongside
-  text-entry, ARIA widget, range, and set-position cases.
+  id lookup, enabled-plan filtering, and action-plan index cases into broader
+  fixtures alongside text-entry, ARIA widget, range, and set-position cases.
 
 ## Dependencies to Add
 

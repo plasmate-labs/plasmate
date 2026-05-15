@@ -26,6 +26,7 @@ from som_parser import (
     from_plasmate,
     get_action_plan,
     get_action_plan_cache_key,
+    get_action_plan_index,
     get_all_elements,
     get_compression_ratio,
     get_enabled_action_plan,
@@ -618,6 +619,18 @@ class TestGetActionPlan:
         assert get_enabled_action_plan(som) == [
             target for target in expected_targets if target["enabled"]
         ]
+
+    def test_indexes_action_plan_for_replay_lookups(self):
+        som, expected_targets = _load_action_availability_fixture()
+        index = get_action_plan_index(som)
+
+        assert index["by_id"]["e_save"] == find_action_target_by_id(som, "e_save")
+        assert index["by_cache_key"][expected_targets[0]["cache_key"]] == expected_targets[0]
+        assert index["by_html_id"]["save-settings"]["id"] == "e_save"
+
+        enabled_index = get_action_plan_index(som, enabled_only=True)
+        assert "e_disabled" not in enabled_index["by_id"]
+        assert "disabled-control" not in enabled_index["by_html_id"]
 
     def test_matches_shared_action_availability_manifest(self):
         som, expected_targets = _load_action_availability_fixture()

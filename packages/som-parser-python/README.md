@@ -54,6 +54,7 @@ from som_parser import (
     find_action_target_by_id,
     find_by_action,
     get_action_plan,
+    get_action_plan_index,
     get_enabled_action_plan,
 )
 
@@ -65,6 +66,8 @@ for item in plan:
 cached = find_action_target_by_cache_key(som, plan[0]["cache_key"])
 same_target = find_action_target_by_id(som, plan[0]["id"])
 dom_target = find_action_target_by_html_id(som, "save-settings")
+index = get_action_plan_index(som, enabled_only=True)
+ready_target = index["by_cache_key"].get(plan[0]["cache_key"])
 
 for button in find_by_action(som, "click"):
     print(button.id, button.text or button.label)
@@ -121,6 +124,7 @@ print(som.model_dump_json(indent=2))
 | `get_action_plan(som) -> list[dict]` | Return compact `{id, html_id, cache_key, role, actions, enabled, label}` action targets with availability, original DOM-id bridge cues, link target/rel/download cues, graphical submitter alt/src cues, form/list and form submission context, submitter override cues, select selected_values/size context, popover/command relation cues, title/label/description ID relationships, ARIA source text plus locale/direction cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues |
 | `get_enabled_action_plan(som) -> list[dict]` | Return compact action targets whose `enabled` field is not false |
 | `get_action_plan_cache_key(item) -> str` | Return a deterministic key for caching or comparing an action target |
+| `get_action_plan_index(som, enabled_only=False) -> dict` | Index compact action targets by `by_id`, `by_cache_key`, and `by_html_id` for replay validation |
 | `find_action_target_by_cache_key(som, cache_key) -> dict \| None` | Resolve a cached action target from the current SOM action plan |
 | `find_action_target_by_id(som, id) -> dict \| None` | Resolve an action target by stable SOM id |
 | `find_action_target_by_html_id(som, html_id) -> dict \| None` | Resolve an action target by original HTML id |

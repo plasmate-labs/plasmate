@@ -62,6 +62,7 @@ export {
   flatElements,
   getActionPlan,
   getActionPlanCacheKey,
+  getActionPlanIndex,
   getEnabledActionPlan,
   getTokenEstimate,
 } from './query';

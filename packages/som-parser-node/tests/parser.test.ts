@@ -18,6 +18,7 @@ import {
   findByText,
   getActionPlan,
   getActionPlanCacheKey,
+  getActionPlanIndex,
   getEnabledActionPlan,
   getInteractiveElements,
   getLinks,
@@ -468,6 +469,19 @@ describe('getActionPlan', () => {
     expect(getEnabledActionPlan(som)).toEqual(
       action_targets.filter((target) => target.enabled),
     );
+  });
+
+  it('indexes action targets for replay lookups', () => {
+    const { som, action_targets } = loadActionAvailabilityFixture();
+    const index = getActionPlanIndex(som);
+
+    expect(index.byId.e_save).toEqual(findActionTargetById(som, 'e_save'));
+    expect(index.byCacheKey[action_targets[0].cache_key]).toEqual(action_targets[0]);
+    expect(index.byHtmlId['save-settings'].id).toBe('e_save');
+
+    const enabledIndex = getActionPlanIndex(som, { enabledOnly: true });
+    expect(enabledIndex.byId.e_disabled).toBeUndefined();
+    expect(enabledIndex.byHtmlId['disabled-control']).toBeUndefined();
   });
 
   it('matches the shared action availability manifest', () => {
