@@ -77,6 +77,7 @@ var testSOM = `{
               {
                 "id": "e10",
                 "role": "button",
+                "html_id": "open-filters",
                 "label": "Open filters",
                 "actions": ["click"],
                 "hints": ["primary"],
@@ -267,6 +268,9 @@ func TestParseElementAttrs(t *testing.T) {
 	if shadowButton.Attrs.Aria == nil || shadowButton.Attrs.Aria.Expanded == nil || *shadowButton.Attrs.Aria.Expanded {
 		t.Errorf("aria.expanded = %v, want false", shadowButton.Attrs.Aria)
 	}
+	if shadowButton.HTMLID == nil || *shadowButton.HTMLID != "open-filters" {
+		t.Errorf("HTMLID = %v, want open-filters", shadowButton.HTMLID)
+	}
 }
 
 func TestParseInvalidJSON(t *testing.T) {
@@ -314,6 +318,21 @@ func TestFindByID(t *testing.T) {
 	}
 	if shadowEl.Label == nil || *shadowEl.Label != "Open filters" {
 		t.Errorf("Label = %v, want Open filters", shadowEl.Label)
+	}
+}
+
+func TestFindByHTMLID(t *testing.T) {
+	som := mustParse(t)
+
+	el := FindByHTMLID(som, "open-filters")
+	if el == nil {
+		t.Fatal("FindByHTMLID(open-filters) returned nil")
+	}
+	if el.ID != "e10" {
+		t.Errorf("ID = %q, want e10", el.ID)
+	}
+	if FindByHTMLID(som, "missing-html-id") != nil {
+		t.Error("FindByHTMLID(missing-html-id) should return nil")
 	}
 }
 
@@ -424,6 +443,9 @@ func TestGetActionPlan(t *testing.T) {
 	}
 	if filters.Label == nil || *filters.Label != "Open filters" {
 		t.Errorf("Label = %v, want Open filters", filters.Label)
+	}
+	if filters.HTMLID == nil || *filters.HTMLID != "open-filters" {
+		t.Errorf("HTMLID = %v, want open-filters", filters.HTMLID)
 	}
 	if !filters.Enabled {
 		t.Error("Enabled = false, want true")

@@ -40,6 +40,7 @@ from .types import (
 )
 from .query import (
     find_by_id,
+    find_by_html_id,
     find_by_role,
     find_by_tag,
     find_by_text,
@@ -70,6 +71,7 @@ __all__ = [
     "StructuredData",
     # Query helpers
     "find_by_id",
+    "find_by_html_id",
     "find_by_role",
     "find_by_tag",
     "find_by_text",

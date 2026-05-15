@@ -383,6 +383,14 @@ Current competitor direction keeps validating cached action plans against the cu
 - **Grouped and multi-select menus need current state**: optgroup labels and `selected_values` should become shared action-plan context before this lands in adapter conformance.
 - **Schema and SDK parity decide stickiness**: option groups, disabled option state, implicit single-select values, and select `size` need to validate in the public schema and flow through parser/SDK action plans before agents can safely cache menu choices across runtimes.
 
+### 2026-05-15 HTML ID Provenance Adjustment
+
+Current competitor docs keep making the interaction surface both structured and replay-aware. Playwright MCP gives snapshot-scoped refs, Stagehand `observe()` returns cacheable action objects, and Browser Run/WebMCP is testing browser-native tool contracts. Plasmate should treat `html_id` as local DOM provenance for compact targets, not just a Rust compiler field.
+
+- **Live DOM resolution matters**: SDK and parser action plans should carry `html_id` so agents can move from a compact SOM target back to `document.getElementById()` or selector execution without re-reading raw DOM.
+- **Cache keys stay stable**: `html_id` is useful provenance, but should not change deterministic action `cache_key` values because the SOM id, role, label, actions, and field identity remain the cache target.
+- **Parity beats isolated fields**: Python, Node, Go, and shared fixtures should expose the same `html_id` lookup and action-plan context before adapters advertise live-DOM replay support.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -574,10 +582,14 @@ Current competitor direction keeps validating cached action plans against the cu
 - [x] Single-select controls infer the browser-default first selected option when markup omits `selected`
 - [x] Disabled optgroups propagate disabled state to child option summaries
 - [x] SOM schema/spec, parser packages, SDKs, Browser Use, LangChain, and Vercel AI carry selected_values and select size context
+- [x] Parser packages and SDKs preserve html_id, expose original-HTML-id lookup helpers, and carry html_id in compact action plans
+- [x] Browser Use, LangChain, and Vercel AI action-plan renderers surface html_id
+- [x] Shared action-availability manifest asserts html_id parity without changing deterministic cache keys
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
+- [ ] Promote html_id DOM-provenance cases into adapter conformance fixtures
 - [ ] Add cross-adapter fixtures for enriched compact action-plan metadata
 - [ ] Promote ARIA relationship-state cases, including owns/flowto/details, into the broader action-state/action-semantics conformance suites
 - [ ] Promote range and orientation cases into broader parser, SDK, and adapter conformance fixtures

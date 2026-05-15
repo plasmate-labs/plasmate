@@ -16,6 +16,7 @@ from som_parser import (
     filter_elements,
     find_by_action,
     find_by_hint,
+    find_by_html_id,
     find_by_id,
     find_by_role,
     find_by_text,
@@ -49,6 +50,7 @@ FIXTURE_SOM = {
                 {
                     "id": "e_1",
                     "role": "link",
+                    "html_id": "home-link",
                     "text": "Home",
                     "actions": ["click"],
                     "attrs": {"href": "/"},
@@ -180,6 +182,7 @@ class TestParseSom:
         nav_elements = som.regions[0].elements
         assert len(nav_elements) == 2
         assert nav_elements[0].role == ElementRole.LINK
+        assert nav_elements[0].html_id == "home-link"
         assert nav_elements[0].text == "Home"
 
     def test_group_role_and_legend_attr_parse(self):
@@ -374,6 +377,16 @@ class TestFindById:
         assert find_by_id(som, "shadow_link").text == "Shadow Docs"
 
 
+class TestFindByHtmlId:
+    def test_found(self, som: Som):
+        el = find_by_html_id(som, "home-link")
+        assert el is not None
+        assert el.id == "e_1"
+
+    def test_not_found(self, som: Som):
+        assert find_by_html_id(som, "missing-id") is None
+
+
 class TestFindByText:
     def test_substring(self, som: Som):
         results = find_by_text(som, "home")
@@ -503,6 +516,7 @@ class TestGetActionPlan:
             "actions": ["click"],
             "enabled": True,
             "label": "Home",
+            "html_id": "home-link",
             "href": "/",
             "cache_key": "plasmate-action:v1:4f5af432",
         }

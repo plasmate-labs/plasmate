@@ -25,6 +25,7 @@
         {
           "id": "e_email",
           "role": "text_input",
+          "html_id": "work-email",
           "label": "Work email",
           "actions": ["type"],
           "attrs": {
@@ -60,6 +61,7 @@
         {
           "id": "e_upload",
           "role": "text_input",
+          "html_id": "evidence-upload",
           "label": "Evidence files",
           "actions": ["type"],
           "attrs": {
@@ -75,6 +77,7 @@
         {
           "id": "e_save",
           "role": "button",
+          "html_id": "save-button",
           "text": "Save",
           "actions": ["click"],
           "attrs": {
@@ -107,6 +110,7 @@
         {
           "id": "e_preview",
           "role": "button",
+          "html_id": "preview-button",
           "text": "Preview changes",
           "actions": ["click"],
           "attrs": {
@@ -117,6 +121,7 @@
         {
           "id": "e_plan",
           "role": "select",
+          "html_id": "plan-select",
           "label": "Plan",
           "actions": ["select"],
           "attrs": {
@@ -142,6 +147,7 @@
         {
           "id": "e_compact",
           "role": "checkbox",
+          "html_id": "compact-mode",
           "label": "Compact mode",
           "actions": ["toggle"],
           "attrs": {
@@ -155,6 +161,7 @@
         {
           "id": "e_annual",
           "role": "radio",
+          "html_id": "annual-billing",
           "label": "Annual billing",
           "actions": ["select"],
           "attrs": {
@@ -168,6 +175,7 @@
         {
           "id": "e_quota",
           "role": "text_input",
+          "html_id": "seat-quota",
           "label": "Seat quota",
           "actions": ["type", "clear"],
           "attrs": {
@@ -189,6 +197,7 @@
         {
           "id": "e_billing",
           "role": "link",
+          "html_id": "billing-link",
           "label": "Billing settings",
           "actions": ["click"],
           "attrs": {

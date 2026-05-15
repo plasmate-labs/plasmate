@@ -37,6 +37,8 @@ def test_build_context_surfaces_action_availability():
 
         assert f'{target["role"]} "{target["label"]}"' in line
         assert f'[cache_key={target["cache_key"]}]' in line
+        if target.get("html_id"):
+            assert f'[html_id={target["html_id"]}]' in line
         if target["enabled"]:
             assert "[enabled]" in line
         else:

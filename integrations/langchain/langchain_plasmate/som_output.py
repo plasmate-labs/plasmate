@@ -211,6 +211,8 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append("[enabled]")
     if interactive:
         flags.append(f"[cache_key={_action_cache_key(elem)}]")
+    if interactive and elem.get("html_id"):
+        flags.append(f'[html_id="{elem["html_id"]}"]')
     if attrs.get("required") is True:
         flags.append("[required]")
     if readonly and "[readonly]" not in flags:

@@ -11,6 +11,7 @@ import {
   findByHint,
   findByRole,
   findById,
+  findByHtmlId,
   findByText,
   getActionPlan,
   getActionPlanCacheKey,
@@ -37,7 +38,14 @@ const FIXTURE: Som = {
       id: 'r_nav',
       role: 'navigation',
       elements: [
-        { id: 'e_1', role: 'link', text: 'Home', actions: ['click'], attrs: { href: '/' } },
+        {
+          id: 'e_1',
+          role: 'link',
+          html_id: 'home-link',
+          text: 'Home',
+          actions: ['click'],
+          attrs: { href: '/' },
+        },
         { id: 'e_2', role: 'link', text: 'About', actions: ['click'], attrs: { href: '/about' } },
       ],
     },
@@ -279,6 +287,16 @@ describe('findById', () => {
   });
 });
 
+describe('findByHtmlId', () => {
+  it('finds existing element by original HTML id', () => {
+    expect(findByHtmlId(FIXTURE, 'home-link')?.id).toBe('e_1');
+  });
+
+  it('returns undefined for missing HTML id', () => {
+    expect(findByHtmlId(FIXTURE, 'missing-html-id')).toBeUndefined();
+  });
+});
+
 describe('findByText', () => {
   it('finds by substring (case-insensitive)', () => {
     const results = findByText(FIXTURE, 'home');
@@ -363,6 +381,7 @@ describe('getActionPlan', () => {
       actions: ['click'],
       enabled: true,
       label: 'Home',
+      html_id: 'home-link',
       href: '/',
     });
     expect(plan.at(-2)).toEqual({

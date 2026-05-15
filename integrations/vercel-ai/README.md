@@ -58,7 +58,7 @@ const { text } = await generateText({
 ```
 
 `plasmateActionGuidance` tells the model to honor SOM action targets with
-`cache_key`, `enabled`, `blocked_reason`, `required`, `description`,
+`cache_key`, `html_id`, `enabled`, `blocked_reason`, `required`, `description`,
 `placeholder`, `group`, `readonly`, `inert`, `value`, `checked`, `expanded`, `pressed`, and
 `selected`, `current`, `controls`, `haspopup`, `name`, `accept`, `capture`,
 `multiple`, `autocomplete`, `inputmode`, `enterkeyhint`, `autocapitalize`,
@@ -123,7 +123,7 @@ name, href, input type, group, and placeholder.
 Flattens a raw Plasmate SOM response into compact action targets. It traverses
 nested `children` and `shadow.elements`, copies common action metadata from
 `attrs` (`href`, `name`, `input_type`, `placeholder`, `description`, `required`,
-`disabled`, `inert`, `readonly`, and `group`), and normalizes availability plus `cache_key` state.
+`disabled`, `inert`, `readonly`, `html_id`, and `group`), and normalizes availability plus `cache_key` state.
 
 ### `preparePlasmateActionPlan(targets, options?)`
 

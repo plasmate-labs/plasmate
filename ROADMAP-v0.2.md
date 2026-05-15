@@ -835,6 +835,26 @@ for repeated SaaS workflows without raw DOM recovery.
    the public schema and flow through parser/SDK action plans before agents can
    safely cache menu choices across runtimes.
 
+### 2026-05-15 HTML ID Provenance Adjustment
+
+Current competitor docs keep making the interaction surface both structured
+and replay-aware. Playwright MCP gives snapshot-scoped refs, Stagehand
+`observe()` returns cacheable action objects, and Cloudflare Browser
+Run/WebMCP is testing browser-native tool contracts. Plasmate should treat
+`html_id` as local DOM provenance for compact targets, not just a Rust
+compiler field.
+
+1. **Live DOM resolution matters**: SDK and parser action plans should carry
+   `html_id` so agents can move from a compact SOM target back to
+   `document.getElementById()` or selector execution without re-reading raw
+   DOM.
+2. **Cache keys stay stable**: `html_id` is useful provenance, but should not
+   change deterministic action `cache_key` values because the SOM id, role,
+   label, actions, and field identity remain the cache target.
+3. **Parity beats isolated fields**: Python, Node, Go, and shared fixtures
+   should expose the same `html_id` lookup and action-plan context before
+   adapters advertise live-DOM replay support.
+
 ## Architecture
 
 ```
@@ -1268,10 +1288,20 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Python/Node parser packages, Python/Node/Go SDK types, action-plan helpers,
   Browser Use, LangChain, and Vercel AI prompt renderers now carry
   `selected_values` and `size` as compact menu-planning context.
+- Python and Node parser packages plus Python/Node/Go SDKs now preserve
+  `html_id`, expose original-HTML-id lookup helpers, and include `html_id` in
+  compact action plans without changing deterministic action `cache_key`
+  values.
+- Browser Use, LangChain, and Vercel AI action-plan renderers now surface
+  `html_id` so framework prompts keep live-DOM provenance alongside cache
+  identity.
+- The shared action-availability manifest now asserts `html_id` parity across
+  parser packages, SDKs, and framework adapters.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
-  and select-option parser/SDK/adaptor parity cases into broader fixtures
-  alongside text-entry, ARIA widget, range, and set-position cases.
+  select-option parser/SDK/adaptor parity, and `html_id` DOM-provenance cases
+  into broader fixtures alongside text-entry, ARIA widget, range, and
+  set-position cases.
 
 ## Dependencies to Add
 

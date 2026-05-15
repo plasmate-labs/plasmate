@@ -200,6 +200,7 @@ export interface LinkElement {
 export interface SomElement {
   id: string;
   role: ElementRole;
+  html_id?: string;
   text?: string;
   label?: string;
   actions?: ElementAction[];

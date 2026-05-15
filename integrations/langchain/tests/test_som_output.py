@@ -36,6 +36,8 @@ def test_som_to_text_surfaces_interactive_state():
         line = next(line for line in text.splitlines() if f'[{target["id"]}]' in line)
 
         assert f'[cache_key={target["cache_key"]}]' in line
+        if target.get("html_id"):
+            assert f'[html_id="{target["html_id"]}"]' in line
         if target["enabled"]:
             assert "[enabled]" in line
         else:

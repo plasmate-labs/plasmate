@@ -46,6 +46,7 @@ assert.deepEqual(email, {
   actions: ['type'],
   enabled: false,
   label: 'Work email',
+  html_id: 'work-email',
   input_type: 'email',
   name: 'email',
   value: 'ops@example.com',
@@ -115,7 +116,7 @@ const formatted = formatPlasmateActionPlan(targets, {
 })
 assert.match(
   formatted,
-  /\[e_email\] text_input "Work email" \(type\) \[blocked\] \[cache_key=plasmate-action:v1:b0c57191\] \[blocked_reason=readonly\] \[required\] \[readonly\] \[type=email\] \[value=ops@example\.com\] \[name=email\] \[autocomplete=email\] \[inputmode=email\] \[enterkeyhint=next\] \[autocapitalize=none\] \[dirname=email\.dir\] \[form=settings-form\].*\[form_action=\/settings\] \[form_method=POST\] \[form_target=_self\] \[form_enctype=multipart\/form-data\] \[form_novalidate=true\] \[form_accept_charset=UTF-8\] \[form_autocomplete=off\] \[list=email-suggestions\].*\[spellcheck=false\] \[placeholder=name@company\.com\].*\[invalid=grammar\] \[aria_placeholder=Work email address\] \[aria_autocomplete=list\] \[active_descendant=email-suggestion-1\] \[errormessage=email-error\] \[group=Account\]/
+  /\[e_email\] text_input "Work email" \(type\) \[blocked\] \[cache_key=plasmate-action:v1:b0c57191\] \[html_id=work-email\] \[blocked_reason=readonly\] \[required\] \[readonly\] \[type=email\] \[value=ops@example\.com\] \[name=email\] \[autocomplete=email\] \[inputmode=email\] \[enterkeyhint=next\] \[autocapitalize=none\] \[dirname=email\.dir\] \[form=settings-form\].*\[form_action=\/settings\] \[form_method=POST\] \[form_target=_self\] \[form_enctype=multipart\/form-data\] \[form_novalidate=true\] \[form_accept_charset=UTF-8\] \[form_autocomplete=off\] \[list=email-suggestions\].*\[spellcheck=false\] \[placeholder=name@company\.com\].*\[invalid=grammar\] \[aria_placeholder=Work email address\] \[aria_autocomplete=list\] \[active_descendant=email-suggestion-1\] \[errormessage=email-error\] \[group=Account\]/
 )
 assert.match(
   formatted,
@@ -142,9 +143,9 @@ assert.match(formatted, /\[e_billing\].*\[rel=noopener\]/)
 assert.match(formatted, /\[e_billing\].*\[download=billing\.csv\]/)
 assert.match(
   formatted,
-  /\[e_save\] button "Save" \(click\) \[blocked\] \[cache_key=plasmate-action:v1:4d0e8356\] \[blocked_reason=disabled\].*\[popovertarget=save-status\].*\[popovertargetaction=show\].*\[commandfor=save-status\].*\[command=toggle-popover\].*\[button_type=submit\].*\[formaction=\/settings\/save\].*\[formmethod=post\].*\[formenctype=application\/x-www-form-urlencoded\].*\[formtarget=_top\].*\[formnovalidate=true\]/
+  /\[e_save\] button "Save" \(click\) \[blocked\] \[cache_key=plasmate-action:v1:4d0e8356\] \[html_id=save-button\] \[blocked_reason=disabled\].*\[popovertarget=save-status\].*\[popovertargetaction=show\].*\[commandfor=save-status\].*\[command=toggle-popover\].*\[button_type=submit\].*\[formaction=\/settings\/save\].*\[formmethod=post\].*\[formenctype=application\/x-www-form-urlencoded\].*\[formtarget=_top\].*\[formnovalidate=true\]/
 )
 assert.match(
   formatted,
-  /\[e_preview\] button "Preview changes" \(click\) \[blocked\] \[cache_key=plasmate-action:v1:a7067d8d\] \[blocked_reason=inert\] \[inert\]/
+  /\[e_preview\] button "Preview changes" \(click\) \[blocked\] \[cache_key=plasmate-action:v1:a7067d8d\] \[html_id=preview-button\] \[blocked_reason=inert\] \[inert\]/
 )
