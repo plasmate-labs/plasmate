@@ -48,6 +48,7 @@ URL: https://news.ycombinator.com
 Interactive form controls include action-state cues such as `[enabled]`,
 `[disabled]`, `[readonly]`, `[inert]`, `[blocked_reason=disabled]`,
 `[blocked_reason=readonly]`, `[blocked_reason=inert]`, `[cache_key=plasmate-action:v1:...]`, `[required]`, `[group="Billing"]`,
+`[html_id="save-button"]`,
 `[checked="true"]`, `[expanded="false"]`, `[pressed="false"]`,
 `[selected="true"]`, `[current="page"]`, `[controls="menu-id"]`,
 `[haspopup="menu"]`, `[autocomplete="email"]`, `[inputmode="email"]`,

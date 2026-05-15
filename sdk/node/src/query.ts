@@ -18,6 +18,11 @@ export function findById(som: Som, id: string): SomElement | undefined {
   return undefined;
 }
 
+/** Find an element by its original HTML id. */
+export function findByHtmlId(som: Som, htmlId: string): SomElement | undefined {
+  return flatElements(som).find((el) => el.html_id === htmlId);
+}
+
 function findElementById(elements: SomElement[], id: string): SomElement | undefined {
   for (const el of elements) {
     if (el.id === id) return el;
@@ -49,6 +54,7 @@ export interface ActionPlanItem {
   role: ElementRole;
   actions: ElementAction[];
   enabled: boolean;
+  html_id?: string;
   label?: string;
   href?: string;
   target?: string;
@@ -208,6 +214,7 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
       actions: el.actions ?? [],
       enabled: true,
     };
+    if (el.html_id) item.html_id = el.html_id;
     const label = el.label ?? el.text;
     if (label) item.label = label;
     if (el.attrs?.href) item.href = el.attrs.href;

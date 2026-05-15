@@ -104,10 +104,11 @@ print(som.model_dump_json(indent=2))
 | `get_all_elements(som) -> list[SomElement]` | Flatten all elements from all regions |
 | `find_by_role(som, role) -> list[SomElement]` | Find elements by role (enum or string) |
 | `find_by_id(som, id) -> SomElement \| None` | Find a single element by its SOM id |
+| `find_by_html_id(som, html_id) -> SomElement \| None` | Find a single element by its original HTML id |
 | `find_by_text(som, text, exact=False) -> list[SomElement]` | Search elements by text content |
 | `find_by_action(som, action) -> list[SomElement]` | Find elements that expose a specific action |
 | `find_by_hint(som, hint) -> list[SomElement]` | Find elements tagged with a semantic hint |
-| `get_action_plan(som) -> list[dict]` | Return compact `{id, cache_key, role, actions, enabled, label}` action targets with availability, link target/rel/download cues, graphical submitter alt/src cues, form/list and form submission context, submitter override cues, select selected_values/size context, popover/command relation cues, title/label/description ID relationships, ARIA source text plus locale/direction cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues |
+| `get_action_plan(som) -> list[dict]` | Return compact `{id, html_id, cache_key, role, actions, enabled, label}` action targets with availability, original DOM-id bridge cues, link target/rel/download cues, graphical submitter alt/src cues, form/list and form submission context, submitter override cues, select selected_values/size context, popover/command relation cues, title/label/description ID relationships, ARIA source text plus locale/direction cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues |
 | `get_action_plan_cache_key(item) -> str` | Return a deterministic key for caching or comparing an action target |
 | `get_interactive_elements(som) -> list[SomElement]` | Get elements that have actions |
 | `get_links(som) -> list[dict]` | Extract all links as `{text, href, id}` dicts |

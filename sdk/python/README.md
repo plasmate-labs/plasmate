@@ -107,7 +107,7 @@ for region in som.regions:
 Search and traverse SOM documents:
 
 ```python
-from plasmate import Som, find_by_role, find_by_id, find_by_tag
+from plasmate import Som, find_by_role, find_by_id, find_by_html_id, find_by_tag
 from plasmate import find_interactive, find_by_text, flat_elements
 from plasmate import get_action_plan, get_action_plan_cache_key, get_token_estimate
 
@@ -118,6 +118,9 @@ navs = find_by_role(som, "navigation")
 el = find_by_id(som, "e5")
 if el:
     print(el.role, el.text)
+
+# Bridge back to a live DOM id when the source page provided one
+source_el = find_by_html_id(som, "login-button")
 
 # Find all links
 links = find_by_tag(som, "link")
@@ -133,6 +136,7 @@ for target in get_action_plan(som):
             target["id"],
             target["cache_key"],
             target["actions"],
+            target.get("html_id"),
             target.get("aria_label"),
             target.get("dir"),
             target.get("lang"),

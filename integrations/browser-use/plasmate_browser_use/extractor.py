@@ -77,6 +77,8 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append("enabled")
     if item.get("cache_key"):
         flags.append(f"cache_key={item['cache_key']}")
+    if item.get("html_id"):
+        flags.append(f"html_id={item['html_id']}")
     if item.get("required") is True:
         flags.append("required")
     if item.get("readonly") is True:

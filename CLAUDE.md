@@ -49,6 +49,44 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-15T01:13:11Z - Plasmate Improvements Automation
+
+- Git sync: the automation worktree still cannot fetch because the linked
+  worktree cannot open `FETCH_HEAD`. Retrying from `/Users/steve/Git/plasmate`
+  still fails DNS for `github.com`, so this run continued from local branch
+  `codex/plasmate-improvements-2026-05-14-target-context` at `621a601`.
+- Market direction: current competitor research still favors Plasmate's
+  local-first compact action-target wedge. Playwright MCP keeps structured
+  refs snapshot-scoped, Stagehand/Browserbase make cached actions depend on
+  target validation, and hosted browser/session platforms remain crowded.
+  The next sticky layer is bridgeable local action state, not hosted browser
+  infrastructure.
+- Code changes: Python/Node parser packages and Python/Node/Go SDK types now
+  accept Rust/SOM-spec `html_id`; Python, Node, and Go query helpers expose
+  source-DOM-id lookup; compact action-plan helpers carry `html_id` without
+  changing deterministic `cache_key` values.
+- Adapter/docs changes: Browser Use, LangChain, and Vercel AI action-plan
+  renderers now surface `html_id`; the shared action-availability manifest
+  asserts `html_id` on representative text input, button, and link targets;
+  PRD, roadmap, SDK/parser/adapter docs, and generated website docs record the
+  DOM-id bridge rationale and next conformance step.
+- Verification: JSON validation passed; Python parser tests passed 70 tests;
+  Python SDK query tests passed 38 tests; Node parser tests passed 55 tests;
+  Node SDK tests passed 23 tests; Go SDK tests passed; Vercel AI tests passed;
+  `node website/build.mjs` rebuilt 39 docs pages; quick and full
+  `./scripts/action-manifest-conformance.sh` passed; `cargo build` passed with
+  existing warnings; `git diff --check` passed.
+- Verification gap: full `cargo test` passed 256 lib tests and 5 main/MCP
+  tests, then failed in `tests/awp_integration_test.rs` because the sandbox
+  denied local socket binding with `Operation not permitted`.
+- Commit/push state: committed `chore: propagate html id action targets` and pushed
+  `origin/codex/plasmate-improvements-2026-05-15-html-id-action-targets`.
+  Direct push to `origin/master` was rejected with `fetch first`; retrying
+  `git fetch origin master` still failed DNS for `github.com`, and `gh pr
+  create` could not connect to `api.github.com`. Remote merge remains blocked
+  until GitHub fetch/API access works or the pushed branch is merged from
+  another environment.
+
 ### 2026-05-15T00:11:24Z - Plasmate Improvements Automation
 
 - Git sync: the automation worktree could not fetch or checkout because the

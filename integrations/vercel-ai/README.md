@@ -77,7 +77,9 @@ const { text } = await generateText({
 reusing browser actions. Use
 `extractPlasmateActionTargets()`, `preparePlasmateActionPlan()`, or
 `formatPlasmateActionPlan()` when your app filters cached or extracted action
-plans before passing them to the model.
+plans before passing them to the model. Original `html_id` values are
+preserved when present so apps can bridge compact SOM targets back to DOM
+selectors without changing deterministic cache keys.
 
 ## API
 

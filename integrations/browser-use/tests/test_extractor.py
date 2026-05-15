@@ -43,6 +43,8 @@ def test_build_context_surfaces_action_availability():
             assert f'[{target.get("blocked_reason", "blocked")}]' in line
         if target.get("blocked_reason"):
             assert f'[blocked_reason={target["blocked_reason"]}]' in line
+        if target.get("html_id"):
+            assert f'[html_id={target["html_id"]}]' in line
         if target.get("required"):
             assert "[required]" in line
         if target.get("readonly"):

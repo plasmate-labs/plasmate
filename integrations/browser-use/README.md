@@ -88,7 +88,7 @@ selected, current, controls, haspopup, name, accept, capture, multiple,
 autocomplete, inputmode, enterkeyhint, autocapitalize, dirname, dir, lang, spellcheck,
 link target/rel/download cues, graphical submitter alt/src cues, form plus
 form submission context, submitter override cues, select selected_values/size
-context, list, popover/command relationships, accesskey, ARIA
+context, original `html_id` bridge cues, list, popover/command relationships, accesskey, ARIA
 placeholder/autocomplete/active-descendant/error-message state, title,
 aria_label/aria_description source text, labelledby/describedby relationship refs, keyshortcuts, roledescription,
 live-region state, ARIA owns/flowto/details relationships,

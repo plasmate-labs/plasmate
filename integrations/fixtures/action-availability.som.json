@@ -24,6 +24,7 @@
       "elements": [
         {
           "id": "e_email",
+          "html_id": "work-email",
           "role": "text_input",
           "label": "Work email",
           "actions": ["type"],
@@ -81,6 +82,7 @@
         },
         {
           "id": "e_save",
+          "html_id": "save-settings",
           "role": "button",
           "text": "Save",
           "actions": ["click"],
@@ -212,6 +214,7 @@
         },
         {
           "id": "e_billing",
+          "html_id": "billing-link",
           "role": "link",
           "label": "Billing settings",
           "actions": ["click"],

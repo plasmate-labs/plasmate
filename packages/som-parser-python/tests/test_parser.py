@@ -16,6 +16,7 @@ from som_parser import (
     filter_elements,
     find_by_action,
     find_by_hint,
+    find_by_html_id,
     find_by_id,
     find_by_role,
     find_by_text,
@@ -68,6 +69,7 @@ FIXTURE_SOM = {
             "elements": [
                 {
                     "id": "e_3",
+                    "html_id": "hero-title",
                     "role": "heading",
                     "text": "Welcome",
                     "attrs": {"level": 1},
@@ -372,6 +374,16 @@ class TestFindById:
             }
         )
         assert find_by_id(som, "shadow_link").text == "Shadow Docs"
+
+
+class TestFindByHtmlId:
+    def test_found(self, som: Som):
+        el = find_by_html_id(som, "hero-title")
+        assert el is not None
+        assert el.id == "e_3"
+
+    def test_not_found(self, som: Som):
+        assert find_by_html_id(som, "missing") is None
 
 
 class TestFindByText:

@@ -519,11 +519,16 @@ client.close();
 
 const navRegions = findByRole(som, &#39;navigation&#39;);
 </code></pre>
-<h3 id="findbyidsom-id">`findById(som, id)`</h3><p>Find a single element by its stable ID.</p>
+<h3 id="findbyidsom-id">`findById(som, id)`</h3><p>Find a single element by its stable SOM ID.</p>
 <pre><code class="language-typescript">import { findById } from &#39;plasmate&#39;;
 
 const el = findById(som, &#39;login-btn&#39;);
 if (el) console.log(el.text);
+</code></pre>
+<h3 id="findbyhtmlidsom-htmlid">`findByHtmlId(som, htmlId)`</h3><p>Find a single element by its original HTML ID when the source page provided one.</p>
+<pre><code class="language-typescript">import { findByHtmlId } from &#39;plasmate&#39;;
+
+const el = findByHtmlId(som, &#39;login-button&#39;);
 </code></pre>
 <h3 id="findbytagsom-tag">`findByTag(som, tag)`</h3><p>Find elements matching a tag/role string.</p>
 <pre><code class="language-typescript">import { findByTag } from &#39;plasmate&#39;;
@@ -536,7 +541,7 @@ const links = findByTag(som, &#39;link&#39;);
 const interactive = findInteractive(som);
 console.log(`${interactive.length} interactive elements`);
 </code></pre>
-<h3 id="getactionplansom">`getActionPlan(som)`</h3><p>Return compact action targets with stable ids, deterministic <code>cache_key</code> values, labels, action lists, and availability state.</p>
+<h3 id="getactionplansom">`getActionPlan(som)`</h3><p>Return compact action targets with stable ids, optional <code>html_id</code> bridge cues, deterministic <code>cache_key</code> values, labels, action lists, and availability state.</p>
 <pre><code class="language-typescript">import { getActionPlan } from &#39;plasmate&#39;;
 
 const availableTargets = getActionPlan(som).filter((target) =&gt; target.enabled);

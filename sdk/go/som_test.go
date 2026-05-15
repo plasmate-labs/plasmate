@@ -46,6 +46,7 @@ var testSOM = `{
         },
         {
           "id": "e4",
+          "html_id": "main-copy",
           "role": "paragraph",
           "text": "Hello world, this is a test page."
         },
@@ -314,6 +315,22 @@ func TestFindByID(t *testing.T) {
 	}
 	if shadowEl.Label == nil || *shadowEl.Label != "Open filters" {
 		t.Errorf("Label = %v, want Open filters", shadowEl.Label)
+	}
+}
+
+func TestFindByHTMLID(t *testing.T) {
+	som := mustParse(t)
+
+	el := FindByHTMLID(som, "main-copy")
+	if el == nil {
+		t.Fatal("FindByHTMLID(main-copy) returned nil")
+	}
+	if el.ID != "e4" {
+		t.Errorf("ID = %q, want e4", el.ID)
+	}
+
+	if FindByHTMLID(som, "missing") != nil {
+		t.Error("FindByHTMLID(missing) should return nil")
 	}
 }
 

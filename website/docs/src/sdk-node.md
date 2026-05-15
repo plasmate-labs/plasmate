@@ -105,13 +105,23 @@ const navRegions = findByRole(som, 'navigation');
 
 ### `findById(som, id)`
 
-Find a single element by its stable ID.
+Find a single element by its stable SOM ID.
 
 ```typescript
 import { findById } from 'plasmate';
 
 const el = findById(som, 'login-btn');
 if (el) console.log(el.text);
+```
+
+### `findByHtmlId(som, htmlId)`
+
+Find a single element by its original HTML ID when the source page provided one.
+
+```typescript
+import { findByHtmlId } from 'plasmate';
+
+const el = findByHtmlId(som, 'login-button');
 ```
 
 ### `findByTag(som, tag)`
@@ -137,7 +147,7 @@ console.log(`${interactive.length} interactive elements`);
 
 ### `getActionPlan(som)`
 
-Return compact action targets with stable ids, deterministic `cache_key` values, labels, action lists, and availability state.
+Return compact action targets with stable ids, optional `html_id` bridge cues, deterministic `cache_key` values, labels, action lists, and availability state.
 
 ```typescript
 import { getActionPlan } from 'plasmate';

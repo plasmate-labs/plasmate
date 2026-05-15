@@ -42,6 +42,8 @@ def test_som_to_text_surfaces_interactive_state():
             assert f'[{target.get("blocked_reason", "blocked")}]' in line
         if target.get("blocked_reason"):
             assert f'[blocked_reason={target["blocked_reason"]}]' in line
+        if target.get("html_id"):
+            assert f'[html_id="{target["html_id"]}"]' in line
         if target.get("required"):
             assert "[required]" in line
         if target.get("readonly"):

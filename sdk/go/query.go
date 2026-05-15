@@ -30,6 +30,17 @@ func FindByID(som *Som, id string) *Element {
 	return nil
 }
 
+// FindByHTMLID searches all regions for an element with the original HTML id.
+// Returns nil if not found.
+func FindByHTMLID(som *Som, htmlID string) *Element {
+	for _, el := range FlatElements(som) {
+		if el.HTMLID != nil && *el.HTMLID == htmlID {
+			return &el
+		}
+	}
+	return nil
+}
+
 func findByIDInSlice(elements []Element, id string) *Element {
 	for i := range elements {
 		if elements[i].ID == id {
@@ -174,6 +185,7 @@ type ActionPlanItem struct {
 	Role              string      `json:"role"`
 	Actions           []string    `json:"actions"`
 	Enabled           bool        `json:"enabled"`
+	HTMLID            *string     `json:"html_id,omitempty"`
 	Label             *string     `json:"label,omitempty"`
 	Href              *string     `json:"href,omitempty"`
 	Target            *string     `json:"target,omitempty"`
@@ -327,6 +339,7 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			Role:    el.Role,
 			Actions: append([]string(nil), el.Actions...),
 			Enabled: true,
+			HTMLID:  el.HTMLID,
 		}
 		if el.Label != nil {
 			item.Label = el.Label

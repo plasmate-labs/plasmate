@@ -11,6 +11,7 @@ import {
   findByHint,
   findByRole,
   findById,
+  findByHtmlId,
   findByText,
   getActionPlan,
   getActionPlanCacheKey,
@@ -45,7 +46,7 @@ const FIXTURE: Som = {
       id: 'r_content',
       role: 'content',
       elements: [
-        { id: 'e_3', role: 'heading', text: 'Welcome', attrs: { level: 1 } },
+        { id: 'e_3', html_id: 'hero-title', role: 'heading', text: 'Welcome', attrs: { level: 1 } },
         { id: 'e_4', role: 'paragraph', text: 'This is a test page.' },
         {
           id: 'e_5',
@@ -276,6 +277,16 @@ describe('findById', () => {
 
   it('finds elements inside shadow roots', () => {
     expect(findById(SHADOW_FIXTURE, 'shadow_action')?.text).toBe('Shadow Save');
+  });
+});
+
+describe('findByHtmlId', () => {
+  it('finds existing source HTML id', () => {
+    expect(findByHtmlId(FIXTURE, 'hero-title')?.id).toBe('e_3');
+  });
+
+  it('returns undefined for missing source HTML id', () => {
+    expect(findByHtmlId(FIXTURE, 'missing')).toBeUndefined();
   });
 });
 

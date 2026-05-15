@@ -91,7 +91,7 @@ The SDK includes query helpers for searching and traversing SOM documents:
 
 ```typescript
 import {
-  findByRole, findById, findByTag, findInteractive,
+  findByRole, findById, findByHtmlId, findByTag, findInteractive,
   findByText, flatElements, getActionPlan, getTokenEstimate,
 } from 'plasmate';
 
@@ -103,6 +103,9 @@ const [main] = findByRole(som, 'main');
 
 // Look up an element by its stable ID
 const el = findById(som, 'e5');
+
+// Bridge back to a live DOM id when the source page provided one
+const sourceEl = findByHtmlId(som, 'login-button');
 
 // Find all links
 const links = findByTag(som, 'link');
@@ -130,10 +133,11 @@ browser.close();
 | Function | Returns | Description |
 |----------|---------|-------------|
 | `findByRole(som, role)` | `SomRegion[]` | Find regions by role |
-| `findById(som, id)` | `SomElement \| undefined` | Find element by stable ID |
+| `findById(som, id)` | `SomElement \| undefined` | Find element by stable SOM ID |
+| `findByHtmlId(som, htmlId)` | `SomElement \| undefined` | Find element by original HTML ID |
 | `findByTag(som, tag)` | `SomElement[]` | Find elements by element role |
 | `findInteractive(som)` | `SomElement[]` | All elements with actions |
-| `getActionPlan(som)` | `ActionPlanItem[]` | Compact action targets with cache keys, availability, link target/rel/download cues, graphical submitter alt/src cues, form/list and form submission context, submitter override cues, select selected_values/size context, popover/command relation cues, title/label/description ID relationships, ARIA source text plus locale/direction cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues |
+| `getActionPlan(som)` | `ActionPlanItem[]` | Compact action targets with cache keys, availability, original `html_id` bridge cues, link target/rel/download cues, graphical submitter alt/src cues, form/list and form submission context, submitter override cues, select selected_values/size context, popover/command relation cues, title/label/description ID relationships, ARIA source text plus locale/direction cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues |
 | `getActionPlanCacheKey(item)` | `string` | Deterministic key for caching or comparing action targets |
 | `findByText(som, text)` | `SomElement[]` | Case-insensitive text search |
 | `flatElements(som)` | `SomElement[]` | Flatten all elements |

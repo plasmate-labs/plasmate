@@ -20,6 +20,7 @@ from plasmate.types import (
 )
 from plasmate.query import (
     find_by_id,
+    find_by_html_id,
     find_by_role,
     find_by_tag,
     find_by_text,
@@ -75,6 +76,7 @@ def sample_som() -> Som:
                     ),
                     SomElement(
                         id="e4",
+                        html_id="main-copy",
                         role=ElementRole.paragraph,
                         text="This is the main content.",
                     ),
@@ -221,6 +223,16 @@ class TestFindById:
         assert el.text == "Confirm"
         assert el.attrs is not None
         assert el.attrs.aria == {"pressed": False}
+
+
+class TestFindByHtmlId:
+    def test_finds_source_html_id(self, sample_som: Som) -> None:
+        el = find_by_html_id(sample_som, "main-copy")
+        assert el is not None
+        assert el.id == "e4"
+
+    def test_returns_none_for_missing_html_id(self, sample_som: Som) -> None:
+        assert find_by_html_id(sample_som, "missing") is None
 
 
 class TestFindByTag:

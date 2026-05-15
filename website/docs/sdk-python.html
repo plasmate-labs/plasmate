@@ -506,12 +506,17 @@ with Plasmate() as client:
 
 nav_regions = find_by_role(som, &quot;navigation&quot;)
 </code></pre>
-<h3 id="findbyidsom-elementid">`find_by_id(som, element_id)`</h3><p>Find a single element by its stable ID.</p>
+<h3 id="findbyidsom-elementid">`find_by_id(som, element_id)`</h3><p>Find a single element by its stable SOM ID.</p>
 <pre><code class="language-python">from plasmate.query import find_by_id
 
 el = find_by_id(som, &quot;login-btn&quot;)
 if el:
     print(el.text)
+</code></pre>
+<h3 id="findbyhtmlidsom-htmlid">`find_by_html_id(som, html_id)`</h3><p>Find a single element by its original HTML ID when the source page provided one.</p>
+<pre><code class="language-python">from plasmate.query import find_by_html_id
+
+el = find_by_html_id(som, &quot;login-button&quot;)
 </code></pre>
 <h3 id="findbytagsom-tag">`find_by_tag(som, tag)`</h3><p>Find elements matching a tag/role string.</p>
 <pre><code class="language-python">from plasmate.query import find_by_tag
@@ -524,7 +529,7 @@ links = find_by_tag(som, &quot;link&quot;)
 interactive = find_interactive(som)
 print(f&quot;{len(interactive)} interactive elements&quot;)
 </code></pre>
-<h3 id="getactionplansom">`get_action_plan(som)`</h3><p>Return compact action targets with stable ids, deterministic <code>cache_key</code> values, labels, action lists, and availability state.</p>
+<h3 id="getactionplansom">`get_action_plan(som)`</h3><p>Return compact action targets with stable ids, optional <code>html_id</code> bridge cues, deterministic <code>cache_key</code> values, labels, action lists, and availability state.</p>
 <pre><code class="language-python">from plasmate.query import get_action_plan
 
 for target in get_action_plan(som):

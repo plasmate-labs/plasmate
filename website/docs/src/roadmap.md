@@ -391,6 +391,14 @@ Current browser-agent competitors keep making cached action replay depend on tar
 - **Label provenance aids validation**: source `aria-labelledby` IDs should remain available as `labelledby` alongside the resolved label.
 - **Description provenance reduces raw DOM recovery**: source `aria-describedby` IDs should remain available as `describedby` while `description` carries resolved text.
 
+### 2026-05-15 DOM ID Bridge Adjustment
+
+Current browser-agent competitors reward compact observations that can still become executable selectors. Plasmate should keep stable SOM ids as the planning surface while carrying original DOM ids as `html_id` for live-page execution and debugging.
+
+- **Original DOM ids are execution hints**: parser packages and SDKs should accept `html_id` wherever Rust emits it.
+- **Lookup helpers reduce raw DOM recovery**: Python, Node, and Go should expose source-DOM-id lookup alongside SOM-id lookup.
+- **Action menus stay cache-stable**: compact targets should carry `html_id` without changing deterministic action `cache_key` values.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites

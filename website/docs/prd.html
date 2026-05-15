@@ -456,7 +456,7 @@
       </div>
     </nav>
     <main class="content">
-      <h1 id="prd-agent-stickiness-and-roadmap-direction">PRD: Agent Stickiness and Roadmap Direction</h1><p>Last updated: 2026-05-14</p>
+      <h1 id="prd-agent-stickiness-and-roadmap-direction">PRD: Agent Stickiness and Roadmap Direction</h1><p>Last updated: 2026-05-15</p>
 <h2 id="product-thesis">Product Thesis</h2><p>Plasmate should be the local-first browser engine agents keep installed because it turns web pages into compact, stable, actionable state. The product is not a general scraper and should not compete feature-for-feature with hosted browser clouds. Its advantage is fast SOM output, predictable element ids, MCP-native tooling, and reusable page understanding without sending browsing data to a cloud API.</p>
 <h2 id="target-audience">Target Audience</h2><ul>
 <li>AI agent developers building MCP tools, coding agents, and research agents.</li>
@@ -520,6 +520,7 @@
 <p>2026-05-14 select-option state read: current Playwright MCP docs still bind actions to fresh structured snapshots, Browserbase/Stagehand now emphasizes validated action caching, and Browser Run/WebMCP is expanding hosted browser interaction contracts. Plasmate should keep the local-first wedge by making ordinary select menus browser-accurate in SOM: default option values, disabled options, optgroup labels, and multi-select state let cached local plans validate menu choices without raw DOM recovery.</p>
 <p>2026-05-14 select parity read: the sticky product promise is not just that Rust emits better select state; every public contract has to accept and reuse it. Single-select default values, disabled optgroup inheritance, select <code>size</code>, option <code>group</code>, option <code>disabled</code>, and <code>selected_values</code> should move through schema, parser packages, SDKs, and prompt renderers so cached menu plans remain portable across the project&#39;s broad integration surface.</p>
 <p>2026-05-14 relationship-context read: competitor docs still reward validated current-state action replay over hosted-browser imitation. Playwright MCP refs stay tied to fresh structured snapshots, Stagehand/Browserbase cached actions need target validation, and Firecrawl/Browser Use keep packaging managed sessions for teams buying infrastructure. Plasmate should preserve native <code>title</code> help text plus <code>aria-labelledby</code>/<code>aria-describedby</code> source ID relationships so local compact targets explain label and description provenance without raw DOM recovery.</p>
+<p>2026-05-15 DOM-id bridge read: current browser-agent tooling keeps splitting between fresh structured snapshots and repeatable cached execution. Playwright MCP exposes snapshot refs, Stagehand/Browserbase cache selectors after validated observations, and hosted browser platforms compete on session infrastructure. Plasmate should keep original DOM ids portable as <code>html_id</code> so agents can plan from stable SOM ids while bridging to <code>document.getElementById()</code> or CSS <code>#id</code> selectors for execution and debugging.</p>
 <h2 id="ecosystem-surface">Ecosystem Surface</h2><p>The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.</p>
 <h2 id="requirements">Requirements</h2><ol>
 <li>Preserve actionable structure: SOM must capture common accessibility roles, stable ids, labels, forms, links, state, and selectors that agents can reuse.</li>
@@ -529,6 +530,12 @@
 <li>Stay local-first by default: hosted competitors can own scale infrastructure; Plasmate should own local speed, privacy, and open protocol fit.</li>
 </ol>
 <h2 id="current-run-changes">Current Run Changes</h2><ul>
+<li>2026-05-15:<ul>
+<li>Parser packages and Python/Node/Go SDK types now accept the Rust/SOM-spec <code>html_id</code> field.</li>
+<li>Python, Node, and Go query helpers now expose source-DOM-id lookup helpers.</li>
+<li>Compact action-plan helpers and Browser Use, LangChain, and Vercel AI renderers now carry <code>html_id</code> without changing deterministic <code>cache_key</code> values.</li>
+</ul>
+</li>
 <li>2026-05-14:<ul>
 <li>Rust SOM now preserves native <code>title</code> plus <code>aria-labelledby</code> and <code>aria-describedby</code> source IDREFs as <code>attrs.title</code>, <code>attrs.labelledby</code>, and <code>attrs.describedby</code>.</li>
 <li>Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose <code>title</code>, <code>labelledby</code>, and <code>describedby</code> without changing deterministic action <code>cache_key</code> values.</li>

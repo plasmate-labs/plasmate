@@ -6,6 +6,7 @@ import type { Som } from './types';
 import {
   findByRole,
   findById,
+  findByHtmlId,
   findByTag,
   findInteractive,
   findByText,
@@ -40,7 +41,7 @@ const fixture: Som = {
       role: 'main',
       label: 'Main content',
       elements: [
-        { id: 'e3', role: 'paragraph', text: 'Hello World' },
+        { id: 'e3', html_id: 'main-copy', role: 'paragraph', text: 'Hello World' },
         {
           id: 'e4',
           role: 'button',
@@ -168,6 +169,17 @@ describe('findById', () => {
 
   it('returns undefined for missing ID', () => {
     assert.equal(findById(fixture, 'e999'), undefined);
+  });
+});
+
+describe('findByHtmlId', () => {
+  it('finds an element by original HTML id', () => {
+    const el = findByHtmlId(fixture, 'main-copy');
+    assert.equal(el?.id, 'e3');
+  });
+
+  it('returns undefined for missing original HTML id', () => {
+    assert.equal(findByHtmlId(fixture, 'missing'), undefined);
   });
 });
 

@@ -56,6 +56,14 @@ def find_by_id(som: Som, id: str) -> Optional[SomElement]:
     return None
 
 
+def find_by_html_id(som: Som, html_id: str) -> Optional[SomElement]:
+    """Find an element by its original HTML id. Returns None if not found."""
+    for el in get_all_elements(som):
+        if el.html_id == html_id:
+            return el
+    return None
+
+
 def find_by_text(
     som: Som, text: str, *, exact: bool = False
 ) -> List[SomElement]:
@@ -168,6 +176,8 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
             "actions": [action.value for action in el.actions or []],
             "enabled": True,
         }
+        if el.html_id:
+            item["html_id"] = el.html_id
         label = el.label or el.text
         if label:
             item["label"] = label

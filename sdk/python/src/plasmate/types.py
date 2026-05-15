@@ -178,6 +178,7 @@ class SomElement(BaseModel):
 
     id: str
     role: ElementRole
+    html_id: Optional[str] = None
     text: Optional[str] = None
     label: Optional[str] = None
     actions: Optional[List[str]] = None

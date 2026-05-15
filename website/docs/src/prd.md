@@ -1,6 +1,6 @@
 # PRD: Agent Stickiness and Roadmap Direction
 
-Last updated: 2026-05-14
+Last updated: 2026-05-15
 
 ## Product Thesis
 
@@ -120,6 +120,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-14 relationship-context read: competitor docs still reward validated current-state action replay over hosted-browser imitation. Playwright MCP refs stay tied to fresh structured snapshots, Stagehand/Browserbase cached actions need target validation, and Firecrawl/Browser Use keep packaging managed sessions for teams buying infrastructure. Plasmate should preserve native `title` help text plus `aria-labelledby`/`aria-describedby` source ID relationships so local compact targets explain label and description provenance without raw DOM recovery.
 
+2026-05-15 DOM-id bridge read: current browser-agent tooling keeps splitting between fresh structured snapshots and repeatable cached execution. Playwright MCP exposes snapshot refs, Stagehand/Browserbase cache selectors after validated observations, and hosted browser platforms compete on session infrastructure. Plasmate should keep original DOM ids portable as `html_id` so agents can plan from stable SOM ids while bridging to `document.getElementById()` or CSS `#id` selectors for execution and debugging.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -134,6 +136,10 @@ The project already spans a large number of package and integration surfaces: Ru
 
 ## Current Run Changes
 
+- 2026-05-15:
+  - Parser packages and Python/Node/Go SDK types now accept the Rust/SOM-spec `html_id` field.
+  - Python, Node, and Go query helpers now expose source-DOM-id lookup helpers.
+  - Compact action-plan helpers and Browser Use, LangChain, and Vercel AI renderers now carry `html_id` without changing deterministic `cache_key` values.
 - 2026-05-14:
   - Rust SOM now preserves native `title` plus `aria-labelledby` and `aria-describedby` source IDREFs as `attrs.title`, `attrs.labelledby`, and `attrs.describedby`.
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `title`, `labelledby`, and `describedby` without changing deterministic action `cache_key` values.

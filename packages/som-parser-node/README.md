@@ -82,10 +82,11 @@ const ratio = getCompressionRatio(som);
 | `getAllElements(som): SomElement[]` | Flatten all elements from all regions into a single array. |
 | `findByRole(som, role): SomElement[]` | Find elements by role (e.g., `'link'`, `'button'`, `'heading'`). |
 | `findById(som, id): SomElement \| undefined` | Find a single element by its SOM id. |
+| `findByHtmlId(som, htmlId): SomElement \| undefined` | Find a single element by its original HTML id. |
 | `findByText(som, text, options?): SomElement[]` | Find elements by text content. Case-insensitive substring by default; pass `{ exact: true }` for exact match. |
 | `findByAction(som, action): SomElement[]` | Find elements that expose a specific action. |
 | `findByHint(som, hint): SomElement[]` | Find elements tagged with a semantic hint. |
-| `getActionPlan(som): ActionPlanItem[]` | Return compact action targets with cache keys, availability, link target/rel/download cues, graphical submitter alt/src cues, form/list and form submission context, submitter override cues, select selected_values/size context, popover/command relation cues, title/label/description ID relationships, ARIA source text plus locale/direction cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues for agent planning. |
+| `getActionPlan(som): ActionPlanItem[]` | Return compact action targets with cache keys, availability, original DOM-id bridge cues, link target/rel/download cues, graphical submitter alt/src cues, form/list and form submission context, submitter override cues, select selected_values/size context, popover/command relation cues, title/label/description ID relationships, ARIA source text plus locale/direction cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues for agent planning. |
 | `getActionPlanCacheKey(item): string` | Return a deterministic key for caching or comparing an action target. |
 | `getInteractiveElements(som): SomElement[]` | Get all elements that have actions. |
 | `getLinks(som): Array<{ text, href, id }>` | Extract all links with text, URL, and id. |

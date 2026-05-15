@@ -88,7 +88,7 @@ nav_regions = find_by_role(som, "navigation")
 
 ### `find_by_id(som, element_id)`
 
-Find a single element by its stable ID.
+Find a single element by its stable SOM ID.
 
 ```python
 from plasmate.query import find_by_id
@@ -96,6 +96,16 @@ from plasmate.query import find_by_id
 el = find_by_id(som, "login-btn")
 if el:
     print(el.text)
+```
+
+### `find_by_html_id(som, html_id)`
+
+Find a single element by its original HTML ID when the source page provided one.
+
+```python
+from plasmate.query import find_by_html_id
+
+el = find_by_html_id(som, "login-button")
 ```
 
 ### `find_by_tag(som, tag)`
@@ -121,7 +131,7 @@ print(f"{len(interactive)} interactive elements")
 
 ### `get_action_plan(som)`
 
-Return compact action targets with stable ids, deterministic `cache_key` values, labels, action lists, and availability state.
+Return compact action targets with stable ids, optional `html_id` bridge cues, deterministic `cache_key` values, labels, action lists, and availability state.
 
 ```python
 from plasmate.query import get_action_plan

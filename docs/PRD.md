@@ -1,6 +1,6 @@
 # Plasmate PRD: Agent Stickiness and Roadmap Direction
 
-Last updated: 2026-05-14
+Last updated: 2026-05-15
 
 ## Product Thesis
 
@@ -533,6 +533,15 @@ local-first wedge by preserving small source-level target cues: raw
 `dir` and `lang` help agents validate bidirectional and multilingual form
 targets before replaying a cached action.
 
+2026-05-15 DOM-id bridge read: current browser-agent tooling keeps splitting
+between fresh structured snapshots and repeatable cached execution. Playwright
+MCP exposes snapshot refs, Stagehand/Browserbase cache selectors after
+validated observations, and hosted browser platforms compete on session
+infrastructure. Plasmate's sticky local-first answer is to keep the original
+DOM id portable as `html_id`: agents can plan from stable SOM ids while still
+bridging to `document.getElementById()` or CSS `#id` selectors when they need
+to execute or debug against a live page.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -558,6 +567,17 @@ and adapter docs over one-off integration logic.
 
 ## Current Run Changes
 
+- 2026-05-15:
+  - Python/Node parser packages and Python/Node/Go SDK types now accept the
+    Rust/SOM-spec `html_id` field, preventing parser drift when core output
+    includes original DOM ids.
+  - Python, Node, and Go query helpers now expose `find_by_html_id()` /
+    `findByHtmlId()` / `FindByHTMLID()` so agents can resolve source DOM ids
+    without scanning raw HTML.
+  - Compact action-plan helpers and Browser Use, LangChain, and Vercel AI
+    renderers now carry `html_id` without changing deterministic `cache_key`
+    values, and the shared action-availability manifest asserts the field
+    across parser, SDK, and framework surfaces.
 - 2026-05-14:
   - Rust SOM now preserves source `aria-label`, `aria-description`, `dir`, and
     `lang` as `attrs.aria_label`, `attrs.aria_description`, `attrs.dir`, and

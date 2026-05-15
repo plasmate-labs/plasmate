@@ -36,6 +36,7 @@ type Region struct {
 type Element struct {
 	ID       string         `json:"id"`
 	Role     string         `json:"role"`
+	HTMLID   *string        `json:"html_id,omitempty"`
 	Text     *string        `json:"text,omitempty"`
 	Label    *string        `json:"label,omitempty"`
 	Actions  []string       `json:"actions,omitempty"`

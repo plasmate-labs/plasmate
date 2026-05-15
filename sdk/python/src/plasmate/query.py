@@ -23,6 +23,14 @@ def find_by_id(som: Som, element_id: str) -> Optional[SomElement]:
     return None
 
 
+def find_by_html_id(som: Som, html_id: str) -> Optional[SomElement]:
+    """Find a single element by its original HTML id."""
+    for element in flat_elements(som):
+        if element.html_id == html_id:
+            return element
+    return None
+
+
 def find_by_tag(som: Som, tag: str) -> List[SomElement]:
     """Find all elements matching the given element role (tag)."""
     results: List[SomElement] = []
@@ -108,6 +116,8 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
             "actions": element.actions or [],
             "enabled": True,
         }
+        if element.html_id:
+            item["html_id"] = element.html_id
         label = element.label or element.text
         if label:
             item["label"] = label

@@ -748,6 +748,12 @@
 <li><strong>Label provenance aids validation</strong>: source <code>aria-labelledby</code> IDs should remain available as <code>labelledby</code> alongside the resolved label.</li>
 <li><strong>Description provenance reduces raw DOM recovery</strong>: source <code>aria-describedby</code> IDs should remain available as <code>describedby</code> while <code>description</code> carries resolved text.</li>
 </ul>
+<h3 id="2026-05-15-dom-id-bridge-adjustment">2026-05-15 DOM ID Bridge Adjustment</h3><p>Current browser-agent competitors reward compact observations that can still become executable selectors. Plasmate should keep stable SOM ids as the planning surface while carrying original DOM ids as <code>html_id</code> for live-page execution and debugging.</p>
+<ul>
+<li><strong>Original DOM ids are execution hints</strong>: parser packages and SDKs should accept <code>html_id</code> wherever Rust emits it.</li>
+<li><strong>Lookup helpers reduce raw DOM recovery</strong>: Python, Node, and Go should expose source-DOM-id lookup alongside SOM-id lookup.</li>
+<li><strong>Action menus stay cache-stable</strong>: compact targets should carry <code>html_id</code> without changing deterministic action <code>cache_key</code> values.</li>
+</ul>
 <h2 id="completed-v011">Completed (v0.1.1)</h2><ul>
 <li>SOM compiler with 9.4x median compression across 38 sites</li>
 <li>V8 JavaScript execution with full DOM shim</li>

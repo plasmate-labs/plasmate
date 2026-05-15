@@ -889,6 +889,23 @@ locale context.
    inform validation and prompt rendering without changing deterministic
    target identity.
 
+### 2026-05-15 DOM ID Bridge Adjustment
+
+Competitor pressure keeps rewarding tools that pair compact observations with
+repeatable execution. Playwright MCP refs remain snapshot-scoped, while
+Stagehand/Browserbase caches need a validated selector path for replay. Plasmate
+should keep stable SOM ids as the planning surface, but preserve original DOM
+ids everywhere so local agents can bridge from SOM plans back to live page
+execution and debugging.
+
+1. **Original DOM ids are execution hints**: `html_id` should be accepted by
+   parser packages and SDK types wherever Rust emits it.
+2. **Lookup helpers reduce raw DOM recovery**: SDKs should expose
+   `find_by_html_id`/`findByHtmlId`/`FindByHTMLID` alongside SOM-id lookup.
+3. **Action menus stay cache-stable**: compact targets should carry `html_id`
+   for validation and selector bridgeability without changing deterministic
+   `cache_key` values.
+
 ## Architecture
 
 ```
@@ -1342,11 +1359,15 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   and `lang` without changing deterministic action cache keys.
 - The shared action-availability fixture now asserts target provenance and
   locale/direction cues across parser, SDK, and framework surfaces.
+- Parser packages and Python/Node/Go SDKs now accept `html_id`, expose
+  source-DOM-id lookup helpers, and carry `html_id` through compact action
+  targets in Browser Use, LangChain, and Vercel AI without changing
+  deterministic action cache keys.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
-  select-option parser/SDK/adaptor parity, relationship-context, and target
-  provenance/locale cases into broader fixtures alongside text-entry, ARIA
-  widget, range, and set-position cases.
+  select-option parser/SDK/adaptor parity, relationship-context,
+  target-provenance/locale, and `html_id` bridge cases into broader fixtures
+  alongside text-entry, ARIA widget, range, and set-position cases.
 
 ## Dependencies to Add
 
