@@ -82,8 +82,8 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   passed 256 lib tests and 5 main/MCP tests, then failed only in
   `tests/awp_integration_test.rs` because the sandbox denied local socket
   binding with `Operation not permitted`.
-- Commit/push state: committed `6dd11ca` (`chore: expose target provenance
-  cues`) and pushed
+- Commit/push state: committed the target-provenance implementation and
+  running-state follow-up to
   `origin/codex/plasmate-improvements-2026-05-14-target-context`. Direct push
   to `origin/master` was rejected with `fetch first`; `git fetch origin
   --prune` still fails DNS for `github.com`, and `gh pr create` cannot connect
