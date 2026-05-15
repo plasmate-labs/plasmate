@@ -77,9 +77,9 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   website/build.mjs`, `cargo build`, `cargo test --lib --bin plasmate` (257
   lib tests and 5 main/MCP tests), and `git diff --check`.
 - Commit/push state: committed `115aba6`
-  (`chore: align form browser defaults`) and pushed
-  `origin/codex/plasmate-improvements-2026-05-15-cache-key-lookup`. Direct
-  `HEAD:master` push was rejected with `fetch first`; `git fetch origin
+  (`chore: align form browser defaults`) plus a follow-up running-state commit,
+  and pushed `origin/codex/plasmate-improvements-2026-05-15-cache-key-lookup`.
+  Direct `HEAD:master` push was rejected with `fetch first`; `git fetch origin
   master` failed DNS for `github.com`; and `gh pr create` could not connect to
   `api.github.com`. Remote merge remains blocked until GitHub fetch/API access
   works or the pushed branch is merged elsewhere.
