@@ -20,6 +20,7 @@ from plasmate.types import (
 )
 from plasmate.query import (
     find_by_id,
+    find_by_html_id,
     find_by_role,
     find_by_tag,
     find_by_text,
@@ -50,6 +51,7 @@ def sample_som() -> Som:
                     SomElement(
                         id="e1",
                         role=ElementRole.link,
+                        html_id="home-link",
                         text="Home",
                         actions=["click"],
                         attrs=ElementAttrs(href="/"),
@@ -205,6 +207,7 @@ class TestFindById:
         el = find_by_id(sample_som, "e1")
         assert el is not None
         assert el.text == "Home"
+        assert el.html_id == "home-link"
 
     def test_finds_nested_element(self, sample_som: Som) -> None:
         el = find_by_id(sample_som, "e8")
@@ -221,6 +224,16 @@ class TestFindById:
         assert el.text == "Confirm"
         assert el.attrs is not None
         assert el.attrs.aria == {"pressed": False}
+
+
+class TestFindByHtmlId:
+    def test_finds_top_level_element(self, sample_som: Som) -> None:
+        el = find_by_html_id(sample_som, "home-link")
+        assert el is not None
+        assert el.id == "e1"
+
+    def test_returns_none_for_missing_html_id(self, sample_som: Som) -> None:
+        assert find_by_html_id(sample_som, "missing-html-id") is None
 
 
 class TestFindByTag:
@@ -274,6 +287,7 @@ class TestGetActionPlan:
             "actions": ["click"],
             "enabled": True,
             "label": "Home",
+            "html_id": "home-link",
             "href": "/",
             "cache_key": "plasmate-action:v1:04ca84bb",
         }

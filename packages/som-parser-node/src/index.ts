@@ -27,6 +27,7 @@ export {
   findByHint,
   findByRole,
   findById,
+  findByHtmlId,
   findByText,
   getActionPlan,
   getActionPlanCacheKey,

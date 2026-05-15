@@ -6,6 +6,7 @@ import type { Som } from './types';
 import {
   findByRole,
   findById,
+  findByHtmlId,
   findByTag,
   findInteractive,
   findByText,
@@ -29,6 +30,7 @@ const fixture: Som = {
         {
           id: 'e2',
           role: 'link',
+          html_id: 'home-link',
           text: 'Home',
           actions: ['click'],
           attrs: { href: '/' },
@@ -171,6 +173,16 @@ describe('findById', () => {
   });
 });
 
+describe('findByHtmlId', () => {
+  it('finds elements by original HTML id', () => {
+    assert.equal(findByHtmlId(fixture, 'home-link')?.id, 'e2');
+  });
+
+  it('returns undefined for missing HTML id', () => {
+    assert.equal(findByHtmlId(fixture, 'missing-html-id'), undefined);
+  });
+});
+
 describe('findByTag', () => {
   it('finds elements by role', () => {
     const paragraphs = findByTag(fixture, 'paragraph');
@@ -231,6 +243,7 @@ describe('getActionPlan', () => {
       actions: ['click'],
       enabled: true,
       label: 'Home',
+      html_id: 'home-link',
       href: '/',
     });
     assert.deepEqual(plan[2], {

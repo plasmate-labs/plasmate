@@ -52,6 +52,7 @@ export type {
 export {
   findByRole,
   findById,
+  findByHtmlId,
   findByTag,
   findInteractive,
   findByText,

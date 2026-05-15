@@ -41,6 +41,11 @@ export function findById(som: Som, id: string): SomElement | undefined {
   return getAllElements(som).find((el) => el.id === id);
 }
 
+/** Find an element by its original HTML id. */
+export function findByHtmlId(som: Som, htmlId: string): SomElement | undefined {
+  return getAllElements(som).find((el) => el.html_id === htmlId);
+}
+
 /** Find elements containing text (case-insensitive substring by default). */
 export function findByText(
   som: Som,
@@ -81,6 +86,7 @@ export interface ActionPlanItem {
   actions: ElementAction[];
   enabled: boolean;
   label?: string;
+  html_id?: string;
   href?: string;
   target?: string;
   rel?: string;
@@ -230,6 +236,7 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     };
     const label = el.label ?? el.text;
     if (label) item.label = label;
+    if (el.html_id) item.html_id = el.html_id;
     if (el.attrs?.href) item.href = el.attrs.href;
     if (el.attrs?.target) item.target = el.attrs.target;
     if (el.attrs?.rel) item.rel = el.attrs.rel;

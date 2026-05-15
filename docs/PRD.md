@@ -1,6 +1,6 @@
 # Plasmate PRD: Agent Stickiness and Roadmap Direction
 
-Last updated: 2026-05-14
+Last updated: 2026-05-15
 
 ## Product Thesis
 
@@ -504,6 +504,15 @@ option `group`, option `disabled`, and `selected_values` should move through
 schema, parser packages, SDKs, and prompt renderers so cached menu plans remain
 portable across the project's broad integration surface.
 
+2026-05-15 HTML-id parity read: current competitor docs keep making structured
+refs and validated cached actions the reusable browser-agent surface.
+Playwright MCP refs are snapshot-scoped, Stagehand `observe()` returns
+cacheable action objects, and Browser Run/WebMCP is exploring browser-native
+tool contracts. Plasmate should keep `html_id` as portable local DOM
+provenance across parser packages and SDKs so agents can resolve from compact
+SOM targets back to live elements without raw DOM recovery or cloud selector
+memory.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -529,6 +538,17 @@ and adapter docs over one-off integration logic.
 
 ## Current Run Changes
 
+- 2026-05-15:
+  - Python and Node parser packages now parse and expose `html_id`, add
+    original-HTML-id lookup helpers, and include `html_id` in compact action
+    plans without changing deterministic `cache_key` values.
+  - Python, Node, and Go SDKs now preserve `html_id`, expose lookup helpers,
+    and carry DOM provenance into action-plan items for live-page resolution.
+  - Browser Use, LangChain, and Vercel AI action-plan renderers now surface
+    `html_id` so framework prompts keep live-DOM provenance alongside cache
+    identity.
+  - The shared action-availability manifest now asserts `html_id` parity
+    across parser packages, SDKs, and framework adapters.
 - 2026-05-14:
   - Rust SOM select extraction now follows browser default option-value
     semantics when an `<option>` omits `value`.
@@ -1083,6 +1103,8 @@ and adapter docs over one-off integration logic.
 - Promote select-option state (`value` fallback text, optgroup `group`,
   option `disabled`, and multi-select `selected_values`) into shared
   Rust/parser/SDK and adapter fixtures.
+- Promote `html_id` DOM-provenance cases into shared parser, SDK, and adapter
+  conformance so compact targets remain resolvable back to live page elements.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and
   `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures
   once the shared action manifest remains stable.

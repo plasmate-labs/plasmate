@@ -36,6 +36,7 @@ type Region struct {
 type Element struct {
 	ID       string         `json:"id"`
 	Role     string         `json:"role"`
+	HTMLID   *string        `json:"html_id,omitempty"`
 	Text     *string        `json:"text,omitempty"`
 	Label    *string        `json:"label,omitempty"`
 	Actions  []string       `json:"actions,omitempty"`
@@ -163,10 +164,10 @@ type SomShadowRoot struct {
 
 // SelectOption represents an option within a select element.
 type SelectOption struct {
-	Value    string `json:"value"`
-	Text     string `json:"text"`
-	Selected *bool  `json:"selected,omitempty"`
-	Disabled *bool  `json:"disabled,omitempty"`
+	Value    string  `json:"value"`
+	Text     string  `json:"text"`
+	Selected *bool   `json:"selected,omitempty"`
+	Disabled *bool   `json:"disabled,omitempty"`
 	Group    *string `json:"group,omitempty"`
 }
 
