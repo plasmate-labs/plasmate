@@ -182,6 +182,15 @@ export interface PreparePlasmateActionPlanOptions {
 }
 
 /**
+ * Replay lookup tables for a normalized compact action plan.
+ */
+export interface PlasmateActionPlanIndex {
+  by_id: Record<string, PlasmateActionTarget>
+  by_cache_key: Record<string, PlasmateActionTarget>
+  by_html_id: Record<string, PlasmateActionTarget>
+}
+
+/**
  * System prompt guidance for Vercel AI SDK agents using Plasmate tools.
  *
  * Plasmate SOM responses expose action targets with stable element ids and
@@ -567,6 +576,74 @@ export function preparePlasmateActionPlan(
   }
 
   return prepared
+}
+
+/**
+ * Index action targets by SOM id, deterministic cache key, and source HTML id.
+ *
+ * The index includes unavailable targets by default so replay validation can
+ * distinguish missing targets from currently blocked targets.
+ */
+export function getPlasmateActionPlanIndex(
+  targets: readonly PlasmateActionTarget[],
+  options: PreparePlasmateActionPlanOptions = {}
+): PlasmateActionPlanIndex {
+  const plan = preparePlasmateActionPlan(targets, {
+    ...options,
+    includeUnavailable: options.includeUnavailable ?? true,
+  })
+  const index: PlasmateActionPlanIndex = {
+    by_id: {},
+    by_cache_key: {},
+    by_html_id: {},
+  }
+
+  for (const target of plan) {
+    if (target.id && !index.by_id[target.id]) {
+      index.by_id[target.id] = target
+    }
+    if (target.cache_key && !index.by_cache_key[target.cache_key]) {
+      index.by_cache_key[target.cache_key] = target
+    }
+    if (target.html_id && !index.by_html_id[target.html_id]) {
+      index.by_html_id[target.html_id] = target
+    }
+  }
+
+  return index
+}
+
+/**
+ * Resolve an action target by stable SOM id from the current action plan.
+ */
+export function findPlasmateActionTargetById(
+  targets: readonly PlasmateActionTarget[],
+  id: string,
+  options: PreparePlasmateActionPlanOptions = {}
+): PlasmateActionTarget | undefined {
+  return getPlasmateActionPlanIndex(targets, options).by_id[id]
+}
+
+/**
+ * Resolve an action target by deterministic cache key from the current plan.
+ */
+export function findPlasmateActionTargetByCacheKey(
+  targets: readonly PlasmateActionTarget[],
+  cacheKey: string,
+  options: PreparePlasmateActionPlanOptions = {}
+): PlasmateActionTarget | undefined {
+  return getPlasmateActionPlanIndex(targets, options).by_cache_key[cacheKey]
+}
+
+/**
+ * Resolve an action target by original source DOM id from the current plan.
+ */
+export function findPlasmateActionTargetByHtmlId(
+  targets: readonly PlasmateActionTarget[],
+  htmlId: string,
+  options: PreparePlasmateActionPlanOptions = {}
+): PlasmateActionTarget | undefined {
+  return getPlasmateActionPlanIndex(targets, options).by_html_id[htmlId]
 }
 
 /**

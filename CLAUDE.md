@@ -49,6 +49,38 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-15T05:06:27Z - Plasmate Improvements Automation
+
+- Git sync: fetch from the linked automation worktree still cannot open
+  `FETCH_HEAD`; retrying from `/Users/steve/Git/plasmate` still fails DNS for
+  `github.com`. Work continued from local branch
+  `codex/plasmate-improvements-2026-05-15-cache-key-lookup` at `606903a`.
+- Market direction: current research still favors local "observe, validate,
+  replay" action memory over a hosted-browser pivot. Playwright MCP keeps
+  refs tied to fresh structured snapshots, Stagehand/Browserbase emphasize
+  cached action validation, Browserbase is selling managed agent sessions, and
+  Crawl4AI keeps pressure on open-source extraction breadth.
+- Code changes: Vercel AI now exposes action-plan replay indexes plus lookup
+  helpers by SOM id, deterministic `cache_key`, and original `html_id`.
+  Browser Use now exposes enabled-only action-plan extraction and replay
+  indexes, including async variants. LangChain now exposes parser-backed
+  `som_to_action_plan()` and `som_to_action_plan_index()` helpers for raw SOM
+  dicts.
+- Docs changes: Browser Use, LangChain, and Vercel AI READMEs now document
+  framework replay-index usage; PRD, roadmap, generated website docs, and this
+  running state record the framework-edge replay validation rationale.
+- Verification: Browser Use adapter tests passed 2 tests; LangChain adapter
+  tests passed 2 tests with one existing Python 3.14/Pydantic warning; Vercel
+  AI build and action-plan tests passed; quick and full
+  `./scripts/action-manifest-conformance.sh` passed; `node website/build.mjs`
+  rebuilt 39 docs pages; `cargo build` passed with existing warnings; `git
+  diff --check` passed.
+- Verification gap: full `cargo test` passed 256 lib tests and 5 main/MCP
+  tests, then failed only in `tests/awp_integration_test.rs` because the
+  sandbox denied local socket binding with `Operation not permitted`.
+- Commit/push state: changes are ready to commit. Remote merge may remain
+  blocked until GitHub DNS/API access works.
+
 ### 2026-05-15T04:08:45Z - Plasmate Improvements Automation
 
 - Git sync: fetch from the linked automation worktree still cannot open

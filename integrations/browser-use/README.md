@@ -79,6 +79,13 @@ actions = extractor.extract_action_plan("https://example.com/settings")
 for action in actions:
     if action["enabled"]:
         print(action["id"], action["cache_key"], action["role"], action["actions"])
+
+ready_actions = extractor.extract_enabled_action_plan("https://example.com/settings")
+replay_index = extractor.extract_action_plan_index(
+    "https://example.com/settings",
+    enabled_only=True,
+)
+cached = replay_index["by_cache_key"].get("plasmate-action:v1:...")
 ```
 
 Browser Use page contexts are tested against the shared

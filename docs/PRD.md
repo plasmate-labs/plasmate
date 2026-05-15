@@ -568,6 +568,14 @@ menu indexable by the identifiers developers already store: stable SOM id,
 deterministic `cache_key`, and original `html_id`, with an enabled-only index
 for prompt-safe menus.
 
+2026-05-15 framework-index read: current official docs keep confirming that
+the sticky layer is the app's validation path, not only the engine output.
+Playwright MCP returns fresh structured refs for each page state, Stagehand and
+Browserbase validate cached actions before replay, Browserbase sells managed
+agent sessions, and Crawl4AI keeps normalizing open-source LLM crawlers. The
+next Plasmate improvement is to push indexed local replay helpers into Browser
+Use, LangChain, and Vercel AI so framework users do not fork parser logic.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -594,6 +602,16 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-15:
+  - Vercel AI now exposes action-plan replay indexes plus lookup helpers by
+    SOM id, deterministic `cache_key`, and original `html_id`.
+  - Browser Use now exposes enabled-only action-plan extraction and replay
+    indexes, including async variants, so agents can validate cached targets
+    before showing model-facing menus.
+  - LangChain now exposes parser-backed `som_to_action_plan()` and
+    `som_to_action_plan_index()` helpers for raw SOM dicts, keeping structured
+    replay validation out of formatted prompt text.
+  - Framework adapter tests now assert enabled-only and indexed replay behavior
+    against the shared action-availability fixture.
   - Python and Node parser packages now export cache-key lookup helpers
     (`find_action_target_by_cache_key()` / `findActionTargetByCacheKey()`), so
     app code can validate a stored action key against the current SOM action

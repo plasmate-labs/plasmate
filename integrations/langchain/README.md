@@ -82,6 +82,17 @@ Interactive form controls include action-state cues such as `[enabled]`,
 `plasmate_click` or `plasmate_type`, and can use cache keys to dedupe repeated
 local action menus.
 
+For workflows that need structured replay validation instead of prompt text,
+use the shared parser-backed helpers:
+
+```python
+from langchain_plasmate import som_to_action_plan, som_to_action_plan_index
+
+targets = som_to_action_plan(som, enabled_only=True)
+index = som_to_action_plan_index(som)
+cached = index["by_cache_key"].get("plasmate-action:v1:...")
+```
+
 ### Agent with browsing tools
 
 ```python

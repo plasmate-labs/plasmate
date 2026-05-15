@@ -9,7 +9,15 @@ import json
 import subprocess
 from typing import Any, Optional
 
-from som_parser import parse_som, get_action_plan, get_links, get_text, to_markdown
+from som_parser import (
+    get_action_plan,
+    get_action_plan_index,
+    get_enabled_action_plan,
+    get_links,
+    get_text,
+    parse_som,
+    to_markdown,
+)
 
 
 def _extract_last_json(text: str) -> Any:
@@ -302,11 +310,41 @@ class PlasmateExtractor:
         som = parse_som(som_data)
         return get_action_plan(som)
 
+    def extract_enabled_action_plan(self, url: str) -> list[dict[str, object]]:
+        """Fetch a URL and return only currently actionable targets."""
+        som_data = self.extract(url)
+        som = parse_som(som_data)
+        return get_enabled_action_plan(som)
+
+    def extract_action_plan_index(
+        self, url: str, *, enabled_only: bool = False
+    ) -> dict[str, dict[str, dict[str, object]]]:
+        """Fetch a URL and index action targets for replay validation."""
+        som_data = self.extract(url)
+        som = parse_som(som_data)
+        return get_action_plan_index(som, enabled_only=enabled_only)
+
     async def extract_action_plan_async(self, url: str) -> list[dict[str, object]]:
         """Async version of extract_action_plan."""
         som_data = await self.extract_async(url)
         som = parse_som(som_data)
         return get_action_plan(som)
+
+    async def extract_enabled_action_plan_async(
+        self, url: str
+    ) -> list[dict[str, object]]:
+        """Async version of extract_enabled_action_plan."""
+        som_data = await self.extract_async(url)
+        som = parse_som(som_data)
+        return get_enabled_action_plan(som)
+
+    async def extract_action_plan_index_async(
+        self, url: str, *, enabled_only: bool = False
+    ) -> dict[str, dict[str, dict[str, object]]]:
+        """Async version of extract_action_plan_index."""
+        som_data = await self.extract_async(url)
+        som = parse_som(som_data)
+        return get_action_plan_index(som, enabled_only=enabled_only)
 
     def get_page_context(self, url: str) -> str:
         """Get a token-efficient page context string for LLM consumption.

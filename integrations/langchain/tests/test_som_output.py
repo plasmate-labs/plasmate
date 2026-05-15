@@ -1,7 +1,11 @@
 import json
 from pathlib import Path
 
-from langchain_plasmate.som_output import som_to_text
+from langchain_plasmate.som_output import (
+    som_to_action_plan,
+    som_to_action_plan_index,
+    som_to_text,
+)
 
 
 FIXTURE_PATH = (
@@ -158,3 +162,26 @@ def test_som_to_text_surfaces_interactive_state():
 
     cache_keys = [target["cache_key"] for target in expected_targets]
     assert len(cache_keys) == len(set(cache_keys))
+
+
+def test_som_to_action_plan_helpers_support_replay_indexes():
+    som = load_action_availability_fixture()
+
+    enabled_plan = som_to_action_plan(som, enabled_only=True)
+    assert [target["id"] for target in enabled_plan] == [
+        "e_upload",
+        "e_image_submit",
+        "e_plan",
+        "e_compact",
+        "e_annual",
+        "e_quota",
+        "e_billing",
+    ]
+
+    index = som_to_action_plan_index(som)
+    assert index["by_id"]["e_save"]["blocked_reason"] == "disabled"
+    assert index["by_html_id"]["save-settings"]["id"] == "e_save"
+
+    enabled_index = som_to_action_plan_index(som, enabled_only=True)
+    assert "e_save" not in enabled_index["by_id"]
+    assert "save-settings" not in enabled_index["by_html_id"]

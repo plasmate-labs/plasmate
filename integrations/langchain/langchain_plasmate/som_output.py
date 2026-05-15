@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from som_parser import get_action_plan, get_action_plan_index, parse_som
+
 
 def som_to_text(som: dict[str, Any]) -> str:
     """Convert a SOM dict to a concise text representation for LLM context.
@@ -56,6 +58,29 @@ def som_to_text(som: dict[str, Any]) -> str:
     )
 
     return "\n".join(lines)
+
+
+def som_to_action_plan(
+    som: dict[str, Any], *, enabled_only: bool = False
+) -> list[dict[str, object]]:
+    """Return compact action targets from a raw SOM dict.
+
+    This mirrors the parser package action-plan contract so LangChain apps can
+    validate cached targets without parsing formatted prompt text.
+    """
+    action_plan = get_action_plan(parse_som(som))
+    if enabled_only:
+        return [
+            target for target in action_plan if target.get("enabled") is not False
+        ]
+    return action_plan
+
+
+def som_to_action_plan_index(
+    som: dict[str, Any], *, enabled_only: bool = False
+) -> dict[str, dict[str, dict[str, object]]]:
+    """Index compact action targets by SOM id, cache key, and source HTML id."""
+    return get_action_plan_index(parse_som(som), enabled_only=enabled_only)
 
 
 def _region_header(region: dict[str, Any]) -> str:

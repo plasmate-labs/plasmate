@@ -956,6 +956,25 @@ runtime.
    keep id lookup, cache-key lookup, HTML-id lookup, enabled filtering, and
    indexed replay helpers synchronized across Python, Node, and Go.
 
+### 2026-05-15 Framework Replay Index Adjustment
+
+The framework edge is where local action memory either becomes sticky or turns
+into bespoke glue. Playwright MCP, Stagehand/Browserbase, Browserbase managed
+agent sessions, Firecrawl, and Crawl4AI all keep teaching developers to
+observe once, validate current state, and then replay carefully. Plasmate's
+roadmap should keep adapter APIs as thin projections of the shared SOM action
+contract.
+
+1. **Replay indexes belong in adapters**: Browser Use, LangChain, and Vercel AI
+   should expose id/cache-key/html-id lookup paths instead of making app code
+   re-scan prompt strings.
+2. **Enabled-only menus should not fork logic**: framework helpers should
+   share parser/SDK availability filtering so prompt menus and replay gates
+   agree.
+3. **Adapter conformance is retention work**: the shared action manifest should
+   keep framework replay indexes aligned before adding more integration
+   surfaces.
+
 ## Architecture
 
 ```
@@ -1422,12 +1441,16 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Python/Node parser packages and Python/Node/Go SDKs now expose action-plan
   indexes keyed by SOM id, deterministic `cache_key`, and original `html_id`,
   with enabled-only variants for prompt-safe replay menus.
+- Browser Use, LangChain, and Vercel AI now expose framework-level replay
+  index helpers so app code can validate current action targets without
+  reimplementing parser/SDK scans.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, relationship-context,
   target-provenance/locale, `html_id` bridge, cache-key lookup, action-target
-  id lookup, enabled-plan filtering, and action-plan index cases into broader
-  fixtures alongside text-entry, ARIA widget, range, and set-position cases.
+  id lookup, enabled-plan filtering, action-plan index, and framework replay
+  index cases into broader fixtures alongside text-entry, ARIA widget, range,
+  and set-position cases.
 
 ## Dependencies to Add
 

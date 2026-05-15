@@ -75,11 +75,11 @@ const { text } = await generateText({
 `valuetext`, `minlength`, `maxlength`, `min`, `max`, `step`,
 `pattern`, and `invalid` fields before selecting or
 reusing browser actions. Use
-`extractPlasmateActionTargets()`, `preparePlasmateActionPlan()`, or
-`formatPlasmateActionPlan()` when your app filters cached or extracted action
-plans before passing them to the model. Original `html_id` values are
-preserved when present so apps can bridge compact SOM targets back to DOM
-selectors without changing deterministic cache keys.
+`extractPlasmateActionTargets()`, `preparePlasmateActionPlan()`,
+`getPlasmateActionPlanIndex()`, or `formatPlasmateActionPlan()` when your app
+filters cached or extracted action plans before passing them to the model.
+Original `html_id` values are preserved when present so apps can bridge compact
+SOM targets back to DOM selectors without changing deterministic cache keys.
 
 ## API
 
@@ -134,6 +134,21 @@ nested `children` and `shadow.elements`, copies common action metadata from
 Normalizes a list of action targets, filters unavailable targets by default,
 and optionally caps the returned menu with `maxTargets`. Pass
 `includeUnavailable: true` when you want a trace or UI to show blocked targets.
+
+### `getPlasmateActionPlanIndex(targets, options?)`
+
+Builds `{ by_id, by_cache_key, by_html_id }` replay lookup tables from a
+normalized action plan. Unlike prompt preparation, the index includes blocked
+targets by default so cached workflow code can tell the difference between a
+missing target and a currently unavailable target. Use
+`includeUnavailable: false` for prompt-safe enabled-only indexes.
+
+### `findPlasmateActionTargetById(targets, id)`
+### `findPlasmateActionTargetByCacheKey(targets, cacheKey)`
+### `findPlasmateActionTargetByHtmlId(targets, htmlId)`
+
+Resolve one target from the current compact action plan without reimplementing
+lookup scans in app code.
 
 ### `formatPlasmateActionPlan(targets, options?)`
 

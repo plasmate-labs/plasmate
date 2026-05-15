@@ -154,3 +154,30 @@ def test_build_context_surfaces_action_availability():
 
     cache_keys = [target["cache_key"] for target in expected_targets]
     assert len(cache_keys) == len(set(cache_keys))
+
+
+def test_extract_action_plan_helpers_support_replay_indexes():
+    extractor = PlasmateExtractor.__new__(PlasmateExtractor)
+    som = load_action_availability_fixture()
+    extractor.extract = lambda _url: som
+
+    enabled_plan = extractor.extract_enabled_action_plan("fixture://actions")
+    assert [target["id"] for target in enabled_plan] == [
+        "e_upload",
+        "e_image_submit",
+        "e_plan",
+        "e_compact",
+        "e_annual",
+        "e_quota",
+        "e_billing",
+    ]
+
+    index = extractor.extract_action_plan_index("fixture://actions")
+    assert index["by_id"]["e_save"]["blocked_reason"] == "disabled"
+    assert index["by_html_id"]["save-settings"]["id"] == "e_save"
+
+    enabled_index = extractor.extract_action_plan_index(
+        "fixture://actions", enabled_only=True
+    )
+    assert "e_save" not in enabled_index["by_id"]
+    assert "save-settings" not in enabled_index["by_html_id"]

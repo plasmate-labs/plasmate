@@ -18,7 +18,7 @@ Document loader::
 """
 
 from .loader import PlasmateSOMLoader
-from .som_output import som_to_text
+from .som_output import som_to_action_plan, som_to_action_plan_index, som_to_text
 from .tools import (
     PlasmateBrowser,
     PlasmateClickTool,
@@ -36,6 +36,8 @@ __all__ = [
     "PlasmateSOMLoader",
     "PlasmateTypeTool",
     "get_plasmate_tools",
+    "som_to_action_plan",
+    "som_to_action_plan_index",
     "som_to_text",
 ]
 __version__ = "0.5.0"

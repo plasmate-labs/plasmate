@@ -3,7 +3,11 @@ import { readFile } from 'node:fs/promises'
 
 import {
   extractPlasmateActionTargets,
+  findPlasmateActionTargetByCacheKey,
+  findPlasmateActionTargetByHtmlId,
+  findPlasmateActionTargetById,
   formatPlasmateActionPlan,
+  getPlasmateActionPlanIndex,
   getPlasmateActionTargetCacheKey,
   isPlasmateActionTargetAvailable,
   preparePlasmateActionPlan,
@@ -117,6 +121,25 @@ assert.deepEqual(
   availableTargets.map((target) => target.id),
   ['e_upload', 'e_image_submit', 'e_plan', 'e_compact', 'e_annual', 'e_quota', 'e_billing']
 )
+
+const replayIndex = getPlasmateActionPlanIndex(targets)
+assert.equal(replayIndex.by_id.e_save.id, 'e_save')
+assert.equal(replayIndex.by_cache_key[save.cache_key].id, 'e_save')
+assert.equal(replayIndex.by_html_id['save-settings'].id, 'e_save')
+assert.equal(findPlasmateActionTargetById(targets, 'e_save').id, 'e_save')
+assert.equal(
+  findPlasmateActionTargetByCacheKey(targets, save.cache_key).id,
+  'e_save'
+)
+assert.equal(
+  findPlasmateActionTargetByHtmlId(targets, 'save-settings').id,
+  'e_save'
+)
+const enabledReplayIndex = getPlasmateActionPlanIndex(targets, {
+  includeUnavailable: false,
+})
+assert.equal(enabledReplayIndex.by_id.e_save, undefined)
+assert.equal(enabledReplayIndex.by_html_id['save-settings'], undefined)
 
 const formatted = formatPlasmateActionPlan(targets, {
   includeUnavailable: true,

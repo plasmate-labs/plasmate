@@ -415,6 +415,14 @@ Action menus are now a daily developer surface, not just an internal representat
 - **Available-target menus should be one call**: SDK users should be able to ask for enabled compact targets without hand-written filters.
 - **Ergonomics should preserve replay identity**: helper additions should not change deterministic action-cache-key inputs.
 
+### 2026-05-15 Framework Replay Index Adjustment
+
+The framework edge is where local action memory either becomes sticky or turns into bespoke glue. Plasmate should keep Browser Use, LangChain, and Vercel AI aligned with the shared action-plan contract instead of making apps scan prompt strings.
+
+- **Replay indexes belong in adapters**: framework helpers should expose id/cache-key/html-id lookup paths.
+- **Enabled-only menus should not fork logic**: prompt menus and replay gates should share parser/SDK availability filtering.
+- **Adapter conformance is retention work**: shared fixtures should keep framework replay indexes synchronized before new integration breadth.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites

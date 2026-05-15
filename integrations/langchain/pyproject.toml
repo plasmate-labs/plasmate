@@ -25,6 +25,7 @@ classifiers = [
 dependencies = [
     "langchain-core>=0.2",
     "plasmate",
+    "som-parser>=0.3.0",
 ]
 
 [project.optional-dependencies]
