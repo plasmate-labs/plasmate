@@ -83,8 +83,9 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   `node website/build.mjs` remains blocked because `marked` is not installed.
 - Commit/push state: worktree refs are still locked by sandbox permissions, so
   the patch was committed with an alternate index. Review branch
-  `codex/locator-provenance-cues` was pushed at commit `538404e`; follow-up
-  PR creation failed because `api.github.com` was unreachable.
+  `codex/locator-provenance-cues` was pushed at `a16fe45` (code commit
+  `538404e` plus this running-state update); follow-up PR creation failed
+  because `api.github.com` was unreachable.
 
 ### 2026-05-15T21:15:26Z - Plasmate Improvements Automation
 
