@@ -49,6 +49,45 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-15T21:15:26Z - Plasmate Improvements Automation
+
+- Git sync: latest pull was retried from the automation worktree and failed
+  because the linked worktree cannot open `FETCH_HEAD`. Retrying from
+  `/Users/steve/Git/plasmate` failed DNS for `github.com`, so work continued
+  from local `HEAD` `4fabe19`/primary branch state `895d5b6`.
+- Market direction: current competitor/product motion still favors
+  Plasmate's local-first SOM/action-state wedge. Playwright MCP keeps
+  structured snapshots and refs central, Stagehand-style workflows emphasize
+  cacheable observed actions, and browser-cloud MCP/CDP surfaces keep
+  broadening. The roadmap should continue increasing stickiness through
+  precise portable action provenance across SDKs and integrations instead of
+  pivoting into hosted browser infrastructure.
+- Code changes: Rust already emitted `html_id`; this run completed downstream
+  parity by adding `html_id` parsing/query/action-plan support across the
+  Python parser package, Python SDK, Node parser package, Node SDK, and Go SDK.
+  Browser Use, LangChain, and Vercel AI renderers now surface HTML ids beside
+  cache keys so agents can choose stable DOM anchors when refs are ephemeral.
+- Fixture/docs changes: shared action-availability fixtures now assert
+  `html_id` on representative form controls, links, buttons, selects,
+  checkboxes, sliders, and toggles. PRD, roadmap, and website doc sources now
+  record HTML-id provenance as the next cross-adapter conformance focus.
+- Verification: Python parser tests passed 70 tests; Python SDK tests passed
+  52 tests; Go SDK tests passed with a local `GOCACHE`; Browser Use and
+  LangChain integration tests passed; JSON fixtures parsed; `git diff --check`
+  passed; `cargo build` passed; and `cargo test --lib --quiet` passed 256
+  tests.
+- Verification gaps: Node package tests were blocked because local
+  `node_modules` are absent (`vitest`/`tsc` not found), and
+  `node website/build.mjs` remains blocked because `marked` is not installed.
+- Commit/push state: the linked worktree still cannot update its own index, so
+  the patch was committed with an alternate index and local `master` was
+  advanced to `d626def` (`chore: expose html id action provenance`). Direct
+  `origin/master` push was rejected with `fetch first`; follow-up fetch and
+  `gh pr create` failed DNS/API access. Review branch
+  `codex/html-id-action-provenance` was pushed successfully and is available
+  at `https://github.com/plasmate-labs/plasmate/pull/new/codex/html-id-action-provenance`.
+  Remote merge remains blocked until fetch/API access works.
+
 ### 2026-05-14T18:08:19Z - Plasmate Improvements Automation
 
 - Git sync: latest pull was retried from the automation worktree and failed
