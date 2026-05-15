@@ -78,8 +78,13 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Verification gap: full `cargo test` was not rerun because prior automation
   runs consistently fail only in `tests/awp_integration_test.rs` when the
   sandbox denies local socket binding with `Operation not permitted`.
-- Commit/push state: implementation is ready to commit from the primary
-  checkout. Remote merge may remain blocked until GitHub DNS/API access works.
+- Commit/push state: committed `be2764c`
+  (`chore: align sdk label text lookup`) and pushed
+  `origin/codex/plasmate-improvements-2026-05-15-cache-key-lookup`.
+  Direct `HEAD:master` push was rejected with `fetch first`, and targeted
+  `git fetch origin master` still failed DNS for `github.com`, so remote merge
+  remains blocked until GitHub fetch/API access works or the pushed branch is
+  merged elsewhere.
 
 ### 2026-05-15T08:11:02Z - Plasmate Improvements Automation
 
