@@ -82,7 +82,13 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   passed 256 lib tests and 5 main/MCP tests, then failed only in
   `tests/awp_integration_test.rs` because the sandbox denied local socket
   binding with `Operation not permitted`.
-- Commit/push state: commit, push, and merge are still pending in this run.
+- Commit/push state: committed `6dd11ca` (`chore: expose target provenance
+  cues`) and pushed
+  `origin/codex/plasmate-improvements-2026-05-14-target-context`. Direct push
+  to `origin/master` was rejected with `fetch first`; `git fetch origin
+  --prune` still fails DNS for `github.com`, and `gh pr create` cannot connect
+  to `api.github.com`. Remote merge remains blocked until GitHub fetch/API
+  access works or the pushed branch is merged from another environment.
 
 ### 2026-05-14T23:09:32Z - Plasmate Improvements Automation
 
