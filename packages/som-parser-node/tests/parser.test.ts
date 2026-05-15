@@ -522,11 +522,29 @@ describe('getActionPlan', () => {
 
     expect(index.byId.e_save).toEqual(findActionTargetById(som, 'e_save'));
     expect(index.byCacheKey[action_targets[0].cache_key]).toEqual(action_targets[0]);
+    expect(index.byCacheKeyAll[action_targets[0].cache_key]).toEqual([action_targets[0]]);
     expect(index.byHtmlId['save-settings'].id).toBe('e_save');
+    expect(index.duplicateCacheKeys).toEqual([]);
+    expect(index.duplicateHtmlIds).toEqual([]);
 
     const enabledIndex = getActionPlanIndex(som, { enabledOnly: true });
     expect(enabledIndex.byId.e_disabled).toBeUndefined();
     expect(enabledIndex.byHtmlId['disabled-control']).toBeUndefined();
+  });
+
+  it('indexes duplicate action keys for replay guards', () => {
+    const { som } = loadActionAvailabilityFixture();
+    const duplicateSom = JSON.parse(JSON.stringify(som)) as Som;
+    const duplicate = JSON.parse(JSON.stringify(duplicateSom.regions[0].elements[0]));
+    duplicateSom.regions[0].elements.push(duplicate);
+    const cacheKey = getActionPlan(duplicateSom)[0].cache_key;
+
+    const index = getActionPlanIndex(duplicateSom);
+
+    expect(index.duplicateCacheKeys).toEqual([cacheKey]);
+    expect(index.byCacheKeyAll[cacheKey]).toHaveLength(2);
+    expect(index.duplicateHtmlIds).toEqual(['work-email']);
+    expect(index.byHtmlIdAll['work-email']).toHaveLength(2);
   });
 
   it('matches the shared action availability manifest', () => {

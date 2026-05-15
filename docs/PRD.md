@@ -649,6 +649,14 @@ through the same availability gate used for model-facing menus: callers need an
 enabled-only lookup path by `cache_key`, SOM id, and original `html_id` so
 disabled, read-only, and inert targets do not slip into replay code.
 
+2026-05-15 replay-ambiguity read: the latest Playwright MCP docs still center
+fresh snapshot-scoped refs, Stagehand/Browserbase emphasize cached action
+validation, and Cloudflare Browser Run continues widening hosted CDP/MCP
+execution. Plasmate should keep its local-first wedge by making replay
+ambiguity visible in app code: action-plan indexes need all candidates for a
+duplicate `cache_key` or `html_id`, not only the first target, so SDK and
+framework users can block or inspect ambiguous cached actions before execution.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -774,6 +782,11 @@ and adapter docs over one-off integration logic.
     action-plan indexes keyed by SOM id, deterministic `cache_key`, and
     original `html_id`, giving replay validators O(1) target lookup without
     changing compact target identity.
+  - Python/Node parser packages, Python/Node/Go SDKs, and Vercel AI now expose
+    all matching candidates in `by_cache_key_all` / `byCacheKeyAll` /
+    `ByCacheKeyAll` and `by_html_id_all` / `byHtmlIdAll` / `ByHTMLIDAll`,
+    plus duplicate-key lists, so replay code can detect ambiguous local action
+    memory instead of silently taking the first indexed target.
   - Action-plan index helpers support enabled-only indexing so apps can build
     prompt menus and replay gates from the same current SOM plan.
   - Parser/SDK tests and docs now cover action-plan indexes across Python,
@@ -1412,6 +1425,9 @@ and adapter docs over one-off integration logic.
   adapter exposes the same compact action target contract.
 - Promote action-plan index helpers into shared conformance so id, cache-key,
   `html_id`, and enabled-only replay indexes cannot drift across runtimes.
+- Promote replay-ambiguity index buckets into shared conformance so
+  duplicate `cache_key` and `html_id` candidates stay visible across parser,
+  SDK, and framework helpers.
 - Promote enabled-only direct lookup helpers into the shared action manifest so
   cache-key, SOM-id, and original-DOM-id replay gates cannot drift from
   enabled-only index behavior.

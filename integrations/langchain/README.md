@@ -97,6 +97,7 @@ from langchain_plasmate import (
 targets = som_to_action_plan(som, enabled_only=True)
 index = som_to_action_plan_index(som)
 cached = index["by_cache_key"].get("plasmate-action:v1:...")
+ambiguous_keys = index["duplicate_cache_keys"]
 summary = som_to_action_plan_summary(som)
 enabled_fingerprint = som_to_action_plan_fingerprint(som, enabled_only=True)
 print(summary["unique_cache_keys"], summary["duplicate_cache_keys"])

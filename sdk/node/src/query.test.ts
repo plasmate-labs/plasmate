@@ -376,11 +376,29 @@ describe('getActionPlan', () => {
 
     assert.deepEqual(index.byId.e_save, findActionTargetById(som, 'e_save'));
     assert.deepEqual(index.byCacheKey[action_targets[0].cache_key], action_targets[0]);
+    assert.deepEqual(index.byCacheKeyAll[action_targets[0].cache_key], [action_targets[0]]);
     assert.equal(index.byHtmlId['save-settings'].id, 'e_save');
+    assert.deepEqual(index.duplicateCacheKeys, []);
+    assert.deepEqual(index.duplicateHtmlIds, []);
 
     const enabledIndex = getActionPlanIndex(som, { enabledOnly: true });
     assert.equal(enabledIndex.byId.e_disabled, undefined);
     assert.equal(enabledIndex.byHtmlId['disabled-control'], undefined);
+  });
+
+  it('indexes duplicate action keys for replay guards', () => {
+    const { som } = loadActionAvailabilityFixture();
+    const duplicateSom = JSON.parse(JSON.stringify(som)) as Som;
+    const duplicate = JSON.parse(JSON.stringify(duplicateSom.regions[0].elements[0]));
+    duplicateSom.regions[0].elements.push(duplicate);
+    const cacheKey = getActionPlan(duplicateSom)[0].cache_key;
+
+    const index = getActionPlanIndex(duplicateSom);
+
+    assert.deepEqual(index.duplicateCacheKeys, [cacheKey]);
+    assert.equal(index.byCacheKeyAll[cacheKey].length, 2);
+    assert.deepEqual(index.duplicateHtmlIds, ['work-email']);
+    assert.equal(index.byHtmlIdAll['work-email'].length, 2);
   });
 });
 

@@ -684,6 +684,7 @@ Current Playwright MCP, Stagehand/Browserbase, Browserbase observability, and Fi
 - [x] Python and Node SDK text search now matches labels as well as visible text
 - [x] Python, Node, and Go SDKs support exact case-sensitive text/label lookup
 - [x] Action-plan summaries expose cache-key coverage, duplicate cache keys, and source `html_id` coverage across parser packages, SDKs, Browser Use, LangChain, and Vercel AI
+- [x] Action-plan indexes expose all cache-key and HTML-id candidates plus duplicate-key lists across parser packages, SDKs, and Vercel AI
 - [x] SOM schema/spec, parser packages, SDKs, Browser Use, LangChain, and Vercel AI carry replay provenance with test_id, data_action, and data_state
 - [x] Rust compiler resolves id-less wrapped-label controls by DOM path
 - [x] Rust compiler normalizes invalid native input types to browser-default text
@@ -706,6 +707,7 @@ Current Playwright MCP, Stagehand/Browserbase, Browserbase observability, and Fi
 - [ ] Promote inert availability cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote framework fingerprint/summary helpers into the shared action-manifest conformance gate
 - [ ] Promote replay-coverage summary fields into the shared action-manifest conformance gate
+- [ ] Promote replay-ambiguity index buckets into the shared action-manifest conformance gate
 - [ ] Promote replay-provenance cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote browser-default form fidelity cases into shared parser, SDK, and adapter conformance fixtures
 - [ ] Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures

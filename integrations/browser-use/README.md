@@ -86,6 +86,7 @@ replay_index = extractor.extract_action_plan_index(
     enabled_only=True,
 )
 cached = replay_index["by_cache_key"].get("plasmate-action:v1:...")
+ambiguous_keys = replay_index["duplicate_cache_keys"]
 
 summary = extractor.extract_action_plan_summary("https://example.com/settings")
 fingerprint = extractor.extract_action_plan_fingerprint(

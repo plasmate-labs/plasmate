@@ -45,6 +45,8 @@ import {
 const plan = getEnabledActionPlan(som);
 // Compact action targets with id, cache_key, role, actions, enabled, labels, link target/rel/download cues, graphical submitter alt/src cues, form/list context, form submission metadata, submitter override cues, select options/state, popover/command relation cues, text-entry/input hints, validation/range cues, and ARIA owns/flowto/details plus orientation/sort/value state.
 const cached = findActionTargetByCacheKey(som, plan[0].cache_key, { enabledOnly: true });
+const replayIndex = getActionPlanIndex(som, { enabledOnly: true });
+const ambiguousKeys = replayIndex.duplicateCacheKeys;
 const sameTarget = findActionTargetById(som, plan[0].id, { enabledOnly: true });
 const domTarget = findActionTargetByHtmlId(som, 'save-settings', { enabledOnly: true });
 
@@ -97,7 +99,7 @@ const ratio = getCompressionRatio(som);
 | `getActionPlan(som): ActionPlanItem[]` | Return compact action targets with cache keys, availability, original DOM-id bridge cues, link target/rel/download cues, graphical submitter alt/src cues, form/list and form submission context, submitter override cues, select options/selected_values/size context, popover/command relation cues, title/label/description ID relationships, ARIA source text plus locale/direction cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues for agent planning. |
 | `getEnabledActionPlan(som): ActionPlanItem[]` | Return compact action targets whose `enabled` field is not false. |
 | `getActionPlanCacheKey(item): string` | Return a deterministic key for caching or comparing an action target. |
-| `getActionPlanIndex(som, { enabledOnly }): ActionPlanIndex` | Index compact action targets by `byId`, `byCacheKey`, and `byHtmlId` for replay validation. |
+| `getActionPlanIndex(som, { enabledOnly }): ActionPlanIndex` | Index compact action targets by first-match maps and all-candidate cache-key/HTML-id buckets, with duplicate key lists for replay ambiguity checks. |
 | `getActionPlanFingerprint(som, { enabledOnly }): string` | Return a deterministic plan-level fingerprint for replay drift checks. |
 | `getActionPlanSummary(som): ActionPlanSummary` | Return action-plan fingerprints plus total/enabled/disabled, role, blocked-reason, cache-key coverage, duplicate cache-key, and `html_id` coverage counts. |
 | `findActionTargetByCacheKey(som, cacheKey, { enabledOnly }): ActionPlanItem \| undefined` | Resolve a cached action target from the current SOM action plan; pass `enabledOnly` to ignore disabled/read-only/inert targets. |

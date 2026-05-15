@@ -139,11 +139,13 @@ and optionally caps the returned menu with `maxTargets`. Pass
 
 ### `getPlasmateActionPlanIndex(targets, options?)`
 
-Builds `{ by_id, by_cache_key, by_html_id }` replay lookup tables from a
-normalized action plan. Unlike prompt preparation, the index includes blocked
-targets by default so cached workflow code can tell the difference between a
-missing target and a currently unavailable target. Use
-`includeUnavailable: false` for prompt-safe enabled-only indexes.
+Builds `{ by_id, by_cache_key, by_cache_key_all, by_html_id, by_html_id_all }`
+replay lookup tables from a normalized action plan, plus
+`duplicate_cache_keys` and `duplicate_html_ids` for ambiguity checks. Unlike
+prompt preparation, the index includes blocked targets by default so cached
+workflow code can tell the difference between a missing target, a currently
+unavailable target, and multiple candidates. Use `includeUnavailable: false`
+for prompt-safe enabled-only indexes.
 
 ### `getPlasmateActionPlanFingerprint(targets, options?)`
 

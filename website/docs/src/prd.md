@@ -144,6 +144,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-15 enabled-lookup read: current browser-agent docs keep rewarding validated replay instead of blind cached-action reuse. Playwright MCP refs are scoped to the current snapshot, Stagehand/Browserbase caches need state checks, and hosted products add observability around that gate. Plasmate should let app code resolve by `cache_key`, SOM id, or original `html_id` while optionally ignoring disabled, read-only, and inert targets.
 
+2026-05-15 replay-ambiguity read: current browser-agent docs still point to validated replay instead of blind first-match reuse. Playwright MCP avoids stale references by scoping refs to a fresh snapshot, Stagehand/Browserbase validate cached actions against current page state, and Cloudflare Browser Run is expanding hosted CDP/MCP execution. Plasmate should make duplicate local replay keys visible through action-plan indexes so app code can block or inspect ambiguous cached targets before execution.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -188,6 +190,7 @@ The project already spans a large number of package and integration surfaces: Ru
   - Parser and SDK docs now show how to resolve stored action keys against the current SOM plan before replay.
   - Python/Node parser packages and Python/Node/Go SDKs now expose enabled-only direct lookup options for cache-key, SOM-id, and original-DOM-id target resolution.
   - Enabled-only direct lookup tests now assert disabled shared-manifest targets are excluded from replay gates.
+  - Python/Node parser packages, Python/Node/Go SDKs, and Vercel AI now expose all matching candidates for duplicate cache-key and HTML-id replay indexes plus duplicate-key lists, preserving first-match compatibility while giving replay gates an explicit ambiguity check.
   - Parser packages and Python/Node/Go SDKs now expose action-target lookup by SOM id and original DOM id.
   - Parser packages and Python/Node/Go SDKs now expose enabled-only action-plan helpers for reusable prompt menus.
   - Focused parser and SDK tests cover id lookup, `html_id` lookup, and enabled-plan filtering.
@@ -395,6 +398,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Promote graphical submitter cases (`input type="image"`, `button_type`, `alt`, and `src`) into the shared action manifest and adapter conformance fixtures.
 - Promote replay-provenance cases (`test_id`, `data_action`, and `data_state`) from the shared action-availability manifest into broader Rust/parser/SDK and adapter fixtures.
 - Promote enabled-only direct lookup helpers into shared parser/SDK conformance so direct replay gates and enabled-only indexes cannot drift.
+- Promote replay-ambiguity index buckets into shared parser/SDK and framework conformance so duplicate cache-key and HTML-id candidates stay visible.
 - Promote browser-default form fidelity cases (id-less wrapped labels, invalid input-type fallback, and default/invalid form method normalization) into shared Rust/parser/SDK and adapter fixtures.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures once the shared action manifest remains stable.
 - Promote form-relation cases (`form`, `list`, and `aria-errormessage`) into broader parser, SDK, and adapter conformance fixtures.

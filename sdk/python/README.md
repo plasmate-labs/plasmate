@@ -164,6 +164,7 @@ dom_target = find_action_target_by_html_id(
 )
 target_index = get_action_plan_index(som, enabled_only=True)
 ready_target = target_index["by_cache_key"].get(action_plan[0]["cache_key"])
+ambiguous_replay_keys = target_index["duplicate_cache_keys"]
 plan_fingerprint = get_action_plan_fingerprint(som, enabled_only=True)
 plan_summary = get_action_plan_summary(som)
 print(

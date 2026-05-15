@@ -132,7 +132,10 @@ assert.deepEqual(
 const replayIndex = getPlasmateActionPlanIndex(targets)
 assert.equal(replayIndex.by_id.e_save.id, 'e_save')
 assert.equal(replayIndex.by_cache_key[save.cache_key].id, 'e_save')
+assert.equal(replayIndex.by_cache_key_all[save.cache_key].length, 1)
 assert.equal(replayIndex.by_html_id['save-settings'].id, 'e_save')
+assert.deepEqual(replayIndex.duplicate_cache_keys, [])
+assert.deepEqual(replayIndex.duplicate_html_ids, [])
 assert.equal(findPlasmateActionTargetById(targets, 'e_save').id, 'e_save')
 assert.equal(
   findPlasmateActionTargetByCacheKey(targets, save.cache_key).id,
@@ -147,6 +150,23 @@ const enabledReplayIndex = getPlasmateActionPlanIndex(targets, {
 })
 assert.equal(enabledReplayIndex.by_id.e_save, undefined)
 assert.equal(enabledReplayIndex.by_html_id['save-settings'], undefined)
+
+const duplicateReplayTargets = [
+  ...targets,
+  { ...save, id: 'e_save_copy' },
+]
+const duplicateReplayIndex =
+  getPlasmateActionPlanIndex(duplicateReplayTargets)
+assert.deepEqual(duplicateReplayIndex.duplicate_cache_keys, [save.cache_key])
+assert.equal(
+  duplicateReplayIndex.by_cache_key_all[save.cache_key].length,
+  2
+)
+assert.deepEqual(duplicateReplayIndex.duplicate_html_ids, ['save-settings'])
+assert.equal(
+  duplicateReplayIndex.by_html_id_all['save-settings'].length,
+  2
+)
 
 const summary = getPlasmateActionPlanSummary(targets)
 assert.equal(summary.total, 10)

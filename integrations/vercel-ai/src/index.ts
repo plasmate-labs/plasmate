@@ -199,7 +199,11 @@ export interface PreparePlasmateActionPlanOptions {
 export interface PlasmateActionPlanIndex {
   by_id: Record<string, PlasmateActionTarget>
   by_cache_key: Record<string, PlasmateActionTarget>
+  by_cache_key_all: Record<string, PlasmateActionTarget[]>
   by_html_id: Record<string, PlasmateActionTarget>
+  by_html_id_all: Record<string, PlasmateActionTarget[]>
+  duplicate_cache_keys: string[]
+  duplicate_html_ids: string[]
 }
 
 /**
@@ -654,7 +658,11 @@ export function getPlasmateActionPlanIndex(
   const index: PlasmateActionPlanIndex = {
     by_id: {},
     by_cache_key: {},
+    by_cache_key_all: {},
     by_html_id: {},
+    by_html_id_all: {},
+    duplicate_cache_keys: [],
+    duplicate_html_ids: [],
   }
 
   for (const target of plan) {
@@ -664,10 +672,28 @@ export function getPlasmateActionPlanIndex(
     if (target.cache_key && !index.by_cache_key[target.cache_key]) {
       index.by_cache_key[target.cache_key] = target
     }
+    if (target.cache_key) {
+      const bucket = index.by_cache_key_all[target.cache_key] ?? []
+      bucket.push(target)
+      index.by_cache_key_all[target.cache_key] = bucket
+    }
     if (target.html_id && !index.by_html_id[target.html_id]) {
       index.by_html_id[target.html_id] = target
     }
+    if (target.html_id) {
+      const bucket = index.by_html_id_all[target.html_id] ?? []
+      bucket.push(target)
+      index.by_html_id_all[target.html_id] = bucket
+    }
   }
+  index.duplicate_cache_keys = Object.entries(index.by_cache_key_all)
+    .filter(([, items]) => items.length > 1)
+    .map(([cacheKey]) => cacheKey)
+    .sort()
+  index.duplicate_html_ids = Object.entries(index.by_html_id_all)
+    .filter(([, items]) => items.length > 1)
+    .map(([htmlId]) => htmlId)
+    .sort()
 
   return index
 }

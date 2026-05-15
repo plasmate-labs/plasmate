@@ -313,9 +313,13 @@ type ActionPlanItem struct {
 
 // ActionPlanIndex groups compact action targets for O(1) replay lookups.
 type ActionPlanIndex struct {
-	ByID       map[string]ActionPlanItem `json:"by_id"`
-	ByCacheKey map[string]ActionPlanItem `json:"by_cache_key"`
-	ByHTMLID   map[string]ActionPlanItem `json:"by_html_id"`
+	ByID               map[string]ActionPlanItem   `json:"by_id"`
+	ByCacheKey         map[string]ActionPlanItem   `json:"by_cache_key"`
+	ByCacheKeyAll      map[string][]ActionPlanItem `json:"by_cache_key_all"`
+	ByHTMLID           map[string]ActionPlanItem   `json:"by_html_id"`
+	ByHTMLIDAll        map[string][]ActionPlanItem `json:"by_html_id_all"`
+	DuplicateCacheKeys []string                    `json:"duplicate_cache_keys"`
+	DuplicateHTMLIDs   []string                    `json:"duplicate_html_ids"`
 }
 
 // ActionPlanSummary gives callers a compact replay-validation view of a plan.
@@ -563,9 +567,11 @@ func GetActionPlanIndex(som *Som, enabledOnly ...bool) ActionPlanIndex {
 		plan = EnabledActionPlan(som)
 	}
 	index := ActionPlanIndex{
-		ByID:       map[string]ActionPlanItem{},
-		ByCacheKey: map[string]ActionPlanItem{},
-		ByHTMLID:   map[string]ActionPlanItem{},
+		ByID:          map[string]ActionPlanItem{},
+		ByCacheKey:    map[string]ActionPlanItem{},
+		ByCacheKeyAll: map[string][]ActionPlanItem{},
+		ByHTMLID:      map[string]ActionPlanItem{},
+		ByHTMLIDAll:   map[string][]ActionPlanItem{},
 	}
 	for _, item := range plan {
 		if _, ok := index.ByID[item.ID]; !ok {
@@ -574,12 +580,26 @@ func GetActionPlanIndex(som *Som, enabledOnly ...bool) ActionPlanIndex {
 		if _, ok := index.ByCacheKey[item.CacheKey]; !ok {
 			index.ByCacheKey[item.CacheKey] = item
 		}
+		index.ByCacheKeyAll[item.CacheKey] = append(index.ByCacheKeyAll[item.CacheKey], item)
 		if item.HTMLID != nil {
 			if _, ok := index.ByHTMLID[*item.HTMLID]; !ok {
 				index.ByHTMLID[*item.HTMLID] = item
 			}
+			index.ByHTMLIDAll[*item.HTMLID] = append(index.ByHTMLIDAll[*item.HTMLID], item)
 		}
 	}
+	for cacheKey, items := range index.ByCacheKeyAll {
+		if len(items) > 1 {
+			index.DuplicateCacheKeys = append(index.DuplicateCacheKeys, cacheKey)
+		}
+	}
+	sort.Strings(index.DuplicateCacheKeys)
+	for htmlID, items := range index.ByHTMLIDAll {
+		if len(items) > 1 {
+			index.DuplicateHTMLIDs = append(index.DuplicateHTMLIDs, htmlID)
+		}
+	}
+	sort.Strings(index.DuplicateHTMLIDs)
 	return index
 }
 

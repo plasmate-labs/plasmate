@@ -1,5 +1,6 @@
 """Tests for SOM query helpers."""
 
+from copy import deepcopy
 import json
 from pathlib import Path
 
@@ -442,11 +443,31 @@ class TestGetActionPlan:
 
         assert index["by_id"]["e_save"] == find_action_target_by_id(som, "e_save")
         assert index["by_cache_key"][expected[0]["cache_key"]] == expected[0]
+        assert index["by_cache_key_all"][expected[0]["cache_key"]] == [expected[0]]
         assert index["by_html_id"]["save-settings"]["id"] == "e_save"
+        assert index["duplicate_cache_keys"] == []
+        assert index["duplicate_html_ids"] == []
 
         enabled_index = get_action_plan_index(som, enabled_only=True)
         assert "e_disabled" not in enabled_index["by_id"]
         assert "disabled-control" not in enabled_index["by_html_id"]
+
+    def test_indexes_duplicate_action_plan_keys_for_replay_guards(self) -> None:
+        fixture_dir = REPO_ROOT / "integrations" / "fixtures"
+        som_payload = json.loads(
+            (fixture_dir / "action-availability.som.json").read_text()
+        )
+        duplicate = deepcopy(som_payload["regions"][0]["elements"][0])
+        som_payload["regions"][0]["elements"].append(duplicate)
+        som = Som.model_validate(som_payload)
+        cache_key = get_action_plan(som)[0]["cache_key"]
+
+        index = get_action_plan_index(som)
+
+        assert index["duplicate_cache_keys"] == [cache_key]
+        assert len(index["by_cache_key_all"][cache_key]) == 2
+        assert index["duplicate_html_ids"] == ["work-email"]
+        assert len(index["by_html_id_all"]["work-email"]) == 2
 
 
 class TestFindByText:

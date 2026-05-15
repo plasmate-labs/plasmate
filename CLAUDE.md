@@ -49,6 +49,37 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-15T16:10:12Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch origin --prune` still fails in the linked
+  automation worktree because it cannot open `FETCH_HEAD`; retrying from the
+  primary checkout still fails DNS resolution for `github.com`. Work continued
+  on `codex/plasmate-improvements-2026-05-15-cache-key-lookup` in
+  `/Users/steve/Git/plasmate`.
+- Market direction: current official docs and competitor positioning still
+  favor validated replay over hosted-browser parity. Playwright MCP keeps refs
+  scoped to fresh accessibility snapshots, Stagehand/Browserbase emphasize
+  cached action validation, and Cloudflare Browser Run is expanding hosted
+  CDP/MCP execution. Plasmate should keep strengthening local SOM action-plan
+  validation and avoid a hosted-browser pivot.
+- Code changes: Python/Node parser packages, Python/Node/Go SDKs, and Vercel
+  AI action-plan indexes now expose all candidates for duplicate `cache_key`
+  and `html_id` values through all-candidate buckets plus duplicate-key lists,
+  while preserving existing first-match lookup maps for compatibility.
+- Docs changes: parser/SDK/framework READMEs, PRD, roadmap source, generated
+  website docs, and this running state now describe replay-ambiguity indexes
+  as the next local replay safety layer for cached agent workflows.
+- Verification: Python parser tests passed 76 tests; Python SDK query tests
+  passed 46 tests; Node parser tests passed 61 tests; Node SDK tests passed 31
+  tests after build; Go SDK tests passed; Vercel AI package tests passed;
+  quick action-manifest conformance passed across parser packages, SDKs,
+  Browser Use, LangChain, and Vercel AI; `node website/build.mjs` rebuilt 39
+  docs pages; `cargo build` passed with existing warnings; `cargo test --lib
+  --bin plasmate` passed 257 lib tests and 5 main/MCP tests; `git diff
+  --check` passed. Full `cargo test` still fails only in
+  `tests/awp_integration_test.rs` because the sandbox denies local socket
+  binding with `Operation not permitted`.
+
 ### 2026-05-15T14:07:38Z - Plasmate Improvements Automation
 
 - Git sync: `git fetch origin --prune` still fails in the linked automation

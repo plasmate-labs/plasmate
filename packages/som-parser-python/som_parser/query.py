@@ -377,24 +377,43 @@ def get_enabled_action_plan(som: Som) -> List[Dict[str, object]]:
 
 def get_action_plan_index(
     som: Som, *, enabled_only: bool = False
-) -> Dict[str, Dict[str, Dict[str, object]]]:
+) -> Dict[str, object]:
     """Return action targets indexed by SOM id, cache key, and original HTML id."""
     plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
-    index: Dict[str, Dict[str, Dict[str, object]]] = {
+    index: Dict[str, object] = {
         "by_id": {},
         "by_cache_key": {},
+        "by_cache_key_all": {},
         "by_html_id": {},
+        "by_html_id_all": {},
+        "duplicate_cache_keys": [],
+        "duplicate_html_ids": [],
     }
+    by_id = index["by_id"]
+    by_cache_key = index["by_cache_key"]
+    by_cache_key_all = index["by_cache_key_all"]
+    by_html_id = index["by_html_id"]
+    by_html_id_all = index["by_html_id_all"]
     for item in plan:
         target_id = item.get("id")
-        if isinstance(target_id, str) and target_id not in index["by_id"]:
-            index["by_id"][target_id] = item
+        if isinstance(target_id, str) and target_id not in by_id:
+            by_id[target_id] = item
         cache_key = item.get("cache_key")
-        if isinstance(cache_key, str) and cache_key not in index["by_cache_key"]:
-            index["by_cache_key"][cache_key] = item
+        if isinstance(cache_key, str):
+            if cache_key not in by_cache_key:
+                by_cache_key[cache_key] = item
+            by_cache_key_all.setdefault(cache_key, []).append(item)
         html_id = item.get("html_id")
-        if isinstance(html_id, str) and html_id not in index["by_html_id"]:
-            index["by_html_id"][html_id] = item
+        if isinstance(html_id, str):
+            if html_id not in by_html_id:
+                by_html_id[html_id] = item
+            by_html_id_all.setdefault(html_id, []).append(item)
+    index["duplicate_cache_keys"] = sorted(
+        key for key, items in by_cache_key_all.items() if len(items) > 1
+    )
+    index["duplicate_html_ids"] = sorted(
+        key for key, items in by_html_id_all.items() if len(items) > 1
+    )
     return index
 
 

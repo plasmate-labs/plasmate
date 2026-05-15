@@ -191,7 +191,11 @@ export interface ActionPlanItem {
 export interface ActionPlanIndex {
   byId: Record<string, ActionPlanItem>;
   byCacheKey: Record<string, ActionPlanItem>;
+  byCacheKeyAll: Record<string, ActionPlanItem[]>;
   byHtmlId: Record<string, ActionPlanItem>;
+  byHtmlIdAll: Record<string, ActionPlanItem[]>;
+  duplicateCacheKeys: string[];
+  duplicateHtmlIds: string[];
 }
 
 export interface ActionPlanSummary {
@@ -422,15 +426,31 @@ export function getActionPlanIndex(
   const index: ActionPlanIndex = {
     byId: {},
     byCacheKey: {},
+    byCacheKeyAll: {},
     byHtmlId: {},
+    byHtmlIdAll: {},
+    duplicateCacheKeys: [],
+    duplicateHtmlIds: [],
   };
   for (const item of plan) {
     if (index.byId[item.id] === undefined) index.byId[item.id] = item;
     if (index.byCacheKey[item.cache_key] === undefined) index.byCacheKey[item.cache_key] = item;
+    (index.byCacheKeyAll[item.cache_key] ??= []).push(item);
     if (item.html_id && index.byHtmlId[item.html_id] === undefined) {
       index.byHtmlId[item.html_id] = item;
     }
+    if (item.html_id) {
+      (index.byHtmlIdAll[item.html_id] ??= []).push(item);
+    }
   }
+  index.duplicateCacheKeys = Object.entries(index.byCacheKeyAll)
+    .filter(([, items]) => items.length > 1)
+    .map(([cacheKey]) => cacheKey)
+    .sort();
+  index.duplicateHtmlIds = Object.entries(index.byHtmlIdAll)
+    .filter(([, items]) => items.length > 1)
+    .map(([htmlId]) => htmlId)
+    .sort();
   return index;
 }
 

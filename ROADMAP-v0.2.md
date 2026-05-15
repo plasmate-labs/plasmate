@@ -1011,6 +1011,24 @@ runtime.
    keep id lookup, cache-key lookup, HTML-id lookup, enabled filtering, and
    indexed replay helpers synchronized across Python, Node, and Go.
 
+### 2026-05-15 Replay Ambiguity Index Adjustment
+
+Validated replay needs a clear failure path when stored action memory maps to
+more than one current target. Playwright MCP avoids this by scoping refs to the
+fresh snapshot, while Stagehand/Browserbase rely on current-page validation
+before reusing cached actions. Plasmate should make the same ambiguity visible
+locally rather than hiding it behind first-match lookup tables.
+
+1. **Indexes should expose all candidates**: parser packages, SDKs, and
+   framework helpers should include `by_cache_key_all`/`byCacheKeyAll` and
+   `by_html_id_all`/`byHtmlIdAll` buckets next to first-match maps.
+2. **Duplicate lists are replay gates**: `duplicate_cache_keys` and duplicate
+   HTML-id lists should let apps block or inspect ambiguous cached actions
+   before execution.
+3. **Compatibility still matters**: existing `by_cache_key` and `by_html_id`
+   maps should keep first-target behavior for current callers while new
+   ambiguity fields make safer replay opt-in and cheap.
+
 ### 2026-05-15 Framework Replay Index Adjustment
 
 The framework edge is where local action memory either becomes sticky or turns
@@ -1562,6 +1580,10 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Python/Node parser packages and Python/Node/Go SDKs now expose action-plan
   indexes keyed by SOM id, deterministic `cache_key`, and original `html_id`,
   with enabled-only variants for prompt-safe replay menus.
+- Python/Node parser packages, Python/Node/Go SDKs, and Vercel AI action-plan
+  indexes now expose all cache-key and HTML-id candidates plus duplicate-key
+  lists, giving replay gates an explicit ambiguity check while preserving
+  existing first-match lookup behavior.
 - Browser Use, LangChain, and Vercel AI now expose framework-level replay
   index helpers so app code can validate current action targets without
   reimplementing parser/SDK scans.
@@ -1600,10 +1622,10 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   select-option parser/SDK/adaptor parity, relationship-context,
   target-provenance/locale, `html_id` bridge, cache-key lookup, action-target
   id lookup, enabled-only direct lookup, enabled-plan filtering, action-plan
-  index, framework replay index, action-plan fingerprint, framework
-  fingerprint/summary, replay-coverage summary, and replay-provenance cases
-  into broader fixtures alongside text-entry, ARIA widget, range, and
-  set-position cases.
+  index, replay-ambiguity index buckets, framework replay index,
+  action-plan fingerprint, framework fingerprint/summary, replay-coverage
+  summary, and replay-provenance cases into broader fixtures alongside
+  text-entry, ARIA widget, range, and set-position cases.
 
 ## Dependencies to Add
 

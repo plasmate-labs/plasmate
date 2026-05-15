@@ -534,6 +534,51 @@ func TestGetActionPlanDisabledTarget(t *testing.T) {
 	}
 }
 
+func TestGetActionPlanIndexReportsDuplicateReplayKeys(t *testing.T) {
+	text := "Save"
+	htmlID := "save-settings"
+	som := &Som{
+		Regions: []Region{
+			{
+				ID:   "r_form",
+				Role: "form",
+				Elements: []Element{
+					{
+						ID:      "save",
+						HTMLID:  &htmlID,
+						Role:    "button",
+						Text:    &text,
+						Actions: []string{"click"},
+					},
+					{
+						ID:      "save",
+						HTMLID:  &htmlID,
+						Role:    "button",
+						Text:    &text,
+						Actions: []string{"click"},
+					},
+				},
+			},
+		},
+	}
+	cacheKey := GetActionPlan(som)[0].CacheKey
+
+	index := GetActionPlanIndex(som)
+
+	if !reflect.DeepEqual(index.DuplicateCacheKeys, []string{cacheKey}) {
+		t.Errorf("DuplicateCacheKeys = %v, want %s", index.DuplicateCacheKeys, cacheKey)
+	}
+	if got := len(index.ByCacheKeyAll[cacheKey]); got != 2 {
+		t.Errorf("ByCacheKeyAll[%s] length = %d, want 2", cacheKey, got)
+	}
+	if !reflect.DeepEqual(index.DuplicateHTMLIDs, []string{htmlID}) {
+		t.Errorf("DuplicateHTMLIDs = %v, want %s", index.DuplicateHTMLIDs, htmlID)
+	}
+	if got := len(index.ByHTMLIDAll[htmlID]); got != 2 {
+		t.Errorf("ByHTMLIDAll[%s] length = %d, want 2", htmlID, got)
+	}
+}
+
 func TestGetActionPlanMatchesSharedAvailabilityManifest(t *testing.T) {
 	somBytes, err := os.ReadFile("../../integrations/fixtures/action-availability.som.json")
 	if err != nil {
