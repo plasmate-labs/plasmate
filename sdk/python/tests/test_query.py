@@ -19,6 +19,10 @@ from plasmate.types import (
     StructuredData,
 )
 from plasmate.query import (
+    find_action_target_by_cache_key,
+    find_action_target_by_html_id,
+    find_action_target_by_id,
+    find_action_target_by_test_id,
     find_by_id,
     find_by_html_id,
     find_by_role,
@@ -28,6 +32,8 @@ from plasmate.query import (
     flat_elements,
     get_action_plan,
     get_action_plan_cache_key,
+    get_action_plan_index,
+    get_enabled_action_plan,
     get_token_estimate,
 )
 
@@ -330,6 +336,41 @@ class TestGetActionPlan:
             )
             == "plasmate-action:v1:5b218ab1"
         )
+
+    def test_indexes_action_targets_for_replay(self) -> None:
+        fixture_dir = REPO_ROOT / "integrations" / "fixtures"
+        som = Som.model_validate(
+            json.loads((fixture_dir / "action-availability.som.json").read_text())
+        )
+        expected = json.loads(
+            (fixture_dir / "action-availability.expected.json").read_text()
+        )["action_targets"]
+        save = next(target for target in expected if target["id"] == "e_save")
+
+        index = get_action_plan_index(som)
+
+        assert index["by_id"]["e_save"] == save
+        assert index["by_cache_key"][save["cache_key"]] == save
+        assert index["by_html_id"]["save-button"] == save
+        assert index["by_test_id"]["settings-save"] == save
+        assert find_action_target_by_id(som, "e_save") == save
+        assert find_action_target_by_cache_key(som, save["cache_key"]) == save
+        assert find_action_target_by_html_id(som, "save-button") == save
+        assert find_action_target_by_test_id(som, "settings-save") == save
+
+    def test_enabled_action_plan_index_filters_blocked_targets(self) -> None:
+        fixture_dir = REPO_ROOT / "integrations" / "fixtures"
+        som = Som.model_validate(
+            json.loads((fixture_dir / "action-availability.som.json").read_text())
+        )
+
+        enabled = get_enabled_action_plan(som)
+        index = get_action_plan_index(som, enabled_only=True)
+
+        assert all(target["enabled"] for target in enabled)
+        assert "e_save" not in index["by_id"]
+        assert "settings-save" not in index["by_test_id"]
+        assert "e_plan" in index["by_id"]
 
 
 class TestFindByText:

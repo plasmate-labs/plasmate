@@ -596,12 +596,15 @@ Official docs continue to split reusable action identity from current-page handl
 - [x] Rust SOM attrs and schema preserve title, source_role, and test_id locator provenance
 - [x] Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action plans surface title, source_role, and test_id without changing deterministic cache keys
 - [x] Shared action-availability manifest asserts locator provenance for parser, SDK, and framework adapters
+- [x] Python/Node parser packages, Python/Node SDKs, and Go SDK expose compact action target lookup/index helpers by id, cache_key, html_id, and test_id
+- [x] Parser and SDK tests cover enabled-only action plans plus replay lookup by cache key, DOM id, and test id
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
 - [ ] Promote html_id DOM-provenance cases into adapter conformance fixtures
 - [ ] Promote locator-provenance cases into broader Rust/parser/SDK and adapter conformance fixtures
+- [ ] Promote action target lookup/index helpers into Browser Use, LangChain, and Vercel AI
 - [ ] Add cross-adapter fixtures for enriched compact action-plan metadata
 - [ ] Promote ARIA relationship-state cases, including owns/flowto/details, into the broader action-state/action-semantics conformance suites
 - [ ] Promote range and orientation cases into broader parser, SDK, and adapter conformance fixtures

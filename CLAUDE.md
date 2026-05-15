@@ -49,6 +49,36 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-15T23:12:05Z - Plasmate Improvements Automation
+
+- Git sync: latest pull was retried from the automation worktree and failed
+  before network access because the linked worktree cannot write
+  `FETCH_HEAD`. A fast-forward to the known remote-tracking
+  `origin/codex/locator-provenance-cues` ref also failed on `ORIG_HEAD`, so
+  that remote-tracking diff was applied directly before this run's new work.
+- Market direction: current docs still favor the local-first reusable action
+  surface. Playwright MCP keeps snapshot-scoped accessibility refs, Stagehand
+  documents `observe()` plus local/server action caching, Firecrawl and
+  Browser Use keep broadening hosted browser/session products, and Cloudflare
+  Browser Run/WebMCP points toward typed action discovery. Plasmate should
+  keep deepening portable local SOM/action replay rather than pivoting into
+  hosted browser infrastructure.
+- Code changes: carried forward locator provenance (`title`, `source_role`,
+  `test_id`) from the known remote-tracking branch, then added compact action
+  target replay helpers across Python/Node parser packages, Python/Node SDKs,
+  and Go SDK. New helpers return enabled-only action plans, build indexes by
+  SOM id, `cache_key`, `html_id`, and `test_id`, and expose direct lookup
+  helpers for those keys.
+- Docs changes: PRD and roadmap docs now record action target lookup as the
+  next stickiness layer after locator provenance, with a follow-up to promote
+  the lookup/index contract into Browser Use, LangChain, and Vercel AI.
+- Verification: `rustfmt --check src/som/compiler.rs`, `cargo build`,
+  `cargo test --lib --quiet` (257), Python parser tests (72), Python SDK query
+  tests (40), Go SDK tests, Python syntax compile, JSON fixture/schema parse,
+  and `git diff --check` passed.
+- Verification gaps: Node SDK and Node parser tests remain blocked because
+  local dev dependencies are absent (`tsc` and `vitest` not found).
+
 ### 2026-05-15T22:11:34Z - Plasmate Improvements Automation
 
 - Git sync: latest pull was retried from the automation worktree and failed

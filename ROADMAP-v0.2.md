@@ -855,6 +855,26 @@ compiler field.
    should expose the same `html_id` lookup and action-plan context before
    adapters advertise live-DOM replay support.
 
+### 2026-05-15 Action Target Lookup Adjustment
+
+Current docs and product motion reinforce that the sticky surface is not only
+the first structured snapshot, but the repeatable action target after the
+first observation. Playwright MCP refs are fresh-snapshot scoped, Stagehand
+caches observed actions, Browser Use/Firecrawl/Cloudflare sell managed
+sessions, and WebMCP points toward typed action discovery. Plasmate's
+local-first answer should make compact action targets directly replayable
+inside ordinary SDK code.
+
+1. **Replay lookup is product surface**: parser packages and SDKs should
+   resolve compact action targets by SOM id, deterministic `cache_key`,
+   `html_id`, and `test_id` without each app scanning arrays manually.
+2. **Availability filters belong with lookup**: enabled-only action plans and
+   indexes help agents avoid replaying disabled, inert, or read-only targets
+   before spending another browser tool call.
+3. **Framework adapters are the next parity layer**: Browser Use, LangChain,
+   and Vercel AI should consume the same lookup/index contract so cached local
+   workflows stay portable across the repo surface.
+
 ## Architecture
 
 ```
@@ -1297,11 +1317,18 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   identity.
 - The shared action-availability manifest now asserts `html_id` parity across
   parser packages, SDKs, and framework adapters.
+- Rust SOM attrs and schema now preserve `title`, `source_role`, and
+  `test_id` locator provenance, and parser packages, SDKs, Browser Use,
+  LangChain, and Vercel AI surface those cues without changing deterministic
+  action cache keys.
+- Python/Node parser packages, Python/Node SDKs, and Go SDK now expose compact
+  action target lookup/index helpers by SOM id, `cache_key`, `html_id`, and
+  `test_id`, plus enabled-only plans for replay menus.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
-  select-option parser/SDK/adaptor parity, and `html_id` DOM-provenance cases
-  into broader fixtures alongside text-entry, ARIA widget, range, and
-  set-position cases.
+  select-option parser/SDK/adaptor parity, `html_id` DOM-provenance cases, and
+  action target lookup/index helpers into broader fixtures alongside
+  text-entry, ARIA widget, range, and set-position cases.
 
 ## Dependencies to Add
 

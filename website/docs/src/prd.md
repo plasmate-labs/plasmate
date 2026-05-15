@@ -137,6 +137,8 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-15:
+  - Python and Node parser packages, Python/Node SDKs, and Go SDK now expose compact action-plan replay helpers: enabled-only plans, indexes by SOM id, deterministic `cache_key`, `html_id`, and `test_id`, plus direct find-by-id/cache-key/html-id/test-id helpers.
+  - The lookup helpers keep cache keys stable and make locator provenance practical for repeated local workflows: agents can store one compact target and resolve it later without scanning every action target or re-walking the raw SOM tree.
   - Rust SOM attrs and JSON Schema now preserve developer-authored action provenance with `title`, raw `source_role`, and normalized `test_id` values from `data-testid`, `data-test`, or `data-qa`.
   - Python and Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI now carry `title`, `source_role`, and `test_id` through compact action plans and prompt renderers without changing deterministic `cache_key` values.
   - Focused compiler coverage and the shared action-availability manifest now assert locator-provenance parity across parser, SDK, and framework surfaces.
@@ -339,6 +341,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Promote graphical submitter cases (`input type="image"`, `button_type`, `alt`, and `src`) into the shared action manifest and adapter conformance fixtures.
 - Promote `html_id` DOM-provenance cases into shared parser, SDK, and adapter conformance so compact targets remain resolvable back to live page elements.
 - Promote locator-provenance cases (`title`, `source_role`, and `test_id`) into broader Rust/parser/SDK and adapter conformance fixtures so local replay can use developer-authored anchors without destabilizing cache keys.
+- Promote compact action target lookup/index helpers into Browser Use, LangChain, and Vercel AI so framework integrations can resolve replay targets by `cache_key`, `html_id`, and `test_id` without bespoke scans.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures once the shared action manifest remains stable.
 - Promote form-relation cases (`form`, `list`, and `aria-errormessage`) into broader parser, SDK, and adapter conformance fixtures.
 - Promote live-region cases (`aria-busy`, `aria-live`, `aria-atomic`, and `aria-relevant`) into broader Rust/parser/SDK conformance fixtures.

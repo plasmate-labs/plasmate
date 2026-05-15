@@ -39,6 +39,10 @@ from .types import (
     StructuredData,
 )
 from .query import (
+    find_action_target_by_cache_key,
+    find_action_target_by_html_id,
+    find_action_target_by_id,
+    find_action_target_by_test_id,
     find_by_id,
     find_by_html_id,
     find_by_role,
@@ -48,6 +52,8 @@ from .query import (
     flat_elements,
     get_action_plan,
     get_action_plan_cache_key,
+    get_action_plan_index,
+    get_enabled_action_plan,
     get_token_estimate,
 )
 
@@ -70,6 +76,10 @@ __all__ = [
     "SomShadowRoot",
     "StructuredData",
     # Query helpers
+    "find_action_target_by_cache_key",
+    "find_action_target_by_html_id",
+    "find_action_target_by_id",
+    "find_action_target_by_test_id",
     "find_by_id",
     "find_by_html_id",
     "find_by_role",
@@ -79,6 +89,8 @@ __all__ = [
     "flat_elements",
     "get_action_plan",
     "get_action_plan_cache_key",
+    "get_action_plan_index",
+    "get_enabled_action_plan",
     "get_token_estimate",
 ]
 __version__ = "0.3.0"

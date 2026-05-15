@@ -284,6 +284,63 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
     return plan
 
 
+def get_enabled_action_plan(som: Som) -> List[Dict[str, object]]:
+    """Return compact action targets that are currently safe to offer."""
+    return [item for item in get_action_plan(som) if item.get("enabled") is not False]
+
+
+def get_action_plan_index(
+    som: Som, *, enabled_only: bool = False
+) -> Dict[str, Dict[str, Dict[str, object]]]:
+    """Return action targets indexed by id, cache key, HTML id, and test id."""
+    plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
+    index: Dict[str, Dict[str, Dict[str, object]]] = {
+        "by_id": {},
+        "by_cache_key": {},
+        "by_html_id": {},
+        "by_test_id": {},
+    }
+    for item in plan:
+        for source_key, bucket_key in (
+            ("id", "by_id"),
+            ("cache_key", "by_cache_key"),
+            ("html_id", "by_html_id"),
+            ("test_id", "by_test_id"),
+        ):
+            value = item.get(source_key)
+            if isinstance(value, str) and value not in index[bucket_key]:
+                index[bucket_key][value] = item
+    return index
+
+
+def find_action_target_by_id(
+    som: Som, target_id: str
+) -> Optional[Dict[str, object]]:
+    """Return the compact action target matching a SOM element id."""
+    return get_action_plan_index(som)["by_id"].get(target_id)
+
+
+def find_action_target_by_cache_key(
+    som: Som, cache_key: str
+) -> Optional[Dict[str, object]]:
+    """Return the compact action target matching a deterministic cache key."""
+    return get_action_plan_index(som)["by_cache_key"].get(cache_key)
+
+
+def find_action_target_by_html_id(
+    som: Som, html_id: str
+) -> Optional[Dict[str, object]]:
+    """Return the compact action target matching an original HTML id."""
+    return get_action_plan_index(som)["by_html_id"].get(html_id)
+
+
+def find_action_target_by_test_id(
+    som: Som, test_id: str
+) -> Optional[Dict[str, object]]:
+    """Return the compact action target matching a test locator attribute."""
+    return get_action_plan_index(som)["by_test_id"].get(test_id)
+
+
 def find_by_text(som: Som, text: str) -> List[SomElement]:
     """Find all elements whose text contains the given substring (case-insensitive)."""
     results: List[SomElement] = []

@@ -146,6 +146,13 @@ export interface ActionPlanItem {
   group?: string;
 }
 
+export interface ActionPlanIndex {
+  byId: Record<string, ActionPlanItem>;
+  byCacheKey: Record<string, ActionPlanItem>;
+  byHtmlId: Record<string, ActionPlanItem>;
+  byTestId: Record<string, ActionPlanItem>;
+}
+
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined;
 }
@@ -318,6 +325,56 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
       cache_key: getActionPlanCacheKey(item),
     };
   });
+}
+
+/** Return compact action targets that are currently safe to offer. */
+export function getEnabledActionPlan(som: Som): ActionPlanItem[] {
+  return getActionPlan(som).filter((item) => item.enabled !== false);
+}
+
+/** Return action targets indexed by SOM id, cache key, HTML id, and test id. */
+export function getActionPlanIndex(
+  som: Som,
+  options?: { enabledOnly?: boolean },
+): ActionPlanIndex {
+  const plan = options?.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
+  const index: ActionPlanIndex = {
+    byId: {},
+    byCacheKey: {},
+    byHtmlId: {},
+    byTestId: {},
+  };
+  for (const item of plan) {
+    if (index.byId[item.id] === undefined) index.byId[item.id] = item;
+    if (index.byCacheKey[item.cache_key] === undefined) index.byCacheKey[item.cache_key] = item;
+    if (item.html_id && index.byHtmlId[item.html_id] === undefined) {
+      index.byHtmlId[item.html_id] = item;
+    }
+    if (item.test_id && index.byTestId[item.test_id] === undefined) {
+      index.byTestId[item.test_id] = item;
+    }
+  }
+  return index;
+}
+
+/** Find a compact action target by its SOM element id. */
+export function findActionTargetById(som: Som, id: string): ActionPlanItem | undefined {
+  return getActionPlanIndex(som).byId[id];
+}
+
+/** Find a compact action target by its deterministic cache key. */
+export function findActionTargetByCacheKey(som: Som, cacheKey: string): ActionPlanItem | undefined {
+  return getActionPlanIndex(som).byCacheKey[cacheKey];
+}
+
+/** Find a compact action target by its original HTML id. */
+export function findActionTargetByHtmlId(som: Som, htmlId: string): ActionPlanItem | undefined {
+  return getActionPlanIndex(som).byHtmlId[htmlId];
+}
+
+/** Find a compact action target by its test locator attribute. */
+export function findActionTargetByTestId(som: Som, testId: string): ActionPlanItem | undefined {
+  return getActionPlanIndex(som).byTestId[testId];
 }
 
 /** Find all elements containing the given text (case-insensitive substring match). */
