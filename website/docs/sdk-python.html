@@ -547,10 +547,12 @@ cache_key = get_action_plan_cache_key(target)
 fingerprint = get_action_plan_fingerprint(som, enabled_only=True)
 summary = get_action_plan_summary(som)
 </code></pre>
-<h3 id="findbytextsom-text">`find_by_text(som, text)`</h3><p>Find elements whose text content contains the given string (case-insensitive).</p>
+<h3 id="findbytextsom-text-exactfalse">`find_by_text(som, text, exact=False)`</h3><p>Find elements whose visible text or control label matches the given string. The
+default is case-insensitive substring search; <code>exact=True</code> is case-sensitive.</p>
 <pre><code class="language-python">from plasmate.query import find_by_text
 
 matches = find_by_text(som, &quot;Sign in&quot;)
+exact_label = find_by_text(som, &quot;Email&quot;, exact=True)
 </code></pre>
 <h3 id="flatelementssom">`flat_elements(som)`</h3><p>Flatten all elements across all regions into a single list.</p>
 <pre><code class="language-python">from plasmate.query import flat_elements

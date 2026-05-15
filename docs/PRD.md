@@ -594,6 +594,15 @@ from making Browser Use, LangChain, and Vercel AI expose the same local plan
 fingerprints and summaries as the parser/SDK layer, so teams can gate replay
 without writing adapter-specific drift checks.
 
+2026-05-15 label-search parity read: current browser-agent tools keep teaching
+developers to choose targets by human-facing names, not DOM trivia. Playwright
+MCP snapshots present accessible names with refs, Stagehand/Browserbase cache
+observed actions by matching current page state, and managed browser platforms
+sell traces around repeated flows. Plasmate's broad SDK surface should make
+label lookup boringly consistent: Python, Node, and Go app code should be able
+to find labelled controls without depending on raw DOM traversal or parser-only
+helpers.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -620,6 +629,13 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-15:
+  - Python SDK `find_by_text()` now searches both visible text and control
+    labels, and adds `exact=True` for case-sensitive label/text matching.
+  - Node SDK `findByText()` now searches both visible text and control labels,
+    and accepts `{ exact: true }` for case-sensitive matching.
+  - Go SDK now exposes `FindByTextExact()` alongside the existing
+    label-aware `FindByText()`, completing SDK parity with parser package text
+    lookup behavior.
   - Browser Use now exposes sync and async action-plan fingerprint and summary
     helpers, and page contexts include full/enabled fingerprints plus enabled
     and disabled counts before listing compact targets.

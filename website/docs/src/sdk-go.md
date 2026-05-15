@@ -139,10 +139,20 @@ fmt.Printf("%d interactive elements\n", len(interactive))
 
 ### `FindByText(som, text)`
 
-Find elements whose text content contains the given string (case-insensitive).
+Find elements whose visible text or control label contains the given string
+(case-insensitive).
 
 ```go
 matches := plasmate.FindByText(som, "Sign in")
+```
+
+### `FindByTextExact(som, text)`
+
+Find elements whose visible text or control label exactly matches the given
+string. Exact matching is case-sensitive.
+
+```go
+matches := plasmate.FindByTextExact(som, "Email")
 ```
 
 ### `FlatElements(som)`

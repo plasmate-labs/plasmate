@@ -92,6 +92,7 @@ el := plasmate.FindByID(som, "e3")
 navs := plasmate.FindByRole(som, "navigation")
 buttons := plasmate.FindByTag(som, "button")
 results := plasmate.FindByText(som, "sign in")
+exact := plasmate.FindByTextExact(som, "Email")
 clickable := plasmate.FindByAction(som, "click")
 required := plasmate.FindByHint(som, "required")
 plan := plasmate.GetActionPlan(som)
@@ -127,7 +128,8 @@ all := plasmate.FlatElements(som)
 | `FindByHTMLID(som, htmlID)` | Find element by original HTML ID |
 | `FindByTag(som, tag)` | Find elements by role/tag |
 | `FindInteractive(som)` | Find elements with actions |
-| `FindByText(som, text)` | Case-insensitive text search |
+| `FindByText(som, text)` | Case-insensitive text and label search |
+| `FindByTextExact(som, text)` | Case-sensitive exact text and label search |
 | `FindByAction(som, action)` | Find elements exposing an action |
 | `FindByHint(som, hint)` | Find elements tagged with a semantic hint |
 | `GetActionPlan(som)` | Return compact action targets with cache keys, availability, original `html_id` bridge cues, link target/rel/download cues, graphical submitter alt/src cues, form submission context, submitter override cues, select selected_values/size context, text-entry/input-affordance cues, popover/command relationship cues, title/label/description ID relationships, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, range constraints, orientation/sort/value state, and set-position cues for agents |

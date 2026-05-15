@@ -1013,6 +1013,24 @@ checks as parser packages and SDKs.
    and summaries as the first replay validation step before id/cache-key/html-id
    lookup.
 
+### 2026-05-15 SDK Label Search Parity Adjustment
+
+Current browser-agent products keep making human-facing labels the unit of
+choice. Playwright MCP snapshots expose accessible names beside refs,
+Stagehand/Browserbase cached actions validate observed targets against current
+page state, and hosted browser platforms sell traceability around the same
+replay loop. Plasmate's SDKs should make labelled-control lookup consistent so
+apps can resolve "Email" or "Search" controls without raw DOM recovery.
+
+1. **Labels are query surface**: Python and Node SDK text search should match
+   labels as well as visible text, aligning them with Go and parser packages.
+2. **Exact matching supports replay gates**: SDKs should offer case-sensitive
+   exact text/label matching for apps that need deterministic target checks
+   before using cached ids.
+3. **Docs should teach label lookup**: SDK docs should describe text search as
+   text-or-label search because agents and users choose controls by accessible
+   names.
+
 ## Architecture
 
 ```
@@ -1491,6 +1509,11 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Auth profile plaintext detection now parses candidate plaintext JSON instead
   of trusting a leading `{` byte, removing a flaky encrypted-profile
   misclassification from the Rust test suite.
+- Python and Node SDK `find_by_text`/`findByText` helpers now search labels as
+  well as visible text, matching parser package and Go SDK behavior for
+  labelled form controls.
+- Python, Node, and Go SDKs now support exact case-sensitive text/label lookup
+  through `exact=True`, `{ exact: true }`, and `FindByTextExact()`.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, relationship-context,

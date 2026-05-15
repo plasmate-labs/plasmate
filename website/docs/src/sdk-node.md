@@ -176,14 +176,17 @@ const fingerprint = getActionPlanFingerprint(som, { enabledOnly: true });
 const summary = getActionPlanSummary(som);
 ```
 
-### `findByText(som, text)`
+### `findByText(som, text, options?)`
 
-Find elements whose text content contains the given string (case-insensitive).
+Find elements whose visible text or control label matches the given string. The
+default is case-insensitive substring search; `{ exact: true }` is
+case-sensitive.
 
 ```typescript
 import { findByText } from 'plasmate';
 
 const matches = findByText(som, 'Sign in');
+const exactLabel = findByText(som, 'Email', { exact: true });
 ```
 
 ### `flatElements(som)`

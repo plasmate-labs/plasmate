@@ -793,6 +793,17 @@
 <li>Interactive coverage scorecards (nightly HTML, weekly JS)</li>
 <li>CDP cookie jar (getCookies, setCookies, deleteCookies, clearBrowserCookies)</li>
 </ul>
+<h3 id="2026-05-15-sdk-label-search-parity-adjustment">2026-05-15 SDK Label Search Parity Adjustment</h3><p>Current browser-agent products keep making human-facing labels the unit of
+choice. Playwright MCP snapshots expose accessible names beside refs,
+Stagehand/Browserbase cached actions validate observed targets against current
+page state, and hosted browser platforms sell traceability around the same
+replay loop. Plasmate&#39;s SDKs should make labelled-control lookup consistent so
+apps can resolve &quot;Email&quot; or &quot;Search&quot; controls without raw DOM recovery.</p>
+<ul>
+<li><strong>Labels are query surface</strong>: Python and Node SDK text search should match labels as well as visible text, aligning them with Go and parser packages.</li>
+<li><strong>Exact matching supports replay gates</strong>: SDKs should offer case-sensitive exact text/label matching for apps that need deterministic target checks before using cached ids.</li>
+<li><strong>Docs should teach label lookup</strong>: SDK docs should describe text search as text-or-label search because agents and users choose controls by accessible names.</li>
+</ul>
 <h2 id="completed-v03">Completed (v0.3)</h2><ul>
 <li>SPA Rendering Bridge: V8 mutations flow into real DOM tree, SOM recompiled after JS</li>
 <li>NodeRegistry with bidirectional V8-DOM bindings</li>
@@ -969,6 +980,8 @@
 <li><input checked="" disabled="" type="checkbox"> Parser packages and Python/Node/Go SDKs expose deterministic action-plan fingerprints and compact summaries</li>
 <li><input checked="" disabled="" type="checkbox"> Browser Use, LangChain, and Vercel AI expose framework-level action-plan fingerprints and summaries</li>
 <li><input checked="" disabled="" type="checkbox"> Auth profile plaintext detection parses candidate JSON instead of trusting a leading <code>{</code> byte</li>
+<li><input checked="" disabled="" type="checkbox"> Python and Node SDK text search now matches labels as well as visible text</li>
+<li><input checked="" disabled="" type="checkbox"> Python, Node, and Go SDKs support exact case-sensitive text/label lookup</li>
 <li><input disabled="" type="checkbox"> Selector-aware SOM cache entries for repeated agent prompts</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
 <li><input disabled="" type="checkbox"> Wire <code>016-action-semantics</code> into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants</li>

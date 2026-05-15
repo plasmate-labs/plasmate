@@ -162,8 +162,9 @@ plan_fingerprint = get_action_plan_fingerprint(som, enabled_only=True)
 plan_summary = get_action_plan_summary(som)
 print(plan_fingerprint, plan_summary["enabled"], plan_summary["blocked_reasons"])
 
-# Search by text content (case-insensitive)
+# Search by visible text or control label (case-insensitive by default)
 results = find_by_text(som, "sign up")
+exact_label = find_by_text(som, "Email", exact=True)
 
 # Flatten all elements for iteration
 all_elements = flat_elements(som)

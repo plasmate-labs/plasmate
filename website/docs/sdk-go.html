@@ -538,8 +538,13 @@ if el != nil {
 <pre><code class="language-go">interactive := plasmate.FindInteractive(som)
 fmt.Printf(&quot;%d interactive elements\n&quot;, len(interactive))
 </code></pre>
-<h3 id="findbytextsom-text">`FindByText(som, text)`</h3><p>Find elements whose text content contains the given string (case-insensitive).</p>
+<h3 id="findbytextsom-text">`FindByText(som, text)`</h3><p>Find elements whose visible text or control label contains the given string
+(case-insensitive).</p>
 <pre><code class="language-go">matches := plasmate.FindByText(som, &quot;Sign in&quot;)
+</code></pre>
+<h3 id="findbytextexactsom-text">`FindByTextExact(som, text)`</h3><p>Find elements whose visible text or control label exactly matches the given
+string. Exact matching is case-sensitive.</p>
+<pre><code class="language-go">matches := plasmate.FindByTextExact(som, &quot;Email&quot;)
 </code></pre>
 <h3 id="flatelementssom">`FlatElements(som)`</h3><p>Flatten all elements across all regions into a single slice.</p>
 <pre><code class="language-go">all := plasmate.FlatElements(som)

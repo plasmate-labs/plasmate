@@ -113,6 +113,16 @@ func FindByText(som *Som, text string) []Element {
 	return result
 }
 
+// FindByTextExact returns all elements whose text or label exactly matches text.
+// Exact matches are case-sensitive.
+func FindByTextExact(som *Som, text string) []Element {
+	var result []Element
+	for _, r := range som.Regions {
+		collectByTextExact(r.Elements, text, &result)
+	}
+	return result
+}
+
 func collectByText(elements []Element, lowerText string, result *[]Element) {
 	for _, el := range elements {
 		if el.Text != nil && strings.Contains(strings.ToLower(*el.Text), lowerText) {
@@ -123,6 +133,20 @@ func collectByText(elements []Element, lowerText string, result *[]Element) {
 		collectByText(el.Children, lowerText, result)
 		if el.Shadow != nil {
 			collectByText(el.Shadow.Elements, lowerText, result)
+		}
+	}
+}
+
+func collectByTextExact(elements []Element, text string, result *[]Element) {
+	for _, el := range elements {
+		if el.Text != nil && *el.Text == text {
+			*result = append(*result, el)
+		} else if el.Label != nil && *el.Label == text {
+			*result = append(*result, el)
+		}
+		collectByTextExact(el.Children, text, result)
+		if el.Shadow != nil {
+			collectByTextExact(el.Shadow.Elements, text, result)
 		}
 	}
 }

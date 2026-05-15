@@ -557,10 +557,13 @@ const cacheKey = getActionPlanCacheKey(target);
 const fingerprint = getActionPlanFingerprint(som, { enabledOnly: true });
 const summary = getActionPlanSummary(som);
 </code></pre>
-<h3 id="findbytextsom-text">`findByText(som, text)`</h3><p>Find elements whose text content contains the given string (case-insensitive).</p>
+<h3 id="findbytextsom-text-options">`findByText(som, text, options?)`</h3><p>Find elements whose visible text or control label matches the given string. The
+default is case-insensitive substring search; <code>{ exact: true }</code> is
+case-sensitive.</p>
 <pre><code class="language-typescript">import { findByText } from &#39;plasmate&#39;;
 
 const matches = findByText(som, &#39;Sign in&#39;);
+const exactLabel = findByText(som, &#39;Email&#39;, { exact: true });
 </code></pre>
 <h3 id="flatelementssom">`flatElements(som)`</h3><p>Flatten all elements across all regions into a single array.</p>
 <pre><code class="language-typescript">import { flatElements } from &#39;plasmate&#39;;

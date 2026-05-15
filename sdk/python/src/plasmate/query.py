@@ -399,13 +399,16 @@ def find_action_target_by_cache_key(
     return None
 
 
-def find_by_text(som: Som, text: str) -> List[SomElement]:
-    """Find all elements whose text contains the given substring (case-insensitive)."""
+def find_by_text(som: Som, text: str, *, exact: bool = False) -> List[SomElement]:
+    """Find all elements whose text or label matches the given text.
+
+    Exact matches are case-sensitive. Substring matches are case-insensitive.
+    """
     results: List[SomElement] = []
     lower = text.lower()
     for region in som.regions:
         for element in region.elements:
-            _collect_by_text(element, lower, results)
+            _collect_by_text(element, text, lower, exact, results)
     return results
 
 
@@ -471,15 +474,26 @@ def _collect_interactive(element: SomElement, results: List[SomElement]) -> None
             _collect_interactive(child, results)
 
 
-def _collect_by_text(element: SomElement, lower_text: str, results: List[SomElement]) -> None:
-    if element.text and lower_text in element.text.lower():
+def _collect_by_text(
+    element: SomElement,
+    text: str,
+    lower_text: str,
+    exact: bool,
+    results: List[SomElement],
+) -> None:
+    values = [value for value in (element.text, element.label) if value]
+    if exact:
+        matched = any(value == text for value in values)
+    else:
+        matched = any(lower_text in value.lower() for value in values)
+    if matched:
         results.append(element)
     if element.children:
         for child in element.children:
-            _collect_by_text(child, lower_text, results)
+            _collect_by_text(child, text, lower_text, exact, results)
     if element.shadow:
         for child in element.shadow.elements:
-            _collect_by_text(child, lower_text, results)
+            _collect_by_text(child, text, lower_text, exact, results)
 
 
 def _flatten(element: SomElement, results: List[SomElement]) -> None:

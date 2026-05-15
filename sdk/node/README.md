@@ -128,8 +128,9 @@ const planFingerprint = getActionPlanFingerprint(som, { enabledOnly: true });
 const planSummary = getActionPlanSummary(som);
 console.log(planFingerprint, planSummary.enabled, planSummary.blockedReasons);
 
-// Search by visible text (case-insensitive)
+// Search by visible text or control label (case-insensitive by default)
 const matches = findByText(som, 'sign in');
+const exactLabel = findByText(som, 'Email', { exact: true });
 
 // Flatten all elements across all regions
 const all = flatElements(som);
@@ -157,7 +158,7 @@ browser.close();
 | `findActionTargetByCacheKey(som, cacheKey)` | `ActionPlanItem \| undefined` | Resolve a cached action target from the current SOM action plan |
 | `findActionTargetById(som, id)` | `ActionPlanItem \| undefined` | Resolve an action target by stable SOM id |
 | `findActionTargetByHtmlId(som, htmlId)` | `ActionPlanItem \| undefined` | Resolve an action target by original HTML id |
-| `findByText(som, text)` | `SomElement[]` | Case-insensitive text search |
+| `findByText(som, text, { exact })` | `SomElement[]` | Search visible text and labels; default is case-insensitive substring, exact is case-sensitive |
 | `flatElements(som)` | `SomElement[]` | Flatten all elements |
 | `getTokenEstimate(som)` | `number` | Estimate token count (~4 bytes/token) |
 

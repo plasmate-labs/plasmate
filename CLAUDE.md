@@ -49,6 +49,38 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-15T09:08:31Z - Plasmate Improvements Automation
+
+- Git sync: the linked automation worktree still cannot open `FETCH_HEAD`;
+  retrying fetch from `/Users/steve/Git/plasmate` failed DNS for
+  `github.com`, so work continued from local branch
+  `codex/plasmate-improvements-2026-05-15-cache-key-lookup` at `d8d7463`.
+- Market direction: current Playwright MCP docs keep structured accessibility
+  snapshots and snapshot-scoped refs as the default browser-agent interaction
+  surface; Browserbase/Stagehand are emphasizing cached action validation; and
+  Firecrawl/Browser Use continue expanding managed browser/session surfaces.
+  The roadmap remains local-first: make compact local SOM/action lookup more
+  reliable across SDKs before considering hosted browser infrastructure.
+- Code changes: Python SDK `find_by_text()` now searches both visible text and
+  control labels, and adds `exact=True` for case-sensitive text/label matching.
+  Node SDK `findByText()` now searches labels as well as visible text and
+  accepts `{ exact: true }`. Go SDK now exposes `FindByTextExact()` alongside
+  the existing label-aware `FindByText()`.
+- Docs changes: Python, Node, and Go SDK docs now describe text search as
+  text-or-label search; PRD, roadmap, generated website docs, and this running
+  state record SDK label-search parity as the next small stickiness layer.
+- Verification: Python SDK query tests passed 45 tests; Node SDK `npm test`
+  passed 30 tests after build; Go SDK tests passed; `node website/build.mjs`
+  rebuilt 39 docs pages; `cargo build` passed with existing warnings;
+  `./scripts/action-manifest-conformance.sh --quick` passed; `cargo test
+  --lib --bin plasmate` passed 257 lib tests and 5 main/MCP tests; `git diff
+  --check` passed.
+- Verification gap: full `cargo test` was not rerun because prior automation
+  runs consistently fail only in `tests/awp_integration_test.rs` when the
+  sandbox denies local socket binding with `Operation not permitted`.
+- Commit/push state: implementation is ready to commit from the primary
+  checkout. Remote merge may remain blocked until GitHub DNS/API access works.
+
 ### 2026-05-15T08:11:02Z - Plasmate Improvements Automation
 
 - Git sync: the linked automation worktree still cannot open `FETCH_HEAD`;

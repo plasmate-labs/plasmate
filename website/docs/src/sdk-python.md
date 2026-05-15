@@ -162,14 +162,16 @@ fingerprint = get_action_plan_fingerprint(som, enabled_only=True)
 summary = get_action_plan_summary(som)
 ```
 
-### `find_by_text(som, text)`
+### `find_by_text(som, text, exact=False)`
 
-Find elements whose text content contains the given string (case-insensitive).
+Find elements whose visible text or control label matches the given string. The
+default is case-insensitive substring search; `exact=True` is case-sensitive.
 
 ```python
 from plasmate.query import find_by_text
 
 matches = find_by_text(som, "Sign in")
+exact_label = find_by_text(som, "Email", exact=True)
 ```
 
 ### `flat_elements(som)`

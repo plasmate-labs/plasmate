@@ -235,6 +235,16 @@ describe('findByText', () => {
     assert.equal(results[0].id, 'shadow_text');
   });
 
+  it('finds by label text', () => {
+    const results = findByText(fixture, 'email');
+    assert.deepEqual(results.map((el) => el.id), ['e5']);
+  });
+
+  it('supports case-sensitive exact text and label matching', () => {
+    assert.deepEqual(findByText(fixture, 'Email', { exact: true }).map((el) => el.id), ['e5']);
+    assert.deepEqual(findByText(fixture, 'email', { exact: true }), []);
+  });
+
   it('returns empty for no match', () => {
     assert.deepEqual(findByText(fixture, 'nonexistent'), []);
   });

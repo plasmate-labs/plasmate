@@ -427,12 +427,20 @@ export function findActionTargetByHtmlId(som: Som, htmlId: string): ActionPlanIt
   return getActionPlan(som).find((item) => item.html_id === htmlId);
 }
 
-/** Find all elements containing the given text (case-insensitive substring match). */
-export function findByText(som: Som, text: string): SomElement[] {
+/** Find all elements whose text or label matches the given text. */
+export function findByText(
+  som: Som,
+  text: string,
+  options?: { exact?: boolean },
+): SomElement[] {
   const lower = text.toLowerCase();
-  return flatElements(som).filter(
-    (el) => el.text != null && el.text.toLowerCase().includes(lower),
-  );
+  return flatElements(som).filter((el) => {
+    const values = [el.text, el.label].filter((value): value is string => Boolean(value));
+    if (options?.exact) {
+      return values.some((value) => value === text);
+    }
+    return values.some((value) => value.toLowerCase().includes(lower));
+  });
 }
 
 /** Flatten all elements from all regions into a single array, recursively including children. */

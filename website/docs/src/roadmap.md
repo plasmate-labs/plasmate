@@ -446,6 +446,19 @@ The framework edge is where local action memory either becomes sticky or turns i
 - Interactive coverage scorecards (nightly HTML, weekly JS)
 - CDP cookie jar (getCookies, setCookies, deleteCookies, clearBrowserCookies)
 
+### 2026-05-15 SDK Label Search Parity Adjustment
+
+Current browser-agent products keep making human-facing labels the unit of
+choice. Playwright MCP snapshots expose accessible names beside refs,
+Stagehand/Browserbase cached actions validate observed targets against current
+page state, and hosted browser platforms sell traceability around the same
+replay loop. Plasmate's SDKs should make labelled-control lookup consistent so
+apps can resolve "Email" or "Search" controls without raw DOM recovery.
+
+- **Labels are query surface**: Python and Node SDK text search should match labels as well as visible text, aligning them with Go and parser packages.
+- **Exact matching supports replay gates**: SDKs should offer case-sensitive exact text/label matching for apps that need deterministic target checks before using cached ids.
+- **Docs should teach label lookup**: SDK docs should describe text search as text-or-label search because agents and users choose controls by accessible names.
+
 ## Completed (v0.3)
 
 - SPA Rendering Bridge: V8 mutations flow into real DOM tree, SOM recompiled after JS
@@ -625,6 +638,8 @@ The framework edge is where local action memory either becomes sticky or turns i
 - [x] Parser packages and Python/Node/Go SDKs expose deterministic action-plan fingerprints and compact summaries
 - [x] Browser Use, LangChain, and Vercel AI expose framework-level action-plan fingerprints and summaries
 - [x] Auth profile plaintext detection parses candidate JSON instead of trusting a leading `{` byte
+- [x] Python and Node SDK text search now matches labels as well as visible text
+- [x] Python, Node, and Go SDKs support exact case-sensitive text/label lookup
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants

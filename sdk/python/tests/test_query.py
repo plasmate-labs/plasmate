@@ -445,6 +445,16 @@ class TestFindByText:
         assert len(results) == 1
         assert results[0].id == "shadow_text"
 
+    def test_finds_by_label_text(self, sample_som: Som) -> None:
+        results = find_by_text(sample_som, "email")
+        assert [result.id for result in results] == ["e9"]
+
+    def test_exact_match_is_case_sensitive_and_checks_labels(self, sample_som: Som) -> None:
+        assert [result.id for result in find_by_text(sample_som, "Email", exact=True)] == [
+            "e9"
+        ]
+        assert find_by_text(sample_som, "email", exact=True) == []
+
     def test_no_match_returns_empty(self, sample_som: Som) -> None:
         assert find_by_text(sample_som, "zzz_no_match") == []
 

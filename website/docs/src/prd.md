@@ -132,6 +132,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-15 framework-fingerprint read: the same replay-validation pressure now belongs at the framework edge. Browserbase/Stagehand are selling cached action validation and observability where app developers wire agents, Playwright MCP keeps refs scoped to the current snapshot, and Browser Use Cloud plus Firecrawl make managed browser sessions easy to adopt. Plasmate's stickiness should come from making Browser Use, LangChain, and Vercel AI expose the same local plan fingerprints and summaries as the parser/SDK layer, so teams can gate replay without writing adapter-specific drift checks.
 
+2026-05-15 label-search parity read: browser-agent tools keep teaching developers to choose targets by human-facing names, not DOM trivia. Playwright MCP snapshots present accessible names with refs, Stagehand/Browserbase cache observed actions by matching current page state, and managed browser platforms sell traces around repeated flows. Plasmate's broad SDK surface should make label lookup boringly consistent across Python, Node, and Go app code.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -147,6 +149,9 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-15:
+  - Python SDK `find_by_text()` now searches both visible text and control labels, and adds `exact=True` for case-sensitive label/text matching.
+  - Node SDK `findByText()` now searches both visible text and control labels, and accepts `{ exact: true }` for case-sensitive matching.
+  - Go SDK now exposes `FindByTextExact()` alongside the existing label-aware `FindByText()`, completing SDK parity with parser package text lookup behavior.
   - Browser Use now exposes sync and async action-plan fingerprint and summary helpers, and page contexts include full/enabled fingerprints plus enabled and disabled counts before listing compact targets.
   - LangChain now exports `som_to_action_plan_fingerprint()` and `som_to_action_plan_summary()` alongside the existing action-plan and replay-index helpers.
   - Vercel AI now exports `getPlasmateActionPlanFingerprint()` and `getPlasmateActionPlanSummary()` so apps can store a plan-level drift gate next to cached action ids.

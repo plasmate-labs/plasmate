@@ -393,6 +393,19 @@ func TestFindByText(t *testing.T) {
 	if results[0].ID != "e10" {
 		t.Errorf("ID = %q, want e10", results[0].ID)
 	}
+
+	results = FindByText(som, "search")
+	if len(results) != 2 {
+		t.Fatalf("FindByText(search) = %d, want 2", len(results))
+	}
+
+	exact := FindByTextExact(som, "Search")
+	if len(exact) != 1 || exact[0].ID != "e5" {
+		t.Fatalf("FindByTextExact(Search) = %#v, want e5", exact)
+	}
+	if len(FindByTextExact(som, "search")) != 0 {
+		t.Fatalf("FindByTextExact(search) should be case-sensitive")
+	}
 }
 
 func TestFlatElements(t *testing.T) {
