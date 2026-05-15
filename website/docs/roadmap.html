@@ -804,6 +804,12 @@ apps can resolve &quot;Email&quot; or &quot;Search&quot; controls without raw DO
 <li><strong>Exact matching supports replay gates</strong>: SDKs should offer case-sensitive exact text/label matching for apps that need deterministic target checks before using cached ids.</li>
 <li><strong>Docs should teach label lookup</strong>: SDK docs should describe text search as text-or-label search because agents and users choose controls by accessible names.</li>
 </ul>
+<h3 id="2026-05-15-replay-coverage-summary-adjustment">2026-05-15 Replay Coverage Summary Adjustment</h3><p>Current Playwright MCP, Stagehand/Browserbase, Browserbase observability, and Firecrawl browser-session surfaces keep rewarding validated replay. Plasmate&#39;s local-first answer should make action-plan summaries tell apps whether cached target lookup is complete and unambiguous before execution.</p>
+<ul>
+<li><strong>Coverage is replay state</strong>: summaries should count targets carrying cache keys and original <code>html_id</code> bridge cues.</li>
+<li><strong>Collisions must be visible</strong>: duplicate cache keys should be surfaced as a list so apps can reject ambiguous local action memory.</li>
+<li><strong>Frameworks need the same signal</strong>: Browser Use, LangChain, and Vercel AI should expose the same replay-coverage fields as parser packages and SDKs.</li>
+</ul>
 <h2 id="completed-v03">Completed (v0.3)</h2><ul>
 <li>SPA Rendering Bridge: V8 mutations flow into real DOM tree, SOM recompiled after JS</li>
 <li>NodeRegistry with bidirectional V8-DOM bindings</li>
@@ -982,6 +988,7 @@ apps can resolve &quot;Email&quot; or &quot;Search&quot; controls without raw DO
 <li><input checked="" disabled="" type="checkbox"> Auth profile plaintext detection parses candidate JSON instead of trusting a leading <code>{</code> byte</li>
 <li><input checked="" disabled="" type="checkbox"> Python and Node SDK text search now matches labels as well as visible text</li>
 <li><input checked="" disabled="" type="checkbox"> Python, Node, and Go SDKs support exact case-sensitive text/label lookup</li>
+<li><input checked="" disabled="" type="checkbox"> Action-plan summaries expose cache-key coverage, duplicate cache keys, and source <code>html_id</code> coverage across parser packages, SDKs, Browser Use, LangChain, and Vercel AI</li>
 <li><input disabled="" type="checkbox"> Selector-aware SOM cache entries for repeated agent prompts</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
 <li><input disabled="" type="checkbox"> Wire <code>016-action-semantics</code> into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants</li>
@@ -999,6 +1006,7 @@ apps can resolve &quot;Email&quot; or &quot;Search&quot; controls without raw DO
 <li><input disabled="" type="checkbox"> Promote relationship-context cases into broader Rust/parser/SDK and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote inert availability cases into broader parser, SDK, and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote framework fingerprint/summary helpers into the shared action-manifest conformance gate</li>
+<li><input disabled="" type="checkbox"> Promote replay-coverage summary fields into the shared action-manifest conformance gate</li>
 <li><input disabled="" type="checkbox"> Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Add cross-adapter accessible-description fixtures</li>

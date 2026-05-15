@@ -321,6 +321,10 @@ type ActionPlanSummary struct {
 	Total              int            `json:"total"`
 	Enabled            int            `json:"enabled"`
 	Disabled           int            `json:"disabled"`
+	WithCacheKey       int            `json:"with_cache_key"`
+	UniqueCacheKeys    int            `json:"unique_cache_keys"`
+	DuplicateCacheKeys []string       `json:"duplicate_cache_keys"`
+	WithHTMLID         int            `json:"with_html_id"`
 	ByRole             map[string]int `json:"by_role"`
 	BlockedReasons     map[string]int `json:"blocked_reasons"`
 }
@@ -593,8 +597,16 @@ func GetActionPlanSummary(som *Som) ActionPlanSummary {
 		ByRole:             map[string]int{},
 		BlockedReasons:     map[string]int{},
 	}
+	cacheKeyCounts := map[string]int{}
 	for _, item := range plan {
 		summary.ByRole[item.Role]++
+		if item.CacheKey != "" {
+			summary.WithCacheKey++
+			cacheKeyCounts[item.CacheKey]++
+		}
+		if item.HTMLID != nil && *item.HTMLID != "" {
+			summary.WithHTMLID++
+		}
 		if item.Enabled {
 			summary.Enabled++
 		} else {
@@ -606,6 +618,13 @@ func GetActionPlanSummary(som *Som) ActionPlanSummary {
 			summary.BlockedReasons[reason]++
 		}
 	}
+	summary.UniqueCacheKeys = len(cacheKeyCounts)
+	for cacheKey, count := range cacheKeyCounts {
+		if count > 1 {
+			summary.DuplicateCacheKeys = append(summary.DuplicateCacheKeys, cacheKey)
+		}
+	}
+	sort.Strings(summary.DuplicateCacheKeys)
 	return summary
 }
 

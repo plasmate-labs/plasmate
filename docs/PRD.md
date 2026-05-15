@@ -603,6 +603,16 @@ label lookup boringly consistent: Python, Node, and Go app code should be able
 to find labelled controls without depending on raw DOM traversal or parser-only
 helpers.
 
+2026-05-15 replay-coverage read: current official docs sharpen the same local
+replay requirement. Playwright MCP refs are stable only inside the current
+accessibility snapshot, Stagehand/Browserbase cache resolved actions only after
+validating current page state, Browserbase adds session observability around
+those runs, and Firecrawl continues broadening browser-session execution. The
+next sticky Plasmate layer is not another hosted session surface; it is making
+local action-plan summaries disclose whether current targets are actually
+replay-indexable by `cache_key` and `html_id`, and whether cache-key collisions
+would make replay ambiguous.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -629,6 +639,17 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-15:
+  - Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+    and Vercel AI action-plan summaries now report replay coverage:
+    `with_cache_key` / `withCacheKey`, `unique_cache_keys` /
+    `uniqueCacheKeys`, `duplicate_cache_keys` / `duplicateCacheKeys`, and
+    `with_html_id` / `withHtmlId`.
+  - Replay validators can now reject ambiguous local action memory before
+    executing a cached target, instead of discovering a duplicate cache key or
+    missing source DOM-id bridge during action dispatch.
+  - Focused parser, SDK, Browser Use, LangChain, and Vercel AI tests now assert
+    replay-coverage summary fields against the shared action-availability
+    fixture, keeping plan-level validation synchronized across runtimes.
   - Python SDK `find_by_text()` now searches both visible text and control
     labels, and adds `exact=True` for case-sensitive label/text matching.
   - Node SDK `findByText()` now searches both visible text and control labels,

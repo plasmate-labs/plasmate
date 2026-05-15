@@ -153,10 +153,11 @@ compact action plan. The default includes unavailable targets; pass
 
 ### `getPlasmateActionPlanSummary(targets)`
 
-Returns total/enabled/disabled counts, role counts, blocked-reason counts, and
-both full and enabled-only fingerprints. Store this beside cached action ids so
-Vercel AI apps can detect plan-level drift before replaying a target by
-`cache_key`, SOM id, or `html_id`.
+Returns total/enabled/disabled counts, role counts, blocked-reason counts,
+cache-key coverage, duplicate cache-key lists, `html_id` coverage, and both
+full and enabled-only fingerprints. Store this beside cached action ids so
+Vercel AI apps can detect plan-level drift or ambiguous replay lookup before
+replaying a target by `cache_key`, SOM id, or `html_id`.
 
 ### `findPlasmateActionTargetById(targets, id)`
 ### `findPlasmateActionTargetByCacheKey(targets, cacheKey)`

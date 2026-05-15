@@ -634,6 +634,10 @@ class TestGetActionPlan:
         assert summary["total"] == 10
         assert summary["enabled"] == 7
         assert summary["disabled"] == 3
+        assert summary["with_cache_key"] == 10
+        assert summary["unique_cache_keys"] == 10
+        assert summary["duplicate_cache_keys"] == []
+        assert summary["with_html_id"] == 3
         assert summary["by_role"] == {
             "button": 3,
             "checkbox": 1,

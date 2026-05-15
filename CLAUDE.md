@@ -49,6 +49,36 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-15T10:10:19Z - Plasmate Improvements Automation
+
+- Git sync: the linked automation worktree still cannot open `FETCH_HEAD`;
+  retrying fetch from `/Users/steve/Git/plasmate` failed DNS for
+  `github.com`, so work continued from local branch
+  `codex/plasmate-improvements-2026-05-15-cache-key-lookup` at `a078dea`.
+- Market direction: current Playwright MCP docs keep refs scoped to fresh
+  accessibility snapshots, Browserbase/Stagehand emphasizes cached action
+  validation and observability, and Firecrawl continues broadening hosted
+  browser-session execution. The roadmap remains local-first: make compact
+  action replay validation stronger across SDKs and framework adapters before
+  considering hosted browser infrastructure.
+- Code changes: Python/Node parser packages, Python/Node/Go SDKs, and Vercel
+  AI action-plan summaries now expose replay coverage fields for cache-key
+  target count, unique cache-key count, duplicate cache keys, and source
+  `html_id` count. Browser Use and LangChain inherit the same fields through
+  parser-backed summary helpers.
+- Docs changes: SDK/parser/framework READMEs, PRD, roadmap, website PRD and
+  roadmap docs, and generated website HTML now describe replay-coverage
+  summaries as the next plan-level validation layer for cached local actions.
+- Verification: Python SDK query tests passed 45 tests; Python parser tests
+  passed 75 tests; Node SDK `npm test` passed 30 tests after build; Node parser
+  tests passed 60 tests; Go SDK tests passed; Browser Use and LangChain adapter
+  tests passed; Vercel AI package test passed after rebuild; `node
+  website/build.mjs` rebuilt 39 docs pages; `cargo build` passed with existing
+  warnings; quick `./scripts/action-manifest-conformance.sh --quick` passed;
+  `cargo test --lib --bin plasmate` passed 257 lib tests and 5 main/MCP tests;
+  `git diff --check` passed.
+- Commit/push state: pending commit and push for replay-coverage summaries.
+
 ### 2026-05-15T09:08:31Z - Plasmate Improvements Automation
 
 - Git sync: the linked automation worktree still cannot open `FETCH_HEAD`;

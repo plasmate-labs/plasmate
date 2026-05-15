@@ -1514,14 +1514,22 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   labelled form controls.
 - Python, Node, and Go SDKs now support exact case-sensitive text/label lookup
   through `exact=True`, `{ exact: true }`, and `FindByTextExact()`.
+- Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+  and Vercel AI action-plan summaries now include replay lookup coverage:
+  cache-key target count, unique cache-key count, duplicate cache-key list, and
+  source `html_id` target count.
+- These replay-coverage fields let apps detect missing or ambiguous local
+  action memory before reusing a cached target, aligning Plasmate with the
+  current market emphasis on validated action replay while keeping the wedge
+  local-first.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, relationship-context,
   target-provenance/locale, `html_id` bridge, cache-key lookup, action-target
   id lookup, enabled-plan filtering, action-plan index, framework replay
-  index, action-plan fingerprint, and framework fingerprint/summary cases into
-  broader fixtures alongside text-entry, ARIA widget, range, and set-position
-  cases.
+  index, action-plan fingerprint, framework fingerprint/summary, and
+  replay-coverage summary cases into broader fixtures alongside text-entry,
+  ARIA widget, range, and set-position cases.
 
 ## Dependencies to Add
 

@@ -160,7 +160,12 @@ target_index = get_action_plan_index(som, enabled_only=True)
 ready_target = target_index["by_cache_key"].get(action_plan[0]["cache_key"])
 plan_fingerprint = get_action_plan_fingerprint(som, enabled_only=True)
 plan_summary = get_action_plan_summary(som)
-print(plan_fingerprint, plan_summary["enabled"], plan_summary["blocked_reasons"])
+print(
+    plan_fingerprint,
+    plan_summary["enabled"],
+    plan_summary["unique_cache_keys"],
+    plan_summary["duplicate_cache_keys"],
+)
 
 # Search by visible text or control label (case-insensitive by default)
 results = find_by_text(som, "sign up")

@@ -616,6 +616,15 @@ func TestGetActionPlanMatchesSharedAvailabilityManifest(t *testing.T) {
 	if summary.Total != 10 || summary.Enabled != 7 || summary.Disabled != 3 {
 		t.Errorf("Summary counts = total %d enabled %d disabled %d, want 10/7/3", summary.Total, summary.Enabled, summary.Disabled)
 	}
+	if summary.WithCacheKey != 10 || summary.UniqueCacheKeys != 10 || len(summary.DuplicateCacheKeys) != 0 || summary.WithHTMLID != 3 {
+		t.Errorf(
+			"Summary replay coverage = cache %d unique %d duplicates %#v html %d, want 10/10/[]/3",
+			summary.WithCacheKey,
+			summary.UniqueCacheKeys,
+			summary.DuplicateCacheKeys,
+			summary.WithHTMLID,
+		)
+	}
 	expectedByRole := map[string]int{
 		"button":     3,
 		"checkbox":   1,

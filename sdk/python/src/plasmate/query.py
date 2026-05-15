@@ -347,23 +347,40 @@ def get_action_plan_summary(som: Som) -> Dict[str, object]:
     plan = get_action_plan(som)
     by_role: Dict[str, int] = {}
     blocked_reasons: Dict[str, int] = {}
+    cache_key_counts: Dict[str, int] = {}
     enabled_count = 0
+    with_cache_key = 0
+    with_html_id = 0
     for item in plan:
         role = item.get("role")
         if isinstance(role, str):
             by_role[role] = by_role.get(role, 0) + 1
+        cache_key = item.get("cache_key")
+        if isinstance(cache_key, str) and cache_key:
+            with_cache_key += 1
+            cache_key_counts[cache_key] = cache_key_counts.get(cache_key, 0) + 1
+        html_id = item.get("html_id")
+        if isinstance(html_id, str) and html_id:
+            with_html_id += 1
         if item.get("enabled") is False:
             reason = item.get("blocked_reason")
             reason_key = reason if isinstance(reason, str) and reason else "unknown"
             blocked_reasons[reason_key] = blocked_reasons.get(reason_key, 0) + 1
         else:
             enabled_count += 1
+    duplicate_cache_keys = sorted(
+        key for key, count in cache_key_counts.items() if count > 1
+    )
     return {
         "fingerprint": get_action_plan_fingerprint(som),
         "enabled_fingerprint": get_action_plan_fingerprint(som, enabled_only=True),
         "total": len(plan),
         "enabled": enabled_count,
         "disabled": len(plan) - enabled_count,
+        "with_cache_key": with_cache_key,
+        "unique_cache_keys": len(cache_key_counts),
+        "duplicate_cache_keys": duplicate_cache_keys,
+        "with_html_id": with_html_id,
         "by_role": dict(sorted(by_role.items())),
         "blocked_reasons": dict(sorted(blocked_reasons.items())),
     }

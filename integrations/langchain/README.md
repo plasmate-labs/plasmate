@@ -98,11 +98,14 @@ index = som_to_action_plan_index(som)
 cached = index["by_cache_key"].get("plasmate-action:v1:...")
 summary = som_to_action_plan_summary(som)
 enabled_fingerprint = som_to_action_plan_fingerprint(som, enabled_only=True)
+print(summary["unique_cache_keys"], summary["duplicate_cache_keys"])
 ```
 
 The summary and fingerprint helpers let LangChain apps store a lightweight
 plan-level drift gate alongside cached target ids, so repeated workflows can
 detect changed menus before selecting one target by `cache_key` or `html_id`.
+Summary cache-key and `html_id` coverage fields expose missing or ambiguous
+lookup state before replay.
 
 ### Agent with browsing tools
 

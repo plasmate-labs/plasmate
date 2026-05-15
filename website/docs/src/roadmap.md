@@ -459,6 +459,14 @@ apps can resolve "Email" or "Search" controls without raw DOM recovery.
 - **Exact matching supports replay gates**: SDKs should offer case-sensitive exact text/label matching for apps that need deterministic target checks before using cached ids.
 - **Docs should teach label lookup**: SDK docs should describe text search as text-or-label search because agents and users choose controls by accessible names.
 
+### 2026-05-15 Replay Coverage Summary Adjustment
+
+Current Playwright MCP, Stagehand/Browserbase, Browserbase observability, and Firecrawl browser-session surfaces keep rewarding validated replay. Plasmate's local-first answer should make action-plan summaries tell apps whether cached target lookup is complete and unambiguous before execution.
+
+- **Coverage is replay state**: summaries should count targets carrying cache keys and original `html_id` bridge cues.
+- **Collisions must be visible**: duplicate cache keys should be surfaced as a list so apps can reject ambiguous local action memory.
+- **Frameworks need the same signal**: Browser Use, LangChain, and Vercel AI should expose the same replay-coverage fields as parser packages and SDKs.
+
 ## Completed (v0.3)
 
 - SPA Rendering Bridge: V8 mutations flow into real DOM tree, SOM recompiled after JS
@@ -640,6 +648,7 @@ apps can resolve "Email" or "Search" controls without raw DOM recovery.
 - [x] Auth profile plaintext detection parses candidate JSON instead of trusting a leading `{` byte
 - [x] Python and Node SDK text search now matches labels as well as visible text
 - [x] Python, Node, and Go SDKs support exact case-sensitive text/label lookup
+- [x] Action-plan summaries expose cache-key coverage, duplicate cache keys, and source `html_id` coverage across parser packages, SDKs, Browser Use, LangChain, and Vercel AI
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
@@ -657,6 +666,7 @@ apps can resolve "Email" or "Search" controls without raw DOM recovery.
 - [ ] Promote relationship-context cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote inert availability cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote framework fingerprint/summary helpers into the shared action-manifest conformance gate
+- [ ] Promote replay-coverage summary fields into the shared action-manifest conformance gate
 - [ ] Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures

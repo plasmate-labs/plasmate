@@ -98,7 +98,7 @@ required := plasmate.FindByHint(som, "required")
 plan := plasmate.GetActionPlan(som)
 fingerprint := plasmate.GetActionPlanFingerprint(som, true)
 summary := plasmate.GetActionPlanSummary(som)
-fmt.Println(fingerprint, summary.Enabled, summary.BlockedReasons)
+fmt.Println(fingerprint, summary.Enabled, summary.UniqueCacheKeys, summary.DuplicateCacheKeys)
 all := plasmate.FlatElements(som)
 ```
 
@@ -137,7 +137,7 @@ all := plasmate.FlatElements(som)
 | `GetActionPlanCacheKey(item)` | Return a deterministic key for caching or comparing an action target |
 | `GetActionPlanIndex(som, enabledOnly...)` | Index compact action targets by `ByID`, `ByCacheKey`, and `ByHTMLID` for replay validation |
 | `GetActionPlanFingerprint(som, enabledOnly...)` | Return a deterministic plan-level fingerprint for replay drift checks |
-| `GetActionPlanSummary(som)` | Return action-plan fingerprints plus total/enabled/disabled, role, and blocked-reason counts |
+| `GetActionPlanSummary(som)` | Return action-plan fingerprints plus total/enabled/disabled, role, blocked-reason, cache-key coverage, duplicate cache-key, and HTML-id coverage counts |
 | `FindActionTargetByCacheKey(som, cacheKey)` | Resolve a cached action target from the current SOM action plan |
 | `FindActionTargetByID(som, id)` | Resolve an action target by stable SOM id |
 | `FindActionTargetByHTMLID(som, htmlID)` | Resolve an action target by original HTML id |

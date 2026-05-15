@@ -134,6 +134,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-15 label-search parity read: browser-agent tools keep teaching developers to choose targets by human-facing names, not DOM trivia. Playwright MCP snapshots present accessible names with refs, Stagehand/Browserbase cache observed actions by matching current page state, and managed browser platforms sell traces around repeated flows. Plasmate's broad SDK surface should make label lookup boringly consistent across Python, Node, and Go app code.
 
+2026-05-15 replay-coverage read: current official docs sharpen the same local replay requirement. Playwright MCP refs are stable only inside the current accessibility snapshot, Stagehand/Browserbase cache resolved actions only after validating current page state, Browserbase adds session observability around those runs, and Firecrawl continues broadening browser-session execution. Plasmate should make local action-plan summaries disclose whether current targets are replay-indexable by `cache_key` and `html_id`, and whether cache-key collisions would make replay ambiguous.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -149,6 +151,9 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-15:
+  - Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI action-plan summaries now report replay coverage: cache-key target count, unique cache-key count, duplicate cache-key list, and source `html_id` target count.
+  - Replay validators can now reject ambiguous local action memory before executing a cached target, instead of discovering a duplicate cache key or missing source DOM-id bridge during action dispatch.
+  - Focused parser, SDK, Browser Use, LangChain, and Vercel AI tests now assert replay-coverage summary fields against the shared action-availability fixture.
   - Python SDK `find_by_text()` now searches both visible text and control labels, and adds `exact=True` for case-sensitive label/text matching.
   - Node SDK `findByText()` now searches both visible text and control labels, and accepts `{ exact: true }` for case-sensitive matching.
   - Go SDK now exposes `FindByTextExact()` alongside the existing label-aware `FindByText()`, completing SDK parity with parser package text lookup behavior.

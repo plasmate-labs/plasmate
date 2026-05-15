@@ -164,6 +164,10 @@ export interface ActionPlanSummary {
   total: number;
   enabled: number;
   disabled: number;
+  withCacheKey: number;
+  uniqueCacheKeys: number;
+  duplicateCacheKeys: string[];
+  withHtmlId: number;
   byRole: Record<string, number>;
   blockedReasons: Record<string, number>;
 }
@@ -396,9 +400,19 @@ export function getActionPlanSummary(som: Som): ActionPlanSummary {
   const plan = getActionPlan(som);
   const byRole: Record<string, number> = {};
   const blockedReasons: Record<string, number> = {};
+  const cacheKeyCounts: Record<string, number> = {};
   let enabled = 0;
+  let withCacheKey = 0;
+  let withHtmlId = 0;
   for (const item of plan) {
     byRole[item.role] = (byRole[item.role] ?? 0) + 1;
+    if (item.cache_key) {
+      withCacheKey += 1;
+      cacheKeyCounts[item.cache_key] = (cacheKeyCounts[item.cache_key] ?? 0) + 1;
+    }
+    if (item.html_id) {
+      withHtmlId += 1;
+    }
     if (item.enabled === false) {
       const reason = item.blocked_reason ?? 'unknown';
       blockedReasons[reason] = (blockedReasons[reason] ?? 0) + 1;
@@ -406,12 +420,20 @@ export function getActionPlanSummary(som: Som): ActionPlanSummary {
       enabled += 1;
     }
   }
+  const duplicateCacheKeys = Object.entries(cacheKeyCounts)
+    .filter(([, count]) => count > 1)
+    .map(([cacheKey]) => cacheKey)
+    .sort();
   return {
     fingerprint: getActionPlanFingerprint(som),
     enabledFingerprint: getActionPlanFingerprint(som, { enabledOnly: true }),
     total: plan.length,
     enabled,
     disabled: plan.length - enabled,
+    withCacheKey,
+    uniqueCacheKeys: Object.keys(cacheKeyCounts).length,
+    duplicateCacheKeys,
+    withHtmlId,
     byRole: Object.fromEntries(Object.entries(byRole).sort()),
     blockedReasons: Object.fromEntries(Object.entries(blockedReasons).sort()),
   };

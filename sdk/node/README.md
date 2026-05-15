@@ -126,7 +126,12 @@ const targetIndex = getActionPlanIndex(som, { enabledOnly: true });
 const readyTarget = targetIndex.byCacheKey[actionPlan[0].cache_key];
 const planFingerprint = getActionPlanFingerprint(som, { enabledOnly: true });
 const planSummary = getActionPlanSummary(som);
-console.log(planFingerprint, planSummary.enabled, planSummary.blockedReasons);
+console.log(
+  planFingerprint,
+  planSummary.enabled,
+  planSummary.uniqueCacheKeys,
+  planSummary.duplicateCacheKeys,
+);
 
 // Search by visible text or control label (case-insensitive by default)
 const matches = findByText(som, 'sign in');
@@ -154,7 +159,7 @@ browser.close();
 | `getActionPlanCacheKey(item)` | `string` | Deterministic key for caching or comparing action targets |
 | `getActionPlanIndex(som, { enabledOnly })` | `ActionPlanIndex` | Index compact action targets by `byId`, `byCacheKey`, and `byHtmlId` for replay validation |
 | `getActionPlanFingerprint(som, { enabledOnly })` | `string` | Deterministic plan-level fingerprint for replay drift checks |
-| `getActionPlanSummary(som)` | `ActionPlanSummary` | Action-plan fingerprints plus total/enabled/disabled, role, and blocked-reason counts |
+| `getActionPlanSummary(som)` | `ActionPlanSummary` | Action-plan fingerprints plus total/enabled/disabled, role, blocked-reason, cache-key coverage, duplicate cache-key, and `html_id` coverage counts |
 | `findActionTargetByCacheKey(som, cacheKey)` | `ActionPlanItem \| undefined` | Resolve a cached action target from the current SOM action plan |
 | `findActionTargetById(som, id)` | `ActionPlanItem \| undefined` | Resolve an action target by stable SOM id |
 | `findActionTargetByHtmlId(som, htmlId)` | `ActionPlanItem \| undefined` | Resolve an action target by original HTML id |

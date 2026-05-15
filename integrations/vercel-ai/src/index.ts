@@ -199,6 +199,10 @@ export interface PlasmateActionPlanSummary {
   total: number
   enabled: number
   disabled: number
+  with_cache_key: number
+  unique_cache_keys: number
+  duplicate_cache_keys: string[]
+  with_html_id: number
   by_role: Record<string, number>
   blocked_reasons: Record<string, number>
 }
@@ -660,11 +664,21 @@ export function getPlasmateActionPlanSummary(
   const plan = preparePlasmateActionPlan(targets, { includeUnavailable: true })
   const byRole: Record<string, number> = {}
   const blockedReasons: Record<string, number> = {}
+  const cacheKeyCounts: Record<string, number> = {}
   let enabled = 0
+  let withCacheKey = 0
+  let withHtmlId = 0
 
   for (const target of plan) {
     const role = target.role ?? 'target'
     byRole[role] = (byRole[role] ?? 0) + 1
+    if (target.cache_key) {
+      withCacheKey += 1
+      cacheKeyCounts[target.cache_key] = (cacheKeyCounts[target.cache_key] ?? 0) + 1
+    }
+    if (target.html_id) {
+      withHtmlId += 1
+    }
 
     if (target.enabled === false) {
       const reason = target.blocked_reason ?? 'unknown'
@@ -673,6 +687,10 @@ export function getPlasmateActionPlanSummary(
       enabled += 1
     }
   }
+  const duplicateCacheKeys = Object.entries(cacheKeyCounts)
+    .filter(([, count]) => count > 1)
+    .map(([cacheKey]) => cacheKey)
+    .sort()
 
   return {
     fingerprint: getPlasmateActionPlanFingerprint(plan),
@@ -682,6 +700,10 @@ export function getPlasmateActionPlanSummary(
     total: plan.length,
     enabled,
     disabled: plan.length - enabled,
+    with_cache_key: withCacheKey,
+    unique_cache_keys: Object.keys(cacheKeyCounts).length,
+    duplicate_cache_keys: duplicateCacheKeys,
+    with_html_id: withHtmlId,
     by_role: Object.fromEntries(Object.entries(byRole).sort()),
     blocked_reasons: Object.fromEntries(Object.entries(blockedReasons).sort()),
   }

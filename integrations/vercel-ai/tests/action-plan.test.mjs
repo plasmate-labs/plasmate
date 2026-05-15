@@ -147,6 +147,10 @@ const summary = getPlasmateActionPlanSummary(targets)
 assert.equal(summary.total, 10)
 assert.equal(summary.enabled, 7)
 assert.equal(summary.disabled, 3)
+assert.equal(summary.with_cache_key, 10)
+assert.equal(summary.unique_cache_keys, 10)
+assert.deepEqual(summary.duplicate_cache_keys, [])
+assert.equal(summary.with_html_id, 3)
 assert.deepEqual(summary.by_role, {
   button: 3,
   checkbox: 1,

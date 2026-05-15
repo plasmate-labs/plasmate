@@ -485,6 +485,10 @@ describe('getActionPlan', () => {
     expect(summary.total).toBe(10);
     expect(summary.enabled).toBe(7);
     expect(summary.disabled).toBe(3);
+    expect(summary.withCacheKey).toBe(10);
+    expect(summary.uniqueCacheKeys).toBe(10);
+    expect(summary.duplicateCacheKeys).toEqual([]);
+    expect(summary.withHtmlId).toBe(3);
     expect(summary.byRole).toEqual({
       button: 3,
       checkbox: 1,

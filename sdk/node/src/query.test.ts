@@ -337,6 +337,10 @@ describe('getActionPlan', () => {
     assert.equal(summary.total, 10);
     assert.equal(summary.enabled, 7);
     assert.equal(summary.disabled, 3);
+    assert.equal(summary.withCacheKey, 10);
+    assert.equal(summary.uniqueCacheKeys, 10);
+    assert.deepEqual(summary.duplicateCacheKeys, []);
+    assert.equal(summary.withHtmlId, 3);
     assert.deepEqual(summary.byRole, {
       button: 3,
       checkbox: 1,
