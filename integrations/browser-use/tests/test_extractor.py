@@ -31,6 +31,11 @@ def test_build_context_surfaces_action_availability():
 
     context = extractor._build_context(som)
     context_lines = context.splitlines()
+    summary_line = next(line for line in context_lines if line.startswith("Action plan:"))
+
+    assert "fingerprint=plasmate-plan:v1:" in summary_line
+    assert "enabled_fingerprint=plasmate-plan:v1:" in summary_line
+    assert "enabled=7 disabled=3" in summary_line
 
     for target in expected_targets:
         line = next(line for line in context_lines if f'[{target["id"]}]' in line)
@@ -181,3 +186,29 @@ def test_extract_action_plan_helpers_support_replay_indexes():
     )
     assert "e_save" not in enabled_index["by_id"]
     assert "save-settings" not in enabled_index["by_html_id"]
+
+    summary = extractor.extract_action_plan_summary("fixture://actions")
+    assert summary["total"] == 10
+    assert summary["enabled"] == 7
+    assert summary["disabled"] == 3
+    assert summary["by_role"] == {
+        "button": 3,
+        "checkbox": 1,
+        "link": 1,
+        "radio": 1,
+        "select": 1,
+        "text_input": 3,
+    }
+    assert summary["blocked_reasons"] == {
+        "disabled": 1,
+        "inert": 1,
+        "readonly": 1,
+    }
+    assert summary["fingerprint"].startswith("plasmate-plan:v1:")
+    assert extractor.extract_action_plan_fingerprint("fixture://actions") == summary["fingerprint"]
+    assert (
+        extractor.extract_action_plan_fingerprint(
+            "fixture://actions", enabled_only=True
+        )
+        == summary["enabled_fingerprint"]
+    )

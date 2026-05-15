@@ -5,7 +5,13 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from som_parser import get_action_plan, get_action_plan_index, parse_som
+from som_parser import (
+    get_action_plan,
+    get_action_plan_fingerprint,
+    get_action_plan_index,
+    get_action_plan_summary,
+    parse_som,
+)
 
 
 def som_to_text(som: dict[str, Any]) -> str:
@@ -81,6 +87,18 @@ def som_to_action_plan_index(
 ) -> dict[str, dict[str, dict[str, object]]]:
     """Index compact action targets by SOM id, cache key, and source HTML id."""
     return get_action_plan_index(parse_som(som), enabled_only=enabled_only)
+
+
+def som_to_action_plan_fingerprint(
+    som: dict[str, Any], *, enabled_only: bool = False
+) -> str:
+    """Return a deterministic compact action-plan fingerprint."""
+    return get_action_plan_fingerprint(parse_som(som), enabled_only=enabled_only)
+
+
+def som_to_action_plan_summary(som: dict[str, Any]) -> dict[str, object]:
+    """Return compact action-plan counts and fingerprints for replay checks."""
+    return get_action_plan_summary(parse_som(som))
 
 
 def _region_header(region: dict[str, Any]) -> str:

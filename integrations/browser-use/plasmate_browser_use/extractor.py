@@ -11,7 +11,9 @@ from typing import Any, Optional
 
 from som_parser import (
     get_action_plan,
+    get_action_plan_fingerprint,
     get_action_plan_index,
+    get_action_plan_summary,
     get_enabled_action_plan,
     get_links,
     get_text,
@@ -324,6 +326,20 @@ class PlasmateExtractor:
         som = parse_som(som_data)
         return get_action_plan_index(som, enabled_only=enabled_only)
 
+    def extract_action_plan_fingerprint(
+        self, url: str, *, enabled_only: bool = False
+    ) -> str:
+        """Fetch a URL and return a deterministic action-plan fingerprint."""
+        som_data = self.extract(url)
+        som = parse_som(som_data)
+        return get_action_plan_fingerprint(som, enabled_only=enabled_only)
+
+    def extract_action_plan_summary(self, url: str) -> dict[str, object]:
+        """Fetch a URL and return compact action-plan drift counts."""
+        som_data = self.extract(url)
+        som = parse_som(som_data)
+        return get_action_plan_summary(som)
+
     async def extract_action_plan_async(self, url: str) -> list[dict[str, object]]:
         """Async version of extract_action_plan."""
         som_data = await self.extract_async(url)
@@ -345,6 +361,22 @@ class PlasmateExtractor:
         som_data = await self.extract_async(url)
         som = parse_som(som_data)
         return get_action_plan_index(som, enabled_only=enabled_only)
+
+    async def extract_action_plan_fingerprint_async(
+        self, url: str, *, enabled_only: bool = False
+    ) -> str:
+        """Async version of extract_action_plan_fingerprint."""
+        som_data = await self.extract_async(url)
+        som = parse_som(som_data)
+        return get_action_plan_fingerprint(som, enabled_only=enabled_only)
+
+    async def extract_action_plan_summary_async(
+        self, url: str
+    ) -> dict[str, object]:
+        """Async version of extract_action_plan_summary."""
+        som_data = await self.extract_async(url)
+        som = parse_som(som_data)
+        return get_action_plan_summary(som)
 
     def get_page_context(self, url: str) -> str:
         """Get a token-efficient page context string for LLM consumption.
@@ -376,7 +408,14 @@ class PlasmateExtractor:
         # Interactive elements
         action_plan = get_action_plan(som)
         if action_plan:
+            summary = get_action_plan_summary(som)
             lines.append(f"## Interactive Elements ({len(action_plan)})")
+            lines.append(
+                "Action plan: "
+                f"fingerprint={summary['fingerprint']} "
+                f"enabled_fingerprint={summary['enabled_fingerprint']} "
+                f"enabled={summary['enabled']} disabled={summary['disabled']}"
+            )
             for item in action_plan:
                 lines.append(_format_action_plan_item(item))
             lines.append("")

@@ -993,6 +993,26 @@ lookup paths; the next sticky layer is plan-level drift detection.
    should verify fingerprints and summaries across Python, Node, and Go before
    plan-level replay validation is promoted as a release guarantee.
 
+### 2026-05-15 Framework Fingerprint Adjustment
+
+The replay-validation surface needs to reach the frameworks where agents are
+actually wired. Browserbase/Stagehand are packaging cached actions with
+validation and observability, Playwright MCP keeps structured refs tied to the
+current page snapshot, and Browser Use Cloud plus Firecrawl are making managed
+browser sessions a low-friction default. Plasmate should keep the local-first
+counter-position by making framework adapters expose the same plan-level drift
+checks as parser packages and SDKs.
+
+1. **Framework fingerprints avoid glue code**: Browser Use, LangChain, and
+   Vercel AI should expose full and enabled-only action-plan fingerprints so
+   apps can reject stale cached menus before resolving one target.
+2. **Summaries make adapter traces useful**: role counts and blocked-reason
+   counts should be available in framework helpers and page contexts, not only
+   lower-level SDKs.
+3. **Docs should teach plan gates**: adapter READMEs should show fingerprints
+   and summaries as the first replay validation step before id/cache-key/html-id
+   lookup.
+
 ## Architecture
 
 ```
@@ -1465,13 +1485,20 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Python/Node parser packages and Python/Node/Go SDKs now expose deterministic
   action-plan fingerprints and compact summaries with role and blocked-reason
   counts so apps can detect plan-level drift before replaying cached targets.
+- Browser Use, LangChain, and Vercel AI now expose framework-level
+  action-plan fingerprints and compact summaries, giving app code the same
+  plan-level replay gate that parser packages and SDKs already expose.
+- Auth profile plaintext detection now parses candidate plaintext JSON instead
+  of trusting a leading `{` byte, removing a flaky encrypted-profile
+  misclassification from the Rust test suite.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, relationship-context,
   target-provenance/locale, `html_id` bridge, cache-key lookup, action-target
   id lookup, enabled-plan filtering, action-plan index, framework replay
-  index, and action-plan fingerprint cases into broader fixtures alongside
-  text-entry, ARIA widget, range, and set-position cases.
+  index, action-plan fingerprint, and framework fingerprint/summary cases into
+  broader fixtures alongside text-entry, ARIA widget, range, and set-position
+  cases.
 
 ## Dependencies to Add
 

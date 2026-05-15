@@ -3,7 +3,9 @@ from pathlib import Path
 
 from langchain_plasmate.som_output import (
     som_to_action_plan,
+    som_to_action_plan_fingerprint,
     som_to_action_plan_index,
+    som_to_action_plan_summary,
     som_to_text,
 )
 
@@ -185,3 +187,26 @@ def test_som_to_action_plan_helpers_support_replay_indexes():
     enabled_index = som_to_action_plan_index(som, enabled_only=True)
     assert "e_save" not in enabled_index["by_id"]
     assert "save-settings" not in enabled_index["by_html_id"]
+
+    summary = som_to_action_plan_summary(som)
+    assert summary["total"] == 10
+    assert summary["enabled"] == 7
+    assert summary["disabled"] == 3
+    assert summary["by_role"] == {
+        "button": 3,
+        "checkbox": 1,
+        "link": 1,
+        "radio": 1,
+        "select": 1,
+        "text_input": 3,
+    }
+    assert summary["blocked_reasons"] == {
+        "disabled": 1,
+        "inert": 1,
+        "readonly": 1,
+    }
+    assert som_to_action_plan_fingerprint(som) == summary["fingerprint"]
+    assert (
+        som_to_action_plan_fingerprint(som, enabled_only=True)
+        == summary["enabled_fingerprint"]
+    )

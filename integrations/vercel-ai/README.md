@@ -76,10 +76,12 @@ const { text } = await generateText({
 `pattern`, and `invalid` fields before selecting or
 reusing browser actions. Use
 `extractPlasmateActionTargets()`, `preparePlasmateActionPlan()`,
-`getPlasmateActionPlanIndex()`, or `formatPlasmateActionPlan()` when your app
-filters cached or extracted action plans before passing them to the model.
-Original `html_id` values are preserved when present so apps can bridge compact
-SOM targets back to DOM selectors without changing deterministic cache keys.
+`getPlasmateActionPlanIndex()`, `getPlasmateActionPlanSummary()`,
+`getPlasmateActionPlanFingerprint()`, or `formatPlasmateActionPlan()` when
+your app filters cached or extracted action plans before passing them to the
+model. Original `html_id` values are preserved when present so apps can bridge
+compact SOM targets back to DOM selectors without changing deterministic cache
+keys.
 
 ## API
 
@@ -142,6 +144,19 @@ normalized action plan. Unlike prompt preparation, the index includes blocked
 targets by default so cached workflow code can tell the difference between a
 missing target and a currently unavailable target. Use
 `includeUnavailable: false` for prompt-safe enabled-only indexes.
+
+### `getPlasmateActionPlanFingerprint(targets, options?)`
+
+Returns a deterministic `plasmate-plan:v1:...` fingerprint for the current
+compact action plan. The default includes unavailable targets; pass
+`includeUnavailable: false` to fingerprint the prompt-safe enabled-only menu.
+
+### `getPlasmateActionPlanSummary(targets)`
+
+Returns total/enabled/disabled counts, role counts, blocked-reason counts, and
+both full and enabled-only fingerprints. Store this beside cached action ids so
+Vercel AI apps can detect plan-level drift before replaying a target by
+`cache_key`, SOM id, or `html_id`.
 
 ### `findPlasmateActionTargetById(targets, id)`
 ### `findPlasmateActionTargetByCacheKey(targets, cacheKey)`

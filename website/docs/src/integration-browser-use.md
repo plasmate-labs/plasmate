@@ -74,13 +74,14 @@ SOM replaces DOM screenshots with structured text. Instead of parsing a raw DOM 
 [SOM] 87,234 -> 4,521 bytes (19.3x) | 156 elements, 89 interactive
 ```
 
-The lightweight extractor package also exposes `extract_action_plan()` and
-`extract_action_plan_async()` for agents that want only reusable action
-targets. Those targets carry `enabled`, disabled/inert `blocked_reason`, `required`,
-`description`, `placeholder`, `group`, `current`, `controls`, and `haspopup`
-context when Plasmate emits it, so Browser Use agents can skip unavailable
-controls and understand popup/controlled-panel targets before spending a
-browser action.
+The lightweight extractor package also exposes `extract_action_plan()`,
+`extract_action_plan_index()`, `extract_action_plan_fingerprint()`, and
+`extract_action_plan_summary()` with async variants for agents that want only
+reusable action targets. Those targets carry `enabled`, disabled/inert/read-only
+`blocked_reason`, `required`, `description`, `placeholder`, `group`, `current`,
+`controls`, and `haspopup` context when Plasmate emits it. Use the fingerprint
+or summary as a plan-level drift gate before replaying one cached target by
+SOM id, `cache_key`, or `html_id`.
 
 ## Token Savings
 

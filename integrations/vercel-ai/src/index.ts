@@ -191,6 +191,19 @@ export interface PlasmateActionPlanIndex {
 }
 
 /**
+ * Compact counts and fingerprints for replay drift checks.
+ */
+export interface PlasmateActionPlanSummary {
+  fingerprint: string
+  enabled_fingerprint: string
+  total: number
+  enabled: number
+  disabled: number
+  by_role: Record<string, number>
+  blocked_reasons: Record<string, number>
+}
+
+/**
  * System prompt guidance for Vercel AI SDK agents using Plasmate tools.
  *
  * Plasmate SOM responses expose action targets with stable element ids and
@@ -611,6 +624,67 @@ export function getPlasmateActionPlanIndex(
   }
 
   return index
+}
+
+/**
+ * Return a deterministic fingerprint for a compact Vercel AI action plan.
+ *
+ * The default includes blocked targets so apps can detect whether the current
+ * page still matches a cached plan before resolving individual action ids.
+ */
+export function getPlasmateActionPlanFingerprint(
+  targets: readonly PlasmateActionTarget[],
+  options: PreparePlasmateActionPlanOptions = {}
+): string {
+  const plan = preparePlasmateActionPlan(targets, {
+    ...options,
+    includeUnavailable: options.includeUnavailable ?? true,
+  })
+  const rows = plan
+    .map((target) => [
+      target.cache_key,
+      target.enabled !== false,
+      target.blocked_reason ?? null,
+    ])
+    .sort((left, right) => String(left[0]).localeCompare(String(right[0])))
+
+  return `plasmate-plan:v1:${fnv1a32(JSON.stringify(rows))}`
+}
+
+/**
+ * Return compact action-plan counts and fingerprints for replay validation.
+ */
+export function getPlasmateActionPlanSummary(
+  targets: readonly PlasmateActionTarget[]
+): PlasmateActionPlanSummary {
+  const plan = preparePlasmateActionPlan(targets, { includeUnavailable: true })
+  const byRole: Record<string, number> = {}
+  const blockedReasons: Record<string, number> = {}
+  let enabled = 0
+
+  for (const target of plan) {
+    const role = target.role ?? 'target'
+    byRole[role] = (byRole[role] ?? 0) + 1
+
+    if (target.enabled === false) {
+      const reason = target.blocked_reason ?? 'unknown'
+      blockedReasons[reason] = (blockedReasons[reason] ?? 0) + 1
+    } else {
+      enabled += 1
+    }
+  }
+
+  return {
+    fingerprint: getPlasmateActionPlanFingerprint(plan),
+    enabled_fingerprint: getPlasmateActionPlanFingerprint(plan, {
+      includeUnavailable: false,
+    }),
+    total: plan.length,
+    enabled,
+    disabled: plan.length - enabled,
+    by_role: Object.fromEntries(Object.entries(byRole).sort()),
+    blocked_reasons: Object.fromEntries(Object.entries(blockedReasons).sort()),
+  }
 }
 
 /**

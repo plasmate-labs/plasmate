@@ -7,7 +7,9 @@ import {
   findPlasmateActionTargetByHtmlId,
   findPlasmateActionTargetById,
   formatPlasmateActionPlan,
+  getPlasmateActionPlanFingerprint,
   getPlasmateActionPlanIndex,
+  getPlasmateActionPlanSummary,
   getPlasmateActionTargetCacheKey,
   isPlasmateActionTargetAvailable,
   preparePlasmateActionPlan,
@@ -140,6 +142,31 @@ const enabledReplayIndex = getPlasmateActionPlanIndex(targets, {
 })
 assert.equal(enabledReplayIndex.by_id.e_save, undefined)
 assert.equal(enabledReplayIndex.by_html_id['save-settings'], undefined)
+
+const summary = getPlasmateActionPlanSummary(targets)
+assert.equal(summary.total, 10)
+assert.equal(summary.enabled, 7)
+assert.equal(summary.disabled, 3)
+assert.deepEqual(summary.by_role, {
+  button: 3,
+  checkbox: 1,
+  link: 1,
+  radio: 1,
+  select: 1,
+  text_input: 3,
+})
+assert.deepEqual(summary.blocked_reasons, {
+  disabled: 1,
+  inert: 1,
+  readonly: 1,
+})
+assert.match(summary.fingerprint, /^plasmate-plan:v1:/)
+assert.equal(getPlasmateActionPlanFingerprint(targets), summary.fingerprint)
+assert.equal(
+  getPlasmateActionPlanFingerprint(targets, { includeUnavailable: false }),
+  summary.enabled_fingerprint
+)
+assert.notEqual(summary.fingerprint, summary.enabled_fingerprint)
 
 const formatted = formatPlasmateActionPlan(targets, {
   includeUnavailable: true,

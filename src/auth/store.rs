@@ -159,11 +159,12 @@ fn decrypt(data: &[u8], key: &[u8; KEY_SIZE]) -> Result<Vec<u8>, Box<dyn std::er
 
 /// Check if data looks like valid JSON (plaintext profile).
 fn is_plaintext_json(data: &[u8]) -> bool {
-    // Valid JSON profile should start with '{' (possibly after whitespace)
-    data.iter()
-        .find(|&&b| !b.is_ascii_whitespace())
-        .map(|&b| b == b'{')
-        .unwrap_or(false)
+    // Encrypted bytes can randomly start with `{`; require actual parseable
+    // JSON so encrypted profiles are not mistaken for legacy plaintext.
+    matches!(
+        serde_json::from_slice::<serde_json::Value>(data),
+        Ok(serde_json::Value::Object(_))
+    )
 }
 
 /// Store a cookie profile for a domain (encrypted).
@@ -472,6 +473,12 @@ mod tests {
         let encrypted = encrypt(plaintext, &key).unwrap();
         let decrypted = decrypt(&encrypted, &key).unwrap();
         assert_eq!(plaintext.as_slice(), decrypted.as_slice());
+    }
+
+    #[test]
+    fn test_plaintext_json_detection_requires_valid_json() {
+        assert!(is_plaintext_json(br#"{"domain":"x.com","cookies":{}}"#));
+        assert!(!is_plaintext_json(b"{\x01not-json"));
     }
 
     #[test]

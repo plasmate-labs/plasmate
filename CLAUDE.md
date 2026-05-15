@@ -49,6 +49,42 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-15T08:11:02Z - Plasmate Improvements Automation
+
+- Git sync: the linked automation worktree still cannot open `FETCH_HEAD`;
+  retrying from `/Users/steve/Git/plasmate` failed DNS for `github.com`.
+  Work continued from local branch
+  `codex/plasmate-improvements-2026-05-15-cache-key-lookup` at `0134343`.
+- Market direction: current Playwright MCP docs keep structured refs scoped to
+  fresh snapshots, Stagehand/Browserbase emphasize observe/action caching plus
+  validation, and Firecrawl/Browser Use keep expanding managed browser/session
+  surfaces. The roadmap remains local-first: make framework action-plan replay
+  validation stronger before considering hosted browser infrastructure.
+- Code changes: Browser Use now exposes sync/async action-plan fingerprint and
+  summary helpers, and page contexts include plan fingerprints plus
+  enabled/disabled counts. LangChain now exports
+  `som_to_action_plan_fingerprint()` and `som_to_action_plan_summary()`.
+  Vercel AI now exports `getPlasmateActionPlanFingerprint()` and
+  `getPlasmateActionPlanSummary()`.
+- Reliability fix: auth profile plaintext detection now parses candidate JSON
+  instead of trusting a leading `{` byte, preventing encrypted profile bytes
+  from being misclassified as legacy plaintext.
+- Docs changes: Browser Use, LangChain, and Vercel AI docs now show
+  plan-level replay drift checks; PRD, roadmap, website docs, and this running
+  state record the framework-fingerprint direction and next conformance step.
+- Verification: focused Browser Use and LangChain adapter tests passed; Vercel
+  AI `npm test` passed; `./scripts/action-manifest-conformance.sh --quick` and
+  full `./scripts/action-manifest-conformance.sh` passed; `node
+  website/build.mjs` rebuilt 39 docs pages; `cargo build` passed with existing
+  warnings; focused auth tests passed; `cargo test --lib --bin plasmate`
+  passed 257 lib tests and 5 main/MCP tests; `git diff --check` passed.
+- Verification gap: full `cargo test` still fails only in
+  `tests/awp_integration_test.rs` because the sandbox denies local socket
+  binding with `Operation not permitted`.
+- Commit/push state: implementation is ready to commit from the primary
+  checkout. Remote push and merge may remain blocked until GitHub DNS/API
+  access works.
+
 ### 2026-05-15T06:11:07Z - Plasmate Improvements Automation
 
 - Git sync: the linked automation worktree still cannot open `FETCH_HEAD`;

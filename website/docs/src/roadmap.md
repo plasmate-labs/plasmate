@@ -622,6 +622,9 @@ The framework edge is where local action memory either becomes sticky or turns i
 - [x] Parser packages and Python/Node/Go SDKs expose cache-key lookup helpers for compact action targets
 - [x] Parser packages and Python/Node/Go SDKs expose action-target lookup by SOM id and original DOM id
 - [x] Parser packages and Python/Node/Go SDKs expose enabled-only action-plan helpers
+- [x] Parser packages and Python/Node/Go SDKs expose deterministic action-plan fingerprints and compact summaries
+- [x] Browser Use, LangChain, and Vercel AI expose framework-level action-plan fingerprints and summaries
+- [x] Auth profile plaintext detection parses candidate JSON instead of trusting a leading `{` byte
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
@@ -638,6 +641,7 @@ The framework edge is where local action memory either becomes sticky or turns i
 - [ ] Promote graphical submitter cases into the shared action manifest and adapter conformance fixtures
 - [ ] Promote relationship-context cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote inert availability cases into broader parser, SDK, and adapter conformance fixtures
+- [ ] Promote framework fingerprint/summary helpers into the shared action-manifest conformance gate
 - [ ] Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures

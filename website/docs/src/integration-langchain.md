@@ -142,6 +142,13 @@ PlasmateSOMLoader(
 
 Document metadata includes: `url`, `title`, `lang`, `html_bytes`, `som_bytes`, `element_count`, `interactive_count`, and optionally `description`, `open_graph`, `json_ld`.
 
+For reusable action workflows, `som_to_action_plan()`,
+`som_to_action_plan_index()`, `som_to_action_plan_fingerprint()`, and
+`som_to_action_plan_summary()` expose the same compact replay contract used by
+the parser packages. Store a fingerprint or summary with cached targets, then
+resolve the current target by SOM id, `cache_key`, or `html_id` only after the
+plan-level drift check still matches.
+
 ## Token Efficiency
 
 Compared to LangChain's `WebBaseLoader` which passes raw HTML:

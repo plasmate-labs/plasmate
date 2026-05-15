@@ -585,6 +585,15 @@ checks on top of per-target `cache_key` lookup: a deterministic action-plan
 fingerprint plus role/blocker counts lets apps detect drift before replaying
 cached local actions.
 
+2026-05-15 framework-fingerprint read: the same replay-validation pressure now
+belongs at the framework edge. Browserbase/Stagehand are selling cached action
+validation and observability where app developers wire agents, Playwright MCP
+keeps refs scoped to the current snapshot, and Browser Use Cloud plus Firecrawl
+make managed browser sessions easy to adopt. Plasmate's stickiness should come
+from making Browser Use, LangChain, and Vercel AI expose the same local plan
+fingerprints and summaries as the parser/SDK layer, so teams can gate replay
+without writing adapter-specific drift checks.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -611,6 +620,22 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-15:
+  - Browser Use now exposes sync and async action-plan fingerprint and summary
+    helpers, and page contexts include full/enabled fingerprints plus enabled
+    and disabled counts before listing compact targets.
+  - LangChain now exports `som_to_action_plan_fingerprint()` and
+    `som_to_action_plan_summary()` alongside the existing action-plan and
+    replay-index helpers.
+  - Vercel AI now exports `getPlasmateActionPlanFingerprint()` and
+    `getPlasmateActionPlanSummary()` so apps can store a plan-level drift gate
+    next to cached action ids.
+  - Framework docs and tests now cover plan-level drift validation across
+    Browser Use, LangChain, and Vercel AI, keeping adapter behavior aligned
+    with parser/SDK fingerprint helpers.
+  - Auth profile plaintext detection now requires parseable JSON instead of
+    checking only the first non-whitespace byte, preventing encrypted profile
+    bytes that happen to start with `{` from being misclassified as legacy
+    plaintext.
   - Python/Node parser packages and Python/Node/Go SDKs now expose
     deterministic action-plan fingerprints plus compact action-plan summaries
     with total/enabled/disabled counts, role counts, and blocked-reason counts.

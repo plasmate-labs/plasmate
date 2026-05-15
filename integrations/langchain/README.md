@@ -86,12 +86,23 @@ For workflows that need structured replay validation instead of prompt text,
 use the shared parser-backed helpers:
 
 ```python
-from langchain_plasmate import som_to_action_plan, som_to_action_plan_index
+from langchain_plasmate import (
+    som_to_action_plan,
+    som_to_action_plan_fingerprint,
+    som_to_action_plan_index,
+    som_to_action_plan_summary,
+)
 
 targets = som_to_action_plan(som, enabled_only=True)
 index = som_to_action_plan_index(som)
 cached = index["by_cache_key"].get("plasmate-action:v1:...")
+summary = som_to_action_plan_summary(som)
+enabled_fingerprint = som_to_action_plan_fingerprint(som, enabled_only=True)
 ```
+
+The summary and fingerprint helpers let LangChain apps store a lightweight
+plan-level drift gate alongside cached target ids, so repeated workflows can
+detect changed menus before selecting one target by `cache_key` or `html_id`.
 
 ### Agent with browsing tools
 

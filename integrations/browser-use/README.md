@@ -86,7 +86,19 @@ replay_index = extractor.extract_action_plan_index(
     enabled_only=True,
 )
 cached = replay_index["by_cache_key"].get("plasmate-action:v1:...")
+
+summary = extractor.extract_action_plan_summary("https://example.com/settings")
+fingerprint = extractor.extract_action_plan_fingerprint(
+    "https://example.com/settings",
+    enabled_only=True,
+)
+print(summary["enabled"], summary["blocked_reasons"], fingerprint)
 ```
+
+Use the summary and fingerprint helpers before replaying cached Browser Use
+actions: they reveal whether the current page still has the same compact action
+menu, and whether drift came from missing targets, disabled/read-only controls,
+or a changed role mix.
 
 Browser Use page contexts are tested against the shared
 `integrations/fixtures/action-availability.som.json` fixture so availability,

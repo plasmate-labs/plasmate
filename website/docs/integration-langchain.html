@@ -544,6 +544,12 @@ tools = get_plasmate_tools(client=client)
 )
 </code></pre>
 <p>Document metadata includes: <code>url</code>, <code>title</code>, <code>lang</code>, <code>html_bytes</code>, <code>som_bytes</code>, <code>element_count</code>, <code>interactive_count</code>, and optionally <code>description</code>, <code>open_graph</code>, <code>json_ld</code>.</p>
+<p>For reusable action workflows, <code>som_to_action_plan()</code>,
+<code>som_to_action_plan_index()</code>, <code>som_to_action_plan_fingerprint()</code>, and
+<code>som_to_action_plan_summary()</code> expose the same compact replay contract used by
+the parser packages. Store a fingerprint or summary with cached targets, then
+resolve the current target by SOM id, <code>cache_key</code>, or <code>html_id</code> only after the
+plan-level drift check still matches.</p>
 <h2 id="token-efficiency">Token Efficiency</h2><p>Compared to LangChain&#39;s <code>WebBaseLoader</code> which passes raw HTML:</p>
 <table>
 <thead>
