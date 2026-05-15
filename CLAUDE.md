@@ -49,6 +49,43 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-15T22:11:34Z - Plasmate Improvements Automation
+
+- Git sync: latest pull was retried from the automation worktree and failed
+  because the linked worktree cannot open `FETCH_HEAD`. The review branch was
+  pushed successfully, but a direct `master` push was rejected with
+  `fetch first`; retrying `git fetch origin master` from
+  `/Users/steve/Git/plasmate` failed DNS for `github.com`. Remote merge
+  remains blocked until fetch/API access works.
+- Market direction: current docs still favor Plasmate's local-first
+  structured action surface. Playwright MCP uses snapshot-scoped refs,
+  Stagehand documents local/server action caching, Firecrawl Interact resumes
+  scrape sessions for prompt/code actions, and Browser Use Cloud emphasizes
+  CDP sessions plus profiles. The roadmap should continue improving portable
+  local action provenance instead of pivoting into hosted browser fleets.
+- Code changes: Rust SOM attrs and schema now preserve `title`,
+  `source_role`, and normalized `test_id` values from `data-testid`,
+  `data-test`, or `data-qa`. Python/Node parser packages, Python/Node/Go SDK
+  action plans, Browser Use, LangChain, and Vercel AI now carry/render those
+  fields without changing deterministic action `cache_key` values.
+- Fixture/docs changes: the shared action-availability fixture now asserts
+  locator provenance on an action target. PRD, roadmap, website doc sources,
+  SOM spec, and this running state now record the locator-provenance rationale
+  and next conformance step.
+- Verification: `rustfmt --check src/som/compiler.rs` passed; focused Rust
+  compiler tests for keyboard/custom-role and test-id fallback attrs passed;
+  `cargo build` passed; `cargo test --lib --quiet` passed 257 tests; Python
+  parser tests passed 70 tests; Python SDK query tests passed 38 tests; Go SDK
+  tests passed; Browser Use and LangChain fixture tests passed; JSON fixture
+  parse, Python syntax compile, and `git diff --check` passed.
+- Verification gaps: Node parser, Node SDK, and Vercel AI tests remain blocked
+  because local `node_modules` are absent (`vitest`, `tsc`, `tsup` not found).
+  `node website/build.mjs` remains blocked because `marked` is not installed.
+- Commit/push state: worktree refs are still locked by sandbox permissions, so
+  the patch was committed with an alternate index. Review branch
+  `codex/locator-provenance-cues` was pushed at commit `538404e`; follow-up
+  PR creation failed because `api.github.com` was unreachable.
+
 ### 2026-05-15T21:15:26Z - Plasmate Improvements Automation
 
 - Git sync: latest pull was retried from the automation worktree and failed
