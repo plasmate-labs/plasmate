@@ -115,6 +115,9 @@ type ElementAttrs struct {
 	Step            *string        `json:"step,omitempty"`
 	Pattern         *string        `json:"pattern,omitempty"`
 	Description     *string        `json:"description,omitempty"`
+	TestID          *string        `json:"test_id,omitempty"`
+	DataAction      *string        `json:"data_action,omitempty"`
+	DataState       *string        `json:"data_state,omitempty"`
 	Aria            *AriaState     `json:"aria,omitempty"`
 	HasSrcdoc       *bool          `json:"has_srcdoc,omitempty"`
 	SrcdocPreview   *string        `json:"srcdoc_preview,omitempty"`

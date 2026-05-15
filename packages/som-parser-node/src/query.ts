@@ -143,6 +143,9 @@ export interface ActionPlanItem {
   step?: string;
   pattern?: string;
   description?: string;
+  test_id?: string;
+  data_action?: string;
+  data_state?: string;
   checked?: boolean | string;
   expanded?: boolean;
   pressed?: boolean;
@@ -208,7 +211,7 @@ function compactString(value: unknown): string | undefined {
 }
 
 function stableActionPlanParts(item: Omit<ActionPlanItem, 'cache_key'> | ActionPlanItem) {
-  return [
+  const parts = [
     compactString(item.id),
     compactString(item.role),
     compactString(item.label),
@@ -219,6 +222,10 @@ function stableActionPlanParts(item: Omit<ActionPlanItem, 'cache_key'> | ActionP
     compactString(item.group),
     compactString(item.placeholder),
   ];
+  for (const value of [compactString(item.test_id), compactString(item.data_action)]) {
+    if (value) parts.push(value);
+  }
+  return parts;
 }
 
 function fnv1a32(input: string): string {
@@ -315,6 +322,9 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.step) item.step = el.attrs.step;
     if (el.attrs?.pattern) item.pattern = el.attrs.pattern;
     if (el.attrs?.description) item.description = el.attrs.description;
+    if (el.attrs?.test_id) item.test_id = el.attrs.test_id;
+    if (el.attrs?.data_action) item.data_action = el.attrs.data_action;
+    if (el.attrs?.data_state) item.data_state = el.attrs.data_state;
     if (el.attrs?.checked !== undefined) {
       item.checked = el.attrs.checked;
     } else if (el.attrs?.aria?.checked !== undefined) {

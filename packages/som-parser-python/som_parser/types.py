@@ -152,6 +152,9 @@ class SomElementAttrs(BaseModel):
     step: Optional[str] = None
     pattern: Optional[str] = None
     description: Optional[str] = None
+    test_id: Optional[str] = None
+    data_action: Optional[str] = None
+    data_state: Optional[str] = None
     aria: Optional[Dict[str, bool | str]] = None
     has_srcdoc: Optional[bool] = None
     srcdoc_preview: Optional[str] = None

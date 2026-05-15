@@ -143,6 +143,9 @@ export interface SomElementAttrs {
   step?: string;
   pattern?: string;
   description?: string;
+  test_id?: string;
+  data_action?: string;
+  data_state?: string;
   aria?: AriaState;
   has_srcdoc?: boolean;
   srcdoc_preview?: string;

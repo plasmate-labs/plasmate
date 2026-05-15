@@ -47,6 +47,8 @@
             "aria_description": "Use your work email",
             "labelledby": "email-label",
             "describedby": "email-help",
+            "test_id": "settings-email",
+            "data_state": "readonly",
             "spellcheck": false,
             "minlength": 6,
             "maxlength": 64,
@@ -98,6 +100,9 @@
             "formenctype": "application/x-www-form-urlencoded",
             "formtarget": "_top",
             "formnovalidate": true,
+            "test_id": "settings-save",
+            "data_action": "save-settings",
+            "data_state": "blocked",
             "disabled": true,
             "aria": {
               "keyshortcuts": "Meta+S",

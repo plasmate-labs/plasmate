@@ -267,6 +267,9 @@ type ActionPlanItem struct {
 	Step              *string     `json:"step,omitempty"`
 	Pattern           *string     `json:"pattern,omitempty"`
 	Description       *string     `json:"description,omitempty"`
+	TestID            *string     `json:"test_id,omitempty"`
+	DataAction        *string     `json:"data_action,omitempty"`
+	DataState         *string     `json:"data_state,omitempty"`
 	Checked           interface{} `json:"checked,omitempty"`
 	Expanded          *bool       `json:"expanded,omitempty"`
 	Pressed           *bool       `json:"pressed,omitempty"`
@@ -344,7 +347,7 @@ func actionPlanCacheParts(item ActionPlanItem) []interface{} {
 	if actionList != "" {
 		actionValue = actionList
 	}
-	return []interface{}{
+	parts := []interface{}{
 		item.ID,
 		item.Role,
 		compactString(item.Label),
@@ -355,6 +358,12 @@ func actionPlanCacheParts(item ActionPlanItem) []interface{} {
 		compactString(item.Group),
 		compactString(item.Placeholder),
 	}
+	for _, value := range []interface{}{compactString(item.TestID), compactString(item.DataAction)} {
+		if value != nil {
+			parts = append(parts, value)
+		}
+	}
+	return parts
 }
 
 // GetActionPlanCacheKey returns a deterministic key for caching or comparing an action target.
@@ -442,6 +451,9 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.Step = el.Attrs.Step
 			item.Pattern = el.Attrs.Pattern
 			item.Description = el.Attrs.Description
+			item.TestID = el.Attrs.TestID
+			item.DataAction = el.Attrs.DataAction
+			item.DataState = el.Attrs.DataState
 			if el.Attrs.Checked != nil {
 				item.Checked = *el.Attrs.Checked
 			} else if el.Attrs.Aria != nil && el.Attrs.Aria.Checked != nil {

@@ -76,6 +76,10 @@ def get_action_plan_cache_key(item: Dict[str, object]) -> str:
         _compact_string(item.get("group")),
         _compact_string(item.get("placeholder")),
     ]
+    for provenance_key in ("test_id", "data_action"):
+        value = _compact_string(item.get(provenance_key))
+        if value:
+            parts.append(value)
     encoded = json.dumps(parts, separators=(",", ":"))
     return f"plasmate-action:v1:{_fnv1a32(encoded)}"
 
@@ -220,6 +224,12 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["pattern"] = attrs.pattern
             if attrs.description:
                 item["description"] = attrs.description
+            if attrs.test_id:
+                item["test_id"] = attrs.test_id
+            if attrs.data_action:
+                item["data_action"] = attrs.data_action
+            if attrs.data_state:
+                item["data_state"] = attrs.data_state
             if attrs.checked is not None:
                 item["checked"] = attrs.checked
             elif attrs.aria and "checked" in attrs.aria:

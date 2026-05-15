@@ -42,6 +42,9 @@ def test_som_to_text_surfaces_interactive_state():
         line = next(line for line in text.splitlines() if f'[{target["id"]}]' in line)
 
         assert f'[cache_key={target["cache_key"]}]' in line
+        for provenance_key in ("test_id", "data_action", "data_state"):
+            if target.get(provenance_key):
+                assert f'[{provenance_key}="{target[provenance_key]}"]' in line
         if target["enabled"]:
             assert "[enabled]" in line
         else:

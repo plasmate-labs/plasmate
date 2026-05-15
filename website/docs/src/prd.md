@@ -136,6 +136,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-15 replay-coverage read: current official docs sharpen the same local replay requirement. Playwright MCP refs are stable only inside the current accessibility snapshot, Stagehand/Browserbase cache resolved actions only after validating current page state, Browserbase adds session observability around those runs, and Firecrawl continues broadening browser-session execution. Plasmate should make local action-plan summaries disclose whether current targets are replay-indexable by `cache_key` and `html_id`, and whether cache-key collisions would make replay ambiguous.
 
+2026-05-15 replay-provenance read: current official docs keep validating a fresh structured action surface with reusable local memory. Playwright MCP refs remain snapshot-scoped, Stagehand/Browserbase caches actions only when current page state still matches, and Browser Use Cloud separates browser sessions, profiles, and agent runs for repeat work. Plasmate should keep avoiding a hosted-browser pivot and instead preserve common app-owned replay anchors: `data-testid`/`data-test`/`data-cy`/`data-qa`, `data-action`, and `data-state` give local agents stable selector hints, intended action names, and component state without raw DOM recovery.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -154,6 +156,9 @@ The project already spans a large number of package and integration surfaces: Ru
   - Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI action-plan summaries now report replay coverage: cache-key target count, unique cache-key count, duplicate cache-key list, and source `html_id` target count.
   - Replay validators can now reject ambiguous local action memory before executing a cached target, instead of discovering a duplicate cache key or missing source DOM-id bridge during action dispatch.
   - Focused parser, SDK, Browser Use, LangChain, and Vercel AI tests now assert replay-coverage summary fields against the shared action-availability fixture.
+  - Rust SOM compilation now preserves common replay provenance as `attrs.test_id`, `attrs.data_action`, and `attrs.data_state`.
+  - JSON Schema/SOM spec, Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI now carry those provenance cues in compact action plans and prompt renderers.
+  - Action cache keys remain unchanged for targets without provenance, while targets with real `test_id` or `data_action` include that anchor in their deterministic key so local replay memory can distinguish reused labels.
   - Python SDK `find_by_text()` now searches both visible text and control labels, and adds `exact=True` for case-sensitive label/text matching.
   - Node SDK `findByText()` now searches both visible text and control labels, and accepts `{ exact: true }` for case-sensitive matching.
   - Go SDK now exposes `FindByTextExact()` alongside the existing label-aware `FindByText()`, completing SDK parity with parser package text lookup behavior.
@@ -373,6 +378,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Promote form-submission context cases (`form_action`, `form_method`, `form_target`, `form_enctype`, `form_novalidate`, `form_accept_charset`, and `form_autocomplete`) into broader Rust/parser/SDK and adapter conformance fixtures.
 - Promote submit-button override cases (`button_type`, `formaction`, `formmethod`, `formenctype`, `formtarget`, and `formnovalidate`) into broader Rust/parser/SDK and adapter conformance fixtures.
 - Promote graphical submitter cases (`input type="image"`, `button_type`, `alt`, and `src`) into the shared action manifest and adapter conformance fixtures.
+- Promote replay-provenance cases (`test_id`, `data_action`, and `data_state`) from the shared action-availability manifest into broader Rust/parser/SDK and adapter fixtures.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures once the shared action manifest remains stable.
 - Promote form-relation cases (`form`, `list`, and `aria-errormessage`) into broader parser, SDK, and adapter conformance fixtures.
 - Promote live-region cases (`aria-busy`, `aria-live`, `aria-atomic`, and `aria-relevant`) into broader Rust/parser/SDK conformance fixtures.

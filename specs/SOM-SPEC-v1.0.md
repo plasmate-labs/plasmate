@@ -381,12 +381,16 @@ Implementations SHOULD preserve common actionability attributes on any element:
 `commandfor`, `command`, `popover`, `button_type`, `formaction`,
 `formmethod`, `formenctype`, `formtarget`, `formnovalidate`, `accesskey`,
 `title`, `aria_label`, `aria_description`, `labelledby`, `describedby`, `dir`,
-`lang`, `readonly`, `inert`, `min`, `max`, `step`, and `description`. The
-`title` value preserves native tooltip/help text. `aria_label` and
-`aria_description` preserve source ARIA text while `labelledby` and
-`describedby` preserve the source `aria-labelledby` and `aria-describedby`
-IDREFs. `description` resolves referenced text from `aria-describedby` or falls
-back to `aria-description`.
+`lang`, `readonly`, `inert`, `min`, `max`, `step`, `description`, `test_id`,
+`data_action`, and `data_state`. The `title` value preserves native
+tooltip/help text. `aria_label` and `aria_description` preserve source ARIA
+text while `labelledby` and `describedby` preserve the source
+`aria-labelledby` and `aria-describedby` IDREFs. `description` resolves
+referenced text from `aria-describedby` or falls back to `aria-description`.
+`test_id` is derived from common
+automation attributes such as `data-testid`, `data-test`, `data-cy`, or
+`data-qa`; `data_action` is derived from `data-action`/`data-action-id`; and
+`data_state` is derived from `data-state`.
 These attributes are especially important for custom controls that are exposed
 through ARIA roles instead of native form elements.
 

@@ -613,6 +613,16 @@ local action-plan summaries disclose whether current targets are actually
 replay-indexable by `cache_key` and `html_id`, and whether cache-key collisions
 would make replay ambiguous.
 
+2026-05-15 replay-provenance read: current official docs keep validating a
+fresh structured action surface with reusable local memory. Playwright MCP refs
+remain snapshot-scoped, Stagehand/Browserbase caches actions only when current
+page state still matches, and Browser Use Cloud separates browser sessions,
+profiles, and agent runs for repeat work. Plasmate should keep avoiding a
+hosted-browser pivot and instead preserve common app-owned replay anchors:
+`data-testid`/`data-test`/`data-cy`/`data-qa`, `data-action`, and
+`data-state` give local agents stable selector hints, intended action names,
+and component state without raw DOM recovery.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -650,6 +660,14 @@ and adapter docs over one-off integration logic.
   - Focused parser, SDK, Browser Use, LangChain, and Vercel AI tests now assert
     replay-coverage summary fields against the shared action-availability
     fixture, keeping plan-level validation synchronized across runtimes.
+  - Rust SOM compilation now preserves common replay provenance as
+    `attrs.test_id`, `attrs.data_action`, and `attrs.data_state`.
+  - JSON Schema/SOM spec, Python/Node parser packages, Python/Node/Go SDKs,
+    Browser Use, LangChain, and Vercel AI now carry those provenance cues in
+    compact action plans and prompt renderers.
+  - Action cache keys remain unchanged for targets without provenance, while
+    targets with real `test_id` or `data_action` include that anchor in their
+    deterministic key so local replay memory can distinguish reused labels.
   - Python SDK `find_by_text()` now searches both visible text and control
     labels, and adds `exact=True` for case-sensitive label/text matching.
   - Node SDK `findByText()` now searches both visible text and control labels,
@@ -1310,6 +1328,9 @@ and adapter docs over one-off integration logic.
   `group`, option `disabled`, and default single-select selection) into broader
   Rust/parser/SDK and adapter fixtures now that `selected_values` and `size`
   are covered by the shared action manifest.
+- Promote replay-provenance cases (`test_id`, `data_action`, and `data_state`)
+  from the shared action-availability manifest into broader Rust/parser/SDK
+  and adapter fixtures.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and
   `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures
   once the shared action manifest remains stable.

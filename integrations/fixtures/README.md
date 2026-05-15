@@ -24,8 +24,9 @@ by the Rust core and parser packages.
   `details`, `orientation`, `sort`, `level`, `posinset`, `setsize`,
   `valuemin`, `valuemax`, `valuenow`, `valuetext`, `multiline`,
   `multiselectable`, `minlength`, `maxlength`, `min`, `max`, `step`,
-  `pattern`, `invalid`), ARIA `readonly` availability gating, inert action
-  blocking, and ARIA menu
+  `pattern`, `invalid`), replay provenance (`test_id`, `data_action`,
+  `data_state`), ARIA `readonly` availability gating, inert action blocking,
+  and ARIA menu
   checkbox/radio targets.
 
 Browser Use, LangChain, Vercel AI, Python parser, Node parser, Python SDK, and

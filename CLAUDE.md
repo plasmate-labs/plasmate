@@ -49,6 +49,43 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-15T11:21:53Z - Plasmate Improvements Automation
+
+- Git sync: the linked automation worktree still cannot open `FETCH_HEAD`,
+  and retrying fetch from `/Users/steve/Git/plasmate` failed DNS for
+  `github.com`. Work continued from local branch
+  `codex/plasmate-improvements-2026-05-15-cache-key-lookup` after preserving
+  the primary checkout's newer replay-index and replay-coverage work.
+- Market direction: current Playwright MCP docs center fresh accessibility
+  snapshots with refs that expire after page changes; Stagehand/Browserbase is
+  leaning into cached action validation, observability, and session replay;
+  Browser Use Cloud and Firecrawl keep expanding managed browser/session
+  surfaces. The roadmap remains local-first: strengthen deterministic replay
+  provenance and conformance across the broad SDK and framework adapter surface
+  rather than pivoting into hosted browser infrastructure.
+- Code changes: Rust SOM compilation now preserves replay provenance cues in
+  `attrs.test_id`, `attrs.data_action`, and `attrs.data_state`, while keeping
+  existing deterministic cache keys unchanged unless stable `test_id` or
+  `data_action` values are present. `data_state` is emitted for validation but
+  intentionally excluded from cache-key inputs.
+- Contract changes: SOM schema/spec, Python and Node parser packages,
+  Python/Node/Go SDK types and action-plan helpers, Browser Use, LangChain,
+  Vercel AI, and the shared action-availability fixture now carry the new
+  provenance fields through action-plan rendering and lookup helpers.
+- Docs changes: PRD, roadmap, website PRD and roadmap sources, and generated
+  website docs now frame replay provenance as the next sticky local validation
+  layer for repeated agent workflows.
+- Verification: Vercel AI package test passed after updating the expected
+  field-order regex; quick `./scripts/action-manifest-conformance.sh --quick`
+  passed across Python/Node parsers, Python/Node/Go SDKs, Browser Use,
+  LangChain, and Vercel AI; `node website/build.mjs` rebuilt 39 docs pages;
+  `cargo build` passed with existing warnings; `cargo test --lib --bin
+  plasmate` passed 257 lib tests and 5 main/MCP tests; `git diff --check`
+  passed.
+- Commit/push state: implementation is ready to commit from the primary
+  checkout. Remote push and merge may remain blocked until GitHub DNS/fetch
+  access works.
+
 ### 2026-05-15T10:10:19Z - Plasmate Improvements Automation
 
 - Git sync: the linked automation worktree still cannot open `FETCH_HEAD`;

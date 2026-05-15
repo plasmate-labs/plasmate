@@ -113,7 +113,7 @@ aria_label/aria_description source text, labelledby/describedby relationship ref
 live-region state, ARIA owns/flowto/details relationships,
 ARIA readonly/multiline/multiselectable widget state, orientation/sort/value
 state, ARIA set-position cues, validation constraints, range constraints, invalid state, and
-description cues
+description and replay-provenance cues
 stay aligned with other adapters.
 
 ### Markdown extraction

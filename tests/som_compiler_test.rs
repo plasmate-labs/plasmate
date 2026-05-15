@@ -208,6 +208,44 @@ fn test_css_hidden_descendant_text_is_stripped_from_visible_surfaces() {
 }
 
 #[test]
+fn test_replay_provenance_data_attrs_are_preserved() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Replay Provenance</title></head>
+<body><main>
+    <button data-testid="save-button" data-action="save" data-state="loading">Save</button>
+    <a href="/billing" data-cy="billing-link" data-action-id="open-billing">Billing</a>
+    <input aria-label="Search" data-qa="search-input" data-state="open">
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let elements = all_elements(&som);
+    let save = elements
+        .iter()
+        .find(|element| element.text.as_deref() == Some("Save"))
+        .expect("save button should compile");
+    let save_attrs = save.attrs.as_ref().expect("button attrs should compile");
+    assert_eq!(save_attrs["test_id"], "save-button");
+    assert_eq!(save_attrs["data_action"], "save");
+    assert_eq!(save_attrs["data_state"], "loading");
+
+    let billing = elements
+        .iter()
+        .find(|element| element.text.as_deref() == Some("Billing"))
+        .expect("billing link should compile");
+    let billing_attrs = billing.attrs.as_ref().expect("link attrs should compile");
+    assert_eq!(billing_attrs["test_id"], "billing-link");
+    assert_eq!(billing_attrs["data_action"], "open-billing");
+
+    let search = elements
+        .iter()
+        .find(|element| element.label.as_deref() == Some("Search"))
+        .expect("search input should compile");
+    let search_attrs = search.attrs.as_ref().expect("input attrs should compile");
+    assert_eq!(search_attrs["test_id"], "search-input");
+    assert_eq!(search_attrs["data_state"], "open");
+}
+
+#[test]
 fn test_news_page_structure() {
     let html = load_fixture("news_page.html");
     let som = compiler::compile(&html, "https://example.com").unwrap();

@@ -1786,6 +1786,30 @@ fn has_aria_true(attrs: &[(String, String)], name: &str) -> bool {
         .any(|(n, v)| n == name && v.eq_ignore_ascii_case("true"))
 }
 
+fn insert_replay_provenance_attrs(
+    map: &mut serde_json::Map<String, serde_json::Value>,
+    attrs: &[(String, String)],
+) {
+    for key in ["data-testid", "data-test", "data-cy", "data-qa"] {
+        if let Some((_, value)) = attrs.iter().find(|(n, v)| n == key && !v.is_empty()) {
+            map.insert("test_id".into(), json!(value));
+            break;
+        }
+    }
+    if let Some((_, value)) = attrs
+        .iter()
+        .find(|(n, v)| (n == "data-action" || n == "data-action-id") && !v.is_empty())
+    {
+        map.insert("data_action".into(), json!(value));
+    }
+    if let Some((_, value)) = attrs
+        .iter()
+        .find(|(n, v)| n == "data-state" && !v.is_empty())
+    {
+        map.insert("data_state".into(), json!(value));
+    }
+}
+
 fn is_disabled_fieldset(node: &Handle) -> bool {
     if let NodeData::Element { name, .. } = &node.data {
         if name.local.as_ref() == "fieldset" {
@@ -2157,6 +2181,7 @@ fn build_element_attrs(
     if has_aria_true(attrs, "aria-disabled") {
         map.insert("disabled".into(), json!(true));
     }
+    insert_replay_provenance_attrs(&mut map, attrs);
 
     // ARIA state preservation: capture common ARIA state attributes
     let aria_states: &[(&str, &str)] = &[

@@ -3,7 +3,7 @@
   "action_targets": [
     {
       "id": "e_email",
-      "cache_key": "plasmate-action:v1:b0c57191",
+      "cache_key": "plasmate-action:v1:e0588ddd",
       "role": "text_input",
       "label": "Work email",
       "actions": ["type"],
@@ -39,6 +39,8 @@
       "aria_description": "Use your work email",
       "labelledby": "email-label",
       "describedby": "email-help",
+      "test_id": "settings-email",
+      "data_state": "readonly",
       "spellcheck": false,
       "minlength": 6,
       "maxlength": 64,
@@ -74,7 +76,7 @@
     },
     {
       "id": "e_save",
-      "cache_key": "plasmate-action:v1:4d0e8356",
+      "cache_key": "plasmate-action:v1:e6fa1cf6",
       "role": "button",
       "label": "Save",
       "actions": ["click"],
@@ -93,6 +95,9 @@
       "formenctype": "application/x-www-form-urlencoded",
       "formtarget": "_top",
       "formnovalidate": true,
+      "test_id": "settings-save",
+      "data_action": "save-settings",
+      "data_state": "blocked",
       "form_action": "/settings",
       "form_method": "POST",
       "form_target": "_self",

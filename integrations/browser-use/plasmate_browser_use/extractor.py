@@ -89,6 +89,9 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append(f"cache_key={item['cache_key']}")
     if item.get("html_id"):
         flags.append(f"html_id={item['html_id']}")
+    for provenance_key in ("test_id", "data_action", "data_state"):
+        if item.get(provenance_key):
+            flags.append(f"{provenance_key}={item[provenance_key]}")
     if item.get("required") is True:
         flags.append("required")
     if item.get("readonly") is True:

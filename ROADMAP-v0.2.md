@@ -835,6 +835,25 @@ for repeated SaaS workflows without raw DOM recovery.
    the public schema and flow through parser/SDK action plans before agents can
    safely cache menu choices across runtimes.
 
+### 2026-05-15 Replay Provenance Adjustment
+
+The current market keeps rewarding validated reuse rather than raw browser
+access. Playwright MCP refs are scoped to a fresh snapshot, Stagehand and
+Browserbase cache resolved actions only after matching current page state, and
+Browser Use Cloud packages profiles/sessions around repeated workflows. Plasmate
+should make local replay more dependable by preserving app-owned anchors that
+teams already put in production markup:
+
+1. **Stable app selectors are product context**: `data-testid`, `data-test`,
+   `data-cy`, and `data-qa` should normalize into `test_id` so cached local
+   action plans can survive label or layout drift.
+2. **Intent and component state should travel with targets**: `data-action` /
+   `data-action-id` and `data-state` should become compact target context for
+   custom design-system controls.
+3. **Do not churn existing cache memory**: replay provenance should refine cache
+   keys only when real `test_id` or `data_action` values exist; targets without
+   provenance must keep their existing deterministic keys.
+
 ### 2026-05-14 Shared Manifest Parity Adjustment
 
 Current competitor movement keeps confirming that action memory is only sticky
@@ -1522,14 +1541,22 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   action memory before reusing a cached target, aligning Plasmate with the
   current market emphasis on validated action replay while keeping the wedge
   local-first.
+- Rust SOM compilation and the JSON Schema now preserve replay provenance with
+  `test_id`, `data_action`, and `data_state`.
+- Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+  and Vercel AI action-plan surfaces now expose replay provenance across the
+  shared action-availability fixture.
+- Deterministic action cache keys stay unchanged for existing targets without
+  provenance, while targets with `test_id` or `data_action` include those
+  anchors for more precise local replay memory.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, relationship-context,
   target-provenance/locale, `html_id` bridge, cache-key lookup, action-target
   id lookup, enabled-plan filtering, action-plan index, framework replay
   index, action-plan fingerprint, framework fingerprint/summary, and
-  replay-coverage summary cases into broader fixtures alongside text-entry,
-  ARIA widget, range, and set-position cases.
+  replay-coverage summary, and replay-provenance cases into broader fixtures
+  alongside text-entry, ARIA widget, range, and set-position cases.
 
 ## Dependencies to Add
 

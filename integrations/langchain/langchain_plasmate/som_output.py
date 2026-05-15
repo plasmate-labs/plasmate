@@ -232,6 +232,10 @@ def _action_cache_key(elem: dict[str, Any]) -> str:
         _compact_string(attrs.get("group")),
         _compact_string(attrs.get("placeholder")),
     ]
+    for provenance_key in ("test_id", "data_action"):
+        value = _compact_string(attrs.get(provenance_key))
+        if value:
+            parts.append(value)
     encoded = json.dumps(parts, separators=(",", ":"))
     return f"plasmate-action:v1:{_fnv1a32(encoded)}"
 
@@ -256,6 +260,9 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append(f"[cache_key={_action_cache_key(elem)}]")
     if elem.get("html_id"):
         flags.append(f'[html_id="{elem["html_id"]}"]')
+    for provenance_key in ("test_id", "data_action", "data_state"):
+        if attrs.get(provenance_key):
+            flags.append(f'[{provenance_key}="{attrs[provenance_key]}"]')
     if attrs.get("required") is True:
         flags.append("[required]")
     if readonly and "[readonly]" not in flags:

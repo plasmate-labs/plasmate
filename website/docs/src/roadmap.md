@@ -383,6 +383,14 @@ Current competitor direction keeps validating cached action plans against the cu
 - **Grouped and multi-select menus need current state**: optgroup labels and `selected_values` should become shared action-plan context before this lands in adapter conformance.
 - **Schema and SDK parity decide stickiness**: option groups, disabled option state, implicit single-select values, and select `size` need to validate in the public schema and flow through parser/SDK action plans before agents can safely cache menu choices across runtimes.
 
+### 2026-05-15 Replay Provenance Adjustment
+
+The current market keeps rewarding validated reuse rather than raw browser access. Playwright MCP refs are scoped to a fresh snapshot, Stagehand and Browserbase cache resolved actions only after matching current page state, and Browser Use Cloud packages profiles/sessions around repeated workflows. Plasmate should make local replay more dependable by preserving app-owned anchors that teams already put in production markup.
+
+- **Stable app selectors are product context**: `data-testid`, `data-test`, `data-cy`, and `data-qa` should normalize into `test_id` so cached local action plans can survive label or layout drift.
+- **Intent and component state should travel with targets**: `data-action` / `data-action-id` and `data-state` should become compact target context for custom design-system controls.
+- **Do not churn existing cache memory**: replay provenance should refine cache keys only when real `test_id` or `data_action` values exist; targets without provenance must keep their existing deterministic keys.
+
 ### 2026-05-14 Relationship Context Adjustment
 
 Current browser-agent competitors keep making cached action replay depend on target validation against fresh structured state. Plasmate should preserve small provenance cues that explain why a target is named or described.
@@ -649,6 +657,7 @@ Current Playwright MCP, Stagehand/Browserbase, Browserbase observability, and Fi
 - [x] Python and Node SDK text search now matches labels as well as visible text
 - [x] Python, Node, and Go SDKs support exact case-sensitive text/label lookup
 - [x] Action-plan summaries expose cache-key coverage, duplicate cache keys, and source `html_id` coverage across parser packages, SDKs, Browser Use, LangChain, and Vercel AI
+- [x] SOM schema/spec, parser packages, SDKs, Browser Use, LangChain, and Vercel AI carry replay provenance with test_id, data_action, and data_state
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
@@ -667,6 +676,7 @@ Current Playwright MCP, Stagehand/Browserbase, Browserbase observability, and Fi
 - [ ] Promote inert availability cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote framework fingerprint/summary helpers into the shared action-manifest conformance gate
 - [ ] Promote replay-coverage summary fields into the shared action-manifest conformance gate
+- [ ] Promote replay-provenance cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures
