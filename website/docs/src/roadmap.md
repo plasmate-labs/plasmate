@@ -391,6 +391,15 @@ The current market keeps rewarding validated reuse rather than raw browser acces
 - **Intent and component state should travel with targets**: `data-action` / `data-action-id` and `data-state` should become compact target context for custom design-system controls.
 - **Do not churn existing cache memory**: replay provenance should refine cache keys only when real `test_id` or `data_action` values exist; targets without provenance must keep their existing deterministic keys.
 
+### 2026-05-15 Browser-Default Form Fidelity Adjustment
+
+Current browser-agent products keep making the current structured page state the replay validation surface. Plasmate should make ordinary HTML defaults match browser behavior before agents cache form workflows, because small mismatches in labels, input type, and method semantics make repeated SaaS actions feel unreliable.
+
+- **Wrapped labels should not require ids**: controls nested in `<label>` need human-facing labels even when production markup omits explicit `id` attributes.
+- **Input type should follow browsers**: unknown or malformed native input types should compile as `text`, while known types should be trimmed and normalized.
+- **Form methods are submission context**: missing and invalid form methods should surface as `GET`, and `method="dialog"` should remain visible for dialog workflows.
+- **Next guardrail is conformance**: these browser-default cases should graduate from focused Rust tests into shared parser, SDK, and adapter fixtures before broader workflow-memory claims.
+
 ### 2026-05-14 Relationship Context Adjustment
 
 Current browser-agent competitors keep making cached action replay depend on target validation against fresh structured state. Plasmate should preserve small provenance cues that explain why a target is named or described.
@@ -658,6 +667,9 @@ Current Playwright MCP, Stagehand/Browserbase, Browserbase observability, and Fi
 - [x] Python, Node, and Go SDKs support exact case-sensitive text/label lookup
 - [x] Action-plan summaries expose cache-key coverage, duplicate cache keys, and source `html_id` coverage across parser packages, SDKs, Browser Use, LangChain, and Vercel AI
 - [x] SOM schema/spec, parser packages, SDKs, Browser Use, LangChain, and Vercel AI carry replay provenance with test_id, data_action, and data_state
+- [x] Rust compiler resolves id-less wrapped-label controls by DOM path
+- [x] Rust compiler normalizes invalid native input types to browser-default text
+- [x] Rust compiler emits browser-default form method semantics for missing, invalid, and dialog methods
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
@@ -677,6 +689,7 @@ Current Playwright MCP, Stagehand/Browserbase, Browserbase observability, and Fi
 - [ ] Promote framework fingerprint/summary helpers into the shared action-manifest conformance gate
 - [ ] Promote replay-coverage summary fields into the shared action-manifest conformance gate
 - [ ] Promote replay-provenance cases into broader Rust/parser/SDK and adapter conformance fixtures
+- [ ] Promote browser-default form fidelity cases into shared parser, SDK, and adapter conformance fixtures
 - [ ] Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures

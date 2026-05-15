@@ -124,6 +124,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-15 cache-key lookup read: fresh competitor research keeps validating local action memory as the sticky surface. Playwright MCP refs are current-snapshot handles, Stagehand/Browserbase highlight cached action selectors with page-state validation, and Firecrawl/Crawl4AI-style tools keep pressuring extraction breadth. Plasmate should make deterministic `cache_key` values directly resolvable to current compact targets across parser packages and SDKs, not just generated.
 
+2026-05-15 browser-default fidelity read: current Playwright MCP and Stagehand docs keep making the fresh structured page state the validation layer before an agent acts or replays a cached action. Plasmate should keep closing the small HTML/browser-default gaps that make local SOM diverge from what a user can actually submit: wrapped labels without ids, invalid input-type fallback, and default/invalid form methods are low-level details that decide whether cached SaaS form plans are trustworthy without raw DOM recovery.
+
 2026-05-15 action-target ergonomics read: current official docs and market commentary keep converging on "observe, validate, replay" loops. Playwright MCP uses fresh accessibility snapshots for each action, Stagehand/Browserbase pair observed actions with cached selector validation, and Firecrawl's extraction surface keeps broadening toward agentic data workflows. Plasmate should make local action menus cheap to use in normal app code: resolve by SOM id, resolve by original DOM id, and filter available targets without every SDK user hand-scanning the compact plan.
 
 2026-05-15 framework-index read: current official docs keep confirming that sticky local action memory lives in app validation paths, not only engine output. Playwright MCP returns fresh structured refs for each page state, Stagehand/Browserbase validate cached actions before replay, Browserbase sells managed agent sessions, and Crawl4AI keeps normalizing open-source LLM crawlers. Plasmate should push indexed replay helpers into Browser Use, LangChain, and Vercel AI so framework users do not fork parser logic.
@@ -159,6 +161,10 @@ The project already spans a large number of package and integration surfaces: Ru
   - Rust SOM compilation now preserves common replay provenance as `attrs.test_id`, `attrs.data_action`, and `attrs.data_state`.
   - JSON Schema/SOM spec, Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI now carry those provenance cues in compact action plans and prompt renderers.
   - Action cache keys remain unchanged for targets without provenance, while targets with real `test_id` or `data_action` include that anchor in their deterministic key so local replay memory can distinguish reused labels.
+  - Wrapped `<label>` controls without an `id` now resolve accessible labels by DOM path, so ordinary SaaS forms no longer need explicit ids for local action plans to retain human-facing field names.
+  - Invalid or whitespace-padded native `<input type>` values now normalize to browser behavior: known types are trimmed/lowercased and unknown types emit `attrs.input_type="text"`.
+  - Form regions now expose browser-default method semantics: missing and invalid methods compile as `GET`, while `method="dialog"` is preserved as `DIALOG`.
+  - Added focused Rust compiler tests for id-less wrapped labels, input type fallback, and form method defaults so these browser-default cases can move into shared conformance next.
   - Python SDK `find_by_text()` now searches both visible text and control labels, and adds `exact=True` for case-sensitive label/text matching.
   - Node SDK `findByText()` now searches both visible text and control labels, and accepts `{ exact: true }` for case-sensitive matching.
   - Go SDK now exposes `FindByTextExact()` alongside the existing label-aware `FindByText()`, completing SDK parity with parser package text lookup behavior.
@@ -379,6 +385,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Promote submit-button override cases (`button_type`, `formaction`, `formmethod`, `formenctype`, `formtarget`, and `formnovalidate`) into broader Rust/parser/SDK and adapter conformance fixtures.
 - Promote graphical submitter cases (`input type="image"`, `button_type`, `alt`, and `src`) into the shared action manifest and adapter conformance fixtures.
 - Promote replay-provenance cases (`test_id`, `data_action`, and `data_state`) from the shared action-availability manifest into broader Rust/parser/SDK and adapter fixtures.
+- Promote browser-default form fidelity cases (id-less wrapped labels, invalid input-type fallback, and default/invalid form method normalization) into shared Rust/parser/SDK and adapter fixtures.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures once the shared action manifest remains stable.
 - Promote form-relation cases (`form`, `list`, and `aria-errormessage`) into broader parser, SDK, and adapter conformance fixtures.
 - Promote live-region cases (`aria-busy`, `aria-live`, `aria-atomic`, and `aria-relevant`) into broader Rust/parser/SDK conformance fixtures.

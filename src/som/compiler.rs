@@ -27,6 +27,7 @@ struct CompileContext {
 struct LabelIndex {
     by_id: HashMap<String, String>,
     by_for: HashMap<String, String>,
+    by_path: HashMap<String, String>,
 }
 
 /// Tracks heading hierarchy for a region.
@@ -227,7 +228,7 @@ fn find_body(node: &Handle) -> Option<Handle> {
 }
 
 fn build_label_index(root: &Handle, css_rules: &VisibilityRules) -> LabelIndex {
-    fn visit(node: &Handle, index: &mut LabelIndex, css_rules: &VisibilityRules) {
+    fn visit(node: &Handle, index: &mut LabelIndex, css_rules: &VisibilityRules, path: &str) {
         if heuristics::should_strip(node) {
             return;
         }
@@ -254,20 +255,26 @@ fn build_label_index(root: &Handle, css_rules: &VisibilityRules) -> LabelIndex {
                         if !target.trim().is_empty() {
                             index.by_for.insert(target.trim().to_string(), text.clone());
                         }
-                    } else if let Some(target) = first_labelable_descendant_id(node) {
-                        index.by_for.insert(target, text.clone());
+                    } else {
+                        if let Some(target) = first_labelable_descendant_id(node) {
+                            index.by_for.insert(target, text.clone());
+                        }
+                        if let Some(target_path) = first_labelable_descendant_path(node, path) {
+                            index.by_path.insert(target_path, text.clone());
+                        }
                     }
                 }
             }
         }
 
-        for child in node.children.borrow().iter() {
-            visit(child, index, css_rules);
+        for (idx, child) in node.children.borrow().iter().enumerate() {
+            let child_path = format!("{}/{}", path, idx);
+            visit(child, index, css_rules, &child_path);
         }
     }
 
     let mut index = LabelIndex::default();
-    visit(root, &mut index, css_rules);
+    visit(root, &mut index, css_rules, "0");
     index
 }
 
@@ -288,6 +295,23 @@ fn first_labelable_descendant_id(node: &Handle) -> Option<String> {
 
         if let Some(id) = first_labelable_descendant_id(child) {
             return Some(id);
+        }
+    }
+
+    None
+}
+
+fn first_labelable_descendant_path(node: &Handle, path: &str) -> Option<String> {
+    for (idx, child) in node.children.borrow().iter().enumerate() {
+        let child_path = format!("{}/{}", path, idx);
+        if let NodeData::Element { name, .. } = &child.data {
+            if is_labelable_tag(name.local.as_ref()) {
+                return Some(child_path);
+            }
+        }
+
+        if let Some(path) = first_labelable_descendant_path(child, &child_path) {
+            return Some(path);
         }
     }
 
@@ -659,7 +683,8 @@ fn collect_regions(
             let form_method = attr_pairs
                 .iter()
                 .find(|(n, _)| n == "method")
-                .map(|(_, v)| v.to_uppercase());
+                .map(|(_, v)| normalize_form_method(v))
+                .or_else(|| Some("GET".to_string()));
             let form_target = attr_pairs
                 .iter()
                 .find(|(n, _)| n == "target")
@@ -1319,7 +1344,7 @@ fn interactive_node_to_element(
         } else {
             Some(heuristics::normalize_text(&text_content))
         };
-        let label = resolve_label(tag, &attr_pairs, &text, &ctx.label_index);
+        let label = resolve_label(tag, &attr_pairs, &text, &ctx.label_index, dom_path);
         let accessible_name = label.as_deref().or(text.as_deref()).unwrap_or("");
         let raw_id = generate_element_id(origin, role.as_str(), accessible_name, dom_path);
         let id = id_tracker.register(raw_id);
@@ -1410,13 +1435,14 @@ fn node_to_element(
                 text = None;
             }
 
-            let label = resolve_label(tag, &attr_pairs, &text, &ctx.label_index).or_else(|| {
-                if tag == "fieldset" {
-                    extract_legend_text(node, &ctx.css_rules)
-                } else {
-                    None
-                }
-            });
+            let label =
+                resolve_label(tag, &attr_pairs, &text, &ctx.label_index, dom_path).or_else(|| {
+                    if tag == "fieldset" {
+                        extract_legend_text(node, &ctx.css_rules)
+                    } else {
+                        None
+                    }
+                });
             let accessible_name = label.as_deref().or(text.as_deref()).unwrap_or("");
             let raw_id = generate_element_id(origin, role.as_str(), accessible_name, dom_path);
             let id = id_tracker.register(raw_id);
@@ -1637,7 +1663,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                 .find(|(n, _)| n == "type")
                 .map(|(_, v)| v.as_str())
                 .unwrap_or("text");
-            match input_type.to_ascii_lowercase().as_str() {
+            match normalize_input_type(input_type).as_str() {
                 "submit" | "button" | "reset" | "image" => Some(ElementRole::Button),
                 "checkbox" => Some(ElementRole::Checkbox),
                 "radio" => Some(ElementRole::Radio),
@@ -1670,6 +1696,7 @@ fn resolve_label(
     attrs: &[(String, String)],
     text: &Option<String>,
     label_index: &LabelIndex,
+    dom_path: &str,
 ) -> Option<String> {
     if let Some((_, ids)) = attrs.iter().find(|(n, _)| n == "aria-labelledby") {
         let label = ids
@@ -1701,6 +1728,11 @@ fn resolve_label(
             }
         }
     }
+    if let Some(label) = label_index.by_path.get(dom_path) {
+        if text.as_deref() != Some(label.as_str()) {
+            return Some(label.clone());
+        }
+    }
     if let Some(title) = attrs.iter().find(|(n, _)| n == "title") {
         if !title.1.is_empty() {
             let normalized = heuristics::normalize_text(&title.1);
@@ -1718,7 +1750,7 @@ fn resolve_label(
         let input_type = attrs
             .iter()
             .find(|(n, _)| n == "type")
-            .map(|(_, v)| v.to_ascii_lowercase())
+            .map(|(_, v)| normalize_input_type(v))
             .unwrap_or_else(|| "text".to_string());
         if input_type == "image" {
             if let Some((_, alt)) = attrs.iter().find(|(n, _)| n == "alt") {
@@ -1738,6 +1770,25 @@ fn resolve_label(
         }
     }
     None
+}
+
+fn normalize_input_type(value: &str) -> String {
+    match value.trim().to_ascii_lowercase().as_str() {
+        "button" | "checkbox" | "color" | "date" | "datetime-local" | "email" | "file"
+        | "hidden" | "image" | "month" | "number" | "password" | "radio" | "range" | "reset"
+        | "search" | "submit" | "tel" | "text" | "time" | "url" | "week" => {
+            value.trim().to_ascii_lowercase()
+        }
+        _ => "text".to_string(),
+    }
+}
+
+fn normalize_form_method(value: &str) -> String {
+    match value.trim().to_ascii_lowercase().as_str() {
+        "post" => "POST".to_string(),
+        "dialog" => "DIALOG".to_string(),
+        _ => "GET".to_string(),
+    }
 }
 
 fn resolve_region_label(attrs: &[(String, String)], label_index: &LabelIndex) -> Option<String> {
@@ -1855,7 +1906,7 @@ fn build_element_attrs(
                 .find(|(n, _)| n == "type")
                 .map(|(_, v)| v.clone())
                 .unwrap_or_else(|| "text".to_string());
-            let input_type = input_type.to_ascii_lowercase();
+            let input_type = normalize_input_type(&input_type);
 
             map.insert("input_type".into(), json!(input_type.clone()));
             if matches!(input_type.as_str(), "submit" | "button" | "reset" | "image") {

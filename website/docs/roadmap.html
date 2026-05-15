@@ -748,6 +748,13 @@
 <li><strong>Intent and component state should travel with targets</strong>: <code>data-action</code> / <code>data-action-id</code> and <code>data-state</code> should become compact target context for custom design-system controls.</li>
 <li><strong>Do not churn existing cache memory</strong>: replay provenance should refine cache keys only when real <code>test_id</code> or <code>data_action</code> values exist; targets without provenance must keep their existing deterministic keys.</li>
 </ul>
+<h3 id="2026-05-15-browser-default-form-fidelity-adjustment">2026-05-15 Browser-Default Form Fidelity Adjustment</h3><p>Current browser-agent products keep making the current structured page state the replay validation surface. Plasmate should make ordinary HTML defaults match browser behavior before agents cache form workflows, because small mismatches in labels, input type, and method semantics make repeated SaaS actions feel unreliable.</p>
+<ul>
+<li><strong>Wrapped labels should not require ids</strong>: controls nested in <code>&lt;label&gt;</code> need human-facing labels even when production markup omits explicit <code>id</code> attributes.</li>
+<li><strong>Input type should follow browsers</strong>: unknown or malformed native input types should compile as <code>text</code>, while known types should be trimmed and normalized.</li>
+<li><strong>Form methods are submission context</strong>: missing and invalid form methods should surface as <code>GET</code>, and <code>method=&quot;dialog&quot;</code> should remain visible for dialog workflows.</li>
+<li><strong>Next guardrail is conformance</strong>: these browser-default cases should graduate from focused Rust tests into shared parser, SDK, and adapter fixtures before broader workflow-memory claims.</li>
+</ul>
 <h3 id="2026-05-14-relationship-context-adjustment">2026-05-14 Relationship Context Adjustment</h3><p>Current browser-agent competitors keep making cached action replay depend on target validation against fresh structured state. Plasmate should preserve small provenance cues that explain why a target is named or described.</p>
 <ul>
 <li><strong>Tooltip help belongs in compact targets</strong>: native <code>title</code> should travel with action targets so agents can reuse browser-visible help text.</li>
@@ -996,6 +1003,9 @@ apps can resolve &quot;Email&quot; or &quot;Search&quot; controls without raw DO
 <li><input checked="" disabled="" type="checkbox"> Python, Node, and Go SDKs support exact case-sensitive text/label lookup</li>
 <li><input checked="" disabled="" type="checkbox"> Action-plan summaries expose cache-key coverage, duplicate cache keys, and source <code>html_id</code> coverage across parser packages, SDKs, Browser Use, LangChain, and Vercel AI</li>
 <li><input checked="" disabled="" type="checkbox"> SOM schema/spec, parser packages, SDKs, Browser Use, LangChain, and Vercel AI carry replay provenance with test_id, data_action, and data_state</li>
+<li><input checked="" disabled="" type="checkbox"> Rust compiler resolves id-less wrapped-label controls by DOM path</li>
+<li><input checked="" disabled="" type="checkbox"> Rust compiler normalizes invalid native input types to browser-default text</li>
+<li><input checked="" disabled="" type="checkbox"> Rust compiler emits browser-default form method semantics for missing, invalid, and dialog methods</li>
 <li><input disabled="" type="checkbox"> Selector-aware SOM cache entries for repeated agent prompts</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
 <li><input disabled="" type="checkbox"> Wire <code>016-action-semantics</code> into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants</li>
@@ -1015,6 +1025,7 @@ apps can resolve &quot;Email&quot; or &quot;Search&quot; controls without raw DO
 <li><input disabled="" type="checkbox"> Promote framework fingerprint/summary helpers into the shared action-manifest conformance gate</li>
 <li><input disabled="" type="checkbox"> Promote replay-coverage summary fields into the shared action-manifest conformance gate</li>
 <li><input disabled="" type="checkbox"> Promote replay-provenance cases into broader Rust/parser/SDK and adapter conformance fixtures</li>
+<li><input disabled="" type="checkbox"> Promote browser-default form fidelity cases into shared parser, SDK, and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Add cross-adapter accessible-description fixtures</li>

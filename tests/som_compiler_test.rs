@@ -499,6 +499,32 @@ fn test_input_types_are_case_insensitive() {
 }
 
 #[test]
+fn test_invalid_input_type_defaults_to_text() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Input Defaults</title></head>
+<body><main>
+    <input aria-label="Account" type="tenant-id" value="acme">
+    <input aria-label="Search" type=" SEARCH ">
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let elems = all_elements(&som);
+
+    let account = elems
+        .iter()
+        .find(|e| e.role == ElementRole::TextInput && e.label.as_deref() == Some("Account"))
+        .expect("invalid input type should remain a text input");
+    assert_eq!(account.attrs.as_ref().unwrap()["input_type"], "text");
+    assert_eq!(account.attrs.as_ref().unwrap()["value"], "acme");
+
+    let search = elems
+        .iter()
+        .find(|e| e.role == ElementRole::TextInput && e.label.as_deref() == Some("Search"))
+        .expect("known input type with whitespace should be normalized");
+    assert_eq!(search.attrs.as_ref().unwrap()["input_type"], "search");
+}
+
+#[test]
 fn test_custom_controls_keep_actionability_attrs() {
     let html = r#"<!DOCTYPE html>
 <html><head><title>Custom Controls</title></head>
@@ -729,6 +755,50 @@ fn test_form_submission_context_is_preserved() {
 }
 
 #[test]
+fn test_form_method_defaults_and_invalid_values_follow_browser_behavior() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Form Defaults</title></head>
+<body>
+    <form aria-label="Search" action="/search">
+        <input aria-label="Query">
+    </form>
+    <form aria-label="Broken method" action="/submit" method="patch">
+        <button>Send</button>
+    </form>
+    <dialog>
+        <form aria-label="Dialog close" method="dialog">
+            <button>Close</button>
+        </form>
+    </dialog>
+</body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let forms: Vec<&Region> = som
+        .regions
+        .iter()
+        .filter(|r| r.role == RegionRole::Form)
+        .collect();
+
+    let search = forms
+        .iter()
+        .find(|form| form.label.as_deref() == Some("Search"))
+        .expect("form without method should compile");
+    assert_eq!(search.method.as_deref(), Some("GET"));
+
+    let broken = forms
+        .iter()
+        .find(|form| form.label.as_deref() == Some("Broken method"))
+        .expect("form with invalid method should compile");
+    assert_eq!(broken.method.as_deref(), Some("GET"));
+
+    let dialog = forms
+        .iter()
+        .find(|form| form.label.as_deref() == Some("Dialog close"))
+        .expect("dialog form method should compile");
+    assert_eq!(dialog.method.as_deref(), Some("DIALOG"));
+}
+
+#[test]
 fn test_accessible_labels_from_label_for_and_labelledby() {
     let html = r#"<!DOCTYPE html>
 <html><head><title>Labels</title></head>
@@ -762,6 +832,7 @@ fn test_wrapped_label_controls_get_accessible_label() {
 <body><main>
     <label>Remember this browser <input id="remember-browser" type="checkbox"></label>
     <label>Support tier <select id="support-tier"><option value="pro">Pro</option></select></label>
+    <label>Account alias <input type="text" value="Team workspace"></label>
 </main></body></html>"#;
 
     let som = compiler::compile(html, "https://example.com").unwrap();
@@ -778,6 +849,12 @@ fn test_wrapped_label_controls_get_accessible_label() {
         .find(|e| e.html_id.as_deref() == Some("support-tier"))
         .expect("wrapped select should be preserved");
     assert_eq!(select.label.as_deref(), Some("Support tier"));
+
+    let alias = elems
+        .iter()
+        .find(|e| e.role == ElementRole::TextInput && e.html_id.is_none())
+        .expect("wrapped input without id should be preserved");
+    assert_eq!(alias.label.as_deref(), Some("Account alias"));
 }
 
 #[test]

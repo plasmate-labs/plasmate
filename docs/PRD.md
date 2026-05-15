@@ -550,6 +550,14 @@ pressuring extraction breadth. Plasmate should make deterministic `cache_key`
 values directly resolvable to current compact targets across parser packages
 and SDKs, not just generated.
 
+2026-05-15 browser-default fidelity read: current Playwright MCP and Stagehand
+docs keep making the fresh structured page state the validation layer before an
+agent acts or replays a cached action. Plasmate should keep closing the small
+HTML/browser-default gaps that make local SOM diverge from what a user can
+actually submit: wrapped labels without ids, invalid input-type fallback, and
+default/invalid form methods are low-level details that decide whether cached
+SaaS form plans are trustworthy without raw DOM recovery.
+
 2026-05-15 action-target ergonomics read: current official docs and market
 commentary keep converging on "observe, validate, replay" loops. Playwright MCP
 uses fresh accessibility snapshots for each action, Stagehand/Browserbase pair
@@ -668,6 +676,18 @@ and adapter docs over one-off integration logic.
   - Action cache keys remain unchanged for targets without provenance, while
     targets with real `test_id` or `data_action` include that anchor in their
     deterministic key so local replay memory can distinguish reused labels.
+  - Wrapped `<label>` controls without an `id` now resolve accessible labels by
+    DOM path, so ordinary SaaS forms no longer need explicit ids for local
+    action plans to retain human-facing field names.
+  - Invalid or whitespace-padded native `<input type>` values now normalize to
+    browser behavior: known types are trimmed/lowercased and unknown types
+    emit `attrs.input_type="text"`.
+  - Form regions now expose browser-default method semantics: missing and
+    invalid methods compile as `GET`, while `method="dialog"` is preserved as
+    `DIALOG`.
+  - Added focused Rust compiler tests for id-less wrapped labels, input type
+    fallback, and form method defaults so these browser-default cases can move
+    into shared conformance next.
   - Python SDK `find_by_text()` now searches both visible text and control
     labels, and adds `exact=True` for case-sensitive label/text matching.
   - Node SDK `findByText()` now searches both visible text and control labels,
@@ -1331,6 +1351,9 @@ and adapter docs over one-off integration logic.
 - Promote replay-provenance cases (`test_id`, `data_action`, and `data_state`)
   from the shared action-availability manifest into broader Rust/parser/SDK
   and adapter fixtures.
+- Promote browser-default form fidelity cases (id-less wrapped labels,
+  invalid input-type fallback, and default/invalid form method normalization)
+  into shared Rust/parser/SDK and adapter fixtures.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and
   `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures
   once the shared action manifest remains stable.

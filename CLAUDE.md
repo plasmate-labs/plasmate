@@ -49,6 +49,32 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-15T12:18:00Z - Plasmate Improvements Automation
+
+- Git sync: required latest pull was retried from the automation worktree and
+  failed because the linked worktree cannot open `FETCH_HEAD`. Retrying from
+  `/Users/steve/Git/plasmate` failed DNS for `github.com`, so work continued
+  from local branch
+  `codex/plasmate-improvements-2026-05-15-cache-key-lookup`.
+- Market direction: current research still favors Plasmate's local-first
+  action-state wedge. Playwright MCP documents accessibility snapshots and
+  snapshot-scoped refs, Browserbase/Stagehand emphasizes observe/action
+  caching with validation, and Firecrawl/Browser Use continue expanding hosted
+  browser/session surfaces. The sticky response remains browser-accurate local
+  SOM that SDKs and adapters can validate without raw DOM recovery.
+- Code changes: Rust SOM now resolves id-less wrapped `<label>` controls by
+  DOM path, normalizes invalid or whitespace-padded native input types to
+  browser-default `text`/known trimmed values, and emits browser-default form
+  method semantics (`GET` for missing or invalid methods and `DIALOG` for
+  dialog forms).
+- Docs changes: PRD and roadmap sources now record the browser-default
+  fidelity rationale and next step to promote these focused Rust cases into
+  shared parser, SDK, and adapter conformance fixtures.
+- Verification in progress: focused Rust compiler tests for the three new
+  cases passed in the automation worktree before this patch was mirrored into
+  the primary checkout. Primary checkout build/test, website docs generation,
+  commit, push, and merge status are still pending for this run.
+
 ### 2026-05-15T11:21:53Z - Plasmate Improvements Automation
 
 - Git sync: the linked automation worktree still cannot open `FETCH_HEAD`,
