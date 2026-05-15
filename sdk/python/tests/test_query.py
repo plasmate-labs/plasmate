@@ -19,6 +19,7 @@ from plasmate.types import (
     StructuredData,
 )
 from plasmate.query import (
+    find_action_target_by_cache_key,
     find_by_id,
     find_by_html_id,
     find_by_role,
@@ -328,6 +329,14 @@ class TestGetActionPlan:
             )
             == "plasmate-action:v1:5b218ab1"
         )
+
+    def test_finds_action_target_by_cache_key(self, sample_som: Som) -> None:
+        target = find_action_target_by_cache_key(
+            sample_som, "plasmate-action:v1:5b218ab1"
+        )
+        assert target is not None
+        assert target["id"] == "e9"
+        assert find_action_target_by_cache_key(sample_som, "missing") is None
 
 
 class TestFindByText:

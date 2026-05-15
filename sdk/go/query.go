@@ -468,6 +468,17 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 	return items
 }
 
+// FindActionTargetByCacheKey returns the compact action target matching a deterministic cache key.
+func FindActionTargetByCacheKey(som *Som, cacheKey string) *ActionPlanItem {
+	for _, item := range GetActionPlan(som) {
+		if item.CacheKey == cacheKey {
+			matched := item
+			return &matched
+		}
+	}
+	return nil
+}
+
 func flattenRegionElements(elements []Element) []Element {
 	var result []Element
 	flattenElements(elements, &result)

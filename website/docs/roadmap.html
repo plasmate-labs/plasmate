@@ -754,6 +754,12 @@
 <li><strong>Lookup helpers reduce raw DOM recovery</strong>: Python, Node, and Go should expose source-DOM-id lookup alongside SOM-id lookup.</li>
 <li><strong>Action menus stay cache-stable</strong>: compact targets should carry <code>html_id</code> without changing deterministic action <code>cache_key</code> values.</li>
 </ul>
+<h3 id="2026-05-15-cache-key-lookup-adjustment">2026-05-15 Cache-Key Lookup Adjustment</h3><p>Stagehand/Browserbase action caching and Playwright MCP snapshot refs keep teaching users to validate stored actions against fresh page state before replay. Plasmate already emits deterministic local <code>cache_key</code> values; parser packages and SDKs should also resolve those keys back to current compact targets.</p>
+<ul>
+<li><strong>Stored keys need current targets</strong>: cache-key lookup should be as direct as id or role lookup.</li>
+<li><strong>SDK parity is retention</strong>: Python, Node, and Go should expose the same helper so workers and orchestration code do not reimplement scans.</li>
+<li><strong>Cache keys stay identity-only</strong>: lookup helpers improve replay ergonomics without changing deterministic <code>cache_key</code> inputs.</li>
+</ul>
 <h2 id="completed-v011">Completed (v0.1.1)</h2><ul>
 <li>SOM compiler with 9.4x median compression across 38 sites</li>
 <li>V8 JavaScript execution with full DOM shim</li>
@@ -945,6 +951,7 @@
 <li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve title, labelledby, and describedby relationship context</li>
 <li><input checked="" disabled="" type="checkbox"> Compact action plans expose title, labelledby, and describedby across parser packages, SDKs, and framework adapters</li>
 <li><input checked="" disabled="" type="checkbox"> Shared action manifest asserts relationship-context cues without changing deterministic action cache keys</li>
+<li><input checked="" disabled="" type="checkbox"> Parser packages and Python/Node/Go SDKs expose cache-key lookup helpers for compact action targets</li>
 <li><input disabled="" type="checkbox"> Selector-aware SOM cache entries for repeated agent prompts</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
 <li><input disabled="" type="checkbox"> Wire <code>016-action-semantics</code> into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants</li>

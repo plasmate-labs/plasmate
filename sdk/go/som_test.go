@@ -451,6 +451,12 @@ func TestGetActionPlan(t *testing.T) {
 	if got := GetActionPlanCacheKey(*filters); got != filters.CacheKey {
 		t.Errorf("GetActionPlanCacheKey = %q, want %q", got, filters.CacheKey)
 	}
+	if got := FindActionTargetByCacheKey(som, filters.CacheKey); got == nil || got.ID != filters.ID {
+		t.Errorf("FindActionTargetByCacheKey = %v, want %s", got, filters.ID)
+	}
+	if got := FindActionTargetByCacheKey(som, "missing"); got != nil {
+		t.Errorf("FindActionTargetByCacheKey missing = %v, want nil", got)
+	}
 	if filters.Name == nil || *filters.Name != "filters" {
 		t.Errorf("Name = %v, want filters", filters.Name)
 	}

@@ -91,7 +91,7 @@ The SDK includes query helpers for searching and traversing SOM documents:
 
 ```typescript
 import {
-  findByRole, findById, findByHtmlId, findByTag, findInteractive,
+  findActionTargetByCacheKey, findByRole, findById, findByHtmlId, findByTag, findInteractive,
   findByText, flatElements, getActionPlan, getTokenEstimate,
 } from 'plasmate';
 
@@ -116,6 +116,7 @@ const interactive = findInteractive(som);
 // Get compact action targets for cached agent workflows
 const actionPlan = getActionPlan(som).filter((target) => target.enabled);
 console.log(actionPlan.map((target) => [target.id, target.cache_key, target.actions, target.expanded]));
+const cachedTarget = findActionTargetByCacheKey(som, actionPlan[0].cache_key);
 
 // Search by visible text (case-insensitive)
 const matches = findByText(som, 'sign in');
@@ -139,6 +140,7 @@ browser.close();
 | `findInteractive(som)` | `SomElement[]` | All elements with actions |
 | `getActionPlan(som)` | `ActionPlanItem[]` | Compact action targets with cache keys, availability, original `html_id` bridge cues, link target/rel/download cues, graphical submitter alt/src cues, form/list and form submission context, submitter override cues, select selected_values/size context, popover/command relation cues, title/label/description ID relationships, ARIA source text plus locale/direction cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues |
 | `getActionPlanCacheKey(item)` | `string` | Deterministic key for caching or comparing action targets |
+| `findActionTargetByCacheKey(som, cacheKey)` | `ActionPlanItem \| undefined` | Resolve a cached action target from the current SOM action plan |
 | `findByText(som, text)` | `SomElement[]` | Case-insensitive text search |
 | `flatElements(som)` | `SomElement[]` | Flatten all elements |
 | `getTokenEstimate(som)` | `number` | Estimate token count (~4 bytes/token) |

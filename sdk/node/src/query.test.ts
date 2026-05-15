@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Som } from './types';
 import {
+  findActionTargetByCacheKey,
   findByRole,
   findById,
   findByHtmlId,
@@ -278,6 +279,13 @@ describe('getActionPlan', () => {
       }),
       'plasmate-action:v1:f08859f9',
     );
+  });
+
+  it('finds action targets by cache key', () => {
+    const target = findActionTargetByCacheKey(fixture, 'plasmate-action:v1:f08859f9');
+
+    assert.equal(target?.id, 'e5');
+    assert.equal(findActionTargetByCacheKey(fixture, 'missing'), undefined);
   });
 });
 

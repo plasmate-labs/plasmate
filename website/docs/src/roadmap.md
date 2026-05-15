@@ -399,6 +399,14 @@ Current browser-agent competitors reward compact observations that can still bec
 - **Lookup helpers reduce raw DOM recovery**: Python, Node, and Go should expose source-DOM-id lookup alongside SOM-id lookup.
 - **Action menus stay cache-stable**: compact targets should carry `html_id` without changing deterministic action `cache_key` values.
 
+### 2026-05-15 Cache-Key Lookup Adjustment
+
+Stagehand/Browserbase action caching and Playwright MCP snapshot refs keep teaching users to validate stored actions against fresh page state before replay. Plasmate already emits deterministic local `cache_key` values; parser packages and SDKs should also resolve those keys back to current compact targets.
+
+- **Stored keys need current targets**: cache-key lookup should be as direct as id or role lookup.
+- **SDK parity is retention**: Python, Node, and Go should expose the same helper so workers and orchestration code do not reimplement scans.
+- **Cache keys stay identity-only**: lookup helpers improve replay ergonomics without changing deterministic `cache_key` inputs.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -595,6 +603,7 @@ Current browser-agent competitors reward compact observations that can still bec
 - [x] Rust compiler and SOM schema preserve title, labelledby, and describedby relationship context
 - [x] Compact action plans expose title, labelledby, and describedby across parser packages, SDKs, and framework adapters
 - [x] Shared action manifest asserts relationship-context cues without changing deterministic action cache keys
+- [x] Parser packages and Python/Node/Go SDKs expose cache-key lookup helpers for compact action targets
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants

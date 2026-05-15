@@ -542,6 +542,14 @@ DOM id portable as `html_id`: agents can plan from stable SOM ids while still
 bridging to `document.getElementById()` or CSS `#id` selectors when they need
 to execute or debug against a live page.
 
+2026-05-15 cache-key lookup read: fresh competitor research keeps validating
+local action memory as the sticky surface. Playwright MCP refs are
+current-snapshot handles, Stagehand/Browserbase now highlight cached action
+selectors with page-state validation, and Firecrawl/Crawl4AI-style tools keep
+pressuring extraction breadth. Plasmate should make deterministic `cache_key`
+values directly resolvable to current compact targets across parser packages
+and SDKs, not just generated.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -568,6 +576,16 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-15:
+  - Python and Node parser packages now export cache-key lookup helpers
+    (`find_action_target_by_cache_key()` / `findActionTargetByCacheKey()`), so
+    app code can validate a stored action key against the current SOM action
+    plan without rescanning manually.
+  - Python, Node, and Go SDKs now expose the same cache-key lookup flow
+    (`find_action_target_by_cache_key()` / `findActionTargetByCacheKey()` /
+    `FindActionTargetByCacheKey()`), keeping local action memory portable
+    across orchestration and worker runtimes.
+  - Parser/SDK docs and tests now cover the cache-key lookup path, preserving
+    deterministic `cache_key` values while improving replay ergonomics.
   - Python/Node parser packages and Python/Node/Go SDK types now accept the
     Rust/SOM-spec `html_id` field, preventing parser drift when core output
     includes original DOM ids.

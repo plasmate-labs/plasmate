@@ -7,6 +7,7 @@ import {
   isValidSom,
   fromPlasmate,
   getAllElements,
+  findActionTargetByCacheKey,
   findByAction,
   findByHint,
   findByRole,
@@ -439,6 +440,13 @@ describe('getActionPlan', () => {
         placeholder: 'Search...',
       }),
     ).toBe('plasmate-action:v1:0b6b537f');
+  });
+
+  it('finds action targets by cache key', () => {
+    const target = findActionTargetByCacheKey(FIXTURE, 'plasmate-action:v1:0b6b537f');
+
+    expect(target?.id).toBe('e_7');
+    expect(findActionTargetByCacheKey(FIXTURE, 'missing')).toBeUndefined();
   });
 
   it('matches the shared action availability manifest', () => {

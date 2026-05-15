@@ -19,6 +19,7 @@ from .types import (
 from .parser import from_plasmate, is_valid_som, parse_som
 from .query import (
     filter_elements,
+    find_action_target_by_cache_key,
     find_by_action,
     find_by_hint,
     find_by_html_id,
@@ -61,6 +62,7 @@ __all__ = [
     "parse_som",
     # Query
     "filter_elements",
+    "find_action_target_by_cache_key",
     "find_by_action",
     "find_by_hint",
     "find_by_html_id",

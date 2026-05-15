@@ -361,6 +361,11 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
   });
 }
 
+/** Find a compact action target by its deterministic cache key. */
+export function findActionTargetByCacheKey(som: Som, cacheKey: string): ActionPlanItem | undefined {
+  return getActionPlan(som).find((item) => item.cache_key === cacheKey);
+}
+
 /** Extract all links with their text and URLs. */
 export function getLinks(som: Som): Array<{ text: string; href: string; id: string }> {
   return findByRole(som, 'link')

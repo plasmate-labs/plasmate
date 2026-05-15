@@ -49,6 +49,36 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-15T02:17:00Z - Plasmate Improvements Automation
+
+- Git sync: fetch from `/Users/steve/Git/plasmate` still fails DNS for
+  `github.com`, and `gh auth status` reports the stored GitHub token is
+  invalid. Work continued from the latest local automation branch
+  `codex/plasmate-improvements-2026-05-14-target-context` at `0941242`.
+- Market direction: current Playwright MCP, Stagehand/Browserbase, Firecrawl,
+  and Crawl4AI research still favors Plasmate's local-first reusable action
+  memory wedge. Hosted browser infrastructure remains crowded; the sticky
+  improvement is making deterministic local action targets easier to validate
+  before replay.
+- Code changes: Python/Node parser packages and Python/Node/Go SDKs now expose
+  cache-key lookup helpers for compact action targets:
+  `find_action_target_by_cache_key()`, `findActionTargetByCacheKey()`, and
+  `FindActionTargetByCacheKey()`. Focused tests cover successful lookup and
+  missing-key behavior.
+- Docs changes: PRD, roadmap, parser package READMEs, SDK READMEs, website
+  docs sources, and this running state now document cache-key lookup as the
+  next ergonomic layer for local action memory.
+- Verification: Python parser tests passed 71 tests; Python SDK query tests
+  passed 39 tests; Node parser tests passed 56 tests; Node SDK tests passed 24
+  tests; Go SDK tests passed; `./scripts/action-manifest-conformance.sh
+  --quick` passed; `node website/build.mjs` rebuilt 39 pages; `cargo build`
+  passed with existing warnings; `git diff --check` passed. Full `cargo test`
+  passed 256 lib tests and 5 main/MCP tests, then failed only in
+  `tests/awp_integration_test.rs` because the sandbox denied local socket
+  binding with `Operation not permitted`.
+- Commit/push state: ready to commit; remote fetch/push/merge may remain
+  blocked until GitHub DNS and CLI auth are fixed.
+
 ### 2026-05-15T01:13:11Z - Plasmate Improvements Automation
 
 - Git sync: the automation worktree still cannot fetch because the linked

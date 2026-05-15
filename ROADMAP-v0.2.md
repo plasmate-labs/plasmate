@@ -906,6 +906,22 @@ execution and debugging.
    for validation and selector bridgeability without changing deterministic
    `cache_key` values.
 
+### 2026-05-15 Cache-Key Lookup Adjustment
+
+Stagehand/Browserbase action caching and Playwright MCP snapshot refs keep
+teaching users to validate a stored action against fresh page state before
+replay. Plasmate already generates deterministic local `cache_key` values, but
+the broad SDK/parser surface should make the lookup step as direct as id or
+role lookup.
+
+1. **Stored keys need current targets**: parser packages should resolve a
+   `cache_key` into the current compact action target for replay validation.
+2. **SDK parity is retention**: Python, Node, and Go SDKs should expose the
+   same cache-key lookup helper so workers and orchestration code do not
+   reimplement action-plan scans.
+3. **Cache keys stay identity-only**: lookup helpers improve ergonomics without
+   changing the deterministic fields used to compute `cache_key` values.
+
 ## Architecture
 
 ```
@@ -1363,11 +1379,15 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   source-DOM-id lookup helpers, and carry `html_id` through compact action
   targets in Browser Use, LangChain, and Vercel AI without changing
   deterministic action cache keys.
+- Python/Node parser packages and Python/Node/Go SDKs now expose cache-key
+  lookup helpers for compact action targets, so local action memory can
+  validate stored keys against the current SOM plan without manual scans.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, relationship-context,
-  target-provenance/locale, and `html_id` bridge cases into broader fixtures
-  alongside text-entry, ARIA widget, range, and set-position cases.
+  target-provenance/locale, `html_id` bridge, and cache-key lookup cases into
+  broader fixtures alongside text-entry, ARIA widget, range, and set-position
+  cases.
 
 ## Dependencies to Add
 

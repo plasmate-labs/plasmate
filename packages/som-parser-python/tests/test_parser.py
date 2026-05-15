@@ -14,6 +14,7 @@ from som_parser import (
     SomElement,
     SomShadowRoot,
     filter_elements,
+    find_action_target_by_cache_key,
     find_by_action,
     find_by_hint,
     find_by_html_id,
@@ -589,6 +590,12 @@ class TestGetActionPlan:
             )
             == "plasmate-action:v1:0b6b537f"
         )
+
+    def test_finds_action_target_by_cache_key(self, som: Som):
+        target = find_action_target_by_cache_key(som, "plasmate-action:v1:0b6b537f")
+        assert target is not None
+        assert target["id"] == "e_7"
+        assert find_action_target_by_cache_key(som, "missing") is None
 
     def test_matches_shared_action_availability_manifest(self):
         som, expected_targets = _load_action_availability_fixture()

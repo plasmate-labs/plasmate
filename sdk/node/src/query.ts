@@ -332,6 +332,11 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
   });
 }
 
+/** Find a compact action target by its deterministic cache key. */
+export function findActionTargetByCacheKey(som: Som, cacheKey: string): ActionPlanItem | undefined {
+  return getActionPlan(som).find((item) => item.cache_key === cacheKey);
+}
+
 /** Find all elements containing the given text (case-insensitive substring match). */
 export function findByText(som: Som, text: string): SomElement[] {
   const lower = text.toLowerCase();

@@ -122,6 +122,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-15 DOM-id bridge read: current browser-agent tooling keeps splitting between fresh structured snapshots and repeatable cached execution. Playwright MCP exposes snapshot refs, Stagehand/Browserbase cache selectors after validated observations, and hosted browser platforms compete on session infrastructure. Plasmate should keep original DOM ids portable as `html_id` so agents can plan from stable SOM ids while bridging to `document.getElementById()` or CSS `#id` selectors for execution and debugging.
 
+2026-05-15 cache-key lookup read: fresh competitor research keeps validating local action memory as the sticky surface. Playwright MCP refs are current-snapshot handles, Stagehand/Browserbase highlight cached action selectors with page-state validation, and Firecrawl/Crawl4AI-style tools keep pressuring extraction breadth. Plasmate should make deterministic `cache_key` values directly resolvable to current compact targets across parser packages and SDKs, not just generated.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -137,6 +139,9 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-15:
+  - Python/Node parser packages and Python/Node/Go SDKs now expose cache-key lookup helpers for compact action targets.
+  - Cache-key lookup tests now cover successful lookup and missing-key behavior across parser packages and SDKs.
+  - Parser and SDK docs now show how to resolve stored action keys against the current SOM plan before replay.
   - Parser packages and Python/Node/Go SDK types now accept the Rust/SOM-spec `html_id` field.
   - Python, Node, and Go query helpers now expose source-DOM-id lookup helpers.
   - Compact action-plan helpers and Browser Use, LangChain, and Vercel AI renderers now carry `html_id` without changing deterministic `cache_key` values.

@@ -356,6 +356,16 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
     return plan
 
 
+def find_action_target_by_cache_key(
+    som: Som, cache_key: str
+) -> Optional[Dict[str, object]]:
+    """Return the compact action target matching a deterministic cache key."""
+    for item in get_action_plan(som):
+        if item.get("cache_key") == cache_key:
+            return item
+    return None
+
+
 def get_links(som: Som) -> List[Dict[str, Optional[str]]]:
     """Extract all links as dicts with text, href, and id."""
     links: List[Dict[str, Optional[str]]] = []

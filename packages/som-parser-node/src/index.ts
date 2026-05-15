@@ -23,6 +23,7 @@ export { parseSom, isValidSom, fromPlasmate } from './parser.js';
 // Query utilities
 export {
   getAllElements,
+  findActionTargetByCacheKey,
   findByAction,
   findByHint,
   findByRole,

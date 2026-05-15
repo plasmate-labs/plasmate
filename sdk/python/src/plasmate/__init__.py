@@ -39,6 +39,7 @@ from .types import (
     StructuredData,
 )
 from .query import (
+    find_action_target_by_cache_key,
     find_by_id,
     find_by_html_id,
     find_by_role,
@@ -70,6 +71,7 @@ __all__ = [
     "SomShadowRoot",
     "StructuredData",
     # Query helpers
+    "find_action_target_by_cache_key",
     "find_by_id",
     "find_by_html_id",
     "find_by_role",
