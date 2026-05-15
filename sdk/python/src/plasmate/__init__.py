@@ -51,7 +51,9 @@ from .query import (
     flat_elements,
     get_action_plan,
     get_action_plan_cache_key,
+    get_action_plan_fingerprint,
     get_action_plan_index,
+    get_action_plan_summary,
     get_enabled_action_plan,
     get_token_estimate,
 )
@@ -87,7 +89,9 @@ __all__ = [
     "flat_elements",
     "get_action_plan",
     "get_action_plan_cache_key",
+    "get_action_plan_fingerprint",
     "get_action_plan_index",
+    "get_action_plan_summary",
     "get_enabled_action_plan",
     "get_token_estimate",
 ]

@@ -115,7 +115,9 @@ from plasmate import (
     find_action_target_by_id,
     get_action_plan,
     get_action_plan_cache_key,
+    get_action_plan_fingerprint,
     get_action_plan_index,
+    get_action_plan_summary,
     get_enabled_action_plan,
     get_token_estimate,
 )
@@ -156,6 +158,9 @@ same_target = find_action_target_by_id(som, action_plan[0]["id"])
 dom_target = find_action_target_by_html_id(som, "login-button")
 target_index = get_action_plan_index(som, enabled_only=True)
 ready_target = target_index["by_cache_key"].get(action_plan[0]["cache_key"])
+plan_fingerprint = get_action_plan_fingerprint(som, enabled_only=True)
+plan_summary = get_action_plan_summary(som)
+print(plan_fingerprint, plan_summary["enabled"], plan_summary["blocked_reasons"])
 
 # Search by text content (case-insensitive)
 results = find_by_text(som, "sign up")

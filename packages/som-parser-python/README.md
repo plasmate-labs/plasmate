@@ -54,7 +54,9 @@ from som_parser import (
     find_action_target_by_id,
     find_by_action,
     get_action_plan,
+    get_action_plan_fingerprint,
     get_action_plan_index,
+    get_action_plan_summary,
     get_enabled_action_plan,
 )
 
@@ -68,6 +70,9 @@ same_target = find_action_target_by_id(som, plan[0]["id"])
 dom_target = find_action_target_by_html_id(som, "save-settings")
 index = get_action_plan_index(som, enabled_only=True)
 ready_target = index["by_cache_key"].get(plan[0]["cache_key"])
+fingerprint = get_action_plan_fingerprint(som, enabled_only=True)
+summary = get_action_plan_summary(som)
+print(fingerprint, summary["enabled"], summary["blocked_reasons"])
 
 for button in find_by_action(som, "click"):
     print(button.id, button.text or button.label)
@@ -125,6 +130,8 @@ print(som.model_dump_json(indent=2))
 | `get_enabled_action_plan(som) -> list[dict]` | Return compact action targets whose `enabled` field is not false |
 | `get_action_plan_cache_key(item) -> str` | Return a deterministic key for caching or comparing an action target |
 | `get_action_plan_index(som, enabled_only=False) -> dict` | Index compact action targets by `by_id`, `by_cache_key`, and `by_html_id` for replay validation |
+| `get_action_plan_fingerprint(som, enabled_only=False) -> str` | Return a deterministic plan-level fingerprint for replay drift checks |
+| `get_action_plan_summary(som) -> dict` | Return action-plan fingerprints plus total/enabled/disabled, role, and blocked-reason counts |
 | `find_action_target_by_cache_key(som, cache_key) -> dict \| None` | Resolve a cached action target from the current SOM action plan |
 | `find_action_target_by_id(som, id) -> dict \| None` | Resolve an action target by stable SOM id |
 | `find_action_target_by_html_id(som, html_id) -> dict \| None` | Resolve an action target by original HTML id |

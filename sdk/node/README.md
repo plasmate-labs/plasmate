@@ -93,8 +93,9 @@ The SDK includes query helpers for searching and traversing SOM documents:
 import {
   findActionTargetByCacheKey, findActionTargetByHtmlId, findActionTargetById,
   findByRole, findById, findByHtmlId, findByTag, findInteractive,
-  findByText, flatElements, getActionPlan, getActionPlanIndex,
-  getEnabledActionPlan, getTokenEstimate,
+  findByText, flatElements, getActionPlan, getActionPlanFingerprint,
+  getActionPlanIndex, getActionPlanSummary, getEnabledActionPlan,
+  getTokenEstimate,
 } from 'plasmate';
 
 const browser = new Plasmate();
@@ -123,6 +124,9 @@ const sameTarget = findActionTargetById(som, actionPlan[0].id);
 const domTarget = findActionTargetByHtmlId(som, 'login-button');
 const targetIndex = getActionPlanIndex(som, { enabledOnly: true });
 const readyTarget = targetIndex.byCacheKey[actionPlan[0].cache_key];
+const planFingerprint = getActionPlanFingerprint(som, { enabledOnly: true });
+const planSummary = getActionPlanSummary(som);
+console.log(planFingerprint, planSummary.enabled, planSummary.blockedReasons);
 
 // Search by visible text (case-insensitive)
 const matches = findByText(som, 'sign in');
@@ -148,6 +152,8 @@ browser.close();
 | `getEnabledActionPlan(som)` | `ActionPlanItem[]` | Compact action targets whose `enabled` field is not false |
 | `getActionPlanCacheKey(item)` | `string` | Deterministic key for caching or comparing action targets |
 | `getActionPlanIndex(som, { enabledOnly })` | `ActionPlanIndex` | Index compact action targets by `byId`, `byCacheKey`, and `byHtmlId` for replay validation |
+| `getActionPlanFingerprint(som, { enabledOnly })` | `string` | Deterministic plan-level fingerprint for replay drift checks |
+| `getActionPlanSummary(som)` | `ActionPlanSummary` | Action-plan fingerprints plus total/enabled/disabled, role, and blocked-reason counts |
 | `findActionTargetByCacheKey(som, cacheKey)` | `ActionPlanItem \| undefined` | Resolve a cached action target from the current SOM action plan |
 | `findActionTargetById(som, id)` | `ActionPlanItem \| undefined` | Resolve an action target by stable SOM id |
 | `findActionTargetByHtmlId(som, htmlId)` | `ActionPlanItem \| undefined` | Resolve an action target by original HTML id |

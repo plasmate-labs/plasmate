@@ -551,6 +551,12 @@ const availableTargets = getActionPlan(som).filter((target) =&gt; target.enabled
 
 const cacheKey = getActionPlanCacheKey(target);
 </code></pre>
+<h3 id="getactionplanfingerprintsom">`getActionPlanFingerprint(som)`</h3><p>Return a deterministic plan-level fingerprint for replay drift checks. Pass <code>{ enabledOnly: true }</code> when the model-facing menu excludes unavailable targets.</p>
+<pre><code class="language-typescript">import { getActionPlanFingerprint, getActionPlanSummary } from &#39;plasmate&#39;;
+
+const fingerprint = getActionPlanFingerprint(som, { enabledOnly: true });
+const summary = getActionPlanSummary(som);
+</code></pre>
 <h3 id="findbytextsom-text">`findByText(som, text)`</h3><p>Find elements whose text content contains the given string (case-insensitive).</p>
 <pre><code class="language-typescript">import { findByText } from &#39;plasmate&#39;;
 

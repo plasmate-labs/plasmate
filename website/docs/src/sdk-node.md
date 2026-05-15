@@ -165,6 +165,17 @@ import { getActionPlanCacheKey } from 'plasmate';
 const cacheKey = getActionPlanCacheKey(target);
 ```
 
+### `getActionPlanFingerprint(som)`
+
+Return a deterministic plan-level fingerprint for replay drift checks. Pass `{ enabledOnly: true }` when the model-facing menu excludes unavailable targets.
+
+```typescript
+import { getActionPlanFingerprint, getActionPlanSummary } from 'plasmate';
+
+const fingerprint = getActionPlanFingerprint(som, { enabledOnly: true });
+const summary = getActionPlanSummary(som);
+```
+
 ### `findByText(som, text)`
 
 Find elements whose text content contains the given string (case-insensitive).

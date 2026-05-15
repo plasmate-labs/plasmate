@@ -576,6 +576,15 @@ agent sessions, and Crawl4AI keeps normalizing open-source LLM crawlers. The
 next Plasmate improvement is to push indexed local replay helpers into Browser
 Use, LangChain, and Vercel AI so framework users do not fork parser logic.
 
+2026-05-15 plan-fingerprint read: current competitor motion keeps emphasizing
+validated replay over one-off observations. Playwright MCP refs are only valid
+for the current structured snapshot, Stagehand/Browserbase action caches rely
+on validating the page still matches before execution, and Firecrawl/Crawl4AI
+keep broadening extraction surfaces. Plasmate should add plan-level replay
+checks on top of per-target `cache_key` lookup: a deterministic action-plan
+fingerprint plus role/blocker counts lets apps detect drift before replaying
+cached local actions.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -602,6 +611,12 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-15:
+  - Python/Node parser packages and Python/Node/Go SDKs now expose
+    deterministic action-plan fingerprints plus compact action-plan summaries
+    with total/enabled/disabled counts, role counts, and blocked-reason counts.
+  - These helpers make local replay validation cheaper at the plan level:
+    apps can compare the current compact action surface before resolving a
+    stored target by SOM id, `cache_key`, or `html_id`.
   - Vercel AI now exposes action-plan replay indexes plus lookup helpers by
     SOM id, deterministic `cache_key`, and original `html_id`.
   - Browser Use now exposes enabled-only action-plan extraction and replay

@@ -49,6 +49,38 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-15T06:11:07Z - Plasmate Improvements Automation
+
+- Git sync: the linked automation worktree still cannot open `FETCH_HEAD`;
+  retrying from `/Users/steve/Git/plasmate` failed DNS for `github.com`.
+  Work continued from local branch
+  `codex/plasmate-improvements-2026-05-15-cache-key-lookup` at `184ef21`.
+- Market direction: current Playwright MCP docs still center fresh
+  accessibility snapshots and snapshot-scoped refs; Stagehand/Browserbase are
+  pushing cached action validation, verified agents, and metrics; Firecrawl and
+  Crawl4AI continue broadening extraction/crawling breadth. Plasmate should
+  keep the local-first replay-validation wedge rather than pivoting into
+  hosted browser infrastructure.
+- Code changes: Python/Node parser packages and Python/Node/Go SDKs now expose
+  deterministic action-plan fingerprints plus compact action-plan summaries
+  with total/enabled/disabled counts, role counts, and blocked-reason counts.
+  This gives apps a plan-level drift gate before resolving cached targets by
+  SOM id, `cache_key`, or original `html_id`.
+- Docs changes: parser and SDK READMEs, website SDK docs, PRD, roadmap, and
+  generated website docs now explain plan-level replay validation and the next
+  conformance direction.
+- Verification: Python parser tests passed 75 tests; Python SDK query tests
+  passed 43 tests; Node parser tests passed 60 tests; Node SDK tests passed 28
+  tests; Go SDK tests passed; quick and full
+  `./scripts/action-manifest-conformance.sh` passed; `node website/build.mjs`
+  rebuilt 39 docs pages; `cargo build` passed with existing warnings; `git
+  diff --check` passed.
+- Verification gap: full `cargo test` passed 256 lib tests and 5 main/MCP
+  tests, then failed only in `tests/awp_integration_test.rs` because the
+  sandbox denied local socket binding with `Operation not permitted`.
+- Commit/push state: implementation is ready to commit from the primary
+  checkout. Remote merge may remain blocked until GitHub DNS/API access works.
+
 ### 2026-05-15T05:06:27Z - Plasmate Improvements Automation
 
 - Git sync: fetch from the linked automation worktree still cannot open

@@ -128,6 +128,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-15 framework-index read: current official docs keep confirming that sticky local action memory lives in app validation paths, not only engine output. Playwright MCP returns fresh structured refs for each page state, Stagehand/Browserbase validate cached actions before replay, Browserbase sells managed agent sessions, and Crawl4AI keeps normalizing open-source LLM crawlers. Plasmate should push indexed replay helpers into Browser Use, LangChain, and Vercel AI so framework users do not fork parser logic.
 
+2026-05-15 plan-fingerprint read: current competitor motion keeps emphasizing validated replay over one-off observations. Playwright MCP refs are current-snapshot handles, Stagehand/Browserbase action caches validate page state before execution, and Firecrawl/Crawl4AI keep broadening extraction surfaces. Plasmate should add deterministic action-plan fingerprints plus compact summaries so apps can detect drift before replaying cached local actions.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -143,6 +145,8 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-15:
+  - Python/Node parser packages and Python/Node/Go SDKs now expose deterministic action-plan fingerprints and compact summaries with total/enabled/disabled counts, role counts, and blocked-reason counts.
+  - These helpers let apps compare the current compact action surface before resolving stored targets by SOM id, `cache_key`, or `html_id`.
   - Vercel AI now exposes action-plan replay indexes and lookup helpers by SOM id, deterministic `cache_key`, and original `html_id`.
   - Browser Use now exposes enabled-only action-plan extraction and replay indexes, including async variants.
   - LangChain now exposes parser-backed `som_to_action_plan()` and `som_to_action_plan_index()` helpers for raw SOM dicts.

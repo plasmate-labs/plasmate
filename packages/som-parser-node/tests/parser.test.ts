@@ -18,7 +18,9 @@ import {
   findByText,
   getActionPlan,
   getActionPlanCacheKey,
+  getActionPlanFingerprint,
   getActionPlanIndex,
+  getActionPlanSummary,
   getEnabledActionPlan,
   getInteractiveElements,
   getLinks,
@@ -469,6 +471,33 @@ describe('getActionPlan', () => {
     expect(getEnabledActionPlan(som)).toEqual(
       action_targets.filter((target) => target.enabled),
     );
+  });
+
+  it('returns action plan summaries for replay validation', () => {
+    const { som } = loadActionAvailabilityFixture();
+    const summary = getActionPlanSummary(som);
+
+    expect(summary.fingerprint).toBe(getActionPlanFingerprint(som));
+    expect(summary.enabledFingerprint).toBe(
+      getActionPlanFingerprint(som, { enabledOnly: true }),
+    );
+    expect(summary.fingerprint).not.toBe(summary.enabledFingerprint);
+    expect(summary.total).toBe(10);
+    expect(summary.enabled).toBe(7);
+    expect(summary.disabled).toBe(3);
+    expect(summary.byRole).toEqual({
+      button: 3,
+      checkbox: 1,
+      link: 1,
+      radio: 1,
+      select: 1,
+      text_input: 3,
+    });
+    expect(summary.blockedReasons).toEqual({
+      disabled: 1,
+      inert: 1,
+      readonly: 1,
+    });
   });
 
   it('indexes action targets for replay lookups', () => {

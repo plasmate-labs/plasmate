@@ -62,7 +62,9 @@ export {
   flatElements,
   getActionPlan,
   getActionPlanCacheKey,
+  getActionPlanFingerprint,
   getActionPlanIndex,
+  getActionPlanSummary,
   getEnabledActionPlan,
   getTokenEstimate,
 } from './query';

@@ -541,6 +541,12 @@ for target in get_action_plan(som):
 
 cache_key = get_action_plan_cache_key(target)
 </code></pre>
+<h3 id="getactionplanfingerprintsom">`get_action_plan_fingerprint(som)`</h3><p>Return a deterministic plan-level fingerprint for replay drift checks. Pass <code>enabled_only=True</code> when the model-facing menu excludes unavailable targets.</p>
+<pre><code class="language-python">from plasmate.query import get_action_plan_fingerprint, get_action_plan_summary
+
+fingerprint = get_action_plan_fingerprint(som, enabled_only=True)
+summary = get_action_plan_summary(som)
+</code></pre>
 <h3 id="findbytextsom-text">`find_by_text(som, text)`</h3><p>Find elements whose text content contains the given string (case-insensitive).</p>
 <pre><code class="language-python">from plasmate.query import find_by_text
 

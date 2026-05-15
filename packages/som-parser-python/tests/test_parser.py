@@ -26,7 +26,9 @@ from som_parser import (
     from_plasmate,
     get_action_plan,
     get_action_plan_cache_key,
+    get_action_plan_fingerprint,
     get_action_plan_index,
+    get_action_plan_summary,
     get_all_elements,
     get_compression_ratio,
     get_enabled_action_plan,
@@ -619,6 +621,32 @@ class TestGetActionPlan:
         assert get_enabled_action_plan(som) == [
             target for target in expected_targets if target["enabled"]
         ]
+
+    def test_returns_action_plan_summary_for_replay_validation(self):
+        som, _ = _load_action_availability_fixture()
+        summary = get_action_plan_summary(som)
+
+        assert summary["fingerprint"] == get_action_plan_fingerprint(som)
+        assert summary["enabled_fingerprint"] == get_action_plan_fingerprint(
+            som, enabled_only=True
+        )
+        assert summary["fingerprint"] != summary["enabled_fingerprint"]
+        assert summary["total"] == 10
+        assert summary["enabled"] == 7
+        assert summary["disabled"] == 3
+        assert summary["by_role"] == {
+            "button": 3,
+            "checkbox": 1,
+            "link": 1,
+            "radio": 1,
+            "select": 1,
+            "text_input": 3,
+        }
+        assert summary["blocked_reasons"] == {
+            "disabled": 1,
+            "inert": 1,
+            "readonly": 1,
+        }
 
     def test_indexes_action_plan_for_replay_lookups(self):
         som, expected_targets = _load_action_availability_fixture()

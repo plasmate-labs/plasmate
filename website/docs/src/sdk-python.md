@@ -151,6 +151,17 @@ from plasmate.query import get_action_plan_cache_key
 cache_key = get_action_plan_cache_key(target)
 ```
 
+### `get_action_plan_fingerprint(som)`
+
+Return a deterministic plan-level fingerprint for replay drift checks. Pass `enabled_only=True` when the model-facing menu excludes unavailable targets.
+
+```python
+from plasmate.query import get_action_plan_fingerprint, get_action_plan_summary
+
+fingerprint = get_action_plan_fingerprint(som, enabled_only=True)
+summary = get_action_plan_summary(som)
+```
+
 ### `find_by_text(som, text)`
 
 Find elements whose text content contains the given string (case-insensitive).

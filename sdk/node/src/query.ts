@@ -158,6 +158,16 @@ export interface ActionPlanIndex {
   byHtmlId: Record<string, ActionPlanItem>;
 }
 
+export interface ActionPlanSummary {
+  fingerprint: string;
+  enabledFingerprint: string;
+  total: number;
+  enabled: number;
+  disabled: number;
+  byRole: Record<string, number>;
+  blockedReasons: Record<string, number>;
+}
+
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined;
 }
@@ -367,6 +377,44 @@ export function getActionPlanIndex(
     }
   }
   return index;
+}
+
+/** Return a deterministic fingerprint for the current compact action plan. */
+export function getActionPlanFingerprint(
+  som: Som,
+  options?: { enabledOnly?: boolean },
+): string {
+  const plan = options?.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
+  const rows = plan
+    .map((item) => [item.cache_key, item.enabled !== false, item.blocked_reason ?? null])
+    .sort((left, right) => String(left[0]).localeCompare(String(right[0])));
+  return `plasmate-plan:v1:${fnv1a32(JSON.stringify(rows))}`;
+}
+
+/** Return compact action-plan counts and fingerprints for replay validation. */
+export function getActionPlanSummary(som: Som): ActionPlanSummary {
+  const plan = getActionPlan(som);
+  const byRole: Record<string, number> = {};
+  const blockedReasons: Record<string, number> = {};
+  let enabled = 0;
+  for (const item of plan) {
+    byRole[item.role] = (byRole[item.role] ?? 0) + 1;
+    if (item.enabled === false) {
+      const reason = item.blocked_reason ?? 'unknown';
+      blockedReasons[reason] = (blockedReasons[reason] ?? 0) + 1;
+    } else {
+      enabled += 1;
+    }
+  }
+  return {
+    fingerprint: getActionPlanFingerprint(som),
+    enabledFingerprint: getActionPlanFingerprint(som, { enabledOnly: true }),
+    total: plan.length,
+    enabled,
+    disabled: plan.length - enabled,
+    byRole: Object.fromEntries(Object.entries(byRole).sort()),
+    blockedReasons: Object.fromEntries(Object.entries(blockedReasons).sort()),
+  };
 }
 
 /** Find a compact action target by its SOM element id. */

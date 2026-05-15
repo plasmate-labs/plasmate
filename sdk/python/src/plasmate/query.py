@@ -324,6 +324,51 @@ def get_action_plan_index(
     return index
 
 
+def get_action_plan_fingerprint(som: Som, *, enabled_only: bool = False) -> str:
+    """Return a deterministic fingerprint for the current compact action plan."""
+    plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
+    rows = sorted(
+        [
+            [
+                item.get("cache_key"),
+                item.get("enabled") is not False,
+                item.get("blocked_reason"),
+            ]
+            for item in plan
+        ],
+        key=lambda row: str(row[0]),
+    )
+    encoded = json.dumps(rows, separators=(",", ":"))
+    return f"plasmate-plan:v1:{_fnv1a32(encoded)}"
+
+
+def get_action_plan_summary(som: Som) -> Dict[str, object]:
+    """Return compact action-plan counts and fingerprints for replay validation."""
+    plan = get_action_plan(som)
+    by_role: Dict[str, int] = {}
+    blocked_reasons: Dict[str, int] = {}
+    enabled_count = 0
+    for item in plan:
+        role = item.get("role")
+        if isinstance(role, str):
+            by_role[role] = by_role.get(role, 0) + 1
+        if item.get("enabled") is False:
+            reason = item.get("blocked_reason")
+            reason_key = reason if isinstance(reason, str) and reason else "unknown"
+            blocked_reasons[reason_key] = blocked_reasons.get(reason_key, 0) + 1
+        else:
+            enabled_count += 1
+    return {
+        "fingerprint": get_action_plan_fingerprint(som),
+        "enabled_fingerprint": get_action_plan_fingerprint(som, enabled_only=True),
+        "total": len(plan),
+        "enabled": enabled_count,
+        "disabled": len(plan) - enabled_count,
+        "by_role": dict(sorted(by_role.items())),
+        "blocked_reasons": dict(sorted(blocked_reasons.items())),
+    }
+
+
 def find_action_target_by_id(
     som: Som, target_id: str
 ) -> Optional[Dict[str, object]]:

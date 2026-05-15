@@ -17,7 +17,9 @@ import {
   flatElements,
   getActionPlan,
   getActionPlanCacheKey,
+  getActionPlanFingerprint,
   getActionPlanIndex,
+  getActionPlanSummary,
   getEnabledActionPlan,
   getTokenEstimate,
 } from './query';
@@ -310,6 +312,34 @@ describe('getActionPlan', () => {
       getEnabledActionPlan(som),
       action_targets.filter((target) => target.enabled),
     );
+  });
+
+  it('returns action plan summaries for replay validation', () => {
+    const { som } = loadActionAvailabilityFixture();
+    const summary = getActionPlanSummary(som);
+
+    assert.equal(summary.fingerprint, getActionPlanFingerprint(som));
+    assert.equal(
+      summary.enabledFingerprint,
+      getActionPlanFingerprint(som, { enabledOnly: true }),
+    );
+    assert.notEqual(summary.fingerprint, summary.enabledFingerprint);
+    assert.equal(summary.total, 10);
+    assert.equal(summary.enabled, 7);
+    assert.equal(summary.disabled, 3);
+    assert.deepEqual(summary.byRole, {
+      button: 3,
+      checkbox: 1,
+      link: 1,
+      radio: 1,
+      select: 1,
+      text_input: 3,
+    });
+    assert.deepEqual(summary.blockedReasons, {
+      disabled: 1,
+      inert: 1,
+      readonly: 1,
+    });
   });
 
   it('indexes action targets for replay lookups', () => {

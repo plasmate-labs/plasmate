@@ -290,6 +290,17 @@ type ActionPlanIndex struct {
 	ByHTMLID   map[string]ActionPlanItem `json:"by_html_id"`
 }
 
+// ActionPlanSummary gives callers a compact replay-validation view of a plan.
+type ActionPlanSummary struct {
+	Fingerprint        string         `json:"fingerprint"`
+	EnabledFingerprint string         `json:"enabled_fingerprint"`
+	Total              int            `json:"total"`
+	Enabled            int            `json:"enabled"`
+	Disabled           int            `json:"disabled"`
+	ByRole             map[string]int `json:"by_role"`
+	BlockedReasons     map[string]int `json:"blocked_reasons"`
+}
+
 func compactString(value *string) interface{} {
 	if value != nil && *value != "" {
 		return *value
@@ -523,6 +534,55 @@ func GetActionPlanIndex(som *Som, enabledOnly ...bool) ActionPlanIndex {
 		}
 	}
 	return index
+}
+
+// GetActionPlanFingerprint returns a deterministic fingerprint for the current compact action plan.
+func GetActionPlanFingerprint(som *Som, enabledOnly ...bool) string {
+	onlyEnabled := len(enabledOnly) > 0 && enabledOnly[0]
+	plan := GetActionPlan(som)
+	if onlyEnabled {
+		plan = EnabledActionPlan(som)
+	}
+	rows := make([][]interface{}, 0, len(plan))
+	for _, item := range plan {
+		rows = append(rows, []interface{}{item.CacheKey, item.Enabled, item.BlockedReason})
+	}
+	sort.Slice(rows, func(i, j int) bool {
+		return rows[i][0].(string) < rows[j][0].(string)
+	})
+	encoded, err := json.Marshal(rows)
+	if err != nil {
+		return "plasmate-plan:v1:00000000"
+	}
+	hash := fnv.New32a()
+	_, _ = hash.Write(encoded)
+	return fmt.Sprintf("plasmate-plan:v1:%08x", hash.Sum32())
+}
+
+// GetActionPlanSummary returns compact action-plan counts and fingerprints for replay validation.
+func GetActionPlanSummary(som *Som) ActionPlanSummary {
+	plan := GetActionPlan(som)
+	summary := ActionPlanSummary{
+		Fingerprint:        GetActionPlanFingerprint(som),
+		EnabledFingerprint: GetActionPlanFingerprint(som, true),
+		Total:              len(plan),
+		ByRole:             map[string]int{},
+		BlockedReasons:     map[string]int{},
+	}
+	for _, item := range plan {
+		summary.ByRole[item.Role]++
+		if item.Enabled {
+			summary.Enabled++
+		} else {
+			summary.Disabled++
+			reason := "unknown"
+			if item.BlockedReason != nil && *item.BlockedReason != "" {
+				reason = *item.BlockedReason
+			}
+			summary.BlockedReasons[reason]++
+		}
+	}
+	return summary
 }
 
 // FindActionTargetByID returns the compact action target matching a SOM element id.

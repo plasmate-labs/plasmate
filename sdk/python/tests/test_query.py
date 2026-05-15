@@ -31,7 +31,9 @@ from plasmate.query import (
     flat_elements,
     get_action_plan,
     get_action_plan_cache_key,
+    get_action_plan_fingerprint,
     get_action_plan_index,
+    get_action_plan_summary,
     get_enabled_action_plan,
     get_token_estimate,
 )
@@ -369,6 +371,35 @@ class TestGetActionPlan:
         assert get_enabled_action_plan(som) == [
             target for target in expected if target["enabled"]
         ]
+
+    def test_returns_action_plan_summary_for_replay_validation(self) -> None:
+        fixture_dir = REPO_ROOT / "integrations" / "fixtures"
+        som = Som.model_validate(
+            json.loads((fixture_dir / "action-availability.som.json").read_text())
+        )
+
+        summary = get_action_plan_summary(som)
+        assert summary["fingerprint"] == get_action_plan_fingerprint(som)
+        assert summary["enabled_fingerprint"] == get_action_plan_fingerprint(
+            som, enabled_only=True
+        )
+        assert summary["fingerprint"] != summary["enabled_fingerprint"]
+        assert summary["total"] == 10
+        assert summary["enabled"] == 7
+        assert summary["disabled"] == 3
+        assert summary["by_role"] == {
+            "button": 3,
+            "checkbox": 1,
+            "link": 1,
+            "radio": 1,
+            "select": 1,
+            "text_input": 3,
+        }
+        assert summary["blocked_reasons"] == {
+            "disabled": 1,
+            "inert": 1,
+            "readonly": 1,
+        }
 
     def test_indexes_action_plan_for_replay_lookups(self) -> None:
         fixture_dir = REPO_ROOT / "integrations" / "fixtures"

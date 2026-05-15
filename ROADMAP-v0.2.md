@@ -975,6 +975,24 @@ contract.
    keep framework replay indexes aligned before adding more integration
    surfaces.
 
+### 2026-05-15 Action-Plan Fingerprint Adjustment
+
+The market is teaching developers to validate before replay. Playwright MCP
+refs are bound to the current structured snapshot, Stagehand/Browserbase cached
+actions validate page state before execution, and Firecrawl/Crawl4AI keep
+raising extraction breadth expectations. Plasmate already exposes per-target
+lookup paths; the next sticky layer is plan-level drift detection.
+
+1. **Plan fingerprints gate replay**: parser packages and SDKs should expose a
+   deterministic action-plan fingerprint so apps can detect whether the compact
+   action surface has changed before using cached targets.
+2. **Summaries make traces inspectable**: role counts and blocked-reason counts
+   should travel with fingerprints so operators can quickly tell whether drift
+   came from missing controls, disabled state, or a changed menu composition.
+3. **Fingerprint parity belongs in conformance**: the shared action manifest
+   should verify fingerprints and summaries across Python, Node, and Go before
+   plan-level replay validation is promoted as a release guarantee.
+
 ## Architecture
 
 ```
@@ -1444,13 +1462,16 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Browser Use, LangChain, and Vercel AI now expose framework-level replay
   index helpers so app code can validate current action targets without
   reimplementing parser/SDK scans.
+- Python/Node parser packages and Python/Node/Go SDKs now expose deterministic
+  action-plan fingerprints and compact summaries with role and blocked-reason
+  counts so apps can detect plan-level drift before replaying cached targets.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, relationship-context,
   target-provenance/locale, `html_id` bridge, cache-key lookup, action-target
-  id lookup, enabled-plan filtering, action-plan index, and framework replay
-  index cases into broader fixtures alongside text-entry, ARIA widget, range,
-  and set-position cases.
+  id lookup, enabled-plan filtering, action-plan index, framework replay
+  index, and action-plan fingerprint cases into broader fixtures alongside
+  text-entry, ARIA widget, range, and set-position cases.
 
 ## Dependencies to Add
 

@@ -589,6 +589,35 @@ func TestGetActionPlanMatchesSharedAvailabilityManifest(t *testing.T) {
 	if !reflect.DeepEqual(enabled, expectedEnabled) {
 		t.Errorf("EnabledActionPlan() = %#v, want %#v", enabled, expectedEnabled)
 	}
+
+	summary := GetActionPlanSummary(som)
+	if summary.Fingerprint != GetActionPlanFingerprint(som) {
+		t.Errorf("Fingerprint = %q, want helper result", summary.Fingerprint)
+	}
+	if summary.EnabledFingerprint != GetActionPlanFingerprint(som, true) {
+		t.Errorf("EnabledFingerprint = %q, want helper result", summary.EnabledFingerprint)
+	}
+	if summary.Fingerprint == summary.EnabledFingerprint {
+		t.Errorf("Fingerprints should differ when unavailable targets are excluded")
+	}
+	if summary.Total != 10 || summary.Enabled != 7 || summary.Disabled != 3 {
+		t.Errorf("Summary counts = total %d enabled %d disabled %d, want 10/7/3", summary.Total, summary.Enabled, summary.Disabled)
+	}
+	expectedByRole := map[string]int{
+		"button":     3,
+		"checkbox":   1,
+		"link":       1,
+		"radio":      1,
+		"select":     1,
+		"text_input": 3,
+	}
+	if !reflect.DeepEqual(summary.ByRole, expectedByRole) {
+		t.Errorf("ByRole = %#v, want %#v", summary.ByRole, expectedByRole)
+	}
+	expectedBlocked := map[string]int{"disabled": 1, "inert": 1, "readonly": 1}
+	if !reflect.DeepEqual(summary.BlockedReasons, expectedBlocked) {
+		t.Errorf("BlockedReasons = %#v, want %#v", summary.BlockedReasons, expectedBlocked)
+	}
 }
 
 func TestTokenEstimate(t *testing.T) {
