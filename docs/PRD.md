@@ -513,6 +513,15 @@ provenance across parser packages and SDKs so agents can resolve from compact
 SOM targets back to live elements without raw DOM recovery or cloud selector
 memory.
 
+2026-05-15 locator-provenance read: current official docs sharpen the same
+lesson. Playwright MCP refs are intentionally scoped to the current snapshot,
+Stagehand documents local/server action caching, Firecrawl and Browser Use
+sell session/profile continuity, and Firecrawl Interact resumes scraped
+sessions for prompt or code actions. Plasmate should keep cache keys focused on
+semantic targets while surfacing developer-authored anchors (`title`, raw
+`role`, and test locators) as non-cache provenance so local replay and debugging
+work without a hosted selector store.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -539,6 +548,16 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-15:
+  - Rust SOM attrs and JSON Schema now preserve developer-authored action
+    provenance with `title`, raw `source_role`, and normalized `test_id`
+    values from `data-testid`, `data-test`, or `data-qa`.
+  - Python and Node parser packages, Python/Node/Go SDKs, Browser Use,
+    LangChain, and Vercel AI now carry `title`, `source_role`, and `test_id`
+    through compact action plans and prompt renderers without changing
+    deterministic `cache_key` values.
+  - Focused compiler coverage and the shared action-availability manifest now
+    assert locator-provenance parity across parser, SDK, and framework
+    surfaces.
   - Python and Node parser packages now parse and expose `html_id`, add
     original-HTML-id lookup helpers, and include `html_id` in compact action
     plans without changing deterministic `cache_key` values.
@@ -1105,6 +1124,9 @@ and adapter docs over one-off integration logic.
   Rust/parser/SDK and adapter fixtures.
 - Promote `html_id` DOM-provenance cases into shared parser, SDK, and adapter
   conformance so compact targets remain resolvable back to live page elements.
+- Promote locator-provenance cases (`title`, `source_role`, and `test_id`)
+  into broader Rust/parser/SDK and adapter conformance fixtures so local
+  replay can use developer-authored anchors without destabilizing cache keys.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and
   `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures
   once the shared action manifest remains stable.

@@ -82,6 +82,9 @@
           "actions": ["click"],
           "attrs": {
             "accesskey": "s",
+            "title": "Save settings",
+            "source_role": "button",
+            "test_id": "settings-save",
             "popovertarget": "save-status",
             "popovertargetaction": "show",
             "commandfor": "save-status",

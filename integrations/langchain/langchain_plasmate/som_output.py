@@ -271,6 +271,12 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append(f'[formnovalidate="{attrs["formnovalidate"]}"]')
     if attrs.get("accesskey"):
         flags.append(f'[accesskey="{attrs["accesskey"]}"]')
+    if attrs.get("title"):
+        flags.append(f'[title="{attrs["title"]}"]')
+    if attrs.get("source_role"):
+        flags.append(f'[source_role="{attrs["source_role"]}"]')
+    if attrs.get("test_id"):
+        flags.append(f'[test_id="{attrs["test_id"]}"]')
     if "spellcheck" in attrs:
         flags.append(f'[spellcheck="{attrs["spellcheck"]}"]')
     for constraint_key in ("minlength", "maxlength", "min", "max", "step", "pattern"):

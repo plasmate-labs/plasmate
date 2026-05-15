@@ -391,6 +391,14 @@ Current competitor docs keep making the interaction surface both structured and 
 - **Cache keys stay stable**: `html_id` is useful provenance, but should not change deterministic action `cache_key` values because the SOM id, role, label, actions, and field identity remain the cache target.
 - **Parity beats isolated fields**: Python, Node, Go, and shared fixtures should expose the same `html_id` lookup and action-plan context before adapters advertise live-DOM replay support.
 
+### 2026-05-15 Locator Provenance Adjustment
+
+Official docs continue to split reusable action identity from current-page handles. Playwright MCP refs are stable only inside the current accessibility snapshot, Stagehand's local/server caches replay observed actions after matching current state, and Firecrawl/Browser Use profiles keep hosted sessions warm. Plasmate should answer with local non-cache provenance that helps agents resolve, test, and debug compact targets without changing deterministic action memory.
+
+- **Developer anchors are replay evidence**: preserve `title`, raw `role` tokens, and `data-testid`/`data-test`/`data-qa` locators as compact attrs for action targets.
+- **Provenance must stay non-cache**: these fields help live DOM resolution and diagnostics, but should not change `cache_key` values because they can churn independently of semantic target identity.
+- **Adapters should render the same cues**: Browser Use, LangChain, Vercel AI, parser packages, and SDKs should expose `title`, `source_role`, and `test_id` together so no integration needs raw DOM recovery for common app-authored anchors.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -585,11 +593,15 @@ Current competitor docs keep making the interaction surface both structured and 
 - [x] Parser packages and SDKs preserve html_id, expose original-HTML-id lookup helpers, and carry html_id in compact action plans
 - [x] Browser Use, LangChain, and Vercel AI action-plan renderers surface html_id
 - [x] Shared action-availability manifest asserts html_id parity without changing deterministic cache keys
+- [x] Rust SOM attrs and schema preserve title, source_role, and test_id locator provenance
+- [x] Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action plans surface title, source_role, and test_id without changing deterministic cache keys
+- [x] Shared action-availability manifest asserts locator provenance for parser, SDK, and framework adapters
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
 - [ ] Promote html_id DOM-provenance cases into adapter conformance fixtures
+- [ ] Promote locator-provenance cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Add cross-adapter fixtures for enriched compact action-plan metadata
 - [ ] Promote ARIA relationship-state cases, including owns/flowto/details, into the broader action-state/action-semantics conformance suites
 - [ ] Promote range and orientation cases into broader parser, SDK, and adapter conformance fixtures

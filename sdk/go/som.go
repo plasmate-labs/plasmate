@@ -79,6 +79,9 @@ type ElementAttrs struct {
 	ContentEditable interface{}    `json:"contenteditable,omitempty"`
 	TabIndex        interface{}    `json:"tabindex,omitempty"`
 	AccessKey       *string        `json:"accesskey,omitempty"`
+	Title           *string        `json:"title,omitempty"`
+	SourceRole      *string        `json:"source_role,omitempty"`
+	TestID          *string        `json:"test_id,omitempty"`
 	Spellcheck      interface{}    `json:"spellcheck,omitempty"`
 	Name            *string        `json:"name,omitempty"`
 	Accept          *string        `json:"accept,omitempty"`

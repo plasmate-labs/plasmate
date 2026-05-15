@@ -378,8 +378,12 @@ Implementations SHOULD preserve common actionability attributes on any element:
 `enterkeyhint`, `form`, `list`, `popovertarget`, `popovertargetaction`,
 `commandfor`, `command`, `popover`, `button_type`, `formaction`,
 `formmethod`, `formenctype`, `formtarget`, `formnovalidate`, `accesskey`,
-`readonly`, `inert`, `min`, `max`, `step`, and `description`. The
+`title`, `source_role`, `test_id`, `readonly`, `inert`, `min`, `max`, `step`,
+and `description`. The
 `description` value is resolved from `aria-describedby` or `aria-description`.
+The `source_role` value is the raw HTML `role` attribute, and `test_id`
+normalizes developer-authored `data-testid`, `data-test`, or `data-qa`
+locators for local replay and diagnostics.
 These attributes are especially important for custom controls that are exposed
 through ARIA roles instead of native form elements.
 

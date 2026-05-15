@@ -227,6 +227,9 @@
               ]
             },
             "accesskey": { "type": "string" },
+            "title": { "type": "string" },
+            "source_role": { "type": "string" },
+            "test_id": { "type": "string" },
             "spellcheck": {
               "oneOf": [
                 { "type": "boolean" },

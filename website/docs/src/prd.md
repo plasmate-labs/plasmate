@@ -120,6 +120,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-15 HTML-id parity read: current competitor docs keep making structured refs and validated cached actions the reusable browser-agent surface. Playwright MCP refs are snapshot-scoped, Stagehand `observe()` returns cacheable action objects, and Browser Run/WebMCP is exploring browser-native tool contracts. Plasmate should keep `html_id` as portable local DOM provenance across parser packages and SDKs so agents can resolve from compact SOM targets back to live elements without raw DOM recovery or cloud selector memory.
 
+2026-05-15 locator-provenance read: current official docs sharpen the same lesson. Playwright MCP refs are intentionally scoped to the current snapshot, Stagehand documents local/server action caching, Firecrawl and Browser Use sell session/profile continuity, and Firecrawl Interact resumes scraped sessions for prompt or code actions. Plasmate should keep cache keys focused on semantic targets while surfacing developer-authored anchors (`title`, raw `role`, and test locators) as non-cache provenance so local replay and debugging work without a hosted selector store.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -135,6 +137,9 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-15:
+  - Rust SOM attrs and JSON Schema now preserve developer-authored action provenance with `title`, raw `source_role`, and normalized `test_id` values from `data-testid`, `data-test`, or `data-qa`.
+  - Python and Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI now carry `title`, `source_role`, and `test_id` through compact action plans and prompt renderers without changing deterministic `cache_key` values.
+  - Focused compiler coverage and the shared action-availability manifest now assert locator-provenance parity across parser, SDK, and framework surfaces.
   - Python and Node parser packages now parse and expose `html_id`, add original-HTML-id lookup helpers, and include `html_id` in compact action plans without changing deterministic `cache_key` values.
   - Python, Node, and Go SDKs now preserve `html_id`, expose lookup helpers, and carry DOM provenance into action-plan items for live-page resolution.
   - Browser Use, LangChain, and Vercel AI action-plan renderers now surface `html_id` so framework prompts keep live-DOM provenance alongside cache identity.
@@ -333,6 +338,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Promote submit-button override cases (`button_type`, `formaction`, `formmethod`, `formenctype`, `formtarget`, and `formnovalidate`) into broader Rust/parser/SDK and adapter conformance fixtures.
 - Promote graphical submitter cases (`input type="image"`, `button_type`, `alt`, and `src`) into the shared action manifest and adapter conformance fixtures.
 - Promote `html_id` DOM-provenance cases into shared parser, SDK, and adapter conformance so compact targets remain resolvable back to live page elements.
+- Promote locator-provenance cases (`title`, `source_role`, and `test_id`) into broader Rust/parser/SDK and adapter conformance fixtures so local replay can use developer-authored anchors without destabilizing cache keys.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures once the shared action manifest remains stable.
 - Promote form-relation cases (`form`, `list`, and `aria-errormessage`) into broader parser, SDK, and adapter conformance fixtures.
 - Promote live-region cases (`aria-busy`, `aria-live`, `aria-atomic`, and `aria-relevant`) into broader Rust/parser/SDK conformance fixtures.

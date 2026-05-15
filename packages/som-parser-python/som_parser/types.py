@@ -116,6 +116,9 @@ class SomElementAttrs(BaseModel):
     contenteditable: Optional[bool | str] = None
     tabindex: Optional[int | str] = None
     accesskey: Optional[str] = None
+    title: Optional[str] = None
+    source_role: Optional[str] = None
+    test_id: Optional[str] = None
     spellcheck: Optional[bool | str] = None
     name: Optional[str] = None
     accept: Optional[str] = None

@@ -92,6 +92,9 @@ export interface ActionPlanItem {
   formtarget?: string;
   formnovalidate?: boolean;
   accesskey?: string;
+  title?: string;
+  source_role?: string;
+  test_id?: string;
   spellcheck?: boolean | string;
   input_type?: string;
   value?: string;
@@ -237,6 +240,9 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.formtarget) item.formtarget = el.attrs.formtarget;
     if (el.attrs?.formnovalidate !== undefined) item.formnovalidate = el.attrs.formnovalidate;
     if (el.attrs?.accesskey) item.accesskey = el.attrs.accesskey;
+    if (el.attrs?.title) item.title = el.attrs.title;
+    if (el.attrs?.source_role) item.source_role = el.attrs.source_role;
+    if (el.attrs?.test_id) item.test_id = el.attrs.test_id;
     if (el.attrs?.spellcheck !== undefined) item.spellcheck = el.attrs.spellcheck;
     if (el.attrs?.input_type) item.input_type = el.attrs.input_type;
     if (el.attrs?.value) item.value = el.attrs.value;
