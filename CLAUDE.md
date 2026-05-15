@@ -82,9 +82,13 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   `cargo build` passed with existing warnings; `cargo test --lib --bin
   plasmate` passed 257 lib tests and 5 main/MCP tests; `git diff --check`
   passed.
-- Commit/push state: implementation is ready to commit from the primary
-  checkout. Remote push and merge may remain blocked until GitHub DNS/fetch
-  access works.
+- Commit/push state: committed `59e6c4d`
+  (`chore: preserve replay provenance cues`) and pushed
+  `origin/codex/plasmate-improvements-2026-05-15-cache-key-lookup`. Direct
+  `HEAD:master` push was rejected with `fetch first`; targeted
+  `git fetch origin master` still failed DNS for `github.com`; and `gh pr
+  create` could not connect to `api.github.com`. Remote merge remains blocked
+  until GitHub fetch/API access works or the pushed branch is merged elsewhere.
 
 ### 2026-05-15T10:10:19Z - Plasmate Improvements Automation
 
