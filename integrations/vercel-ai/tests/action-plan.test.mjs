@@ -176,6 +176,10 @@ assert.equal(summary.with_cache_key, 10)
 assert.equal(summary.unique_cache_keys, 10)
 assert.deepEqual(summary.duplicate_cache_keys, [])
 assert.equal(summary.with_html_id, 3)
+assert.deepEqual(summary.duplicate_html_ids, [])
+assert.equal(summary.with_test_id, 2)
+assert.equal(summary.with_data_action, 1)
+assert.equal(summary.with_data_state, 2)
 assert.deepEqual(summary.by_role, {
   button: 3,
   checkbox: 1,

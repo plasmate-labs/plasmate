@@ -546,6 +546,7 @@ cache_key = get_action_plan_cache_key(target)
 
 fingerprint = get_action_plan_fingerprint(som, enabled_only=True)
 summary = get_action_plan_summary(som)
+print(summary[&quot;duplicate_html_ids&quot;], summary[&quot;with_test_id&quot;])
 </code></pre>
 <h3 id="findbytextsom-text-exactfalse">`find_by_text(som, text, exact=False)`</h3><p>Find elements whose visible text or control label matches the given string. The
 default is case-insensitive substring search; <code>exact=True</code> is case-sensitive.</p>

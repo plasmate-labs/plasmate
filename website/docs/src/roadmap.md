@@ -500,6 +500,14 @@ Current Playwright MCP, Stagehand/Browserbase, Browserbase observability, and Fi
 - **Collisions must be visible**: duplicate cache keys should be surfaced as a list so apps can reject ambiguous local action memory.
 - **Frameworks need the same signal**: Browser Use, LangChain, and Vercel AI should expose the same replay-coverage fields as parser packages and SDKs.
 
+### 2026-05-15 Replay Summary Provenance Adjustment
+
+Current browser-agent products keep making reusable action memory depend on current structured state. Playwright MCP refs are fresh-snapshot handles, Stagehand/Browserbase cached actions validate before replay, and Firecrawl plus Browser Use sell hosted session continuity around the same repeated-work problem. Plasmate should keep the local-first wedge by making summaries expose source-id ambiguity and provenance-anchor coverage before full lookup.
+
+- **Source-id ambiguity should be cheap to detect**: summaries should include duplicate HTML-id lists alongside duplicate cache-key lists.
+- **App-owned anchors are retention signals**: summaries should count targets with `test_id`, `data_action`, and `data_state` so replay gates know whether stable production markers are still present.
+- **Adapters inherit the contract**: Browser Use, LangChain, and Vercel AI should surface the same coverage counts as parser packages and SDKs.
+
 ## Completed (v0.3)
 
 - SPA Rendering Bridge: V8 mutations flow into real DOM tree, SOM recompiled after JS
@@ -684,6 +692,7 @@ Current Playwright MCP, Stagehand/Browserbase, Browserbase observability, and Fi
 - [x] Python and Node SDK text search now matches labels as well as visible text
 - [x] Python, Node, and Go SDKs support exact case-sensitive text/label lookup
 - [x] Action-plan summaries expose cache-key coverage, duplicate cache keys, and source `html_id` coverage across parser packages, SDKs, Browser Use, LangChain, and Vercel AI
+- [x] Action-plan summaries expose duplicate HTML-id lists plus `test_id`, `data_action`, and `data_state` coverage across parser packages, SDKs, Browser Use, LangChain, and Vercel AI
 - [x] Action-plan indexes expose all cache-key and HTML-id candidates plus duplicate-key lists across parser packages, SDKs, and Vercel AI
 - [x] SOM schema/spec, parser packages, SDKs, Browser Use, LangChain, and Vercel AI carry replay provenance with test_id, data_action, and data_state
 - [x] Rust compiler resolves id-less wrapped-label controls by DOM path
@@ -707,6 +716,7 @@ Current Playwright MCP, Stagehand/Browserbase, Browserbase observability, and Fi
 - [ ] Promote inert availability cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote framework fingerprint/summary helpers into the shared action-manifest conformance gate
 - [ ] Promote replay-coverage summary fields into the shared action-manifest conformance gate
+- [ ] Promote replay-summary provenance coverage into the shared action-manifest conformance gate
 - [ ] Promote replay-ambiguity index buckets into the shared action-manifest conformance gate
 - [ ] Promote replay-provenance cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote browser-default form fidelity cases into shared parser, SDK, and adapter conformance fixtures

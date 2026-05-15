@@ -101,7 +101,7 @@ const ratio = getCompressionRatio(som);
 | `getActionPlanCacheKey(item): string` | Return a deterministic key for caching or comparing an action target. |
 | `getActionPlanIndex(som, { enabledOnly }): ActionPlanIndex` | Index compact action targets by first-match maps and all-candidate cache-key/HTML-id buckets, with duplicate key lists for replay ambiguity checks. |
 | `getActionPlanFingerprint(som, { enabledOnly }): string` | Return a deterministic plan-level fingerprint for replay drift checks. |
-| `getActionPlanSummary(som): ActionPlanSummary` | Return action-plan fingerprints plus total/enabled/disabled, role, blocked-reason, cache-key coverage, duplicate cache-key, and `html_id` coverage counts. |
+| `getActionPlanSummary(som): ActionPlanSummary` | Return action-plan fingerprints plus total/enabled/disabled, role, blocked-reason, cache-key/HTML-id coverage, duplicate key/id lists, and replay provenance counts. |
 | `findActionTargetByCacheKey(som, cacheKey, { enabledOnly }): ActionPlanItem \| undefined` | Resolve a cached action target from the current SOM action plan; pass `enabledOnly` to ignore disabled/read-only/inert targets. |
 | `findActionTargetById(som, id, { enabledOnly }): ActionPlanItem \| undefined` | Resolve an action target by stable SOM id; pass `enabledOnly` for prompt-safe replay. |
 | `findActionTargetByHtmlId(som, htmlId, { enabledOnly }): ActionPlanItem \| undefined` | Resolve an action target by original HTML id; pass `enabledOnly` for prompt-safe replay. |

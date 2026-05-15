@@ -160,6 +160,7 @@ from plasmate.query import get_action_plan_fingerprint, get_action_plan_summary
 
 fingerprint = get_action_plan_fingerprint(som, enabled_only=True)
 summary = get_action_plan_summary(som)
+print(summary["duplicate_html_ids"], summary["with_test_id"])
 ```
 
 ### `find_by_text(som, text, exact=False)`

@@ -835,6 +835,12 @@ apps can resolve &quot;Email&quot; or &quot;Search&quot; controls without raw DO
 <li><strong>Collisions must be visible</strong>: duplicate cache keys should be surfaced as a list so apps can reject ambiguous local action memory.</li>
 <li><strong>Frameworks need the same signal</strong>: Browser Use, LangChain, and Vercel AI should expose the same replay-coverage fields as parser packages and SDKs.</li>
 </ul>
+<h3 id="2026-05-15-replay-summary-provenance-adjustment">2026-05-15 Replay Summary Provenance Adjustment</h3><p>Current browser-agent products keep making reusable action memory depend on current structured state. Playwright MCP refs are fresh-snapshot handles, Stagehand/Browserbase cached actions validate before replay, and Firecrawl plus Browser Use sell hosted session continuity around the same repeated-work problem. Plasmate should keep the local-first wedge by making summaries expose source-id ambiguity and provenance-anchor coverage before full lookup.</p>
+<ul>
+<li><strong>Source-id ambiguity should be cheap to detect</strong>: summaries should include duplicate HTML-id lists alongside duplicate cache-key lists.</li>
+<li><strong>App-owned anchors are retention signals</strong>: summaries should count targets with <code>test_id</code>, <code>data_action</code>, and <code>data_state</code> so replay gates know whether stable production markers are still present.</li>
+<li><strong>Adapters inherit the contract</strong>: Browser Use, LangChain, and Vercel AI should surface the same coverage counts as parser packages and SDKs.</li>
+</ul>
 <h2 id="completed-v03">Completed (v0.3)</h2><ul>
 <li>SPA Rendering Bridge: V8 mutations flow into real DOM tree, SOM recompiled after JS</li>
 <li>NodeRegistry with bidirectional V8-DOM bindings</li>
@@ -1016,6 +1022,7 @@ apps can resolve &quot;Email&quot; or &quot;Search&quot; controls without raw DO
 <li><input checked="" disabled="" type="checkbox"> Python and Node SDK text search now matches labels as well as visible text</li>
 <li><input checked="" disabled="" type="checkbox"> Python, Node, and Go SDKs support exact case-sensitive text/label lookup</li>
 <li><input checked="" disabled="" type="checkbox"> Action-plan summaries expose cache-key coverage, duplicate cache keys, and source <code>html_id</code> coverage across parser packages, SDKs, Browser Use, LangChain, and Vercel AI</li>
+<li><input checked="" disabled="" type="checkbox"> Action-plan summaries expose duplicate HTML-id lists plus <code>test_id</code>, <code>data_action</code>, and <code>data_state</code> coverage across parser packages, SDKs, Browser Use, LangChain, and Vercel AI</li>
 <li><input checked="" disabled="" type="checkbox"> Action-plan indexes expose all cache-key and HTML-id candidates plus duplicate-key lists across parser packages, SDKs, and Vercel AI</li>
 <li><input checked="" disabled="" type="checkbox"> SOM schema/spec, parser packages, SDKs, Browser Use, LangChain, and Vercel AI carry replay provenance with test_id, data_action, and data_state</li>
 <li><input checked="" disabled="" type="checkbox"> Rust compiler resolves id-less wrapped-label controls by DOM path</li>
@@ -1039,6 +1046,7 @@ apps can resolve &quot;Email&quot; or &quot;Search&quot; controls without raw DO
 <li><input disabled="" type="checkbox"> Promote inert availability cases into broader parser, SDK, and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote framework fingerprint/summary helpers into the shared action-manifest conformance gate</li>
 <li><input disabled="" type="checkbox"> Promote replay-coverage summary fields into the shared action-manifest conformance gate</li>
+<li><input disabled="" type="checkbox"> Promote replay-summary provenance coverage into the shared action-manifest conformance gate</li>
 <li><input disabled="" type="checkbox"> Promote replay-ambiguity index buckets into the shared action-manifest conformance gate</li>
 <li><input disabled="" type="checkbox"> Promote replay-provenance cases into broader Rust/parser/SDK and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote browser-default form fidelity cases into shared parser, SDK, and adapter conformance fixtures</li>

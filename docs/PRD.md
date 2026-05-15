@@ -657,6 +657,15 @@ ambiguity visible in app code: action-plan indexes need all candidates for a
 duplicate `cache_key` or `html_id`, not only the first target, so SDK and
 framework users can block or inspect ambiguous cached actions before execution.
 
+2026-05-15 replay-summary provenance read: current official docs keep
+rewarding validated reuse over raw browser access. Playwright MCP exposes refs
+only inside the current accessibility snapshot, Stagehand/Browserbase action
+caches depend on current-page validation, and Firecrawl/Browser Use keep
+selling hosted session continuity. Plasmate should make local summaries answer
+whether current targets still expose unambiguous source DOM ids and app-owned
+provenance anchors (`test_id`, `data_action`, `data_state`) before a cached
+plan reaches execution.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -688,6 +697,10 @@ and adapter docs over one-off integration logic.
     `with_cache_key` / `withCacheKey`, `unique_cache_keys` /
     `uniqueCacheKeys`, `duplicate_cache_keys` / `duplicateCacheKeys`, and
     `with_html_id` / `withHtmlId`.
+  - Action-plan summaries now also report duplicate source DOM ids and
+    provenance-anchor coverage with `duplicate_html_ids`, `with_test_id`,
+    `with_data_action`, and `with_data_state` (camelCase in Node SDK/parser
+    helpers).
   - Replay validators can now reject ambiguous local action memory before
     executing a cached target, instead of discovering a duplicate cache key or
     missing source DOM-id bridge during action dispatch.
@@ -1428,6 +1441,9 @@ and adapter docs over one-off integration logic.
 - Promote replay-ambiguity index buckets into shared conformance so
   duplicate `cache_key` and `html_id` candidates stay visible across parser,
   SDK, and framework helpers.
+- Promote replay-summary provenance coverage into shared conformance so
+  duplicate HTML ids and app-owned anchor counts stay synchronized across
+  parser, SDK, and framework helpers.
 - Promote enabled-only direct lookup helpers into the shared action manifest so
   cache-key, SOM-id, and original-DOM-id replay gates cannot drift from
   enabled-only index behavior.

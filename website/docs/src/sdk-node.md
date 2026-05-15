@@ -174,6 +174,7 @@ import { getActionPlanFingerprint, getActionPlanSummary } from 'plasmate';
 
 const fingerprint = getActionPlanFingerprint(som, { enabledOnly: true });
 const summary = getActionPlanSummary(som);
+console.log(summary.duplicateHtmlIds, summary.withTestId);
 ```
 
 ### `findByText(som, text, options?)`

@@ -501,6 +501,10 @@ describe('getActionPlan', () => {
     expect(summary.uniqueCacheKeys).toBe(10);
     expect(summary.duplicateCacheKeys).toEqual([]);
     expect(summary.withHtmlId).toBe(3);
+    expect(summary.duplicateHtmlIds).toEqual([]);
+    expect(summary.withTestId).toBe(2);
+    expect(summary.withDataAction).toBe(1);
+    expect(summary.withDataState).toBe(2);
     expect(summary.byRole).toEqual({
       button: 3,
       checkbox: 1,
@@ -545,6 +549,11 @@ describe('getActionPlan', () => {
     expect(index.byCacheKeyAll[cacheKey]).toHaveLength(2);
     expect(index.duplicateHtmlIds).toEqual(['work-email']);
     expect(index.byHtmlIdAll['work-email']).toHaveLength(2);
+    const duplicateSummary = getActionPlanSummary(duplicateSom);
+    expect(duplicateSummary.duplicateCacheKeys).toEqual([cacheKey]);
+    expect(duplicateSummary.duplicateHtmlIds).toEqual(['work-email']);
+    expect(duplicateSummary.withTestId).toBe(3);
+    expect(duplicateSummary.withDataState).toBe(3);
   });
 
   it('matches the shared action availability manifest', () => {

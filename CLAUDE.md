@@ -49,6 +49,42 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-15T17:11:47Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch origin --prune` still fails in the linked
+  automation worktree because it cannot open `FETCH_HEAD`; retrying from the
+  primary checkout still fails DNS resolution for `github.com`. Work continued
+  on `codex/plasmate-improvements-2026-05-15-cache-key-lookup` in
+  `/Users/steve/Git/plasmate`.
+- Market direction: current official docs and competitor positioning continue
+  to favor validated replay over raw browser access. Playwright MCP keeps refs
+  scoped to fresh accessibility snapshots, Stagehand/Browserbase emphasize
+  cached action validation, Firecrawl and Browser Use keep adding hosted
+  browser/session surfaces, and Cloudflare Browser Rendering broadens hosted
+  browser APIs. Plasmate should keep strengthening local SOM replay summaries
+  instead of pivoting into hosted browser infrastructure.
+- Code changes: Python/Node parser packages, Python/Node/Go SDKs, Browser Use,
+  LangChain, and Vercel AI action-plan summaries now expose
+  `duplicate_html_ids` plus replay provenance coverage counts for `test_id`,
+  `data_action`, and `data_state` (`duplicateHtmlIds`, `withTestId`,
+  `withDataAction`, and `withDataState` in Node-style helpers). Existing
+  first-match lookup maps, all-candidate index buckets, and deterministic
+  action cache keys are unchanged.
+- Docs changes: parser/SDK/framework READMEs, PRD, roadmap source, generated
+  website docs, and this running state now describe replay-summary provenance
+  coverage as the next local replay validation layer.
+- Verification: Python parser tests passed 76 tests; Python SDK query tests
+  passed 46 tests; Node parser tests passed 61 tests; Node SDK tests passed 31
+  tests after build; Go SDK tests passed; Browser Use and LangChain fixture
+  tests passed with local parser `PYTHONPATH`; Vercel AI package tests passed;
+  quick action-manifest conformance passed across parser packages, SDKs,
+  Browser Use, LangChain, and Vercel AI; `node website/build.mjs` rebuilt 39
+  docs pages; `cargo build` passed with existing warnings; `cargo test --lib
+  --bin plasmate` passed 257 lib tests and 5 main/MCP tests; `git diff
+  --check` passed. Full `cargo test` still fails only in
+  `tests/awp_integration_test.rs` because the sandbox denies local socket
+  binding with `Operation not permitted`.
+
 ### 2026-05-15T16:10:12Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch origin --prune` still fails in the linked

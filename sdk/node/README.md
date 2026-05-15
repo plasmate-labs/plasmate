@@ -132,6 +132,8 @@ console.log(
   planSummary.enabled,
   planSummary.uniqueCacheKeys,
   planSummary.duplicateCacheKeys,
+  planSummary.duplicateHtmlIds,
+  planSummary.withTestId,
 );
 
 // Search by visible text or control label (case-insensitive by default)
@@ -160,7 +162,7 @@ browser.close();
 | `getActionPlanCacheKey(item)` | `string` | Deterministic key for caching or comparing action targets |
 | `getActionPlanIndex(som, { enabledOnly })` | `ActionPlanIndex` | Index compact action targets by first-match maps and all-candidate cache-key/HTML-id buckets, with duplicate key lists for replay ambiguity checks |
 | `getActionPlanFingerprint(som, { enabledOnly })` | `string` | Deterministic plan-level fingerprint for replay drift checks |
-| `getActionPlanSummary(som)` | `ActionPlanSummary` | Action-plan fingerprints plus total/enabled/disabled, role, blocked-reason, cache-key coverage, duplicate cache-key, and `html_id` coverage counts |
+| `getActionPlanSummary(som)` | `ActionPlanSummary` | Action-plan fingerprints plus total/enabled/disabled, role, blocked-reason, cache-key/HTML-id coverage, duplicate key/id lists, and replay provenance counts |
 | `findActionTargetByCacheKey(som, cacheKey, { enabledOnly })` | `ActionPlanItem \| undefined` | Resolve a cached action target; pass `enabledOnly` to ignore disabled/read-only/inert targets |
 | `findActionTargetById(som, id, { enabledOnly })` | `ActionPlanItem \| undefined` | Resolve an action target by stable SOM id; pass `enabledOnly` for prompt-safe replay |
 | `findActionTargetByHtmlId(som, htmlId, { enabledOnly })` | `ActionPlanItem \| undefined` | Resolve an action target by original HTML id; pass `enabledOnly` for prompt-safe replay |

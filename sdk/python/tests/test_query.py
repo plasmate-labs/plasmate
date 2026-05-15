@@ -417,6 +417,10 @@ class TestGetActionPlan:
         assert summary["unique_cache_keys"] == 10
         assert summary["duplicate_cache_keys"] == []
         assert summary["with_html_id"] == 3
+        assert summary["duplicate_html_ids"] == []
+        assert summary["with_test_id"] == 2
+        assert summary["with_data_action"] == 1
+        assert summary["with_data_state"] == 2
         assert summary["by_role"] == {
             "button": 3,
             "checkbox": 1,
@@ -468,6 +472,11 @@ class TestGetActionPlan:
         assert len(index["by_cache_key_all"][cache_key]) == 2
         assert index["duplicate_html_ids"] == ["work-email"]
         assert len(index["by_html_id_all"]["work-email"]) == 2
+        duplicate_summary = get_action_plan_summary(som)
+        assert duplicate_summary["duplicate_cache_keys"] == [cache_key]
+        assert duplicate_summary["duplicate_html_ids"] == ["work-email"]
+        assert duplicate_summary["with_test_id"] == 3
+        assert duplicate_summary["with_data_state"] == 3
 
 
 class TestFindByText:

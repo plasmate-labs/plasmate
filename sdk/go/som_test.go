@@ -674,13 +674,24 @@ func TestGetActionPlanMatchesSharedAvailabilityManifest(t *testing.T) {
 	if summary.Total != 10 || summary.Enabled != 7 || summary.Disabled != 3 {
 		t.Errorf("Summary counts = total %d enabled %d disabled %d, want 10/7/3", summary.Total, summary.Enabled, summary.Disabled)
 	}
-	if summary.WithCacheKey != 10 || summary.UniqueCacheKeys != 10 || len(summary.DuplicateCacheKeys) != 0 || summary.WithHTMLID != 3 {
+	if summary.WithCacheKey != 10 ||
+		summary.UniqueCacheKeys != 10 ||
+		len(summary.DuplicateCacheKeys) != 0 ||
+		summary.WithHTMLID != 3 ||
+		len(summary.DuplicateHTMLIDs) != 0 ||
+		summary.WithTestID != 2 ||
+		summary.WithDataAction != 1 ||
+		summary.WithDataState != 2 {
 		t.Errorf(
-			"Summary replay coverage = cache %d unique %d duplicates %#v html %d, want 10/10/[]/3",
+			"Summary replay coverage = cache %d unique %d duplicates %#v html %d duplicate html %#v test %d action %d state %d, want 10/10/[]/3/[]/2/1/2",
 			summary.WithCacheKey,
 			summary.UniqueCacheKeys,
 			summary.DuplicateCacheKeys,
 			summary.WithHTMLID,
+			summary.DuplicateHTMLIDs,
+			summary.WithTestID,
+			summary.WithDataAction,
+			summary.WithDataState,
 		)
 	}
 	expectedByRole := map[string]int{

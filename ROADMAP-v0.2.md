@@ -1104,6 +1104,27 @@ apps can resolve "Email" or "Search" controls without raw DOM recovery.
    text-or-label search because agents and users choose controls by accessible
    names.
 
+### 2026-05-15 Replay Summary Provenance Adjustment
+
+The latest competitor read keeps pointing to the same product wedge:
+validated replay needs cheap current-state checks before execution. Playwright
+MCP refs are scoped to fresh accessibility snapshots, Stagehand/Browserbase
+cache actions only after validation, Firecrawl and Browser Use continue adding
+hosted browser/session breadth, and Cloudflare Browser Rendering is widening
+browser APIs around structured extraction. Plasmate should keep the local-first
+path by making compact action-plan summaries explain whether current targets
+have enough stable anchors to replay safely.
+
+1. **HTML-id ambiguity belongs in summaries**: `duplicate_html_ids` should sit
+   beside duplicate cache keys so apps can reject ambiguous DOM-id bridges
+   without building a full index first.
+2. **Provenance coverage is a drift signal**: `with_test_id`,
+   `with_data_action`, and `with_data_state` counts tell teams whether a page
+   still exposes the app-owned anchors their local action memory expects.
+3. **Framework helpers should inherit the same gate**: Browser Use, LangChain,
+   and Vercel AI summaries should report the same replay coverage as parser
+   packages and SDKs so framework users do not fork validation logic.
+
 ## Architecture
 
 ```
@@ -1609,6 +1630,10 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   action memory before reusing a cached target, aligning Plasmate with the
   current market emphasis on validated action replay while keeping the wedge
   local-first.
+- Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+  and Vercel AI action-plan summaries now also expose duplicate HTML-id lists
+  plus `test_id`, `data_action`, and `data_state` coverage counts, giving
+  replay gates a fast provenance-health check before full target lookup.
 - Rust SOM compilation and the JSON Schema now preserve replay provenance with
   `test_id`, `data_action`, and `data_state`.
 - Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
@@ -1624,8 +1649,9 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   id lookup, enabled-only direct lookup, enabled-plan filtering, action-plan
   index, replay-ambiguity index buckets, framework replay index,
   action-plan fingerprint, framework fingerprint/summary, replay-coverage
-  summary, and replay-provenance cases into broader fixtures alongside
-  text-entry, ARIA widget, range, and set-position cases.
+  summary, replay-summary provenance coverage, and replay-provenance cases
+  into broader fixtures alongside text-entry, ARIA widget, range, and
+  set-position cases.
 
 ## Dependencies to Add
 

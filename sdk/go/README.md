@@ -98,7 +98,7 @@ required := plasmate.FindByHint(som, "required")
 plan := plasmate.GetActionPlan(som)
 fingerprint := plasmate.GetActionPlanFingerprint(som, true)
 summary := plasmate.GetActionPlanSummary(som)
-fmt.Println(fingerprint, summary.Enabled, summary.UniqueCacheKeys, summary.DuplicateCacheKeys)
+fmt.Println(fingerprint, summary.Enabled, summary.UniqueCacheKeys, summary.DuplicateCacheKeys, summary.DuplicateHTMLIDs, summary.WithTestID)
 all := plasmate.FlatElements(som)
 ```
 
@@ -137,7 +137,7 @@ all := plasmate.FlatElements(som)
 | `GetActionPlanCacheKey(item)` | Return a deterministic key for caching or comparing an action target |
 | `GetActionPlanIndex(som, enabledOnly...)` | Index compact action targets by first-match maps and all-candidate cache-key/HTML-id buckets, with duplicate key lists for replay ambiguity checks |
 | `GetActionPlanFingerprint(som, enabledOnly...)` | Return a deterministic plan-level fingerprint for replay drift checks |
-| `GetActionPlanSummary(som)` | Return action-plan fingerprints plus total/enabled/disabled, role, blocked-reason, cache-key coverage, duplicate cache-key, and HTML-id coverage counts |
+| `GetActionPlanSummary(som)` | Return action-plan fingerprints plus total/enabled/disabled, role, blocked-reason, cache-key/HTML-id coverage, duplicate key/id lists, and replay provenance counts |
 | `FindActionTargetByCacheKey(som, cacheKey, enabledOnly...)` | Resolve a cached action target; pass `true` to ignore disabled/read-only/inert targets |
 | `FindActionTargetByID(som, id, enabledOnly...)` | Resolve an action target by stable SOM id; pass `true` for prompt-safe replay |
 | `FindActionTargetByHTMLID(som, htmlID, enabledOnly...)` | Resolve an action target by original HTML id; pass `true` for prompt-safe replay |

@@ -176,6 +176,10 @@ export interface ActionPlanSummary {
   uniqueCacheKeys: number;
   duplicateCacheKeys: string[];
   withHtmlId: number;
+  duplicateHtmlIds: string[];
+  withTestId: number;
+  withDataAction: number;
+  withDataState: number;
   byRole: Record<string, number>;
   blockedReasons: Record<string, number>;
 }
@@ -442,9 +446,13 @@ export function getActionPlanSummary(som: Som): ActionPlanSummary {
   const byRole: Record<string, number> = {};
   const blockedReasons: Record<string, number> = {};
   const cacheKeyCounts: Record<string, number> = {};
+  const htmlIdCounts: Record<string, number> = {};
   let enabled = 0;
   let withCacheKey = 0;
   let withHtmlId = 0;
+  let withTestId = 0;
+  let withDataAction = 0;
+  let withDataState = 0;
   for (const item of plan) {
     byRole[item.role] = (byRole[item.role] ?? 0) + 1;
     if (item.cache_key) {
@@ -453,7 +461,11 @@ export function getActionPlanSummary(som: Som): ActionPlanSummary {
     }
     if (item.html_id) {
       withHtmlId += 1;
+      htmlIdCounts[item.html_id] = (htmlIdCounts[item.html_id] ?? 0) + 1;
     }
+    if (item.test_id) withTestId += 1;
+    if (item.data_action) withDataAction += 1;
+    if (item.data_state) withDataState += 1;
     if (item.enabled === false) {
       const reason = item.blocked_reason ?? 'unknown';
       blockedReasons[reason] = (blockedReasons[reason] ?? 0) + 1;
@@ -465,6 +477,10 @@ export function getActionPlanSummary(som: Som): ActionPlanSummary {
     .filter(([, count]) => count > 1)
     .map(([cacheKey]) => cacheKey)
     .sort();
+  const duplicateHtmlIds = Object.entries(htmlIdCounts)
+    .filter(([, count]) => count > 1)
+    .map(([htmlId]) => htmlId)
+    .sort();
   return {
     fingerprint: getActionPlanFingerprint(som),
     enabledFingerprint: getActionPlanFingerprint(som, { enabledOnly: true }),
@@ -475,6 +491,10 @@ export function getActionPlanSummary(som: Som): ActionPlanSummary {
     uniqueCacheKeys: Object.keys(cacheKeyCounts).length,
     duplicateCacheKeys,
     withHtmlId,
+    duplicateHtmlIds,
+    withTestId,
+    withDataAction,
+    withDataState,
     byRole: Object.fromEntries(Object.entries(byRole).sort()),
     blockedReasons: Object.fromEntries(Object.entries(blockedReasons).sort()),
   };

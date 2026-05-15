@@ -199,6 +199,10 @@ def test_som_to_action_plan_helpers_support_replay_indexes():
     assert summary["unique_cache_keys"] == 10
     assert summary["duplicate_cache_keys"] == []
     assert summary["with_html_id"] == 3
+    assert summary["duplicate_html_ids"] == []
+    assert summary["with_test_id"] == 2
+    assert summary["with_data_action"] == 1
+    assert summary["with_data_state"] == 2
     assert summary["by_role"] == {
         "button": 3,
         "checkbox": 1,

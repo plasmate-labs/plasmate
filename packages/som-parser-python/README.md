@@ -77,7 +77,14 @@ ready_target = index["by_cache_key"].get(plan[0]["cache_key"])
 ambiguous_keys = index["duplicate_cache_keys"]
 fingerprint = get_action_plan_fingerprint(som, enabled_only=True)
 summary = get_action_plan_summary(som)
-print(fingerprint, summary["enabled"], summary["unique_cache_keys"], summary["duplicate_cache_keys"])
+print(
+    fingerprint,
+    summary["enabled"],
+    summary["unique_cache_keys"],
+    summary["duplicate_cache_keys"],
+    summary["duplicate_html_ids"],
+    summary["with_test_id"],
+)
 
 for button in find_by_action(som, "click"):
     print(button.id, button.text or button.label)
@@ -136,7 +143,7 @@ print(som.model_dump_json(indent=2))
 | `get_action_plan_cache_key(item) -> str` | Return a deterministic key for caching or comparing an action target |
 | `get_action_plan_index(som, enabled_only=False) -> dict` | Index compact action targets by `by_id`, `by_cache_key`, `by_cache_key_all`, `by_html_id`, and `by_html_id_all`, plus duplicate key lists for replay ambiguity checks |
 | `get_action_plan_fingerprint(som, enabled_only=False) -> str` | Return a deterministic plan-level fingerprint for replay drift checks |
-| `get_action_plan_summary(som) -> dict` | Return action-plan fingerprints plus total/enabled/disabled, role, blocked-reason, cache-key coverage, duplicate cache-key, and `html_id` coverage counts |
+| `get_action_plan_summary(som) -> dict` | Return action-plan fingerprints plus total/enabled/disabled, role, blocked-reason, cache-key/HTML-id coverage, duplicate key/id lists, and replay provenance counts |
 | `find_action_target_by_cache_key(som, cache_key, enabled_only=False) -> dict \| None` | Resolve a cached action target from the current SOM action plan; pass `enabled_only=True` to ignore disabled/read-only/inert targets |
 | `find_action_target_by_id(som, id, enabled_only=False) -> dict \| None` | Resolve an action target by stable SOM id; pass `enabled_only=True` for prompt-safe replay |
 | `find_action_target_by_html_id(som, html_id, enabled_only=False) -> dict \| None` | Resolve an action target by original HTML id; pass `enabled_only=True` for prompt-safe replay |

@@ -147,7 +147,9 @@ For reusable action workflows, `som_to_action_plan()`,
 `som_to_action_plan_summary()` expose the same compact replay contract used by
 the parser packages. Store a fingerprint or summary with cached targets, then
 resolve the current target by SOM id, `cache_key`, or `html_id` only after the
-plan-level drift check still matches.
+plan-level drift check still matches. Summaries include duplicate HTML-id
+lists and provenance counts for `test_id`, `data_action`, and `data_state`
+coverage.
 
 ## Token Efficiency
 

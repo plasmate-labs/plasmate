@@ -172,6 +172,8 @@ print(
     plan_summary["enabled"],
     plan_summary["unique_cache_keys"],
     plan_summary["duplicate_cache_keys"],
+    plan_summary["duplicate_html_ids"],
+    plan_summary["with_test_id"],
 )
 
 # Search by visible text or control label (case-insensitive by default)

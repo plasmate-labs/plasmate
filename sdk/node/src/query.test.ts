@@ -355,6 +355,10 @@ describe('getActionPlan', () => {
     assert.equal(summary.uniqueCacheKeys, 10);
     assert.deepEqual(summary.duplicateCacheKeys, []);
     assert.equal(summary.withHtmlId, 3);
+    assert.deepEqual(summary.duplicateHtmlIds, []);
+    assert.equal(summary.withTestId, 2);
+    assert.equal(summary.withDataAction, 1);
+    assert.equal(summary.withDataState, 2);
     assert.deepEqual(summary.byRole, {
       button: 3,
       checkbox: 1,
@@ -399,6 +403,11 @@ describe('getActionPlan', () => {
     assert.equal(index.byCacheKeyAll[cacheKey].length, 2);
     assert.deepEqual(index.duplicateHtmlIds, ['work-email']);
     assert.equal(index.byHtmlIdAll['work-email'].length, 2);
+    const duplicateSummary = getActionPlanSummary(duplicateSom);
+    assert.deepEqual(duplicateSummary.duplicateCacheKeys, [cacheKey]);
+    assert.deepEqual(duplicateSummary.duplicateHtmlIds, ['work-email']);
+    assert.equal(duplicateSummary.withTestId, 3);
+    assert.equal(duplicateSummary.withDataState, 3);
   });
 });
 

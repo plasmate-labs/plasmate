@@ -556,6 +556,7 @@ const cacheKey = getActionPlanCacheKey(target);
 
 const fingerprint = getActionPlanFingerprint(som, { enabledOnly: true });
 const summary = getActionPlanSummary(som);
+console.log(summary.duplicateHtmlIds, summary.withTestId);
 </code></pre>
 <h3 id="findbytextsom-text-options">`findByText(som, text, options?)`</h3><p>Find elements whose visible text or control label matches the given string. The
 default is case-insensitive substring search; <code>{ exact: true }</code> is

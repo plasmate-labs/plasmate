@@ -93,13 +93,21 @@ fingerprint = extractor.extract_action_plan_fingerprint(
     "https://example.com/settings",
     enabled_only=True,
 )
-print(summary["enabled"], summary["unique_cache_keys"], summary["duplicate_cache_keys"], fingerprint)
+print(
+    summary["enabled"],
+    summary["unique_cache_keys"],
+    summary["duplicate_cache_keys"],
+    summary["duplicate_html_ids"],
+    summary["with_test_id"],
+    fingerprint,
+)
 ```
 
 Use the summary and fingerprint helpers before replaying cached Browser Use
 actions: they reveal whether the current page still has the same compact action
 menu, whether replay lookup is complete or ambiguous, and whether drift came
-from missing targets, disabled/read-only controls, or a changed role mix.
+from missing targets, disabled/read-only controls, duplicate DOM-id bridges,
+missing provenance anchors, or a changed role mix.
 
 Browser Use page contexts are tested against the shared
 `integrations/fixtures/action-availability.som.json` fixture so availability,

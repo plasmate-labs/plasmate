@@ -381,9 +381,13 @@ def get_action_plan_summary(som: Som) -> Dict[str, object]:
     by_role: Dict[str, int] = {}
     blocked_reasons: Dict[str, int] = {}
     cache_key_counts: Dict[str, int] = {}
+    html_id_counts: Dict[str, int] = {}
     enabled_count = 0
     with_cache_key = 0
     with_html_id = 0
+    with_test_id = 0
+    with_data_action = 0
+    with_data_state = 0
     for item in plan:
         role = item.get("role")
         if isinstance(role, str):
@@ -395,6 +399,13 @@ def get_action_plan_summary(som: Som) -> Dict[str, object]:
         html_id = item.get("html_id")
         if isinstance(html_id, str) and html_id:
             with_html_id += 1
+            html_id_counts[html_id] = html_id_counts.get(html_id, 0) + 1
+        if isinstance(item.get("test_id"), str) and item["test_id"]:
+            with_test_id += 1
+        if isinstance(item.get("data_action"), str) and item["data_action"]:
+            with_data_action += 1
+        if isinstance(item.get("data_state"), str) and item["data_state"]:
+            with_data_state += 1
         if item.get("enabled") is False:
             reason = item.get("blocked_reason")
             reason_key = reason if isinstance(reason, str) and reason else "unknown"
@@ -403,6 +414,9 @@ def get_action_plan_summary(som: Som) -> Dict[str, object]:
             enabled_count += 1
     duplicate_cache_keys = sorted(
         key for key, count in cache_key_counts.items() if count > 1
+    )
+    duplicate_html_ids = sorted(
+        key for key, count in html_id_counts.items() if count > 1
     )
     return {
         "fingerprint": get_action_plan_fingerprint(som),
@@ -414,6 +428,10 @@ def get_action_plan_summary(som: Som) -> Dict[str, object]:
         "unique_cache_keys": len(cache_key_counts),
         "duplicate_cache_keys": duplicate_cache_keys,
         "with_html_id": with_html_id,
+        "duplicate_html_ids": duplicate_html_ids,
+        "with_test_id": with_test_id,
+        "with_data_action": with_data_action,
+        "with_data_state": with_data_state,
         "by_role": dict(sorted(by_role.items())),
         "blocked_reasons": dict(sorted(blocked_reasons.items())),
     }

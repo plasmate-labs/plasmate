@@ -219,6 +219,10 @@ export interface PlasmateActionPlanSummary {
   unique_cache_keys: number
   duplicate_cache_keys: string[]
   with_html_id: number
+  duplicate_html_ids: string[]
+  with_test_id: number
+  with_data_action: number
+  with_data_state: number
   by_role: Record<string, number>
   blocked_reasons: Record<string, number>
 }
@@ -733,9 +737,13 @@ export function getPlasmateActionPlanSummary(
   const byRole: Record<string, number> = {}
   const blockedReasons: Record<string, number> = {}
   const cacheKeyCounts: Record<string, number> = {}
+  const htmlIdCounts: Record<string, number> = {}
   let enabled = 0
   let withCacheKey = 0
   let withHtmlId = 0
+  let withTestId = 0
+  let withDataAction = 0
+  let withDataState = 0
 
   for (const target of plan) {
     const role = target.role ?? 'target'
@@ -746,7 +754,11 @@ export function getPlasmateActionPlanSummary(
     }
     if (target.html_id) {
       withHtmlId += 1
+      htmlIdCounts[target.html_id] = (htmlIdCounts[target.html_id] ?? 0) + 1
     }
+    if (target.test_id) withTestId += 1
+    if (target.data_action) withDataAction += 1
+    if (target.data_state) withDataState += 1
 
     if (target.enabled === false) {
       const reason = target.blocked_reason ?? 'unknown'
@@ -758,6 +770,10 @@ export function getPlasmateActionPlanSummary(
   const duplicateCacheKeys = Object.entries(cacheKeyCounts)
     .filter(([, count]) => count > 1)
     .map(([cacheKey]) => cacheKey)
+    .sort()
+  const duplicateHtmlIds = Object.entries(htmlIdCounts)
+    .filter(([, count]) => count > 1)
+    .map(([htmlId]) => htmlId)
     .sort()
 
   return {
@@ -772,6 +788,10 @@ export function getPlasmateActionPlanSummary(
     unique_cache_keys: Object.keys(cacheKeyCounts).length,
     duplicate_cache_keys: duplicateCacheKeys,
     with_html_id: withHtmlId,
+    duplicate_html_ids: duplicateHtmlIds,
+    with_test_id: withTestId,
+    with_data_action: withDataAction,
+    with_data_state: withDataState,
     by_role: Object.fromEntries(Object.entries(byRole).sort()),
     blocked_reasons: Object.fromEntries(Object.entries(blockedReasons).sort()),
   }

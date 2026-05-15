@@ -146,6 +146,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-15 replay-ambiguity read: current browser-agent docs still point to validated replay instead of blind first-match reuse. Playwright MCP avoids stale references by scoping refs to a fresh snapshot, Stagehand/Browserbase validate cached actions against current page state, and Cloudflare Browser Run is expanding hosted CDP/MCP execution. Plasmate should make duplicate local replay keys visible through action-plan indexes so app code can block or inspect ambiguous cached targets before execution.
 
+2026-05-15 replay-summary provenance read: current official docs keep rewarding validated reuse over raw browser access. Playwright MCP exposes refs only inside the current accessibility snapshot, Stagehand/Browserbase action caches depend on current-page validation, and Firecrawl/Browser Use keep selling hosted session continuity. Plasmate should make local summaries answer whether current targets still expose unambiguous source DOM ids and app-owned provenance anchors (`test_id`, `data_action`, `data_state`) before a cached plan reaches execution.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -162,6 +164,7 @@ The project already spans a large number of package and integration surfaces: Ru
 
 - 2026-05-15:
   - Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI action-plan summaries now report replay coverage: cache-key target count, unique cache-key count, duplicate cache-key list, and source `html_id` target count.
+  - Action-plan summaries now also report duplicate source DOM ids plus `test_id`, `data_action`, and `data_state` coverage across parser packages, SDKs, Browser Use, LangChain, and Vercel AI.
   - Replay validators can now reject ambiguous local action memory before executing a cached target, instead of discovering a duplicate cache key or missing source DOM-id bridge during action dispatch.
   - Focused parser, SDK, Browser Use, LangChain, and Vercel AI tests now assert replay-coverage summary fields against the shared action-availability fixture.
   - Rust SOM compilation now preserves common replay provenance as `attrs.test_id`, `attrs.data_action`, and `attrs.data_state`.
@@ -399,6 +402,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Promote replay-provenance cases (`test_id`, `data_action`, and `data_state`) from the shared action-availability manifest into broader Rust/parser/SDK and adapter fixtures.
 - Promote enabled-only direct lookup helpers into shared parser/SDK conformance so direct replay gates and enabled-only indexes cannot drift.
 - Promote replay-ambiguity index buckets into shared parser/SDK and framework conformance so duplicate cache-key and HTML-id candidates stay visible.
+- Promote replay-summary provenance coverage into shared parser/SDK and framework conformance so duplicate HTML ids and app-owned anchor counts stay synchronized.
 - Promote browser-default form fidelity cases (id-less wrapped labels, invalid input-type fallback, and default/invalid form method normalization) into shared Rust/parser/SDK and adapter fixtures.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures once the shared action manifest remains stable.
 - Promote form-relation cases (`form`, `list`, and `aria-errormessage`) into broader parser, SDK, and adapter conformance fixtures.

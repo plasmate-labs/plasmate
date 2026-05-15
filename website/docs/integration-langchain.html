@@ -549,7 +549,9 @@ tools = get_plasmate_tools(client=client)
 <code>som_to_action_plan_summary()</code> expose the same compact replay contract used by
 the parser packages. Store a fingerprint or summary with cached targets, then
 resolve the current target by SOM id, <code>cache_key</code>, or <code>html_id</code> only after the
-plan-level drift check still matches.</p>
+plan-level drift check still matches. Summaries include duplicate HTML-id
+lists and provenance counts for <code>test_id</code>, <code>data_action</code>, and <code>data_state</code>
+coverage.</p>
 <h2 id="token-efficiency">Token Efficiency</h2><p>Compared to LangChain&#39;s <code>WebBaseLoader</code> which passes raw HTML:</p>
 <table>
 <thead>
