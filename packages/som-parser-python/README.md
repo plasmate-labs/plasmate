@@ -50,19 +50,21 @@ for el in find_by_role(som, "link"):
 from som_parser import (
     parse_som,
     find_action_target_by_cache_key,
+    find_action_target_by_html_id,
+    find_action_target_by_id,
     find_by_action,
     get_action_plan,
+    get_enabled_action_plan,
 )
 
 som = parse_som(data)
-plan = get_action_plan(som)
+plan = get_enabled_action_plan(som)
 for item in plan:
-    if item["enabled"]:
-        print(item["id"], item["cache_key"], item["role"], item["actions"], item.get("label"))
-    else:
-        print(item["id"], "blocked:", item.get("blocked_reason"))
+    print(item["id"], item["cache_key"], item["role"], item["actions"], item.get("label"))
 
 cached = find_action_target_by_cache_key(som, plan[0]["cache_key"])
+same_target = find_action_target_by_id(som, plan[0]["id"])
+dom_target = find_action_target_by_html_id(som, "save-settings")
 
 for button in find_by_action(som, "click"):
     print(button.id, button.text or button.label)
@@ -117,8 +119,11 @@ print(som.model_dump_json(indent=2))
 | `find_by_action(som, action) -> list[SomElement]` | Find elements that expose a specific action |
 | `find_by_hint(som, hint) -> list[SomElement]` | Find elements tagged with a semantic hint |
 | `get_action_plan(som) -> list[dict]` | Return compact `{id, html_id, cache_key, role, actions, enabled, label}` action targets with availability, original DOM-id bridge cues, link target/rel/download cues, graphical submitter alt/src cues, form/list and form submission context, submitter override cues, select selected_values/size context, popover/command relation cues, title/label/description ID relationships, ARIA source text plus locale/direction cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues |
+| `get_enabled_action_plan(som) -> list[dict]` | Return compact action targets whose `enabled` field is not false |
 | `get_action_plan_cache_key(item) -> str` | Return a deterministic key for caching or comparing an action target |
 | `find_action_target_by_cache_key(som, cache_key) -> dict \| None` | Resolve a cached action target from the current SOM action plan |
+| `find_action_target_by_id(som, id) -> dict \| None` | Resolve an action target by stable SOM id |
+| `find_action_target_by_html_id(som, html_id) -> dict \| None` | Resolve an action target by original HTML id |
 | `get_interactive_elements(som) -> list[SomElement]` | Get elements that have actions |
 | `get_links(som) -> list[dict]` | Extract all links as `{text, href, id}` dicts |
 | `get_forms(som) -> list[SomRegion]` | Get all form regions |

@@ -479,6 +479,39 @@ func FindActionTargetByCacheKey(som *Som, cacheKey string) *ActionPlanItem {
 	return nil
 }
 
+// EnabledActionPlan returns compact action targets that are currently available.
+func EnabledActionPlan(som *Som) []ActionPlanItem {
+	var result []ActionPlanItem
+	for _, item := range GetActionPlan(som) {
+		if item.Enabled {
+			result = append(result, item)
+		}
+	}
+	return result
+}
+
+// FindActionTargetByID returns the compact action target matching a SOM element id.
+func FindActionTargetByID(som *Som, id string) *ActionPlanItem {
+	for _, item := range GetActionPlan(som) {
+		if item.ID == id {
+			matched := item
+			return &matched
+		}
+	}
+	return nil
+}
+
+// FindActionTargetByHTMLID returns the compact action target matching an original HTML id.
+func FindActionTargetByHTMLID(som *Som, htmlID string) *ActionPlanItem {
+	for _, item := range GetActionPlan(som) {
+		if item.HTMLID != nil && *item.HTMLID == htmlID {
+			matched := item
+			return &matched
+		}
+	}
+	return nil
+}
+
 func flattenRegionElements(elements []Element) []Element {
 	var result []Element
 	flattenElements(elements, &result)

@@ -24,6 +24,8 @@ export { parseSom, isValidSom, fromPlasmate } from './parser.js';
 export {
   getAllElements,
   findActionTargetByCacheKey,
+  findActionTargetByHtmlId,
+  findActionTargetById,
   findByAction,
   findByHint,
   findByRole,
@@ -32,6 +34,7 @@ export {
   findByText,
   getActionPlan,
   getActionPlanCacheKey,
+  getEnabledActionPlan,
   getInteractiveElements,
   getLinks,
   getForms,

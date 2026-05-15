@@ -8,6 +8,8 @@ import {
   fromPlasmate,
   getAllElements,
   findActionTargetByCacheKey,
+  findActionTargetByHtmlId,
+  findActionTargetById,
   findByAction,
   findByHint,
   findByRole,
@@ -16,6 +18,7 @@ import {
   findByText,
   getActionPlan,
   getActionPlanCacheKey,
+  getEnabledActionPlan,
   getInteractiveElements,
   getLinks,
   getForms,
@@ -27,7 +30,7 @@ import {
   toMarkdown,
   filter,
 } from '../src/index.js';
-import type { Som } from '../src/index.js';
+import type { ActionPlanItem, Som } from '../src/query.js';
 
 const FIXTURE: Som = {
   som_version: '0.1',
@@ -88,7 +91,7 @@ const FIXTURE: Som = {
 const FIXTURE_JSON = JSON.stringify(FIXTURE);
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 
-function loadActionAvailabilityFixture(): { som: Som; action_targets: unknown[] } {
+function loadActionAvailabilityFixture(): { som: Som; action_targets: ActionPlanItem[] } {
   const fixtureDir = resolve(REPO_ROOT, 'integrations/fixtures');
   return {
     som: JSON.parse(readFileSync(resolve(fixtureDir, 'action-availability.som.json'), 'utf8')),
@@ -447,6 +450,24 @@ describe('getActionPlan', () => {
 
     expect(target?.id).toBe('e_7');
     expect(findActionTargetByCacheKey(FIXTURE, 'missing')).toBeUndefined();
+  });
+
+  it('finds action targets by SOM and HTML ids', () => {
+    const target = findActionTargetById(FIXTURE, 'e_7');
+    expect(target?.cache_key).toBe('plasmate-action:v1:0b6b537f');
+    expect(findActionTargetById(FIXTURE, 'e_3')).toBeUndefined();
+
+    const { som } = loadActionAvailabilityFixture();
+    expect(findActionTargetByHtmlId(som, 'save-settings')?.id).toBe('e_save');
+    expect(findActionTargetByHtmlId(FIXTURE, 'hero-title')).toBeUndefined();
+  });
+
+  it('returns enabled action targets', () => {
+    const { som, action_targets } = loadActionAvailabilityFixture();
+
+    expect(getEnabledActionPlan(som)).toEqual(
+      action_targets.filter((target) => target.enabled),
+    );
   });
 
   it('matches the shared action availability manifest', () => {

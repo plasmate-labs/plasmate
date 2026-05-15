@@ -20,6 +20,8 @@ from plasmate.types import (
 )
 from plasmate.query import (
     find_action_target_by_cache_key,
+    find_action_target_by_html_id,
+    find_action_target_by_id,
     find_by_id,
     find_by_html_id,
     find_by_role,
@@ -29,6 +31,7 @@ from plasmate.query import (
     flat_elements,
     get_action_plan,
     get_action_plan_cache_key,
+    get_enabled_action_plan,
     get_token_estimate,
 )
 
@@ -337,6 +340,34 @@ class TestGetActionPlan:
         assert target is not None
         assert target["id"] == "e9"
         assert find_action_target_by_cache_key(sample_som, "missing") is None
+
+    def test_finds_action_targets_by_ids(self, sample_som: Som) -> None:
+        target = find_action_target_by_id(sample_som, "e9")
+        assert target is not None
+        assert target["cache_key"] == "plasmate-action:v1:5b218ab1"
+        assert find_action_target_by_id(sample_som, "e3") is None
+
+        fixture_dir = REPO_ROOT / "integrations" / "fixtures"
+        som = Som.model_validate(
+            json.loads((fixture_dir / "action-availability.som.json").read_text())
+        )
+        html_target = find_action_target_by_html_id(som, "save-settings")
+        assert html_target is not None
+        assert html_target["id"] == "e_save"
+        assert find_action_target_by_html_id(sample_som, "main-copy") is None
+
+    def test_returns_enabled_action_plan(self) -> None:
+        fixture_dir = REPO_ROOT / "integrations" / "fixtures"
+        som = Som.model_validate(
+            json.loads((fixture_dir / "action-availability.som.json").read_text())
+        )
+        expected = json.loads(
+            (fixture_dir / "action-availability.expected.json").read_text()
+        )["action_targets"]
+
+        assert get_enabled_action_plan(som) == [
+            target for target in expected if target["enabled"]
+        ]
 
 
 class TestFindByText:

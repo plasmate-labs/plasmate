@@ -550,6 +550,15 @@ pressuring extraction breadth. Plasmate should make deterministic `cache_key`
 values directly resolvable to current compact targets across parser packages
 and SDKs, not just generated.
 
+2026-05-15 action-target ergonomics read: current official docs and market
+commentary keep converging on "observe, validate, replay" loops. Playwright MCP
+uses fresh accessibility snapshots for each action, Stagehand/Browserbase pair
+observed actions with cached selector validation, and Firecrawl's extraction
+surface keeps broadening toward agentic data workflows. Plasmate's sticky
+answer is to make the local action menu cheap to use in normal app code:
+resolve by SOM id, resolve by original DOM id, and filter available targets
+without every SDK user hand-scanning the compact plan.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -586,6 +595,13 @@ and adapter docs over one-off integration logic.
     across orchestration and worker runtimes.
   - Parser/SDK docs and tests now cover the cache-key lookup path, preserving
     deterministic `cache_key` values while improving replay ergonomics.
+  - Python/Node parser packages and Python/Node/Go SDKs now expose direct
+    compact-target lookup by SOM id and original DOM id, so agents can bridge
+    stored plans, live selectors, and current SOM state without raw DOM scans.
+  - Python/Node parser packages and Python/Node/Go SDKs now expose enabled-only
+    action-plan helpers for the common "show the model usable targets" path.
+  - Focused parser and SDK tests now cover id lookup, `html_id` lookup, and
+    enabled-plan filtering against the shared action availability manifest.
   - Python/Node parser packages and Python/Node/Go SDK types now accept the
     Rust/SOM-spec `html_id` field, preventing parser drift when core output
     includes original DOM ids.

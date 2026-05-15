@@ -20,6 +20,8 @@ from .parser import from_plasmate, is_valid_som, parse_som
 from .query import (
     filter_elements,
     find_action_target_by_cache_key,
+    find_action_target_by_html_id,
+    find_action_target_by_id,
     find_by_action,
     find_by_hint,
     find_by_html_id,
@@ -30,6 +32,7 @@ from .query import (
     get_action_plan_cache_key,
     get_all_elements,
     get_compression_ratio,
+    get_enabled_action_plan,
     get_forms,
     get_headings,
     get_inputs,
@@ -63,6 +66,8 @@ __all__ = [
     # Query
     "filter_elements",
     "find_action_target_by_cache_key",
+    "find_action_target_by_html_id",
+    "find_action_target_by_id",
     "find_by_action",
     "find_by_hint",
     "find_by_html_id",
@@ -73,6 +78,7 @@ __all__ = [
     "get_action_plan_cache_key",
     "get_all_elements",
     "get_compression_ratio",
+    "get_enabled_action_plan",
     "get_forms",
     "get_headings",
     "get_inputs",

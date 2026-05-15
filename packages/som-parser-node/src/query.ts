@@ -366,6 +366,21 @@ export function findActionTargetByCacheKey(som: Som, cacheKey: string): ActionPl
   return getActionPlan(som).find((item) => item.cache_key === cacheKey);
 }
 
+/** Return compact action targets that are currently available. */
+export function getEnabledActionPlan(som: Som): ActionPlanItem[] {
+  return getActionPlan(som).filter((item) => item.enabled !== false);
+}
+
+/** Find a compact action target by its SOM element id. */
+export function findActionTargetById(som: Som, id: string): ActionPlanItem | undefined {
+  return getActionPlan(som).find((item) => item.id === id);
+}
+
+/** Find a compact action target by its original HTML id. */
+export function findActionTargetByHtmlId(som: Som, htmlId: string): ActionPlanItem | undefined {
+  return getActionPlan(som).find((item) => item.html_id === htmlId);
+}
+
 /** Extract all links with their text and URLs. */
 export function getLinks(som: Som): Array<{ text: string; href: string; id: string }> {
   return findByRole(som, 'link')

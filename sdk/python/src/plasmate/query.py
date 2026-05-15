@@ -296,6 +296,31 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
     return plan
 
 
+def get_enabled_action_plan(som: Som) -> List[Dict[str, object]]:
+    """Return compact action targets that are currently available."""
+    return [item for item in get_action_plan(som) if item.get("enabled") is not False]
+
+
+def find_action_target_by_id(
+    som: Som, target_id: str
+) -> Optional[Dict[str, object]]:
+    """Return the compact action target matching a SOM element id."""
+    for item in get_action_plan(som):
+        if item.get("id") == target_id:
+            return item
+    return None
+
+
+def find_action_target_by_html_id(
+    som: Som, html_id: str
+) -> Optional[Dict[str, object]]:
+    """Return the compact action target matching an original HTML id."""
+    for item in get_action_plan(som):
+        if item.get("html_id") == html_id:
+            return item
+    return None
+
+
 def find_action_target_by_cache_key(
     som: Som, cache_key: str
 ) -> Optional[Dict[str, object]]:

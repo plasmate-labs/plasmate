@@ -457,6 +457,12 @@ func TestGetActionPlan(t *testing.T) {
 	if got := FindActionTargetByCacheKey(som, "missing"); got != nil {
 		t.Errorf("FindActionTargetByCacheKey missing = %v, want nil", got)
 	}
+	if got := FindActionTargetByID(som, filters.ID); got == nil || got.CacheKey != filters.CacheKey {
+		t.Errorf("FindActionTargetByID = %v, want %s", got, filters.CacheKey)
+	}
+	if got := FindActionTargetByID(som, "e3"); got != nil {
+		t.Errorf("FindActionTargetByID non-action = %v, want nil", got)
+	}
 	if filters.Name == nil || *filters.Name != "filters" {
 		t.Errorf("Name = %v, want filters", filters.Name)
 	}
@@ -540,6 +546,30 @@ func TestGetActionPlanMatchesSharedAvailabilityManifest(t *testing.T) {
 
 	if !reflect.DeepEqual(actual, expected.ActionTargets) {
 		t.Errorf("GetActionPlan() = %#v, want %#v", actual, expected.ActionTargets)
+	}
+	if got := FindActionTargetByHTMLID(som, "save-settings"); got == nil || got.ID != "e_save" {
+		t.Errorf("FindActionTargetByHTMLID = %v, want e_save", got)
+	}
+	if got := FindActionTargetByHTMLID(som, "missing"); got != nil {
+		t.Errorf("FindActionTargetByHTMLID missing = %v, want nil", got)
+	}
+
+	enabledBytes, err := json.Marshal(EnabledActionPlan(som))
+	if err != nil {
+		t.Fatalf("Marshal enabled action plan failed: %v", err)
+	}
+	var enabled []map[string]interface{}
+	if err := json.Unmarshal(enabledBytes, &enabled); err != nil {
+		t.Fatalf("Unmarshal enabled action plan failed: %v", err)
+	}
+	var expectedEnabled []map[string]interface{}
+	for _, item := range expected.ActionTargets {
+		if item["enabled"] == true {
+			expectedEnabled = append(expectedEnabled, item)
+		}
+	}
+	if !reflect.DeepEqual(enabled, expectedEnabled) {
+		t.Errorf("EnabledActionPlan() = %#v, want %#v", enabled, expectedEnabled)
 	}
 }
 

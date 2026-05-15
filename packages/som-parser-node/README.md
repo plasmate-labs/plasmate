@@ -34,12 +34,19 @@ const links = getLinks(som);
 ### Plan agent actions
 
 ```typescript
-import { findActionTargetByCacheKey, findByAction, getActionPlan } from 'som-parser';
+import {
+  findActionTargetByCacheKey,
+  findActionTargetByHtmlId,
+  findActionTargetById,
+  findByAction,
+  getEnabledActionPlan,
+} from 'som-parser';
 
-const plan = getActionPlan(som);
+const plan = getEnabledActionPlan(som);
 // Compact action targets with id, cache_key, role, actions, enabled, labels, link target/rel/download cues, graphical submitter alt/src cues, form/list context, form submission metadata, submitter override cues, select selected_values/size context, popover/command relation cues, text-entry/input hints, validation/range cues, and ARIA owns/flowto/details plus orientation/sort/value state.
-const available = plan.filter((item) => item.enabled);
 const cached = findActionTargetByCacheKey(som, plan[0].cache_key);
+const sameTarget = findActionTargetById(som, plan[0].id);
+const domTarget = findActionTargetByHtmlId(som, 'save-settings');
 
 const clickable = findByAction(som, 'click');
 // Elements that can be clicked.
@@ -88,8 +95,11 @@ const ratio = getCompressionRatio(som);
 | `findByAction(som, action): SomElement[]` | Find elements that expose a specific action. |
 | `findByHint(som, hint): SomElement[]` | Find elements tagged with a semantic hint. |
 | `getActionPlan(som): ActionPlanItem[]` | Return compact action targets with cache keys, availability, original DOM-id bridge cues, link target/rel/download cues, graphical submitter alt/src cues, form/list and form submission context, submitter override cues, select selected_values/size context, popover/command relation cues, title/label/description ID relationships, ARIA source text plus locale/direction cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues for agent planning. |
+| `getEnabledActionPlan(som): ActionPlanItem[]` | Return compact action targets whose `enabled` field is not false. |
 | `getActionPlanCacheKey(item): string` | Return a deterministic key for caching or comparing an action target. |
 | `findActionTargetByCacheKey(som, cacheKey): ActionPlanItem \| undefined` | Resolve a cached action target from the current SOM action plan. |
+| `findActionTargetById(som, id): ActionPlanItem \| undefined` | Resolve an action target by stable SOM id. |
+| `findActionTargetByHtmlId(som, htmlId): ActionPlanItem \| undefined` | Resolve an action target by original HTML id. |
 | `getInteractiveElements(som): SomElement[]` | Get all elements that have actions. |
 | `getLinks(som): Array<{ text, href, id }>` | Extract all links with text, URL, and id. |
 | `getForms(som): SomRegion[]` | Get all form regions. |

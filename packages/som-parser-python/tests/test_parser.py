@@ -15,6 +15,8 @@ from som_parser import (
     SomShadowRoot,
     filter_elements,
     find_action_target_by_cache_key,
+    find_action_target_by_html_id,
+    find_action_target_by_id,
     find_by_action,
     find_by_hint,
     find_by_html_id,
@@ -26,6 +28,7 @@ from som_parser import (
     get_action_plan_cache_key,
     get_all_elements,
     get_compression_ratio,
+    get_enabled_action_plan,
     get_forms,
     get_headings,
     get_inputs,
@@ -596,6 +599,25 @@ class TestGetActionPlan:
         assert target is not None
         assert target["id"] == "e_7"
         assert find_action_target_by_cache_key(som, "missing") is None
+
+    def test_finds_action_targets_by_ids(self, som: Som):
+        target = find_action_target_by_id(som, "e_7")
+        assert target is not None
+        assert target["cache_key"] == "plasmate-action:v1:0b6b537f"
+        assert find_action_target_by_id(som, "e_3") is None
+
+        manifest_som, _ = _load_action_availability_fixture()
+        html_target = find_action_target_by_html_id(manifest_som, "save-settings")
+        assert html_target is not None
+        assert html_target["id"] == "e_save"
+        assert find_action_target_by_html_id(som, "hero-title") is None
+
+    def test_returns_enabled_action_plan(self):
+        som, expected_targets = _load_action_availability_fixture()
+
+        assert get_enabled_action_plan(som) == [
+            target for target in expected_targets if target["enabled"]
+        ]
 
     def test_matches_shared_action_availability_manifest(self):
         som, expected_targets = _load_action_availability_fixture()

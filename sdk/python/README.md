@@ -111,8 +111,11 @@ from plasmate import Som, find_by_role, find_by_id, find_by_html_id, find_by_tag
 from plasmate import find_interactive, find_by_text, flat_elements
 from plasmate import (
     find_action_target_by_cache_key,
+    find_action_target_by_html_id,
+    find_action_target_by_id,
     get_action_plan,
     get_action_plan_cache_key,
+    get_enabled_action_plan,
     get_token_estimate,
 )
 
@@ -135,20 +138,21 @@ for el in find_interactive(som):
     print(f"{el.id}: {el.role} - {el.text}")
 
 # Get compact action targets for cached agent workflows
-action_plan = get_action_plan(som)
+action_plan = get_enabled_action_plan(som)
 for target in action_plan:
-    if target["enabled"]:
-        print(
-            target["id"],
-            target["cache_key"],
-            target["actions"],
-            target.get("html_id"),
-            target.get("aria_label"),
-            target.get("dir"),
-            target.get("lang"),
-        )
+    print(
+        target["id"],
+        target["cache_key"],
+        target["actions"],
+        target.get("html_id"),
+        target.get("aria_label"),
+        target.get("dir"),
+        target.get("lang"),
+    )
 
 cached_target = find_action_target_by_cache_key(som, action_plan[0]["cache_key"])
+same_target = find_action_target_by_id(som, action_plan[0]["id"])
+dom_target = find_action_target_by_html_id(som, "login-button")
 
 # Search by text content (case-insensitive)
 results = find_by_text(som, "sign up")

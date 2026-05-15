@@ -3,8 +3,11 @@ import * as assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Som } from './types';
+import type { ActionPlanItem } from './query';
 import {
   findActionTargetByCacheKey,
+  findActionTargetByHtmlId,
+  findActionTargetById,
   findByRole,
   findById,
   findByHtmlId,
@@ -14,6 +17,7 @@ import {
   flatElements,
   getActionPlan,
   getActionPlanCacheKey,
+  getEnabledActionPlan,
   getTokenEstimate,
 } from './query';
 
@@ -127,7 +131,7 @@ const shadowFixture: Som = {
   },
 };
 
-function loadActionAvailabilityFixture(): { som: Som; action_targets: unknown[] } {
+function loadActionAvailabilityFixture(): { som: Som; action_targets: ActionPlanItem[] } {
   const fixtureDir = resolve(process.cwd(), '../../integrations/fixtures');
   return {
     som: JSON.parse(readFileSync(resolve(fixtureDir, 'action-availability.som.json'), 'utf8')),
@@ -286,6 +290,25 @@ describe('getActionPlan', () => {
 
     assert.equal(target?.id, 'e5');
     assert.equal(findActionTargetByCacheKey(fixture, 'missing'), undefined);
+  });
+
+  it('finds action targets by SOM and HTML ids', () => {
+    const target = findActionTargetById(fixture, 'e5');
+    assert.equal(target?.cache_key, 'plasmate-action:v1:f08859f9');
+    assert.equal(findActionTargetById(fixture, 'e3'), undefined);
+
+    const { som } = loadActionAvailabilityFixture();
+    assert.equal(findActionTargetByHtmlId(som, 'save-settings')?.id, 'e_save');
+    assert.equal(findActionTargetByHtmlId(fixture, 'main-copy'), undefined);
+  });
+
+  it('returns enabled action targets', () => {
+    const { som, action_targets } = loadActionAvailabilityFixture();
+
+    assert.deepEqual(
+      getEnabledActionPlan(som),
+      action_targets.filter((target) => target.enabled),
+    );
   });
 });
 

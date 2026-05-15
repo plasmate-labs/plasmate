@@ -49,6 +49,36 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-15T03:12:53Z - Plasmate Improvements Automation
+
+- Git sync: fetch from the linked automation worktree still cannot open
+  `FETCH_HEAD`; retrying from `/Users/steve/Git/plasmate` still fails DNS for
+  `github.com`. Work continued from local branch
+  `codex/plasmate-improvements-2026-05-15-cache-key-lookup` at `7ff4c56`.
+- Market direction: current Playwright MCP docs still center fresh
+  accessibility snapshots, Stagehand/Browserbase emphasize observed and cached
+  actions with page-state validation, and Firecrawl/Crawl4AI keep broadening
+  extraction surfaces. The roadmap remains local-first: make compact SOM
+  action menus easier to validate and reuse before considering hosted browser
+  infrastructure.
+- Code changes: Python/Node parser packages and Python/Node/Go SDKs now expose
+  compact action target lookup by stable SOM id and original `html_id`, plus
+  enabled-only action-plan helpers for prompt-ready reusable menus.
+- Docs changes: parser/SDK READMEs, PRD, roadmap, generated website docs, and
+  this running state now document direct action-target lookup and enabled-plan
+  filtering as the next ergonomic layer after deterministic cache-key lookup.
+- Verification: Python parser tests passed 73 tests; Python SDK query tests
+  passed 41 tests; Node parser tests passed 58 tests; Node SDK tests passed 26
+  tests; Go SDK tests passed; quick and full
+  `./scripts/action-manifest-conformance.sh` passed; `node website/build.mjs`
+  rebuilt 39 pages; `cargo build` passed with existing warnings; `git
+  diff --check` passed.
+- Verification gap: full `cargo test` passed 256 lib tests and 5 main/MCP
+  tests, then failed only in `tests/awp_integration_test.rs` because the
+  sandbox denied local socket binding with `Operation not permitted`.
+- Commit/push state: implementation is ready to commit; remote push and merge
+  may remain blocked until GitHub DNS/API access works.
+
 ### 2026-05-15T02:17:00Z - Plasmate Improvements Automation
 
 - Git sync: fetch from `/Users/steve/Git/plasmate` still fails DNS for

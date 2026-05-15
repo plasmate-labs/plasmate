@@ -922,6 +922,21 @@ role lookup.
 3. **Cache keys stay identity-only**: lookup helpers improve ergonomics without
    changing the deterministic fields used to compute `cache_key` values.
 
+### 2026-05-15 Action-Target Ergonomics Adjustment
+
+The browser-agent market is making action menus a daily developer surface, not
+just an internal representation. Plasmate should reduce the amount of repeated
+application code needed to use local SOM plans.
+
+1. **Direct target lookup should match element lookup**: parser packages and
+   SDKs should resolve compact action targets by SOM id and original DOM id,
+   not only by `cache_key`.
+2. **Available-target menus should be one call**: SDK users should be able to
+   ask for enabled compact targets without reimplementing availability filters.
+3. **Ergonomics should preserve replay identity**: helper additions should
+   improve planning and validation without changing deterministic
+   action-cache-key inputs.
+
 ## Architecture
 
 ```
@@ -1382,12 +1397,15 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Python/Node parser packages and Python/Node/Go SDKs now expose cache-key
   lookup helpers for compact action targets, so local action memory can
   validate stored keys against the current SOM plan without manual scans.
+- Python/Node parser packages and Python/Node/Go SDKs now expose compact action
+  target lookup by SOM id and original DOM id, plus enabled-only action-plan
+  helpers, keeping app-level replay validation small and consistent.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, relationship-context,
-  target-provenance/locale, `html_id` bridge, and cache-key lookup cases into
-  broader fixtures alongside text-entry, ARIA widget, range, and set-position
-  cases.
+  target-provenance/locale, `html_id` bridge, cache-key lookup, action-target
+  id lookup, and enabled-plan filtering cases into broader fixtures alongside
+  text-entry, ARIA widget, range, and set-position cases.
 
 ## Dependencies to Add
 

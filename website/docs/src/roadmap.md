@@ -407,6 +407,14 @@ Stagehand/Browserbase action caching and Playwright MCP snapshot refs keep teach
 - **SDK parity is retention**: Python, Node, and Go should expose the same helper so workers and orchestration code do not reimplement scans.
 - **Cache keys stay identity-only**: lookup helpers improve replay ergonomics without changing deterministic `cache_key` inputs.
 
+### 2026-05-15 Action-Target Ergonomics Adjustment
+
+Action menus are now a daily developer surface, not just an internal representation. Plasmate should reduce repeated application code around local SOM plans.
+
+- **Direct target lookup should match element lookup**: parser packages and SDKs should resolve compact action targets by SOM id and original DOM id.
+- **Available-target menus should be one call**: SDK users should be able to ask for enabled compact targets without hand-written filters.
+- **Ergonomics should preserve replay identity**: helper additions should not change deterministic action-cache-key inputs.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -604,6 +612,8 @@ Stagehand/Browserbase action caching and Playwright MCP snapshot refs keep teach
 - [x] Compact action plans expose title, labelledby, and describedby across parser packages, SDKs, and framework adapters
 - [x] Shared action manifest asserts relationship-context cues without changing deterministic action cache keys
 - [x] Parser packages and Python/Node/Go SDKs expose cache-key lookup helpers for compact action targets
+- [x] Parser packages and Python/Node/Go SDKs expose action-target lookup by SOM id and original DOM id
+- [x] Parser packages and Python/Node/Go SDKs expose enabled-only action-plan helpers
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
