@@ -72,6 +72,10 @@ def test_som_to_text_surfaces_interactive_state():
             assert f'[autocapitalize="{target["autocapitalize"]}"]' in line
         if target.get("dirname"):
             assert f'[dirname="{target["dirname"]}"]' in line
+        if target.get("dir"):
+            assert f'[dir="{target["dir"]}"]' in line
+        if target.get("lang"):
+            assert f'[lang="{target["lang"]}"]' in line
         if target.get("form"):
             assert f'[form="{target["form"]}"]' in line
         if target.get("list"):
@@ -100,7 +104,7 @@ def test_som_to_text_surfaces_interactive_state():
             assert f'[formnovalidate="{target["formnovalidate"]}"]' in line
         if target.get("accesskey"):
             assert f'[accesskey="{target["accesskey"]}"]' in line
-        for relation_key in ("title", "labelledby", "describedby"):
+        for relation_key in ("title", "aria_label", "aria_description", "labelledby", "describedby"):
             if target.get(relation_key):
                 assert f'[{relation_key}="{target[relation_key]}"]' in line
         if "spellcheck" in target:

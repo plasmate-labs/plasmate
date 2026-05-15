@@ -134,8 +134,9 @@ all := plasmate.FlatElements(som)
 The Go types include current SOM actionability fields such as
 `attrs.description`, `attrs.name`, `attrs.accept`, `attrs.capture`,
 `attrs.multiple`, `attrs.autocomplete`, `attrs.inputmode`,
-`attrs.enterkeyhint`, `attrs.autocapitalize`, `attrs.dirname`,
-`attrs.spellcheck`, `attrs.form`, `attrs.list`, `attrs.popovertarget`,
+`attrs.enterkeyhint`, `attrs.autocapitalize`, `attrs.dirname`, `attrs.dir`,
+`attrs.lang`, `attrs.spellcheck`, `attrs.aria_label`,
+`attrs.aria_description`, `attrs.form`, `attrs.list`, `attrs.popovertarget`,
 `attrs.popovertargetaction`, `attrs.commandfor`, `attrs.command`,
 `attrs.button_type`, `attrs.formaction`, `attrs.formmethod`,
 `attrs.formenctype`, `attrs.formtarget`, `attrs.formnovalidate`, `attrs.accesskey`,

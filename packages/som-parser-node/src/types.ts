@@ -108,6 +108,8 @@ export interface SomElementAttrs {
   tabindex?: number | string;
   accesskey?: string;
   title?: string;
+  aria_label?: string;
+  aria_description?: string;
   labelledby?: string;
   describedby?: string;
   spellcheck?: boolean | string;
@@ -119,6 +121,8 @@ export interface SomElementAttrs {
   enterkeyhint?: string;
   autocapitalize?: string;
   dirname?: string;
+  dir?: string;
+  lang?: string;
   form?: string;
   list?: string;
   popovertarget?: string;

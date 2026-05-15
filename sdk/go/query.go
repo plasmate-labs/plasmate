@@ -192,6 +192,8 @@ type ActionPlanItem struct {
 	EnterKeyHint      *string     `json:"enterkeyhint,omitempty"`
 	AutoCapitalize    *string     `json:"autocapitalize,omitempty"`
 	DirName           *string     `json:"dirname,omitempty"`
+	Dir               *string     `json:"dir,omitempty"`
+	Lang              *string     `json:"lang,omitempty"`
 	Form              *string     `json:"form,omitempty"`
 	FormAction        *string     `json:"form_action,omitempty"`
 	FormMethod        *string     `json:"form_method,omitempty"`
@@ -214,6 +216,8 @@ type ActionPlanItem struct {
 	SubmitNoValidate  *bool       `json:"formnovalidate,omitempty"`
 	AccessKey         *string     `json:"accesskey,omitempty"`
 	Title             *string     `json:"title,omitempty"`
+	AriaLabel         *string     `json:"aria_label,omitempty"`
+	AriaDescription   *string     `json:"aria_description,omitempty"`
 	LabelledBy        *string     `json:"labelledby,omitempty"`
 	DescribedBy       *string     `json:"describedby,omitempty"`
 	Spellcheck        interface{} `json:"spellcheck,omitempty"`
@@ -347,6 +351,8 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.EnterKeyHint = el.Attrs.EnterKeyHint
 			item.AutoCapitalize = el.Attrs.AutoCapitalize
 			item.DirName = el.Attrs.DirName
+			item.Dir = el.Attrs.Dir
+			item.Lang = el.Attrs.Lang
 			item.Form = el.Attrs.Form
 			item.List = el.Attrs.List
 			item.PopoverTarget = el.Attrs.PopoverTarget
@@ -362,6 +368,8 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.SubmitNoValidate = el.Attrs.FormNoValidate
 			item.AccessKey = el.Attrs.AccessKey
 			item.Title = el.Attrs.Title
+			item.AriaLabel = el.Attrs.AriaLabel
+			item.AriaDescription = el.Attrs.AriaDescription
 			item.LabelledBy = el.Attrs.LabelledBy
 			item.DescribedBy = el.Attrs.DescribedBy
 			item.Spellcheck = el.Attrs.Spellcheck

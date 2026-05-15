@@ -2098,6 +2098,8 @@ fn build_element_attrs(
         "enterkeyhint",
         "autocapitalize",
         "dirname",
+        "dir",
+        "lang",
         "form",
         "formaction",
         "formmethod",
@@ -2109,11 +2111,15 @@ fn build_element_attrs(
         "commandfor",
         "command",
         "popover",
+        "aria-label",
+        "aria-description",
         "aria-labelledby",
         "aria-describedby",
     ] {
         if let Some((_, value)) = attrs.iter().find(|(n, _)| n == key) {
             let som_key = match key {
+                "aria-label" => "aria_label",
+                "aria-description" => "aria_description",
                 "aria-labelledby" => "labelledby",
                 "aria-describedby" => "describedby",
                 _ => key,
@@ -3194,7 +3200,7 @@ mod tests {
 <html><head><title>Reply</title></head>
 <body>
 <main>
-  <input aria-label="Reply" spellcheck="false" autocapitalize="sentences" dirname="reply.dir" aria-placeholder="Write a response">
+  <input aria-label="Reply" aria-description="Use plain text" spellcheck="false" autocapitalize="sentences" dirname="reply.dir" dir="rtl" lang="ar" aria-placeholder="Write a response">
 </main>
 </body>
 </html>"#;
@@ -3208,8 +3214,12 @@ mod tests {
             .expect("text input should compile");
         let attrs = input.attrs.as_ref().expect("input attrs should compile");
         assert_eq!(attrs["spellcheck"], false);
+        assert_eq!(attrs["aria_label"], "Reply");
+        assert_eq!(attrs["aria_description"], "Use plain text");
         assert_eq!(attrs["autocapitalize"], "sentences");
         assert_eq!(attrs["dirname"], "reply.dir");
+        assert_eq!(attrs["dir"], "rtl");
+        assert_eq!(attrs["lang"], "ar");
         assert_eq!(attrs["aria"]["placeholder"], "Write a response");
     }
 }

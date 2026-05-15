@@ -119,6 +119,10 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append(f"autocapitalize={item['autocapitalize']}")
     if item.get("dirname"):
         flags.append(f"dirname={item['dirname']}")
+    if item.get("dir"):
+        flags.append(f"dir={item['dir']}")
+    if item.get("lang"):
+        flags.append(f"lang={item['lang']}")
     if item.get("form"):
         flags.append(f"form={item['form']}")
     for form_key in (
@@ -153,7 +157,7 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append(f"formnovalidate={item['formnovalidate']}")
     if item.get("accesskey"):
         flags.append(f"accesskey={item['accesskey']}")
-    for relation_key in ("title", "labelledby", "describedby"):
+    for relation_key in ("title", "aria_label", "aria_description", "labelledby", "describedby"):
         if item.get(relation_key):
             flags.append(f"{relation_key}={item[relation_key]}")
     if "spellcheck" in item:

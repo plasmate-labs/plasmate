@@ -146,6 +146,10 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["autocapitalize"] = attrs.autocapitalize
             if attrs.dirname:
                 item["dirname"] = attrs.dirname
+            if attrs.dir:
+                item["dir"] = attrs.dir
+            if attrs.lang:
+                item["lang"] = attrs.lang
             if attrs.form:
                 item["form"] = attrs.form
             if attrs.list:
@@ -176,6 +180,10 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["accesskey"] = attrs.accesskey
             if attrs.title:
                 item["title"] = attrs.title
+            if attrs.aria_label:
+                item["aria_label"] = attrs.aria_label
+            if attrs.aria_description:
+                item["aria_description"] = attrs.aria_description
             if attrs.labelledby:
                 item["labelledby"] = attrs.labelledby
             if attrs.describedby:

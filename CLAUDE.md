@@ -49,6 +49,41 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-15T00:11:24Z - Plasmate Improvements Automation
+
+- Git sync: the automation worktree could not fetch or checkout because the
+  linked worktree still cannot write `FETCH_HEAD` or `index.lock`. Retrying
+  from `/Users/steve/Git/plasmate` failed DNS for `github.com`, so this run
+  continued from the latest local automation branch
+  `codex/action-relationship-context-2026-05-14` at `8bb5adb` and created
+  `codex/plasmate-improvements-2026-05-14-target-context`.
+- Market direction: current Playwright MCP, Stagehand/Browserbase, Firecrawl,
+  Browser Use, and Crawl4AI docs still favor Plasmate's local-first compact
+  action-target wedge. Hosted sessions are crowded; the sticky surface remains
+  trustworthy, portable target state that agents can validate before replay.
+- Code changes: Rust SOM now preserves source `aria-label`,
+  `aria-description`, `dir`, and `lang` as `attrs.aria_label`,
+  `attrs.aria_description`, `attrs.dir`, and `attrs.lang`.
+- Contract changes: JSON Schema/SOM spec, Python/Node parser packages,
+  Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI action-plan
+  surfaces now carry those source-provenance and locale/direction cues without
+  changing deterministic `cache_key` values.
+- Fixture/docs changes: the shared action-availability fixture now asserts
+  `aria_label`, `aria_description`, `dir`, and `lang` on the email target.
+  PRD, roadmap, SDK/adapter READMEs, fixture docs, and this running state were
+  updated with the target-provenance rationale and next conformance step.
+- Verification: focused Rust text-entry compiler test passed; touched Rust
+  formatting passed; JSON validation passed for the shared fixture and schema;
+  `cargo build` passed with existing warnings; `node website/build.mjs` rebuilt
+  39 docs pages; `./scripts/action-manifest-conformance.sh --quick` and the
+  full `./scripts/action-manifest-conformance.sh` passed across Python parser,
+  Node parser, Go SDK, Python SDK, Node SDK, Browser Use, LangChain, and Vercel
+  AI; Python syntax compile and `git diff --check` passed. Full `cargo test`
+  passed 256 lib tests and 5 main/MCP tests, then failed only in
+  `tests/awp_integration_test.rs` because the sandbox denied local socket
+  binding with `Operation not permitted`.
+- Commit/push state: commit, push, and merge are still pending in this run.
+
 ### 2026-05-14T23:09:32Z - Plasmate Improvements Automation
 
 - Git sync: initial fetch from the automation worktree failed because the

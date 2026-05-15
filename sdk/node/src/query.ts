@@ -67,6 +67,8 @@ export interface ActionPlanItem {
   enterkeyhint?: string;
   autocapitalize?: string;
   dirname?: string;
+  dir?: string;
+  lang?: string;
   form?: string;
   form_action?: string;
   form_method?: string;
@@ -89,6 +91,8 @@ export interface ActionPlanItem {
   formnovalidate?: boolean;
   accesskey?: string;
   title?: string;
+  aria_label?: string;
+  aria_description?: string;
   labelledby?: string;
   describedby?: string;
   spellcheck?: boolean | string;
@@ -223,6 +227,8 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.enterkeyhint) item.enterkeyhint = el.attrs.enterkeyhint;
     if (el.attrs?.autocapitalize) item.autocapitalize = el.attrs.autocapitalize;
     if (el.attrs?.dirname) item.dirname = el.attrs.dirname;
+    if (el.attrs?.dir) item.dir = el.attrs.dir;
+    if (el.attrs?.lang) item.lang = el.attrs.lang;
     if (el.attrs?.form) item.form = el.attrs.form;
     if (el.attrs?.list) item.list = el.attrs.list;
     if (el.attrs?.popovertarget) item.popovertarget = el.attrs.popovertarget;
@@ -238,6 +244,8 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.formnovalidate !== undefined) item.formnovalidate = el.attrs.formnovalidate;
     if (el.attrs?.accesskey) item.accesskey = el.attrs.accesskey;
     if (el.attrs?.title) item.title = el.attrs.title;
+    if (el.attrs?.aria_label) item.aria_label = el.attrs.aria_label;
+    if (el.attrs?.aria_description) item.aria_description = el.attrs.aria_description;
     if (el.attrs?.labelledby) item.labelledby = el.attrs.labelledby;
     if (el.attrs?.describedby) item.describedby = el.attrs.describedby;
     if (el.attrs?.spellcheck !== undefined) item.spellcheck = el.attrs.spellcheck;

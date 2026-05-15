@@ -127,6 +127,8 @@ class ElementAttrs(BaseModel):
     tabindex: Optional[int | str] = None
     accesskey: Optional[str] = None
     title: Optional[str] = None
+    aria_label: Optional[str] = None
+    aria_description: Optional[str] = None
     labelledby: Optional[str] = None
     describedby: Optional[str] = None
     spellcheck: Optional[bool | str] = None
@@ -138,6 +140,8 @@ class ElementAttrs(BaseModel):
     enterkeyhint: Optional[str] = None
     autocapitalize: Optional[str] = None
     dirname: Optional[str] = None
+    dir: Optional[str] = None
+    lang: Optional[str] = None
     form: Optional[str] = None
     list: Optional[str] = None
     popovertarget: Optional[str] = None

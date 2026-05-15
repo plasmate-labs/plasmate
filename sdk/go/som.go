@@ -79,6 +79,8 @@ type ElementAttrs struct {
 	TabIndex        interface{}    `json:"tabindex,omitempty"`
 	AccessKey       *string        `json:"accesskey,omitempty"`
 	Title           *string        `json:"title,omitempty"`
+	AriaLabel       *string        `json:"aria_label,omitempty"`
+	AriaDescription *string        `json:"aria_description,omitempty"`
 	LabelledBy      *string        `json:"labelledby,omitempty"`
 	DescribedBy     *string        `json:"describedby,omitempty"`
 	Spellcheck      interface{}    `json:"spellcheck,omitempty"`
@@ -90,6 +92,8 @@ type ElementAttrs struct {
 	EnterKeyHint    *string        `json:"enterkeyhint,omitempty"`
 	AutoCapitalize  *string        `json:"autocapitalize,omitempty"`
 	DirName         *string        `json:"dirname,omitempty"`
+	Dir             *string        `json:"dir,omitempty"`
+	Lang            *string        `json:"lang,omitempty"`
 	Form            *string        `json:"form,omitempty"`
 	List            *string        `json:"list,omitempty"`
 	PopoverTarget   *string        `json:"popovertarget,omitempty"`

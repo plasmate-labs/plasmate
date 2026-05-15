@@ -241,6 +241,10 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append(f'[autocapitalize="{attrs["autocapitalize"]}"]')
     if attrs.get("dirname"):
         flags.append(f'[dirname="{attrs["dirname"]}"]')
+    if attrs.get("dir"):
+        flags.append(f'[dir="{attrs["dir"]}"]')
+    if attrs.get("lang"):
+        flags.append(f'[lang="{attrs["lang"]}"]')
     if attrs.get("form"):
         flags.append(f'[form="{attrs["form"]}"]')
     if attrs.get("list"):
@@ -273,7 +277,7 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append(f'[formnovalidate="{attrs["formnovalidate"]}"]')
     if attrs.get("accesskey"):
         flags.append(f'[accesskey="{attrs["accesskey"]}"]')
-    for relation_key in ("title", "labelledby", "describedby"):
+    for relation_key in ("title", "aria_label", "aria_description", "labelledby", "describedby"):
         if attrs.get(relation_key):
             flags.append(f'[{relation_key}="{attrs[relation_key]}"]')
     if "spellcheck" in attrs:

@@ -54,6 +54,8 @@ assert.deepEqual(email, {
   enterkeyhint: 'next',
   autocapitalize: 'none',
   dirname: 'email.dir',
+  dir: 'ltr',
+  lang: 'en-US',
   form: 'settings-form',
   form_action: '/settings',
   form_method: 'POST',
@@ -65,6 +67,8 @@ assert.deepEqual(email, {
   list: 'email-suggestions',
   placeholder: 'name@company.com',
   title: 'Credential field',
+  aria_label: 'Work email',
+  aria_description: 'Use your work email',
   labelledby: 'email-label',
   describedby: 'email-help',
   spellcheck: false,
@@ -118,7 +122,7 @@ const formatted = formatPlasmateActionPlan(targets, {
 })
 assert.match(
   formatted,
-  /\[e_email\] text_input "Work email" \(type\) \[blocked\] \[cache_key=plasmate-action:v1:b0c57191\] \[blocked_reason=readonly\] \[required\] \[readonly\] \[type=email\] \[value=ops@example\.com\] \[name=email\] \[autocomplete=email\] \[inputmode=email\] \[enterkeyhint=next\] \[autocapitalize=none\] \[dirname=email\.dir\] \[form=settings-form\].*\[form_action=\/settings\] \[form_method=POST\] \[form_target=_self\] \[form_enctype=multipart\/form-data\] \[form_novalidate=true\] \[form_accept_charset=UTF-8\] \[form_autocomplete=off\] \[list=email-suggestions\].*\[title=Credential field\] \[labelledby=email-label\] \[describedby=email-help\] \[spellcheck=false\] \[placeholder=name@company\.com\].*\[invalid=grammar\] \[aria_placeholder=Work email address\] \[aria_autocomplete=list\] \[active_descendant=email-suggestion-1\] \[errormessage=email-error\] \[group=Account\]/
+  /\[e_email\] text_input "Work email" \(type\) \[blocked\] \[cache_key=plasmate-action:v1:b0c57191\] \[blocked_reason=readonly\] \[required\] \[readonly\] \[type=email\] \[value=ops@example\.com\] \[name=email\] \[autocomplete=email\] \[inputmode=email\] \[enterkeyhint=next\] \[autocapitalize=none\] \[dirname=email\.dir\] \[dir=ltr\] \[lang=en-US\] \[form=settings-form\].*\[form_action=\/settings\] \[form_method=POST\] \[form_target=_self\] \[form_enctype=multipart\/form-data\] \[form_novalidate=true\] \[form_accept_charset=UTF-8\] \[form_autocomplete=off\] \[list=email-suggestions\].*\[title=Credential field\] \[aria_label=Work email\] \[aria_description=Use your work email\] \[labelledby=email-label\] \[describedby=email-help\] \[spellcheck=false\] \[placeholder=name@company\.com\].*\[invalid=grammar\] \[aria_placeholder=Work email address\] \[aria_autocomplete=list\] \[active_descendant=email-suggestion-1\] \[errormessage=email-error\] \[group=Account\]/
 )
 assert.match(
   formatted,

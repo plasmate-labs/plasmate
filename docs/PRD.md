@@ -523,6 +523,16 @@ explainable: native `title` help text plus `aria-labelledby`/`aria-describedby`
 ID relationships let agents verify why a control is named or described the way
 it is without re-reading raw DOM.
 
+2026-05-14 target-provenance read: the latest official docs still sharpen the
+same adoption bar. Playwright MCP returns a fresh accessibility snapshot after
+interactions, Stagehand/Browserbase caches only help when the current target
+validates, Firecrawl and Browser Use sell hosted sessions, and Crawl4AI keeps
+raising open-source extraction expectations. Plasmate should keep the
+local-first wedge by preserving small source-level target cues: raw
+`aria-label`/`aria-description` text explains label provenance, while native
+`dir` and `lang` help agents validate bidirectional and multilingual form
+targets before replaying a cached action.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -549,6 +559,16 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-14:
+  - Rust SOM now preserves source `aria-label`, `aria-description`, `dir`, and
+    `lang` as `attrs.aria_label`, `attrs.aria_description`, `attrs.dir`, and
+    `attrs.lang` on compact targets.
+  - JSON Schema/SOM spec, Python/Node parser packages, Python/Node/Go SDKs,
+    Browser Use, LangChain, and Vercel AI now carry those source-provenance and
+    locale/direction cues through action-plan output without changing
+    deterministic `cache_key` values.
+  - The shared action-availability manifest now asserts `aria_label`,
+    `aria_description`, `dir`, and `lang` on the email target so parser, SDK,
+    and framework surfaces cannot drift on multilingual form context.
   - Rust SOM now preserves native `title` help text plus source
     `aria-labelledby` and `aria-describedby` IDREF relationships as
     `attrs.title`, `attrs.labelledby`, and `attrs.describedby`.
@@ -1097,8 +1117,9 @@ and adapter docs over one-off integration logic.
   SDK, and adapter fixtures.
 - Promote input-affordance cases (`inputmode`, `enterkeyhint`, autocomplete
   widget state, active descendants, `spellcheck`, `autocapitalize`,
-  `dirname`, and `aria-placeholder`) into broader parser, SDK, and adapter
-  conformance fixtures once the shared action manifest remains stable.
+  `dirname`, `dir`, `lang`, `aria-label`, `aria-description`, and
+  `aria-placeholder`) into broader parser, SDK, and adapter conformance
+  fixtures once the shared action manifest remains stable.
 - Promote upload-affordance cases (`accept`, `capture`, `multiple`, and
   stable field `name`) into broader Rust/parser/SDK and adapter conformance
   fixtures.

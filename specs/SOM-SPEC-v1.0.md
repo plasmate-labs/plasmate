@@ -263,6 +263,8 @@ field MUST be omitted when the object would be empty.
 | `autocapitalize` | string | Capitalization hint for virtual keyboards, when present. |
 | `spellcheck` | boolean/string | Spellcheck state. Invalid source values are preserved as strings. |
 | `dirname` | string | Directionality submission field name, when present. |
+| `dir` | string | Text direction inherited from or declared on the target, when present. |
+| `lang` | string | Language tag declared on the target, when present. |
 | `accept` | string | Accepted file/media types for upload controls. |
 | `capture` | boolean/string | Capture source hint for upload controls. Empty `capture` is emitted as `true`. |
 | `form` | string | Associated form id, when a form-associated control uses the `form` attribute. |
@@ -378,11 +380,13 @@ Implementations SHOULD preserve common actionability attributes on any element:
 `enterkeyhint`, `form`, `list`, `popovertarget`, `popovertargetaction`,
 `commandfor`, `command`, `popover`, `button_type`, `formaction`,
 `formmethod`, `formenctype`, `formtarget`, `formnovalidate`, `accesskey`,
-`title`, `labelledby`, `describedby`, `readonly`, `inert`, `min`, `max`,
-`step`, and `description`. The `title` value preserves native tooltip/help
-text. `labelledby` and `describedby` preserve the source `aria-labelledby` and
-`aria-describedby` IDREFs while `description` resolves referenced text from
-`aria-describedby` or falls back to `aria-description`.
+`title`, `aria_label`, `aria_description`, `labelledby`, `describedby`, `dir`,
+`lang`, `readonly`, `inert`, `min`, `max`, `step`, and `description`. The
+`title` value preserves native tooltip/help text. `aria_label` and
+`aria_description` preserve source ARIA text while `labelledby` and
+`describedby` preserve the source `aria-labelledby` and `aria-describedby`
+IDREFs. `description` resolves referenced text from `aria-describedby` or falls
+back to `aria-description`.
 These attributes are especially important for custom controls that are exposed
 through ARIA roles instead of native form elements.
 

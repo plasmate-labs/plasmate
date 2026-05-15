@@ -15,6 +15,8 @@ const fixtureTargets: PlasmateActionTarget[] = [
     label: 'Work email',
     actions: ['type'],
     required: true,
+    aria_label: 'Work email',
+    aria_description: 'Use your work email',
     description: 'Use your work email',
     group: 'Account',
   },

@@ -870,6 +870,25 @@ preserve small provenance cues that explain why a target is named or described.
    `aria-describedby` IDs should remain available as `describedby` while
    `description` carries resolved human-facing text.
 
+### 2026-05-14 Target Provenance and Locale Adjustment
+
+The newest competitor read keeps rewarding fresh, explainable action targets.
+Playwright MCP returns updated accessibility snapshots after page changes,
+Stagehand/Browserbase action caches validate before replay, Firecrawl and
+Browser Use keep broadening hosted session surfaces, and Crawl4AI continues to
+raise open-source extraction expectations. Plasmate should keep its local-first
+counter-position by making compact targets carry more source provenance and
+locale context.
+
+1. **Raw ARIA text explains labels**: `aria-label` and `aria-description`
+   should be preserved as `aria_label` and `aria_description` beside resolved
+   labels/descriptions so agents can validate naming provenance.
+2. **Locale and direction are replay context**: native `dir` and `lang` should
+   travel with action targets for multilingual and bidirectional SaaS forms.
+3. **Cache keys stay target-focused**: provenance and locale fields should
+   inform validation and prompt rendering without changing deterministic
+   target identity.
+
 ## Architecture
 
 ```
@@ -1316,11 +1335,18 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   without changing deterministic action cache keys.
 - The shared action-availability fixture now asserts these relationship-context
   cues so label and description provenance stays synchronized across runtimes.
+- Rust SOM now preserves source `aria-label`, `aria-description`, `dir`, and
+  `lang` as compact target context.
+- JSON Schema, SOM spec, parser packages, Python/Node/Go SDKs, Browser Use,
+  LangChain, and Vercel AI now expose `aria_label`, `aria_description`, `dir`,
+  and `lang` without changing deterministic action cache keys.
+- The shared action-availability fixture now asserts target provenance and
+  locale/direction cues across parser, SDK, and framework surfaces.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
-  select-option parser/SDK/adaptor parity, and relationship-context cases into
-  broader fixtures alongside text-entry, ARIA widget, range, and set-position
-  cases.
+  select-option parser/SDK/adaptor parity, relationship-context, and target
+  provenance/locale cases into broader fixtures alongside text-entry, ARIA
+  widget, range, and set-position cases.
 
 ## Dependencies to Add
 
