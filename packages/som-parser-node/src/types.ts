@@ -113,6 +113,7 @@ export interface SomElementAttrs {
   labelledby?: string;
   describedby?: string;
   spellcheck?: boolean | string;
+  draggable?: boolean | string;
   name?: string;
   accept?: string;
   capture?: boolean | string;
@@ -192,6 +193,8 @@ export interface AriaState {
   colindex?: string;
   rowcount?: string;
   colcount?: string;
+  grabbed?: boolean;
+  dropeffect?: string;
   valuemin?: string;
   valuemax?: string;
   valuenow?: string;

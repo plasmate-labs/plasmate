@@ -258,6 +258,7 @@ type ActionPlanItem struct {
 	LabelledBy        *string        `json:"labelledby,omitempty"`
 	DescribedBy       *string        `json:"describedby,omitempty"`
 	Spellcheck        interface{}    `json:"spellcheck,omitempty"`
+	Draggable         interface{}    `json:"draggable,omitempty"`
 	InputType         *string        `json:"input_type,omitempty"`
 	Value             *string        `json:"value,omitempty"`
 	Placeholder       *string        `json:"placeholder,omitempty"`
@@ -304,6 +305,8 @@ type ActionPlanItem struct {
 	ColIndex          *string        `json:"colindex,omitempty"`
 	RowCount          *string        `json:"rowcount,omitempty"`
 	ColCount          *string        `json:"colcount,omitempty"`
+	Grabbed           *bool          `json:"grabbed,omitempty"`
+	DropEffect        *string        `json:"dropeffect,omitempty"`
 	ValueMin          *string        `json:"valuemin,omitempty"`
 	ValueMax          *string        `json:"valuemax,omitempty"`
 	ValueNow          *string        `json:"valuenow,omitempty"`
@@ -456,6 +459,7 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.LabelledBy = el.Attrs.LabelledBy
 			item.DescribedBy = el.Attrs.DescribedBy
 			item.Spellcheck = el.Attrs.Spellcheck
+			item.Draggable = el.Attrs.Draggable
 			item.InputType = el.Attrs.InputType
 			item.Value = el.Attrs.Value
 			item.Placeholder = el.Attrs.Placeholder
@@ -510,6 +514,8 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.ColIndex = el.Attrs.Aria.ColIndex
 				item.RowCount = el.Attrs.Aria.RowCount
 				item.ColCount = el.Attrs.Aria.ColCount
+				item.Grabbed = el.Attrs.Aria.Grabbed
+				item.DropEffect = el.Attrs.Aria.DropEffect
 				item.ValueMin = el.Attrs.Aria.ValueMin
 				item.ValueMax = el.Attrs.Aria.ValueMax
 				item.ValueNow = el.Attrs.Aria.ValueNow

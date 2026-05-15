@@ -219,6 +219,8 @@ assert.match(
 )
 assert.match(formatted, /\[e_compact\].*\[checked=false\]/)
 assert.match(formatted, /\[e_compact\].*\[pressed=false\]/)
+assert.match(formatted, /\[e_compact\].*\[draggable=true\]/)
+assert.match(formatted, /\[e_compact\].*\[grabbed=false\].*\[dropeffect=move\]/)
 assert.match(formatted, /\[e_annual\].*\[checked=true\]/)
 assert.match(formatted, /\[e_annual\].*\[selected=true\]/)
 assert.match(formatted, /\[e_plan\].*\[expanded=false\]/)

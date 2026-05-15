@@ -120,6 +120,8 @@ def test_som_to_text_surfaces_interactive_state():
                 assert f'[{relation_key}="{target[relation_key]}"]' in line
         if "spellcheck" in target:
             assert f'[spellcheck="{target["spellcheck"]}"]' in line
+        if "draggable" in target:
+            assert f'[draggable="{target["draggable"]}"]' in line
         for constraint_key in ("minlength", "maxlength", "min", "max", "step", "pattern"):
             if constraint_key in target:
                 assert f'[{constraint_key}="{target[constraint_key]}"]' in line
@@ -158,6 +160,8 @@ def test_som_to_text_surfaces_interactive_state():
             "colindex",
             "rowcount",
             "colcount",
+            "grabbed",
+            "dropeffect",
             "valuemin",
             "valuemax",
             "valuenow",

@@ -118,6 +118,8 @@ def test_build_context_surfaces_action_availability():
                 assert f'[{relation_key}={target[relation_key]}]' in line
         if "spellcheck" in target:
             assert f'[spellcheck={target["spellcheck"]}]' in line
+        if "draggable" in target:
+            assert f'[draggable={target["draggable"]}]' in line
         if target.get("value"):
             assert f'[value={target["value"]}]' in line
         for constraint_key in ("minlength", "maxlength", "min", "max", "step", "pattern"):
@@ -158,6 +160,8 @@ def test_build_context_surfaces_action_availability():
             "colindex",
             "rowcount",
             "colcount",
+            "grabbed",
+            "dropeffect",
             "valuemin",
             "valuemax",
             "valuenow",

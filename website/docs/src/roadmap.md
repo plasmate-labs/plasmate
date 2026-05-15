@@ -425,6 +425,14 @@ The latest competitor read keeps the local-first strategy intact. Playwright MCP
 - **Grid coordinates reduce ambiguity**: `aria-rowindex`, `aria-colindex`, `aria-rowcount`, and `aria-colcount` help agents validate that a data-grid action still points at the expected row and column.
 - **Cache keys stay target-focused**: modal/grid cues should be visible to agents without changing deterministic `cache_key` values.
 
+### 2026-05-15 Drag-State Action Context Adjustment
+
+Current competitor docs keep emphasizing current-state validation before replay: Playwright MCP refs belong to a fresh snapshot, Stagehand `observe()` and caching validate repeated actions, and Browserbase/Firecrawl package replay observability around browser sessions. Plasmate should keep the local-first wedge by preserving drag/reorder affordances in compact action menus.
+
+- **Native drag state is planning context**: `draggable` should travel with action targets so agents recognize reorderable cards, rows, and kanban items.
+- **ARIA drag state explains current replay drift**: `aria-grabbed` and `aria-dropeffect` should surface as compact `grabbed` and `dropeffect` cues.
+- **Cache keys stay stable**: drag/drop state should validate replay context without changing deterministic target identity.
+
 ### 2026-05-14 Relationship Context Adjustment
 
 Current browser-agent competitors keep making cached action replay depend on target validation against fresh structured state. Plasmate should preserve small provenance cues that explain why a target is named or described.
@@ -720,6 +728,9 @@ Current browser-agent products keep making reusable action memory depend on curr
 - [x] Rust compiler and SOM schema preserve ARIA modal and grid-position cues
 - [x] Compact action plans expose modal, rowindex, colindex, rowcount, and colcount across parser packages, SDKs, and framework adapters
 - [x] Shared action-availability manifest asserts modal/grid cues without changing deterministic action cache keys
+- [x] Rust compiler and SOM schema preserve native draggable plus ARIA grabbed/dropeffect cues
+- [x] Compact action plans expose draggable, grabbed, and dropeffect across parser packages, SDKs, and framework adapters
+- [x] Shared action-availability manifest asserts drag/drop action context without changing deterministic action cache keys
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
@@ -743,6 +754,7 @@ Current browser-agent products keep making reusable action memory depend on curr
 - [ ] Promote replay-provenance cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote browser-default form fidelity cases, including enctype and submitter override normalization, into shared parser, SDK, and adapter conformance fixtures
 - [ ] Promote modal and grid-position cases into broader Rust/parser/SDK and adapter conformance fixtures
+- [ ] Promote drag/drop state cases (`draggable`, `aria-grabbed`, and `aria-dropeffect`) into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures

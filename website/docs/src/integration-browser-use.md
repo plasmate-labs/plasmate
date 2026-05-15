@@ -79,7 +79,8 @@ The lightweight extractor package also exposes `extract_action_plan()`,
 `extract_action_plan_summary()` with async variants for agents that want only
 reusable action targets. Those targets carry `enabled`, disabled/inert/read-only
 `blocked_reason`, `required`, `description`, `placeholder`, `group`, `current`,
-`controls`, and `haspopup` context when Plasmate emits it. Use the fingerprint
+`controls`, `haspopup`, `draggable`, `grabbed`, and `dropeffect` context when
+Plasmate emits it. Use the fingerprint
 or summary as a plan-level drift gate before replaying one cached target by
 SOM id, `cache_key`, or `html_id`; summaries include duplicate HTML-id lists
 and provenance counts for `test_id`, `data_action`, and `data_state`.

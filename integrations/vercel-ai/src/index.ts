@@ -83,6 +83,7 @@ export interface PlasmateActionTarget {
   labelledby?: string
   describedby?: string
   spellcheck?: boolean | string
+  draggable?: boolean | string
   minlength?: number | string
   maxlength?: number | string
   min?: number | string
@@ -122,6 +123,8 @@ export interface PlasmateActionTarget {
   colindex?: string
   rowcount?: string
   colcount?: string
+  grabbed?: boolean
+  dropeffect?: string
   valuemin?: string
   valuemax?: string
   valuenow?: string
@@ -242,7 +245,7 @@ export interface PlasmateActionPlanSummary {
 export const plasmateActionGuidance =
   'Use Plasmate SOM element ids for browser actions. Treat action targets ' +
   'with enabled=false or blocked_reason as unavailable, and prefer ' +
-  'cache_key, html_id, test_id, data_action, data_state, required, readonly, inert, value, target, rel, download, alt, src, name, accept, capture, multiple, options, selected_values, size, autocomplete, inputmode, enterkeyhint, autocapitalize, dirname, dir, lang, spellcheck, form, form_action, form_method, form_target, form_enctype, form_novalidate, form_accept_charset, form_autocomplete, button_type, formaction, formmethod, formenctype, formtarget, formnovalidate, list, popovertarget, popovertargetaction, commandfor, command, accesskey, title, aria_label, aria_description, labelledby, describedby, aria_placeholder, aria_autocomplete, active_descendant, errormessage, keyshortcuts, roledescription, busy, live, modal, atomic, relevant, owns, flowto, details, multiline, multiselectable, orientation, sort, level, posinset, setsize, rowindex, colindex, rowcount, colcount, valuemin, valuemax, valuenow, valuetext, pattern, minlength, maxlength, min, max, step, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
+  'cache_key, html_id, test_id, data_action, data_state, required, readonly, inert, value, target, rel, download, alt, src, name, accept, capture, multiple, options, selected_values, size, autocomplete, inputmode, enterkeyhint, autocapitalize, dirname, dir, lang, spellcheck, draggable, form, form_action, form_method, form_target, form_enctype, form_novalidate, form_accept_charset, form_autocomplete, button_type, formaction, formmethod, formenctype, formtarget, formnovalidate, list, popovertarget, popovertargetaction, commandfor, command, accesskey, title, aria_label, aria_description, labelledby, describedby, aria_placeholder, aria_autocomplete, active_descendant, errormessage, keyshortcuts, roledescription, busy, live, modal, atomic, relevant, owns, flowto, details, multiline, multiselectable, orientation, sort, level, posinset, setsize, rowindex, colindex, rowcount, colcount, grabbed, dropeffect, valuemin, valuemax, valuenow, valuetext, pattern, minlength, maxlength, min, max, step, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
 
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined
@@ -353,7 +356,7 @@ function copyStringAttr(
 function copyStringOrBooleanAttr(
   item: PlasmateActionTarget,
   attrs: Record<string, unknown>,
-  key: 'download' | 'capture' | 'spellcheck'
+  key: 'download' | 'capture' | 'spellcheck' | 'draggable'
 ) {
   if (typeof attrs[key] === 'string' || typeof attrs[key] === 'boolean') {
     item[key] = attrs[key]
@@ -470,6 +473,7 @@ export function extractPlasmateActionTargets(
       copyStringAttr(target, attrs, 'labelledby')
       copyStringAttr(target, attrs, 'describedby')
       copyStringOrBooleanAttr(target, attrs, 'spellcheck')
+      copyStringOrBooleanAttr(target, attrs, 'draggable')
       copyStringAttr(target, attrs, 'placeholder')
       copyStringOrNumberAttr(target, attrs, 'minlength')
       copyStringOrNumberAttr(target, attrs, 'maxlength')
@@ -588,6 +592,7 @@ export function extractPlasmateActionTargets(
           'colindex',
           'rowcount',
           'colcount',
+          'dropeffect',
           'valuemin',
           'valuemax',
           'valuenow',
@@ -597,6 +602,10 @@ export function extractPlasmateActionTargets(
           if (typeof stateValue === 'string' && stateValue.length > 0) {
             target[stateKey] = stateValue
           }
+        }
+        const grabbed = (aria as Record<string, unknown>).grabbed
+        if (typeof grabbed === 'boolean') {
+          target.grabbed = grabbed
         }
       }
 
@@ -942,6 +951,8 @@ export function formatPlasmateActionPlan(
       const describedby = target.describedby ? ` [describedby=${target.describedby}]` : ''
       const spellcheck =
         typeof target.spellcheck !== 'undefined' ? ` [spellcheck=${target.spellcheck}]` : ''
+      const draggable =
+        typeof target.draggable !== 'undefined' ? ` [draggable=${target.draggable}]` : ''
       const placeholder = target.placeholder
         ? ` [placeholder=${target.placeholder}]`
         : ''
@@ -1010,6 +1021,9 @@ export function formatPlasmateActionPlan(
       const colindex = target.colindex ? ` [colindex=${target.colindex}]` : ''
       const rowcount = target.rowcount ? ` [rowcount=${target.rowcount}]` : ''
       const colcount = target.colcount ? ` [colcount=${target.colcount}]` : ''
+      const grabbed =
+        typeof target.grabbed !== 'undefined' ? ` [grabbed=${target.grabbed}]` : ''
+      const dropeffect = target.dropeffect ? ` [dropeffect=${target.dropeffect}]` : ''
       const valuemin = target.valuemin ? ` [valuemin=${target.valuemin}]` : ''
       const valuemax = target.valuemax ? ` [valuemax=${target.valuemax}]` : ''
       const valuenow = target.valuenow ? ` [valuenow=${target.valuenow}]` : ''
@@ -1019,7 +1033,7 @@ export function formatPlasmateActionPlan(
         ? ` [description=${target.description}]`
         : ''
 
-      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${htmlId}${testId}${dataAction}${dataState}${blockedReason}${required}${readonly}${inert}${linkTarget}${rel}${download}${alt}${src}${inputType}${value}${nameAttr}${accept}${capture}${multiple}${selectOptions}${selectedValues}${size}${autocomplete}${inputmode}${enterkeyhint}${autocapitalize}${dirname}${dir}${lang}${form}${formAction}${formMethod}${formTarget}${formEnctype}${formNoValidate}${formAcceptCharset}${formAutocomplete}${list}${popovertarget}${popovertargetaction}${commandfor}${command}${popover}${buttonType}${submitFormAction}${submitFormMethod}${submitFormEnctype}${submitFormTarget}${submitNoValidate}${accesskey}${title}${ariaLabel}${ariaDescription}${labelledby}${describedby}${spellcheck}${placeholder}${minlength}${maxlength}${min}${max}${step}${pattern}${checked}${expanded}${pressed}${selected}${modal}${multiline}${multiselectable}${current}${controls}${haspopup}${invalid}${ariaPlaceholder}${ariaAutocomplete}${activeDescendant}${errorMessage}${keyshortcuts}${roledescription}${busy}${live}${atomic}${relevant}${owns}${flowto}${details}${orientation}${sort}${level}${posinset}${setsize}${rowindex}${colindex}${rowcount}${colcount}${valuemin}${valuemax}${valuenow}${valuetext}${group}${description}`
+      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${htmlId}${testId}${dataAction}${dataState}${blockedReason}${required}${readonly}${inert}${linkTarget}${rel}${download}${alt}${src}${inputType}${value}${nameAttr}${accept}${capture}${multiple}${selectOptions}${selectedValues}${size}${autocomplete}${inputmode}${enterkeyhint}${autocapitalize}${dirname}${dir}${lang}${form}${formAction}${formMethod}${formTarget}${formEnctype}${formNoValidate}${formAcceptCharset}${formAutocomplete}${list}${popovertarget}${popovertargetaction}${commandfor}${command}${popover}${buttonType}${submitFormAction}${submitFormMethod}${submitFormEnctype}${submitFormTarget}${submitNoValidate}${accesskey}${title}${ariaLabel}${ariaDescription}${labelledby}${describedby}${spellcheck}${draggable}${placeholder}${minlength}${maxlength}${min}${max}${step}${pattern}${checked}${expanded}${pressed}${selected}${modal}${multiline}${multiselectable}${current}${controls}${haspopup}${invalid}${ariaPlaceholder}${ariaAutocomplete}${activeDescendant}${errorMessage}${keyshortcuts}${roledescription}${busy}${live}${atomic}${relevant}${owns}${flowto}${details}${orientation}${sort}${level}${posinset}${setsize}${rowindex}${colindex}${rowcount}${colcount}${grabbed}${dropeffect}${valuemin}${valuemax}${valuenow}${valuetext}${group}${description}`
     })
     .join('\n')
 }

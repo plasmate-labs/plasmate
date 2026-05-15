@@ -184,8 +184,11 @@
           "actions": ["toggle"],
           "attrs": {
             "checked": false,
+            "draggable": true,
             "aria": {
-              "pressed": false
+              "pressed": false,
+              "grabbed": false,
+              "dropeffect": "move"
             },
             "group": "Preferences"
           }

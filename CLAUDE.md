@@ -49,6 +49,41 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-15T20:11:32Z - Plasmate Improvements Automation
+
+- Git sync: required fetch was retried from the automation worktree and still
+  failed before network access because the linked worktree cannot open
+  `FETCH_HEAD`. Retrying from `/Users/steve/Git/plasmate` reached SSH but DNS
+  resolution for `github.com` failed, so work continued from local branch
+  `codex/plasmate-improvements-2026-05-15-cache-key-lookup`.
+- Market direction: current docs keep validating action menus that can be
+  checked against fresh state before replay. Playwright MCP exposes current
+  accessibility snapshots with snapshot-scoped refs, Stagehand/Browserbase
+  emphasize `observe()` plus action caching and replay observability, and
+  Firecrawl Interact resumes scraped browser sessions for prompt/code actions.
+  Plasmate should keep its local-first wedge and carry more production SaaS
+  affordances into compact SOM action targets instead of pivoting into hosted
+  browser infrastructure.
+- Code changes: Rust SOM and schema/spec now preserve native `draggable` plus
+  ARIA drag/drop state with `aria-grabbed` and `aria-dropeffect`.
+  Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+  and Vercel AI now expose `draggable`, `grabbed`, and `dropeffect` in compact
+  action-plan targets and prompt renderers without changing deterministic
+  action `cache_key` values.
+- Fixture/docs changes: the shared action-availability manifest now asserts
+  drag/drop context on a reusable target. PRD, roadmap source, generated
+  website docs, SDK/integration docs, and this running state record the
+  rationale and next conformance promotion.
+- Verification: Python parser tests, Python SDK query tests, Node parser
+  tests, Node SDK tests, Go SDK tests, Browser Use tests, LangChain tests,
+  Vercel AI tests, quick action-manifest conformance, focused Rust drag-state
+  compiler coverage, `cargo build`, `cargo test --lib --bin plasmate`, `node
+  website/build.mjs`, and `git diff --check` passed. Existing Rust warnings
+  and the existing Python 3.14/Pydantic warning remain unrelated.
+- Commit/push state: pending commit/push at the time of this note. Remote
+  merge may remain blocked until GitHub fetch/API access works or the pushed
+  branch is merged elsewhere.
+
 ### 2026-05-15T19:09:06Z - Plasmate Improvements Automation
 
 - Git sync: required fetch was retried from the automation worktree and still

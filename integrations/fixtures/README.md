@@ -17,7 +17,7 @@ by the Rust core and parser packages.
   checked state, ARIA expanded/pressed/selected cues, ARIA current/controls/
   haspopup relationship cues, validation constraints (`autocomplete`,
   `inputmode`, `enterkeyhint`, `autocapitalize`, `dirname`, `dir`, `lang`,
-  `spellcheck`, `aria_label`, `aria_description`, `aria_placeholder`,
+  `spellcheck`, `draggable`, `aria_label`, `aria_description`, `aria_placeholder`,
   `aria_autocomplete`, `active_descendant`,
   `form`, `list`, `popovertarget`, `popovertargetaction`, `commandfor`,
   `command`, `button_type`, `formaction`, `formmethod`, `formenctype`,
@@ -25,7 +25,7 @@ by the Rust core and parser packages.
   `roledescription`, `busy`, `live`, `atomic`, `relevant`, `owns`, `flowto`,
   `details`, `orientation`, `sort`, `level`, `posinset`, `setsize`,
   `valuemin`, `valuemax`, `valuenow`, `valuetext`, `multiline`,
-  `multiselectable`, `minlength`, `maxlength`, `min`, `max`, `step`,
+  `multiselectable`, `grabbed`, `dropeffect`, `minlength`, `maxlength`, `min`, `max`, `step`,
   `pattern`, `invalid`), replay provenance (`test_id`, `data_action`,
   `data_state`), ARIA `readonly` availability gating, inert action blocking,
   and ARIA menu

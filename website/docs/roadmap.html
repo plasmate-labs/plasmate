@@ -774,6 +774,12 @@
 <li><strong>Grid coordinates reduce ambiguity</strong>: <code>aria-rowindex</code>, <code>aria-colindex</code>, <code>aria-rowcount</code>, and <code>aria-colcount</code> help agents validate that a data-grid action still points at the expected row and column.</li>
 <li><strong>Cache keys stay target-focused</strong>: modal/grid cues should be visible to agents without changing deterministic <code>cache_key</code> values.</li>
 </ul>
+<h3 id="2026-05-15-drag-state-action-context-adjustment">2026-05-15 Drag-State Action Context Adjustment</h3><p>Current competitor docs keep emphasizing current-state validation before replay: Playwright MCP refs belong to a fresh snapshot, Stagehand <code>observe()</code> and caching validate repeated actions, and Browserbase/Firecrawl package replay observability around browser sessions. Plasmate should keep the local-first wedge by preserving drag/reorder affordances in compact action menus.</p>
+<ul>
+<li><strong>Native drag state is planning context</strong>: <code>draggable</code> should travel with action targets so agents recognize reorderable cards, rows, and kanban items.</li>
+<li><strong>ARIA drag state explains current replay drift</strong>: <code>aria-grabbed</code> and <code>aria-dropeffect</code> should surface as compact <code>grabbed</code> and <code>dropeffect</code> cues.</li>
+<li><strong>Cache keys stay stable</strong>: drag/drop state should validate replay context without changing deterministic target identity.</li>
+</ul>
 <h3 id="2026-05-14-relationship-context-adjustment">2026-05-14 Relationship Context Adjustment</h3><p>Current browser-agent competitors keep making cached action replay depend on target validation against fresh structured state. Plasmate should preserve small provenance cues that explain why a target is named or described.</p>
 <ul>
 <li><strong>Tooltip help belongs in compact targets</strong>: native <code>title</code> should travel with action targets so agents can reuse browser-visible help text.</li>
@@ -1046,6 +1052,9 @@ apps can resolve &quot;Email&quot; or &quot;Search&quot; controls without raw DO
 <li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve ARIA modal and grid-position cues</li>
 <li><input checked="" disabled="" type="checkbox"> Compact action plans expose modal, rowindex, colindex, rowcount, and colcount across parser packages, SDKs, and framework adapters</li>
 <li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest asserts modal/grid cues without changing deterministic action cache keys</li>
+<li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve native draggable plus ARIA grabbed/dropeffect cues</li>
+<li><input checked="" disabled="" type="checkbox"> Compact action plans expose draggable, grabbed, and dropeffect across parser packages, SDKs, and framework adapters</li>
+<li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest asserts drag/drop action context without changing deterministic action cache keys</li>
 <li><input disabled="" type="checkbox"> Selector-aware SOM cache entries for repeated agent prompts</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
 <li><input disabled="" type="checkbox"> Wire <code>016-action-semantics</code> into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants</li>
@@ -1069,6 +1078,7 @@ apps can resolve &quot;Email&quot; or &quot;Search&quot; controls without raw DO
 <li><input disabled="" type="checkbox"> Promote replay-provenance cases into broader Rust/parser/SDK and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote browser-default form fidelity cases, including enctype and submitter override normalization, into shared parser, SDK, and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote modal and grid-position cases into broader Rust/parser/SDK and adapter conformance fixtures</li>
+<li><input disabled="" type="checkbox"> Promote drag/drop state cases (<code>draggable</code>, <code>aria-grabbed</code>, and <code>aria-dropeffect</code>) into broader Rust/parser/SDK and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Add cross-adapter accessible-description fixtures</li>

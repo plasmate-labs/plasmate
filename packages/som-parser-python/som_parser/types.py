@@ -122,6 +122,7 @@ class SomElementAttrs(BaseModel):
     labelledby: Optional[str] = None
     describedby: Optional[str] = None
     spellcheck: Optional[bool | str] = None
+    draggable: Optional[bool | str] = None
     name: Optional[str] = None
     accept: Optional[str] = None
     capture: Optional[bool | str] = None

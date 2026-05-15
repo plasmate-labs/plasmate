@@ -2163,6 +2163,15 @@ fn build_element_attrs(
         };
         map.insert("spellcheck".into(), spellcheck);
     }
+    if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "draggable") {
+        let normalized = value.trim().to_ascii_lowercase();
+        let draggable = match normalized.as_str() {
+            "true" => json!(true),
+            "false" => json!(false),
+            _ => json!(value),
+        };
+        map.insert("draggable".into(), draggable);
+    }
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "name") {
         map.insert("name".into(), json!(value));
     }
@@ -2284,6 +2293,8 @@ fn build_element_attrs(
         ("aria-colindex", "colindex"),
         ("aria-rowcount", "rowcount"),
         ("aria-colcount", "colcount"),
+        ("aria-grabbed", "grabbed"),
+        ("aria-dropeffect", "dropeffect"),
         ("aria-valuemin", "valuemin"),
         ("aria-valuemax", "valuemax"),
         ("aria-valuenow", "valuenow"),
@@ -3311,6 +3322,30 @@ mod tests {
         assert_eq!(attrs["aria"]["colindex"], "2");
         assert_eq!(attrs["aria"]["rowcount"], "10");
         assert_eq!(attrs["aria"]["colcount"], "4");
+    }
+
+    #[test]
+    fn test_drag_action_cues_are_preserved() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Board</title></head>
+<body>
+<main>
+  <button draggable="true" aria-grabbed="true" aria-dropeffect="move">Move card</button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.com").unwrap();
+        let button = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| element.role == ElementRole::Button)
+            .expect("draggable button should compile");
+        let attrs = button.attrs.as_ref().expect("button attrs should compile");
+        assert_eq!(attrs["draggable"], true);
+        assert_eq!(attrs["aria"]["grabbed"], true);
+        assert_eq!(attrs["aria"]["dropeffect"], "move");
     }
 
     #[test]

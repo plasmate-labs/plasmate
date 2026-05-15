@@ -103,6 +103,7 @@ export interface ActionPlanItem {
   labelledby?: string;
   describedby?: string;
   spellcheck?: boolean | string;
+  draggable?: boolean | string;
   input_type?: string;
   value?: string;
   placeholder?: string;
@@ -149,6 +150,8 @@ export interface ActionPlanItem {
   colindex?: string;
   rowcount?: string;
   colcount?: string;
+  grabbed?: boolean;
+  dropeffect?: string;
   valuemin?: string;
   valuemax?: string;
   valuenow?: string;
@@ -302,6 +305,7 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.labelledby) item.labelledby = el.attrs.labelledby;
     if (el.attrs?.describedby) item.describedby = el.attrs.describedby;
     if (el.attrs?.spellcheck !== undefined) item.spellcheck = el.attrs.spellcheck;
+    if (el.attrs?.draggable !== undefined) item.draggable = el.attrs.draggable;
     if (el.attrs?.input_type) item.input_type = el.attrs.input_type;
     if (el.attrs?.value) item.value = el.attrs.value;
     if (el.attrs?.placeholder) item.placeholder = el.attrs.placeholder;
@@ -353,6 +357,8 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.aria?.colindex !== undefined) item.colindex = el.attrs.aria.colindex;
     if (el.attrs?.aria?.rowcount !== undefined) item.rowcount = el.attrs.aria.rowcount;
     if (el.attrs?.aria?.colcount !== undefined) item.colcount = el.attrs.aria.colcount;
+    if (el.attrs?.aria?.grabbed !== undefined) item.grabbed = el.attrs.aria.grabbed;
+    if (el.attrs?.aria?.dropeffect !== undefined) item.dropeffect = el.attrs.aria.dropeffect;
     if (el.attrs?.aria?.valuemin !== undefined) item.valuemin = el.attrs.aria.valuemin;
     if (el.attrs?.aria?.valuemax !== undefined) item.valuemax = el.attrs.aria.valuemax;
     if (el.attrs?.aria?.valuenow !== undefined) item.valuenow = el.attrs.aria.valuenow;

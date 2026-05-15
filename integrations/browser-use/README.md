@@ -113,14 +113,14 @@ Browser Use page contexts are tested against the shared
 `integrations/fixtures/action-availability.som.json` fixture so availability,
 cache-key, required, readonly, inert, group, type, value, checked, expanded, pressed,
 selected, current, controls, haspopup, name, accept, capture, multiple,
-autocomplete, inputmode, enterkeyhint, autocapitalize, dirname, dir, lang, spellcheck,
+autocomplete, inputmode, enterkeyhint, autocapitalize, dirname, dir, lang, spellcheck, draggable,
 link target/rel/download cues, graphical submitter alt/src cues, form plus
 form submission context, submitter override cues, select options/selected_values/size
 context, original `html_id` bridge cues, list, popover/command relationships, accesskey, ARIA
 placeholder/autocomplete/active-descendant/error-message state, title,
 aria_label/aria_description source text, labelledby/describedby relationship refs, keyshortcuts, roledescription,
 live-region state, ARIA owns/flowto/details relationships,
-ARIA readonly/multiline/multiselectable widget state, orientation/sort/value
+ARIA readonly/multiline/multiselectable widget state, orientation/sort/value, drag/drop
 state, ARIA set-position cues, validation constraints, range constraints, invalid state, and
 description and replay-provenance cues
 stay aligned with other adapters.

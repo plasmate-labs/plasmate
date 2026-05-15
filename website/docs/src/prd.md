@@ -152,6 +152,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-15 modal-grid context read: current browser-agent products keep rewarding action menus that explain current UI structure before replay. Playwright MCP snapshots give agents fresh accessibility state with refs, Stagehand/Browserbase cache only after validating observed actions, Firecrawl Interact keeps scrape sessions actionable, and Browser Use Cloud exposes CDP sessions and profiles. Plasmate should keep its local-first wedge by carrying modal state and grid row/column coordinates through compact local action plans.
 
+2026-05-15 drag-state read: current docs keep making cached replay depend on fresh, validated target state. Playwright MCP exposes current accessibility refs, Stagehand `observe()` and caching validate repeated actions before execution, Browserbase markets action caching and session observability, and Firecrawl Interact resumes browser sessions for prompt/code actions. Plasmate should keep turning production SaaS affordances into portable local context: native `draggable` plus `aria-grabbed` and `aria-dropeffect` let agents recognize reorder/kanban targets without screenshots or raw DOM recovery.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -167,6 +169,9 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-15:
+  - Rust SOM compilation and the SOM schema/spec now preserve native `draggable` plus ARIA drag/drop state with `aria-grabbed` and `aria-dropeffect`.
+  - Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI now carry `draggable`, `grabbed`, and `dropeffect` through compact action targets and prompt renderers without changing deterministic `cache_key` values.
+  - The shared action-availability manifest now asserts drag/drop context for a reusable compact action target.
   - Rust SOM compilation and the SOM schema/spec now preserve `aria-modal`, `aria-rowindex`, `aria-colindex`, `aria-rowcount`, and `aria-colcount` in `attrs.aria`.
   - Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI now carry modal and grid-position cues into compact action targets and prompt renderers without changing deterministic `cache_key` values.
   - The shared action-availability manifest now asserts modal and grid-coordinate context for a reusable select target.
@@ -419,6 +424,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Promote form-relation cases (`form`, `list`, and `aria-errormessage`) into broader parser, SDK, and adapter conformance fixtures.
 - Promote live-region cases (`aria-busy`, `aria-live`, `aria-atomic`, and `aria-relevant`) into broader Rust/parser/SDK conformance fixtures.
 - Promote modal and grid-position cases (`aria-modal`, `aria-rowindex`, `aria-colindex`, `aria-rowcount`, and `aria-colcount`) into broader Rust/parser/SDK and adapter conformance fixtures.
+- Promote drag/drop state cases (`draggable`, `aria-grabbed`, and `aria-dropeffect`) into broader Rust/parser/SDK and adapter conformance fixtures.
 - Promote fieldset/legend group semantics into shared conformance fixtures alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched action-plan metadata.
 - Promote the new SDK/parser shadow-root and Go action-plan tests into shared conformance fixtures that run against every adapter before release.

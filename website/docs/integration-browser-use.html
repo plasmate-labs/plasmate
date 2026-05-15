@@ -545,7 +545,8 @@ asyncio.run(main())
 <code>extract_action_plan_summary()</code> with async variants for agents that want only
 reusable action targets. Those targets carry <code>enabled</code>, disabled/inert/read-only
 <code>blocked_reason</code>, <code>required</code>, <code>description</code>, <code>placeholder</code>, <code>group</code>, <code>current</code>,
-<code>controls</code>, and <code>haspopup</code> context when Plasmate emits it. Use the fingerprint
+<code>controls</code>, <code>haspopup</code>, <code>draggable</code>, <code>grabbed</code>, and <code>dropeffect</code> context when
+Plasmate emits it. Use the fingerprint
 or summary as a plan-level drift gate before replaying one cached target by
 SOM id, <code>cache_key</code>, or <code>html_id</code>; summaries include duplicate HTML-id lists
 and provenance counts for <code>test_id</code>, <code>data_action</code>, and <code>data_state</code>.</p>

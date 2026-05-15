@@ -686,6 +686,15 @@ small but high-signal ARIA context from complex SaaS surfaces: modal state and
 grid row/column coordinates let agents validate a cached action is still in
 the expected dialog or data-grid position without raw DOM recovery.
 
+2026-05-15 drag-state read: current docs keep making cached replay depend on
+fresh, validated target state. Playwright MCP exposes current accessibility
+refs, Stagehand `observe()` and caching validate repeated actions before
+execution, Browserbase markets action caching and session observability, and
+Firecrawl Interact resumes browser sessions for prompt/code actions. Plasmate
+should keep turning production SaaS affordances into portable local context:
+native `draggable` plus `aria-grabbed` and `aria-dropeffect` let agents
+recognize reorder/kanban targets without screenshots or raw DOM recovery.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -712,6 +721,16 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-15:
+  - Rust SOM compilation and the SOM schema/spec now preserve native
+    `draggable` plus ARIA drag/drop state with `aria-grabbed` and
+    `aria-dropeffect`.
+  - Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+    and Vercel AI now carry `draggable`, `grabbed`, and `dropeffect` through
+    compact action targets and prompt renderers without changing deterministic
+    `cache_key` values.
+  - The shared action-availability manifest now asserts drag/drop context for
+    a reusable compact action target, adding coverage for reorder-heavy SaaS
+    workflows.
   - Rust SOM compilation and the SOM schema/spec now preserve `aria-modal`,
     `aria-rowindex`, `aria-colindex`, `aria-rowcount`, and `aria-colcount` in
     `attrs.aria`.
@@ -1470,6 +1489,9 @@ and adapter docs over one-off integration logic.
 - Promote modal and grid-position cases (`aria-modal`, `aria-rowindex`,
   `aria-colindex`, `aria-rowcount`, and `aria-colcount`) into broader
   Rust/parser/SDK and adapter conformance fixtures.
+- Promote drag/drop state cases (`draggable`, `aria-grabbed`, and
+  `aria-dropeffect`) into broader Rust/parser/SDK and adapter conformance
+  fixtures.
 - Promote popover/command relationship cases (`popovertarget`,
   `popovertargetaction`, `commandfor`, and `command`) into broader
   Rust/parser/SDK conformance fixtures.

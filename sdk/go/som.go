@@ -85,6 +85,7 @@ type ElementAttrs struct {
 	LabelledBy      *string        `json:"labelledby,omitempty"`
 	DescribedBy     *string        `json:"describedby,omitempty"`
 	Spellcheck      interface{}    `json:"spellcheck,omitempty"`
+	Draggable       interface{}    `json:"draggable,omitempty"`
 	Name            *string        `json:"name,omitempty"`
 	Accept          *string        `json:"accept,omitempty"`
 	Capture         interface{}    `json:"capture,omitempty"`
@@ -165,6 +166,8 @@ type AriaState struct {
 	ColIndex         *string     `json:"colindex,omitempty"`
 	RowCount         *string     `json:"rowcount,omitempty"`
 	ColCount         *string     `json:"colcount,omitempty"`
+	Grabbed          *bool       `json:"grabbed,omitempty"`
+	DropEffect       *string     `json:"dropeffect,omitempty"`
 	ValueMin         *string     `json:"valuemin,omitempty"`
 	ValueMax         *string     `json:"valuemax,omitempty"`
 	ValueNow         *string     `json:"valuenow,omitempty"`

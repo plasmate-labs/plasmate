@@ -381,8 +381,8 @@ Implementations SHOULD preserve common actionability attributes on any element:
 `commandfor`, `command`, `popover`, `button_type`, `formaction`,
 `formmethod`, `formenctype`, `formtarget`, `formnovalidate`, `accesskey`,
 `title`, `aria_label`, `aria_description`, `labelledby`, `describedby`, `dir`,
-`lang`, `readonly`, `inert`, `min`, `max`, `step`, `description`, `test_id`,
-`data_action`, and `data_state`. The `title` value preserves native
+`lang`, `readonly`, `inert`, `draggable`, `min`, `max`, `step`, `description`,
+`test_id`, `data_action`, and `data_state`. The `title` value preserves native
 tooltip/help text. `aria_label` and `aria_description` preserve source ARIA
 text while `labelledby` and `describedby` preserve the source
 `aria-labelledby` and `aria-describedby` IDREFs. `description` resolves
@@ -438,6 +438,8 @@ attributes SHOULD be preserved when present:
 | `aria-colindex`  | `colindex`  | string          |
 | `aria-rowcount`  | `rowcount`  | string          |
 | `aria-colcount`  | `colcount`  | string          |
+| `aria-grabbed`   | `grabbed`   | boolean         |
+| `aria-dropeffect` | `dropeffect` | string        |
 | `aria-valuemin`  | `valuemin`  | string          |
 | `aria-valuemax`  | `valuemax`  | string          |
 | `aria-valuenow`  | `valuenow`  | string          |

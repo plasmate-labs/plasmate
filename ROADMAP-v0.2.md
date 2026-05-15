@@ -890,6 +890,24 @@ menus replayable from compact action plans, not only from full SOM attrs.
    render concise option menus so agents can choose or explain select actions
    without reloading raw DOM/SOM.
 
+### 2026-05-15 Drag-State Action Context Adjustment
+
+Current competitor docs keep emphasizing current-state validation before
+replay: Playwright MCP refs belong to a fresh snapshot, Stagehand `observe()`
+and caching validate repeated actions, and Browserbase/Firecrawl package
+replay observability around browser sessions. Plasmate should keep the
+local-first wedge by preserving drag/reorder affordances in compact action
+menus.
+
+1. **Native drag state is planning context**: `draggable` should travel with
+   action targets so agents recognize reorderable cards, rows, and kanban
+   items.
+2. **ARIA drag state explains current replay drift**: `aria-grabbed` and
+   `aria-dropeffect` should surface as compact `grabbed` and `dropeffect`
+   cues.
+3. **Cache keys stay stable**: drag/drop state should validate replay context
+   without changing deterministic target identity.
+
 ### 2026-05-14 Relationship Context Adjustment
 
 Current browser-agent competitors keep making cached action replay depend on
@@ -1672,6 +1690,13 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Focused Rust compiler tests now cover form encoding normalization and
   submitter method/encoding override normalization as browser-default form
   fidelity cases.
+- Rust SOM compilation and the JSON Schema now preserve native `draggable`
+  plus ARIA drag/drop state with `aria-grabbed` and `aria-dropeffect`.
+- Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+  and Vercel AI action-plan surfaces now expose `draggable`, `grabbed`, and
+  `dropeffect` without changing deterministic action `cache_key` values.
+- The shared action-availability manifest now asserts drag/drop action context
+  across parser, SDK, and framework adapter outputs.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, relationship-context,
@@ -1680,7 +1705,7 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   index, replay-ambiguity index buckets, framework replay index,
   action-plan fingerprint, framework fingerprint/summary, replay-coverage
   summary, replay-summary provenance coverage, replay-provenance, and
-  submit-default normalization cases into broader fixtures alongside
+  submit-default normalization, and drag/drop state cases into broader fixtures alongside
   text-entry, ARIA widget, range, and set-position cases.
 
 ## Dependencies to Add
