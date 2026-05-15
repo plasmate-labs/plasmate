@@ -80,9 +80,13 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   compiler coverage, `cargo build`, `cargo test --lib --bin plasmate`, `node
   website/build.mjs`, and `git diff --check` passed. Existing Rust warnings
   and the existing Python 3.14/Pydantic warning remain unrelated.
-- Commit/push state: pending commit/push at the time of this note. Remote
-  merge may remain blocked until GitHub fetch/API access works or the pushed
-  branch is merged elsewhere.
+- Commit/push state: committed as `chore: carry drag action cues` (`6f78bf0`)
+  and pushed to
+  `origin/codex/plasmate-improvements-2026-05-15-cache-key-lookup`. Direct
+  `HEAD:master` push was rejected with `fetch first`; retrying
+  `git fetch origin master` still failed DNS for `github.com`; `gh pr create`
+  could not connect to `api.github.com`. Remote merge remains blocked until
+  GitHub fetch/API access works or the pushed branch is merged elsewhere.
 
 ### 2026-05-15T19:09:06Z - Plasmate Improvements Automation
 
