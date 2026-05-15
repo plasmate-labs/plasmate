@@ -44,9 +44,9 @@ import {
 
 const plan = getEnabledActionPlan(som);
 // Compact action targets with id, cache_key, role, actions, enabled, labels, link target/rel/download cues, graphical submitter alt/src cues, form/list context, form submission metadata, submitter override cues, select options/state, popover/command relation cues, text-entry/input hints, validation/range cues, and ARIA owns/flowto/details plus orientation/sort/value state.
-const cached = findActionTargetByCacheKey(som, plan[0].cache_key);
-const sameTarget = findActionTargetById(som, plan[0].id);
-const domTarget = findActionTargetByHtmlId(som, 'save-settings');
+const cached = findActionTargetByCacheKey(som, plan[0].cache_key, { enabledOnly: true });
+const sameTarget = findActionTargetById(som, plan[0].id, { enabledOnly: true });
+const domTarget = findActionTargetByHtmlId(som, 'save-settings', { enabledOnly: true });
 
 const clickable = findByAction(som, 'click');
 // Elements that can be clicked.
@@ -100,9 +100,9 @@ const ratio = getCompressionRatio(som);
 | `getActionPlanIndex(som, { enabledOnly }): ActionPlanIndex` | Index compact action targets by `byId`, `byCacheKey`, and `byHtmlId` for replay validation. |
 | `getActionPlanFingerprint(som, { enabledOnly }): string` | Return a deterministic plan-level fingerprint for replay drift checks. |
 | `getActionPlanSummary(som): ActionPlanSummary` | Return action-plan fingerprints plus total/enabled/disabled, role, blocked-reason, cache-key coverage, duplicate cache-key, and `html_id` coverage counts. |
-| `findActionTargetByCacheKey(som, cacheKey): ActionPlanItem \| undefined` | Resolve a cached action target from the current SOM action plan. |
-| `findActionTargetById(som, id): ActionPlanItem \| undefined` | Resolve an action target by stable SOM id. |
-| `findActionTargetByHtmlId(som, htmlId): ActionPlanItem \| undefined` | Resolve an action target by original HTML id. |
+| `findActionTargetByCacheKey(som, cacheKey, { enabledOnly }): ActionPlanItem \| undefined` | Resolve a cached action target from the current SOM action plan; pass `enabledOnly` to ignore disabled/read-only/inert targets. |
+| `findActionTargetById(som, id, { enabledOnly }): ActionPlanItem \| undefined` | Resolve an action target by stable SOM id; pass `enabledOnly` for prompt-safe replay. |
+| `findActionTargetByHtmlId(som, htmlId, { enabledOnly }): ActionPlanItem \| undefined` | Resolve an action target by original HTML id; pass `enabledOnly` for prompt-safe replay. |
 | `getInteractiveElements(som): SomElement[]` | Get all elements that have actions. |
 | `getLinks(som): Array<{ text, href, id }>` | Extract all links with text, URL, and id. |
 | `getForms(som): SomRegion[]` | Get all form regions. |

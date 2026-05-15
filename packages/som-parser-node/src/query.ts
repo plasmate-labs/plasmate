@@ -208,6 +208,10 @@ export interface ActionPlanSummary {
   blockedReasons: Record<string, number>;
 }
 
+export interface ActionTargetLookupOptions {
+  enabledOnly?: boolean;
+}
+
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined;
 }
@@ -395,8 +399,13 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
 }
 
 /** Find a compact action target by its deterministic cache key. */
-export function findActionTargetByCacheKey(som: Som, cacheKey: string): ActionPlanItem | undefined {
-  return getActionPlan(som).find((item) => item.cache_key === cacheKey);
+export function findActionTargetByCacheKey(
+  som: Som,
+  cacheKey: string,
+  options?: ActionTargetLookupOptions,
+): ActionPlanItem | undefined {
+  const plan = options?.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
+  return plan.find((item) => item.cache_key === cacheKey);
 }
 
 /** Return compact action targets that are currently available. */
@@ -482,13 +491,23 @@ export function getActionPlanSummary(som: Som): ActionPlanSummary {
 }
 
 /** Find a compact action target by its SOM element id. */
-export function findActionTargetById(som: Som, id: string): ActionPlanItem | undefined {
-  return getActionPlan(som).find((item) => item.id === id);
+export function findActionTargetById(
+  som: Som,
+  id: string,
+  options?: ActionTargetLookupOptions,
+): ActionPlanItem | undefined {
+  const plan = options?.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
+  return plan.find((item) => item.id === id);
 }
 
 /** Find a compact action target by its original HTML id. */
-export function findActionTargetByHtmlId(som: Som, htmlId: string): ActionPlanItem | undefined {
-  return getActionPlan(som).find((item) => item.html_id === htmlId);
+export function findActionTargetByHtmlId(
+  som: Som,
+  htmlId: string,
+  options?: ActionTargetLookupOptions,
+): ActionPlanItem | undefined {
+  const plan = options?.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
+  return plan.find((item) => item.html_id === htmlId);
 }
 
 /** Extract all links with their text and URLs. */

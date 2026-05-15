@@ -65,9 +65,13 @@ plan = get_enabled_action_plan(som)
 for item in plan:
     print(item["id"], item["cache_key"], item["role"], item["actions"], item.get("label"))
 
-cached = find_action_target_by_cache_key(som, plan[0]["cache_key"])
-same_target = find_action_target_by_id(som, plan[0]["id"])
-dom_target = find_action_target_by_html_id(som, "save-settings")
+cached = find_action_target_by_cache_key(
+    som, plan[0]["cache_key"], enabled_only=True
+)
+same_target = find_action_target_by_id(som, plan[0]["id"], enabled_only=True)
+dom_target = find_action_target_by_html_id(
+    som, "save-settings", enabled_only=True
+)
 index = get_action_plan_index(som, enabled_only=True)
 ready_target = index["by_cache_key"].get(plan[0]["cache_key"])
 fingerprint = get_action_plan_fingerprint(som, enabled_only=True)
@@ -132,9 +136,9 @@ print(som.model_dump_json(indent=2))
 | `get_action_plan_index(som, enabled_only=False) -> dict` | Index compact action targets by `by_id`, `by_cache_key`, and `by_html_id` for replay validation |
 | `get_action_plan_fingerprint(som, enabled_only=False) -> str` | Return a deterministic plan-level fingerprint for replay drift checks |
 | `get_action_plan_summary(som) -> dict` | Return action-plan fingerprints plus total/enabled/disabled, role, blocked-reason, cache-key coverage, duplicate cache-key, and `html_id` coverage counts |
-| `find_action_target_by_cache_key(som, cache_key) -> dict \| None` | Resolve a cached action target from the current SOM action plan |
-| `find_action_target_by_id(som, id) -> dict \| None` | Resolve an action target by stable SOM id |
-| `find_action_target_by_html_id(som, html_id) -> dict \| None` | Resolve an action target by original HTML id |
+| `find_action_target_by_cache_key(som, cache_key, enabled_only=False) -> dict \| None` | Resolve a cached action target from the current SOM action plan; pass `enabled_only=True` to ignore disabled/read-only/inert targets |
+| `find_action_target_by_id(som, id, enabled_only=False) -> dict \| None` | Resolve an action target by stable SOM id; pass `enabled_only=True` for prompt-safe replay |
+| `find_action_target_by_html_id(som, html_id, enabled_only=False) -> dict \| None` | Resolve an action target by original HTML id; pass `enabled_only=True` for prompt-safe replay |
 | `get_interactive_elements(som) -> list[SomElement]` | Get elements that have actions |
 | `get_links(som) -> list[dict]` | Extract all links as `{text, href, id}` dicts |
 | `get_forms(som) -> list[SomRegion]` | Get all form regions |

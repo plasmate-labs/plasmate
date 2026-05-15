@@ -959,6 +959,24 @@ role lookup.
 3. **Cache keys stay identity-only**: lookup helpers improve ergonomics without
    changing the deterministic fields used to compute `cache_key` values.
 
+### 2026-05-15 Enabled Lookup Adjustment
+
+The market's replay loop is now explicit: observe, validate current state, then
+act. Playwright MCP refs expire with page changes, while Stagehand/Browserbase
+only reuse cached actions after checking the page still matches. Plasmate's
+direct lookup helpers should support the same safety path without forcing app
+code to build an index first.
+
+1. **Lookup should honor availability gates**: cache-key, SOM-id, and
+   original-DOM-id target resolution should optionally search only enabled
+   compact targets.
+2. **Runtime parity reduces replay bugs**: Python parser, Node parser,
+   Python SDK, Node SDK, and Go SDK APIs should expose the same enabled-only
+   direct lookup behavior with idiomatic option shapes.
+3. **Indexes and direct lookups should agree**: enabled-only direct lookup must
+   match enabled-only action-plan indexes so prompt menus and replay gates
+   cannot disagree.
+
 ### 2026-05-15 Action-Target Ergonomics Adjustment
 
 The browser-agent market is making action menus a daily developer surface, not
@@ -1535,6 +1553,9 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Python/Node parser packages and Python/Node/Go SDKs now expose cache-key
   lookup helpers for compact action targets, so local action memory can
   validate stored keys against the current SOM plan without manual scans.
+- Python/Node parser packages and Python/Node/Go SDKs now expose enabled-only
+  direct lookup options for cache-key, SOM-id, and original-DOM-id target
+  resolution, keeping replay gates aligned with enabled-only indexes.
 - Python/Node parser packages and Python/Node/Go SDKs now expose compact action
   target lookup by SOM id and original DOM id, plus enabled-only action-plan
   helpers, keeping app-level replay validation small and consistent.
@@ -1578,10 +1599,11 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, relationship-context,
   target-provenance/locale, `html_id` bridge, cache-key lookup, action-target
-  id lookup, enabled-plan filtering, action-plan index, framework replay
-  index, action-plan fingerprint, framework fingerprint/summary, and
-  replay-coverage summary, and replay-provenance cases into broader fixtures
-  alongside text-entry, ARIA widget, range, and set-position cases.
+  id lookup, enabled-only direct lookup, enabled-plan filtering, action-plan
+  index, framework replay index, action-plan fingerprint, framework
+  fingerprint/summary, replay-coverage summary, and replay-provenance cases
+  into broader fixtures alongside text-entry, ARIA widget, range, and
+  set-position cases.
 
 ## Dependencies to Add
 

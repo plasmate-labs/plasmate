@@ -49,6 +49,36 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-15T14:07:38Z - Plasmate Improvements Automation
+
+- Git sync: `git fetch origin --prune` still fails in the linked automation
+  worktree because it cannot open `FETCH_HEAD`; retrying from the primary
+  checkout still fails DNS resolution for `github.com`. Work continued on
+  `codex/plasmate-improvements-2026-05-15-cache-key-lookup` in
+  `/Users/steve/Git/plasmate`.
+- Market direction: current docs and competitor messaging still validate the
+  local-first replay wedge. Playwright MCP refs remain scoped to fresh
+  accessibility snapshots, Stagehand/Browserbase emphasize cached actions with
+  page-state validation, and Firecrawl/Browser Use continue expanding hosted
+  sessions. Plasmate should keep strengthening portable local SOM action plans
+  and avoid a hosted-browser pivot.
+- Code changes: Python/Node parser packages and Python/Node/Go SDKs now expose
+  enabled-only direct lookup for compact action targets by deterministic
+  `cache_key`, stable SOM id, and original `html_id`. This lets replay gates
+  ignore disabled, read-only, and inert targets without manually building an
+  enabled-only index.
+- Docs changes: parser/SDK READMEs, PRD, roadmap, and website docs source now
+  describe enabled-only direct lookup as the next replay-validation ergonomic
+  layer and record the rationale for keeping index behavior and direct lookup
+  behavior aligned.
+- Verification: Python parser tests passed 75 tests; Python SDK query tests
+  passed 45 tests; Node parser tests passed 60 tests; Node SDK tests passed
+  30 tests after build; Go SDK tests passed; quick action-manifest
+  conformance passed across parser packages, SDKs, Browser Use, LangChain, and
+  Vercel AI; `node website/build.mjs` rebuilt 39 docs pages; `cargo build`
+  passed with existing warnings; `cargo test --lib --bin plasmate` passed 257
+  lib tests and 5 main/MCP tests; `git diff --check` passed.
+
 ### 2026-05-15T13:10:19Z - Plasmate Improvements Automation
 
 - Git sync: `git fetch origin --prune` from the linked automation worktree

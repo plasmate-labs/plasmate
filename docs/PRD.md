@@ -640,6 +640,15 @@ hosted-browser pivot and instead preserve common app-owned replay anchors:
 `data-state` give local agents stable selector hints, intended action names,
 and component state without raw DOM recovery.
 
+2026-05-15 enabled-lookup read: fresh competitor docs keep pointing at
+validated replay rather than blind reuse. Playwright MCP refs are scoped to the
+current accessibility snapshot, Stagehand/Browserbase caches only pay off after
+state validation, and hosted browser products add observability around the same
+check. Plasmate's local replay helpers should therefore resolve cached targets
+through the same availability gate used for model-facing menus: callers need an
+enabled-only lookup path by `cache_key`, SOM id, and original `html_id` so
+disabled, read-only, and inert targets do not slip into replay code.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -746,6 +755,16 @@ and adapter docs over one-off integration logic.
     across orchestration and worker runtimes.
   - Parser/SDK docs and tests now cover the cache-key lookup path, preserving
     deterministic `cache_key` values while improving replay ergonomics.
+  - Python and Node parser lookup helpers now accept `enabled_only=True` /
+    `{ enabledOnly: true }` for cache-key, SOM-id, and original-DOM-id target
+    resolution, so replay gates can ignore disabled, read-only, and inert
+    targets without manually building an index.
+  - Python, Node, and Go SDK lookup helpers now expose the same enabled-only
+    direct target resolution (`enabled_only=True`, `{ enabledOnly: true }`, and
+    `true`), keeping orchestration and worker runtimes aligned.
+  - Parser/SDK tests and docs now cover enabled-only direct lookups against the
+    shared action-availability fixture, preserving deterministic `cache_key`
+    values while tightening replay safety.
   - Python/Node parser packages and Python/Node/Go SDKs now expose direct
     compact-target lookup by SOM id and original DOM id, so agents can bridge
     stored plans, live selectors, and current SOM state without raw DOM scans.
@@ -1393,3 +1412,6 @@ and adapter docs over one-off integration logic.
   adapter exposes the same compact action target contract.
 - Promote action-plan index helpers into shared conformance so id, cache-key,
   `html_id`, and enabled-only replay indexes cannot drift across runtimes.
+- Promote enabled-only direct lookup helpers into the shared action manifest so
+  cache-key, SOM-id, and original-DOM-id replay gates cannot drift from
+  enabled-only index behavior.

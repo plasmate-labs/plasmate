@@ -155,9 +155,13 @@ for target in action_plan:
         target.get("lang"),
     )
 
-cached_target = find_action_target_by_cache_key(som, action_plan[0]["cache_key"])
-same_target = find_action_target_by_id(som, action_plan[0]["id"])
-dom_target = find_action_target_by_html_id(som, "login-button")
+cached_target = find_action_target_by_cache_key(
+    som, action_plan[0]["cache_key"], enabled_only=True
+)
+same_target = find_action_target_by_id(som, action_plan[0]["id"], enabled_only=True)
+dom_target = find_action_target_by_html_id(
+    som, "login-button", enabled_only=True
+)
 target_index = get_action_plan_index(som, enabled_only=True)
 ready_target = target_index["by_cache_key"].get(action_plan[0]["cache_key"])
 plan_fingerprint = get_action_plan_fingerprint(som, enabled_only=True)

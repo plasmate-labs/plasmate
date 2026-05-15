@@ -779,6 +779,12 @@
 <li><strong>SDK parity is retention</strong>: Python, Node, and Go should expose the same helper so workers and orchestration code do not reimplement scans.</li>
 <li><strong>Cache keys stay identity-only</strong>: lookup helpers improve replay ergonomics without changing deterministic <code>cache_key</code> inputs.</li>
 </ul>
+<h3 id="2026-05-15-enabled-lookup-adjustment">2026-05-15 Enabled Lookup Adjustment</h3><p>Validated replay should be available without building an index first. Parser packages and SDKs should optionally resolve by <code>cache_key</code>, SOM id, or original <code>html_id</code> against enabled targets only.</p>
+<ul>
+<li><strong>Lookup should honor availability gates</strong>: direct target resolution should exclude disabled, read-only, and inert targets when requested.</li>
+<li><strong>Runtime parity reduces replay bugs</strong>: Python, Node, and Go should expose the same behavior with idiomatic options.</li>
+<li><strong>Indexes and direct lookups should agree</strong>: enabled-only direct lookup must match enabled-only action-plan indexes.</li>
+</ul>
 <h3 id="2026-05-15-action-target-ergonomics-adjustment">2026-05-15 Action-Target Ergonomics Adjustment</h3><p>Action menus are now a daily developer surface, not just an internal representation. Plasmate should reduce repeated application code around local SOM plans.</p>
 <ul>
 <li><strong>Direct target lookup should match element lookup</strong>: parser packages and SDKs should resolve compact action targets by SOM id and original DOM id.</li>
@@ -1001,6 +1007,7 @@ apps can resolve &quot;Email&quot; or &quot;Search&quot; controls without raw DO
 <li><input checked="" disabled="" type="checkbox"> Compact action plans expose title, labelledby, and describedby across parser packages, SDKs, and framework adapters</li>
 <li><input checked="" disabled="" type="checkbox"> Shared action manifest asserts relationship-context cues without changing deterministic action cache keys</li>
 <li><input checked="" disabled="" type="checkbox"> Parser packages and Python/Node/Go SDKs expose cache-key lookup helpers for compact action targets</li>
+<li><input checked="" disabled="" type="checkbox"> Parser packages and Python/Node/Go SDKs expose enabled-only direct lookup options for cache-key, SOM-id, and original-DOM-id replay gates</li>
 <li><input checked="" disabled="" type="checkbox"> Parser packages and Python/Node/Go SDKs expose action-target lookup by SOM id and original DOM id</li>
 <li><input checked="" disabled="" type="checkbox"> Parser packages and Python/Node/Go SDKs expose enabled-only action-plan helpers</li>
 <li><input checked="" disabled="" type="checkbox"> Parser packages and Python/Node/Go SDKs expose deterministic action-plan fingerprints and compact summaries</li>

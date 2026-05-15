@@ -573,6 +573,19 @@ func TestGetActionPlanMatchesSharedAvailabilityManifest(t *testing.T) {
 	if got := FindActionTargetByHTMLID(som, "missing"); got != nil {
 		t.Errorf("FindActionTargetByHTMLID missing = %v, want nil", got)
 	}
+	if got := FindActionTargetByID(som, "e_save", true); got != nil {
+		t.Errorf("FindActionTargetByID enabled-only disabled target = %v, want nil", got)
+	}
+	if got := FindActionTargetByHTMLID(som, "save-settings", true); got != nil {
+		t.Errorf("FindActionTargetByHTMLID enabled-only disabled target = %v, want nil", got)
+	}
+	disabledTarget := FindActionTargetByHTMLID(som, "save-settings")
+	if disabledTarget == nil {
+		t.Fatal("disabled target missing")
+	}
+	if got := FindActionTargetByCacheKey(som, disabledTarget.CacheKey, true); got != nil {
+		t.Errorf("FindActionTargetByCacheKey enabled-only disabled target = %v, want nil", got)
+	}
 	index := GetActionPlanIndex(som)
 	if got := index.ByHTMLID["save-settings"]; got.ID != "e_save" {
 		t.Errorf("GetActionPlanIndex ByHTMLID = %v, want e_save", got)

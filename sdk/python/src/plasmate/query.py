@@ -401,30 +401,33 @@ def get_action_plan_summary(som: Som) -> Dict[str, object]:
 
 
 def find_action_target_by_id(
-    som: Som, target_id: str
+    som: Som, target_id: str, *, enabled_only: bool = False
 ) -> Optional[Dict[str, object]]:
     """Return the compact action target matching a SOM element id."""
-    for item in get_action_plan(som):
+    plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
+    for item in plan:
         if item.get("id") == target_id:
             return item
     return None
 
 
 def find_action_target_by_html_id(
-    som: Som, html_id: str
+    som: Som, html_id: str, *, enabled_only: bool = False
 ) -> Optional[Dict[str, object]]:
     """Return the compact action target matching an original HTML id."""
-    for item in get_action_plan(som):
+    plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
+    for item in plan:
         if item.get("html_id") == html_id:
             return item
     return None
 
 
 def find_action_target_by_cache_key(
-    som: Som, cache_key: str
+    som: Som, cache_key: str, *, enabled_only: bool = False
 ) -> Optional[Dict[str, object]]:
     """Return the compact action target matching a deterministic cache key."""
-    for item in get_action_plan(som):
+    plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
+    for item in plan:
         if item.get("cache_key") == cache_key:
             return item
     return None

@@ -344,6 +344,26 @@ class TestGetActionPlan:
         assert target["id"] == "e9"
         assert find_action_target_by_cache_key(sample_som, "missing") is None
 
+        fixture_dir = REPO_ROOT / "integrations" / "fixtures"
+        som = Som.model_validate(
+            json.loads((fixture_dir / "action-availability.som.json").read_text())
+        )
+        expected = json.loads(
+            (fixture_dir / "action-availability.expected.json").read_text()
+        )["action_targets"]
+        disabled_target = expected[2]
+        assert disabled_target["id"] == "e_save"
+        assert (
+            find_action_target_by_cache_key(som, disabled_target["cache_key"])
+            == disabled_target
+        )
+        assert (
+            find_action_target_by_cache_key(
+                som, disabled_target["cache_key"], enabled_only=True
+            )
+            is None
+        )
+
     def test_finds_action_targets_by_ids(self, sample_som: Som) -> None:
         target = find_action_target_by_id(sample_som, "e9")
         assert target is not None
@@ -358,6 +378,11 @@ class TestGetActionPlan:
         assert html_target is not None
         assert html_target["id"] == "e_save"
         assert find_action_target_by_html_id(sample_som, "main-copy") is None
+        assert find_action_target_by_id(som, "e_save", enabled_only=True) is None
+        assert (
+            find_action_target_by_html_id(som, "save-settings", enabled_only=True)
+            is None
+        )
 
     def test_returns_enabled_action_plan(self) -> None:
         fixture_dir = REPO_ROOT / "integrations" / "fixtures"

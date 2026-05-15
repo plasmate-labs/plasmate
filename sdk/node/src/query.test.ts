@@ -303,6 +303,15 @@ describe('getActionPlan', () => {
 
     assert.equal(target?.id, 'e5');
     assert.equal(findActionTargetByCacheKey(fixture, 'missing'), undefined);
+
+    const { som, action_targets } = loadActionAvailabilityFixture();
+    const disabledTarget = action_targets[2];
+    assert.equal(disabledTarget.id, 'e_save');
+    assert.deepEqual(findActionTargetByCacheKey(som, disabledTarget.cache_key), disabledTarget);
+    assert.equal(
+      findActionTargetByCacheKey(som, disabledTarget.cache_key, { enabledOnly: true }),
+      undefined,
+    );
   });
 
   it('finds action targets by SOM and HTML ids', () => {
@@ -313,6 +322,11 @@ describe('getActionPlan', () => {
     const { som } = loadActionAvailabilityFixture();
     assert.equal(findActionTargetByHtmlId(som, 'save-settings')?.id, 'e_save');
     assert.equal(findActionTargetByHtmlId(fixture, 'main-copy'), undefined);
+    assert.equal(findActionTargetById(som, 'e_save', { enabledOnly: true }), undefined);
+    assert.equal(
+      findActionTargetByHtmlId(som, 'save-settings', { enabledOnly: true }),
+      undefined,
+    );
   });
 
   it('returns enabled action targets', () => {

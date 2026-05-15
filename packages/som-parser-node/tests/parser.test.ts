@@ -453,6 +453,14 @@ describe('getActionPlan', () => {
 
     expect(target?.id).toBe('e_7');
     expect(findActionTargetByCacheKey(FIXTURE, 'missing')).toBeUndefined();
+
+    const { som, action_targets } = loadActionAvailabilityFixture();
+    const disabledTarget = action_targets[2];
+    expect(disabledTarget.id).toBe('e_save');
+    expect(findActionTargetByCacheKey(som, disabledTarget.cache_key)).toEqual(disabledTarget);
+    expect(
+      findActionTargetByCacheKey(som, disabledTarget.cache_key, { enabledOnly: true }),
+    ).toBeUndefined();
   });
 
   it('finds action targets by SOM and HTML ids', () => {
@@ -463,6 +471,10 @@ describe('getActionPlan', () => {
     const { som } = loadActionAvailabilityFixture();
     expect(findActionTargetByHtmlId(som, 'save-settings')?.id).toBe('e_save');
     expect(findActionTargetByHtmlId(FIXTURE, 'hero-title')).toBeUndefined();
+    expect(findActionTargetById(som, 'e_save', { enabledOnly: true })).toBeUndefined();
+    expect(
+      findActionTargetByHtmlId(som, 'save-settings', { enabledOnly: true }),
+    ).toBeUndefined();
   });
 
   it('returns enabled action targets', () => {

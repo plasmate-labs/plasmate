@@ -69,6 +69,13 @@ export {
   getTokenEstimate,
 } from './query';
 
+export type {
+  ActionPlanIndex,
+  ActionPlanItem,
+  ActionPlanSummary,
+  ActionTargetLookupOptions,
+} from './query';
+
 import type { Som } from './types';
 
 export interface PageSession {

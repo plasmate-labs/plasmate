@@ -529,8 +529,13 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 }
 
 // FindActionTargetByCacheKey returns the compact action target matching a deterministic cache key.
-func FindActionTargetByCacheKey(som *Som, cacheKey string) *ActionPlanItem {
-	for _, item := range GetActionPlan(som) {
+// Pass true as the optional third argument to search only currently enabled targets.
+func FindActionTargetByCacheKey(som *Som, cacheKey string, enabledOnly ...bool) *ActionPlanItem {
+	plan := GetActionPlan(som)
+	if len(enabledOnly) > 0 && enabledOnly[0] {
+		plan = EnabledActionPlan(som)
+	}
+	for _, item := range plan {
 		if item.CacheKey == cacheKey {
 			matched := item
 			return &matched
@@ -643,8 +648,13 @@ func GetActionPlanSummary(som *Som) ActionPlanSummary {
 }
 
 // FindActionTargetByID returns the compact action target matching a SOM element id.
-func FindActionTargetByID(som *Som, id string) *ActionPlanItem {
-	for _, item := range GetActionPlan(som) {
+// Pass true as the optional third argument to search only currently enabled targets.
+func FindActionTargetByID(som *Som, id string, enabledOnly ...bool) *ActionPlanItem {
+	plan := GetActionPlan(som)
+	if len(enabledOnly) > 0 && enabledOnly[0] {
+		plan = EnabledActionPlan(som)
+	}
+	for _, item := range plan {
 		if item.ID == id {
 			matched := item
 			return &matched
@@ -654,8 +664,13 @@ func FindActionTargetByID(som *Som, id string) *ActionPlanItem {
 }
 
 // FindActionTargetByHTMLID returns the compact action target matching an original HTML id.
-func FindActionTargetByHTMLID(som *Som, htmlID string) *ActionPlanItem {
-	for _, item := range GetActionPlan(som) {
+// Pass true as the optional third argument to search only currently enabled targets.
+func FindActionTargetByHTMLID(som *Som, htmlID string, enabledOnly ...bool) *ActionPlanItem {
+	plan := GetActionPlan(som)
+	if len(enabledOnly) > 0 && enabledOnly[0] {
+		plan = EnabledActionPlan(som)
+	}
+	for _, item := range plan {
 		if item.HTMLID != nil && *item.HTMLID == htmlID {
 			matched := item
 			return &matched

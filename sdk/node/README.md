@@ -119,9 +119,9 @@ const interactive = findInteractive(som);
 // Get compact action targets for cached agent workflows
 const actionPlan = getEnabledActionPlan(som);
 console.log(actionPlan.map((target) => [target.id, target.cache_key, target.actions, target.expanded]));
-const cachedTarget = findActionTargetByCacheKey(som, actionPlan[0].cache_key);
-const sameTarget = findActionTargetById(som, actionPlan[0].id);
-const domTarget = findActionTargetByHtmlId(som, 'login-button');
+const cachedTarget = findActionTargetByCacheKey(som, actionPlan[0].cache_key, { enabledOnly: true });
+const sameTarget = findActionTargetById(som, actionPlan[0].id, { enabledOnly: true });
+const domTarget = findActionTargetByHtmlId(som, 'login-button', { enabledOnly: true });
 const targetIndex = getActionPlanIndex(som, { enabledOnly: true });
 const readyTarget = targetIndex.byCacheKey[actionPlan[0].cache_key];
 const planFingerprint = getActionPlanFingerprint(som, { enabledOnly: true });
@@ -160,9 +160,9 @@ browser.close();
 | `getActionPlanIndex(som, { enabledOnly })` | `ActionPlanIndex` | Index compact action targets by `byId`, `byCacheKey`, and `byHtmlId` for replay validation |
 | `getActionPlanFingerprint(som, { enabledOnly })` | `string` | Deterministic plan-level fingerprint for replay drift checks |
 | `getActionPlanSummary(som)` | `ActionPlanSummary` | Action-plan fingerprints plus total/enabled/disabled, role, blocked-reason, cache-key coverage, duplicate cache-key, and `html_id` coverage counts |
-| `findActionTargetByCacheKey(som, cacheKey)` | `ActionPlanItem \| undefined` | Resolve a cached action target from the current SOM action plan |
-| `findActionTargetById(som, id)` | `ActionPlanItem \| undefined` | Resolve an action target by stable SOM id |
-| `findActionTargetByHtmlId(som, htmlId)` | `ActionPlanItem \| undefined` | Resolve an action target by original HTML id |
+| `findActionTargetByCacheKey(som, cacheKey, { enabledOnly })` | `ActionPlanItem \| undefined` | Resolve a cached action target; pass `enabledOnly` to ignore disabled/read-only/inert targets |
+| `findActionTargetById(som, id, { enabledOnly })` | `ActionPlanItem \| undefined` | Resolve an action target by stable SOM id; pass `enabledOnly` for prompt-safe replay |
+| `findActionTargetByHtmlId(som, htmlId, { enabledOnly })` | `ActionPlanItem \| undefined` | Resolve an action target by original HTML id; pass `enabledOnly` for prompt-safe replay |
 | `findByText(som, text, { exact })` | `SomElement[]` | Search visible text and labels; default is case-insensitive substring, exact is case-sensitive |
 | `flatElements(som)` | `SomElement[]` | Flatten all elements |
 | `getTokenEstimate(som)` | `number` | Estimate token count (~4 bytes/token) |

@@ -432,6 +432,14 @@ Stagehand/Browserbase action caching and Playwright MCP snapshot refs keep teach
 - **SDK parity is retention**: Python, Node, and Go should expose the same helper so workers and orchestration code do not reimplement scans.
 - **Cache keys stay identity-only**: lookup helpers improve replay ergonomics without changing deterministic `cache_key` inputs.
 
+### 2026-05-15 Enabled Lookup Adjustment
+
+Validated replay should be available without building an index first. Parser packages and SDKs should optionally resolve by `cache_key`, SOM id, or original `html_id` against enabled targets only.
+
+- **Lookup should honor availability gates**: direct target resolution should exclude disabled, read-only, and inert targets when requested.
+- **Runtime parity reduces replay bugs**: Python, Node, and Go should expose the same behavior with idiomatic options.
+- **Indexes and direct lookups should agree**: enabled-only direct lookup must match enabled-only action-plan indexes.
+
 ### 2026-05-15 Action-Target Ergonomics Adjustment
 
 Action menus are now a daily developer surface, not just an internal representation. Plasmate should reduce repeated application code around local SOM plans.
@@ -667,6 +675,7 @@ Current Playwright MCP, Stagehand/Browserbase, Browserbase observability, and Fi
 - [x] Compact action plans expose title, labelledby, and describedby across parser packages, SDKs, and framework adapters
 - [x] Shared action manifest asserts relationship-context cues without changing deterministic action cache keys
 - [x] Parser packages and Python/Node/Go SDKs expose cache-key lookup helpers for compact action targets
+- [x] Parser packages and Python/Node/Go SDKs expose enabled-only direct lookup options for cache-key, SOM-id, and original-DOM-id replay gates
 - [x] Parser packages and Python/Node/Go SDKs expose action-target lookup by SOM id and original DOM id
 - [x] Parser packages and Python/Node/Go SDKs expose enabled-only action-plan helpers
 - [x] Parser packages and Python/Node/Go SDKs expose deterministic action-plan fingerprints and compact summaries

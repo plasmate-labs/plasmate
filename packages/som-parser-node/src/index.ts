@@ -49,3 +49,10 @@ export {
   toMarkdown,
   filter,
 } from './query.js';
+
+export type {
+  ActionPlanIndex,
+  ActionPlanItem,
+  ActionPlanSummary,
+  ActionTargetLookupOptions,
+} from './query.js';
