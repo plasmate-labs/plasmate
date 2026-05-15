@@ -150,6 +150,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-15 submit-default read: current docs and competitor positioning keep validating "observe, validate, replay" as the sticky loop. Playwright MCP refs remain snapshot-scoped, Stagehand documents cached observed actions and server/local cache paths, Browserbase sells replay/observability around cached actions, Firecrawl Interact resumes browser sessions after scraping, and Browser Use Cloud exposes CDP-backed sessions and profiles. Plasmate should keep its local-first wedge by making submit contracts browser-accurate: normalized `method`, `enctype`, `formmethod`, and `formenctype` values let cached SaaS submit actions validate what the browser will actually send.
 
+2026-05-15 modal-grid context read: current browser-agent products keep rewarding action menus that explain current UI structure before replay. Playwright MCP snapshots give agents fresh accessibility state with refs, Stagehand/Browserbase cache only after validating observed actions, Firecrawl Interact keeps scrape sessions actionable, and Browser Use Cloud exposes CDP sessions and profiles. Plasmate should keep its local-first wedge by carrying modal state and grid row/column coordinates through compact local action plans.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -165,6 +167,9 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-15:
+  - Rust SOM compilation and the SOM schema/spec now preserve `aria-modal`, `aria-rowindex`, `aria-colindex`, `aria-rowcount`, and `aria-colcount` in `attrs.aria`.
+  - Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI now carry modal and grid-position cues into compact action targets and prompt renderers without changing deterministic `cache_key` values.
+  - The shared action-availability manifest now asserts modal and grid-coordinate context for a reusable select target.
   - Rust SOM compilation now normalizes present form `enctype` values to browser behavior: valid multipart/text encodings are lowercased, and invalid values compile as `application/x-www-form-urlencoded`.
   - Submitter override `formmethod` values now compile through the same browser-default method normalization as form regions, so invalid overrides validate as `GET` and valid `post`/`dialog` values stay typed.
   - Submitter override `formenctype` values now normalize to the browser submission encoding contract, preventing cached submit actions from trusting raw invalid markup.
@@ -413,6 +418,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures once the shared action manifest remains stable.
 - Promote form-relation cases (`form`, `list`, and `aria-errormessage`) into broader parser, SDK, and adapter conformance fixtures.
 - Promote live-region cases (`aria-busy`, `aria-live`, `aria-atomic`, and `aria-relevant`) into broader Rust/parser/SDK conformance fixtures.
+- Promote modal and grid-position cases (`aria-modal`, `aria-rowindex`, `aria-colindex`, `aria-rowcount`, and `aria-colcount`) into broader Rust/parser/SDK and adapter conformance fixtures.
 - Promote fieldset/legend group semantics into shared conformance fixtures alongside cross-adapter accessible-description cases.
 - Add shared conformance for nested shadow-root controls and enriched action-plan metadata.
 - Promote the new SDK/parser shadow-root and Go action-plan tests into shared conformance fixtures that run against every adapter before release.

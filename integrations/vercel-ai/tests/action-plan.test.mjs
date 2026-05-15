@@ -233,6 +233,8 @@ assert.match(formatted, /\[e_plan\].*\[selected_values=team,agency\]/)
 assert.match(formatted, /\[e_plan\].*\[size=4\]/)
 assert.match(formatted, /\[e_plan\].*\[multiselectable=true\]/)
 assert.match(formatted, /\[e_plan\].*\[level=2\].*\[posinset=1\].*\[setsize=3\]/)
+assert.match(formatted, /\[e_plan\].*\[modal=true\]/)
+assert.match(formatted, /\[e_plan\].*\[rowindex=2\].*\[colindex=1\].*\[rowcount=4\].*\[colcount=2\]/)
 assert.match(formatted, /\[e_quota\].*\[min=1\].*\[max=100\].*\[step=5\]/)
 assert.match(
   formatted,

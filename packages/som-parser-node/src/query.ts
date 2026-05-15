@@ -166,6 +166,7 @@ export interface ActionPlanItem {
   roledescription?: string;
   busy?: boolean;
   live?: string;
+  modal?: boolean;
   atomic?: boolean;
   relevant?: string;
   owns?: string;
@@ -176,6 +177,10 @@ export interface ActionPlanItem {
   level?: string;
   posinset?: string;
   setsize?: string;
+  rowindex?: string;
+  colindex?: string;
+  rowcount?: string;
+  colcount?: string;
   valuemin?: string;
   valuemax?: string;
   valuenow?: string;
@@ -361,6 +366,7 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.aria?.roledescription !== undefined) item.roledescription = el.attrs.aria.roledescription;
     if (el.attrs?.aria?.busy !== undefined) item.busy = el.attrs.aria.busy;
     if (el.attrs?.aria?.live !== undefined) item.live = el.attrs.aria.live;
+    if (el.attrs?.aria?.modal !== undefined) item.modal = el.attrs.aria.modal;
     if (el.attrs?.aria?.atomic !== undefined) item.atomic = el.attrs.aria.atomic;
     if (el.attrs?.aria?.relevant !== undefined) item.relevant = el.attrs.aria.relevant;
     if (el.attrs?.aria?.owns !== undefined) item.owns = el.attrs.aria.owns;
@@ -373,6 +379,10 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.aria?.level !== undefined) item.level = el.attrs.aria.level;
     if (el.attrs?.aria?.posinset !== undefined) item.posinset = el.attrs.aria.posinset;
     if (el.attrs?.aria?.setsize !== undefined) item.setsize = el.attrs.aria.setsize;
+    if (el.attrs?.aria?.rowindex !== undefined) item.rowindex = el.attrs.aria.rowindex;
+    if (el.attrs?.aria?.colindex !== undefined) item.colindex = el.attrs.aria.colindex;
+    if (el.attrs?.aria?.rowcount !== undefined) item.rowcount = el.attrs.aria.rowcount;
+    if (el.attrs?.aria?.colcount !== undefined) item.colcount = el.attrs.aria.colcount;
     if (el.attrs?.aria?.valuemin !== undefined) item.valuemin = el.attrs.aria.valuemin;
     if (el.attrs?.aria?.valuemax !== undefined) item.valuemax = el.attrs.aria.valuemax;
     if (el.attrs?.aria?.valuenow !== undefined) item.valuenow = el.attrs.aria.valuenow;

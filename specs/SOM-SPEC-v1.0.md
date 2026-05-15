@@ -421,6 +421,7 @@ attributes SHOULD be preserved when present:
 | `aria-roledescription` | `roledescription` | string |
 | `aria-busy`      | `busy`      | boolean         |
 | `aria-live`      | `live`      | string          |
+| `aria-modal`     | `modal`     | boolean         |
 | `aria-atomic`    | `atomic`    | boolean         |
 | `aria-relevant`  | `relevant`  | string          |
 | `aria-owns`      | `owns`      | string          |
@@ -433,6 +434,10 @@ attributes SHOULD be preserved when present:
 | `aria-level`     | `level`     | string          |
 | `aria-posinset`  | `posinset`  | string          |
 | `aria-setsize`   | `setsize`   | string          |
+| `aria-rowindex`  | `rowindex`  | string          |
+| `aria-colindex`  | `colindex`  | string          |
+| `aria-rowcount`  | `rowcount`  | string          |
+| `aria-colcount`  | `colcount`  | string          |
 | `aria-valuemin`  | `valuemin`  | string          |
 | `aria-valuemax`  | `valuemax`  | string          |
 | `aria-valuenow`  | `valuenow`  | string          |

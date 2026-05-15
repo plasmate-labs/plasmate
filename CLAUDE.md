@@ -49,6 +49,38 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-15T19:09:06Z - Plasmate Improvements Automation
+
+- Git sync: required fetch was retried from the automation worktree and still
+  failed before network access because the linked worktree cannot open
+  `FETCH_HEAD`. Retrying from `/Users/steve/Git/plasmate` reached SSH but DNS
+  resolution for `github.com` failed, so work continued from local branch
+  `codex/plasmate-improvements-2026-05-15-cache-key-lookup`.
+- Market direction: current docs keep reinforcing validated action replay over
+  raw browser access. Playwright MCP uses fresh accessibility snapshots and
+  snapshot-scoped refs, Stagehand/Browserbase emphasize cached observed actions
+  with validation and observability, Firecrawl Interact resumes scraped browser
+  sessions, and Browser Use Cloud exposes CDP-backed sessions and profiles.
+  Plasmate should keep strengthening local SOM action context instead of
+  pivoting into hosted browser infrastructure.
+- Code changes: Rust SOM and schema/spec now preserve `aria-modal`,
+  `aria-rowindex`, `aria-colindex`, `aria-rowcount`, and `aria-colcount`.
+  Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+  and Vercel AI now carry modal and grid-position cues into compact action
+  targets and prompt renderers without changing deterministic action
+  `cache_key` values.
+- Fixture/docs changes: the shared action-availability manifest now asserts
+  modal/grid context for the reusable select target. PRD, roadmap source,
+  generated website docs, and this running state record the rationale and next
+  conformance step.
+- Verification so far: Python parser tests, Python SDK tests, Node parser
+  tests, Node SDK tests, Go SDK tests, Browser Use tests, LangChain tests,
+  Vercel AI tests, quick action-manifest conformance, focused Rust compiler
+  coverage, and `cargo build` passed. Existing Rust warnings and the existing
+  Python 3.14/Pydantic warning remain unrelated. Full `cargo test` still
+  fails only in `tests/awp_integration_test.rs` because the sandbox denies
+  local socket binding with `Operation not permitted`.
+
 ### 2026-05-15T18:09:46Z - Plasmate Improvements Automation
 
 - Git sync: required pull was retried from the automation worktree and still

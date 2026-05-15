@@ -175,6 +175,7 @@ export interface AriaState {
   roledescription?: string;
   busy?: boolean;
   live?: string;
+  modal?: boolean;
   atomic?: boolean;
   relevant?: string;
   owns?: string;
@@ -187,6 +188,10 @@ export interface AriaState {
   level?: string;
   posinset?: string;
   setsize?: string;
+  rowindex?: string;
+  colindex?: string;
+  rowcount?: string;
+  colcount?: string;
   valuemin?: string;
   valuemax?: string;
   valuenow?: string;

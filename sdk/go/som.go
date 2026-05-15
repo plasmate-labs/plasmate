@@ -148,6 +148,7 @@ type AriaState struct {
 	RoleDescription  *string     `json:"roledescription,omitempty"`
 	Busy             *bool       `json:"busy,omitempty"`
 	Live             *string     `json:"live,omitempty"`
+	Modal            *bool       `json:"modal,omitempty"`
 	Atomic           *bool       `json:"atomic,omitempty"`
 	Relevant         *string     `json:"relevant,omitempty"`
 	Owns             *string     `json:"owns,omitempty"`
@@ -160,6 +161,10 @@ type AriaState struct {
 	Level            *string     `json:"level,omitempty"`
 	PosInSet         *string     `json:"posinset,omitempty"`
 	SetSize          *string     `json:"setsize,omitempty"`
+	RowIndex         *string     `json:"rowindex,omitempty"`
+	ColIndex         *string     `json:"colindex,omitempty"`
+	RowCount         *string     `json:"rowcount,omitempty"`
+	ColCount         *string     `json:"colcount,omitempty"`
 	ValueMin         *string     `json:"valuemin,omitempty"`
 	ValueMax         *string     `json:"valuemax,omitempty"`
 	ValueNow         *string     `json:"valuenow,omitempty"`

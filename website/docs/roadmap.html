@@ -768,6 +768,12 @@
 <li><strong>Submitter overrides need browser defaults</strong>: <code>formmethod</code> should share the same GET/POST/DIALOG normalization as form regions, and <code>formenctype</code> should normalize to the same valid encoding set.</li>
 <li><strong>Conformance should cover submission contracts</strong>: browser-default form fixtures should include labels, input types, methods, encodings, and submitter overrides before form replay is marketed as durable workflow memory.</li>
 </ul>
+<h3 id="2026-05-15-modal-and-grid-context-adjustment">2026-05-15 Modal and Grid Context Adjustment</h3><p>The latest competitor read keeps the local-first strategy intact. Playwright MCP snapshots expose current accessibility state, Stagehand/Browserbase cache actions only after validation, and Firecrawl/Browser Use continue selling hosted session continuity. Plasmate should answer by making local action menus more explanatory for complex SaaS dialogs and grids.</p>
+<ul>
+<li><strong>Modal state is replay context</strong>: <code>aria-modal</code> should survive into compact action targets so cached actions know whether they are inside a modal workflow.</li>
+<li><strong>Grid coordinates reduce ambiguity</strong>: <code>aria-rowindex</code>, <code>aria-colindex</code>, <code>aria-rowcount</code>, and <code>aria-colcount</code> help agents validate that a data-grid action still points at the expected row and column.</li>
+<li><strong>Cache keys stay target-focused</strong>: modal/grid cues should be visible to agents without changing deterministic <code>cache_key</code> values.</li>
+</ul>
 <h3 id="2026-05-14-relationship-context-adjustment">2026-05-14 Relationship Context Adjustment</h3><p>Current browser-agent competitors keep making cached action replay depend on target validation against fresh structured state. Plasmate should preserve small provenance cues that explain why a target is named or described.</p>
 <ul>
 <li><strong>Tooltip help belongs in compact targets</strong>: native <code>title</code> should travel with action targets so agents can reuse browser-visible help text.</li>
@@ -1037,6 +1043,9 @@ apps can resolve &quot;Email&quot; or &quot;Search&quot; controls without raw DO
 <li><input checked="" disabled="" type="checkbox"> Rust compiler emits browser-default form method semantics for missing, invalid, and dialog methods</li>
 <li><input checked="" disabled="" type="checkbox"> Rust compiler normalizes present form enctype values to browser submission encodings</li>
 <li><input checked="" disabled="" type="checkbox"> Rust compiler normalizes submitter formmethod and formenctype override values before replay validation</li>
+<li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve ARIA modal and grid-position cues</li>
+<li><input checked="" disabled="" type="checkbox"> Compact action plans expose modal, rowindex, colindex, rowcount, and colcount across parser packages, SDKs, and framework adapters</li>
+<li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest asserts modal/grid cues without changing deterministic action cache keys</li>
 <li><input disabled="" type="checkbox"> Selector-aware SOM cache entries for repeated agent prompts</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
 <li><input disabled="" type="checkbox"> Wire <code>016-action-semantics</code> into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants</li>
@@ -1059,6 +1068,7 @@ apps can resolve &quot;Email&quot; or &quot;Search&quot; controls without raw DO
 <li><input disabled="" type="checkbox"> Promote replay-ambiguity index buckets into the shared action-manifest conformance gate</li>
 <li><input disabled="" type="checkbox"> Promote replay-provenance cases into broader Rust/parser/SDK and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote browser-default form fidelity cases, including enctype and submitter override normalization, into shared parser, SDK, and adapter conformance fixtures</li>
+<li><input disabled="" type="checkbox"> Promote modal and grid-position cases into broader Rust/parser/SDK and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Add cross-adapter accessible-description fixtures</li>

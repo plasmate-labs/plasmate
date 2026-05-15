@@ -2267,6 +2267,7 @@ fn build_element_attrs(
         ("aria-roledescription", "roledescription"),
         ("aria-busy", "busy"),
         ("aria-live", "live"),
+        ("aria-modal", "modal"),
         ("aria-atomic", "atomic"),
         ("aria-relevant", "relevant"),
         ("aria-owns", "owns"),
@@ -2279,6 +2280,10 @@ fn build_element_attrs(
         ("aria-level", "level"),
         ("aria-posinset", "posinset"),
         ("aria-setsize", "setsize"),
+        ("aria-rowindex", "rowindex"),
+        ("aria-colindex", "colindex"),
+        ("aria-rowcount", "rowcount"),
+        ("aria-colcount", "colcount"),
         ("aria-valuemin", "valuemin"),
         ("aria-valuemax", "valuemax"),
         ("aria-valuenow", "valuenow"),
@@ -3280,6 +3285,32 @@ mod tests {
         assert_eq!(attrs["aria"]["level"], "2");
         assert_eq!(attrs["aria"]["posinset"], "1");
         assert_eq!(attrs["aria"]["setsize"], "3");
+    }
+
+    #[test]
+    fn test_aria_modal_and_grid_position_cues_are_preserved() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Grid</title></head>
+<body>
+<main>
+  <button aria-label="Edit status" aria-modal="true" aria-rowindex="3" aria-colindex="2" aria-rowcount="10" aria-colcount="4">Edit</button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.com").unwrap();
+        let button = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| element.role == ElementRole::Button)
+            .expect("grid action button should compile");
+        let attrs = button.attrs.as_ref().expect("button attrs should compile");
+        assert_eq!(attrs["aria"]["modal"], true);
+        assert_eq!(attrs["aria"]["rowindex"], "3");
+        assert_eq!(attrs["aria"]["colindex"], "2");
+        assert_eq!(attrs["aria"]["rowcount"], "10");
+        assert_eq!(attrs["aria"]["colcount"], "4");
     }
 
     #[test]

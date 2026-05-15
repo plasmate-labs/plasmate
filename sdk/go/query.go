@@ -289,6 +289,7 @@ type ActionPlanItem struct {
 	RoleDescription   *string        `json:"roledescription,omitempty"`
 	Busy              *bool          `json:"busy,omitempty"`
 	Live              *string        `json:"live,omitempty"`
+	Modal             *bool          `json:"modal,omitempty"`
 	Atomic            *bool          `json:"atomic,omitempty"`
 	Relevant          *string        `json:"relevant,omitempty"`
 	Owns              *string        `json:"owns,omitempty"`
@@ -299,6 +300,10 @@ type ActionPlanItem struct {
 	Level             *string        `json:"level,omitempty"`
 	PosInSet          *string        `json:"posinset,omitempty"`
 	SetSize           *string        `json:"setsize,omitempty"`
+	RowIndex          *string        `json:"rowindex,omitempty"`
+	ColIndex          *string        `json:"colindex,omitempty"`
+	RowCount          *string        `json:"rowcount,omitempty"`
+	ColCount          *string        `json:"colcount,omitempty"`
 	ValueMin          *string        `json:"valuemin,omitempty"`
 	ValueMax          *string        `json:"valuemax,omitempty"`
 	ValueNow          *string        `json:"valuenow,omitempty"`
@@ -488,6 +493,7 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.RoleDescription = el.Attrs.Aria.RoleDescription
 				item.Busy = el.Attrs.Aria.Busy
 				item.Live = el.Attrs.Aria.Live
+				item.Modal = el.Attrs.Aria.Modal
 				item.Atomic = el.Attrs.Aria.Atomic
 				item.Relevant = el.Attrs.Aria.Relevant
 				item.Owns = el.Attrs.Aria.Owns
@@ -500,6 +506,10 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.Level = el.Attrs.Aria.Level
 				item.PosInSet = el.Attrs.Aria.PosInSet
 				item.SetSize = el.Attrs.Aria.SetSize
+				item.RowIndex = el.Attrs.Aria.RowIndex
+				item.ColIndex = el.Attrs.Aria.ColIndex
+				item.RowCount = el.Attrs.Aria.RowCount
+				item.ColCount = el.Attrs.Aria.ColCount
 				item.ValueMin = el.Attrs.Aria.ValueMin
 				item.ValueMax = el.Attrs.Aria.ValueMax
 				item.ValueNow = el.Attrs.Aria.ValueNow

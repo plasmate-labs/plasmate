@@ -676,6 +676,16 @@ keep its local-first wedge by making submit contracts browser-accurate:
 normalized `method`, `enctype`, `formmethod`, and `formenctype` values let
 cached SaaS submit actions validate what the browser will actually send.
 
+2026-05-15 modal-grid context read: current browser-agent products keep
+rewarding action menus that explain current UI structure before replay.
+Playwright MCP snapshots give agents fresh accessibility state with refs,
+Stagehand/Browserbase cache only after validating observed actions, Firecrawl
+Interact keeps scrape sessions actionable, and Browser Use Cloud exposes CDP
+sessions and profiles. Plasmate should keep its local-first wedge by carrying
+small but high-signal ARIA context from complex SaaS surfaces: modal state and
+grid row/column coordinates let agents validate a cached action is still in
+the expected dialog or data-grid position without raw DOM recovery.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -702,6 +712,16 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-15:
+  - Rust SOM compilation and the SOM schema/spec now preserve `aria-modal`,
+    `aria-rowindex`, `aria-colindex`, `aria-rowcount`, and `aria-colcount` in
+    `attrs.aria`.
+  - Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+    and Vercel AI now carry modal and grid-position cues into compact action
+    targets and prompt renderers without changing deterministic `cache_key`
+    values.
+  - The shared action-availability manifest now asserts modal and grid
+    coordinate context for a reusable select target, extending release-gate
+    coverage for data-grid and dialog-heavy SaaS workflows.
   - Rust SOM compilation now normalizes form `enctype` values to browser
     behavior when present: valid multipart/text encodings are lowercased, and
     invalid values compile as `application/x-www-form-urlencoded`.
@@ -1447,6 +1467,9 @@ and adapter docs over one-off integration logic.
   broader parser, SDK, and adapter conformance fixtures.
 - Promote live-region cases (`aria-busy`, `aria-live`, `aria-atomic`, and
   `aria-relevant`) into broader Rust/parser/SDK conformance fixtures.
+- Promote modal and grid-position cases (`aria-modal`, `aria-rowindex`,
+  `aria-colindex`, `aria-rowcount`, and `aria-colcount`) into broader
+  Rust/parser/SDK and adapter conformance fixtures.
 - Promote popover/command relationship cases (`popovertarget`,
   `popovertargetaction`, `commandfor`, and `command`) into broader
   Rust/parser/SDK conformance fixtures.

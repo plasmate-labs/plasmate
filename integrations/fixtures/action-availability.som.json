@@ -156,10 +156,15 @@
               "expanded": false,
               "controls": "plan-options",
               "haspopup": "listbox",
+              "modal": true,
               "multiselectable": true,
               "level": "2",
               "posinset": "1",
-              "setsize": "3"
+              "setsize": "3",
+              "rowindex": "2",
+              "colindex": "1",
+              "rowcount": "4",
+              "colcount": "2"
             },
             "options": [
               { "value": "starter", "text": "Starter" },
