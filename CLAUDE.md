@@ -84,9 +84,10 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   returns `Operation not permitted`.
 - Commit/push state: normal branch checkout and commit still cannot write
   linked worktree Git metadata, so created alternate-index commit `4f35e33`
-  (`chore: expose mcp session observability`), pushed review branch
-  `codex/plasmate-improvements-2026-05-16-session-observability`, and
-  fast-forwarded remote `master` from `cd89e54` to `4f35e33`.
+  (`chore: expose mcp session observability`) and follow-up running-state
+  commit `bb76fbd` (`docs: record mcp session observability state`). Pushed
+  review branch `codex/plasmate-improvements-2026-05-16-session-observability`
+  and fast-forwarded remote `master` from `cd89e54` to `bb76fbd`.
 
 ### 2026-05-16T15:13:18Z - Plasmate Improvements Automation
 
