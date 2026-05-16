@@ -91,6 +91,12 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append(f"target={item['target']}")
     if item.get("rel"):
         flags.append(f"rel={item['rel']}")
+    if item.get("hreflang"):
+        flags.append(f"hreflang={item['hreflang']}")
+    if item.get("type"):
+        flags.append(f"type={item['type']}")
+    if item.get("referrerpolicy"):
+        flags.append(f"referrerpolicy={item['referrerpolicy']}")
     if "download" in item:
         flags.append(f"download={item['download']}")
     if item.get("input_type"):
@@ -151,8 +157,16 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append(f"formnovalidate={item['formnovalidate']}")
     if item.get("accesskey"):
         flags.append(f"accesskey={item['accesskey']}")
+    if item.get("title"):
+        flags.append(f"title={item['title']}")
+    if item.get("source_role"):
+        flags.append(f"source_role={item['source_role']}")
+    if item.get("test_id"):
+        flags.append(f"test_id={item['test_id']}")
     if "spellcheck" in item:
         flags.append(f"spellcheck={item['spellcheck']}")
+    if "draggable" in item:
+        flags.append(f"draggable={item['draggable']}")
     if item.get("value"):
         flags.append(f"value={item['value']}")
     for constraint_key in ("minlength", "maxlength", "min", "max", "step", "pattern"):
@@ -188,6 +202,8 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         "level",
         "posinset",
         "setsize",
+        "grabbed",
+        "dropeffect",
         "valuemin",
         "valuemax",
         "valuenow",

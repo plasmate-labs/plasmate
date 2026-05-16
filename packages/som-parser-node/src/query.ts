@@ -90,6 +90,9 @@ export interface ActionPlanItem {
   href?: string;
   target?: string;
   rel?: string;
+  hreflang?: string;
+  type?: string;
+  referrerpolicy?: string;
   download?: boolean | string;
   name?: string;
   accept?: string;
@@ -123,7 +126,11 @@ export interface ActionPlanItem {
   formtarget?: string;
   formnovalidate?: boolean;
   accesskey?: string;
+  title?: string;
+  source_role?: string;
+  test_id?: string;
   spellcheck?: boolean | string;
+  draggable?: boolean | string;
   input_type?: string;
   value?: string;
   placeholder?: string;
@@ -162,6 +169,8 @@ export interface ActionPlanItem {
   level?: string;
   posinset?: string;
   setsize?: string;
+  grabbed?: boolean;
+  dropeffect?: string;
   valuemin?: string;
   valuemax?: string;
   valuenow?: string;
@@ -172,6 +181,13 @@ export interface ActionPlanItem {
   inert?: boolean;
   blocked_reason?: 'disabled' | 'readonly' | 'inert';
   group?: string;
+}
+
+export interface ActionPlanIndex {
+  byId: Record<string, ActionPlanItem>;
+  byCacheKey: Record<string, ActionPlanItem>;
+  byHtmlId: Record<string, ActionPlanItem>;
+  byTestId: Record<string, ActionPlanItem>;
 }
 
 function compactString(value: unknown): string | undefined {
@@ -240,6 +256,9 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.href) item.href = el.attrs.href;
     if (el.attrs?.target) item.target = el.attrs.target;
     if (el.attrs?.rel) item.rel = el.attrs.rel;
+    if (el.attrs?.hreflang) item.hreflang = el.attrs.hreflang;
+    if (el.attrs?.type) item.type = el.attrs.type;
+    if (el.attrs?.referrerpolicy) item.referrerpolicy = el.attrs.referrerpolicy;
     if (el.attrs?.download !== undefined) item.download = el.attrs.download;
     if (el.attrs?.name) item.name = el.attrs.name;
     if (el.attrs?.accept) item.accept = el.attrs.accept;
@@ -266,7 +285,11 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.formtarget) item.formtarget = el.attrs.formtarget;
     if (el.attrs?.formnovalidate !== undefined) item.formnovalidate = el.attrs.formnovalidate;
     if (el.attrs?.accesskey) item.accesskey = el.attrs.accesskey;
+    if (el.attrs?.title) item.title = el.attrs.title;
+    if (el.attrs?.source_role) item.source_role = el.attrs.source_role;
+    if (el.attrs?.test_id) item.test_id = el.attrs.test_id;
     if (el.attrs?.spellcheck !== undefined) item.spellcheck = el.attrs.spellcheck;
+    if (el.attrs?.draggable !== undefined) item.draggable = el.attrs.draggable;
     if (el.attrs?.input_type) item.input_type = el.attrs.input_type;
     if (el.attrs?.value) item.value = el.attrs.value;
     if (el.attrs?.placeholder) item.placeholder = el.attrs.placeholder;
@@ -310,6 +333,8 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.aria?.level !== undefined) item.level = el.attrs.aria.level;
     if (el.attrs?.aria?.posinset !== undefined) item.posinset = el.attrs.aria.posinset;
     if (el.attrs?.aria?.setsize !== undefined) item.setsize = el.attrs.aria.setsize;
+    if (el.attrs?.aria?.grabbed !== undefined) item.grabbed = el.attrs.aria.grabbed;
+    if (el.attrs?.aria?.dropeffect !== undefined) item.dropeffect = el.attrs.aria.dropeffect;
     if (el.attrs?.aria?.valuemin !== undefined) item.valuemin = el.attrs.aria.valuemin;
     if (el.attrs?.aria?.valuemax !== undefined) item.valuemax = el.attrs.aria.valuemax;
     if (el.attrs?.aria?.valuenow !== undefined) item.valuenow = el.attrs.aria.valuenow;
@@ -341,6 +366,56 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
       cache_key: getActionPlanCacheKey(item),
     };
   });
+}
+
+/** Return compact action targets that are currently safe to offer. */
+export function getEnabledActionPlan(som: Som): ActionPlanItem[] {
+  return getActionPlan(som).filter((item) => item.enabled !== false);
+}
+
+/** Return action targets indexed by SOM id, cache key, HTML id, and test id. */
+export function getActionPlanIndex(
+  som: Som,
+  options?: { enabledOnly?: boolean },
+): ActionPlanIndex {
+  const plan = options?.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
+  const index: ActionPlanIndex = {
+    byId: {},
+    byCacheKey: {},
+    byHtmlId: {},
+    byTestId: {},
+  };
+  for (const item of plan) {
+    if (index.byId[item.id] === undefined) index.byId[item.id] = item;
+    if (index.byCacheKey[item.cache_key] === undefined) index.byCacheKey[item.cache_key] = item;
+    if (item.html_id && index.byHtmlId[item.html_id] === undefined) {
+      index.byHtmlId[item.html_id] = item;
+    }
+    if (item.test_id && index.byTestId[item.test_id] === undefined) {
+      index.byTestId[item.test_id] = item;
+    }
+  }
+  return index;
+}
+
+/** Find a compact action target by its SOM element id. */
+export function findActionTargetById(som: Som, id: string): ActionPlanItem | undefined {
+  return getActionPlanIndex(som).byId[id];
+}
+
+/** Find a compact action target by its deterministic cache key. */
+export function findActionTargetByCacheKey(som: Som, cacheKey: string): ActionPlanItem | undefined {
+  return getActionPlanIndex(som).byCacheKey[cacheKey];
+}
+
+/** Find a compact action target by its original HTML id. */
+export function findActionTargetByHtmlId(som: Som, htmlId: string): ActionPlanItem | undefined {
+  return getActionPlanIndex(som).byHtmlId[htmlId];
+}
+
+/** Find a compact action target by its test locator attribute. */
+export function findActionTargetByTestId(som: Som, testId: string): ActionPlanItem | undefined {
+  return getActionPlanIndex(som).byTestId[testId];
 }
 
 /** Extract all links with their text and URLs. */

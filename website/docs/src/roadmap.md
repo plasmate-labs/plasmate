@@ -391,6 +391,30 @@ Current competitor docs keep making the interaction surface both structured and 
 - **Cache keys stay stable**: `html_id` is useful provenance, but should not change deterministic action `cache_key` values because the SOM id, role, label, actions, and field identity remain the cache target.
 - **Parity beats isolated fields**: Python, Node, Go, and shared fixtures should expose the same `html_id` lookup and action-plan context before adapters advertise live-DOM replay support.
 
+### 2026-05-15 Locator Provenance Adjustment
+
+Official docs continue to split reusable action identity from current-page handles. Playwright MCP refs are stable only inside the current accessibility snapshot, Stagehand's local/server caches replay observed actions after matching current state, and Firecrawl/Browser Use profiles keep hosted sessions warm. Plasmate should answer with local non-cache provenance that helps agents resolve, test, and debug compact targets without changing deterministic action memory.
+
+- **Developer anchors are replay evidence**: preserve `title`, raw `role` tokens, and `data-testid`/`data-test`/`data-qa` locators as compact attrs for action targets.
+- **Provenance must stay non-cache**: these fields help live DOM resolution and diagnostics, but should not change `cache_key` values because they can churn independently of semantic target identity.
+- **Adapters should render the same cues**: Browser Use, LangChain, Vercel AI, parser packages, and SDKs should expose `title`, `source_role`, and `test_id` together so no integration needs raw DOM recovery for common app-authored anchors.
+
+### 2026-05-15 Drag/Drop Replay Adjustment
+
+Current competitor docs keep tying repeat automation to validated current page state: Playwright MCP refs are scoped to fresh snapshots, Stagehand/Browserbase action caching depends on DOM validation, and Browser Use/Firecrawl package hosted sessions plus skills for recurring workflows. Plasmate should keep its local-first replay wedge by preserving drag/drop state in the same compact action targets agents already cache.
+
+- **Drag/drop is a replay cue**: native `draggable`, ARIA `grabbed`, and ARIA `dropeffect` should travel through Rust SOM, schema, parser packages, SDKs, and framework prompt renderers.
+- **Do not destabilize cache keys**: drag state can change while the semantic target stays the same, so it should be validation context rather than deterministic action-key material.
+- **Boards and builders are sticky SaaS cases**: kanban boards, upload builders, scheduling grids, and workflow canvases need drag/drop cues before local replay can compete with hosted action-memory products.
+
+### 2026-05-16 Link Navigation Replay Adjustment
+
+The browser-agent market keeps rewarding tools that validate current page state before reusing an action. Playwright MCP refs are snapshot-scoped, Stagehand and Browserbase action caches depend on selector/DOM validation, and hosted browser products package profiles and traces around repeated workflows. Plasmate's local-first answer should keep semantic cache keys stable while making link side effects visible enough for agents to reject stale clicks.
+
+- **Locale matters for repeated navigation**: `hreflang` should travel through Rust SOM, schema, SDKs, parser packages, and framework renderers so agents can distinguish same-label links that target different languages.
+- **Resource type is replay context**: link MIME `type` should surface beside `href` so cached actions can tell a normal HTML navigation from a PDF, CSV, or alternate representation.
+- **Privacy policy changes are side effects**: `referrerpolicy` should be compact action context without becoming cache-key material, preserving local action memory while exposing navigation risk.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -585,11 +609,24 @@ Current competitor docs keep making the interaction surface both structured and 
 - [x] Parser packages and SDKs preserve html_id, expose original-HTML-id lookup helpers, and carry html_id in compact action plans
 - [x] Browser Use, LangChain, and Vercel AI action-plan renderers surface html_id
 - [x] Shared action-availability manifest asserts html_id parity without changing deterministic cache keys
+- [x] Rust SOM attrs and schema preserve title, source_role, and test_id locator provenance
+- [x] Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action plans surface title, source_role, and test_id without changing deterministic cache keys
+- [x] Shared action-availability manifest asserts locator provenance for parser, SDK, and framework adapters
+- [x] Python/Node parser packages, Python/Node SDKs, and Go SDK expose compact action target lookup/index helpers by id, cache_key, html_id, and test_id
+- [x] Parser and SDK tests cover enabled-only action plans plus replay lookup by cache key, DOM id, and test id
+- [x] Rust SOM attrs and schema preserve draggable, aria-grabbed, and aria-dropeffect replay cues
+- [x] Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action plans surface draggable, grabbed, and dropeffect without changing deterministic cache keys
+- [x] Shared action-availability manifest asserts drag/drop replay cues across parser, SDK, and framework adapters
+- [x] Rust compiler and SOM schema preserve link replay cues with hreflang, type, and referrerpolicy
+- [x] Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action plans surface hreflang, type, and referrerpolicy without changing deterministic cache keys
+- [x] Shared action-availability manifest asserts link locale, resource type, and referrer-policy cues across parser, SDK, and framework adapters
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
 - [ ] Promote html_id DOM-provenance cases into adapter conformance fixtures
+- [ ] Promote locator-provenance cases into broader Rust/parser/SDK and adapter conformance fixtures
+- [ ] Promote action target lookup/index helpers into Browser Use, LangChain, and Vercel AI
 - [ ] Add cross-adapter fixtures for enriched compact action-plan metadata
 - [ ] Promote ARIA relationship-state cases, including owns/flowto/details, into the broader action-state/action-semantics conformance suites
 - [ ] Promote range and orientation cases into broader parser, SDK, and adapter conformance fixtures
@@ -603,6 +640,8 @@ Current competitor docs keep making the interaction surface both structured and 
 - [ ] Promote inert availability cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures
+- [ ] Promote drag/drop replay cues into broader Rust/parser/SDK and adapter conformance fixtures
+- [ ] Promote link navigation replay cues into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures
 - [ ] Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners
 - [x] Promote adapter availability checks into shared cross-adapter fixtures

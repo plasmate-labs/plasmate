@@ -49,6 +49,160 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-16T01:13:12Z - Plasmate Improvements Automation
+
+- Git sync: required latest pull was retried. The automation worktree still
+  cannot open the linked checkout `FETCH_HEAD`; switching to the newest local
+  remote-tracking branch also failed on the linked worktree `index.lock`. The
+  tree was clean, so the newest available local remote-tracking diff
+  (`origin/codex/drag-replay-cues`) was applied directly before this run's
+  link-replay work.
+- Market direction: current docs continue to validate Plasmate's local-first
+  action-surface wedge. Playwright MCP uses accessibility snapshots with refs
+  scoped to the current snapshot; Browserbase/Stagehand positions observed
+  actions and action caching around DOM validation; Browser Use and Firecrawl
+  keep broadening hosted sessions, profiles, and skills. The roadmap should
+  keep making local SOM action targets richer and easier to validate rather
+  than pivoting into hosted browser infrastructure.
+- Code changes: Rust SOM attrs and JSON Schema now preserve three link replay
+  validation cues: `hreflang`, link MIME `type`, and `referrerpolicy`.
+  Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+  and Vercel AI action-plan surfaces now carry/render those fields without
+  changing deterministic action `cache_key` values.
+- Fixture/docs changes: the shared action-availability fixture now asserts
+  link locale, resource type, and referrer-policy context. PRD and roadmap
+  docs now record the 2026-05-16 link replay rationale and next conformance
+  step.
+- Verification passed: `rustfmt --check src/som/compiler.rs
+  tests/som_compiler_test.rs`, JSON fixture/schema parse checks, touched
+  Python syntax compile, focused Rust link-metadata test, `cargo build`,
+  `cargo test --lib --quiet` (258), Python parser tests (72), Python SDK query
+  tests (40), Browser Use fixture test, LangChain fixture test, Go SDK tests,
+  and `git diff --check`.
+- Verification gaps: whole-worktree cargo tests are still constrained by the
+  sandboxed AWP listener issue noted in prior runs; Node parser, Node SDK, and
+  Vercel AI tests remain blocked by missing local dev dependencies (`vitest`,
+  `tsc`, `tsup`); website docs generation remains blocked by missing `marked`.
+- Commit/push state: preparing review branch `codex/link-navigation-replay-cues`
+  from the current working tree. Direct merge to `master` remains subject to
+  GitHub fetch/push/API access because fetch still cannot complete in this
+  linked worktree.
+
+### 2026-05-16T00:08:51Z - Plasmate Improvements Automation
+
+- Git sync: required GitHub refresh was retried. The automation worktree still
+  cannot write its linked `FETCH_HEAD`, and the primary checkout still cannot
+  resolve `github.com`, so work continued by applying the newest available
+  local remote-tracking diff (`codex/action-target-replay-lookup`) directly to
+  the worktree before adding this run's changes.
+- Market direction: current docs continue to favor reusable structured action
+  surfaces over another hosted browser fleet. Playwright MCP keeps refs scoped
+  to fresh accessibility snapshots; Browserbase/Stagehand markets validated
+  action caching and DOM fingerprints; Browser Use and Firecrawl package
+  hosted sessions, profiles, skills, and browser sandboxes. Plasmate should
+  keep improving local replay validation context across its broad SDK and
+  adapter surface.
+- Code changes: Rust SOM attrs and schema now preserve drag/drop replay cues
+  with native `draggable`, ARIA `grabbed`, and ARIA `dropeffect`. Python/Node
+  parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI
+  action-plan surfaces now expose those cues without changing deterministic
+  action `cache_key` values.
+- Fixture/docs changes: the shared action-availability fixture now asserts
+  drag/drop replay context, and PRD/roadmap docs record the reason: kanban
+  boards, upload builders, scheduling grids, and workflow canvases need more
+  than cached click identity to validate local replay.
+- Verification passed: `rustfmt --check src/som/compiler.rs`, JSON fixture and
+  schema parse checks, touched Python syntax compile, `git diff --check`,
+  focused Rust drag-cue test, `cargo build`, `cargo test --lib --quiet` (258),
+  Python parser tests (72), Python SDK query tests (40), Browser Use fixture
+  test, LangChain fixture test, and Go SDK tests.
+- Verification gaps: full `cargo test --quiet` still fails in sandboxed AWP
+  integration tests because `TcpListener::bind("127.0.0.1:0")` returns
+  `Operation not permitted`; Node parser, Node SDK, and Vercel AI tests remain
+  blocked by missing local dev dependencies (`vitest`, `tsc`, `tsup`); website
+  docs generation remains blocked by missing `marked`.
+- Commit/push state: created alternate-index code/docs commit `ccab552`
+  (`chore: carry drag replay cues`) plus running-state commit `0314aac`, then
+  pushed review branch `codex/drag-replay-cues`. Direct `master` push was
+  rejected with `fetch first`; `git fetch origin master` and `git ls-remote`
+  failed DNS for `github.com`, and `gh pr create` failed to reach
+  `api.github.com`. Remote merge remains blocked until fetch/API access works.
+
+### 2026-05-15T23:12:05Z - Plasmate Improvements Automation
+
+- Git sync: latest pull was retried from the automation worktree and failed
+  before network access because the linked worktree cannot write
+  `FETCH_HEAD`. A fast-forward to the known remote-tracking
+  `origin/codex/locator-provenance-cues` ref also failed on `ORIG_HEAD`, so
+  that remote-tracking diff was applied directly before this run's new work.
+- Market direction: current docs still favor the local-first reusable action
+  surface. Playwright MCP keeps snapshot-scoped accessibility refs, Stagehand
+  documents `observe()` plus local/server action caching, Firecrawl and
+  Browser Use keep broadening hosted browser/session products, and Cloudflare
+  Browser Run/WebMCP points toward typed action discovery. Plasmate should
+  keep deepening portable local SOM/action replay rather than pivoting into
+  hosted browser infrastructure.
+- Code changes: carried forward locator provenance (`title`, `source_role`,
+  `test_id`) from the known remote-tracking branch, then added compact action
+  target replay helpers across Python/Node parser packages, Python/Node SDKs,
+  and Go SDK. New helpers return enabled-only action plans, build indexes by
+  SOM id, `cache_key`, `html_id`, and `test_id`, and expose direct lookup
+  helpers for those keys.
+- Docs changes: PRD and roadmap docs now record action target lookup as the
+  next stickiness layer after locator provenance, with a follow-up to promote
+  the lookup/index contract into Browser Use, LangChain, and Vercel AI.
+- Verification: `rustfmt --check src/som/compiler.rs`, `cargo build`,
+  `cargo test --lib --quiet` (257), Python parser tests (72), Python SDK query
+  tests (40), Go SDK tests, Python syntax compile, JSON fixture/schema parse,
+  and `git diff --check` passed.
+- Verification gaps: Node SDK and Node parser tests remain blocked because
+  local dev dependencies are absent (`tsc` and `vitest` not found).
+- Commit/push state: created code commit `39ad726` (`chore: add action target
+  replay lookup`) plus running-state follow-ups; branch
+  `codex/action-target-replay-lookup` was pushed to GitHub. Direct push to
+  `master` was rejected with `fetch first`; retrying
+  `git fetch origin master` from `/Users/steve/Git/plasmate` failed DNS for
+  `github.com`, and `gh pr create` failed to reach `api.github.com`. Remote
+  merge remains blocked until fetch/API access works.
+
+### 2026-05-15T22:11:34Z - Plasmate Improvements Automation
+
+- Git sync: latest pull was retried from the automation worktree and failed
+  because the linked worktree cannot open `FETCH_HEAD`. The review branch was
+  pushed successfully, but a direct `master` push was rejected with
+  `fetch first`; retrying `git fetch origin master` from
+  `/Users/steve/Git/plasmate` failed DNS for `github.com`. Remote merge
+  remains blocked until fetch/API access works.
+- Market direction: current docs still favor Plasmate's local-first
+  structured action surface. Playwright MCP uses snapshot-scoped refs,
+  Stagehand documents local/server action caching, Firecrawl Interact resumes
+  scrape sessions for prompt/code actions, and Browser Use Cloud emphasizes
+  CDP sessions plus profiles. The roadmap should continue improving portable
+  local action provenance instead of pivoting into hosted browser fleets.
+- Code changes: Rust SOM attrs and schema now preserve `title`,
+  `source_role`, and normalized `test_id` values from `data-testid`,
+  `data-test`, or `data-qa`. Python/Node parser packages, Python/Node/Go SDK
+  action plans, Browser Use, LangChain, and Vercel AI now carry/render those
+  fields without changing deterministic action `cache_key` values.
+- Fixture/docs changes: the shared action-availability fixture now asserts
+  locator provenance on an action target. PRD, roadmap, website doc sources,
+  SOM spec, and this running state now record the locator-provenance rationale
+  and next conformance step.
+- Verification: `rustfmt --check src/som/compiler.rs` passed; focused Rust
+  compiler tests for keyboard/custom-role and test-id fallback attrs passed;
+  `cargo build` passed; `cargo test --lib --quiet` passed 257 tests; Python
+  parser tests passed 70 tests; Python SDK query tests passed 38 tests; Go SDK
+  tests passed; Browser Use and LangChain fixture tests passed; JSON fixture
+  parse, Python syntax compile, and `git diff --check` passed.
+- Verification gaps: Node parser, Node SDK, and Vercel AI tests remain blocked
+  because local `node_modules` are absent (`vitest`, `tsc`, `tsup` not found).
+  `node website/build.mjs` remains blocked because `marked` is not installed.
+- Commit/push state: worktree refs are still locked by sandbox permissions, so
+  the patch was committed with an alternate index. Review branch
+  `codex/locator-provenance-cues` was pushed with code commit `538404e` plus
+  running-state follow-up commits; follow-up PR creation failed because
+  `api.github.com` was unreachable.
+
 ### 2026-05-15T21:15:26Z - Plasmate Improvements Automation
 
 - Git sync: latest pull was retried from the automation worktree and failed

@@ -4,6 +4,10 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Som } from './types';
 import {
+  findActionTargetByCacheKey,
+  findActionTargetByHtmlId,
+  findActionTargetById,
+  findActionTargetByTestId,
   findByRole,
   findById,
   findByHtmlId,
@@ -13,8 +17,12 @@ import {
   flatElements,
   getActionPlan,
   getActionPlanCacheKey,
+  getActionPlanIndex,
+  getEnabledActionPlan,
   getTokenEstimate,
 } from './query';
+
+type ExpectedActionTarget = { id: string; cache_key: string; [key: string]: unknown };
 
 const fixture: Som = {
   som_version: '1.0',
@@ -127,7 +135,7 @@ const shadowFixture: Som = {
   },
 };
 
-function loadActionAvailabilityFixture(): { som: Som; action_targets: unknown[] } {
+function loadActionAvailabilityFixture(): { som: Som; action_targets: ExpectedActionTarget[] } {
   const fixtureDir = resolve(process.cwd(), '../../integrations/fixtures');
   return {
     som: JSON.parse(readFileSync(resolve(fixtureDir, 'action-availability.som.json'), 'utf8')),
@@ -279,6 +287,32 @@ describe('getActionPlan', () => {
       }),
       'plasmate-action:v1:f08859f9',
     );
+  });
+
+  it('indexes action targets for replay', () => {
+    const { som, action_targets } = loadActionAvailabilityFixture();
+    const save = action_targets.find((target) => target.id === 'e_save')!;
+    const index = getActionPlanIndex(som);
+
+    assert.deepEqual(index.byId.e_save, save);
+    assert.deepEqual(index.byCacheKey[save.cache_key], save);
+    assert.deepEqual(index.byHtmlId['save-button'], save);
+    assert.deepEqual(index.byTestId['settings-save'], save);
+    assert.deepEqual(findActionTargetById(som, 'e_save'), save);
+    assert.deepEqual(findActionTargetByCacheKey(som, save.cache_key), save);
+    assert.deepEqual(findActionTargetByHtmlId(som, 'save-button'), save);
+    assert.deepEqual(findActionTargetByTestId(som, 'settings-save'), save);
+  });
+
+  it('filters blocked targets from enabled action indexes', () => {
+    const { som } = loadActionAvailabilityFixture();
+    const enabled = getEnabledActionPlan(som);
+    const index = getActionPlanIndex(som, { enabledOnly: true });
+
+    assert.equal(enabled.every((target) => target.enabled), true);
+    assert.equal(index.byId.e_save, undefined);
+    assert.equal(index.byTestId['settings-save'], undefined);
+    assert.notEqual(index.byId.e_plan, undefined);
   });
 });
 

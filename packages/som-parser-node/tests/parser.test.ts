@@ -8,6 +8,10 @@ import {
   fromPlasmate,
   getAllElements,
   findByAction,
+  findActionTargetByCacheKey,
+  findActionTargetByHtmlId,
+  findActionTargetById,
+  findActionTargetByTestId,
   findByHint,
   findByRole,
   findById,
@@ -15,6 +19,8 @@ import {
   findByText,
   getActionPlan,
   getActionPlanCacheKey,
+  getActionPlanIndex,
+  getEnabledActionPlan,
   getInteractiveElements,
   getLinks,
   getForms,
@@ -27,6 +33,8 @@ import {
   filter,
 } from '../src/index.js';
 import type { Som } from '../src/index.js';
+
+type ExpectedActionTarget = { id: string; cache_key: string; [key: string]: unknown };
 
 const FIXTURE: Som = {
   som_version: '0.1',
@@ -94,7 +102,7 @@ const FIXTURE: Som = {
 const FIXTURE_JSON = JSON.stringify(FIXTURE);
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 
-function loadActionAvailabilityFixture(): { som: Som; action_targets: unknown[] } {
+function loadActionAvailabilityFixture(): { som: Som; action_targets: ExpectedActionTarget[] } {
   const fixtureDir = resolve(REPO_ROOT, 'integrations/fixtures');
   return {
     som: JSON.parse(readFileSync(resolve(fixtureDir, 'action-availability.som.json'), 'utf8')),
@@ -453,6 +461,32 @@ describe('getActionPlan', () => {
     const { som, action_targets } = loadActionAvailabilityFixture();
 
     expect(getActionPlan(som)).toEqual(action_targets);
+  });
+
+  it('indexes action targets for replay', () => {
+    const { som, action_targets } = loadActionAvailabilityFixture();
+    const save = action_targets.find((target) => target.id === 'e_save')!;
+    const index = getActionPlanIndex(som);
+
+    expect(index.byId.e_save).toEqual(save);
+    expect(index.byCacheKey[save.cache_key]).toEqual(save);
+    expect(index.byHtmlId['save-button']).toEqual(save);
+    expect(index.byTestId['settings-save']).toEqual(save);
+    expect(findActionTargetById(som, 'e_save')).toEqual(save);
+    expect(findActionTargetByCacheKey(som, save.cache_key)).toEqual(save);
+    expect(findActionTargetByHtmlId(som, 'save-button')).toEqual(save);
+    expect(findActionTargetByTestId(som, 'settings-save')).toEqual(save);
+  });
+
+  it('filters blocked targets from enabled action indexes', () => {
+    const { som } = loadActionAvailabilityFixture();
+    const enabled = getEnabledActionPlan(som);
+    const index = getActionPlanIndex(som, { enabledOnly: true });
+
+    expect(enabled.every((target) => target.enabled)).toBe(true);
+    expect(index.byId.e_save).toBeUndefined();
+    expect(index.byTestId['settings-save']).toBeUndefined();
+    expect(index.byId.e_plan).toBeDefined();
   });
 });
 

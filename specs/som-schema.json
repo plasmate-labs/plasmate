@@ -157,6 +157,9 @@
             "href": { "type": "string" },
             "target": { "type": "string" },
             "rel": { "type": "string" },
+            "hreflang": { "type": "string" },
+            "type": { "type": "string" },
+            "referrerpolicy": { "type": "string" },
             "download": {
               "oneOf": [
                 { "type": "boolean" },
@@ -227,7 +230,16 @@
               ]
             },
             "accesskey": { "type": "string" },
+            "title": { "type": "string" },
+            "source_role": { "type": "string" },
+            "test_id": { "type": "string" },
             "spellcheck": {
+              "oneOf": [
+                { "type": "boolean" },
+                { "type": "string" }
+              ]
+            },
+            "draggable": {
               "oneOf": [
                 { "type": "boolean" },
                 { "type": "string" }
@@ -391,6 +403,8 @@
         "level": { "type": "string" },
         "posinset": { "type": "string" },
         "setsize": { "type": "string" },
+        "grabbed": { "type": "boolean" },
+        "dropeffect": { "type": "string" },
         "valuemin": { "type": "string" },
         "valuemax": { "type": "string" },
         "valuenow": { "type": "string" },

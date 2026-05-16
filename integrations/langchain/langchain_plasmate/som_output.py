@@ -251,6 +251,12 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append(f'[target="{attrs["target"]}"]')
     if attrs.get("rel"):
         flags.append(f'[rel="{attrs["rel"]}"]')
+    if attrs.get("hreflang"):
+        flags.append(f'[hreflang="{attrs["hreflang"]}"]')
+    if attrs.get("type"):
+        flags.append(f'[type="{attrs["type"]}"]')
+    if attrs.get("referrerpolicy"):
+        flags.append(f'[referrerpolicy="{attrs["referrerpolicy"]}"]')
     if "download" in attrs:
         flags.append(f'[download="{attrs["download"]}"]')
     for command_key in (
@@ -271,8 +277,16 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append(f'[formnovalidate="{attrs["formnovalidate"]}"]')
     if attrs.get("accesskey"):
         flags.append(f'[accesskey="{attrs["accesskey"]}"]')
+    if attrs.get("title"):
+        flags.append(f'[title="{attrs["title"]}"]')
+    if attrs.get("source_role"):
+        flags.append(f'[source_role="{attrs["source_role"]}"]')
+    if attrs.get("test_id"):
+        flags.append(f'[test_id="{attrs["test_id"]}"]')
     if "spellcheck" in attrs:
         flags.append(f'[spellcheck="{attrs["spellcheck"]}"]')
+    if "draggable" in attrs:
+        flags.append(f'[draggable="{attrs["draggable"]}"]')
     for constraint_key in ("minlength", "maxlength", "min", "max", "step", "pattern"):
         if constraint_key in attrs:
             flags.append(f'[{constraint_key}="{attrs[constraint_key]}"]')
@@ -309,6 +323,8 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
             "level",
             "posinset",
             "setsize",
+            "grabbed",
+            "dropeffect",
             "valuemin",
             "valuemax",
             "valuenow",

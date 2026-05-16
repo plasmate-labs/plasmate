@@ -67,7 +67,11 @@ export interface PlasmateActionTarget {
   formtarget?: string
   formnovalidate?: boolean
   accesskey?: string
+  title?: string
+  source_role?: string
+  test_id?: string
   spellcheck?: boolean | string
+  draggable?: boolean | string
   minlength?: number | string
   maxlength?: number | string
   min?: number | string
@@ -90,6 +94,8 @@ export interface PlasmateActionTarget {
   errormessage?: string
   keyshortcuts?: string
   roledescription?: string
+  grabbed?: boolean
+  dropeffect?: string
   busy?: boolean
   live?: string
   atomic?: boolean
@@ -109,6 +115,9 @@ export interface PlasmateActionTarget {
   href?: string
   target?: string
   rel?: string
+  hreflang?: string
+  type?: string
+  referrerpolicy?: string
   download?: boolean | string
   input_type?: string
   value?: string
@@ -182,7 +191,7 @@ export interface PreparePlasmateActionPlanOptions {
 export const plasmateActionGuidance =
   'Use Plasmate SOM element ids for browser actions. Treat action targets ' +
   'with enabled=false or blocked_reason as unavailable, and prefer ' +
-  'cache_key, html_id, required, readonly, inert, value, target, rel, download, name, accept, capture, multiple, selected_values, size, autocomplete, inputmode, enterkeyhint, autocapitalize, dirname, spellcheck, form, form_action, form_method, form_target, form_enctype, form_novalidate, form_accept_charset, form_autocomplete, button_type, formaction, formmethod, formenctype, formtarget, formnovalidate, list, popovertarget, popovertargetaction, commandfor, command, accesskey, aria_placeholder, aria_autocomplete, active_descendant, errormessage, keyshortcuts, roledescription, busy, live, atomic, relevant, owns, flowto, details, multiline, multiselectable, orientation, sort, level, posinset, setsize, valuemin, valuemax, valuenow, valuetext, pattern, minlength, maxlength, min, max, step, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
+  'cache_key, html_id, title, source_role, test_id, required, readonly, inert, value, target, rel, hreflang, type, referrerpolicy, download, name, accept, capture, multiple, selected_values, size, autocomplete, inputmode, enterkeyhint, autocapitalize, dirname, spellcheck, draggable, form, form_action, form_method, form_target, form_enctype, form_novalidate, form_accept_charset, form_autocomplete, button_type, formaction, formmethod, formenctype, formtarget, formnovalidate, list, popovertarget, popovertargetaction, commandfor, command, accesskey, aria_placeholder, aria_autocomplete, active_descendant, errormessage, keyshortcuts, roledescription, grabbed, dropeffect, busy, live, atomic, relevant, owns, flowto, details, multiline, multiselectable, orientation, sort, level, posinset, setsize, valuemin, valuemax, valuenow, valuetext, pattern, minlength, maxlength, min, max, step, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
 
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined
@@ -277,7 +286,7 @@ function collectSomElements(elements: readonly PlasmateSomElement[] = []) {
 function copyStringAttr(
   item: PlasmateActionTarget,
   attrs: Record<string, unknown>,
-  key: 'href' | 'target' | 'rel' | 'input_type' | 'value' | 'name' | 'accept' | 'placeholder' | 'description' | 'group' | 'autocomplete' | 'inputmode' | 'enterkeyhint' | 'autocapitalize' | 'dirname' | 'form' | 'list' | 'popovertarget' | 'popovertargetaction' | 'commandfor' | 'command' | 'popover' | 'button_type' | 'formaction' | 'formmethod' | 'formenctype' | 'formtarget' | 'accesskey' | 'pattern' | 'step'
+  key: 'href' | 'target' | 'rel' | 'hreflang' | 'type' | 'referrerpolicy' | 'input_type' | 'value' | 'name' | 'accept' | 'placeholder' | 'description' | 'group' | 'autocomplete' | 'inputmode' | 'enterkeyhint' | 'autocapitalize' | 'dirname' | 'form' | 'list' | 'popovertarget' | 'popovertargetaction' | 'commandfor' | 'command' | 'popover' | 'button_type' | 'formaction' | 'formmethod' | 'formenctype' | 'formtarget' | 'accesskey' | 'title' | 'source_role' | 'test_id' | 'pattern' | 'step'
 ) {
   if (typeof attrs[key] === 'string' && attrs[key].length > 0) {
     item[key] = attrs[key]
@@ -287,7 +296,7 @@ function copyStringAttr(
 function copyStringOrBooleanAttr(
   item: PlasmateActionTarget,
   attrs: Record<string, unknown>,
-  key: 'download' | 'capture' | 'spellcheck'
+  key: 'download' | 'capture' | 'spellcheck' | 'draggable'
 ) {
   if (typeof attrs[key] === 'string' || typeof attrs[key] === 'boolean') {
     item[key] = attrs[key]
@@ -344,6 +353,9 @@ export function extractPlasmateActionTargets(
       copyStringAttr(target, attrs, 'href')
       copyStringAttr(target, attrs, 'target')
       copyStringAttr(target, attrs, 'rel')
+      copyStringAttr(target, attrs, 'hreflang')
+      copyStringAttr(target, attrs, 'type')
+      copyStringAttr(target, attrs, 'referrerpolicy')
       copyStringOrBooleanAttr(target, attrs, 'download')
       copyStringAttr(target, attrs, 'input_type')
       copyStringAttr(target, attrs, 'value')
@@ -373,7 +385,11 @@ export function extractPlasmateActionTargets(
       copyStringAttr(target, attrs, 'formtarget')
       if (typeof attrs.formnovalidate === 'boolean') target.formnovalidate = attrs.formnovalidate
       copyStringAttr(target, attrs, 'accesskey')
+      copyStringAttr(target, attrs, 'title')
+      copyStringAttr(target, attrs, 'source_role')
+      copyStringAttr(target, attrs, 'test_id')
       copyStringOrBooleanAttr(target, attrs, 'spellcheck')
+      copyStringOrBooleanAttr(target, attrs, 'draggable')
       copyStringAttr(target, attrs, 'placeholder')
       copyStringOrNumberAttr(target, attrs, 'minlength')
       copyStringOrNumberAttr(target, attrs, 'maxlength')
@@ -494,6 +510,14 @@ export function extractPlasmateActionTargets(
           if (typeof stateValue === 'string' && stateValue.length > 0) {
             target[stateKey] = stateValue
           }
+        }
+        const grabbed = (aria as Record<string, unknown>).grabbed
+        if (typeof grabbed === 'boolean') {
+          target.grabbed = grabbed
+        }
+        const dropeffect = (aria as Record<string, unknown>).dropeffect
+        if (typeof dropeffect === 'string' && dropeffect.length > 0) {
+          target.dropeffect = dropeffect
         }
       }
 
@@ -639,8 +663,13 @@ export function formatPlasmateActionPlan(
       const accesskey = target.accesskey
         ? ` [accesskey=${target.accesskey}]`
         : ''
+      const title = target.title ? ` [title=${target.title}]` : ''
+      const sourceRole = target.source_role ? ` [source_role=${target.source_role}]` : ''
+      const testId = target.test_id ? ` [test_id=${target.test_id}]` : ''
       const spellcheck =
         typeof target.spellcheck !== 'undefined' ? ` [spellcheck=${target.spellcheck}]` : ''
+      const draggable =
+        typeof target.draggable !== 'undefined' ? ` [draggable=${target.draggable}]` : ''
       const placeholder = target.placeholder
         ? ` [placeholder=${target.placeholder}]`
         : ''
@@ -689,6 +718,9 @@ export function formatPlasmateActionPlan(
       const roledescription = target.roledescription
         ? ` [roledescription=${target.roledescription}]`
         : ''
+      const grabbed =
+        typeof target.grabbed !== 'undefined' ? ` [grabbed=${target.grabbed}]` : ''
+      const dropeffect = target.dropeffect ? ` [dropeffect=${target.dropeffect}]` : ''
       const busy =
         typeof target.busy !== 'undefined' ? ` [busy=${target.busy}]` : ''
       const live = target.live ? ` [live=${target.live}]` : ''
@@ -712,7 +744,7 @@ export function formatPlasmateActionPlan(
         ? ` [description=${target.description}]`
         : ''
 
-      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${htmlId}${blockedReason}${required}${readonly}${inert}${linkTarget}${rel}${download}${inputType}${value}${nameAttr}${accept}${capture}${multiple}${selectedValues}${size}${autocomplete}${inputmode}${enterkeyhint}${autocapitalize}${dirname}${form}${formAction}${formMethod}${formTarget}${formEnctype}${formNoValidate}${formAcceptCharset}${formAutocomplete}${list}${popovertarget}${popovertargetaction}${commandfor}${command}${popover}${buttonType}${submitFormAction}${submitFormMethod}${submitFormEnctype}${submitFormTarget}${submitNoValidate}${accesskey}${spellcheck}${placeholder}${minlength}${maxlength}${min}${max}${step}${pattern}${checked}${expanded}${pressed}${selected}${multiline}${multiselectable}${current}${controls}${haspopup}${invalid}${ariaPlaceholder}${ariaAutocomplete}${activeDescendant}${errorMessage}${keyshortcuts}${roledescription}${busy}${live}${atomic}${relevant}${owns}${flowto}${details}${orientation}${sort}${level}${posinset}${setsize}${valuemin}${valuemax}${valuenow}${valuetext}${group}${description}`
+      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${htmlId}${blockedReason}${required}${readonly}${inert}${linkTarget}${rel}${download}${inputType}${value}${nameAttr}${accept}${capture}${multiple}${selectedValues}${size}${autocomplete}${inputmode}${enterkeyhint}${autocapitalize}${dirname}${form}${formAction}${formMethod}${formTarget}${formEnctype}${formNoValidate}${formAcceptCharset}${formAutocomplete}${list}${popovertarget}${popovertargetaction}${commandfor}${command}${popover}${buttonType}${submitFormAction}${submitFormMethod}${submitFormEnctype}${submitFormTarget}${submitNoValidate}${accesskey}${title}${sourceRole}${testId}${spellcheck}${draggable}${placeholder}${minlength}${maxlength}${min}${max}${step}${pattern}${checked}${expanded}${pressed}${selected}${multiline}${multiselectable}${current}${controls}${haspopup}${invalid}${ariaPlaceholder}${ariaAutocomplete}${activeDescendant}${errorMessage}${keyshortcuts}${roledescription}${grabbed}${dropeffect}${busy}${live}${atomic}${relevant}${owns}${flowto}${details}${orientation}${sort}${level}${posinset}${setsize}${valuemin}${valuemax}${valuenow}${valuetext}${group}${description}`
     })
     .join('\n')
 }

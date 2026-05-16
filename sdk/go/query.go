@@ -190,6 +190,9 @@ type ActionPlanItem struct {
 	Href              *string     `json:"href,omitempty"`
 	Target            *string     `json:"target,omitempty"`
 	Rel               *string     `json:"rel,omitempty"`
+	HrefLang          *string     `json:"hreflang,omitempty"`
+	Type              *string     `json:"type,omitempty"`
+	ReferrerPolicy    *string     `json:"referrerpolicy,omitempty"`
 	Download          interface{} `json:"download,omitempty"`
 	Name              *string     `json:"name,omitempty"`
 	Accept            *string     `json:"accept,omitempty"`
@@ -223,7 +226,11 @@ type ActionPlanItem struct {
 	SubmitFormTarget  *string     `json:"formtarget,omitempty"`
 	SubmitNoValidate  *bool       `json:"formnovalidate,omitempty"`
 	AccessKey         *string     `json:"accesskey,omitempty"`
+	Title             *string     `json:"title,omitempty"`
+	SourceRole        *string     `json:"source_role,omitempty"`
+	TestID            *string     `json:"test_id,omitempty"`
 	Spellcheck        interface{} `json:"spellcheck,omitempty"`
+	Draggable         interface{} `json:"draggable,omitempty"`
 	InputType         *string     `json:"input_type,omitempty"`
 	Value             *string     `json:"value,omitempty"`
 	Placeholder       *string     `json:"placeholder,omitempty"`
@@ -262,6 +269,8 @@ type ActionPlanItem struct {
 	Level             *string     `json:"level,omitempty"`
 	PosInSet          *string     `json:"posinset,omitempty"`
 	SetSize           *string     `json:"setsize,omitempty"`
+	Grabbed           *bool       `json:"grabbed,omitempty"`
+	DropEffect        *string     `json:"dropeffect,omitempty"`
 	ValueMin          *string     `json:"valuemin,omitempty"`
 	ValueMax          *string     `json:"valuemax,omitempty"`
 	ValueNow          *string     `json:"valuenow,omitempty"`
@@ -272,6 +281,14 @@ type ActionPlanItem struct {
 	Inert             *bool       `json:"inert,omitempty"`
 	BlockedReason     *string     `json:"blocked_reason,omitempty"`
 	Group             *string     `json:"group,omitempty"`
+}
+
+// ActionPlanIndex groups compact action targets for replay lookups.
+type ActionPlanIndex struct {
+	ByID       map[string]ActionPlanItem `json:"by_id"`
+	ByCacheKey map[string]ActionPlanItem `json:"by_cache_key"`
+	ByHTMLID   map[string]ActionPlanItem `json:"by_html_id"`
+	ByTestID   map[string]ActionPlanItem `json:"by_test_id"`
 }
 
 func compactString(value *string) interface{} {
@@ -341,6 +358,9 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.Href = el.Attrs.Href
 			item.Target = el.Attrs.Target
 			item.Rel = el.Attrs.Rel
+			item.HrefLang = el.Attrs.HrefLang
+			item.Type = el.Attrs.Type
+			item.ReferrerPolicy = el.Attrs.ReferrerPolicy
 			item.Download = el.Attrs.Download
 			item.Name = el.Attrs.Name
 			item.Accept = el.Attrs.Accept
@@ -367,7 +387,11 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.SubmitFormTarget = el.Attrs.FormTarget
 			item.SubmitNoValidate = el.Attrs.FormNoValidate
 			item.AccessKey = el.Attrs.AccessKey
+			item.Title = el.Attrs.Title
+			item.SourceRole = el.Attrs.SourceRole
+			item.TestID = el.Attrs.TestID
 			item.Spellcheck = el.Attrs.Spellcheck
+			item.Draggable = el.Attrs.Draggable
 			item.InputType = el.Attrs.InputType
 			item.Value = el.Attrs.Value
 			item.Placeholder = el.Attrs.Placeholder
@@ -414,6 +438,8 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.Level = el.Attrs.Aria.Level
 				item.PosInSet = el.Attrs.Aria.PosInSet
 				item.SetSize = el.Attrs.Aria.SetSize
+				item.Grabbed = el.Attrs.Aria.Grabbed
+				item.DropEffect = el.Attrs.Aria.DropEffect
 				item.ValueMin = el.Attrs.Aria.ValueMin
 				item.ValueMax = el.Attrs.Aria.ValueMax
 				item.ValueNow = el.Attrs.Aria.ValueNow
@@ -448,6 +474,82 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 		items = append(items, item)
 	}
 	return items
+}
+
+// EnabledActionPlan returns compact action targets that are currently safe to offer.
+func EnabledActionPlan(som *Som) []ActionPlanItem {
+	var result []ActionPlanItem
+	for _, item := range GetActionPlan(som) {
+		if item.Enabled {
+			result = append(result, item)
+		}
+	}
+	return result
+}
+
+// GetActionPlanIndex returns action targets indexed by SOM id, cache key, HTML id, and test id.
+func GetActionPlanIndex(som *Som, enabledOnly ...bool) ActionPlanIndex {
+	plan := GetActionPlan(som)
+	if len(enabledOnly) > 0 && enabledOnly[0] {
+		plan = EnabledActionPlan(som)
+	}
+	index := ActionPlanIndex{
+		ByID:       map[string]ActionPlanItem{},
+		ByCacheKey: map[string]ActionPlanItem{},
+		ByHTMLID:   map[string]ActionPlanItem{},
+		ByTestID:   map[string]ActionPlanItem{},
+	}
+	for _, item := range plan {
+		if _, ok := index.ByID[item.ID]; !ok {
+			index.ByID[item.ID] = item
+		}
+		if _, ok := index.ByCacheKey[item.CacheKey]; !ok {
+			index.ByCacheKey[item.CacheKey] = item
+		}
+		if item.HTMLID != nil {
+			if _, ok := index.ByHTMLID[*item.HTMLID]; !ok {
+				index.ByHTMLID[*item.HTMLID] = item
+			}
+		}
+		if item.TestID != nil {
+			if _, ok := index.ByTestID[*item.TestID]; !ok {
+				index.ByTestID[*item.TestID] = item
+			}
+		}
+	}
+	return index
+}
+
+// FindActionTargetByID returns the compact action target matching a SOM element id.
+func FindActionTargetByID(som *Som, id string) *ActionPlanItem {
+	if item, ok := GetActionPlanIndex(som).ByID[id]; ok {
+		return &item
+	}
+	return nil
+}
+
+// FindActionTargetByCacheKey returns the compact action target matching a deterministic cache key.
+func FindActionTargetByCacheKey(som *Som, cacheKey string) *ActionPlanItem {
+	if item, ok := GetActionPlanIndex(som).ByCacheKey[cacheKey]; ok {
+		return &item
+	}
+	return nil
+}
+
+// FindActionTargetByHTMLID returns the compact action target matching an original HTML id.
+func FindActionTargetByHTMLID(som *Som, htmlID string) *ActionPlanItem {
+	if item, ok := GetActionPlanIndex(som).ByHTMLID[htmlID]; ok {
+		return &item
+	}
+	return nil
+}
+
+// FindActionTargetByTestID returns the compact action target matching a test locator attribute.
+func FindActionTargetByTestID(som *Som, testID string) *ActionPlanItem {
+	if item, ok := GetActionPlanIndex(som).ByTestID[testID]; ok {
+		return &item
+	}
+	return nil
 }
 
 func flattenRegionElements(elements []Element) []Element {

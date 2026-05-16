@@ -88,6 +88,9 @@ class SomElementAttrs(BaseModel):
     href: Optional[str] = None
     target: Optional[str] = None
     rel: Optional[str] = None
+    hreflang: Optional[str] = None
+    type: Optional[str] = None
+    referrerpolicy: Optional[str] = None
     download: Optional[bool | str] = None
     input_type: Optional[str] = None
     value: Optional[str] = None
@@ -116,7 +119,11 @@ class SomElementAttrs(BaseModel):
     contenteditable: Optional[bool | str] = None
     tabindex: Optional[int | str] = None
     accesskey: Optional[str] = None
+    title: Optional[str] = None
+    source_role: Optional[str] = None
+    test_id: Optional[str] = None
     spellcheck: Optional[bool | str] = None
+    draggable: Optional[bool | str] = None
     name: Optional[str] = None
     accept: Optional[str] = None
     capture: Optional[bool | str] = None
