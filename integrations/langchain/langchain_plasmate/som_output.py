@@ -287,6 +287,8 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append(f'[spellcheck="{attrs["spellcheck"]}"]')
     if "draggable" in attrs:
         flags.append(f'[draggable="{attrs["draggable"]}"]')
+    if "autofocus" in attrs:
+        flags.append(f'[autofocus="{attrs["autofocus"]}"]')
     for constraint_key in ("minlength", "maxlength", "min", "max", "step", "pattern"):
         if constraint_key in attrs:
             flags.append(f'[{constraint_key}="{attrs[constraint_key]}"]')
@@ -304,8 +306,10 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
             "haspopup",
             "invalid",
             "label",
+            "description",
             "labelledby",
             "describedby",
+            "modal",
             "placeholder",
             "autocomplete",
             "active_descendant",
@@ -341,6 +345,8 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
                     if state_key == "placeholder"
                     else "aria_label"
                     if state_key == "label"
+                    else "aria_description"
+                    if state_key == "description"
                     else state_key
                 )
                 flags.append(f'[{output_key}="{aria[state_key]}"]')

@@ -100,6 +100,7 @@ export interface ActionPlanItem {
   test_id?: string;
   spellcheck?: boolean | string;
   draggable?: boolean | string;
+  autofocus?: boolean;
   input_type?: string;
   value?: string;
   placeholder?: string;
@@ -123,8 +124,10 @@ export interface ActionPlanItem {
   aria_placeholder?: string;
   aria_autocomplete?: string;
   aria_label?: string;
+  aria_description?: string;
   labelledby?: string;
   describedby?: string;
+  modal?: boolean | string;
   active_descendant?: string;
   errormessage?: string;
   keyshortcuts?: string;
@@ -264,6 +267,7 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.test_id) item.test_id = el.attrs.test_id;
     if (el.attrs?.spellcheck !== undefined) item.spellcheck = el.attrs.spellcheck;
     if (el.attrs?.draggable !== undefined) item.draggable = el.attrs.draggable;
+    if (el.attrs?.autofocus !== undefined) item.autofocus = el.attrs.autofocus;
     if (el.attrs?.input_type) item.input_type = el.attrs.input_type;
     if (el.attrs?.value) item.value = el.attrs.value;
     if (el.attrs?.placeholder) item.placeholder = el.attrs.placeholder;
@@ -290,8 +294,10 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.aria?.placeholder !== undefined) item.aria_placeholder = el.attrs.aria.placeholder;
     if (el.attrs?.aria?.autocomplete !== undefined) item.aria_autocomplete = el.attrs.aria.autocomplete;
     if (el.attrs?.aria?.label !== undefined) item.aria_label = el.attrs.aria.label;
+    if (el.attrs?.aria?.description !== undefined) item.aria_description = el.attrs.aria.description;
     if (el.attrs?.aria?.labelledby !== undefined) item.labelledby = el.attrs.aria.labelledby;
     if (el.attrs?.aria?.describedby !== undefined) item.describedby = el.attrs.aria.describedby;
+    if (el.attrs?.aria?.modal !== undefined) item.modal = el.attrs.aria.modal;
     if (el.attrs?.aria?.active_descendant !== undefined) item.active_descendant = el.attrs.aria.active_descendant;
     if (el.attrs?.aria?.errormessage !== undefined) item.errormessage = el.attrs.aria.errormessage;
     if (el.attrs?.aria?.keyshortcuts !== undefined) item.keyshortcuts = el.attrs.aria.keyshortcuts;

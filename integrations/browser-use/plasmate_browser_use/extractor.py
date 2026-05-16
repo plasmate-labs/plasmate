@@ -167,6 +167,8 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append(f"spellcheck={item['spellcheck']}")
     if "draggable" in item:
         flags.append(f"draggable={item['draggable']}")
+    if "autofocus" in item:
+        flags.append(f"autofocus={item['autofocus']}")
     if item.get("value"):
         flags.append(f"value={item['value']}")
     for constraint_key in ("minlength", "maxlength", "min", "max", "step", "pattern"):
@@ -183,8 +185,10 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         "haspopup",
         "invalid",
         "aria_label",
+        "aria_description",
         "labelledby",
         "describedby",
+        "modal",
         "aria_placeholder",
         "aria_autocomplete",
         "active_descendant",

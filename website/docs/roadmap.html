@@ -729,6 +729,61 @@
 <li><strong>Input submitters need button identity</strong>: input-backed <code>submit</code>, <code>button</code>, <code>reset</code>, and <code>image</code> controls should expose <code>button_type</code>.</li>
 <li><strong>Icon-only submitters need context</strong>: graphical submitters should resolve labels from <code>alt</code> and preserve <code>alt</code> plus <code>src</code> so agents can recognize branded/icon-only actions without raw DOM recovery.</li>
 </ul>
+<h3 id="2026-05-14-hidden-descendant-text-adjustment">2026-05-14 Hidden Descendant Text Adjustment</h3><p>Current browser-agent products keep tying replay to fresh structured state: Playwright MCP refs belong to the current accessibility snapshot, Stagehand/Browserbase cache actions after validating the page still matches, and Browser Run/WebMCP is widening hosted interaction contracts. Plasmate should make local SOM text match visible page state across the same surfaces agents use for action planning.</p>
+<ul>
+<li><strong>Visible parent text must stay visible</strong>: stylesheet-hidden descendants should not leak into paragraph or button text.</li>
+<li><strong>Labels are cache evidence</strong>: <code>label for</code> and <code>aria-labelledby</code> indexes should skip hidden fragments so cached form plans compare against visible names.</li>
+<li><strong>Structured summaries need parity</strong>: select options, list items, table captions, and table cells should ignore hidden descendants.</li>
+</ul>
+<h3 id="2026-05-14-select-option-state-adjustment">2026-05-14 Select Option State Adjustment</h3><p>Current competitor direction keeps validating cached action plans against the current structured page state. Playwright MCP snapshots are fresh interaction surfaces, Stagehand/Browserbase cache actions only after state checks, and Browser Run/WebMCP is widening hosted browser contracts. Plasmate&#39;s local-first roadmap should make native select menus precise enough for repeated SaaS workflows without raw DOM recovery.</p>
+<ul>
+<li><strong>Option values should match browsers</strong>: when an <code>&lt;option&gt;</code> omits <code>value</code>, SOM should expose the visible option text as the submitted value.</li>
+<li><strong>Unavailable choices need to be visible</strong>: disabled options should remain in the compact menu with <code>disabled=true</code> so agents can explain why they did not select them.</li>
+<li><strong>Grouped and multi-select menus need current state</strong>: optgroup labels and <code>selected_values</code> should become shared action-plan context before this lands in adapter conformance.</li>
+<li><strong>Schema and SDK parity decide stickiness</strong>: option groups, disabled option state, implicit single-select values, and select <code>size</code> need to validate in the public schema and flow through parser/SDK action plans before agents can safely cache menu choices across runtimes.</li>
+</ul>
+<h3 id="2026-05-15-html-id-provenance-adjustment">2026-05-15 HTML ID Provenance Adjustment</h3><p>Current competitor docs keep making the interaction surface both structured and replay-aware. Playwright MCP gives snapshot-scoped refs, Stagehand <code>observe()</code> returns cacheable action objects, and Browser Run/WebMCP is testing browser-native tool contracts. Plasmate should treat <code>html_id</code> as local DOM provenance for compact targets, not just a Rust compiler field.</p>
+<ul>
+<li><strong>Live DOM resolution matters</strong>: SDK and parser action plans should carry <code>html_id</code> so agents can move from a compact SOM target back to <code>document.getElementById()</code> or selector execution without re-reading raw DOM.</li>
+<li><strong>Cache keys stay stable</strong>: <code>html_id</code> is useful provenance, but should not change deterministic action <code>cache_key</code> values because the SOM id, role, label, actions, and field identity remain the cache target.</li>
+<li><strong>Parity beats isolated fields</strong>: Python, Node, Go, and shared fixtures should expose the same <code>html_id</code> lookup and action-plan context before adapters advertise live-DOM replay support.</li>
+</ul>
+<h3 id="2026-05-15-locator-provenance-adjustment">2026-05-15 Locator Provenance Adjustment</h3><p>Official docs continue to split reusable action identity from current-page handles. Playwright MCP refs are stable only inside the current accessibility snapshot, Stagehand&#39;s local/server caches replay observed actions after matching current state, and Firecrawl/Browser Use profiles keep hosted sessions warm. Plasmate should answer with local non-cache provenance that helps agents resolve, test, and debug compact targets without changing deterministic action memory.</p>
+<ul>
+<li><strong>Developer anchors are replay evidence</strong>: preserve <code>title</code>, raw <code>role</code> tokens, and <code>data-testid</code>/<code>data-test</code>/<code>data-qa</code> locators as compact attrs for action targets.</li>
+<li><strong>Provenance must stay non-cache</strong>: these fields help live DOM resolution and diagnostics, but should not change <code>cache_key</code> values because they can churn independently of semantic target identity.</li>
+<li><strong>Adapters should render the same cues</strong>: Browser Use, LangChain, Vercel AI, parser packages, and SDKs should expose <code>title</code>, <code>source_role</code>, and <code>test_id</code> together so no integration needs raw DOM recovery for common app-authored anchors.</li>
+</ul>
+<h3 id="2026-05-15-dragdrop-replay-adjustment">2026-05-15 Drag/Drop Replay Adjustment</h3><p>Current competitor docs keep tying repeat automation to validated current page state: Playwright MCP refs are scoped to fresh snapshots, Stagehand/Browserbase action caching depends on DOM validation, and Browser Use/Firecrawl package hosted sessions plus skills for recurring workflows. Plasmate should keep its local-first replay wedge by preserving drag/drop state in the same compact action targets agents already cache.</p>
+<ul>
+<li><strong>Drag/drop is a replay cue</strong>: native <code>draggable</code>, ARIA <code>grabbed</code>, and ARIA <code>dropeffect</code> should travel through Rust SOM, schema, parser packages, SDKs, and framework prompt renderers.</li>
+<li><strong>Do not destabilize cache keys</strong>: drag state can change while the semantic target stays the same, so it should be validation context rather than deterministic action-key material.</li>
+<li><strong>Boards and builders are sticky SaaS cases</strong>: kanban boards, upload builders, scheduling grids, and workflow canvases need drag/drop cues before local replay can compete with hosted action-memory products.</li>
+</ul>
+<h3 id="2026-05-16-link-navigation-replay-adjustment">2026-05-16 Link Navigation Replay Adjustment</h3><p>The browser-agent market keeps rewarding tools that validate current page state before reusing an action. Playwright MCP refs are snapshot-scoped, Stagehand and Browserbase action caches depend on selector/DOM validation, and hosted browser products package profiles and traces around repeated workflows. Plasmate&#39;s local-first answer should keep semantic cache keys stable while making link side effects visible enough for agents to reject stale clicks.</p>
+<ul>
+<li><strong>Locale matters for repeated navigation</strong>: <code>hreflang</code> should travel through Rust SOM, schema, SDKs, parser packages, and framework renderers so agents can distinguish same-label links that target different languages.</li>
+<li><strong>Resource type is replay context</strong>: link MIME <code>type</code> should surface beside <code>href</code> so cached actions can tell a normal HTML navigation from a PDF, CSV, or alternate representation.</li>
+<li><strong>Privacy policy changes are side effects</strong>: <code>referrerpolicy</code> should be compact action context without becoming cache-key material, preserving local action memory while exposing navigation risk.</li>
+</ul>
+<h3 id="2026-05-16-aria-naming-provenance-adjustment">2026-05-16 ARIA Naming Provenance Adjustment</h3><p>Validated action reuse remains the durable retention hook: Playwright MCP refs are scoped to the current accessibility snapshot, Stagehand/Browserbase validate cached actions against DOM state, and managed browser platforms sell profile continuity for repeated workflows. Plasmate should preserve raw ARIA naming relationships beside resolved labels/descriptions so cached local targets can be checked without raw DOM recovery.</p>
+<ul>
+<li><strong>Raw names are replay evidence</strong>: <code>aria-label</code> should surface as compact <code>aria_label</code> action context.</li>
+<li><strong>Label relationships are DOM anchors</strong>: <code>aria-labelledby</code> should travel as <code>labelledby</code> through schema, SDKs, parser packages, and adapters.</li>
+<li><strong>Descriptions need provenance</strong>: <code>aria-describedby</code> should stay beside resolved <code>description</code> text as <code>describedby</code>.</li>
+</ul>
+<h3 id="2026-05-16-iframe-replay-context-adjustment">2026-05-16 Iframe Replay Context Adjustment</h3><p>Current browser-agent products pair structured snapshots with managed browser session traces, but embedded app surfaces still cause replay ambiguity. Payment widgets, maps, auth prompts, and dashboards frequently live in iframes whose loading, referrer, fullscreen, and credential behavior changes whether an agent can safely reuse a local plan. Plasmate should deepen local iframe context before chasing hosted session infrastructure.</p>
+<ul>
+<li><strong>Loading state affects availability</strong>: iframe <code>loading</code> hints should be preserved so agents know when embedded context may not exist immediately.</li>
+<li><strong>Embed policy is replay context</strong>: <code>referrerpolicy</code>, <code>allowfullscreen</code>, and <code>credentialless</code> should travel through schema and SDK types for safer embedded workflow validation.</li>
+<li><strong>Iframe fixtures should become adapter gates</strong>: compiler coverage is the first step; parser, SDK, and framework adapters should eventually assert the same iframe context.</li>
+</ul>
+<h3 id="2026-05-16-focus-and-modal-replay-adjustment">2026-05-16 Focus and Modal Replay Adjustment</h3><p>Current browser-agent tools keep making action reuse conditional on current page state. Playwright MCP refs are valid only within a fresh snapshot, while Stagehand/Browserbase caching validates DOM state before avoiding another LLM call. Dialog-heavy SaaS workflows need the same local validation context: initial focus, custom descriptions, and modal state should travel with compact action targets rather than forcing agents back to raw DOM.</p>
+<ul>
+<li><strong>Initial focus predicts the next action</strong>: native <code>autofocus</code> should travel through Rust SOM, schema, parser packages, SDKs, and framework renderers.</li>
+<li><strong>Raw descriptions validate cached labels</strong>: <code>aria-description</code> should surface as <code>aria_description</code> beside resolved <code>description</code> text.</li>
+<li><strong>Modal state changes replay risk</strong>: <code>aria-modal</code> should surface as <code>modal</code> context without becoming deterministic cache-key material.</li>
+</ul>
 <h2 id="completed-v011">Completed (v0.1.1)</h2><ul>
 <li>SOM compiler with 9.4x median compression across 38 sites</li>
 <li>V8 JavaScript execution with full DOM shim</li>
@@ -912,10 +967,37 @@
 <li><input checked="" disabled="" type="checkbox"> Compact action plans expose inert availability gating across parser packages, SDKs, and framework adapters</li>
 <li><input checked="" disabled="" type="checkbox"> Shared action-state and action-availability fixtures assert inert targets without changing deterministic action cache keys</li>
 <li><input checked="" disabled="" type="checkbox"> Rust compiler maps graphical submit inputs to actionable buttons, resolves alt labels, and preserves button_type, alt, and src context</li>
+<li><input checked="" disabled="" type="checkbox"> Single-select controls infer the browser-default first selected option when markup omits <code>selected</code></li>
+<li><input checked="" disabled="" type="checkbox"> Disabled optgroups propagate disabled state to child option summaries</li>
+<li><input checked="" disabled="" type="checkbox"> SOM schema/spec, parser packages, SDKs, Browser Use, LangChain, and Vercel AI carry selected_values and select size context</li>
+<li><input checked="" disabled="" type="checkbox"> Parser packages and SDKs preserve html_id, expose original-HTML-id lookup helpers, and carry html_id in compact action plans</li>
+<li><input checked="" disabled="" type="checkbox"> Browser Use, LangChain, and Vercel AI action-plan renderers surface html_id</li>
+<li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest asserts html_id parity without changing deterministic cache keys</li>
+<li><input checked="" disabled="" type="checkbox"> Rust SOM attrs and schema preserve title, source_role, and test_id locator provenance</li>
+<li><input checked="" disabled="" type="checkbox"> Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action plans surface title, source_role, and test_id without changing deterministic cache keys</li>
+<li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest asserts locator provenance for parser, SDK, and framework adapters</li>
+<li><input checked="" disabled="" type="checkbox"> Python/Node parser packages, Python/Node SDKs, and Go SDK expose compact action target lookup/index helpers by id, cache_key, html_id, and test_id</li>
+<li><input checked="" disabled="" type="checkbox"> Parser and SDK tests cover enabled-only action plans plus replay lookup by cache key, DOM id, and test id</li>
+<li><input checked="" disabled="" type="checkbox"> Rust SOM attrs and schema preserve draggable, aria-grabbed, and aria-dropeffect replay cues</li>
+<li><input checked="" disabled="" type="checkbox"> Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action plans surface draggable, grabbed, and dropeffect without changing deterministic cache keys</li>
+<li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest asserts drag/drop replay cues across parser, SDK, and framework adapters</li>
+<li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve link replay cues with hreflang, type, and referrerpolicy</li>
+<li><input checked="" disabled="" type="checkbox"> Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action plans surface hreflang, type, and referrerpolicy without changing deterministic cache keys</li>
+<li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest asserts link locale, resource type, and referrer-policy cues across parser, SDK, and framework adapters</li>
+<li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve ARIA naming provenance with aria-label, aria-labelledby, and aria-describedby</li>
+<li><input checked="" disabled="" type="checkbox"> Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action plans surface aria_label, labelledby, and describedby without changing deterministic cache keys</li>
+<li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest asserts ARIA naming provenance beside resolved description text</li>
+<li><input checked="" disabled="" type="checkbox"> Rust compiler, schema, parser types, SDK types, and iframe fixtures preserve loading, referrerpolicy, allowfullscreen, and credentialless iframe context</li>
+<li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve autofocus, aria-description, and aria-modal replay cues</li>
+<li><input checked="" disabled="" type="checkbox"> Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action plans surface autofocus, aria_description, and modal without changing deterministic cache keys</li>
+<li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest asserts focus/modal replay cues across parser, SDK, and framework adapters</li>
 <li><input disabled="" type="checkbox"> Selector-aware SOM cache entries for repeated agent prompts</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
 <li><input disabled="" type="checkbox"> Wire <code>016-action-semantics</code> into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants</li>
 <li><input disabled="" type="checkbox"> Promote shadow-DOM and web-component cases into shared cross-adapter fixtures</li>
+<li><input disabled="" type="checkbox"> Promote html_id DOM-provenance cases into adapter conformance fixtures</li>
+<li><input disabled="" type="checkbox"> Promote locator-provenance cases into broader Rust/parser/SDK and adapter conformance fixtures</li>
+<li><input disabled="" type="checkbox"> Promote action target lookup/index helpers into Browser Use, LangChain, and Vercel AI</li>
 <li><input disabled="" type="checkbox"> Add cross-adapter fixtures for enriched compact action-plan metadata</li>
 <li><input disabled="" type="checkbox"> Promote ARIA relationship-state cases, including owns/flowto/details, into the broader action-state/action-semantics conformance suites</li>
 <li><input disabled="" type="checkbox"> Promote range and orientation cases into broader parser, SDK, and adapter conformance fixtures</li>
@@ -929,6 +1011,9 @@
 <li><input disabled="" type="checkbox"> Promote inert availability cases into broader parser, SDK, and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures</li>
+<li><input disabled="" type="checkbox"> Promote drag/drop replay cues into broader Rust/parser/SDK and adapter conformance fixtures</li>
+<li><input disabled="" type="checkbox"> Promote link navigation replay cues into broader Rust/parser/SDK and adapter conformance fixtures</li>
+<li><input disabled="" type="checkbox"> Promote focus/modal replay cues into broader Rust/parser/SDK and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Add cross-adapter accessible-description fixtures</li>
 <li><input disabled="" type="checkbox"> Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners</li>
 <li><input checked="" disabled="" type="checkbox"> Promote adapter availability checks into shared cross-adapter fixtures</li>

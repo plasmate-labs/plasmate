@@ -196,6 +196,8 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["spellcheck"] = attrs.spellcheck
             if attrs.draggable is not None:
                 item["draggable"] = attrs.draggable
+            if attrs.autofocus is not None:
+                item["autofocus"] = attrs.autofocus
             if attrs.input_type:
                 item["input_type"] = attrs.input_type
             if attrs.value:
@@ -259,6 +261,8 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                     "label",
                     "labelledby",
                     "describedby",
+                    "description",
+                    "modal",
                 ):
                     if aria_key in attrs.aria:
                         item_key = (
@@ -268,6 +272,8 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                             if aria_key == "placeholder"
                             else "aria_label"
                             if aria_key == "label"
+                            else "aria_description"
+                            if aria_key == "description"
                             else aria_key
                         )
                         item[item_key] = attrs.aria[aria_key]

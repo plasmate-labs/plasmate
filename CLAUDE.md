@@ -49,6 +49,44 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-16T11:13:41Z - Plasmate Improvements Automation
+
+- Git sync: latest fetch was retried from the automation worktree and failed
+  because the linked worktree cannot open `FETCH_HEAD`; retrying from the
+  primary checkout failed DNS resolution for `github.com`. Work continued from
+  the newest locally available remote-tracking ref,
+  `origin/codex/iframe-replay-context`, on branch
+  `codex/plasmate-improvements-2026-05-16-navigation-context`.
+- Market direction: current docs still favor validated action reuse over a
+  hosted-browser pivot. Playwright MCP refs are scoped to fresh accessibility
+  snapshots, Browserbase/Stagehand action caching validates DOM state before
+  skipping model calls, and Firecrawl/Browser Use continue packaging
+  persistent browser sessions/profiles. Plasmate should keep deepening local
+  replay validation context across SDKs and adapters.
+- Code changes: Rust SOM attrs and JSON Schema now preserve focus/modal replay
+  cues: native `autofocus`, raw `aria-description` as
+  `attrs.aria.description`, and `aria-modal` as `attrs.aria.modal`.
+  Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+  and Vercel AI action-plan surfaces expose `autofocus`,
+  `aria_description`, and `modal` without changing deterministic
+  `cache_key` values.
+- Fixture/docs changes: the shared action-availability manifest now asserts
+  focus and modal context. PRD, roadmap, SOM schema/spec, generated website
+  docs, adapter docs, Go README, and this running state were updated with the
+  rationale and next conformance step.
+- Verification passed: touched Rust formatting, JSON fixture/schema parse
+  checks, `git diff --check`, Python parser tests (73), Python SDK query tests
+  (41), Go SDK tests, Browser Use fixture test, LangChain fixture test, Node
+  parser tests (58), Node SDK tests, Vercel AI action-plan test,
+  `cargo build --quiet`, focused Rust focus/modal compiler test,
+  `cargo test --lib --quiet` (259 tests), `./scripts/action-manifest-
+  conformance.sh --quick`, and `node website/build.mjs`.
+- Verification gap: full `cargo test --quiet` still fails only in
+  `tests/awp_integration_test.rs` because this sandbox denies local listener
+  setup with `Operation not permitted`.
+- Commit/push state: pending at this point; GitHub fetch/merge remains blocked
+  by DNS and linked-worktree metadata permissions.
+
 ### 2026-05-16T10:21:25Z - Plasmate Improvements Automation
 
 - Git sync: required fetch still fails in the linked automation worktree

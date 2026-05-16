@@ -99,6 +99,8 @@ def test_som_to_text_surfaces_interactive_state():
             assert f'[spellcheck="{target["spellcheck"]}"]' in line
         if "draggable" in target:
             assert f'[draggable="{target["draggable"]}"]' in line
+        if "autofocus" in target:
+            assert f'[autofocus="{target["autofocus"]}"]' in line
         for constraint_key in ("minlength", "maxlength", "min", "max", "step", "pattern"):
             if constraint_key in target:
                 assert f'[{constraint_key}="{target[constraint_key]}"]' in line
@@ -113,8 +115,10 @@ def test_som_to_text_surfaces_interactive_state():
             "haspopup",
             "invalid",
             "aria_label",
+            "aria_description",
             "labelledby",
             "describedby",
+            "modal",
             "aria_placeholder",
             "aria_autocomplete",
             "active_descendant",

@@ -115,6 +115,7 @@ export interface SomElementAttrs {
   test_id?: string;
   spellcheck?: boolean | string;
   draggable?: boolean | string;
+  autofocus?: boolean;
   name?: string;
   accept?: string;
   capture?: boolean | string;
@@ -149,7 +150,6 @@ export interface SomElementAttrs {
   sandbox?: string;
   allow?: string;
   loading?: string;
-  referrerpolicy?: string;
   allowfullscreen?: boolean;
   credentialless?: boolean;
   width?: string;
@@ -197,6 +197,8 @@ export interface AriaState {
   label?: string;
   labelledby?: string;
   describedby?: string;
+  description?: string;
+  modal?: boolean | string;
 }
 
 export interface SomShadowRoot {

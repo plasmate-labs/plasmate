@@ -231,6 +231,7 @@ type ActionPlanItem struct {
 	TestID            *string     `json:"test_id,omitempty"`
 	Spellcheck        interface{} `json:"spellcheck,omitempty"`
 	Draggable         interface{} `json:"draggable,omitempty"`
+	Autofocus         *bool       `json:"autofocus,omitempty"`
 	InputType         *string     `json:"input_type,omitempty"`
 	Value             *string     `json:"value,omitempty"`
 	Placeholder       *string     `json:"placeholder,omitempty"`
@@ -254,8 +255,10 @@ type ActionPlanItem struct {
 	AriaPlaceholder   *string     `json:"aria_placeholder,omitempty"`
 	AriaAutocomplete  *string     `json:"aria_autocomplete,omitempty"`
 	AriaLabel         *string     `json:"aria_label,omitempty"`
+	AriaDescription   *string     `json:"aria_description,omitempty"`
 	LabelledBy        *string     `json:"labelledby,omitempty"`
 	DescribedBy       *string     `json:"describedby,omitempty"`
+	Modal             interface{} `json:"modal,omitempty"`
 	ActiveDescendant  *string     `json:"active_descendant,omitempty"`
 	ErrorMessage      *string     `json:"errormessage,omitempty"`
 	KeyShortcuts      *string     `json:"keyshortcuts,omitempty"`
@@ -395,6 +398,7 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.TestID = el.Attrs.TestID
 			item.Spellcheck = el.Attrs.Spellcheck
 			item.Draggable = el.Attrs.Draggable
+			item.Autofocus = el.Attrs.Autofocus
 			item.InputType = el.Attrs.InputType
 			item.Value = el.Attrs.Value
 			item.Placeholder = el.Attrs.Placeholder
@@ -424,8 +428,10 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.AriaPlaceholder = el.Attrs.Aria.Placeholder
 				item.AriaAutocomplete = el.Attrs.Aria.Autocomplete
 				item.AriaLabel = el.Attrs.Aria.Label
+				item.AriaDescription = el.Attrs.Aria.Description
 				item.LabelledBy = el.Attrs.Aria.LabelledBy
 				item.DescribedBy = el.Attrs.Aria.DescribedBy
+				item.Modal = el.Attrs.Aria.Modal
 				item.ActiveDescendant = el.Attrs.Aria.ActiveDescendant
 				item.ErrorMessage = el.Attrs.Aria.ErrorMessage
 				item.KeyShortcuts = el.Attrs.Aria.KeyShortcuts

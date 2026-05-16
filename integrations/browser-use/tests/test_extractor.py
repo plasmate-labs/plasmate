@@ -102,6 +102,8 @@ def test_build_context_surfaces_action_availability():
             assert f'[spellcheck={target["spellcheck"]}]' in line
         if "draggable" in target:
             assert f'[draggable={target["draggable"]}]' in line
+        if "autofocus" in target:
+            assert f'[autofocus={target["autofocus"]}]' in line
         if target.get("value"):
             assert f'[value={target["value"]}]' in line
         for constraint_key in ("minlength", "maxlength", "min", "max", "step", "pattern"):
@@ -118,8 +120,10 @@ def test_build_context_surfaces_action_availability():
             "haspopup",
             "invalid",
             "aria_label",
+            "aria_description",
             "labelledby",
             "describedby",
+            "modal",
             "aria_placeholder",
             "aria_autocomplete",
             "active_descendant",

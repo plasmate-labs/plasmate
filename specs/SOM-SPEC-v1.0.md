@@ -265,6 +265,7 @@ field MUST be omitted when the object would be empty.
 | `enterkeyhint` | string | Enter-key action hint, when present. |
 | `autocapitalize` | string | Capitalization hint for virtual keyboards, when present. |
 | `spellcheck` | boolean/string | Spellcheck state. Invalid source values are preserved as strings. |
+| `autofocus` | boolean | `true` when the element requests initial focus. |
 | `dirname` | string | Directionality submission field name, when present. |
 | `accept` | string | Accepted file/media types for upload controls. |
 | `capture` | boolean/string | Capture source hint for upload controls. Empty `capture` is emitted as `true`. |
@@ -382,7 +383,7 @@ Each **Option** object:
 
 Implementations SHOULD preserve common actionability attributes on any element:
 `contenteditable`, `tabindex`, `name`, `accept`, `capture`, `autocomplete`, `inputmode`,
-`enterkeyhint`, `draggable`, `form`, `list`, `popovertarget`, `popovertargetaction`,
+`enterkeyhint`, `draggable`, `autofocus`, `form`, `list`, `popovertarget`, `popovertargetaction`,
 `commandfor`, `command`, `popover`, `button_type`, `formaction`,
 `formmethod`, `formenctype`, `formtarget`, `formnovalidate`, `accesskey`,
 `title`, `source_role`, `test_id`, `readonly`, `inert`, `min`, `max`, `step`,
@@ -442,6 +443,8 @@ attributes SHOULD be preserved when present:
 | `aria-label`     | `label`     | string          |
 | `aria-labelledby` | `labelledby` | string        |
 | `aria-describedby` | `describedby` | string      |
+| `aria-description` | `description` | string      |
+| `aria-modal`    | `modal`     | boolean/string  |
 
 Values `"true"` and `"false"` MUST be normalized to boolean. Other string
 values (e.g. `aria-current="page"`, `aria-checked="mixed"`, or

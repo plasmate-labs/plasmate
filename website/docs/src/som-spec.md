@@ -67,6 +67,10 @@ Iframe elements preserve embed context in `attrs`: `src`, `srcdoc_preview`,
 `name`, `sandbox`, `allow`, `loading`, `referrerpolicy`, `allowfullscreen`,
 `credentialless`, `width`, and `height`.
 
+Action targets also preserve focus and modal replay cues: native `autofocus`,
+raw `aria-description` as `attrs.aria.description`, and `aria-modal` as
+`attrs.aria.modal`.
+
 ## Stable Element IDs
 
 Every element gets a deterministic ID derived from its semantic identity:

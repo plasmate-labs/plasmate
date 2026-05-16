@@ -87,6 +87,7 @@ type ElementAttrs struct {
 	TestID          *string        `json:"test_id,omitempty"`
 	Spellcheck      interface{}    `json:"spellcheck,omitempty"`
 	Draggable       interface{}    `json:"draggable,omitempty"`
+	Autofocus       *bool          `json:"autofocus,omitempty"`
 	Name            *string        `json:"name,omitempty"`
 	Accept          *string        `json:"accept,omitempty"`
 	Capture         interface{}    `json:"capture,omitempty"`
@@ -169,6 +170,8 @@ type AriaState struct {
 	Label            *string     `json:"label,omitempty"`
 	LabelledBy       *string     `json:"labelledby,omitempty"`
 	DescribedBy      *string     `json:"describedby,omitempty"`
+	Description      *string     `json:"description,omitempty"`
+	Modal            interface{} `json:"modal,omitempty"`
 }
 
 // SomShadowRoot represents elements inside a web component shadow root.

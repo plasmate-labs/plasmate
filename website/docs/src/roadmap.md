@@ -431,6 +431,14 @@ Current browser-agent products pair structured snapshots with managed browser se
 - **Embed policy is replay context**: `referrerpolicy`, `allowfullscreen`, and `credentialless` should travel through schema and SDK types for safer embedded workflow validation.
 - **Iframe fixtures should become adapter gates**: compiler coverage is the first step; parser, SDK, and framework adapters should eventually assert the same iframe context.
 
+### 2026-05-16 Focus and Modal Replay Adjustment
+
+Current browser-agent tools keep making action reuse conditional on current page state. Playwright MCP refs are valid only within a fresh snapshot, while Stagehand/Browserbase caching validates DOM state before avoiding another LLM call. Dialog-heavy SaaS workflows need the same local validation context: initial focus, custom descriptions, and modal state should travel with compact action targets rather than forcing agents back to raw DOM.
+
+- **Initial focus predicts the next action**: native `autofocus` should travel through Rust SOM, schema, parser packages, SDKs, and framework renderers.
+- **Raw descriptions validate cached labels**: `aria-description` should surface as `aria_description` beside resolved `description` text.
+- **Modal state changes replay risk**: `aria-modal` should surface as `modal` context without becoming deterministic cache-key material.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -640,6 +648,9 @@ Current browser-agent products pair structured snapshots with managed browser se
 - [x] Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action plans surface aria_label, labelledby, and describedby without changing deterministic cache keys
 - [x] Shared action-availability manifest asserts ARIA naming provenance beside resolved description text
 - [x] Rust compiler, schema, parser types, SDK types, and iframe fixtures preserve loading, referrerpolicy, allowfullscreen, and credentialless iframe context
+- [x] Rust compiler and SOM schema preserve autofocus, aria-description, and aria-modal replay cues
+- [x] Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action plans surface autofocus, aria_description, and modal without changing deterministic cache keys
+- [x] Shared action-availability manifest asserts focus/modal replay cues across parser, SDK, and framework adapters
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
@@ -662,6 +673,7 @@ Current browser-agent products pair structured snapshots with managed browser se
 - [ ] Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures
 - [ ] Promote drag/drop replay cues into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote link navigation replay cues into broader Rust/parser/SDK and adapter conformance fixtures
+- [ ] Promote focus/modal replay cues into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures
 - [ ] Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners
 - [x] Promote adapter availability checks into shared cross-adapter fixtures

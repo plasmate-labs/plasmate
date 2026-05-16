@@ -62,7 +62,7 @@ const { text } = await generateText({
 `placeholder`, `group`, `readonly`, `inert`, `value`, `checked`, `expanded`, `pressed`, and
 `selected`, `current`, `controls`, `haspopup`, `name`, `accept`, `capture`,
 `multiple`, `autocomplete`, `inputmode`, `enterkeyhint`, `autocapitalize`,
-`dirname`, `spellcheck`, `target`, `rel`,
+`dirname`, `spellcheck`, `autofocus`, `aria_description`, `modal`, `target`, `rel`,
 `download`, `form`, `list`, `popovertarget`, `popovertargetaction`,
 `commandfor`, `command`, `button_type`, `formaction`, `formmethod`,
 `formenctype`, `formtarget`, `formnovalidate`, `accesskey`, `aria_placeholder`, `aria_autocomplete`,

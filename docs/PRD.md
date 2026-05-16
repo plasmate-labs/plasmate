@@ -51,6 +51,15 @@ referrer-restricted, fullscreen-capable, or credentialless before treating it
 as replayable context. Plasmate should preserve these iframe cues locally
 across schema and SDK surfaces rather than forcing raw DOM inspection.
 
+2026-05-16 focus-modal read: latest competitor docs keep validating the same
+direction. Playwright MCP exposes fresh accessibility snapshots with
+snapshot-scoped refs, Browserbase/Stagehand caches observed actions only when
+current DOM state validates, and Firecrawl/Browser Use keep selling persistent
+sessions for repeated workflows. Plasmate should keep the local-first action
+contract and add focus/modal replay cues (`autofocus`, raw
+`aria-description`, and `aria-modal`) so cached targets can be checked against
+dialog-heavy SaaS flows without raw DOM recovery.
+
 2026-05-05 market read: the strongest retention hooks are reusable structured
 state, cached repeated actions, and ecosystem-native distribution. Playwright
 MCP returns accessibility snapshots with stable refs for interaction, Stagehand
@@ -586,6 +595,16 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-16:
+  - Rust SOM attrs and JSON Schema now preserve focus/modal replay cues:
+    native `autofocus`, raw `aria-description` as `attrs.aria.description`,
+    and `aria-modal` as `attrs.aria.modal`.
+  - Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+    and Vercel AI action-plan surfaces now expose `autofocus`,
+    `aria_description`, and `modal` without changing deterministic
+    `cache_key` values.
+  - The shared action-availability manifest now asserts focus and modal
+    context so dialog-heavy cached actions stay aligned across SDK and
+    adapter outputs.
   - Rust SOM compilation and JSON Schema now preserve iframe replay/security
     cues: `loading`, `referrerpolicy`, `allowfullscreen`, and
     `credentialless`.
@@ -1213,6 +1232,9 @@ and adapter docs over one-off integration logic.
   broader parser, SDK, and adapter conformance fixtures.
 - Promote live-region cases (`aria-busy`, `aria-live`, `aria-atomic`, and
   `aria-relevant`) into broader Rust/parser/SDK conformance fixtures.
+- Promote focus/modal replay cases (`autofocus`, `aria-description`, and
+  `aria-modal`) into broader Rust/parser/SDK and adapter conformance fixtures
+  for dialog-heavy SaaS workflows.
 - Promote popover/command relationship cases (`popovertarget`,
   `popovertargetaction`, `commandfor`, and `command`) into broader
   Rust/parser/SDK conformance fixtures.

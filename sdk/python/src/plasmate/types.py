@@ -134,6 +134,7 @@ class ElementAttrs(BaseModel):
     test_id: Optional[str] = None
     spellcheck: Optional[bool | str] = None
     draggable: Optional[bool | str] = None
+    autofocus: Optional[bool] = None
     name: Optional[str] = None
     accept: Optional[str] = None
     capture: Optional[bool | str] = None

@@ -950,6 +950,22 @@ context before chasing hosted session infrastructure.
    first step; parser, SDK, and framework adapters should eventually assert the
    same iframe context.
 
+### 2026-05-16 Focus and Modal Replay Adjustment
+
+Current browser-agent tools keep making action reuse conditional on current
+page state. Playwright MCP refs are valid only within a fresh snapshot, while
+Stagehand/Browserbase caching validates DOM state before avoiding another LLM
+call. Dialog-heavy SaaS workflows need the same local validation context:
+initial focus, custom descriptions, and modal state should travel with compact
+action targets rather than forcing agents back to raw DOM.
+
+1. **Initial focus predicts the next action**: native `autofocus` should travel
+   through Rust SOM, schema, parser packages, SDKs, and framework renderers.
+2. **Raw descriptions validate cached labels**: `aria-description` should
+   surface as `aria_description` beside resolved `description` text.
+3. **Modal state changes replay risk**: `aria-modal` should surface as
+   `modal` context without becoming deterministic cache-key material.
+
 ## Architecture
 
 ```
@@ -1424,12 +1440,19 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Rust SOM compilation, JSON Schema, Python/Node parser types, Python/Node/Go
   SDK types, and iframe fixtures now preserve `loading`, `referrerpolicy`,
   `allowfullscreen`, and `credentialless` iframe context.
+- Rust SOM attrs and schema now preserve focus/modal replay context with
+  `autofocus`, `aria-description`, and `aria-modal`.
+- Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+  and Vercel AI action plans surface `autofocus`, `aria_description`, and
+  `modal` without changing deterministic cache keys.
+- The shared action-availability manifest now asserts focus/modal replay cues
+  across parser, SDK, and framework adapter outputs.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, `html_id` DOM-provenance cases, and
   action target lookup/index helpers into broader fixtures alongside
-  drag/drop, link replay, ARIA naming provenance, text-entry, ARIA widget,
-  range, and set-position cases.
+  drag/drop, link replay, ARIA naming provenance, focus/modal, text-entry,
+  ARIA widget, range, and set-position cases.
 
 ## Dependencies to Add
 

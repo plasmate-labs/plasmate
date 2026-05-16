@@ -2116,6 +2116,9 @@ fn build_element_attrs(
         };
         map.insert("draggable".into(), draggable);
     }
+    if has_attr(attrs, "autofocus") {
+        map.insert("autofocus".into(), json!(true));
+    }
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "name") {
         map.insert("name".into(), json!(value));
     }
@@ -2223,6 +2226,8 @@ fn build_element_attrs(
         ("aria-label", "label"),
         ("aria-labelledby", "labelledby"),
         ("aria-describedby", "describedby"),
+        ("aria-description", "description"),
+        ("aria-modal", "modal"),
     ];
     let mut aria_map = serde_json::Map::new();
     for (html_attr, som_key) in aria_states {
@@ -3315,5 +3320,29 @@ mod tests {
         assert_eq!(attrs["draggable"], true);
         assert_eq!(attrs["aria"]["grabbed"], true);
         assert_eq!(attrs["aria"]["dropeffect"], "move");
+    }
+
+    #[test]
+    fn test_focus_modal_action_cues_are_preserved() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Dialog</title></head>
+<body>
+<main>
+  <button autofocus aria-description="Primary confirmation action" aria-modal="true">Confirm</button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.com").unwrap();
+        let button = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| element.role == ElementRole::Button)
+            .expect("modal confirmation button should compile");
+        let attrs = button.attrs.as_ref().expect("button attrs should compile");
+        assert_eq!(attrs["autofocus"], true);
+        assert_eq!(attrs["aria"]["description"], "Primary confirmation action");
+        assert_eq!(attrs["aria"]["modal"], true);
     }
 }

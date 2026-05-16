@@ -245,6 +245,7 @@
                 { "type": "string" }
               ]
             },
+            "autofocus": { "type": "boolean" },
             "name": { "type": "string" },
             "accept": { "type": "string" },
             "capture": {
@@ -415,7 +416,14 @@
         "valuetext": { "type": "string" },
         "label": { "type": "string" },
         "labelledby": { "type": "string" },
-        "describedby": { "type": "string" }
+        "describedby": { "type": "string" },
+        "description": { "type": "string" },
+        "modal": {
+          "oneOf": [
+            { "type": "boolean" },
+            { "type": "string" }
+          ]
+        }
       }
     },
     "ShadowRoot": {
