@@ -49,6 +49,35 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-16T13:09:20Z - Plasmate Improvements Automation
+
+- Git sync: required latest fetch was retried from the automation worktree and
+  still failed on linked `FETCH_HEAD` permissions; fallback fetch from the
+  primary checkout still failed DNS for `github.com`. Work continued from the
+  newest locally known `origin/master`/`master` `538c087`.
+- Market direction: current docs keep validating scoped, reusable page state.
+  Playwright MCP refs remain current-snapshot handles, Stagehand/Browserbase
+  emphasizes selector/action caching for repeated workflows, and Browser
+  Use/Firecrawl keep widening session/profile continuity. Plasmate should keep
+  the local-first SOM cache wedge and make it visible in the warm daemon path.
+- Code changes: daemon fetch requests now carry `selector`, the daemon owns a
+  shared `SomCache`, content-hash-valid cache hits return before JS/SOM
+  recompilation, and compiled responses store both full-page and selector
+  filtered SOM entries. CLI daemon delegation now renders the daemon-filtered
+  SOM directly.
+- Tests/docs: added daemon unit coverage for selector request serialization,
+  selector-cache materialization, and cache-status response parsing. PRD,
+  roadmap, and website doc sources now shift the next step from wiring daemon
+  selector cache to exposing daemon cache observability and extending reuse into
+  MCP/session paths.
+- Verification: `RUSTY_V8_ARCHIVE=/Users/steve/Git/plasmate/target/debug/gn_out/obj/librusty_v8.a
+  cargo test daemon::tests --quiet` passed, as did the same-env
+  `cargo check --quiet` (pre-existing warnings only). Initial test/check
+  attempts without `RUSTY_V8_ARCHIVE` failed because DNS could not download the
+  `rusty_v8` static archive.
+- Commit/push state: not yet committed at this checkpoint; build and broader
+  tests still need to be run before pushing/merging.
+
 ### 2026-05-16T12:08:37Z - Plasmate Improvements Automation
 
 - Git sync: retried the required latest fetch from the automation worktree.

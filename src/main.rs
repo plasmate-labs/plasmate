@@ -1025,7 +1025,10 @@ fn parse_header_args(args: &[String]) -> std::collections::HashMap<String, Strin
                 map.insert(key, val);
             }
         } else {
-            eprintln!("Warning: ignoring malformed header (expected 'Name: value'): {}", arg);
+            eprintln!(
+                "Warning: ignoring malformed header (expected 'Name: value'): {}",
+                arg
+            );
         }
     }
     map
@@ -1048,14 +1051,9 @@ async fn cmd_fetch(
     if plugins.is_none() {
         if let Some(port) = daemon::daemon_port() {
             info!(port, "Delegating to daemon");
-            match daemon::daemon_fetch(port, url, no_js, profile).await {
+            match daemon::daemon_fetch(port, url, no_js, profile, selector).await {
                 Ok(som) => {
-                    let effective_som = if let Some(sel) = selector {
-                        apply_selector(&som, sel)
-                    } else {
-                        som
-                    };
-                    let out = render_som_output(&effective_som, format)?;
+                    let out = render_som_output(&som, format)?;
                     println!("{}", out);
                     return Ok(());
                 }
@@ -1079,8 +1077,17 @@ async fn cmd_fetch(
     }
 
     let tls_config = network::tls::global();
-    let headers_opt = if extra_headers.is_empty() { None } else { Some(extra_headers) };
-    let client = network::fetch::build_client_h1_fallback_with_headers(user_agent, jar, tls_config, headers_opt)?;
+    let headers_opt = if extra_headers.is_empty() {
+        None
+    } else {
+        Some(extra_headers)
+    };
+    let client = network::fetch::build_client_h1_fallback_with_headers(
+        user_agent,
+        jar,
+        tls_config,
+        headers_opt,
+    )?;
 
     // Plugin hook: pre_navigate
     let effective_url = if let Some(pm) = plugins.as_deref_mut() {

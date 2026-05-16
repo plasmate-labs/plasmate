@@ -9,14 +9,16 @@
 //! avoiding cold-start overhead on every invocation.
 
 use crate::auth;
+use crate::cache::store::{CacheConfig, CacheLookup, SomCache};
 use crate::js;
 use crate::network;
 use crate::som;
+use crate::som::filter::apply_selector;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpListener;
-use tracing::info;
+use tracing::{debug, info};
 
 const DEFAULT_PORT: u16 = 9224;
 
@@ -27,6 +29,8 @@ struct FetchRequest {
     no_js: bool,
     #[serde(default)]
     no_external: bool,
+    #[serde(default)]
+    selector: Option<String>,
     profile: Option<String>,
 }
 
@@ -38,6 +42,8 @@ struct FetchResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     error: Option<String>,
     fetch_ms: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    cache_status: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -56,6 +62,7 @@ pub async fn run_daemon(port: u16) -> Result<(), Box<dyn std::error::Error>> {
     let jar = Arc::new(reqwest::cookie::Jar::default());
     let tls_config = network::tls::global();
     let client = network::fetch::build_client_h1_fallback(None, jar.clone(), tls_config)?;
+    let cache = Arc::new(SomCache::new(CacheConfig::default()));
 
     let listener = TcpListener::bind(&addr).await?;
     eprintln!("Plasmate daemon listening on {}", addr);
@@ -73,11 +80,14 @@ pub async fn run_daemon(port: u16) -> Result<(), Box<dyn std::error::Error>> {
         let (stream, _) = listener.accept().await?;
         let client = client.clone();
         let jar = jar.clone();
+        let cache = cache.clone();
         let count = request_count.clone();
         let start_time = start;
 
         tokio::spawn(async move {
-            if let Err(e) = handle_connection(stream, &client, &jar, &count, start_time).await {
+            if let Err(e) =
+                handle_connection(stream, &client, &jar, &cache, &count, start_time).await
+            {
                 eprintln!("Connection error: {}", e);
             }
         });
@@ -88,6 +98,7 @@ async fn handle_connection(
     stream: tokio::net::TcpStream,
     client: &reqwest::Client,
     _jar: &Arc<reqwest::cookie::Jar>,
+    cache: &Arc<SomCache>,
     request_count: &Arc<std::sync::atomic::AtomicU64>,
     start_time: std::time::Instant,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -122,7 +133,7 @@ async fn handle_connection(
 
     let (status, response_body) = if request_line.starts_with("POST /fetch") {
         request_count.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        handle_fetch(client, &body).await
+        handle_fetch(client, cache, &body).await
     } else if request_line.starts_with("GET /health") {
         let uptime = start_time.elapsed().as_secs();
         let count = request_count.load(std::sync::atomic::Ordering::Relaxed);
@@ -165,7 +176,7 @@ async fn handle_connection(
     Ok(())
 }
 
-async fn handle_fetch(client: &reqwest::Client, body: &[u8]) -> (String, String) {
+async fn handle_fetch(client: &reqwest::Client, cache: &SomCache, body: &[u8]) -> (String, String) {
     let req: FetchRequest = match serde_json::from_slice(body) {
         Ok(r) => r,
         Err(e) => {
@@ -174,6 +185,7 @@ async fn handle_fetch(client: &reqwest::Client, body: &[u8]) -> (String, String)
                 som: None,
                 error: Some(format!("Invalid request: {}", e)),
                 fetch_ms: 0,
+                cache_status: None,
             };
             return (
                 "400 Bad Request".to_string(),
@@ -199,6 +211,7 @@ async fn handle_fetch(client: &reqwest::Client, body: &[u8]) -> (String, String)
                 som: None,
                 error: Some(format!("Fetch failed: {}", e)),
                 fetch_ms: start.elapsed().as_millis() as u64,
+                cache_status: None,
             };
             return (
                 "502 Bad Gateway".to_string(),
@@ -206,6 +219,23 @@ async fn handle_fetch(client: &reqwest::Client, body: &[u8]) -> (String, String)
             );
         }
     };
+    let content_hash = SomCache::content_hash(result.html.as_bytes());
+    match cache.lookup_or_filter_selector(&result.url, content_hash, req.selector.as_deref()) {
+        CacheLookup::Hit(entry) => {
+            if let Ok(som) = serde_json::from_slice::<som::types::Som>(&entry.som_json) {
+                debug!(url = %result.url, selector = ?req.selector, "Daemon SOM cache hit");
+                let resp = FetchResponse {
+                    success: true,
+                    som: Some(som),
+                    error: None,
+                    fetch_ms: start.elapsed().as_millis() as u64,
+                    cache_status: Some("hit".to_string()),
+                };
+                return ("200 OK".to_string(), serde_json::to_string(&resp).unwrap());
+            }
+        }
+        CacheLookup::Stale { .. } | CacheLookup::Miss => {}
+    }
 
     // Process through JS pipeline
     let pipeline_config = js::pipeline::PipelineConfig {
@@ -224,13 +254,22 @@ async fn handle_fetch(client: &reqwest::Client, body: &[u8]) -> (String, String)
                 info!(error = %e, "JS pipeline failed, compiling without JS");
                 match som::compiler::compile(&result.html, &result.url) {
                     Ok(som) => {
+                        let selected_som = select_and_store_som(
+                            cache,
+                            &result.url,
+                            content_hash,
+                            som,
+                            result.html_bytes,
+                            req.selector.as_deref(),
+                        );
                         let resp = FetchResponse {
                             success: true,
-                            som: Some(som),
+                            som: Some(selected_som),
                             error: Some(
                                 "JS execution failed, compiled from static HTML".to_string(),
                             ),
                             fetch_ms: start.elapsed().as_millis() as u64,
+                            cache_status: None,
                         };
                         return ("200 OK".to_string(), serde_json::to_string(&resp).unwrap());
                     }
@@ -243,6 +282,7 @@ async fn handle_fetch(client: &reqwest::Client, body: &[u8]) -> (String, String)
                                 e, e2
                             )),
                             fetch_ms: start.elapsed().as_millis() as u64,
+                            cache_status: None,
                         };
                         return (
                             "500 Internal Server Error".to_string(),
@@ -253,14 +293,47 @@ async fn handle_fetch(client: &reqwest::Client, body: &[u8]) -> (String, String)
             }
         };
 
+    let som = select_and_store_som(
+        cache,
+        &result.url,
+        content_hash,
+        page_result.som,
+        result.html_bytes,
+        req.selector.as_deref(),
+    );
+
     let resp = FetchResponse {
         success: true,
-        som: Some(page_result.som),
+        som: Some(som),
         error: None,
         fetch_ms: start.elapsed().as_millis() as u64,
+        cache_status: Some("miss".to_string()),
     };
 
     ("200 OK".to_string(), serde_json::to_string(&resp).unwrap())
+}
+
+fn select_and_store_som(
+    cache: &SomCache,
+    url: &str,
+    content_hash: u64,
+    som: som::types::Som,
+    html_bytes: usize,
+    selector: Option<&str>,
+) -> som::types::Som {
+    if let Ok(full_som_json) = serde_json::to_vec(&som) {
+        cache.store(url, content_hash, full_som_json, html_bytes);
+    }
+
+    if let Some(selector) = selector {
+        let selected = apply_selector(&som, selector);
+        if let Ok(selected_json) = serde_json::to_vec(&selected) {
+            cache.store_with_selector(url, content_hash, Some(selector), selected_json, html_bytes);
+        }
+        selected
+    } else {
+        som
+    }
 }
 
 /// Path to the daemon PID file.
@@ -301,11 +374,13 @@ pub async fn daemon_fetch(
     url: &str,
     no_js: bool,
     profile: Option<&str>,
+    selector: Option<&str>,
 ) -> Result<som::types::Som, Box<dyn std::error::Error>> {
     let req = FetchRequest {
         url: url.to_string(),
         no_js,
         no_external: false,
+        selector: selector.map(|s| s.to_string()),
         profile: profile.map(|s| s.to_string()),
     };
     let body = serde_json::to_string(&req)?;
@@ -331,5 +406,129 @@ pub async fn daemon_fetch(
             .error
             .unwrap_or_else(|| "Unknown error".to_string())
             .into())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::som::types::{Element, ElementRole, Region, RegionRole, Som, SomMeta};
+
+    fn test_som() -> Som {
+        Som {
+            som_version: "0.1".to_string(),
+            url: "https://example.com/app".to_string(),
+            title: "App".to_string(),
+            lang: "en".to_string(),
+            regions: vec![Region {
+                id: "r1".to_string(),
+                role: RegionRole::Main,
+                label: None,
+                action: None,
+                method: None,
+                target: None,
+                enctype: None,
+                novalidate: None,
+                accept_charset: None,
+                autocomplete: None,
+                elements: vec![
+                    Element {
+                        id: "e1".to_string(),
+                        role: ElementRole::Button,
+                        html_id: Some("save".to_string()),
+                        text: Some("Save".to_string()),
+                        label: None,
+                        actions: Some(vec!["click".to_string()]),
+                        attrs: None,
+                        children: None,
+                        hints: None,
+                        shadow: None,
+                    },
+                    Element {
+                        id: "e2".to_string(),
+                        role: ElementRole::Paragraph,
+                        html_id: None,
+                        text: Some("Body".to_string()),
+                        label: None,
+                        actions: None,
+                        attrs: None,
+                        children: None,
+                        hints: None,
+                        shadow: None,
+                    },
+                ],
+            }],
+            meta: SomMeta {
+                html_bytes: 200,
+                som_bytes: 100,
+                element_count: 2,
+                interactive_count: 1,
+            },
+            structured_data: None,
+        }
+    }
+
+    #[test]
+    fn fetch_request_round_trips_selector() {
+        let req = FetchRequest {
+            url: "https://example.com".to_string(),
+            no_js: true,
+            no_external: true,
+            selector: Some("action:click".to_string()),
+            profile: Some("example.com".to_string()),
+        };
+
+        let json = serde_json::to_string(&req).unwrap();
+        assert!(json.contains("\"selector\":\"action:click\""));
+
+        let parsed: FetchRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.selector.as_deref(), Some("action:click"));
+        assert!(parsed.no_js);
+        assert!(parsed.no_external);
+    }
+
+    #[test]
+    fn select_and_store_som_materializes_selector_cache() {
+        let cache = SomCache::new(CacheConfig::default());
+        let content_hash = 42;
+
+        let selected = select_and_store_som(
+            &cache,
+            "https://example.com/app",
+            content_hash,
+            test_som(),
+            200,
+            Some("ACTION:CLICK"),
+        );
+
+        assert_eq!(selected.regions.len(), 1);
+        assert_eq!(selected.regions[0].elements.len(), 1);
+        assert_eq!(selected.regions[0].elements[0].id, "e1");
+        assert!(matches!(
+            cache.lookup("https://example.com/app", content_hash),
+            CacheLookup::Hit(_)
+        ));
+        assert!(matches!(
+            cache.lookup_with_selector(
+                "https://example.com/app",
+                content_hash,
+                Some("action:click")
+            ),
+            CacheLookup::Hit(_)
+        ));
+    }
+
+    #[test]
+    fn fetch_response_accepts_cache_status() {
+        let response = serde_json::json!({
+            "success": true,
+            "som": test_som(),
+            "fetch_ms": 3,
+            "cache_status": "hit"
+        });
+
+        let parsed: FetchResponse = serde_json::from_value(response).unwrap();
+        assert_eq!(parsed.cache_status.as_deref(), Some("hit"));
+        assert!(parsed.success);
     }
 }

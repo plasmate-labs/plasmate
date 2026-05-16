@@ -130,6 +130,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-16 selector-cache read: scoped action memory is now explicit competitor guidance. Playwright MCP refs remain tied to fresh snapshots, while Stagehand recommends selector-scoped caching so unrelated headers, ads, and surrounding DOM do not invalidate repeated action cache keys. Plasmate should keep this local and SOM-native by deriving selector-specific cache entries from a validated full-page SOM for `main`, `form`, `#id`, role selectors, `interactive`, and `action:<name>` prompts.
 
+2026-05-16 daemon selector-cache read: scoped memory now needs to reach the hot CLI/daemon path. Playwright MCP still asks agents to act from the current structured snapshot, Stagehand/Browserbase markets cached selectors for repeated work, and Browser Use/Firecrawl sell session continuity. Plasmate's sticky local answer is a daemon that remembers content-hash-validated full SOMs plus selector-filtered SOMs, making repeated `interactive` and `action:<name>` fetches cheaper without hosted selector storage.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -148,6 +150,8 @@ The project already spans a large number of package and integration surfaces: Ru
   - SOM cache lookup/store APIs now support selector-specific entries while keeping full-page cache entries distinct.
   - Selector cache keys normalize role/action selectors such as `INTERACTIVE` and `ACTION:CLICK` but preserve case-sensitive `#id` selectors.
   - A fresh cached full SOM can now materialize and cache a filtered selector view without recompiling the page.
+  - Daemon fetch requests now carry selectors to the warm process, and the daemon stores/serves content-hash-validated full-page and selector-filtered SOM cache entries.
+  - Added daemon unit coverage for selector request serialization, cache response metadata, and selector-cache materialization.
   - Rust SOM attrs and JSON Schema now preserve link navigation validation cues: `hreflang`, link MIME `type`, and `referrerpolicy`.
   - Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI now surface those link cues in compact action targets and prompt renderers without changing deterministic `cache_key` values.
   - The shared action-availability manifest now asserts link locale, resource type, and referrer-policy context so adapters stay aligned for repeated navigation workflows.
@@ -341,7 +345,8 @@ The project already spans a large number of package and integration surfaces: Ru
 
 ## Next Steps
 
-- Wire selector-aware SOM cache entries into daemon/fetch paths for `main`, `form`, `#id`, role, `interactive`, and `action:<name>` prompts.
+- Add daemon cache observability in health/status output so users can see selector hit/miss behavior during repeated workflows.
+- Extend selector-aware cache use into MCP/session fetch paths where a warm process can safely reuse content-hash-validated SOM views.
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked or selected an element.
 - Add conformance cases for ARIA-heavy SaaS pages, especially disabled and required custom controls, and compare output against Playwright MCP snapshots.
 - Wire `015-action-state` into cross-adapter parser/SDK conformance runners so inherited disabled state stays synchronized outside Rust.

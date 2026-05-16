@@ -62,6 +62,15 @@ entries from a validated full-page SOM: `main`, `form`, `#id`, role selectors,
 `interactive`, and `action:<name>` should become cheap repeated views without
 hosted selector storage.
 
+2026-05-16 daemon selector-cache read: the same scoped-memory trend now needs
+to show up in the hot user path. Playwright MCP still makes agents choose from
+the current structured snapshot, Stagehand/Browserbase markets cached selectors
+for repeat work, and Browser Use/Firecrawl keep selling session continuity.
+Plasmate's stickier local response is to make the persistent daemon remember
+validated full SOMs and selector-filtered SOMs together, so repeated
+`interactive` or `action:<name>` fetches avoid recompilation while staying
+content-hash validated and local.
+
 2026-05-05 market read: the strongest retention hooks are reusable structured
 state, cached repeated actions, and ecosystem-native distribution. Playwright
 MCP returns accessibility snapshots with stable refs for interaction, Stagehand
@@ -1149,11 +1158,21 @@ and adapter docs over one-off integration logic.
     SOM entries distinct, normalize case-insensitive action/role selectors,
     preserve case-sensitive `#id` selectors, and derive selector entries from a
     fresh cached full SOM without recompiling.
+  - Daemon fetch requests now carry the CLI selector to the warm process, so a
+    running daemon returns the already-filtered SOM instead of forcing the CLI
+    to filter after the response.
+  - The daemon now keeps a shared SOM cache, checks content hashes after fetch,
+    returns cache hits before JS/SOM recompilation, and stores both full-page
+    and selector-filtered SOM entries for repeated prompts.
+  - Added daemon unit coverage for selector request serialization, cache-hit
+    response metadata, and selector-cache materialization.
 
 ## Next Steps
 
-- Wire selector-aware SOM cache entries into daemon/fetch paths for `main`,
-  `form`, `#id`, element-role, `interactive`, and `action:<name>` prompts.
+- Add daemon cache observability in health/status output so users can see
+  selector hit/miss behavior during repeated workflows.
+- Extend selector-aware cache use into MCP/session fetch paths where a warm
+  process can safely reuse content-hash-validated SOM views.
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked
   or selected an element.
 - Add conformance cases for ARIA-heavy SaaS pages, especially disabled,

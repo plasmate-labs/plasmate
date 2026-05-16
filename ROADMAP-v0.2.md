@@ -971,6 +971,24 @@ views for repeated prompts without another compile or hosted selector store.
    exists, Plasmate should derive selector-specific JSON from it and cache that
    view, making repeated local action planning cheaper over time.
 
+### 2026-05-16 Daemon Selector Cache Adjustment
+
+The cache work now needs to live where repeat users feel latency: the warm
+daemon path. Stagehand/Browserbase is training users to expect repeated action
+planning to skip expensive reasoning once a selector is validated; Plasmate's
+local answer is to let the daemon reuse content-hash-validated SOM cache
+entries for full-page and selector-filtered fetches.
+
+1. **Selectors travel to the warm process**: CLI fetch requests should pass
+   `selector` into the daemon so the daemon, not the CLI, owns narrow SOM
+   cache identity.
+2. **Cache hits avoid recompilation**: after fetch and hash validation, daemon
+   requests should return cached full or selector-filtered SOM JSON before
+   rerunning JS execution and SOM compilation.
+3. **Next visibility step**: daemon health/status should expose cache hit,
+   miss, stale, and selector-entry counts so repeated-work savings are
+   inspectable during agent workflows.
+
 ## Architecture
 
 ```
@@ -1446,6 +1464,11 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   versus selector cache entries, case-normalized role/action selector keys,
   case-preserving `#id` selector keys, and full-SOM-derived selector cache
   materialization.
+- Daemon fetch requests now carry selectors into the warm process, and the
+  daemon stores/serves content-hash-validated full-page and selector-filtered
+  SOM cache entries before recompiling.
+- Daemon tests now cover selector request serialization, cache response
+  metadata, and selector-cache materialization from a full SOM.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, `html_id` DOM-provenance cases, and
