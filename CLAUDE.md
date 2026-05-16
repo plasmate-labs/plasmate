@@ -83,10 +83,12 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   sandboxed AWP listener issue noted in prior runs; Node parser, Node SDK, and
   Vercel AI tests remain blocked by missing local dev dependencies (`vitest`,
   `tsc`, `tsup`); website docs generation remains blocked by missing `marked`.
-- Commit/push state: preparing review branch `codex/link-navigation-replay-cues`
-  from the current working tree. Direct merge to `master` remains subject to
-  GitHub fetch/push/API access because fetch still cannot complete in this
-  linked worktree.
+- Commit/push state: created alternate-index commit `92a1206` (`chore: expose
+  link replay cues`) and pushed review branch
+  `codex/link-navigation-replay-cues`. Direct `master` push was rejected with
+  `fetch first`; retrying `git fetch origin master` from the primary checkout
+  failed DNS for `github.com`, and `gh pr create` failed to reach
+  `api.github.com`. Remote merge remains blocked until fetch/API access works.
 
 ### 2026-05-16T00:08:51Z - Plasmate Improvements Automation
 
