@@ -101,6 +101,17 @@ ensuring nested and shadow-root action targets stay addressable after
 `open_page` and `navigate_to`, before attempting heavier trace export or
 hosted session features.
 
+2026-05-16 session-replay readiness read: the latest competitor docs reinforce
+that replay only becomes sticky when session state is inspectable after every
+mutation, not only after navigation. Playwright MCP refreshes refs after page
+changes, Stagehand validates cached actions against current DOM state,
+Browserbase/Cloudflare Browser Run pair sessions with replay/recording, and
+Firecrawl keeps broadening browser-session MCP workflows. Plasmate should keep
+the local-first wedge by making every MCP interaction refresh the same
+structured-data and CDP node-map indexes that `open_page` and `navigate_to`
+produce, while expanding `session_status` into a lightweight loaded-session
+inventory before trace export.
+
 2026-05-05 market read: the strongest retention hooks are reusable structured
 state, cached repeated actions, and ecosystem-native distribution. Playwright
 MCP returns accessibility snapshots with stable refs for interaction, Stagehand
@@ -1214,19 +1225,27 @@ and adapter docs over one-off integration logic.
   - Added an MCP `session_status` tool that returns active session count,
     capacity, oldest session age, and longest idle time for stateful workflow
     observability.
+  - Expanded MCP `session_status` with available-session capacity, loaded
+    session URLs, titles, SOM sizes, element/interactive counts, node-map
+    counts, and structured-data presence so agents can inspect replay
+    readiness without leaving MCP.
   - Stateful MCP `open_page` and `navigate_to` now preserve structured data and
     rebuild CDP node maps after SOM compilation.
+  - Stateful MCP `click`, `type_text`, `select_option`, `scroll`, `toggle`, and
+    `clear` now use the same page-state update path as navigation, preserving
+    structured data and rebuilding CDP node maps after every interaction.
   - Stateful MCP click lookup and CDP SOM-id lookup now traverse nested
     children and shadow-root elements, keeping web-component action targets
     addressable after navigation.
 
 ## Next Steps
 
-- Extend selector-aware cache use into stateful MCP session navigation once the
-  cache can safely preserve the effective HTML needed for replay after a hit.
-- Add stateful-session cache reuse only after the session can restore
-  `effective_html`, structured data, and CDP node maps from a validated cache
-  entry without breaking click/type/evaluate replay.
+- Extend selector-aware cache use into stateful MCP session navigation once
+  cache entries can safely carry or restore the effective HTML needed for
+  replay after a hit.
+- Add stateful-session cache reuse through the centralized session page-state
+  update path, so validated cache hits restore `effective_html`, structured
+  data, and CDP node maps without breaking click/type/evaluate replay.
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked
   or selected an element.
 - Add conformance cases for ARIA-heavy SaaS pages, especially disabled,

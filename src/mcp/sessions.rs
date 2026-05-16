@@ -22,8 +22,25 @@ pub const MAX_SESSIONS: usize = 10;
 pub struct SessionSnapshot {
     pub active_sessions: usize,
     pub max_sessions: usize,
+    pub available_sessions: usize,
     pub oldest_session_age_ms: u128,
     pub longest_idle_ms: u128,
+    pub sessions: Vec<SessionSummary>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SessionSummary {
+    pub session_id: String,
+    pub url: Option<String>,
+    pub title: Option<String>,
+    pub age_ms: u128,
+    pub idle_ms: u128,
+    pub has_page: bool,
+    pub has_structured_data: bool,
+    pub node_count: usize,
+    pub som_bytes: Option<usize>,
+    pub element_count: Option<usize>,
+    pub interactive_count: Option<usize>,
 }
 
 /// State for a single MCP browser session.
@@ -155,12 +172,39 @@ impl SessionManager {
             .map(|session| now.duration_since(session.last_accessed).as_millis())
             .max()
             .unwrap_or(0);
+        let mut session_summaries: Vec<SessionSummary> = sessions
+            .iter()
+            .map(|(session_id, session)| {
+                let som_meta = session.target.current_som.as_ref().map(|som| &som.meta);
+                SessionSummary {
+                    session_id: session_id.clone(),
+                    url: session.target.current_url.clone(),
+                    title: session
+                        .target
+                        .current_som
+                        .as_ref()
+                        .map(|som| som.title.clone()),
+                    age_ms: now.duration_since(session.created_at).as_millis(),
+                    idle_ms: now.duration_since(session.last_accessed).as_millis(),
+                    has_page: session.target.current_som.is_some(),
+                    has_structured_data: session.target.current_structured_data.is_some(),
+                    node_count: session.target.node_map.len(),
+                    som_bytes: som_meta.map(|meta| meta.som_bytes),
+                    element_count: som_meta.map(|meta| meta.element_count),
+                    interactive_count: som_meta.map(|meta| meta.interactive_count),
+                }
+            })
+            .collect();
+
+        session_summaries.sort_by(|a, b| a.session_id.cmp(&b.session_id));
 
         SessionSnapshot {
             active_sessions: sessions.len(),
             max_sessions: MAX_SESSIONS,
+            available_sessions: MAX_SESSIONS.saturating_sub(sessions.len()),
             oldest_session_age_ms,
             longest_idle_ms,
+            sessions: session_summaries,
         }
     }
 }
@@ -211,6 +255,10 @@ mod tests {
 
         assert_eq!(snapshot.active_sessions, 1);
         assert_eq!(snapshot.max_sessions, MAX_SESSIONS);
+        assert_eq!(snapshot.available_sessions, MAX_SESSIONS - 1);
+        assert_eq!(snapshot.sessions.len(), 1);
+        assert_eq!(snapshot.sessions[0].session_id, id);
+        assert!(!snapshot.sessions[0].has_page);
         assert!(manager.close_session(&id).await);
     }
 }

@@ -55,7 +55,7 @@ It should use `fetch_page` and return structured content instead of raw HTML. If
 | `extract_text` | Plain text only (for reading, not interacting) |
 | `extract_links` | All links with region context |
 | `cache_status` | Inspect local MCP SOM cache hits, misses, selector entries, and avoided HTML work |
-| `session_status` | Inspect active browser sessions, capacity, age, and idle time |
+| `session_status` | Inspect active browser sessions, loaded URLs, SOM/node inventory, capacity, age, and idle time |
 | `open_page` | Start an interactive session |
 | `navigate_to` | Go to a new URL in an existing session |
 | `click` | Click buttons and links |

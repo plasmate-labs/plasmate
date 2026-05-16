@@ -1052,6 +1052,28 @@ trust-building surface as stateless cache calls.
    should traverse child and shadow-root elements, matching the compiler and
    parser contract for modern web-component UIs.
 
+### 2026-05-16 MCP Interaction Replay-Readiness Adjustment
+
+Current competitor direction keeps pushing from sessions toward replayable,
+inspectable session state. Playwright MCP refreshes structured refs after page
+changes, Stagehand validates cached actions against the current DOM before
+replay, Browserbase and Cloudflare Browser Run sell recordings/replay around
+browser sessions, and Firecrawl keeps browser-session workflows in MCP.
+Plasmate should keep the local-first wedge by making every stateful MCP
+interaction refresh the same replay indexes as navigation before adding trace
+export or hosted scale.
+
+1. **Mutation tools must rebuild replay indexes**: `click`, `type_text`,
+   `select_option`, `scroll`, `toggle`, and `clear` should preserve structured
+   data and rebuild CDP node maps after recompiling SOM.
+2. **Session status should show loaded state**: `session_status` should expose
+   available capacity, loaded URLs, titles, SOM sizes, element/interactive
+   counts, node-map counts, and structured-data presence so agents can inspect
+   replay readiness.
+3. **Cache restore should reuse the same update path**: stateful cache hits
+   should restore `effective_html`, structured data, and node maps through the
+   centralized page-state updater before they are allowed into replay flows.
+
 ## Architecture
 
 ```
@@ -1547,8 +1569,15 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   the stateless tool path.
 - MCP now exposes `session_status` for active browser-session inventory,
   capacity, oldest age, and idle timing without leaving the MCP surface.
+- MCP `session_status` now includes available capacity, per-session loaded URL,
+  title, SOM size, element/interactive counts, node-map count, and
+  structured-data presence for replay readiness checks.
 - Stateful MCP `open_page` and `navigate_to` now preserve structured data and
   rebuild CDP node maps after SOM compilation.
+- Stateful MCP mutation tools (`click`, `type_text`, `select_option`,
+  `scroll`, `toggle`, and `clear`) now use the same page-state updater as
+  navigation so structured data and CDP node maps stay current after every
+  interaction.
 - Stateful MCP click lookup and CDP SOM-id lookup now traverse nested children
   and shadow-root elements, keeping web-component action targets addressable.
 - Next conformance step: promote upload-affordance, form-submission context,

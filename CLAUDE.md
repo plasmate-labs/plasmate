@@ -49,6 +49,30 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-16T17:07:46Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch origin master` still fails in the automation
+  worktree because linked `FETCH_HEAD` cannot be opened, and fallback fetch
+  from the primary checkout cannot resolve `github.com`. Work continued from
+  newest locally known `origin/master` `21e1654`.
+- Market direction: current docs keep pushing browser-agent products toward
+  cached/replayable action state with inspection. Playwright MCP refreshes
+  structured refs after page changes, Stagehand validates cached actions,
+  Browserbase/Cloudflare Browser Run sell replay/recordings around sessions,
+  and Firecrawl keeps broad MCP browser-session workflows. Plasmate should
+  keep the local-first wedge and make stateful MCP replay indexes trustworthy
+  before trace export or hosted-browser features.
+- Code changes: stateful MCP page-state updates are now centralized. `click`,
+  `type_text`, `select_option`, `scroll`, `toggle`, and `clear` preserve
+  structured data and rebuild CDP node maps after every interaction, matching
+  `open_page` and `navigate_to`. `session_status` now reports available
+  capacity plus per-session URL, title, SOM size, element/interactive counts,
+  node-map count, structured-data presence, age, and idle timing.
+- Tests/docs: added session page-state coverage for structured data and node
+  maps, expanded session-status JSON coverage, and updated PRD, roadmap,
+  README, Claude Desktop docs, and website doc sources with the replay
+  readiness rationale and next stateful-cache step.
+
 ### 2026-05-16T16:10:14Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch origin master` still fails in the automation

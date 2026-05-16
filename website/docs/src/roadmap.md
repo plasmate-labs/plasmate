@@ -463,6 +463,14 @@ The latest market read keeps moving from raw browser sessions toward inspectable
 - **Open/navigate rebuilds replay indexes**: `open_page` and `navigate_to` should refresh structured data and CDP node maps after compiling SOM so follow-up interaction tools operate on the current action surface.
 - **Nested targets are stateful targets**: click lookup and CDP SOM-id lookup should traverse child and shadow-root elements, matching the compiler and parser contract for modern web-component UIs.
 
+### 2026-05-16 MCP Interaction Replay-Readiness Adjustment
+
+Current competitor direction keeps pushing from sessions toward replayable, inspectable session state. Playwright MCP refreshes structured refs after page changes, Stagehand validates cached actions against the current DOM before replay, Browserbase and Cloudflare Browser Run sell recordings/replay around browser sessions, and Firecrawl keeps browser-session workflows in MCP. Plasmate should keep the local-first wedge by making every stateful MCP interaction refresh the same replay indexes as navigation before adding trace export or hosted scale.
+
+- **Mutation tools must rebuild replay indexes**: `click`, `type_text`, `select_option`, `scroll`, `toggle`, and `clear` should preserve structured data and rebuild CDP node maps after recompiling SOM.
+- **Session status should show loaded state**: `session_status` should expose available capacity, loaded URLs, titles, SOM sizes, element/interactive counts, node-map counts, and structured-data presence so agents can inspect replay readiness.
+- **Cache restore should reuse the same update path**: stateful cache hits should restore `effective_html`, structured data, and node maps through the centralized page-state updater before they are allowed into replay flows.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -676,7 +684,9 @@ The latest market read keeps moving from raw browser sessions toward inspectable
 - [x] MCP stateless fetch/text/link SOM cache reuse
 - [x] MCP cache_status observability for selector hit/miss behavior
 - [x] MCP session_status observability for stateful browser sessions
+- [x] MCP session_status loaded-session replay inventory
 - [x] Stateful MCP open/navigate rebuilds structured data and CDP node maps
+- [x] Stateful MCP mutation tools rebuild structured data and CDP node maps
 - [x] Stateful MCP click/CDP lookup traverses nested and shadow-root elements
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants

@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tracing::{debug, info, warn};
 
-use super::sessions::SessionManager;
+use super::sessions::{SessionManager, SessionState};
 use crate::cache::store::{CacheLookup, SomCache};
 use crate::cdp::cookies::{cookie_from_cdp_params, Cookie};
 use crate::js::pipeline::{self, PipelineConfig};
@@ -160,6 +160,22 @@ fn select_and_store_mcp_som(
     } else {
         som
     }
+}
+
+fn store_page_state_in_session(
+    session: &mut SessionState,
+    url: &str,
+    html: &str,
+    page_result: &pipeline::PageResult,
+) -> Option<Value> {
+    session.target.current_url = Some(url.to_string());
+    session.target.current_html = Some(html.to_string());
+    session.target.effective_html = Some(page_result.effective_html.clone());
+    session.target.current_structured_data = page_result.som.structured_data.clone();
+    session.target.current_som = Some(page_result.som.clone());
+    session.target.rebuild_node_map();
+
+    serde_json::to_value(&page_result.som).ok()
 }
 
 /// Get the tool definition for fetch_page.
@@ -466,7 +482,7 @@ pub fn cache_status_definition() -> ToolDefinition {
 pub fn session_status_definition() -> ToolDefinition {
     ToolDefinition {
         name: "session_status".to_string(),
-        description: "Return Plasmate's MCP browser-session inventory: active session count, maximum sessions, oldest session age, and longest idle time. Use this to inspect stateful open_page/navigate_to workflows before creating more sessions.".to_string(),
+        description: "Return Plasmate's MCP browser-session inventory: capacity, age/idle timing, loaded URLs, SOM sizes, node-map counts, and structured-data presence. Use this to inspect stateful open_page/navigate_to workflows before creating more sessions or debugging repeated actions.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {}
@@ -951,15 +967,12 @@ pub async fn handle_open_page(
     // Store the result in the session
     let som_json = sessions
         .with_session(&session_id, |session| {
-            session.target.current_url = Some(fetch_result.url.clone());
-            session.target.current_html = Some(fetch_result.html.clone());
-            session.target.effective_html = Some(page_result.effective_html.clone());
-            session.target.current_structured_data = page_result.som.structured_data.clone();
-            session.target.current_som = Some(page_result.som.clone());
-            session.target.rebuild_node_map();
-
-            // Return SOM JSON
-            serde_json::to_value(&page_result.som).ok()
+            store_page_state_in_session(
+                session,
+                &fetch_result.url,
+                &fetch_result.html,
+                &page_result,
+            )
         })
         .await;
 
@@ -1264,12 +1277,7 @@ pub async fn handle_click(
     // Update session with new state
     let som_json = sessions
         .with_session(&params.session_id, |session| {
-            session.target.current_url = Some(final_url.clone());
-            session.target.current_html = Some(final_html.clone());
-            session.target.effective_html = Some(page_result.effective_html.clone());
-            session.target.current_som = Some(page_result.som.clone());
-
-            serde_json::to_value(&page_result.som).ok()
+            store_page_state_in_session(session, &final_url, &final_html, &page_result)
         })
         .await;
 
@@ -1565,14 +1573,12 @@ pub async fn handle_navigate_to(
     // Update session state
     let som_json = sessions
         .with_session(&params.session_id, |session| {
-            session.target.current_url = Some(fetch_result.url.clone());
-            session.target.current_html = Some(fetch_result.html.clone());
-            session.target.effective_html = Some(page_result.effective_html.clone());
-            session.target.current_structured_data = page_result.som.structured_data.clone();
-            session.target.current_som = Some(page_result.som.clone());
-            session.target.rebuild_node_map();
-
-            serde_json::to_value(&page_result.som).ok()
+            store_page_state_in_session(
+                session,
+                &fetch_result.url,
+                &fetch_result.html,
+                &page_result,
+            )
         })
         .await;
 
@@ -1719,12 +1725,7 @@ pub async fn handle_type_text(
     // Update session
     let som_json = sessions
         .with_session(&params.session_id, |session| {
-            session.target.current_url = Some(url.clone());
-            session.target.current_html = Some(updated_html.clone());
-            session.target.effective_html = Some(page_result.effective_html.clone());
-            session.target.current_som = Some(page_result.som.clone());
-
-            serde_json::to_value(&page_result.som).ok()
+            store_page_state_in_session(session, &url, &updated_html, &page_result)
         })
         .await;
 
@@ -1870,12 +1871,7 @@ pub async fn handle_select_option(
     // Update session
     let som_json = sessions
         .with_session(&params.session_id, |session| {
-            session.target.current_url = Some(url.clone());
-            session.target.current_html = Some(updated_html.clone());
-            session.target.effective_html = Some(page_result.effective_html.clone());
-            session.target.current_som = Some(page_result.som.clone());
-
-            serde_json::to_value(&page_result.som).ok()
+            store_page_state_in_session(session, &url, &updated_html, &page_result)
         })
         .await;
 
@@ -2028,12 +2024,7 @@ pub async fn handle_scroll(
     // Update session
     let som_json = sessions
         .with_session(&params.session_id, |session| {
-            session.target.current_url = Some(url.clone());
-            session.target.current_html = Some(updated_html.clone());
-            session.target.effective_html = Some(page_result.effective_html.clone());
-            session.target.current_som = Some(page_result.som.clone());
-
-            serde_json::to_value(&page_result.som).ok()
+            store_page_state_in_session(session, &url, &updated_html, &page_result)
         })
         .await;
 
@@ -2174,12 +2165,7 @@ pub async fn handle_toggle(
     // Update session
     let som_json = sessions
         .with_session(&params.session_id, |session| {
-            session.target.current_url = Some(url.clone());
-            session.target.current_html = Some(updated_html.clone());
-            session.target.effective_html = Some(page_result.effective_html.clone());
-            session.target.current_som = Some(page_result.som.clone());
-
-            serde_json::to_value(&page_result.som).ok()
+            store_page_state_in_session(session, &url, &updated_html, &page_result)
         })
         .await;
 
@@ -2311,12 +2297,7 @@ pub async fn handle_clear(
     // Update session
     let som_json = sessions
         .with_session(&params.session_id, |session| {
-            session.target.current_url = Some(url.clone());
-            session.target.current_html = Some(updated_html.clone());
-            session.target.effective_html = Some(page_result.effective_html.clone());
-            session.target.current_som = Some(page_result.som.clone());
-
-            serde_json::to_value(&page_result.som).ok()
+            store_page_state_in_session(session, &url, &updated_html, &page_result)
         })
         .await;
 
@@ -2684,6 +2665,9 @@ fn cookie_to_json(cookie: &Cookie) -> Value {
 mod tests {
     use super::*;
     use crate::cache::store::CacheConfig;
+    use crate::cdp::session::CdpTarget;
+    use crate::js::pipeline::{PageResult, PipelineTiming};
+    use crate::som::metadata::StructuredData;
     use crate::som::types::{Element, ElementRole, Region, RegionRole, ShadowRoot, SomMeta};
 
     fn test_element(
@@ -2856,6 +2840,55 @@ mod tests {
     }
 
     #[test]
+    fn test_store_page_state_preserves_structured_data_and_node_map() {
+        let mut som = test_som();
+        let mut structured_data = StructuredData::default();
+        structured_data
+            .meta
+            .insert("description".to_string(), "Agent app".to_string());
+        som.structured_data = Some(structured_data);
+
+        let page_result = PageResult {
+            som,
+            url: "https://example.com/app".to_string(),
+            timing: PipelineTiming {
+                extract_scripts_us: 0,
+                js_execution_us: 0,
+                som_compile_us: 0,
+                total_us: 0,
+            },
+            js_report: None,
+            effective_html: "<html><body><button>Save</button></body></html>".to_string(),
+        };
+        let mut session = SessionState::new(CdpTarget::new().unwrap());
+
+        let som_json = store_page_state_in_session(
+            &mut session,
+            "https://example.com/app",
+            "<html></html>",
+            &page_result,
+        )
+        .unwrap();
+
+        assert_eq!(som_json["title"], "App");
+        assert_eq!(
+            session
+                .target
+                .current_structured_data
+                .as_ref()
+                .and_then(|data| data.meta.get("description"))
+                .map(String::as_str),
+            Some("Agent app")
+        );
+        assert!(session.target.find_element_by_som_id("button-1").is_some());
+        assert!(session
+            .target
+            .node_map
+            .values()
+            .any(|node| node.som_element_id.as_deref() == Some("button-1")));
+    }
+
+    #[test]
     fn test_cache_status_returns_snapshot_json() {
         let cache = Arc::new(SomCache::new(CacheConfig::default()));
         cache.store("https://example.com/app", 42, b"som".to_vec(), 200);
@@ -2880,6 +2913,11 @@ mod tests {
 
         assert_eq!(snapshot["active_sessions"], 1);
         assert_eq!(snapshot["max_sessions"], crate::mcp::sessions::MAX_SESSIONS);
+        assert_eq!(
+            snapshot["available_sessions"].as_u64(),
+            Some((crate::mcp::sessions::MAX_SESSIONS - 1) as u64)
+        );
+        assert!(snapshot["sessions"].as_array().unwrap()[0]["session_id"].is_string());
         assert!(sessions.close_session(&session_id).await);
     }
 }

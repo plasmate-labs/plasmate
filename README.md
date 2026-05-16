@@ -105,7 +105,7 @@ This exposes Plasmate over stdio as MCP tools:
 - `fetch_page` - get structured SOM from any URL
 - `extract_text` - get clean readable text
 - `cache_status` - inspect stateless MCP SOM cache reuse
-- `session_status` - inspect active stateful browser sessions
+- `session_status` - inspect active sessions, loaded URLs, SOM/node inventory
 - `open_page` - start an interactive session (returns session_id + SOM)
 - `evaluate` - run JavaScript in the page context
 - `click` - click elements by SOM element ID
@@ -157,7 +157,8 @@ compact click-target menu before the LLM sees the content.
 Use `cache_status` after repeated fetches to inspect local MCP SOM cache hits,
 misses, selector entries, and avoided HTML work.
 Use `session_status` before long interactive runs to inspect active browser
-session count, capacity, age, and idle time.
+session count, capacity, loaded URLs, SOM sizes, node-map counts, structured
+data presence, age, and idle time.
 
 ### Vercel AI SDK
 
