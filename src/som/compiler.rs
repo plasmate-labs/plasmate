@@ -2044,6 +2044,18 @@ fn build_element_attrs(
             if let Some(allow) = attrs.iter().find(|(n, _)| n == "allow") {
                 map.insert("allow".into(), json!(allow.1));
             }
+            if let Some(loading) = attrs.iter().find(|(n, _)| n == "loading") {
+                map.insert("loading".into(), json!(loading.1));
+            }
+            if let Some(referrerpolicy) = attrs.iter().find(|(n, _)| n == "referrerpolicy") {
+                map.insert("referrerpolicy".into(), json!(referrerpolicy.1));
+            }
+            if has_attr(attrs, "allowfullscreen") {
+                map.insert("allowfullscreen".into(), json!(true));
+            }
+            if has_attr(attrs, "credentialless") {
+                map.insert("credentialless".into(), json!(true));
+            }
             // Dimensions can be useful for understanding iframe purpose
             if let Some(width) = attrs.iter().find(|(n, _)| n == "width") {
                 map.insert("width".into(), json!(width.1));

@@ -63,6 +63,10 @@ current `value`, multi-select `selected_values`, `multiple`, `size`,
 `required`, `disabled`, and `inert`. Option summaries include `value`, `text`,
 optional `selected`, optional `disabled`, and optional optgroup `group`.
 
+Iframe elements preserve embed context in `attrs`: `src`, `srcdoc_preview`,
+`name`, `sandbox`, `allow`, `loading`, `referrerpolicy`, `allowfullscreen`,
+`credentialless`, `width`, and `height`.
+
 ## Stable Element IDs
 
 Every element gets a deterministic ID derived from its semantic identity:

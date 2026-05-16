@@ -423,6 +423,14 @@ Validated action reuse remains the durable retention hook: Playwright MCP refs a
 - **Label relationships are DOM anchors**: `aria-labelledby` should travel as `labelledby` through schema, SDKs, parser packages, and adapters.
 - **Descriptions need provenance**: `aria-describedby` should stay beside resolved `description` text as `describedby`.
 
+### 2026-05-16 Iframe Replay Context Adjustment
+
+Current browser-agent products pair structured snapshots with managed browser session traces, but embedded app surfaces still cause replay ambiguity. Payment widgets, maps, auth prompts, and dashboards frequently live in iframes whose loading, referrer, fullscreen, and credential behavior changes whether an agent can safely reuse a local plan. Plasmate should deepen local iframe context before chasing hosted session infrastructure.
+
+- **Loading state affects availability**: iframe `loading` hints should be preserved so agents know when embedded context may not exist immediately.
+- **Embed policy is replay context**: `referrerpolicy`, `allowfullscreen`, and `credentialless` should travel through schema and SDK types for safer embedded workflow validation.
+- **Iframe fixtures should become adapter gates**: compiler coverage is the first step; parser, SDK, and framework adapters should eventually assert the same iframe context.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -631,6 +639,7 @@ Validated action reuse remains the durable retention hook: Playwright MCP refs a
 - [x] Rust compiler and SOM schema preserve ARIA naming provenance with aria-label, aria-labelledby, and aria-describedby
 - [x] Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action plans surface aria_label, labelledby, and describedby without changing deterministic cache keys
 - [x] Shared action-availability manifest asserts ARIA naming provenance beside resolved description text
+- [x] Rust compiler, schema, parser types, SDK types, and iframe fixtures preserve loading, referrerpolicy, allowfullscreen, and credentialless iframe context
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants

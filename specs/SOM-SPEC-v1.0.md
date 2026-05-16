@@ -371,6 +371,10 @@ Each **Option** object:
 | `name`           | string  | The iframe browsing-context name. |
 | `sandbox`        | string  | Sandbox policy tokens. |
 | `allow`          | string  | Permissions policy string. |
+| `loading`        | string  | Native iframe loading hint (`"lazy"` or `"eager"`). |
+| `referrerpolicy` | string  | Referrer policy used for the embedded request. |
+| `allowfullscreen` | boolean | `true` when fullscreen permission is granted. |
+| `credentialless` | boolean | `true` when the iframe uses a credentialless browsing context. |
 | `width`          | string  | Source width attribute. |
 | `height`         | string  | Source height attribute. |
 

@@ -186,6 +186,36 @@ describe('parseSom', () => {
     expect(group.attrs?.disabled).toBe(true);
   });
 
+  it('parses iframe replay attrs', () => {
+    const som = parseSom({
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_content',
+          role: 'content',
+          elements: [
+            {
+              id: 'e_frame',
+              role: 'iframe',
+              attrs: {
+                src: 'https://example.com/embed',
+                loading: 'lazy',
+                referrerpolicy: 'no-referrer',
+                allowfullscreen: true,
+                credentialless: true,
+              },
+            },
+          ],
+        },
+      ],
+    });
+    const attrs = som.regions[0].elements[0].attrs;
+    expect(attrs?.loading).toBe('lazy');
+    expect(attrs?.referrerpolicy).toBe('no-referrer');
+    expect(attrs?.allowfullscreen).toBe(true);
+    expect(attrs?.credentialless).toBe(true);
+  });
+
   it('throws on invalid input', () => {
     expect(() => parseSom('{}')).toThrow('Invalid SOM');
     expect(() => parseSom('not json')).toThrow();

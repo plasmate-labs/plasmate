@@ -1690,6 +1690,22 @@ fn test_iframe_attributes() {
         .iter()
         .any(|e| e.attrs.as_ref().and_then(|a| a.get("sandbox")).is_some());
     assert!(has_sandbox, "Should capture sandbox attribute");
+
+    let framed_map = iframes
+        .iter()
+        .find(|e| {
+            e.attrs
+                .as_ref()
+                .and_then(|a| a.get("name"))
+                .and_then(|v| v.as_str())
+                == Some("map-frame")
+        })
+        .expect("map iframe should be preserved");
+    let attrs = framed_map.attrs.as_ref().expect("iframe should have attrs");
+    assert_eq!(attrs["loading"], "lazy");
+    assert_eq!(attrs["referrerpolicy"], "no-referrer");
+    assert_eq!(attrs["allowfullscreen"], true);
+    assert_eq!(attrs["credentialless"], true);
 }
 
 #[test]

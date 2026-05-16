@@ -303,6 +303,10 @@
             "srcdoc_preview": { "type": "string" },
             "sandbox": { "type": "string" },
             "allow": { "type": "string" },
+            "loading": { "type": "string" },
+            "referrerpolicy": { "type": "string" },
+            "allowfullscreen": { "type": "boolean" },
+            "credentialless": { "type": "boolean" },
             "width": { "type": "string" },
             "height": { "type": "string" }
           },

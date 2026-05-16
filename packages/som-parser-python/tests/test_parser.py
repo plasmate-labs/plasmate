@@ -184,6 +184,39 @@ class TestParseSom:
         assert som.regions[1].role == RegionRole.CONTENT
         assert som.regions[2].role == RegionRole.FORM
 
+    def test_iframe_replay_attrs_parsed(self):
+        som = parse_som(
+            {
+                **FIXTURE_SOM,
+                "regions": [
+                    {
+                        "id": "r_content",
+                        "role": "content",
+                        "elements": [
+                            {
+                                "id": "e_frame",
+                                "role": "iframe",
+                                "attrs": {
+                                    "src": "https://example.com/embed",
+                                    "loading": "lazy",
+                                    "referrerpolicy": "no-referrer",
+                                    "allowfullscreen": True,
+                                    "credentialless": True,
+                                },
+                            }
+                        ],
+                    }
+                ],
+            }
+        )
+
+        attrs = som.regions[0].elements[0].attrs
+        assert attrs is not None
+        assert attrs.loading == "lazy"
+        assert attrs.referrerpolicy == "no-referrer"
+        assert attrs.allowfullscreen is True
+        assert attrs.credentialless is True
+
     def test_elements_parsed(self, som: Som):
         nav_elements = som.regions[0].elements
         assert len(nav_elements) == 2

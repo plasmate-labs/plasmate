@@ -446,6 +446,20 @@ class TestGetTokenEstimate:
 
 
 class TestPydanticModels:
+    def test_iframe_replay_attrs_roundtrip(self) -> None:
+        attrs = ElementAttrs(
+            loading="lazy",
+            referrerpolicy="no-referrer",
+            allowfullscreen=True,
+            credentialless=True,
+        )
+
+        restored = ElementAttrs(**attrs.model_dump())
+        assert restored.loading == "lazy"
+        assert restored.referrerpolicy == "no-referrer"
+        assert restored.allowfullscreen is True
+        assert restored.credentialless is True
+
     def test_som_roundtrip(self, sample_som: Som) -> None:
         data = sample_som.model_dump()
         restored = Som(**data)

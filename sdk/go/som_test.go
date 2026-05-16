@@ -273,6 +273,52 @@ func TestParseElementAttrs(t *testing.T) {
 	}
 }
 
+func TestParseIframeReplayAttrs(t *testing.T) {
+	payload := `{
+	  "som_version": "1.0",
+	  "url": "https://example.com",
+	  "title": "Iframe",
+	  "lang": "en",
+	  "regions": [{
+	    "id": "r_main",
+	    "role": "main",
+	    "elements": [{
+	      "id": "e_frame",
+	      "role": "iframe",
+	      "attrs": {
+	        "src": "https://example.com/embed",
+	        "loading": "lazy",
+	        "referrerpolicy": "no-referrer",
+	        "allowfullscreen": true,
+	        "credentialless": true
+	      }
+	    }]
+	  }],
+	  "meta": {"html_bytes": 100, "som_bytes": 80, "element_count": 1, "interactive_count": 0}
+	}`
+
+	som, err := Parse([]byte(payload))
+	if err != nil {
+		t.Fatalf("Parse iframe payload: %v", err)
+	}
+	attrs := som.Regions[0].Elements[0].Attrs
+	if attrs == nil {
+		t.Fatal("iframe attrs nil")
+	}
+	if attrs.Loading == nil || *attrs.Loading != "lazy" {
+		t.Fatalf("Loading = %v, want lazy", attrs.Loading)
+	}
+	if attrs.ReferrerPolicy == nil || *attrs.ReferrerPolicy != "no-referrer" {
+		t.Fatalf("ReferrerPolicy = %v, want no-referrer", attrs.ReferrerPolicy)
+	}
+	if attrs.AllowFullscreen == nil || !*attrs.AllowFullscreen {
+		t.Fatalf("AllowFullscreen = %v, want true", attrs.AllowFullscreen)
+	}
+	if attrs.Credentialless == nil || !*attrs.Credentialless {
+		t.Fatalf("Credentialless = %v, want true", attrs.Credentialless)
+	}
+}
+
 func TestParseInvalidJSON(t *testing.T) {
 	_, err := Parse([]byte(`{invalid`))
 	if err == nil {

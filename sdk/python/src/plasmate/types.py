@@ -167,6 +167,10 @@ class ElementAttrs(BaseModel):
     srcdoc_preview: Optional[str] = None
     sandbox: Optional[str] = None
     allow: Optional[str] = None
+    loading: Optional[str] = None
+    referrerpolicy: Optional[str] = None
+    allowfullscreen: Optional[bool] = None
+    credentialless: Optional[bool] = None
     width: Optional[str] = None
     height: Optional[str] = None
 

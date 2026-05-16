@@ -932,6 +932,24 @@ that produced the resolved label and description.
    `describedby` beside resolved `description` text, letting agents validate
    help/error copy without rewalking raw DOM.
 
+### 2026-05-16 Iframe Replay Context Adjustment
+
+Current browser-agent products pair structured snapshots with managed browser
+session traces, but embedded app surfaces still cause replay ambiguity. Payment
+widgets, maps, auth prompts, and dashboards frequently live in iframes whose
+loading, referrer, fullscreen, and credential behavior changes whether an
+agent can safely reuse a local plan. Plasmate should deepen local iframe
+context before chasing hosted session infrastructure.
+
+1. **Loading state affects availability**: iframe `loading` hints should be
+   preserved so agents know when embedded context may not exist immediately.
+2. **Embed policy is replay context**: `referrerpolicy`, `allowfullscreen`, and
+   `credentialless` should travel through schema and SDK types for safer
+   embedded workflow validation.
+3. **Iframe fixtures should become adapter gates**: compiler coverage is the
+   first step; parser, SDK, and framework adapters should eventually assert the
+   same iframe context.
+
 ## Architecture
 
 ```
@@ -1403,6 +1421,9 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   and `describedby` without changing deterministic action `cache_key` values.
 - The shared action-availability manifest now asserts ARIA naming provenance
   alongside resolved `description` text.
+- Rust SOM compilation, JSON Schema, Python/Node parser types, Python/Node/Go
+  SDK types, and iframe fixtures now preserve `loading`, `referrerpolicy`,
+  `allowfullscreen`, and `credentialless` iframe context.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, `html_id` DOM-provenance cases, and

@@ -139,7 +139,8 @@ The Go types include current SOM actionability fields such as
 `attrs.popovertargetaction`, `attrs.commandfor`, `attrs.command`,
 `attrs.button_type`, `attrs.formaction`, `attrs.formmethod`,
 `attrs.formenctype`, `attrs.formtarget`, `attrs.formnovalidate`, `attrs.accesskey`,
-`attrs.aria`, iframe attrs, form validation constraints, and `shadow` roots so
+`attrs.aria`, iframe attrs (`Loading`, `ReferrerPolicy`, `AllowFullscreen`,
+`Credentialless`), form validation constraints, and `shadow` roots so
 Go agents receive the same
 contract as the Python and Node parser packages. Action-plan items include
 `Enabled`, `BlockedReason`, `PopoverTarget`, `CommandFor`, `KeyShortcuts`, and

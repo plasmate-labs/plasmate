@@ -43,6 +43,14 @@ relationships (`aria-label`, `aria-labelledby`, and `aria-describedby`) beside
 resolved labels/descriptions so cached action targets can be checked against
 the live DOM without raw DOM recovery.
 
+2026-05-16 iframe-context read: current competitors continue to split between
+compact structured snapshots and managed browser sessions with traces. Embedded
+apps, payment widgets, maps, and auth frames are common in sticky SaaS
+workflows, and agents need to know whether an iframe is lazy-loaded,
+referrer-restricted, fullscreen-capable, or credentialless before treating it
+as replayable context. Plasmate should preserve these iframe cues locally
+across schema and SDK surfaces rather than forcing raw DOM inspection.
+
 2026-05-05 market read: the strongest retention hooks are reusable structured
 state, cached repeated actions, and ecosystem-native distribution. Playwright
 MCP returns accessibility snapshots with stable refs for interaction, Stagehand
@@ -578,6 +586,15 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-16:
+  - Rust SOM compilation and JSON Schema now preserve iframe replay/security
+    cues: `loading`, `referrerpolicy`, `allowfullscreen`, and
+    `credentialless`.
+  - Python/Node parser types, Python/Node/Go SDK types, and parser/SDK tests
+    now accept those iframe fields so embedded app context does not drift
+    across libraries.
+  - The iframe fixture now covers lazy loading, referrer policy, fullscreen
+    permission, and credentialless context because embedded SaaS workflows are
+    common replay surfaces for agents.
   - Rust SOM attrs and JSON Schema now preserve link navigation validation
     cues: `hreflang`, link MIME `type`, and `referrerpolicy`.
   - Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,

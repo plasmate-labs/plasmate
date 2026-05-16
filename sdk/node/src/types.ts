@@ -148,6 +148,10 @@ export interface SomElementAttrs {
   srcdoc_preview?: string;
   sandbox?: string;
   allow?: string;
+  loading?: string;
+  referrerpolicy?: string;
+  allowfullscreen?: boolean;
+  credentialless?: boolean;
   width?: string;
   height?: string;
 }

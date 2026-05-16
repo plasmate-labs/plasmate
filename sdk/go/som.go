@@ -120,6 +120,9 @@ type ElementAttrs struct {
 	SrcdocPreview   *string        `json:"srcdoc_preview,omitempty"`
 	Sandbox         *string        `json:"sandbox,omitempty"`
 	Allow           *string        `json:"allow,omitempty"`
+	Loading         *string        `json:"loading,omitempty"`
+	AllowFullscreen *bool          `json:"allowfullscreen,omitempty"`
+	Credentialless  *bool          `json:"credentialless,omitempty"`
 	Width           *string        `json:"width,omitempty"`
 	Height          *string        `json:"height,omitempty"`
 }

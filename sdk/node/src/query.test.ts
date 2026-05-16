@@ -158,6 +158,41 @@ describe('findByRole', () => {
 });
 
 describe('findById', () => {
+  it('preserves iframe replay attrs in typed fixtures', () => {
+    const som: Som = {
+      som_version: '1.0',
+      url: 'https://example.com/frame',
+      title: 'Frame',
+      lang: 'en',
+      regions: [
+        {
+          id: 'r_main',
+          role: 'main',
+          elements: [
+            {
+              id: 'e_frame',
+              role: 'iframe',
+              attrs: {
+                src: 'https://example.com/embed',
+                loading: 'lazy',
+                referrerpolicy: 'no-referrer',
+                allowfullscreen: true,
+                credentialless: true,
+              },
+            },
+          ],
+        },
+      ],
+      meta: { html_bytes: 0, som_bytes: 0, element_count: 1, interactive_count: 0 },
+    };
+
+    const frame = findById(som, 'e_frame');
+    assert.equal(frame?.attrs?.loading, 'lazy');
+    assert.equal(frame?.attrs?.referrerpolicy, 'no-referrer');
+    assert.equal(frame?.attrs?.allowfullscreen, true);
+    assert.equal(frame?.attrs?.credentialless, true);
+  });
+
   it('finds a top-level element', () => {
     const el = findById(fixture, 'e4');
     assert.equal(el?.role, 'button');
