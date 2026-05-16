@@ -49,6 +49,37 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-16T12:08:37Z - Plasmate Improvements Automation
+
+- Git sync: retried the required latest fetch from the automation worktree.
+  The linked worktree still cannot open shared Git metadata during fetch, so
+  work continued from the newest locally known `origin/master`/`master`
+  `9ce6c6d`.
+- Market direction: current docs keep validating scoped, reusable page state.
+  Playwright MCP refs are scoped to fresh accessibility snapshots, Stagehand
+  now explicitly recommends selector-scoped caching to avoid unrelated DOM
+  invalidating repeated actions, Firecrawl continues widening browser
+  interaction, and Browser Use keeps packaging profile/session continuity.
+  Plasmate should keep the local-first SOM wedge and make selector-specific
+  cache views cheap before considering hosted selector storage.
+- Code changes: SOM cache lookup/store APIs now accept optional selectors,
+  keep full-page and selector entries distinct, normalize case-insensitive
+  role/action selectors, preserve case-sensitive `#id` selector keys, and can
+  derive/cache a selector-filtered SOM from a fresh full-page cache hit without
+  recompiling.
+- Docs changes: PRD, roadmap, and website doc sources now record the
+  selector-aware cache rationale and shift the next step from creating cache
+  APIs to wiring them through daemon/fetch paths.
+- Verification: copied the local `librusty_v8` artifact from the primary
+  checkout after the first focused test run hit DNS failures downloading
+  `rusty_v8`; then `rustfmt --edition 2021 --check src/cache/store.rs`,
+  `cargo test cache::store --quiet` (14 cache tests), `cargo build --quiet`,
+  `cargo test --lib --quiet` (265 tests), `cargo clippy --quiet`, `node
+  website/build.mjs` via the primary checkout's local `marked` dependency, and
+  `git diff --check` passed. Full `cargo test --quiet` remains blocked only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`.
+
 ### 2026-05-16T11:51:13Z - Plasmate Improvements Automation
 
 - Git sync: retried the required latest pull from both the automation worktree

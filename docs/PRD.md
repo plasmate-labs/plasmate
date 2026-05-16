@@ -53,6 +53,15 @@ selector narrowing useful for action planning, not only content trimming:
 agents should be able to ask for `interactive`, `action:click`, or `button`
 SOM slices before spending tokens on unrelated page state.
 
+2026-05-16 selector-cache read: current competitor docs make scoped action
+memory more explicit. Playwright MCP refs still belong to fresh accessibility
+snapshots, and Stagehand now recommends selector-scoped caching so unrelated
+headers, ads, or surrounding DOM do not pollute repeated action cache keys.
+Plasmate should answer locally by materializing selector-specific SOM cache
+entries from a validated full-page SOM: `main`, `form`, `#id`, role selectors,
+`interactive`, and `action:<name>` should become cheap repeated views without
+hosted selector storage.
+
 2026-05-05 market read: the strongest retention hooks are reusable structured
 state, cached repeated actions, and ecosystem-native distribution. Playwright
 MCP returns accessibility snapshots with stable refs for interaction, Stagehand
@@ -1136,11 +1145,15 @@ and adapter docs over one-off integration logic.
   - Added `action:<name>` selector support for action menus such as
     `action:click`, `action:type`, `action:select`, and `action:toggle`, with
     no-match selectors still falling back to the full SOM.
+  - Added selector-aware cache APIs that keep full-page and selector-specific
+    SOM entries distinct, normalize case-insensitive action/role selectors,
+    preserve case-sensitive `#id` selectors, and derive selector entries from a
+    fresh cached full SOM without recompiling.
 
 ## Next Steps
 
-- Implement selector-aware SOM cache entries for `main`, `form`, `#id`,
-  element-role, `interactive`, and `action:<name>` prompts.
+- Wire selector-aware SOM cache entries into daemon/fetch paths for `main`,
+  `form`, `#id`, element-role, `interactive`, and `action:<name>` prompts.
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked
   or selected an element.
 - Add conformance cases for ARIA-heavy SaaS pages, especially disabled,

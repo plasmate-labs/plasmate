@@ -1,8 +1,10 @@
 //! In-memory + on-disk SOM cache.
 //!
-//! Key = URL (normalized). Value = CacheEntry { content_hash, som_json, metadata }.
+//! Key = URL (normalized) plus optional SOM selector.
+//! Value = CacheEntry { content_hash, som_json, metadata }.
 //! On revisit: fetch HTML, compute hash, compare. If match -> instant SOM return.
 
+use crate::som::{filter::apply_selector, types::Som};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
@@ -102,14 +104,29 @@ impl SomCache {
 
     /// Look up a URL in the cache, checking content hash.
     pub fn lookup(&self, url: &str, content_hash: u64) -> CacheLookup {
+        self.lookup_with_selector(url, content_hash, None)
+    }
+
+    /// Look up a URL plus selector in the cache, checking content hash.
+    ///
+    /// A `None` or blank selector uses the full-page cache entry. Non-id
+    /// selectors are case-insensitive (`interactive`, `ACTION:CLICK`), while
+    /// `#id` selectors preserve case so HTML id lookups keep browser semantics.
+    pub fn lookup_with_selector(
+        &self,
+        url: &str,
+        content_hash: u64,
+        selector: Option<&str>,
+    ) -> CacheLookup {
         let mut entries = self.entries.write().unwrap();
         let mut stats = self.stats.write().unwrap();
+        let key = cache_key(url, selector);
 
-        if let Some(entry) = entries.get_mut(&normalize_url(url)) {
+        if let Some(entry) = entries.get_mut(&key) {
             // Check if expired
             if entry.created_at.elapsed() > self.config.max_age {
                 stats.misses += 1;
-                entries.remove(&normalize_url(url));
+                entries.remove(&key);
                 return CacheLookup::Miss;
             }
 
@@ -139,8 +156,17 @@ impl SomCache {
 
     /// Look up by URL only (skip content hash check). Used for prefetch/instant mode.
     pub fn lookup_any(&self, url: &str) -> Option<CacheEntry> {
+        self.lookup_any_with_selector(url, None)
+    }
+
+    /// Look up by URL plus selector only (skip content hash check).
+    pub fn lookup_any_with_selector(
+        &self,
+        url: &str,
+        selector: Option<&str>,
+    ) -> Option<CacheEntry> {
         let mut entries = self.entries.write().unwrap();
-        let key = normalize_url(url);
+        let key = cache_key(url, selector);
         if let Some(entry) = entries.get_mut(&key) {
             if entry.created_at.elapsed() <= self.config.max_age {
                 entry.last_accessed = Instant::now();
@@ -154,6 +180,18 @@ impl SomCache {
 
     /// Store a compiled SOM in the cache.
     pub fn store(&self, url: &str, content_hash: u64, som_json: Vec<u8>, html_bytes: usize) {
+        self.store_with_selector(url, content_hash, None, som_json, html_bytes);
+    }
+
+    /// Store a compiled or filtered SOM in the cache for a URL plus selector.
+    pub fn store_with_selector(
+        &self,
+        url: &str,
+        content_hash: u64,
+        selector: Option<&str>,
+        som_json: Vec<u8>,
+        html_bytes: usize,
+    ) {
         let som_bytes = som_json.len();
         let entry = CacheEntry {
             som_json,
@@ -165,15 +203,61 @@ impl SomCache {
             hit_count: 0,
         };
 
+        let key = cache_key(url, selector);
         let mut entries = self.entries.write().unwrap();
 
-        // Evict if at capacity (LRU by last_accessed)
-        if entries.len() >= self.config.max_hot_entries {
+        // Evict if at capacity (LRU by last_accessed). Replacing an existing
+        // key should not evict an unrelated cache entry.
+        if !entries.contains_key(&key) && entries.len() >= self.config.max_hot_entries {
             self.evict_lru(&mut entries);
         }
 
-        entries.insert(normalize_url(url), entry);
-        debug!(url, html_bytes, som_bytes, "SOM cached");
+        entries.insert(key, entry);
+        debug!(url, selector = ?selector, html_bytes, som_bytes, "SOM cached");
+    }
+
+    /// Return a selector-specific cache entry, deriving it from a fresh full-SOM
+    /// cache hit when the selector entry has not been materialized yet.
+    pub fn lookup_or_filter_selector(
+        &self,
+        url: &str,
+        content_hash: u64,
+        selector: Option<&str>,
+    ) -> CacheLookup {
+        match self.lookup_with_selector(url, content_hash, selector) {
+            CacheLookup::Miss if normalized_selector(selector).is_some() => {}
+            other => return other,
+        }
+
+        let full_entry = match self.lookup(url, content_hash) {
+            CacheLookup::Hit(entry) => entry,
+            CacheLookup::Stale { old_hash, new_hash } => {
+                return CacheLookup::Stale { old_hash, new_hash };
+            }
+            CacheLookup::Miss => return CacheLookup::Miss,
+        };
+
+        let Some(selector) = normalized_selector(selector) else {
+            return CacheLookup::Hit(full_entry);
+        };
+
+        let Ok(som) = serde_json::from_slice::<Som>(&full_entry.som_json) else {
+            return CacheLookup::Hit(full_entry);
+        };
+        let filtered = apply_selector(&som, &selector);
+        let Ok(filtered_json) = serde_json::to_vec(&filtered) else {
+            return CacheLookup::Hit(full_entry);
+        };
+
+        self.store_with_selector(
+            url,
+            content_hash,
+            Some(&selector),
+            filtered_json,
+            full_entry.html_bytes,
+        );
+
+        self.lookup_with_selector(url, content_hash, Some(&selector))
     }
 
     /// Get cache statistics.
@@ -184,6 +268,11 @@ impl SomCache {
     /// Number of entries currently cached.
     pub fn len(&self) -> usize {
         self.entries.read().unwrap().len()
+    }
+
+    /// Whether the cache currently has no entries.
+    pub fn is_empty(&self) -> bool {
+        self.entries.read().unwrap().is_empty()
     }
 
     /// Extract all link hrefs from cached SOM JSON for prefetching.
@@ -237,6 +326,26 @@ fn normalize_url(url: &str) -> String {
         .unwrap_or(trimmed)
         .trim_end_matches('/')
         .to_string()
+}
+
+fn normalized_selector(selector: Option<&str>) -> Option<String> {
+    let selector = selector?.trim();
+    if selector.is_empty() {
+        return None;
+    }
+    if selector.starts_with('#') {
+        Some(selector.to_string())
+    } else {
+        Some(selector.to_ascii_lowercase())
+    }
+}
+
+fn cache_key(url: &str, selector: Option<&str>) -> String {
+    let url_key = normalize_url(url);
+    match normalized_selector(selector) {
+        Some(selector) => format!("{url_key}::selector={selector}"),
+        None => url_key,
+    }
 }
 
 fn collect_prefetch_urls(
@@ -347,6 +456,97 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_cache_keys_are_distinct_and_normalized() {
+        let cache = SomCache::new(CacheConfig::default());
+        cache.store("https://example.com/app", 111, b"full".to_vec(), 100);
+        cache.store_with_selector(
+            "https://example.com/app",
+            111,
+            Some(" ACTION:CLICK "),
+            b"click".to_vec(),
+            100,
+        );
+
+        match cache.lookup_with_selector("https://example.com/app", 111, Some("action:click")) {
+            CacheLookup::Hit(entry) => assert_eq!(entry.som_json, b"click".to_vec()),
+            _ => panic!("Expected selector cache hit"),
+        }
+        match cache.lookup("https://example.com/app", 111) {
+            CacheLookup::Hit(entry) => assert_eq!(entry.som_json, b"full".to_vec()),
+            _ => panic!("Expected full cache hit"),
+        }
+    }
+
+    #[test]
+    fn test_id_selector_cache_keys_preserve_case() {
+        let cache = SomCache::new(CacheConfig::default());
+        cache.store_with_selector(
+            "https://example.com/app",
+            111,
+            Some("#SaveButton"),
+            b"save".to_vec(),
+            100,
+        );
+
+        assert!(matches!(
+            cache.lookup_with_selector("https://example.com/app", 111, Some("#savebutton")),
+            CacheLookup::Miss
+        ));
+        assert!(matches!(
+            cache.lookup_with_selector("https://example.com/app", 111, Some("#SaveButton")),
+            CacheLookup::Hit(_)
+        ));
+    }
+
+    #[test]
+    fn test_selector_lookup_derives_from_full_som_cache() {
+        let cache = SomCache::new(CacheConfig::default());
+        let som = serde_json::json!({
+            "som_version": "1",
+            "url": "https://example.com/app",
+            "title": "App",
+            "lang": "en",
+            "regions": [{
+                "id": "r_main",
+                "role": "main",
+                "elements": [
+                    {"id": "e_copy", "role": "paragraph", "text": "Welcome"},
+                    {"id": "e_save", "role": "button", "text": "Save", "actions": ["click"]}
+                ]
+            }],
+            "meta": {
+                "html_bytes": 100,
+                "som_bytes": 100,
+                "element_count": 2,
+                "interactive_count": 1
+            }
+        });
+        cache.store(
+            "https://example.com/app",
+            111,
+            serde_json::to_vec(&som).unwrap(),
+            100,
+        );
+
+        let derived =
+            cache.lookup_or_filter_selector("https://example.com/app", 111, Some("interactive"));
+        match derived {
+            CacheLookup::Hit(entry) => {
+                let filtered: serde_json::Value = serde_json::from_slice(&entry.som_json).unwrap();
+                let elements = filtered["regions"][0]["elements"].as_array().unwrap();
+                assert_eq!(elements.len(), 1);
+                assert_eq!(elements[0]["id"], "e_save");
+            }
+            _ => panic!("Expected derived selector cache hit"),
+        }
+
+        assert!(matches!(
+            cache.lookup_with_selector("https://example.com/app", 111, Some("INTERACTIVE")),
+            CacheLookup::Hit(_)
+        ));
+    }
+
+    #[test]
     fn test_cache_eviction() {
         let config = CacheConfig {
             max_hot_entries: 2,
@@ -359,6 +559,28 @@ mod tests {
 
         // Cache should have 2 entries (one was evicted)
         assert_eq!(cache.len(), 2);
+    }
+
+    #[test]
+    fn test_cache_replace_does_not_evict_other_entry() {
+        let config = CacheConfig {
+            max_hot_entries: 2,
+            ..Default::default()
+        };
+        let cache = SomCache::new(config);
+        cache.store("https://a.com", 1, b"a".to_vec(), 100);
+        cache.store("https://b.com", 2, b"b".to_vec(), 100);
+        cache.store("https://b.com", 3, b"b2".to_vec(), 100);
+
+        assert_eq!(cache.len(), 2);
+        assert!(matches!(
+            cache.lookup("https://a.com", 1),
+            CacheLookup::Hit(_)
+        ));
+        match cache.lookup("https://b.com", 3) {
+            CacheLookup::Hit(entry) => assert_eq!(entry.som_json, b"b2".to_vec()),
+            _ => panic!("Expected replaced cache hit"),
+        }
     }
 
     #[test]

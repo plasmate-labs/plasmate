@@ -952,6 +952,25 @@ not just a content-extraction tool.
    include role/action selectors alongside `main`, `form`, and `#id`, preserving
    Plasmate's local replay-validation wedge without hosted selector storage.
 
+### 2026-05-16 Selector-Aware Cache Adjustment
+
+The latest docs make scoped cache identity a direct competitive point:
+Playwright MCP refs remain current-snapshot handles, while Stagehand recommends
+selector-scoped action caching so unrelated surrounding DOM does not invalidate
+repeated automation. Plasmate should keep the same benefit local and SOM-native:
+a full-page SOM cache hit should be enough to materialize compact selector
+views for repeated prompts without another compile or hosted selector store.
+
+1. **Selectors are cache identity**: `main`, `form`, role selectors,
+   `interactive`, and `action:<name>` cache entries should be distinct from the
+   full page while sharing the same content hash validation.
+2. **HTML ids stay browser-like**: `#id` selector cache keys should preserve
+   case, while action and role selectors normalize case for practical agent
+   prompts.
+3. **Full SOM can feed narrow views**: when a fresh full-page cache entry
+   exists, Plasmate should derive selector-specific JSON from it and cache that
+   view, making repeated local action planning cheaper over time.
+
 ## Architecture
 
 ```
@@ -1423,6 +1442,10 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   and `describedby` without changing deterministic action `cache_key` values.
 - The shared action-availability manifest now asserts ARIA naming provenance
   alongside resolved `description` text.
+- The SOM cache now has selector-aware lookup/store APIs, distinct full-page
+  versus selector cache entries, case-normalized role/action selector keys,
+  case-preserving `#id` selector keys, and full-SOM-derived selector cache
+  materialization.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, `html_id` DOM-provenance cases, and

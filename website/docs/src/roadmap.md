@@ -423,6 +423,14 @@ Validated action reuse remains the durable retention hook: Playwright MCP refs a
 - **Label relationships are DOM anchors**: `aria-labelledby` should travel as `labelledby` through schema, SDKs, parser packages, and adapters.
 - **Descriptions need provenance**: `aria-describedby` should stay beside resolved `description` text as `describedby`.
 
+### 2026-05-16 Selector-Aware Cache Adjustment
+
+Scoped cache identity is now a direct competitive point: Playwright MCP refs remain current-snapshot handles, while Stagehand recommends selector-scoped action caching so unrelated surrounding DOM does not invalidate repeated automation. Plasmate should keep the same benefit local and SOM-native by deriving compact selector views from validated full-page SOM cache hits.
+
+- **Selectors are cache identity**: `main`, `form`, role selectors, `interactive`, and `action:<name>` cache entries should be distinct from the full page while sharing content-hash validation.
+- **HTML ids stay browser-like**: `#id` selector cache keys should preserve case, while action and role selectors normalize case for practical agent prompts.
+- **Full SOM can feed narrow views**: a fresh full-page cache entry should materialize selector-specific JSON without another compile or hosted selector store.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
