@@ -479,6 +479,14 @@ Current competitor docs keep validating the same product wedge: structured brows
 - **Fetch/extract should seed sessions**: stateless MCP fetch/extract calls should store restorable full-page cache entries when JavaScript runs, so a later `open_page` does not pay a second JS/SOM compile for the same content.
 - **Restore must stay observable**: `open_page` and `navigate_to` should return `cache_restored`, while `cache_status` and `session_status` expose effective-HTML inventory and per-session raw/effective HTML sizes.
 
+### 2026-05-16 Label Parity Adjustment
+
+Current browser-agent tools keep making human-facing names the unit of interaction. Playwright MCP refs are selected from accessibility snapshots, while Stagehand/Browserbase only reuse cached actions when current page state still validates. Plasmate's local-first retention path is to make every helper honor the same label surface the compiler emits, especially for icon-only links and label-only controls that otherwise disappear from search or markdown views.
+
+- **SDK search must include labels**: Node and Python SDK text search should match `label` as well as visible `text`.
+- **Link inventories need accessible names**: parser `get_links()` helpers should fall back to labels so icon links remain usable in summaries.
+- **Markdown is agent context**: parser markdown renderers should preserve label-only links instead of emitting empty link text.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -698,6 +706,8 @@ Current competitor docs keep validating the same product wedge: structured brows
 - [x] Stateful MCP click/CDP lookup traverses nested and shadow-root elements
 - [x] MCP stateful open/navigate restore validated cached SOM and effective HTML
 - [x] MCP cache_status/session_status expose effective-HTML replay inventory
+- [x] Python and Node SDK text search matches label-only controls
+- [x] Python and Node parser link/markdown helpers preserve label-only accessible links
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
@@ -719,6 +729,7 @@ Current competitor docs keep validating the same product wedge: structured brows
 - [ ] Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures
 - [ ] Promote drag/drop replay cues into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote link navigation replay cues into broader Rust/parser/SDK and adapter conformance fixtures
+- [ ] Promote label-only link/control parity into shared parser, SDK, and adapter conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures
 - [ ] Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners
 - [x] Promote adapter availability checks into shared cross-adapter fixtures

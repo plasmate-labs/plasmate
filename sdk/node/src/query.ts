@@ -399,7 +399,9 @@ export function findActionTargetByTestId(som: Som, testId: string): ActionPlanIt
 export function findByText(som: Som, text: string): SomElement[] {
   const lower = text.toLowerCase();
   return flatElements(som).filter(
-    (el) => el.text != null && el.text.toLowerCase().includes(lower),
+    (el) =>
+      (el.text != null && el.text.toLowerCase().includes(lower)) ||
+      (el.label != null && el.label.toLowerCase().includes(lower)),
   );
 }
 

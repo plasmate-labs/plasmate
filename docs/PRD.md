@@ -123,6 +123,16 @@ content-hash-validated cache entry only when it carries both SOM and
 post-JS `effective_html`, then restore that state through the same session
 updater that rebuilds structured data and CDP node maps.
 
+2026-05-16 label-parity read: current official docs keep making structured
+names the browser-agent contract. Playwright MCP refs are chosen from fresh
+accessibility snapshots, Stagehand/Browserbase cache actions only when the live
+page still validates, and Firecrawl continues widening MCP/browser-session
+coverage. Plasmate should not pivot into hosted execution; the stickier move is
+to make every SDK and parser helper find the same human-facing labels the SOM
+compiler emits. Label-only controls and icon links must be searchable,
+link-extractable, and markdown-renderable without agents falling back to raw
+DOM or screenshots.
+
 2026-05-05 market read: the strongest retention hooks are reusable structured
 state, cached repeated actions, and ecosystem-native distribution. Playwright
 MCP returns accessibility snapshots with stable refs for interaction, Stagehand

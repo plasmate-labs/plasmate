@@ -49,6 +49,34 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-16T19:25:28Z - Plasmate Improvements Automation
+
+- Git sync: while rebasing onto the newest local `origin/master` (`2c73499`),
+  fetch/ls-remote from the primary checkout still failed DNS for
+  `github.com`; the original linked worktree still could not write
+  `FETCH_HEAD` or `index.lock`.
+- Market direction: current docs continue to reward structured names,
+  validated action reuse, and inspectable sessions. Playwright MCP uses
+  accessibility snapshots with snapshot-scoped refs, Browserbase/Stagehand
+  pairs action caching with replay/observability, and Firecrawl keeps widening
+  MCP/browser-session coverage. No hosted-browser pivot is recommended; the
+  stickier local move is parity across the SDK/parser surfaces agents already
+  use.
+- Code changes: Node SDK `findByText` and Python SDK `find_by_text` now match
+  label-only controls as well as visible text. Python and Node parser
+  `get_links()`/`getLinks()` plus markdown renderers now fall back to labels
+  for accessible-only icon links instead of emitting empty link text.
+- Fixture/docs changes: added focused Node SDK, Python SDK, Python parser, and
+  Node parser tests for label-only discovery/link rendering. PRD, roadmap,
+  website doc sources, and generated website docs now record the label-parity
+  rationale and next conformance step.
+- Verification passed before rebase: Node SDK tests, Python SDK query tests
+  (42), Python parser tests (75), Node parser tests (60), Node parser build,
+  website docs generation, `cargo build --quiet`, `cargo test --lib --quiet`
+  (259 tests), and `git diff --check`. Full `cargo test --quiet` still fails
+  only in `tests/awp_integration_test.rs` because this sandbox denies local
+  listener setup with `Operation not permitted`.
+
 ### 2026-05-16T19:06:51Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch origin` still fails in the automation worktree

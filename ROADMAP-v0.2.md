@@ -1096,6 +1096,22 @@ post-JS HTML needed for follow-up interaction.
    return `cache_restored`, while `cache_status` and `session_status` expose
    effective-HTML inventory and per-session raw/effective HTML sizes.
 
+### 2026-05-16 Label Parity Adjustment
+
+Current browser-agent tools keep making human-facing names the unit of
+interaction. Playwright MCP refs are selected from accessibility snapshots,
+while Stagehand/Browserbase only reuse cached actions when current page state
+still validates. Plasmate's local-first retention path is to make every helper
+honor the same label surface the compiler emits, especially for icon-only links
+and label-only controls that otherwise disappear from search or markdown views.
+
+1. **SDK search must include labels**: Node and Python SDK text search should
+   match `label` as well as visible `text`.
+2. **Link inventories need accessible names**: parser `get_links()` helpers
+   should fall back to labels so icon links remain usable in summaries.
+3. **Markdown is agent context**: parser markdown renderers should preserve
+   label-only links instead of emitting empty link text.
+
 ## Architecture
 
 ```
@@ -1612,12 +1628,14 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   in the tool response.
 - MCP `session_status` now reports per-session raw/effective HTML sizes and
   effective-HTML presence alongside SOM and node-map inventory.
+- Python and Node SDK text search now matches label-only controls, and Python
+  plus Node parser link/markdown helpers preserve label-only accessible links.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
-  select-option parser/SDK/adaptor parity, `html_id` DOM-provenance cases, and
-  action target lookup/index helpers into broader fixtures alongside
-  drag/drop, link replay, ARIA naming provenance, text-entry, ARIA widget,
-  range, and set-position cases.
+  select-option parser/SDK/adaptor parity, `html_id` DOM-provenance cases,
+  label-only link/control parity, and action target lookup/index helpers into
+  broader fixtures alongside drag/drop, link replay, ARIA naming provenance,
+  text-entry, ARIA widget, range, and set-position cases.
 
 ## Dependencies to Add
 

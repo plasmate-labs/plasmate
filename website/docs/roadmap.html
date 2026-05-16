@@ -814,6 +814,12 @@
 <li><strong>Fetch/extract should seed sessions</strong>: stateless MCP fetch/extract calls should store restorable full-page cache entries when JavaScript runs, so a later <code>open_page</code> does not pay a second JS/SOM compile for the same content.</li>
 <li><strong>Restore must stay observable</strong>: <code>open_page</code> and <code>navigate_to</code> should return <code>cache_restored</code>, while <code>cache_status</code> and <code>session_status</code> expose effective-HTML inventory and per-session raw/effective HTML sizes.</li>
 </ul>
+<h3 id="2026-05-16-label-parity-adjustment">2026-05-16 Label Parity Adjustment</h3><p>Current browser-agent tools keep making human-facing names the unit of interaction. Playwright MCP refs are selected from accessibility snapshots, while Stagehand/Browserbase only reuse cached actions when current page state still validates. Plasmate&#39;s local-first retention path is to make every helper honor the same label surface the compiler emits, especially for icon-only links and label-only controls that otherwise disappear from search or markdown views.</p>
+<ul>
+<li><strong>SDK search must include labels</strong>: Node and Python SDK text search should match <code>label</code> as well as visible <code>text</code>.</li>
+<li><strong>Link inventories need accessible names</strong>: parser <code>get_links()</code> helpers should fall back to labels so icon links remain usable in summaries.</li>
+<li><strong>Markdown is agent context</strong>: parser markdown renderers should preserve label-only links instead of emitting empty link text.</li>
+</ul>
 <h2 id="completed-v011">Completed (v0.1.1)</h2><ul>
 <li>SOM compiler with 9.4x median compression across 38 sites</li>
 <li>V8 JavaScript execution with full DOM shim</li>
@@ -1028,6 +1034,8 @@
 <li><input checked="" disabled="" type="checkbox"> Stateful MCP click/CDP lookup traverses nested and shadow-root elements</li>
 <li><input checked="" disabled="" type="checkbox"> MCP stateful open/navigate restore validated cached SOM and effective HTML</li>
 <li><input checked="" disabled="" type="checkbox"> MCP cache_status/session_status expose effective-HTML replay inventory</li>
+<li><input checked="" disabled="" type="checkbox"> Python and Node SDK text search matches label-only controls</li>
+<li><input checked="" disabled="" type="checkbox"> Python and Node parser link/markdown helpers preserve label-only accessible links</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
 <li><input disabled="" type="checkbox"> Wire <code>016-action-semantics</code> into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants</li>
 <li><input disabled="" type="checkbox"> Promote shadow-DOM and web-component cases into shared cross-adapter fixtures</li>
@@ -1049,6 +1057,7 @@
 <li><input disabled="" type="checkbox"> Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote drag/drop replay cues into broader Rust/parser/SDK and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote link navigation replay cues into broader Rust/parser/SDK and adapter conformance fixtures</li>
+<li><input disabled="" type="checkbox"> Promote label-only link/control parity into shared parser, SDK, and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Add cross-adapter accessible-description fixtures</li>
 <li><input disabled="" type="checkbox"> Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners</li>
 <li><input checked="" disabled="" type="checkbox"> Promote adapter availability checks into shared cross-adapter fixtures</li>
