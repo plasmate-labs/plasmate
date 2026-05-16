@@ -55,6 +55,8 @@ type ElementAttrs struct {
 	Checked         *bool          `json:"checked,omitempty"`
 	Group           *string        `json:"group,omitempty"`
 	Multiple        *bool          `json:"multiple,omitempty"`
+	Accept          *string        `json:"accept,omitempty"`
+	Capture         interface{}    `json:"capture,omitempty"`
 	Options         []SelectOption `json:"options,omitempty"`
 	Level           *int           `json:"level,omitempty"`
 	Alt             *string        `json:"alt,omitempty"`
@@ -87,6 +89,11 @@ type ElementAttrs struct {
 	CommandFor      *string        `json:"commandfor,omitempty"`
 	Command         *string        `json:"command,omitempty"`
 	Popover         *string        `json:"popover,omitempty"`
+	FormAction      *string        `json:"formaction,omitempty"`
+	FormMethod      *string        `json:"formmethod,omitempty"`
+	FormEncType     *string        `json:"formenctype,omitempty"`
+	FormTarget      *string        `json:"formtarget,omitempty"`
+	FormNoValidate  *bool          `json:"formnovalidate,omitempty"`
 	MinLength       interface{}    `json:"minlength,omitempty"`
 	MaxLength       interface{}    `json:"maxlength,omitempty"`
 	Min             interface{}    `json:"min,omitempty"`

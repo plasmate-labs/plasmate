@@ -334,6 +334,14 @@ Competitors are making browser-agent state reusable through snapshots, cached ac
 - **Quick gates should prove high-risk semantics**: the fast action-manifest command should cover both the shared action target manifest and the focused semantic fixture that guards production-markup tolerance.
 - **Adapters are the next prompt surface**: Browser Use, LangChain, and Vercel AI should get prompt-rendering checks for the same `016-action-semantics` cases once parser/SDK parity is stable.
 
+### 2026-05-16 Upload and Submitter Replay Adjustment
+
+Current browser-agent products are teaching users to reuse validated action menus, but file-upload and submit-button flows still fail when agents only see generic click/type targets. Stagehand action caching validates current page state before replay, and Playwright MCP refs are scoped to the fresh snapshot. Plasmate should keep the local-first path by preserving upload constraints and per-submit-button overrides in the compact SOM action contract.
+
+- **Upload constraints are replay guards**: `accept`, `capture`, and input `multiple` should travel through Rust, schema, parser packages, SDKs, and adapters so agents know what file choices are valid.
+- **Submit buttons can change the request**: `formaction`, `formmethod`, `formenctype`, `formtarget`, and `formnovalidate` should be visible before a cached plan clicks "Save draft" instead of "Submit".
+- **Cache keys stay focused on identity**: these cues should enrich action validation and prompt context without changing deterministic target `cache_key` values.
+
 ### 2026-05-13 Keyboard-Affordance Action Menu Adjustment
 
 Current Playwright MCP and Stagehand docs keep validating action surfaces that are current, inspectable, and reusable. Browserbase, Browser Use, and Firecrawl add hosted sessions and traces around that same workflow, but Plasmate's sticky local-first wedge is still a portable action contract that carries browser-like affordances everywhere.
@@ -520,6 +528,10 @@ Current Playwright MCP and Stagehand docs keep validating action surfaces that a
 - [x] Python and Node parser tests load the 016-action-semantics expected fixture for search, fallback menu roles, hidden content, and text-entry locale attrs
 - [x] Python, Node, and Go SDK tests load the 016-action-semantics expected fixture for the same semantic contract
 - [x] Quick action-manifest conformance runs focused parser/SDK 016-action-semantics checks beside the shared action-availability manifest
+- [x] Rust compiler and SOM schema preserve upload accept/capture/multiple cues
+- [x] Compact action plans expose upload accept/capture/multiple cues across parser packages, SDKs, and framework adapters
+- [x] Rust compiler and SOM schema preserve submitter override cues
+- [x] Shared action-availability manifest asserts upload and submitter cues without changing deterministic action cache keys
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Extend `016-action-semantics` into Browser Use, LangChain, and Vercel AI prompt-rendering conformance for fallback roles, hidden-state variants, and locale attrs

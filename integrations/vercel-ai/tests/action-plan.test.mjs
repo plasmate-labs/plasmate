@@ -58,6 +58,9 @@ assert.deepEqual(email, {
   translate: false,
   form: 'settings-form',
   list: 'email-suggestions',
+  accept: 'image/png,.pdf',
+  capture: 'environment',
+  multiple: true,
   placeholder: 'name@company.com',
   spellcheck: false,
   minlength: 6,
@@ -86,6 +89,11 @@ assert.equal(save.popovertarget, 'save-status')
 assert.equal(save.popovertargetaction, 'show')
 assert.equal(save.commandfor, 'save-status')
 assert.equal(save.command, 'toggle-popover')
+assert.equal(save.formaction, '/settings/draft')
+assert.equal(save.formmethod, 'post')
+assert.equal(save.formenctype, 'multipart/form-data')
+assert.equal(save.formtarget, '_blank')
+assert.equal(save.formnovalidate, true)
 
 const availableTargets = preparePlasmateActionPlan(targets)
 assert.deepEqual(
@@ -98,7 +106,7 @@ const formatted = formatPlasmateActionPlan(targets, {
 })
 assert.match(
   formatted,
-  /\[e_email\] text_input "Work email" \(type\) \[blocked\] \[cache_key=plasmate-action:v1:91875850\] \[blocked_reason=readonly\] \[required\] \[readonly\] \[type=email\] \[value=ops@example\.com\] \[autocomplete=email\] \[inputmode=email\] \[enterkeyhint=next\] \[autocapitalize=none\] \[dirname=email\.dir\] \[lang=ar\] \[dir=rtl\] \[translate=false\] \[form=settings-form\] \[list=email-suggestions\].*\[spellcheck=false\] \[placeholder=name@company\.com\].*\[invalid=grammar\] \[aria_placeholder=Work email address\] \[aria_autocomplete=list\] \[active_descendant=email-suggestion-1\] \[errormessage=email-error\] \[group=Account\]/
+  /\[e_email\] text_input "Work email" \(type\) \[blocked\] \[cache_key=plasmate-action:v1:91875850\] \[blocked_reason=readonly\] \[required\] \[readonly\].*\[accept=image\/png,\.pdf\] \[capture=environment\] \[multiple=true\] \[type=email\].*\[form=settings-form\] \[list=email-suggestions\].*\[spellcheck=false\] \[placeholder=name@company\.com\].*\[invalid=grammar\] \[aria_placeholder=Work email address\] \[aria_autocomplete=list\] \[active_descendant=email-suggestion-1\] \[errormessage=email-error\] \[group=Account\]/
 )
 assert.match(formatted, /\[e_compact\].*\[checked=false\]/)
 assert.match(formatted, /\[e_compact\].*\[pressed=false\]/)
@@ -120,5 +128,5 @@ assert.match(formatted, /\[e_billing\].*\[rel=noopener\]/)
 assert.match(formatted, /\[e_billing\].*\[download=billing\.csv\]/)
 assert.match(
   formatted,
-  /\[e_save\] button "Save" \(click\) \[blocked\] \[cache_key=plasmate-action:v1:4d0e8356\] \[blocked_reason=disabled\].*\[popovertarget=save-status\].*\[popovertargetaction=show\].*\[commandfor=save-status\].*\[command=toggle-popover\]/
+  /\[e_save\] button "Save" \(click\) \[blocked\] \[cache_key=plasmate-action:v1:4d0e8356\] \[blocked_reason=disabled\].*\[popovertarget=save-status\].*\[popovertargetaction=show\].*\[commandfor=save-status\].*\[command=toggle-popover\].*\[formaction=\/settings\/draft\].*\[formmethod=post\].*\[formenctype=multipart\/form-data\].*\[formtarget=_blank\].*\[formnovalidate=true\]/
 )

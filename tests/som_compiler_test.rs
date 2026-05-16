@@ -374,13 +374,14 @@ fn test_form_state_values_and_readonly_are_preserved() {
     let html = r#"<!DOCTYPE html>
 <html><head><title>Form State</title></head>
 <body><main>
+    <input type="file" aria-label="Evidence" accept="image/png,.pdf" capture="environment" multiple>
     <input type="email" aria-label="Email" readonly value="ops@example.com" autocomplete="email" inputmode="email" enterkeyhint="next" minlength="6" maxlength="64" pattern=".+@example\.com" aria-invalid="TRUE" aria-autocomplete="list" aria-activedescendant="email-suggestion-1">
     <textarea aria-label="Notes" readonly maxlength="200">Already reviewed</textarea>
     <select aria-label="Plan">
         <option value="starter">Starter</option>
         <option value="team" selected>Team</option>
     </select>
-    <button aria-label="Menu" aria-expanded=" FALSE " aria-pressed="TRUE"></button>
+    <button aria-label="Menu" aria-expanded=" FALSE " aria-pressed="TRUE" formaction="/draft" formmethod="post" formenctype="multipart/form-data" formtarget="_blank" formnovalidate></button>
 </main></body></html>"#;
 
     let som = compiler::compile(html, "https://example.com").unwrap();
@@ -405,6 +406,19 @@ fn test_form_state_values_and_readonly_are_preserved() {
         email_attrs["aria"]["active_descendant"],
         "email-suggestion-1"
     );
+
+    let evidence = elems
+        .iter()
+        .find(|e| e.role == ElementRole::TextInput && e.label.as_deref() == Some("Evidence"))
+        .expect("file input should be preserved");
+    let evidence_attrs = evidence
+        .attrs
+        .as_ref()
+        .expect("file input attrs should exist");
+    assert_eq!(evidence_attrs["input_type"], "file");
+    assert_eq!(evidence_attrs["accept"], "image/png,.pdf");
+    assert_eq!(evidence_attrs["capture"], "environment");
+    assert_eq!(evidence_attrs["multiple"], true);
 
     let textarea = elems
         .iter()
@@ -436,6 +450,12 @@ fn test_form_state_values_and_readonly_are_preserved() {
         .expect("button aria state should be preserved");
     assert_eq!(aria["expanded"], false);
     assert_eq!(aria["pressed"], true);
+    let button_attrs = button.attrs.as_ref().expect("button attrs should exist");
+    assert_eq!(button_attrs["formaction"], "/draft");
+    assert_eq!(button_attrs["formmethod"], "post");
+    assert_eq!(button_attrs["formenctype"], "multipart/form-data");
+    assert_eq!(button_attrs["formtarget"], "_blank");
+    assert_eq!(button_attrs["formnovalidate"], true);
 }
 
 #[test]

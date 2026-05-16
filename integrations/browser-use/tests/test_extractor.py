@@ -71,7 +71,7 @@ def test_build_context_surfaces_action_availability():
             assert f'[form={target["form"]}]' in line
         if target.get("list"):
             assert f'[list={target["list"]}]' in line
-        for link_key in ("target", "rel", "download"):
+        for link_key in ("target", "rel", "download", "accept", "capture", "multiple"):
             if link_key in target:
                 assert f'[{link_key}={target[link_key]}]' in line
         for command_key in (
@@ -80,8 +80,13 @@ def test_build_context_surfaces_action_availability():
             "commandfor",
             "command",
             "popover",
+            "formaction",
+            "formmethod",
+            "formenctype",
+            "formtarget",
+            "formnovalidate",
         ):
-            if target.get(command_key):
+            if command_key in target:
                 assert f'[{command_key}={target[command_key]}]' in line
         if target.get("accesskey"):
             assert f'[accesskey={target["accesskey"]}]' in line

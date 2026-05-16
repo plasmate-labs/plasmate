@@ -85,6 +85,9 @@ export interface ActionPlanItem {
   target?: string;
   rel?: string;
   download?: boolean | string;
+  accept?: string;
+  capture?: boolean | string;
+  multiple?: boolean;
   name?: string;
   autocomplete?: string;
   inputmode?: string;
@@ -101,6 +104,11 @@ export interface ActionPlanItem {
   commandfor?: string;
   command?: string;
   popover?: string;
+  formaction?: string;
+  formmethod?: string;
+  formenctype?: string;
+  formtarget?: string;
+  formnovalidate?: boolean;
   accesskey?: string;
   spellcheck?: boolean | string;
   input_type?: string;
@@ -199,6 +207,9 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.target) item.target = el.attrs.target;
     if (el.attrs?.rel) item.rel = el.attrs.rel;
     if (el.attrs?.download !== undefined) item.download = el.attrs.download;
+    if (el.attrs?.accept) item.accept = el.attrs.accept;
+    if (el.attrs?.capture !== undefined) item.capture = el.attrs.capture;
+    if (el.attrs?.multiple !== undefined) item.multiple = el.attrs.multiple;
     if (el.attrs?.name) item.name = el.attrs.name;
     if (el.attrs?.autocomplete) item.autocomplete = el.attrs.autocomplete;
     if (el.attrs?.inputmode) item.inputmode = el.attrs.inputmode;
@@ -215,6 +226,11 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.commandfor) item.commandfor = el.attrs.commandfor;
     if (el.attrs?.command) item.command = el.attrs.command;
     if (el.attrs?.popover) item.popover = el.attrs.popover;
+    if (el.attrs?.formaction) item.formaction = el.attrs.formaction;
+    if (el.attrs?.formmethod) item.formmethod = el.attrs.formmethod;
+    if (el.attrs?.formenctype) item.formenctype = el.attrs.formenctype;
+    if (el.attrs?.formtarget) item.formtarget = el.attrs.formtarget;
+    if (el.attrs?.formnovalidate !== undefined) item.formnovalidate = el.attrs.formnovalidate;
     if (el.attrs?.accesskey) item.accesskey = el.attrs.accesskey;
     if (el.attrs?.spellcheck !== undefined) item.spellcheck = el.attrs.spellcheck;
     if (el.attrs?.input_type) item.input_type = el.attrs.input_type;

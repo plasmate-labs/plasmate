@@ -96,6 +96,8 @@ class SomElementAttrs(BaseModel):
     checked: Optional[bool] = None
     group: Optional[str] = None
     multiple: Optional[bool] = None
+    accept: Optional[str] = None
+    capture: Optional[bool | str] = None
     options: Optional[List[SelectOption]] = None
     level: Optional[int] = None
     alt: Optional[str] = None
@@ -128,6 +130,11 @@ class SomElementAttrs(BaseModel):
     commandfor: Optional[str] = None
     command: Optional[str] = None
     popover: Optional[str] = None
+    formaction: Optional[str] = None
+    formmethod: Optional[str] = None
+    formenctype: Optional[str] = None
+    formtarget: Optional[str] = None
+    formnovalidate: Optional[bool] = None
     minlength: Optional[int | str] = None
     maxlength: Optional[int | str] = None
     min: Optional[int | str] = None

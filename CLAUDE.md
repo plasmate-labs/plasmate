@@ -49,6 +49,47 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-16T09:15:06Z - Plasmate Improvements Automation
+
+- Git sync: required latest pull was retried. The automation worktree still
+  cannot open its linked `FETCH_HEAD`; retrying from the primary checkout
+  failed DNS resolution for `github.com`. Work continued from the newest local
+  review branch, `codex/plasmate-improvements-2026-05-16` at `1566c77`.
+- Market direction: current official docs still point to validated action
+  menus and hosted session observability as the sticky category layer.
+  Playwright MCP refs are scoped to fresh accessibility snapshots,
+  Browserbase/Stagehand emphasizes `observe()` plus action caching, Firecrawl
+  and Browser Use keep broadening browser/session products, and Cloudflare
+  Browser Run/WebMCP is moving typed browser tools into hosted sessions.
+  Plasmate should keep its local-first wedge and deepen portable action
+  validation context across its broad SDK and adapter surface.
+- Code changes: Rust SOM attrs and schema now preserve upload and submitter
+  replay cues: `accept`, `capture`, input `multiple`, `formaction`,
+  `formmethod`, `formenctype`, `formtarget`, and `formnovalidate`.
+  Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+  and Vercel AI action-plan surfaces now carry/render those fields without
+  changing deterministic `cache_key` values.
+- Fixture/docs changes: the shared action-availability manifest now asserts
+  upload constraints and submitter overrides. PRD, roadmap, website docs
+  sources, SOM spec, adapter READMEs, SDK/parser docs, and this running state
+  now record the rationale and the next conformance step.
+- Verification passed: touched Rust formatting, JSON fixture/schema parse
+  checks, focused Rust upload/submitter compiler test, `cargo build --quiet`,
+  `cargo test --lib --quiet` (257 tests), Python parser/SDK shared-manifest
+  checks, Go SDK shared-manifest check, Browser Use and LangChain
+  shared-manifest checks, `./scripts/action-manifest-conformance.sh --quick`,
+  `node website/build.mjs`, and `git diff --check`.
+- Verification gaps: full `cargo test --quiet` still fails only in sandboxed
+  AWP integration tests because local listener setup returns `Operation not
+  permitted`. Whole-repo `cargo fmt --check` still reports unrelated
+  pre-existing formatting drift outside the touched files.
+- Commit/push state: commit `13a7d5f` (`chore: expose upload action replay
+  cues`) was pushed to `origin/codex/plasmate-improvements-2026-05-16`.
+  Direct push to `origin/master` was rejected with `fetch first`; retrying
+  `git fetch origin master` failed DNS resolution for `github.com`, and
+  `gh pr create` could not reach `api.github.com`. There is no `main` branch
+  in this checkout; `origin/HEAD` points at `origin/master`.
+
 ### 2026-05-16T08:08:15Z - Plasmate Improvements Automation
 
 - Git sync: the detached automation worktree still cannot write shared

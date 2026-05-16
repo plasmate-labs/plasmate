@@ -126,7 +126,7 @@ all := plasmate.FlatElements(som)
 | `FindByText(som, text)` | Case-insensitive text search |
 | `FindByAction(som, action)` | Find elements exposing an action |
 | `FindByHint(som, hint)` | Find elements tagged with a semantic hint |
-| `GetActionPlan(som)` | Return compact action targets with cache keys, availability, link target/rel/download cues, locale context, text-entry/input-affordance cues, popover/command relationship cues, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, range constraints, orientation/sort/value state, and set-position cues for agents |
+| `GetActionPlan(som)` | Return compact action targets with cache keys, availability, link target/rel/download cues, upload accept/capture/multiple cues, locale context, text-entry/input-affordance cues, popover/command relationship cues, submitter override cues, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, range constraints, orientation/sort/value state, and set-position cues for agents |
 | `GetActionPlanCacheKey(item)` | Return a deterministic key for caching or comparing an action target |
 | `FlatElements(som)` | Flatten all elements, including shadow roots |
 | `TokenEstimate(som)` | Estimate token count |
@@ -136,7 +136,8 @@ The Go types include current SOM actionability fields such as
 `attrs.enterkeyhint`, `attrs.autocapitalize`, `attrs.dirname`,
 `attrs.lang`, `attrs.dir`, `attrs.translate`, `attrs.spellcheck`,
 `attrs.form`, `attrs.list`, `attrs.popovertarget`,
-`attrs.popovertargetaction`, `attrs.commandfor`, `attrs.command`, `attrs.accesskey`,
+`attrs.popovertargetaction`, `attrs.commandfor`, `attrs.command`,
+submitter override attrs, upload attrs, `attrs.accesskey`,
 `attrs.aria`, iframe attrs, form validation constraints, and `shadow` roots so
 Go agents receive the same
 contract as the Python and Node parser packages. Action-plan items include

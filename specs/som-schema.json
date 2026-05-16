@@ -152,6 +152,13 @@
             "checked": { "type": "boolean" },
             "group": { "type": "string" },
             "multiple": { "type": "boolean" },
+            "accept": { "type": "string" },
+            "capture": {
+              "oneOf": [
+                { "type": "boolean" },
+                { "type": "string" }
+              ]
+            },
             "options": {
               "type": "array",
               "items": { "$ref": "#/$defs/SelectOption" }
@@ -223,6 +230,11 @@
             "commandfor": { "type": "string" },
             "command": { "type": "string" },
             "popover": { "type": "string" },
+            "formaction": { "type": "string" },
+            "formmethod": { "type": "string" },
+            "formenctype": { "type": "string" },
+            "formtarget": { "type": "string" },
+            "formnovalidate": { "type": "boolean" },
             "minlength": {
               "oneOf": [
                 { "type": "integer" },

@@ -87,6 +87,8 @@ export interface SomElementAttrs {
   checked?: boolean;
   group?: string;
   multiple?: boolean;
+  accept?: string;
+  capture?: boolean | string;
   options?: SelectOption[];
   level?: number;
   alt?: string;
@@ -119,6 +121,11 @@ export interface SomElementAttrs {
   commandfor?: string;
   command?: string;
   popover?: string;
+  formaction?: string;
+  formmethod?: string;
+  formenctype?: string;
+  formtarget?: string;
+  formnovalidate?: boolean;
   minlength?: number | string;
   maxlength?: number | string;
   min?: number | string;

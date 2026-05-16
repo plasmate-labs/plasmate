@@ -95,6 +95,12 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["rel"] = attrs.rel
             if attrs.download is not None:
                 item["download"] = attrs.download
+            if attrs.accept:
+                item["accept"] = attrs.accept
+            if attrs.capture is not None:
+                item["capture"] = attrs.capture
+            if attrs.multiple is not None:
+                item["multiple"] = attrs.multiple
             if attrs.name:
                 item["name"] = attrs.name
             if attrs.autocomplete:
@@ -127,6 +133,16 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["command"] = attrs.command
             if attrs.popover:
                 item["popover"] = attrs.popover
+            if attrs.formaction:
+                item["formaction"] = attrs.formaction
+            if attrs.formmethod:
+                item["formmethod"] = attrs.formmethod
+            if attrs.formenctype:
+                item["formenctype"] = attrs.formenctype
+            if attrs.formtarget:
+                item["formtarget"] = attrs.formtarget
+            if attrs.formnovalidate is not None:
+                item["formnovalidate"] = attrs.formnovalidate
             if attrs.accesskey:
                 item["accesskey"] = attrs.accesskey
             if attrs.spellcheck is not None:

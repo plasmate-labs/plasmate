@@ -63,8 +63,10 @@ const { text } = await generateText({
 `selected`, `current`, `controls`, `haspopup`, `autocomplete`, `inputmode`,
 `enterkeyhint`, `autocapitalize`, `dirname`, `lang`, `dir`, `translate`,
 `spellcheck`, `target`, `rel`,
-`download`, `form`, `list`, `popovertarget`, `popovertargetaction`,
-`commandfor`, `command`, `accesskey`, `aria_placeholder`, `aria_autocomplete`,
+`download`, `accept`, `capture`, `multiple`, `form`, `list`,
+`popovertarget`, `popovertargetaction`, `commandfor`, `command`,
+`formaction`, `formmethod`, `formenctype`, `formtarget`, `formnovalidate`,
+`accesskey`, `aria_placeholder`, `aria_autocomplete`,
 `active_descendant`, `errormessage`,
 `keyshortcuts`, `roledescription`, `busy`, `live`, `atomic`, `relevant`,
 `owns`, `flowto`, `details`, `multiline`, `multiselectable`, `orientation`,
@@ -122,7 +124,8 @@ name, href, input type, group, and placeholder.
 Flattens a raw Plasmate SOM response into compact action targets. It traverses
 nested `children` and `shadow.elements`, copies common action metadata from
 `attrs` (`href`, `name`, `input_type`, `placeholder`, `description`, `required`,
-`disabled`, `readonly`, and `group`), and normalizes availability plus `cache_key` state.
+`disabled`, `readonly`, `accept`, `capture`, `multiple`, form submitter
+overrides, and `group`), and normalizes availability plus `cache_key` state.
 
 ### `preparePlasmateActionPlan(targets, options?)`
 

@@ -683,6 +683,25 @@ stable target identity.
    boolean/string compact target state without changing deterministic
    `cache_key` values.
 
+### 2026-05-16 Upload and Submitter Replay Adjustment
+
+Current browser-agent products are teaching users to reuse validated action
+menus, but file-upload and submit-button flows still fail when agents only see
+generic click/type targets. Stagehand action caching validates current page
+state before replay, and Playwright MCP refs are scoped to the fresh snapshot.
+Plasmate should keep the local-first path by preserving upload constraints and
+per-submit-button overrides in the compact SOM action contract.
+
+1. **Upload constraints are replay guards**: `accept`, `capture`, and input
+   `multiple` should travel through Rust, schema, parser packages, SDKs, and
+   adapters so agents know what file choices are valid.
+2. **Submit buttons can change the request**: `formaction`, `formmethod`,
+   `formenctype`, `formtarget`, and `formnovalidate` should be visible before a
+   cached plan clicks "Save draft" instead of "Submit".
+3. **Cache keys stay focused on identity**: these cues should enrich action
+   validation and prompt context without changing deterministic target
+   `cache_key` values.
+
 ## Architecture
 
 ```
@@ -816,6 +835,16 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 
 ## Current Minor Improvements Logged
 
+- Rust SOM compilation and the JSON Schema now preserve upload replay cues
+  with `accept`, `capture`, and input `multiple`.
+- Rust SOM compilation and the JSON Schema now preserve submitter override
+  cues with `formaction`, `formmethod`, `formenctype`, `formtarget`, and
+  `formnovalidate`.
+- Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and
+  Vercel AI action-plan surfaces now expose upload and submitter cues without
+  changing deterministic action `cache_key` values.
+- The shared action-availability manifest now asserts upload constraints and
+  submitter overrides across parser, SDK, and framework adapter outputs.
 - Cache prefetch extraction walks nested children and shadow-root elements,
   dedupes discovered HTTP(S) URLs, and filters out non-navigation schemes.
 - Cache URL normalization now uses structured URL parsing so host casing is

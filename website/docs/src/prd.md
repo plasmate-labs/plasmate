@@ -104,6 +104,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-16 conformance-gate read: current competitors make reusable browser state sticky only when teams can trust it outside the core engine. Playwright MCP snapshots, Stagehand cached actions, and Browserbase/Firecrawl session workflows all teach users to expect the same action surface wherever they wire agents. Plasmate should keep promoting Rust conformance fixtures into parser and SDK release gates so its broad repo surface acts like one product contract, not a set of drifting libraries.
 
+2026-05-16 upload-and-submitter read: official Playwright MCP snapshots and Stagehand `observe()`/caching docs keep reinforcing that agents need current, validated action metadata before replay. File-upload fields and submit buttons are high-churn SaaS surfaces: allowed MIME/extensions, capture source, multi-file state, and per-button submit overrides decide whether a cached plan is still valid. Plasmate should preserve those cues locally across Rust, schema, SDKs, parser packages, and framework adapters instead of forcing agents back to raw DOM recovery.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -119,6 +121,9 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-16:
+  - The Rust SOM compiler and JSON Schema now preserve upload and submitter replay cues: `accept`, `capture`, input `multiple`, `formaction`, `formmethod`, `formenctype`, `formtarget`, and `formnovalidate`.
+  - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose those cues without changing deterministic action `cache_key` values.
+  - The shared action-availability manifest now asserts upload constraints and submitter overrides so cached upload/form workflows stay synchronized across adapters.
   - The Rust SOM compiler and JSON Schema now preserve element-level locale context: `lang`, `dir`, and `translate`.
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `lang`, `dir`, and `translate` without changing deterministic action `cache_key` values.
   - The shared action-availability manifest and `016-action-semantics` conformance fixture now assert locale-context cues so multilingual and bidirectional form replay stays synchronized across adapters.
@@ -287,6 +292,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Add dependency-cache tuning for the action-manifest job so cross-runtime conformance stays cheap enough to keep required.
 - Extend `016-action-semantics` coverage into adapter context-rendering tests so Browser Use, LangChain, and Vercel AI prove search landmarks, fallback-token menu roles, hidden-content stripping, and locale attrs in prompt-facing output.
 - Promote ARIA relationship-state cases (`aria-controls`, `aria-haspopup`, `aria-owns`, `aria-flowto`, and `aria-details`) from the shared action availability manifest into the broader `015-action-state`/`016-action-semantics` conformance suites.
+- Promote upload and submitter cases (`accept`, `capture`, input `multiple`, `formaction`, `formmethod`, `formenctype`, `formtarget`, and `formnovalidate`) into broader Rust/parser/SDK and adapter conformance fixtures.
 - Promote range and orientation cases (`min`, `max`, `step`, `aria-orientation`, `aria-sort`, and ARIA value state) into broader Rust/parser/SDK and adapter conformance fixtures.
 - Promote ARIA widget affordance cases (`aria-readonly`, `aria-multiline`, and `aria-multiselectable`) into broader Rust/parser/SDK and adapter conformance fixtures.
 - Add compiler/schema conformance for form validation constraints and `aria-invalid`, then promote the shared manifest cases into broader parser, SDK, and adapter fixtures.

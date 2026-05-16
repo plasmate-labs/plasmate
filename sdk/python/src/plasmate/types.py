@@ -106,6 +106,8 @@ class ElementAttrs(BaseModel):
     checked: Optional[bool] = None
     group: Optional[str] = None
     multiple: Optional[bool] = None
+    accept: Optional[str] = None
+    capture: Optional[bool | str] = None
     options: Optional[List[SelectOption]] = None
     level: Optional[int] = Field(default=None, ge=1, le=6)
     alt: Optional[str] = None
@@ -138,6 +140,11 @@ class ElementAttrs(BaseModel):
     commandfor: Optional[str] = None
     command: Optional[str] = None
     popover: Optional[str] = None
+    formaction: Optional[str] = None
+    formmethod: Optional[str] = None
+    formenctype: Optional[str] = None
+    formtarget: Optional[str] = None
+    formnovalidate: Optional[bool] = None
     minlength: Optional[int | str] = None
     maxlength: Optional[int | str] = None
     min: Optional[int | str] = None

@@ -705,6 +705,12 @@
 <li><strong>Quick gates should prove high-risk semantics</strong>: the fast action-manifest command should cover both the shared action target manifest and the focused semantic fixture that guards production-markup tolerance.</li>
 <li><strong>Adapters are the next prompt surface</strong>: Browser Use, LangChain, and Vercel AI should get prompt-rendering checks for the same <code>016-action-semantics</code> cases once parser/SDK parity is stable.</li>
 </ul>
+<h3 id="2026-05-16-upload-and-submitter-replay-adjustment">2026-05-16 Upload and Submitter Replay Adjustment</h3><p>Current browser-agent products are teaching users to reuse validated action menus, but file-upload and submit-button flows still fail when agents only see generic click/type targets. Stagehand action caching validates current page state before replay, and Playwright MCP refs are scoped to the fresh snapshot. Plasmate should keep the local-first path by preserving upload constraints and per-submit-button overrides in the compact SOM action contract.</p>
+<ul>
+<li><strong>Upload constraints are replay guards</strong>: <code>accept</code>, <code>capture</code>, and input <code>multiple</code> should travel through Rust, schema, parser packages, SDKs, and adapters so agents know what file choices are valid.</li>
+<li><strong>Submit buttons can change the request</strong>: <code>formaction</code>, <code>formmethod</code>, <code>formenctype</code>, <code>formtarget</code>, and <code>formnovalidate</code> should be visible before a cached plan clicks &quot;Save draft&quot; instead of &quot;Submit&quot;.</li>
+<li><strong>Cache keys stay focused on identity</strong>: these cues should enrich action validation and prompt context without changing deterministic target <code>cache_key</code> values.</li>
+</ul>
 <h3 id="2026-05-13-keyboard-affordance-action-menu-adjustment">2026-05-13 Keyboard-Affordance Action Menu Adjustment</h3><p>Current Playwright MCP and Stagehand docs keep validating action surfaces that are current, inspectable, and reusable. Browserbase, Browser Use, and Firecrawl add hosted sessions and traces around that same workflow, but Plasmate&#39;s sticky local-first wedge is still a portable action contract that carries browser-like affordances everywhere.</p>
 <ul>
 <li><strong>Native shortcuts are action context</strong>: <code>accesskey</code> should travel through Rust, schema, SDKs, parser packages, and adapters so agents can understand page-provided keyboard activation paths.</li>
@@ -884,6 +890,10 @@
 <li><input checked="" disabled="" type="checkbox"> Python and Node parser tests load the 016-action-semantics expected fixture for search, fallback menu roles, hidden content, and text-entry locale attrs</li>
 <li><input checked="" disabled="" type="checkbox"> Python, Node, and Go SDK tests load the 016-action-semantics expected fixture for the same semantic contract</li>
 <li><input checked="" disabled="" type="checkbox"> Quick action-manifest conformance runs focused parser/SDK 016-action-semantics checks beside the shared action-availability manifest</li>
+<li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve upload accept/capture/multiple cues</li>
+<li><input checked="" disabled="" type="checkbox"> Compact action plans expose upload accept/capture/multiple cues across parser packages, SDKs, and framework adapters</li>
+<li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve submitter override cues</li>
+<li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest asserts upload and submitter cues without changing deterministic action cache keys</li>
 <li><input disabled="" type="checkbox"> Selector-aware SOM cache entries for repeated agent prompts</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
 <li><input disabled="" type="checkbox"> Extend <code>016-action-semantics</code> into Browser Use, LangChain, and Vercel AI prompt-rendering conformance for fallback roles, hidden-state variants, and locale attrs</li>

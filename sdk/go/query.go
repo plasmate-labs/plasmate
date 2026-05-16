@@ -179,6 +179,9 @@ type ActionPlanItem struct {
 	Target           *string     `json:"target,omitempty"`
 	Rel              *string     `json:"rel,omitempty"`
 	Download         interface{} `json:"download,omitempty"`
+	Accept           *string     `json:"accept,omitempty"`
+	Capture          interface{} `json:"capture,omitempty"`
+	Multiple         *bool       `json:"multiple,omitempty"`
 	Name             *string     `json:"name,omitempty"`
 	Autocomplete     *string     `json:"autocomplete,omitempty"`
 	InputMode        *string     `json:"inputmode,omitempty"`
@@ -195,6 +198,11 @@ type ActionPlanItem struct {
 	CommandFor       *string     `json:"commandfor,omitempty"`
 	Command          *string     `json:"command,omitempty"`
 	Popover          *string     `json:"popover,omitempty"`
+	FormAction       *string     `json:"formaction,omitempty"`
+	FormMethod       *string     `json:"formmethod,omitempty"`
+	FormEncType      *string     `json:"formenctype,omitempty"`
+	FormTarget       *string     `json:"formtarget,omitempty"`
+	FormNoValidate   *bool       `json:"formnovalidate,omitempty"`
 	AccessKey        *string     `json:"accesskey,omitempty"`
 	Spellcheck       interface{} `json:"spellcheck,omitempty"`
 	InputType        *string     `json:"input_type,omitempty"`
@@ -305,6 +313,9 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.Target = el.Attrs.Target
 			item.Rel = el.Attrs.Rel
 			item.Download = el.Attrs.Download
+			item.Accept = el.Attrs.Accept
+			item.Capture = el.Attrs.Capture
+			item.Multiple = el.Attrs.Multiple
 			item.Name = el.Attrs.Name
 			item.Autocomplete = el.Attrs.Autocomplete
 			item.InputMode = el.Attrs.InputMode
@@ -321,6 +332,11 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.CommandFor = el.Attrs.CommandFor
 			item.Command = el.Attrs.Command
 			item.Popover = el.Attrs.Popover
+			item.FormAction = el.Attrs.FormAction
+			item.FormMethod = el.Attrs.FormMethod
+			item.FormEncType = el.Attrs.FormEncType
+			item.FormTarget = el.Attrs.FormTarget
+			item.FormNoValidate = el.Attrs.FormNoValidate
 			item.AccessKey = el.Attrs.AccessKey
 			item.Spellcheck = el.Attrs.Spellcheck
 			item.InputType = el.Attrs.InputType

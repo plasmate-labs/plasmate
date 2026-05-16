@@ -89,6 +89,12 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append(f"rel={item['rel']}")
     if "download" in item:
         flags.append(f"download={item['download']}")
+    if item.get("accept"):
+        flags.append(f"accept={item['accept']}")
+    if "capture" in item:
+        flags.append(f"capture={item['capture']}")
+    if "multiple" in item:
+        flags.append(f"multiple={item['multiple']}")
     if item.get("input_type"):
         flags.append(f"type={item['input_type']}")
     if item.get("autocomplete"):
@@ -117,9 +123,15 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         "commandfor",
         "command",
         "popover",
+        "formaction",
+        "formmethod",
+        "formenctype",
+        "formtarget",
     ):
         if item.get(command_key):
             flags.append(f"{command_key}={item[command_key]}")
+    if "formnovalidate" in item:
+        flags.append(f"formnovalidate={item['formnovalidate']}")
     if item.get("accesskey"):
         flags.append(f"accesskey={item['accesskey']}")
     if "spellcheck" in item:

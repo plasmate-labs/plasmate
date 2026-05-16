@@ -238,6 +238,11 @@ field MUST be omitted when the object would be empty.
 | Attribute  | Type    | Description |
 |------------|---------|-------------|
 | `disabled` | boolean | Present and `true` when the button is disabled. |
+| `formaction` | string | Submitter-specific form action override. |
+| `formmethod` | string | Submitter-specific form method override. |
+| `formenctype` | string | Submitter-specific encoding override. |
+| `formtarget` | string | Submitter-specific target browsing context. |
+| `formnovalidate` | boolean | Present and `true` when the submitter bypasses form validation. |
 
 #### `text_input`
 
@@ -260,6 +265,9 @@ field MUST be omitted when the object would be empty.
 | `translate` | boolean/string | Translation preference from the source element. `no`/`false` become `false`; `yes`/`true`/empty become `true`; other values are preserved as strings. |
 | `form` | string | Associated form id, when a form-associated control uses the `form` attribute. |
 | `list` | string | Associated datalist id, when an input uses the `list` attribute. |
+| `accept` | string | Accepted file types for file inputs. |
+| `capture` | boolean/string | File capture hint. Empty/`true` become `true`, `false` becomes `false`, and other source values such as `user`/`environment` are preserved as strings. |
+| `multiple` | boolean | Present and `true` when an input allows multiple values/files. |
 | `minlength` | integer/string | Minimum text length constraint. Invalid source values are preserved as strings. |
 | `maxlength` | integer/string | Maximum text length constraint. Invalid source values are preserved as strings. |
 | `min`       | integer/string | Minimum range/value constraint. Invalid source values are preserved as strings. |

@@ -434,6 +434,15 @@ agents. Plasmate should keep promoting Rust conformance fixtures into parser
 and SDK release gates so its broad repo surface acts like one product contract,
 not a set of drifting libraries.
 
+2026-05-16 upload-and-submitter read: official Playwright MCP snapshots and
+Stagehand `observe()`/caching docs keep reinforcing that agents need current,
+validated action metadata before replay. File-upload fields and submit buttons
+are high-churn SaaS surfaces: allowed MIME/extensions, capture source,
+multi-file state, and per-button submit overrides decide whether a cached plan
+is still valid. Plasmate should preserve those cues locally across Rust,
+schema, SDKs, parser packages, and framework adapters instead of forcing
+agents back to raw DOM recovery.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -460,6 +469,15 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-16:
+  - The Rust SOM compiler and JSON Schema now preserve upload and submitter
+    replay cues: `accept`, `capture`, input `multiple`, `formaction`,
+    `formmethod`, `formenctype`, `formtarget`, and `formnovalidate`.
+  - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
+    AI action-plan surfaces now expose those cues without changing
+    deterministic action `cache_key` values.
+  - The shared action-availability manifest now asserts upload constraints and
+    submitter overrides so cached upload/form workflows stay synchronized
+    across adapters.
   - The Rust SOM compiler and JSON Schema now preserve element-level locale
     context: `lang`, `dir`, and `translate`.
   - Parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel
@@ -908,6 +926,10 @@ and adapter docs over one-off integration logic.
 - Promote link navigation cases (`target`, `rel`, and `download`) from the
   shared action availability manifest into broader Rust/parser/SDK and adapter
   conformance fixtures.
+- Promote upload and submitter cases (`accept`, `capture`, input `multiple`,
+  `formaction`, `formmethod`, `formenctype`, `formtarget`, and
+  `formnovalidate`) from the shared action availability manifest into broader
+  Rust/parser/SDK and adapter conformance fixtures.
 - Promote range and orientation cases (`min`, `max`, `step`,
   `aria-orientation`, `aria-sort`, and ARIA value state) into broader
   Rust/parser/SDK and adapter conformance fixtures.

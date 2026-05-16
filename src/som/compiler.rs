@@ -1653,6 +1653,21 @@ fn build_element_attrs(
             if let Some(ph) = attrs.iter().find(|(n, _)| n == "placeholder") {
                 map.insert("placeholder".into(), json!(ph.1));
             }
+            if let Some((_, accept)) = attrs.iter().find(|(n, _)| n == "accept") {
+                map.insert("accept".into(), json!(accept));
+            }
+            if let Some((_, capture)) = attrs.iter().find(|(n, _)| n == "capture") {
+                let normalized = capture.trim().to_ascii_lowercase();
+                let capture = match normalized.as_str() {
+                    "" | "true" => json!(true),
+                    "false" => json!(false),
+                    _ => json!(capture),
+                };
+                map.insert("capture".into(), capture);
+            }
+            if has_attr(attrs, "multiple") {
+                map.insert("multiple".into(), json!(true));
+            }
             if has_attr(attrs, "required") {
                 map.insert("required".into(), json!(true));
             }
@@ -1691,6 +1706,9 @@ fn build_element_attrs(
         "button" => {
             if inherited_disabled || has_attr(attrs, "disabled") {
                 map.insert("disabled".into(), json!(true));
+            }
+            if has_attr(attrs, "formnovalidate") {
+                map.insert("formnovalidate".into(), json!(true));
             }
         }
         "select" => {
@@ -1874,10 +1892,17 @@ fn build_element_attrs(
         "commandfor",
         "command",
         "popover",
+        "formaction",
+        "formmethod",
+        "formenctype",
+        "formtarget",
     ] {
         if let Some((_, value)) = attrs.iter().find(|(n, _)| n == key) {
             map.insert(key.into(), json!(value));
         }
+    }
+    if has_attr(attrs, "formnovalidate") {
+        map.insert("formnovalidate".into(), json!(true));
     }
     for key in ["minlength", "maxlength", "min", "max"] {
         if let Some((_, value)) = attrs.iter().find(|(n, _)| n == key) {

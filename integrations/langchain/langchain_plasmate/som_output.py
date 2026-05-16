@@ -232,15 +232,27 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append(f'[rel="{attrs["rel"]}"]')
     if "download" in attrs:
         flags.append(f'[download="{attrs["download"]}"]')
+    if attrs.get("accept"):
+        flags.append(f'[accept="{attrs["accept"]}"]')
+    if "capture" in attrs:
+        flags.append(f'[capture="{attrs["capture"]}"]')
+    if "multiple" in attrs:
+        flags.append(f'[multiple="{attrs["multiple"]}"]')
     for command_key in (
         "popovertarget",
         "popovertargetaction",
         "commandfor",
         "command",
         "popover",
+        "formaction",
+        "formmethod",
+        "formenctype",
+        "formtarget",
     ):
         if attrs.get(command_key):
             flags.append(f'[{command_key}="{attrs[command_key]}"]')
+    if "formnovalidate" in attrs:
+        flags.append(f'[formnovalidate="{attrs["formnovalidate"]}"]')
     if attrs.get("accesskey"):
         flags.append(f'[accesskey="{attrs["accesskey"]}"]')
     if "spellcheck" in attrs:
