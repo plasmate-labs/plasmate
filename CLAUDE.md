@@ -78,11 +78,12 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Commit/push state: normal `git commit` was blocked by the linked worktree
   `index.lock`, so created alternate-index commit `780f165` (`chore: add
   action surface selectors`) and pushed review branch
-  `codex/plasmate-improvements-2026-05-16-selector-actions`. Direct non-force
-  push to `master` was rejected with `fetch first`; `git fetch`/`ls-remote`
-  still intermittently fail DNS for `github.com`, and `gh` still reports an
-  invalid token. Remote merge remains blocked until the latest `master` can be
-  fetched or GitHub API auth is repaired.
+  `codex/plasmate-improvements-2026-05-16-selector-actions`. Follow-up
+  2026-05-16T11:57:43Z: GitHub auth and fetch recovered, the branch was
+  attached to the real worktree, rebased onto `origin/master` `9884b74`, and
+  verified with `cargo build --quiet`, `cargo test --quiet`, and
+  `cargo clippy --quiet` (warnings only). The rebased branch was force-pushed
+  with lease, then `master` was fast-forwarded to `7d11348`.
 
 ### 2026-05-16T02:05:58Z - Plasmate Improvements Automation
 
