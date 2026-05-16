@@ -83,6 +83,7 @@ type ElementAttrs struct {
 	SourceRole      *string        `json:"source_role,omitempty"`
 	TestID          *string        `json:"test_id,omitempty"`
 	Spellcheck      interface{}    `json:"spellcheck,omitempty"`
+	Draggable       interface{}    `json:"draggable,omitempty"`
 	Name            *string        `json:"name,omitempty"`
 	Accept          *string        `json:"accept,omitempty"`
 	Capture         interface{}    `json:"capture,omitempty"`
@@ -153,6 +154,8 @@ type AriaState struct {
 	Level            *string     `json:"level,omitempty"`
 	PosInSet         *string     `json:"posinset,omitempty"`
 	SetSize          *string     `json:"setsize,omitempty"`
+	Grabbed          *bool       `json:"grabbed,omitempty"`
+	DropEffect       *string     `json:"dropeffect,omitempty"`
 	ValueMin         *string     `json:"valuemin,omitempty"`
 	ValueMax         *string     `json:"valuemax,omitempty"`
 	ValueNow         *string     `json:"valuenow,omitempty"`

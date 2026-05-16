@@ -399,6 +399,14 @@ Official docs continue to split reusable action identity from current-page handl
 - **Provenance must stay non-cache**: these fields help live DOM resolution and diagnostics, but should not change `cache_key` values because they can churn independently of semantic target identity.
 - **Adapters should render the same cues**: Browser Use, LangChain, Vercel AI, parser packages, and SDKs should expose `title`, `source_role`, and `test_id` together so no integration needs raw DOM recovery for common app-authored anchors.
 
+### 2026-05-15 Drag/Drop Replay Adjustment
+
+Current competitor docs keep tying repeat automation to validated current page state: Playwright MCP refs are scoped to fresh snapshots, Stagehand/Browserbase action caching depends on DOM validation, and Browser Use/Firecrawl package hosted sessions plus skills for recurring workflows. Plasmate should keep its local-first replay wedge by preserving drag/drop state in the same compact action targets agents already cache.
+
+- **Drag/drop is a replay cue**: native `draggable`, ARIA `grabbed`, and ARIA `dropeffect` should travel through Rust SOM, schema, parser packages, SDKs, and framework prompt renderers.
+- **Do not destabilize cache keys**: drag state can change while the semantic target stays the same, so it should be validation context rather than deterministic action-key material.
+- **Boards and builders are sticky SaaS cases**: kanban boards, upload builders, scheduling grids, and workflow canvases need drag/drop cues before local replay can compete with hosted action-memory products.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -598,6 +606,9 @@ Official docs continue to split reusable action identity from current-page handl
 - [x] Shared action-availability manifest asserts locator provenance for parser, SDK, and framework adapters
 - [x] Python/Node parser packages, Python/Node SDKs, and Go SDK expose compact action target lookup/index helpers by id, cache_key, html_id, and test_id
 - [x] Parser and SDK tests cover enabled-only action plans plus replay lookup by cache key, DOM id, and test id
+- [x] Rust SOM attrs and schema preserve draggable, aria-grabbed, and aria-dropeffect replay cues
+- [x] Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action plans surface draggable, grabbed, and dropeffect without changing deterministic cache keys
+- [x] Shared action-availability manifest asserts drag/drop replay cues across parser, SDK, and framework adapters
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
@@ -618,6 +629,7 @@ Official docs continue to split reusable action identity from current-page handl
 - [ ] Promote inert availability cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures
+- [ ] Promote drag/drop replay cues into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures
 - [ ] Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners
 - [x] Promote adapter availability checks into shared cross-adapter fixtures

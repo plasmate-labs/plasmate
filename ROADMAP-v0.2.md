@@ -875,6 +875,25 @@ inside ordinary SDK code.
    and Vercel AI should consume the same lookup/index contract so cached local
    workflows stay portable across the repo surface.
 
+### 2026-05-15 Drag/Drop Replay Adjustment
+
+Current competitor docs keep tying repeat automation to validated current page
+state: Playwright MCP refs are scoped to fresh snapshots, Stagehand/Browserbase
+action caching depends on DOM validation, and Browser Use/Firecrawl package
+hosted sessions plus skills for recurring workflows. Plasmate should keep its
+local-first replay wedge by preserving drag/drop state in the same compact
+action targets agents already cache.
+
+1. **Drag/drop is a replay cue**: native `draggable`, ARIA `grabbed`, and ARIA
+   `dropeffect` should travel through Rust SOM, schema, parser packages, SDKs,
+   and framework prompt renderers.
+2. **Do not destabilize cache keys**: drag state can change while the semantic
+   target stays the same, so it should be validation context rather than
+   deterministic action-key material.
+3. **Boards and builders are sticky SaaS cases**: kanban boards, upload
+   builders, scheduling grids, and workflow canvases need drag/drop cues before
+   local replay can compete with hosted action-memory products.
+
 ## Architecture
 
 ```
@@ -1324,11 +1343,18 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Python/Node parser packages, Python/Node SDKs, and Go SDK now expose compact
   action target lookup/index helpers by SOM id, `cache_key`, `html_id`, and
   `test_id`, plus enabled-only plans for replay menus.
+- Rust SOM attrs and schema now preserve drag/drop replay context with
+  `draggable`, `aria-grabbed`, and `aria-dropeffect`.
+- Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+  and Vercel AI action-plan surfaces now expose `draggable`, `grabbed`, and
+  `dropeffect` without changing deterministic action `cache_key` values.
+- The shared action-availability manifest now asserts drag/drop replay cues
+  across parser, SDK, and framework adapter outputs.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, `html_id` DOM-provenance cases, and
   action target lookup/index helpers into broader fixtures alongside
-  text-entry, ARIA widget, range, and set-position cases.
+  drag/drop, text-entry, ARIA widget, range, and set-position cases.
 
 ## Dependencies to Add
 

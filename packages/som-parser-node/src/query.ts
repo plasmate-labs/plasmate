@@ -127,6 +127,7 @@ export interface ActionPlanItem {
   source_role?: string;
   test_id?: string;
   spellcheck?: boolean | string;
+  draggable?: boolean | string;
   input_type?: string;
   value?: string;
   placeholder?: string;
@@ -165,6 +166,8 @@ export interface ActionPlanItem {
   level?: string;
   posinset?: string;
   setsize?: string;
+  grabbed?: boolean;
+  dropeffect?: string;
   valuemin?: string;
   valuemax?: string;
   valuenow?: string;
@@ -280,6 +283,7 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.source_role) item.source_role = el.attrs.source_role;
     if (el.attrs?.test_id) item.test_id = el.attrs.test_id;
     if (el.attrs?.spellcheck !== undefined) item.spellcheck = el.attrs.spellcheck;
+    if (el.attrs?.draggable !== undefined) item.draggable = el.attrs.draggable;
     if (el.attrs?.input_type) item.input_type = el.attrs.input_type;
     if (el.attrs?.value) item.value = el.attrs.value;
     if (el.attrs?.placeholder) item.placeholder = el.attrs.placeholder;
@@ -323,6 +327,8 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.aria?.level !== undefined) item.level = el.attrs.aria.level;
     if (el.attrs?.aria?.posinset !== undefined) item.posinset = el.attrs.aria.posinset;
     if (el.attrs?.aria?.setsize !== undefined) item.setsize = el.attrs.aria.setsize;
+    if (el.attrs?.aria?.grabbed !== undefined) item.grabbed = el.attrs.aria.grabbed;
+    if (el.attrs?.aria?.dropeffect !== undefined) item.dropeffect = el.attrs.aria.dropeffect;
     if (el.attrs?.aria?.valuemin !== undefined) item.valuemin = el.attrs.aria.valuemin;
     if (el.attrs?.aria?.valuemax !== undefined) item.valuemax = el.attrs.aria.valuemax;
     if (el.attrs?.aria?.valuenow !== undefined) item.valuenow = el.attrs.aria.valuenow;

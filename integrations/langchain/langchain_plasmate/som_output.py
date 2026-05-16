@@ -279,6 +279,8 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append(f'[test_id="{attrs["test_id"]}"]')
     if "spellcheck" in attrs:
         flags.append(f'[spellcheck="{attrs["spellcheck"]}"]')
+    if "draggable" in attrs:
+        flags.append(f'[draggable="{attrs["draggable"]}"]')
     for constraint_key in ("minlength", "maxlength", "min", "max", "step", "pattern"):
         if constraint_key in attrs:
             flags.append(f'[{constraint_key}="{attrs[constraint_key]}"]')
@@ -315,6 +317,8 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
             "level",
             "posinset",
             "setsize",
+            "grabbed",
+            "dropeffect",
             "valuemin",
             "valuemax",
             "valuenow",

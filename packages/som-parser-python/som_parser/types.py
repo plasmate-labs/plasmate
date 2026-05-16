@@ -120,6 +120,7 @@ class SomElementAttrs(BaseModel):
     source_role: Optional[str] = None
     test_id: Optional[str] = None
     spellcheck: Optional[bool | str] = None
+    draggable: Optional[bool | str] = None
     name: Optional[str] = None
     accept: Optional[str] = None
     capture: Optional[bool | str] = None

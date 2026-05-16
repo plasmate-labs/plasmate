@@ -236,6 +236,12 @@
                 { "type": "string" }
               ]
             },
+            "draggable": {
+              "oneOf": [
+                { "type": "boolean" },
+                { "type": "string" }
+              ]
+            },
             "name": { "type": "string" },
             "accept": { "type": "string" },
             "capture": {
@@ -394,6 +400,8 @@
         "level": { "type": "string" },
         "posinset": { "type": "string" },
         "setsize": { "type": "string" },
+        "grabbed": { "type": "boolean" },
+        "dropeffect": { "type": "string" },
         "valuemin": { "type": "string" },
         "valuemax": { "type": "string" },
         "valuenow": { "type": "string" },

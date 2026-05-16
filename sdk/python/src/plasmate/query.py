@@ -188,6 +188,8 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["test_id"] = attrs.test_id
             if attrs.spellcheck is not None:
                 item["spellcheck"] = attrs.spellcheck
+            if attrs.draggable is not None:
+                item["draggable"] = attrs.draggable
             if attrs.input_type:
                 item["input_type"] = attrs.input_type
             if attrs.value:
@@ -242,6 +244,8 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                     "level",
                     "posinset",
                     "setsize",
+                    "grabbed",
+                    "dropeffect",
                     "valuemin",
                     "valuemax",
                     "valuenow",

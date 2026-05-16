@@ -49,6 +49,42 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-16T00:08:51Z - Plasmate Improvements Automation
+
+- Git sync: required GitHub refresh was retried. The automation worktree still
+  cannot write its linked `FETCH_HEAD`, and the primary checkout still cannot
+  resolve `github.com`, so work continued by applying the newest available
+  local remote-tracking diff (`codex/action-target-replay-lookup`) directly to
+  the worktree before adding this run's changes.
+- Market direction: current docs continue to favor reusable structured action
+  surfaces over another hosted browser fleet. Playwright MCP keeps refs scoped
+  to fresh accessibility snapshots; Browserbase/Stagehand markets validated
+  action caching and DOM fingerprints; Browser Use and Firecrawl package
+  hosted sessions, profiles, skills, and browser sandboxes. Plasmate should
+  keep improving local replay validation context across its broad SDK and
+  adapter surface.
+- Code changes: Rust SOM attrs and schema now preserve drag/drop replay cues
+  with native `draggable`, ARIA `grabbed`, and ARIA `dropeffect`. Python/Node
+  parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI
+  action-plan surfaces now expose those cues without changing deterministic
+  action `cache_key` values.
+- Fixture/docs changes: the shared action-availability fixture now asserts
+  drag/drop replay context, and PRD/roadmap docs record the reason: kanban
+  boards, upload builders, scheduling grids, and workflow canvases need more
+  than cached click identity to validate local replay.
+- Verification passed: `rustfmt --check src/som/compiler.rs`, JSON fixture and
+  schema parse checks, touched Python syntax compile, `git diff --check`,
+  focused Rust drag-cue test, `cargo build`, `cargo test --lib --quiet` (258),
+  Python parser tests (72), Python SDK query tests (40), Browser Use fixture
+  test, LangChain fixture test, and Go SDK tests.
+- Verification gaps: full `cargo test --quiet` still fails in sandboxed AWP
+  integration tests because `TcpListener::bind("127.0.0.1:0")` returns
+  `Operation not permitted`; Node parser, Node SDK, and Vercel AI tests remain
+  blocked by missing local dev dependencies (`vitest`, `tsc`, `tsup`); website
+  docs generation remains blocked by missing `marked`.
+- Commit/push state: pending at this entry until the alternate-index commit and
+  push/merge attempts complete.
+
 ### 2026-05-15T23:12:05Z - Plasmate Improvements Automation
 
 - Git sync: latest pull was retried from the automation worktree and failed

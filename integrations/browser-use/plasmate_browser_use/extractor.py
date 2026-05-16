@@ -159,6 +159,8 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append(f"test_id={item['test_id']}")
     if "spellcheck" in item:
         flags.append(f"spellcheck={item['spellcheck']}")
+    if "draggable" in item:
+        flags.append(f"draggable={item['draggable']}")
     if item.get("value"):
         flags.append(f"value={item['value']}")
     for constraint_key in ("minlength", "maxlength", "min", "max", "step", "pattern"):
@@ -194,6 +196,8 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         "level",
         "posinset",
         "setsize",
+        "grabbed",
+        "dropeffect",
         "valuemin",
         "valuemax",
         "valuenow",

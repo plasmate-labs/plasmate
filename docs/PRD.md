@@ -522,6 +522,15 @@ semantic targets while surfacing developer-authored anchors (`title`, raw
 `role`, and test locators) as non-cache provenance so local replay and debugging
 work without a hosted selector store.
 
+2026-05-15 drag/drop action read: the current browser-agent market is still
+moving toward validated repeat actions. Playwright MCP uses current
+accessibility snapshots and refs, Stagehand/Browserbase markets cached actions
+validated against DOM fingerprints, and Browser Use/Firecrawl make hosted
+sessions and skills easy to buy. Plasmate should keep the local-first replay
+wedge, but compact action targets need drag/drop state for kanban boards,
+upload builders, scheduling grids, and no-code workflow canvases where a
+cached click is not enough context.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -548,6 +557,15 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-15:
+  - Rust SOM attrs and JSON Schema now preserve drag/drop action cues:
+    native `draggable`, ARIA `grabbed`, and ARIA `dropeffect`.
+  - Python and Node parser packages, Python/Node/Go SDKs, Browser Use,
+    LangChain, and Vercel AI now carry those drag/drop cues through compact
+    action targets and prompt renderers without changing deterministic
+    `cache_key` values.
+  - The shared action-availability manifest now asserts drag/drop replay
+    context so cross-runtime adapters stay aligned for board, builder, and
+    scheduling UIs.
   - Python and Node parser packages, Python/Node SDKs, and Go SDK now expose
     compact action-plan replay helpers: enabled-only plans, indexes by SOM id,
     deterministic `cache_key`, `html_id`, and `test_id`, plus direct
@@ -1138,6 +1156,9 @@ and adapter docs over one-off integration logic.
 - Promote compact action target lookup/index helpers into Browser Use,
   LangChain, and Vercel AI so framework integrations can resolve replay
   targets by `cache_key`, `html_id`, and `test_id` without bespoke scans.
+- Promote drag/drop replay cues (`draggable`, `aria-grabbed`, and
+  `aria-dropeffect`) into broader Rust/parser/SDK and adapter conformance
+  fixtures for board, builder, and scheduling workflows.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and
   `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures
   once the shared action manifest remains stable.

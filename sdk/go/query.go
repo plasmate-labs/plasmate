@@ -227,6 +227,7 @@ type ActionPlanItem struct {
 	SourceRole        *string     `json:"source_role,omitempty"`
 	TestID            *string     `json:"test_id,omitempty"`
 	Spellcheck        interface{} `json:"spellcheck,omitempty"`
+	Draggable         interface{} `json:"draggable,omitempty"`
 	InputType         *string     `json:"input_type,omitempty"`
 	Value             *string     `json:"value,omitempty"`
 	Placeholder       *string     `json:"placeholder,omitempty"`
@@ -265,6 +266,8 @@ type ActionPlanItem struct {
 	Level             *string     `json:"level,omitempty"`
 	PosInSet          *string     `json:"posinset,omitempty"`
 	SetSize           *string     `json:"setsize,omitempty"`
+	Grabbed           *bool       `json:"grabbed,omitempty"`
+	DropEffect        *string     `json:"dropeffect,omitempty"`
 	ValueMin          *string     `json:"valuemin,omitempty"`
 	ValueMax          *string     `json:"valuemax,omitempty"`
 	ValueNow          *string     `json:"valuenow,omitempty"`
@@ -382,6 +385,7 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.SourceRole = el.Attrs.SourceRole
 			item.TestID = el.Attrs.TestID
 			item.Spellcheck = el.Attrs.Spellcheck
+			item.Draggable = el.Attrs.Draggable
 			item.InputType = el.Attrs.InputType
 			item.Value = el.Attrs.Value
 			item.Placeholder = el.Attrs.Placeholder
@@ -428,6 +432,8 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.Level = el.Attrs.Aria.Level
 				item.PosInSet = el.Attrs.Aria.PosInSet
 				item.SetSize = el.Attrs.Aria.SetSize
+				item.Grabbed = el.Attrs.Aria.Grabbed
+				item.DropEffect = el.Attrs.Aria.DropEffect
 				item.ValueMin = el.Attrs.Aria.ValueMin
 				item.ValueMax = el.Attrs.Aria.ValueMax
 				item.ValueNow = el.Attrs.Aria.ValueNow
