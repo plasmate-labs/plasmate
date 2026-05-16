@@ -70,13 +70,18 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   roadmap, and website doc sources now shift the next step from wiring daemon
   selector cache to exposing daemon cache observability and extending reuse into
   MCP/session paths.
-- Verification: `RUSTY_V8_ARCHIVE=/Users/steve/Git/plasmate/target/debug/gn_out/obj/librusty_v8.a
-  cargo test daemon::tests --quiet` passed, as did the same-env
-  `cargo check --quiet` (pre-existing warnings only). Initial test/check
-  attempts without `RUSTY_V8_ARCHIVE` failed because DNS could not download the
-  `rusty_v8` static archive.
-- Commit/push state: not yet committed at this checkpoint; build and broader
-  tests still need to be run before pushing/merging.
+- Verification: after pointing `RUSTY_V8_ARCHIVE` at the primary checkout's
+  local V8 archive, `cargo test daemon::tests --quiet`, `cargo check --quiet`,
+  `cargo build --quiet`, `cargo test --lib --quiet` (268 tests), and
+  `cargo clippy --quiet` passed with pre-existing warnings. `git diff --check`
+  and `node website/build.mjs` passed using the primary checkout's local
+  `marked` dependency. Full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`.
+- Commit/push state: created alternate-index commit `44b2933` (`chore: wire
+  daemon selector som cache`), pushed review branch
+  `codex/plasmate-improvements-2026-05-16-daemon-selector-cache`, and
+  fast-forwarded remote `master` from `538c087` to `44b2933`.
 
 ### 2026-05-16T12:08:37Z - Plasmate Improvements Automation
 
