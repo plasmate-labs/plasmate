@@ -83,6 +83,13 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Verification gap: full `cargo test --quiet` still fails only in
   `tests/awp_integration_test.rs` because this sandbox denies local listener
   setup with `Operation not permitted`.
+- Commit/push state: local implementation commit `50ae928` was pushed to
+  `origin/codex/plasmate-improvements-2026-05-16-navigation-context`. Direct
+  push to `origin/master` was rejected as non-fast-forward; the fetch needed
+  to rebase/merge still fails DNS for `github.com`. GitHub connector PR
+  creation and non-forced `master` ref update both failed with `403 Resource
+  not accessible by integration`, so remote merge remains blocked without a
+  fresh fetch or maintainer-side PR/merge.
 
 ### 2026-05-16T11:13:41Z - Plasmate Improvements Automation
 
