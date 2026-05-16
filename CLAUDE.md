@@ -82,6 +82,11 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Pending next step: propagate grouped role/action target helpers to Browser
   Use, LangChain, Vercel AI, and Go, then add the grouped buckets to the shared
   action-manifest conformance script.
+- Commit/push state: normal `git add` is still blocked by linked worktree
+  `index.lock` permissions, so alternate-index commit `82510cb` (`chore: group
+  action targets by role and action`) was pushed to
+  `origin/codex/plasmate-improvements-2026-05-16-role-action-grouping` and
+  fast-forwarded to remote `master`.
 
 ### 2026-05-16T22:11:50Z - Plasmate Improvements Automation
 
