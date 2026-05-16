@@ -83,12 +83,13 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   AWP integration tests because local listener setup returns `Operation not
   permitted`. Whole-repo `cargo fmt --check` still reports unrelated
   pre-existing formatting drift outside the touched files.
-- Commit/push state: commit `13a7d5f` (`chore: expose upload action replay
-  cues`) was pushed to `origin/codex/plasmate-improvements-2026-05-16`.
-  Direct push to `origin/master` was rejected with `fetch first`; retrying
-  `git fetch origin master` failed DNS resolution for `github.com`, and
-  `gh pr create` could not reach `api.github.com`. There is no `main` branch
-  in this checkout; `origin/HEAD` points at `origin/master`.
+- Commit/push state: amended commit `ab8fabf` (`chore: expose upload action
+  replay cues`) was pushed to
+  `origin/codex/plasmate-improvements-2026-05-16`. Direct push to
+  `origin/master` was rejected with `fetch first`; retrying `git fetch origin
+  master` failed DNS resolution for `github.com`, and `gh pr create` could
+  not reach `api.github.com`. There is no `main` branch in this checkout;
+  `origin/HEAD` points at `origin/master`.
 
 ### 2026-05-16T08:08:15Z - Plasmate Improvements Automation
 
