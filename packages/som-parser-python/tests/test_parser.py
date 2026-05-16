@@ -132,6 +132,24 @@ def _load_action_availability_fixture():
     return parse_som(som_payload), expected["action_targets"]
 
 
+def _load_action_semantics_fixture():
+    payload = json.loads(
+        (REPO_ROOT / "specs" / "conformance" / "016-action-semantics.expected.json").read_text()
+    )
+    payload.pop("$description", None)
+    for region_index, region in enumerate(payload["regions"]):
+        region.setdefault("id", f"r_action_semantics_{region_index}")
+        for element_index, element in enumerate(region.get("elements", [])):
+            element.setdefault("id", f"e_action_semantics_{region_index}_{element_index}")
+    payload["meta"] = {
+        "html_bytes": 0,
+        "som_bytes": 0,
+        "element_count": sum(len(region.get("elements", [])) for region in payload["regions"]),
+        "interactive_count": payload["meta"]["interactive_count"],
+    }
+    return parse_som(payload)
+
+
 @pytest.fixture
 def som() -> Som:
     return parse_som(FIXTURE_SOM)
@@ -217,6 +235,28 @@ class TestParseSom:
         form = som.regions[2]
         assert form.action == "/search"
         assert form.method == "GET"
+
+    def test_action_semantics_conformance_fixture(self):
+        som = _load_action_semantics_fixture()
+
+        assert som.regions[0].role == RegionRole.NAVIGATION
+        assert som.regions[0].label == "Product search"
+        assert [el.label for el in find_by_role(som, ElementRole.CHECKBOX)] == ["Compact mode"]
+        assert [el.label for el in find_by_role(som, ElementRole.RADIO)] == ["Annual billing"]
+
+        reply = next(el for el in get_inputs(som) if el.label == "Reply")
+        assert reply.attrs is not None
+        assert reply.attrs.spellcheck is False
+        assert reply.attrs.autocapitalize == "sentences"
+        assert reply.attrs.dirname == "reply.dir"
+        assert reply.attrs.lang == "ar"
+        assert reply.attrs.dir == "rtl"
+        assert reply.attrs.translate is False
+        assert reply.attrs.aria == {"placeholder": "Write a response"}
+
+        text = get_text(som)
+        assert "Visible preferences copy" in text
+        assert "Hidden stylesheet copy" not in text
 
 
 class TestIsValidSom:

@@ -49,6 +49,47 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-16T08:08:15Z - Plasmate Improvements Automation
+
+- Git sync: the detached automation worktree still cannot write shared
+  worktree git metadata (`FETCH_HEAD` / `index.lock`). Retrying from the
+  primary checkout still cannot resolve `github.com` over SSH, so this run
+  continued from the local `codex/plasmate-improvements-2026-05-16` branch at
+  `88053a5`. There is no `main` branch; `origin/HEAD` points at
+  `origin/master`.
+- Market direction: current official docs and recent browser-agent discourse
+  still favor compact, validated structured state over a hosted-browser pivot.
+  Playwright MCP documents accessibility snapshots as the current action
+  surface, Browserbase/Stagehand emphasize cached/self-healing actions and
+  observability, Firecrawl Interact resumes scrape sessions for actions, and
+  Browser Use Cloud sells persistent sessions/profiles. Plasmate should keep
+  deepening local SOM conformance across its broad SDK/parser/integration
+  surface.
+- Code/test changes: Python and Node parser packages now load the
+  `016-action-semantics` expected fixture, normalize spec-only ids/meta for
+  typed parsers, and assert search landmarks, fallback menu checkbox/radio
+  roles, hidden-content stripping, and text-entry locale attrs.
+- SDK changes: Python, Node, and Go SDK tests now read the same
+  `016-action-semantics` expected fixture so the semantic contract is verified
+  in client libraries, not only the Rust compiler test.
+- Release-gate changes: `./scripts/action-manifest-conformance.sh --quick`
+  now runs focused parser/SDK `016-action-semantics` checks alongside the
+  shared action-availability manifest.
+- Docs changes: PRD and roadmap now record the conformance-gate rationale,
+  completed parser/SDK fixture promotion, and the next adapter prompt-rendering
+  coverage step.
+- Verification passed: focused Python parser, Python SDK, Go SDK, Node parser,
+  and Node SDK `016-action-semantics` checks; `node website/build.mjs`;
+  `./scripts/action-manifest-conformance.sh --quick`; `--full`;
+  `CARGO_TARGET_DIR=/Users/steve/Git/plasmate/target cargo build`;
+  `cargo test --lib -- --test-threads=1` (257 tests); non-socket integration
+  suites `som_compiler_test`, `som_improvements_test`, `plugin_test`, and
+  `tls_integration_test`; and `git diff --check`.
+- Verification blocked: full `cargo test -- --test-threads=1` still fails in
+  `tests/awp_integration_test.rs` because the sandbox denies local listener
+  setup with `Operation not permitted`; the library and non-socket integration
+  suites passed.
+
 ### 2026-05-16T07:11:48Z - Plasmate Improvements Automation
 
 - Git sync: the detached automation worktree could not write shared worktree

@@ -326,6 +326,14 @@ Current browser-agent tools keep making compact structured state the replay surf
 - **Text direction prevents bad typing**: `dir` should surface as compact target context for right-to-left and bidirectional workflows.
 - **Translation policy matters**: `translate` should be visible without changing deterministic `cache_key` values, so cached plans can avoid rewriting product names, legal terms, or user-entered values marked as non-translatable.
 
+### 2026-05-16 Action-Semantics Release-Gate Adjustment
+
+Competitors are making browser-agent state reusable through snapshots, cached actions, and session traces, but users only feel that reliability when the same contract survives in client libraries. Plasmate should keep converting Rust conformance fixtures into parser and SDK gates before treating semantic fixes as shipped product behavior.
+
+- **Rust fixtures should reach application code**: `016-action-semantics` now needs parser and SDK coverage for search landmarks, fallback menu roles, hidden-content stripping, and locale/text-entry attrs.
+- **Quick gates should prove high-risk semantics**: the fast action-manifest command should cover both the shared action target manifest and the focused semantic fixture that guards production-markup tolerance.
+- **Adapters are the next prompt surface**: Browser Use, LangChain, and Vercel AI should get prompt-rendering checks for the same `016-action-semantics` cases once parser/SDK parity is stable.
+
 ### 2026-05-13 Keyboard-Affordance Action Menu Adjustment
 
 Current Playwright MCP and Stagehand docs keep validating action surfaces that are current, inspectable, and reusable. Browserbase, Browser Use, and Firecrawl add hosted sessions and traces around that same workflow, but Plasmate's sticky local-first wedge is still a portable action contract that carries browser-like affordances everywhere.
@@ -509,9 +517,12 @@ Current Playwright MCP and Stagehand docs keep validating action surfaces that a
 - [x] Rust compiler and SOM schema preserve element-level lang, dir, and translate locale-context cues
 - [x] Compact action plans expose lang, dir, and translate across parser packages, SDKs, and framework adapters
 - [x] Shared action-availability manifest and 016-action-semantics fixture assert locale-context cues without changing deterministic action cache keys
+- [x] Python and Node parser tests load the 016-action-semantics expected fixture for search, fallback menu roles, hidden content, and text-entry locale attrs
+- [x] Python, Node, and Go SDK tests load the 016-action-semantics expected fixture for the same semantic contract
+- [x] Quick action-manifest conformance runs focused parser/SDK 016-action-semantics checks beside the shared action-availability manifest
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
-- [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
+- [ ] Extend `016-action-semantics` into Browser Use, LangChain, and Vercel AI prompt-rendering conformance for fallback roles, hidden-state variants, and locale attrs
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
 - [ ] Add cross-adapter fixtures for enriched compact action-plan metadata
 - [ ] Promote ARIA relationship-state cases, including owns/flowto/details, into the broader action-state/action-semantics conformance suites

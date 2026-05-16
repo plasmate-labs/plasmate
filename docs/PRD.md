@@ -426,6 +426,14 @@ replay more trustworthy: element-level `lang`, `dir`, and `translate` tell
 agents which locale, writing direction, and translation policy applies before
 typing into or replaying a cached target.
 
+2026-05-16 conformance-gate read: current competitors make reusable browser
+state sticky only when teams can trust it outside the core engine. Playwright
+MCP snapshots, Stagehand cached actions, and Browserbase/Firecrawl session
+workflows all teach users to expect the same action surface wherever they wire
+agents. Plasmate should keep promoting Rust conformance fixtures into parser
+and SDK release gates so its broad repo surface acts like one product contract,
+not a set of drifting libraries.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces:
@@ -460,6 +468,16 @@ and adapter docs over one-off integration logic.
   - The shared action-availability manifest and `016-action-semantics`
     conformance fixture now assert locale-context cues so multilingual and
     bidirectional form replay stays synchronized across adapters.
+  - Python and Node parser tests now load the `016-action-semantics`
+    conformance fixture, normalize spec-only ids/meta, and assert search
+    landmarks, fallback menu checkbox/radio roles, hidden-content stripping,
+    and text-entry locale attrs.
+  - Python, Node, and Go SDK tests now read the same `016-action-semantics`
+    expected fixture so core semantic polish is verified in application-facing
+    client libraries, not only Rust.
+  - The quick action-manifest release gate now runs focused parser/SDK
+    `016-action-semantics` checks alongside the shared action-availability
+    manifest.
 - 2026-05-14:
   - The Rust SOM compiler and JSON Schema now preserve link navigation cues:
     `target`, `rel`, and `download`.
@@ -879,9 +897,10 @@ and adapter docs over one-off integration logic.
   checks to full conformance once runtime and dependency caching are stable.
 - Add dependency-cache tuning for the action-manifest job so cross-runtime
   conformance stays cheap enough to keep required.
-- Wire `016-action-semantics` into parser/SDK and adapter conformance runners
-  so search landmarks, fallback-token ARIA roles, menu roles, ARIA-hidden
-  casing, and visibility-hidden variants stay synchronized outside Rust.
+- Extend `016-action-semantics` coverage into adapter context-rendering tests
+  so Browser Use, LangChain, and Vercel AI prove search landmarks,
+  fallback-token menu roles, hidden-content stripping, and locale attrs in
+  prompt-facing output.
 - Promote ARIA relationship-state cases (`aria-controls`, `aria-haspopup`,
   `aria-owns`, `aria-flowto`, and `aria-details`) from the shared action
   availability manifest into the broader `015-action-state` /

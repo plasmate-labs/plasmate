@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -517,6 +518,77 @@ func TestGetActionPlanMatchesSharedAvailabilityManifest(t *testing.T) {
 
 	if !reflect.DeepEqual(actual, expected.ActionTargets) {
 		t.Errorf("GetActionPlan() = %#v, want %#v", actual, expected.ActionTargets)
+	}
+}
+
+func TestParseActionSemanticsConformanceFixture(t *testing.T) {
+	somBytes, err := os.ReadFile("../../specs/conformance/016-action-semantics.expected.json")
+	if err != nil {
+		t.Fatalf("ReadFile action semantics fixture failed: %v", err)
+	}
+	som, err := Parse(somBytes)
+	if err != nil {
+		t.Fatalf("Parse action semantics fixture failed: %v", err)
+	}
+
+	navs := FindByRole(som, "navigation")
+	if len(navs) != 1 || navs[0].Label == nil || *navs[0].Label != "Product search" {
+		t.Fatalf("navigation search region = %#v, want labelled Product search region", navs)
+	}
+	checkboxes := FindByTag(som, "checkbox")
+	if len(checkboxes) != 1 || checkboxes[0].Label == nil || *checkboxes[0].Label != "Compact mode" {
+		t.Fatalf("checkboxes = %#v, want Compact mode checkbox", checkboxes)
+	}
+	radios := FindByTag(som, "radio")
+	if len(radios) != 1 || radios[0].Label == nil || *radios[0].Label != "Annual billing" {
+		t.Fatalf("radios = %#v, want Annual billing radio", radios)
+	}
+
+	var reply *Element
+	for _, el := range FlatElements(som) {
+		if el.Label != nil && *el.Label == "Reply" {
+			reply = &el
+			break
+		}
+	}
+	if reply == nil || reply.Attrs == nil {
+		t.Fatal("Reply text input attrs missing")
+	}
+	if reply.Attrs.Spellcheck != false {
+		t.Fatalf("Spellcheck = %#v, want false", reply.Attrs.Spellcheck)
+	}
+	if reply.Attrs.AutoCapitalize == nil || *reply.Attrs.AutoCapitalize != "sentences" {
+		t.Fatalf("AutoCapitalize = %#v, want sentences", reply.Attrs.AutoCapitalize)
+	}
+	if reply.Attrs.DirName == nil || *reply.Attrs.DirName != "reply.dir" {
+		t.Fatalf("DirName = %#v, want reply.dir", reply.Attrs.DirName)
+	}
+	if reply.Attrs.Lang == nil || *reply.Attrs.Lang != "ar" {
+		t.Fatalf("Lang = %#v, want ar", reply.Attrs.Lang)
+	}
+	if reply.Attrs.Dir == nil || *reply.Attrs.Dir != "rtl" {
+		t.Fatalf("Dir = %#v, want rtl", reply.Attrs.Dir)
+	}
+	if reply.Attrs.Translate != false {
+		t.Fatalf("Translate = %#v, want false", reply.Attrs.Translate)
+	}
+	if reply.Attrs.Aria == nil ||
+		reply.Attrs.Aria.Placeholder == nil ||
+		*reply.Attrs.Aria.Placeholder != "Write a response" {
+		t.Fatalf("ARIA placeholder = %#v, want Write a response", reply.Attrs.Aria)
+	}
+
+	text := ""
+	for _, el := range FlatElements(som) {
+		if el.Text != nil {
+			text += *el.Text + "\n"
+		}
+	}
+	if !strings.Contains(text, "Visible preferences copy") {
+		t.Fatalf("visible text = %q, want Visible preferences copy", text)
+	}
+	if strings.Contains(text, "Hidden stylesheet copy") {
+		t.Fatalf("visible text = %q, should not include hidden stylesheet copy", text)
 	}
 }
 

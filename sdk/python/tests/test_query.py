@@ -33,6 +33,24 @@ from plasmate.query import (
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
+def _load_action_semantics_fixture() -> Som:
+    payload = json.loads(
+        (REPO_ROOT / "specs" / "conformance" / "016-action-semantics.expected.json").read_text()
+    )
+    payload.pop("$description", None)
+    for region_index, region in enumerate(payload["regions"]):
+        region.setdefault("id", f"r_action_semantics_{region_index}")
+        for element_index, element in enumerate(region.get("elements", [])):
+            element.setdefault("id", f"e_action_semantics_{region_index}_{element_index}")
+    payload["meta"] = {
+        "html_bytes": 0,
+        "som_bytes": 0,
+        "element_count": sum(len(region.get("elements", [])) for region in payload["regions"]),
+        "interactive_count": payload["meta"]["interactive_count"],
+    }
+    return Som.model_validate(payload)
+
+
 @pytest.fixture
 def sample_som() -> Som:
     """Build a realistic SOM fixture."""
@@ -237,6 +255,28 @@ class TestFindByTag:
 
     def test_finds_shadow_root_roles(self) -> None:
         assert [el.id for el in find_by_tag(_shadow_som(), "paragraph")] == ["shadow_text"]
+
+    def test_action_semantics_conformance_fixture(self) -> None:
+        som = _load_action_semantics_fixture()
+
+        assert som.regions[0].role == RegionRole.navigation
+        assert som.regions[0].label == "Product search"
+        assert [el.label for el in find_by_tag(som, "checkbox")] == ["Compact mode"]
+        assert [el.label for el in find_by_tag(som, "radio")] == ["Annual billing"]
+
+        reply = next(el for el in flat_elements(som) if el.label == "Reply")
+        assert reply.attrs is not None
+        assert reply.attrs.spellcheck is False
+        assert reply.attrs.autocapitalize == "sentences"
+        assert reply.attrs.dirname == "reply.dir"
+        assert reply.attrs.lang == "ar"
+        assert reply.attrs.dir == "rtl"
+        assert reply.attrs.translate is False
+        assert reply.attrs.aria == {"placeholder": "Write a response"}
+
+        visible_text = "\n".join(el.text or el.label or "" for el in flat_elements(som))
+        assert "Visible preferences copy" in visible_text
+        assert "Hidden stylesheet copy" not in visible_text
 
 
 class TestFindInteractive:

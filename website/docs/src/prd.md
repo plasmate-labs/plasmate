@@ -102,6 +102,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-16 locale-context read: current browser-agent infrastructure keeps splitting between compact accessibility/semantic snapshots and hosted browser session platforms. Playwright MCP's documented snapshot flow makes current structured page state the action surface, while Browserbase/Stagehand position cached actions and session observability as repeat-work retention hooks. Plasmate should keep its local-first wedge and make multilingual form replay more trustworthy: element-level `lang`, `dir`, and `translate` tell agents which locale, writing direction, and translation policy applies before typing into or replaying a cached target.
 
+2026-05-16 conformance-gate read: current competitors make reusable browser state sticky only when teams can trust it outside the core engine. Playwright MCP snapshots, Stagehand cached actions, and Browserbase/Firecrawl session workflows all teach users to expect the same action surface wherever they wire agents. Plasmate should keep promoting Rust conformance fixtures into parser and SDK release gates so its broad repo surface acts like one product contract, not a set of drifting libraries.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -120,6 +122,9 @@ The project already spans a large number of package and integration surfaces: Ru
   - The Rust SOM compiler and JSON Schema now preserve element-level locale context: `lang`, `dir`, and `translate`.
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `lang`, `dir`, and `translate` without changing deterministic action `cache_key` values.
   - The shared action-availability manifest and `016-action-semantics` conformance fixture now assert locale-context cues so multilingual and bidirectional form replay stays synchronized across adapters.
+  - Python and Node parser tests now load the `016-action-semantics` conformance fixture, normalize spec-only ids/meta, and assert search landmarks, fallback menu checkbox/radio roles, hidden-content stripping, and text-entry locale attrs.
+  - Python, Node, and Go SDK tests now read the same `016-action-semantics` expected fixture so core semantic polish is verified in application-facing client libraries, not only Rust.
+  - The quick action-manifest release gate now runs focused parser/SDK `016-action-semantics` checks alongside the shared action-availability manifest.
 - 2026-05-14:
   - The Rust SOM compiler and JSON Schema now preserve native range/value constraints (`min`, `max`, and `step`) plus ARIA range, orientation, and sort cues (`aria-valuemin`, `aria-valuemax`, `aria-valuenow`, `aria-valuetext`, `aria-orientation`, and `aria-sort`).
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `min`, `max`, `step`, `orientation`, `sort`, `valuemin`, `valuemax`, `valuenow`, and `valuetext` without changing deterministic action `cache_key` values.
@@ -280,7 +285,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Wire `015-action-state` into cross-adapter parser/SDK conformance runners so inherited disabled state stays synchronized outside Rust.
 - Promote the GitHub Actions action-manifest job from quick shared-manifest checks to full conformance once runtime and dependency caching are stable.
 - Add dependency-cache tuning for the action-manifest job so cross-runtime conformance stays cheap enough to keep required.
-- Wire `016-action-semantics` into parser/SDK and adapter conformance runners so search landmarks, fallback-token ARIA roles, menu roles, ARIA-hidden casing, and visibility-hidden variants stay synchronized outside Rust.
+- Extend `016-action-semantics` coverage into adapter context-rendering tests so Browser Use, LangChain, and Vercel AI prove search landmarks, fallback-token menu roles, hidden-content stripping, and locale attrs in prompt-facing output.
 - Promote ARIA relationship-state cases (`aria-controls`, `aria-haspopup`, `aria-owns`, `aria-flowto`, and `aria-details`) from the shared action availability manifest into the broader `015-action-state`/`016-action-semantics` conformance suites.
 - Promote range and orientation cases (`min`, `max`, `step`, `aria-orientation`, `aria-sort`, and ARIA value state) into broader Rust/parser/SDK and adapter conformance fixtures.
 - Promote ARIA widget affordance cases (`aria-readonly`, `aria-multiline`, and `aria-multiselectable`) into broader Rust/parser/SDK and adapter conformance fixtures.

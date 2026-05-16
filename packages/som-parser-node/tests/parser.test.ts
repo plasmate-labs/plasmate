@@ -96,6 +96,29 @@ function loadActionAvailabilityFixture(): { som: Som; action_targets: unknown[] 
   };
 }
 
+function loadActionSemanticsFixture(): Som {
+  const payload = JSON.parse(
+    readFileSync(resolve(REPO_ROOT, 'specs/conformance/016-action-semantics.expected.json'), 'utf8'),
+  );
+  delete payload.$description;
+  payload.regions.forEach((region: { id?: string; elements?: Array<{ id?: string }> }, regionIndex: number) => {
+    region.id ??= `r_action_semantics_${regionIndex}`;
+    region.elements?.forEach((element, elementIndex) => {
+      element.id ??= `e_action_semantics_${regionIndex}_${elementIndex}`;
+    });
+  });
+  payload.meta = {
+    html_bytes: 0,
+    som_bytes: 0,
+    element_count: payload.regions.reduce(
+      (count: number, region: { elements?: unknown[] }) => count + (region.elements?.length ?? 0),
+      0,
+    ),
+    interactive_count: payload.meta.interactive_count,
+  };
+  return parseSom(payload);
+}
+
 const SHADOW_FIXTURE: Som = {
   ...FIXTURE,
   regions: [
@@ -168,6 +191,28 @@ describe('parseSom', () => {
     expect(group.role).toBe('group');
     expect(group.attrs?.legend).toBe('Contact preference');
     expect(group.attrs?.disabled).toBe(true);
+  });
+
+  it('parses the action semantics conformance fixture', () => {
+    const som = loadActionSemanticsFixture();
+
+    expect(som.regions[0].role).toBe('navigation');
+    expect(som.regions[0].label).toBe('Product search');
+    expect(findByRole(som, 'checkbox').map((element) => element.label)).toEqual(['Compact mode']);
+    expect(findByRole(som, 'radio').map((element) => element.label)).toEqual(['Annual billing']);
+
+    const reply = findByRole(som, 'text_input').find((element) => element.label === 'Reply');
+    expect(reply?.attrs?.spellcheck).toBe(false);
+    expect(reply?.attrs?.autocapitalize).toBe('sentences');
+    expect(reply?.attrs?.dirname).toBe('reply.dir');
+    expect(reply?.attrs?.lang).toBe('ar');
+    expect(reply?.attrs?.dir).toBe('rtl');
+    expect(reply?.attrs?.translate).toBe(false);
+    expect(reply?.attrs?.aria).toEqual({ placeholder: 'Write a response' });
+
+    const text = getText(som);
+    expect(text).toContain('Visible preferences copy');
+    expect(text).not.toContain('Hidden stylesheet copy');
   });
 
   it('throws on invalid input', () => {

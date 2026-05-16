@@ -46,24 +46,26 @@ if [ "$MODE" = "--quick" ]; then
   run_in "packages/som-parser-python" \
     "Python parser action manifest" \
     env PYTHONPATH=. python3 -m pytest \
-      tests/test_parser.py::TestGetActionPlan::test_matches_shared_action_availability_manifest -q
+      tests/test_parser.py::TestGetActionPlan::test_matches_shared_action_availability_manifest \
+      tests/test_parser.py::TestParseSom::test_action_semantics_conformance_fixture -q
 
   run_in "packages/som-parser-node" \
     "Node parser action manifest" \
-    npm test -- tests/parser.test.ts -t "matches the shared action availability manifest"
+    npm test -- tests/parser.test.ts -t "matches the shared action availability manifest|parses the action semantics conformance fixture"
 
   run_in "sdk/go" \
     "Go SDK action manifest" \
-    env GOCACHE="$GO_CACHE" go test ./... -run TestGetActionPlanMatchesSharedAvailabilityManifest
+    env GOCACHE="$GO_CACHE" go test ./... -run 'Test(GetActionPlanMatchesSharedAvailabilityManifest|ParseActionSemanticsConformanceFixture)'
 
   run_in "sdk/python" \
     "Python SDK action manifest" \
     env PYTHONPATH=src python3 -m pytest \
-      tests/test_query.py::TestGetActionPlan::test_matches_shared_action_availability_manifest -q
+      tests/test_query.py::TestGetActionPlan::test_matches_shared_action_availability_manifest \
+      tests/test_query.py::TestFindByTag::test_action_semantics_conformance_fixture -q
 
   run_in "sdk/node" \
     "Node SDK action manifest" \
-    sh -c 'npm run build && node --test --test-name-pattern "matches the shared action availability manifest" dist/query.test.js'
+    sh -c 'npm run build && node --test --test-name-pattern "matches the shared action availability manifest|reads the action semantics conformance fixture" dist/query.test.js'
 else
   run_in "packages/som-parser-python" \
     "Python parser action manifest" \

@@ -135,6 +135,32 @@ function loadActionAvailabilityFixture(): { som: Som; action_targets: unknown[] 
   };
 }
 
+function loadActionSemanticsFixture(): Som {
+  const payload = JSON.parse(
+    readFileSync(
+      resolve(process.cwd(), '../../specs/conformance/016-action-semantics.expected.json'),
+      'utf8',
+    ),
+  );
+  delete payload.$description;
+  payload.regions.forEach((region: { id?: string; elements?: Array<{ id?: string }> }, regionIndex: number) => {
+    region.id ??= `r_action_semantics_${regionIndex}`;
+    region.elements?.forEach((element, elementIndex) => {
+      element.id ??= `e_action_semantics_${regionIndex}_${elementIndex}`;
+    });
+  });
+  payload.meta = {
+    html_bytes: 0,
+    som_bytes: 0,
+    element_count: payload.regions.reduce(
+      (count: number, region: { elements?: unknown[] }) => count + (region.elements?.length ?? 0),
+      0,
+    ),
+    interactive_count: payload.meta.interactive_count,
+  };
+  return payload as Som;
+}
+
 describe('findByRole', () => {
   it('finds regions by role', () => {
     const mains = findByRole(fixture, 'main');
@@ -179,6 +205,28 @@ describe('findByTag', () => {
 
   it('returns empty for unused role', () => {
     assert.deepEqual(findByTag(fixture, 'table'), []);
+  });
+
+  it('reads the action semantics conformance fixture', () => {
+    const som = loadActionSemanticsFixture();
+
+    assert.equal(som.regions[0].role, 'navigation');
+    assert.equal(som.regions[0].label, 'Product search');
+    assert.deepEqual(findByTag(som, 'checkbox').map((element) => element.label), ['Compact mode']);
+    assert.deepEqual(findByTag(som, 'radio').map((element) => element.label), ['Annual billing']);
+
+    const reply = flatElements(som).find((element) => element.label === 'Reply');
+    assert.equal(reply?.attrs?.spellcheck, false);
+    assert.equal(reply?.attrs?.autocapitalize, 'sentences');
+    assert.equal(reply?.attrs?.dirname, 'reply.dir');
+    assert.equal(reply?.attrs?.lang, 'ar');
+    assert.equal(reply?.attrs?.dir, 'rtl');
+    assert.equal(reply?.attrs?.translate, false);
+    assert.deepEqual(reply?.attrs?.aria, { placeholder: 'Write a response' });
+
+    const visibleText = flatElements(som).map((element) => element.text ?? element.label ?? '').join('\n');
+    assert.match(visibleText, /Visible preferences copy/);
+    assert.doesNotMatch(visibleText, /Hidden stylesheet copy/);
   });
 });
 
