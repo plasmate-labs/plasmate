@@ -80,9 +80,10 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   sandboxed `tests/awp_integration_test.rs` because local listener setup
   returns `Operation not permitted`.
 - Commit/push state: created alternate-index commit `847c637` (`chore: expose
-  daemon cache observability`), pushed review branch
+  daemon cache observability`) plus a follow-up running-state docs commit,
+  pushed review branch
   `codex/plasmate-improvements-2026-05-16-cache-observability`, and
-  fast-forwarded remote `master` from `b46a674` to `847c637`.
+  fast-forwarded remote `master` from `b46a674`.
 
 ### 2026-05-16T13:09:20Z - Plasmate Improvements Automation
 
