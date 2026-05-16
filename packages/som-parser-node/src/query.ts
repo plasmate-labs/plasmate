@@ -435,7 +435,7 @@ export function getLinks(som: Som): Array<{ text: string; href: string; id: stri
   return findByRole(som, 'link')
     .filter((el) => el.attrs?.href)
     .map((el) => ({
-      text: el.text ?? '',
+      text: el.text ?? el.label ?? '',
       href: el.attrs!.href!,
       id: el.id,
     }));
@@ -531,7 +531,7 @@ export function toMarkdown(som: Som): string {
           }
           break;
         case 'link':
-          lines.push(`- [${el.text ?? ''}](${el.attrs?.href ?? '#'})`);
+          lines.push(`- [${el.text ?? el.label ?? ''}](${el.attrs?.href ?? '#'})`);
           break;
         case 'image':
           lines.push(`![${el.attrs?.alt ?? ''}](${el.attrs?.src ?? ''})`);

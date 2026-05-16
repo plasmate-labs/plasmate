@@ -439,6 +439,14 @@ Current browser-agent tools keep making action reuse conditional on current page
 - **Raw descriptions validate cached labels**: `aria-description` should surface as `aria_description` beside resolved `description` text.
 - **Modal state changes replay risk**: `aria-modal` should surface as `modal` context without becoming deterministic cache-key material.
 
+### 2026-05-16 Label Parity Adjustment
+
+Current browser-agent tools keep making human-facing names the unit of interaction. Playwright MCP refs are selected from accessibility snapshots, while Stagehand/Browserbase only reuse cached actions when current page state still validates. Plasmate's local-first retention path is to make every helper honor the same label surface the compiler emits, especially for icon-only links and label-only controls that otherwise disappear from search or markdown views.
+
+- **SDK search must include labels**: Node and Python SDK text search should match `label` as well as visible `text`.
+- **Link inventories need accessible names**: parser `get_links()` helpers should fall back to labels so icon links remain usable in summaries.
+- **Markdown is agent context**: parser markdown renderers should preserve label-only links instead of emitting empty link text.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -651,6 +659,8 @@ Current browser-agent tools keep making action reuse conditional on current page
 - [x] Rust compiler and SOM schema preserve autofocus, aria-description, and aria-modal replay cues
 - [x] Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action plans surface autofocus, aria_description, and modal without changing deterministic cache keys
 - [x] Shared action-availability manifest asserts focus/modal replay cues across parser, SDK, and framework adapters
+- [x] Python and Node SDK text search matches label-only controls
+- [x] Python and Node parser link/markdown helpers preserve label-only accessible links
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
@@ -674,6 +684,7 @@ Current browser-agent tools keep making action reuse conditional on current page
 - [ ] Promote drag/drop replay cues into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote link navigation replay cues into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote focus/modal replay cues into broader Rust/parser/SDK and adapter conformance fixtures
+- [ ] Promote label-only link/control parity into shared parser, SDK, and adapter conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures
 - [ ] Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners
 - [x] Promote adapter availability checks into shared cross-adapter fixtures

@@ -675,6 +675,34 @@ class TestGetLinks:
             "id": "e_5",
         }
 
+    def test_uses_labels_for_accessible_only_links(self):
+        som = parse_som({
+            **FIXTURE_SOM,
+            "regions": [
+                {
+                    "id": "r_nav",
+                    "role": "navigation",
+                    "elements": [
+                        {
+                            "id": "icon_docs",
+                            "role": "link",
+                            "label": "Docs",
+                            "actions": ["click"],
+                            "attrs": {"href": "/docs"},
+                        }
+                    ],
+                }
+            ],
+            "meta": {
+                "html_bytes": 100,
+                "som_bytes": 50,
+                "element_count": 1,
+                "interactive_count": 1,
+            },
+        })
+
+        assert get_links(som) == [{"text": "Docs", "href": "/docs", "id": "icon_docs"}]
+
 
 class TestGetForms:
     def test_forms(self, som: Som):
@@ -753,6 +781,34 @@ class TestToMarkdown:
         md = to_markdown(som)
         assert "[Home](/)" in md
         assert "[About](/about)" in md
+
+    def test_uses_labels_for_markdown_links_without_text(self):
+        som = parse_som({
+            **FIXTURE_SOM,
+            "regions": [
+                {
+                    "id": "r_nav",
+                    "role": "navigation",
+                    "elements": [
+                        {
+                            "id": "icon_docs",
+                            "role": "link",
+                            "label": "Docs",
+                            "actions": ["click"],
+                            "attrs": {"href": "/docs"},
+                        }
+                    ],
+                }
+            ],
+            "meta": {
+                "html_bytes": 100,
+                "som_bytes": 50,
+                "element_count": 1,
+                "interactive_count": 1,
+            },
+        })
+
+        assert "[Docs](/docs)" in to_markdown(som)
 
     def test_contains_heading(self, som: Som):
         md = to_markdown(som)

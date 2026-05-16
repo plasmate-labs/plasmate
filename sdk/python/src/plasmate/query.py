@@ -363,7 +363,7 @@ def find_action_target_by_test_id(
 
 
 def find_by_text(som: Som, text: str) -> List[SomElement]:
-    """Find all elements whose text contains the given substring (case-insensitive)."""
+    """Find all elements whose text or label contains the substring."""
     results: List[SomElement] = []
     lower = text.lower()
     for region in som.regions:
@@ -435,7 +435,9 @@ def _collect_interactive(element: SomElement, results: List[SomElement]) -> None
 
 
 def _collect_by_text(element: SomElement, lower_text: str, results: List[SomElement]) -> None:
-    if element.text and lower_text in element.text.lower():
+    if (element.text and lower_text in element.text.lower()) or (
+        element.label and lower_text in element.label.lower()
+    ):
         results.append(element)
     if element.children:
         for child in element.children:

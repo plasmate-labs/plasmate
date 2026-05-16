@@ -49,6 +49,41 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-16T18:06:26Z - Plasmate Improvements Automation
+
+- Git sync: latest fetch from the linked automation worktree failed because
+  the shared worktree could not open `FETCH_HEAD`; fallback fetch from the
+  primary checkout failed DNS resolution for `github.com`. The linked worktree
+  also could not checkout the newest local remote-tracking ref because it
+  could not create the shared `index.lock`, so this run continued in the
+  primary checkout on the newest locally available branch,
+  `codex/plasmate-improvements-2026-05-16-navigation-context` at `186f2d4`.
+- Market direction: current docs continue to reward structured names,
+  validated action reuse, and inspectable sessions. Playwright MCP uses
+  accessibility snapshots with snapshot-scoped refs, Browserbase/Stagehand
+  pairs action caching with replay/observability, and Firecrawl keeps widening
+  MCP/browser-session coverage. No hosted-browser pivot is recommended; the
+  stickier local move is parity across the SDK/parser surfaces agents already
+  use.
+- Code changes: Node SDK `findByText` and Python SDK `find_by_text` now match
+  label-only controls as well as visible text. Python and Node parser
+  `get_links()`/`getLinks()` plus markdown renderers now fall back to labels
+  for accessible-only icon links instead of emitting empty link text.
+- Fixture/docs changes: added focused Node SDK, Python SDK, Python parser, and
+  Node parser tests for label-only discovery/link rendering. PRD, roadmap,
+  website doc sources, and generated website docs now record the label-parity
+  rationale and next conformance step.
+- Verification passed: Node SDK tests, Python SDK query tests (42), Python
+  parser tests (75), Node parser tests (60), Node parser build, website docs
+  generation, `cargo build --quiet`, `cargo test --lib --quiet` (259 tests),
+  and `git diff --check`. Rust commands used
+  `RUSTY_V8_ARCHIVE=/private/tmp/plasmate-librusty_v8.a` after the cached
+  debug V8 archive was found to be zero bytes; it was restored from the intact
+  release archive copy for this run.
+- Verification gap: full `cargo test --quiet` still fails only in
+  `tests/awp_integration_test.rs` because this sandbox denies local listener
+  setup with `Operation not permitted`.
+
 ### 2026-05-16T11:13:41Z - Plasmate Improvements Automation
 
 - Git sync: latest fetch was retried from the automation worktree and failed

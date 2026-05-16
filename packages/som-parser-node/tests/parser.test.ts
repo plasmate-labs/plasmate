@@ -527,6 +527,30 @@ describe('getLinks', () => {
     expect(links[0]).toEqual({ text: 'Home', href: '/', id: 'e_1' });
     expect(links[2]).toEqual({ text: 'Learn more', href: 'https://example.org', id: 'e_5' });
   });
+
+  it('falls back to labels for accessible-only links', () => {
+    const links = getLinks({
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_nav',
+          role: 'navigation',
+          elements: [
+            {
+              id: 'icon_docs',
+              role: 'link',
+              label: 'Docs',
+              actions: ['click'],
+              attrs: { href: '/docs' },
+            },
+          ],
+        },
+      ],
+      meta: { html_bytes: 100, som_bytes: 50, element_count: 1, interactive_count: 1 },
+    });
+
+    expect(links).toEqual([{ text: 'Docs', href: '/docs', id: 'icon_docs' }]);
+  });
 });
 
 describe('getForms', () => {
@@ -615,6 +639,30 @@ describe('toMarkdown', () => {
     expect(md).toContain('[Home](/)');
     expect(md).toContain('[About](/about)');
     expect(md).toContain('[Learn more](https://example.org)');
+  });
+
+  it('uses labels for markdown links without text', () => {
+    const md = toMarkdown({
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_nav',
+          role: 'navigation',
+          elements: [
+            {
+              id: 'icon_docs',
+              role: 'link',
+              label: 'Docs',
+              actions: ['click'],
+              attrs: { href: '/docs' },
+            },
+          ],
+        },
+      ],
+      meta: { html_bytes: 100, som_bytes: 50, element_count: 1, interactive_count: 1 },
+    });
+
+    expect(md).toContain('[Docs](/docs)');
   });
 
   it('includes paragraph text', () => {

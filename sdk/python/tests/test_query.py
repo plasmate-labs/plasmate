@@ -388,6 +388,11 @@ class TestFindByText:
         texts = [e.text for e in results]
         assert "Welcome to Example" in texts
 
+    def test_finds_label_only_controls(self, sample_som: Som) -> None:
+        results = find_by_text(sample_som, "email")
+        assert len(results) == 1
+        assert results[0].id == "e9"
+
     def test_finds_nested_text(self, sample_som: Som) -> None:
         results = find_by_text(sample_som, "Nested")
         assert len(results) == 1

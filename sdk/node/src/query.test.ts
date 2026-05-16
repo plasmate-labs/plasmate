@@ -264,6 +264,12 @@ describe('findByText', () => {
     assert.equal(results[0].id, 'e1');
   });
 
+  it('matches label-only controls', () => {
+    const results = findByText(fixture, 'email');
+    assert.equal(results.length, 1);
+    assert.equal(results[0].id, 'e5');
+  });
+
   it('finds text inside shadow roots', () => {
     const results = findByText(shadowFixture, 'inside shadow');
     assert.equal(results.length, 1);

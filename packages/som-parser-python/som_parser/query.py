@@ -427,7 +427,7 @@ def get_links(som: Som) -> List[Dict[str, Optional[str]]]:
     links: List[Dict[str, Optional[str]]] = []
     for el in find_by_role(som, ElementRole.LINK):
         href = el.attrs.href if el.attrs else None
-        links.append({"text": el.text, "href": href, "id": el.id})
+        links.append({"text": el.text or el.label, "href": href, "id": el.id})
     return links
 
 
@@ -530,7 +530,7 @@ def _element_to_markdown(el: SomElement, lines: List[str]) -> None:
         lines.append("")
     elif role == ElementRole.LINK:
         href = el.attrs.href if el.attrs else "#"
-        lines.append(f"[{el.text or ''}]({href})")
+        lines.append(f"[{el.text or el.label or ''}]({href})")
     elif role == ElementRole.BUTTON:
         lines.append(f"[Button: {el.text or ''}]")
     elif role == ElementRole.IMAGE:
