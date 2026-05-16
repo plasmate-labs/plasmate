@@ -108,8 +108,8 @@ Search and traverse SOM documents:
 
 ```python
 from plasmate import Som, find_by_role, find_by_id, find_by_tag
-from plasmate import find_interactive, find_by_text, flat_elements
-from plasmate import find_action_target, get_action_plan, get_token_estimate
+from plasmate import find_interactive, find_by_label, find_by_text, flat_elements
+from plasmate import find_action_target, find_action_targets_by_label, get_action_plan, get_token_estimate
 
 # Find all navigation regions
 navs = find_by_role(som, "navigation")
@@ -131,11 +131,14 @@ for target in get_action_plan(som):
     if target["enabled"]:
         print(target["id"], target["cache_key"], target["actions"], target.get("target"), target.get("download"))
 
-# Resolve a stored replay id from SOM id, cache key, HTML id, or test id
+# Resolve a stored replay id from SOM id, cache key, HTML id, test id, or explicit label
 save = find_action_target(som, "plasmate-action:v1:...", enabled_only=True)
+save_by_label = find_action_target(som, "Save", by="label", enabled_only=True)
+buttons = find_action_targets_by_label(som, "save")
 
-# Search by text content (case-insensitive)
+# Search by visible text or accessible label (case-insensitive)
 results = find_by_text(som, "sign up")
+labeled = find_by_label(som, "email")
 
 # Flatten all elements for iteration
 all_elements = flat_elements(som)

@@ -49,6 +49,38 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-16T22:11:50Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch origin --prune` was attempted first and still
+  fails in the linked automation worktree because shared `FETCH_HEAD` cannot be
+  opened. Work continued from local `HEAD` / `origin/master` `021a83b`.
+- Market direction: current docs still favor fresh structured action state and
+  validated replay over raw page dumps. Playwright MCP uses accessibility
+  snapshot refs, Stagehand documents local/managed cached actions, and
+  Cloudflare Browser Run is expanding Live View, recordings, CDP, and WebMCP.
+  No hosted-browser pivot is recommended; the sticky local step is
+  label-addressable action recovery while keeping stable ids as default replay.
+- Code changes: Python/Node parser packages and Python/Node SDKs now expose
+  explicit accessible-label element lookup, exact label buckets in action-plan
+  indexes, `find_action_target(..., by="label")` / `findActionTarget(...,
+  { by: "label" })`, and label-search helpers for compact action targets.
+  Auto replay lookup still prefers SOM id, `cache_key`, `html_id`, and
+  `test_id` to avoid silently choosing duplicate labels.
+- Tests/docs: added focused parser and SDK tests for label-only controls,
+  label-index buckets, enabled-only label filtering, and compact action target
+  label search. Updated parser/SDK READMEs, shared fixture docs, PRD, roadmap,
+  website doc sources/generated HTML, and this running state with rationale and
+  next conformance step.
+- Verification passed: Python SDK query tests, Python parser tests, Node SDK
+  tests/build via temporary `node_modules` symlink to the primary checkout,
+  Node parser tests/build via the same pattern, `./scripts/action-manifest-
+  conformance.sh --quick`, `node website/build.mjs`, `cargo build --quiet`,
+  `cargo test --lib --quiet`, `cargo clippy --quiet` (pre-existing warnings),
+  and `git diff --check`.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`.
+
 ### 2026-05-16T21:10:58Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch origin --prune` still fails in the linked

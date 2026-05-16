@@ -32,6 +32,17 @@ cloud API.
 - Crawl4AI remains strong for open-source Python crawling and extraction, but
   carries Chromium/Playwright operational weight.
 
+2026-05-16 label-addressable action read: current docs keep reinforcing that
+agents choose targets from human-facing structured names, then need a cheap way
+to reuse those choices in app code. Playwright MCP returns accessibility
+snapshot refs, Stagehand caches observed actions after validation, and
+Cloudflare Browser Run is pairing hosted sessions with Live View, recordings,
+and WebMCP experiments. Plasmate should keep the local-first wedge and make
+accessible labels first-class lookup hints across parser and SDK surfaces:
+exact label buckets/search should help humans and agents recover compact
+targets, while default replay lookup should continue to prefer stable ids,
+cache keys, HTML ids, and test ids because labels can collide.
+
 2026-05-16 ARIA naming-provenance read: current docs keep pointing at the
 same validation-before-replay wedge. Playwright MCP refs remain scoped to the
 current accessibility snapshot, Browserbase/Stagehand action caches validate

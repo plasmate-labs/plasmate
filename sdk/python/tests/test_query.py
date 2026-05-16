@@ -23,9 +23,12 @@ from plasmate.query import (
     find_action_target_by_cache_key,
     find_action_target_by_html_id,
     find_action_target_by_id,
+    find_action_target_by_label,
     find_action_target_by_test_id,
+    find_action_targets_by_label,
     find_by_id,
     find_by_html_id,
+    find_by_label,
     find_by_role,
     find_by_tag,
     find_by_text,
@@ -243,6 +246,16 @@ class TestFindByHtmlId:
         assert find_by_html_id(sample_som, "missing-html-id") is None
 
 
+class TestFindByLabel:
+    def test_finds_label_only_controls(self, sample_som: Som) -> None:
+        results = find_by_label(sample_som, "email")
+        assert [el.id for el in results] == ["e9"]
+
+    def test_exact_label_match_is_case_sensitive(self, sample_som: Som) -> None:
+        assert [el.id for el in find_by_label(sample_som, "Email", exact=True)] == ["e9"]
+        assert find_by_label(sample_som, "email", exact=True) == []
+
+
 class TestFindByTag:
     def test_finds_all_links(self, sample_som: Som) -> None:
         links = find_by_tag(sample_som, "link")
@@ -354,16 +367,21 @@ class TestGetActionPlan:
         assert index["by_cache_key"][save["cache_key"]] == save
         assert index["by_html_id"]["save-button"] == save
         assert index["by_test_id"]["settings-save"] == save
+        assert index["by_label"]["Save"] == save
         assert find_action_target(som, "e_save") == save
         assert find_action_target(som, save["cache_key"]) == save
         assert find_action_target(som, "save-button") == save
         assert find_action_target(som, "settings-save") == save
+        assert find_action_target(som, "Save", by="label") == save
         assert find_action_target(som, "settings-save", by="test_id") == save
         assert find_action_target_by_id(som, "e_save") == save
         assert find_action_target_by_cache_key(som, save["cache_key"]) == save
         assert find_action_target_by_html_id(som, "save-button") == save
         assert find_action_target_by_test_id(som, "settings-save") == save
+        assert find_action_target_by_label(som, "Save") == save
+        assert find_action_targets_by_label(som, "save") == [save]
         assert find_action_target(som, "settings-save", enabled_only=True) is None
+        assert find_action_target(som, "Save", by="label", enabled_only=True) is None
 
     def test_enabled_action_plan_index_filters_blocked_targets(self) -> None:
         fixture_dir = REPO_ROOT / "integrations" / "fixtures"
@@ -377,6 +395,7 @@ class TestGetActionPlan:
         assert all(target["enabled"] for target in enabled)
         assert "e_save" not in index["by_id"]
         assert "settings-save" not in index["by_test_id"]
+        assert "Save" not in index["by_label"]
         assert "e_plan" in index["by_id"]
 
 

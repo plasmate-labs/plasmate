@@ -34,15 +34,25 @@ const links = getLinks(som);
 ### Plan agent actions
 
 ```typescript
-import { findActionTarget, findByAction, getActionPlan } from 'som-parser';
+import {
+  findActionTarget,
+  findActionTargetsByLabel,
+  findByAction,
+  findByLabel,
+  getActionPlan,
+} from 'som-parser';
 
 const plan = getActionPlan(som);
 // Compact action targets with id, cache_key, role, actions, enabled, labels, link target/rel/download cues, form/list context, form submission metadata, submitter override cues, popover/command relation cues, text-entry/input hints, validation/range cues, and ARIA owns/flowto/details plus orientation/sort/value state.
 const available = plan.filter((item) => item.enabled);
 const save = findActionTarget(som, 'plasmate-action:v1:...', { enabledOnly: true });
+const saveByLabel = findActionTarget(som, 'Save', { by: 'label', enabledOnly: true });
+const labeledActions = findActionTargetsByLabel(som, 'save');
 
 const clickable = findByAction(som, 'click');
 // Elements that can be clicked.
+
+const fields = findByLabel(som, 'email');
 ```
 
 ### Convert to markdown
@@ -83,11 +93,14 @@ const ratio = getCompressionRatio(som);
 | `getAllElements(som): SomElement[]` | Flatten all elements from all regions into a single array. |
 | `findByRole(som, role): SomElement[]` | Find elements by role (e.g., `'link'`, `'button'`, `'heading'`). |
 | `findById(som, id): SomElement \| undefined` | Find a single element by its SOM id. |
+| `findByLabel(som, label, options?): SomElement[]` | Find elements by accessible label. Case-insensitive substring by default; pass `{ exact: true }` for exact match. |
 | `findByText(som, text, options?): SomElement[]` | Find elements by text content. Case-insensitive substring by default; pass `{ exact: true }` for exact match. |
 | `findByAction(som, action): SomElement[]` | Find elements that expose a specific action. |
 | `findByHint(som, hint): SomElement[]` | Find elements tagged with a semantic hint. |
 | `getActionPlan(som): ActionPlanItem[]` | Return compact action targets with cache keys, availability, link target/rel/download cues, form/list and form submission context, submitter override cues, popover/command relation cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues for agent planning. |
 | `getActionPlanCacheKey(item): string` | Return a deterministic key for caching or comparing an action target. |
+| `findActionTarget(som, value, options?): ActionPlanItem \| undefined` | Resolve a target by SOM id, cache key, HTML id, test id, explicit label, or auto lookup. |
+| `findActionTargetsByLabel(som, label, options?): ActionPlanItem[]` | Find compact action targets by accessible label. |
 | `getInteractiveElements(som): SomElement[]` | Get all elements that have actions. |
 | `getLinks(som): Array<{ text, href, id }>` | Extract all links with text, URL, and id. |
 | `getForms(som): SomRegion[]` | Get all form regions. |

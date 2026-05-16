@@ -56,4 +56,6 @@ Browser Use also has `find_action_target()`, LangChain exposes
 `action_target_index()` / `find_action_target()`, and Vercel AI exposes
 `indexPlasmateActionTargets()` / `findPlasmateActionTarget()`. The direct
 lookup helpers default to auto-resolving SOM ids, deterministic cache keys,
-original HTML ids, and test ids.
+original HTML ids, and test ids. Parser packages and SDKs also expose explicit
+label buckets/search helpers for user-facing labels, but label lookup remains
+opt-in because page labels are not guaranteed to be unique.

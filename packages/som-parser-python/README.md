@@ -47,7 +47,8 @@ for el in find_by_role(som, "link"):
 ### Plan agent actions
 
 ```python
-from som_parser import parse_som, find_by_action, get_action_plan
+from som_parser import parse_som, find_action_target, find_action_targets_by_label
+from som_parser import find_by_action, find_by_label, get_action_plan
 
 som = parse_som(data)
 for item in get_action_plan(som):
@@ -58,6 +59,10 @@ for item in get_action_plan(som):
 
 for button in find_by_action(som, "click"):
     print(button.id, button.text or button.label)
+
+save = find_action_target(som, "Save", by="label", enabled_only=True)
+matches = find_action_targets_by_label(som, "save")
+fields = find_by_label(som, "email")
 ```
 
 ### Convert to markdown
@@ -104,12 +109,14 @@ print(som.model_dump_json(indent=2))
 | `get_all_elements(som) -> list[SomElement]` | Flatten all elements from all regions |
 | `find_by_role(som, role) -> list[SomElement]` | Find elements by role (enum or string) |
 | `find_by_id(som, id) -> SomElement \| None` | Find a single element by its SOM id |
+| `find_by_label(som, label, exact=False) -> list[SomElement]` | Search elements by accessible label |
 | `find_by_text(som, text, exact=False) -> list[SomElement]` | Search elements by text content |
 | `find_by_action(som, action) -> list[SomElement]` | Find elements that expose a specific action |
 | `find_by_hint(som, hint) -> list[SomElement]` | Find elements tagged with a semantic hint |
 | `get_action_plan(som) -> list[dict]` | Return compact `{id, cache_key, role, actions, enabled, label}` action targets with availability, link target/rel/download cues, form/list and form submission context, submitter override cues, popover/command relation cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues |
 | `get_action_plan_cache_key(item) -> str` | Return a deterministic key for caching or comparing an action target |
-| `find_action_target(som, value, by="auto", enabled_only=False) -> dict \| None` | Resolve a replay id by SOM id, cache key, HTML id, test id, or auto lookup |
+| `find_action_target(som, value, by="auto", enabled_only=False) -> dict \| None` | Resolve a replay id by SOM id, cache key, HTML id, test id, explicit label, or auto lookup |
+| `find_action_targets_by_label(som, label, exact=False, enabled_only=False) -> list[dict]` | Search compact action targets by accessible label |
 | `get_interactive_elements(som) -> list[SomElement]` | Get elements that have actions |
 | `get_links(som) -> list[dict]` | Extract all links as `{text, href, id}` dicts |
 | `get_forms(som) -> list[SomRegion]` | Get all form regions |

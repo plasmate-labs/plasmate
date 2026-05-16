@@ -92,8 +92,9 @@ The SDK includes query helpers for searching and traversing SOM documents:
 ```typescript
 import {
   findActionTarget,
+  findActionTargetsByLabel,
   findByRole, findById, findByTag, findInteractive,
-  findByText, flatElements, getActionPlan, getTokenEstimate,
+  findByLabel, findByText, flatElements, getActionPlan, getTokenEstimate,
 } from 'plasmate';
 
 const browser = new Plasmate();
@@ -115,11 +116,14 @@ const interactive = findInteractive(som);
 const actionPlan = getActionPlan(som).filter((target) => target.enabled);
 console.log(actionPlan.map((target) => [target.id, target.cache_key, target.actions, target.expanded]));
 
-// Resolve a stored replay id from SOM id, cache key, HTML id, or test id
+// Resolve a stored replay id from SOM id, cache key, HTML id, test id, or explicit label
 const save = findActionTarget(som, 'plasmate-action:v1:...', { enabledOnly: true });
+const saveByLabel = findActionTarget(som, 'Save', { by: 'label', enabledOnly: true });
+const labeledActions = findActionTargetsByLabel(som, 'save');
 
-// Search by visible text (case-insensitive)
+// Search by visible text or accessible label (case-insensitive)
 const matches = findByText(som, 'sign in');
+const labeled = findByLabel(som, 'email');
 
 // Flatten all elements across all regions
 const all = flatElements(som);
@@ -139,6 +143,9 @@ browser.close();
 | `findInteractive(som)` | `SomElement[]` | All elements with actions |
 | `getActionPlan(som)` | `ActionPlanItem[]` | Compact action targets with cache keys, availability, link target/rel/download cues, form/list and form submission context, submitter override cues, popover/command relation cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues |
 | `getActionPlanCacheKey(item)` | `string` | Deterministic key for caching or comparing action targets |
+| `findActionTarget(som, value, options?)` | `ActionPlanItem \| undefined` | Resolve a target by SOM id, cache key, HTML id, test id, or explicit label |
+| `findActionTargetsByLabel(som, label, options?)` | `ActionPlanItem[]` | Find compact action targets by accessible label |
+| `findByLabel(som, label, options?)` | `SomElement[]` | Case-insensitive accessible-label search |
 | `findByText(som, text)` | `SomElement[]` | Case-insensitive text search |
 | `flatElements(som)` | `SomElement[]` | Flatten all elements |
 | `getTokenEstimate(som)` | `number` | Estimate token count (~4 bytes/token) |

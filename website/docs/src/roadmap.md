@@ -14,6 +14,14 @@ Plasmate should keep its local-first position, but the roadmap now emphasizes th
 
 Near-term target: make Plasmate the fastest local way to turn authenticated or repetitive web workflows into compact, inspectable, reusable state.
 
+### 2026-05-16 Label-Addressable Action Adjustment
+
+Current browser-agent products keep training users to choose actions by human-facing structured names, then reuse validated targets later. Playwright MCP snapshot refs make accessible names the selection layer, Stagehand caches observed actions after validation, and Browser Run/WebMCP raises the bar for inspectable action state. Plasmate should keep stable identifiers as the default replay contract, but make labels easy to use explicitly:
+
+- **Labels are lookup hints**: parser packages and SDKs should expose element-level label search plus compact action-target label search.
+- **Replay remains stable by default**: auto lookup should continue to prefer SOM ids, cache keys, HTML ids, and test ids because labels can duplicate.
+- **Docs should teach the distinction**: app developers can use labels for user-facing recovery and debugging while storing stable ids for unattended replay.
+
 ### 2026-05-05 Roadmap Adjustment
 
 Current competitor pressure reinforces the same direction but raises the bar on completeness. Playwright MCP snapshots train agents to expect every actionable surface to appear in structured output, Browserbase/Stagehand caching trains operators to expect repeated flows to get cheaper, and Firecrawl's MCP/browser sessions make broad hosted extraction easy to adopt. Plasmate should answer with local-first depth:
@@ -720,6 +728,7 @@ Competitor pressure keeps moving reusable action state from browser engines into
 - [x] Python/Node parser packages and Python/Node/Go SDKs auto-resolve replay ids across SOM id, cache_key, html_id, and test_id buckets
 - [x] Browser Use, LangChain, and Vercel AI direct replay lookup helpers auto-resolve stored replay ids while preserving enabled-only filtering
 - [x] Package and adapter tests cover auto replay lookup without bespoke action-menu scans
+- [x] Python/Node parser packages and SDKs expose explicit accessible-label lookup for elements and compact action targets
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures

@@ -8,10 +8,13 @@ import {
   findActionTargetByCacheKey,
   findActionTargetByHtmlId,
   findActionTargetById,
+  findActionTargetByLabel,
   findActionTargetByTestId,
+  findActionTargetsByLabel,
   findByRole,
   findById,
   findByHtmlId,
+  findByLabel,
   findByTag,
   findInteractive,
   findByText,
@@ -192,6 +195,18 @@ describe('findByHtmlId', () => {
   });
 });
 
+describe('findByLabel', () => {
+  it('finds label-only controls', () => {
+    const results = findByLabel(fixture, 'email');
+    assert.deepEqual(results.map((el) => el.id), ['e5']);
+  });
+
+  it('supports exact case-sensitive label matching', () => {
+    assert.deepEqual(findByLabel(fixture, 'Email', { exact: true }).map((el) => el.id), ['e5']);
+    assert.deepEqual(findByLabel(fixture, 'email', { exact: true }), []);
+  });
+});
+
 describe('findByTag', () => {
   it('finds elements by role', () => {
     const paragraphs = findByTag(fixture, 'paragraph');
@@ -305,16 +320,21 @@ describe('getActionPlan', () => {
     assert.deepEqual(index.byCacheKey[save.cache_key], save);
     assert.deepEqual(index.byHtmlId['save-button'], save);
     assert.deepEqual(index.byTestId['settings-save'], save);
+    assert.deepEqual(index.byLabel.Save, save);
     assert.deepEqual(findActionTarget(som, 'e_save'), save);
     assert.deepEqual(findActionTarget(som, save.cache_key), save);
     assert.deepEqual(findActionTarget(som, 'save-button'), save);
     assert.deepEqual(findActionTarget(som, 'settings-save'), save);
+    assert.deepEqual(findActionTarget(som, 'Save', { by: 'label' }), save);
     assert.deepEqual(findActionTarget(som, 'settings-save', { by: 'test_id' }), save);
     assert.deepEqual(findActionTargetById(som, 'e_save'), save);
     assert.deepEqual(findActionTargetByCacheKey(som, save.cache_key), save);
     assert.deepEqual(findActionTargetByHtmlId(som, 'save-button'), save);
     assert.deepEqual(findActionTargetByTestId(som, 'settings-save'), save);
+    assert.deepEqual(findActionTargetByLabel(som, 'Save'), save);
+    assert.deepEqual(findActionTargetsByLabel(som, 'save'), [save]);
     assert.equal(findActionTarget(som, 'settings-save', { enabledOnly: true }), undefined);
+    assert.equal(findActionTarget(som, 'Save', { by: 'label', enabledOnly: true }), undefined);
   });
 
   it('filters blocked targets from enabled action indexes', () => {
@@ -325,6 +345,7 @@ describe('getActionPlan', () => {
     assert.equal(enabled.every((target) => target.enabled), true);
     assert.equal(index.byId.e_save, undefined);
     assert.equal(index.byTestId['settings-save'], undefined);
+    assert.equal(index.byLabel.Save, undefined);
     assert.notEqual(index.byId.e_plan, undefined);
   });
 });

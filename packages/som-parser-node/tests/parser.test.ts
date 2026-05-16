@@ -12,11 +12,14 @@ import {
   findActionTargetByCacheKey,
   findActionTargetByHtmlId,
   findActionTargetById,
+  findActionTargetByLabel,
   findActionTargetByTestId,
+  findActionTargetsByLabel,
   findByHint,
   findByRole,
   findById,
   findByHtmlId,
+  findByLabel,
   findByText,
   getActionPlan,
   getActionPlanCacheKey,
@@ -306,6 +309,18 @@ describe('findByHtmlId', () => {
   });
 });
 
+describe('findByLabel', () => {
+  it('finds label-only controls', () => {
+    const results = findByLabel(FIXTURE, 'search');
+    expect(results.map((el) => el.id)).toEqual(['e_7']);
+  });
+
+  it('supports exact case-sensitive label matching', () => {
+    expect(findByLabel(FIXTURE, 'Search', { exact: true }).map((el) => el.id)).toEqual(['e_7']);
+    expect(findByLabel(FIXTURE, 'search', { exact: true })).toEqual([]);
+  });
+});
+
 describe('findByText', () => {
   it('finds by substring (case-insensitive)', () => {
     const results = findByText(FIXTURE, 'home');
@@ -473,16 +488,21 @@ describe('getActionPlan', () => {
     expect(index.byCacheKey[save.cache_key]).toEqual(save);
     expect(index.byHtmlId['save-button']).toEqual(save);
     expect(index.byTestId['settings-save']).toEqual(save);
+    expect(index.byLabel.Save).toEqual(save);
     expect(findActionTarget(som, 'e_save')).toEqual(save);
     expect(findActionTarget(som, save.cache_key)).toEqual(save);
     expect(findActionTarget(som, 'save-button')).toEqual(save);
     expect(findActionTarget(som, 'settings-save')).toEqual(save);
+    expect(findActionTarget(som, 'Save', { by: 'label' })).toEqual(save);
     expect(findActionTarget(som, 'settings-save', { by: 'test_id' })).toEqual(save);
     expect(findActionTargetById(som, 'e_save')).toEqual(save);
     expect(findActionTargetByCacheKey(som, save.cache_key)).toEqual(save);
     expect(findActionTargetByHtmlId(som, 'save-button')).toEqual(save);
     expect(findActionTargetByTestId(som, 'settings-save')).toEqual(save);
+    expect(findActionTargetByLabel(som, 'Save')).toEqual(save);
+    expect(findActionTargetsByLabel(som, 'save')).toEqual([save]);
     expect(findActionTarget(som, 'settings-save', { enabledOnly: true })).toBeUndefined();
+    expect(findActionTarget(som, 'Save', { by: 'label', enabledOnly: true })).toBeUndefined();
   });
 
   it('filters blocked targets from enabled action indexes', () => {
@@ -493,6 +513,7 @@ describe('getActionPlan', () => {
     expect(enabled.every((target) => target.enabled)).toBe(true);
     expect(index.byId.e_save).toBeUndefined();
     expect(index.byTestId['settings-save']).toBeUndefined();
+    expect(index.byLabel.Save).toBeUndefined();
     expect(index.byId.e_plan).toBeDefined();
   });
 });

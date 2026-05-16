@@ -160,9 +160,10 @@ export interface ActionPlanIndex {
   byCacheKey: Record<string, ActionPlanItem>;
   byHtmlId: Record<string, ActionPlanItem>;
   byTestId: Record<string, ActionPlanItem>;
+  byLabel: Record<string, ActionPlanItem>;
 }
 
-export type ActionTargetLookupKey = 'auto' | 'id' | 'cache_key' | 'html_id' | 'test_id';
+export type ActionTargetLookupKey = 'auto' | 'id' | 'cache_key' | 'html_id' | 'test_id' | 'label';
 
 export interface ActionTargetLookupOptions {
   by?: ActionTargetLookupKey;
@@ -357,7 +358,7 @@ export function getEnabledActionPlan(som: Som): ActionPlanItem[] {
   return getActionPlan(som).filter((item) => item.enabled !== false);
 }
 
-/** Return action targets indexed by SOM id, cache key, HTML id, and test id. */
+/** Return action targets indexed by SOM id, cache key, HTML id, test id, and label. */
 export function getActionPlanIndex(
   som: Som,
   options?: { enabledOnly?: boolean },
@@ -368,6 +369,7 @@ export function getActionPlanIndex(
     byCacheKey: {},
     byHtmlId: {},
     byTestId: {},
+    byLabel: {},
   };
   for (const item of plan) {
     if (index.byId[item.id] === undefined) index.byId[item.id] = item;
@@ -378,11 +380,14 @@ export function getActionPlanIndex(
     if (item.test_id && index.byTestId[item.test_id] === undefined) {
       index.byTestId[item.test_id] = item;
     }
+    if (item.label && index.byLabel[item.label] === undefined) {
+      index.byLabel[item.label] = item;
+    }
   }
   return index;
 }
 
-/** Find a compact action target by id, cache key, HTML id, test id, or auto-detected replay id. */
+/** Find a compact action target by id, cache key, HTML id, test id, label, or auto-detected replay id. */
 export function findActionTarget(
   som: Som,
   value: string,
@@ -394,12 +399,27 @@ export function findActionTarget(
   if (by === 'cache_key') return index.byCacheKey[value];
   if (by === 'html_id') return index.byHtmlId[value];
   if (by === 'test_id') return index.byTestId[value];
+  if (by === 'label') return index.byLabel[value];
   return (
     index.byId[value] ??
     index.byCacheKey[value] ??
     index.byHtmlId[value] ??
     index.byTestId[value]
   );
+}
+
+/** Find compact action targets by accessible label. */
+export function findActionTargetsByLabel(
+  som: Som,
+  label: string,
+  options?: { exact?: boolean; enabledOnly?: boolean },
+): ActionPlanItem[] {
+  const plan = options?.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
+  if (options?.exact) {
+    return plan.filter((item) => item.label === label);
+  }
+  const lower = label.toLowerCase();
+  return plan.filter((item) => item.label?.toLowerCase().includes(lower));
 }
 
 /** Find a compact action target by its SOM element id. */
@@ -438,6 +458,15 @@ export function findActionTargetByTestId(
   return findActionTarget(som, testId, { ...options, by: 'test_id' });
 }
 
+/** Find the first compact action target by exact accessible label. */
+export function findActionTargetByLabel(
+  som: Som,
+  label: string,
+  options: Pick<ActionTargetLookupOptions, 'enabledOnly'> = {},
+): ActionPlanItem | undefined {
+  return findActionTarget(som, label, { ...options, by: 'label' });
+}
+
 /** Find all elements containing the given text (case-insensitive substring match). */
 export function findByText(som: Som, text: string): SomElement[] {
   const lower = text.toLowerCase();
@@ -446,6 +475,20 @@ export function findByText(som: Som, text: string): SomElement[] {
       (el.text != null && el.text.toLowerCase().includes(lower)) ||
       (el.label != null && el.label.toLowerCase().includes(lower)),
   );
+}
+
+/** Find all elements whose accessible label contains the given text. */
+export function findByLabel(
+  som: Som,
+  label: string,
+  options?: { exact?: boolean },
+): SomElement[] {
+  const all = flatElements(som);
+  if (options?.exact) {
+    return all.filter((el) => el.label === label);
+  }
+  const lower = label.toLowerCase();
+  return all.filter((el) => el.label?.toLowerCase().includes(lower));
 }
 
 /** Flatten all elements from all regions into a single array, recursively including children. */

@@ -31,6 +31,19 @@ def find_by_html_id(som: Som, html_id: str) -> Optional[SomElement]:
     return None
 
 
+def find_by_label(som: Som, label: str, *, exact: bool = False) -> List[SomElement]:
+    """Find elements by accessible label."""
+    results: List[SomElement] = []
+    for element in flat_elements(som):
+        element_label = element.label or ""
+        if exact:
+            if label == element_label:
+                results.append(element)
+        elif label.lower() in element_label.lower():
+            results.append(element)
+    return results
+
+
 def find_by_tag(som: Som, tag: str) -> List[SomElement]:
     """Find all elements matching the given element role (tag)."""
     results: List[SomElement] = []
@@ -307,13 +320,14 @@ def get_enabled_action_plan(som: Som) -> List[Dict[str, object]]:
 def get_action_plan_index(
     som: Som, *, enabled_only: bool = False
 ) -> Dict[str, Dict[str, Dict[str, object]]]:
-    """Return action targets indexed by id, cache key, HTML id, and test id."""
+    """Return action targets indexed by id, cache key, HTML id, test id, and label."""
     plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
     index: Dict[str, Dict[str, Dict[str, object]]] = {
         "by_id": {},
         "by_cache_key": {},
         "by_html_id": {},
         "by_test_id": {},
+        "by_label": {},
     }
     for item in plan:
         for source_key, bucket_key in (
@@ -321,6 +335,7 @@ def get_action_plan_index(
             ("cache_key", "by_cache_key"),
             ("html_id", "by_html_id"),
             ("test_id", "by_test_id"),
+            ("label", "by_label"),
         ):
             value = item.get(source_key)
             if isinstance(value, str) and value not in index[bucket_key]:
@@ -328,7 +343,7 @@ def get_action_plan_index(
     return index
 
 
-ActionTargetLookupKey = Literal["auto", "id", "cache_key", "html_id", "test_id"]
+ActionTargetLookupKey = Literal["auto", "id", "cache_key", "html_id", "test_id", "label"]
 
 
 def find_action_target(
@@ -341,6 +356,7 @@ def find_action_target(
     """Return the compact action target matching a replay id.
 
     ``by="auto"`` checks SOM id, deterministic cache key, HTML id, then test id.
+    Use ``by="label"`` only when the label is unique enough for the page.
     """
     index = get_action_plan_index(som, enabled_only=enabled_only)
     buckets = {
@@ -348,16 +364,39 @@ def find_action_target(
         "cache_key": "by_cache_key",
         "html_id": "by_html_id",
         "test_id": "by_test_id",
+        "label": "by_label",
     }
     if by == "auto":
-        for bucket in buckets.values():
+        for bucket in ("by_id", "by_cache_key", "by_html_id", "by_test_id"):
             found = index[bucket].get(value)
             if found is not None:
                 return found
         return None
     if by not in buckets:
-        raise ValueError("by must be one of: auto, id, cache_key, html_id, test_id")
+        raise ValueError("by must be one of: auto, id, cache_key, html_id, test_id, label")
     return index[buckets[by]].get(value)
+
+
+def find_action_targets_by_label(
+    som: Som,
+    label: str,
+    *,
+    exact: bool = False,
+    enabled_only: bool = False,
+) -> List[Dict[str, object]]:
+    """Return compact action targets whose accessible label matches text."""
+    plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
+    results: List[Dict[str, object]] = []
+    for item in plan:
+        item_label = item.get("label")
+        if not isinstance(item_label, str):
+            continue
+        if exact:
+            if label == item_label:
+                results.append(item)
+        elif label.lower() in item_label.lower():
+            results.append(item)
+    return results
 
 
 def find_action_target_by_id(
@@ -386,6 +425,13 @@ def find_action_target_by_test_id(
 ) -> Optional[Dict[str, object]]:
     """Return the compact action target matching a test locator attribute."""
     return find_action_target(som, test_id, by="test_id", enabled_only=enabled_only)
+
+
+def find_action_target_by_label(
+    som: Som, label: str, *, enabled_only: bool = False
+) -> Optional[Dict[str, object]]:
+    """Return the first compact action target matching an exact accessible label."""
+    return find_action_target(som, label, by="label", enabled_only=enabled_only)
 
 
 def find_by_text(som: Som, text: str) -> List[SomElement]:

@@ -29,6 +29,23 @@ Near-term stickiness target: developers should keep Plasmate installed because
 it becomes the fastest local way to turn authenticated or repetitive web
 workflows into compact, inspectable, reusable state.
 
+### 2026-05-16 Label-Addressable Action Adjustment
+
+Current browser-agent products keep training users to choose actions by
+human-facing structured names, then reuse validated targets later. Playwright
+MCP snapshot refs make accessible names the selection layer, Stagehand caches
+observed actions after validation, and Browser Run/WebMCP raises the bar for
+inspectable action state. Plasmate should keep stable identifiers as the
+default replay contract, but make labels easy to use explicitly:
+
+1. **Labels are lookup hints**: parser packages and SDKs should expose
+   element-level label search plus compact action-target label search.
+2. **Replay remains stable by default**: auto lookup should continue to prefer
+   SOM ids, cache keys, HTML ids, and test ids because labels can duplicate.
+3. **Docs should teach the distinction**: app developers can use labels for
+   user-facing recovery and debugging while storing stable ids for unattended
+   replay.
+
 ### 2026-05-05 Roadmap Adjustment
 
 Current competitor pressure reinforces the same direction but raises the bar on
@@ -1651,10 +1668,14 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Browser Use now exposes sync/async indexed action-plan extraction; LangChain
   now exports raw-SOM action target indexes/finders; and Vercel AI now exports
   action-target indexes/finders for prepared menus.
+- Python/Node parser packages and SDKs now expose explicit accessible-label
+  lookup for elements and compact action targets, plus exact label buckets in
+  action-plan indexes, while keeping auto replay lookup on stable ids.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, `html_id` DOM-provenance cases,
-  label-only link/control parity, and framework replay lookup helpers into
+  label-only link/control parity, label-addressable action lookup, and
+  framework replay lookup helpers into
   broader fixtures alongside drag/drop, link replay, ARIA naming provenance,
   text-entry, ARIA widget, range, and set-position cases.
 
