@@ -335,12 +335,12 @@ async fn handle_tools_call(
         // Screenshot
         "screenshot_page" => tools::handle_screenshot_page(&arguments, client).await,
         // Phase 2: Stateful tools
-        "open_page" => tools::handle_open_page(&arguments, client, sessions).await,
+        "open_page" => tools::handle_open_page(&arguments, client, sessions, cache).await,
         "evaluate" => tools::handle_evaluate(&arguments, sessions).await,
         "click" => tools::handle_click(&arguments, client, sessions).await,
         "close_page" => tools::handle_close_page(&arguments, sessions).await,
         // Phase 3: Interaction tools
-        "navigate_to" => tools::handle_navigate_to(&arguments, client, sessions).await,
+        "navigate_to" => tools::handle_navigate_to(&arguments, client, sessions, cache).await,
         "type_text" => tools::handle_type_text(&arguments, client, sessions).await,
         "select_option" => tools::handle_select_option(&arguments, client, sessions).await,
         "scroll" => tools::handle_scroll(&arguments, client, sessions).await,

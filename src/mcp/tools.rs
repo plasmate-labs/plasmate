@@ -127,6 +127,7 @@ async fn load_som_for_mcp(
             content_hash,
             page_result.som,
             fetch_result.html_bytes,
+            Some(page_result.effective_html),
             selector,
         ))
     } else if let Some(selector) = selector {
@@ -145,10 +146,15 @@ fn select_and_store_mcp_som(
     content_hash: u64,
     som: Som,
     html_bytes: usize,
+    effective_html: Option<String>,
     selector: Option<&str>,
 ) -> Som {
     if let Ok(full_som_json) = serde_json::to_vec(&som) {
-        cache.store(url, content_hash, full_som_json, html_bytes);
+        if let Some(effective_html) = effective_html {
+            cache.store_page_state(url, content_hash, full_som_json, html_bytes, effective_html);
+        } else {
+            cache.store(url, content_hash, full_som_json, html_bytes);
+        }
     }
 
     if let Some(selector) = selector {
@@ -176,6 +182,72 @@ fn store_page_state_in_session(
     session.target.rebuild_node_map();
 
     serde_json::to_value(&page_result.som).ok()
+}
+
+async fn load_session_page_for_mcp(
+    client: &reqwest::Client,
+    cache: &SomCache,
+    url: &str,
+) -> Result<(String, String, pipeline::PageResult, bool), String> {
+    let fetch_result = fetch::fetch_url(client, url, DEFAULT_TIMEOUT_MS)
+        .await
+        .map_err(|e| format!("Failed to fetch {}: {}", url, e))?;
+
+    let content_hash = SomCache::content_hash(fetch_result.html.as_bytes());
+    match cache.lookup(&fetch_result.url, content_hash) {
+        CacheLookup::Hit(entry) => {
+            if let (Some(effective_html), Ok(som)) = (
+                entry.effective_html.clone(),
+                serde_json::from_slice::<Som>(&entry.som_json),
+            ) {
+                debug!(
+                    url = %fetch_result.url,
+                    "MCP session page-state cache hit"
+                );
+                let page_result = pipeline::PageResult {
+                    som,
+                    url: fetch_result.url.clone(),
+                    timing: pipeline::PipelineTiming {
+                        extract_scripts_us: 0,
+                        js_execution_us: 0,
+                        som_compile_us: 0,
+                        total_us: 0,
+                    },
+                    js_report: None,
+                    effective_html,
+                };
+                return Ok((fetch_result.html, fetch_result.url, page_result, true));
+            }
+        }
+        CacheLookup::Stale { .. } | CacheLookup::Miss => {}
+    }
+
+    let pipeline_config = PipelineConfig {
+        execute_js: true,
+        fetch_external_scripts: true,
+        ..Default::default()
+    };
+
+    let page_result = pipeline::process_page_async(
+        &fetch_result.html,
+        &fetch_result.url,
+        &pipeline_config,
+        client,
+    )
+    .await
+    .map_err(|e| format!("Pipeline error: {}", e))?;
+
+    if let Ok(full_som_json) = serde_json::to_vec(&page_result.som) {
+        cache.store_page_state(
+            &fetch_result.url,
+            content_hash,
+            full_som_json,
+            fetch_result.html_bytes,
+            page_result.effective_html.clone(),
+        );
+    }
+
+    Ok((fetch_result.html, fetch_result.url, page_result, false))
 }
 
 /// Get the tool definition for fetch_page.
@@ -482,7 +554,7 @@ pub fn cache_status_definition() -> ToolDefinition {
 pub fn session_status_definition() -> ToolDefinition {
     ToolDefinition {
         name: "session_status".to_string(),
-        description: "Return Plasmate's MCP browser-session inventory: capacity, age/idle timing, loaded URLs, SOM sizes, node-map counts, and structured-data presence. Use this to inspect stateful open_page/navigate_to workflows before creating more sessions or debugging repeated actions.".to_string(),
+        description: "Return Plasmate's MCP browser-session inventory: capacity, age/idle timing, loaded URLs, raw/effective HTML sizes, SOM sizes, node-map counts, and structured-data presence. Use this to inspect stateful open_page/navigate_to workflows before creating more sessions or debugging repeated actions.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {}
@@ -833,7 +905,7 @@ struct ClosePageParams {
 pub fn open_page_definition() -> ToolDefinition {
     ToolDefinition {
         name: "open_page".to_string(),
-        description: "Open a URL in a persistent browser session. Returns a session_id and the initial SOM. Use this (instead of fetch_page) when you need to interact with the page - click buttons, fill forms, navigate, or run JavaScript. Pair with click, type_text, navigate_to, and evaluate.".to_string(),
+        description: "Open a URL in a persistent browser session. Returns a session_id, the initial SOM, and whether validated local page-state cache restored the SOM/effective HTML. Use this (instead of fetch_page) when you need to interact with the page - click buttons, fill forms, navigate, or run JavaScript. Pair with click, type_text, navigate_to, and evaluate.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -914,6 +986,7 @@ pub async fn handle_open_page(
     arguments: &Value,
     client: &reqwest::Client,
     sessions: &Arc<SessionManager>,
+    cache: &Arc<SomCache>,
 ) -> Value {
     // Parse arguments
     let params: OpenPageParams = match serde_json::from_value(arguments.clone()) {
@@ -933,46 +1006,19 @@ pub async fn handle_open_page(
         }
     };
 
-    // Fetch and navigate using the shared HTTP client
-    let fetch_result = match fetch::fetch_url(client, &params.url, DEFAULT_TIMEOUT_MS).await {
-        Ok(r) => r,
-        Err(e) => {
-            // Clean up the session on failure
-            sessions.close_session(&session_id).await;
-            return error_response(&format!("Failed to fetch {}: {}", params.url, e));
-        }
-    };
-
-    let pipeline_config = PipelineConfig {
-        execute_js: true,
-        fetch_external_scripts: true,
-        ..Default::default()
-    };
-
-    let page_result = match pipeline::process_page_async(
-        &fetch_result.html,
-        &fetch_result.url,
-        &pipeline_config,
-        client,
-    )
-    .await
-    {
-        Ok(r) => r,
-        Err(e) => {
-            sessions.close_session(&session_id).await;
-            return error_response(&format!("Pipeline error: {}", e));
-        }
-    };
+    let (html, final_url, page_result, cache_restored) =
+        match load_session_page_for_mcp(client, cache, &params.url).await {
+            Ok(result) => result,
+            Err(e) => {
+                sessions.close_session(&session_id).await;
+                return error_response(&e);
+            }
+        };
 
     // Store the result in the session
     let som_json = sessions
         .with_session(&session_id, |session| {
-            store_page_state_in_session(
-                session,
-                &fetch_result.url,
-                &fetch_result.html,
-                &page_result,
-            )
+            store_page_state_in_session(session, &final_url, &html, &page_result)
         })
         .await;
 
@@ -992,7 +1038,8 @@ pub async fn handle_open_page(
                 "text": json!({
                     "session_id": session_id,
                     "title": page_result.som.title,
-                    "url": fetch_result.url,
+                    "url": final_url,
+                    "cache_restored": cache_restored,
                     "regions": som_json.get("regions")
                 }).to_string()
             }
@@ -1370,7 +1417,7 @@ fn default_pixels() -> i32 {
 pub fn navigate_to_definition() -> ToolDefinition {
     ToolDefinition {
         name: "navigate_to".to_string(),
-        description: "Navigate to a new URL within an existing browser session. Returns the updated page SOM.".to_string(),
+        description: "Navigate to a new URL within an existing browser session. Returns the updated page SOM and whether validated local page-state cache restored the SOM/effective HTML.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1524,6 +1571,7 @@ pub async fn handle_navigate_to(
     arguments: &Value,
     client: &reqwest::Client,
     sessions: &Arc<SessionManager>,
+    cache: &Arc<SomCache>,
 ) -> Value {
     let params: NavigateToParams = match serde_json::from_value(arguments.clone()) {
         Ok(p) => p,
@@ -1542,43 +1590,18 @@ pub async fn handle_navigate_to(
         return error_response(&format!("Session not found: {}", params.session_id));
     }
 
-    // Fetch the new URL
-    let fetch_result = match fetch::fetch_url(client, &params.url, DEFAULT_TIMEOUT_MS).await {
-        Ok(r) => r,
-        Err(e) => {
-            return error_response(&format!("Failed to fetch {}: {}", params.url, e));
-        }
-    };
-
-    let pipeline_config = PipelineConfig {
-        execute_js: true,
-        fetch_external_scripts: true,
-        ..Default::default()
-    };
-
-    let page_result = match pipeline::process_page_async(
-        &fetch_result.html,
-        &fetch_result.url,
-        &pipeline_config,
-        client,
-    )
-    .await
-    {
-        Ok(r) => r,
-        Err(e) => {
-            return error_response(&format!("Pipeline error: {}", e));
-        }
-    };
+    let (html, final_url, page_result, cache_restored) =
+        match load_session_page_for_mcp(client, cache, &params.url).await {
+            Ok(result) => result,
+            Err(e) => {
+                return error_response(&e);
+            }
+        };
 
     // Update session state
     let som_json = sessions
         .with_session(&params.session_id, |session| {
-            store_page_state_in_session(
-                session,
-                &fetch_result.url,
-                &fetch_result.html,
-                &page_result,
-            )
+            store_page_state_in_session(session, &final_url, &html, &page_result)
         })
         .await;
 
@@ -1596,7 +1619,8 @@ pub async fn handle_navigate_to(
                 "text": json!({
                     "session_id": params.session_id,
                     "title": page_result.som.title,
-                    "url": fetch_result.url,
+                    "url": final_url,
+                    "cache_restored": cache_restored,
                     "regions": som_json.get("regions")
                 }).to_string()
             }
@@ -2825,6 +2849,7 @@ mod tests {
             42,
             test_som(),
             200,
+            Some("<html><body>ready</body></html>".to_string()),
             Some("interactive"),
         );
 
@@ -2837,6 +2862,15 @@ mod tests {
             cache.lookup_with_selector("https://example.com/app", 42, Some("INTERACTIVE")),
             CacheLookup::Hit(_)
         ));
+        match cache.lookup("https://example.com/app", 42) {
+            CacheLookup::Hit(entry) => {
+                assert_eq!(
+                    entry.effective_html.as_deref(),
+                    Some("<html><body>ready</body></html>")
+                );
+            }
+            _ => panic!("Expected full cache hit"),
+        }
     }
 
     #[test]
@@ -2891,7 +2925,13 @@ mod tests {
     #[test]
     fn test_cache_status_returns_snapshot_json() {
         let cache = Arc::new(SomCache::new(CacheConfig::default()));
-        cache.store("https://example.com/app", 42, b"som".to_vec(), 200);
+        cache.store_page_state(
+            "https://example.com/app",
+            42,
+            b"som".to_vec(),
+            200,
+            "<html><body>ready</body></html>".to_string(),
+        );
 
         let result = handle_cache_status(&cache);
         let text = result["content"][0]["text"].as_str().unwrap();
@@ -2899,6 +2939,8 @@ mod tests {
 
         assert_eq!(snapshot["entries"], 1);
         assert_eq!(snapshot["full_entries"], 1);
+        assert_eq!(snapshot["effective_html_entries"], 1);
+        assert_eq!(snapshot["total_effective_html_bytes"], 31);
         assert_eq!(snapshot["max_hot_entries"], 1000);
     }
 
@@ -2918,6 +2960,10 @@ mod tests {
             Some((crate::mcp::sessions::MAX_SESSIONS - 1) as u64)
         );
         assert!(snapshot["sessions"].as_array().unwrap()[0]["session_id"].is_string());
+        assert_eq!(
+            snapshot["sessions"].as_array().unwrap()[0]["has_effective_html"].as_bool(),
+            Some(false)
+        );
         assert!(sessions.close_session(&session_id).await);
     }
 }

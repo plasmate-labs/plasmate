@@ -27,6 +27,8 @@ pub struct CacheEntry {
     pub html_bytes: usize,
     /// SOM byte count.
     pub som_bytes: usize,
+    /// Effective HTML after JS execution, when stored by an interactive path.
+    pub effective_html: Option<String>,
     /// Number of times this entry has been served from cache.
     pub hit_count: u64,
 }
@@ -96,8 +98,10 @@ pub struct CacheSnapshot {
     pub entries: usize,
     pub full_entries: usize,
     pub selector_entries: usize,
+    pub effective_html_entries: usize,
     pub total_som_bytes: usize,
     pub total_html_bytes: usize,
+    pub total_effective_html_bytes: usize,
     pub max_hot_entries: usize,
 }
 
@@ -214,6 +218,44 @@ impl SomCache {
         som_json: Vec<u8>,
         html_bytes: usize,
     ) {
+        self.store_with_selector_and_effective_html(
+            url,
+            content_hash,
+            selector,
+            som_json,
+            html_bytes,
+            None,
+        );
+    }
+
+    /// Store a full-page SOM with effective HTML for later session restoration.
+    pub fn store_page_state(
+        &self,
+        url: &str,
+        content_hash: u64,
+        som_json: Vec<u8>,
+        html_bytes: usize,
+        effective_html: String,
+    ) {
+        self.store_with_selector_and_effective_html(
+            url,
+            content_hash,
+            None,
+            som_json,
+            html_bytes,
+            Some(effective_html),
+        );
+    }
+
+    fn store_with_selector_and_effective_html(
+        &self,
+        url: &str,
+        content_hash: u64,
+        selector: Option<&str>,
+        som_json: Vec<u8>,
+        html_bytes: usize,
+        effective_html: Option<String>,
+    ) {
         let som_bytes = som_json.len();
         let entry = CacheEntry {
             som_json,
@@ -222,6 +264,7 @@ impl SomCache {
             last_accessed: Instant::now(),
             html_bytes,
             som_bytes,
+            effective_html,
             hit_count: 0,
         };
 
@@ -308,6 +351,10 @@ impl SomCache {
                 snapshot.selector_entries += 1;
             } else {
                 snapshot.full_entries += 1;
+            }
+            if let Some(effective_html) = &entry.effective_html {
+                snapshot.effective_html_entries += 1;
+                snapshot.total_effective_html_bytes += effective_html.len();
             }
             snapshot.total_som_bytes += entry.som_bytes;
             snapshot.total_html_bytes += entry.html_bytes;
@@ -676,7 +723,13 @@ mod tests {
     #[test]
     fn test_cache_snapshot_counts_full_and_selector_entries() {
         let cache = SomCache::new(CacheConfig::default());
-        cache.store("https://example.com", 111, b"full".to_vec(), 1000);
+        cache.store_page_state(
+            "https://example.com",
+            111,
+            b"full".to_vec(),
+            1000,
+            "<html><body>full</body></html>".to_string(),
+        );
         cache.store_with_selector(
             "https://example.com",
             111,
@@ -690,13 +743,37 @@ mod tests {
         assert_eq!(snapshot.entries, 2);
         assert_eq!(snapshot.full_entries, 1);
         assert_eq!(snapshot.selector_entries, 1);
+        assert_eq!(snapshot.effective_html_entries, 1);
         assert_eq!(snapshot.total_som_bytes, 12);
         assert_eq!(snapshot.total_html_bytes, 2000);
+        assert_eq!(snapshot.total_effective_html_bytes, 30);
         assert_eq!(snapshot.hits, 1);
         assert_eq!(
             snapshot.max_hot_entries,
             CacheConfig::default().max_hot_entries
         );
+    }
+
+    #[test]
+    fn test_page_state_cache_entry_restores_effective_html() {
+        let cache = SomCache::new(CacheConfig::default());
+        cache.store_page_state(
+            "https://example.com/app",
+            111,
+            b"{\"regions\":[]}".to_vec(),
+            100,
+            "<html><body>hydrated</body></html>".to_string(),
+        );
+
+        match cache.lookup("https://example.com/app", 111) {
+            CacheLookup::Hit(entry) => {
+                assert_eq!(
+                    entry.effective_html.as_deref(),
+                    Some("<html><body>hydrated</body></html>")
+                );
+            }
+            _ => panic!("Expected page-state cache hit"),
+        }
     }
 
     #[test]

@@ -471,6 +471,14 @@ Current competitor direction keeps pushing from sessions toward replayable, insp
 - **Session status should show loaded state**: `session_status` should expose available capacity, loaded URLs, titles, SOM sizes, element/interactive counts, node-map counts, and structured-data presence so agents can inspect replay readiness.
 - **Cache restore should reuse the same update path**: stateful cache hits should restore `effective_html`, structured data, and node maps through the centralized page-state updater before they are allowed into replay flows.
 
+### 2026-05-16 MCP Session Cache-Restore Adjustment
+
+Current competitor docs keep validating the same product wedge: structured browser state has to be inspectable before it is replayable. Playwright MCP keeps refs scoped to a fresh accessibility snapshot, Stagehand and Browserbase cache actions only after validating page state, Browserbase and Cloudflare Browser Run package sessions with replay/recordings/Live View, and Firecrawl continues to distribute hosted browser sessions through MCP. Plasmate should not pivot into a hosted browser fleet. The stickier local move is to make MCP session creation reuse validated SOM cache entries only when they carry the post-JS HTML needed for follow-up interaction.
+
+- **Cache entries need replay payloads**: full-page SOM cache entries should optionally carry `effective_html` so stateful sessions can bootstrap `evaluate`, click, type, and CDP node maps from a validated cache hit.
+- **Fetch/extract should seed sessions**: stateless MCP fetch/extract calls should store restorable full-page cache entries when JavaScript runs, so a later `open_page` does not pay a second JS/SOM compile for the same content.
+- **Restore must stay observable**: `open_page` and `navigate_to` should return `cache_restored`, while `cache_status` and `session_status` expose effective-HTML inventory and per-session raw/effective HTML sizes.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -688,6 +696,8 @@ Current competitor direction keeps pushing from sessions toward replayable, insp
 - [x] Stateful MCP open/navigate rebuilds structured data and CDP node maps
 - [x] Stateful MCP mutation tools rebuild structured data and CDP node maps
 - [x] Stateful MCP click/CDP lookup traverses nested and shadow-root elements
+- [x] MCP stateful open/navigate restore validated cached SOM and effective HTML
+- [x] MCP cache_status/session_status expose effective-HTML replay inventory
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures

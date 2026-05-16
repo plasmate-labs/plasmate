@@ -37,7 +37,10 @@ pub struct SessionSummary {
     pub idle_ms: u128,
     pub has_page: bool,
     pub has_structured_data: bool,
+    pub has_effective_html: bool,
     pub node_count: usize,
+    pub html_bytes: Option<usize>,
+    pub effective_html_bytes: Option<usize>,
     pub som_bytes: Option<usize>,
     pub element_count: Option<usize>,
     pub interactive_count: Option<usize>,
@@ -188,7 +191,10 @@ impl SessionManager {
                     idle_ms: now.duration_since(session.last_accessed).as_millis(),
                     has_page: session.target.current_som.is_some(),
                     has_structured_data: session.target.current_structured_data.is_some(),
+                    has_effective_html: session.target.effective_html.is_some(),
                     node_count: session.target.node_map.len(),
+                    html_bytes: session.target.current_html.as_ref().map(String::len),
+                    effective_html_bytes: session.target.effective_html.as_ref().map(String::len),
                     som_bytes: som_meta.map(|meta| meta.som_bytes),
                     element_count: som_meta.map(|meta| meta.element_count),
                     interactive_count: som_meta.map(|meta| meta.interactive_count),
@@ -250,6 +256,13 @@ mod tests {
     async fn test_snapshot_reports_session_inventory() {
         let manager = SessionManager::new();
         let id = manager.create_session().await.unwrap();
+        manager
+            .with_session(&id, |session| {
+                session.target.current_html = Some("<html></html>".to_string());
+                session.target.effective_html = Some("<html><body>ready</body></html>".to_string());
+            })
+            .await
+            .unwrap();
 
         let snapshot = manager.snapshot().await;
 
@@ -259,6 +272,9 @@ mod tests {
         assert_eq!(snapshot.sessions.len(), 1);
         assert_eq!(snapshot.sessions[0].session_id, id);
         assert!(!snapshot.sessions[0].has_page);
+        assert!(snapshot.sessions[0].has_effective_html);
+        assert_eq!(snapshot.sessions[0].html_bytes, Some(13));
+        assert_eq!(snapshot.sessions[0].effective_html_bytes, Some(31));
         assert!(manager.close_session(&id).await);
     }
 }

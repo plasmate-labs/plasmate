@@ -49,6 +49,44 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-16T19:06:51Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch origin` still fails in the automation worktree
+  because linked `FETCH_HEAD` cannot be opened, and fallback fetch from the
+  primary checkout cannot resolve `github.com`. Work continued from newest
+  locally known `origin/master` `c0a9a9d`.
+- Market direction: current docs and launch notes keep pushing browser-agent
+  products toward validated, replayable state. Playwright MCP refs are scoped
+  to fresh snapshots, Stagehand/Browserbase cache actions after page-state
+  validation, Browserbase and Cloudflare Browser Run package sessions with
+  replay/recordings/Live View, and Firecrawl keeps hosted browser sessions in
+  MCP. Plasmate should keep the local-first wedge and make validated MCP
+  session cache restore work before trace export or hosted-browser features.
+- Code changes: SOM cache entries can now carry post-JS `effective_html`;
+  cache snapshots report effective-HTML entry counts and bytes; stateless MCP
+  fetch/text/link tools seed restorable full-page cache entries when JavaScript
+  runs; stateful MCP `open_page` and `navigate_to` restore cached SOM plus
+  `effective_html` after content-hash validation and return `cache_restored`.
+  `session_status` now reports raw/effective HTML sizes and effective-HTML
+  presence for replay-readiness inspection.
+- Tests/docs: added cache/session/MCP tests for effective-HTML persistence,
+  cache-status inventory, and session-status HTML fields. Updated PRD,
+  roadmap, README, Claude Desktop MCP docs, website doc sources/generated docs,
+  and this running state with the session-cache-restore rationale and next
+  conformance step.
+- Verification: focused `cargo test cache::store --quiet`, `cargo test
+  mcp::sessions --quiet`, `cargo test mcp::tools --quiet`, `cargo check
+  --quiet`, `cargo build --quiet`, `cargo test --lib --quiet` (273 tests),
+  `cargo clippy --quiet`, website docs rebuild, and `git diff --check`
+  passed with pre-existing warnings, using
+  `RUSTY_V8_ARCHIVE=/Users/steve/Git/plasmate/target/debug/gn_out/obj/librusty_v8.a`.
+  Full `cargo test --quiet` still fails only in sandboxed
+  `tests/awp_integration_test.rs` because local listener setup returns
+  `Operation not permitted`.
+- Pending next step: add cache-restore conformance for repeated `fetch_page` ->
+  `open_page` and repeated `navigate_to`, then add trace export for MCP/AWP
+  sessions.
+
 ### 2026-05-16T17:07:46Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch origin master` still fails in the automation

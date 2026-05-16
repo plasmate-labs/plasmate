@@ -1074,6 +1074,28 @@ export or hosted scale.
    should restore `effective_html`, structured data, and node maps through the
    centralized page-state updater before they are allowed into replay flows.
 
+### 2026-05-16 MCP Session Cache-Restore Adjustment
+
+Current competitor docs keep validating the same product wedge: structured
+browser state has to be inspectable before it is replayable. Playwright MCP
+keeps refs scoped to a fresh accessibility snapshot, Stagehand and Browserbase
+cache actions only after validating page state, Browserbase and Cloudflare
+Browser Run package sessions with replay/recordings/Live View, and Firecrawl
+continues to distribute hosted browser sessions through MCP. Plasmate should
+not pivot into a hosted browser fleet. The stickier local move is to make MCP
+session creation reuse validated SOM cache entries only when they carry the
+post-JS HTML needed for follow-up interaction.
+
+1. **Cache entries need replay payloads**: full-page SOM cache entries should
+   optionally carry `effective_html` so stateful sessions can bootstrap
+   `evaluate`, click, type, and CDP node maps from a validated cache hit.
+2. **Fetch/extract should seed sessions**: stateless MCP fetch/extract calls
+   should store restorable full-page cache entries when JavaScript runs, so a
+   later `open_page` does not pay a second JS/SOM compile for the same content.
+3. **Restore must stay observable**: `open_page` and `navigate_to` should
+   return `cache_restored`, while `cache_status` and `session_status` expose
+   effective-HTML inventory and per-session raw/effective HTML sizes.
+
 ## Architecture
 
 ```
@@ -1580,6 +1602,16 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   interaction.
 - Stateful MCP click lookup and CDP SOM-id lookup now traverse nested children
   and shadow-root elements, keeping web-component action targets addressable.
+- SOM cache entries can now store post-JS `effective_html`, and cache snapshots
+  report effective-HTML entry counts and bytes for replay-restorability checks.
+- Stateless MCP `fetch_page`, `extract_text`, and `extract_links` now seed
+  restorable cache entries when JavaScript runs, so later stateful sessions can
+  reuse validated page understanding.
+- Stateful MCP `open_page` and `navigate_to` now restore cached SOM plus
+  `effective_html` after content-hash validation and return `cache_restored`
+  in the tool response.
+- MCP `session_status` now reports per-session raw/effective HTML sizes and
+  effective-HTML presence alongside SOM and node-map inventory.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, `html_id` DOM-provenance cases, and

@@ -39,12 +39,12 @@ Claude now has access to these tools:
 | `fetch_page` | Fetch a URL and return the Semantic Object Model (SOM) - 17x fewer tokens than raw HTML |
 | `extract_text` | Get clean, readable text from any web page |
 | `extract_links` | Get all outbound URLs from a page (deduplicated) |
-| `cache_status` | Inspect MCP SOM cache hits, misses, selector entries, and avoided HTML work |
-| `session_status` | Inspect active MCP browser sessions, loaded URLs, SOM/node inventory, capacity, age, and idle time |
-| `open_page` | Open a persistent browser session |
+| `cache_status` | Inspect MCP SOM cache hits, misses, selector/effective-HTML entries, and avoided HTML work |
+| `session_status` | Inspect active MCP browser sessions, loaded URLs, raw/effective HTML, SOM/node inventory, capacity, age, and idle time |
+| `open_page` | Open a persistent browser session; reports `cache_restored` on validated page-state cache hits |
 | `click` | Click elements on an open page |
 | `type_text` | Type into form fields |
-| `navigate_to` | Navigate to a new URL in an open session |
+| `navigate_to` | Navigate to a new URL in an open session; reports `cache_restored` on validated page-state cache hits |
 | `scroll` | Scroll the page |
 | `screenshot` | Take a screenshot |
 | `evaluate` | Run JavaScript on the page |

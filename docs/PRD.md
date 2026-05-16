@@ -112,6 +112,17 @@ structured-data and CDP node-map indexes that `open_page` and `navigate_to`
 produce, while expanding `session_status` into a lightweight loaded-session
 inventory before trace export.
 
+2026-05-16 session-cache restore read: current docs and launch notes keep
+making replayable, validated state a purchase driver. Playwright MCP refs are
+valid inside the current snapshot, Stagehand local and Browserbase caches skip
+LLM work only after page-state validation, Browserbase and Cloudflare Browser
+Run pair sessions with recordings/Live View, and Firecrawl keeps hosted MCP
+browser sessions broad. Plasmate should still avoid a hosted-browser pivot.
+The sticky local move is to let MCP `open_page` and `navigate_to` reuse a
+content-hash-validated cache entry only when it carries both SOM and
+post-JS `effective_html`, then restore that state through the same session
+updater that rebuilds structured data and CDP node maps.
+
 2026-05-05 market read: the strongest retention hooks are reusable structured
 state, cached repeated actions, and ecosystem-native distribution. Playwright
 MCP returns accessibility snapshots with stable refs for interaction, Stagehand
@@ -1237,17 +1248,26 @@ and adapter docs over one-off integration logic.
   - Stateful MCP click lookup and CDP SOM-id lookup now traverse nested
     children and shadow-root elements, keeping web-component action targets
     addressable after navigation.
+  - SOM cache entries can now carry post-JS `effective_html`, and cache
+    snapshots report effective-HTML entry counts and bytes so users can see
+    whether entries are restorable for stateful replay.
+  - MCP stateless `fetch_page`, `extract_text`, and `extract_links` now seed
+    full-page cache entries with `effective_html` when JavaScript runs, allowing
+    later stateful sessions to reuse the same validated page understanding.
+  - Stateful MCP `open_page` and `navigate_to` now check the local SOM cache
+    after fetch/content-hash validation and restore cached SOM plus
+    `effective_html` through the centralized page-state updater when available.
+  - MCP `open_page` and `navigate_to` responses now include `cache_restored`;
+    `session_status` also reports raw/effective HTML size and effective-HTML
+    presence for replay-readiness inspection.
 
 ## Next Steps
 
-- Extend selector-aware cache use into stateful MCP session navigation once
-  cache entries can safely carry or restore the effective HTML needed for
-  replay after a hit.
-- Add stateful-session cache reuse through the centralized session page-state
-  update path, so validated cache hits restore `effective_html`, structured
-  data, and CDP node maps without breaking click/type/evaluate replay.
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked
   or selected an element.
+- Add cache-restore conformance for MCP sessions: repeated `fetch_page` ->
+  `open_page` and repeated `navigate_to` should show `cache_restored=true`
+  while preserving `effective_html`, structured data, and CDP node maps.
 - Add conformance cases for ARIA-heavy SaaS pages, especially disabled,
   required, and read-only custom controls, and compare output against Playwright MCP
   snapshots.

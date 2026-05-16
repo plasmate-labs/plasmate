@@ -140,6 +140,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-16 session-replay readiness read: the latest competitor docs reinforce that replay only becomes sticky when session state is inspectable after every mutation, not only after navigation. Playwright MCP refreshes refs after page changes, Stagehand validates cached actions against current DOM state, Browserbase/Cloudflare Browser Run pair sessions with replay/recording, and Firecrawl keeps broadening browser-session MCP workflows. Plasmate should keep the local-first wedge by making every MCP interaction refresh the same structured-data and CDP node-map indexes that `open_page` and `navigate_to` produce, while expanding `session_status` into a lightweight loaded-session inventory before trace export.
 
+2026-05-16 session-cache restore read: current docs and launch notes keep making replayable, validated state a purchase driver. Playwright MCP refs are valid inside the current snapshot, Stagehand local and Browserbase caches skip LLM work only after page-state validation, Browserbase and Cloudflare Browser Run pair sessions with recordings/Live View, and Firecrawl keeps hosted MCP browser sessions broad. Plasmate should still avoid a hosted-browser pivot. The sticky local move is to let MCP `open_page` and `navigate_to` reuse a content-hash-validated cache entry only when it carries both SOM and post-JS `effective_html`, then restore that state through the same session updater that rebuilds structured data and CDP node maps.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -171,6 +173,10 @@ The project already spans a large number of package and integration surfaces: Ru
   - Stateful MCP `open_page` and `navigate_to` now preserve structured data and rebuild CDP node maps after SOM compilation.
   - Stateful MCP `click`, `type_text`, `select_option`, `scroll`, `toggle`, and `clear` now use the same page-state update path as navigation, preserving structured data and rebuilding CDP node maps after every interaction.
   - Stateful MCP click lookup and CDP SOM-id lookup now traverse nested children and shadow-root elements, keeping web-component action targets addressable after navigation.
+  - SOM cache entries can now carry post-JS `effective_html`, and cache snapshots report effective-HTML entry counts and bytes so users can see whether entries are restorable for stateful replay.
+  - MCP stateless `fetch_page`, `extract_text`, and `extract_links` now seed full-page cache entries with `effective_html` when JavaScript runs, allowing later stateful sessions to reuse the same validated page understanding.
+  - Stateful MCP `open_page` and `navigate_to` now check the local SOM cache after fetch/content-hash validation and restore cached SOM plus `effective_html` through the centralized page-state updater when available.
+  - MCP `open_page` and `navigate_to` responses now include `cache_restored`; `session_status` also reports raw/effective HTML size and effective-HTML presence for replay-readiness inspection.
   - Rust SOM attrs and JSON Schema now preserve link navigation validation cues: `hreflang`, link MIME `type`, and `referrerpolicy`.
   - Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI now surface those link cues in compact action targets and prompt renderers without changing deterministic `cache_key` values.
   - The shared action-availability manifest now asserts link locale, resource type, and referrer-policy context so adapters stay aligned for repeated navigation workflows.
@@ -364,9 +370,8 @@ The project already spans a large number of package and integration surfaces: Ru
 
 ## Next Steps
 
-- Extend selector-aware cache use into stateful MCP session navigation once cache entries can safely carry or restore the effective HTML needed for replay after a hit.
-- Add stateful-session cache reuse through the centralized session page-state update path, so validated cache hits restore `effective_html`, structured data, and CDP node maps without breaking click/type/evaluate replay.
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked or selected an element.
+- Add cache-restore conformance for MCP sessions: repeated `fetch_page` -> `open_page` and repeated `navigate_to` should show `cache_restored=true` while preserving `effective_html`, structured data, and CDP node maps.
 - Add conformance cases for ARIA-heavy SaaS pages, especially disabled and required custom controls, and compare output against Playwright MCP snapshots.
 - Wire `015-action-state` into cross-adapter parser/SDK conformance runners so inherited disabled state stays synchronized outside Rust.
 - Promote the GitHub Actions action-manifest job from quick shared-manifest checks to full conformance once runtime and dependency caching are stable.
