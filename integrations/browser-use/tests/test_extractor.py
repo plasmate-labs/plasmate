@@ -172,3 +172,22 @@ def test_extract_action_plan_index_exposes_replay_lookup_buckets():
     )
     assert "e_save" not in enabled_index["by_id"]
     assert "e_plan" in enabled_index["by_id"]
+
+
+def test_find_action_target_resolves_replay_identifiers():
+    extractor = PlasmateExtractor.__new__(PlasmateExtractor)
+    som = load_action_availability_fixture()
+    expected_targets = load_action_availability_expectations()
+    extractor.extract = lambda url: som
+    save = next(target for target in expected_targets if target["id"] == "e_save")
+
+    assert extractor.find_action_target("https://example.com/settings", "e_save") == save
+    assert extractor.find_action_target("https://example.com/settings", save["cache_key"]) == save
+    assert extractor.find_action_target("https://example.com/settings", "save-button") == save
+    assert extractor.find_action_target("https://example.com/settings", "settings-save") == save
+    assert (
+        extractor.find_action_target(
+            "https://example.com/settings", "settings-save", enabled_only=True
+        )
+        is None
+    )

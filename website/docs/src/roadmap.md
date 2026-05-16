@@ -717,12 +717,15 @@ Competitor pressure keeps moving reusable action state from browser engines into
 - [x] Python and Node SDK text search matches label-only controls
 - [x] Python and Node parser link/markdown helpers preserve label-only accessible links
 - [x] Browser Use, LangChain, and Vercel AI expose action-target replay lookup helpers
+- [x] Python/Node parser packages and Python/Node/Go SDKs auto-resolve replay ids across SOM id, cache_key, html_id, and test_id buckets
+- [x] Browser Use, LangChain, and Vercel AI direct replay lookup helpers auto-resolve stored replay ids while preserving enabled-only filtering
+- [x] Package and adapter tests cover auto replay lookup without bespoke action-menu scans
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
 - [ ] Promote html_id DOM-provenance cases into adapter conformance fixtures
 - [ ] Promote locator-provenance cases into broader Rust/parser/SDK and adapter conformance fixtures
-- [ ] Promote framework replay lookup helpers into shared cross-adapter fixtures
+- [ ] Promote auto replay lookup into the shared action-manifest release gate
 - [ ] Add cross-adapter fixtures for enriched compact action-plan metadata
 - [ ] Promote ARIA relationship-state cases, including owns/flowto/details, into the broader action-state/action-semantics conformance suites
 - [ ] Promote range and orientation cases into broader parser, SDK, and adapter conformance fixtures

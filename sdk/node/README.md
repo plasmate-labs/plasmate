@@ -91,6 +91,7 @@ The SDK includes query helpers for searching and traversing SOM documents:
 
 ```typescript
 import {
+  findActionTarget,
   findByRole, findById, findByTag, findInteractive,
   findByText, flatElements, getActionPlan, getTokenEstimate,
 } from 'plasmate';
@@ -113,6 +114,9 @@ const interactive = findInteractive(som);
 // Get compact action targets for cached agent workflows
 const actionPlan = getActionPlan(som).filter((target) => target.enabled);
 console.log(actionPlan.map((target) => [target.id, target.cache_key, target.actions, target.expanded]));
+
+// Resolve a stored replay id from SOM id, cache key, HTML id, or test id
+const save = findActionTarget(som, 'plasmate-action:v1:...', { enabledOnly: true });
 
 // Search by visible text (case-insensitive)
 const matches = findByText(som, 'sign in');

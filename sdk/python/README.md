@@ -109,7 +109,7 @@ Search and traverse SOM documents:
 ```python
 from plasmate import Som, find_by_role, find_by_id, find_by_tag
 from plasmate import find_interactive, find_by_text, flat_elements
-from plasmate import get_action_plan, get_action_plan_cache_key, get_token_estimate
+from plasmate import find_action_target, get_action_plan, get_token_estimate
 
 # Find all navigation regions
 navs = find_by_role(som, "navigation")
@@ -130,6 +130,9 @@ for el in find_interactive(som):
 for target in get_action_plan(som):
     if target["enabled"]:
         print(target["id"], target["cache_key"], target["actions"], target.get("target"), target.get("download"))
+
+# Resolve a stored replay id from SOM id, cache key, HTML id, or test id
+save = find_action_target(som, "plasmate-action:v1:...", enabled_only=True)
 
 # Search by text content (case-insensitive)
 results = find_by_text(som, "sign up")

@@ -162,6 +162,13 @@ export interface ActionPlanIndex {
   byTestId: Record<string, ActionPlanItem>;
 }
 
+export type ActionTargetLookupKey = 'auto' | 'id' | 'cache_key' | 'html_id' | 'test_id';
+
+export interface ActionTargetLookupOptions {
+  by?: ActionTargetLookupKey;
+  enabledOnly?: boolean;
+}
+
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined;
 }
@@ -375,24 +382,60 @@ export function getActionPlanIndex(
   return index;
 }
 
+/** Find a compact action target by id, cache key, HTML id, test id, or auto-detected replay id. */
+export function findActionTarget(
+  som: Som,
+  value: string,
+  options: ActionTargetLookupOptions = {},
+): ActionPlanItem | undefined {
+  const index = getActionPlanIndex(som, { enabledOnly: options.enabledOnly });
+  const by = options.by ?? 'auto';
+  if (by === 'id') return index.byId[value];
+  if (by === 'cache_key') return index.byCacheKey[value];
+  if (by === 'html_id') return index.byHtmlId[value];
+  if (by === 'test_id') return index.byTestId[value];
+  return (
+    index.byId[value] ??
+    index.byCacheKey[value] ??
+    index.byHtmlId[value] ??
+    index.byTestId[value]
+  );
+}
+
 /** Find a compact action target by its SOM element id. */
-export function findActionTargetById(som: Som, id: string): ActionPlanItem | undefined {
-  return getActionPlanIndex(som).byId[id];
+export function findActionTargetById(
+  som: Som,
+  id: string,
+  options: Pick<ActionTargetLookupOptions, 'enabledOnly'> = {},
+): ActionPlanItem | undefined {
+  return findActionTarget(som, id, { ...options, by: 'id' });
 }
 
 /** Find a compact action target by its deterministic cache key. */
-export function findActionTargetByCacheKey(som: Som, cacheKey: string): ActionPlanItem | undefined {
-  return getActionPlanIndex(som).byCacheKey[cacheKey];
+export function findActionTargetByCacheKey(
+  som: Som,
+  cacheKey: string,
+  options: Pick<ActionTargetLookupOptions, 'enabledOnly'> = {},
+): ActionPlanItem | undefined {
+  return findActionTarget(som, cacheKey, { ...options, by: 'cache_key' });
 }
 
 /** Find a compact action target by its original HTML id. */
-export function findActionTargetByHtmlId(som: Som, htmlId: string): ActionPlanItem | undefined {
-  return getActionPlanIndex(som).byHtmlId[htmlId];
+export function findActionTargetByHtmlId(
+  som: Som,
+  htmlId: string,
+  options: Pick<ActionTargetLookupOptions, 'enabledOnly'> = {},
+): ActionPlanItem | undefined {
+  return findActionTarget(som, htmlId, { ...options, by: 'html_id' });
 }
 
 /** Find a compact action target by its test locator attribute. */
-export function findActionTargetByTestId(som: Som, testId: string): ActionPlanItem | undefined {
-  return getActionPlanIndex(som).byTestId[testId];
+export function findActionTargetByTestId(
+  som: Som,
+  testId: string,
+  options: Pick<ActionTargetLookupOptions, 'enabledOnly'> = {},
+): ActionPlanItem | undefined {
+  return findActionTarget(som, testId, { ...options, by: 'test_id' });
 }
 
 /** Find all elements containing the given text (case-insensitive substring match). */

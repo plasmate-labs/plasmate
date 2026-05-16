@@ -571,6 +571,14 @@ func TestActionPlanLookupHelpers(t *testing.T) {
 	if byTest := FindActionTargetByTestID(som, "settings-save"); byTest == nil || byTest.ID != save.ID {
 		t.Fatalf("FindActionTargetByTestID = %#v, want %s", byTest, save.ID)
 	}
+	for _, value := range []string{"e_save", save.CacheKey, "save-button", "settings-save"} {
+		if found := FindActionTarget(som, value); found == nil || found.ID != save.ID {
+			t.Fatalf("FindActionTarget(%q) = %#v, want %s", value, found, save.ID)
+		}
+	}
+	if byTest := FindActionTarget(som, "settings-save", "test_id"); byTest == nil || byTest.ID != save.ID {
+		t.Fatalf("FindActionTarget(test_id) = %#v, want %s", byTest, save.ID)
+	}
 
 	index := GetActionPlanIndex(som)
 	if index.ByID["e_save"].ID != save.ID {
@@ -584,6 +592,9 @@ func TestActionPlanLookupHelpers(t *testing.T) {
 	}
 	if index.ByTestID["settings-save"].ID != save.ID {
 		t.Fatalf("ByTestID[settings-save] missing save target")
+	}
+	if found := FindActionTargetInIndex(index, save.CacheKey); found == nil || found.ID != save.ID {
+		t.Fatalf("FindActionTargetInIndex(cache_key) = %#v, want %s", found, save.ID)
 	}
 }
 

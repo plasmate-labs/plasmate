@@ -50,6 +50,7 @@ export type {
 // ---- SOM query helpers ----
 
 export {
+  findActionTarget,
   findByRole,
   findActionTargetByCacheKey,
   findActionTargetByHtmlId,

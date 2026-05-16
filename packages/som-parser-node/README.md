@@ -34,11 +34,12 @@ const links = getLinks(som);
 ### Plan agent actions
 
 ```typescript
-import { findByAction, getActionPlan } from 'som-parser';
+import { findActionTarget, findByAction, getActionPlan } from 'som-parser';
 
 const plan = getActionPlan(som);
 // Compact action targets with id, cache_key, role, actions, enabled, labels, link target/rel/download cues, form/list context, form submission metadata, submitter override cues, popover/command relation cues, text-entry/input hints, validation/range cues, and ARIA owns/flowto/details plus orientation/sort/value state.
 const available = plan.filter((item) => item.enabled);
+const save = findActionTarget(som, 'plasmate-action:v1:...', { enabledOnly: true });
 
 const clickable = findByAction(som, 'click');
 // Elements that can be clicked.

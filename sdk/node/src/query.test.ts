@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Som } from './types';
 import {
+  findActionTarget,
   findActionTargetByCacheKey,
   findActionTargetByHtmlId,
   findActionTargetById,
@@ -304,10 +305,16 @@ describe('getActionPlan', () => {
     assert.deepEqual(index.byCacheKey[save.cache_key], save);
     assert.deepEqual(index.byHtmlId['save-button'], save);
     assert.deepEqual(index.byTestId['settings-save'], save);
+    assert.deepEqual(findActionTarget(som, 'e_save'), save);
+    assert.deepEqual(findActionTarget(som, save.cache_key), save);
+    assert.deepEqual(findActionTarget(som, 'save-button'), save);
+    assert.deepEqual(findActionTarget(som, 'settings-save'), save);
+    assert.deepEqual(findActionTarget(som, 'settings-save', { by: 'test_id' }), save);
     assert.deepEqual(findActionTargetById(som, 'e_save'), save);
     assert.deepEqual(findActionTargetByCacheKey(som, save.cache_key), save);
     assert.deepEqual(findActionTargetByHtmlId(som, 'save-button'), save);
     assert.deepEqual(findActionTargetByTestId(som, 'settings-save'), save);
+    assert.equal(findActionTarget(som, 'settings-save', { enabledOnly: true }), undefined);
   });
 
   it('filters blocked targets from enabled action indexes', () => {

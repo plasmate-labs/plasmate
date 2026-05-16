@@ -8,6 +8,7 @@ import {
   fromPlasmate,
   getAllElements,
   findByAction,
+  findActionTarget,
   findActionTargetByCacheKey,
   findActionTargetByHtmlId,
   findActionTargetById,
@@ -472,10 +473,16 @@ describe('getActionPlan', () => {
     expect(index.byCacheKey[save.cache_key]).toEqual(save);
     expect(index.byHtmlId['save-button']).toEqual(save);
     expect(index.byTestId['settings-save']).toEqual(save);
+    expect(findActionTarget(som, 'e_save')).toEqual(save);
+    expect(findActionTarget(som, save.cache_key)).toEqual(save);
+    expect(findActionTarget(som, 'save-button')).toEqual(save);
+    expect(findActionTarget(som, 'settings-save')).toEqual(save);
+    expect(findActionTarget(som, 'settings-save', { by: 'test_id' })).toEqual(save);
     expect(findActionTargetById(som, 'e_save')).toEqual(save);
     expect(findActionTargetByCacheKey(som, save.cache_key)).toEqual(save);
     expect(findActionTargetByHtmlId(som, 'save-button')).toEqual(save);
     expect(findActionTargetByTestId(som, 'settings-save')).toEqual(save);
+    expect(findActionTarget(som, 'settings-save', { enabledOnly: true })).toBeUndefined();
   });
 
   it('filters blocked targets from enabled action indexes', () => {

@@ -528,34 +528,87 @@ func GetActionPlanIndex(som *Som, enabledOnly ...bool) ActionPlanIndex {
 
 // FindActionTargetByID returns the compact action target matching a SOM element id.
 func FindActionTargetByID(som *Som, id string) *ActionPlanItem {
-	if item, ok := GetActionPlanIndex(som).ByID[id]; ok {
-		return &item
+	if item := FindActionTarget(som, id, "id"); item != nil {
+		return item
+	}
+	return nil
+}
+
+// FindActionTarget returns the compact action target matching a replay id.
+//
+// The optional lookup key can be "auto", "id", "cache_key", "html_id", or "test_id".
+// Auto lookup checks SOM id, deterministic cache key, HTML id, then test id.
+func FindActionTarget(som *Som, value string, by ...string) *ActionPlanItem {
+	lookup := "auto"
+	if len(by) > 0 && by[0] != "" {
+		lookup = by[0]
+	}
+	index := GetActionPlanIndex(som)
+	if lookup == "id" || lookup == "auto" {
+		if item, ok := index.ByID[value]; ok {
+			return &item
+		}
+	}
+	if lookup == "cache_key" || lookup == "auto" {
+		if item, ok := index.ByCacheKey[value]; ok {
+			return &item
+		}
+	}
+	if lookup == "html_id" || lookup == "auto" {
+		if item, ok := index.ByHTMLID[value]; ok {
+			return &item
+		}
+	}
+	if lookup == "test_id" || lookup == "auto" {
+		if item, ok := index.ByTestID[value]; ok {
+			return &item
+		}
+	}
+	return nil
+}
+
+// FindActionTargetInIndex returns the compact action target matching a replay id in an existing index.
+func FindActionTargetInIndex(index ActionPlanIndex, value string, by ...string) *ActionPlanItem {
+	lookup := "auto"
+	if len(by) > 0 && by[0] != "" {
+		lookup = by[0]
+	}
+	if lookup == "id" || lookup == "auto" {
+		if item, ok := index.ByID[value]; ok {
+			return &item
+		}
+	}
+	if lookup == "cache_key" || lookup == "auto" {
+		if item, ok := index.ByCacheKey[value]; ok {
+			return &item
+		}
+	}
+	if lookup == "html_id" || lookup == "auto" {
+		if item, ok := index.ByHTMLID[value]; ok {
+			return &item
+		}
+	}
+	if lookup == "test_id" || lookup == "auto" {
+		if item, ok := index.ByTestID[value]; ok {
+			return &item
+		}
 	}
 	return nil
 }
 
 // FindActionTargetByCacheKey returns the compact action target matching a deterministic cache key.
 func FindActionTargetByCacheKey(som *Som, cacheKey string) *ActionPlanItem {
-	if item, ok := GetActionPlanIndex(som).ByCacheKey[cacheKey]; ok {
-		return &item
-	}
-	return nil
+	return FindActionTarget(som, cacheKey, "cache_key")
 }
 
 // FindActionTargetByHTMLID returns the compact action target matching an original HTML id.
 func FindActionTargetByHTMLID(som *Som, htmlID string) *ActionPlanItem {
-	if item, ok := GetActionPlanIndex(som).ByHTMLID[htmlID]; ok {
-		return &item
-	}
-	return nil
+	return FindActionTarget(som, htmlID, "html_id")
 }
 
 // FindActionTargetByTestID returns the compact action target matching a test locator attribute.
 func FindActionTargetByTestID(som *Som, testID string) *ActionPlanItem {
-	if item, ok := GetActionPlanIndex(som).ByTestID[testID]; ok {
-		return &item
-	}
-	return nil
+	return FindActionTarget(som, testID, "test_id")
 }
 
 func flattenRegionElements(elements []Element) []Element {

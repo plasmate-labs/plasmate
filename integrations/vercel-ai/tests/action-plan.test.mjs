@@ -111,6 +111,10 @@ assert.deepEqual(targetIndex.by_id.e_save, save)
 assert.deepEqual(targetIndex.by_cache_key[save.cache_key], save)
 assert.deepEqual(targetIndex.by_html_id['save-button'], save)
 assert.deepEqual(targetIndex.by_test_id['settings-save'], save)
+assert.deepEqual(findPlasmateActionTarget(targets, 'e_save', { includeUnavailable: true }), save)
+assert.deepEqual(findPlasmateActionTarget(targets, save.cache_key, { includeUnavailable: true }), save)
+assert.deepEqual(findPlasmateActionTarget(targets, 'save-button', { includeUnavailable: true }), save)
+assert.deepEqual(findPlasmateActionTarget(targets, 'settings-save', { includeUnavailable: true }), save)
 assert.deepEqual(
   findPlasmateActionTarget(targets, save.cache_key, {
     by: 'cache_key',
@@ -122,6 +126,7 @@ assert.deepEqual(
 const enabledTargetIndex = indexPlasmateActionTargets(targets)
 assert.equal(enabledTargetIndex.by_id.e_save, undefined)
 assert.equal(enabledTargetIndex.by_id.e_plan.id, 'e_plan')
+assert.equal(findPlasmateActionTarget(targets, 'settings-save'), undefined)
 
 const preview = targets.find((target) => target.id === 'e_preview')
 assert.equal(isPlasmateActionTargetAvailable(preview), false)

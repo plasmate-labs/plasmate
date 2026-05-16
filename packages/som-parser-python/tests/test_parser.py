@@ -14,6 +14,7 @@ from som_parser import (
     SomElement,
     SomShadowRoot,
     filter_elements,
+    find_action_target,
     find_action_target_by_cache_key,
     find_action_target_by_html_id,
     find_action_target_by_id,
@@ -613,10 +614,16 @@ class TestGetActionPlan:
         assert index["by_cache_key"][save["cache_key"]] == save
         assert index["by_html_id"]["save-button"] == save
         assert index["by_test_id"]["settings-save"] == save
+        assert find_action_target(som, "e_save") == save
+        assert find_action_target(som, save["cache_key"]) == save
+        assert find_action_target(som, "save-button") == save
+        assert find_action_target(som, "settings-save") == save
+        assert find_action_target(som, "settings-save", by="test_id") == save
         assert find_action_target_by_id(som, "e_save") == save
         assert find_action_target_by_cache_key(som, save["cache_key"]) == save
         assert find_action_target_by_html_id(som, "save-button") == save
         assert find_action_target_by_test_id(som, "settings-save") == save
+        assert find_action_target(som, "settings-save", enabled_only=True) is None
 
     def test_enabled_action_plan_index_filters_blocked_targets(self):
         som, _ = _load_action_availability_fixture()

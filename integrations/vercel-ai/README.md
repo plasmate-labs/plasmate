@@ -139,7 +139,8 @@ to resolve a saved target without scanning the full action menu.
 
 ### `findPlasmateActionTarget(targets, value, options?)`
 
-Finds one action target by `id`, `cache_key`, `html_id`, or `test_id`.
+Finds one action target by `id`, `cache_key`, `html_id`, `test_id`, or the
+default auto lookup across all four replay buckets.
 
 ```ts
 const index = indexPlasmateActionTargets(actionTargets, {

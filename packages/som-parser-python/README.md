@@ -109,6 +109,7 @@ print(som.model_dump_json(indent=2))
 | `find_by_hint(som, hint) -> list[SomElement]` | Find elements tagged with a semantic hint |
 | `get_action_plan(som) -> list[dict]` | Return compact `{id, cache_key, role, actions, enabled, label}` action targets with availability, link target/rel/download cues, form/list and form submission context, submitter override cues, popover/command relation cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues |
 | `get_action_plan_cache_key(item) -> str` | Return a deterministic key for caching or comparing an action target |
+| `find_action_target(som, value, by="auto", enabled_only=False) -> dict \| None` | Resolve a replay id by SOM id, cache key, HTML id, test id, or auto lookup |
 | `get_interactive_elements(som) -> list[SomElement]` | Get elements that have actions |
 | `get_links(som) -> list[dict]` | Extract all links as `{text, href, id}` dicts |
 | `get_forms(som) -> list[SomRegion]` | Get all form regions |

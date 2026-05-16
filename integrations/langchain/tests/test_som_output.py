@@ -166,8 +166,13 @@ def test_action_target_index_resolves_replay_targets():
     assert index["by_html_id"]["save-button"]["id"] == "e_save"
     assert index["by_test_id"]["settings-save"]["id"] == "e_save"
     assert index["by_id"]["e_save"]["blocked_reason"] == "disabled"
+    assert find_action_target(som, "e_save")["id"] == "e_save"
+    assert find_action_target(som, save["cache_key"])["id"] == "e_save"
+    assert find_action_target(som, "save-button")["id"] == "e_save"
+    assert find_action_target(som, "settings-save")["id"] == "e_save"
     assert find_action_target(som, save["cache_key"], by="cache_key")["id"] == "e_save"
 
     enabled_index = action_target_index(som, enabled_only=True)
     assert "e_save" not in enabled_index["by_id"]
     assert "e_plan" in enabled_index["by_id"]
+    assert find_action_target(som, "settings-save", enabled_only=True) is None

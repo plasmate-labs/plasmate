@@ -128,6 +128,7 @@ all := plasmate.FlatElements(som)
 | `FindByHint(som, hint)` | Find elements tagged with a semantic hint |
 | `GetActionPlan(som)` | Return compact action targets with cache keys, availability, link target/rel/download cues, form submission context, submitter override cues, text-entry/input-affordance cues, popover/command relationship cues, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, range constraints, orientation/sort/value state, and set-position cues for agents |
 | `GetActionPlanCacheKey(item)` | Return a deterministic key for caching or comparing an action target |
+| `FindActionTarget(som, value, by...)` | Resolve a replay id by SOM id, cache key, HTML id, test id, or auto lookup |
 | `FlatElements(som)` | Flatten all elements, including shadow roots |
 | `TokenEstimate(som)` | Estimate token count |
 

@@ -276,20 +276,27 @@ def find_action_target(
     som: dict[str, Any],
     value: str,
     *,
-    by: str = "id",
+    by: str = "auto",
     enabled_only: bool = False,
 ) -> dict[str, Any] | None:
-    """Find one compact action target by id, cache key, HTML id, or test id."""
+    """Find one compact action target by id, cache key, HTML id, test id, or auto lookup."""
     buckets = {
         "id": "by_id",
         "cache_key": "by_cache_key",
         "html_id": "by_html_id",
         "test_id": "by_test_id",
     }
+    index = action_target_index(som, enabled_only=enabled_only)
+    if by == "auto":
+        for bucket in buckets.values():
+            found = index[bucket].get(value)
+            if found is not None:
+                return found
+        return None
     bucket = buckets.get(by)
     if bucket is None:
-        raise ValueError("by must be one of: id, cache_key, html_id, test_id")
-    return action_target_index(som, enabled_only=enabled_only)[bucket].get(value)
+        raise ValueError("by must be one of: auto, id, cache_key, html_id, test_id")
+    return index[bucket].get(value)
 
 
 def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> str:

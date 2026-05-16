@@ -26,6 +26,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-16 framework replay-index read: current browser-agent products keep moving reusable action state into app code. Playwright MCP exposes current snapshot refs, Stagehand/Browserbase caches validated actions, and hosted browser platforms add traces around replay. Plasmate should keep the local-first wedge by making Browser Use, LangChain, and Vercel AI resolve cached action targets by `cache_key`, `html_id`, and `test_id` directly, instead of forcing adapter users to scan action menus or re-walk SOM trees.
 
+2026-05-16 auto replay-lookup read: current browser-agent docs keep reinforcing that replay memory has to be cheap at the app edge. Playwright MCP refs are chosen from a fresh snapshot, Stagehand validates cached selectors before skipping model work, Cloudflare Browser Run is adding hosted MCP/CDP/WebMCP sessions, and Firecrawl keeps broad MCP/browser-session packaging. Plasmate should not pivot into hosted execution; it should make local replay identifiers boring to resolve across its many libraries. Apps should be able to store one identifier and let SDKs/adapters resolve it as a SOM id, `cache_key`, `html_id`, or `test_id` without remembering the source bucket.
+
 2026-05-05 market read: the strongest retention hooks are reusable structured state, cached repeated actions, and ecosystem-native distribution. Playwright MCP returns accessibility snapshots with stable refs for interaction, Stagehand now markets action caching as an LLM-cost and latency reduction path, and Firecrawl's MCP surface combines scraping, search, browser sessions, and deep research. Plasmate should not chase hosted anti-bot infrastructure as the main wedge; it should make local SOM snapshots more complete, reusable, and easy to verify across its many adapters.
 
 2026-05-06 market read: competitors are converging on "agent-ready page state" as a retention mechanism. Playwright MCP's structured snapshots set the expectation that interactive elements carry stable refs, Stagehand's `observe()` and action caching make repeated workflows feel deterministic after the first run, Firecrawl's current MCP docs include interactive browser sessions alongside scrape/search/extract, and Skyvern continues to package screenshots plus DOM context for multi-step visual workflows. The clearest Plasmate answer is not a pivot into hosted browser clouds; it is tighter local SOM actionability, conformance fixtures, and deterministic cache/diff behavior across the many SDK and integration repos.
@@ -161,6 +163,9 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Current Run Changes
 
 - 2026-05-16:
+  - Python and Node parser packages, Python and Node SDKs, and Go SDK now expose generic replay lookup helpers that auto-resolve SOM ids, deterministic `cache_key` values, original `html_id` values, and `test_id` locators.
+  - Browser Use now adds sync/async `find_action_target()` helpers, LangChain `find_action_target()` now defaults to auto bucket resolution, and Vercel AI `findPlasmateActionTarget()` now defaults to auto lookup while preserving explicit bucket selection.
+  - Focused tests cover auto lookup and enabled-only filtering across parser packages, SDKs, Browser Use, LangChain, Vercel AI, and Go so downstream apps can store one replay id without bespoke menu scans.
   - Browser Use now exposes `extract_action_plan_index()` and async parity for replay target lookup by SOM id, deterministic `cache_key`, original `html_id`, or `test_id`.
   - LangChain now exports `action_target_index()` and `find_action_target()` for raw SOM dictionaries, giving app code cache-key, DOM-id, and test-id lookup without bespoke tree scans.
   - Vercel AI now exports `indexPlasmateActionTargets()` and `findPlasmateActionTarget()` for prepared action menus while preserving unavailable-target filtering defaults.
@@ -395,7 +400,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Promote graphical submitter cases (`input type="image"`, `button_type`, `alt`, and `src`) into the shared action manifest and adapter conformance fixtures.
 - Promote `html_id` DOM-provenance cases into shared parser, SDK, and adapter conformance so compact targets remain resolvable back to live page elements.
 - Promote locator-provenance cases (`title`, `source_role`, and `test_id`) into broader Rust/parser/SDK and adapter conformance fixtures so local replay can use developer-authored anchors without destabilizing cache keys.
-- Promote the Browser Use, LangChain, and Vercel AI lookup/index helpers into cross-adapter release fixtures so replay target resolution keeps matching parser and SDK behavior.
+- Promote auto replay lookup into the shared action-manifest release gate so parser, SDK, and framework direct lookups cannot drift from indexed lookup behavior.
 - Promote link navigation cases (`target`, `rel`, `hreflang`, `type`, `referrerpolicy`, and `download`) into broader Rust/parser/SDK and adapter conformance fixtures.
 - Promote drag/drop replay cues (`draggable`, `aria-grabbed`, and `aria-dropeffect`) into broader Rust/parser/SDK and adapter conformance fixtures for board, builder, and scheduling workflows.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures once the shared action manifest remains stable.

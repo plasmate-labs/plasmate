@@ -636,14 +636,22 @@ export function findPlasmateActionTarget(
   targets: readonly PlasmateActionTarget[],
   value: string,
   options: PreparePlasmateActionPlanOptions & {
-    by?: 'id' | 'cache_key' | 'html_id' | 'test_id'
+    by?: 'auto' | 'id' | 'cache_key' | 'html_id' | 'test_id'
   } = {}
 ): PlasmateActionTarget | undefined {
   const index = indexPlasmateActionTargets(targets, options)
-  const by = options.by ?? 'id'
+  const by = options.by ?? 'auto'
   if (by === 'cache_key') return index.by_cache_key[value]
   if (by === 'html_id') return index.by_html_id[value]
   if (by === 'test_id') return index.by_test_id[value]
+  if (by === 'auto') {
+    return (
+      index.by_id[value] ??
+      index.by_cache_key[value] ??
+      index.by_html_id[value] ??
+      index.by_test_id[value]
+    )
+  }
   return index.by_id[value]
 }
 

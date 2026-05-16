@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Literal, Optional, Union
 
 from .types import Som, SomElement, SomRegion
 
@@ -328,32 +328,64 @@ def get_action_plan_index(
     return index
 
 
+ActionTargetLookupKey = Literal["auto", "id", "cache_key", "html_id", "test_id"]
+
+
+def find_action_target(
+    som: Som,
+    value: str,
+    *,
+    by: ActionTargetLookupKey = "auto",
+    enabled_only: bool = False,
+) -> Optional[Dict[str, object]]:
+    """Return the compact action target matching a replay id.
+
+    ``by="auto"`` checks SOM id, deterministic cache key, HTML id, then test id.
+    """
+    index = get_action_plan_index(som, enabled_only=enabled_only)
+    buckets = {
+        "id": "by_id",
+        "cache_key": "by_cache_key",
+        "html_id": "by_html_id",
+        "test_id": "by_test_id",
+    }
+    if by == "auto":
+        for bucket in buckets.values():
+            found = index[bucket].get(value)
+            if found is not None:
+                return found
+        return None
+    if by not in buckets:
+        raise ValueError("by must be one of: auto, id, cache_key, html_id, test_id")
+    return index[buckets[by]].get(value)
+
+
 def find_action_target_by_id(
-    som: Som, target_id: str
+    som: Som, target_id: str, *, enabled_only: bool = False
 ) -> Optional[Dict[str, object]]:
     """Return the compact action target matching a SOM element id."""
-    return get_action_plan_index(som)["by_id"].get(target_id)
+    return find_action_target(som, target_id, by="id", enabled_only=enabled_only)
 
 
 def find_action_target_by_cache_key(
-    som: Som, cache_key: str
+    som: Som, cache_key: str, *, enabled_only: bool = False
 ) -> Optional[Dict[str, object]]:
     """Return the compact action target matching a deterministic cache key."""
-    return get_action_plan_index(som)["by_cache_key"].get(cache_key)
+    return find_action_target(som, cache_key, by="cache_key", enabled_only=enabled_only)
 
 
 def find_action_target_by_html_id(
-    som: Som, html_id: str
+    som: Som, html_id: str, *, enabled_only: bool = False
 ) -> Optional[Dict[str, object]]:
     """Return the compact action target matching an original HTML id."""
-    return get_action_plan_index(som)["by_html_id"].get(html_id)
+    return find_action_target(som, html_id, by="html_id", enabled_only=enabled_only)
 
 
 def find_action_target_by_test_id(
-    som: Som, test_id: str
+    som: Som, test_id: str, *, enabled_only: bool = False
 ) -> Optional[Dict[str, object]]:
     """Return the compact action target matching a test locator attribute."""
-    return get_action_plan_index(som)["by_test_id"].get(test_id)
+    return find_action_target(som, test_id, by="test_id", enabled_only=enabled_only)
 
 
 def find_by_text(som: Som, text: str) -> List[SomElement]:

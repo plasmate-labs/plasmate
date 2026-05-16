@@ -49,6 +49,39 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-16T21:10:58Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch origin --prune` still fails in the linked
+  automation worktree because shared `FETCH_HEAD` cannot be opened. Work
+  continued from locally known `origin/master` / `HEAD` `7514bc6`.
+- Market direction: current docs still favor validated, replayable action
+  state over raw browser dumps. Playwright MCP uses fresh accessibility
+  snapshot refs, Browserbase/Stagehand markets validated action caching,
+  Cloudflare Browser Run is expanding hosted MCP/CDP/WebMCP sessions, and
+  Firecrawl keeps broad MCP/browser-session distribution. No hosted-browser
+  pivot is recommended; the stickier local step is making replay ids easy to
+  resolve across every library surface.
+- Code changes: Python/Node parser packages, Python/Node SDKs, and Go SDK now
+  expose generic auto replay lookup helpers over SOM id, deterministic
+  `cache_key`, original `html_id`, and `test_id`. Browser Use now adds
+  sync/async `find_action_target()`, LangChain `find_action_target()` defaults
+  to auto bucket resolution, and Vercel AI `findPlasmateActionTarget()`
+  defaults to auto lookup while preserving explicit bucket selection.
+- Tests/docs: added focused parser, SDK, Browser Use, LangChain, Vercel AI,
+  and Go tests for auto lookup plus enabled-only filtering. Updated package
+  READMEs, adapter READMEs, fixture docs, PRD, roadmap, and website doc
+  sources with the auto replay-lookup rationale and next release-gate step.
+- Verification passed so far: Node SDK tests, Python SDK query tests, Python
+  parser tests, Node parser tests/build, Go SDK tests with workspace
+  `GOCACHE`, Browser Use adapter tests with local parser `PYTHONPATH`,
+  LangChain adapter tests, and Vercel AI tests/typecheck using temporary
+  symlinks to the primary checkout's `node_modules`; `node website/build.mjs`;
+  `./scripts/action-manifest-conformance.sh --quick`; `cargo build --quiet`;
+  `cargo test --lib --quiet`; and `git diff --check`.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`.
+
 ### 2026-05-16T20:10:06Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch origin --prune` still fails in the linked

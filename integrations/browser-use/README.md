@@ -88,6 +88,13 @@ a cached action back to a current SOM target without scanning the menu:
 index = extractor.extract_action_plan_index("https://example.com/settings")
 target = index["by_cache_key"]["plasmate-action:v1:..."]
 print(target["id"], target.get("html_id"), target.get("test_id"))
+
+# Or let Plasmate resolve SOM id, cache key, HTML id, or test id automatically.
+target = extractor.find_action_target(
+    "https://example.com/settings",
+    "plasmate-action:v1:...",
+    enabled_only=True,
+)
 ```
 
 Browser Use page contexts are tested against the shared

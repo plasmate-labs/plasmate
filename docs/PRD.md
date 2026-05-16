@@ -141,6 +141,16 @@ local-first wedge by making Browser Use, LangChain, and Vercel AI resolve
 cached action targets by `cache_key`, `html_id`, and `test_id` directly,
 instead of forcing adapter users to scan action menus or re-walk SOM trees.
 
+2026-05-16 auto replay-lookup read: the latest official docs keep reinforcing
+that replay memory has to be cheap at the app edge. Playwright MCP refs are
+chosen from a fresh snapshot, Stagehand validates cached selectors before
+skipping model work, Cloudflare Browser Run is adding hosted MCP/CDP/WebMCP
+sessions, and Firecrawl keeps broad MCP/browser-session packaging. Plasmate
+should not pivot into hosted execution; it should make local replay identifiers
+boring to resolve across its many libraries. Apps should be able to store one
+identifier and let SDKs/adapters resolve it as a SOM id, `cache_key`,
+`html_id`, or `test_id` without remembering the source bucket.
+
 2026-05-05 market read: the strongest retention hooks are reusable structured
 state, cached repeated actions, and ecosystem-native distribution. Playwright
 MCP returns accessibility snapshots with stable refs for interaction, Stagehand
@@ -676,6 +686,17 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-16:
+  - Python and Node parser packages, Python and Node SDKs, and Go SDK now
+    expose generic replay lookup helpers that auto-resolve SOM ids,
+    deterministic `cache_key` values, original `html_id` values, and `test_id`
+    locators.
+  - Browser Use now adds sync/async `find_action_target()` helpers, LangChain
+    `find_action_target()` now defaults to auto bucket resolution, and Vercel
+    AI `findPlasmateActionTarget()` now defaults to auto lookup while
+    preserving explicit bucket selection.
+  - Focused tests cover auto lookup and enabled-only filtering across parser
+    packages, SDKs, Browser Use, LangChain, Vercel AI, and Go so downstream
+    apps can store one replay id without bespoke menu scans.
   - Browser Use now exposes `extract_action_plan_index()` and async parity so
     agents can resolve replay targets by SOM id, deterministic `cache_key`,
     original `html_id`, or `test_id` with optional enabled-only filtering.
@@ -1358,9 +1379,9 @@ and adapter docs over one-off integration logic.
 - Promote locator-provenance cases (`title`, `source_role`, and `test_id`)
   into broader Rust/parser/SDK and adapter conformance fixtures so local
   replay can use developer-authored anchors without destabilizing cache keys.
-- Promote the Browser Use, LangChain, and Vercel AI lookup/index helpers into
-  cross-adapter release fixtures so replay target resolution keeps matching
-  parser and SDK behavior.
+- Promote auto replay lookup into the shared action-manifest release gate so
+  parser, SDK, and framework direct lookups cannot drift from indexed lookup
+  behavior.
 - Promote drag/drop replay cues (`draggable`, `aria-grabbed`, and
   `aria-dropeffect`) into broader Rust/parser/SDK and adapter conformance
   fixtures for board, builder, and scheduling workflows.
