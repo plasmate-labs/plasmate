@@ -49,6 +49,39 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-16T10:21:25Z - Plasmate Improvements Automation
+
+- Git sync: required fetch still fails in the linked automation worktree
+  because `FETCH_HEAD` is not writable. A review branch push succeeded, but
+  fetching remote `master` from the primary checkout still intermittently
+  fails DNS for `github.com`; direct `master` push was rejected with
+  `fetch first`, and `gh pr create` could not reach `api.github.com`.
+- Market direction: current Playwright MCP snapshot docs, Browserbase/Stagehand
+  cached-action positioning, and Firecrawl/Browserbase managed-session
+  products continue to validate Plasmate's local-first replay-context wedge.
+  Embedded SaaS workflows are a sticky gap: maps, auth prompts, payments, and
+  dashboards often live in iframes whose loading and security policy affect
+  whether local plans can be reused.
+- Code changes: Rust SOM iframe attrs and JSON Schema now preserve
+  `loading`, `referrerpolicy`, `allowfullscreen`, and `credentialless`.
+  Python/Node parser types, Python/Node/Go SDK types, parser tests, SDK tests,
+  the iframe fixture, SOM spec, PRD, roadmap, and website doc sources now
+  document or validate those fields.
+- Verification passed: touched Rust formatting, JSON schema parse,
+  Python syntax compile, focused Rust iframe test, `cargo build --quiet`,
+  `cargo test --lib --quiet` (258), Python parser tests (73), Python SDK
+  query tests (41), Go SDK tests, and `git diff --check`.
+- Verification gaps: `./scripts/action-manifest-conformance.sh --quick` still
+  reaches the known missing `vitest` dependency after the Python step; website
+  docs generation still fails because `marked` is not installed. Whole-repo
+  `cargo test` was not run because prior runs show sandboxed AWP socket tests
+  cannot bind local listeners here.
+- Commit/push state: created object commit `6892c84` (`chore: preserve iframe
+  replay context`) and pushed it to
+  `origin/codex/iframe-replay-context`. Remote merge remains blocked until the
+  remote `master` can be fetched/rebased or a PR can be created through GitHub
+  API access.
+
 ### 2026-05-16T02:05:58Z - Plasmate Improvements Automation
 
 - Git sync: required latest pull was retried. The automation worktree still
