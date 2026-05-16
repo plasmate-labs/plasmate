@@ -84,8 +84,13 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Verification gap: full `cargo test --quiet` still fails only in
   `tests/awp_integration_test.rs` because this sandbox denies local listener
   setup with `Operation not permitted`.
-- Commit/push state: pending at this point; GitHub fetch/merge remains blocked
-  by DNS and linked-worktree metadata permissions.
+- Commit/push state: implementation commit `8f86631` (`chore: expose focus
+  modal replay cues`) plus this follow-up running-state note were pushed to
+  `origin/codex/plasmate-improvements-2026-05-16-navigation-context`.
+  Direct push to `origin/master` was rejected with `fetch first`; the fetch
+  needed to rebase still fails DNS for `github.com`, and `gh pr create`
+  cannot reach `api.github.com`. There is no `main` branch in this checkout;
+  `origin/HEAD` points at `origin/master`.
 
 ### 2026-05-16T10:21:25Z - Plasmate Improvements Automation
 
