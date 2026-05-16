@@ -82,8 +82,10 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Verification blocked: full `cargo test --quiet` still fails only in
   sandboxed `tests/awp_integration_test.rs` because local listener setup
   returns `Operation not permitted`.
-- Commit/push state: pending commit and push/merge from this worktree at the
-  time this state entry was written.
+- Commit/push state: created alternate-index commit `167738c` (`chore:
+  expose mcp som cache status`), pushed review branch
+  `codex/plasmate-improvements-2026-05-16-mcp-cache-status`, and
+  fast-forwarded remote `master` from `82270f5` to `167738c`.
 
 ### 2026-05-16T14:05:55Z - Plasmate Improvements Automation
 
