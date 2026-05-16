@@ -83,7 +83,11 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   blocked by missing local dev dependencies (`vitest`, `tsc`, `tsup`); website
   docs generation remains blocked by missing `marked`.
 - Commit/push state: created alternate-index code/docs commit `ccab552`
-  (`chore: carry drag replay cues`). Push/merge attempts are still pending.
+  (`chore: carry drag replay cues`) plus running-state commit `0314aac`, then
+  pushed review branch `codex/drag-replay-cues`. Direct `master` push was
+  rejected with `fetch first`; `git fetch origin master` and `git ls-remote`
+  failed DNS for `github.com`, and `gh pr create` failed to reach
+  `api.github.com`. Remote merge remains blocked until fetch/API access works.
 
 ### 2026-05-15T23:12:05Z - Plasmate Improvements Automation
 
