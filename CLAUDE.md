@@ -82,8 +82,8 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   `Operation not permitted`; Node parser, Node SDK, and Vercel AI tests remain
   blocked by missing local dev dependencies (`vitest`, `tsc`, `tsup`); website
   docs generation remains blocked by missing `marked`.
-- Commit/push state: pending at this entry until the alternate-index commit and
-  push/merge attempts complete.
+- Commit/push state: created alternate-index code/docs commit `ccab552`
+  (`chore: carry drag replay cues`). Push/merge attempts are still pending.
 
 ### 2026-05-15T23:12:05Z - Plasmate Improvements Automation
 
