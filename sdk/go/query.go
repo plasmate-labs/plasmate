@@ -185,6 +185,9 @@ type ActionPlanItem struct {
 	EnterKeyHint     *string     `json:"enterkeyhint,omitempty"`
 	AutoCapitalize   *string     `json:"autocapitalize,omitempty"`
 	DirName          *string     `json:"dirname,omitempty"`
+	Lang             *string     `json:"lang,omitempty"`
+	Dir              *string     `json:"dir,omitempty"`
+	Translate        interface{} `json:"translate,omitempty"`
 	Form             *string     `json:"form,omitempty"`
 	List             *string     `json:"list,omitempty"`
 	PopoverTarget    *string     `json:"popovertarget,omitempty"`
@@ -308,6 +311,9 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.EnterKeyHint = el.Attrs.EnterKeyHint
 			item.AutoCapitalize = el.Attrs.AutoCapitalize
 			item.DirName = el.Attrs.DirName
+			item.Lang = el.Attrs.Lang
+			item.Dir = el.Attrs.Dir
+			item.Translate = el.Attrs.Translate
 			item.Form = el.Attrs.Form
 			item.List = el.Attrs.List
 			item.PopoverTarget = el.Attrs.PopoverTarget

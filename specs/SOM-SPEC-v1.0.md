@@ -255,6 +255,9 @@ field MUST be omitted when the object would be empty.
 | `autocapitalize` | string | Capitalization hint for virtual keyboards, when present. |
 | `spellcheck` | boolean/string | Spellcheck state. Invalid source values are preserved as strings. |
 | `dirname` | string | Directionality submission field name, when present. |
+| `lang` | string | Element-level language context, when it differs from or refines the page language. |
+| `dir` | string | Element-level text direction (`ltr`, `rtl`, or `auto`) for bidirectional input/replay context. |
+| `translate` | boolean/string | Translation preference from the source element. `no`/`false` become `false`; `yes`/`true`/empty become `true`; other values are preserved as strings. |
 | `form` | string | Associated form id, when a form-associated control uses the `form` attribute. |
 | `list` | string | Associated datalist id, when an input uses the `list` attribute. |
 | `minlength` | integer/string | Minimum text length constraint. Invalid source values are preserved as strings. |

@@ -91,6 +91,9 @@ export interface ActionPlanItem {
   enterkeyhint?: string;
   autocapitalize?: string;
   dirname?: string;
+  lang?: string;
+  dir?: string;
+  translate?: boolean | string;
   form?: string;
   list?: string;
   popovertarget?: string;
@@ -202,6 +205,9 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.enterkeyhint) item.enterkeyhint = el.attrs.enterkeyhint;
     if (el.attrs?.autocapitalize) item.autocapitalize = el.attrs.autocapitalize;
     if (el.attrs?.dirname) item.dirname = el.attrs.dirname;
+    if (el.attrs?.lang) item.lang = el.attrs.lang;
+    if (el.attrs?.dir) item.dir = el.attrs.dir;
+    if (el.attrs?.translate !== undefined) item.translate = el.attrs.translate;
     if (el.attrs?.form) item.form = el.attrs.form;
     if (el.attrs?.list) item.list = el.attrs.list;
     if (el.attrs?.popovertarget) item.popovertarget = el.attrs.popovertarget;

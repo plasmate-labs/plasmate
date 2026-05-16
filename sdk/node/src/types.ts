@@ -109,6 +109,9 @@ export interface SomElementAttrs {
   enterkeyhint?: string;
   autocapitalize?: string;
   dirname?: string;
+  lang?: string;
+  dir?: string;
+  translate?: boolean | string;
   form?: string;
   list?: string;
   popovertarget?: string;

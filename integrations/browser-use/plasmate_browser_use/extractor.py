@@ -101,6 +101,12 @@ def _format_action_plan_item(item: dict[str, object]) -> str:
         flags.append(f"autocapitalize={item['autocapitalize']}")
     if item.get("dirname"):
         flags.append(f"dirname={item['dirname']}")
+    if item.get("lang"):
+        flags.append(f"lang={item['lang']}")
+    if item.get("dir"):
+        flags.append(f"dir={item['dir']}")
+    if "translate" in item:
+        flags.append(f"translate={item['translate']}")
     if item.get("form"):
         flags.append(f"form={item['form']}")
     if item.get("list"):

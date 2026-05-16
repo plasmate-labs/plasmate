@@ -293,6 +293,9 @@ fn test_action_semantics_conformance_fixture() {
     assert_eq!(attrs["spellcheck"], false);
     assert_eq!(attrs["autocapitalize"], "sentences");
     assert_eq!(attrs["dirname"], "reply.dir");
+    assert_eq!(attrs["lang"], "ar");
+    assert_eq!(attrs["dir"], "rtl");
+    assert_eq!(attrs["translate"], false);
     assert_eq!(attrs["aria"]["placeholder"], "Write a response");
     assert!(!json.contains("Hidden stylesheet copy"));
     assert!(!json.contains("Hidden uppercase ARIA copy"));

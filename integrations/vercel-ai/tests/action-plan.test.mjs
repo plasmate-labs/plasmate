@@ -53,6 +53,9 @@ assert.deepEqual(email, {
   enterkeyhint: 'next',
   autocapitalize: 'none',
   dirname: 'email.dir',
+  lang: 'ar',
+  dir: 'rtl',
+  translate: false,
   form: 'settings-form',
   list: 'email-suggestions',
   placeholder: 'name@company.com',
@@ -95,7 +98,7 @@ const formatted = formatPlasmateActionPlan(targets, {
 })
 assert.match(
   formatted,
-  /\[e_email\] text_input "Work email" \(type\) \[blocked\] \[cache_key=plasmate-action:v1:91875850\] \[blocked_reason=readonly\] \[required\] \[readonly\] \[type=email\] \[value=ops@example\.com\] \[autocomplete=email\] \[inputmode=email\] \[enterkeyhint=next\] \[autocapitalize=none\] \[dirname=email\.dir\] \[form=settings-form\] \[list=email-suggestions\].*\[spellcheck=false\] \[placeholder=name@company\.com\].*\[invalid=grammar\] \[aria_placeholder=Work email address\] \[aria_autocomplete=list\] \[active_descendant=email-suggestion-1\] \[errormessage=email-error\] \[group=Account\]/
+  /\[e_email\] text_input "Work email" \(type\) \[blocked\] \[cache_key=plasmate-action:v1:91875850\] \[blocked_reason=readonly\] \[required\] \[readonly\] \[type=email\] \[value=ops@example\.com\] \[autocomplete=email\] \[inputmode=email\] \[enterkeyhint=next\] \[autocapitalize=none\] \[dirname=email\.dir\] \[lang=ar\] \[dir=rtl\] \[translate=false\] \[form=settings-form\] \[list=email-suggestions\].*\[spellcheck=false\] \[placeholder=name@company\.com\].*\[invalid=grammar\] \[aria_placeholder=Work email address\] \[aria_autocomplete=list\] \[active_descendant=email-suggestion-1\] \[errormessage=email-error\] \[group=Account\]/
 )
 assert.match(formatted, /\[e_compact\].*\[checked=false\]/)
 assert.match(formatted, /\[e_compact\].*\[pressed=false\]/)

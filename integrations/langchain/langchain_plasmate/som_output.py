@@ -216,6 +216,12 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
         flags.append(f'[autocapitalize="{attrs["autocapitalize"]}"]')
     if attrs.get("dirname"):
         flags.append(f'[dirname="{attrs["dirname"]}"]')
+    if attrs.get("lang"):
+        flags.append(f'[lang="{attrs["lang"]}"]')
+    if attrs.get("dir"):
+        flags.append(f'[dir="{attrs["dir"]}"]')
+    if "translate" in attrs:
+        flags.append(f'[translate="{attrs["translate"]}"]')
     if attrs.get("form"):
         flags.append(f'[form="{attrs["form"]}"]')
     if attrs.get("list"):

@@ -44,6 +44,9 @@ export interface PlasmateActionTarget {
   enterkeyhint?: string
   autocapitalize?: string
   dirname?: string
+  lang?: string
+  dir?: string
+  translate?: boolean | string
   form?: string
   list?: string
   popovertarget?: string
@@ -154,7 +157,7 @@ export interface PreparePlasmateActionPlanOptions {
 export const plasmateActionGuidance =
   'Use Plasmate SOM element ids for browser actions. Treat action targets ' +
   'with enabled=false or blocked_reason as unavailable, and prefer ' +
-  'cache_key, required, readonly, value, target, rel, download, autocomplete, inputmode, enterkeyhint, autocapitalize, dirname, spellcheck, form, list, popovertarget, popovertargetaction, commandfor, command, accesskey, aria_placeholder, aria_autocomplete, active_descendant, errormessage, keyshortcuts, roledescription, busy, live, atomic, relevant, owns, flowto, details, multiline, multiselectable, orientation, sort, level, posinset, setsize, valuemin, valuemax, valuenow, valuetext, pattern, minlength, maxlength, min, max, step, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
+  'cache_key, required, readonly, value, target, rel, download, autocomplete, inputmode, enterkeyhint, autocapitalize, dirname, lang, dir, translate, spellcheck, form, list, popovertarget, popovertargetaction, commandfor, command, accesskey, aria_placeholder, aria_autocomplete, active_descendant, errormessage, keyshortcuts, roledescription, busy, live, atomic, relevant, owns, flowto, details, multiline, multiselectable, orientation, sort, level, posinset, setsize, valuemin, valuemax, valuenow, valuetext, pattern, minlength, maxlength, min, max, step, invalid, description, placeholder, group, current, controls, and haspopup fields when choosing or reusing form controls.'
 
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined
@@ -248,7 +251,7 @@ function collectSomElements(elements: readonly PlasmateSomElement[] = []) {
 function copyStringAttr(
   item: PlasmateActionTarget,
   attrs: Record<string, unknown>,
-  key: 'href' | 'target' | 'rel' | 'input_type' | 'value' | 'name' | 'placeholder' | 'description' | 'group' | 'autocomplete' | 'inputmode' | 'enterkeyhint' | 'autocapitalize' | 'dirname' | 'form' | 'list' | 'popovertarget' | 'popovertargetaction' | 'commandfor' | 'command' | 'popover' | 'accesskey' | 'pattern' | 'step'
+  key: 'href' | 'target' | 'rel' | 'input_type' | 'value' | 'name' | 'placeholder' | 'description' | 'group' | 'autocomplete' | 'inputmode' | 'enterkeyhint' | 'autocapitalize' | 'dirname' | 'lang' | 'dir' | 'form' | 'list' | 'popovertarget' | 'popovertargetaction' | 'commandfor' | 'command' | 'popover' | 'accesskey' | 'pattern' | 'step'
 ) {
   if (typeof attrs[key] === 'string' && attrs[key].length > 0) {
     item[key] = attrs[key]
@@ -259,6 +262,16 @@ function copyStringOrBooleanAttr(
   item: PlasmateActionTarget,
   attrs: Record<string, unknown>,
   key: 'download' | 'spellcheck'
+) {
+  if (typeof attrs[key] === 'string' || typeof attrs[key] === 'boolean') {
+    item[key] = attrs[key]
+  }
+}
+
+function copyStringOrBooleanContextAttr(
+  item: PlasmateActionTarget,
+  attrs: Record<string, unknown>,
+  key: 'translate'
 ) {
   if (typeof attrs[key] === 'string' || typeof attrs[key] === 'boolean') {
     item[key] = attrs[key]
@@ -307,6 +320,9 @@ export function extractPlasmateActionTargets(
       copyStringAttr(target, attrs, 'enterkeyhint')
       copyStringAttr(target, attrs, 'autocapitalize')
       copyStringAttr(target, attrs, 'dirname')
+      copyStringAttr(target, attrs, 'lang')
+      copyStringAttr(target, attrs, 'dir')
+      copyStringOrBooleanContextAttr(target, attrs, 'translate')
       copyStringAttr(target, attrs, 'form')
       copyStringAttr(target, attrs, 'list')
       copyStringAttr(target, attrs, 'popovertarget')
@@ -524,6 +540,10 @@ export function formatPlasmateActionPlan(
         ? ` [autocapitalize=${target.autocapitalize}]`
         : ''
       const dirname = target.dirname ? ` [dirname=${target.dirname}]` : ''
+      const lang = target.lang ? ` [lang=${target.lang}]` : ''
+      const dir = target.dir ? ` [dir=${target.dir}]` : ''
+      const translate =
+        typeof target.translate !== 'undefined' ? ` [translate=${target.translate}]` : ''
       const form = target.form ? ` [form=${target.form}]` : ''
       const list = target.list ? ` [list=${target.list}]` : ''
       const popovertarget = target.popovertarget
@@ -613,7 +633,7 @@ export function formatPlasmateActionPlan(
         ? ` [description=${target.description}]`
         : ''
 
-      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${readonly}${linkTarget}${rel}${download}${inputType}${value}${autocomplete}${inputmode}${enterkeyhint}${autocapitalize}${dirname}${form}${list}${popovertarget}${popovertargetaction}${commandfor}${command}${popover}${accesskey}${spellcheck}${placeholder}${minlength}${maxlength}${min}${max}${step}${pattern}${checked}${expanded}${pressed}${selected}${multiline}${multiselectable}${current}${controls}${haspopup}${invalid}${ariaPlaceholder}${ariaAutocomplete}${activeDescendant}${errorMessage}${keyshortcuts}${roledescription}${busy}${live}${atomic}${relevant}${owns}${flowto}${details}${orientation}${sort}${level}${posinset}${setsize}${valuemin}${valuemax}${valuenow}${valuetext}${group}${description}`
+      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${blockedReason}${required}${readonly}${linkTarget}${rel}${download}${inputType}${value}${autocomplete}${inputmode}${enterkeyhint}${autocapitalize}${dirname}${lang}${dir}${translate}${form}${list}${popovertarget}${popovertargetaction}${commandfor}${command}${popover}${accesskey}${spellcheck}${placeholder}${minlength}${maxlength}${min}${max}${step}${pattern}${checked}${expanded}${pressed}${selected}${multiline}${multiselectable}${current}${controls}${haspopup}${invalid}${ariaPlaceholder}${ariaAutocomplete}${activeDescendant}${errorMessage}${keyshortcuts}${roledescription}${busy}${live}${atomic}${relevant}${owns}${flowto}${details}${orientation}${sort}${level}${posinset}${setsize}${valuemin}${valuemax}${valuenow}${valuetext}${group}${description}`
     })
     .join('\n')
 }

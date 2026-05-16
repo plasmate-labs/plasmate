@@ -17,6 +17,9 @@ const fixtureTargets: PlasmateActionTarget[] = [
     required: true,
     description: 'Use your work email',
     group: 'Account',
+    lang: 'ar',
+    dir: 'rtl',
+    translate: false,
   },
   {
     id: 'e_save',

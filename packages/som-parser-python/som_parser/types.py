@@ -118,6 +118,9 @@ class SomElementAttrs(BaseModel):
     enterkeyhint: Optional[str] = None
     autocapitalize: Optional[str] = None
     dirname: Optional[str] = None
+    lang: Optional[str] = None
+    dir: Optional[str] = None
+    translate: Optional[bool | str] = None
     form: Optional[str] = None
     list: Optional[str] = None
     popovertarget: Optional[str] = None

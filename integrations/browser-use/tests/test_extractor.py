@@ -61,6 +61,12 @@ def test_build_context_surfaces_action_availability():
             assert f'[autocapitalize={target["autocapitalize"]}]' in line
         if target.get("dirname"):
             assert f'[dirname={target["dirname"]}]' in line
+        if target.get("lang"):
+            assert f'[lang={target["lang"]}]' in line
+        if target.get("dir"):
+            assert f'[dir={target["dir"]}]' in line
+        if "translate" in target:
+            assert f'[translate={target["translate"]}]' in line
         if target.get("form"):
             assert f'[form={target["form"]}]' in line
         if target.get("list"):

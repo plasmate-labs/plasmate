@@ -49,6 +49,56 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-16T07:11:48Z - Plasmate Improvements Automation
+
+- Git sync: the detached automation worktree could not write shared worktree
+  git metadata, so work moved to the primary checkout. `origin/master` was
+  already available locally at `f7af658`; a fresh branch
+  `codex/plasmate-improvements-2026-05-16` was created from that ref.
+  Network fetch over SSH was blocked by DNS resolution for `github.com`, so
+  this run continued from the locally available remote ref.
+- Market direction: current Playwright MCP docs still validate structured
+  accessibility snapshots as the action surface, while Browserbase/Stagehand
+  emphasize cached actions, session replay/observability, and repeated
+  workflow validation. Plasmate should keep deepening portable local SOM
+  action state rather than pivoting into hosted browser infrastructure.
+- Code changes: Rust SOM now preserves element-level locale context:
+  `lang`, `dir`, and `translate`. `translate="no"`/`false` normalizes to
+  `false`, `yes`/`true`/empty normalizes to `true`, and unusual values are
+  preserved as strings.
+- Parser/SDK/adapter changes: Python/Node parser packages, Python/Node/Go
+  SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose
+  `lang`, `dir`, and `translate` without changing deterministic `cache_key`
+  values.
+- Fixture and docs changes: the shared action-availability manifest and
+  `016-action-semantics` conformance fixture now assert locale context.
+  PRD, roadmap, SOM schema/spec, SDK/parser/adapter docs, generated website
+  docs, and this running state were updated with rationale and next
+  conformance steps.
+- Verification: JSON validation passed; `rustfmt --check src/som/compiler.rs
+  tests/som_compiler_test.rs` passed; focused locale and action-semantics Rust
+  tests passed; `cargo build` passed with existing warnings; `cargo test --lib
+  -- --test-threads=1` passed 257 tests; non-socket integration suites
+  `som_compiler_test`, `som_improvements_test`, `plugin_test`, and
+  `tls_integration_test` passed; `./scripts/action-manifest-conformance.sh
+  --quick` and `--full` passed; `node website/build.mjs` rebuilt 39 pages;
+  `git diff --check` passed.
+- Verification gaps: full `cargo fmt --check` still reports pre-existing
+  formatting drift in unrelated files (`src/awp/handler.rs`,
+  `src/bench/runner.rs`, `src/network/proxy.rs`, `src/main.rs`, and
+  `src/mcp/tools.rs`). Full `cargo test` is blocked by sandbox denial for
+  local TCP listener binds in AWP/intercept integration tests. `cargo clippy
+  --all-targets --all-features -- -D warnings` is blocked before analysis
+  because Cargo cannot create a registry source directory under
+  `/Users/steve/.cargo/registry/src/...` in this sandbox.
+- Commit/push state: implementation/docs commit
+  `chore: expose locale action context` was created. Direct push to remote
+  `master` was rejected because the remote branch advanced. A follow-up fetch
+  to rebase was blocked by SSH DNS resolution, so the verified work was pushed
+  to `origin/codex/plasmate-improvements-2026-05-16`. Creating a GitHub PR
+  with `gh pr create` was then blocked by API connectivity. There is no
+  `main` branch in this repo; `origin/HEAD` points at `origin/master`.
+
 ### 2026-05-14T08:14:37Z - Plasmate Improvements Automation
 
 - Git sync: requested latest pull was attempted from the primary checkout, but

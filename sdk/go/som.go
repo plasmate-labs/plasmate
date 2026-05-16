@@ -77,6 +77,9 @@ type ElementAttrs struct {
 	EnterKeyHint    *string        `json:"enterkeyhint,omitempty"`
 	AutoCapitalize  *string        `json:"autocapitalize,omitempty"`
 	DirName         *string        `json:"dirname,omitempty"`
+	Lang            *string        `json:"lang,omitempty"`
+	Dir             *string        `json:"dir,omitempty"`
+	Translate       interface{}    `json:"translate,omitempty"`
 	Form            *string        `json:"form,omitempty"`
 	List            *string        `json:"list,omitempty"`
 	PopoverTarget   *string        `json:"popovertarget,omitempty"`

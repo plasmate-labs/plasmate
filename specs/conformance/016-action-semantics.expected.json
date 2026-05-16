@@ -1,5 +1,5 @@
 {
-  "$description": "Tests fallback-token ARIA search landmarks, fallback-token ARIA menuitem checkbox/radio action targets, stylesheet hidden-rule parsing with production whitespace/casing, uppercase aria-hidden, and inline opacity hiding.",
+  "$description": "Tests fallback-token ARIA search landmarks, fallback-token ARIA menuitem checkbox/radio action targets, text-entry locale context, stylesheet hidden-rule parsing with production whitespace/casing, uppercase aria-hidden, and inline opacity hiding.",
   "som_version": "0.1",
   "url": "https://example.com/action-semantics",
   "title": "Action Semantics",
@@ -37,6 +37,9 @@
             "spellcheck": false,
             "autocapitalize": "sentences",
             "dirname": "reply.dir",
+            "lang": "ar",
+            "dir": "rtl",
+            "translate": false,
             "aria": { "placeholder": "Write a response" }
           }
         },

@@ -318,6 +318,14 @@ Current browser-agent products reward action menus that explain why a target is 
 - **Guided flow order should be portable**: `aria-flowto` should surface as `flowto` for multi-step forms and custom onboarding flows.
 - **Detailed help can stay out of raw DOM**: `aria-details` should surface as `details` so agents can locate extended help or validation panels without changing deterministic `cache_key` values.
 
+### 2026-05-16 Locale Context Action Menu Adjustment
+
+Current browser-agent tools keep making compact structured state the replay surface: Playwright MCP documents accessibility snapshots as the current page state, while Browserbase/Stagehand sell cached action validation and observable repeated workflows. Plasmate should keep the local-first wedge and make multilingual form replay safer by preserving locale context in action targets.
+
+- **Element language is replay context**: `lang` should travel through Rust, schema, SDKs, parser packages, and adapters so agents know which locale applies to a field or control.
+- **Text direction prevents bad typing**: `dir` should surface as compact target context for right-to-left and bidirectional workflows.
+- **Translation policy matters**: `translate` should be visible without changing deterministic `cache_key` values, so cached plans can avoid rewriting product names, legal terms, or user-entered values marked as non-translatable.
+
 ### 2026-05-13 Keyboard-Affordance Action Menu Adjustment
 
 Current Playwright MCP and Stagehand docs keep validating action surfaces that are current, inspectable, and reusable. Browserbase, Browser Use, and Firecrawl add hosted sessions and traces around that same workflow, but Plasmate's sticky local-first wedge is still a portable action contract that carries browser-like affordances everywhere.
@@ -498,6 +506,9 @@ Current Playwright MCP and Stagehand docs keep validating action surfaces that a
 - [x] Rust compiler and SOM schema preserve spellcheck, autocapitalize, dirname, and ARIA placeholder cues
 - [x] Compact action plans expose spellcheck, autocapitalize, dirname, and aria_placeholder across parser packages, SDKs, and framework adapters
 - [x] Shared action-availability manifest and 016-action-semantics fixture assert text-entry affordance cues without changing deterministic action cache keys
+- [x] Rust compiler and SOM schema preserve element-level lang, dir, and translate locale-context cues
+- [x] Compact action plans expose lang, dir, and translate across parser packages, SDKs, and framework adapters
+- [x] Shared action-availability manifest and 016-action-semantics fixture assert locale-context cues without changing deterministic action cache keys
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
@@ -508,6 +519,7 @@ Current Playwright MCP and Stagehand docs keep validating action surfaces that a
 - [ ] Promote ARIA widget affordance cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote ARIA set-position cases into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote text-entry affordance cases into broader parser, SDK, and adapter conformance fixtures
+- [ ] Promote locale-context cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures
 - [ ] Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures
 - [ ] Add cross-adapter accessible-description fixtures

@@ -1847,6 +1847,15 @@ fn build_element_attrs(
         };
         map.insert("spellcheck".into(), spellcheck);
     }
+    if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "translate") {
+        let normalized = value.trim().to_ascii_lowercase();
+        let translate = match normalized.as_str() {
+            "" | "yes" | "true" => json!(true),
+            "no" | "false" => json!(false),
+            _ => json!(value),
+        };
+        map.insert("translate".into(), translate);
+    }
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "name") {
         map.insert("name".into(), json!(value));
     }
@@ -1856,6 +1865,8 @@ fn build_element_attrs(
         "enterkeyhint",
         "autocapitalize",
         "dirname",
+        "lang",
+        "dir",
         "form",
         "list",
         "popovertarget",
@@ -2786,5 +2797,29 @@ mod tests {
         assert_eq!(attrs["autocapitalize"], "sentences");
         assert_eq!(attrs["dirname"], "reply.dir");
         assert_eq!(attrs["aria"]["placeholder"], "Write a response");
+    }
+
+    #[test]
+    fn test_locale_context_cues_are_preserved() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Localized form</title></head>
+<body>
+<main>
+  <input aria-label="Arabic company name" lang="ar" dir="rtl" translate="no">
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.com").unwrap();
+        let input = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| element.role == ElementRole::TextInput)
+            .expect("text input should compile");
+        let attrs = input.attrs.as_ref().expect("input attrs should compile");
+        assert_eq!(attrs["lang"], "ar");
+        assert_eq!(attrs["dir"], "rtl");
+        assert_eq!(attrs["translate"], false);
     }
 }

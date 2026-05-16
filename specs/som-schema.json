@@ -208,6 +208,14 @@
             "enterkeyhint": { "type": "string" },
             "autocapitalize": { "type": "string" },
             "dirname": { "type": "string" },
+            "lang": { "type": "string" },
+            "dir": { "type": "string" },
+            "translate": {
+              "oneOf": [
+                { "type": "boolean" },
+                { "type": "string" }
+              ]
+            },
             "form": { "type": "string" },
             "list": { "type": "string" },
             "popovertarget": { "type": "string" },

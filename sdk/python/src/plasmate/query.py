@@ -107,6 +107,12 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["autocapitalize"] = attrs.autocapitalize
             if attrs.dirname:
                 item["dirname"] = attrs.dirname
+            if attrs.lang:
+                item["lang"] = attrs.lang
+            if attrs.dir:
+                item["dir"] = attrs.dir
+            if attrs.translate is not None:
+                item["translate"] = attrs.translate
             if attrs.form:
                 item["form"] = attrs.form
             if attrs.list:

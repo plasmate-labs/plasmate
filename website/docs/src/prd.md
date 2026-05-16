@@ -1,6 +1,6 @@
 # PRD: Agent Stickiness and Roadmap Direction
 
-Last updated: 2026-05-14
+Last updated: 2026-05-16
 
 ## Product Thesis
 
@@ -100,6 +100,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-14 text-entry-affordance read: current competitor docs and developer commentary keep validating compact, fresh action menus over full-DOM recovery. Stagehand-style cached actions only stay useful when the field's typing affordances have not drifted, and Playwright MCP-style snapshots make the current accessibility state the selection surface. Plasmate should preserve small but practical text-entry cues such as `spellcheck`, `autocapitalize`, `dirname`, and `aria-placeholder` across the same manifest so agents understand keyboard behavior, language direction capture, and custom textbox prompt text without changing deterministic cache keys.
 
+2026-05-16 locale-context read: current browser-agent infrastructure keeps splitting between compact accessibility/semantic snapshots and hosted browser session platforms. Playwright MCP's documented snapshot flow makes current structured page state the action surface, while Browserbase/Stagehand position cached actions and session observability as repeat-work retention hooks. Plasmate should keep its local-first wedge and make multilingual form replay more trustworthy: element-level `lang`, `dir`, and `translate` tell agents which locale, writing direction, and translation policy applies before typing into or replaying a cached target.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -114,6 +116,10 @@ The project already spans a large number of package and integration surfaces: Ru
 
 ## Current Run Changes
 
+- 2026-05-16:
+  - The Rust SOM compiler and JSON Schema now preserve element-level locale context: `lang`, `dir`, and `translate`.
+  - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `lang`, `dir`, and `translate` without changing deterministic action `cache_key` values.
+  - The shared action-availability manifest and `016-action-semantics` conformance fixture now assert locale-context cues so multilingual and bidirectional form replay stays synchronized across adapters.
 - 2026-05-14:
   - The Rust SOM compiler and JSON Schema now preserve native range/value constraints (`min`, `max`, and `step`) plus ARIA range, orientation, and sort cues (`aria-valuemin`, `aria-valuemax`, `aria-valuenow`, `aria-valuetext`, `aria-orientation`, and `aria-sort`).
   - Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action-plan surfaces now expose `min`, `max`, `step`, `orientation`, `sort`, `valuemin`, `valuemax`, `valuenow`, and `valuetext` without changing deterministic action `cache_key` values.
@@ -279,7 +285,7 @@ The project already spans a large number of package and integration surfaces: Ru
 - Promote range and orientation cases (`min`, `max`, `step`, `aria-orientation`, `aria-sort`, and ARIA value state) into broader Rust/parser/SDK and adapter conformance fixtures.
 - Promote ARIA widget affordance cases (`aria-readonly`, `aria-multiline`, and `aria-multiselectable`) into broader Rust/parser/SDK and adapter conformance fixtures.
 - Add compiler/schema conformance for form validation constraints and `aria-invalid`, then promote the shared manifest cases into broader parser, SDK, and adapter fixtures.
-- Promote input-affordance cases (`inputmode`, `enterkeyhint`, autocomplete widget state, active descendants, `spellcheck`, `autocapitalize`, `dirname`, and `aria-placeholder`) into broader parser, SDK, and adapter conformance fixtures once the shared action manifest remains stable.
+- Promote input-affordance cases (`inputmode`, `enterkeyhint`, autocomplete widget state, active descendants, `spellcheck`, `autocapitalize`, `dirname`, `lang`, `dir`, `translate`, and `aria-placeholder`) into broader parser, SDK, and adapter conformance fixtures once the shared action manifest remains stable.
 - Promote keyboard-affordance cases (`accesskey`, `aria-keyshortcuts`, and `aria-roledescription`) into broader Rust/parser/SDK conformance fixtures once the shared action manifest remains stable.
 - Promote form-relation cases (`form`, `list`, and `aria-errormessage`) into broader parser, SDK, and adapter conformance fixtures.
 - Promote live-region cases (`aria-busy`, `aria-live`, `aria-atomic`, and `aria-relevant`) into broader Rust/parser/SDK conformance fixtures.

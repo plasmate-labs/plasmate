@@ -693,6 +693,12 @@
 <li><strong>Guided flow order should be portable</strong>: <code>aria-flowto</code> should surface as <code>flowto</code> for multi-step forms and custom onboarding flows.</li>
 <li><strong>Detailed help can stay out of raw DOM</strong>: <code>aria-details</code> should surface as <code>details</code> so agents can locate extended help or validation panels without changing deterministic <code>cache_key</code> values.</li>
 </ul>
+<h3 id="2026-05-16-locale-context-action-menu-adjustment">2026-05-16 Locale Context Action Menu Adjustment</h3><p>Current browser-agent tools keep making compact structured state the replay surface: Playwright MCP documents accessibility snapshots as the current page state, while Browserbase/Stagehand sell cached action validation and observable repeated workflows. Plasmate should keep the local-first wedge and make multilingual form replay safer by preserving locale context in action targets.</p>
+<ul>
+<li><strong>Element language is replay context</strong>: <code>lang</code> should travel through Rust, schema, SDKs, parser packages, and adapters so agents know which locale applies to a field or control.</li>
+<li><strong>Text direction prevents bad typing</strong>: <code>dir</code> should surface as compact target context for right-to-left and bidirectional workflows.</li>
+<li><strong>Translation policy matters</strong>: <code>translate</code> should be visible without changing deterministic <code>cache_key</code> values, so cached plans can avoid rewriting product names, legal terms, or user-entered values marked as non-translatable.</li>
+</ul>
 <h3 id="2026-05-13-keyboard-affordance-action-menu-adjustment">2026-05-13 Keyboard-Affordance Action Menu Adjustment</h3><p>Current Playwright MCP and Stagehand docs keep validating action surfaces that are current, inspectable, and reusable. Browserbase, Browser Use, and Firecrawl add hosted sessions and traces around that same workflow, but Plasmate&#39;s sticky local-first wedge is still a portable action contract that carries browser-like affordances everywhere.</p>
 <ul>
 <li><strong>Native shortcuts are action context</strong>: <code>accesskey</code> should travel through Rust, schema, SDKs, parser packages, and adapters so agents can understand page-provided keyboard activation paths.</li>
@@ -866,6 +872,9 @@
 <li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve spellcheck, autocapitalize, dirname, and ARIA placeholder cues</li>
 <li><input checked="" disabled="" type="checkbox"> Compact action plans expose spellcheck, autocapitalize, dirname, and aria_placeholder across parser packages, SDKs, and framework adapters</li>
 <li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest and 016-action-semantics fixture assert text-entry affordance cues without changing deterministic action cache keys</li>
+<li><input checked="" disabled="" type="checkbox"> Rust compiler and SOM schema preserve element-level lang, dir, and translate locale-context cues</li>
+<li><input checked="" disabled="" type="checkbox"> Compact action plans expose lang, dir, and translate across parser packages, SDKs, and framework adapters</li>
+<li><input checked="" disabled="" type="checkbox"> Shared action-availability manifest and 016-action-semantics fixture assert locale-context cues without changing deterministic action cache keys</li>
 <li><input disabled="" type="checkbox"> Selector-aware SOM cache entries for repeated agent prompts</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
 <li><input disabled="" type="checkbox"> Wire <code>016-action-semantics</code> into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants</li>
@@ -876,6 +885,7 @@
 <li><input disabled="" type="checkbox"> Promote ARIA widget affordance cases into broader parser, SDK, and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote ARIA set-position cases into broader Rust/parser/SDK and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote text-entry affordance cases into broader parser, SDK, and adapter conformance fixtures</li>
+<li><input disabled="" type="checkbox"> Promote locale-context cases into broader parser, SDK, and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote validation-constraint cases into broader parser, SDK, and adapter conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Promote keyboard-affordance cases into broader Rust/parser/SDK conformance fixtures</li>
 <li><input disabled="" type="checkbox"> Add cross-adapter accessible-description fixtures</li>
