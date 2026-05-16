@@ -85,8 +85,13 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   missing `tsup`; website docs generation remains blocked by missing `marked`.
   A mistyped focused cargo command rejected multiple test-name arguments before
   the corrected Rust test run passed.
-- Commit/push state: pending in this run at time of note. Remote merge remains
-  blocked unless GitHub fetch/API access recovers.
+- Commit/push state: created alternate-index commit `98613ae` (`chore: expose
+  aria naming provenance`), fast-forwarded local `master` to it, and pushed
+  review branch `codex/aria-naming-provenance`. Direct `origin/master` push
+  reached GitHub but was rejected with `fetch first`; retrying `git fetch
+  origin master` from the primary checkout failed DNS for `github.com`, and
+  `gh pr create` failed to reach `api.github.com`. Remote merge remains
+  blocked until fetch/API access works.
 
 ### 2026-05-16T01:13:12Z - Plasmate Improvements Automation
 
