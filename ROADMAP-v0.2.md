@@ -913,6 +913,25 @@ making link side effects visible enough for agents to reject stale clicks.
    compact action context without becoming cache-key material, preserving local
    action memory while exposing navigation risk.
 
+### 2026-05-16 ARIA Naming Provenance Adjustment
+
+The current competitive pressure is validated action reuse: Playwright MCP
+binds refs to fresh accessibility snapshots, Stagehand/Browserbase validate
+cached actions against DOM state, and managed browser platforms sell profile
+continuity for repeated workflows. Plasmate's local-first wedge should make
+cached target verification cheaper by preserving the raw naming relationships
+that produced the resolved label and description.
+
+1. **Raw names are replay evidence**: `aria-label` should survive as compact
+   `aria_label` action context so agents can detect when custom control text
+   changed even if the resolved label still looks plausible.
+2. **Label relationships are DOM anchors**: `aria-labelledby` should travel
+   through schema, SDKs, parser packages, and adapters as `labelledby` so a
+   cached target can verify the referenced label node still exists.
+3. **Descriptions need provenance**: `aria-describedby` should be preserved as
+   `describedby` beside resolved `description` text, letting agents validate
+   help/error copy without rewalking raw DOM.
+
 ## Architecture
 
 ```
@@ -1377,12 +1396,19 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - The shared action-availability manifest now asserts link locale, resource
   type, and referrer-policy cues across parser, SDK, and framework adapter
   outputs.
+- Rust SOM attrs and schema now preserve ARIA naming provenance with
+  `aria-label`, `aria-labelledby`, and `aria-describedby`.
+- Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
+  and Vercel AI action-plan surfaces now expose `aria_label`, `labelledby`,
+  and `describedby` without changing deterministic action `cache_key` values.
+- The shared action-availability manifest now asserts ARIA naming provenance
+  alongside resolved `description` text.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, `html_id` DOM-provenance cases, and
   action target lookup/index helpers into broader fixtures alongside
-  drag/drop, link replay, text-entry, ARIA widget, range, and set-position
-  cases.
+  drag/drop, link replay, ARIA naming provenance, text-entry, ARIA widget,
+  range, and set-position cases.
 
 ## Dependencies to Add
 

@@ -961,6 +961,9 @@ fn test_aria_labelledby_takes_precedence_over_aria_label() {
         .expect("button should be preserved");
 
     assert_eq!(button.label.as_deref(), Some("Primary action name"));
+    let attrs = button.attrs.as_ref().expect("button should expose attrs");
+    assert_eq!(attrs["aria"]["label"], "Fallback name");
+    assert_eq!(attrs["aria"]["labelledby"], "primary-label");
 }
 
 #[test]
@@ -983,6 +986,8 @@ fn test_aria_describedby_sets_accessible_description_attr() {
         attrs.get("description").and_then(|v| v.as_str()),
         Some("Use at least 12 characters.")
     );
+    assert_eq!(attrs["aria"]["label"], "Password");
+    assert_eq!(attrs["aria"]["describedby"], "password-help");
 }
 
 #[test]

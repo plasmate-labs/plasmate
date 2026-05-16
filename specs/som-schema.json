@@ -408,7 +408,10 @@
         "valuemin": { "type": "string" },
         "valuemax": { "type": "string" },
         "valuenow": { "type": "string" },
-        "valuetext": { "type": "string" }
+        "valuetext": { "type": "string" },
+        "label": { "type": "string" },
+        "labelledby": { "type": "string" },
+        "describedby": { "type": "string" }
       }
     },
     "ShadowRoot": {

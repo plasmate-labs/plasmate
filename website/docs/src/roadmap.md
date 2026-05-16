@@ -415,6 +415,14 @@ The browser-agent market keeps rewarding tools that validate current page state 
 - **Resource type is replay context**: link MIME `type` should surface beside `href` so cached actions can tell a normal HTML navigation from a PDF, CSV, or alternate representation.
 - **Privacy policy changes are side effects**: `referrerpolicy` should be compact action context without becoming cache-key material, preserving local action memory while exposing navigation risk.
 
+### 2026-05-16 ARIA Naming Provenance Adjustment
+
+Validated action reuse remains the durable retention hook: Playwright MCP refs are scoped to the current accessibility snapshot, Stagehand/Browserbase validate cached actions against DOM state, and managed browser platforms sell profile continuity for repeated workflows. Plasmate should preserve raw ARIA naming relationships beside resolved labels/descriptions so cached local targets can be checked without raw DOM recovery.
+
+- **Raw names are replay evidence**: `aria-label` should surface as compact `aria_label` action context.
+- **Label relationships are DOM anchors**: `aria-labelledby` should travel as `labelledby` through schema, SDKs, parser packages, and adapters.
+- **Descriptions need provenance**: `aria-describedby` should stay beside resolved `description` text as `describedby`.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -620,6 +628,9 @@ The browser-agent market keeps rewarding tools that validate current page state 
 - [x] Rust compiler and SOM schema preserve link replay cues with hreflang, type, and referrerpolicy
 - [x] Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action plans surface hreflang, type, and referrerpolicy without changing deterministic cache keys
 - [x] Shared action-availability manifest asserts link locale, resource type, and referrer-policy cues across parser, SDK, and framework adapters
+- [x] Rust compiler and SOM schema preserve ARIA naming provenance with aria-label, aria-labelledby, and aria-describedby
+- [x] Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action plans surface aria_label, labelledby, and describedby without changing deterministic cache keys
+- [x] Shared action-availability manifest asserts ARIA naming provenance beside resolved description text
 - [ ] Selector-aware SOM cache entries for repeated agent prompts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants

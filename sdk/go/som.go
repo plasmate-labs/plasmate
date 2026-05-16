@@ -163,6 +163,9 @@ type AriaState struct {
 	ValueMax         *string     `json:"valuemax,omitempty"`
 	ValueNow         *string     `json:"valuenow,omitempty"`
 	ValueText        *string     `json:"valuetext,omitempty"`
+	Label            *string     `json:"label,omitempty"`
+	LabelledBy       *string     `json:"labelledby,omitempty"`
+	DescribedBy      *string     `json:"describedby,omitempty"`
 }
 
 // SomShadowRoot represents elements inside a web component shadow root.
