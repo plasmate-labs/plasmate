@@ -79,6 +79,11 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   `git diff --check` passed. Full `cargo test --quiet` remains blocked only in
   sandboxed `tests/awp_integration_test.rs` because local listener setup
   returns `Operation not permitted`.
+- Commit/push state: normal branch checkout was still blocked by linked
+  worktree `HEAD.lock`, so created alternate-index commit `3827e71` (`chore:
+  add selector-aware som cache`), pushed review branch
+  `codex/plasmate-improvements-2026-05-16-selector-cache`, and fast-forwarded
+  remote `master` from `9ce6c6d` to `3827e71`.
 
 ### 2026-05-16T11:51:13Z - Plasmate Improvements Automation
 
