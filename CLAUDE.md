@@ -72,6 +72,22 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   maps, expanded session-status JSON coverage, and updated PRD, roadmap,
   README, Claude Desktop docs, and website doc sources with the replay
   readiness rationale and next stateful-cache step.
+- Verification: touched-file `rustfmt --edition 2021 --check`, focused
+  `cargo test mcp::sessions --quiet`, `cargo test mcp::tools --quiet`,
+  `cargo check --quiet`, `cargo build --quiet`, `cargo test --lib --quiet`
+  (272 tests), `cargo clippy --quiet` (pre-existing warnings only), website
+  docs rebuild via the primary checkout's local `marked` dependency, and
+  `git diff --check` passed. Rust commands used
+  `RUSTY_V8_ARCHIVE=/Users/steve/Git/plasmate/target/debug/gn_out/obj/librusty_v8.a`
+  because DNS cannot download `rusty_v8` in this sandbox.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`.
+- Commit/push state: normal branch checkout still cannot write linked
+  worktree `HEAD.lock`, so created alternate-index commits and pushed review
+  branch
+  `codex/plasmate-improvements-2026-05-16-session-replay-readiness`; remote
+  `master` was fast-forwarded from `21e1654` to the latest commit.
 
 ### 2026-05-16T16:10:14Z - Plasmate Improvements Automation
 
