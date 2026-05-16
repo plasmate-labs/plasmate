@@ -39,6 +39,7 @@ Claude now has access to these tools:
 | `fetch_page` | Fetch a URL and return the Semantic Object Model (SOM) - 17x fewer tokens than raw HTML |
 | `extract_text` | Get clean, readable text from any web page |
 | `extract_links` | Get all outbound URLs from a page (deduplicated) |
+| `cache_status` | Inspect MCP SOM cache hits, misses, selector entries, and avoided HTML work |
 | `open_page` | Open a persistent browser session |
 | `click` | Click elements on an open page |
 | `type_text` | Type into form fields |

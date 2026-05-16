@@ -12,6 +12,7 @@ use tracing::{debug, error, info};
 
 use super::sessions::SessionManager;
 use super::tools::{self, ToolDefinition};
+use crate::cache::store::{CacheConfig, SomCache};
 use crate::network::fetch;
 
 /// MCP protocol version we support.
@@ -73,6 +74,7 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
 
     // Session manager for stateful browser tools
     let sessions = Arc::new(SessionManager::new());
+    let cache = Arc::new(SomCache::new(CacheConfig::default()));
 
     let stdin = io::stdin();
     let mut stdout = io::stdout();
@@ -129,7 +131,7 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         // Handle the request
-        let response = handle_request(&request, &client, &sessions).await;
+        let response = handle_request(&request, &client, &sessions, &cache).await;
 
         // MCP notifications (no id) must not receive a response.
         if request.id.is_none() && request.method.starts_with("notifications/") {
@@ -160,6 +162,7 @@ async fn handle_request(
     request: &JsonRpcRequest,
     client: &reqwest::Client,
     sessions: &Arc<SessionManager>,
+    cache: &Arc<SomCache>,
 ) -> JsonRpcResponse {
     match request.method.as_str() {
         // MCP lifecycle methods
@@ -168,7 +171,7 @@ async fn handle_request(
 
         // MCP tool methods
         "tools/list" => handle_tools_list(request),
-        "tools/call" => handle_tools_call(request, client, sessions).await,
+        "tools/call" => handle_tools_call(request, client, sessions, cache).await,
 
         // Unknown method
         _ => JsonRpcResponse {
@@ -249,6 +252,7 @@ fn handle_tools_list(request: &JsonRpcRequest) -> JsonRpcResponse {
         tools::fetch_page_definition(),
         tools::extract_text_definition(),
         tools::extract_links_definition(),
+        tools::cache_status_definition(),
         // Screenshot
         tools::screenshot_page_definition(),
         // Phase 2: Stateful tools
@@ -284,6 +288,7 @@ async fn handle_tools_call(
     request: &JsonRpcRequest,
     client: &reqwest::Client,
     sessions: &Arc<SessionManager>,
+    cache: &Arc<SomCache>,
 ) -> JsonRpcResponse {
     let params = match &request.params {
         Some(p) => p,
@@ -321,9 +326,10 @@ async fn handle_tools_call(
 
     let result = match tool_name {
         // Phase 1: Stateless tools
-        "fetch_page" => tools::handle_fetch_page(&arguments, client).await,
-        "extract_text" => tools::handle_extract_text(&arguments, client).await,
-        "extract_links" => tools::handle_extract_links(&arguments, client).await,
+        "fetch_page" => tools::handle_fetch_page(&arguments, client, cache).await,
+        "extract_text" => tools::handle_extract_text(&arguments, client, cache).await,
+        "extract_links" => tools::handle_extract_links(&arguments, client, cache).await,
+        "cache_status" => tools::handle_cache_status(cache),
         // Screenshot
         "screenshot_page" => tools::handle_screenshot_page(&arguments, client).await,
         // Phase 2: Stateful tools

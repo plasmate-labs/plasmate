@@ -8,6 +8,7 @@ mod mcp;
 use plasmate::auth;
 use plasmate::awp;
 use plasmate::bench;
+use plasmate::cache;
 use plasmate::cdp;
 use plasmate::coverage;
 use plasmate::daemon;

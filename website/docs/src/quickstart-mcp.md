@@ -54,6 +54,7 @@ It should use `fetch_page` and return structured content instead of raw HTML. If
 | `fetch_page` | Fetch any URL as structured JSON (17x fewer tokens than HTML) |
 | `extract_text` | Plain text only (for reading, not interacting) |
 | `extract_links` | All links with region context |
+| `cache_status` | Inspect local MCP SOM cache hits, misses, selector entries, and avoided HTML work |
 | `open_page` | Start an interactive session |
 | `navigate_to` | Go to a new URL in an existing session |
 | `click` | Click buttons and links |

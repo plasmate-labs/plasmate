@@ -147,11 +147,13 @@ Config file locations:
 - **VS Code Copilot** — `.vscode/mcp.json` (workspace) or user settings
 - **Windsurf** — `~/.codeium/windsurf/mcp_config.json`
 
-Once connected, 16 tools are available: `fetch_page`, `extract_text`, `extract_links`, `open_page`, `navigate_to`, `click`, `type_text`, `select_option`, `scroll`, `toggle`, `clear`, `evaluate`, `close_page`, `get_cookies`, `set_cookies`, `clear_cookies`.
+Once connected, 17 tools are available: `fetch_page`, `extract_text`, `extract_links`, `cache_status`, `open_page`, `navigate_to`, `click`, `type_text`, `select_option`, `scroll`, `toggle`, `clear`, `evaluate`, `close_page`, `get_cookies`, `set_cookies`, `clear_cookies`.
 
 **Tip:** use `selector="main"` to strip nav/footer, `selector="interactive"`
 to return only actionable elements, or `selector="action:click"` to build a
 compact click-target menu before the LLM sees the content.
+Use `cache_status` after repeated fetches to inspect local MCP SOM cache hits,
+misses, selector entries, and avoided HTML work.
 
 ### Vercel AI SDK
 
@@ -183,7 +185,7 @@ const { text } = await generateText({
 await mcp.close()
 ```
 
-This wires all 16 Plasmate tools directly into any Vercel AI SDK agent. See [Vercel AI SDK MCP docs](https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#mcp-tools) for details.
+This wires all 17 Plasmate tools directly into any Vercel AI SDK agent. See [Vercel AI SDK MCP docs](https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#mcp-tools) for details.
 
 ### LLM context
 

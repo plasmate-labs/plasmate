@@ -17,10 +17,12 @@ use serde_json::{json, Value};
 use tracing::{debug, info, warn};
 
 use super::sessions::SessionManager;
+use crate::cache::store::{CacheLookup, SomCache};
 use crate::cdp::cookies::{cookie_from_cdp_params, Cookie};
 use crate::js::pipeline::{self, PipelineConfig};
 use crate::js::runtime::{JsRuntime, RuntimeConfig};
 use crate::network::fetch;
+use crate::som::types::Som;
 
 /// Default timeout for fetching pages (30 seconds).
 const DEFAULT_TIMEOUT_MS: u64 = 30000;
@@ -62,6 +64,102 @@ struct ExtractTextParams {
     /// Filter to a specific region before extracting text.
     #[serde(default)]
     selector: Option<String>,
+}
+
+async fn load_som_for_mcp(
+    client: &reqwest::Client,
+    cache: &SomCache,
+    url: &str,
+    javascript: bool,
+    selector: Option<&str>,
+) -> Result<Som, String> {
+    let fetch_result = fetch::fetch_url(client, url, DEFAULT_TIMEOUT_MS)
+        .await
+        .map_err(|e| format!("Failed to fetch {}: {}", url, e))?;
+
+    debug!(
+        url = %fetch_result.url,
+        status = fetch_result.status,
+        html_bytes = fetch_result.html_bytes,
+        load_ms = fetch_result.load_ms,
+        "Fetched"
+    );
+
+    let content_hash = SomCache::content_hash(fetch_result.html.as_bytes());
+    if javascript {
+        match cache.lookup_or_filter_selector(&fetch_result.url, content_hash, selector) {
+            CacheLookup::Hit(entry) => {
+                if let Ok(som) = serde_json::from_slice::<Som>(&entry.som_json) {
+                    debug!(url = %fetch_result.url, selector = ?selector, "MCP SOM cache hit");
+                    return Ok(som);
+                }
+            }
+            CacheLookup::Stale { .. } | CacheLookup::Miss => {}
+        }
+    }
+
+    let pipeline_config = PipelineConfig {
+        execute_js: javascript,
+        fetch_external_scripts: javascript,
+        ..Default::default()
+    };
+
+    let page_result = pipeline::process_page_async(
+        &fetch_result.html,
+        &fetch_result.url,
+        &pipeline_config,
+        client,
+    )
+    .await
+    .map_err(|e| format!("Pipeline error: {}", e))?;
+
+    debug!(
+        som_bytes = page_result.som.meta.som_bytes,
+        element_count = page_result.som.meta.element_count,
+        interactive_count = page_result.som.meta.interactive_count,
+        "SOM compiled"
+    );
+
+    if javascript {
+        Ok(select_and_store_mcp_som(
+            cache,
+            &fetch_result.url,
+            content_hash,
+            page_result.som,
+            fetch_result.html_bytes,
+            selector,
+        ))
+    } else if let Some(selector) = selector {
+        Ok(crate::som::filter::apply_selector(
+            &page_result.som,
+            selector,
+        ))
+    } else {
+        Ok(page_result.som)
+    }
+}
+
+fn select_and_store_mcp_som(
+    cache: &SomCache,
+    url: &str,
+    content_hash: u64,
+    som: Som,
+    html_bytes: usize,
+    selector: Option<&str>,
+) -> Som {
+    if let Ok(full_som_json) = serde_json::to_vec(&som) {
+        cache.store(url, content_hash, full_som_json, html_bytes);
+    }
+
+    if let Some(selector) = selector {
+        let selected = crate::som::filter::apply_selector(&som, selector);
+        if let Ok(selected_json) = serde_json::to_vec(&selected) {
+            cache.store_with_selector(url, content_hash, Some(selector), selected_json, html_bytes);
+        }
+        selected
+    } else {
+        som
+    }
 }
 
 /// Get the tool definition for fetch_page.
@@ -121,7 +219,11 @@ pub fn extract_text_definition() -> ToolDefinition {
 }
 
 /// Handle the fetch_page tool call.
-pub async fn handle_fetch_page(arguments: &Value, client: &reqwest::Client) -> Value {
+pub async fn handle_fetch_page(
+    arguments: &Value,
+    client: &reqwest::Client,
+    cache: &Arc<SomCache>,
+) -> Value {
     // Parse arguments
     let params: FetchPageParams = match serde_json::from_value(arguments.clone()) {
         Ok(p) => p,
@@ -132,55 +234,19 @@ pub async fn handle_fetch_page(arguments: &Value, client: &reqwest::Client) -> V
 
     info!(url = %params.url, javascript = params.javascript, "fetch_page");
 
-    // Fetch the page
-    let fetch_result = match fetch::fetch_url(client, &params.url, DEFAULT_TIMEOUT_MS).await {
-        Ok(r) => r,
-        Err(e) => {
-            return error_response(&format!("Failed to fetch {}: {}", params.url, e));
-        }
-    };
-
-    debug!(
-        url = %fetch_result.url,
-        status = fetch_result.status,
-        html_bytes = fetch_result.html_bytes,
-        load_ms = fetch_result.load_ms,
-        "Fetched"
-    );
-
-    // Process through the pipeline
-    let pipeline_config = PipelineConfig {
-        execute_js: params.javascript,
-        fetch_external_scripts: params.javascript,
-        ..Default::default()
-    };
-
-    let page_result = match pipeline::process_page_async(
-        &fetch_result.html,
-        &fetch_result.url,
-        &pipeline_config,
+    let som_to_serialize = match load_som_for_mcp(
         client,
+        cache,
+        &params.url,
+        params.javascript,
+        params.selector.as_deref(),
     )
     .await
     {
-        Ok(r) => r,
+        Ok(som) => som,
         Err(e) => {
-            return error_response(&format!("Pipeline error: {}", e));
+            return error_response(&e);
         }
-    };
-
-    debug!(
-        som_bytes = page_result.som.meta.som_bytes,
-        element_count = page_result.som.meta.element_count,
-        interactive_count = page_result.som.meta.interactive_count,
-        "SOM compiled"
-    );
-
-    // Apply selector filter (if requested)
-    let som_to_serialize = if let Some(ref sel) = params.selector {
-        crate::som::filter::apply_selector(&page_result.som, sel)
-    } else {
-        page_result.som
     };
 
     // Serialize SOM to JSON
@@ -231,7 +297,11 @@ pub async fn handle_fetch_page(arguments: &Value, client: &reqwest::Client) -> V
 }
 
 /// Handle the extract_text tool call.
-pub async fn handle_extract_text(arguments: &Value, client: &reqwest::Client) -> Value {
+pub async fn handle_extract_text(
+    arguments: &Value,
+    client: &reqwest::Client,
+    cache: &Arc<SomCache>,
+) -> Value {
     // Parse arguments
     let params: ExtractTextParams = match serde_json::from_value(arguments.clone()) {
         Ok(p) => p,
@@ -242,47 +312,19 @@ pub async fn handle_extract_text(arguments: &Value, client: &reqwest::Client) ->
 
     info!(url = %params.url, "extract_text");
 
-    // Fetch the page
-    let fetch_result = match fetch::fetch_url(client, &params.url, DEFAULT_TIMEOUT_MS).await {
-        Ok(r) => r,
-        Err(e) => {
-            return error_response(&format!("Failed to fetch {}: {}", params.url, e));
-        }
-    };
-
-    debug!(
-        url = %fetch_result.url,
-        status = fetch_result.status,
-        html_bytes = fetch_result.html_bytes,
-        "Fetched"
-    );
-
-    // Process through the pipeline with JS enabled
-    let pipeline_config = PipelineConfig {
-        execute_js: true,
-        fetch_external_scripts: true,
-        ..Default::default()
-    };
-
-    let page_result = match pipeline::process_page_async(
-        &fetch_result.html,
-        &fetch_result.url,
-        &pipeline_config,
+    let effective_som = match load_som_for_mcp(
         client,
+        cache,
+        &params.url,
+        true,
+        params.selector.as_deref(),
     )
     .await
     {
-        Ok(r) => r,
+        Ok(som) => som,
         Err(e) => {
-            return error_response(&format!("Pipeline error: {}", e));
+            return error_response(&e);
         }
-    };
-
-    // Apply selector filter (if requested)
-    let effective_som = if let Some(ref sel) = params.selector {
-        crate::som::filter::apply_selector(&page_result.som, sel)
-    } else {
-        page_result.som
     };
 
     // Extract text from all regions
@@ -408,8 +450,37 @@ pub fn extract_links_definition() -> ToolDefinition {
     }
 }
 
+/// Get the tool definition for cache_status.
+pub fn cache_status_definition() -> ToolDefinition {
+    ToolDefinition {
+        name: "cache_status".to_string(),
+        description: "Return Plasmate's MCP SOM cache counters and inventory. Use this after repeated fetch_page, extract_text, or extract_links calls to inspect local cache hits, misses, selector entries, and avoided HTML work.".to_string(),
+        input_schema: json!({
+            "type": "object",
+            "properties": {}
+        }),
+    }
+}
+
+/// Handle the cache_status tool call.
+pub fn handle_cache_status(cache: &Arc<SomCache>) -> Value {
+    let snapshot = cache.snapshot();
+    json!({
+        "content": [
+            {
+                "type": "text",
+                "text": serde_json::to_string(&snapshot).unwrap_or_default()
+            }
+        ]
+    })
+}
+
 /// Handle the extract_links tool call.
-pub async fn handle_extract_links(arguments: &Value, client: &reqwest::Client) -> Value {
+pub async fn handle_extract_links(
+    arguments: &Value,
+    client: &reqwest::Client,
+    cache: &Arc<SomCache>,
+) -> Value {
     let params: ExtractLinksParams = match serde_json::from_value(arguments.clone()) {
         Ok(p) => p,
         Err(e) => {
@@ -419,38 +490,19 @@ pub async fn handle_extract_links(arguments: &Value, client: &reqwest::Client) -
 
     info!(url = %params.url, "extract_links");
 
-    let fetch_result = match fetch::fetch_url(client, &params.url, DEFAULT_TIMEOUT_MS).await {
-        Ok(r) => r,
-        Err(e) => {
-            return error_response(&format!("Failed to fetch {}: {}", params.url, e));
-        }
-    };
-
-    let pipeline_config = PipelineConfig {
-        execute_js: true,
-        fetch_external_scripts: true,
-        ..Default::default()
-    };
-
-    let page_result = match pipeline::process_page_async(
-        &fetch_result.html,
-        &fetch_result.url,
-        &pipeline_config,
+    let effective_som = match load_som_for_mcp(
         client,
+        cache,
+        &params.url,
+        true,
+        params.selector.as_deref(),
     )
     .await
     {
-        Ok(r) => r,
+        Ok(som) => som,
         Err(e) => {
-            return error_response(&format!("Pipeline error: {}", e));
+            return error_response(&e);
         }
-    };
-
-    // Apply selector filter (if requested)
-    let effective_som = if let Some(ref sel) = params.selector {
-        crate::som::filter::apply_selector(&page_result.som, sel)
-    } else {
-        page_result.som
     };
 
     // Collect all link URLs, deduplicated
@@ -2493,47 +2545,48 @@ pub async fn handle_clear_cookies(arguments: &Value, sessions: &Arc<SessionManag
 
     let result = sessions
         .with_session(&params.session_id, |session| {
-            let cleared = if params.name.is_none() && params.domain.is_none() && params.url.is_none() {
-                // Clear all cookies
-                let count = session.target.cookie_jar.len();
-                session.target.cookie_jar.clear();
-                count
-            } else if let Some(ref cookie_name) = params.name {
-                // Delete specific cookies by name
-                session.target.cookie_jar.delete_cookies(
-                    cookie_name,
-                    params.url.as_deref(),
-                    params.domain.as_deref(),
-                    None,
-                )
-            } else {
-                // Domain/URL only filter
-                let cookies_to_check = if let Some(ref url_str) = params.url {
-                    session.target.cookie_jar.get_cookies(url_str)
+            let cleared =
+                if params.name.is_none() && params.domain.is_none() && params.url.is_none() {
+                    // Clear all cookies
+                    let count = session.target.cookie_jar.len();
+                    session.target.cookie_jar.clear();
+                    count
+                } else if let Some(ref cookie_name) = params.name {
+                    // Delete specific cookies by name
+                    session.target.cookie_jar.delete_cookies(
+                        cookie_name,
+                        params.url.as_deref(),
+                        params.domain.as_deref(),
+                        None,
+                    )
                 } else {
-                    session.target.cookie_jar.get_all_cookies()
-                };
+                    // Domain/URL only filter
+                    let cookies_to_check = if let Some(ref url_str) = params.url {
+                        session.target.cookie_jar.get_cookies(url_str)
+                    } else {
+                        session.target.cookie_jar.get_all_cookies()
+                    };
 
-                let mut cleared = 0;
-                for cookie in cookies_to_check {
-                    let domain_matches = params
-                        .domain
-                        .as_ref()
-                        .map(|d| cookie.domain.contains(d) || d.contains(&cookie.domain))
-                        .unwrap_or(true);
+                    let mut cleared = 0;
+                    for cookie in cookies_to_check {
+                        let domain_matches = params
+                            .domain
+                            .as_ref()
+                            .map(|d| cookie.domain.contains(d) || d.contains(&cookie.domain))
+                            .unwrap_or(true);
 
-                    if domain_matches {
-                        if session.target.cookie_jar.remove_cookie(
-                            &cookie.name,
-                            &cookie.domain,
-                            Some(&cookie.path),
-                        ) {
-                            cleared += 1;
+                        if domain_matches {
+                            if session.target.cookie_jar.remove_cookie(
+                                &cookie.name,
+                                &cookie.domain,
+                                Some(&cookie.path),
+                            ) {
+                                cleared += 1;
+                            }
                         }
                     }
-                }
-                cleared
-            };
+                    cleared
+                };
             cleared
         })
         .await;
@@ -2572,7 +2625,8 @@ fn cookie_to_json(cookie: &Cookie) -> Value {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::som::types::{Element, ElementRole, ShadowRoot};
+    use crate::cache::store::CacheConfig;
+    use crate::som::types::{Element, ElementRole, Region, RegionRole, ShadowRoot, SomMeta};
 
     fn test_element(
         id: &str,
@@ -2650,5 +2704,76 @@ mod tests {
         truncate_text_to_chars(&mut text, 7);
 
         assert_eq!(text, "Hello...");
+    }
+
+    fn test_som() -> Som {
+        Som {
+            som_version: "0.1".to_string(),
+            url: "https://example.com/app".to_string(),
+            title: "App".to_string(),
+            lang: "en".to_string(),
+            regions: vec![Region {
+                id: "r1".to_string(),
+                role: RegionRole::Main,
+                label: None,
+                action: None,
+                method: None,
+                target: None,
+                enctype: None,
+                novalidate: None,
+                accept_charset: None,
+                autocomplete: None,
+                elements: vec![test_element(
+                    "button-1",
+                    ElementRole::Button,
+                    Some("Save"),
+                    None,
+                )],
+            }],
+            meta: SomMeta {
+                html_bytes: 200,
+                som_bytes: 100,
+                element_count: 1,
+                interactive_count: 1,
+            },
+            structured_data: None,
+        }
+    }
+
+    #[test]
+    fn test_select_and_store_mcp_som_materializes_selector_cache() {
+        let cache = SomCache::new(CacheConfig::default());
+        let selected = select_and_store_mcp_som(
+            &cache,
+            "https://example.com/app",
+            42,
+            test_som(),
+            200,
+            Some("interactive"),
+        );
+
+        assert_eq!(selected.regions[0].elements[0].id, "button-1");
+        assert!(matches!(
+            cache.lookup("https://example.com/app", 42),
+            CacheLookup::Hit(_)
+        ));
+        assert!(matches!(
+            cache.lookup_with_selector("https://example.com/app", 42, Some("INTERACTIVE")),
+            CacheLookup::Hit(_)
+        ));
+    }
+
+    #[test]
+    fn test_cache_status_returns_snapshot_json() {
+        let cache = Arc::new(SomCache::new(CacheConfig::default()));
+        cache.store("https://example.com/app", 42, b"som".to_vec(), 200);
+
+        let result = handle_cache_status(&cache);
+        let text = result["content"][0]["text"].as_str().unwrap();
+        let snapshot: serde_json::Value = serde_json::from_str(text).unwrap();
+
+        assert_eq!(snapshot["entries"], 1);
+        assert_eq!(snapshot["full_entries"], 1);
+        assert_eq!(snapshot["max_hot_entries"], 1000);
     }
 }

@@ -447,6 +447,14 @@ Current browser-agent products are making cache reuse explainable. Playwright MC
 - **Status is an operator surface**: `plasmate daemon status` should summarize cache state in readable CLI output rather than requiring users to parse raw health JSON.
 - **Stats count every cache path**: unvalidated cache reads should update hit/miss and avoided-byte counters too, keeping future instant/prefetch status output honest.
 
+### 2026-05-16 MCP Cache Surface Adjustment
+
+The latest competitor docs keep making repeated-work memory visible where agents actually call tools. Stagehand now documents local and Browserbase action caches, Browserbase markets action caching with prompt observability and session replay, Firecrawl keeps broad MCP scrape/search/extract distribution, and Browser Run exposes MCP/CDP sessions plus recordings and WebMCP labs. Plasmate should keep the local-first wedge by making stateless MCP calls reuse and inspect selector-aware SOM cache entries before adding heavier trace or hosted-browser features.
+
+- **MCP fetches should warm up**: `fetch_page`, `extract_text`, and `extract_links` should share an in-process SOM cache so repeated MCP agent calls avoid JS/SOM recompilation after content-hash validation.
+- **Selector views are first-class MCP cache entries**: MCP calls with `selector='interactive'`, `action:<name>`, role selectors, or `#id` should reuse the same full-page-derived selector cache path as the daemon.
+- **Agents need cache introspection**: an MCP `cache_status` tool should expose hit/miss/stale/eviction counters, full versus selector inventory, cached bytes, avoided HTML bytes, and capacity so users can tell whether repeated workflows are getting cheaper.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -657,6 +665,8 @@ Current browser-agent products are making cache reuse explainable. Playwright MC
 - [x] Shared action-availability manifest asserts ARIA naming provenance beside resolved description text
 - [x] Selector-aware SOM cache entries for repeated daemon agent prompts
 - [x] Daemon cache health/status observability for selector hit/miss behavior
+- [x] MCP stateless fetch/text/link SOM cache reuse
+- [x] MCP cache_status observability for selector hit/miss behavior
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures

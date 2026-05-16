@@ -1009,6 +1009,28 @@ the daemon.
    hit/miss and avoided-byte counters too, keeping future instant/prefetch
    status output honest.
 
+### 2026-05-16 MCP Cache Surface Adjustment
+
+The latest competitor docs keep making repeated-work memory visible where
+agents actually call tools. Stagehand now documents local and Browserbase
+action caches, Browserbase markets action caching with prompt observability and
+session replay, Firecrawl keeps broad MCP scrape/search/extract distribution,
+and Browser Run exposes MCP/CDP sessions plus recordings and WebMCP labs.
+Plasmate should keep the local-first wedge by making stateless MCP calls reuse
+and inspect selector-aware SOM cache entries before adding heavier trace or
+hosted-browser features.
+
+1. **MCP fetches should warm up**: `fetch_page`, `extract_text`, and
+   `extract_links` should share an in-process SOM cache so repeated MCP agent
+   calls avoid JS/SOM recompilation after content-hash validation.
+2. **Selector views are first-class MCP cache entries**: MCP calls with
+   `selector='interactive'`, `action:<name>`, role selectors, or `#id` should
+   reuse the same full-page-derived selector cache path as the daemon.
+3. **Agents need cache introspection**: an MCP `cache_status` tool should expose
+   hit/miss/stale/eviction counters, full versus selector inventory, cached
+   bytes, avoided HTML bytes, and capacity so users can tell whether repeated
+   workflows are getting cheaper.
+
 ## Architecture
 
 ```
@@ -1494,6 +1516,14 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   CLI renders those counters as readable status output.
 - Unvalidated SOM cache reads now update hit/miss and avoided-byte statistics,
   so daemon observability stays consistent across cache access modes.
+- MCP now keeps an in-process SOM cache for stateless `fetch_page`,
+  `extract_text`, and `extract_links` calls, reusing content-hash-validated
+  full-page and selector-filtered SOM entries before recompiling.
+- MCP now exposes `cache_status` so agents can inspect hit/miss/stale,
+  eviction, full-entry, selector-entry, cached-byte, avoided-HTML, and capacity
+  counters without leaving the MCP surface.
+- MCP tests now cover selector-cache materialization and cache-status JSON for
+  the stateless tool path.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, `html_id` DOM-provenance cases, and

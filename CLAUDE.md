@@ -49,6 +49,42 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-16T15:13:18Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch origin master` was retried from the automation
+  worktree and failed on linked `FETCH_HEAD` permissions; fallback fetch from
+  the primary checkout failed DNS for `github.com`. Work continued from the
+  newest locally known `origin/master` `82270f5`.
+- Market direction: current docs continue to reward reusable, inspectable
+  action state. Stagehand now documents local/Browserbase action caching,
+  Browserbase pairs caching with prompt observability and replay, Firecrawl
+  keeps broad MCP scrape/search/extract distribution, and Cloudflare Browser
+  Run exposes MCP/CDP sessions, recordings, and WebMCP labs. Plasmate should
+  keep the local-first wedge and make repeated SOM reuse visible in MCP, not
+  only the daemon.
+- Code changes: MCP server mode now owns an in-process `SomCache`; stateless
+  `fetch_page`, `extract_text`, and `extract_links` calls validate fetched HTML
+  by content hash, reuse cached full-page or selector-filtered SOM JSON before
+  JS/SOM recompilation, and materialize selector entries from the full SOM. A
+  new MCP `cache_status` tool returns cache hit, miss, stale, eviction,
+  full-entry, selector-entry, cached-byte, avoided-HTML, and capacity counters.
+- Tests/docs: added MCP cache tests for selector materialization and
+  cache-status JSON. PRD, roadmap, website doc sources/generated HTML, README,
+  and Claude Desktop MCP docs now record the MCP cache-surface rationale, the
+  new `cache_status` tool, and the next step of stateful session cache reuse
+  once effective HTML can be preserved safely.
+- Verification: `rustfmt --edition 2021 --check src/main.rs src/mcp/server.rs
+  src/mcp/tools.rs`, `cargo test mcp::tools --quiet`, `cargo check --quiet`,
+  `cargo build --quiet`, `cargo test --lib --quiet` (271 tests),
+  `cargo clippy --quiet` (pre-existing warnings only), `node website/build.mjs`
+  via a temporary symlink to the primary checkout's local `marked` dependency,
+  and `git diff --check` passed.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`.
+- Commit/push state: pending commit and push/merge from this worktree at the
+  time this state entry was written.
+
 ### 2026-05-16T14:05:55Z - Plasmate Improvements Automation
 
 - Git sync: required latest fetch was retried from the automation worktree and
