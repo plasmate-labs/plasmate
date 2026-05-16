@@ -14,7 +14,9 @@ import {
   findActionTargetById,
   findActionTargetByLabel,
   findActionTargetByTestId,
+  findActionTargetsByAction,
   findActionTargetsByLabel,
+  findActionTargetsByRole,
   findByHint,
   findByRole,
   findById,
@@ -482,6 +484,7 @@ describe('getActionPlan', () => {
   it('indexes action targets for replay', () => {
     const { som, action_targets } = loadActionAvailabilityFixture();
     const save = action_targets.find((target) => target.id === 'e_save')!;
+    const billing = action_targets[action_targets.length - 1];
     const index = getActionPlanIndex(som);
 
     expect(index.byId.e_save).toEqual(save);
@@ -489,6 +492,12 @@ describe('getActionPlan', () => {
     expect(index.byHtmlId['save-button']).toEqual(save);
     expect(index.byTestId['settings-save']).toEqual(save);
     expect(index.byLabel.Save).toEqual(save);
+    expect(index.byRole.button.map((target) => target.id)).toEqual(['e_save', 'e_preview']);
+    expect(index.byAction.click.map((target) => target.id)).toEqual([
+      'e_save',
+      'e_preview',
+      'e_billing',
+    ]);
     expect(findActionTarget(som, 'e_save')).toEqual(save);
     expect(findActionTarget(som, save.cache_key)).toEqual(save);
     expect(findActionTarget(som, 'save-button')).toEqual(save);
@@ -501,8 +510,21 @@ describe('getActionPlan', () => {
     expect(findActionTargetByTestId(som, 'settings-save')).toEqual(save);
     expect(findActionTargetByLabel(som, 'Save')).toEqual(save);
     expect(findActionTargetsByLabel(som, 'save')).toEqual([save]);
+    expect(findActionTargetsByRole(som, 'button')).toEqual([
+      action_targets[2],
+      action_targets[3],
+    ]);
+    expect(findActionTargetsByAction(som, 'click')).toEqual([
+      action_targets[2],
+      action_targets[3],
+      billing,
+    ]);
     expect(findActionTarget(som, 'settings-save', { enabledOnly: true })).toBeUndefined();
     expect(findActionTarget(som, 'Save', { by: 'label', enabledOnly: true })).toBeUndefined();
+    expect(findActionTargetsByRole(som, 'button', { enabledOnly: true })).toEqual([]);
+    expect(findActionTargetsByAction(som, 'click', { enabledOnly: true })).toEqual([
+      billing,
+    ]);
   });
 
   it('filters blocked targets from enabled action indexes', () => {
@@ -514,6 +536,8 @@ describe('getActionPlan', () => {
     expect(index.byId.e_save).toBeUndefined();
     expect(index.byTestId['settings-save']).toBeUndefined();
     expect(index.byLabel.Save).toBeUndefined();
+    expect(index.byRole.button).toBeUndefined();
+    expect(index.byAction.click.map((target) => target.id)).toEqual(['e_billing']);
     expect(index.byId.e_plan).toBeDefined();
   });
 });

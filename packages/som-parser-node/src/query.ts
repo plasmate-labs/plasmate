@@ -206,6 +206,8 @@ export interface ActionPlanIndex {
   byHtmlId: Record<string, ActionPlanItem>;
   byTestId: Record<string, ActionPlanItem>;
   byLabel: Record<string, ActionPlanItem>;
+  byRole: Record<string, ActionPlanItem[]>;
+  byAction: Record<string, ActionPlanItem[]>;
 }
 
 export type ActionTargetLookupKey = 'auto' | 'id' | 'cache_key' | 'html_id' | 'test_id' | 'label';
@@ -401,7 +403,7 @@ export function getEnabledActionPlan(som: Som): ActionPlanItem[] {
   return getActionPlan(som).filter((item) => item.enabled !== false);
 }
 
-/** Return action targets indexed by SOM id, cache key, HTML id, test id, and label. */
+/** Return action targets indexed for replay and grouped by role/action. */
 export function getActionPlanIndex(
   som: Som,
   options?: { enabledOnly?: boolean },
@@ -413,6 +415,8 @@ export function getActionPlanIndex(
     byHtmlId: {},
     byTestId: {},
     byLabel: {},
+    byRole: {},
+    byAction: {},
   };
   for (const item of plan) {
     if (index.byId[item.id] === undefined) index.byId[item.id] = item;
@@ -425,6 +429,10 @@ export function getActionPlanIndex(
     }
     if (item.label && index.byLabel[item.label] === undefined) {
       index.byLabel[item.label] = item;
+    }
+    (index.byRole[item.role] ??= []).push(item);
+    for (const action of item.actions) {
+      (index.byAction[action] ??= []).push(item);
     }
   }
   return index;
@@ -463,6 +471,24 @@ export function findActionTargetsByLabel(
   }
   const lower = label.toLowerCase();
   return plan.filter((item) => item.label?.toLowerCase().includes(lower));
+}
+
+/** Find compact action targets by exact SOM role. */
+export function findActionTargetsByRole(
+  som: Som,
+  role: ElementRole,
+  options?: { enabledOnly?: boolean },
+): ActionPlanItem[] {
+  return getActionPlanIndex(som, { enabledOnly: options?.enabledOnly }).byRole[role] ?? [];
+}
+
+/** Find compact action targets that expose the requested action. */
+export function findActionTargetsByAction(
+  som: Som,
+  action: ElementAction,
+  options?: { enabledOnly?: boolean },
+): ActionPlanItem[] {
+  return getActionPlanIndex(som, { enabledOnly: options?.enabledOnly }).byAction[action] ?? [];
 }
 
 /** Find a compact action target by its SOM element id. */

@@ -389,15 +389,17 @@ def get_enabled_action_plan(som: Som) -> List[Dict[str, object]]:
 
 def get_action_plan_index(
     som: Som, *, enabled_only: bool = False
-) -> Dict[str, Dict[str, Dict[str, object]]]:
-    """Return action targets indexed by id, cache key, HTML id, test id, and label."""
+) -> Dict[str, Dict[str, object]]:
+    """Return action targets indexed for replay and grouped by role/action."""
     plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
-    index: Dict[str, Dict[str, Dict[str, object]]] = {
+    index: Dict[str, Dict[str, object]] = {
         "by_id": {},
         "by_cache_key": {},
         "by_html_id": {},
         "by_test_id": {},
         "by_label": {},
+        "by_role": {},
+        "by_action": {},
     }
     for item in plan:
         for source_key, bucket_key in (
@@ -410,6 +412,14 @@ def get_action_plan_index(
             value = item.get(source_key)
             if isinstance(value, str) and value not in index[bucket_key]:
                 index[bucket_key][value] = item
+        role = item.get("role")
+        if isinstance(role, str):
+            index["by_role"].setdefault(role, []).append(item)
+        actions = item.get("actions")
+        if isinstance(actions, list):
+            for action in actions:
+                if isinstance(action, str):
+                    index["by_action"].setdefault(action, []).append(item)
     return index
 
 
@@ -467,6 +477,32 @@ def find_action_targets_by_label(
         elif label.lower() in item_label.lower():
             results.append(item)
     return results
+
+
+def find_action_targets_by_role(
+    som: Som,
+    role: Union[ElementRole, str],
+    *,
+    enabled_only: bool = False,
+) -> List[Dict[str, object]]:
+    """Return compact action targets whose SOM role matches exactly."""
+    role_value = role.value if isinstance(role, ElementRole) else role
+    index = get_action_plan_index(som, enabled_only=enabled_only)
+    results = index["by_role"].get(role_value, [])
+    return list(results) if isinstance(results, list) else []
+
+
+def find_action_targets_by_action(
+    som: Som,
+    action: Union[ElementAction, str],
+    *,
+    enabled_only: bool = False,
+) -> List[Dict[str, object]]:
+    """Return compact action targets that expose the requested action."""
+    action_value = action.value if isinstance(action, ElementAction) else action
+    index = get_action_plan_index(som, enabled_only=enabled_only)
+    results = index["by_action"].get(action_value, [])
+    return list(results) if isinstance(results, list) else []
 
 
 def find_action_target_by_id(

@@ -48,6 +48,7 @@ for el in find_by_role(som, "link"):
 
 ```python
 from som_parser import parse_som, find_action_target, find_action_targets_by_label
+from som_parser import find_action_targets_by_action, find_action_targets_by_role
 from som_parser import find_by_action, find_by_label, get_action_plan
 
 som = parse_som(data)
@@ -62,6 +63,8 @@ for button in find_by_action(som, "click"):
 
 save = find_action_target(som, "Save", by="label", enabled_only=True)
 matches = find_action_targets_by_label(som, "save")
+buttons = find_action_targets_by_role(som, "button", enabled_only=True)
+clicks = find_action_targets_by_action(som, "click", enabled_only=True)
 fields = find_by_label(som, "email")
 ```
 
@@ -117,6 +120,8 @@ print(som.model_dump_json(indent=2))
 | `get_action_plan_cache_key(item) -> str` | Return a deterministic key for caching or comparing an action target |
 | `find_action_target(som, value, by="auto", enabled_only=False) -> dict \| None` | Resolve a replay id by SOM id, cache key, HTML id, test id, explicit label, or auto lookup |
 | `find_action_targets_by_label(som, label, exact=False, enabled_only=False) -> list[dict]` | Search compact action targets by accessible label |
+| `find_action_targets_by_role(som, role, enabled_only=False) -> list[dict]` | Find compact action targets by exact SOM role |
+| `find_action_targets_by_action(som, action, enabled_only=False) -> list[dict]` | Find compact action targets that expose an action |
 | `get_interactive_elements(som) -> list[SomElement]` | Get elements that have actions |
 | `get_links(som) -> list[dict]` | Extract all links as `{text, href, id}` dicts |
 | `get_forms(som) -> list[SomRegion]` | Get all form regions |

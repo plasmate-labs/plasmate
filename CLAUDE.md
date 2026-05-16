@@ -49,6 +49,40 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-16T23:06:48Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch origin --prune` was attempted first and failed
+  in this linked worktree because the parent repository worktree metadata
+  `FETCH_HEAD` cannot be opened. Work continued from the already-local
+  `HEAD`/`origin/master` `21b0d69`.
+- Market direction: current docs still reward compact, validated action
+  surfaces. Playwright MCP exposes current accessibility snapshot refs,
+  Stagehand `observe()` returns cacheable structured actions, Firecrawl keeps
+  broad MCP/browser-session distribution, and Cloudflare Browser Run/WebMCP is
+  experimenting with typed website-provided browser tools. No hosted-browser
+  pivot is recommended; the sticky local step is cheaper role/action scoping
+  before replay.
+- Code changes: Python/Node parser packages and Python/Node SDKs now expose
+  grouped compact action-plan buckets for `by_role`/`by_action` plus
+  `find_action_targets_by_role`, `find_action_targets_by_action`,
+  `findActionTargetsByRole`, and `findActionTargetsByAction`. Stable id,
+  cache-key, HTML id, test-id, and explicit-label lookup behavior is unchanged.
+- Tests/docs: added parser and SDK tests for role/action action-target buckets,
+  enabled-only filtering, and helper parity. Updated package/SDK READMEs, PRD,
+  roadmap, website doc sources/generated HTML, and this running state with the
+  rationale and next adapter-conformance step.
+- Verification passed: Python parser tests (76), Python SDK query tests (43),
+  Node parser tests (61), Node parser build, Node SDK tests/build (28), website
+  docs build, `cargo build --quiet`, `cargo test --lib --quiet` (273), and
+  `git diff --check`. Rust commands used
+  `RUSTY_V8_ARCHIVE=/Users/steve/Git/plasmate/target/debug/gn_out/obj/librusty_v8.a`.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`.
+- Pending next step: propagate grouped role/action target helpers to Browser
+  Use, LangChain, Vercel AI, and Go, then add the grouped buckets to the shared
+  action-manifest conformance script.
+
 ### 2026-05-16T22:11:50Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch origin --prune` was attempted first and still

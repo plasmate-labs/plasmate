@@ -92,7 +92,9 @@ The SDK includes query helpers for searching and traversing SOM documents:
 ```typescript
 import {
   findActionTarget,
+  findActionTargetsByAction,
   findActionTargetsByLabel,
+  findActionTargetsByRole,
   findByRole, findById, findByTag, findInteractive,
   findByLabel, findByText, flatElements, getActionPlan, getTokenEstimate,
 } from 'plasmate';
@@ -120,6 +122,8 @@ console.log(actionPlan.map((target) => [target.id, target.cache_key, target.acti
 const save = findActionTarget(som, 'plasmate-action:v1:...', { enabledOnly: true });
 const saveByLabel = findActionTarget(som, 'Save', { by: 'label', enabledOnly: true });
 const labeledActions = findActionTargetsByLabel(som, 'save');
+const enabledButtons = findActionTargetsByRole(som, 'button', { enabledOnly: true });
+const enabledClicks = findActionTargetsByAction(som, 'click', { enabledOnly: true });
 
 // Search by visible text or accessible label (case-insensitive)
 const matches = findByText(som, 'sign in');
@@ -145,6 +149,8 @@ browser.close();
 | `getActionPlanCacheKey(item)` | `string` | Deterministic key for caching or comparing action targets |
 | `findActionTarget(som, value, options?)` | `ActionPlanItem \| undefined` | Resolve a target by SOM id, cache key, HTML id, test id, or explicit label |
 | `findActionTargetsByLabel(som, label, options?)` | `ActionPlanItem[]` | Find compact action targets by accessible label |
+| `findActionTargetsByRole(som, role, options?)` | `ActionPlanItem[]` | Find compact action targets by exact SOM role |
+| `findActionTargetsByAction(som, action, options?)` | `ActionPlanItem[]` | Find compact action targets that expose an action |
 | `findByLabel(som, label, options?)` | `SomElement[]` | Case-insensitive accessible-label search |
 | `findByText(som, text)` | `SomElement[]` | Case-insensitive text search |
 | `flatElements(som)` | `SomElement[]` | Flatten all elements |

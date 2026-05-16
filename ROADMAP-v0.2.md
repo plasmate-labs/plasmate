@@ -29,6 +29,25 @@ Near-term stickiness target: developers should keep Plasmate installed because
 it becomes the fastest local way to turn authenticated or repetitive web
 workflows into compact, inspectable, reusable state.
 
+### 2026-05-16 Role/Action Grouping Adjustment
+
+Current browser-agent products are making action discovery a reusable app-layer
+surface. Playwright MCP gives agents current snapshot refs, Stagehand
+`observe()` produces cacheable action plans, Firecrawl keeps broad MCP/browser
+session distribution, and Cloudflare Browser Run/WebMCP points toward typed
+browser-native tools. Plasmate should keep the local-first wedge and make action
+menus easier to scope in ordinary SDK code:
+
+1. **Group before replay**: parser packages and SDKs should expose
+   `by_role`/`by_action` action-plan buckets plus helpers for role/action target
+   lists.
+2. **Stable ids remain the replay contract**: role/action buckets are for
+   planning and narrowing; unattended replay should still store SOM ids,
+   cache keys, HTML ids, or test ids.
+3. **Conformance should follow the action surface**: Browser Use, LangChain,
+   Vercel AI, Go, and shared fixtures should adopt the same grouped target
+   contract so the broad repo surface stays one product promise.
+
 ### 2026-05-16 Label-Addressable Action Adjustment
 
 Current browser-agent products keep training users to choose actions by

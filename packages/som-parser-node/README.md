@@ -36,7 +36,9 @@ const links = getLinks(som);
 ```typescript
 import {
   findActionTarget,
+  findActionTargetsByAction,
   findActionTargetsByLabel,
+  findActionTargetsByRole,
   findByAction,
   findByLabel,
   getActionPlan,
@@ -48,6 +50,8 @@ const available = plan.filter((item) => item.enabled);
 const save = findActionTarget(som, 'plasmate-action:v1:...', { enabledOnly: true });
 const saveByLabel = findActionTarget(som, 'Save', { by: 'label', enabledOnly: true });
 const labeledActions = findActionTargetsByLabel(som, 'save');
+const buttons = findActionTargetsByRole(som, 'button', { enabledOnly: true });
+const clicks = findActionTargetsByAction(som, 'click', { enabledOnly: true });
 
 const clickable = findByAction(som, 'click');
 // Elements that can be clicked.
@@ -101,6 +105,8 @@ const ratio = getCompressionRatio(som);
 | `getActionPlanCacheKey(item): string` | Return a deterministic key for caching or comparing an action target. |
 | `findActionTarget(som, value, options?): ActionPlanItem \| undefined` | Resolve a target by SOM id, cache key, HTML id, test id, explicit label, or auto lookup. |
 | `findActionTargetsByLabel(som, label, options?): ActionPlanItem[]` | Find compact action targets by accessible label. |
+| `findActionTargetsByRole(som, role, options?): ActionPlanItem[]` | Find compact action targets by exact SOM role. |
+| `findActionTargetsByAction(som, action, options?): ActionPlanItem[]` | Find compact action targets that expose an action. |
 | `getInteractiveElements(som): SomElement[]` | Get all elements that have actions. |
 | `getLinks(som): Array<{ text, href, id }>` | Extract all links with text, URL, and id. |
 | `getForms(som): SomRegion[]` | Get all form regions. |

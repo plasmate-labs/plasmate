@@ -32,6 +32,16 @@ cloud API.
 - Crawl4AI remains strong for open-source Python crawling and extraction, but
   carries Chromium/Playwright operational weight.
 
+2026-05-16 role/action grouping read: current docs keep pushing action menus
+toward cheap, reusable selection surfaces. Playwright MCP exposes accessible
+refs from the current snapshot, Stagehand `observe()` returns structured actions
+that can be cached locally or in Browserbase, Firecrawl keeps packaging browser
+sessions behind MCP, and Cloudflare Browser Run/WebMCP is experimenting with
+typed website-provided tools. Plasmate should not pivot into hosted execution;
+the sticky local move is to let SDK/parser users group compact action targets by
+role and action directly (`button`, `text_input`, `click`, `type`, `select`)
+so agents can scope a plan before asking an LLM or rewalking the full SOM.
+
 2026-05-16 label-addressable action read: current docs keep reinforcing that
 agents choose targets from human-facing structured names, then need a cheap way
 to reuse those choices in app code. Playwright MCP returns accessibility

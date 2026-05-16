@@ -20,7 +20,9 @@ from som_parser import (
     find_action_target_by_id,
     find_action_target_by_label,
     find_action_target_by_test_id,
+    find_action_targets_by_action,
     find_action_targets_by_label,
+    find_action_targets_by_role,
     find_by_action,
     find_by_hint,
     find_by_html_id,
@@ -628,6 +630,15 @@ class TestGetActionPlan:
         assert index["by_html_id"]["save-button"] == save
         assert index["by_test_id"]["settings-save"] == save
         assert index["by_label"]["Save"] == save
+        assert [target["id"] for target in index["by_role"]["button"]] == [
+            "e_save",
+            "e_preview",
+        ]
+        assert [target["id"] for target in index["by_action"]["click"]] == [
+            "e_save",
+            "e_preview",
+            "e_billing",
+        ]
         assert find_action_target(som, "e_save") == save
         assert find_action_target(som, save["cache_key"]) == save
         assert find_action_target(som, "save-button") == save
@@ -640,8 +651,21 @@ class TestGetActionPlan:
         assert find_action_target_by_test_id(som, "settings-save") == save
         assert find_action_target_by_label(som, "Save") == save
         assert find_action_targets_by_label(som, "save") == [save]
+        assert find_action_targets_by_role(som, ElementRole.BUTTON) == [
+            expected_targets[2],
+            expected_targets[3],
+        ]
+        assert find_action_targets_by_action(som, ElementAction.CLICK) == [
+            expected_targets[2],
+            expected_targets[3],
+            expected_targets[-1],
+        ]
         assert find_action_target(som, "settings-save", enabled_only=True) is None
         assert find_action_target(som, "Save", by="label", enabled_only=True) is None
+        assert find_action_targets_by_role(som, "button", enabled_only=True) == []
+        assert find_action_targets_by_action(som, "click", enabled_only=True) == [
+            expected_targets[-1]
+        ]
 
     def test_enabled_action_plan_index_filters_blocked_targets(self):
         som, _ = _load_action_availability_fixture()
@@ -653,6 +677,8 @@ class TestGetActionPlan:
         assert "e_save" not in index["by_id"]
         assert "settings-save" not in index["by_test_id"]
         assert "Save" not in index["by_label"]
+        assert "button" not in index["by_role"]
+        assert [target["id"] for target in index["by_action"]["click"]] == ["e_billing"]
         assert "e_plan" in index["by_id"]
 
 

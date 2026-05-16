@@ -10,7 +10,9 @@ import {
   findActionTargetById,
   findActionTargetByLabel,
   findActionTargetByTestId,
+  findActionTargetsByAction,
   findActionTargetsByLabel,
+  findActionTargetsByRole,
   findByRole,
   findById,
   findByHtmlId,
@@ -314,6 +316,7 @@ describe('getActionPlan', () => {
   it('indexes action targets for replay', () => {
     const { som, action_targets } = loadActionAvailabilityFixture();
     const save = action_targets.find((target) => target.id === 'e_save')!;
+    const billing = action_targets[action_targets.length - 1];
     const index = getActionPlanIndex(som);
 
     assert.deepEqual(index.byId.e_save, save);
@@ -321,6 +324,12 @@ describe('getActionPlan', () => {
     assert.deepEqual(index.byHtmlId['save-button'], save);
     assert.deepEqual(index.byTestId['settings-save'], save);
     assert.deepEqual(index.byLabel.Save, save);
+    assert.deepEqual(index.byRole.button.map((target) => target.id), ['e_save', 'e_preview']);
+    assert.deepEqual(index.byAction.click.map((target) => target.id), [
+      'e_save',
+      'e_preview',
+      'e_billing',
+    ]);
     assert.deepEqual(findActionTarget(som, 'e_save'), save);
     assert.deepEqual(findActionTarget(som, save.cache_key), save);
     assert.deepEqual(findActionTarget(som, 'save-button'), save);
@@ -333,8 +342,21 @@ describe('getActionPlan', () => {
     assert.deepEqual(findActionTargetByTestId(som, 'settings-save'), save);
     assert.deepEqual(findActionTargetByLabel(som, 'Save'), save);
     assert.deepEqual(findActionTargetsByLabel(som, 'save'), [save]);
+    assert.deepEqual(findActionTargetsByRole(som, 'button'), [
+      action_targets[2],
+      action_targets[3],
+    ]);
+    assert.deepEqual(findActionTargetsByAction(som, 'click'), [
+      action_targets[2],
+      action_targets[3],
+      billing,
+    ]);
     assert.equal(findActionTarget(som, 'settings-save', { enabledOnly: true }), undefined);
     assert.equal(findActionTarget(som, 'Save', { by: 'label', enabledOnly: true }), undefined);
+    assert.deepEqual(findActionTargetsByRole(som, 'button', { enabledOnly: true }), []);
+    assert.deepEqual(findActionTargetsByAction(som, 'click', { enabledOnly: true }), [
+      billing,
+    ]);
   });
 
   it('filters blocked targets from enabled action indexes', () => {
@@ -346,6 +368,8 @@ describe('getActionPlan', () => {
     assert.equal(index.byId.e_save, undefined);
     assert.equal(index.byTestId['settings-save'], undefined);
     assert.equal(index.byLabel.Save, undefined);
+    assert.equal(index.byRole.button, undefined);
+    assert.deepEqual(index.byAction.click.map((target) => target.id), ['e_billing']);
     assert.notEqual(index.byId.e_plan, undefined);
   });
 });
