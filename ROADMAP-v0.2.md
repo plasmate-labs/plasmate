@@ -989,6 +989,26 @@ entries for full-page and selector-filtered fetches.
    miss, stale, and selector-entry counts so repeated-work savings are
    inspectable during agent workflows.
 
+### 2026-05-16 Daemon Cache Observability Adjustment
+
+Current browser-agent products are making cache reuse explainable. Playwright
+MCP shows the fresh snapshot refs an agent can use, Stagehand/Browserbase pairs
+selector/action caching with observability and replay, and Firecrawl/Browser
+Use keep broadening hosted session continuity. Plasmate should not pivot into
+hosted infrastructure, but local repeated-work savings need to be visible from
+the daemon.
+
+1. **Health carries cache inventory**: daemon health should expose full-entry,
+   selector-entry, hit, miss, stale, eviction, cached-byte, and avoided-HTML
+   counters so users can tell whether repeated prompts are benefiting from
+   local SOM memory.
+2. **Status is an operator surface**: `plasmate daemon status` should summarize
+   cache state in readable CLI output rather than requiring users to parse raw
+   health JSON.
+3. **Stats count every cache path**: unvalidated cache reads should update
+   hit/miss and avoided-byte counters too, keeping future instant/prefetch
+   status output honest.
+
 ## Architecture
 
 ```
@@ -1469,6 +1489,11 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   SOM cache entries before recompiling.
 - Daemon tests now cover selector request serialization, cache response
   metadata, and selector-cache materialization from a full SOM.
+- Daemon health/status now exposes cache hit, miss, stale, eviction,
+  full-entry, selector-entry, cached-byte, and avoided-HTML counters, and the
+  CLI renders those counters as readable status output.
+- Unvalidated SOM cache reads now update hit/miss and avoided-byte statistics,
+  so daemon observability stays consistent across cache access modes.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, `html_id` DOM-provenance cases, and

@@ -132,6 +132,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-16 daemon selector-cache read: scoped memory now needs to reach the hot CLI/daemon path. Playwright MCP still asks agents to act from the current structured snapshot, Stagehand/Browserbase markets cached selectors for repeated work, and Browser Use/Firecrawl sell session continuity. Plasmate's sticky local answer is a daemon that remembers content-hash-validated full SOMs plus selector-filtered SOMs, making repeated `interactive` and `action:<name>` fetches cheaper without hosted selector storage.
 
+2026-05-16 daemon cache-observability read: current competitor messaging makes cached action reuse inspectable, not invisible. Playwright MCP exposes the current snapshot refs an agent will act on, Stagehand/Browserbase pairs action caching with observability and session replay, Firecrawl keeps moving browser workflows into hosted sessions, and Browser Use Cloud packages profiles with direct CDP sessions. Plasmate should keep the local-first wedge but make daemon cache reuse visible from the CLI: users need to see hit/miss/stale behavior, selector-entry counts, and avoided HTML work before trusting local repeated workflow memory.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -152,6 +154,9 @@ The project already spans a large number of package and integration surfaces: Ru
   - A fresh cached full SOM can now materialize and cache a filtered selector view without recompiling the page.
   - Daemon fetch requests now carry selectors to the warm process, and the daemon stores/serves content-hash-validated full-page and selector-filtered SOM cache entries.
   - Added daemon unit coverage for selector request serialization, cache response metadata, and selector-cache materialization.
+  - Daemon health output now includes cache hit, miss, stale, eviction, full-entry, selector-entry, cached-byte, and avoided-HTML counters.
+  - `plasmate daemon status` now renders those counters as readable CLI output instead of only dumping raw health JSON.
+  - Unvalidated `lookup_any()` cache reads now update hit/miss and avoided-byte statistics so daemon status stays consistent across cache access modes.
   - Rust SOM attrs and JSON Schema now preserve link navigation validation cues: `hreflang`, link MIME `type`, and `referrerpolicy`.
   - Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI now surface those link cues in compact action targets and prompt renderers without changing deterministic `cache_key` values.
   - The shared action-availability manifest now asserts link locale, resource type, and referrer-policy context so adapters stay aligned for repeated navigation workflows.
@@ -345,7 +350,6 @@ The project already spans a large number of package and integration surfaces: Ru
 
 ## Next Steps
 
-- Add daemon cache observability in health/status output so users can see selector hit/miss behavior during repeated workflows.
 - Extend selector-aware cache use into MCP/session fetch paths where a warm process can safely reuse content-hash-validated SOM views.
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked or selected an element.
 - Add conformance cases for ARIA-heavy SaaS pages, especially disabled and required custom controls, and compare output against Playwright MCP snapshots.

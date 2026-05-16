@@ -9,7 +9,7 @@
 //! avoiding cold-start overhead on every invocation.
 
 use crate::auth;
-use crate::cache::store::{CacheConfig, CacheLookup, SomCache};
+use crate::cache::store::{CacheConfig, CacheLookup, CacheSnapshot, SomCache};
 use crate::js;
 use crate::network;
 use crate::som;
@@ -51,6 +51,7 @@ struct HealthResponse {
     status: String,
     uptime_seconds: u64,
     requests_served: u64,
+    cache: CacheSnapshot,
 }
 
 /// Start the daemon server.
@@ -141,6 +142,7 @@ async fn handle_connection(
             status: "ok".to_string(),
             uptime_seconds: uptime,
             requests_served: count,
+            cache: cache.snapshot(),
         };
         ("200 OK".to_string(), serde_json::to_string(&resp).unwrap())
     } else if request_line.starts_with("POST /shutdown") {
@@ -530,5 +532,32 @@ mod tests {
         let parsed: FetchResponse = serde_json::from_value(response).unwrap();
         assert_eq!(parsed.cache_status.as_deref(), Some("hit"));
         assert!(parsed.success);
+    }
+
+    #[test]
+    fn health_response_includes_cache_snapshot() {
+        let cache = SomCache::new(CacheConfig::default());
+        cache.store("https://example.com/app", 42, b"som".to_vec(), 200);
+        cache.store_with_selector(
+            "https://example.com/app",
+            42,
+            Some("interactive"),
+            b"sel".to_vec(),
+            200,
+        );
+        let _ = cache.lookup_with_selector("https://example.com/app", 42, Some("interactive"));
+
+        let response = HealthResponse {
+            status: "ok".to_string(),
+            uptime_seconds: 5,
+            requests_served: 2,
+            cache: cache.snapshot(),
+        };
+        let json = serde_json::to_value(response).unwrap();
+
+        assert_eq!(json["cache"]["entries"], 2);
+        assert_eq!(json["cache"]["full_entries"], 1);
+        assert_eq!(json["cache"]["selector_entries"], 1);
+        assert_eq!(json["cache"]["hits"], 1);
     }
 }

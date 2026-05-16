@@ -71,6 +71,16 @@ validated full SOMs and selector-filtered SOMs together, so repeated
 `interactive` or `action:<name>` fetches avoid recompilation while staying
 content-hash validated and local.
 
+2026-05-16 daemon cache-observability read: current competitor messaging makes
+cached action reuse inspectable, not invisible. Playwright MCP exposes the
+current snapshot refs an agent will act on, Stagehand/Browserbase pairs action
+caching with observability and session replay, Firecrawl keeps moving browser
+workflows into hosted sessions, and Browser Use Cloud packages profiles with
+direct CDP sessions. Plasmate should keep the local-first wedge but make daemon
+cache reuse visible from the CLI: users need to see hit/miss/stale behavior,
+selector-entry counts, and avoided HTML work before trusting local repeated
+workflow memory.
+
 2026-05-05 market read: the strongest retention hooks are reusable structured
 state, cached repeated actions, and ecosystem-native distribution. Playwright
 MCP returns accessibility snapshots with stable refs for interaction, Stagehand
@@ -1166,11 +1176,15 @@ and adapter docs over one-off integration logic.
     and selector-filtered SOM entries for repeated prompts.
   - Added daemon unit coverage for selector request serialization, cache-hit
     response metadata, and selector-cache materialization.
+  - Daemon health output now includes cache hit, miss, stale, eviction,
+    full-entry, selector-entry, cached-byte, and avoided-HTML counters.
+  - `plasmate daemon status` now renders those counters as readable CLI output
+    instead of only dumping raw health JSON.
+  - Unvalidated `lookup_any()` cache reads now update hit/miss and avoided-byte
+    statistics so daemon status stays consistent across cache access modes.
 
 ## Next Steps
 
-- Add daemon cache observability in health/status output so users can see
-  selector hit/miss behavior during repeated workflows.
 - Extend selector-aware cache use into MCP/session fetch paths where a warm
   process can safely reuse content-hash-validated SOM views.
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked

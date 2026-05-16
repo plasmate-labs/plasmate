@@ -49,6 +49,37 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-16T14:05:55Z - Plasmate Improvements Automation
+
+- Git sync: required latest fetch was retried from the automation worktree and
+  still failed on linked `FETCH_HEAD` permissions; fallback fetch from the
+  primary checkout failed DNS for `github.com`. Work continued from the newest
+  locally known `origin/master` `b46a674`.
+- Market direction: current docs still favor reusable, inspectable page state.
+  Playwright MCP exposes fresh snapshot refs, Stagehand/Browserbase pairs
+  selector/action caching with observability and replay, and Firecrawl/Browser
+  Use keep broadening hosted session/profile continuity. Plasmate should keep
+  the local-first SOM cache wedge and make daemon cache behavior visible.
+- Code changes: daemon health now includes a serialized cache snapshot with
+  hit, miss, stale, eviction, full-entry, selector-entry, cached-byte, and
+  avoided-HTML counters. `plasmate daemon status` now renders those counters as
+  readable CLI output. `lookup_any()` cache reads now update hit/miss and
+  avoided-byte stats, and `SomCache::snapshot()` uses the existing cache lock
+  order to avoid daemon health/fetch deadlocks.
+- Tests/docs: added cache tests for `lookup_any()` stats and full-vs-selector
+  cache inventory, plus daemon health serialization coverage. PRD, roadmap,
+  website doc sources, and generated website docs now record the daemon cache
+  observability rationale and shift the next step to MCP/session cache reuse.
+- Verification: `rustfmt --edition 2021 --check src/cache/store.rs
+  src/daemon.rs`, `cargo test cache::store --quiet`, `cargo test
+  daemon::tests --quiet`, `cargo build --quiet`, `cargo test --lib --quiet`
+  (271 tests), `cargo clippy --quiet` (pre-existing warnings only),
+  `node website/build.mjs` using the primary checkout's local `marked`
+  dependency, and `git diff --check` passed.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`.
+
 ### 2026-05-16T13:09:20Z - Plasmate Improvements Automation
 
 - Git sync: required latest fetch was retried from the automation worktree and

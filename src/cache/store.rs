@@ -5,6 +5,7 @@
 //! On revisit: fetch HTML, compute hash, compare. If match -> instant SOM return.
 
 use crate::som::{filter::apply_selector, types::Som};
+use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
@@ -74,7 +75,7 @@ pub struct SomCache {
     stats: Arc<RwLock<CacheStats>>,
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Serialize)]
 pub struct CacheStats {
     pub hits: u64,
     pub stale_hits: u64,
@@ -82,6 +83,22 @@ pub struct CacheStats {
     pub evictions: u64,
     pub total_som_bytes_served: u64,
     pub total_html_bytes_avoided: u64,
+}
+
+#[derive(Debug, Default, Clone, Serialize)]
+pub struct CacheSnapshot {
+    pub hits: u64,
+    pub stale_hits: u64,
+    pub misses: u64,
+    pub evictions: u64,
+    pub total_som_bytes_served: u64,
+    pub total_html_bytes_avoided: u64,
+    pub entries: usize,
+    pub full_entries: usize,
+    pub selector_entries: usize,
+    pub total_som_bytes: usize,
+    pub total_html_bytes: usize,
+    pub max_hot_entries: usize,
 }
 
 impl SomCache {
@@ -166,15 +183,20 @@ impl SomCache {
         selector: Option<&str>,
     ) -> Option<CacheEntry> {
         let mut entries = self.entries.write().unwrap();
+        let mut stats = self.stats.write().unwrap();
         let key = cache_key(url, selector);
         if let Some(entry) = entries.get_mut(&key) {
             if entry.created_at.elapsed() <= self.config.max_age {
                 entry.last_accessed = Instant::now();
                 entry.hit_count += 1;
+                stats.hits += 1;
+                stats.total_som_bytes_served += entry.som_bytes as u64;
+                stats.total_html_bytes_avoided += entry.html_bytes as u64;
                 return Some(entry.clone());
             }
             entries.remove(&key);
         }
+        stats.misses += 1;
         None
     }
 
@@ -263,6 +285,35 @@ impl SomCache {
     /// Get cache statistics.
     pub fn stats(&self) -> CacheStats {
         self.stats.read().unwrap().clone()
+    }
+
+    /// Cache statistics plus current entry inventory for daemon status output.
+    pub fn snapshot(&self) -> CacheSnapshot {
+        let entries = self.entries.read().unwrap();
+        let stats = self.stats.read().unwrap().clone();
+        let mut snapshot = CacheSnapshot {
+            hits: stats.hits,
+            stale_hits: stats.stale_hits,
+            misses: stats.misses,
+            evictions: stats.evictions,
+            total_som_bytes_served: stats.total_som_bytes_served,
+            total_html_bytes_avoided: stats.total_html_bytes_avoided,
+            entries: entries.len(),
+            max_hot_entries: self.config.max_hot_entries,
+            ..CacheSnapshot::default()
+        };
+
+        for (key, entry) in entries.iter() {
+            if key.contains("::selector=") {
+                snapshot.selector_entries += 1;
+            } else {
+                snapshot.full_entries += 1;
+            }
+            snapshot.total_som_bytes += entry.som_bytes;
+            snapshot.total_html_bytes += entry.html_bytes;
+        }
+
+        snapshot
     }
 
     /// Number of entries currently cached.
@@ -604,6 +655,48 @@ mod tests {
         let stats = cache.stats();
         assert_eq!(stats.hits, 2);
         assert_eq!(stats.misses, 1);
+    }
+
+    #[test]
+    fn test_lookup_any_updates_stats() {
+        let cache = SomCache::new(CacheConfig::default());
+        cache.store("https://example.com", 111, b"som".to_vec(), 1000);
+
+        let hit = cache.lookup_any("https://example.com");
+        assert!(hit.is_some());
+        assert!(cache.lookup_any("https://missing.example").is_none());
+
+        let stats = cache.stats();
+        assert_eq!(stats.hits, 1);
+        assert_eq!(stats.misses, 1);
+        assert_eq!(stats.total_som_bytes_served, 3);
+        assert_eq!(stats.total_html_bytes_avoided, 1000);
+    }
+
+    #[test]
+    fn test_cache_snapshot_counts_full_and_selector_entries() {
+        let cache = SomCache::new(CacheConfig::default());
+        cache.store("https://example.com", 111, b"full".to_vec(), 1000);
+        cache.store_with_selector(
+            "https://example.com",
+            111,
+            Some("interactive"),
+            b"selector".to_vec(),
+            1000,
+        );
+        let _ = cache.lookup_with_selector("https://example.com", 111, Some("INTERACTIVE"));
+
+        let snapshot = cache.snapshot();
+        assert_eq!(snapshot.entries, 2);
+        assert_eq!(snapshot.full_entries, 1);
+        assert_eq!(snapshot.selector_entries, 1);
+        assert_eq!(snapshot.total_som_bytes, 12);
+        assert_eq!(snapshot.total_html_bytes, 2000);
+        assert_eq!(snapshot.hits, 1);
+        assert_eq!(
+            snapshot.max_hot_entries,
+            CacheConfig::default().max_hot_entries
+        );
     }
 
     #[test]

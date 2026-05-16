@@ -439,6 +439,14 @@ The cache work now needs to live where repeat users feel latency: the warm daemo
 - **Cache hits avoid recompilation**: after fetch and hash validation, daemon requests should return cached full or selector-filtered SOM JSON before rerunning JS execution and SOM compilation.
 - **Next visibility step**: daemon health/status should expose cache hit, miss, stale, and selector-entry counts so repeated-work savings are inspectable during agent workflows.
 
+### 2026-05-16 Daemon Cache Observability Adjustment
+
+Current browser-agent products are making cache reuse explainable. Playwright MCP shows the fresh snapshot refs an agent can use, Stagehand/Browserbase pairs selector/action caching with observability and replay, and Firecrawl/Browser Use keep broadening hosted session continuity. Plasmate should not pivot into hosted infrastructure, but local repeated-work savings need to be visible from the daemon.
+
+- **Health carries cache inventory**: daemon health should expose full-entry, selector-entry, hit, miss, stale, eviction, cached-byte, and avoided-HTML counters so users can tell whether repeated prompts are benefiting from local SOM memory.
+- **Status is an operator surface**: `plasmate daemon status` should summarize cache state in readable CLI output rather than requiring users to parse raw health JSON.
+- **Stats count every cache path**: unvalidated cache reads should update hit/miss and avoided-byte counters too, keeping future instant/prefetch status output honest.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -648,7 +656,7 @@ The cache work now needs to live where repeat users feel latency: the warm daemo
 - [x] Parser packages, SDKs, Browser Use, LangChain, and Vercel AI action plans surface aria_label, labelledby, and describedby without changing deterministic cache keys
 - [x] Shared action-availability manifest asserts ARIA naming provenance beside resolved description text
 - [x] Selector-aware SOM cache entries for repeated daemon agent prompts
-- [ ] Daemon cache health/status observability for selector hit/miss behavior
+- [x] Daemon cache health/status observability for selector hit/miss behavior
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures

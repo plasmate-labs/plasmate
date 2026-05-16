@@ -567,48 +567,74 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         } => {
             cmd_screenshot(&url, &output, width, height, &format, quality, full_page)?;
         }
-        Commands::Daemon { action } => {
-            match action {
-                DaemonAction::Start { port } => {
-                    daemon::run_daemon(port).await?;
-                }
-                DaemonAction::Stop => {
-                    if let Some(port) = daemon::daemon_port() {
-                        let client = reqwest::Client::new();
-                        let resp = client
-                            .post(format!("http://127.0.0.1:{}/shutdown", port))
-                            .send()
-                            .await;
-                        match resp {
-                            Ok(_) => eprintln!("Daemon stopped."),
-                            Err(e) => eprintln!("Failed to stop daemon: {}", e),
-                        }
-                    } else {
-                        eprintln!("No daemon is running.");
+        Commands::Daemon { action } => match action {
+            DaemonAction::Start { port } => {
+                daemon::run_daemon(port).await?;
+            }
+            DaemonAction::Stop => {
+                if let Some(port) = daemon::daemon_port() {
+                    let client = reqwest::Client::new();
+                    let resp = client
+                        .post(format!("http://127.0.0.1:{}/shutdown", port))
+                        .send()
+                        .await;
+                    match resp {
+                        Ok(_) => eprintln!("Daemon stopped."),
+                        Err(e) => eprintln!("Failed to stop daemon: {}", e),
                     }
-                }
-                DaemonAction::Status => {
-                    if let Some(port) = daemon::daemon_port() {
-                        let client = reqwest::Client::new();
-                        match client
-                            .get(format!("http://127.0.0.1:{}/health", port))
-                            .send()
-                            .await
-                        {
-                            Ok(resp) => {
-                                let body = resp.text().await.unwrap_or_default();
-                                eprintln!("Daemon running on port {} {}", port, body);
-                            }
-                            Err(_) => {
-                                eprintln!("Daemon PID file exists but daemon is not responding on port {}.", port);
-                            }
-                        }
-                    } else {
-                        eprintln!("No daemon is running.");
-                    }
+                } else {
+                    eprintln!("No daemon is running.");
                 }
             }
-        }
+            DaemonAction::Status => {
+                if let Some(port) = daemon::daemon_port() {
+                    let client = reqwest::Client::new();
+                    match client
+                        .get(format!("http://127.0.0.1:{}/health", port))
+                        .send()
+                        .await
+                    {
+                        Ok(resp) => {
+                            let body = resp.text().await.unwrap_or_default();
+                            if let Ok(json) = serde_json::from_str::<serde_json::Value>(&body) {
+                                let uptime = json["uptime_seconds"].as_u64().unwrap_or_default();
+                                let requests = json["requests_served"].as_u64().unwrap_or_default();
+                                let cache = &json["cache"];
+                                eprintln!("Daemon running on port {}", port);
+                                eprintln!("Uptime: {}s, requests served: {}", uptime, requests);
+                                eprintln!(
+                                        "Cache: {} entries ({} full, {} selector), hits: {}, misses: {}, stale: {}, evictions: {}",
+                                        cache["entries"].as_u64().unwrap_or_default(),
+                                        cache["full_entries"].as_u64().unwrap_or_default(),
+                                        cache["selector_entries"].as_u64().unwrap_or_default(),
+                                        cache["hits"].as_u64().unwrap_or_default(),
+                                        cache["misses"].as_u64().unwrap_or_default(),
+                                        cache["stale_hits"].as_u64().unwrap_or_default(),
+                                        cache["evictions"].as_u64().unwrap_or_default()
+                                    );
+                                eprintln!(
+                                    "Bytes: {} SOM cached, {} HTML avoided",
+                                    cache["total_som_bytes"].as_u64().unwrap_or_default(),
+                                    cache["total_html_bytes_avoided"]
+                                        .as_u64()
+                                        .unwrap_or_default()
+                                );
+                            } else {
+                                eprintln!("Daemon running on port {} {}", port, body);
+                            }
+                        }
+                        Err(_) => {
+                            eprintln!(
+                                "Daemon PID file exists but daemon is not responding on port {}.",
+                                port
+                            );
+                        }
+                    }
+                } else {
+                    eprintln!("No daemon is running.");
+                }
+            }
+        },
         Commands::Compile {
             file,
             url,
