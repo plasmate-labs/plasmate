@@ -32,6 +32,17 @@ cloud API.
 - Crawl4AI remains strong for open-source Python crawling and extraction, but
   carries Chromium/Playwright operational weight.
 
+2026-05-16 ARIA naming-provenance read: current docs keep pointing at the
+same validation-before-replay wedge. Playwright MCP refs remain scoped to the
+current accessibility snapshot, Browserbase/Stagehand action caches validate
+DOM state before skipping an LLM call, Browser Use and AWS AgentCore Browser
+sell profiles for repeated authenticated sessions, and Firecrawl keeps
+broadening MCP scrape/extract/browser sessions. Plasmate should still avoid a
+hosted-browser pivot. The stickier local move is to preserve raw ARIA naming
+relationships (`aria-label`, `aria-labelledby`, and `aria-describedby`) beside
+resolved labels/descriptions so cached action targets can be checked against
+the live DOM without raw DOM recovery.
+
 2026-05-05 market read: the strongest retention hooks are reusable structured
 state, cached repeated actions, and ecosystem-native distribution. Playwright
 MCP returns accessibility snapshots with stable refs for interaction, Stagehand

@@ -435,6 +435,9 @@ attributes SHOULD be preserved when present:
 | `aria-valuemax`  | `valuemax`  | string          |
 | `aria-valuenow`  | `valuenow`  | string          |
 | `aria-valuetext` | `valuetext` | string          |
+| `aria-label`     | `label`     | string          |
+| `aria-labelledby` | `labelledby` | string        |
+| `aria-describedby` | `describedby` | string      |
 
 Values `"true"` and `"false"` MUST be normalized to boolean. Other string
 values (e.g. `aria-current="page"`, `aria-checked="mixed"`, or

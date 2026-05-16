@@ -49,6 +49,45 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-16T02:05:58Z - Plasmate Improvements Automation
+
+- Git sync: required latest pull was retried. The automation worktree still
+  cannot open the linked checkout `FETCH_HEAD`, and the primary checkout
+  still cannot resolve `github.com`. Checkout to the newest local branch also
+  failed on the linked worktree `index.lock`, so the newest locally available
+  diff (`origin/codex/link-navigation-replay-cues`) was applied directly
+  before this run's ARIA naming-provenance work.
+- Market direction: current docs continue to validate Plasmate's local-first
+  replay-validation wedge. Playwright MCP uses snapshot-scoped accessibility
+  refs, Browserbase/Stagehand positions action caching around DOM validation,
+  Firecrawl keeps broadening MCP scrape/extract/browser sessions, and Browser
+  Use/AWS AgentCore Browser emphasize profiles for repeated authenticated
+  workflows. The roadmap should keep improving portable SOM/action target
+  fidelity rather than pivoting into hosted browser infrastructure.
+- Code changes: Rust SOM attrs and JSON Schema now preserve three ARIA naming
+  provenance cues: raw `aria-label`, raw `aria-labelledby`, and raw
+  `aria-describedby`. Python/Node parser packages, Python/Node/Go SDKs,
+  Browser Use, LangChain, and Vercel AI action-plan surfaces now carry/render
+  these as `aria_label`, `labelledby`, and `describedby` without changing
+  deterministic action `cache_key` values.
+- Fixture/docs changes: the shared action-availability fixture now asserts
+  ARIA naming provenance beside resolved `description` text. PRD and roadmap
+  docs now record the 2026-05-16 ARIA naming-provenance rationale and next
+  conformance step.
+- Verification passed: `rustfmt --check src/som/compiler.rs
+  tests/som_compiler_test.rs`, JSON fixture/schema parse checks, touched
+  Python syntax compile, focused Rust ARIA compiler tests, `cargo build`,
+  `cargo test --lib --quiet` (258), Python parser tests (72), Python SDK
+  query tests (40), Browser Use fixture test, LangChain fixture test, Go SDK
+  tests, and `git diff --check`.
+- Verification gaps: Node parser and SDK tests remain blocked by missing local
+  dev dependencies (`vitest`, `tsc`); Vercel AI tests remain blocked by
+  missing `tsup`; website docs generation remains blocked by missing `marked`.
+  A mistyped focused cargo command rejected multiple test-name arguments before
+  the corrected Rust test run passed.
+- Commit/push state: pending in this run at time of note. Remote merge remains
+  blocked unless GitHub fetch/API access recovers.
+
 ### 2026-05-16T01:13:12Z - Plasmate Improvements Automation
 
 - Git sync: required latest pull was retried. The automation worktree still

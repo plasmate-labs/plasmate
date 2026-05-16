@@ -253,6 +253,9 @@ type ActionPlanItem struct {
 	Invalid           interface{} `json:"invalid,omitempty"`
 	AriaPlaceholder   *string     `json:"aria_placeholder,omitempty"`
 	AriaAutocomplete  *string     `json:"aria_autocomplete,omitempty"`
+	AriaLabel         *string     `json:"aria_label,omitempty"`
+	LabelledBy        *string     `json:"labelledby,omitempty"`
+	DescribedBy       *string     `json:"describedby,omitempty"`
 	ActiveDescendant  *string     `json:"active_descendant,omitempty"`
 	ErrorMessage      *string     `json:"errormessage,omitempty"`
 	KeyShortcuts      *string     `json:"keyshortcuts,omitempty"`
@@ -420,6 +423,9 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.Invalid = el.Attrs.Aria.Invalid
 				item.AriaPlaceholder = el.Attrs.Aria.Placeholder
 				item.AriaAutocomplete = el.Attrs.Aria.Autocomplete
+				item.AriaLabel = el.Attrs.Aria.Label
+				item.LabelledBy = el.Attrs.Aria.LabelledBy
+				item.DescribedBy = el.Attrs.Aria.DescribedBy
 				item.ActiveDescendant = el.Attrs.Aria.ActiveDescendant
 				item.ErrorMessage = el.Attrs.Aria.ErrorMessage
 				item.KeyShortcuts = el.Attrs.Aria.KeyShortcuts

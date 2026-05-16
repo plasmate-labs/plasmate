@@ -46,6 +46,9 @@
             "pattern": ".+@example\\.com",
             "required": true,
             "aria": {
+              "label": "Work email",
+              "labelledby": "email-label",
+              "describedby": "email-help",
               "readonly": true,
               "multiline": true,
               "placeholder": "Work email address",

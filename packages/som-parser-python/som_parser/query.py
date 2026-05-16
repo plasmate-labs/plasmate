@@ -316,6 +316,9 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                     "valuemax",
                     "valuenow",
                     "valuetext",
+                    "label",
+                    "labelledby",
+                    "describedby",
                 ):
                     if aria_key in attrs.aria:
                         item_key = (
@@ -323,6 +326,8 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                             if aria_key == "autocomplete"
                             else "aria_placeholder"
                             if aria_key == "placeholder"
+                            else "aria_label"
+                            if aria_key == "label"
                             else aria_key
                         )
                         item[item_key] = attrs.aria[aria_key]

@@ -190,6 +190,9 @@ export interface AriaState {
   valuemax?: string;
   valuenow?: string;
   valuetext?: string;
+  label?: string;
+  labelledby?: string;
+  describedby?: string;
 }
 
 export interface SomShadowRoot {

@@ -303,6 +303,9 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
             "controls",
             "haspopup",
             "invalid",
+            "label",
+            "labelledby",
+            "describedby",
             "placeholder",
             "autocomplete",
             "active_descendant",
@@ -336,6 +339,8 @@ def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> st
                     if state_key == "autocomplete"
                     else "aria_placeholder"
                     if state_key == "placeholder"
+                    else "aria_label"
+                    if state_key == "label"
                     else state_key
                 )
                 flags.append(f'[{output_key}="{aria[state_key]}"]')

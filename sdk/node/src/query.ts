@@ -122,6 +122,9 @@ export interface ActionPlanItem {
   invalid?: boolean | string;
   aria_placeholder?: string;
   aria_autocomplete?: string;
+  aria_label?: string;
+  labelledby?: string;
+  describedby?: string;
   active_descendant?: string;
   errormessage?: string;
   keyshortcuts?: string;
@@ -286,6 +289,9 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.aria?.invalid !== undefined) item.invalid = el.attrs.aria.invalid;
     if (el.attrs?.aria?.placeholder !== undefined) item.aria_placeholder = el.attrs.aria.placeholder;
     if (el.attrs?.aria?.autocomplete !== undefined) item.aria_autocomplete = el.attrs.aria.autocomplete;
+    if (el.attrs?.aria?.label !== undefined) item.aria_label = el.attrs.aria.label;
+    if (el.attrs?.aria?.labelledby !== undefined) item.labelledby = el.attrs.aria.labelledby;
+    if (el.attrs?.aria?.describedby !== undefined) item.describedby = el.attrs.aria.describedby;
     if (el.attrs?.aria?.active_descendant !== undefined) item.active_descendant = el.attrs.aria.active_descendant;
     if (el.attrs?.aria?.errormessage !== undefined) item.errormessage = el.attrs.aria.errormessage;
     if (el.attrs?.aria?.keyshortcuts !== undefined) item.keyshortcuts = el.attrs.aria.keyshortcuts;

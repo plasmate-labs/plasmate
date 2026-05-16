@@ -2208,6 +2208,9 @@ fn build_element_attrs(
         ("aria-valuemax", "valuemax"),
         ("aria-valuenow", "valuenow"),
         ("aria-valuetext", "valuetext"),
+        ("aria-label", "label"),
+        ("aria-labelledby", "labelledby"),
+        ("aria-describedby", "describedby"),
     ];
     let mut aria_map = serde_json::Map::new();
     for (html_attr, som_key) in aria_states {
