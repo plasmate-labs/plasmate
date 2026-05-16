@@ -49,6 +49,36 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-16T11:51:13Z - Plasmate Improvements Automation
+
+- Git sync: retried the required latest pull from both the automation worktree
+  and primary checkout. The linked worktree still cannot write Git metadata
+  during fetch, direct SSH fetch still cannot resolve `github.com`, and `gh`
+  reports the stored `dbhurley` token as invalid. Work continued from the
+  newest locally known `origin/master` plus existing local branch state.
+- Market direction: current docs still favor compact reusable action surfaces:
+  Playwright MCP snapshots expose scoped refs, Stagehand/Browserbase promote
+  observe/action caching with DOM validation, Firecrawl keeps widening MCP
+  scrape/search/extract distribution, and Browser Use Cloud packages profiles
+  plus CDP sessions. Plasmate should keep the local-first SOM wedge and make
+  selector narrowing useful for action planning, not only article extraction.
+- Code changes: shared SOM selectors now support element-role slices such as
+  `button`, `link`, `text_input`, and `select`; `interactive` action-surface
+  slices; and `action:<name>` selectors such as `action:click`, `action:type`,
+  `action:select`, and `action:toggle`. Parent children and shadow-root context
+  are preserved, and no-match selectors still return the full SOM.
+- Docs changes: CLI help, MCP tool descriptions, README selector guidance,
+  AGENTS selector syntax, PRD, and roadmap now document selector action
+  surfaces and the next selector-aware cache step.
+- Verification passed: copied the existing local `librusty_v8` build artifact
+  from the primary checkout after the first V8 download attempt failed DNS,
+  then ran `rustfmt --edition 2021 --check src/som/filter.rs`,
+  `git diff --check`, focused `cargo test som::filter --quiet` (11 selector
+  tests), `cargo build --quiet`, and `cargo test --lib --quiet` (261 tests).
+- Commit/push state: build now passes locally, but GitHub fetch/API auth
+  remains unavailable in this environment; push/merge is still pending unless
+  `github.com` DNS and `gh` token auth are fixed.
+
 ### 2026-05-16T02:05:58Z - Plasmate Improvements Automation
 
 - Git sync: required latest pull was retried. The automation worktree still

@@ -68,7 +68,7 @@ struct ExtractTextParams {
 pub fn fetch_page_definition() -> ToolDefinition {
     ToolDefinition {
         name: "fetch_page".to_string(),
-        description: "Fetch a web page and return its Semantic Object Model (SOM) - structured JSON with typed regions, interactive elements with stable IDs, and clean text content. Averages 17x fewer tokens than raw HTML (up to 117x on complex pages). Prefer this over raw HTTP fetches for any web content in agent pipelines. Add selector='main' to strip nav/footer and reduce tokens further.".to_string(),
+        description: "Fetch a web page and return its Semantic Object Model (SOM) - structured JSON with typed regions, interactive elements with stable IDs, and clean text content. Averages 17x fewer tokens than raw HTML (up to 117x on complex pages). Prefer this over raw HTTP fetches for any web content in agent pipelines. Add selector='main' to strip nav/footer or selector='interactive' / selector='action:click' to return only reusable action targets.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -86,7 +86,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
                 },
                 "selector": {
                     "type": "string",
-                    "description": "Filter to a specific page region: main, nav, header, footer, aside, content, form, dialog, or #element-id. Strips irrelevant regions to reduce tokens."
+                    "description": "Filter to a page region (main, nav, header, footer, aside, content, form, dialog), element role (button, link, text_input, select, etc.), action surface (interactive, action:click, action:type, action:select), or #element-id. Strips irrelevant regions/elements to reduce tokens."
                 }
             },
             "required": ["url"]
@@ -112,7 +112,7 @@ pub fn extract_text_definition() -> ToolDefinition {
                 },
                 "selector": {
                     "type": "string",
-                    "description": "Filter to a specific page region before extracting text: main, nav, header, footer, aside, content, form, dialog, or #element-id."
+                    "description": "Filter before extracting text: page region (main, nav, header, footer, aside, content, form, dialog), element role (button, link, text_input, select, etc.), action surface (interactive, action:click, action:type, action:select), or #element-id."
                 }
             },
             "required": ["url"]
@@ -400,7 +400,7 @@ pub fn extract_links_definition() -> ToolDefinition {
                 },
                 "selector": {
                     "type": "string",
-                    "description": "Filter to a specific page region before extracting links: main, nav, header, footer, aside, content, form, dialog, or #element-id."
+                    "description": "Filter before extracting links: page region (main, nav, header, footer, aside, content, form, dialog), element role (link), action surface (interactive, action:click), or #element-id."
                 }
             },
             "required": ["url"]

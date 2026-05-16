@@ -932,6 +932,26 @@ that produced the resolved label and description.
    `describedby` beside resolved `description` text, letting agents validate
    help/error copy without rewalking raw DOM.
 
+### 2026-05-16 Selector Action-Surface Adjustment
+
+The current competitor trend favors small, reusable action menus over full-page
+context on every step. Playwright MCP returns structured snapshots with refs,
+Stagehand `observe()` produces cacheable action candidates, Browserbase
+foregrounds DOM-validated action caching, and Firecrawl/Browser Use continue
+to make broad MCP/browser-session distribution easy. Plasmate should keep its
+local-first SOM contract and make selector narrowing an action-planning tool,
+not just a content-extraction tool.
+
+1. **Element roles are selectors**: `button`, `link`, `text_input`, `select`,
+   and adjacent role selectors let agents request the specific control surface
+   they are about to reason over.
+2. **Action selectors reduce repeated-work cost**: `interactive` and
+   `action:<name>` should become the low-token path for building cached local
+   click/type/select/toggle menus without shipping unrelated copy to the model.
+3. **Selector cache follows action memory**: selector-aware cache entries should
+   include role/action selectors alongside `main`, `form`, and `#id`, preserving
+   Plasmate's local replay-validation wedge without hosted selector storage.
+
 ## Architecture
 
 ```

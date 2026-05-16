@@ -116,14 +116,20 @@ enum Commands {
         /// Filter output to a specific SOM region or element.
         ///
         /// Accepts semantic region roles (main, nav, navigation, aside, header,
-        /// footer, form, dialog, content) or an HTML id selector (#my-id).
+        /// footer, form, dialog, content), element roles (button, link,
+        /// text_input, select, etc.), action selectors (interactive,
+        /// action:click, action:type, action:select), or an HTML id selector
+        /// (#my-id).
         /// When a role is given, only regions of that role are included.
-        /// When an id is given, only elements whose html_id matches are kept.
+        /// When an element/action selector or id is given, only matching
+        /// elements are kept, with parent containers preserved.
         /// Unrecognised selectors fall through gracefully (full SOM returned).
         ///
         /// Examples:
         ///   --selector main            (just the main content region)
         ///   --selector nav             (navigation links only)
+        ///   --selector interactive     (only actionable elements)
+        ///   --selector action:click    (only click targets)
         ///   --selector "#toc"          (elements with id="toc")
         ///   --selector main --format text   (main content as plain text)
         #[arg(long)]
@@ -283,8 +289,9 @@ enum Commands {
         /// --format`.
         #[arg(long, default_value = "json")]
         format: String,
-        /// Filter output to a specific SOM region or element — same syntax as
-        /// `plasmate fetch --selector` (e.g. `main`, `nav`, `#my-id`).
+        /// Filter output to a specific SOM region, role, action surface, or
+        /// element — same syntax as `plasmate fetch --selector` (e.g. `main`,
+        /// `button`, `interactive`, `action:click`, `#my-id`).
         #[arg(long)]
         selector: Option<String>,
     },
@@ -312,7 +319,8 @@ enum Commands {
         output: Option<String>,
         /// Filter both snapshots to a specific region before diffing.
         /// Same syntax as `plasmate fetch --selector` (e.g. `main`, `nav`,
-        /// `#my-id`). Useful for diffing only the content region and ignoring
+        /// `button`, `interactive`, `action:click`, `#my-id`). Useful for
+        /// diffing only the content region or action surface and ignoring
         /// navigation or footer churn.
         #[arg(long)]
         selector: Option<String>,

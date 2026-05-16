@@ -84,6 +84,9 @@ Tool descriptions are read by LLMs (Claude, GPT-4, etc.) to decide which tool to
 | `content` | Article / content regions |
 | `form` | Form regions |
 | `dialog` | Dialog/modal regions |
+| `button` / `link` / `text_input` | Elements with that SOM role, preserving parent context |
+| `interactive` | Elements with interactive SOM roles |
+| `action:click` / `action:type` | Elements exposing that compact action |
 | `#foo` | Region with id `foo` |
 
 Returns full SOM if selector matches nothing (graceful fallback).

@@ -149,7 +149,9 @@ Config file locations:
 
 Once connected, 16 tools are available: `fetch_page`, `extract_text`, `extract_links`, `open_page`, `navigate_to`, `click`, `type_text`, `select_option`, `scroll`, `toggle`, `clear`, `evaluate`, `close_page`, `get_cookies`, `set_cookies`, `clear_cookies`.
 
-**Tip:** use `selector="main"` on any fetch to strip nav/footer before the LLM sees the content.
+**Tip:** use `selector="main"` to strip nav/footer, `selector="interactive"`
+to return only actionable elements, or `selector="action:click"` to build a
+compact click-target menu before the LLM sees the content.
 
 ### Vercel AI SDK
 

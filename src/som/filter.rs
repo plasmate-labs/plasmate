@@ -4,13 +4,18 @@
 //! elements by semantic role or HTML id. Used by both the CLI (`--selector`)
 //! and MCP tools (`selector` parameter).
 
-use super::types::{Element, RegionRole, ShadowRoot, Som};
+use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
 /// Supported selectors:
 /// - Region roles: `main`, `nav`/`navigation`, `aside`, `header`, `footer`,
 ///   `form`, `dialog`, `content`
+/// - Element roles: `link`, `button`, `text_input`, `textarea`, `select`,
+///   `checkbox`, `radio`, `heading`, `image`, `list`, `table`, `paragraph`,
+///   `section`, `group`, `separator`, `details`, `iframe`
+/// - Action surfaces: `interactive` or `action:click` / `action:type` /
+///   `action:clear` / `action:select` / `action:toggle`
 /// - HTML id: `#some-id` - keeps only elements whose `html_id` matches
 ///
 /// Unrecognised selectors return the full SOM unchanged (with a warning to stderr).
@@ -51,6 +56,33 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         return result;
     }
 
+    // Match element roles, preserving parent containers and shadow roots that
+    // contain matching descendants.
+    if let Some(role) = parse_element_role(selector) {
+        return filter_som_elements(som, selector, |element| element.role == role);
+    }
+
+    // Match only actionable elements. This is useful when an agent needs a
+    // compact menu of possible targets without full body text.
+    if selector.eq_ignore_ascii_case("interactive") {
+        return filter_som_elements(som, selector, |element| element.role.is_interactive());
+    }
+
+    // Match elements that expose a specific action in their compact action list.
+    let selector_lower = selector.to_ascii_lowercase();
+    if let Some(action) = selector_lower.strip_prefix("action:") {
+        let action = action.trim().to_ascii_lowercase();
+        if !action.is_empty() {
+            return filter_som_elements(som, selector, |element| {
+                element
+                    .actions
+                    .as_ref()
+                    .map(|actions| actions.iter().any(|a| a.eq_ignore_ascii_case(&action)))
+                    .unwrap_or(false)
+            });
+        }
+    }
+
     // Try id selector: #my-id. Prefer documented region ids, then HTML ids
     // on elements. If neither matches, return the full SOM as a graceful fallback.
     if let Some(id) = selector.strip_prefix('#') {
@@ -89,6 +121,107 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         selector
     );
     som.clone()
+}
+
+fn parse_element_role(selector: &str) -> Option<ElementRole> {
+    match selector
+        .trim()
+        .to_ascii_lowercase()
+        .replace('-', "_")
+        .as_str()
+    {
+        "link" => Some(ElementRole::Link),
+        "button" => Some(ElementRole::Button),
+        "text_input" | "textbox" | "input" => Some(ElementRole::TextInput),
+        "textarea" => Some(ElementRole::Textarea),
+        "select" => Some(ElementRole::Select),
+        "checkbox" => Some(ElementRole::Checkbox),
+        "radio" => Some(ElementRole::Radio),
+        "heading" => Some(ElementRole::Heading),
+        "image" | "img" => Some(ElementRole::Image),
+        "list" => Some(ElementRole::List),
+        "table" => Some(ElementRole::Table),
+        "paragraph" => Some(ElementRole::Paragraph),
+        "section" => Some(ElementRole::Section),
+        "group" => Some(ElementRole::Group),
+        "separator" => Some(ElementRole::Separator),
+        "details" => Some(ElementRole::Details),
+        "iframe" => Some(ElementRole::Iframe),
+        _ => None,
+    }
+}
+
+fn filter_som_elements<F>(som: &Som, selector: &str, matches: F) -> Som
+where
+    F: Fn(&Element) -> bool,
+{
+    let filtered_regions: Vec<_> = som
+        .regions
+        .iter()
+        .filter_map(|region| {
+            let elements = filter_elements_by(&region.elements, &matches);
+            if elements.is_empty() {
+                None
+            } else {
+                let mut region = region.clone();
+                region.elements = elements;
+                Some(region)
+            }
+        })
+        .collect();
+
+    if filtered_regions.is_empty() {
+        eprintln!(
+            "Warning: selector '{}' matched no elements - returning full SOM",
+            selector
+        );
+        return som.clone();
+    }
+
+    let mut result = som.clone();
+    result.regions = filtered_regions;
+    result
+}
+
+fn filter_elements_by<F>(elements: &[Element], matches: &F) -> Vec<Element>
+where
+    F: Fn(&Element) -> bool,
+{
+    elements
+        .iter()
+        .filter_map(|element| {
+            let mut cloned = element.clone();
+            if let Some(children) = &element.children {
+                let filtered_children = filter_elements_by(children, matches);
+                cloned.children = if filtered_children.is_empty() {
+                    None
+                } else {
+                    Some(filtered_children)
+                };
+            }
+
+            let shadow_match = if let Some(shadow) = &element.shadow {
+                let filtered_shadow_elements = filter_elements_by(&shadow.elements, matches);
+                if filtered_shadow_elements.is_empty() {
+                    false
+                } else {
+                    cloned.shadow = Some(ShadowRoot {
+                        mode: shadow.mode.clone(),
+                        elements: filtered_shadow_elements,
+                    });
+                    true
+                }
+            } else {
+                false
+            };
+
+            if matches(element) || cloned.children.is_some() || shadow_match {
+                Some(cloned)
+            } else {
+                None
+            }
+        })
+        .collect()
 }
 
 fn filter_elements_by_html_id(elements: &[Element], id: &str) -> Vec<Element> {
@@ -158,7 +291,7 @@ mod tests {
                         html_id: None,
                         text: Some("Home".to_string()),
                         label: None,
-                        actions: None,
+                        actions: Some(vec!["click".to_string()]),
                         attrs: None,
                         children: None,
                         hints: None,
@@ -176,25 +309,39 @@ mod tests {
                     novalidate: None,
                     accept_charset: None,
                     autocomplete: None,
-                    elements: vec![Element {
-                        id: "e2".to_string(),
-                        role: ElementRole::Paragraph,
-                        html_id: Some("intro".to_string()),
-                        text: Some("Hello world".to_string()),
-                        label: None,
-                        actions: None,
-                        attrs: None,
-                        children: None,
-                        hints: None,
-                        shadow: None,
-                    }],
+                    elements: vec![
+                        Element {
+                            id: "e2".to_string(),
+                            role: ElementRole::Paragraph,
+                            html_id: Some("intro".to_string()),
+                            text: Some("Hello world".to_string()),
+                            label: None,
+                            actions: None,
+                            attrs: None,
+                            children: None,
+                            hints: None,
+                            shadow: None,
+                        },
+                        Element {
+                            id: "e3".to_string(),
+                            role: ElementRole::Button,
+                            html_id: Some("save".to_string()),
+                            text: Some("Save".to_string()),
+                            label: None,
+                            actions: Some(vec!["click".to_string()]),
+                            attrs: None,
+                            children: None,
+                            hints: None,
+                            shadow: None,
+                        },
+                    ],
                 },
             ],
             meta: SomMeta {
                 html_bytes: 100,
                 som_bytes: 50,
-                element_count: 2,
-                interactive_count: 1,
+                element_count: 3,
+                interactive_count: 2,
             },
             structured_data: None,
         }
@@ -226,6 +373,42 @@ mod tests {
             filtered.regions[0].elements[0].html_id.as_deref(),
             Some("intro")
         );
+    }
+
+    #[test]
+    fn test_selector_element_role() {
+        let som = make_test_som();
+        let filtered = apply_selector(&som, "button");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Button);
+    }
+
+    #[test]
+    fn test_selector_interactive_elements() {
+        let som = make_test_som();
+        let filtered = apply_selector(&som, "interactive");
+        assert_eq!(filtered.regions.len(), 2);
+        assert!(filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .all(|element| element.role.is_interactive()));
+    }
+
+    #[test]
+    fn test_selector_action() {
+        let som = make_test_som();
+        let filtered = apply_selector(&som, "action:click");
+        assert_eq!(filtered.regions.len(), 2);
+        assert!(filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .all(|element| element
+                .actions
+                .as_ref()
+                .is_some_and(|actions| actions.contains(&"click".to_string()))));
     }
 
     #[test]

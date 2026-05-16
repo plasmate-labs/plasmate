@@ -43,6 +43,16 @@ relationships (`aria-label`, `aria-labelledby`, and `aria-describedby`) beside
 resolved labels/descriptions so cached action targets can be checked against
 the live DOM without raw DOM recovery.
 
+2026-05-16 selector-action read: current category motion makes compact action
+menus a first-class product surface. Playwright MCP exposes refs from
+structured accessibility snapshots, Stagehand `observe()` and action caching
+focus repeated workflows on reusable targets, Firecrawl continues to widen MCP
+scrape/search/extract distribution, and Browser Use Cloud packages persistent
+profiles plus CDP sessions. Plasmate should keep the local-first wedge and make
+selector narrowing useful for action planning, not only content trimming:
+agents should be able to ask for `interactive`, `action:click`, or `button`
+SOM slices before spending tokens on unrelated page state.
+
 2026-05-05 market read: the strongest retention hooks are reusable structured
 state, cached repeated actions, and ecosystem-native distribution. Playwright
 MCP returns accessibility snapshots with stable refs for interaction, Stagehand
@@ -1117,11 +1127,20 @@ and adapter docs over one-off integration logic.
   - Hardened inline hidden-style stripping against spacing and casing variants.
   - Updated roadmap direction around cached structured actions, MCP
     distribution, and accessibility/SOM parity.
+- 2026-05-16:
+  - Added shared selector support for element roles such as `button`, `link`,
+    `text_input`, and `select`, so CLI and MCP callers can request compact SOM
+    slices around the controls they plan to use.
+  - Added `interactive` selector support to return only actionable elements
+    while preserving necessary parent/shadow context.
+  - Added `action:<name>` selector support for action menus such as
+    `action:click`, `action:type`, `action:select`, and `action:toggle`, with
+    no-match selectors still falling back to the full SOM.
 
 ## Next Steps
 
-- Implement selector-aware SOM cache entries for `main`, `form`, and `#id`
-  prompts.
+- Implement selector-aware SOM cache entries for `main`, `form`, `#id`,
+  element-role, `interactive`, and `action:<name>` prompts.
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked
   or selected an element.
 - Add conformance cases for ARIA-heavy SaaS pages, especially disabled,
