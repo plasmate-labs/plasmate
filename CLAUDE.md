@@ -75,9 +75,14 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   then ran `rustfmt --edition 2021 --check src/som/filter.rs`,
   `git diff --check`, focused `cargo test som::filter --quiet` (11 selector
   tests), `cargo build --quiet`, and `cargo test --lib --quiet` (261 tests).
-- Commit/push state: build now passes locally, but GitHub fetch/API auth
-  remains unavailable in this environment; push/merge is still pending unless
-  `github.com` DNS and `gh` token auth are fixed.
+- Commit/push state: normal `git commit` was blocked by the linked worktree
+  `index.lock`, so created alternate-index commit `780f165` (`chore: add
+  action surface selectors`) and pushed review branch
+  `codex/plasmate-improvements-2026-05-16-selector-actions`. Direct non-force
+  push to `master` was rejected with `fetch first`; `git fetch`/`ls-remote`
+  still intermittently fail DNS for `github.com`, and `gh` still reports an
+  invalid token. Remote merge remains blocked until the latest `master` can be
+  fetched or GitHub API auth is repaired.
 
 ### 2026-05-16T02:05:58Z - Plasmate Improvements Automation
 
