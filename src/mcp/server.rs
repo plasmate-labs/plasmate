@@ -253,6 +253,7 @@ fn handle_tools_list(request: &JsonRpcRequest) -> JsonRpcResponse {
         tools::extract_text_definition(),
         tools::extract_links_definition(),
         tools::cache_status_definition(),
+        tools::session_status_definition(),
         // Screenshot
         tools::screenshot_page_definition(),
         // Phase 2: Stateful tools
@@ -330,6 +331,7 @@ async fn handle_tools_call(
         "extract_text" => tools::handle_extract_text(&arguments, client, cache).await,
         "extract_links" => tools::handle_extract_links(&arguments, client, cache).await,
         "cache_status" => tools::handle_cache_status(cache),
+        "session_status" => tools::handle_session_status(sessions).await,
         // Screenshot
         "screenshot_page" => tools::handle_screenshot_page(&arguments, client).await,
         // Phase 2: Stateful tools

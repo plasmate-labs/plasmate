@@ -40,6 +40,7 @@ Claude now has access to these tools:
 | `extract_text` | Get clean, readable text from any web page |
 | `extract_links` | Get all outbound URLs from a page (deduplicated) |
 | `cache_status` | Inspect MCP SOM cache hits, misses, selector entries, and avoided HTML work |
+| `session_status` | Inspect active MCP browser sessions, capacity, age, and idle time |
 | `open_page` | Open a persistent browser session |
 | `click` | Click elements on an open page |
 | `type_text` | Type into form fields |

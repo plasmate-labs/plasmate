@@ -104,6 +104,8 @@ plasmate mcp
 This exposes Plasmate over stdio as MCP tools:
 - `fetch_page` - get structured SOM from any URL
 - `extract_text` - get clean readable text
+- `cache_status` - inspect stateless MCP SOM cache reuse
+- `session_status` - inspect active stateful browser sessions
 - `open_page` - start an interactive session (returns session_id + SOM)
 - `evaluate` - run JavaScript in the page context
 - `click` - click elements by SOM element ID
@@ -147,13 +149,15 @@ Config file locations:
 - **VS Code Copilot** — `.vscode/mcp.json` (workspace) or user settings
 - **Windsurf** — `~/.codeium/windsurf/mcp_config.json`
 
-Once connected, 17 tools are available: `fetch_page`, `extract_text`, `extract_links`, `cache_status`, `open_page`, `navigate_to`, `click`, `type_text`, `select_option`, `scroll`, `toggle`, `clear`, `evaluate`, `close_page`, `get_cookies`, `set_cookies`, `clear_cookies`.
+Once connected, 18 tools are available: `fetch_page`, `extract_text`, `extract_links`, `cache_status`, `session_status`, `open_page`, `navigate_to`, `click`, `type_text`, `select_option`, `scroll`, `toggle`, `clear`, `evaluate`, `close_page`, `get_cookies`, `set_cookies`, `clear_cookies`.
 
 **Tip:** use `selector="main"` to strip nav/footer, `selector="interactive"`
 to return only actionable elements, or `selector="action:click"` to build a
 compact click-target menu before the LLM sees the content.
 Use `cache_status` after repeated fetches to inspect local MCP SOM cache hits,
 misses, selector entries, and avoided HTML work.
+Use `session_status` before long interactive runs to inspect active browser
+session count, capacity, age, and idle time.
 
 ### Vercel AI SDK
 
@@ -328,6 +332,7 @@ See [docs.plasmate.app/roadmap](https://docs.plasmate.app/roadmap) for the full 
 - [x] Iframe support
 - [x] Shadow DOM support (declarative shadow DOM)
 - [x] Full ES module support
+- [x] MCP cache/session observability for repeated agent workflows
 - [ ] Parallel sessions at scale (500+ concurrent)
 
 ## Ecosystem

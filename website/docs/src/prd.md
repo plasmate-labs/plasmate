@@ -136,6 +136,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 
 2026-05-16 MCP cache-surface read: current docs reinforce that repeated workflow memory is now an agent-facing feature, not just an internal optimization. Stagehand documents local and Browserbase action caches, Browser Run exposes MCP/CDP sessions with recordings and WebMCP experiments, Firecrawl keeps packaging scrape/search/extract behind MCP, and Playwright MCP continues to make fresh structured snapshots the action unit. Plasmate should extend the same inspectable local cache story into MCP stateless fetch tools so agents can reuse content-hash-validated SOM and selector views before a hosted browser or trace product is necessary.
 
+2026-05-16 MCP session-state read: current competitor positioning now pairs structured action state with session observability. Playwright MCP refs are snapshot-scoped, Stagehand local caches replay action choices across runs, Browserbase and Cloudflare Browser Run sell prompt/session replay, and Firecrawl continues broad MCP/browser-session packaging. Plasmate should keep the local-first wedge by making stateful MCP sessions inspectable and by ensuring nested and shadow-root action targets stay addressable after `open_page` and `navigate_to`, before attempting heavier trace export or hosted session features.
+
 ## Ecosystem Surface
 
 The project already spans a large number of package and integration surfaces: Rust CLI/daemon/MCP/CDP/AWP core, Python SDK, Node SDK, Go SDK, LangChain, Browser Use, Vercel AI, SOM parser packages for Python and Node, plugin examples, smoke tests, generated docs, comparison pages, and marketing assets. This breadth is a distribution advantage only if contracts stay synchronized. Short-term roadmap work should favor conformance fixtures, shared schema tests, and adapter docs over one-off integration logic.
@@ -162,6 +164,9 @@ The project already spans a large number of package and integration surfaces: Ru
   - MCP now owns an in-process SOM cache for stateless `fetch_page`, `extract_text`, and `extract_links` calls, reusing content-hash-validated full-page and selector-filtered SOM entries before rerunning JS/SOM compilation.
   - Added an MCP `cache_status` tool that returns cache hit, miss, stale, eviction, full-entry, selector-entry, cached-byte, avoided-HTML, and capacity counters for agent-side observability.
   - Added MCP cache tests for selector materialization and cache-status JSON so the local repeated-work surface is covered outside the daemon path.
+  - Added an MCP `session_status` tool that returns active session count, capacity, oldest session age, and longest idle time for stateful workflow observability.
+  - Stateful MCP `open_page` and `navigate_to` now preserve structured data and rebuild CDP node maps after SOM compilation.
+  - Stateful MCP click lookup and CDP SOM-id lookup now traverse nested children and shadow-root elements, keeping web-component action targets addressable after navigation.
   - Rust SOM attrs and JSON Schema now preserve link navigation validation cues: `hreflang`, link MIME `type`, and `referrerpolicy`.
   - Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain, and Vercel AI now surface those link cues in compact action targets and prompt renderers without changing deterministic `cache_key` values.
   - The shared action-availability manifest now asserts link locale, resource type, and referrer-policy context so adapters stay aligned for repeated navigation workflows.
@@ -356,6 +361,7 @@ The project already spans a large number of package and integration surfaces: Ru
 ## Next Steps
 
 - Extend selector-aware cache use into stateful MCP session navigation once the cache can safely preserve the effective HTML needed for replay after a hit.
+- Add stateful-session cache reuse only after the session can restore `effective_html`, structured data, and CDP node maps from a validated cache entry without breaking click/type/evaluate replay.
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked or selected an element.
 - Add conformance cases for ARIA-heavy SaaS pages, especially disabled and required custom controls, and compare output against Playwright MCP snapshots.
 - Wire `015-action-state` into cross-adapter parser/SDK conformance runners so inherited disabled state stays synchronized outside Rust.

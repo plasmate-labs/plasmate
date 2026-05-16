@@ -402,7 +402,7 @@ impl CdpTarget {
     }
 
     /// Build a CDP-compatible node tree from our SOM.
-    fn rebuild_node_map(&mut self) {
+    pub fn rebuild_node_map(&mut self) {
         self.node_map.clear();
 
         let som = match &self.current_som {
@@ -422,42 +422,7 @@ impl CdpTarget {
             let mut region_children = Vec::new();
 
             for element in &region.elements {
-                let el_id = next_node_id();
-
-                // Create text child if element has text
-                let mut el_children = Vec::new();
-                if let Some(text) = &element.text {
-                    if !text.is_empty() {
-                        let text_id = next_node_id();
-                        self.node_map.insert(
-                            text_id,
-                            NodeEntry {
-                                node_id: text_id,
-                                backend_node_id: text_id,
-                                som_element_id: None,
-                                node_type: 3, // Text
-                                node_name: "#text".to_string(),
-                                node_value: text.clone(),
-                                children_ids: vec![],
-                            },
-                        );
-                        el_children.push(text_id);
-                    }
-                }
-
-                self.node_map.insert(
-                    el_id,
-                    NodeEntry {
-                        node_id: el_id,
-                        backend_node_id: el_id,
-                        som_element_id: Some(element.id.clone()),
-                        node_type: 1, // Element
-                        node_name: role_to_tag(&element.role),
-                        node_value: String::new(),
-                        children_ids: el_children,
-                    },
-                );
-
+                let el_id = build_node_map_for_element(element, &mut self.node_map);
                 region_children.push(el_id);
             }
 
@@ -495,10 +460,8 @@ impl CdpTarget {
     pub fn find_element_by_som_id(&self, som_id: &str) -> Option<&Element> {
         let som = self.current_som.as_ref()?;
         for region in &som.regions {
-            for element in &region.elements {
-                if element.id == som_id {
-                    return Some(element);
-                }
+            if let Some(element) = find_element_in_tree(&region.elements, som_id) {
+                return Some(element);
             }
         }
         None
@@ -687,6 +650,76 @@ pub struct SetContentResult {
     pub loader_id: String,
 }
 
+fn build_node_map_for_element(element: &Element, node_map: &mut HashMap<u64, NodeEntry>) -> u64 {
+    let el_id = next_node_id();
+    let mut el_children = Vec::new();
+
+    if let Some(text) = &element.text {
+        if !text.is_empty() {
+            let text_id = next_node_id();
+            node_map.insert(
+                text_id,
+                NodeEntry {
+                    node_id: text_id,
+                    backend_node_id: text_id,
+                    som_element_id: None,
+                    node_type: 3,
+                    node_name: "#text".to_string(),
+                    node_value: text.clone(),
+                    children_ids: vec![],
+                },
+            );
+            el_children.push(text_id);
+        }
+    }
+
+    if let Some(children) = &element.children {
+        for child in children {
+            el_children.push(build_node_map_for_element(child, node_map));
+        }
+    }
+
+    if let Some(shadow) = &element.shadow {
+        for child in &shadow.elements {
+            el_children.push(build_node_map_for_element(child, node_map));
+        }
+    }
+
+    node_map.insert(
+        el_id,
+        NodeEntry {
+            node_id: el_id,
+            backend_node_id: el_id,
+            som_element_id: Some(element.id.clone()),
+            node_type: 1,
+            node_name: role_to_tag(&element.role),
+            node_value: String::new(),
+            children_ids: el_children,
+        },
+    );
+
+    el_id
+}
+
+fn find_element_in_tree<'a>(elements: &'a [Element], som_id: &str) -> Option<&'a Element> {
+    for element in elements {
+        if element.id == som_id {
+            return Some(element);
+        }
+        if let Some(children) = &element.children {
+            if let Some(found) = find_element_in_tree(children, som_id) {
+                return Some(found);
+            }
+        }
+        if let Some(shadow) = &element.shadow {
+            if let Some(found) = find_element_in_tree(&shadow.elements, som_id) {
+                return Some(found);
+            }
+        }
+    }
+    None
+}
+
 fn next_node_id() -> u64 {
     NODE_COUNTER.fetch_add(1, Ordering::Relaxed)
 }
@@ -710,5 +743,81 @@ fn role_to_tag(role: &ElementRole) -> String {
         ElementRole::Separator => "hr".to_string(),
         ElementRole::Details => "details".to_string(),
         ElementRole::Iframe => "iframe".to_string(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::som::types::{Region, RegionRole, ShadowRoot, SomMeta};
+
+    fn element(id: &str, role: ElementRole, text: Option<&str>) -> Element {
+        Element {
+            id: id.to_string(),
+            role,
+            html_id: None,
+            text: text.map(str::to_string),
+            label: None,
+            actions: None,
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        }
+    }
+
+    #[test]
+    fn test_rebuild_node_map_indexes_nested_and_shadow_elements() {
+        let mut host = element("host", ElementRole::Section, None);
+        host.children = Some(vec![element(
+            "child-button",
+            ElementRole::Button,
+            Some("Child"),
+        )]);
+        host.shadow = Some(ShadowRoot {
+            mode: "open".to_string(),
+            elements: vec![element(
+                "shadow-button",
+                ElementRole::Button,
+                Some("Shadow"),
+            )],
+        });
+
+        let mut target = CdpTarget::new().unwrap();
+        target.current_som = Some(Som {
+            som_version: "0.1".to_string(),
+            url: "https://example.com/app".to_string(),
+            title: "App".to_string(),
+            lang: "en".to_string(),
+            regions: vec![Region {
+                id: "r1".to_string(),
+                role: RegionRole::Main,
+                label: None,
+                action: None,
+                method: None,
+                target: None,
+                enctype: None,
+                novalidate: None,
+                accept_charset: None,
+                autocomplete: None,
+                elements: vec![host],
+            }],
+            meta: SomMeta {
+                html_bytes: 100,
+                som_bytes: 100,
+                element_count: 3,
+                interactive_count: 2,
+            },
+            structured_data: None,
+        });
+
+        target.rebuild_node_map();
+
+        assert!(target.find_element_by_som_id("child-button").is_some());
+        assert!(target.find_element_by_som_id("shadow-button").is_some());
+        assert!(target
+            .node_map
+            .values()
+            .any(|entry| entry.som_element_id.as_deref() == Some("shadow-button")));
     }
 }

@@ -9,13 +9,22 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
 
+use serde::Serialize;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
 use crate::cdp::session::CdpTarget;
 
 /// Maximum number of concurrent sessions.
-const MAX_SESSIONS: usize = 10;
+pub const MAX_SESSIONS: usize = 10;
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SessionSnapshot {
+    pub active_sessions: usize,
+    pub max_sessions: usize,
+    pub oldest_session_age_ms: u128,
+    pub longest_idle_ms: u128,
+}
 
 /// State for a single MCP browser session.
 pub struct SessionState {
@@ -131,6 +140,29 @@ impl SessionManager {
         let sessions = self.sessions.read().await;
         sessions.len()
     }
+
+    /// Return a lightweight inventory for MCP status output.
+    pub async fn snapshot(&self) -> SessionSnapshot {
+        let sessions = self.sessions.read().await;
+        let now = Instant::now();
+        let oldest_session_age_ms = sessions
+            .values()
+            .map(|session| now.duration_since(session.created_at).as_millis())
+            .max()
+            .unwrap_or(0);
+        let longest_idle_ms = sessions
+            .values()
+            .map(|session| now.duration_since(session.last_accessed).as_millis())
+            .max()
+            .unwrap_or(0);
+
+        SessionSnapshot {
+            active_sessions: sessions.len(),
+            max_sessions: MAX_SESSIONS,
+            oldest_session_age_ms,
+            longest_idle_ms,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -168,5 +200,17 @@ mod tests {
         manager.close_session(&session_ids[0]).await;
         let result = manager.create_session().await;
         assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_snapshot_reports_session_inventory() {
+        let manager = SessionManager::new();
+        let id = manager.create_session().await.unwrap();
+
+        let snapshot = manager.snapshot().await;
+
+        assert_eq!(snapshot.active_sessions, 1);
+        assert_eq!(snapshot.max_sessions, MAX_SESSIONS);
+        assert!(manager.close_session(&id).await);
     }
 }

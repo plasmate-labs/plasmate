@@ -49,6 +49,39 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-16T16:10:14Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch origin master` still fails in the automation
+  worktree because linked `FETCH_HEAD` cannot be opened; fallback fetch from
+  the primary checkout still fails DNS for `github.com`. Work continued from
+  the newest locally known `origin/master` `cd89e54`.
+- Market direction: current docs keep pairing structured browser-agent state
+  with replay and observability. Playwright MCP refs remain scoped to fresh
+  accessibility snapshots, Stagehand documents local and Browserbase action
+  caches, Browserbase/Cloudflare Browser Run sell prompt/session replay, and
+  Firecrawl keeps broad MCP/browser-session distribution. Plasmate should keep
+  the local-first wedge and make stateful MCP sessions inspectable and
+  complete before heavier hosted-session or trace features.
+- Code changes: MCP now exposes `session_status` with active session count,
+  capacity, oldest session age, and longest idle time. Stateful MCP
+  `open_page` and `navigate_to` now preserve structured data and rebuild CDP
+  node maps after SOM compilation. Stateful MCP click lookup and CDP SOM-id
+  lookup now traverse nested children and shadow-root elements, keeping
+  web-component action targets addressable after session navigation.
+- Tests/docs: added session snapshot tests, MCP `session_status` JSON coverage,
+  recursive SOM-id lookup tests, and CDP node-map indexing coverage. PRD,
+  roadmap, README, Claude Desktop MCP docs, and website doc sources record the
+  session-observability rationale and keep the next cache step scoped to
+  restoring `effective_html`, structured data, and node maps safely.
+- Verification so far: touched-file rustfmt passed; focused Rust tests passed
+  with `RUSTY_V8_ARCHIVE=/Users/steve/Git/plasmate/target/debug/gn_out/obj/librusty_v8.a`:
+  `cargo test mcp::sessions --quiet`, `cargo test mcp::tools --quiet`, and
+  `cargo test cdp::session --quiet`. Initial focused tests without
+  `RUSTY_V8_ARCHIVE` failed only because DNS could not download `rusty_v8`.
+- Next step: rebuild generated website docs, run broader build/test checks,
+  then commit and push using the alternate-index path if linked worktree Git
+  metadata remains locked.
+
 ### 2026-05-16T15:13:18Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch origin master` was retried from the automation

@@ -796,6 +796,12 @@
 <li><strong>Selector views are first-class MCP cache entries</strong>: MCP calls with <code>selector=&#39;interactive&#39;</code>, <code>action:&lt;name&gt;</code>, role selectors, or <code>#id</code> should reuse the same full-page-derived selector cache path as the daemon.</li>
 <li><strong>Agents need cache introspection</strong>: an MCP <code>cache_status</code> tool should expose hit/miss/stale/eviction counters, full versus selector inventory, cached bytes, avoided HTML bytes, and capacity so users can tell whether repeated workflows are getting cheaper.</li>
 </ul>
+<h3 id="2026-05-16-mcp-session-observability-adjustment">2026-05-16 MCP Session Observability Adjustment</h3><p>The latest market read keeps moving from raw browser sessions toward inspectable, replayable action state. Playwright MCP makes fresh snapshot refs the unit of action, Stagehand documents local and managed action caches, Browserbase markets prompt observability and replay around cached actions, Cloudflare Browser Run exposes CDP/MCP sessions with recordings, and Firecrawl keeps browser sessions in its MCP distribution. Plasmate should still avoid a hosted-browser pivot, but stateful MCP sessions need the same local trust-building surface as stateless cache calls.</p>
+<ul>
+<li><strong>Session inventory is an MCP tool</strong>: agents should be able to inspect active session count, capacity, oldest age, and idle time before creating more browser state.</li>
+<li><strong>Open/navigate rebuilds replay indexes</strong>: <code>open_page</code> and <code>navigate_to</code> should refresh structured data and CDP node maps after compiling SOM so follow-up interaction tools operate on the current action surface.</li>
+<li><strong>Nested targets are stateful targets</strong>: click lookup and CDP SOM-id lookup should traverse child and shadow-root elements, matching the compiler and parser contract for modern web-component UIs.</li>
+</ul>
 <h2 id="completed-v011">Completed (v0.1.1)</h2><ul>
 <li>SOM compiler with 9.4x median compression across 38 sites</li>
 <li>V8 JavaScript execution with full DOM shim</li>
@@ -1003,6 +1009,9 @@
 <li><input checked="" disabled="" type="checkbox"> Daemon cache health/status observability for selector hit/miss behavior</li>
 <li><input checked="" disabled="" type="checkbox"> MCP stateless fetch/text/link SOM cache reuse</li>
 <li><input checked="" disabled="" type="checkbox"> MCP cache_status observability for selector hit/miss behavior</li>
+<li><input checked="" disabled="" type="checkbox"> MCP session_status observability for stateful browser sessions</li>
+<li><input checked="" disabled="" type="checkbox"> Stateful MCP open/navigate rebuilds structured data and CDP node maps</li>
+<li><input checked="" disabled="" type="checkbox"> Stateful MCP click/CDP lookup traverses nested and shadow-root elements</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
 <li><input disabled="" type="checkbox"> Wire <code>016-action-semantics</code> into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants</li>
 <li><input disabled="" type="checkbox"> Promote shadow-DOM and web-component cases into shared cross-adapter fixtures</li>

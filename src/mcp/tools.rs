@@ -462,9 +462,34 @@ pub fn cache_status_definition() -> ToolDefinition {
     }
 }
 
+/// Get the tool definition for session_status.
+pub fn session_status_definition() -> ToolDefinition {
+    ToolDefinition {
+        name: "session_status".to_string(),
+        description: "Return Plasmate's MCP browser-session inventory: active session count, maximum sessions, oldest session age, and longest idle time. Use this to inspect stateful open_page/navigate_to workflows before creating more sessions.".to_string(),
+        input_schema: json!({
+            "type": "object",
+            "properties": {}
+        }),
+    }
+}
+
 /// Handle the cache_status tool call.
 pub fn handle_cache_status(cache: &Arc<SomCache>) -> Value {
     let snapshot = cache.snapshot();
+    json!({
+        "content": [
+            {
+                "type": "text",
+                "text": serde_json::to_string(&snapshot).unwrap_or_default()
+            }
+        ]
+    })
+}
+
+/// Handle the session_status tool call.
+pub async fn handle_session_status(sessions: &Arc<SessionManager>) -> Value {
+    let snapshot = sessions.snapshot().await;
     json!({
         "content": [
             {
@@ -547,6 +572,40 @@ fn collect_element_links(element: &crate::som::types::Element, urls: &mut Vec<St
             collect_element_links(child, urls);
         }
     }
+}
+
+fn find_som_element_by_id<'a>(
+    som: &'a Som,
+    element_id: &str,
+) -> Option<&'a crate::som::types::Element> {
+    for region in &som.regions {
+        if let Some(element) = find_element_by_id_in_tree(&region.elements, element_id) {
+            return Some(element);
+        }
+    }
+    None
+}
+
+fn find_element_by_id_in_tree<'a>(
+    elements: &'a [crate::som::types::Element],
+    element_id: &str,
+) -> Option<&'a crate::som::types::Element> {
+    for element in elements {
+        if element.id == element_id {
+            return Some(element);
+        }
+        if let Some(children) = &element.children {
+            if let Some(found) = find_element_by_id_in_tree(children, element_id) {
+                return Some(found);
+            }
+        }
+        if let Some(shadow) = &element.shadow {
+            if let Some(found) = find_element_by_id_in_tree(&shadow.elements, element_id) {
+                return Some(found);
+            }
+        }
+    }
+    None
 }
 
 // ============================================================================
@@ -895,7 +954,9 @@ pub async fn handle_open_page(
             session.target.current_url = Some(fetch_result.url.clone());
             session.target.current_html = Some(fetch_result.html.clone());
             session.target.effective_html = Some(page_result.effective_html.clone());
+            session.target.current_structured_data = page_result.som.structured_data.clone();
             session.target.current_som = Some(page_result.som.clone());
+            session.target.rebuild_node_map();
 
             // Return SOM JSON
             serde_json::to_value(&page_result.som).ok()
@@ -1051,17 +1112,12 @@ pub async fn handle_click(
     };
 
     // Find the element in the SOM
-    let element = som
-        .regions
-        .iter()
-        .flat_map(|r| &r.elements)
-        .find(|e| e.id == params.element_id);
-
-    if element.is_none() {
-        return error_response(&format!("Element not found: {}", params.element_id));
-    }
-
-    let element = element.unwrap();
+    let element = match find_som_element_by_id(&som, &params.element_id) {
+        Some(element) => element,
+        None => {
+            return error_response(&format!("Element not found: {}", params.element_id));
+        }
+    };
 
     // Check if element is clickable (has actions or is interactive)
     let is_interactive = element.role.is_interactive();
@@ -1512,7 +1568,9 @@ pub async fn handle_navigate_to(
             session.target.current_url = Some(fetch_result.url.clone());
             session.target.current_html = Some(fetch_result.html.clone());
             session.target.effective_html = Some(page_result.effective_html.clone());
+            session.target.current_structured_data = page_result.som.structured_data.clone();
             session.target.current_som = Some(page_result.som.clone());
+            session.target.rebuild_node_map();
 
             serde_json::to_value(&page_result.som).ok()
         })
@@ -2699,6 +2757,40 @@ mod tests {
     }
 
     #[test]
+    fn test_find_som_element_by_id_includes_nested_and_shadow_dom() {
+        let mut host = test_element("host", ElementRole::Section, None, None);
+        host.children = Some(vec![test_element(
+            "child-button",
+            ElementRole::Button,
+            Some("Child"),
+            None,
+        )]);
+        host.shadow = Some(ShadowRoot {
+            mode: "open".to_string(),
+            elements: vec![test_element(
+                "shadow-button",
+                ElementRole::Button,
+                Some("Shadow"),
+                None,
+            )],
+        });
+
+        let mut som = test_som();
+        som.regions[0].elements = vec![host];
+
+        assert_eq!(
+            find_som_element_by_id(&som, "child-button")
+                .and_then(|element| element.text.as_deref()),
+            Some("Child")
+        );
+        assert_eq!(
+            find_som_element_by_id(&som, "shadow-button")
+                .and_then(|element| element.text.as_deref()),
+            Some("Shadow")
+        );
+    }
+
+    #[test]
     fn test_truncate_text_to_chars_preserves_utf8_boundaries() {
         let mut text = "Hello 😀 world".to_string();
         truncate_text_to_chars(&mut text, 7);
@@ -2775,5 +2867,19 @@ mod tests {
         assert_eq!(snapshot["entries"], 1);
         assert_eq!(snapshot["full_entries"], 1);
         assert_eq!(snapshot["max_hot_entries"], 1000);
+    }
+
+    #[tokio::test]
+    async fn test_session_status_returns_snapshot_json() {
+        let sessions = Arc::new(SessionManager::new());
+        let session_id = sessions.create_session().await.unwrap();
+
+        let result = handle_session_status(&sessions).await;
+        let text = result["content"][0]["text"].as_str().unwrap();
+        let snapshot: serde_json::Value = serde_json::from_str(text).unwrap();
+
+        assert_eq!(snapshot["active_sessions"], 1);
+        assert_eq!(snapshot["max_sessions"], crate::mcp::sessions::MAX_SESSIONS);
+        assert!(sessions.close_session(&session_id).await);
     }
 }

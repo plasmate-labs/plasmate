@@ -91,6 +91,16 @@ same inspectable local cache story into MCP stateless fetch tools so agents can
 reuse content-hash-validated SOM and selector views before a hosted browser or
 trace product is necessary.
 
+2026-05-16 MCP session-state read: current competitor positioning now pairs
+structured action state with session observability. Playwright MCP refs are
+snapshot-scoped, Stagehand local caches replay action choices across runs,
+Browserbase and Cloudflare Browser Run sell prompt/session replay, and
+Firecrawl continues broad MCP/browser-session packaging. Plasmate should keep
+the local-first wedge by making stateful MCP sessions inspectable and by
+ensuring nested and shadow-root action targets stay addressable after
+`open_page` and `navigate_to`, before attempting heavier trace export or
+hosted session features.
+
 2026-05-05 market read: the strongest retention hooks are reusable structured
 state, cached repeated actions, and ecosystem-native distribution. Playwright
 MCP returns accessibility snapshots with stable refs for interaction, Stagehand
@@ -1201,11 +1211,22 @@ and adapter docs over one-off integration logic.
     capacity counters for agent-side observability.
   - Added MCP cache tests for selector materialization and cache-status JSON so
     the local repeated-work surface is covered outside the daemon path.
+  - Added an MCP `session_status` tool that returns active session count,
+    capacity, oldest session age, and longest idle time for stateful workflow
+    observability.
+  - Stateful MCP `open_page` and `navigate_to` now preserve structured data and
+    rebuild CDP node maps after SOM compilation.
+  - Stateful MCP click lookup and CDP SOM-id lookup now traverse nested
+    children and shadow-root elements, keeping web-component action targets
+    addressable after navigation.
 
 ## Next Steps
 
 - Extend selector-aware cache use into stateful MCP session navigation once the
   cache can safely preserve the effective HTML needed for replay after a hit.
+- Add stateful-session cache reuse only after the session can restore
+  `effective_html`, structured data, and CDP node maps from a validated cache
+  entry without breaking click/type/evaluate replay.
 - Add trace export for MCP/AWP sessions so users can debug why an agent clicked
   or selected an element.
 - Add conformance cases for ARIA-heavy SaaS pages, especially disabled,
