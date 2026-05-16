@@ -86,6 +86,10 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Pending next step: add cache-restore conformance for repeated `fetch_page` ->
   `open_page` and repeated `navigate_to`, then add trace export for MCP/AWP
   sessions.
+- Commit/push state: created alternate-index commit `ebbf704` (`chore:
+  restore mcp session page cache`), pushed review branch
+  `codex/plasmate-improvements-2026-05-16-session-cache-restore`, and
+  fast-forwarded remote `master` from `c0a9a9d` to `ebbf704`.
 
 ### 2026-05-16T17:07:46Z - Plasmate Improvements Automation
 
