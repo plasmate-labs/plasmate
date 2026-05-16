@@ -73,14 +73,20 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   roadmap, README, Claude Desktop MCP docs, and website doc sources record the
   session-observability rationale and keep the next cache step scoped to
   restoring `effective_html`, structured data, and node maps safely.
-- Verification so far: touched-file rustfmt passed; focused Rust tests passed
-  with `RUSTY_V8_ARCHIVE=/Users/steve/Git/plasmate/target/debug/gn_out/obj/librusty_v8.a`:
-  `cargo test mcp::sessions --quiet`, `cargo test mcp::tools --quiet`, and
-  `cargo test cdp::session --quiet`. Initial focused tests without
-  `RUSTY_V8_ARCHIVE` failed only because DNS could not download `rusty_v8`.
-- Next step: rebuild generated website docs, run broader build/test checks,
-  then commit and push using the alternate-index path if linked worktree Git
-  metadata remains locked.
+- Verification: touched-file rustfmt, focused Rust tests, `cargo check
+  --quiet`, `cargo build --quiet`, `cargo test --lib --quiet` (272 tests),
+  `cargo clippy --quiet` (pre-existing warnings only), `node
+  website/build.mjs`, and `git diff --check` passed. Rust commands used
+  `RUSTY_V8_ARCHIVE=/Users/steve/Git/plasmate/target/debug/gn_out/obj/librusty_v8.a`
+  because DNS cannot download `rusty_v8` from GitHub in this sandbox.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`.
+- Commit/push state: normal branch checkout and commit still cannot write
+  linked worktree Git metadata, so created alternate-index commit `4f35e33`
+  (`chore: expose mcp session observability`), pushed review branch
+  `codex/plasmate-improvements-2026-05-16-session-observability`, and
+  fast-forwarded remote `master` from `cd89e54` to `4f35e33`.
 
 ### 2026-05-16T15:13:18Z - Plasmate Improvements Automation
 
