@@ -1,7 +1,11 @@
 import json
 from pathlib import Path
 
-from langchain_plasmate.som_output import som_to_text
+from langchain_plasmate.som_output import (
+    action_target_index,
+    find_action_target,
+    som_to_text,
+)
 
 
 FIXTURE_PATH = (
@@ -148,3 +152,22 @@ def test_som_to_text_surfaces_interactive_state():
 
     cache_keys = [target["cache_key"] for target in expected_targets]
     assert len(cache_keys) == len(set(cache_keys))
+
+
+def test_action_target_index_resolves_replay_targets():
+    som = load_action_availability_fixture()
+    expected_targets = load_action_availability_expectations()
+    save = next(target for target in expected_targets if target["id"] == "e_save")
+
+    index = action_target_index(som)
+
+    assert index["by_id"]["e_save"]["id"] == "e_save"
+    assert index["by_cache_key"][save["cache_key"]]["id"] == "e_save"
+    assert index["by_html_id"]["save-button"]["id"] == "e_save"
+    assert index["by_test_id"]["settings-save"]["id"] == "e_save"
+    assert index["by_id"]["e_save"]["blocked_reason"] == "disabled"
+    assert find_action_target(som, save["cache_key"], by="cache_key")["id"] == "e_save"
+
+    enabled_index = action_target_index(som, enabled_only=True)
+    assert "e_save" not in enabled_index["by_id"]
+    assert "e_plan" in enabled_index["by_id"]

@@ -133,6 +133,14 @@ compiler emits. Label-only controls and icon links must be searchable,
 link-extractable, and markdown-renderable without agents falling back to raw
 DOM or screenshots.
 
+2026-05-16 framework replay-index read: current browser-agent products keep
+moving reusable action state into app code. Playwright MCP exposes current
+snapshot refs, Stagehand/Browserbase caches validated actions, and hosted
+browser platforms add traces around replay. Plasmate should keep the
+local-first wedge by making Browser Use, LangChain, and Vercel AI resolve
+cached action targets by `cache_key`, `html_id`, and `test_id` directly,
+instead of forcing adapter users to scan action menus or re-walk SOM trees.
+
 2026-05-05 market read: the strongest retention hooks are reusable structured
 state, cached repeated actions, and ecosystem-native distribution. Playwright
 MCP returns accessibility snapshots with stable refs for interaction, Stagehand
@@ -668,6 +676,15 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-16:
+  - Browser Use now exposes `extract_action_plan_index()` and async parity so
+    agents can resolve replay targets by SOM id, deterministic `cache_key`,
+    original `html_id`, or `test_id` with optional enabled-only filtering.
+  - LangChain now exports `action_target_index()` and `find_action_target()`
+    for raw SOM dictionaries, giving app code cache-key, DOM-id, and test-id
+    lookup without bespoke tree scans.
+  - Vercel AI now exports `indexPlasmateActionTargets()` and
+    `findPlasmateActionTarget()` for prepared action menus, preserving the
+    existing unavailable-target filtering defaults.
   - Rust SOM attrs and JSON Schema now preserve link navigation validation
     cues: `hreflang`, link MIME `type`, and `referrerpolicy`.
   - Python/Node parser packages, Python/Node/Go SDKs, Browser Use, LangChain,
@@ -1208,6 +1225,10 @@ and adapter docs over one-off integration logic.
   - Updated roadmap direction around cached structured actions, MCP
     distribution, and accessibility/SOM parity.
 - 2026-05-16:
+  - Browser Use, LangChain, and Vercel AI framework integrations now expose
+    compact action-target indexes/finders by id, `cache_key`, `html_id`, and
+    `test_id`, moving replay lookup parity from SDK/parser packages into app
+    framework surfaces.
   - Added shared selector support for element roles such as `button`, `link`,
     `text_input`, and `select`, so CLI and MCP callers can request compact SOM
     slices around the controls they plan to use.
@@ -1337,9 +1358,9 @@ and adapter docs over one-off integration logic.
 - Promote locator-provenance cases (`title`, `source_role`, and `test_id`)
   into broader Rust/parser/SDK and adapter conformance fixtures so local
   replay can use developer-authored anchors without destabilizing cache keys.
-- Promote compact action target lookup/index helpers into Browser Use,
-  LangChain, and Vercel AI so framework integrations can resolve replay
-  targets by `cache_key`, `html_id`, and `test_id` without bespoke scans.
+- Promote the Browser Use, LangChain, and Vercel AI lookup/index helpers into
+  cross-adapter release fixtures so replay target resolution keeps matching
+  parser and SDK behavior.
 - Promote drag/drop replay cues (`draggable`, `aria-grabbed`, and
   `aria-dropeffect`) into broader Rust/parser/SDK and adapter conformance
   fixtures for board, builder, and scheduling workflows.

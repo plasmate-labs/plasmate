@@ -193,6 +193,105 @@ def _action_cache_key(elem: dict[str, Any]) -> str:
     return f"plasmate-action:v1:{_fnv1a32(encoded)}"
 
 
+def _iter_elements(elements: list[dict[str, Any]]):
+    for elem in elements:
+        yield elem
+        children = elem.get("children")
+        if isinstance(children, list):
+            yield from _iter_elements(children)
+        shadow = elem.get("shadow")
+        shadow_elements = shadow.get("elements") if isinstance(shadow, dict) else None
+        if isinstance(shadow_elements, list):
+            yield from _iter_elements(shadow_elements)
+
+
+def _action_target_from_element(elem: dict[str, Any]) -> dict[str, Any]:
+    attrs = elem.get("attrs") or {}
+    aria = attrs.get("aria") if isinstance(attrs.get("aria"), dict) else {}
+    readonly = attrs.get("readonly") is True or aria.get("readonly") is True
+    disabled = attrs.get("disabled") is True
+    inert = attrs.get("inert") is True
+    enabled = not (disabled or inert or readonly)
+    target: dict[str, Any] = {
+        "id": elem.get("id"),
+        "cache_key": _action_cache_key(elem),
+        "role": elem.get("role"),
+        "actions": elem.get("actions") or [],
+        "enabled": enabled,
+    }
+    label = elem.get("label") or elem.get("text")
+    if label:
+        target["label"] = label
+    if elem.get("html_id"):
+        target["html_id"] = elem["html_id"]
+    if attrs.get("test_id"):
+        target["test_id"] = attrs["test_id"]
+    if disabled:
+        target["disabled"] = True
+        target["blocked_reason"] = "disabled"
+    elif inert:
+        target["inert"] = True
+        target["blocked_reason"] = "inert"
+    elif readonly:
+        target["readonly"] = True
+        target["blocked_reason"] = "readonly"
+    return target
+
+
+def action_target_index(
+    som: dict[str, Any], *, enabled_only: bool = False
+) -> dict[str, dict[str, dict[str, Any]]]:
+    """Return compact action targets indexed for replay lookups.
+
+    Buckets match the parser/SDK contract: ``by_id``, ``by_cache_key``,
+    ``by_html_id``, and ``by_test_id``. Values are compact target summaries
+    suitable for resolving a cached action back to a SOM element id.
+    """
+    index: dict[str, dict[str, dict[str, Any]]] = {
+        "by_id": {},
+        "by_cache_key": {},
+        "by_html_id": {},
+        "by_test_id": {},
+    }
+    for region in som.get("regions", []):
+        for elem in _iter_elements(region.get("elements", [])):
+            if not elem.get("actions"):
+                continue
+            target = _action_target_from_element(elem)
+            if enabled_only and target.get("enabled") is False:
+                continue
+            for source_key, bucket_key in (
+                ("id", "by_id"),
+                ("cache_key", "by_cache_key"),
+                ("html_id", "by_html_id"),
+                ("test_id", "by_test_id"),
+            ):
+                value = target.get(source_key)
+                if isinstance(value, str) and value not in index[bucket_key]:
+                    index[bucket_key][value] = target
+    return index
+
+
+def find_action_target(
+    som: dict[str, Any],
+    value: str,
+    *,
+    by: str = "id",
+    enabled_only: bool = False,
+) -> dict[str, Any] | None:
+    """Find one compact action target by id, cache key, HTML id, or test id."""
+    buckets = {
+        "id": "by_id",
+        "cache_key": "by_cache_key",
+        "html_id": "by_html_id",
+        "test_id": "by_test_id",
+    }
+    bucket = buckets.get(by)
+    if bucket is None:
+        raise ValueError("by must be one of: id, cache_key, html_id, test_id")
+    return action_target_index(som, enabled_only=enabled_only)[bucket].get(value)
+
+
 def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> str:
     attrs = elem.get("attrs") or {}
     flags: list[str] = []

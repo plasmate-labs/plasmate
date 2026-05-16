@@ -1,6 +1,8 @@
 import {
   extractPlasmateActionTargets,
+  findPlasmateActionTarget,
   formatPlasmateActionPlan,
+  indexPlasmateActionTargets,
   isPlasmateActionTargetAvailable,
   normalizePlasmateActionTarget,
   preparePlasmateActionPlan,
@@ -38,6 +40,11 @@ const fixtureTargets: PlasmateActionTarget[] = [
 
 const normalized = normalizePlasmateActionTarget(fixtureTargets[1])
 const availableOnly = preparePlasmateActionPlan(fixtureTargets)
+const indexedTargets = indexPlasmateActionTargets(fixtureTargets)
+const targetByCacheKey = findPlasmateActionTarget(fixtureTargets, normalized.cache_key ?? '', {
+  by: 'cache_key',
+  includeUnavailable: true,
+})
 const visiblePromptMenu = formatPlasmateActionPlan(fixtureTargets, {
   maxTargets: 2,
 })
@@ -74,3 +81,5 @@ const shouldBeString: string = visiblePromptMenu
 
 void shouldBeBoolean
 void shouldBeString
+void indexedTargets
+void targetByCacheKey

@@ -1112,6 +1112,24 @@ and label-only controls that otherwise disappear from search or markdown views.
 3. **Markdown is agent context**: parser markdown renderers should preserve
    label-only links instead of emitting empty link text.
 
+### 2026-05-16 Framework Replay Lookup Adjustment
+
+Competitor pressure keeps moving reusable action state from browser engines
+into application code. Playwright MCP gives agents snapshot-scoped refs,
+Stagehand/Browserbase makes validated cached actions a workflow primitive, and
+hosted browser tools wrap replay with traces. Plasmate's local-first answer is
+to let framework adapters resolve cached action targets by stable local
+identifiers instead of forcing every app to scan compact menus.
+
+1. **Framework helpers should index targets**: Browser Use, LangChain, and
+   Vercel AI need first-class lookup buckets for SOM id, `cache_key`,
+   `html_id`, and `test_id`.
+2. **Defaults should stay action-safe**: enabled-only filtering should remain
+   the easy path where the framework already filters unavailable targets.
+3. **Release fixtures are next**: framework lookup helpers should be promoted
+   into shared cross-adapter conformance so replay resolution keeps matching
+   parser and SDK behavior.
+
 ## Architecture
 
 ```
@@ -1630,10 +1648,13 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   effective-HTML presence alongside SOM and node-map inventory.
 - Python and Node SDK text search now matches label-only controls, and Python
   plus Node parser link/markdown helpers preserve label-only accessible links.
+- Browser Use now exposes sync/async indexed action-plan extraction; LangChain
+  now exports raw-SOM action target indexes/finders; and Vercel AI now exports
+  action-target indexes/finders for prepared menus.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, `html_id` DOM-provenance cases,
-  label-only link/control parity, and action target lookup/index helpers into
+  label-only link/control parity, and framework replay lookup helpers into
   broader fixtures alongside drag/drop, link replay, ARIA naming provenance,
   text-entry, ARIA widget, range, and set-position cases.
 

@@ -49,6 +49,40 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-16T20:10:06Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch origin --prune` still fails in the linked
+  automation worktree because shared `FETCH_HEAD` cannot be opened; fallback
+  fetch/ls-remote from the primary checkout still cannot resolve `github.com`.
+  Work continued from newest locally known `origin/master` `1b482c7`.
+- Market direction: current docs and launch notes keep rewarding validated
+  action reuse. Playwright MCP exposes fresh accessibility snapshot refs,
+  Browserbase/Stagehand markets action caching with validation and
+  observability, Cloudflare Browser Run is expanding MCP/CDP/WebMCP hosted
+  sessions, and Firecrawl keeps broad MCP/browser-session distribution. No
+  hosted-browser pivot is recommended; the stickier move is framework replay
+  lookup parity over local SOM action targets.
+- Code changes: Browser Use now exposes sync/async
+  `extract_action_plan_index()` for `by_id`, `by_cache_key`, `by_html_id`, and
+  `by_test_id` lookups. LangChain now exports `action_target_index()` and
+  `find_action_target()` for raw SOM dictionaries. Vercel AI now exports
+  `indexPlasmateActionTargets()` and `findPlasmateActionTarget()` for prepared
+  action menus while preserving default unavailable-target filtering.
+- Tests/docs: added focused Browser Use, LangChain, and Vercel AI tests for
+  replay lookup buckets and enabled-only filtering. Updated adapter READMEs,
+  shared fixture docs, PRD, roadmap, website doc sources, and generated website
+  docs with the framework replay-index rationale and next fixture step.
+- Verification passed: Browser Use adapter tests, LangChain adapter tests,
+  Vercel AI typecheck and tests via a temporary symlink to the primary
+  checkout's `node_modules`, `./scripts/action-manifest-conformance.sh
+  --quick` with temporary Node dependency symlinks, `node website/build.mjs`,
+  `cargo build --quiet`, `cargo test --lib --quiet` (273 tests), and
+  `git diff --check`. Rust commands used
+  `RUSTY_V8_ARCHIVE=/Users/steve/Git/plasmate/target/debug/gn_out/obj/librusty_v8.a`.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`.
+
 ### 2026-05-16T19:25:28Z - Plasmate Improvements Automation
 
 - Git sync: while rebasing onto the newest local `origin/master` (`2c73499`),

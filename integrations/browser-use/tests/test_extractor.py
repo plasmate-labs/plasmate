@@ -151,3 +151,24 @@ def test_build_context_surfaces_action_availability():
 
     cache_keys = [target["cache_key"] for target in expected_targets]
     assert len(cache_keys) == len(set(cache_keys))
+
+
+def test_extract_action_plan_index_exposes_replay_lookup_buckets():
+    extractor = PlasmateExtractor.__new__(PlasmateExtractor)
+    som = load_action_availability_fixture()
+    expected_targets = load_action_availability_expectations()
+    extractor.extract = lambda url: som
+
+    index = extractor.extract_action_plan_index("https://example.com/settings")
+    save = next(target for target in expected_targets if target["id"] == "e_save")
+
+    assert index["by_id"]["e_save"] == save
+    assert index["by_cache_key"][save["cache_key"]] == save
+    assert index["by_html_id"]["save-button"] == save
+    assert index["by_test_id"]["settings-save"] == save
+
+    enabled_index = extractor.extract_action_plan_index(
+        "https://example.com/settings", enabled_only=True
+    )
+    assert "e_save" not in enabled_index["by_id"]
+    assert "e_plan" in enabled_index["by_id"]

@@ -49,3 +49,8 @@ Browser Use, LangChain, and Vercel AI adapters against the same expectation
 manifest. CI runs the quick gate on pull requests and pushes; maintainers should
 use the full gate before changing action-plan semantics or publishing SDK and
 adapter releases.
+
+Framework adapters also expose replay lookup helpers over this contract:
+Browser Use returns indexed action plans from `extract_action_plan_index()`,
+LangChain exposes `action_target_index()` / `find_action_target()`, and Vercel
+AI exposes `indexPlasmateActionTargets()` / `findPlasmateActionTarget()`.

@@ -81,6 +81,15 @@ for action in actions:
         print(action["id"], action["cache_key"], action["role"], action["actions"])
 ```
 
+Use `extract_action_plan_index()` when a Browser Use workflow needs to resolve
+a cached action back to a current SOM target without scanning the menu:
+
+```python
+index = extractor.extract_action_plan_index("https://example.com/settings")
+target = index["by_cache_key"]["plasmate-action:v1:..."]
+print(target["id"], target.get("html_id"), target.get("test_id"))
+```
+
 Browser Use page contexts are tested against the shared
 `integrations/fixtures/action-availability.som.json` fixture so availability,
 cache-key, required, readonly, inert, group, type, value, checked, expanded, pressed,

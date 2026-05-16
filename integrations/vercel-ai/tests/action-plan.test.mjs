@@ -3,8 +3,10 @@ import { readFile } from 'node:fs/promises'
 
 import {
   extractPlasmateActionTargets,
+  findPlasmateActionTarget,
   formatPlasmateActionPlan,
   getPlasmateActionTargetCacheKey,
+  indexPlasmateActionTargets,
   isPlasmateActionTargetAvailable,
   preparePlasmateActionPlan,
 } from '../dist/index.js'
@@ -101,6 +103,25 @@ assert.equal(save.formmethod, 'post')
 assert.equal(save.formenctype, 'application/x-www-form-urlencoded')
 assert.equal(save.formtarget, '_top')
 assert.equal(save.formnovalidate, true)
+
+const targetIndex = indexPlasmateActionTargets(targets, {
+  includeUnavailable: true,
+})
+assert.deepEqual(targetIndex.by_id.e_save, save)
+assert.deepEqual(targetIndex.by_cache_key[save.cache_key], save)
+assert.deepEqual(targetIndex.by_html_id['save-button'], save)
+assert.deepEqual(targetIndex.by_test_id['settings-save'], save)
+assert.deepEqual(
+  findPlasmateActionTarget(targets, save.cache_key, {
+    by: 'cache_key',
+    includeUnavailable: true,
+  }),
+  save
+)
+
+const enabledTargetIndex = indexPlasmateActionTargets(targets)
+assert.equal(enabledTargetIndex.by_id.e_save, undefined)
+assert.equal(enabledTargetIndex.by_id.e_plan.id, 'e_plan')
 
 const preview = targets.find((target) => target.id === 'e_preview')
 assert.equal(isPlasmateActionTargetAvailable(preview), false)

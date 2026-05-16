@@ -184,6 +184,13 @@ export interface PreparePlasmateActionPlanOptions {
   maxTargets?: number
 }
 
+export interface PlasmateActionTargetIndex {
+  by_id: Record<string, PlasmateActionTarget>
+  by_cache_key: Record<string, PlasmateActionTarget>
+  by_html_id: Record<string, PlasmateActionTarget>
+  by_test_id: Record<string, PlasmateActionTarget>
+}
+
 /**
  * System prompt guidance for Vercel AI SDK agents using Plasmate tools.
  *
@@ -588,6 +595,56 @@ export function preparePlasmateActionPlan(
   }
 
   return prepared
+}
+
+/**
+ * Return action targets indexed by replay-friendly identifiers.
+ */
+export function indexPlasmateActionTargets(
+  targets: readonly PlasmateActionTarget[],
+  options: PreparePlasmateActionPlanOptions = {}
+): PlasmateActionTargetIndex {
+  const index: PlasmateActionTargetIndex = {
+    by_id: {},
+    by_cache_key: {},
+    by_html_id: {},
+    by_test_id: {},
+  }
+
+  for (const target of preparePlasmateActionPlan(targets, options)) {
+    if (typeof target.id === 'string' && !index.by_id[target.id]) {
+      index.by_id[target.id] = target
+    }
+    if (typeof target.cache_key === 'string' && !index.by_cache_key[target.cache_key]) {
+      index.by_cache_key[target.cache_key] = target
+    }
+    if (typeof target.html_id === 'string' && !index.by_html_id[target.html_id]) {
+      index.by_html_id[target.html_id] = target
+    }
+    if (typeof target.test_id === 'string' && !index.by_test_id[target.test_id]) {
+      index.by_test_id[target.test_id] = target
+    }
+  }
+
+  return index
+}
+
+/**
+ * Find one action target by id, cache key, HTML id, or test id.
+ */
+export function findPlasmateActionTarget(
+  targets: readonly PlasmateActionTarget[],
+  value: string,
+  options: PreparePlasmateActionPlanOptions & {
+    by?: 'id' | 'cache_key' | 'html_id' | 'test_id'
+  } = {}
+): PlasmateActionTarget | undefined {
+  const index = indexPlasmateActionTargets(targets, options)
+  const by = options.by ?? 'id'
+  if (by === 'cache_key') return index.by_cache_key[value]
+  if (by === 'html_id') return index.by_html_id[value]
+  if (by === 'test_id') return index.by_test_id[value]
+  return index.by_id[value]
 }
 
 /**

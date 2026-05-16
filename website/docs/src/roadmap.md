@@ -487,6 +487,14 @@ Current browser-agent tools keep making human-facing names the unit of interacti
 - **Link inventories need accessible names**: parser `get_links()` helpers should fall back to labels so icon links remain usable in summaries.
 - **Markdown is agent context**: parser markdown renderers should preserve label-only links instead of emitting empty link text.
 
+### 2026-05-16 Framework Replay Lookup Adjustment
+
+Competitor pressure keeps moving reusable action state from browser engines into application code. Playwright MCP gives agents snapshot-scoped refs, Stagehand/Browserbase makes validated cached actions a workflow primitive, and hosted browser tools wrap replay with traces. Plasmate's local-first answer is to let framework adapters resolve cached action targets by stable local identifiers instead of forcing every app to scan compact menus.
+
+- **Framework helpers should index targets**: Browser Use, LangChain, and Vercel AI need first-class lookup buckets for SOM id, `cache_key`, `html_id`, and `test_id`.
+- **Defaults should stay action-safe**: enabled-only filtering should remain the easy path where the framework already filters unavailable targets.
+- **Release fixtures are next**: framework lookup helpers should be promoted into shared cross-adapter conformance so replay resolution keeps matching parser and SDK behavior.
+
 ## Completed (v0.1.1)
 
 - SOM compiler with 9.4x median compression across 38 sites
@@ -708,12 +716,13 @@ Current browser-agent tools keep making human-facing names the unit of interacti
 - [x] MCP cache_status/session_status expose effective-HTML replay inventory
 - [x] Python and Node SDK text search matches label-only controls
 - [x] Python and Node parser link/markdown helpers preserve label-only accessible links
+- [x] Browser Use, LangChain, and Vercel AI expose action-target replay lookup helpers
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
 - [ ] Promote html_id DOM-provenance cases into adapter conformance fixtures
 - [ ] Promote locator-provenance cases into broader Rust/parser/SDK and adapter conformance fixtures
-- [ ] Promote action target lookup/index helpers into Browser Use, LangChain, and Vercel AI
+- [ ] Promote framework replay lookup helpers into shared cross-adapter fixtures
 - [ ] Add cross-adapter fixtures for enriched compact action-plan metadata
 - [ ] Promote ARIA relationship-state cases, including owns/flowto/details, into the broader action-state/action-semantics conformance suites
 - [ ] Promote range and orientation cases into broader parser, SDK, and adapter conformance fixtures

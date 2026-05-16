@@ -131,6 +131,26 @@ Normalizes a list of action targets, filters unavailable targets by default,
 and optionally caps the returned menu with `maxTargets`. Pass
 `includeUnavailable: true` when you want a trace or UI to show blocked targets.
 
+### `indexPlasmateActionTargets(targets, options?)`
+
+Returns normalized action targets indexed by `by_id`, `by_cache_key`,
+`by_html_id`, and `by_test_id`. Use this when cached Vercel AI workflows need
+to resolve a saved target without scanning the full action menu.
+
+### `findPlasmateActionTarget(targets, value, options?)`
+
+Finds one action target by `id`, `cache_key`, `html_id`, or `test_id`.
+
+```ts
+const index = indexPlasmateActionTargets(actionTargets, {
+  includeUnavailable: true,
+})
+const save = findPlasmateActionTarget(actionTargets, 'settings-save', {
+  by: 'test_id',
+  includeUnavailable: true,
+})
+```
+
 ### `formatPlasmateActionPlan(targets, options?)`
 
 Formats a prepared action menu as compact prompt text:
