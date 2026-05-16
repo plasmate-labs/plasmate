@@ -76,6 +76,13 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   (259 tests), and `git diff --check`. Full `cargo test --quiet` still fails
   only in `tests/awp_integration_test.rs` because this sandbox denies local
   listener setup with `Operation not permitted`.
+- Rebase/merge state: the label-parity changes were replayed onto current
+  local `origin/master` `2c73499` as `4e5c0dc` and pushed to both
+  `origin/codex/plasmate-improvements-2026-05-16-label-parity` and
+  `origin/master`. Post-rebase verification passed: Node SDK tests (26),
+  Python SDK query tests (41), Python parser tests (74), Node parser tests
+  (59), Node parser build, website docs generation, `cargo build --quiet`,
+  `cargo test --lib --quiet` (273 tests), and `git diff --check`.
 
 ### 2026-05-16T19:06:51Z - Plasmate Improvements Automation
 
