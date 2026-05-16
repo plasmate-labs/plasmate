@@ -51,6 +51,10 @@ export type {
 
 export {
   findByRole,
+  findActionTargetByCacheKey,
+  findActionTargetByHtmlId,
+  findActionTargetById,
+  findActionTargetByTestId,
   findById,
   findByHtmlId,
   findByTag,
@@ -59,6 +63,8 @@ export {
   flatElements,
   getActionPlan,
   getActionPlanCacheKey,
+  getActionPlanIndex,
+  getEnabledActionPlan,
   getTokenEstimate,
 } from './query';
 

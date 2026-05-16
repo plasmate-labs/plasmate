@@ -51,6 +51,9 @@ type ElementAttrs struct {
 	Href            *string        `json:"href,omitempty"`
 	Target          *string        `json:"target,omitempty"`
 	Rel             *string        `json:"rel,omitempty"`
+	HrefLang        *string        `json:"hreflang,omitempty"`
+	Type            *string        `json:"type,omitempty"`
+	ReferrerPolicy  *string        `json:"referrerpolicy,omitempty"`
 	Download        interface{}    `json:"download,omitempty"`
 	InputType       *string        `json:"input_type,omitempty"`
 	Value           *string        `json:"value,omitempty"`
@@ -79,7 +82,11 @@ type ElementAttrs struct {
 	ContentEditable interface{}    `json:"contenteditable,omitempty"`
 	TabIndex        interface{}    `json:"tabindex,omitempty"`
 	AccessKey       *string        `json:"accesskey,omitempty"`
+	Title           *string        `json:"title,omitempty"`
+	SourceRole      *string        `json:"source_role,omitempty"`
+	TestID          *string        `json:"test_id,omitempty"`
 	Spellcheck      interface{}    `json:"spellcheck,omitempty"`
+	Draggable       interface{}    `json:"draggable,omitempty"`
 	Name            *string        `json:"name,omitempty"`
 	Accept          *string        `json:"accept,omitempty"`
 	Capture         interface{}    `json:"capture,omitempty"`
@@ -150,6 +157,8 @@ type AriaState struct {
 	Level            *string     `json:"level,omitempty"`
 	PosInSet         *string     `json:"posinset,omitempty"`
 	SetSize          *string     `json:"setsize,omitempty"`
+	Grabbed          *bool       `json:"grabbed,omitempty"`
+	DropEffect       *string     `json:"dropeffect,omitempty"`
 	ValueMin         *string     `json:"valuemin,omitempty"`
 	ValueMax         *string     `json:"valuemax,omitempty"`
 	ValueNow         *string     `json:"valuenow,omitempty"`

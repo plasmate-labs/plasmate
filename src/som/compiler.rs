@@ -1816,6 +1816,15 @@ fn build_element_attrs(
             if let Some((_, rel)) = attrs.iter().find(|(n, _)| n == "rel") {
                 map.insert("rel".into(), json!(rel));
             }
+            if let Some((_, hreflang)) = attrs.iter().find(|(n, _)| n == "hreflang") {
+                map.insert("hreflang".into(), json!(hreflang));
+            }
+            if let Some((_, link_type)) = attrs.iter().find(|(n, _)| n == "type") {
+                map.insert("type".into(), json!(link_type));
+            }
+            if let Some((_, referrerpolicy)) = attrs.iter().find(|(n, _)| n == "referrerpolicy") {
+                map.insert("referrerpolicy".into(), json!(referrerpolicy));
+            }
             if let Some((_, download)) = attrs.iter().find(|(n, _)| n == "download") {
                 let download = if download.is_empty() {
                     json!(true)
@@ -2068,6 +2077,15 @@ fn build_element_attrs(
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "accesskey") {
         map.insert("accesskey".into(), json!(value));
     }
+    if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "title") {
+        map.insert("title".into(), json!(value));
+    }
+    if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "role") {
+        map.insert("source_role".into(), json!(value));
+    }
+    if let Some(test_id) = extract_test_id(attrs) {
+        map.insert("test_id".into(), json!(test_id));
+    }
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "spellcheck") {
         let normalized = value.trim().to_ascii_lowercase();
         let spellcheck = match normalized.as_str() {
@@ -2076,6 +2094,15 @@ fn build_element_attrs(
             _ => json!(value),
         };
         map.insert("spellcheck".into(), spellcheck);
+    }
+    if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "draggable") {
+        let normalized = value.trim().to_ascii_lowercase();
+        let draggable = match normalized.as_str() {
+            "true" => json!(true),
+            "false" => json!(false),
+            _ => json!(value),
+        };
+        map.insert("draggable".into(), draggable);
     }
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "name") {
         map.insert("name".into(), json!(value));
@@ -2175,6 +2202,8 @@ fn build_element_attrs(
         ("aria-level", "level"),
         ("aria-posinset", "posinset"),
         ("aria-setsize", "setsize"),
+        ("aria-grabbed", "grabbed"),
+        ("aria-dropeffect", "dropeffect"),
         ("aria-valuemin", "valuemin"),
         ("aria-valuemax", "valuemax"),
         ("aria-valuenow", "valuenow"),
@@ -2653,6 +2682,18 @@ fn extract_html_id(attrs: &[(String, String)]) -> Option<String> {
         .filter(|v| !v.is_empty())
 }
 
+fn extract_test_id(attrs: &[(String, String)]) -> Option<String> {
+    for key in ["data-testid", "data-test", "data-qa"] {
+        if let Some((_, value)) = attrs.iter().find(|(n, _)| n == key) {
+            let value = value.trim();
+            if !value.is_empty() {
+                return Some(value.to_string());
+            }
+        }
+    }
+    None
+}
+
 fn count_links(node: &Handle) -> usize {
     let mut count = 0;
     if let NodeData::Element { name, attrs, .. } = &node.data {
@@ -2908,7 +2949,7 @@ mod tests {
 <html><head><title>Actions</title></head>
 <body>
 <main>
-  <button accesskey="s" aria-keyshortcuts="Meta+S" aria-roledescription="primary action">Save</button>
+  <button accesskey="s" title="Save settings" role="button menuitem" data-testid="save-action" aria-keyshortcuts="Meta+S" aria-roledescription="primary action">Save</button>
 </main>
 </body>
 </html>"#;
@@ -2923,8 +2964,42 @@ mod tests {
         let attrs = button.attrs.as_ref().expect("button attrs should compile");
 
         assert_eq!(attrs["accesskey"], "s");
+        assert_eq!(attrs["title"], "Save settings");
+        assert_eq!(attrs["source_role"], "button menuitem");
+        assert_eq!(attrs["test_id"], "save-action");
         assert_eq!(attrs["aria"]["keyshortcuts"], "Meta+S");
         assert_eq!(attrs["aria"]["roledescription"], "primary action");
+    }
+
+    #[test]
+    fn test_test_id_fallback_attrs_are_preserved() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Actions</title></head>
+<body>
+<main>
+  <button data-test="secondary-action">Preview</button>
+  <button data-qa="tertiary-action">Cancel</button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.com").unwrap();
+        let buttons: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .filter(|element| element.role == ElementRole::Button)
+            .collect();
+
+        assert_eq!(buttons.len(), 2);
+        assert_eq!(
+            buttons[0].attrs.as_ref().unwrap()["test_id"],
+            "secondary-action"
+        );
+        assert_eq!(
+            buttons[1].attrs.as_ref().unwrap()["test_id"],
+            "tertiary-action"
+        );
     }
 
     #[test]
@@ -3201,5 +3276,29 @@ mod tests {
         assert_eq!(attrs["autocapitalize"], "sentences");
         assert_eq!(attrs["dirname"], "reply.dir");
         assert_eq!(attrs["aria"]["placeholder"], "Write a response");
+    }
+
+    #[test]
+    fn test_drag_action_cues_are_preserved() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Board</title></head>
+<body>
+<main>
+  <button draggable="true" aria-grabbed="true" aria-dropeffect="move">Move card</button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.com").unwrap();
+        let button = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| element.role == ElementRole::Button)
+            .expect("draggable button should compile");
+        let attrs = button.attrs.as_ref().expect("button attrs should compile");
+        assert_eq!(attrs["draggable"], true);
+        assert_eq!(attrs["aria"]["grabbed"], true);
+        assert_eq!(attrs["aria"]["dropeffect"], "move");
     }
 }

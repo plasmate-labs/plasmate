@@ -188,6 +188,12 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["target"] = attrs.target
             if attrs.rel:
                 item["rel"] = attrs.rel
+            if attrs.hreflang:
+                item["hreflang"] = attrs.hreflang
+            if attrs.type:
+                item["type"] = attrs.type
+            if attrs.referrerpolicy:
+                item["referrerpolicy"] = attrs.referrerpolicy
             if attrs.download is not None:
                 item["download"] = attrs.download
             if attrs.name:
@@ -240,8 +246,16 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["formnovalidate"] = attrs.formnovalidate
             if attrs.accesskey:
                 item["accesskey"] = attrs.accesskey
+            if attrs.title:
+                item["title"] = attrs.title
+            if attrs.source_role:
+                item["source_role"] = attrs.source_role
+            if attrs.test_id:
+                item["test_id"] = attrs.test_id
             if attrs.spellcheck is not None:
                 item["spellcheck"] = attrs.spellcheck
+            if attrs.draggable is not None:
+                item["draggable"] = attrs.draggable
             if attrs.input_type:
                 item["input_type"] = attrs.input_type
             if attrs.value:
@@ -296,6 +310,8 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                     "level",
                     "posinset",
                     "setsize",
+                    "grabbed",
+                    "dropeffect",
                     "valuemin",
                     "valuemax",
                     "valuenow",
@@ -336,6 +352,63 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
         item["cache_key"] = get_action_plan_cache_key(item)
         plan.append(item)
     return plan
+
+
+def get_enabled_action_plan(som: Som) -> List[Dict[str, object]]:
+    """Return compact action targets that are currently safe to offer."""
+    return [item for item in get_action_plan(som) if item.get("enabled") is not False]
+
+
+def get_action_plan_index(
+    som: Som, *, enabled_only: bool = False
+) -> Dict[str, Dict[str, Dict[str, object]]]:
+    """Return action targets indexed by id, cache key, HTML id, and test id."""
+    plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
+    index: Dict[str, Dict[str, Dict[str, object]]] = {
+        "by_id": {},
+        "by_cache_key": {},
+        "by_html_id": {},
+        "by_test_id": {},
+    }
+    for item in plan:
+        for source_key, bucket_key in (
+            ("id", "by_id"),
+            ("cache_key", "by_cache_key"),
+            ("html_id", "by_html_id"),
+            ("test_id", "by_test_id"),
+        ):
+            value = item.get(source_key)
+            if isinstance(value, str) and value not in index[bucket_key]:
+                index[bucket_key][value] = item
+    return index
+
+
+def find_action_target_by_id(
+    som: Som, target_id: str
+) -> Optional[Dict[str, object]]:
+    """Return the compact action target matching a SOM element id."""
+    return get_action_plan_index(som)["by_id"].get(target_id)
+
+
+def find_action_target_by_cache_key(
+    som: Som, cache_key: str
+) -> Optional[Dict[str, object]]:
+    """Return the compact action target matching a deterministic cache key."""
+    return get_action_plan_index(som)["by_cache_key"].get(cache_key)
+
+
+def find_action_target_by_html_id(
+    som: Som, html_id: str
+) -> Optional[Dict[str, object]]:
+    """Return the compact action target matching an original HTML id."""
+    return get_action_plan_index(som)["by_html_id"].get(html_id)
+
+
+def find_action_target_by_test_id(
+    som: Som, test_id: str
+) -> Optional[Dict[str, object]]:
+    """Return the compact action target matching a test locator attribute."""
+    return get_action_plan_index(som)["by_test_id"].get(test_id)
 
 
 def get_links(som: Som) -> List[Dict[str, Optional[str]]]:

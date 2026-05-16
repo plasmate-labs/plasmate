@@ -79,6 +79,9 @@ export interface SomElementAttrs {
   href?: string;
   target?: string;
   rel?: string;
+  hreflang?: string;
+  type?: string;
+  referrerpolicy?: string;
   download?: boolean | string;
   input_type?: string;
   value?: string;
@@ -107,7 +110,11 @@ export interface SomElementAttrs {
   contenteditable?: boolean | string;
   tabindex?: number | string;
   accesskey?: string;
+  title?: string;
+  source_role?: string;
+  test_id?: string;
   spellcheck?: boolean | string;
+  draggable?: boolean | string;
   name?: string;
   accept?: string;
   capture?: boolean | string;
@@ -177,6 +184,8 @@ export interface AriaState {
   level?: string;
   posinset?: string;
   setsize?: string;
+  grabbed?: boolean;
+  dropeffect?: string;
   valuemin?: string;
   valuemax?: string;
   valuenow?: string;

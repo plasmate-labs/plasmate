@@ -223,6 +223,29 @@ fn test_news_page_structure() {
 }
 
 #[test]
+fn test_link_navigation_metadata_is_preserved() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Link Metadata</title></head>
+<body><main>
+    <a href="/fr/billing" target="_blank" rel="alternate noopener" hreflang="fr" type="text/html" referrerpolicy="no-referrer">Facturation</a>
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let link = all_elements(&som)
+        .into_iter()
+        .find(|element| element.role == ElementRole::Link)
+        .expect("link should compile");
+    let attrs = link.attrs.as_ref().expect("link attrs should be present");
+
+    assert_eq!(attrs["href"], "/fr/billing");
+    assert_eq!(attrs["target"], "_blank");
+    assert_eq!(attrs["rel"], "alternate noopener");
+    assert_eq!(attrs["hreflang"], "fr");
+    assert_eq!(attrs["type"], "text/html");
+    assert_eq!(attrs["referrerpolicy"], "no-referrer");
+}
+
+#[test]
 fn test_deterministic_ids_across_compiles() {
     let html = load_fixture("simple_page.html");
     let j1 =

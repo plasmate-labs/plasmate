@@ -542,6 +542,78 @@ func TestGetActionPlanMatchesSharedAvailabilityManifest(t *testing.T) {
 	}
 }
 
+func TestActionPlanLookupHelpers(t *testing.T) {
+	somBytes, err := os.ReadFile("../../integrations/fixtures/action-availability.som.json")
+	if err != nil {
+		t.Fatalf("ReadFile SOM fixture failed: %v", err)
+	}
+	som, err := Parse(somBytes)
+	if err != nil {
+		t.Fatalf("Parse fixture failed: %v", err)
+	}
+
+	save := FindActionTargetByID(som, "e_save")
+	if save == nil {
+		t.Fatal("FindActionTargetByID missing e_save")
+	}
+	if save.HTMLID == nil || *save.HTMLID != "save-button" {
+		t.Fatalf("HTMLID = %v, want save-button", save.HTMLID)
+	}
+	if save.TestID == nil || *save.TestID != "settings-save" {
+		t.Fatalf("TestID = %v, want settings-save", save.TestID)
+	}
+	if byCache := FindActionTargetByCacheKey(som, save.CacheKey); byCache == nil || byCache.ID != save.ID {
+		t.Fatalf("FindActionTargetByCacheKey = %#v, want %s", byCache, save.ID)
+	}
+	if byHTML := FindActionTargetByHTMLID(som, "save-button"); byHTML == nil || byHTML.ID != save.ID {
+		t.Fatalf("FindActionTargetByHTMLID = %#v, want %s", byHTML, save.ID)
+	}
+	if byTest := FindActionTargetByTestID(som, "settings-save"); byTest == nil || byTest.ID != save.ID {
+		t.Fatalf("FindActionTargetByTestID = %#v, want %s", byTest, save.ID)
+	}
+
+	index := GetActionPlanIndex(som)
+	if index.ByID["e_save"].ID != save.ID {
+		t.Fatalf("ByID[e_save] = %#v, want %s", index.ByID["e_save"], save.ID)
+	}
+	if index.ByCacheKey[save.CacheKey].ID != save.ID {
+		t.Fatalf("ByCacheKey[%s] missing save target", save.CacheKey)
+	}
+	if index.ByHTMLID["save-button"].ID != save.ID {
+		t.Fatalf("ByHTMLID[save-button] missing save target")
+	}
+	if index.ByTestID["settings-save"].ID != save.ID {
+		t.Fatalf("ByTestID[settings-save] missing save target")
+	}
+}
+
+func TestEnabledActionPlanIndexFiltersBlockedTargets(t *testing.T) {
+	somBytes, err := os.ReadFile("../../integrations/fixtures/action-availability.som.json")
+	if err != nil {
+		t.Fatalf("ReadFile SOM fixture failed: %v", err)
+	}
+	som, err := Parse(somBytes)
+	if err != nil {
+		t.Fatalf("Parse fixture failed: %v", err)
+	}
+
+	for _, item := range EnabledActionPlan(som) {
+		if !item.Enabled {
+			t.Fatalf("EnabledActionPlan included disabled target: %#v", item)
+		}
+	}
+	index := GetActionPlanIndex(som, true)
+	if _, ok := index.ByID["e_save"]; ok {
+		t.Fatal("enabled-only index included blocked e_save target")
+	}
+	if _, ok := index.ByTestID["settings-save"]; ok {
+		t.Fatal("enabled-only index included blocked settings-save target")
+	}
+	if _, ok := index.ByID["e_plan"]; !ok {
+		t.Fatal("enabled-only index omitted enabled e_plan target")
+	}
+}
+
 func TestTokenEstimate(t *testing.T) {
 	som := mustParse(t)
 

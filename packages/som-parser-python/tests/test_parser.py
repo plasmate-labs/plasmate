@@ -14,6 +14,10 @@ from som_parser import (
     SomElement,
     SomShadowRoot,
     filter_elements,
+    find_action_target_by_cache_key,
+    find_action_target_by_html_id,
+    find_action_target_by_id,
+    find_action_target_by_test_id,
     find_by_action,
     find_by_hint,
     find_by_html_id,
@@ -23,6 +27,8 @@ from som_parser import (
     from_plasmate,
     get_action_plan,
     get_action_plan_cache_key,
+    get_action_plan_index,
+    get_enabled_action_plan,
     get_all_elements,
     get_compression_ratio,
     get_forms,
@@ -596,6 +602,32 @@ class TestGetActionPlan:
         som, expected_targets = _load_action_availability_fixture()
 
         assert get_action_plan(som) == expected_targets
+
+    def test_indexes_action_targets_for_replay(self):
+        som, expected_targets = _load_action_availability_fixture()
+        save = next(target for target in expected_targets if target["id"] == "e_save")
+
+        index = get_action_plan_index(som)
+
+        assert index["by_id"]["e_save"] == save
+        assert index["by_cache_key"][save["cache_key"]] == save
+        assert index["by_html_id"]["save-button"] == save
+        assert index["by_test_id"]["settings-save"] == save
+        assert find_action_target_by_id(som, "e_save") == save
+        assert find_action_target_by_cache_key(som, save["cache_key"]) == save
+        assert find_action_target_by_html_id(som, "save-button") == save
+        assert find_action_target_by_test_id(som, "settings-save") == save
+
+    def test_enabled_action_plan_index_filters_blocked_targets(self):
+        som, _ = _load_action_availability_fixture()
+
+        enabled = get_enabled_action_plan(som)
+        index = get_action_plan_index(som, enabled_only=True)
+
+        assert all(target["enabled"] for target in enabled)
+        assert "e_save" not in index["by_id"]
+        assert "settings-save" not in index["by_test_id"]
+        assert "e_plan" in index["by_id"]
 
 
 class TestGetLinks:

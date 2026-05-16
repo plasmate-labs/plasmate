@@ -237,6 +237,9 @@ field MUST be omitted when the object would be empty.
 | `href`    | string | The link destination URL. |
 | `target`  | string | The browsing context target, such as `_blank`, when present. |
 | `rel`     | string | Link relationship tokens, such as `noopener`, when present. |
+| `hreflang` | string | Linked resource language, when present. |
+| `type` | string | Linked resource MIME type, when present. |
+| `referrerpolicy` | string | Referrer policy applied to the navigation, when present. |
 | `download` | boolean/string | `true` for a boolean download attribute, or the suggested filename when provided. |
 
 #### `button`
@@ -375,11 +378,15 @@ Each **Option** object:
 
 Implementations SHOULD preserve common actionability attributes on any element:
 `contenteditable`, `tabindex`, `name`, `accept`, `capture`, `autocomplete`, `inputmode`,
-`enterkeyhint`, `form`, `list`, `popovertarget`, `popovertargetaction`,
+`enterkeyhint`, `draggable`, `form`, `list`, `popovertarget`, `popovertargetaction`,
 `commandfor`, `command`, `popover`, `button_type`, `formaction`,
 `formmethod`, `formenctype`, `formtarget`, `formnovalidate`, `accesskey`,
-`readonly`, `inert`, `min`, `max`, `step`, and `description`. The
+`title`, `source_role`, `test_id`, `readonly`, `inert`, `min`, `max`, `step`,
+and `description`. The
 `description` value is resolved from `aria-describedby` or `aria-description`.
+The `source_role` value is the raw HTML `role` attribute, and `test_id`
+normalizes developer-authored `data-testid`, `data-test`, or `data-qa`
+locators for local replay and diagnostics.
 These attributes are especially important for custom controls that are exposed
 through ARIA roles instead of native form elements.
 
@@ -422,6 +429,8 @@ attributes SHOULD be preserved when present:
 | `aria-level`     | `level`     | string          |
 | `aria-posinset`  | `posinset`  | string          |
 | `aria-setsize`   | `setsize`   | string          |
+| `aria-grabbed`   | `grabbed`   | boolean         |
+| `aria-dropeffect` | `dropeffect` | string         |
 | `aria-valuemin`  | `valuemin`  | string          |
 | `aria-valuemax`  | `valuemax`  | string          |
 | `aria-valuenow`  | `valuenow`  | string          |
