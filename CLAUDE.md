@@ -89,7 +89,8 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Commit/push state: created alternate-index commit `ebbf704` (`chore:
   restore mcp session page cache`), pushed review branch
   `codex/plasmate-improvements-2026-05-16-session-cache-restore`, and
-  fast-forwarded remote `master` from `c0a9a9d` to `ebbf704`.
+  fast-forwarded remote `master` from `c0a9a9d`; then pushed a follow-up
+  running-state docs commit to the same branch and `master`.
 
 ### 2026-05-16T17:07:46Z - Plasmate Improvements Automation
 
