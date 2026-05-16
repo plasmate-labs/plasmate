@@ -80,14 +80,14 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Verification blocked: full `cargo test --quiet` still fails only in
   sandboxed `tests/awp_integration_test.rs` because local listener setup
   returns `Operation not permitted`.
-- Commit/push state: normal `git add` and detached-HEAD update are still
-  blocked by linked worktree lock permissions, so alternate-index commit
-  `00b1665` (`chore: add label-addressable action lookup`) was created and
-  pushed to `origin/codex/plasmate-improvements-2026-05-16-label-lookup` and
-  fast-forwarded to remote `master`. The push reported `021a83b..00b1665`;
-  post-push `git ls-remote` could not resolve `github.com`. Local
-  `origin/master` was updated to `00b1665`; the detached worktree still shows
-  the committed files as modified relative to local `HEAD`, and
+- Commit/push state: normal `git add` and detached-HEAD updates are still
+  blocked by linked worktree lock permissions, so alternate-index commits were
+  used. Code commit `00b1665` (`chore: add label-addressable action lookup`)
+  was pushed to
+  `origin/codex/plasmate-improvements-2026-05-16-label-lookup` and remote
+  `master`, followed by a running-state docs commit on both refs. The detached
+  worktree still shows the committed files as modified relative to local
+  `HEAD`; `origin/master` was updated locally to the pushed state and
   `git diff origin/master` is empty.
 
 ### 2026-05-16T21:10:58Z - Plasmate Improvements Automation
