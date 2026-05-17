@@ -32,6 +32,19 @@ cloud API.
 - Crawl4AI remains strong for open-source Python crawling and extraction, but
   carries Chromium/Playwright operational weight.
 
+2026-05-17 combined action-filter read: current browser-agent docs keep moving
+target selection into reusable, validated action menus. Playwright MCP refs
+come from the current accessibility snapshot, Stagehand/Browserbase action
+caches replay only after page-state validation, Firecrawl packages browser
+sandbox sessions behind broad API/CLI/SDK/MCP entrypoints, and Cloudflare
+Browser Run makes CDP/MCP browser sessions a distribution surface. Plasmate
+should keep the local-first wedge but make app-edge filtering boring and
+portable: Python, Node, Go, and parser packages should all expose one helper
+that combines role, action, label, exact-label, and enabled-only constraints
+before prompt construction or cached replay. This keeps the broad repo surface
+aligned with `Plasmate.getInteractiveElements` filters and avoids forcing agent
+builders to hand-roll the same pre-prompt scans in every language.
+
 2026-05-17 CDP action-menu parity read: current competitor docs make the
 protocol edge part of the sticky action surface. Playwright MCP documents
 accessibility snapshot refs that refresh after page changes, Stagehand

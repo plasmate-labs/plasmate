@@ -217,6 +217,14 @@ export interface ActionTargetLookupOptions {
   enabledOnly?: boolean;
 }
 
+export interface ActionTargetFilterOptions {
+  role?: ElementRole;
+  action?: ElementAction;
+  label?: string;
+  exact?: boolean;
+  enabledOnly?: boolean;
+}
+
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined;
 }
@@ -457,6 +465,25 @@ export function findActionTarget(
     index.byHtmlId[value] ??
     index.byTestId[value]
   );
+}
+
+/** Find compact action targets with combined role, action, label, and availability filters. */
+export function findActionTargets(
+  som: Som,
+  options: ActionTargetFilterOptions = {},
+): ActionPlanItem[] {
+  const plan = options.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
+  const lowerLabel = options.label?.toLowerCase();
+  return plan.filter((item) => {
+    if (options.role && item.role !== options.role) return false;
+    if (options.action && !item.actions.includes(options.action)) return false;
+    if (options.label !== undefined) {
+      if (options.exact) return item.label === options.label;
+      if (!lowerLabel) return true;
+      return item.label?.toLowerCase().includes(lowerLabel) ?? false;
+    }
+    return true;
+  });
 }
 
 /** Find compact action targets by accessible label. */

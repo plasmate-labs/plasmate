@@ -387,6 +387,42 @@ def find_action_target(
     return index[buckets[by]].get(value)
 
 
+def find_action_targets(
+    som: Som,
+    *,
+    role: Optional[str] = None,
+    action: Optional[str] = None,
+    label: Optional[str] = None,
+    exact: bool = False,
+    enabled_only: bool = False,
+) -> List[Dict[str, object]]:
+    """Return compact action targets matching combined planning filters."""
+    plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
+    results: List[Dict[str, object]] = []
+    label_lower = label.lower() if label is not None else None
+    for item in plan:
+        if role is not None and item.get("role") != role:
+            continue
+        actions = item.get("actions")
+        if action is not None and not (
+            isinstance(actions, list) and action in actions
+        ):
+            continue
+        if label is not None:
+            item_label = item.get("label")
+            if exact:
+                if item_label != label:
+                    continue
+            elif not (
+                isinstance(item_label, str)
+                and label_lower is not None
+                and label_lower in item_label.lower()
+            ):
+                continue
+        results.append(item)
+    return results
+
+
 def find_action_targets_by_label(
     som: Som,
     label: str,

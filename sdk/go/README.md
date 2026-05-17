@@ -105,9 +105,12 @@ clickable := plasmate.FindByAction(som, "click")
 required := plasmate.FindByHint(som, "required")
 plan := plasmate.GetActionPlan(som)
 index := plasmate.GetActionPlanIndex(som, true)
-buttons := plasmate.FindActionTargetsByRole(som, "button", true)
+actionButtons := plasmate.FindActionTargetsByRole(som, "button", true)
 clicks := plasmate.FindActionTargetsByAction(som, "click", true)
 matches := plasmate.FindActionTargetsByLabel(som, "billing", false, true)
+saveButtons := plasmate.FindActionTargets(som, plasmate.ActionTargetFilter{
+    Role: "button", Action: "click", Label: "save", EnabledOnly: true,
+})
 all := plasmate.FlatElements(som)
 ```
 
@@ -144,6 +147,7 @@ all := plasmate.FlatElements(som)
 | `GetActionPlanCacheKey(item)` | Return a deterministic key for caching or comparing an action target |
 | `FindActionTarget(som, value, by...)` | Resolve a replay id by SOM id, cache key, HTML id, test id, exact label, or auto lookup |
 | `FindActionTargetByLabel(som, label)` | Resolve the first compact target with an exact accessible label |
+| `FindActionTargets(som, filter)` | Combine role, action, label, exact-label, and enabled-only filters before prompting or replay |
 | `FindActionTargetsByLabel(som, label, exact, enabledOnly...)` | Return compact targets whose label matches exactly or by substring |
 | `FindActionTargetsByRole(som, role, enabledOnly...)` | Return compact action targets for one SOM role |
 | `FindActionTargetsByAction(som, action, enabledOnly...)` | Return compact action targets exposing one action |

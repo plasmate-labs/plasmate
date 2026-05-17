@@ -10,6 +10,7 @@ import {
   findActionTargetById,
   findActionTargetByLabel,
   findActionTargetByTestId,
+  findActionTargets,
   findActionTargetsByAction,
   findActionTargetsByLabel,
   findActionTargetsByRole,
@@ -341,6 +342,20 @@ describe('getActionPlan', () => {
     assert.deepEqual(findActionTargetByHtmlId(som, 'save-button'), save);
     assert.deepEqual(findActionTargetByTestId(som, 'settings-save'), save);
     assert.deepEqual(findActionTargetByLabel(som, 'Save'), save);
+    assert.deepEqual(
+      findActionTargets(som, { role: 'button', action: 'click', label: 'preview' }),
+      [action_targets[3]],
+    );
+    assert.deepEqual(
+      findActionTargets(som, {
+        role: 'button',
+        action: 'click',
+        label: 'Preview changes',
+        exact: true,
+        enabledOnly: true,
+      }),
+      [],
+    );
     assert.deepEqual(findActionTargetsByLabel(som, 'save'), [save]);
     assert.deepEqual(findActionTargetsByRole(som, 'button'), [
       action_targets[2],

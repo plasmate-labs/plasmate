@@ -47,7 +47,8 @@ for el in find_by_role(som, "link"):
 ### Plan agent actions
 
 ```python
-from som_parser import parse_som, find_action_target, find_action_targets_by_label
+from som_parser import parse_som, find_action_target, find_action_targets
+from som_parser import find_action_targets_by_label
 from som_parser import find_action_targets_by_action, find_action_targets_by_role
 from som_parser import find_by_action, find_by_label, get_action_plan
 
@@ -62,6 +63,13 @@ for button in find_by_action(som, "click"):
     print(button.id, button.text or button.label)
 
 save = find_action_target(som, "Save", by="label", enabled_only=True)
+enabled_save_buttons = find_action_targets(
+    som,
+    role="button",
+    action="click",
+    label="save",
+    enabled_only=True,
+)
 matches = find_action_targets_by_label(som, "save")
 buttons = find_action_targets_by_role(som, "button", enabled_only=True)
 clicks = find_action_targets_by_action(som, "click", enabled_only=True)
@@ -119,6 +127,7 @@ print(som.model_dump_json(indent=2))
 | `get_action_plan(som) -> list[dict]` | Return compact `{id, cache_key, role, actions, enabled, label}` action targets with availability, link target/rel/download cues, form/list and form submission context, submitter override cues, popover/command relation cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues |
 | `get_action_plan_cache_key(item) -> str` | Return a deterministic key for caching or comparing an action target |
 | `find_action_target(som, value, by="auto", enabled_only=False) -> dict \| None` | Resolve a replay id by SOM id, cache key, HTML id, test id, explicit label, or auto lookup |
+| `find_action_targets(som, role=None, action=None, label=None, exact=False, enabled_only=False) -> list[dict]` | Combine role, action, label, exact-label, and enabled-only filters before prompting or replay |
 | `find_action_targets_by_label(som, label, exact=False, enabled_only=False) -> list[dict]` | Search compact action targets by accessible label |
 | `find_action_targets_by_role(som, role, enabled_only=False) -> list[dict]` | Find compact action targets by exact SOM role |
 | `find_action_targets_by_action(som, action, enabled_only=False) -> list[dict]` | Find compact action targets that expose an action |

@@ -14,6 +14,7 @@ import {
   findActionTargetById,
   findActionTargetByLabel,
   findActionTargetByTestId,
+  findActionTargets,
   findActionTargetsByAction,
   findActionTargetsByLabel,
   findActionTargetsByRole,
@@ -509,6 +510,18 @@ describe('getActionPlan', () => {
     expect(findActionTargetByHtmlId(som, 'save-button')).toEqual(save);
     expect(findActionTargetByTestId(som, 'settings-save')).toEqual(save);
     expect(findActionTargetByLabel(som, 'Save')).toEqual(save);
+    expect(
+      findActionTargets(som, { role: 'button', action: 'click', label: 'preview' }),
+    ).toEqual([action_targets[3]]);
+    expect(
+      findActionTargets(som, {
+        role: 'button',
+        action: 'click',
+        label: 'Preview changes',
+        exact: true,
+        enabledOnly: true,
+      }),
+    ).toEqual([]);
     expect(findActionTargetsByLabel(som, 'save')).toEqual([save]);
     expect(findActionTargetsByRole(som, 'button')).toEqual([
       action_targets[2],

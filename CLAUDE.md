@@ -49,6 +49,43 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-17T06:21:59Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch --prune origin` was attempted first in the
+  linked automation worktree and failed because shared worktree metadata
+  `FETCH_HEAD` could not be opened. Fallback fetch from the primary checkout
+  failed DNS for `github.com`, so work continued from the locally known
+  `origin/master` / `HEAD` `d1c8fbb`.
+- Market direction: current docs still make small, validated action menus the
+  retention surface. Playwright MCP uses snapshot-scoped accessibility refs,
+  Stagehand/Browserbase documents local and managed action caching, Firecrawl
+  exposes browser sandbox sessions through API/CLI/SDK/MCP, and Cloudflare
+  Browser Run treats CDP/MCP sessions as agent infrastructure. No hosted
+  browser pivot is recommended; the sticky local step is portable app-edge
+  filtering before prompt construction or cached replay.
+- Code changes: Python SDK, Node SDK, Go SDK, Python parser package, and Node
+  parser package now expose combined action-target filtering. The new helpers
+  combine role, action, label, exact-label, and enabled-only constraints so app
+  code can mirror CDP `Plasmate.getInteractiveElements` filtering without
+  hand-rolled scans.
+- Docs changes: SDK/parser READMEs now show combined pre-prompt filtering.
+  PRD, roadmap source, and generated website PRD/roadmap docs now record the
+  combined-filter rationale and next conformance direction.
+- Verification passed: Python SDK query tests (43), Python parser tests (76),
+  Node SDK tests/build (28), Node parser tests (61) plus parser build, Go SDK
+  tests with workspace-local `GOCACHE`, `node website/build.mjs`,
+  `git diff --check`,
+  `RUSTY_V8_ARCHIVE=/Users/steve/Git/plasmate/target/debug/gn_out/obj/librusty_v8.a cargo build --quiet`,
+  `cargo test --lib --quiet` (275), and `cargo clippy --quiet` with
+  pre-existing warnings.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`.
+- Pending next step: promote the combined filter helper into framework
+  adapters (Browser Use, LangChain, Vercel AI) and shared action-manifest
+  conformance so app-layer filtering stays aligned across the full repo
+  surface.
+
 ### 2026-05-17T02:40:09Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch --prune origin` was attempted first in the

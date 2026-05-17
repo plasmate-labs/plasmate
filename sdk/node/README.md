@@ -92,6 +92,7 @@ The SDK includes query helpers for searching and traversing SOM documents:
 ```typescript
 import {
   findActionTarget,
+  findActionTargets,
   findActionTargetsByAction,
   findActionTargetsByLabel,
   findActionTargetsByRole,
@@ -124,6 +125,12 @@ const saveByLabel = findActionTarget(som, 'Save', { by: 'label', enabledOnly: tr
 const labeledActions = findActionTargetsByLabel(som, 'save');
 const enabledButtons = findActionTargetsByRole(som, 'button', { enabledOnly: true });
 const enabledClicks = findActionTargetsByAction(som, 'click', { enabledOnly: true });
+const enabledSaveButtons = findActionTargets(som, {
+  role: 'button',
+  action: 'click',
+  label: 'save',
+  enabledOnly: true,
+});
 
 // Search by visible text or accessible label (case-insensitive)
 const matches = findByText(som, 'sign in');
@@ -148,6 +155,7 @@ browser.close();
 | `getActionPlan(som)` | `ActionPlanItem[]` | Compact action targets with cache keys, availability, link target/rel/download cues, form/list and form submission context, submitter override cues, popover/command relation cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues |
 | `getActionPlanCacheKey(item)` | `string` | Deterministic key for caching or comparing action targets |
 | `findActionTarget(som, value, options?)` | `ActionPlanItem \| undefined` | Resolve a target by SOM id, cache key, HTML id, test id, or explicit label |
+| `findActionTargets(som, options?)` | `ActionPlanItem[]` | Combine role, action, label, exact-label, and enabled-only filters before prompting or replay |
 | `findActionTargetsByLabel(som, label, options?)` | `ActionPlanItem[]` | Find compact action targets by accessible label |
 | `findActionTargetsByRole(som, role, options?)` | `ActionPlanItem[]` | Find compact action targets by exact SOM role |
 | `findActionTargetsByAction(som, action, options?)` | `ActionPlanItem[]` | Find compact action targets that expose an action |

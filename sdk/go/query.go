@@ -297,6 +297,15 @@ type ActionPlanIndex struct {
 	ByAction   map[string][]ActionPlanItem `json:"by_action"`
 }
 
+// ActionTargetFilter narrows compact action targets before prompt construction or replay.
+type ActionTargetFilter struct {
+	Role        string
+	Action      string
+	Label       string
+	ExactLabel  bool
+	EnabledOnly bool
+}
+
 func compactString(value *string) interface{} {
 	if value != nil && *value != "" {
 		return *value
@@ -643,6 +652,38 @@ func FindActionTargetByTestID(som *Som, testID string) *ActionPlanItem {
 // FindActionTargetByLabel returns the first compact action target matching an exact accessible label.
 func FindActionTargetByLabel(som *Som, label string) *ActionPlanItem {
 	return FindActionTarget(som, label, "label")
+}
+
+// FindActionTargets returns compact action targets matching combined planning filters.
+func FindActionTargets(som *Som, filter ActionTargetFilter) []ActionPlanItem {
+	plan := GetActionPlan(som)
+	if filter.EnabledOnly {
+		plan = EnabledActionPlan(som)
+	}
+	results := []ActionPlanItem{}
+	needle := strings.ToLower(filter.Label)
+	for _, item := range plan {
+		if filter.Role != "" && item.Role != filter.Role {
+			continue
+		}
+		if filter.Action != "" && !containsString(item.Actions, filter.Action) {
+			continue
+		}
+		if filter.Label != "" {
+			if item.Label == nil {
+				continue
+			}
+			if filter.ExactLabel {
+				if *item.Label != filter.Label {
+					continue
+				}
+			} else if !strings.Contains(strings.ToLower(*item.Label), needle) {
+				continue
+			}
+		}
+		results = append(results, item)
+	}
+	return results
 }
 
 // FindActionTargetsByLabel returns compact action targets whose accessible label matches text.

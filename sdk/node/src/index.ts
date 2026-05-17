@@ -57,6 +57,7 @@ export {
   findActionTargetById,
   findActionTargetByLabel,
   findActionTargetByTestId,
+  findActionTargets,
   findActionTargetsByAction,
   findActionTargetsByLabel,
   findActionTargetsByRole,

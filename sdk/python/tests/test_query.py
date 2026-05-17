@@ -25,6 +25,7 @@ from plasmate.query import (
     find_action_target_by_id,
     find_action_target_by_label,
     find_action_target_by_test_id,
+    find_action_targets,
     find_action_targets_by_action,
     find_action_targets_by_label,
     find_action_targets_by_role,
@@ -390,6 +391,21 @@ class TestGetActionPlan:
         assert find_action_target_by_html_id(som, "save-button") == save
         assert find_action_target_by_test_id(som, "settings-save") == save
         assert find_action_target_by_label(som, "Save") == save
+        assert find_action_targets(
+            som,
+            role="button",
+            action="click",
+            label="preview",
+            enabled_only=False,
+        ) == [expected[3]]
+        assert find_action_targets(
+            som,
+            role="button",
+            action="click",
+            label="Preview changes",
+            exact=True,
+            enabled_only=True,
+        ) == []
         assert find_action_targets_by_label(som, "save") == [save]
         assert find_action_targets_by_role(som, "button") == [expected[2], expected[3]]
         assert find_action_targets_by_action(som, "click") == [

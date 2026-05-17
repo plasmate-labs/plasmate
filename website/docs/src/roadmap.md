@@ -14,6 +14,14 @@ Plasmate should keep its local-first position, but the roadmap now emphasizes th
 
 Near-term target: make Plasmate the fastest local way to turn authenticated or repetitive web workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 Combined Action Filter Adjustment
+
+The latest competitor pressure is not only "return an action menu"; it is "make the menu cheap to narrow where app code runs." Playwright MCP keeps refs tied to fresh snapshots, Stagehand/Browserbase validates cached actions before replay, Firecrawl exposes browser sessions through many entrypoints, and Cloudflare Browser Run treats CDP/MCP sessions as first-class agent infrastructure. Plasmate should answer with portable local query ergonomics across its existing repos:
+
+- **One combined filter helper**: Python, Node, Go, and parser packages should expose role + action + label + exact-label + enabled-only filtering so app code can prepare compact target sets without bespoke scans.
+- **Protocol and SDK parity**: combined SDK filters should mirror the CDP `Plasmate.getInteractiveElements` filter shape, keeping protocol clients and library users on the same selection model.
+- **Docs should show the pre-prompt path**: public SDK/parser pages should teach combined filtering as the normal step before LLM prompt construction, cached replay validation, or trace logging.
+
 ### 2026-05-17 CDP Action-Menu Parity Adjustment
 
 Current browser-agent tools increasingly expose action state at the protocol edge, not only in SDK helpers. Playwright MCP uses fresh accessibility snapshot refs for interaction, Stagehand/Browserbase caches validated actions to remove repeat LLM calls, Firecrawl exposes browser sandbox sessions through API, CLI, SDK, and MCP surfaces, and Cloudflare Browser Rendering/Browser Run now supports CDP plus MCP client workflows. Plasmate should keep the local-first SOM wedge and make CDP compatibility more agent-native:

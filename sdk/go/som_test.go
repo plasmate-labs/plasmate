@@ -608,6 +608,12 @@ func TestActionPlanLookupHelpers(t *testing.T) {
 	if got := FindActionTargetsByAction(som, "click"); len(got) != 3 || got[0].ID != "e_save" || got[1].ID != "e_preview" || got[2].ID != "e_billing" {
 		t.Fatalf("FindActionTargetsByAction(click) = %#v, want e_save/e_preview/e_billing", got)
 	}
+	if got := FindActionTargets(som, ActionTargetFilter{Role: "button", Action: "click", Label: "preview"}); len(got) != 1 || got[0].ID != "e_preview" {
+		t.Fatalf("FindActionTargets(button/click/preview) = %#v, want e_preview", got)
+	}
+	if got := FindActionTargets(som, ActionTargetFilter{Role: "button", Action: "click", Label: "Preview changes", ExactLabel: true, EnabledOnly: true}); len(got) != 0 {
+		t.Fatalf("enabled-only exact FindActionTargets(preview) = %#v, want none", got)
+	}
 	if found := FindActionTargetByLabel(som, "Plan"); found == nil || found.ID != "e_plan" {
 		t.Fatalf("FindActionTargetByLabel(Plan) = %#v, want e_plan", found)
 	}

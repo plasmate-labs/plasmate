@@ -49,6 +49,12 @@ const plan = getActionPlan(som);
 const available = plan.filter((item) => item.enabled);
 const save = findActionTarget(som, 'plasmate-action:v1:...', { enabledOnly: true });
 const saveByLabel = findActionTarget(som, 'Save', { by: 'label', enabledOnly: true });
+const enabledSaveButtons = findActionTargets(som, {
+  role: 'button',
+  action: 'click',
+  label: 'save',
+  enabledOnly: true,
+});
 const labeledActions = findActionTargetsByLabel(som, 'save');
 const buttons = findActionTargetsByRole(som, 'button', { enabledOnly: true });
 const clicks = findActionTargetsByAction(som, 'click', { enabledOnly: true });
@@ -104,6 +110,7 @@ const ratio = getCompressionRatio(som);
 | `getActionPlan(som): ActionPlanItem[]` | Return compact action targets with cache keys, availability, link target/rel/download cues, form/list and form submission context, submitter override cues, popover/command relation cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues for agent planning. |
 | `getActionPlanCacheKey(item): string` | Return a deterministic key for caching or comparing an action target. |
 | `findActionTarget(som, value, options?): ActionPlanItem \| undefined` | Resolve a target by SOM id, cache key, HTML id, test id, explicit label, or auto lookup. |
+| `findActionTargets(som, options?): ActionPlanItem[]` | Combine role, action, label, exact-label, and enabled-only filters before prompting or replay. |
 | `findActionTargetsByLabel(som, label, options?): ActionPlanItem[]` | Find compact action targets by accessible label. |
 | `findActionTargetsByRole(som, role, options?): ActionPlanItem[]` | Find compact action targets by exact SOM role. |
 | `findActionTargetsByAction(som, action, options?): ActionPlanItem[]` | Find compact action targets that expose an action. |

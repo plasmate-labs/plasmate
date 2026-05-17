@@ -465,6 +465,12 @@
 <li><strong>Ecosystem distribution</strong>: MCP, Browser Use, SDKs, and comparison pages should remain conformance-tested so partner repos do not drift.</li>
 </ul>
 <p>Near-term target: make Plasmate the fastest local way to turn authenticated or repetitive web workflows into compact, inspectable, reusable state.</p>
+<h3 id="2026-05-17-combined-action-filter-adjustment">2026-05-17 Combined Action Filter Adjustment</h3><p>The latest competitor pressure is not only &quot;return an action menu&quot;; it is &quot;make the menu cheap to narrow where app code runs.&quot; Playwright MCP keeps refs tied to fresh snapshots, Stagehand/Browserbase validates cached actions before replay, Firecrawl exposes browser sessions through many entrypoints, and Cloudflare Browser Run treats CDP/MCP sessions as first-class agent infrastructure. Plasmate should answer with portable local query ergonomics across its existing repos:</p>
+<ul>
+<li><strong>One combined filter helper</strong>: Python, Node, Go, and parser packages should expose role + action + label + exact-label + enabled-only filtering so app code can prepare compact target sets without bespoke scans.</li>
+<li><strong>Protocol and SDK parity</strong>: combined SDK filters should mirror the CDP <code>Plasmate.getInteractiveElements</code> filter shape, keeping protocol clients and library users on the same selection model.</li>
+<li><strong>Docs should show the pre-prompt path</strong>: public SDK/parser pages should teach combined filtering as the normal step before LLM prompt construction, cached replay validation, or trace logging.</li>
+</ul>
 <h3 id="2026-05-17-cdp-action-menu-parity-adjustment">2026-05-17 CDP Action-Menu Parity Adjustment</h3><p>Current browser-agent tools increasingly expose action state at the protocol edge, not only in SDK helpers. Playwright MCP uses fresh accessibility snapshot refs for interaction, Stagehand/Browserbase caches validated actions to remove repeat LLM calls, Firecrawl exposes browser sandbox sessions through API, CLI, SDK, and MCP surfaces, and Cloudflare Browser Rendering/Browser Run now supports CDP plus MCP client workflows. Plasmate should keep the local-first SOM wedge and make CDP compatibility more agent-native:</p>
 <ul>
 <li><strong>Full-tree CDP action menus</strong>: <code>Plasmate.getInteractiveElements</code> should traverse nested children and shadow roots, matching MCP/session lookup and parser/SDK action-plan behavior.</li>
