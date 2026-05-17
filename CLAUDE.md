@@ -82,6 +82,9 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Verification blocked: full `cargo test --quiet` still fails only in
   sandboxed `tests/awp_integration_test.rs` because local listener setup
   returns `Operation not permitted`.
+- Commit/push state: alternate-index commit `31dc7c1` (`chore: improve CDP
+  attribute selector parity`) was pushed to remote `master` and to
+  `origin/codex/plasmate-improvements-2026-05-17-cdp-attribute-selectors`.
 
 ### 2026-05-17T06:20:17Z - Plasmate Improvements Automation
 
