@@ -90,7 +90,9 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Commit/push state: the first alternate-index commit `f14ccec` pushed to
   `origin/codex/plasmate-improvements-2026-05-17-cdp-dom-ax`; direct push to
   `master` was rejected because remote master had advanced. The patch was then
-  replayed onto `45e55d1` for the final integrated commit.
+  replayed onto `45e55d1` as integrated commit `8ac5265`, pushed to
+  `master`, and force-updated the automation branch to the same integrated
+  history.
 
 ### 2026-05-17T06:16:27Z - Plasmate Improvements Automation
 
