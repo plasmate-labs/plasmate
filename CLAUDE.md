@@ -83,7 +83,13 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Verification blocked: full `cargo test --quiet` still fails only in
   sandboxed `tests/awp_integration_test.rs` because local listener setup
   returns `Operation not permitted`.
-- Commit/push state: pending at this point in the run.
+- Commit/push state: alternate-index commit `3aec401` (`chore: add adapter
+  label recovery helpers`) was pushed to
+  `origin/codex/plasmate-improvements-2026-05-17-adapter-label-recovery`.
+  Direct push to remote `master` was rejected as non-fast-forward because the
+  remote advanced. Follow-up fetch/ls-remote attempts then failed DNS for
+  `github.com`, so merge to `master` remains blocked until the latest remote
+  head can be fetched and the branch replayed.
 
 ### 2026-05-17T02:40:09Z - Plasmate Improvements Automation
 
