@@ -134,14 +134,22 @@ and optionally caps the returned menu with `maxTargets`. Pass
 ### `indexPlasmateActionTargets(targets, options?)`
 
 Returns normalized action targets indexed by `by_id`, `by_cache_key`,
-`by_html_id`, and `by_test_id`, plus grouped `by_role` and `by_action`
-buckets. Use this when cached Vercel AI workflows need to resolve a saved
-target or scope a plan without scanning the full action menu.
+`by_html_id`, `by_test_id`, and `by_label`, plus grouped `by_role` and
+`by_action` buckets. Use this when cached Vercel AI workflows need to resolve
+a saved target or scope a plan without scanning the full action menu.
 
 ### `findPlasmateActionTarget(targets, value, options?)`
 
 Finds one action target by `id`, `cache_key`, `html_id`, `test_id`, or the
-default auto lookup across all four replay buckets.
+default auto lookup across the stable replay buckets. Pass `by: 'label'`
+explicitly for recovery/debugging flows where the label is unique enough.
+
+### `findPlasmateActionTargetsByLabel(targets, label, options?)`
+
+Returns compact action targets whose accessible label matches text. Label
+matching is substring-based by default; pass `exact: true` for exact matching.
+Use label lookup for user-facing recovery and inspection, not unattended
+replay, because page labels can collide.
 
 ### `findPlasmateActionTargetsByRole(targets, role, options?)`
 
@@ -161,6 +169,11 @@ const save = findPlasmateActionTarget(actionTargets, 'settings-save', {
   by: 'test_id',
   includeUnavailable: true,
 })
+const saveByLabel = findPlasmateActionTarget(actionTargets, 'Save', {
+  by: 'label',
+  includeUnavailable: true,
+})
+const planTargets = findPlasmateActionTargetsByLabel(actionTargets, 'plan')
 const enabledClicks = findPlasmateActionTargetsByAction(actionTargets, 'click')
 ```
 

@@ -2,6 +2,7 @@ import {
   extractPlasmateActionTargets,
   findPlasmateActionTarget,
   findPlasmateActionTargetsByAction,
+  findPlasmateActionTargetsByLabel,
   findPlasmateActionTargetsByRole,
   formatPlasmateActionPlan,
   indexPlasmateActionTargets,
@@ -49,8 +50,16 @@ const buttonTargets = findPlasmateActionTargetsByRole(fixtureTargets, 'button', 
 const clickTargets = findPlasmateActionTargetsByAction(fixtureTargets, 'click', {
   includeUnavailable: true,
 })
+const labelTargets = findPlasmateActionTargetsByLabel(fixtureTargets, 'work', {
+  exact: false,
+  includeUnavailable: true,
+})
 const targetByCacheKey = findPlasmateActionTarget(fixtureTargets, normalized.cache_key ?? '', {
   by: 'cache_key',
+  includeUnavailable: true,
+})
+const targetByLabel = findPlasmateActionTarget(fixtureTargets, 'Work email', {
+  by: 'label',
   includeUnavailable: true,
 })
 const visiblePromptMenu = formatPlasmateActionPlan(fixtureTargets, {
@@ -92,4 +101,6 @@ void shouldBeString
 void indexedTargets
 void buttonTargets
 void clickTargets
+void labelTargets
 void targetByCacheKey
+void targetByLabel

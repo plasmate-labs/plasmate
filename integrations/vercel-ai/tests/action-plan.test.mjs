@@ -5,6 +5,7 @@ import {
   extractPlasmateActionTargets,
   findPlasmateActionTarget,
   findPlasmateActionTargetsByAction,
+  findPlasmateActionTargetsByLabel,
   findPlasmateActionTargetsByRole,
   formatPlasmateActionPlan,
   getPlasmateActionTargetCacheKey,
@@ -113,6 +114,7 @@ assert.deepEqual(targetIndex.by_id.e_save, save)
 assert.deepEqual(targetIndex.by_cache_key[save.cache_key], save)
 assert.deepEqual(targetIndex.by_html_id['save-button'], save)
 assert.deepEqual(targetIndex.by_test_id['settings-save'], save)
+assert.deepEqual(targetIndex.by_label.Save, save)
 assert.deepEqual(
   targetIndex.by_role.button.map((target) => target.id),
   ['e_save', 'e_preview']
@@ -125,6 +127,7 @@ assert.deepEqual(findPlasmateActionTarget(targets, 'e_save', { includeUnavailabl
 assert.deepEqual(findPlasmateActionTarget(targets, save.cache_key, { includeUnavailable: true }), save)
 assert.deepEqual(findPlasmateActionTarget(targets, 'save-button', { includeUnavailable: true }), save)
 assert.deepEqual(findPlasmateActionTarget(targets, 'settings-save', { includeUnavailable: true }), save)
+assert.deepEqual(findPlasmateActionTarget(targets, 'Save', { by: 'label', includeUnavailable: true }), save)
 assert.deepEqual(
   findPlasmateActionTarget(targets, save.cache_key, {
     by: 'cache_key',
@@ -144,11 +147,16 @@ assert.deepEqual(
   }).map((target) => target.id),
   ['e_save', 'e_preview', 'e_billing']
 )
+assert.deepEqual(
+  findPlasmateActionTargetsByLabel(targets, 'plan').map((target) => target.id),
+  ['e_plan']
+)
 
 const enabledTargetIndex = indexPlasmateActionTargets(targets)
 assert.equal(enabledTargetIndex.by_id.e_save, undefined)
 assert.equal(enabledTargetIndex.by_id.e_plan.id, 'e_plan')
 assert.equal(enabledTargetIndex.by_role.button, undefined)
+assert.equal(enabledTargetIndex.by_label.Save, undefined)
 assert.deepEqual(
   enabledTargetIndex.by_action.click.map((target) => target.id),
   ['e_billing']

@@ -22,6 +22,14 @@ Current browser-agent tools increasingly expose action state at the protocol edg
 - **Protocol filters before prompts**: CDP clients should narrow by SOM role, action, accessible label, and enabled state before handing targets to an LLM.
 - **Replay cues on the wire**: CDP output should expose SOM role names, `html_id`, `test_id`, `enabled`, and `blocked_reason` directly so Puppeteer and Playwright users do not need raw DOM recovery for simple cached replay.
 
+### 2026-05-17 Adapter Label-Recovery Parity Adjustment
+
+Current browser-agent tools keep making accessible names the human selection layer while requiring stable, validated ids for unattended replay. Plasmate already supports label lookup in parser packages and SDKs; the adapter layer should not make framework users relearn a narrower contract.
+
+- **Framework adapters should expose labels explicitly**: Browser Use, LangChain, and Vercel AI should provide `by_label`/label-search helpers alongside role/action grouping.
+- **Auto replay should stay stable**: default lookup should continue to prefer SOM ids, cache keys, HTML ids, and test ids; labels require explicit opt-in because repeated UI labels are common.
+- **Docs should position labels as recovery**: examples should use labels for debugging, user-facing repair, and inspection while recommending stable replay identifiers for background workflows.
+
 ### 2026-05-17 SDK Discoverability and Label Parity Adjustment
 
 Current browser-agent competitors keep converging on compact action menus that can be validated before replay. Playwright MCP keeps refs scoped to the current accessibility snapshot, Stagehand/Browserbase makes action caching a repeated workflow feature, Firecrawl exposes scrape/search/extract/browser interaction through MCP and APIs, and Cloudflare Browser Run/WebMCP is expanding hosted browser-native tool surfaces. Plasmate should not pivot into hosted execution; the stickier move is to make local SOM action menus easier to discover and query in every SDK and adapter:
@@ -761,6 +769,7 @@ Competitor pressure keeps moving reusable action state from browser engines into
 - [x] Browser Use, LangChain, and Vercel AI direct replay lookup helpers auto-resolve stored replay ids while preserving enabled-only filtering
 - [x] Package and adapter tests cover auto replay lookup without bespoke action-menu scans
 - [x] Python/Node parser packages and SDKs expose explicit accessible-label lookup for elements and compact action targets
+- [x] Browser Use, LangChain, and Vercel AI expose explicit accessible-label lookup for compact action targets
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
@@ -783,6 +792,7 @@ Competitor pressure keeps moving reusable action state from browser engines into
 - [ ] Promote drag/drop replay cues into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote link navigation replay cues into broader Rust/parser/SDK and adapter conformance fixtures
 - [ ] Promote label-only link/control parity into shared parser, SDK, and adapter conformance fixtures
+- [ ] Promote adapter label-recovery lookup into the shared action-manifest release gate
 - [ ] Add cross-adapter accessible-description fixtures
 - [ ] Wire disabled/required action-state fixtures into cross-adapter parser/SDK conformance runners
 - [x] Promote adapter availability checks into shared cross-adapter fixtures

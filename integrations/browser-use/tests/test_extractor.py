@@ -166,6 +166,7 @@ def test_extract_action_plan_index_exposes_replay_lookup_buckets():
     assert index["by_cache_key"][save["cache_key"]] == save
     assert index["by_html_id"]["save-button"] == save
     assert index["by_test_id"]["settings-save"] == save
+    assert index["by_label"]["Save"] == save
 
     enabled_index = extractor.extract_action_plan_index(
         "https://example.com/settings", enabled_only=True
@@ -202,6 +203,12 @@ def test_extract_action_plan_index_groups_targets_by_role_and_action():
             "https://example.com/settings", "click", enabled_only=True
         )
     ] == ["e_billing"]
+    assert [
+        target["id"]
+        for target in extractor.find_action_targets_by_label(
+            "https://example.com/settings", "plan", enabled_only=True
+        )
+    ] == ["e_plan"]
 
 
 def test_find_action_target_resolves_replay_identifiers():
@@ -215,6 +222,14 @@ def test_find_action_target_resolves_replay_identifiers():
     assert extractor.find_action_target("https://example.com/settings", save["cache_key"]) == save
     assert extractor.find_action_target("https://example.com/settings", "save-button") == save
     assert extractor.find_action_target("https://example.com/settings", "settings-save") == save
+    assert (
+        extractor.find_action_target(
+            "https://example.com/settings",
+            "Save",
+            by="label",
+        )
+        == save
+    )
     assert (
         extractor.find_action_target(
             "https://example.com/settings", "settings-save", enabled_only=True

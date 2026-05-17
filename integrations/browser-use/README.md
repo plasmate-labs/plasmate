@@ -99,12 +99,25 @@ enabled_clicks = extractor.find_action_targets_by_action(
     "click",
     enabled_only=True,
 )
+plan_targets = extractor.find_action_targets_by_label(
+    "https://example.com/settings",
+    "plan",
+    enabled_only=True,
+)
 
 # Or let Plasmate resolve SOM id, cache key, HTML id, or test id automatically.
 target = extractor.find_action_target(
     "https://example.com/settings",
     "plasmate-action:v1:...",
     enabled_only=True,
+)
+
+# Use labels explicitly for user-facing recovery/debugging, not unattended replay.
+save = extractor.find_action_target(
+    "https://example.com/settings",
+    "Save",
+    by="label",
+    enabled_only=False,
 )
 ```
 

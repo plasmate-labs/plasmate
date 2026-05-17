@@ -189,6 +189,7 @@ export interface PlasmateActionTargetIndex {
   by_cache_key: Record<string, PlasmateActionTarget>
   by_html_id: Record<string, PlasmateActionTarget>
   by_test_id: Record<string, PlasmateActionTarget>
+  by_label: Record<string, PlasmateActionTarget>
   by_role: Record<string, PlasmateActionTarget[]>
   by_action: Record<string, PlasmateActionTarget[]>
 }
@@ -611,6 +612,7 @@ export function indexPlasmateActionTargets(
     by_cache_key: {},
     by_html_id: {},
     by_test_id: {},
+    by_label: {},
     by_role: {},
     by_action: {},
   }
@@ -627,6 +629,10 @@ export function indexPlasmateActionTargets(
     }
     if (typeof target.test_id === 'string' && !index.by_test_id[target.test_id]) {
       index.by_test_id[target.test_id] = target
+    }
+    const targetLabel = target.label ?? target.text
+    if (typeof targetLabel === 'string' && !index.by_label[targetLabel]) {
+      index.by_label[targetLabel] = target
     }
     if (typeof target.role === 'string') {
       index.by_role[target.role] ??= []
@@ -651,7 +657,7 @@ export function findPlasmateActionTarget(
   targets: readonly PlasmateActionTarget[],
   value: string,
   options: PreparePlasmateActionPlanOptions & {
-    by?: 'auto' | 'id' | 'cache_key' | 'html_id' | 'test_id'
+    by?: 'auto' | 'id' | 'cache_key' | 'html_id' | 'test_id' | 'label'
   } = {}
 ): PlasmateActionTarget | undefined {
   const index = indexPlasmateActionTargets(targets, options)
@@ -659,6 +665,7 @@ export function findPlasmateActionTarget(
   if (by === 'cache_key') return index.by_cache_key[value]
   if (by === 'html_id') return index.by_html_id[value]
   if (by === 'test_id') return index.by_test_id[value]
+  if (by === 'label') return index.by_label[value]
   if (by === 'auto') {
     return (
       index.by_id[value] ??
@@ -668,6 +675,23 @@ export function findPlasmateActionTarget(
     )
   }
   return index.by_id[value]
+}
+
+/**
+ * Return action targets whose accessible label matches text.
+ */
+export function findPlasmateActionTargetsByLabel(
+  targets: readonly PlasmateActionTarget[],
+  label: string,
+  options: PreparePlasmateActionPlanOptions & { exact?: boolean } = {}
+): PlasmateActionTarget[] {
+  const needle = options.exact ? label : label.toLowerCase()
+  return preparePlasmateActionPlan(targets, options).filter((target) => {
+    const targetLabel = target.label ?? target.text
+    if (typeof targetLabel !== 'string') return false
+    const haystack = options.exact ? targetLabel : targetLabel.toLowerCase()
+    return options.exact ? haystack === needle : haystack.includes(needle)
+  })
 }
 
 /**

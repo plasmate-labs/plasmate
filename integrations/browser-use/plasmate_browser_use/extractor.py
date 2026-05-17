@@ -12,6 +12,7 @@ from typing import Any, Optional
 from som_parser import (
     find_action_target,
     find_action_targets_by_action,
+    find_action_targets_by_label,
     find_action_targets_by_role,
     parse_som,
     get_action_plan,
@@ -362,6 +363,21 @@ class PlasmateExtractor:
         som = parse_som(som_data)
         return find_action_targets_by_action(som, action, enabled_only=enabled_only)
 
+    def find_action_targets_by_label(
+        self,
+        url: str,
+        label: str,
+        *,
+        exact: bool = False,
+        enabled_only: bool = False,
+    ) -> list[dict[str, object]]:
+        """Fetch a URL and return compact action targets matching an accessible label."""
+        som_data = self.extract(url)
+        som = parse_som(som_data)
+        return find_action_targets_by_label(
+            som, label, exact=exact, enabled_only=enabled_only
+        )
+
     async def extract_action_plan_async(self, url: str) -> list[dict[str, object]]:
         """Async version of extract_action_plan."""
         som_data = await self.extract_async(url)
@@ -404,6 +420,21 @@ class PlasmateExtractor:
         som_data = await self.extract_async(url)
         som = parse_som(som_data)
         return find_action_targets_by_action(som, action, enabled_only=enabled_only)
+
+    async def find_action_targets_by_label_async(
+        self,
+        url: str,
+        label: str,
+        *,
+        exact: bool = False,
+        enabled_only: bool = False,
+    ) -> list[dict[str, object]]:
+        """Async version of find_action_targets_by_label."""
+        som_data = await self.extract_async(url)
+        som = parse_som(som_data)
+        return find_action_targets_by_label(
+            som, label, exact=exact, enabled_only=enabled_only
+        )
 
     def get_page_context(self, url: str) -> str:
         """Get a token-efficient page context string for LLM consumption.

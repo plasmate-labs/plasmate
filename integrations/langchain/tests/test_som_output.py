@@ -5,6 +5,7 @@ from langchain_plasmate.som_output import (
     action_target_index,
     find_action_target,
     find_action_targets_by_action,
+    find_action_targets_by_label,
     find_action_targets_by_role,
     som_to_text,
 )
@@ -167,6 +168,7 @@ def test_action_target_index_resolves_replay_targets():
     assert index["by_cache_key"][save["cache_key"]]["id"] == "e_save"
     assert index["by_html_id"]["save-button"]["id"] == "e_save"
     assert index["by_test_id"]["settings-save"]["id"] == "e_save"
+    assert index["by_label"]["Save"]["id"] == "e_save"
     assert [target["id"] for target in index["by_role"]["button"]] == [
         "e_save",
         "e_preview",
@@ -181,6 +183,7 @@ def test_action_target_index_resolves_replay_targets():
     assert find_action_target(som, save["cache_key"])["id"] == "e_save"
     assert find_action_target(som, "save-button")["id"] == "e_save"
     assert find_action_target(som, "settings-save")["id"] == "e_save"
+    assert find_action_target(som, "Save", by="label")["id"] == "e_save"
     assert find_action_target(som, save["cache_key"], by="cache_key")["id"] == "e_save"
     assert [target["id"] for target in find_action_targets_by_role(som, "button")] == [
         "e_save",
@@ -190,6 +193,10 @@ def test_action_target_index_resolves_replay_targets():
         target["id"]
         for target in find_action_targets_by_action(som, "click", enabled_only=True)
     ] == ["e_billing"]
+    assert [
+        target["id"]
+        for target in find_action_targets_by_label(som, "plan", enabled_only=True)
+    ] == ["e_plan"]
 
     enabled_index = action_target_index(som, enabled_only=True)
     assert "e_save" not in enabled_index["by_id"]

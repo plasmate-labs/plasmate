@@ -49,6 +49,23 @@ SOM wedge and make CDP compatibility more agent-native:
    `html_id`, `test_id`, `enabled`, and `blocked_reason` directly so Puppeteer
    and Playwright users do not need raw DOM recovery for simple cached replay.
 
+### 2026-05-17 Adapter Label-Recovery Parity Adjustment
+
+Current browser-agent tools keep making accessible names the human selection
+layer while requiring stable, validated ids for unattended replay. Plasmate
+already supports label lookup in parser packages and SDKs; the adapter layer
+should not make framework users relearn a narrower contract.
+
+1. **Framework adapters should expose labels explicitly**: Browser Use,
+   LangChain, and Vercel AI should provide `by_label`/label-search helpers
+   alongside role/action grouping.
+2. **Auto replay should stay stable**: default lookup should continue to prefer
+   SOM ids, cache keys, HTML ids, and test ids; labels require explicit opt-in
+   because repeated UI labels are common.
+3. **Docs should position labels as recovery**: examples should use labels for
+   debugging, user-facing repair, and inspection while recommending stable
+   replay identifiers for background workflows.
+
 ### 2026-05-17 SDK Discoverability and Label Parity Adjustment
 
 Current browser-agent competitors keep converging on compact action menus that
@@ -1735,12 +1752,16 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Python/Node parser packages and SDKs now expose explicit accessible-label
   lookup for elements and compact action targets, plus exact label buckets in
   action-plan indexes, while keeping auto replay lookup on stable ids.
+- Browser Use, LangChain, and Vercel AI now expose explicit accessible-label
+  lookup for compact action targets, including label buckets/search for
+  recovery and debugging while keeping default auto replay lookup on stable
+  replay ids.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, `html_id` DOM-provenance cases,
-  label-only link/control parity, label-addressable action lookup, and
-  framework replay lookup helpers into
-  broader fixtures alongside drag/drop, link replay, ARIA naming provenance,
+  label-only link/control parity, label-addressable action lookup, framework
+  replay lookup helpers, and adapter label-recovery lookup into broader
+  fixtures alongside drag/drop, link replay, ARIA naming provenance,
   text-entry, ARIA widget, range, and set-position cases.
 
 ## Dependencies to Add

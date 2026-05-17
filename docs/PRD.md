@@ -45,6 +45,18 @@ shadow-root targets, serialize roles with SOM names like `text_input`, expose
 top-level replay identifiers/availability, and let CDP clients narrow by role,
 action, label, and enabled state before prompting an LLM.
 
+2026-05-17 adapter label-recovery parity read: current browser-agent products
+keep teaching developers to choose targets from human-facing structured names,
+then validate stable refs before replay. Playwright MCP refs remain scoped to a
+fresh accessibility snapshot, Stagehand/Browserbase action caches still require
+current-page validation, Firecrawl keeps broad MCP/browser-session entrypoints,
+and Cloudflare Browser Run makes CDP/MCP part of the hosted browser edge.
+Plasmate should keep the local-first wedge and close the last framework-adapter
+gap: Browser Use, LangChain, and Vercel AI should expose label buckets/search
+beside role/action groups so app teams can recover or debug targets by the same
+accessible labels Python, Node, and Go already understand. Auto replay should
+still avoid labels unless requested because duplicate button names are common.
+
 2026-05-17 SDK discoverability and Go label-parity read: current competitor
 docs keep pushing browser-agent products toward small, validated action menus.
 Playwright MCP documents snapshot-scoped accessibility refs, Browserbase/
@@ -740,6 +752,18 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-17:
+  - Browser Use now exposes sync/async `find_action_targets_by_label()` so
+    agents can recover compact targets by accessible label after role/action
+    narrowing.
+  - LangChain action indexes now include `by_label`, explicit
+    `by="label"` lookup, and `find_action_targets_by_label()` while keeping
+    default auto replay lookup limited to stable ids.
+  - Vercel AI action indexes now include `by_label`, explicit label lookup,
+    and `findPlasmateActionTargetsByLabel()` for app-side recovery and debug
+    UIs.
+  - Adapter docs now position labels as human-facing recovery hints and keep
+    SOM ids, cache keys, HTML ids, and test ids as the recommended unattended
+    replay identifiers.
   - Go SDK `ActionPlanIndex` now includes `ByLabel`, plus
     `FindActionTargetByLabel()` and `FindActionTargetsByLabel()` helpers so
     durable worker code matches Python/Node label-addressable action lookup.

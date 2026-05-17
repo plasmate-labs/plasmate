@@ -22,6 +22,7 @@ from .som_output import (
     action_target_index,
     find_action_target,
     find_action_targets_by_action,
+    find_action_targets_by_label,
     find_action_targets_by_role,
     som_to_text,
 )
@@ -44,6 +45,7 @@ __all__ = [
     "action_target_index",
     "find_action_target",
     "find_action_targets_by_action",
+    "find_action_targets_by_label",
     "find_action_targets_by_role",
     "get_plasmate_tools",
     "som_to_text",

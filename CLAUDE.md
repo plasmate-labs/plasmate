@@ -49,6 +49,42 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-17T06:21:03Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch --prune origin` was attempted first in the
+  linked automation worktree and failed because shared worktree metadata
+  `FETCH_HEAD` could not be opened. Fallback fetch from the primary checkout
+  failed DNS for `github.com`, and `gh auth status` still reports an invalid
+  `dbhurley` token, so work continued from already-local `origin/master` /
+  `HEAD` `d1c8fbb`.
+- Market direction: current official docs continue to reward compact,
+  validated action state over raw DOM dumps. Playwright MCP exposes
+  accessibility snapshots with action targets, Stagehand/Browserbase documents
+  local and managed action caches, Firecrawl continues broad MCP/browser
+  session packaging, and Cloudflare Browser Run exposes CDP/MCP workflows plus
+  WebMCP/session-recording features. No hosted-browser pivot is recommended;
+  the sticky local step is label-recovery parity at the framework adapter edge.
+- Code changes: Browser Use now exposes sync/async
+  `find_action_targets_by_label()`; LangChain now adds `by_label`,
+  explicit `by="label"` lookup, and `find_action_targets_by_label()`; Vercel
+  AI now adds `by_label`, explicit label lookup, and
+  `findPlasmateActionTargetsByLabel()`. Default auto replay lookup still
+  prefers stable SOM ids, cache keys, HTML ids, and test ids.
+- Docs changes: PRD, roadmap, Browser Use, LangChain, Vercel AI, and
+  generated website docs now position labels as user-facing recovery/debugging
+  hints while recommending stable replay identifiers for unattended workflows.
+- Verification passed: Browser Use adapter tests (4), LangChain adapter tests
+  (2, with the existing Python 3.14 Pydantic warning), Vercel AI tests and
+  typecheck using a temporary `node_modules` symlink to the primary checkout,
+  `node website/build.mjs`, `git diff --check`,
+  `RUSTY_V8_ARCHIVE=/Users/steve/Git/plasmate/target/debug/gn_out/obj/librusty_v8.a cargo build --quiet`,
+  `cargo test --lib --quiet` (275), and `cargo clippy --quiet` with
+  pre-existing warnings.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`.
+- Commit/push state: pending at this point in the run.
+
 ### 2026-05-17T02:40:09Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch --prune origin` was attempted first in the

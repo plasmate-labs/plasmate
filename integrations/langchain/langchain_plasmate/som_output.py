@@ -244,14 +244,15 @@ def action_target_index(
     """Return compact action targets indexed for replay lookups.
 
     Buckets match the parser/SDK contract. ``by_id``, ``by_cache_key``,
-    ``by_html_id``, and ``by_test_id`` resolve one cached target; ``by_role``
-    and ``by_action`` group targets for plan scoping before replay.
+    ``by_html_id``, ``by_test_id``, and ``by_label`` resolve one cached target;
+    ``by_role`` and ``by_action`` group targets for plan scoping before replay.
     """
     index: dict[str, Any] = {
         "by_id": {},
         "by_cache_key": {},
         "by_html_id": {},
         "by_test_id": {},
+        "by_label": {},
         "by_role": {},
         "by_action": {},
     }
@@ -267,6 +268,7 @@ def action_target_index(
                 ("cache_key", "by_cache_key"),
                 ("html_id", "by_html_id"),
                 ("test_id", "by_test_id"),
+                ("label", "by_label"),
             ):
                 value = target.get(source_key)
                 if isinstance(value, str) and value not in index[bucket_key]:
@@ -289,24 +291,49 @@ def find_action_target(
     by: str = "auto",
     enabled_only: bool = False,
 ) -> dict[str, Any] | None:
-    """Find one compact action target by id, cache key, HTML id, test id, or auto lookup."""
+    """Find one compact action target by id, cache key, HTML id, test id, label, or auto lookup."""
     buckets = {
         "id": "by_id",
         "cache_key": "by_cache_key",
         "html_id": "by_html_id",
         "test_id": "by_test_id",
+        "label": "by_label",
     }
     index = action_target_index(som, enabled_only=enabled_only)
     if by == "auto":
-        for bucket in buckets.values():
+        for bucket in ("by_id", "by_cache_key", "by_html_id", "by_test_id"):
             found = index[bucket].get(value)
             if found is not None:
                 return found
         return None
     bucket = buckets.get(by)
     if bucket is None:
-        raise ValueError("by must be one of: auto, id, cache_key, html_id, test_id")
+        raise ValueError("by must be one of: auto, id, cache_key, html_id, test_id, label")
     return index[bucket].get(value)
+
+
+def find_action_targets_by_label(
+    som: dict[str, Any],
+    label: str,
+    *,
+    exact: bool = False,
+    enabled_only: bool = False,
+) -> list[dict[str, Any]]:
+    """Return compact action targets whose accessible label matches text."""
+    results: list[dict[str, Any]] = []
+    needle = label if exact else label.lower()
+    for targets in action_target_index(som, enabled_only=enabled_only)["by_role"].values():
+        if not isinstance(targets, list):
+            continue
+        for target in targets:
+            target_label = target.get("label")
+            if not isinstance(target_label, str):
+                continue
+            haystack = target_label if exact else target_label.lower()
+            matches = needle == haystack if exact else needle in haystack
+            if matches:
+                results.append(target)
+    return results
 
 
 def find_action_targets_by_role(
