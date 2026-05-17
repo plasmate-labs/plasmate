@@ -82,8 +82,13 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   returns `Operation not permitted`.
 - Commit/push state: normal `git add` remains blocked by linked-worktree
   `index.lock` permissions. Alternate-index code/docs commit `66248e0`
-  (`chore: improve CDP replay ergonomics`) was created for push, followed by
-  this running-state update.
+  (`chore: improve CDP replay ergonomics`) and state commit `76100f7`
+  (`docs: record CDP replay ergonomics state`) were pushed to
+  `origin/codex/plasmate-improvements-2026-05-17-cdp-replay-ergonomics`.
+  Direct push to `master` was rejected because remote master advanced to
+  `96fa6df`; shell DNS then prevented fetching that parent object, and GitHub
+  connector PR creation returned 403. Merge to master remains blocked on
+  fetching/rebasing or opening/merging the pushed branch outside this sandbox.
 
 ### 2026-05-17T07:06:05Z - Plasmate Improvements Automation
 
