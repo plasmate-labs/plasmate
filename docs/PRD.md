@@ -32,6 +32,20 @@ cloud API.
 - Crawl4AI remains strong for open-source Python crawling and extraction, but
   carries Chromium/Playwright operational weight.
 
+2026-05-17 shared selector recovery read: latest official docs sharpen the
+same retention wedge around validated, reusable action state. Playwright MCP
+uses accessibility snapshots with refs that refresh after page changes;
+Stagehand now documents both managed Browserbase Cache and local filesystem
+action caches that replay without another LLM call; Firecrawl's MCP surface now
+includes scrape/search/extract plus browser session and live interaction tools;
+and Cloudflare Browser Run exposes quick actions plus browser sessions through
+Playwright, Puppeteer, CDP, and Stagehand. Plasmate should keep avoiding a
+hosted-browser pivot. The sticky local move is making the shared CLI/MCP SOM
+selector layer resolve the same human and developer anchors that agents store
+after a first successful run: `text:`, `label:`, `placeholder:`,
+`description:`, test ids, common attributes, and tag-qualified selectors such
+as `input[type=search]`.
+
 2026-05-17 CDP attribute-selector read: fresh trend research keeps reinforcing
 that protocol compatibility is now part of browser-agent distribution.
 Browserbase/Stagehand markets `act`, `extract`, `observe`, `agent`, local
@@ -782,6 +796,16 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-17:
+  - Shared CLI/MCP SOM selectors now support case-insensitive `text:<query>`
+    and `label:<query>` matching, preserving parent and shadow-root context for
+    narrow prompt slices.
+  - Shared selectors now support `placeholder:<query>` and
+    `description:<query>` so form-affordance recovery can use the same compact
+    evidence agents see in action menus.
+  - Shared selectors now support common developer anchors including
+    `test_id:`, `[data-testid=value]`, `[name=q]`, `[aria-label="Save"]`,
+    `[required]`, and tag-qualified selectors such as `input[type=search]`,
+    reducing fallback to raw DOM or screenshots during replay debugging.
   - Go SDK `ActionPlanIndex` now includes `ByLabel`, plus
     `FindActionTargetByLabel()` and `FindActionTargetsByLabel()` helpers so
     durable worker code matches Python/Node label-addressable action lookup.

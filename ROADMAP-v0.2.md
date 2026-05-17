@@ -29,6 +29,28 @@ Near-term stickiness target: developers should keep Plasmate installed because
 it becomes the fastest local way to turn authenticated or repetitive web
 workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 Shared Selector Recovery Adjustment
+
+Current browser-agent infrastructure keeps making repeated actions cheaper only
+after the first successful observation. Playwright MCP keeps interaction refs
+inside fresh accessibility snapshots, Stagehand now documents both managed
+Browserbase Cache and local filesystem action caches, Firecrawl exposes
+scrape/search/extract plus browser session tools through MCP, and Cloudflare
+Browser Run offers quick actions plus browser sessions through Playwright,
+Puppeteer, CDP, and Stagehand. Plasmate should keep the local-first wedge and
+make shared CLI/MCP selectors easier to reuse after an agent has identified a
+target:
+
+1. **Human anchors belong in shared selectors**: `text:<query>` and
+   `label:<query>` should narrow SOM output without exact casing or raw DOM
+   recovery.
+2. **Form affordances are recovery cues**: `placeholder:<query>` and
+   `description:<query>` should let agents recover controls from compact
+   action evidence.
+3. **Developer locators should work everywhere**: test ids, common attributes,
+   boolean attrs, and tag-qualified selectors such as `input[type=search]`
+   should be supported by the shared selector layer, not only CDP.
+
 ### 2026-05-17 CDP Action-Menu Parity Adjustment
 
 Current browser-agent tools increasingly expose action state at the protocol
@@ -1753,6 +1775,12 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Python/Node parser packages and SDKs now expose explicit accessible-label
   lookup for elements and compact action targets, plus exact label buckets in
   action-plan indexes, while keeping auto replay lookup on stable ids.
+- Shared CLI/MCP SOM selectors now support case-insensitive `text:<query>` and
+  `label:<query>` matching for human-facing recovery.
+- Shared selectors now support `placeholder:<query>` and `description:<query>`
+  for form-affordance recovery without raw DOM scans.
+- Shared selectors now support test-id shorthands, common attribute selectors,
+  boolean attrs, and tag-qualified forms such as `input[type=search]`.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, `html_id` DOM-provenance cases,

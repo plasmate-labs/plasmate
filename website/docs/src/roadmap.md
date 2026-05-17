@@ -14,6 +14,14 @@ Plasmate should keep its local-first position, but the roadmap now emphasizes th
 
 Near-term target: make Plasmate the fastest local way to turn authenticated or repetitive web workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 Shared Selector Recovery Adjustment
+
+Current browser-agent infrastructure keeps making repeated actions cheaper only after the first successful observation. Playwright MCP keeps interaction refs inside fresh accessibility snapshots, Stagehand now documents both managed Browserbase Cache and local filesystem action caches, Firecrawl exposes scrape/search/extract plus browser session tools through MCP, and Cloudflare Browser Run offers quick actions plus browser sessions through Playwright, Puppeteer, CDP, and Stagehand. Plasmate should keep the local-first wedge and make shared CLI/MCP selectors easier to reuse after an agent has identified a target:
+
+- **Human anchors belong in shared selectors**: `text:<query>` and `label:<query>` should narrow SOM output without exact casing or raw DOM recovery.
+- **Form affordances are recovery cues**: `placeholder:<query>` and `description:<query>` should let agents recover controls from compact action evidence.
+- **Developer locators should work everywhere**: test ids, common attributes, boolean attrs, and tag-qualified selectors such as `input[type=search]` should be supported by the shared selector layer, not only CDP.
+
 ### 2026-05-17 CDP Attribute-Selector Adjustment
 
 Current browser-agent infrastructure keeps turning protocol compatibility into distribution. Browserbase/Stagehand highlights observe/action primitives, cached actions, session replay, and local-to-cloud portability; Cloudflare Browser Rendering added CDP endpoints and MCP client support; Firecrawl keeps exposing MCP scrape/search/extract plus browser interaction. Plasmate should keep the local-first wedge and improve the compatibility path where ordinary CDP clients already start: selectors and node attributes.
@@ -788,6 +796,7 @@ Competitor pressure keeps moving reusable action state from browser engines into
 - [x] CDP DOM query selectors resolve `#html_id`, `#som_id`, test-id selectors, roles, text, and labels in SOM document order
 - [x] CDP accessibility trees include nested and shadow-root SOM elements with backend node ids
 - [x] CDP accessibility nodes expose disabled/readonly availability properties for replay validation
+- [x] Shared CLI/MCP selectors support `text:`, `label:`, `placeholder:`, `description:`, test-id, common attribute, boolean, and tag-qualified target recovery
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures

@@ -49,6 +49,39 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-17T21:08:31Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch --prune origin` was attempted first in the
+  linked automation worktree and failed because shared worktree metadata
+  `FETCH_HEAD` could not be opened (`Operation not permitted`). Work continued
+  from the clean detached `origin/master`/`HEAD` `48c03d6`.
+- Market direction: current official docs reinforce the same local-first
+  retention wedge. Playwright MCP uses accessibility snapshots with refs scoped
+  to the current page state; Stagehand now documents both Browserbase-managed
+  cache and local filesystem action cache; Firecrawl's MCP surface includes
+  scrape/search/extract plus browser sessions and live interaction; and
+  Cloudflare Browser Run exposes quick actions plus browser sessions through
+  Playwright, Puppeteer, CDP, and Stagehand. No hosted-browser pivot is
+  recommended; shared local selector recovery is the sticky next step.
+- Code changes: shared CLI/MCP SOM selectors now support case-insensitive
+  `text:<query>` and `label:<query>`, `placeholder:<query>` and
+  `description:<query>`, test-id shorthands, common attribute selectors such as
+  `[name=q]` and `[aria-label="Save"]`, boolean attrs such as `[required]`, and
+  tag-qualified selectors such as `input[type=search]`, all while preserving
+  parent and shadow-root context.
+- Docs changes: CLI help, MCP tool descriptions, README selector guidance, PRD,
+  roadmap source docs, and website docs now describe shared selector recovery
+  as a local repeated-work/replay-debugging feature.
+- Verification passed: touched-file `rustfmt --edition 2021 --check`, focused
+  `cargo test som::filter --quiet` (14 selector tests), `node
+  website/build.mjs` using the primary-checkout `website/node_modules` symlink
+  removed afterward, `git diff --check`, `cargo build --quiet`, `cargo test
+  --lib --quiet` (284), and `cargo clippy --quiet` with pre-existing warnings.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`.
+- Commit/push state: pending in this run.
+
 ### 2026-05-17T07:06:05Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch --prune origin` was attempted first in the
