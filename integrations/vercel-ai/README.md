@@ -134,13 +134,24 @@ and optionally caps the returned menu with `maxTargets`. Pass
 ### `indexPlasmateActionTargets(targets, options?)`
 
 Returns normalized action targets indexed by `by_id`, `by_cache_key`,
-`by_html_id`, and `by_test_id`. Use this when cached Vercel AI workflows need
-to resolve a saved target without scanning the full action menu.
+`by_html_id`, and `by_test_id`, plus grouped `by_role` and `by_action`
+buckets. Use this when cached Vercel AI workflows need to resolve a saved
+target or scope a plan without scanning the full action menu.
 
 ### `findPlasmateActionTarget(targets, value, options?)`
 
 Finds one action target by `id`, `cache_key`, `html_id`, `test_id`, or the
 default auto lookup across all four replay buckets.
+
+### `findPlasmateActionTargetsByRole(targets, role, options?)`
+
+Returns compact action targets for one SOM role, such as `button` or
+`text_input`.
+
+### `findPlasmateActionTargetsByAction(targets, action, options?)`
+
+Returns compact action targets exposing one action, such as `click`, `type`, or
+`select`.
 
 ```ts
 const index = indexPlasmateActionTargets(actionTargets, {
@@ -150,6 +161,7 @@ const save = findPlasmateActionTarget(actionTargets, 'settings-save', {
   by: 'test_id',
   includeUnavailable: true,
 })
+const enabledClicks = findPlasmateActionTargetsByAction(actionTargets, 'click')
 ```
 
 ### `formatPlasmateActionPlan(targets, options?)`

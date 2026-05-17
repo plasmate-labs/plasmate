@@ -52,10 +52,15 @@ adapter releases.
 
 Framework adapters also expose replay lookup helpers over this contract:
 Browser Use returns indexed action plans from `extract_action_plan_index()`,
-Browser Use also has `find_action_target()`, LangChain exposes
-`action_target_index()` / `find_action_target()`, and Vercel AI exposes
-`indexPlasmateActionTargets()` / `findPlasmateActionTarget()`. The direct
-lookup helpers default to auto-resolving SOM ids, deterministic cache keys,
-original HTML ids, and test ids. Parser packages and SDKs also expose explicit
-label buckets/search helpers for user-facing labels, but label lookup remains
-opt-in because page labels are not guaranteed to be unique.
+Browser Use also has `find_action_target()`,
+`find_action_targets_by_role()`, and `find_action_targets_by_action()`;
+LangChain exposes `action_target_index()`, `find_action_target()`,
+`find_action_targets_by_role()`, and `find_action_targets_by_action()`; and
+Vercel AI exposes `indexPlasmateActionTargets()`,
+`findPlasmateActionTarget()`, `findPlasmateActionTargetsByRole()`, and
+`findPlasmateActionTargetsByAction()`. The direct lookup helpers default to
+auto-resolving SOM ids, deterministic cache keys, original HTML ids, and test
+ids. The grouped role/action helpers are for plan scoping before replay.
+Parser packages and SDKs also expose explicit label buckets/search helpers for
+user-facing labels, but label lookup remains opt-in because page labels are not
+guaranteed to be unique.

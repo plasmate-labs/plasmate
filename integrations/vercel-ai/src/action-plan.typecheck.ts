@@ -1,6 +1,8 @@
 import {
   extractPlasmateActionTargets,
   findPlasmateActionTarget,
+  findPlasmateActionTargetsByAction,
+  findPlasmateActionTargetsByRole,
   formatPlasmateActionPlan,
   indexPlasmateActionTargets,
   isPlasmateActionTargetAvailable,
@@ -41,6 +43,12 @@ const fixtureTargets: PlasmateActionTarget[] = [
 const normalized = normalizePlasmateActionTarget(fixtureTargets[1])
 const availableOnly = preparePlasmateActionPlan(fixtureTargets)
 const indexedTargets = indexPlasmateActionTargets(fixtureTargets)
+const buttonTargets = findPlasmateActionTargetsByRole(fixtureTargets, 'button', {
+  includeUnavailable: true,
+})
+const clickTargets = findPlasmateActionTargetsByAction(fixtureTargets, 'click', {
+  includeUnavailable: true,
+})
 const targetByCacheKey = findPlasmateActionTarget(fixtureTargets, normalized.cache_key ?? '', {
   by: 'cache_key',
   includeUnavailable: true,
@@ -82,4 +90,6 @@ const shouldBeString: string = visiblePromptMenu
 void shouldBeBoolean
 void shouldBeString
 void indexedTargets
+void buttonTargets
+void clickTargets
 void targetByCacheKey

@@ -49,6 +49,49 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-17T00:11:02Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch origin --prune` was attempted first and still
+  fails in the linked automation worktree because shared `FETCH_HEAD` cannot be
+  opened. Fallback fetch from `/Users/steve/Git/plasmate` failed DNS for
+  `github.com`, so work continued from local `HEAD`/`origin/master` `b7b5574`.
+- Market direction: current official docs still favor compact, validated,
+  reusable action surfaces. Playwright MCP uses current accessibility snapshot
+  refs, Stagehand/Browserbase documents local/server action caching, Firecrawl
+  continues MCP/browser-session packaging, and Cloudflare Browser Run/WebMCP
+  is adding hosted MCP/CDP and typed browser-native tools. No hosted-browser
+  pivot is recommended; the sticky local step is cross-adapter role/action
+  grouping before replay.
+- Code changes: propagated grouped compact action-target lookup to the adapter
+  and durable-worker surfaces. Browser Use now has sync/async
+  `find_action_targets_by_role()` and `find_action_targets_by_action()`;
+  LangChain exports `find_action_targets_by_role()` and
+  `find_action_targets_by_action()` plus `by_role`/`by_action` index buckets;
+  Vercel AI exports `findPlasmateActionTargetsByRole()` and
+  `findPlasmateActionTargetsByAction()` plus grouped index buckets; Go SDK
+  `ActionPlanIndex` now includes `ByRole`/`ByAction` with matching helper
+  functions.
+- Tests/docs: added focused grouped-bucket and enabled-only tests for Browser
+  Use, LangChain, Vercel AI, and Go. Updated adapter/Go READMEs, fixture docs,
+  PRD, roadmap source/generated HTML, and this running state with the adapter
+  grouping rationale. The quick action-manifest gate now runs Go grouping
+  lookup tests as part of conformance.
+- Verification passed: Browser Use adapter tests (4), LangChain adapter tests
+  (2, with existing Python 3.14 Pydantic warning), Vercel AI tests/typecheck
+  using a temporary `node_modules` symlink to the primary checkout, Go SDK
+  tests, `./scripts/action-manifest-conformance.sh --quick` with temporary
+  Node dependency symlinks, `node website/build.mjs` with a temporary website
+  dependency symlink, `git diff --check`, `cargo build --quiet`,
+  `cargo test --lib --quiet` (273), and `cargo clippy --quiet` with
+  pre-existing warnings. Rust commands used
+  `RUSTY_V8_ARCHIVE=/Users/steve/Git/plasmate/target/debug/gn_out/obj/librusty_v8.a`.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`.
+- Pending next step: extend grouped role/action helper examples into the public
+  website SDK/integration pages and consider a small release note once the
+  adapter grouping contract is merged.
+
 ### 2026-05-16T23:06:48Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch origin --prune` was attempted first and failed

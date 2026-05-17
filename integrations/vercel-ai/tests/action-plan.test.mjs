@@ -4,6 +4,8 @@ import { readFile } from 'node:fs/promises'
 import {
   extractPlasmateActionTargets,
   findPlasmateActionTarget,
+  findPlasmateActionTargetsByAction,
+  findPlasmateActionTargetsByRole,
   formatPlasmateActionPlan,
   getPlasmateActionTargetCacheKey,
   indexPlasmateActionTargets,
@@ -111,6 +113,14 @@ assert.deepEqual(targetIndex.by_id.e_save, save)
 assert.deepEqual(targetIndex.by_cache_key[save.cache_key], save)
 assert.deepEqual(targetIndex.by_html_id['save-button'], save)
 assert.deepEqual(targetIndex.by_test_id['settings-save'], save)
+assert.deepEqual(
+  targetIndex.by_role.button.map((target) => target.id),
+  ['e_save', 'e_preview']
+)
+assert.deepEqual(
+  targetIndex.by_action.click.map((target) => target.id),
+  ['e_save', 'e_preview', 'e_billing']
+)
 assert.deepEqual(findPlasmateActionTarget(targets, 'e_save', { includeUnavailable: true }), save)
 assert.deepEqual(findPlasmateActionTarget(targets, save.cache_key, { includeUnavailable: true }), save)
 assert.deepEqual(findPlasmateActionTarget(targets, 'save-button', { includeUnavailable: true }), save)
@@ -122,11 +132,32 @@ assert.deepEqual(
   }),
   save
 )
+assert.deepEqual(
+  findPlasmateActionTargetsByRole(targets, 'button', { includeUnavailable: true }).map(
+    (target) => target.id
+  ),
+  ['e_save', 'e_preview']
+)
+assert.deepEqual(
+  findPlasmateActionTargetsByAction(targets, 'click', {
+    includeUnavailable: true,
+  }).map((target) => target.id),
+  ['e_save', 'e_preview', 'e_billing']
+)
 
 const enabledTargetIndex = indexPlasmateActionTargets(targets)
 assert.equal(enabledTargetIndex.by_id.e_save, undefined)
 assert.equal(enabledTargetIndex.by_id.e_plan.id, 'e_plan')
+assert.equal(enabledTargetIndex.by_role.button, undefined)
+assert.deepEqual(
+  enabledTargetIndex.by_action.click.map((target) => target.id),
+  ['e_billing']
+)
 assert.equal(findPlasmateActionTarget(targets, 'settings-save'), undefined)
+assert.deepEqual(
+  findPlasmateActionTargetsByAction(targets, 'click').map((target) => target.id),
+  ['e_billing']
+)
 
 const preview = targets.find((target) => target.id === 'e_preview')
 assert.equal(isPlasmateActionTargetAvailable(preview), false)

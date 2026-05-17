@@ -286,12 +286,14 @@ type ActionPlanItem struct {
 	Group             *string     `json:"group,omitempty"`
 }
 
-// ActionPlanIndex groups compact action targets for replay lookups.
+// ActionPlanIndex groups compact action targets for replay lookups and planning.
 type ActionPlanIndex struct {
-	ByID       map[string]ActionPlanItem `json:"by_id"`
-	ByCacheKey map[string]ActionPlanItem `json:"by_cache_key"`
-	ByHTMLID   map[string]ActionPlanItem `json:"by_html_id"`
-	ByTestID   map[string]ActionPlanItem `json:"by_test_id"`
+	ByID       map[string]ActionPlanItem   `json:"by_id"`
+	ByCacheKey map[string]ActionPlanItem   `json:"by_cache_key"`
+	ByHTMLID   map[string]ActionPlanItem   `json:"by_html_id"`
+	ByTestID   map[string]ActionPlanItem   `json:"by_test_id"`
+	ByRole     map[string][]ActionPlanItem `json:"by_role"`
+	ByAction   map[string][]ActionPlanItem `json:"by_action"`
 }
 
 func compactString(value *string) interface{} {
@@ -493,7 +495,7 @@ func EnabledActionPlan(som *Som) []ActionPlanItem {
 	return result
 }
 
-// GetActionPlanIndex returns action targets indexed by SOM id, cache key, HTML id, and test id.
+// GetActionPlanIndex returns action targets indexed by replay ids and grouped by role/action.
 func GetActionPlanIndex(som *Som, enabledOnly ...bool) ActionPlanIndex {
 	plan := GetActionPlan(som)
 	if len(enabledOnly) > 0 && enabledOnly[0] {
@@ -504,6 +506,8 @@ func GetActionPlanIndex(som *Som, enabledOnly ...bool) ActionPlanIndex {
 		ByCacheKey: map[string]ActionPlanItem{},
 		ByHTMLID:   map[string]ActionPlanItem{},
 		ByTestID:   map[string]ActionPlanItem{},
+		ByRole:     map[string][]ActionPlanItem{},
+		ByAction:   map[string][]ActionPlanItem{},
 	}
 	for _, item := range plan {
 		if _, ok := index.ByID[item.ID]; !ok {
@@ -520,6 +524,14 @@ func GetActionPlanIndex(som *Som, enabledOnly ...bool) ActionPlanIndex {
 		if item.TestID != nil {
 			if _, ok := index.ByTestID[*item.TestID]; !ok {
 				index.ByTestID[*item.TestID] = item
+			}
+		}
+		if item.Role != "" {
+			index.ByRole[item.Role] = append(index.ByRole[item.Role], item)
+		}
+		for _, action := range item.Actions {
+			if action != "" {
+				index.ByAction[action] = append(index.ByAction[action], item)
 			}
 		}
 	}
@@ -609,6 +621,18 @@ func FindActionTargetByHTMLID(som *Som, htmlID string) *ActionPlanItem {
 // FindActionTargetByTestID returns the compact action target matching a test locator attribute.
 func FindActionTargetByTestID(som *Som, testID string) *ActionPlanItem {
 	return FindActionTarget(som, testID, "test_id")
+}
+
+// FindActionTargetsByRole returns compact action targets whose SOM role matches exactly.
+func FindActionTargetsByRole(som *Som, role string, enabledOnly ...bool) []ActionPlanItem {
+	index := GetActionPlanIndex(som, enabledOnly...)
+	return append([]ActionPlanItem(nil), index.ByRole[role]...)
+}
+
+// FindActionTargetsByAction returns compact action targets that expose the requested action.
+func FindActionTargetsByAction(som *Som, action string, enabledOnly ...bool) []ActionPlanItem {
+	index := GetActionPlanIndex(som, enabledOnly...)
+	return append([]ActionPlanItem(nil), index.ByAction[action]...)
 }
 
 func flattenRegionElements(elements []Element) []Element {

@@ -75,17 +75,25 @@ Interactive form controls include action-state cues such as `[enabled]`,
 `plasmate_click` or `plasmate_type`, and can use cache keys to dedupe repeated
 local action menus.
 
-For replay lookups in app code, `action_target_index(som)` and
-`find_action_target(som, value)` resolve compact targets by SOM id,
-deterministic cache key, original `html_id`, or `test_id` without a custom tree
-scan:
+For replay lookups in app code, `action_target_index(som)`,
+`find_action_target(som, value)`, `find_action_targets_by_role(som, role)`,
+and `find_action_targets_by_action(som, action)` resolve compact targets by
+SOM id, deterministic cache key, original `html_id`, `test_id`, role, or
+action without a custom tree scan:
 
 ```python
-from langchain_plasmate import action_target_index, find_action_target
+from langchain_plasmate import (
+    action_target_index,
+    find_action_target,
+    find_action_targets_by_action,
+    find_action_targets_by_role,
+)
 
 index = action_target_index(som)
 save = find_action_target(som, "plasmate-action:v1:...", enabled_only=True)
-print(save["id"], index["by_html_id"].get("save-button"))
+buttons = find_action_targets_by_role(som, "button")
+enabled_clicks = find_action_targets_by_action(som, "click", enabled_only=True)
+print(save["id"], index["by_html_id"].get("save-button"), len(enabled_clicks))
 ```
 
 ### Agent with browsing tools

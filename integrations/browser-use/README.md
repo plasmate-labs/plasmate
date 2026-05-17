@@ -89,6 +89,17 @@ index = extractor.extract_action_plan_index("https://example.com/settings")
 target = index["by_cache_key"]["plasmate-action:v1:..."]
 print(target["id"], target.get("html_id"), target.get("test_id"))
 
+# Or scope a Browser Use plan before replaying a cached target.
+buttons = extractor.find_action_targets_by_role(
+    "https://example.com/settings",
+    "button",
+)
+enabled_clicks = extractor.find_action_targets_by_action(
+    "https://example.com/settings",
+    "click",
+    enabled_only=True,
+)
+
 # Or let Plasmate resolve SOM id, cache key, HTML id, or test id automatically.
 target = extractor.find_action_target(
     "https://example.com/settings",

@@ -42,6 +42,14 @@ the sticky local move is to let SDK/parser users group compact action targets by
 role and action directly (`button`, `text_input`, `click`, `type`, `select`)
 so agents can scope a plan before asking an LLM or rewalking the full SOM.
 
+2026-05-16 adapter grouping read: the role/action grouping contract is only
+sticky when it reaches the many repositories where users actually wire agents:
+Browser Use, LangChain, Vercel AI, and Go services now need the same buckets as
+the parser packages and SDKs. This keeps Plasmate from becoming a Rust-only
+engine with thin docs around it; the product promise is a portable local action
+surface that framework apps can filter before prompt construction, cached
+replay, or trace logging.
+
 2026-05-16 label-addressable action read: current docs keep reinforcing that
 agents choose targets from human-facing structured names, then need a cheap way
 to reuse those choices in app code. Playwright MCP returns accessibility

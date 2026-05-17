@@ -22,6 +22,14 @@ Current browser-agent products are making action discovery a reusable app-layer 
 - **Stable ids remain the replay contract**: role/action buckets are for planning and narrowing; unattended replay should still store SOM ids, cache keys, HTML ids, or test ids.
 - **Conformance should follow the action surface**: Browser Use, LangChain, Vercel AI, Go, and shared fixtures should adopt the same grouped target contract so the broad repo surface stays one product promise.
 
+### 2026-05-16 Adapter Grouping Adjustment
+
+The grouped action-target contract now needs to live where agent developers actually build workflows: Browser Use, LangChain, Vercel AI, and Go durable workers. Current competitors keep turning browser state into reusable app-layer action menus, so Plasmate's next retention step is cross-adapter parity rather than another hosted-browser feature.
+
+- **Adapters should scope plans directly**: framework helpers should expose role/action groups instead of forcing users to scan compact action lists by hand.
+- **Go workers should match orchestration SDKs**: durable services need `ByRole`/`ByAction` buckets and helper functions to reuse the same target-selection logic as Python and Node agents.
+- **Release gates should include grouping**: the action-manifest conformance path should prove grouped buckets and enabled-only filtering across adapters before release.
+
 ### 2026-05-16 Label-Addressable Action Adjustment
 
 Current browser-agent products keep training users to choose actions by human-facing structured names, then reuse validated targets later. Playwright MCP snapshot refs make accessible names the selection layer, Stagehand caches observed actions after validation, and Browser Run/WebMCP raises the bar for inspectable action state. Plasmate should keep stable identifiers as the default replay contract, but make labels easy to use explicitly:

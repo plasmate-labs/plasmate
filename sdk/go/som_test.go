@@ -593,6 +593,18 @@ func TestActionPlanLookupHelpers(t *testing.T) {
 	if index.ByTestID["settings-save"].ID != save.ID {
 		t.Fatalf("ByTestID[settings-save] missing save target")
 	}
+	if got := index.ByRole["button"]; len(got) != 2 || got[0].ID != "e_save" || got[1].ID != "e_preview" {
+		t.Fatalf("ByRole[button] = %#v, want e_save/e_preview", got)
+	}
+	if got := index.ByAction["click"]; len(got) != 3 || got[0].ID != "e_save" || got[1].ID != "e_preview" || got[2].ID != "e_billing" {
+		t.Fatalf("ByAction[click] = %#v, want e_save/e_preview/e_billing", got)
+	}
+	if got := FindActionTargetsByRole(som, "button"); len(got) != 2 || got[0].ID != "e_save" || got[1].ID != "e_preview" {
+		t.Fatalf("FindActionTargetsByRole(button) = %#v, want e_save/e_preview", got)
+	}
+	if got := FindActionTargetsByAction(som, "click"); len(got) != 3 || got[0].ID != "e_save" || got[1].ID != "e_preview" || got[2].ID != "e_billing" {
+		t.Fatalf("FindActionTargetsByAction(click) = %#v, want e_save/e_preview/e_billing", got)
+	}
 	if found := FindActionTargetInIndex(index, save.CacheKey); found == nil || found.ID != save.ID {
 		t.Fatalf("FindActionTargetInIndex(cache_key) = %#v, want %s", found, save.ID)
 	}
@@ -622,6 +634,15 @@ func TestEnabledActionPlanIndexFiltersBlockedTargets(t *testing.T) {
 	}
 	if _, ok := index.ByID["e_plan"]; !ok {
 		t.Fatal("enabled-only index omitted enabled e_plan target")
+	}
+	if _, ok := index.ByRole["button"]; ok {
+		t.Fatal("enabled-only index included blocked button targets")
+	}
+	if got := index.ByAction["click"]; len(got) != 1 || got[0].ID != "e_billing" {
+		t.Fatalf("enabled-only ByAction[click] = %#v, want e_billing", got)
+	}
+	if got := FindActionTargetsByAction(som, "click", true); len(got) != 1 || got[0].ID != "e_billing" {
+		t.Fatalf("enabled-only FindActionTargetsByAction(click) = %#v, want e_billing", got)
 	}
 }
 

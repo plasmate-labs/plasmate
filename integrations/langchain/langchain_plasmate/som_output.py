@@ -240,18 +240,20 @@ def _action_target_from_element(elem: dict[str, Any]) -> dict[str, Any]:
 
 def action_target_index(
     som: dict[str, Any], *, enabled_only: bool = False
-) -> dict[str, dict[str, dict[str, Any]]]:
+) -> dict[str, Any]:
     """Return compact action targets indexed for replay lookups.
 
-    Buckets match the parser/SDK contract: ``by_id``, ``by_cache_key``,
-    ``by_html_id``, and ``by_test_id``. Values are compact target summaries
-    suitable for resolving a cached action back to a SOM element id.
+    Buckets match the parser/SDK contract. ``by_id``, ``by_cache_key``,
+    ``by_html_id``, and ``by_test_id`` resolve one cached target; ``by_role``
+    and ``by_action`` group targets for plan scoping before replay.
     """
-    index: dict[str, dict[str, dict[str, Any]]] = {
+    index: dict[str, Any] = {
         "by_id": {},
         "by_cache_key": {},
         "by_html_id": {},
         "by_test_id": {},
+        "by_role": {},
+        "by_action": {},
     }
     for region in som.get("regions", []):
         for elem in _iter_elements(region.get("elements", [])):
@@ -269,6 +271,14 @@ def action_target_index(
                 value = target.get(source_key)
                 if isinstance(value, str) and value not in index[bucket_key]:
                     index[bucket_key][value] = target
+            role = target.get("role")
+            if isinstance(role, str):
+                index["by_role"].setdefault(role, []).append(target)
+            actions = target.get("actions")
+            if isinstance(actions, list):
+                for action in actions:
+                    if isinstance(action, str):
+                        index["by_action"].setdefault(action, []).append(target)
     return index
 
 
@@ -297,6 +307,26 @@ def find_action_target(
     if bucket is None:
         raise ValueError("by must be one of: auto, id, cache_key, html_id, test_id")
     return index[bucket].get(value)
+
+
+def find_action_targets_by_role(
+    som: dict[str, Any], role: str, *, enabled_only: bool = False
+) -> list[dict[str, Any]]:
+    """Return compact action targets whose SOM role matches exactly."""
+    results = action_target_index(som, enabled_only=enabled_only)["by_role"].get(
+        role, []
+    )
+    return list(results) if isinstance(results, list) else []
+
+
+def find_action_targets_by_action(
+    som: dict[str, Any], action: str, *, enabled_only: bool = False
+) -> list[dict[str, Any]]:
+    """Return compact action targets that expose the requested action."""
+    results = action_target_index(som, enabled_only=enabled_only)["by_action"].get(
+        action, []
+    )
+    return list(results) if isinstance(results, list) else []
 
 
 def _action_state_to_text(elem: dict[str, Any], interactive: bool = False) -> str:

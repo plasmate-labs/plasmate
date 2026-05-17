@@ -10,7 +10,8 @@ usage() {
 Usage: ./scripts/action-manifest-conformance.sh [--full|--quick]
 
 Runs the shared action-availability expectation manifest across parser
-packages, SDKs, and framework adapters.
+packages, SDKs, and framework adapters, including grouped role/action target
+buckets used to scope replay plans.
 
   --full   Run each package's normal action-plan test suite. Default.
   --quick  Run the narrow shared-manifest checks for faster CI feedback.
@@ -54,7 +55,8 @@ if [ "$MODE" = "--quick" ]; then
 
   run_in "sdk/go" \
     "Go SDK action manifest" \
-    env GOCACHE="$GO_CACHE" go test ./... -run TestGetActionPlanMatchesSharedAvailabilityManifest
+    env GOCACHE="$GO_CACHE" go test ./... \
+      -run 'Test(GetActionPlanMatchesSharedAvailabilityManifest|ActionPlanLookupHelpers|EnabledActionPlanIndexFiltersBlockedTargets)'
 
   run_in "sdk/python" \
     "Python SDK action manifest" \

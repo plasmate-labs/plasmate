@@ -174,6 +174,36 @@ def test_extract_action_plan_index_exposes_replay_lookup_buckets():
     assert "e_plan" in enabled_index["by_id"]
 
 
+def test_extract_action_plan_index_groups_targets_by_role_and_action():
+    extractor = PlasmateExtractor.__new__(PlasmateExtractor)
+    som = load_action_availability_fixture()
+    extractor.extract = lambda url: som
+
+    index = extractor.extract_action_plan_index("https://example.com/settings")
+
+    assert [target["id"] for target in index["by_role"]["button"]] == [
+        "e_save",
+        "e_preview",
+    ]
+    assert [target["id"] for target in index["by_action"]["click"]] == [
+        "e_save",
+        "e_preview",
+        "e_billing",
+    ]
+    assert [
+        target["id"]
+        for target in extractor.find_action_targets_by_role(
+            "https://example.com/settings", "button"
+        )
+    ] == ["e_save", "e_preview"]
+    assert [
+        target["id"]
+        for target in extractor.find_action_targets_by_action(
+            "https://example.com/settings", "click", enabled_only=True
+        )
+    ] == ["e_billing"]
+
+
 def test_find_action_target_resolves_replay_identifiers():
     extractor = PlasmateExtractor.__new__(PlasmateExtractor)
     som = load_action_availability_fixture()

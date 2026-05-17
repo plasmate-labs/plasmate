@@ -471,6 +471,12 @@
 <li><strong>Stable ids remain the replay contract</strong>: role/action buckets are for planning and narrowing; unattended replay should still store SOM ids, cache keys, HTML ids, or test ids.</li>
 <li><strong>Conformance should follow the action surface</strong>: Browser Use, LangChain, Vercel AI, Go, and shared fixtures should adopt the same grouped target contract so the broad repo surface stays one product promise.</li>
 </ul>
+<h3 id="2026-05-16-adapter-grouping-adjustment">2026-05-16 Adapter Grouping Adjustment</h3><p>The grouped action-target contract now needs to live where agent developers actually build workflows: Browser Use, LangChain, Vercel AI, and Go durable workers. Current competitors keep turning browser state into reusable app-layer action menus, so Plasmate&#39;s next retention step is cross-adapter parity rather than another hosted-browser feature.</p>
+<ul>
+<li><strong>Adapters should scope plans directly</strong>: framework helpers should expose role/action groups instead of forcing users to scan compact action lists by hand.</li>
+<li><strong>Go workers should match orchestration SDKs</strong>: durable services need <code>ByRole</code>/<code>ByAction</code> buckets and helper functions to reuse the same target-selection logic as Python and Node agents.</li>
+<li><strong>Release gates should include grouping</strong>: the action-manifest conformance path should prove grouped buckets and enabled-only filtering across adapters before release.</li>
+</ul>
 <h3 id="2026-05-16-label-addressable-action-adjustment">2026-05-16 Label-Addressable Action Adjustment</h3><p>Current browser-agent products keep training users to choose actions by human-facing structured names, then reuse validated targets later. Playwright MCP snapshot refs make accessible names the selection layer, Stagehand caches observed actions after validation, and Browser Run/WebMCP raises the bar for inspectable action state. Plasmate should keep stable identifiers as the default replay contract, but make labels easy to use explicitly:</p>
 <ul>
 <li><strong>Labels are lookup hints</strong>: parser packages and SDKs should expose element-level label search plus compact action-target label search.</li>

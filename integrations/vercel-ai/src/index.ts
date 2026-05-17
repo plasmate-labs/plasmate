@@ -189,6 +189,8 @@ export interface PlasmateActionTargetIndex {
   by_cache_key: Record<string, PlasmateActionTarget>
   by_html_id: Record<string, PlasmateActionTarget>
   by_test_id: Record<string, PlasmateActionTarget>
+  by_role: Record<string, PlasmateActionTarget[]>
+  by_action: Record<string, PlasmateActionTarget[]>
 }
 
 /**
@@ -609,6 +611,8 @@ export function indexPlasmateActionTargets(
     by_cache_key: {},
     by_html_id: {},
     by_test_id: {},
+    by_role: {},
+    by_action: {},
   }
 
   for (const target of preparePlasmateActionPlan(targets, options)) {
@@ -623,6 +627,17 @@ export function indexPlasmateActionTargets(
     }
     if (typeof target.test_id === 'string' && !index.by_test_id[target.test_id]) {
       index.by_test_id[target.test_id] = target
+    }
+    if (typeof target.role === 'string') {
+      index.by_role[target.role] ??= []
+      index.by_role[target.role].push(target)
+    }
+    if (Array.isArray(target.actions)) {
+      for (const action of target.actions) {
+        if (typeof action !== 'string') continue
+        index.by_action[action] ??= []
+        index.by_action[action].push(target)
+      }
     }
   }
 
@@ -653,6 +668,28 @@ export function findPlasmateActionTarget(
     )
   }
   return index.by_id[value]
+}
+
+/**
+ * Return action targets whose SOM role matches exactly.
+ */
+export function findPlasmateActionTargetsByRole(
+  targets: readonly PlasmateActionTarget[],
+  role: string,
+  options: PreparePlasmateActionPlanOptions = {}
+): PlasmateActionTarget[] {
+  return [...(indexPlasmateActionTargets(targets, options).by_role[role] ?? [])]
+}
+
+/**
+ * Return action targets that expose the requested action.
+ */
+export function findPlasmateActionTargetsByAction(
+  targets: readonly PlasmateActionTarget[],
+  action: string,
+  options: PreparePlasmateActionPlanOptions = {}
+): PlasmateActionTarget[] {
+  return [...(indexPlasmateActionTargets(targets, options).by_action[action] ?? [])]
 }
 
 /**
