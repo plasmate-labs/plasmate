@@ -14,6 +14,14 @@ Plasmate should keep its local-first position, but the roadmap now emphasizes th
 
 Near-term target: make Plasmate the fastest local way to turn authenticated or repetitive web workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 CDP Attribute-Selector Adjustment
+
+Current browser-agent infrastructure keeps turning protocol compatibility into distribution. Browserbase/Stagehand highlights observe/action primitives, cached actions, session replay, and local-to-cloud portability; Cloudflare Browser Rendering added CDP endpoints and MCP client support; Firecrawl keeps exposing MCP scrape/search/extract plus browser interaction. Plasmate should keep the local-first wedge and improve the compatibility path where ordinary CDP clients already start: selectors and node attributes.
+
+- **Common selectors should hit SOM targets**: `DOM.querySelector` and `DOM.querySelectorAll` should support tag-qualified and bare attribute selectors for `name`, `href`, `type`, `aria-label`, `aria-labelledby`, `aria-describedby`, `role`, test ids, and boolean availability attrs.
+- **Human labels should be forgiving**: text and label selector matching should be case-insensitive so agents can reuse natural-language targets without exact casing.
+- **DOM nodes should expose replay cues**: CDP DOM nodes should include `data-plasmate-id`, `data-som-role`, HTML id, test id, ARIA label, href/name/type, and disabled/readonly/required flags when the SOM has them.
+
 ### 2026-05-17 CDP DOM/AX Selector Parity Adjustment
 
 Current browser-agent tools are turning structured page state into a protocol-level adoption path. Playwright MCP uses accessibility snapshots and snapshot-scoped refs, Stagehand/Browserbase caches observed actions and selectors for repeated workflows, Firecrawl distributes scrape/search/extract through MCP, and Cloudflare Browser Run now positions CDP, MCP, recordings, and structured-data endpoints as hosted browser-session features. Plasmate should keep the local-first wedge and make existing CDP clients resolve SOM-backed targets without raw DOM recovery:

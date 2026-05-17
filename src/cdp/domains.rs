@@ -1704,6 +1704,10 @@ fn node_to_cdp(entry: &NodeEntry, target: &CdpTarget, depth: u32) -> serde_json:
         "nodeValue": entry.node_value,
     });
 
+    if let Some(attributes) = node_attributes(entry, target) {
+        node["attributes"] = json!(attributes);
+    }
+
     if depth > 0 && !entry.children_ids.is_empty() {
         let children: Vec<serde_json::Value> = entry
             .children_ids
@@ -1718,6 +1722,77 @@ fn node_to_cdp(entry: &NodeEntry, target: &CdpTarget, depth: u32) -> serde_json:
     }
 
     node
+}
+
+fn node_attributes(entry: &NodeEntry, target: &CdpTarget) -> Option<Vec<String>> {
+    let som_id = entry.som_element_id.as_deref()?;
+    let element = target.find_element_by_som_id(som_id)?;
+    let mut attrs = Vec::new();
+
+    push_attr(&mut attrs, "data-plasmate-id", Some(element.id.as_str()));
+    push_attr(&mut attrs, "data-som-role", Some(element.role.as_str()));
+    push_attr(&mut attrs, "id", element.html_id.as_deref());
+    push_attr(&mut attrs, "aria-label", element.label.as_deref());
+    push_attr(&mut attrs, "data-testid", element_test_id(element));
+
+    let element_attrs = element.attrs.as_ref();
+    push_attr(&mut attrs, "href", attr_string(element_attrs, "href"));
+    push_attr(&mut attrs, "name", attr_string(element_attrs, "name"));
+    push_attr(
+        &mut attrs,
+        "placeholder",
+        attr_string(element_attrs, "placeholder"),
+    );
+    push_attr(&mut attrs, "title", attr_string(element_attrs, "title"));
+    push_attr(
+        &mut attrs,
+        "type",
+        attr_string(element_attrs, "type")
+            .or_else(|| attr_string(element_attrs, "input_type"))
+            .or_else(|| attr_string(element_attrs, "button_type")),
+    );
+    push_bool_attr(
+        &mut attrs,
+        "disabled",
+        attr_bool_opt(element_attrs, "disabled"),
+    );
+    push_bool_attr(
+        &mut attrs,
+        "readonly",
+        attr_bool_opt(element_attrs, "readonly"),
+    );
+    push_bool_attr(
+        &mut attrs,
+        "required",
+        attr_bool_opt(element_attrs, "required"),
+    );
+
+    if attrs.is_empty() {
+        None
+    } else {
+        Some(attrs)
+    }
+}
+
+fn push_attr(out: &mut Vec<String>, name: &str, value: Option<&str>) {
+    if let Some(value) = value.filter(|value| !value.is_empty()) {
+        out.push(name.to_string());
+        out.push(value.to_string());
+    }
+}
+
+fn push_bool_attr(out: &mut Vec<String>, name: &str, value: bool) {
+    if value {
+        out.push(name.to_string());
+        out.push("true".to_string());
+    }
+}
+
+fn attr_bool_opt(attrs: Option<&serde_json::Value>, key: &str) -> bool {
+    attrs
+        .and_then(|attrs| attrs.get(key))
+        .and_then(|value| value.as_bool())
+        .unwrap_or(false)
 }
 
 fn interactive_elements(som: &Som) -> Vec<&Element> {
@@ -2040,6 +2115,28 @@ mod tests {
         assert!(elements.iter().all(|element| element["cache_key"]
             .as_str()
             .is_some_and(|key| key.starts_with("plasmate-action:v1:"))));
+    }
+
+    #[test]
+    fn dom_nodes_expose_replay_attributes() {
+        let target = cdp_target_with_som(fixture_som());
+        let node_id = target.query_selector("#save-button").unwrap();
+        let entry = target.node_map.get(&node_id).unwrap();
+        let node = node_to_cdp(entry, &target, 0);
+        let attrs = node["attributes"].as_array().unwrap();
+        let attr = |name: &str| {
+            attrs
+                .chunks(2)
+                .find(|pair| pair[0].as_str() == Some(name))
+                .and_then(|pair| pair[1].as_str())
+        };
+
+        assert_eq!(attr("data-plasmate-id"), Some("top-button"));
+        assert_eq!(attr("data-som-role"), Some("button"));
+        assert_eq!(attr("id"), Some("save-button"));
+        assert_eq!(attr("aria-label"), Some("Save"));
+        assert_eq!(attr("data-testid"), Some("settings-save"));
+        assert_eq!(attr("disabled"), Some("true"));
     }
 
     #[test]

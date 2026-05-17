@@ -467,7 +467,7 @@ impl CdpTarget {
         None
     }
 
-    /// Find a node by CSS selector (simplified: tag, #id, data-testid, SOM role, text).
+    /// Find a node by CSS selector (simplified: tag, #id, common attrs, SOM role, text).
     pub fn query_selector(&self, selector: &str) -> Option<u64> {
         // Ensure a page is loaded
         let _ = self.current_som.as_ref()?;
@@ -515,7 +515,7 @@ impl CdpTarget {
             return false;
         }
 
-        if entry.node_name == selector {
+        if entry.node_name.eq_ignore_ascii_case(selector) {
             return true;
         }
 
@@ -539,18 +539,28 @@ impl CdpTarget {
                 == Some(test_id);
         }
 
-        if element.role.as_str() == selector {
+        if let Some((tag, attr)) = selector_attribute(selector) {
+            if let Some(tag) = tag {
+                if !entry.node_name.eq_ignore_ascii_case(tag) {
+                    return false;
+                }
+            }
+            return element_matches_attribute(element, attr.name, attr.value);
+        }
+
+        let normalized_selector = selector.to_ascii_lowercase().replace('-', "_");
+        if element.role.as_str() == normalized_selector {
             return true;
         }
 
         if let Some(text) = element.text.as_deref() {
-            if text.contains(selector) {
+            if text_contains_case_insensitive(text, selector) {
                 return true;
             }
         }
 
         if let Some(label) = element.label.as_deref() {
-            if label.contains(selector) {
+            if text_contains_case_insensitive(label, selector) {
                 return true;
             }
         }
@@ -818,6 +828,105 @@ fn selector_test_id(selector: &str) -> Option<&str> {
     None
 }
 
+struct SelectorAttribute<'a> {
+    name: &'a str,
+    value: Option<&'a str>,
+}
+
+fn selector_attribute(selector: &str) -> Option<(Option<&str>, SelectorAttribute<'_>)> {
+    let selector = selector.trim();
+    let open = selector.find('[')?;
+    let close = selector.rfind(']')?;
+    if close <= open || close != selector.len() - 1 {
+        return None;
+    }
+
+    let tag = selector[..open].trim();
+    let tag = if tag.is_empty() { None } else { Some(tag) };
+    let body = selector[open + 1..close].trim();
+    if body.is_empty() {
+        return None;
+    }
+
+    let (name, value) = match body.split_once('=') {
+        Some((name, value)) => {
+            let value = value.trim().trim_matches('"').trim_matches('\'');
+            (name.trim(), Some(value))
+        }
+        None => (body, None),
+    };
+
+    if name.is_empty() {
+        None
+    } else {
+        Some((tag, SelectorAttribute { name, value }))
+    }
+}
+
+fn element_matches_attribute(element: &Element, name: &str, expected: Option<&str>) -> bool {
+    let name = name.trim().to_ascii_lowercase();
+    let actual = match name.as_str() {
+        "id" => element.html_id.as_deref(),
+        "data-testid" | "data-test-id" | "data-test" | "data-qa" | "test_id" => {
+            attr_string(element.attrs.as_ref(), "test_id")
+        }
+        "role" => {
+            attr_string(element.attrs.as_ref(), "source_role").or(Some(element.role.as_str()))
+        }
+        "aria-label" | "label" => element.label.as_deref(),
+        "aria-labelledby" => attr_string_from_aria(element.attrs.as_ref(), "labelledby"),
+        "aria-describedby" => attr_string_from_aria(element.attrs.as_ref(), "describedby"),
+        "type" => attr_string(element.attrs.as_ref(), "type")
+            .or_else(|| attr_string(element.attrs.as_ref(), "input_type"))
+            .or_else(|| attr_string(element.attrs.as_ref(), "button_type")),
+        other => attr_string(element.attrs.as_ref(), &other.replace('-', "_"))
+            .or_else(|| attr_string(element.attrs.as_ref(), other))
+            .or_else(|| {
+                other
+                    .strip_prefix("aria-")
+                    .and_then(|key| attr_string_from_aria(element.attrs.as_ref(), key))
+            }),
+    };
+
+    match (actual, expected) {
+        (Some(_), None) => true,
+        (Some(actual), Some(expected)) => actual.eq_ignore_ascii_case(expected),
+        (None, Some(expected)) => attr_bool_matches(element.attrs.as_ref(), &name, expected),
+        (None, None) => attr_bool_present(element.attrs.as_ref(), &name),
+    }
+}
+
+fn attr_string<'a>(attrs: Option<&'a serde_json::Value>, key: &str) -> Option<&'a str> {
+    attrs
+        .and_then(|attrs| attrs.get(key))
+        .and_then(|value| value.as_str())
+        .filter(|value| !value.is_empty())
+}
+
+fn attr_string_from_aria<'a>(attrs: Option<&'a serde_json::Value>, key: &str) -> Option<&'a str> {
+    attrs
+        .and_then(|attrs| attrs.get("aria"))
+        .and_then(|aria| aria.get(key))
+        .and_then(|value| value.as_str())
+        .filter(|value| !value.is_empty())
+}
+
+fn attr_bool_present(attrs: Option<&serde_json::Value>, key: &str) -> bool {
+    let normalized = key.replace('-', "_");
+    attrs
+        .and_then(|attrs| attrs.get(&normalized).or_else(|| attrs.get(key)))
+        .and_then(|value| value.as_bool())
+        .unwrap_or(false)
+}
+
+fn attr_bool_matches(attrs: Option<&serde_json::Value>, key: &str, expected: &str) -> bool {
+    attr_bool_present(attrs, key) && expected.eq_ignore_ascii_case("true")
+}
+
+fn text_contains_case_insensitive(haystack: &str, needle: &str) -> bool {
+    haystack.to_lowercase().contains(&needle.to_lowercase())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -955,5 +1064,78 @@ mod tests {
                 .len(),
             1
         );
+    }
+
+    #[test]
+    fn test_query_selector_matches_common_attribute_selectors() {
+        let mut link = element("docs-link", ElementRole::Link, Some("Read docs"));
+        link.html_id = Some("docs".to_string());
+        link.label = Some("Product Docs".to_string());
+        link.attrs = Some(serde_json::json!({
+            "href": "/docs",
+            "name": "docs-link",
+            "source_role": "menuitem",
+            "aria": {
+                "label": "Product Docs",
+                "labelledby": "docs-label"
+            }
+        }));
+
+        let mut input = element("search-box", ElementRole::TextInput, None);
+        input.label = Some("Search docs".to_string());
+        input.attrs = Some(serde_json::json!({
+            "name": "q",
+            "input_type": "search",
+            "placeholder": "Search",
+            "required": true
+        }));
+
+        let mut target = CdpTarget::new().unwrap();
+        target.current_som = Some(Som {
+            som_version: "0.1".to_string(),
+            url: "https://example.com/app".to_string(),
+            title: "App".to_string(),
+            lang: "en".to_string(),
+            regions: vec![Region {
+                id: "r1".to_string(),
+                role: RegionRole::Main,
+                label: None,
+                action: None,
+                method: None,
+                target: None,
+                enctype: None,
+                novalidate: None,
+                accept_charset: None,
+                autocomplete: None,
+                elements: vec![link, input],
+            }],
+            meta: SomMeta {
+                html_bytes: 100,
+                som_bytes: 100,
+                element_count: 2,
+                interactive_count: 2,
+            },
+            structured_data: None,
+        });
+        target.rebuild_node_map();
+
+        let by_href = target.query_selector("a[href='/docs']").unwrap();
+        let by_name = target.query_selector("[name=\"docs-link\"]").unwrap();
+        let by_role = target.query_selector("[role='menuitem']").unwrap();
+        let by_label = target
+            .query_selector("[aria-label=\"Product Docs\"]")
+            .unwrap();
+        let by_labelledby = target
+            .query_selector("[aria-labelledby='docs-label']")
+            .unwrap();
+
+        assert_eq!(by_href, by_name);
+        assert_eq!(by_href, by_role);
+        assert_eq!(by_href, by_label);
+        assert_eq!(by_href, by_labelledby);
+        assert!(target.query_selector("product docs").is_some());
+        assert!(target.query_selector("input[name=q]").is_some());
+        assert!(target.query_selector("input[type=search]").is_some());
+        assert!(target.query_selector("[required=true]").is_some());
     }
 }

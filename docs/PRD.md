@@ -32,6 +32,22 @@ cloud API.
 - Crawl4AI remains strong for open-source Python crawling and extraction, but
   carries Chromium/Playwright operational weight.
 
+2026-05-17 CDP attribute-selector read: fresh trend research keeps reinforcing
+that protocol compatibility is now part of browser-agent distribution.
+Browserbase/Stagehand markets `act`, `extract`, `observe`, `agent`, local
+starts plus Browserbase deployment, action caching, session replay, and prompt
+observability; Cloudflare Browser Rendering added CDP endpoints plus MCP client
+support; Firecrawl continues distributing scrape/search/extract through MCP and
+browser interaction surfaces. Plasmate should not chase hosted browser
+infrastructure as the primary wedge. The sticky local move is to make
+Puppeteer/Playwright/CDP clients resolve ordinary selectors against SOM-backed
+targets before raw DOM recovery: support common attribute selectors such as
+`[name]`, `[href]`, `[type]`, `[aria-label]`, `[aria-labelledby]`, `[role]`,
+and unquoted test-id forms; make label/text matching case-insensitive; and
+return replay-oriented node attributes (`data-plasmate-id`, `data-som-role`,
+HTML id, test id, ARIA label, href/name/type, and availability flags) from CDP
+DOM nodes.
+
 2026-05-17 CDP DOM/AX selector parity read: current official docs keep making
 structured snapshots and protocol compatibility the adoption bridge. Playwright
 MCP states that agents act through accessibility snapshots with refs that are
