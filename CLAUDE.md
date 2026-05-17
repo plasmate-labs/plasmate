@@ -86,8 +86,9 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Verification blocked: full `cargo test --quiet` still fails only in
   sandboxed `tests/awp_integration_test.rs` because local listener setup
   returns `Operation not permitted`.
-- Commit/push state: alternate-index commit `33e4604` (`chore: improve
-  adapter label action lookup`) pushed successfully to
+- Commit/push state: alternate-index code/docs commit `33e4604` (`chore:
+  improve adapter label action lookup`) plus follow-up state commit `aff9010`
+  (`docs: record adapter label lookup push state`) pushed successfully to
   `origin/codex/plasmate-improvements-2026-05-17-adapter-label-lookup`.
   Direct push to `master` was rejected as non-fast-forward because remote
   `master` has newer commits. Follow-up fetch/`ls-remote` failed DNS for
