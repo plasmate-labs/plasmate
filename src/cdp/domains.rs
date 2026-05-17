@@ -1424,7 +1424,7 @@ pub fn plasmate_get_interactive_elements(
         })
         .filter(|e| {
             role_filter
-                .map(|role| e.role.as_str() == role)
+                .map(|role| e.role.as_str() == normalize_role_filter(role))
                 .unwrap_or(true)
         })
         .filter(|e| {
@@ -1432,7 +1432,7 @@ pub fn plasmate_get_interactive_elements(
                 .map(|action| {
                     e.actions
                         .as_ref()
-                        .map(|actions| actions.iter().any(|a| a == action))
+                        .map(|actions| actions.iter().any(|a| a.eq_ignore_ascii_case(action)))
                         .unwrap_or(false)
                 })
                 .unwrap_or(true)
@@ -1727,15 +1727,25 @@ fn node_to_cdp(entry: &NodeEntry, target: &CdpTarget, depth: u32) -> serde_json:
 fn node_attributes(entry: &NodeEntry, target: &CdpTarget) -> Option<Vec<String>> {
     let som_id = entry.som_element_id.as_deref()?;
     let element = target.find_element_by_som_id(som_id)?;
+    let element_attrs = element.attrs.as_ref();
     let mut attrs = Vec::new();
 
     push_attr(&mut attrs, "data-plasmate-id", Some(element.id.as_str()));
     push_attr(&mut attrs, "data-som-role", Some(element.role.as_str()));
     push_attr(&mut attrs, "id", element.html_id.as_deref());
     push_attr(&mut attrs, "aria-label", element.label.as_deref());
+    push_attr(
+        &mut attrs,
+        "aria-labelledby",
+        attr_string_from_aria(element_attrs, "labelledby"),
+    );
+    push_attr(
+        &mut attrs,
+        "aria-describedby",
+        attr_string_from_aria(element_attrs, "describedby"),
+    );
     push_attr(&mut attrs, "data-testid", element_test_id(element));
 
-    let element_attrs = element.attrs.as_ref();
     push_attr(&mut attrs, "href", attr_string(element_attrs, "href"));
     push_attr(&mut attrs, "name", attr_string(element_attrs, "name"));
     push_attr(
@@ -1843,7 +1853,7 @@ fn element_matches_lookup(element: &Element, value: &str, by: &str, exact_label:
         "cache_key" | "cacheKey" => action_plan_cache_key(element) == value,
         "html_id" | "htmlId" => element.html_id.as_deref() == Some(value),
         "test_id" | "testId" => element_test_id(element) == Some(value),
-        "label" => element_label_matches(element, value, exact_label || by == "label"),
+        "label" => element_label_matches(element, value, exact_label),
         _ => {
             element.id == value
                 || action_plan_cache_key(element) == value
@@ -1851,6 +1861,10 @@ fn element_matches_lookup(element: &Element, value: &str, by: &str, exact_label:
                 || element_test_id(element) == Some(value)
         }
     }
+}
+
+fn normalize_role_filter(role: &str) -> String {
+    role.to_ascii_lowercase().replace('-', "_")
 }
 
 fn element_label_matches(element: &Element, label: &str, exact: bool) -> bool {
@@ -1901,6 +1915,14 @@ fn action_plan_cache_key(element: &Element) -> String {
 fn attr_string<'a>(attrs: Option<&'a serde_json::Value>, key: &str) -> Option<&'a str> {
     attrs
         .and_then(|attrs| attrs.get(key))
+        .and_then(|value| value.as_str())
+        .filter(|value| !value.is_empty())
+}
+
+fn attr_string_from_aria<'a>(attrs: Option<&'a serde_json::Value>, key: &str) -> Option<&'a str> {
+    attrs
+        .and_then(|attrs| attrs.get("aria"))
+        .and_then(|aria| aria.get(key))
         .and_then(|value| value.as_str())
         .filter(|value| !value.is_empty())
 }
@@ -2041,6 +2063,10 @@ mod tests {
         top_button.attrs = Some(json!({
             "test_id": "settings-save",
             "disabled": true,
+            "aria": {
+                "labelledby": "save-label",
+                "describedby": "save-help"
+            },
         }));
 
         let mut text_input = element("email-input", ElementRole::TextInput, Some("Email"));
@@ -2135,6 +2161,8 @@ mod tests {
         assert_eq!(attr("data-som-role"), Some("button"));
         assert_eq!(attr("id"), Some("save-button"));
         assert_eq!(attr("aria-label"), Some("Save"));
+        assert_eq!(attr("aria-labelledby"), Some("save-label"));
+        assert_eq!(attr("aria-describedby"), Some("save-help"));
         assert_eq!(attr("data-testid"), Some("settings-save"));
         assert_eq!(attr("disabled"), Some("true"));
     }
@@ -2177,6 +2205,41 @@ mod tests {
         assert_eq!(blocked_elements[0]["test_id"], "settings-save");
         assert_eq!(blocked_elements[0]["enabled"], false);
         assert_eq!(blocked_elements[0]["blocked_reason"], "disabled");
+    }
+
+    #[test]
+    fn get_interactive_elements_uses_forgiving_lookup_filters() {
+        let target = cdp_target_with_som(fixture_som());
+
+        let by_label = plasmate_get_interactive_elements(
+            1,
+            &json!({
+                "value": "shadow",
+                "by": "label",
+            }),
+            &target,
+        )
+        .result
+        .unwrap();
+        let label_elements = by_label["elements"].as_array().unwrap();
+        assert_eq!(label_elements.len(), 1);
+        assert_eq!(label_elements[0]["id"], "shadow-button");
+
+        let by_normalized_filters = plasmate_get_interactive_elements(
+            2,
+            &json!({
+                "role": "text-input",
+                "action": "TYPE",
+                "value": "email",
+                "by": "label",
+            }),
+            &target,
+        )
+        .result
+        .unwrap();
+        let normalized_elements = by_normalized_filters["elements"].as_array().unwrap();
+        assert_eq!(normalized_elements.len(), 1);
+        assert_eq!(normalized_elements[0]["id"], "email-input");
     }
 
     #[test]

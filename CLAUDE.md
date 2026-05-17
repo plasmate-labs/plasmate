@@ -49,6 +49,43 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-17T15:07:31Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch origin --prune` was attempted first and still
+  fails in the linked automation worktree because shared worktree metadata
+  `FETCH_HEAD` cannot be opened (`Operation not permitted`). Work continued
+  from local `HEAD` / `origin/master` `48c03d6`, which matched the locally
+  known remote-tracking head at start. GitHub CLI auth is also invalid for user
+  `dbhurley`, so any publish step must use plain git/SSH rather than `gh`.
+- Market direction: current docs keep reinforcing the same no-pivot call.
+  Playwright MCP operates on structured accessibility snapshots and
+  snapshot-scoped refs, Stagehand/Browserbase documents `observe()` plus local
+  and managed action caching, Firecrawl packages scrape/extract/browser
+  interaction through MCP and browser APIs, and Cloudflare Browser Run markets
+  CDP/MCP sessions and recordings as hosted infrastructure. Plasmate should
+  stay local-first and deepen protocol-compatible SOM replay rather than chase
+  hosted browser sessions.
+- Code changes: CDP `DOM.querySelector` / `DOM.querySelectorAll` now support
+  exact, contains, prefix, and suffix attribute operators (`=`, `*=`, `^=`,
+  `$=`) for common SOM-backed attrs. CDP DOM nodes now expose raw
+  `aria-labelledby` and `aria-describedby` alongside resolved labels.
+  `Plasmate.getInteractiveElements` now treats `by="label"` as substring
+  search unless `exact=true`, accepts case-insensitive action filters, and
+  accepts hyphenated role filters such as `text-input`.
+- Docs changes: README, PRD, roadmap source docs, and generated website docs
+  now document the selector-ergonomics rationale and CDP compatibility
+  contract.
+- Verification passed: touched-file rustfmt, focused `cargo test cdp::`, `node
+  website/build.mjs` with a temporary primary-checkout `website/node_modules`
+  symlink removed afterward, `git diff --check`, `cargo build --quiet`,
+  `cargo test --lib --quiet` (282), and `cargo clippy --quiet` with existing
+  warnings.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`.
+- Commit/push state: pending at this entry; changed files are `src/cdp/`,
+  README, PRD/roadmap docs, generated website docs, and this running state.
+
 ### 2026-05-17T07:06:05Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch --prune origin` was attempted first in the

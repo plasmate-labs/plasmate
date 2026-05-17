@@ -545,7 +545,7 @@ impl CdpTarget {
                     return false;
                 }
             }
-            return element_matches_attribute(element, attr.name, attr.value);
+            return element_matches_attribute(element, attr);
         }
 
         let normalized_selector = selector.to_ascii_lowercase().replace('-', "_");
@@ -830,7 +830,17 @@ fn selector_test_id(selector: &str) -> Option<&str> {
 
 struct SelectorAttribute<'a> {
     name: &'a str,
+    operator: AttributeOperator,
     value: Option<&'a str>,
+}
+
+#[derive(Clone, Copy)]
+enum AttributeOperator {
+    Exists,
+    Exact,
+    Contains,
+    Prefix,
+    Suffix,
 }
 
 fn selector_attribute(selector: &str) -> Option<(Option<&str>, SelectorAttribute<'_>)> {
@@ -848,22 +858,44 @@ fn selector_attribute(selector: &str) -> Option<(Option<&str>, SelectorAttribute
         return None;
     }
 
-    let (name, value) = match body.split_once('=') {
-        Some((name, value)) => {
+    let (name, operator, value) = match body
+        .split_once("*=")
+        .map(|parts| (parts, AttributeOperator::Contains))
+        .or_else(|| {
+            body.split_once("^=")
+                .map(|parts| (parts, AttributeOperator::Prefix))
+        })
+        .or_else(|| {
+            body.split_once("$=")
+                .map(|parts| (parts, AttributeOperator::Suffix))
+        })
+        .or_else(|| {
+            body.split_once('=')
+                .map(|parts| (parts, AttributeOperator::Exact))
+        }) {
+        Some(((name, value), operator)) => {
             let value = value.trim().trim_matches('"').trim_matches('\'');
-            (name.trim(), Some(value))
+            (name.trim(), operator, Some(value))
         }
-        None => (body, None),
+        None => (body, AttributeOperator::Exists, None),
     };
 
     if name.is_empty() {
         None
     } else {
-        Some((tag, SelectorAttribute { name, value }))
+        Some((
+            tag,
+            SelectorAttribute {
+                name,
+                operator,
+                value,
+            },
+        ))
     }
 }
 
-fn element_matches_attribute(element: &Element, name: &str, expected: Option<&str>) -> bool {
+fn element_matches_attribute(element: &Element, attr: SelectorAttribute<'_>) -> bool {
+    let name = attr.name;
     let name = name.trim().to_ascii_lowercase();
     let actual = match name.as_str() {
         "id" => element.html_id.as_deref(),
@@ -888,11 +920,24 @@ fn element_matches_attribute(element: &Element, name: &str, expected: Option<&st
             }),
     };
 
-    match (actual, expected) {
+    match (actual, attr.value) {
         (Some(_), None) => true,
-        (Some(actual), Some(expected)) => actual.eq_ignore_ascii_case(expected),
-        (None, Some(expected)) => attr_bool_matches(element.attrs.as_ref(), &name, expected),
+        (Some(actual), Some(expected)) => attr_value_matches(actual, expected, attr.operator),
+        (None, Some(expected)) => {
+            matches!(attr.operator, AttributeOperator::Exact)
+                && attr_bool_matches(element.attrs.as_ref(), &name, expected)
+        }
         (None, None) => attr_bool_present(element.attrs.as_ref(), &name),
+    }
+}
+
+fn attr_value_matches(actual: &str, expected: &str, operator: AttributeOperator) -> bool {
+    match operator {
+        AttributeOperator::Exists => true,
+        AttributeOperator::Exact => actual.eq_ignore_ascii_case(expected),
+        AttributeOperator::Contains => text_contains_case_insensitive(actual, expected),
+        AttributeOperator::Prefix => actual.to_lowercase().starts_with(&expected.to_lowercase()),
+        AttributeOperator::Suffix => actual.to_lowercase().ends_with(&expected.to_lowercase()),
     }
 }
 
@@ -1136,6 +1181,11 @@ mod tests {
         assert!(target.query_selector("product docs").is_some());
         assert!(target.query_selector("input[name=q]").is_some());
         assert!(target.query_selector("input[type=search]").is_some());
+        assert!(target.query_selector("a[href^='/do']").is_some());
+        assert!(target.query_selector("a[href$='ocs']").is_some());
+        assert!(target.query_selector("[aria-label*='product']").is_some());
+        assert!(target.query_selector("input[name^=q]").is_some());
+        assert!(target.query_selector("input[type$=arch]").is_some());
         assert!(target.query_selector("[required=true]").is_some());
     }
 }

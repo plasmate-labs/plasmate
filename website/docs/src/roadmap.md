@@ -14,6 +14,14 @@ Plasmate should keep its local-first position, but the roadmap now emphasizes th
 
 Near-term target: make Plasmate the fastest local way to turn authenticated or repetitive web workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 CDP Selector-Ergonomics Adjustment
+
+Current browser-agent docs keep pointing to the same adoption pattern: Playwright MCP makes structured accessibility refs the default action surface, Stagehand/Browserbase caches observed actions and selectors for repeated flows, Firecrawl distributes scrape/extract/browser interaction through MCP and browser APIs, and Cloudflare Browser Run now markets CDP/MCP sessions plus recordings. Plasmate should keep the local-first wedge, but CDP clients should feel more browser-like before they fall back to raw DOM or screenshots.
+
+- **Selector operators reduce raw DOM recovery**: `DOM.querySelector` and `DOM.querySelectorAll` should support common attribute operator selectors (`*=`, `^=`, `$=`) against SOM-backed replay attrs such as labels, hrefs, names, roles, and test ids.
+- **ARIA relationship ids should cross CDP**: DOM nodes should expose `aria-labelledby` and `aria-describedby` alongside resolved labels so cached replay can validate naming context without a second DOM walk.
+- **Action-menu filters should be forgiving**: CDP action lookup should keep exact replay identifiers strict while allowing case-insensitive role, action, and label filters for human-facing planning prompts.
+
 ### 2026-05-17 CDP Attribute-Selector Adjustment
 
 Current browser-agent infrastructure keeps turning protocol compatibility into distribution. Browserbase/Stagehand highlights observe/action primitives, cached actions, session replay, and local-to-cloud portability; Cloudflare Browser Rendering added CDP endpoints and MCP client support; Firecrawl keeps exposing MCP scrape/search/extract plus browser interaction. Plasmate should keep the local-first wedge and improve the compatibility path where ordinary CDP clients already start: selectors and node attributes.

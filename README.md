@@ -272,12 +272,15 @@ document order and understand stable replay selectors such as `#html_id`,
 `#som_id`, `[data-testid="..."]`, `[data-test-id="..."]`, common attributes
 such as `[name="..."]`, `[href="..."]`, `[type="..."]`,
 `[aria-label="..."]`, `[aria-labelledby="..."]`, `[role="..."]`, SOM role
-names, text, and labels. Matching for text and labels is case-insensitive.
+names, text, and labels. Attribute selectors support exact, contains, prefix,
+and suffix matching (`=`, `*=`, `^=`, `$=`) for the common SOM-backed attrs.
+Matching for text, labels, and CDP action filters is case-insensitive.
 CDP DOM nodes expose replay attributes such as `data-plasmate-id`,
-`data-som-role`, HTML id, test id, ARIA label, href/name/type, and
-disabled/readonly/required flags when available. `Accessibility.getFullAXTree`
-is also SOM-backed and includes nested and shadow-root elements with backend
-node ids plus disabled/readonly properties when available.
+`data-som-role`, HTML id, test id, ARIA label/labelledby/describedby,
+href/name/type, and disabled/readonly/required flags when available.
+`Accessibility.getFullAXTree` is also SOM-backed and includes nested and
+shadow-root elements with backend node ids plus disabled/readonly properties
+when available.
 
 CDP is a compatibility layer. AWP is the native protocol, designed for agents rather than debuggers.
 
