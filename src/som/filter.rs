@@ -1,8 +1,8 @@
 //! Region/element filtering for SOM snapshots.
 //!
 //! Provides `apply_selector` to narrow a SOM down to specific regions or
-//! elements by semantic role or HTML id. Used by both the CLI (`--selector`)
-//! and MCP tools (`selector` parameter).
+//! elements by semantic role, labels, text, attributes, or HTML id. Used by
+//! both the CLI (`--selector`) and MCP tools (`selector` parameter).
 
 use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 
@@ -16,6 +16,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `section`, `group`, `separator`, `details`, `iframe`
 /// - Action surfaces: `interactive` or `action:click` / `action:type` /
 ///   `action:clear` / `action:select` / `action:toggle`
+/// - Human text: `label:Save settings` or `text:Welcome`
+/// - Common attributes: `[name=q]`, `[href="/docs"]`, `input[type=search]`,
+///   `[data-testid=save]`, `[aria-label="Save"]`, `[required]`
 /// - HTML id: `#some-id` - keeps only elements whose `html_id` matches
 ///
 /// Unrecognised selectors return the full SOM unchanged (with a warning to stderr).
@@ -83,6 +86,33 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         }
     }
 
+    if let Some(label) = selector_value(selector, "label:") {
+        return filter_som_elements(som, selector, |element| {
+            element
+                .label
+                .as_ref()
+                .map(|value| text_contains_case_insensitive(value, label))
+                .unwrap_or(false)
+        });
+    }
+
+    if let Some(text) = selector_value(selector, "text:") {
+        return filter_som_elements(som, selector, |element| {
+            element
+                .text
+                .as_ref()
+                .map(|value| text_contains_case_insensitive(value, text))
+                .unwrap_or(false)
+        });
+    }
+
+    if let Some((tag, attr)) = selector_attribute(selector) {
+        return filter_som_elements(som, selector, |element| {
+            tag_matches_role(element, tag)
+                && element_matches_attribute(element, attr.name, attr.value)
+        });
+    }
+
     // Try id selector: #my-id. Prefer documented region ids, then HTML ids
     // on elements. If neither matches, return the full SOM as a graceful fallback.
     if let Some(id) = selector.strip_prefix('#') {
@@ -123,6 +153,20 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     som.clone()
 }
 
+fn selector_value<'a>(selector: &'a str, prefix: &str) -> Option<&'a str> {
+    let value = selector
+        .trim()
+        .strip_prefix(prefix)
+        .map(str::trim)
+        .map(|value| value.trim_matches('"').trim_matches('\''))?;
+
+    if value.is_empty() {
+        None
+    } else {
+        Some(value)
+    }
+}
+
 fn parse_element_role(selector: &str) -> Option<ElementRole> {
     match selector
         .trim()
@@ -149,6 +193,169 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         "iframe" => Some(ElementRole::Iframe),
         _ => None,
     }
+}
+
+struct SelectorAttribute<'a> {
+    name: &'a str,
+    value: Option<&'a str>,
+}
+
+fn selector_attribute(selector: &str) -> Option<(Option<&str>, SelectorAttribute<'_>)> {
+    let selector = selector.trim();
+    let open = selector.find('[')?;
+    let close = selector.rfind(']')?;
+    if close <= open || close != selector.len() - 1 {
+        return None;
+    }
+
+    let tag = selector[..open].trim();
+    let tag = if tag.is_empty() { None } else { Some(tag) };
+    let body = selector[open + 1..close].trim();
+    if body.is_empty() {
+        return None;
+    }
+
+    let (name, value) = match body.split_once('=') {
+        Some((name, value)) => {
+            let value = value.trim().trim_matches('"').trim_matches('\'');
+            (name.trim(), Some(value))
+        }
+        None => (body, None),
+    };
+
+    if name.is_empty() {
+        None
+    } else {
+        Some((tag, SelectorAttribute { name, value }))
+    }
+}
+
+fn tag_matches_role(element: &Element, tag: Option<&str>) -> bool {
+    let Some(tag) = tag else {
+        return true;
+    };
+
+    match tag.trim().to_ascii_lowercase().as_str() {
+        "a" => element.role == ElementRole::Link,
+        "button" => element.role == ElementRole::Button,
+        "input" => matches!(
+            element.role,
+            ElementRole::TextInput
+                | ElementRole::Checkbox
+                | ElementRole::Radio
+                | ElementRole::Button
+        ),
+        "textarea" => element.role == ElementRole::Textarea,
+        "select" => element.role == ElementRole::Select,
+        "img" | "picture" => element.role == ElementRole::Image,
+        "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => element.role == ElementRole::Heading,
+        "section" | "article" => element.role == ElementRole::Section,
+        "fieldset" => element.role == ElementRole::Group,
+        "iframe" => element.role == ElementRole::Iframe,
+        _ => false,
+    }
+}
+
+fn element_matches_attribute(element: &Element, name: &str, expected: Option<&str>) -> bool {
+    let normalized = name.trim().to_ascii_lowercase();
+    match normalized.as_str() {
+        "id" => attr_string_matches(element.html_id.as_deref(), expected),
+        "role" => attr_string_matches(
+            attr_string(element.attrs.as_ref(), "source_role").or(Some(element.role.as_str())),
+            expected,
+        ),
+        "aria-label" | "label" => attr_string_matches(
+            element
+                .label
+                .as_deref()
+                .or_else(|| attr_string_from_aria(element.attrs.as_ref(), "label")),
+            expected,
+        ),
+        "aria-labelledby" => attr_string_matches(
+            attr_string_from_aria(element.attrs.as_ref(), "labelledby"),
+            expected,
+        ),
+        "aria-describedby" => attr_string_matches(
+            attr_string_from_aria(element.attrs.as_ref(), "describedby"),
+            expected,
+        ),
+        "data-testid" | "data-test-id" | "data-test" | "data-qa" | "test_id" => {
+            attr_string_matches(attr_string(element.attrs.as_ref(), "test_id"), expected)
+        }
+        "type" => attr_string_matches(
+            attr_string(element.attrs.as_ref(), "type")
+                .or_else(|| attr_string(element.attrs.as_ref(), "input_type"))
+                .or_else(|| attr_string(element.attrs.as_ref(), "button_type")),
+            expected,
+        ),
+        other => attr_value_matches(element.attrs.as_ref(), other, expected),
+    }
+}
+
+fn attr_string_matches(actual: Option<&str>, expected: Option<&str>) -> bool {
+    match (actual, expected) {
+        (Some(value), Some(expected)) => value.eq_ignore_ascii_case(expected),
+        (Some(_), None) => true,
+        _ => false,
+    }
+}
+
+fn attr_value_matches(
+    attrs: Option<&serde_json::Value>,
+    key: &str,
+    expected: Option<&str>,
+) -> bool {
+    let normalized = key.replace('-', "_");
+    let value = attrs
+        .and_then(|attrs| attrs.get(key).or_else(|| attrs.get(&normalized)))
+        .or_else(|| {
+            key.strip_prefix("aria-")
+                .and_then(|aria_key| attrs.and_then(|attrs| attrs.get("aria")?.get(aria_key)))
+        });
+
+    match (value, expected) {
+        (Some(value), Some(expected)) => value_matches_expected(value, expected),
+        (Some(value), None) => value.as_bool().unwrap_or(true),
+        (None, _) => false,
+    }
+}
+
+fn value_matches_expected(value: &serde_json::Value, expected: &str) -> bool {
+    if let Some(actual) = value.as_str() {
+        return actual.eq_ignore_ascii_case(expected);
+    }
+    if let Some(actual) = value.as_bool() {
+        return expected
+            .parse::<bool>()
+            .map(|expected| actual == expected)
+            .unwrap_or(false);
+    }
+    if let Some(actual) = value.as_i64() {
+        return expected
+            .parse::<i64>()
+            .map(|expected| actual == expected)
+            .unwrap_or(false);
+    }
+    false
+}
+
+fn attr_string<'a>(attrs: Option<&'a serde_json::Value>, key: &str) -> Option<&'a str> {
+    attrs
+        .and_then(|attrs| attrs.get(key))
+        .and_then(|value| value.as_str())
+        .filter(|value| !value.is_empty())
+}
+
+fn attr_string_from_aria<'a>(attrs: Option<&'a serde_json::Value>, key: &str) -> Option<&'a str> {
+    attrs
+        .and_then(|attrs| attrs.get("aria"))
+        .and_then(|aria| aria.get(key))
+        .and_then(|value| value.as_str())
+        .filter(|value| !value.is_empty())
+}
+
+fn text_contains_case_insensitive(haystack: &str, needle: &str) -> bool {
+    haystack.to_lowercase().contains(&needle.to_lowercase())
 }
 
 fn filter_som_elements<F>(som: &Som, selector: &str, matches: F) -> Som
@@ -266,6 +473,7 @@ fn filter_elements_by_html_id(elements: &[Element], id: &str) -> Vec<Element> {
 mod tests {
     use super::*;
     use crate::som::types::*;
+    use serde_json::json;
 
     fn make_test_som() -> Som {
         Som {
@@ -327,9 +535,18 @@ mod tests {
                             role: ElementRole::Button,
                             html_id: Some("save".to_string()),
                             text: Some("Save".to_string()),
-                            label: None,
+                            label: Some("Save settings".to_string()),
                             actions: Some(vec!["click".to_string()]),
-                            attrs: None,
+                            attrs: Some(json!({
+                                "button_type": "submit",
+                                "name": "save",
+                                "test_id": "settings-save",
+                                "required": true,
+                                "aria": {
+                                    "label": "Save settings",
+                                    "labelledby": "save-label"
+                                }
+                            })),
                             children: None,
                             hints: None,
                             shadow: None,
@@ -449,6 +666,40 @@ mod tests {
         let children = filtered.regions[0].elements[0].children.as_ref().unwrap();
         assert_eq!(children.len(), 1);
         assert_eq!(children[0].html_id.as_deref(), Some("nested-action"));
+    }
+
+    #[test]
+    fn test_selector_label_and_text_prefixes() {
+        let som = make_test_som();
+
+        let by_label = apply_selector(&som, "label:save SETTINGS");
+        assert_eq!(by_label.regions.len(), 1);
+        assert_eq!(by_label.regions[0].elements[0].id, "e3");
+
+        let by_text = apply_selector(&som, "text:hello");
+        assert_eq!(by_text.regions.len(), 1);
+        assert_eq!(by_text.regions[0].elements[0].id, "e2");
+    }
+
+    #[test]
+    fn test_selector_common_attributes() {
+        let som = make_test_som();
+
+        let by_test_id = apply_selector(&som, "[data-testid=settings-save]");
+        assert_eq!(by_test_id.regions.len(), 1);
+        assert_eq!(by_test_id.regions[0].elements[0].id, "e3");
+
+        let by_name = apply_selector(&som, "[name='save']");
+        assert_eq!(by_name.regions[0].elements[0].id, "e3");
+
+        let by_role = apply_selector(&som, "button[type=submit]");
+        assert_eq!(by_role.regions[0].elements[0].id, "e3");
+
+        let by_aria = apply_selector(&som, "[aria-labelledby=save-label]");
+        assert_eq!(by_aria.regions[0].elements[0].id, "e3");
+
+        let by_bool = apply_selector(&som, "[required]");
+        assert_eq!(by_bool.regions[0].elements[0].id, "e3");
     }
 
     #[test]

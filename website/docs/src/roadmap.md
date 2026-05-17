@@ -14,6 +14,27 @@ Plasmate should keep its local-first position, but the roadmap now emphasizes th
 
 Near-term target: make Plasmate the fastest local way to turn authenticated or repetitive web workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 Shared Selector Parity Adjustment
+
+Current browser-agent infrastructure keeps moving reusable action state into
+multiple entrypoints at once. Playwright MCP normalizes accessibility snapshots
+and snapshot-scoped refs, Browserbase/Stagehand highlights observed actions,
+action caching, session replay, and observability, Cloudflare Browser Run now
+offers hosted Playwright/Puppeteer/CDP/MCP session paths, and Firecrawl keeps
+MCP scrape/search/extract plus browser interaction in the same distribution
+surface. Plasmate should keep the local-first wedge and make selector narrowing
+consistent before users choose CLI, MCP, daemon cache, or CDP:
+
+- **Human selectors should work everywhere**: shared SOM filtering should accept
+  `label:<text>` and `text:<text>` selectors with case-insensitive matching.
+- **Replay attributes should narrow SOMs early**: selectors such as `[name=q]`,
+  `[href="/docs"]`, `[data-testid=save]`, `[aria-label="Save"]`, `[required]`,
+  and `input[type=search]` should return compact SOM views before prompt
+  construction.
+- **Compatibility must stay graceful**: unknown or no-match selectors should
+  keep returning the full SOM so existing agent prompts and cache entries do
+  not break.
+
 ### 2026-05-17 CDP Attribute-Selector Adjustment
 
 Current browser-agent infrastructure keeps turning protocol compatibility into distribution. Browserbase/Stagehand highlights observe/action primitives, cached actions, session replay, and local-to-cloud portability; Cloudflare Browser Rendering added CDP endpoints and MCP client support; Firecrawl keeps exposing MCP scrape/search/extract plus browser interaction. Plasmate should keep the local-first wedge and improve the compatibility path where ordinary CDP clients already start: selectors and node attributes.
@@ -785,6 +806,8 @@ Competitor pressure keeps moving reusable action state from browser engines into
 - [x] Browser Use, LangChain, and Vercel AI direct replay lookup helpers auto-resolve stored replay ids while preserving enabled-only filtering
 - [x] Package and adapter tests cover auto replay lookup without bespoke action-menu scans
 - [x] Python/Node parser packages and SDKs expose explicit accessible-label lookup for elements and compact action targets
+- [x] Shared CLI/MCP SOM selectors accept label/text filters and common replay attributes
+- [x] Cookie-profile plaintext migration detects real profile JSON before treating files as legacy plaintext
 - [x] CDP DOM query selectors resolve `#html_id`, `#som_id`, test-id selectors, roles, text, and labels in SOM document order
 - [x] CDP accessibility trees include nested and shadow-root SOM elements with backend node ids
 - [x] CDP accessibility nodes expose disabled/readonly availability properties for replay validation

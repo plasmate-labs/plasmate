@@ -32,6 +32,20 @@ cloud API.
 - Crawl4AI remains strong for open-source Python crawling and extraction, but
   carries Chromium/Playwright operational weight.
 
+2026-05-17 shared selector parity read: current trend research keeps
+reinforcing that reusable action state must be available before an agent
+chooses a protocol. Playwright MCP centers accessibility snapshots with
+snapshot-scoped refs, Browserbase/Stagehand emphasizes `observe()`, action
+caching, session replay, and observability, Cloudflare Browser Run exposes
+Playwright/Puppeteer/CDP/MCP paths for hosted sessions, and Firecrawl keeps
+packaging scrape/search/extract plus browser interaction through MCP. Plasmate
+should keep the local-first wedge and make CLI/MCP selector narrowing feel like
+the same product surface as CDP selector lookup: support `label:<text>` and
+`text:<text>` filters, common replay-oriented attribute selectors such as
+`[name]`, `[href]`, `[type]`, `[data-testid]`, `[aria-label]`, and tag-qualified
+forms such as `input[type=search]`, and preserve graceful full-SOM fallback for
+no-match or unrecognized selectors so existing agents do not break.
+
 2026-05-17 CDP attribute-selector read: fresh trend research keeps reinforcing
 that protocol compatibility is now part of browser-agent distribution.
 Browserbase/Stagehand markets `act`, `extract`, `observe`, `agent`, local
@@ -1418,6 +1432,15 @@ and adapter docs over one-off integration logic.
   - MCP `open_page` and `navigate_to` responses now include `cache_restored`;
     `session_status` also reports raw/effective HTML size and effective-HTML
     presence for replay-readiness inspection.
+  - Shared CLI/MCP SOM selector filtering now supports `label:<text>` and
+    `text:<text>` selectors with case-insensitive matching, common attribute
+    selectors such as `[name=q]`, `[href="/docs"]`, `[data-testid=save]`,
+    `[aria-label="Save"]`, `[required]`, and tag-qualified forms such as
+    `input[type=search]`, while preserving full-SOM fallback on no-match.
+  - Cookie-profile plaintext migration now detects actual profile JSON shape
+    (`domain` plus `cookies`) instead of treating any encrypted byte stream
+    that happens to start with `{` as plaintext, removing a flaky auth-storage
+    test and reducing false migration risk.
 
 ## Next Steps
 

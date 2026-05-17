@@ -49,6 +49,43 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-17T11:28:46Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch --prune origin` was attempted first in the
+  linked automation worktree and failed because shared worktree metadata
+  `FETCH_HEAD` could not be opened (`Operation not permitted`). Fallback fetch
+  from `/Users/steve/Git/plasmate` failed DNS for `github.com`, so work
+  continued from already-local `HEAD`/`origin/master` `48c03d6`.
+- Market direction: current trend research still supports Plasmate's local-first
+  SOM/action-state wedge. Playwright MCP keeps accessibility snapshots and
+  snapshot-scoped refs as the interaction baseline; Browserbase/Stagehand
+  emphasizes observed actions, action caching, replay, and observability;
+  Cloudflare Browser Run exposes hosted Playwright/Puppeteer/CDP/MCP session
+  paths; Firecrawl continues packaging scrape/search/extract plus browser
+  interaction behind MCP. No hosted-browser pivot is recommended. The sticky
+  move is making compact selector/action state consistent before users choose
+  CLI, MCP, daemon cache, or CDP.
+- Code changes: shared SOM filtering now supports `label:<text>` and
+  `text:<text>` selectors with case-insensitive matching, plus common
+  replay-oriented attribute selectors such as `[name=q]`, `[href="/docs"]`,
+  `[data-testid=save]`, `[aria-label="Save"]`, `[required]`, and tag-qualified
+  forms such as `input[type=search]`. The existing full-SOM fallback is
+  preserved for no-match and unrecognized selectors. Cookie-profile plaintext
+  migration now parses real profile JSON shape (`domain` plus `cookies`) before
+  treating a file as legacy plaintext, removing a flaky encrypted-profile
+  false positive.
+- Docs changes: README, MCP/CLI selector descriptions, PRD, roadmap source, and
+  generated website PRD/roadmap now document shared selector parity and the
+  auth-storage flake fix.
+- Verification passed: touched-file rustfmt check, `git diff --check`,
+  focused `cargo test som::filter`, focused `cargo test auth::store`,
+  `node website/build.mjs`, `cargo build --quiet`, `cargo test --lib --quiet`
+  (284), and `cargo clippy --quiet` with existing warnings.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`.
+- Commit/push state: pending final commit and push from this run.
+
 ### 2026-05-17T07:06:05Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch --prune origin` was attempted first in the

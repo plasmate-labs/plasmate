@@ -108,7 +108,7 @@ fn get_or_create_master_key() -> Result<[u8; KEY_SIZE], Box<dyn std::error::Erro
         OsRng.fill_bytes(&mut key);
 
         // Write key with restrictive permissions
-        std::fs::write(&key_path, &key)?;
+        std::fs::write(&key_path, key)?;
 
         #[cfg(unix)]
         {
@@ -159,11 +159,13 @@ fn decrypt(data: &[u8], key: &[u8; KEY_SIZE]) -> Result<Vec<u8>, Box<dyn std::er
 
 /// Check if data looks like valid JSON (plaintext profile).
 fn is_plaintext_json(data: &[u8]) -> bool {
-    // Valid JSON profile should start with '{' (possibly after whitespace)
-    data.iter()
-        .find(|&&b| !b.is_ascii_whitespace())
-        .map(|&b| b == b'{')
-        .unwrap_or(false)
+    let Ok(value) = serde_json::from_slice::<serde_json::Value>(data) else {
+        return false;
+    };
+
+    value
+        .as_object()
+        .is_some_and(|object| object.contains_key("domain") && object.contains_key("cookies"))
 }
 
 /// Store a cookie profile for a domain (encrypted).
@@ -472,6 +474,15 @@ mod tests {
         let encrypted = encrypt(plaintext, &key).unwrap();
         let decrypted = decrypt(&encrypted, &key).unwrap();
         assert_eq!(plaintext.as_slice(), decrypted.as_slice());
+    }
+
+    #[test]
+    fn test_plaintext_detection_requires_profile_json() {
+        assert!(!is_plaintext_json(b"{not encrypted, but also not json"));
+        assert!(!is_plaintext_json(br#"{"domain":"x.com"}"#));
+        assert!(is_plaintext_json(
+            br#"{"domain":"x.com","cookies":{"ct0":{"value":"abc"}}}"#
+        ));
     }
 
     #[test]

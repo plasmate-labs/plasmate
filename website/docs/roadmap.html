@@ -465,6 +465,25 @@
 <li><strong>Ecosystem distribution</strong>: MCP, Browser Use, SDKs, and comparison pages should remain conformance-tested so partner repos do not drift.</li>
 </ul>
 <p>Near-term target: make Plasmate the fastest local way to turn authenticated or repetitive web workflows into compact, inspectable, reusable state.</p>
+<h3 id="2026-05-17-shared-selector-parity-adjustment">2026-05-17 Shared Selector Parity Adjustment</h3><p>Current browser-agent infrastructure keeps moving reusable action state into
+multiple entrypoints at once. Playwright MCP normalizes accessibility snapshots
+and snapshot-scoped refs, Browserbase/Stagehand highlights observed actions,
+action caching, session replay, and observability, Cloudflare Browser Run now
+offers hosted Playwright/Puppeteer/CDP/MCP session paths, and Firecrawl keeps
+MCP scrape/search/extract plus browser interaction in the same distribution
+surface. Plasmate should keep the local-first wedge and make selector narrowing
+consistent before users choose CLI, MCP, daemon cache, or CDP:</p>
+<ul>
+<li><strong>Human selectors should work everywhere</strong>: shared SOM filtering should accept
+<code>label:&lt;text&gt;</code> and <code>text:&lt;text&gt;</code> selectors with case-insensitive matching.</li>
+<li><strong>Replay attributes should narrow SOMs early</strong>: selectors such as <code>[name=q]</code>,
+<code>[href=&quot;/docs&quot;]</code>, <code>[data-testid=save]</code>, <code>[aria-label=&quot;Save&quot;]</code>, <code>[required]</code>,
+and <code>input[type=search]</code> should return compact SOM views before prompt
+construction.</li>
+<li><strong>Compatibility must stay graceful</strong>: unknown or no-match selectors should
+keep returning the full SOM so existing agent prompts and cache entries do
+not break.</li>
+</ul>
 <h3 id="2026-05-17-cdp-attribute-selector-adjustment">2026-05-17 CDP Attribute-Selector Adjustment</h3><p>Current browser-agent infrastructure keeps turning protocol compatibility into distribution. Browserbase/Stagehand highlights observe/action primitives, cached actions, session replay, and local-to-cloud portability; Cloudflare Browser Rendering added CDP endpoints and MCP client support; Firecrawl keeps exposing MCP scrape/search/extract plus browser interaction. Plasmate should keep the local-first wedge and improve the compatibility path where ordinary CDP clients already start: selectors and node attributes.</p>
 <ul>
 <li><strong>Common selectors should hit SOM targets</strong>: <code>DOM.querySelector</code> and <code>DOM.querySelectorAll</code> should support tag-qualified and bare attribute selectors for <code>name</code>, <code>href</code>, <code>type</code>, <code>aria-label</code>, <code>aria-labelledby</code>, <code>aria-describedby</code>, <code>role</code>, test ids, and boolean availability attrs.</li>
@@ -1095,6 +1114,8 @@
 <li><input checked="" disabled="" type="checkbox"> Browser Use, LangChain, and Vercel AI direct replay lookup helpers auto-resolve stored replay ids while preserving enabled-only filtering</li>
 <li><input checked="" disabled="" type="checkbox"> Package and adapter tests cover auto replay lookup without bespoke action-menu scans</li>
 <li><input checked="" disabled="" type="checkbox"> Python/Node parser packages and SDKs expose explicit accessible-label lookup for elements and compact action targets</li>
+<li><input checked="" disabled="" type="checkbox"> Shared CLI/MCP SOM selectors accept label/text filters and common replay attributes</li>
+<li><input checked="" disabled="" type="checkbox"> Cookie-profile plaintext migration detects real profile JSON before treating files as legacy plaintext</li>
 <li><input checked="" disabled="" type="checkbox"> CDP DOM query selectors resolve <code>#html_id</code>, <code>#som_id</code>, test-id selectors, roles, text, and labels in SOM document order</li>
 <li><input checked="" disabled="" type="checkbox"> CDP accessibility trees include nested and shadow-root SOM elements with backend node ids</li>
 <li><input checked="" disabled="" type="checkbox"> CDP accessibility nodes expose disabled/readonly availability properties for replay validation</li>
