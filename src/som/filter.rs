@@ -17,6 +17,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// - Action surfaces: `interactive` or `action:click` / `action:type` /
 ///   `action:clear` / `action:select` / `action:toggle`
 /// - HTML id: `#some-id` - keeps only elements whose `html_id` matches
+/// - Text and label search: `text:Save`, `label:Email`
+/// - Test locator: `test_id:save-button` or `[data-testid="save-button"]`
 ///
 /// Unrecognised selectors return the full SOM unchanged (with a warning to stderr).
 /// If a recognised selector matches nothing, the full SOM is returned (with a
@@ -81,6 +83,35 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                     .unwrap_or(false)
             });
         }
+    }
+
+    // Match visible text or accessible labels without forcing callers to dump
+    // the whole page before prompt construction.
+    if let Some(text) = parse_prefixed_value(selector, "text:") {
+        return filter_som_elements(som, selector, |element| {
+            string_contains_ci(element.text.as_deref(), text)
+                || string_contains_ci(element.label.as_deref(), text)
+        });
+    }
+
+    if let Some(label) = parse_prefixed_value(selector, "label:") {
+        return filter_som_elements(som, selector, |element| {
+            string_contains_ci(element.label.as_deref(), label)
+        });
+    }
+
+    if let Some(test_id) = parse_test_id_selector(selector) {
+        return filter_som_elements(som, selector, |element| {
+            let element_test_id = element
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("test_id"))
+                .and_then(|value| value.as_str());
+            match test_id {
+                TestIdSelector::Any => element_test_id.is_some_and(|value| !value.is_empty()),
+                TestIdSelector::Exact(expected) => element_test_id == Some(expected),
+            }
+        });
     }
 
     // Try id selector: #my-id. Prefer documented region ids, then HTML ids
@@ -149,6 +180,75 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         "iframe" => Some(ElementRole::Iframe),
         _ => None,
     }
+}
+
+fn parse_prefixed_value<'a>(selector: &'a str, prefix: &str) -> Option<&'a str> {
+    if !selector
+        .get(..prefix.len())
+        .is_some_and(|head| head.eq_ignore_ascii_case(prefix))
+    {
+        return None;
+    }
+    let value = selector[prefix.len()..].trim();
+    if value.is_empty() {
+        None
+    } else {
+        Some(value)
+    }
+}
+
+fn string_contains_ci(value: Option<&str>, needle: &str) -> bool {
+    value
+        .map(|value| {
+            value
+                .to_ascii_lowercase()
+                .contains(&needle.to_ascii_lowercase())
+        })
+        .unwrap_or(false)
+}
+
+enum TestIdSelector<'a> {
+    Any,
+    Exact(&'a str),
+}
+
+fn parse_test_id_selector(selector: &str) -> Option<TestIdSelector<'_>> {
+    for prefix in [
+        "test_id:",
+        "testid:",
+        "data-testid:",
+        "data-test-id:",
+        "data-test:",
+        "data-qa:",
+    ] {
+        if let Some(value) = parse_prefixed_value(selector, prefix) {
+            return Some(TestIdSelector::Exact(trim_selector_quotes(value)));
+        }
+    }
+
+    let start = selector.find('[')?;
+    let end = selector[start + 1..].find(']')? + start + 1;
+    let body = selector[start + 1..end].trim();
+    let (name, value) = body
+        .split_once('=')
+        .map(|(name, value)| (name.trim(), Some(trim_selector_quotes(value.trim()))))
+        .unwrap_or((body, None));
+
+    if !matches!(
+        name.to_ascii_lowercase().as_str(),
+        "data-testid" | "data-test-id" | "data-test" | "data-qa"
+    ) {
+        return None;
+    }
+
+    match value {
+        Some(value) if !value.is_empty() => Some(TestIdSelector::Exact(value)),
+        _ => Some(TestIdSelector::Any),
+    }
+}
+
+fn trim_selector_quotes(value: &str) -> &str {
+    value.trim().trim_matches('"').trim_matches('\'').trim()
 }
 
 fn filter_som_elements<F>(som: &Som, selector: &str, matches: F) -> Som
@@ -327,9 +427,9 @@ mod tests {
                             role: ElementRole::Button,
                             html_id: Some("save".to_string()),
                             text: Some("Save".to_string()),
-                            label: None,
+                            label: Some("Save changes".to_string()),
                             actions: Some(vec!["click".to_string()]),
-                            attrs: None,
+                            attrs: Some(serde_json::json!({"test_id": "save-action"})),
                             children: None,
                             hints: None,
                             shadow: None,
@@ -409,6 +509,41 @@ mod tests {
                 .actions
                 .as_ref()
                 .is_some_and(|actions| actions.contains(&"click".to_string()))));
+    }
+
+    #[test]
+    fn test_selector_text_search() {
+        let som = make_test_som();
+        let filtered = apply_selector(&som, "text:hello");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e2");
+    }
+
+    #[test]
+    fn test_selector_label_search() {
+        let som = make_test_som();
+        let filtered = apply_selector(&som, "label:changes");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e3");
+    }
+
+    #[test]
+    fn test_selector_test_id_search() {
+        let som = make_test_som();
+
+        for selector in [
+            "test_id:save-action",
+            "[data-testid=\"save-action\"]",
+            "button[data-test-id=save-action]",
+            "[data-testid]",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "{selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "{selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e3", "{selector}");
+        }
     }
 
     #[test]

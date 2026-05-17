@@ -32,6 +32,17 @@ cloud API.
 - Crawl4AI remains strong for open-source Python crawling and extraction, but
   carries Chromium/Playwright operational weight.
 
+2026-05-17 shared selector-scoping read: current docs sharpen the same
+retention loop outside CDP. Playwright MCP keeps interaction grounded in a
+fresh structured snapshot, Stagehand/Browserbase documents local and managed
+action caches that reuse validated targets, Firecrawl keeps packaging
+scrape/search/extract behind MCP, and Cloudflare Browser Run positions CDP/MCP
+as a hosted browser-session path. Plasmate should make the local selector
+surface more memorable across CLI, MCP, daemon cache, and SDK users: after
+role/action selectors, the next sticky step is text, accessible-label, and test
+locator selector narrowing so repeated workflows can validate a known control
+before handing a full page to an LLM.
+
 2026-05-17 CDP attribute-selector read: fresh trend research keeps reinforcing
 that protocol compatibility is now part of browser-agent distribution.
 Browserbase/Stagehand markets `act`, `extract`, `observe`, `agent`, local
@@ -782,6 +793,14 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-17:
+  - Shared SOM selectors now accept `text:<query>` and `label:<query>` for
+    case-insensitive pre-prompt narrowing by visible copy or accessible name.
+  - Shared SOM selectors now accept test locator selectors such as
+    `test_id:save-action`, `[data-testid=save-action]`, and tag-qualified
+    `[data-test-id=...]` forms, aligning CLI/MCP selection with replay
+    locators already exposed in compact action targets.
+  - CLI help, MCP tool descriptions, README, Claude config docs, and generated
+    website docs now document the selector-scoping rationale and examples.
   - Go SDK `ActionPlanIndex` now includes `ByLabel`, plus
     `FindActionTargetByLabel()` and `FindActionTargetsByLabel()` helpers so
     durable worker code matches Python/Node label-addressable action lookup.

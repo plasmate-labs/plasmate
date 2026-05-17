@@ -29,6 +29,26 @@ Near-term stickiness target: developers should keep Plasmate installed because
 it becomes the fastest local way to turn authenticated or repetitive web
 workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 Shared Selector-Scoping Adjustment
+
+The same competitor pressure now applies to the plain CLI/MCP selector surface,
+not only CDP. Playwright MCP normalizes fresh structured snapshots as the
+action unit, Stagehand/Browserbase makes repeated validated actions cheaper
+through local and managed caches, Firecrawl keeps distributing scrape/search/
+extract through MCP, and Cloudflare Browser Run offers CDP/MCP sessions as a
+hosted path. Plasmate should keep the local-first wedge by letting users scope
+known targets with the same human and developer anchors they store during
+replay:
+
+1. **Text and labels should be selectors**: `text:<query>` and `label:<query>`
+   let agents validate a known control or content slice before spending tokens
+   on the full page.
+2. **Test locators should work outside CDP**: `test_id:<value>` and
+   `[data-testid=...]` forms should narrow SOM output from CLI, MCP, daemon,
+   and cache paths, matching compact action-plan replay provenance.
+3. **Selector docs are product surface**: public tool descriptions should teach
+   these selectors as the local alternative to hosted selector/action memory.
+
 ### 2026-05-17 CDP Action-Menu Parity Adjustment
 
 Current browser-agent tools increasingly expose action state at the protocol
@@ -1753,6 +1773,13 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Python/Node parser packages and SDKs now expose explicit accessible-label
   lookup for elements and compact action targets, plus exact label buckets in
   action-plan indexes, while keeping auto replay lookup on stable ids.
+- Shared SOM selectors now support `text:<query>`, `label:<query>`,
+  `test_id:<value>`, and `[data-testid=...]` / `[data-test-id=...]` forms for
+  local pre-prompt narrowing across CLI, MCP, daemon cache, and text/link
+  extraction paths.
+- CLI help, MCP tool schemas, README, Claude config docs, PRD, roadmap, and
+  generated website docs now explain text/label/test-locator selector scoping
+  as the local repeated-work counterpart to hosted action caches.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, `html_id` DOM-provenance cases,

@@ -49,6 +49,41 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-17T11:32:49Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch --prune origin` was attempted first in the
+  linked automation worktree and failed because shared worktree metadata
+  `FETCH_HEAD` could not be opened (`Operation not permitted`). Fallback fetch
+  from `/Users/steve/Git/plasmate` failed DNS for `github.com`, so work
+  continued from the already-local `HEAD`/`origin/master` `48c03d6`.
+- Market direction: current trend research continues to support local-first
+  validated action surfaces over a hosted-browser pivot. Playwright MCP keeps
+  interaction grounded in fresh structured snapshots, Stagehand/Browserbase
+  emphasizes cached actions and observability, Firecrawl keeps MCP
+  scrape/search/extract distribution broad, and Cloudflare Browser Run/CDP/MCP
+  offerings frame hosted sessions as the competing cloud path. Plasmate's next
+  sticky step is making CLI/MCP selector narrowing use the same human and
+  developer anchors stored for replay.
+- Code changes: shared SOM selectors now support case-insensitive
+  `text:<query>` and `label:<query>` narrowing, plus test-locator selectors
+  including `test_id:<value>`, `testid:<value>`, `data-testid:<value>`,
+  `[data-testid=value]`, `[data-test-id=value]`, `[data-test=value]`,
+  `[data-qa=value]`, and tag-qualified attribute forms. Empty test-locator
+  attribute selectors such as `[data-testid]` match any element with a stored
+  SOM `attrs.test_id`.
+- Docs changes: CLI help, MCP tool schemas, README tips, Claude desktop config
+  docs, root PRD/roadmap, website doc sources, and generated website HTML now
+  document the shared selector-scoping rationale and examples.
+- Verification passed: touched-file `rustfmt --check`; focused
+  `cargo test som::filter --quiet`; `node website/build.mjs` using a temporary
+  primary-checkout `website/node_modules` symlink removed afterward;
+  `git diff --check`; `cargo build --quiet`; `cargo test --lib --quiet` (284);
+  and `cargo clippy --quiet` with existing warnings.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  `tests/awp_integration_test.rs` because the sandbox cannot create the local
+  test listener (`Operation not permitted`).
+- Commit/push state: pending at this point in the run.
+
 ### 2026-05-17T07:06:05Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch --prune origin` was attempted first in the
