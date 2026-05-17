@@ -84,10 +84,10 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   unrelated pre-existing formatting drift in AWP/bench/proxy files.
 - Commit/push state: normal `git add` remains blocked by linked-worktree
   `index.lock` permissions, so alternate-index commit `f1cabd8` (`chore:
-  improve CDP replay action lookup`) and state commit `d6561e9` were created
-  on local branch `codex/plasmate-improvements-2026-05-17-cdp-replay-lookup`.
-  Push/merge to GitHub is blocked because SSH cannot resolve `github.com`
-  (`Could not resolve hostname github.com: -65563`).
+  improve CDP replay action lookup`) plus follow-up state commits were created.
+  Final commit `3036bcb` was pushed to
+  `origin/codex/plasmate-improvements-2026-05-17-cdp-replay-lookup` and
+  fast-forwarded to remote `master` (`d1c8fbb..3036bcb`).
 
 ### 2026-05-17T02:40:09Z - Plasmate Improvements Automation
 
