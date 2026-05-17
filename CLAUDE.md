@@ -84,8 +84,14 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Verification blocked: full `cargo test --quiet` still fails only in
   sandboxed `tests/awp_integration_test.rs` because local listener setup
   returns `Operation not permitted`.
-- Commit/push state: alternate-index code/docs commit `3e6b737` was created
-  for this run; a follow-up state commit should be pushed with it.
+- Commit/push state: alternate-index code/docs commit `3e6b737` plus state
+  commit `42eee89` were pushed to
+  `origin/codex/plasmate-improvements-2026-05-17-shared-selectors`. Direct
+  push to `master` was rejected because remote `master` had advanced to
+  `96fa6df` with coverage-scorecard updates; repeated fetch attempts failed
+  DNS, and the GitHub connector could compare refs but was not permitted to
+  create a PR or merge tree. Merge to `master` remains blocked on refreshing
+  the advanced remote head or opening/merging the pushed branch.
 
 ### 2026-05-17T07:06:05Z - Plasmate Improvements Automation
 
