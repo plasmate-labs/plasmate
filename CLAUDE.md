@@ -84,6 +84,14 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   returns `Operation not permitted`. Full `cargo fmt --check` is also blocked
   by pre-existing formatting drift in unrelated files including
   `src/awp/handler.rs` and `src/network/proxy.rs`.
+- Commit/push state: normal `git add` is still blocked by linked-worktree
+  `index.lock` permissions, so alternate-index commit `45c3d1d` was created
+  and pushed to
+  `origin/codex/plasmate-improvements-2026-05-17-shared-selector-scoping-2`.
+  Direct push to `master` was rejected because remote `master` has two newer
+  coverage JSON commits at `96fa6df`. GitHub connector direct ref, contents,
+  and PR creation writes returned 403, and shell fetch/clone cannot resolve
+  `github.com`, so merge to `master` remains blocked without force-pushing.
 
 ### 2026-05-17T07:06:05Z - Plasmate Improvements Automation
 
