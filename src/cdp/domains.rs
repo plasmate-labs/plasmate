@@ -1359,6 +1359,21 @@ pub fn plasmate_get_interactive_elements(
     params: &serde_json::Value,
     target: &CdpTarget,
 ) -> CdpResponse {
+    let id_filter = params.get("id").and_then(|v| v.as_str());
+    let cache_key_filter = params
+        .get("cacheKey")
+        .or_else(|| params.get("cache_key"))
+        .and_then(|v| v.as_str());
+    let html_id_filter = params
+        .get("htmlId")
+        .or_else(|| params.get("html_id"))
+        .and_then(|v| v.as_str());
+    let test_id_filter = params
+        .get("testId")
+        .or_else(|| params.get("test_id"))
+        .and_then(|v| v.as_str());
+    let lookup_value = params.get("value").and_then(|v| v.as_str());
+    let lookup_by = params.get("by").and_then(|v| v.as_str()).unwrap_or("auto");
     let role_filter = params.get("role").and_then(|v| v.as_str());
     let action_filter = params.get("action").and_then(|v| v.as_str());
     let label_filter = params.get("label").and_then(|v| v.as_str());
@@ -1371,6 +1386,11 @@ pub fn plasmate_get_interactive_elements(
         .or_else(|| params.get("enabled_only"))
         .and_then(|v| v.as_bool())
         .unwrap_or(false);
+    let offset = params.get("offset").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
+    let limit = params
+        .get("limit")
+        .and_then(|v| v.as_u64())
+        .map(|value| value as usize);
 
     let all_elements: Vec<&Element> = target
         .current_som
@@ -1378,9 +1398,30 @@ pub fn plasmate_get_interactive_elements(
         .map(interactive_elements)
         .unwrap_or_default();
 
-    let elements: Vec<serde_json::Value> = all_elements
+    let filtered_elements: Vec<&Element> = all_elements
         .iter()
         .copied()
+        .filter(|e| id_filter.map(|target_id| e.id == target_id).unwrap_or(true))
+        .filter(|e| {
+            cache_key_filter
+                .map(|cache_key| action_plan_cache_key(e) == cache_key)
+                .unwrap_or(true)
+        })
+        .filter(|e| {
+            html_id_filter
+                .map(|html_id| e.html_id.as_deref() == Some(html_id))
+                .unwrap_or(true)
+        })
+        .filter(|e| {
+            test_id_filter
+                .map(|test_id| element_test_id(e) == Some(test_id))
+                .unwrap_or(true)
+        })
+        .filter(|e| {
+            lookup_value
+                .map(|value| element_matches_lookup(e, value, lookup_by, exact_label))
+                .unwrap_or(true)
+        })
         .filter(|e| {
             role_filter
                 .map(|role| e.role.as_str() == role)
@@ -1409,15 +1450,28 @@ pub fn plasmate_get_interactive_elements(
                 .unwrap_or(true)
         })
         .filter(|e| !enabled_only || interactive_enabled_state(e).0)
+        .collect();
+
+    let filtered_count = filtered_elements.len();
+    let mut paged_elements: Vec<&Element> = filtered_elements.into_iter().skip(offset).collect();
+    if let Some(limit) = limit {
+        paged_elements.truncate(limit);
+    }
+    let elements: Vec<serde_json::Value> = paged_elements
+        .into_iter()
         .map(interactive_element_to_json)
         .collect();
+    let count = elements.len();
 
     CdpResponse::success(
         id,
         json!({
             "elements": elements,
-            "count": elements.len(),
+            "count": count,
+            "filtered_count": filtered_count,
             "total_interactive_count": all_elements.len(),
+            "offset": offset,
+            "limit": limit,
         }),
     )
 }
@@ -1631,15 +1685,12 @@ fn collect_interactive_elements<'a>(source: &'a [Element], out: &mut Vec<&'a Ele
 
 fn interactive_element_to_json(element: &Element) -> serde_json::Value {
     let (enabled, blocked_reason) = interactive_enabled_state(element);
-    let test_id = element
-        .attrs
-        .as_ref()
-        .and_then(|attrs| attrs.get("test_id"))
-        .and_then(|value| value.as_str());
+    let test_id = element_test_id(element);
 
     json!({
         "id": element.id,
         "role": element.role.as_str(),
+        "cache_key": action_plan_cache_key(element),
         "html_id": element.html_id,
         "test_id": test_id,
         "text": element.text,
@@ -1650,6 +1701,83 @@ fn interactive_element_to_json(element: &Element) -> serde_json::Value {
         "enabled": enabled,
         "blocked_reason": blocked_reason,
     })
+}
+
+fn element_matches_lookup(element: &Element, value: &str, by: &str, exact_label: bool) -> bool {
+    match by {
+        "id" => element.id == value,
+        "cache_key" | "cacheKey" => action_plan_cache_key(element) == value,
+        "html_id" | "htmlId" => element.html_id.as_deref() == Some(value),
+        "test_id" | "testId" => element_test_id(element) == Some(value),
+        "label" => element_label_matches(element, value, exact_label || by == "label"),
+        _ => {
+            element.id == value
+                || action_plan_cache_key(element) == value
+                || element.html_id.as_deref() == Some(value)
+                || element_test_id(element) == Some(value)
+        }
+    }
+}
+
+fn element_label_matches(element: &Element, label: &str, exact: bool) -> bool {
+    let element_label = element
+        .label
+        .as_deref()
+        .or(element.text.as_deref())
+        .unwrap_or("");
+    if exact {
+        element_label == label
+    } else {
+        element_label.to_lowercase().contains(&label.to_lowercase())
+    }
+}
+
+fn element_test_id(element: &Element) -> Option<&str> {
+    element
+        .attrs
+        .as_ref()
+        .and_then(|attrs| attrs.get("test_id"))
+        .and_then(|value| value.as_str())
+}
+
+fn action_plan_cache_key(element: &Element) -> String {
+    let mut actions = element.actions.clone().unwrap_or_default();
+    actions.sort();
+    let action_value = if actions.is_empty() {
+        None
+    } else {
+        Some(actions.join(","))
+    };
+    let attrs = element.attrs.as_ref();
+    let parts = vec![
+        Some(element.id.clone()),
+        Some(element.role.as_str().to_string()),
+        element.label.clone(),
+        action_value,
+        attr_string(attrs, "name").map(str::to_string),
+        attr_string(attrs, "href").map(str::to_string),
+        attr_string(attrs, "input_type").map(str::to_string),
+        attr_string(attrs, "group").map(str::to_string),
+        attr_string(attrs, "placeholder").map(str::to_string),
+    ];
+    let encoded = serde_json::to_string(&parts).unwrap_or_else(|_| "[]".to_string());
+    format!("plasmate-action:v1:{}", fnv1a32(&encoded))
+}
+
+fn attr_string<'a>(attrs: Option<&'a serde_json::Value>, key: &str) -> Option<&'a str> {
+    attrs
+        .and_then(|attrs| attrs.get(key))
+        .and_then(|value| value.as_str())
+        .filter(|value| !value.is_empty())
+}
+
+fn fnv1a32(value: &str) -> String {
+    let mut hash = 0x811c9dc5u32;
+    for byte in value.as_bytes() {
+        hash ^= u32::from(*byte);
+        hash = hash.wrapping_mul(0x01000193);
+    }
+    format!("{hash:08x}")
 }
 
 fn interactive_enabled_state(element: &Element) -> (bool, Option<&'static str>) {
@@ -1836,6 +1964,7 @@ mod tests {
             .collect();
 
         assert_eq!(result["count"], 4);
+        assert_eq!(result["filtered_count"], 4);
         assert_eq!(result["total_interactive_count"], 4);
         assert!(ids.contains(&"top-button"));
         assert!(ids.contains(&"email-input"));
@@ -1848,6 +1977,9 @@ mod tests {
                 .unwrap()["role"],
             "text_input"
         );
+        assert!(elements.iter().all(|element| element["cache_key"]
+            .as_str()
+            .is_some_and(|key| key.starts_with("plasmate-action:v1:"))));
     }
 
     #[test]
@@ -1888,5 +2020,80 @@ mod tests {
         assert_eq!(blocked_elements[0]["test_id"], "settings-save");
         assert_eq!(blocked_elements[0]["enabled"], false);
         assert_eq!(blocked_elements[0]["blocked_reason"], "disabled");
+    }
+
+    #[test]
+    fn get_interactive_elements_resolves_replay_identifiers() {
+        let target = cdp_target_with_som(fixture_som());
+        let all = plasmate_get_interactive_elements(1, &json!({}), &target)
+            .result
+            .unwrap();
+        let elements = all["elements"].as_array().unwrap();
+        let save = elements
+            .iter()
+            .find(|element| element["id"] == "top-button")
+            .unwrap();
+        let cache_key = save["cache_key"].as_str().unwrap();
+
+        let by_cache_key = plasmate_get_interactive_elements(
+            2,
+            &json!({
+                "value": cache_key,
+                "by": "cache_key",
+            }),
+            &target,
+        )
+        .result
+        .unwrap();
+        assert_eq!(by_cache_key["count"], 1);
+        assert_eq!(by_cache_key["elements"][0]["id"], "top-button");
+
+        let by_auto = plasmate_get_interactive_elements(
+            3,
+            &json!({
+                "value": "settings-save",
+            }),
+            &target,
+        )
+        .result
+        .unwrap();
+        assert_eq!(by_auto["count"], 1);
+        assert_eq!(by_auto["elements"][0]["id"], "top-button");
+
+        let by_label = plasmate_get_interactive_elements(
+            4,
+            &json!({
+                "value": "Shadow save",
+                "by": "label",
+            }),
+            &target,
+        )
+        .result
+        .unwrap();
+        assert_eq!(by_label["count"], 1);
+        assert_eq!(by_label["elements"][0]["id"], "shadow-button");
+    }
+
+    #[test]
+    fn get_interactive_elements_pages_filtered_results() {
+        let target = cdp_target_with_som(fixture_som());
+        let response = plasmate_get_interactive_elements(
+            1,
+            &json!({
+                "action": "click",
+                "offset": 1,
+                "limit": 1,
+            }),
+            &target,
+        );
+        let result = response.result.unwrap();
+        let elements = result["elements"].as_array().unwrap();
+
+        assert_eq!(result["count"], 1);
+        assert_eq!(result["filtered_count"], 3);
+        assert_eq!(result["total_interactive_count"], 4);
+        assert_eq!(result["offset"], 1);
+        assert_eq!(result["limit"], 1);
+        assert_eq!(elements[0]["id"], "nested-link");
     }
 }

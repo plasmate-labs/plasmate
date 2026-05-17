@@ -45,6 +45,17 @@ shadow-root targets, serialize roles with SOM names like `text_input`, expose
 top-level replay identifiers/availability, and let CDP clients narrow by role,
 action, label, and enabled state before prompting an LLM.
 
+2026-05-17 CDP replay-key read: latest competitor docs make the same retention
+loop sharper: Playwright MCP refs are scoped to the current snapshot,
+Stagehand/Browserbase caches validated action selectors to skip repeat model
+calls, Firecrawl keeps packaging browser work behind MCP and hosted sessions,
+and Cloudflare Browser Run now positions CDP/MCP as agent-facing browser
+infrastructure. Plasmate should make CDP clients reusable without becoming a
+hosted browser cloud. `Plasmate.getInteractiveElements` should emit the same
+deterministic `cache_key` shape used by SDK action plans, let clients resolve
+targets by SOM id, cache key, HTML id, or test id, and support offset/limit
+paging so large action menus can be searched before being handed to an LLM.
+
 2026-05-17 SDK discoverability and Go label-parity read: current competitor
 docs keep pushing browser-agent products toward small, validated action menus.
 Playwright MCP documents snapshot-scoped accessibility refs, Browserbase/

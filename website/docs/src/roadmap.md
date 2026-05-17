@@ -22,6 +22,14 @@ Current browser-agent tools increasingly expose action state at the protocol edg
 - **Protocol filters before prompts**: CDP clients should narrow by SOM role, action, accessible label, and enabled state before handing targets to an LLM.
 - **Replay cues on the wire**: CDP output should expose SOM role names, `html_id`, `test_id`, `enabled`, and `blocked_reason` directly so Puppeteer and Playwright users do not need raw DOM recovery for simple cached replay.
 
+### 2026-05-17 CDP Replay-Key Adjustment
+
+Current browser-agent competitors are making reusable action identity a protocol-level expectation. Playwright MCP gives agents snapshot refs, Stagehand/Browserbase caches validated selectors after first observation, Firecrawl distributes browser sessions through MCP/API surfaces, and Cloudflare Browser Run sells CDP/MCP browser infrastructure. Plasmate should answer with a local, deterministic replay surface in its CDP domain:
+
+- **Cache keys should cross the protocol boundary**: CDP action targets should include the same `plasmate-action:v1:*` cache key as Python, Node, Go, and adapter action plans.
+- **Replay lookup should be boring**: CDP clients should filter by SOM id, `cache_key`, `html_id`, or `test_id` before resorting to label search or raw DOM recovery.
+- **Large pages need paging**: `offset`/`limit` support should let clients inspect or stream action menus without handing every target to an LLM.
+
 ### 2026-05-17 SDK Discoverability and Label Parity Adjustment
 
 Current browser-agent competitors keep converging on compact action menus that can be validated before replay. Playwright MCP keeps refs scoped to the current accessibility snapshot, Stagehand/Browserbase makes action caching a repeated workflow feature, Firecrawl exposes scrape/search/extract/browser interaction through MCP and APIs, and Cloudflare Browser Run/WebMCP is expanding hosted browser-native tool surfaces. Plasmate should not pivot into hosted execution; the stickier move is to make local SOM action menus easier to discover and query in every SDK and adapter:
