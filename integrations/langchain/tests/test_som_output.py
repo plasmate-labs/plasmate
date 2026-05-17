@@ -4,7 +4,9 @@ from pathlib import Path
 from langchain_plasmate.som_output import (
     action_target_index,
     find_action_target,
+    find_action_target_by_label,
     find_action_targets_by_action,
+    find_action_targets_by_label,
     find_action_targets_by_role,
     som_to_text,
 )
@@ -167,6 +169,7 @@ def test_action_target_index_resolves_replay_targets():
     assert index["by_cache_key"][save["cache_key"]]["id"] == "e_save"
     assert index["by_html_id"]["save-button"]["id"] == "e_save"
     assert index["by_test_id"]["settings-save"]["id"] == "e_save"
+    assert index["by_label"]["Save"]["id"] == "e_save"
     assert [target["id"] for target in index["by_role"]["button"]] == [
         "e_save",
         "e_preview",
@@ -182,6 +185,16 @@ def test_action_target_index_resolves_replay_targets():
     assert find_action_target(som, "save-button")["id"] == "e_save"
     assert find_action_target(som, "settings-save")["id"] == "e_save"
     assert find_action_target(som, save["cache_key"], by="cache_key")["id"] == "e_save"
+    assert find_action_target(som, "Save", by="label")["id"] == "e_save"
+    assert find_action_target_by_label(som, "Save")["id"] == "e_save"
+    assert [target["id"] for target in find_action_targets_by_label(som, "billing")] == [
+        "e_annual",
+        "e_billing",
+    ]
+    assert [
+        target["id"]
+        for target in find_action_targets_by_label(som, "Billing settings", exact=True)
+    ] == ["e_billing"]
     assert [target["id"] for target in find_action_targets_by_role(som, "button")] == [
         "e_save",
         "e_preview",
@@ -193,9 +206,12 @@ def test_action_target_index_resolves_replay_targets():
 
     enabled_index = action_target_index(som, enabled_only=True)
     assert "e_save" not in enabled_index["by_id"]
+    assert "Save" not in enabled_index["by_label"]
     assert "button" not in enabled_index["by_role"]
     assert [target["id"] for target in enabled_index["by_action"]["click"]] == [
         "e_billing"
     ]
     assert "e_plan" in enabled_index["by_id"]
     assert find_action_target(som, "settings-save", enabled_only=True) is None
+    assert find_action_target(som, "Save", by="label", enabled_only=True) is None
+    assert find_action_targets_by_label(som, "preview", enabled_only=True) == []

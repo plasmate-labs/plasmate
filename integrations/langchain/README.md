@@ -77,23 +77,28 @@ local action menus.
 
 For replay lookups in app code, `action_target_index(som)`,
 `find_action_target(som, value)`, `find_action_targets_by_role(som, role)`,
-and `find_action_targets_by_action(som, action)` resolve compact targets by
-SOM id, deterministic cache key, original `html_id`, `test_id`, role, or
-action without a custom tree scan:
+`find_action_targets_by_action(som, action)`, and
+`find_action_targets_by_label(som, label)` resolve compact targets by SOM id,
+deterministic cache key, original `html_id`, `test_id`, explicit accessible
+label, role, or action without a custom tree scan:
 
 ```python
 from langchain_plasmate import (
     action_target_index,
     find_action_target,
+    find_action_target_by_label,
     find_action_targets_by_action,
+    find_action_targets_by_label,
     find_action_targets_by_role,
 )
 
 index = action_target_index(som)
 save = find_action_target(som, "plasmate-action:v1:...", enabled_only=True)
+save_by_label = find_action_target_by_label(som, "Save", enabled_only=True)
+labeled = find_action_targets_by_label(som, "billing")
 buttons = find_action_targets_by_role(som, "button")
 enabled_clicks = find_action_targets_by_action(som, "click", enabled_only=True)
-print(save["id"], index["by_html_id"].get("save-button"), len(enabled_clicks))
+print(save["id"], save_by_label["id"], index["by_label"].get("Save"), len(labeled), len(enabled_clicks))
 ```
 
 ### Agent with browsing tools

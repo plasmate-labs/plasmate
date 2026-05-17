@@ -12,6 +12,7 @@ from typing import Any, Optional
 from som_parser import (
     find_action_target,
     find_action_targets_by_action,
+    find_action_targets_by_label,
     find_action_targets_by_role,
     parse_som,
     get_action_plan,
@@ -322,12 +323,13 @@ class PlasmateExtractor:
 
     def extract_action_plan_index(
         self, url: str, *, enabled_only: bool = False
-    ) -> dict[str, dict[str, dict[str, object]]]:
+    ) -> dict[str, object]:
         """Fetch a URL and return action targets indexed for replay lookups.
 
         The returned buckets are ``by_id``, ``by_cache_key``, ``by_html_id``,
-        and ``by_test_id`` so Browser Use agents can resolve cached action
-        targets without scanning the whole plan.
+        ``by_test_id``, ``by_label``, ``by_role``, and ``by_action`` so
+        Browser Use agents can resolve cached action targets without scanning
+        the whole plan.
         """
         som_data = self.extract(url)
         som = parse_som(som_data)
@@ -345,6 +347,29 @@ class PlasmateExtractor:
         som_data = self.extract(url)
         som = parse_som(som_data)
         return find_action_target(som, value, by=by, enabled_only=enabled_only)
+
+    def find_action_target_by_label(
+        self, url: str, label: str, *, enabled_only: bool = False
+    ) -> dict[str, object] | None:
+        """Fetch a URL and resolve the first compact action target with an exact label."""
+        som_data = self.extract(url)
+        som = parse_som(som_data)
+        return find_action_target(som, label, by="label", enabled_only=enabled_only)
+
+    def find_action_targets_by_label(
+        self,
+        url: str,
+        label: str,
+        *,
+        exact: bool = False,
+        enabled_only: bool = False,
+    ) -> list[dict[str, object]]:
+        """Fetch a URL and return compact action targets whose label matches text."""
+        som_data = self.extract(url)
+        som = parse_som(som_data)
+        return find_action_targets_by_label(
+            som, label, exact=exact, enabled_only=enabled_only
+        )
 
     def find_action_targets_by_role(
         self, url: str, role: str, *, enabled_only: bool = False
@@ -370,7 +395,7 @@ class PlasmateExtractor:
 
     async def extract_action_plan_index_async(
         self, url: str, *, enabled_only: bool = False
-    ) -> dict[str, dict[str, dict[str, object]]]:
+    ) -> dict[str, object]:
         """Async version of extract_action_plan_index."""
         som_data = await self.extract_async(url)
         som = parse_som(som_data)
@@ -388,6 +413,29 @@ class PlasmateExtractor:
         som_data = await self.extract_async(url)
         som = parse_som(som_data)
         return find_action_target(som, value, by=by, enabled_only=enabled_only)
+
+    async def find_action_target_by_label_async(
+        self, url: str, label: str, *, enabled_only: bool = False
+    ) -> dict[str, object] | None:
+        """Async version of find_action_target_by_label."""
+        som_data = await self.extract_async(url)
+        som = parse_som(som_data)
+        return find_action_target(som, label, by="label", enabled_only=enabled_only)
+
+    async def find_action_targets_by_label_async(
+        self,
+        url: str,
+        label: str,
+        *,
+        exact: bool = False,
+        enabled_only: bool = False,
+    ) -> list[dict[str, object]]:
+        """Async version of find_action_targets_by_label."""
+        som_data = await self.extract_async(url)
+        som = parse_som(som_data)
+        return find_action_targets_by_label(
+            som, label, exact=exact, enabled_only=enabled_only
+        )
 
     async def find_action_targets_by_role_async(
         self, url: str, role: str, *, enabled_only: bool = False

@@ -244,14 +244,15 @@ def action_target_index(
     """Return compact action targets indexed for replay lookups.
 
     Buckets match the parser/SDK contract. ``by_id``, ``by_cache_key``,
-    ``by_html_id``, and ``by_test_id`` resolve one cached target; ``by_role``
-    and ``by_action`` group targets for plan scoping before replay.
+    ``by_html_id``, ``by_test_id``, and ``by_label`` resolve one cached target;
+    ``by_role`` and ``by_action`` group targets for plan scoping before replay.
     """
     index: dict[str, Any] = {
         "by_id": {},
         "by_cache_key": {},
         "by_html_id": {},
         "by_test_id": {},
+        "by_label": {},
         "by_role": {},
         "by_action": {},
     }
@@ -267,6 +268,7 @@ def action_target_index(
                 ("cache_key", "by_cache_key"),
                 ("html_id", "by_html_id"),
                 ("test_id", "by_test_id"),
+                ("label", "by_label"),
             ):
                 value = target.get(source_key)
                 if isinstance(value, str) and value not in index[bucket_key]:
@@ -289,12 +291,13 @@ def find_action_target(
     by: str = "auto",
     enabled_only: bool = False,
 ) -> dict[str, Any] | None:
-    """Find one compact action target by id, cache key, HTML id, test id, or auto lookup."""
+    """Find one compact action target by id, cache key, HTML id, test id, label, or auto lookup."""
     buckets = {
         "id": "by_id",
         "cache_key": "by_cache_key",
         "html_id": "by_html_id",
         "test_id": "by_test_id",
+        "label": "by_label",
     }
     index = action_target_index(som, enabled_only=enabled_only)
     if by == "auto":
@@ -305,8 +308,43 @@ def find_action_target(
         return None
     bucket = buckets.get(by)
     if bucket is None:
-        raise ValueError("by must be one of: auto, id, cache_key, html_id, test_id")
+        raise ValueError("by must be one of: auto, id, cache_key, html_id, test_id, label")
     return index[bucket].get(value)
+
+
+def find_action_target_by_label(
+    som: dict[str, Any], label: str, *, enabled_only: bool = False
+) -> dict[str, Any] | None:
+    """Return the first compact action target matching an exact accessible label."""
+    return find_action_target(som, label, by="label", enabled_only=enabled_only)
+
+
+def find_action_targets_by_label(
+    som: dict[str, Any],
+    label: str,
+    *,
+    exact: bool = False,
+    enabled_only: bool = False,
+) -> list[dict[str, Any]]:
+    """Return compact action targets whose accessible label matches text."""
+    results: list[dict[str, Any]] = []
+    needle = label.lower()
+    for region in som.get("regions", []):
+        for elem in _iter_elements(region.get("elements", [])):
+            if not elem.get("actions"):
+                continue
+            target = _action_target_from_element(elem)
+            if enabled_only and target.get("enabled") is False:
+                continue
+            item_label = target.get("label")
+            if not isinstance(item_label, str):
+                continue
+            if exact:
+                if label == item_label:
+                    results.append(target)
+            elif needle in item_label.lower():
+                results.append(target)
+    return results
 
 
 def find_action_targets_by_role(

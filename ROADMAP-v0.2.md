@@ -29,6 +29,27 @@ Near-term stickiness target: developers should keep Plasmate installed because
 it becomes the fastest local way to turn authenticated or repetitive web
 workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 Adapter Label-Recovery Adjustment
+
+Current browser-agent competitors are broadening the MCP/browser surface while
+selling repeatable action state as the workflow loop. Firecrawl's MCP surface
+now packages scrape, crawl, discovery, search, extraction, deep research, and
+batch scraping; Crawl4AI's docs emphasize local Markdown plus CSS/XPath/LLM
+structured extraction over dynamic pages; and 2026 browser-agent comparisons
+keep centering Playwright/CDP compatibility, action traces, and cached
+repeat-workflow selectors. Plasmate should keep the local-first SOM wedge and
+make its broad repo surface feel like one product:
+
+1. **Adapters should match SDK lookup parity**: Browser Use and LangChain
+   should expose label-indexed compact action targets just like Python, Node,
+   Go, and parser packages.
+2. **Labels are recovery handles, not replay ids**: human-facing label lookup
+   helps debugging and guided recovery; unattended workflows should still
+   persist SOM ids, cache keys, HTML ids, or test ids.
+3. **Conformance protects distribution**: shared fixtures should verify label,
+   role, action, availability, and replay-index behavior across adapters before
+   adding more framework repos.
+
 ### 2026-05-17 CDP Action-Menu Parity Adjustment
 
 Current browser-agent tools increasingly expose action state at the protocol
@@ -1356,6 +1377,12 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 
 ## Current Minor Improvements Logged
 
+- Browser Use now exposes exact and substring label recovery helpers for compact
+  action targets, including sync/async methods and `by_label` docs.
+- LangChain action target indexes now include `by_label`, explicit label
+  lookup, label search helpers, and enabled-only label filtering tests.
+- Adapter conformance now verifies Browser Use and LangChain label lookup
+  parity against the shared action-availability fixture.
 - Go SDK action-plan indexes now expose `ByLabel` and exact-label helper
   functions, bringing durable worker lookup parity closer to Python and Node.
 - Public Python, Node, and Go SDK docs now show grouped role/action action-plan

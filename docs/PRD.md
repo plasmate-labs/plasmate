@@ -32,6 +32,19 @@ cloud API.
 - Crawl4AI remains strong for open-source Python crawling and extraction, but
   carries Chromium/Playwright operational weight.
 
+2026-05-17 adapter label-recovery read: current market research keeps pointing
+at the same retention path across the full ecosystem surface. Firecrawl's MCP
+docs package scrape, crawl, discovery, search, extraction, deep research, and
+batch scraping behind MCP; Crawl4AI's current docs emphasize clean Markdown,
+CSS/XPath/LLM extraction, dynamic-page crawling, and structured crawler
+results; 2026 browser-agent roundups are converging around Playwright/CDP
+compatibility, MCP distribution, action traces, and cached repeat workflows.
+Plasmate should not pivot into hosted crawling or visual browser clouds. The
+stickier move is adapter parity: Browser Use and LangChain should expose the
+same label-indexed action targets already available in Python, Node, Go, and
+parser packages, so users can recover a human-facing target by label while
+still storing stable replay ids for unattended runs.
+
 2026-05-17 CDP attribute-selector read: fresh trend research keeps reinforcing
 that protocol compatibility is now part of browser-agent distribution.
 Browserbase/Stagehand markets `act`, `extract`, `observe`, `agent`, local
@@ -782,6 +795,15 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-17:
+  - Browser Use now exposes sync/async label recovery helpers
+    (`find_action_target_by_label` and `find_action_targets_by_label`) and
+    documents `by_label` action-plan indexes for guided recovery flows.
+  - LangChain now indexes compact action targets by accessible label, supports
+    `find_action_target(..., by="label")`, exports exact/substring label
+    helpers, and covers enabled-only label filtering in adapter tests.
+  - Shared adapter conformance now asserts label buckets and label helper
+    behavior across Browser Use and LangChain, closing the gap with Python,
+    Node, Go, and parser package action-plan lookup.
   - Go SDK `ActionPlanIndex` now includes `ByLabel`, plus
     `FindActionTargetByLabel()` and `FindActionTargetsByLabel()` helpers so
     durable worker code matches Python/Node label-addressable action lookup.

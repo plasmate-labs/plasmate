@@ -49,6 +49,46 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-17T14:08:59Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch origin --prune` was attempted first in the
+  linked automation worktree and failed because shared worktree metadata
+  `FETCH_HEAD` could not be opened (`Operation not permitted`). Fallback fetch
+  from `/Users/steve/Git/plasmate` failed DNS for `github.com`, so work
+  continued from the already-local `HEAD`/`origin/master` `48c03d6`.
+- Market direction: current research still supports the local-first SOM wedge.
+  Firecrawl's MCP surface packages scrape, crawl, discovery, search,
+  extraction, deep research, and batch scraping; Crawl4AI emphasizes local
+  Markdown plus CSS/XPath/LLM structured extraction over dynamic pages; and
+  2026 browser-agent comparisons keep centering MCP distribution,
+  Playwright/CDP compatibility, action traces, and cached repeated workflows.
+  No hosted-browser pivot is recommended; the sticky move is adapter parity for
+  reusable local action targets.
+- Code changes: Browser Use now exposes sync/async
+  `find_action_target_by_label()` and `find_action_targets_by_label()`
+  helpers, with action-plan index docs corrected to include `by_label`,
+  `by_role`, and `by_action`.
+- Code changes: LangChain action target indexes now include `by_label`,
+  `find_action_target(..., by="label")`, exported
+  `find_action_target_by_label()`, and exported substring/exact
+  `find_action_targets_by_label()` helpers.
+- Tests/docs changes: Browser Use and LangChain tests now assert label buckets,
+  exact label lookup, substring label search, and enabled-only label filtering.
+  Integration docs, PRD, and roadmap now describe labels as human-facing
+  recovery handles while stable ids/cache keys/HTML ids/test ids remain the
+  replay contract.
+- Verification passed: focused Browser Use pytest (4), focused LangChain
+  pytest (2, with an existing Python 3.14/Pydantic warning), `node
+  website/build.mjs` using a temporary primary-checkout `node_modules` symlink,
+  `git diff --check`, `cargo build --quiet`, `cargo test --lib --quiet` (281),
+  `scripts/action-manifest-conformance.sh` with temporary Node dependency
+  symlinks, and `cargo clippy --quiet` with existing warnings.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`.
+- Commit/push state: pending at the time of this state entry; push may be
+  blocked by the same DNS restriction that prevented fetching from GitHub.
+
 ### 2026-05-17T07:06:05Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch --prune origin` was attempted first in the

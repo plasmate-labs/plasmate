@@ -88,6 +88,7 @@ a cached action back to a current SOM target without scanning the menu:
 index = extractor.extract_action_plan_index("https://example.com/settings")
 target = index["by_cache_key"]["plasmate-action:v1:..."]
 print(target["id"], target.get("html_id"), target.get("test_id"))
+target = index["by_label"]["Save"]
 
 # Or scope a Browser Use plan before replaying a cached target.
 buttons = extractor.find_action_targets_by_role(
@@ -99,8 +100,17 @@ enabled_clicks = extractor.find_action_targets_by_action(
     "click",
     enabled_only=True,
 )
+save = extractor.find_action_target_by_label(
+    "https://example.com/settings",
+    "Save",
+    enabled_only=True,
+)
+labeled = extractor.find_action_targets_by_label(
+    "https://example.com/settings",
+    "billing",
+)
 
-# Or let Plasmate resolve SOM id, cache key, HTML id, or test id automatically.
+# Or let Plasmate resolve SOM id, cache key, HTML id, test id, or explicit label.
 target = extractor.find_action_target(
     "https://example.com/settings",
     "plasmate-action:v1:...",
