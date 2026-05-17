@@ -49,6 +49,42 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-17T17:11:06Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch origin --prune` was attempted first and failed
+  in the linked automation worktree because shared worktree metadata
+  `FETCH_HEAD` could not be opened (`Operation not permitted`). Work continued
+  from local detached `HEAD`/`origin/master` `48c03d6`.
+- Market direction: official docs still favor structured, repeatable,
+  protocol-native browser state. Playwright MCP uses accessibility snapshots
+  with snapshot-scoped refs; Stagehand documents local and Browserbase action
+  caching; Firecrawl packages scrape/search/extract plus browser/interact
+  sessions through MCP/API/SDK surfaces; Cloudflare Browser Run is pushing
+  CDP/MCP/WebMCP as the hosted browser-session lane. No hosted pivot is
+  recommended; Plasmate's sticky counter-position remains local SOM snapshots
+  with replay-friendly protocol compatibility.
+- Code changes: Rust SOM compilation now normalizes `data-test-id` into
+  `attrs.test_id`; CDP DOM nodes expose raw `aria-labelledby` and
+  `aria-describedby` replay provenance; `Plasmate.getInteractiveElements`
+  accepts AX/DOM role aliases such as `textbox`, `combobox`, `listbox`, `img`,
+  and `input` while returning canonical SOM role names.
+- Docs changes: PRD, roadmap, and SOM spec now record the CDP
+  replay-ergonomics rationale, completed improvements, and broadened test-id
+  locator contract.
+- Verification passed: touched-file rustfmt check, focused CDP domain tests,
+  focused SOM compiler test for test-id fallback preservation,
+  `node website/build.mjs` using the primary-checkout `website/node_modules`
+  symlink removed afterward, `git diff --check`, `cargo build --quiet`, and
+  `cargo test --lib --quiet` (281) with
+  `RUSTY_V8_ARCHIVE=/Users/steve/Git/plasmate/target/debug/gn_out/obj/librusty_v8.a`.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`.
+- Commit/push state: normal `git add` remains blocked by linked-worktree
+  `index.lock` permissions. Alternate-index code/docs commit `66248e0`
+  (`chore: improve CDP replay ergonomics`) was created for push, followed by
+  this running-state update.
+
 ### 2026-05-17T07:06:05Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch --prune origin` was attempted first in the
