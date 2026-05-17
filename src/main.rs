@@ -119,8 +119,10 @@ enum Commands {
         /// Accepts semantic region roles (main, nav, navigation, aside, header,
         /// footer, form, dialog, content), element roles (button, link,
         /// text_input, select, etc.), action selectors (interactive,
-        /// action:click, action:type, action:select), or an HTML id selector
-        /// (#my-id).
+        /// action:click, action:type, action:select), text/label selectors
+        /// (text:checkout, label:email), common locator attributes
+        /// ([data-testid=save], input[name=q], [required]), or an HTML id
+        /// selector (#my-id).
         /// When a role is given, only regions of that role are included.
         /// When an element/action selector or id is given, only matching
         /// elements are kept, with parent containers preserved.
@@ -131,6 +133,8 @@ enum Commands {
         ///   --selector nav             (navigation links only)
         ///   --selector interactive     (only actionable elements)
         ///   --selector action:click    (only click targets)
+        ///   --selector "label:email"   (matching accessible labels)
+        ///   --selector "[data-testid=save]" (developer locator anchors)
         ///   --selector "#toc"          (elements with id="toc")
         ///   --selector main --format text   (main content as plain text)
         #[arg(long)]
@@ -290,9 +294,10 @@ enum Commands {
         /// --format`.
         #[arg(long, default_value = "json")]
         format: String,
-        /// Filter output to a specific SOM region, role, action surface, or
-        /// element — same syntax as `plasmate fetch --selector` (e.g. `main`,
-        /// `button`, `interactive`, `action:click`, `#my-id`).
+        /// Filter output to a specific SOM region, role, action surface,
+        /// text/label query, locator attribute, or element — same syntax as
+        /// `plasmate fetch --selector` (e.g. `main`, `button`, `interactive`,
+        /// `action:click`, `label:email`, `[data-testid=save]`, `#my-id`).
         #[arg(long)]
         selector: Option<String>,
     },
@@ -320,9 +325,10 @@ enum Commands {
         output: Option<String>,
         /// Filter both snapshots to a specific region before diffing.
         /// Same syntax as `plasmate fetch --selector` (e.g. `main`, `nav`,
-        /// `button`, `interactive`, `action:click`, `#my-id`). Useful for
-        /// diffing only the content region or action surface and ignoring
-        /// navigation or footer churn.
+        /// `button`, `interactive`, `action:click`, `label:email`,
+        /// `[data-testid=save]`, `#my-id`). Useful for diffing only the
+        /// content region or action surface and ignoring navigation or footer
+        /// churn.
         #[arg(long)]
         selector: Option<String>,
     },

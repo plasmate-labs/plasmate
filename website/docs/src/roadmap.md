@@ -14,6 +14,14 @@ Plasmate should keep its local-first position, but the roadmap now emphasizes th
 
 Near-term target: make Plasmate the fastest local way to turn authenticated or repetitive web workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 Shared Selector-Locator Adjustment
+
+Current browser-agent products are teaching users to store and validate action targets through selectors, labels, and replay ids before asking an LLM again. Playwright MCP snapshot refs stay scoped to a current structured snapshot, Stagehand/Browserbase caches actions locally or server-side after validation, Cloudflare Browser Run is widening CDP/MCP/WebMCP distribution, and Firecrawl keeps hosted browser sessions in its MCP/API surface. Plasmate should keep the local-first path and make shared SOM selectors cover the same replay anchors:
+
+- **Human-facing selectors should be forgiving**: `text:<query>` and `label:<query>` should match case-insensitively while preserving parent and shadow-root context.
+- **Developer locators should work everywhere**: `test_id:<value>`, `[data-testid=value]`, `[data-test-id=value]`, `[data-test=value]`, and `[data-qa=value]` should filter SOM targets before prompt construction.
+- **Common attribute selectors reduce DOM fallback**: selectors such as `input[name=q]`, `input[type=search]`, `[aria-label="Save"]`, and `[required]` should share the CLI/MCP/daemon selector path and therefore the selector-aware cache path.
+
 ### 2026-05-17 CDP Attribute-Selector Adjustment
 
 Current browser-agent infrastructure keeps turning protocol compatibility into distribution. Browserbase/Stagehand highlights observe/action primitives, cached actions, session replay, and local-to-cloud portability; Cloudflare Browser Rendering added CDP endpoints and MCP client support; Firecrawl keeps exposing MCP scrape/search/extract plus browser interaction. Plasmate should keep the local-first wedge and improve the compatibility path where ordinary CDP clients already start: selectors and node attributes.
@@ -600,6 +608,9 @@ Competitor pressure keeps moving reusable action state from browser engines into
 - Deep SPA hydration ops (insertBefore, replaceChild, classList, cloneNode)
 - Timer queue drain (setTimeout, requestAnimationFrame)
 - page.click() / page.type() via DOM bridge
+- Shared CLI/MCP/daemon selectors support case-insensitive `text:<query>` and `label:<query>` filters while preserving parent and shadow-root context.
+- Shared selectors support test-locator aliases including `test_id:<value>`, `[data-testid=value]`, `[data-test-id=value]`, `[data-test=value]`, and `[data-qa=value]`.
+- Shared selectors support common replay-validation attributes such as `input[name=q]`, `input[type=search]`, `[aria-label="Save"]`, `[required]`, `[readonly]`, and `[disabled]`.
 - page.waitForSelector() (final DOM state)
 - Chrome-delegated Page.captureScreenshot for pixel-perfect rendering
 - CDP stubs wired: setDeviceMetricsOverride, addScriptToEvaluateOnNewDocument, getLayoutMetrics, getProperties

@@ -49,6 +49,46 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-17T18:09:31Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch --prune origin` was attempted first and failed
+  in the linked automation worktree because shared worktree metadata
+  `FETCH_HEAD` could not be opened (`Operation not permitted`). Work continued
+  from local detached `HEAD`/`origin/master` `48c03d6`; remote freshness could
+  not be confirmed from shell because this sandbox still cannot update the
+  shared fetch metadata.
+- Market direction: current official/product docs keep validating the
+  local-first replay-selector wedge. Playwright MCP uses accessibility
+  snapshots with refs stable only within the current snapshot, Stagehand/
+  Browserbase documents `observe()` plus local/managed action caching,
+  Cloudflare Browser Run packages CDP/MCP sessions and WebMCP experiments, and
+  Firecrawl keeps browser sessions behind API/CLI/SDK/MCP surfaces. No hosted
+  browser pivot is recommended; the sticky move is making shared selectors
+  resolve the same text, labels, and developer locators users store for replay.
+- Code changes: shared SOM selectors now support case-insensitive
+  `text:<query>` filters, case-insensitive `label:<query>` filters including
+  ARIA label attrs, and common locator/attribute selectors such as
+  `test_id:<value>`, `[data-testid=value]`, `[data-test-id=value]`,
+  `[data-test=value]`, `[data-qa=value]`, `input[name=q]`,
+  `input[type=search]`, `[aria-label="Save"]`, `[required]`, `[readonly]`,
+  and `[disabled]`. Tag-qualified attribute selectors now honor common tag
+  hints before matching attrs.
+- Docs changes: README, CLI help, MCP tool descriptions, PRD, roadmap source
+  docs, generated website docs, and this running state now document the shared
+  selector-locator rationale and completed changes.
+- Verification passed: touched-file rustfmt check; focused
+  `cargo test som::filter --quiet` with local `RUSTY_V8_ARCHIVE`;
+  `node website/build.mjs` with a temporary primary-checkout
+  `website/node_modules` symlink removed afterward; `git diff --check`;
+  `cargo build --quiet`; `cargo test --lib --quiet` (285); and
+  `cargo clippy --quiet` with existing warnings.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  `tests/awp_integration_test.rs` because local listener setup returns
+  `Operation not permitted` in this sandbox.
+- Commit/push state: pending. Normal linked-worktree git metadata has
+  previously blocked fetch/staging, so use the alternate-index path if normal
+  `git add` fails; do not force-push over a remote head that cannot be fetched.
+
 ### 2026-05-17T07:06:05Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch --prune origin` was attempted first in the

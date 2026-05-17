@@ -29,6 +29,27 @@ Near-term stickiness target: developers should keep Plasmate installed because
 it becomes the fastest local way to turn authenticated or repetitive web
 workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 Shared Selector-Locator Adjustment
+
+Current browser-agent products are teaching users to store and validate action
+targets through selectors, labels, and replay ids before asking an LLM again.
+Playwright MCP snapshot refs stay scoped to a current structured snapshot,
+Stagehand/Browserbase caches actions locally or server-side after validation,
+Cloudflare Browser Run is widening CDP/MCP/WebMCP distribution, and Firecrawl
+keeps hosted browser sessions in its MCP/API surface. Plasmate should keep the
+local-first path and make shared SOM selectors cover the same replay anchors:
+
+1. **Human-facing selectors should be forgiving**: `text:<query>` and
+   `label:<query>` should match case-insensitively while preserving parent and
+   shadow-root context.
+2. **Developer locators should work everywhere**: `test_id:<value>`,
+   `[data-testid=value]`, `[data-test-id=value]`, `[data-test=value]`, and
+   `[data-qa=value]` should filter SOM targets before prompt construction.
+3. **Common attribute selectors reduce DOM fallback**: selectors such as
+   `input[name=q]`, `input[type=search]`, `[aria-label="Save"]`, and
+   `[required]` should share the CLI/MCP/daemon selector path and therefore the
+   selector-aware cache path.
+
 ### 2026-05-17 CDP Action-Menu Parity Adjustment
 
 Current browser-agent tools increasingly expose action state at the protocol
@@ -1753,6 +1774,16 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Python/Node parser packages and SDKs now expose explicit accessible-label
   lookup for elements and compact action targets, plus exact label buckets in
   action-plan indexes, while keeping auto replay lookup on stable ids.
+- Shared CLI/MCP/daemon selectors now support case-insensitive `text:<query>`
+  and `label:<query>` filters, preserving parent and shadow-root context for
+  human-facing recovery.
+- Shared selectors now support test-locator aliases including `test_id:<value>`,
+  `[data-testid=value]`, `[data-test-id=value]`, `[data-test=value]`, and
+  `[data-qa=value]` so developer-authored anchors can scope action menus before
+  prompts.
+- Shared selectors now support common replay-validation attributes such as
+  `input[name=q]`, `input[type=search]`, `[aria-label="Save"]`, `[required]`,
+  `[readonly]`, and `[disabled]`, reducing raw DOM fallback for repeated forms.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, `html_id` DOM-provenance cases,

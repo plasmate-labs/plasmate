@@ -32,6 +32,21 @@ cloud API.
 - Crawl4AI remains strong for open-source Python crawling and extraction, but
   carries Chromium/Playwright operational weight.
 
+2026-05-17 shared selector-locator read: the newest market read keeps pointing
+at selector reuse as the retention layer, not just browser access. Playwright
+MCP returns snapshot refs that are valid only in the current structured
+snapshot, Stagehand now documents both local and Browserbase action caches that
+skip repeat LLM calls after page-state validation, Cloudflare Browser Run
+packages CDP/MCP browser sessions plus WebMCP experiments, and Firecrawl keeps
+broadening scrape/extract/browser-session distribution. Plasmate should keep
+the local-first SOM wedge and make shared selectors speak the same language
+agents already store for replay: case-insensitive `text:<query>` and
+`label:<query>` selectors for human-facing recovery, test-locator aliases such
+as `test_id:save` and `[data-testid=save]`, and common attribute selectors such
+as `input[name=q]`, `[aria-label="Save"]`, and `[required]`. These selectors
+should work through CLI, daemon, MCP, and selector-aware cache entries before
+users need raw DOM recovery or hosted selector memory.
+
 2026-05-17 CDP attribute-selector read: fresh trend research keeps reinforcing
 that protocol compatibility is now part of browser-agent distribution.
 Browserbase/Stagehand markets `act`, `extract`, `observe`, `agent`, local
@@ -782,6 +797,16 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-17:
+  - Shared SOM selectors now support case-insensitive `text:<query>` filters,
+    giving CLI, daemon, MCP, and diff users a low-token way to scope visible
+    copy before prompt construction.
+  - Shared SOM selectors now support case-insensitive `label:<query>` filters,
+    including ARIA label attrs, so human-facing action recovery does not depend
+    on exact casing or raw DOM scans.
+  - Shared SOM selectors now support test-locator and common attribute forms
+    such as `test_id:save`, `[data-testid=save]`, `input[name=q]`,
+    `input[type=search]`, `[aria-label="Save"]`, and `[required]`, preserving
+    parent and shadow-root context for replay validation.
   - Go SDK `ActionPlanIndex` now includes `ByLabel`, plus
     `FindActionTargetByLabel()` and `FindActionTargetsByLabel()` helpers so
     durable worker code matches Python/Node label-addressable action lookup.

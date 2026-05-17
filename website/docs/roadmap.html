@@ -465,6 +465,12 @@
 <li><strong>Ecosystem distribution</strong>: MCP, Browser Use, SDKs, and comparison pages should remain conformance-tested so partner repos do not drift.</li>
 </ul>
 <p>Near-term target: make Plasmate the fastest local way to turn authenticated or repetitive web workflows into compact, inspectable, reusable state.</p>
+<h3 id="2026-05-17-shared-selector-locator-adjustment">2026-05-17 Shared Selector-Locator Adjustment</h3><p>Current browser-agent products are teaching users to store and validate action targets through selectors, labels, and replay ids before asking an LLM again. Playwright MCP snapshot refs stay scoped to a current structured snapshot, Stagehand/Browserbase caches actions locally or server-side after validation, Cloudflare Browser Run is widening CDP/MCP/WebMCP distribution, and Firecrawl keeps hosted browser sessions in its MCP/API surface. Plasmate should keep the local-first path and make shared SOM selectors cover the same replay anchors:</p>
+<ul>
+<li><strong>Human-facing selectors should be forgiving</strong>: <code>text:&lt;query&gt;</code> and <code>label:&lt;query&gt;</code> should match case-insensitively while preserving parent and shadow-root context.</li>
+<li><strong>Developer locators should work everywhere</strong>: <code>test_id:&lt;value&gt;</code>, <code>[data-testid=value]</code>, <code>[data-test-id=value]</code>, <code>[data-test=value]</code>, and <code>[data-qa=value]</code> should filter SOM targets before prompt construction.</li>
+<li><strong>Common attribute selectors reduce DOM fallback</strong>: selectors such as <code>input[name=q]</code>, <code>input[type=search]</code>, <code>[aria-label=&quot;Save&quot;]</code>, and <code>[required]</code> should share the CLI/MCP/daemon selector path and therefore the selector-aware cache path.</li>
+</ul>
 <h3 id="2026-05-17-cdp-attribute-selector-adjustment">2026-05-17 CDP Attribute-Selector Adjustment</h3><p>Current browser-agent infrastructure keeps turning protocol compatibility into distribution. Browserbase/Stagehand highlights observe/action primitives, cached actions, session replay, and local-to-cloud portability; Cloudflare Browser Rendering added CDP endpoints and MCP client support; Firecrawl keeps exposing MCP scrape/search/extract plus browser interaction. Plasmate should keep the local-first wedge and improve the compatibility path where ordinary CDP clients already start: selectors and node attributes.</p>
 <ul>
 <li><strong>Common selectors should hit SOM targets</strong>: <code>DOM.querySelector</code> and <code>DOM.querySelectorAll</code> should support tag-qualified and bare attribute selectors for <code>name</code>, <code>href</code>, <code>type</code>, <code>aria-label</code>, <code>aria-labelledby</code>, <code>aria-describedby</code>, <code>role</code>, test ids, and boolean availability attrs.</li>
@@ -911,6 +917,9 @@
 <li>Deep SPA hydration ops (insertBefore, replaceChild, classList, cloneNode)</li>
 <li>Timer queue drain (setTimeout, requestAnimationFrame)</li>
 <li>page.click() / page.type() via DOM bridge</li>
+<li>Shared CLI/MCP/daemon selectors support case-insensitive <code>text:&lt;query&gt;</code> and <code>label:&lt;query&gt;</code> filters while preserving parent and shadow-root context.</li>
+<li>Shared selectors support test-locator aliases including <code>test_id:&lt;value&gt;</code>, <code>[data-testid=value]</code>, <code>[data-test-id=value]</code>, <code>[data-test=value]</code>, and <code>[data-qa=value]</code>.</li>
+<li>Shared selectors support common replay-validation attributes such as <code>input[name=q]</code>, <code>input[type=search]</code>, <code>[aria-label=&quot;Save&quot;]</code>, <code>[required]</code>, <code>[readonly]</code>, and <code>[disabled]</code>.</li>
 <li>page.waitForSelector() (final DOM state)</li>
 <li>Chrome-delegated Page.captureScreenshot for pixel-perfect rendering</li>
 <li>CDP stubs wired: setDeviceMetricsOverride, addScriptToEvaluateOnNewDocument, getLayoutMetrics, getProperties</li>
