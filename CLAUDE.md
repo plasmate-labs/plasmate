@@ -85,9 +85,10 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Commit/push state: normal `git add` remains blocked by linked-worktree
   `index.lock` permissions, so alternate-index commit `f1cabd8` (`chore:
   improve CDP replay action lookup`) plus follow-up state commits were created.
-  Final commit `3036bcb` was pushed to
-  `origin/codex/plasmate-improvements-2026-05-17-cdp-replay-lookup` and
-  fast-forwarded to remote `master` (`d1c8fbb..3036bcb`).
+  The automation branch
+  `origin/codex/plasmate-improvements-2026-05-17-cdp-replay-lookup` was pushed
+  and remote `master` was fast-forwarded from `d1c8fbb` through the state
+  update.
 
 ### 2026-05-17T02:40:09Z - Plasmate Improvements Automation
 
