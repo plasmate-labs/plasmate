@@ -29,6 +29,27 @@ Near-term stickiness target: developers should keep Plasmate installed because
 it becomes the fastest local way to turn authenticated or repetitive web
 workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 CDP Replay-Ergonomics Adjustment
+
+Current browser-agent docs keep rewarding protocol surfaces that reuse the
+agent's existing vocabulary. Playwright MCP exposes structured accessibility
+roles such as `textbox` with snapshot refs, Stagehand/Browserbase caches
+observed actions to avoid repeat LLM calls, Firecrawl packages browser and
+interact sessions through MCP/API/SDK surfaces, and Cloudflare Browser Run is
+pushing CDP/MCP/WebMCP as the agent browser entrypoint. Plasmate should keep
+the local-first SOM wedge and close the small naming gaps that force agents
+back to raw DOM recovery:
+
+1. **Test locators should normalize broadly**: `data-test-id` should compile
+   into the same `attrs.test_id` field as `data-testid`, `data-test`, and
+   `data-qa`.
+2. **ARIA provenance should cross CDP**: DOM nodes should expose raw
+   `aria-labelledby` and `aria-describedby` attributes beside resolved labels
+   so replay validation can compare live relationship anchors.
+3. **Role filters should speak AX and SOM**: CDP action-menu filters should
+   accept common accessibility/DOM aliases such as `textbox`, `combobox`,
+   `listbox`, `img`, and `input` while returning canonical SOM role names.
+
 ### 2026-05-17 CDP Action-Menu Parity Adjustment
 
 Current browser-agent tools increasingly expose action state at the protocol
@@ -1356,6 +1377,15 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 
 ## Current Minor Improvements Logged
 
+- Rust SOM compilation now normalizes `data-test-id` into `attrs.test_id`,
+  aligning compiler output with CDP selector support and common test locator
+  conventions.
+- CDP DOM nodes now expose raw `aria-labelledby` and `aria-describedby`
+  relationship attributes when available, preserving replay validation
+  provenance at the protocol edge.
+- `Plasmate.getInteractiveElements` role filters now accept AX/DOM aliases such
+  as `textbox`, `combobox`, `listbox`, `img`, and `input` while continuing to
+  serialize canonical SOM role names.
 - Go SDK action-plan indexes now expose `ByLabel` and exact-label helper
   functions, bringing durable worker lookup parity closer to Python and Node.
 - Public Python, Node, and Go SDK docs now show grouped role/action action-plan

@@ -48,6 +48,18 @@ return replay-oriented node attributes (`data-plasmate-id`, `data-som-role`,
 HTML id, test id, ARIA label, href/name/type, and availability flags) from CDP
 DOM nodes.
 
+2026-05-17 CDP replay-ergonomics read: official docs continue to reward
+small protocol compatibility details that keep agents out of raw DOM recovery.
+Playwright MCP exposes structured accessibility roles such as `textbox` refs,
+Stagehand caches observed actions locally and on Browserbase, Firecrawl
+packages browser/interact sessions with profiles and MCP distribution, and
+Cloudflare Browser Run is leaning into CDP/MCP/WebMCP as the agent browser
+entrypoint. Plasmate should keep the local-first wedge and make its protocol
+surface accept the names developers already store: normalize `data-test-id`
+alongside other test-id locators, expose raw ARIA relationship attributes on
+CDP DOM nodes, and let CDP action filters accept AX/DOM role aliases such as
+`textbox`, `combobox`, and `img` without losing canonical SOM role names.
+
 2026-05-17 CDP DOM/AX selector parity read: current official docs keep making
 structured snapshots and protocol compatibility the adoption bridge. Playwright
 MCP states that agents act through accessibility snapshots with refs that are
@@ -782,6 +794,15 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-17:
+  - Rust SOM compilation now normalizes `data-test-id` into `attrs.test_id`,
+    matching the CDP selector layer and common framework test locator
+    conventions.
+  - CDP DOM nodes now expose raw `aria-labelledby` and `aria-describedby`
+    attributes when SOM carries ARIA relationship provenance, giving cached
+    replay code live-DOM validation hints without raw DOM recovery.
+  - `Plasmate.getInteractiveElements` role filters now accept common AX/DOM
+    aliases such as `textbox`, `combobox`, `listbox`, `img`, and `input` while
+    continuing to return canonical SOM role names in results.
   - Go SDK `ActionPlanIndex` now includes `ByLabel`, plus
     `FindActionTargetByLabel()` and `FindActionTargetsByLabel()` helpers so
     durable worker code matches Python/Node label-addressable action lookup.

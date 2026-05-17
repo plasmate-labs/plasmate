@@ -385,7 +385,7 @@ Implementations SHOULD preserve common actionability attributes on any element:
 and `description`. The
 `description` value is resolved from `aria-describedby` or `aria-description`.
 The `source_role` value is the raw HTML `role` attribute, and `test_id`
-normalizes developer-authored `data-testid`, `data-test`, or `data-qa`
+normalizes developer-authored `data-testid`, `data-test-id`, `data-test`, or `data-qa`
 locators for local replay and diagnostics.
 These attributes are especially important for custom controls that are exposed
 through ARIA roles instead of native form elements.

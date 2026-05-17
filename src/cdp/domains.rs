@@ -1424,7 +1424,7 @@ pub fn plasmate_get_interactive_elements(
         })
         .filter(|e| {
             role_filter
-                .map(|role| e.role.as_str() == role)
+                .map(|role| element_matches_role_filter(e, role))
                 .unwrap_or(true)
         })
         .filter(|e| {
@@ -1728,14 +1728,24 @@ fn node_attributes(entry: &NodeEntry, target: &CdpTarget) -> Option<Vec<String>>
     let som_id = entry.som_element_id.as_deref()?;
     let element = target.find_element_by_som_id(som_id)?;
     let mut attrs = Vec::new();
+    let element_attrs = element.attrs.as_ref();
 
     push_attr(&mut attrs, "data-plasmate-id", Some(element.id.as_str()));
     push_attr(&mut attrs, "data-som-role", Some(element.role.as_str()));
     push_attr(&mut attrs, "id", element.html_id.as_deref());
     push_attr(&mut attrs, "aria-label", element.label.as_deref());
+    push_attr(
+        &mut attrs,
+        "aria-labelledby",
+        attr_aria_string(element_attrs, "labelledby"),
+    );
+    push_attr(
+        &mut attrs,
+        "aria-describedby",
+        attr_aria_string(element_attrs, "describedby"),
+    );
     push_attr(&mut attrs, "data-testid", element_test_id(element));
 
-    let element_attrs = element.attrs.as_ref();
     push_attr(&mut attrs, "href", attr_string(element_attrs, "href"));
     push_attr(&mut attrs, "name", attr_string(element_attrs, "name"));
     push_attr(
@@ -1853,6 +1863,29 @@ fn element_matches_lookup(element: &Element, value: &str, by: &str, exact_label:
     }
 }
 
+fn element_matches_role_filter(element: &Element, role: &str) -> bool {
+    let normalized = normalize_role_filter(role);
+    match normalized.as_str() {
+        "textbox" => matches!(
+            element.role,
+            crate::som::types::ElementRole::TextInput | crate::som::types::ElementRole::Textarea
+        ),
+        "combobox" | "listbox" => element.role.as_str() == "select",
+        "img" => element.role.as_str() == "image",
+        "input" => matches!(
+            element.role,
+            crate::som::types::ElementRole::TextInput
+                | crate::som::types::ElementRole::Checkbox
+                | crate::som::types::ElementRole::Radio
+        ),
+        other => element.role.as_str() == other,
+    }
+}
+
+fn normalize_role_filter(role: &str) -> String {
+    role.trim().to_ascii_lowercase().replace(['-', ' '], "_")
+}
+
 fn element_label_matches(element: &Element, label: &str, exact: bool) -> bool {
     let element_label = element
         .label
@@ -1901,6 +1934,14 @@ fn action_plan_cache_key(element: &Element) -> String {
 fn attr_string<'a>(attrs: Option<&'a serde_json::Value>, key: &str) -> Option<&'a str> {
     attrs
         .and_then(|attrs| attrs.get(key))
+        .and_then(|value| value.as_str())
+        .filter(|value| !value.is_empty())
+}
+
+fn attr_aria_string<'a>(attrs: Option<&'a serde_json::Value>, key: &str) -> Option<&'a str> {
+    attrs
+        .and_then(|attrs| attrs.get("aria"))
+        .and_then(|aria| aria.get(key))
         .and_then(|value| value.as_str())
         .filter(|value| !value.is_empty())
 }
@@ -2041,6 +2082,10 @@ mod tests {
         top_button.attrs = Some(json!({
             "test_id": "settings-save",
             "disabled": true,
+            "aria": {
+                "labelledby": "save-label",
+                "describedby": "save-help"
+            },
         }));
 
         let mut text_input = element("email-input", ElementRole::TextInput, Some("Email"));
@@ -2135,6 +2180,8 @@ mod tests {
         assert_eq!(attr("data-som-role"), Some("button"));
         assert_eq!(attr("id"), Some("save-button"));
         assert_eq!(attr("aria-label"), Some("Save"));
+        assert_eq!(attr("aria-labelledby"), Some("save-label"));
+        assert_eq!(attr("aria-describedby"), Some("save-help"));
         assert_eq!(attr("data-testid"), Some("settings-save"));
         assert_eq!(attr("disabled"), Some("true"));
     }
@@ -2177,6 +2224,18 @@ mod tests {
         assert_eq!(blocked_elements[0]["test_id"], "settings-save");
         assert_eq!(blocked_elements[0]["enabled"], false);
         assert_eq!(blocked_elements[0]["blocked_reason"], "disabled");
+
+        let textbox = plasmate_get_interactive_elements(
+            3,
+            &json!({
+                "role": "textbox",
+            }),
+            &target,
+        )
+        .result
+        .unwrap();
+        assert_eq!(textbox["count"], 1);
+        assert_eq!(textbox["elements"][0]["id"], "email-input");
     }
 
     #[test]

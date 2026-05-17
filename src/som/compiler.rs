@@ -2686,7 +2686,7 @@ fn extract_html_id(attrs: &[(String, String)]) -> Option<String> {
 }
 
 fn extract_test_id(attrs: &[(String, String)]) -> Option<String> {
-    for key in ["data-testid", "data-test", "data-qa"] {
+    for key in ["data-testid", "data-test-id", "data-test", "data-qa"] {
         if let Some((_, value)) = attrs.iter().find(|(n, _)| n == key) {
             let value = value.trim();
             if !value.is_empty() {
@@ -2980,6 +2980,7 @@ mod tests {
 <html><head><title>Actions</title></head>
 <body>
 <main>
+  <button data-test-id="primary-action">Save</button>
   <button data-test="secondary-action">Preview</button>
   <button data-qa="tertiary-action">Cancel</button>
 </main>
@@ -2994,13 +2995,17 @@ mod tests {
             .filter(|element| element.role == ElementRole::Button)
             .collect();
 
-        assert_eq!(buttons.len(), 2);
+        assert_eq!(buttons.len(), 3);
         assert_eq!(
             buttons[0].attrs.as_ref().unwrap()["test_id"],
-            "secondary-action"
+            "primary-action"
         );
         assert_eq!(
             buttons[1].attrs.as_ref().unwrap()["test_id"],
+            "secondary-action"
+        );
+        assert_eq!(
+            buttons[2].attrs.as_ref().unwrap()["test_id"],
             "tertiary-action"
         );
     }
