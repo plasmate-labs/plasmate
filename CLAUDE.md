@@ -85,9 +85,15 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Verification blocked: full `cargo test --quiet` still fails only in
   `tests/awp_integration_test.rs` because local listener setup returns
   `Operation not permitted` in this sandbox.
-- Commit/push state: pending. Normal linked-worktree git metadata has
-  previously blocked fetch/staging, so use the alternate-index path if normal
-  `git add` fails; do not force-push over a remote head that cannot be fetched.
+- Commit/push state: normal `git add` failed on linked-worktree
+  `index.lock`, so alternate-index commit `fc9afb5` was created and pushed to
+  `origin/codex/plasmate-improvements-2026-05-17-shared-selector-locators`.
+  Direct push to `master` was rejected because remote `master` is at
+  `96fa6df`, two coverage JSON commits ahead of local `48c03d6`. GitHub
+  connector PR creation and tree creation both returned 403, common-git fetch
+  still failed DNS, and a manual fast-forward commit could not be pushed
+  because the remote parent object is unavailable locally. No force push was
+  attempted.
 
 ### 2026-05-17T07:06:05Z - Plasmate Improvements Automation
 
