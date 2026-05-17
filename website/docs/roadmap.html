@@ -465,6 +465,12 @@
 <li><strong>Ecosystem distribution</strong>: MCP, Browser Use, SDKs, and comparison pages should remain conformance-tested so partner repos do not drift.</li>
 </ul>
 <p>Near-term target: make Plasmate the fastest local way to turn authenticated or repetitive web workflows into compact, inspectable, reusable state.</p>
+<h3 id="2026-05-17-mcpcli-selector-alignment-adjustment">2026-05-17 MCP/CLI Selector Alignment Adjustment</h3><p>Current browser-agent tools are converging on compact, reusable action state with ordinary locator ergonomics. Playwright MCP exposes accessibility snapshots with refs scoped to the current page snapshot, Browserbase/Stagehand markets observed actions plus cached selectors for repeated workflows, Firecrawl packages scraping, extraction, and browser sandbox work through MCP and SDK entrypoints, and Cloudflare Browser Run is widening hosted CDP/MCP browser access. Plasmate should keep the local-first wedge and make its shared selector path useful before any raw DOM fallback:</p>
+<ul>
+<li><strong>Human anchors should scope SOM output</strong>: <code>text:&lt;query&gt;</code> and <code>label:&lt;query&gt;</code> should be case-insensitive selectors across CLI, MCP, compile, and diff paths.</li>
+<li><strong>Developer locators should work outside CDP</strong>: test ids and common attribute selectors such as <code>[data-testid=save]</code>, <code>[aria-label=Search]</code>, <code>[required]</code>, and <code>input[type=search]</code> should return compact SOM slices.</li>
+<li><strong>Selector parity should become conformance</strong>: shared selector fixtures should keep CLI, MCP, SDK/parser, CDP, and adapter recovery behavior aligned as the repo surface grows.</li>
+</ul>
 <h3 id="2026-05-17-cdp-attribute-selector-adjustment">2026-05-17 CDP Attribute-Selector Adjustment</h3><p>Current browser-agent infrastructure keeps turning protocol compatibility into distribution. Browserbase/Stagehand highlights observe/action primitives, cached actions, session replay, and local-to-cloud portability; Cloudflare Browser Rendering added CDP endpoints and MCP client support; Firecrawl keeps exposing MCP scrape/search/extract plus browser interaction. Plasmate should keep the local-first wedge and improve the compatibility path where ordinary CDP clients already start: selectors and node attributes.</p>
 <ul>
 <li><strong>Common selectors should hit SOM targets</strong>: <code>DOM.querySelector</code> and <code>DOM.querySelectorAll</code> should support tag-qualified and bare attribute selectors for <code>name</code>, <code>href</code>, <code>type</code>, <code>aria-label</code>, <code>aria-labelledby</code>, <code>aria-describedby</code>, <code>role</code>, test ids, and boolean availability attrs.</li>
@@ -914,6 +920,13 @@
 <li>page.waitForSelector() (final DOM state)</li>
 <li>Chrome-delegated Page.captureScreenshot for pixel-perfect rendering</li>
 <li>CDP stubs wired: setDeviceMetricsOverride, addScriptToEvaluateOnNewDocument, getLayoutMetrics, getProperties</li>
+<li>Shared CLI/MCP selectors support case-insensitive <code>text:&lt;query&gt;</code> and
+<code>label:&lt;query&gt;</code> matching.</li>
+<li>Shared CLI/MCP selectors support test-locator lookup with <code>test_id:&lt;value&gt;</code>,
+<code>data-testid:&lt;value&gt;</code>, and bracket attribute forms.</li>
+<li>Shared CLI/MCP selectors support common attribute selectors such as
+<code>[name=q]</code>, <code>[href=&quot;/docs&quot;]</code>, <code>[aria-label=&quot;Search&quot;]</code>, <code>[required]</code>, and
+<code>input[type=search]</code>.</li>
 </ul>
 <h2 id="v05-scale-adoption-next">v0.5: Scale & Adoption (Next)</h2><ul>
 <li><input disabled="" type="checkbox"> Parallel sessions at scale (500+ concurrent per 8GB)</li>

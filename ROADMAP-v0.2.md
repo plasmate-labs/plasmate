@@ -29,6 +29,27 @@ Near-term stickiness target: developers should keep Plasmate installed because
 it becomes the fastest local way to turn authenticated or repetitive web
 workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 MCP/CLI Selector Alignment Adjustment
+
+Current browser-agent tools are converging on compact, reusable action state
+with ordinary locator ergonomics. Playwright MCP exposes accessibility
+snapshots with refs scoped to the current page snapshot, Browserbase/Stagehand
+markets observed actions plus cached selectors for repeated workflows,
+Firecrawl packages scraping, extraction, and browser sandbox work through MCP
+and SDK entrypoints, and Cloudflare Browser Run is widening hosted CDP/MCP
+browser access. Plasmate should keep the local-first wedge and make its shared
+selector path useful before any raw DOM fallback:
+
+1. **Human anchors should scope SOM output**: `text:<query>` and
+   `label:<query>` should be case-insensitive selectors across CLI, MCP,
+   compile, and diff paths.
+2. **Developer locators should work outside CDP**: test ids and common
+   attribute selectors such as `[data-testid=save]`, `[aria-label=Search]`,
+   `[required]`, and `input[type=search]` should return compact SOM slices.
+3. **Selector parity should become conformance**: shared selector fixtures
+   should keep CLI, MCP, SDK/parser, CDP, and adapter recovery behavior aligned
+   as the repo surface grows.
+
 ### 2026-05-17 CDP Action-Menu Parity Adjustment
 
 Current browser-agent tools increasingly expose action state at the protocol
@@ -1727,6 +1748,14 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - MCP `session_status` now includes available capacity, per-session loaded URL,
   title, SOM size, element/interactive counts, node-map count, and
   structured-data presence for replay readiness checks.
+- Shared CLI/MCP SOM selectors now support case-insensitive `text:<query>` and
+  `label:<query>` matching while preserving parent and shadow-root context.
+- Shared CLI/MCP SOM selectors now support test-locator lookup via
+  `test_id:<value>`, `data-testid:<value>`, `[data-testid=value]`,
+  `[data-test-id=value]`, `[data-test=value]`, and `[data-qa=value]`.
+- Shared CLI/MCP SOM selectors now support common attribute selectors such as
+  `[name=q]`, `[href="/docs"]`, `[aria-label="Search"]`, `[required]`, and
+  tag-qualified forms such as `input[type=search]`.
 - Stateful MCP `open_page` and `navigate_to` now preserve structured data and
   rebuild CDP node maps after SOM compilation.
 - Stateful MCP mutation tools (`click`, `type_text`, `select_option`,

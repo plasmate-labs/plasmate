@@ -55,7 +55,12 @@ Claude now has access to these tools:
 Ask Claude: "Fetch stripe.com/docs but only the main content, not the nav"
 Claude will call: `fetch_page(url="https://stripe.com/docs", selector="main")`
 
-**Available selectors:** `main`, `nav`, `header`, `footer`, `aside`, `content`, `form`, `dialog`, or any HTML id like `#my-section`.
+**Available selectors:** `main`, `nav`, `header`, `footer`, `aside`,
+`content`, `form`, `dialog`, element roles such as `button` and `text_input`,
+action menus such as `interactive` and `action:click`, text/label queries such
+as `text:pricing` and `label:Search`, common locators such as
+`[data-testid=save]` and `input[type=search]`, or any HTML id like
+`#my-section`.
 
 ## Using with Cursor
 

@@ -49,6 +49,41 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-17T16:06:07Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch --prune origin` was attempted first in the
+  linked automation worktree and failed because shared worktree metadata
+  `FETCH_HEAD` could not be opened (`Operation not permitted`). Work continued
+  from local detached `HEAD`/`origin/master` `48c03d6`; earlier memory still
+  notes remote `master` may have advanced beyond the locally fetchable state.
+- Market direction: fresh official docs keep reinforcing compact, reusable
+  action state as the sticky layer. Playwright MCP exposes accessibility
+  snapshots with snapshot-scoped refs, Browserbase/Stagehand markets
+  `observe()` plus action caching for repeated workflows, Firecrawl packages
+  scrape/search/extract and browser sandbox work through MCP/SDK surfaces, and
+  Cloudflare Browser Run exposes hosted CDP/MCP browser access. No hosted
+  browser pivot is recommended; the local-first move is selector parity across
+  CLI, MCP, CDP, SDKs, and adapters.
+- Code changes: shared SOM selectors now support case-insensitive
+  `text:<query>` and `label:<query>` matching; test locator selectors such as
+  `test_id:<value>`, `data-testid:<value>`, `[data-testid=value]`,
+  `[data-test-id=value]`, `[data-test=value]`, and `[data-qa=value]`; and
+  common attribute selectors such as `[name=q]`, `[href="/docs"]`,
+  `[aria-label="Search"]`, `[required]`, and `input[type=search]`.
+- Docs changes: CLI help, MCP tool descriptions, README, Claude desktop config
+  docs, PRD, roadmap source, and website docs now describe text/label/locator
+  selector recovery as a local action-planning feature.
+- Verification passed: touched-file rustfmt check, `git diff --check`, focused
+  `cargo test som::filter --quiet` (14), `node website/build.mjs` with a
+  temporary primary-checkout `website/node_modules` symlink removed afterward,
+  `cargo build --quiet`, `cargo test --lib --quiet` (284), and
+  `cargo clippy --quiet` with existing warnings. Rust commands used
+  `RUSTY_V8_ARCHIVE=/Users/steve/Git/plasmate/target/debug/gn_out/obj/librusty_v8.a`
+  after the first focused test hit the known offline `rusty_v8` download path.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`.
+
 ### 2026-05-17T07:06:05Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch --prune origin` was attempted first in the

@@ -546,6 +546,11 @@
 <td>End session</td>
 </tr>
 </tbody></table>
+<p>Selectors can keep MCP responses small before an LLM sees the page. Use
+<code>selector=&quot;main&quot;</code> for content, <code>selector=&quot;interactive&quot;</code> or
+<code>selector=&quot;action:click&quot;</code> for action menus, <code>selector=&quot;label:Search&quot;</code> for
+accessible-name recovery, and <code>selector=&quot;[data-testid=save]&quot;</code> or
+<code>selector=&quot;input[type=search]&quot;</code> when the app exposes developer locators.</p>
 <h2 id="what-changes-for-the-user">What Changes for the User</h2><p>Nothing visible changes. Your AI just gets better at reading the web:</p>
 <ul>
 <li><strong>Faster</strong>: 17x fewer tokens means faster responses</li>

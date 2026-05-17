@@ -119,7 +119,9 @@ enum Commands {
         /// Accepts semantic region roles (main, nav, navigation, aside, header,
         /// footer, form, dialog, content), element roles (button, link,
         /// text_input, select, etc.), action selectors (interactive,
-        /// action:click, action:type, action:select), or an HTML id selector
+        /// action:click, action:type, action:select), text/label selectors
+        /// (text:checkout, label:Search), common locator attributes
+        /// ([data-testid=save], input[type=search]), or an HTML id selector
         /// (#my-id).
         /// When a role is given, only regions of that role are included.
         /// When an element/action selector or id is given, only matching
@@ -131,6 +133,8 @@ enum Commands {
         ///   --selector nav             (navigation links only)
         ///   --selector interactive     (only actionable elements)
         ///   --selector action:click    (only click targets)
+        ///   --selector "label:Search"  (controls named Search)
+        ///   --selector "[data-testid=save]" (test locator target)
         ///   --selector "#toc"          (elements with id="toc")
         ///   --selector main --format text   (main content as plain text)
         #[arg(long)]

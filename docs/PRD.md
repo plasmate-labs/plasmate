@@ -32,6 +32,19 @@ cloud API.
 - Crawl4AI remains strong for open-source Python crawling and extraction, but
   carries Chromium/Playwright operational weight.
 
+2026-05-17 MCP/CLI selector-alignment read: fresh official docs keep raising
+the floor for selector and locator ergonomics. Playwright MCP exposes
+structured accessibility snapshots with snapshot-scoped refs; Stagehand/
+Browserbase now markets `observe()` and action caching as repeat-run cost
+reducers; Firecrawl distributes scrape/search/extract plus browser sandbox
+work through MCP and SDK surfaces; Cloudflare Browser Run adds CDP/MCP access
+for hosted browsers. Plasmate should keep the local-first wedge, but make the
+shared CLI/MCP selector path recover the same human and developer anchors as
+CDP clients: case-insensitive `text:<query>` and `label:<query>` slices,
+test-locator selectors, and common attribute selectors such as
+`[data-testid=save]`, `[aria-label="Search"]`, `[required]`, and
+`input[type=search]`.
+
 2026-05-17 CDP attribute-selector read: fresh trend research keeps reinforcing
 that protocol compatibility is now part of browser-agent distribution.
 Browserbase/Stagehand markets `act`, `extract`, `observe`, `agent`, local
@@ -782,6 +795,17 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-17:
+  - Shared SOM selectors now support case-insensitive `text:<query>` matching
+    across CLI, MCP, compile, and diff paths, giving agents a compact recovery
+    slice around known visible copy.
+  - Shared SOM selectors now support case-insensitive `label:<query>` matching
+    so accessible names can be used as explicit lookup hints without returning
+    the full page.
+  - Shared SOM selectors now support developer-authored locator selectors:
+    `test_id:<value>`, `data-testid:<value>`, `[data-testid=value]`,
+    `[data-test-id=value]`, `[data-test=value]`, `[data-qa=value]`, common
+    ARIA/name/type/href attributes, boolean attrs such as `[required]`, and
+    tag-qualified forms such as `input[type=search]`.
   - Go SDK `ActionPlanIndex` now includes `ByLabel`, plus
     `FindActionTargetByLabel()` and `FindActionTargetsByLabel()` helpers so
     durable worker code matches Python/Node label-addressable action lookup.
@@ -1485,6 +1509,10 @@ and adapter docs over one-off integration logic.
 - Promote locator-provenance cases (`title`, `source_role`, and `test_id`)
   into broader Rust/parser/SDK and adapter conformance fixtures so local
   replay can use developer-authored anchors without destabilizing cache keys.
+- Promote shared selector recovery cases (`text:<query>`, `label:<query>`,
+  test locators, boolean attributes, and tag-qualified attributes) into CLI,
+  MCP, SDK/parser, and adapter conformance so every surface can request the
+  same compact SOM slice before prompting.
 - Promote auto replay lookup into the shared action-manifest release gate so
   parser, SDK, and framework direct lookups cannot drift from indexed lookup
   behavior.

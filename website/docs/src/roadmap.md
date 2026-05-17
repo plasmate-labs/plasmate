@@ -14,6 +14,14 @@ Plasmate should keep its local-first position, but the roadmap now emphasizes th
 
 Near-term target: make Plasmate the fastest local way to turn authenticated or repetitive web workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 MCP/CLI Selector Alignment Adjustment
+
+Current browser-agent tools are converging on compact, reusable action state with ordinary locator ergonomics. Playwright MCP exposes accessibility snapshots with refs scoped to the current page snapshot, Browserbase/Stagehand markets observed actions plus cached selectors for repeated workflows, Firecrawl packages scraping, extraction, and browser sandbox work through MCP and SDK entrypoints, and Cloudflare Browser Run is widening hosted CDP/MCP browser access. Plasmate should keep the local-first wedge and make its shared selector path useful before any raw DOM fallback:
+
+- **Human anchors should scope SOM output**: `text:<query>` and `label:<query>` should be case-insensitive selectors across CLI, MCP, compile, and diff paths.
+- **Developer locators should work outside CDP**: test ids and common attribute selectors such as `[data-testid=save]`, `[aria-label=Search]`, `[required]`, and `input[type=search]` should return compact SOM slices.
+- **Selector parity should become conformance**: shared selector fixtures should keep CLI, MCP, SDK/parser, CDP, and adapter recovery behavior aligned as the repo surface grows.
+
 ### 2026-05-17 CDP Attribute-Selector Adjustment
 
 Current browser-agent infrastructure keeps turning protocol compatibility into distribution. Browserbase/Stagehand highlights observe/action primitives, cached actions, session replay, and local-to-cloud portability; Cloudflare Browser Rendering added CDP endpoints and MCP client support; Firecrawl keeps exposing MCP scrape/search/extract plus browser interaction. Plasmate should keep the local-first wedge and improve the compatibility path where ordinary CDP clients already start: selectors and node attributes.
@@ -603,6 +611,13 @@ Competitor pressure keeps moving reusable action state from browser engines into
 - page.waitForSelector() (final DOM state)
 - Chrome-delegated Page.captureScreenshot for pixel-perfect rendering
 - CDP stubs wired: setDeviceMetricsOverride, addScriptToEvaluateOnNewDocument, getLayoutMetrics, getProperties
+- Shared CLI/MCP selectors support case-insensitive `text:<query>` and
+  `label:<query>` matching.
+- Shared CLI/MCP selectors support test-locator lookup with `test_id:<value>`,
+  `data-testid:<value>`, and bracket attribute forms.
+- Shared CLI/MCP selectors support common attribute selectors such as
+  `[name=q]`, `[href="/docs"]`, `[aria-label="Search"]`, `[required]`, and
+  `input[type=search]`.
 
 ## v0.5: Scale & Adoption (Next)
 

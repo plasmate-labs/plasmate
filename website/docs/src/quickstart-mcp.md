@@ -67,6 +67,12 @@ It should use `fetch_page` and return structured content instead of raw HTML. If
 | `evaluate` | Run JavaScript |
 | `close_page` | End session |
 
+Selectors can keep MCP responses small before an LLM sees the page. Use
+`selector="main"` for content, `selector="interactive"` or
+`selector="action:click"` for action menus, `selector="label:Search"` for
+accessible-name recovery, and `selector="[data-testid=save]"` or
+`selector="input[type=search]"` when the app exposes developer locators.
+
 ## What Changes for the User
 
 Nothing visible changes. Your AI just gets better at reading the web:
