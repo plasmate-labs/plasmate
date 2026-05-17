@@ -49,6 +49,41 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-17T02:40:09Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch --prune origin` was attempted first in the
+  linked automation worktree and failed because shared worktree metadata
+  `FETCH_HEAD` could not be opened. Fallback fetch from the primary checkout
+  failed DNS for `github.com`, so work continued from the already-local
+  `origin/master` / `HEAD` `3084ab7`.
+- Market direction: current official docs continue to make protocol-level,
+  validated action state the sticky surface. Playwright MCP uses fresh
+  accessibility snapshot refs, Stagehand/Browserbase documents local and
+  managed action caches, Firecrawl exposes browser sandbox sessions through
+  API/CLI/SDK/MCP, and Cloudflare Browser Rendering/Browser Run now exposes
+  CDP plus MCP client support. No hosted-browser pivot is recommended; the
+  sticky local step is making Plasmate's CDP custom domain expose the same
+  full-tree action menu as MCP and SDK paths.
+- Code changes: `Plasmate.getInteractiveElements` now traverses nested
+  children and shadow roots, serializes roles with canonical SOM names such as
+  `text_input`, supports `role`, `action`, `label`, `exact`, and
+  `enabledOnly`/`enabled_only` filters, and exposes top-level `html_id`,
+  `test_id`, `enabled`, and `blocked_reason` cues for CDP clients.
+- Docs changes: PRD, roadmap, README, and generated website docs now record
+  the CDP action-menu parity rationale and public `getInteractiveElements`
+  filter contract.
+- Verification passed: focused CDP Rust tests, touched-file rustfmt check,
+  `node website/build.mjs`, `git diff --check`,
+  `RUSTY_V8_ARCHIVE=/Users/steve/Git/plasmate/target/release/gn_out/obj/librusty_v8.a cargo build --quiet`,
+  and `cargo test --lib --quiet` (275).
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`. Full `cargo fmt --check` still reports
+  unrelated pre-existing formatting drift in AWP/bench/proxy files.
+- Commit/push state: pending commit/push/merge; network fetch and later push
+  may be blocked by the same sandbox DNS restrictions unless remote access is
+  restored.
+
 ### 2026-05-17T01:09:42Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch --prune origin` was attempted first and failed

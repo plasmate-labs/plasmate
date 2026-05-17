@@ -510,7 +510,7 @@ async fn handle_cdp_request_inner(
         "Plasmate.getSom" => (domains::plasmate_get_som(id, target), vec![]),
         "Plasmate.getStructuredData" => (domains::plasmate_get_structured_data(id, target), vec![]),
         "Plasmate.getInteractiveElements" => (
-            domains::plasmate_get_interactive_elements(id, target),
+            domains::plasmate_get_interactive_elements(id, params, target),
             vec![],
         ),
         "Plasmate.getMarkdown" => (domains::plasmate_get_markdown(id, target), vec![]),

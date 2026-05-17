@@ -256,6 +256,14 @@ Plasmate passes [Lightpanda's Puppeteer benchmark](https://github.com/lightpanda
 - `DOM.getDocument`, `DOM.querySelector`, `DOM.querySelectorAll`
 - `Input.dispatchMouseEvent`, `Input.dispatchKeyEvent`
 - Target management (create, attach, close)
+- `Plasmate.getSom`, `Plasmate.getStructuredData`, `Plasmate.getInteractiveElements`, `Plasmate.getMarkdown`
+
+`Plasmate.getInteractiveElements` returns a full-tree action menu, including
+nested and shadow-root targets. It accepts optional `role`, `action`, `label`,
+`exact`, and `enabledOnly` params so Puppeteer/Playwright clients can request,
+for example, enabled click targets before calling an LLM. Each target includes
+SOM role names, `html_id`, `test_id`, `enabled`, and `blocked_reason` when
+available.
 
 CDP is a compatibility layer. AWP is the native protocol, designed for agents rather than debuggers.
 

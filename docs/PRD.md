@@ -32,6 +32,19 @@ cloud API.
 - Crawl4AI remains strong for open-source Python crawling and extraction, but
   carries Chromium/Playwright operational weight.
 
+2026-05-17 CDP action-menu parity read: current competitor docs make the
+protocol edge part of the sticky action surface. Playwright MCP documents
+accessibility snapshot refs that refresh after page changes, Stagehand
+documents local and Browserbase action caches for repeated workflows, Firecrawl
+packages browser sandbox sessions behind API/CLI/SDK/MCP entrypoints, and
+Cloudflare Browser Rendering/Browser Run now exposes CDP plus MCP client
+support. Plasmate should keep the local-first wedge but make its CDP custom
+domain return the same full-tree, filterable action menu users expect from MCP
+and SDK helpers. `Plasmate.getInteractiveElements` should include nested and
+shadow-root targets, serialize roles with SOM names like `text_input`, expose
+top-level replay identifiers/availability, and let CDP clients narrow by role,
+action, label, and enabled state before prompting an LLM.
+
 2026-05-17 SDK discoverability and Go label-parity read: current competitor
 docs keep pushing browser-agent products toward small, validated action menus.
 Playwright MCP documents snapshot-scoped accessibility refs, Browserbase/

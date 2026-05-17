@@ -12,6 +12,7 @@ use tracing::info;
 use super::cookies::cookie_from_cdp_params;
 use super::session::{CdpTarget, NodeEntry};
 use super::types::*;
+use crate::som::types::{Element, Som};
 
 // ============================================================
 // Browser domain
@@ -1353,33 +1354,70 @@ pub fn plasmate_get_structured_data(id: u64, target: &CdpTarget) -> CdpResponse 
     }
 }
 
-pub fn plasmate_get_interactive_elements(id: u64, target: &CdpTarget) -> CdpResponse {
-    let elements: Vec<serde_json::Value> = if let Some(som) = &target.current_som {
-        som.regions
-            .iter()
-            .flat_map(|r| &r.elements)
-            .filter(|e| e.role.is_interactive())
-            .map(|e| {
-                json!({
-                    "id": e.id,
-                    "role": format!("{:?}", e.role).to_lowercase(),
-                    "text": e.text,
-                    "label": e.label,
-                    "actions": e.actions,
-                    "attrs": e.attrs,
-                    "hints": e.hints,
+pub fn plasmate_get_interactive_elements(
+    id: u64,
+    params: &serde_json::Value,
+    target: &CdpTarget,
+) -> CdpResponse {
+    let role_filter = params.get("role").and_then(|v| v.as_str());
+    let action_filter = params.get("action").and_then(|v| v.as_str());
+    let label_filter = params.get("label").and_then(|v| v.as_str());
+    let exact_label = params
+        .get("exact")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    let enabled_only = params
+        .get("enabledOnly")
+        .or_else(|| params.get("enabled_only"))
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+
+    let all_elements: Vec<&Element> = target
+        .current_som
+        .as_ref()
+        .map(interactive_elements)
+        .unwrap_or_default();
+
+    let elements: Vec<serde_json::Value> = all_elements
+        .iter()
+        .copied()
+        .filter(|e| {
+            role_filter
+                .map(|role| e.role.as_str() == role)
+                .unwrap_or(true)
+        })
+        .filter(|e| {
+            action_filter
+                .map(|action| {
+                    e.actions
+                        .as_ref()
+                        .map(|actions| actions.iter().any(|a| a == action))
+                        .unwrap_or(false)
                 })
-            })
-            .collect()
-    } else {
-        vec![]
-    };
+                .unwrap_or(true)
+        })
+        .filter(|e| {
+            label_filter
+                .map(|label| {
+                    let element_label = e.label.as_deref().or(e.text.as_deref()).unwrap_or("");
+                    if exact_label {
+                        element_label == label
+                    } else {
+                        element_label.to_lowercase().contains(&label.to_lowercase())
+                    }
+                })
+                .unwrap_or(true)
+        })
+        .filter(|e| !enabled_only || interactive_enabled_state(e).0)
+        .map(interactive_element_to_json)
+        .collect();
 
     CdpResponse::success(
         id,
         json!({
             "elements": elements,
             "count": elements.len(),
+            "total_interactive_count": all_elements.len(),
         }),
     )
 }
@@ -1569,6 +1607,76 @@ fn node_to_cdp(entry: &NodeEntry, target: &CdpTarget, depth: u32) -> serde_json:
     node
 }
 
+fn interactive_elements(som: &Som) -> Vec<&Element> {
+    let mut elements = Vec::new();
+    for region in &som.regions {
+        collect_interactive_elements(&region.elements, &mut elements);
+    }
+    elements
+}
+
+fn collect_interactive_elements<'a>(source: &'a [Element], out: &mut Vec<&'a Element>) {
+    for element in source {
+        if element.role.is_interactive() {
+            out.push(element);
+        }
+        if let Some(children) = &element.children {
+            collect_interactive_elements(children, out);
+        }
+        if let Some(shadow) = &element.shadow {
+            collect_interactive_elements(&shadow.elements, out);
+        }
+    }
+}
+
+fn interactive_element_to_json(element: &Element) -> serde_json::Value {
+    let (enabled, blocked_reason) = interactive_enabled_state(element);
+    let test_id = element
+        .attrs
+        .as_ref()
+        .and_then(|attrs| attrs.get("test_id"))
+        .and_then(|value| value.as_str());
+
+    json!({
+        "id": element.id,
+        "role": element.role.as_str(),
+        "html_id": element.html_id,
+        "test_id": test_id,
+        "text": element.text,
+        "label": element.label,
+        "actions": element.actions,
+        "attrs": element.attrs,
+        "hints": element.hints,
+        "enabled": enabled,
+        "blocked_reason": blocked_reason,
+    })
+}
+
+fn interactive_enabled_state(element: &Element) -> (bool, Option<&'static str>) {
+    let Some(attrs) = &element.attrs else {
+        return (true, None);
+    };
+
+    if attr_bool(attrs, "disabled") {
+        return (false, Some("disabled"));
+    }
+    if attr_bool(attrs, "inert") {
+        return (false, Some("inert"));
+    }
+    if attr_bool(attrs, "readonly") {
+        return (false, Some("readonly"));
+    }
+
+    (true, None)
+}
+
+fn attr_bool(attrs: &serde_json::Value, key: &str) -> bool {
+    attrs
+        .get(key)
+        .and_then(|value| value.as_bool())
+        .unwrap_or(false)
+}
+
 fn timestamp_sec() -> f64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -1635,4 +1743,150 @@ fn som_to_markdown(som: &crate::som::types::Som) -> String {
     }
 
     md
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::som::types::{ElementRole, Region, RegionRole, ShadowRoot, SomMeta};
+
+    fn element(id: &str, role: ElementRole, label: Option<&str>) -> Element {
+        Element {
+            id: id.to_string(),
+            role,
+            html_id: None,
+            text: None,
+            label: label.map(str::to_string),
+            actions: None,
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        }
+    }
+
+    fn cdp_target_with_som(som: Som) -> CdpTarget {
+        let mut target = CdpTarget::new().unwrap();
+        target.current_som = Some(som);
+        target
+    }
+
+    fn fixture_som() -> Som {
+        let mut top_button = element("top-button", ElementRole::Button, Some("Save"));
+        top_button.actions = Some(vec!["click".to_string()]);
+        top_button.html_id = Some("save-button".to_string());
+        top_button.attrs = Some(json!({
+            "test_id": "settings-save",
+            "disabled": true,
+        }));
+
+        let mut text_input = element("email-input", ElementRole::TextInput, Some("Email"));
+        text_input.actions = Some(vec!["type".to_string(), "clear".to_string()]);
+
+        let mut nested_link = element("nested-link", ElementRole::Link, Some("Docs"));
+        nested_link.actions = Some(vec!["click".to_string()]);
+
+        let mut shadow_button = element("shadow-button", ElementRole::Button, Some("Shadow save"));
+        shadow_button.actions = Some(vec!["click".to_string()]);
+
+        let mut host = element("host", ElementRole::Section, Some("Host"));
+        host.children = Some(vec![nested_link]);
+        host.shadow = Some(ShadowRoot {
+            mode: "open".to_string(),
+            elements: vec![shadow_button],
+        });
+
+        Som {
+            som_version: "0.1".to_string(),
+            url: "https://example.com/app".to_string(),
+            title: "Settings".to_string(),
+            lang: "en".to_string(),
+            regions: vec![Region {
+                id: "main".to_string(),
+                role: RegionRole::Main,
+                label: None,
+                action: None,
+                method: None,
+                target: None,
+                enctype: None,
+                novalidate: None,
+                accept_charset: None,
+                autocomplete: None,
+                elements: vec![top_button, text_input, host],
+            }],
+            meta: SomMeta {
+                html_bytes: 100,
+                som_bytes: 100,
+                element_count: 5,
+                interactive_count: 4,
+            },
+            structured_data: None,
+        }
+    }
+
+    #[test]
+    fn get_interactive_elements_includes_nested_shadow_and_serialized_roles() {
+        let target = cdp_target_with_som(fixture_som());
+        let response = plasmate_get_interactive_elements(1, &json!({}), &target);
+        let result = response.result.unwrap();
+        let elements = result["elements"].as_array().unwrap();
+        let ids: Vec<&str> = elements
+            .iter()
+            .map(|element| element["id"].as_str().unwrap())
+            .collect();
+
+        assert_eq!(result["count"], 4);
+        assert_eq!(result["total_interactive_count"], 4);
+        assert!(ids.contains(&"top-button"));
+        assert!(ids.contains(&"email-input"));
+        assert!(ids.contains(&"nested-link"));
+        assert!(ids.contains(&"shadow-button"));
+        assert_eq!(
+            elements
+                .iter()
+                .find(|element| element["id"] == "email-input")
+                .unwrap()["role"],
+            "text_input"
+        );
+    }
+
+    #[test]
+    fn get_interactive_elements_filters_by_action_label_and_enabled_state() {
+        let target = cdp_target_with_som(fixture_som());
+        let response = plasmate_get_interactive_elements(
+            1,
+            &json!({
+                "action": "click",
+                "label": "save",
+                "enabledOnly": true,
+            }),
+            &target,
+        );
+        let result = response.result.unwrap();
+        let elements = result["elements"].as_array().unwrap();
+
+        assert_eq!(result["count"], 1);
+        assert_eq!(elements[0]["id"], "shadow-button");
+        assert_eq!(elements[0]["enabled"], true);
+        assert!(elements[0]["blocked_reason"].is_null());
+
+        let blocked = plasmate_get_interactive_elements(
+            2,
+            &json!({
+                "role": "button",
+                "label": "Save",
+                "exact": true,
+            }),
+            &target,
+        )
+        .result
+        .unwrap();
+        let blocked_elements = blocked["elements"].as_array().unwrap();
+        assert_eq!(blocked_elements.len(), 1);
+        assert_eq!(blocked_elements[0]["id"], "top-button");
+        assert_eq!(blocked_elements[0]["html_id"], "save-button");
+        assert_eq!(blocked_elements[0]["test_id"], "settings-save");
+        assert_eq!(blocked_elements[0]["enabled"], false);
+        assert_eq!(blocked_elements[0]["blocked_reason"], "disabled");
+    }
 }

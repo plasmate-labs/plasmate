@@ -14,6 +14,14 @@ Plasmate should keep its local-first position, but the roadmap now emphasizes th
 
 Near-term target: make Plasmate the fastest local way to turn authenticated or repetitive web workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 CDP Action-Menu Parity Adjustment
+
+Current browser-agent tools increasingly expose action state at the protocol edge, not only in SDK helpers. Playwright MCP uses fresh accessibility snapshot refs for interaction, Stagehand/Browserbase caches validated actions to remove repeat LLM calls, Firecrawl exposes browser sandbox sessions through API, CLI, SDK, and MCP surfaces, and Cloudflare Browser Rendering/Browser Run now supports CDP plus MCP client workflows. Plasmate should keep the local-first SOM wedge and make CDP compatibility more agent-native:
+
+- **Full-tree CDP action menus**: `Plasmate.getInteractiveElements` should traverse nested children and shadow roots, matching MCP/session lookup and parser/SDK action-plan behavior.
+- **Protocol filters before prompts**: CDP clients should narrow by SOM role, action, accessible label, and enabled state before handing targets to an LLM.
+- **Replay cues on the wire**: CDP output should expose SOM role names, `html_id`, `test_id`, `enabled`, and `blocked_reason` directly so Puppeteer and Playwright users do not need raw DOM recovery for simple cached replay.
+
 ### 2026-05-17 SDK Discoverability and Label Parity Adjustment
 
 Current browser-agent competitors keep converging on compact action menus that can be validated before replay. Playwright MCP keeps refs scoped to the current accessibility snapshot, Stagehand/Browserbase makes action caching a repeated workflow feature, Firecrawl exposes scrape/search/extract/browser interaction through MCP and APIs, and Cloudflare Browser Run/WebMCP is expanding hosted browser-native tool surfaces. Plasmate should not pivot into hosted execution; the stickier move is to make local SOM action menus easier to discover and query in every SDK and adapter:

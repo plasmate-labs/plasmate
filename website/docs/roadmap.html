@@ -465,6 +465,12 @@
 <li><strong>Ecosystem distribution</strong>: MCP, Browser Use, SDKs, and comparison pages should remain conformance-tested so partner repos do not drift.</li>
 </ul>
 <p>Near-term target: make Plasmate the fastest local way to turn authenticated or repetitive web workflows into compact, inspectable, reusable state.</p>
+<h3 id="2026-05-17-cdp-action-menu-parity-adjustment">2026-05-17 CDP Action-Menu Parity Adjustment</h3><p>Current browser-agent tools increasingly expose action state at the protocol edge, not only in SDK helpers. Playwright MCP uses fresh accessibility snapshot refs for interaction, Stagehand/Browserbase caches validated actions to remove repeat LLM calls, Firecrawl exposes browser sandbox sessions through API, CLI, SDK, and MCP surfaces, and Cloudflare Browser Rendering/Browser Run now supports CDP plus MCP client workflows. Plasmate should keep the local-first SOM wedge and make CDP compatibility more agent-native:</p>
+<ul>
+<li><strong>Full-tree CDP action menus</strong>: <code>Plasmate.getInteractiveElements</code> should traverse nested children and shadow roots, matching MCP/session lookup and parser/SDK action-plan behavior.</li>
+<li><strong>Protocol filters before prompts</strong>: CDP clients should narrow by SOM role, action, accessible label, and enabled state before handing targets to an LLM.</li>
+<li><strong>Replay cues on the wire</strong>: CDP output should expose SOM role names, <code>html_id</code>, <code>test_id</code>, <code>enabled</code>, and <code>blocked_reason</code> directly so Puppeteer and Playwright users do not need raw DOM recovery for simple cached replay.</li>
+</ul>
 <h3 id="2026-05-17-sdk-discoverability-and-label-parity-adjustment">2026-05-17 SDK Discoverability and Label Parity Adjustment</h3><p>Current browser-agent competitors keep converging on compact action menus that can be validated before replay. Playwright MCP keeps refs scoped to the current accessibility snapshot, Stagehand/Browserbase makes action caching a repeated workflow feature, Firecrawl exposes scrape/search/extract/browser interaction through MCP and APIs, and Cloudflare Browser Run/WebMCP is expanding hosted browser-native tool surfaces. Plasmate should not pivot into hosted execution; the stickier move is to make local SOM action menus easier to discover and query in every SDK and adapter:</p>
 <ul>
 <li><strong>Go should match Python/Node label lookup</strong>: durable worker code needs <code>ByLabel</code>, exact-label resolution, and label search helpers for debugging and human-facing recovery.</li>
