@@ -14,6 +14,14 @@ Plasmate should keep its local-first position, but the roadmap now emphasizes th
 
 Near-term target: make Plasmate the fastest local way to turn authenticated or repetitive web workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 Shared Selector-Scoping Adjustment
+
+Current browser-agent products keep rewarding compact, reusable action context: Playwright MCP makes structured accessibility snapshots a baseline, Stagehand and Browserbase market observed/cached actions plus replay observability, Firecrawl exposes hosted browser interaction through MCP/API paths, and Cloudflare Browser Rendering/Browser Run keeps expanding CDP/MCP browser session surfaces. Plasmate should not pivot into hosted execution; it should make local SOM views easier to scope before prompts, cache lookups, and SDK tree walks:
+
+- **Human selectors belong in the shared filter**: CLI and MCP `selector` should support case-insensitive `text:<query>` and `label:<query>` matching against nested and shadow-root SOM elements.
+- **Developer locators should skip raw DOM recovery**: `test_id:<value>`, `[data-testid=value]`, `[data-test-id=value]`, `[data-test=value]`, and `[data-qa=value]` should filter SOM directly.
+- **Common attr selectors should pre-scope action menus**: selectors such as `[name=q]`, `[aria-label="Save"]`, `[required]`, and `input[type=search]` should preserve parent context while returning only matching targets.
+
 ### 2026-05-17 CDP Attribute-Selector Adjustment
 
 Current browser-agent infrastructure keeps turning protocol compatibility into distribution. Browserbase/Stagehand highlights observe/action primitives, cached actions, session replay, and local-to-cloud portability; Cloudflare Browser Rendering added CDP endpoints and MCP client support; Firecrawl keeps exposing MCP scrape/search/extract plus browser interaction. Plasmate should keep the local-first wedge and improve the compatibility path where ordinary CDP clients already start: selectors and node attributes.

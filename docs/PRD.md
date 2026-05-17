@@ -32,6 +32,22 @@ cloud API.
 - Crawl4AI remains strong for open-source Python crawling and extraction, but
   carries Chromium/Playwright operational weight.
 
+2026-05-17 shared selector-scoping read: fresh trend research continues to
+make the pre-prompt action surface the sticky layer. Playwright MCP documents
+structured accessibility snapshots as the interaction substrate; Stagehand and
+Browserbase market `observe()`, cached actions, session replay, and prompt
+observability; Firecrawl exposes scrape/search/extract plus browser interaction
+through MCP/API surfaces; Cloudflare Browser Rendering/Browser Run sells hosted
+browser sessions with CDP/MCP paths. Plasmate should keep the local-first wedge
+and move ordinary recovery selectors into the shared CLI/MCP SOM filter, not
+only CDP. `--selector` and MCP `selector` should accept case-insensitive
+`text:<query>` and `label:<query>` selectors, test-locator aliases such as
+`test_id:<value>` and `[data-testid=value]`, and common attribute selectors
+such as `[name=q]`, `[aria-label="Save"]`, `[required]`, and
+`input[type=search]`. This lets users cache and prompt narrow, inspectable SOM
+views before reaching for hosted browsers, raw DOM, screenshots, or custom SDK
+tree walks.
+
 2026-05-17 CDP attribute-selector read: fresh trend research keeps reinforcing
 that protocol compatibility is now part of browser-agent distribution.
 Browserbase/Stagehand markets `act`, `extract`, `observe`, `agent`, local

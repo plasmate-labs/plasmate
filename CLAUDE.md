@@ -49,6 +49,42 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-17T13:39:00Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch --prune origin` was attempted first in the
+  linked automation worktree and failed because shared worktree metadata
+  `FETCH_HEAD` could not be opened (`Operation not permitted`). Fallback fetch
+  from `/Users/steve/Git/plasmate` failed DNS for `github.com`, so work
+  continued from already-local `HEAD`/`origin/master` `48c03d6`.
+- Market direction: current trend research still supports the local-first SOM
+  wedge. Playwright MCP normalizes structured accessibility snapshots,
+  Browserbase/Stagehand emphasizes `observe()`, action caching, session replay,
+  and prompt observability, Firecrawl exposes browser interaction through
+  MCP/API surfaces, and Cloudflare Browser Rendering/Browser Run keeps pushing
+  hosted CDP/MCP browser sessions. No hosted-browser pivot is recommended; the
+  sticky move is making shared CLI/MCP SOM selectors narrow reusable targets
+  before agents need raw DOM, screenshots, or hosted sessions.
+- Code changes: shared `apply_selector()` now supports case-insensitive
+  `text:<query>` selectors, case-insensitive `label:<query>` selectors, and
+  replay-oriented test/attribute selectors such as `test_id:save`,
+  `[data-testid=save]`, `[data-test-id=save]`, `[data-test=save]`,
+  `[data-qa=save]`, `[name=q]`, `[aria-label="Save"]`, `[required]`, and
+  `input[type=search]`, preserving parent containers and shadow-root context.
+- Docs changes: CLI help, MCP tool descriptions, README, Claude Desktop config,
+  PRD, roadmap source, website source docs, generated website docs, and this
+  running state now document the shared selector-scoping rationale.
+- Verification passed: `rustfmt --edition 2021 --check` on touched Rust files,
+  focused `cargo test som::filter --quiet` (17 filter tests),
+  `node website/build.mjs` using a temporary primary-checkout
+  `website/node_modules` symlink removed afterward, `git diff --check`,
+  `cargo build --quiet`, `cargo test --lib --quiet` (287), and
+  `cargo clippy --quiet` with existing warnings.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`. Full `cargo fmt --check` is also blocked
+  by pre-existing formatting drift in unrelated files including
+  `src/awp/handler.rs` and `src/network/proxy.rs`.
+
 ### 2026-05-17T07:06:05Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch --prune origin` was attempted first in the

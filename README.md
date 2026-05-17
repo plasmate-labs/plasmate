@@ -153,7 +153,12 @@ Once connected, 18 tools are available: `fetch_page`, `extract_text`, `extract_l
 
 **Tip:** use `selector="main"` to strip nav/footer, `selector="interactive"`
 to return only actionable elements, or `selector="action:click"` to build a
-compact click-target menu before the LLM sees the content.
+compact click-target menu before the LLM sees the content. Selectors also
+support human and developer anchors such as `selector="label:Search"`,
+`selector="text:Pricing"`, `selector="test_id:save-action"`,
+`selector="[data-testid=save-action]"`, `selector="[name=q]"`, and
+`selector="input[type=search]"` so agents can scope reusable targets without
+raw DOM recovery.
 Use `cache_status` after repeated fetches to inspect local MCP SOM cache hits,
 misses, selector entries, effective-HTML entries, and avoided HTML work.
 Use `session_status` before long interactive runs to inspect active browser

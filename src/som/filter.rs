@@ -1,8 +1,8 @@
 //! Region/element filtering for SOM snapshots.
 //!
 //! Provides `apply_selector` to narrow a SOM down to specific regions or
-//! elements by semantic role or HTML id. Used by both the CLI (`--selector`)
-//! and MCP tools (`selector` parameter).
+//! elements by semantic role, accessible text, or stable DOM/replay attrs. Used
+//! by both the CLI (`--selector`) and MCP tools (`selector` parameter).
 
 use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 
@@ -16,7 +16,10 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `section`, `group`, `separator`, `details`, `iframe`
 /// - Action surfaces: `interactive` or `action:click` / `action:type` /
 ///   `action:clear` / `action:select` / `action:toggle`
+/// - Accessible text: `text:Submit` or `label:Search`, case-insensitive
 /// - HTML id: `#some-id` - keeps only elements whose `html_id` matches
+/// - Replay attrs: `test_id:save`, `[data-testid=save]`, `[name=q]`,
+///   `[aria-label="Save"]`, `[required]`, or tag-qualified `input[type=search]`
 ///
 /// Unrecognised selectors return the full SOM unchanged (with a warning to stderr).
 /// If a recognised selector matches nothing, the full SOM is returned (with a
@@ -81,6 +84,46 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                     .unwrap_or(false)
             });
         }
+    }
+
+    if let Some(query) = selector_lower
+        .strip_prefix("text:")
+        .map(|_| &selector[5..])
+        .map(str::trim)
+        .filter(|query| !query.is_empty())
+    {
+        return filter_som_elements(som, selector, |element| {
+            element
+                .text
+                .as_deref()
+                .map(|text| contains_case_insensitive(text, query))
+                .unwrap_or(false)
+        });
+    }
+
+    if let Some(query) = selector_lower
+        .strip_prefix("label:")
+        .map(|_| &selector[6..])
+        .map(str::trim)
+        .filter(|query| !query.is_empty())
+    {
+        return filter_som_elements(som, selector, |element| {
+            element_accessible_label(element)
+                .map(|label| contains_case_insensitive(label, query))
+                .unwrap_or(false)
+        });
+    }
+
+    if let Some(query) = parse_prefixed_test_id(selector) {
+        return filter_som_elements(som, selector, |element| {
+            element_test_id(element) == Some(query)
+        });
+    }
+
+    if let Some(attr_selector) = parse_attribute_selector(selector) {
+        return filter_som_elements(som, selector, |element| {
+            element_matches_attribute_selector(element, &attr_selector)
+        });
     }
 
     // Try id selector: #my-id. Prefer documented region ids, then HTML ids
@@ -149,6 +192,167 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         "iframe" => Some(ElementRole::Iframe),
         _ => None,
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct AttributeSelector {
+    tag: Option<String>,
+    attr: String,
+    value: Option<String>,
+}
+
+fn contains_case_insensitive(haystack: &str, needle: &str) -> bool {
+    haystack.to_lowercase().contains(&needle.to_lowercase())
+}
+
+fn element_accessible_label(element: &Element) -> Option<&str> {
+    element.label.as_deref().or(element.text.as_deref())
+}
+
+fn parse_prefixed_test_id(selector: &str) -> Option<&str> {
+    let (prefix, value) = selector.split_once(':')?;
+    match prefix
+        .trim()
+        .to_ascii_lowercase()
+        .replace('-', "_")
+        .as_str()
+    {
+        "test_id" | "testid" | "data_testid" | "data_test_id" | "data_test" | "data_qa" => {
+            let value = value.trim();
+            (!value.is_empty()).then_some(value)
+        }
+        _ => None,
+    }
+}
+
+fn parse_attribute_selector(selector: &str) -> Option<AttributeSelector> {
+    let selector = selector.trim();
+    let open = selector.find('[')?;
+    let close = selector.rfind(']')?;
+    if close <= open || !selector[close + 1..].trim().is_empty() {
+        return None;
+    }
+
+    let tag = selector[..open].trim();
+    let tag = if tag.is_empty() {
+        None
+    } else {
+        Some(tag.to_ascii_lowercase())
+    };
+    let body = selector[open + 1..close].trim();
+    if body.is_empty() {
+        return None;
+    }
+
+    let (attr, value) = if let Some((attr, value)) = body.split_once('=') {
+        let attr = attr.trim();
+        let value = strip_selector_quotes(value.trim());
+        (attr, Some(value.to_string()))
+    } else {
+        (body, None)
+    };
+
+    if attr.is_empty() {
+        return None;
+    }
+
+    Some(AttributeSelector {
+        tag,
+        attr: attr.to_ascii_lowercase(),
+        value,
+    })
+}
+
+fn strip_selector_quotes(value: &str) -> &str {
+    value
+        .strip_prefix('"')
+        .and_then(|v| v.strip_suffix('"'))
+        .or_else(|| value.strip_prefix('\'').and_then(|v| v.strip_suffix('\'')))
+        .unwrap_or(value)
+}
+
+fn element_matches_attribute_selector(element: &Element, selector: &AttributeSelector) -> bool {
+    if let Some(tag) = &selector.tag {
+        if !element_matches_tag_hint(element, tag) {
+            return false;
+        }
+    }
+
+    let Some(actual) = element_attribute_value(element, &selector.attr) else {
+        return false;
+    };
+
+    selector
+        .value
+        .as_deref()
+        .map(|expected| actual == expected)
+        .unwrap_or(true)
+}
+
+fn element_matches_tag_hint(element: &Element, tag: &str) -> bool {
+    match tag {
+        "a" => element.role == ElementRole::Link,
+        "button" => element.role == ElementRole::Button,
+        "input" => matches!(
+            element.role,
+            ElementRole::TextInput | ElementRole::Checkbox | ElementRole::Radio
+        ),
+        "textarea" => element.role == ElementRole::Textarea,
+        "select" => element.role == ElementRole::Select,
+        "img" => element.role == ElementRole::Image,
+        "iframe" => element.role == ElementRole::Iframe,
+        "details" => element.role == ElementRole::Details,
+        _ => element.role.as_str() == tag.replace('-', "_"),
+    }
+}
+
+fn element_attribute_value<'a>(element: &'a Element, attr: &str) -> Option<&'a str> {
+    match attr {
+        "id" => element.html_id.as_deref(),
+        "data-plasmate-id" => Some(element.id.as_str()),
+        "data-som-role" | "role" => Some(element.role.as_str()),
+        "aria-label" => element.label.as_deref(),
+        "data-testid" | "data-test-id" | "data-test" | "data-qa" | "test_id" | "testid" => {
+            element_test_id(element)
+        }
+        "type" => attr_string(element.attrs.as_ref(), "type")
+            .or_else(|| attr_string(element.attrs.as_ref(), "input_type"))
+            .or_else(|| attr_string(element.attrs.as_ref(), "button_type")),
+        "aria-labelledby" => attr_string(element.attrs.as_ref(), "labelledby")
+            .or_else(|| nested_attr_string(element.attrs.as_ref(), "aria", "labelledby")),
+        "aria-describedby" => attr_string(element.attrs.as_ref(), "describedby")
+            .or_else(|| nested_attr_string(element.attrs.as_ref(), "aria", "describedby")),
+        _ => attr_string(element.attrs.as_ref(), attr)
+            .or_else(|| bool_attr_string(element.attrs.as_ref(), attr)),
+    }
+}
+
+fn element_test_id(element: &Element) -> Option<&str> {
+    attr_string(element.attrs.as_ref(), "test_id")
+}
+
+fn attr_string<'a>(attrs: Option<&'a serde_json::Value>, key: &str) -> Option<&'a str> {
+    attrs
+        .and_then(|attrs| attrs.get(key))
+        .and_then(|v| v.as_str())
+}
+
+fn nested_attr_string<'a>(
+    attrs: Option<&'a serde_json::Value>,
+    parent: &str,
+    key: &str,
+) -> Option<&'a str> {
+    attrs
+        .and_then(|attrs| attrs.get(parent))
+        .and_then(|parent| parent.get(key))
+        .and_then(|v| v.as_str())
+}
+
+fn bool_attr_string<'a>(attrs: Option<&'a serde_json::Value>, key: &str) -> Option<&'a str> {
+    attrs
+        .and_then(|attrs| attrs.get(key))
+        .and_then(|value| value.as_bool())
+        .and_then(|value| value.then_some("true"))
 }
 
 fn filter_som_elements<F>(som: &Som, selector: &str, matches: F) -> Som
@@ -266,6 +470,7 @@ fn filter_elements_by_html_id(elements: &[Element], id: &str) -> Vec<Element> {
 mod tests {
     use super::*;
     use crate::som::types::*;
+    use serde_json::json;
 
     fn make_test_som() -> Som {
         Som {
@@ -327,9 +532,30 @@ mod tests {
                             role: ElementRole::Button,
                             html_id: Some("save".to_string()),
                             text: Some("Save".to_string()),
-                            label: None,
+                            label: Some("Save changes".to_string()),
                             actions: Some(vec!["click".to_string()]),
-                            attrs: None,
+                            attrs: Some(json!({
+                                "test_id": "save-action",
+                                "name": "save",
+                                "button_type": "submit"
+                            })),
+                            children: None,
+                            hints: None,
+                            shadow: None,
+                        },
+                        Element {
+                            id: "e4".to_string(),
+                            role: ElementRole::TextInput,
+                            html_id: Some("q".to_string()),
+                            text: None,
+                            label: Some("Search query".to_string()),
+                            actions: Some(vec!["type".to_string(), "clear".to_string()]),
+                            attrs: Some(json!({
+                                "test_id": "search-field",
+                                "name": "q",
+                                "input_type": "search",
+                                "required": true
+                            })),
                             children: None,
                             hints: None,
                             shadow: None,
@@ -409,6 +635,60 @@ mod tests {
                 .actions
                 .as_ref()
                 .is_some_and(|actions| actions.contains(&"click".to_string()))));
+    }
+
+    #[test]
+    fn test_selector_text_prefix_matches_case_insensitive() {
+        let som = make_test_som();
+        let filtered = apply_selector(&som, "text:home");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(
+            filtered.regions[0].elements[0].text.as_deref(),
+            Some("Home")
+        );
+    }
+
+    #[test]
+    fn test_selector_label_prefix_matches_accessible_name() {
+        let som = make_test_som();
+        let filtered = apply_selector(&som, "label:search");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(
+            filtered.regions[0].elements[0].label.as_deref(),
+            Some("Search query")
+        );
+    }
+
+    #[test]
+    fn test_selector_test_id_prefix() {
+        let som = make_test_som();
+        let filtered = apply_selector(&som, "test_id:save-action");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e3");
+    }
+
+    #[test]
+    fn test_selector_attribute_value() {
+        let som = make_test_som();
+        let filtered = apply_selector(&som, "[data-testid=search-field]");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e4");
+    }
+
+    #[test]
+    fn test_selector_attribute_existence() {
+        let som = make_test_som();
+        let filtered = apply_selector(&som, "[required]");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e4");
+    }
+
+    #[test]
+    fn test_selector_tag_qualified_attribute() {
+        let som = make_test_som();
+        let filtered = apply_selector(&som, "input[type=search]");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e4");
     }
 
     #[test]

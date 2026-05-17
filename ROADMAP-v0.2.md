@@ -29,6 +29,28 @@ Near-term stickiness target: developers should keep Plasmate installed because
 it becomes the fastest local way to turn authenticated or repetitive web
 workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 Shared Selector-Scoping Adjustment
+
+Current browser-agent products keep rewarding compact, reusable action context:
+Playwright MCP makes structured accessibility snapshots a baseline, Stagehand
+and Browserbase market observed/cached actions plus replay observability,
+Firecrawl exposes hosted browser interaction through MCP/API paths, and
+Cloudflare Browser Rendering/Browser Run keeps expanding CDP/MCP browser
+session surfaces. Plasmate should not pivot into hosted execution; it should
+make local SOM views easier to scope before prompts, cache lookups, and SDK
+tree walks:
+
+1. **Human selectors belong in the shared filter**: CLI and MCP `selector`
+   should support case-insensitive `text:<query>` and `label:<query>` matching
+   against nested and shadow-root SOM elements.
+2. **Developer locators should skip raw DOM recovery**: `test_id:<value>`,
+   `[data-testid=value]`, `[data-test-id=value]`, `[data-test=value]`, and
+   `[data-qa=value]` should filter SOM directly.
+3. **Common attr selectors should pre-scope action menus**: selectors such as
+   `[name=q]`, `[aria-label="Save"]`, `[required]`, and
+   `input[type=search]` should preserve parent context while returning only
+   matching targets.
+
 ### 2026-05-17 CDP Action-Menu Parity Adjustment
 
 Current browser-agent tools increasingly expose action state at the protocol
