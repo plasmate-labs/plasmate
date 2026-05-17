@@ -29,6 +29,25 @@ Near-term stickiness target: developers should keep Plasmate installed because
 it becomes the fastest local way to turn authenticated or repetitive web
 workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 CDP Action Summary Adjustment
+
+Current browser-agent tools keep moving action selection closer to protocol
+edges. Playwright MCP makes current accessibility refs the action unit,
+Stagehand/Browserbase markets reusable cached actions with observability,
+Firecrawl keeps widening MCP scrape/search/extract distribution, and Cloudflare
+Browser Run positions CDP/MCP sessions as agent infrastructure. Plasmate should
+keep its local-first SOM wedge and make CDP action menus easier to narrow before
+prompting:
+
+1. **Filters should fit client code**: `Plasmate.getInteractiveElements` should
+   accept case-insensitive `role`/`roles` and `action`/`actions`, including
+   hyphen or underscore role spelling.
+2. **Blocked targets should be auditable**: CDP clients should be able to ask
+   for `enabled=false` when debugging why a cached action should not replay.
+3. **Summaries should precede pages**: responses should include compact
+   role/action buckets plus enabled/blocked counts so clients can decide
+   whether to page, filter again, or prompt an LLM.
+
 ### 2026-05-17 CDP Action-Menu Parity Adjustment
 
 Current browser-agent tools increasingly expose action state at the protocol
@@ -1753,6 +1772,10 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Python/Node parser packages and SDKs now expose explicit accessible-label
   lookup for elements and compact action targets, plus exact label buckets in
   action-plan indexes, while keeping auto replay lookup on stable ids.
+- CDP `Plasmate.getInteractiveElements` now accepts case-insensitive
+  multi-value `role`/`roles` and `action`/`actions` filters, supports explicit
+  `enabled=false` blocked-target audits, and returns role/action/enabled
+  summary counts alongside paged targets.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, `html_id` DOM-provenance cases,

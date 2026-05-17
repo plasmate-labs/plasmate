@@ -32,6 +32,19 @@ cloud API.
 - Crawl4AI remains strong for open-source Python crawling and extraction, but
   carries Chromium/Playwright operational weight.
 
+2026-05-17 CDP action-summary read: current competitor docs keep making
+structured, reusable action state the adoption surface. Playwright MCP exposes
+snapshot-scoped accessibility refs, Browserbase/Stagehand markets `act`,
+`extract`, `observe`, `agent`, cached actions, session replay, and prompt
+observability, Firecrawl keeps distributing scrape/search/extract through MCP,
+and Cloudflare Browser Run now frames CDP/MCP/browser sessions as AI-agent
+infrastructure. Plasmate should keep the local-first wedge but make CDP action
+menus cheaper to narrow before an LLM call: `Plasmate.getInteractiveElements`
+should accept case-insensitive multi-value `role`/`roles` and
+`action`/`actions`, support explicit `enabled=false` filtering for blocked
+target audits, and return role/action/enabled summary counts alongside paged
+targets.
+
 2026-05-17 CDP attribute-selector read: fresh trend research keeps reinforcing
 that protocol compatibility is now part of browser-agent distribution.
 Browserbase/Stagehand markets `act`, `extract`, `observe`, `agent`, local
@@ -1418,6 +1431,10 @@ and adapter docs over one-off integration logic.
   - MCP `open_page` and `navigate_to` responses now include `cache_restored`;
     `session_status` also reports raw/effective HTML size and effective-HTML
     presence for replay-readiness inspection.
+  - CDP `Plasmate.getInteractiveElements` now supports case-insensitive
+    multi-value `role`/`roles` and `action`/`actions`, explicit
+    `enabled=false` blocked-target audits, and compact summary counts for
+    role/action/enabled scoping before LLM prompts.
 
 ## Next Steps
 

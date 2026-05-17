@@ -4,7 +4,7 @@
 //! The goal: Puppeteer/Playwright connect and work. Under the hood, everything
 //! goes through Plasmate's engine - agents get speed + token efficiency for free.
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use serde_json::json;
 use tracing::info;
@@ -1374,8 +1374,14 @@ pub fn plasmate_get_interactive_elements(
         .and_then(|v| v.as_str());
     let lookup_value = params.get("value").and_then(|v| v.as_str());
     let lookup_by = params.get("by").and_then(|v| v.as_str()).unwrap_or("auto");
-    let role_filter = params.get("role").and_then(|v| v.as_str());
-    let action_filter = params.get("action").and_then(|v| v.as_str());
+    let role_filters = param_string_list(params, &["role", "roles"])
+        .into_iter()
+        .map(normalize_role_filter)
+        .collect::<Vec<_>>();
+    let action_filters = param_string_list(params, &["action", "actions"])
+        .into_iter()
+        .map(|action| action.to_ascii_lowercase())
+        .collect::<Vec<_>>();
     let label_filter = params.get("label").and_then(|v| v.as_str());
     let exact_label = params
         .get("exact")
@@ -1386,6 +1392,11 @@ pub fn plasmate_get_interactive_elements(
         .or_else(|| params.get("enabled_only"))
         .and_then(|v| v.as_bool())
         .unwrap_or(false);
+    let enabled_filter = if enabled_only {
+        Some(true)
+    } else {
+        params.get("enabled").and_then(|v| v.as_bool())
+    };
     let offset = params.get("offset").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
     let limit = params
         .get("limit")
@@ -1423,19 +1434,29 @@ pub fn plasmate_get_interactive_elements(
                 .unwrap_or(true)
         })
         .filter(|e| {
-            role_filter
-                .map(|role| e.role.as_str() == role)
-                .unwrap_or(true)
+            if role_filters.is_empty() {
+                true
+            } else {
+                role_filters
+                    .iter()
+                    .any(|role| e.role.as_str().eq_ignore_ascii_case(role))
+            }
         })
         .filter(|e| {
-            action_filter
-                .map(|action| {
-                    e.actions
-                        .as_ref()
-                        .map(|actions| actions.iter().any(|a| a == action))
-                        .unwrap_or(false)
-                })
-                .unwrap_or(true)
+            if action_filters.is_empty() {
+                true
+            } else {
+                e.actions
+                    .as_ref()
+                    .map(|actions| {
+                        actions.iter().any(|action| {
+                            action_filters
+                                .iter()
+                                .any(|filter| action.eq_ignore_ascii_case(filter))
+                        })
+                    })
+                    .unwrap_or(false)
+            }
         })
         .filter(|e| {
             label_filter
@@ -1449,10 +1470,15 @@ pub fn plasmate_get_interactive_elements(
                 })
                 .unwrap_or(true)
         })
-        .filter(|e| !enabled_only || interactive_enabled_state(e).0)
+        .filter(|e| {
+            enabled_filter
+                .map(|enabled| interactive_enabled_state(e).0 == enabled)
+                .unwrap_or(true)
+        })
         .collect();
 
     let filtered_count = filtered_elements.len();
+    let summary = interactive_elements_summary(&filtered_elements);
     let mut paged_elements: Vec<&Element> = filtered_elements.into_iter().skip(offset).collect();
     if let Some(limit) = limit {
         paged_elements.truncate(limit);
@@ -1470,6 +1496,7 @@ pub fn plasmate_get_interactive_elements(
             "count": count,
             "filtered_count": filtered_count,
             "total_interactive_count": all_elements.len(),
+            "summary": summary,
             "offset": offset,
             "limit": limit,
         }),
@@ -1837,6 +1864,55 @@ fn interactive_element_to_json(element: &Element) -> serde_json::Value {
     })
 }
 
+fn interactive_elements_summary(elements: &[&Element]) -> serde_json::Value {
+    let mut by_role: BTreeMap<&str, usize> = BTreeMap::new();
+    let mut by_action: BTreeMap<&str, usize> = BTreeMap::new();
+    let mut enabled_count = 0usize;
+    let mut blocked_count = 0usize;
+
+    for element in elements {
+        *by_role.entry(element.role.as_str()).or_default() += 1;
+        if let Some(actions) = &element.actions {
+            for action in actions {
+                *by_action.entry(action.as_str()).or_default() += 1;
+            }
+        }
+        if interactive_enabled_state(element).0 {
+            enabled_count += 1;
+        } else {
+            blocked_count += 1;
+        }
+    }
+
+    json!({
+        "by_role": by_role,
+        "by_action": by_action,
+        "enabled_count": enabled_count,
+        "blocked_count": blocked_count,
+    })
+}
+
+fn param_string_list<'a>(params: &'a serde_json::Value, keys: &[&str]) -> Vec<&'a str> {
+    for key in keys {
+        if let Some(value) = params.get(key) {
+            if let Some(text) = value.as_str() {
+                if !text.trim().is_empty() {
+                    return vec![text.trim()];
+                }
+            }
+            if let Some(values) = value.as_array() {
+                return values
+                    .iter()
+                    .filter_map(|value| value.as_str())
+                    .map(str::trim)
+                    .filter(|value| !value.is_empty())
+                    .collect();
+            }
+        }
+    }
+    Vec::new()
+}
+
 fn element_matches_lookup(element: &Element, value: &str, by: &str, exact_label: bool) -> bool {
     match by {
         "id" => element.id == value,
@@ -1872,6 +1948,10 @@ fn element_test_id(element: &Element) -> Option<&str> {
         .as_ref()
         .and_then(|attrs| attrs.get("test_id"))
         .and_then(|value| value.as_str())
+}
+
+fn normalize_role_filter(role: &str) -> String {
+    role.trim().to_ascii_lowercase().replace('-', "_")
 }
 
 fn action_plan_cache_key(element: &Element) -> String {
@@ -2177,6 +2257,49 @@ mod tests {
         assert_eq!(blocked_elements[0]["test_id"], "settings-save");
         assert_eq!(blocked_elements[0]["enabled"], false);
         assert_eq!(blocked_elements[0]["blocked_reason"], "disabled");
+    }
+
+    #[test]
+    fn get_interactive_elements_supports_multi_filters_and_summary() {
+        let target = cdp_target_with_som(fixture_som());
+        let response = plasmate_get_interactive_elements(
+            1,
+            &json!({
+                "roles": ["text-input", "LINK"],
+                "actions": ["TYPE", "CLICK"],
+                "enabled": true,
+            }),
+            &target,
+        );
+        let result = response.result.unwrap();
+        let elements = result["elements"].as_array().unwrap();
+        let ids: Vec<&str> = elements
+            .iter()
+            .map(|element| element["id"].as_str().unwrap())
+            .collect();
+
+        assert_eq!(result["count"], 2);
+        assert_eq!(result["filtered_count"], 2);
+        assert_eq!(ids, vec!["email-input", "nested-link"]);
+        assert_eq!(result["summary"]["by_role"]["text_input"], 1);
+        assert_eq!(result["summary"]["by_role"]["link"], 1);
+        assert_eq!(result["summary"]["by_action"]["type"], 1);
+        assert_eq!(result["summary"]["by_action"]["click"], 1);
+        assert_eq!(result["summary"]["enabled_count"], 2);
+        assert_eq!(result["summary"]["blocked_count"], 0);
+
+        let blocked = plasmate_get_interactive_elements(
+            2,
+            &json!({
+                "enabled": false,
+            }),
+            &target,
+        )
+        .result
+        .unwrap();
+        assert_eq!(blocked["count"], 1);
+        assert_eq!(blocked["elements"][0]["id"], "top-button");
+        assert_eq!(blocked["summary"]["blocked_count"], 1);
     }
 
     #[test]

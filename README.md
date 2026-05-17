@@ -259,13 +259,16 @@ Plasmate passes [Lightpanda's Puppeteer benchmark](https://github.com/lightpanda
 - `Plasmate.getSom`, `Plasmate.getStructuredData`, `Plasmate.getInteractiveElements`, `Plasmate.getMarkdown`
 
 `Plasmate.getInteractiveElements` returns a full-tree action menu, including
-nested and shadow-root targets. It accepts optional `role`, `action`, `label`,
-`exact`, `enabledOnly`, replay lookup (`value` plus `by`, or direct `id`,
-`cacheKey`, `htmlId`, `testId`), and `offset`/`limit` params so Puppeteer/
-Playwright clients can request, for example, one page of enabled click targets
-before calling an LLM. Each target includes SOM role names, deterministic
-`cache_key`, `html_id`, `test_id`, `enabled`, and `blocked_reason` when
-available.
+nested and shadow-root targets. It accepts optional `role`/`roles`,
+`action`/`actions`, `label`, `exact`, `enabled`, `enabledOnly`, replay lookup
+(`value` plus `by`, or direct `id`, `cacheKey`, `htmlId`, `testId`), and
+`offset`/`limit` params so Puppeteer/Playwright clients can request, for
+example, one page of enabled click targets before calling an LLM. Role and
+action filters are case-insensitive, roles accept hyphen or underscore spelling,
+and the response includes a compact `summary` with role/action buckets plus
+enabled/blocked counts for pre-prompt scoping. Each target includes SOM role
+names, deterministic `cache_key`, `html_id`, `test_id`, `enabled`, and
+`blocked_reason` when available.
 
 `DOM.querySelector` / `DOM.querySelectorAll` walk the SOM-backed node tree in
 document order and understand stable replay selectors such as `#html_id`,

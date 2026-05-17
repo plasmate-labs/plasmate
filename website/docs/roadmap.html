@@ -465,6 +465,12 @@
 <li><strong>Ecosystem distribution</strong>: MCP, Browser Use, SDKs, and comparison pages should remain conformance-tested so partner repos do not drift.</li>
 </ul>
 <p>Near-term target: make Plasmate the fastest local way to turn authenticated or repetitive web workflows into compact, inspectable, reusable state.</p>
+<h3 id="2026-05-17-cdp-action-summary-adjustment">2026-05-17 CDP Action Summary Adjustment</h3><p>Current browser-agent tools keep moving action selection closer to protocol edges. Playwright MCP makes current accessibility refs the action unit, Stagehand/Browserbase markets reusable cached actions with observability, Firecrawl keeps widening MCP scrape/search/extract distribution, and Cloudflare Browser Run positions CDP/MCP sessions as agent infrastructure. Plasmate should keep its local-first SOM wedge and make CDP action menus easier to narrow before prompting:</p>
+<ul>
+<li><strong>Filters should fit client code</strong>: <code>Plasmate.getInteractiveElements</code> should accept case-insensitive <code>role</code>/<code>roles</code> and <code>action</code>/<code>actions</code>, including hyphen or underscore role spelling.</li>
+<li><strong>Blocked targets should be auditable</strong>: CDP clients should be able to ask for <code>enabled=false</code> when debugging why a cached action should not replay.</li>
+<li><strong>Summaries should precede pages</strong>: responses should include compact role/action buckets plus enabled/blocked counts so clients can decide whether to page, filter again, or prompt an LLM.</li>
+</ul>
 <h3 id="2026-05-17-cdp-attribute-selector-adjustment">2026-05-17 CDP Attribute-Selector Adjustment</h3><p>Current browser-agent infrastructure keeps turning protocol compatibility into distribution. Browserbase/Stagehand highlights observe/action primitives, cached actions, session replay, and local-to-cloud portability; Cloudflare Browser Rendering added CDP endpoints and MCP client support; Firecrawl keeps exposing MCP scrape/search/extract plus browser interaction. Plasmate should keep the local-first wedge and improve the compatibility path where ordinary CDP clients already start: selectors and node attributes.</p>
 <ul>
 <li><strong>Common selectors should hit SOM targets</strong>: <code>DOM.querySelector</code> and <code>DOM.querySelectorAll</code> should support tag-qualified and bare attribute selectors for <code>name</code>, <code>href</code>, <code>type</code>, <code>aria-label</code>, <code>aria-labelledby</code>, <code>aria-describedby</code>, <code>role</code>, test ids, and boolean availability attrs.</li>
@@ -1098,6 +1104,7 @@
 <li><input checked="" disabled="" type="checkbox"> CDP DOM query selectors resolve <code>#html_id</code>, <code>#som_id</code>, test-id selectors, roles, text, and labels in SOM document order</li>
 <li><input checked="" disabled="" type="checkbox"> CDP accessibility trees include nested and shadow-root SOM elements with backend node ids</li>
 <li><input checked="" disabled="" type="checkbox"> CDP accessibility nodes expose disabled/readonly availability properties for replay validation</li>
+<li><input checked="" disabled="" type="checkbox"> CDP action menus support case-insensitive multi-value role/action filters, explicit blocked-target audits, and compact summary counts</li>
 <li><input disabled="" type="checkbox"> Session replay/trace export for debugging agent runs</li>
 <li><input disabled="" type="checkbox"> Wire <code>016-action-semantics</code> into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants</li>
 <li><input disabled="" type="checkbox"> Promote shadow-DOM and web-component cases into shared cross-adapter fixtures</li>

@@ -14,6 +14,14 @@ Plasmate should keep its local-first position, but the roadmap now emphasizes th
 
 Near-term target: make Plasmate the fastest local way to turn authenticated or repetitive web workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 CDP Action Summary Adjustment
+
+Current browser-agent tools keep moving action selection closer to protocol edges. Playwright MCP makes current accessibility refs the action unit, Stagehand/Browserbase markets reusable cached actions with observability, Firecrawl keeps widening MCP scrape/search/extract distribution, and Cloudflare Browser Run positions CDP/MCP sessions as agent infrastructure. Plasmate should keep its local-first SOM wedge and make CDP action menus easier to narrow before prompting:
+
+- **Filters should fit client code**: `Plasmate.getInteractiveElements` should accept case-insensitive `role`/`roles` and `action`/`actions`, including hyphen or underscore role spelling.
+- **Blocked targets should be auditable**: CDP clients should be able to ask for `enabled=false` when debugging why a cached action should not replay.
+- **Summaries should precede pages**: responses should include compact role/action buckets plus enabled/blocked counts so clients can decide whether to page, filter again, or prompt an LLM.
+
 ### 2026-05-17 CDP Attribute-Selector Adjustment
 
 Current browser-agent infrastructure keeps turning protocol compatibility into distribution. Browserbase/Stagehand highlights observe/action primitives, cached actions, session replay, and local-to-cloud portability; Cloudflare Browser Rendering added CDP endpoints and MCP client support; Firecrawl keeps exposing MCP scrape/search/extract plus browser interaction. Plasmate should keep the local-first wedge and improve the compatibility path where ordinary CDP clients already start: selectors and node attributes.
@@ -788,6 +796,7 @@ Competitor pressure keeps moving reusable action state from browser engines into
 - [x] CDP DOM query selectors resolve `#html_id`, `#som_id`, test-id selectors, roles, text, and labels in SOM document order
 - [x] CDP accessibility trees include nested and shadow-root SOM elements with backend node ids
 - [x] CDP accessibility nodes expose disabled/readonly availability properties for replay validation
+- [x] CDP action menus support case-insensitive multi-value role/action filters, explicit blocked-target audits, and compact summary counts
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
