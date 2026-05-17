@@ -32,6 +32,21 @@ cloud API.
 - Crawl4AI remains strong for open-source Python crawling and extraction, but
   carries Chromium/Playwright operational weight.
 
+2026-05-17 label-collision read: current trend research keeps validating
+Plasmate's local action-plan layer, but it also raises the bar for replay
+safety. Playwright MCP refs are snapshot-scoped, Stagehand/Browserbase caches
+validated selectors only when the page still matches, Firecrawl continues to
+package scrape/search/extract and browser interaction behind MCP/API surfaces,
+and Cloudflare Browser Run is normalizing CDP/MCP compatibility for hosted
+browser sessions. Plasmate should keep labels as human-facing recovery hints,
+not unattended replay ids. The sticky local improvement is to make duplicate
+labels inspectable in Node, Python, and Go action-plan indexes (`byLabelAll` /
+`by_label_all`) and provide unique-label helpers that refuse ambiguous matches.
+Next steps: carry the same collision-aware label semantics into Browser Use,
+LangChain, Vercel AI, MCP action responses, and CDP `Plasmate.getInteractiveElements`
+so every repository teaches the same rule: store stable SOM ids, cache keys,
+HTML ids, or test ids; use labels for debugging and assisted recovery.
+
 2026-05-17 CDP attribute-selector read: fresh trend research keeps reinforcing
 that protocol compatibility is now part of browser-agent distribution.
 Browserbase/Stagehand markets `act`, `extract`, `observe`, `agent`, local

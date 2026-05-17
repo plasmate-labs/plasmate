@@ -596,6 +596,9 @@ func TestActionPlanLookupHelpers(t *testing.T) {
 	if index.ByLabel["Plan"].ID != "e_plan" {
 		t.Fatalf("ByLabel[Plan] = %#v, want e_plan", index.ByLabel["Plan"])
 	}
+	if got := index.ByLabelAll["Plan"]; len(got) != 1 || got[0].ID != "e_plan" {
+		t.Fatalf("ByLabelAll[Plan] = %#v, want e_plan", got)
+	}
 	if got := index.ByRole["button"]; len(got) != 2 || got[0].ID != "e_save" || got[1].ID != "e_preview" {
 		t.Fatalf("ByRole[button] = %#v, want e_save/e_preview", got)
 	}
@@ -611,6 +614,9 @@ func TestActionPlanLookupHelpers(t *testing.T) {
 	if found := FindActionTargetByLabel(som, "Plan"); found == nil || found.ID != "e_plan" {
 		t.Fatalf("FindActionTargetByLabel(Plan) = %#v, want e_plan", found)
 	}
+	if found := FindUniqueActionTargetByLabel(som, "Plan"); found == nil || found.ID != "e_plan" {
+		t.Fatalf("FindUniqueActionTargetByLabel(Plan) = %#v, want e_plan", found)
+	}
 	if found := FindActionTarget(som, "Plan", "label"); found == nil || found.ID != "e_plan" {
 		t.Fatalf("FindActionTarget(label) = %#v, want e_plan", found)
 	}
@@ -625,6 +631,42 @@ func TestActionPlanLookupHelpers(t *testing.T) {
 	}
 	if found := FindActionTargetInIndex(index, "Plan", "label"); found == nil || found.ID != "e_plan" {
 		t.Fatalf("FindActionTargetInIndex(label) = %#v, want e_plan", found)
+	}
+}
+
+func TestDuplicateLabelBucketsDoNotImplyUniqueReplay(t *testing.T) {
+	labelSave := "Save"
+	labelCancel := "Cancel"
+	som := &Som{
+		Regions: []Region{
+			{
+				ID:   "r_actions",
+				Role: "main",
+				Elements: []Element{
+					{ID: "save_primary", Role: "button", Text: &labelSave, Actions: []string{"click"}},
+					{ID: "save_secondary", Role: "button", Text: &labelSave, Actions: []string{"click"}},
+					{ID: "cancel", Role: "button", Text: &labelCancel, Actions: []string{"click"}},
+				},
+			},
+		},
+	}
+
+	index := GetActionPlanIndex(som)
+
+	if index.ByLabel["Save"].ID != "save_primary" {
+		t.Fatalf("ByLabel[Save] = %#v, want save_primary", index.ByLabel["Save"])
+	}
+	if got := index.ByLabelAll["Save"]; len(got) != 2 || got[0].ID != "save_primary" || got[1].ID != "save_secondary" {
+		t.Fatalf("ByLabelAll[Save] = %#v, want save_primary/save_secondary", got)
+	}
+	if found := FindActionTargetByLabel(som, "Save"); found == nil || found.ID != "save_primary" {
+		t.Fatalf("FindActionTargetByLabel(Save) = %#v, want save_primary", found)
+	}
+	if found := FindUniqueActionTargetByLabel(som, "Save"); found != nil {
+		t.Fatalf("FindUniqueActionTargetByLabel(Save) = %#v, want nil", found)
+	}
+	if found := FindUniqueActionTargetByLabel(som, "Cancel"); found == nil || found.ID != "cancel" {
+		t.Fatalf("FindUniqueActionTargetByLabel(Cancel) = %#v, want cancel", found)
 	}
 }
 

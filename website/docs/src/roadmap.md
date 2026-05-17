@@ -14,6 +14,14 @@ Plasmate should keep its local-first position, but the roadmap now emphasizes th
 
 Near-term target: make Plasmate the fastest local way to turn authenticated or repetitive web workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 Label Collision and Replay Safety Adjustment
+
+Current browser-agent products are teaching users to choose actions by readable names while validating replay against fresh page state. Playwright MCP keeps refs scoped to the current snapshot, Stagehand/Browserbase caches selectors only after validation, Firecrawl keeps distributing MCP/API browser workflows, and Cloudflare Browser Run is widening CDP/MCP compatibility. Plasmate should keep labels as assisted-recovery signals while making ambiguity explicit:
+
+- **Label collisions must be inspectable**: Node, Python, and Go action-plan indexes should keep all exact matches in `byLabelAll` / `by_label_all` instead of exposing only the first label match.
+- **Unique-label replay should fail closed**: helper APIs should return a target only when an exact label maps to one compact action target.
+- **Stable ids remain the unattended contract**: docs, MCP, CDP, and adapters should keep steering replay caches toward SOM ids, deterministic cache keys, HTML ids, and test ids, with labels reserved for debugging and recovery.
+
 ### 2026-05-17 CDP Attribute-Selector Adjustment
 
 Current browser-agent infrastructure keeps turning protocol compatibility into distribution. Browserbase/Stagehand highlights observe/action primitives, cached actions, session replay, and local-to-cloud portability; Cloudflare Browser Rendering added CDP endpoints and MCP client support; Firecrawl keeps exposing MCP scrape/search/extract plus browser interaction. Plasmate should keep the local-first wedge and improve the compatibility path where ordinary CDP clients already start: selectors and node attributes.

@@ -546,6 +546,7 @@ menu of enabled buttons, links, inputs, or one action type.</p>
 buttons := index.ByRole[&quot;button&quot;]
 clickTargets := index.ByAction[&quot;click&quot;]
 planSelect := index.ByLabel[&quot;Plan&quot;]
+planLabelMatches := index.ByLabelAll[&quot;Plan&quot;]
 </code></pre>
 <h3 id="findactiontargetsbyrolesom-role-enabledonly">`FindActionTargetsByRole(som, role, enabledOnly...)`</h3><p>Return compact action targets for one SOM role without scanning the full plan.</p>
 <pre><code class="language-go">buttons := plasmate.FindActionTargetsByRole(som, &quot;button&quot;, true)
@@ -557,6 +558,11 @@ planSelect := index.ByLabel[&quot;Plan&quot;]
 labels as human-facing recovery hints; store SOM ids, cache keys, HTML ids, or
 test ids for unattended replay.</p>
 <pre><code class="language-go">target := plasmate.FindActionTargetByLabel(som, &quot;Plan&quot;)
+</code></pre>
+<h3 id="finduniqueactiontargetbylabelsom-label-enabledonly">`FindUniqueActionTargetByLabel(som, label, enabledOnly...)`</h3><p>Resolve an exact accessible label only when it maps to one compact action
+target. Use stable ids or cache keys for unattended replay when this returns
+<code>nil</code>.</p>
+<pre><code class="language-go">target := plasmate.FindUniqueActionTargetByLabel(som, &quot;Plan&quot;, true)
 </code></pre>
 <h3 id="findbytextsom-text">`FindByText(som, text)`</h3><p>Find elements whose text content contains the given string (case-insensitive).</p>
 <pre><code class="language-go">matches := plasmate.FindByText(som, &quot;Sign in&quot;)

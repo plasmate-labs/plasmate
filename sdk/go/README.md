@@ -57,6 +57,10 @@ func main() {
     if planSelect != nil {
         fmt.Println("Plan target:", planSelect.ID)
     }
+    uniquePlan := plasmate.FindUniqueActionTargetByLabel(som, "Plan")
+    if uniquePlan != nil {
+        fmt.Println("Unique Plan target:", uniquePlan.ID)
+    }
 
     fmt.Printf("~%d tokens\n", plasmate.TokenEstimate(som))
 }
@@ -108,6 +112,7 @@ index := plasmate.GetActionPlanIndex(som, true)
 buttons := plasmate.FindActionTargetsByRole(som, "button", true)
 clicks := plasmate.FindActionTargetsByAction(som, "click", true)
 matches := plasmate.FindActionTargetsByLabel(som, "billing", false, true)
+unique := plasmate.FindUniqueActionTargetByLabel(som, "Plan", true)
 all := plasmate.FlatElements(som)
 ```
 
@@ -144,6 +149,7 @@ all := plasmate.FlatElements(som)
 | `GetActionPlanCacheKey(item)` | Return a deterministic key for caching or comparing an action target |
 | `FindActionTarget(som, value, by...)` | Resolve a replay id by SOM id, cache key, HTML id, test id, exact label, or auto lookup |
 | `FindActionTargetByLabel(som, label)` | Resolve the first compact target with an exact accessible label |
+| `FindUniqueActionTargetByLabel(som, label, enabledOnly...)` | Resolve an exact label only when it maps to one target |
 | `FindActionTargetsByLabel(som, label, exact, enabledOnly...)` | Return compact targets whose label matches exactly or by substring |
 | `FindActionTargetsByRole(som, role, enabledOnly...)` | Return compact action targets for one SOM role |
 | `FindActionTargetsByAction(som, action, enabledOnly...)` | Return compact action targets exposing one action |
@@ -170,6 +176,6 @@ They also include deterministic `CacheKey` values plus `Autocomplete`,
 `AutoCapitalize`, `DirName`, `Spellcheck`, `AriaPlaceholder`, `MinLength`,
 `MaxLength`, `Pattern`, and `Invalid` cues for local action-plan caches,
 prompt dedupe, and trace correlation.
-`GetActionPlanIndex` also includes `ByRole` and `ByAction` buckets so Go
-workers can scope a replay plan to, for example, enabled click targets or all
-text inputs without scanning the full SOM.
+`GetActionPlanIndex` also includes `ByRole`, `ByAction`, and `ByLabelAll`
+buckets so Go workers can scope a replay plan to enabled click targets, all
+text inputs, or every exact label collision without scanning the full SOM.

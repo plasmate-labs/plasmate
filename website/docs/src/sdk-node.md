@@ -166,6 +166,7 @@ import { getActionPlanIndex } from 'plasmate';
 const index = getActionPlanIndex(som, { enabledOnly: true });
 const buttons = index.byRole.button ?? [];
 const clickTargets = index.byAction.click ?? [];
+const saveLabelMatches = index.byLabelAll.Save ?? [];
 ```
 
 ### `findActionTargetsByRole(som, role, options)`
@@ -186,6 +187,18 @@ Return compact action targets exposing one action.
 import { findActionTargetsByAction } from 'plasmate';
 
 const clicks = findActionTargetsByAction(som, 'click', { enabledOnly: true });
+```
+
+### `findUniqueActionTargetByLabel(som, label, options)`
+
+Resolve an exact accessible label only when it maps to one compact action
+target. Use stable ids or cache keys for unattended replay when this returns
+`undefined`.
+
+```typescript
+import { findUniqueActionTargetByLabel } from 'plasmate';
+
+const save = findUniqueActionTargetByLabel(som, 'Save', { enabledOnly: true });
 ```
 
 ### `findByText(som, text)`

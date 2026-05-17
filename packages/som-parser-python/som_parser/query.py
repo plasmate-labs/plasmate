@@ -398,6 +398,7 @@ def get_action_plan_index(
         "by_html_id": {},
         "by_test_id": {},
         "by_label": {},
+        "by_label_all": {},
         "by_role": {},
         "by_action": {},
     }
@@ -412,6 +413,9 @@ def get_action_plan_index(
             value = item.get(source_key)
             if isinstance(value, str) and value not in index[bucket_key]:
                 index[bucket_key][value] = item
+        label = item.get("label")
+        if isinstance(label, str):
+            index["by_label_all"].setdefault(label, []).append(item)
         role = item.get("role")
         if isinstance(role, str):
             index["by_role"].setdefault(role, []).append(item)
@@ -538,6 +542,17 @@ def find_action_target_by_label(
 ) -> Optional[Dict[str, object]]:
     """Return the first compact action target matching an exact accessible label."""
     return find_action_target(som, label, by="label", enabled_only=enabled_only)
+
+
+def find_unique_action_target_by_label(
+    som: Som, label: str, *, enabled_only: bool = False
+) -> Optional[Dict[str, object]]:
+    """Return an exact label match only when the label maps to one action target."""
+    index = get_action_plan_index(som, enabled_only=enabled_only)
+    matches = index["by_label_all"].get(label, [])
+    if isinstance(matches, list) and len(matches) == 1:
+        return matches[0]
+    return None
 
 
 def get_links(som: Som) -> List[Dict[str, Optional[str]]]:

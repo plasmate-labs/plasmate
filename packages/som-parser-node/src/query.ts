@@ -206,6 +206,7 @@ export interface ActionPlanIndex {
   byHtmlId: Record<string, ActionPlanItem>;
   byTestId: Record<string, ActionPlanItem>;
   byLabel: Record<string, ActionPlanItem>;
+  byLabelAll: Record<string, ActionPlanItem[]>;
   byRole: Record<string, ActionPlanItem[]>;
   byAction: Record<string, ActionPlanItem[]>;
 }
@@ -415,6 +416,7 @@ export function getActionPlanIndex(
     byHtmlId: {},
     byTestId: {},
     byLabel: {},
+    byLabelAll: {},
     byRole: {},
     byAction: {},
   };
@@ -429,6 +431,9 @@ export function getActionPlanIndex(
     }
     if (item.label && index.byLabel[item.label] === undefined) {
       index.byLabel[item.label] = item;
+    }
+    if (item.label) {
+      (index.byLabelAll[item.label] ??= []).push(item);
     }
     (index.byRole[item.role] ??= []).push(item);
     for (const action of item.actions) {
@@ -534,6 +539,16 @@ export function findActionTargetByLabel(
   options: Pick<ActionTargetLookupOptions, 'enabledOnly'> = {},
 ): ActionPlanItem | undefined {
   return findActionTarget(som, label, { ...options, by: 'label' });
+}
+
+/** Find an exact accessible label only when it resolves to one compact action target. */
+export function findUniqueActionTargetByLabel(
+  som: Som,
+  label: string,
+  options: Pick<ActionTargetLookupOptions, 'enabledOnly'> = {},
+): ActionPlanItem | undefined {
+  const matches = getActionPlanIndex(som, { enabledOnly: options.enabledOnly }).byLabelAll[label] ?? [];
+  return matches.length === 1 ? matches[0] : undefined;
 }
 
 /** Extract all links with their text and URLs. */

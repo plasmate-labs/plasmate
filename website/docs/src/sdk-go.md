@@ -149,6 +149,7 @@ index := plasmate.GetActionPlanIndex(som, true)
 buttons := index.ByRole["button"]
 clickTargets := index.ByAction["click"]
 planSelect := index.ByLabel["Plan"]
+planLabelMatches := index.ByLabelAll["Plan"]
 ```
 
 ### `FindActionTargetsByRole(som, role, enabledOnly...)`
@@ -175,6 +176,16 @@ test ids for unattended replay.
 
 ```go
 target := plasmate.FindActionTargetByLabel(som, "Plan")
+```
+
+### `FindUniqueActionTargetByLabel(som, label, enabledOnly...)`
+
+Resolve an exact accessible label only when it maps to one compact action
+target. Use stable ids or cache keys for unattended replay when this returns
+`nil`.
+
+```go
+target := plasmate.FindUniqueActionTargetByLabel(som, "Plan", true)
 ```
 
 ### `FindByText(som, text)`

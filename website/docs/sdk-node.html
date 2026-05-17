@@ -553,6 +553,7 @@ Use this when an agent needs a small action menu instead of the full SOM.</p>
 const index = getActionPlanIndex(som, { enabledOnly: true });
 const buttons = index.byRole.button ?? [];
 const clickTargets = index.byAction.click ?? [];
+const saveLabelMatches = index.byLabelAll.Save ?? [];
 </code></pre>
 <h3 id="findactiontargetsbyrolesom-role-options">`findActionTargetsByRole(som, role, options)`</h3><p>Return compact action targets for one SOM role without scanning the full plan.</p>
 <pre><code class="language-typescript">import { findActionTargetsByRole } from &#39;plasmate&#39;;
@@ -563,6 +564,13 @@ const buttons = findActionTargetsByRole(som, &#39;button&#39;, { enabledOnly: tr
 <pre><code class="language-typescript">import { findActionTargetsByAction } from &#39;plasmate&#39;;
 
 const clicks = findActionTargetsByAction(som, &#39;click&#39;, { enabledOnly: true });
+</code></pre>
+<h3 id="finduniqueactiontargetbylabelsom-label-options">`findUniqueActionTargetByLabel(som, label, options)`</h3><p>Resolve an exact accessible label only when it maps to one compact action
+target. Use stable ids or cache keys for unattended replay when this returns
+<code>undefined</code>.</p>
+<pre><code class="language-typescript">import { findUniqueActionTargetByLabel } from &#39;plasmate&#39;;
+
+const save = findUniqueActionTargetByLabel(som, &#39;Save&#39;, { enabledOnly: true });
 </code></pre>
 <h3 id="findbytextsom-text">`findByText(som, text)`</h3><p>Find elements whose text content contains the given string (case-insensitive).</p>
 <pre><code class="language-typescript">import { findByText } from &#39;plasmate&#39;;

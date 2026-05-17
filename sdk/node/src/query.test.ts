@@ -13,6 +13,7 @@ import {
   findActionTargetsByAction,
   findActionTargetsByLabel,
   findActionTargetsByRole,
+  findUniqueActionTargetByLabel,
   findByRole,
   findById,
   findByHtmlId,
@@ -324,6 +325,7 @@ describe('getActionPlan', () => {
     assert.deepEqual(index.byHtmlId['save-button'], save);
     assert.deepEqual(index.byTestId['settings-save'], save);
     assert.deepEqual(index.byLabel.Save, save);
+    assert.deepEqual(index.byLabelAll.Save, [save]);
     assert.deepEqual(index.byRole.button.map((target) => target.id), ['e_save', 'e_preview']);
     assert.deepEqual(index.byAction.click.map((target) => target.id), [
       'e_save',
@@ -371,6 +373,40 @@ describe('getActionPlan', () => {
     assert.equal(index.byRole.button, undefined);
     assert.deepEqual(index.byAction.click.map((target) => target.id), ['e_billing']);
     assert.notEqual(index.byId.e_plan, undefined);
+  });
+
+  it('exposes duplicate exact-label matches without treating them as unique', () => {
+    const duplicateLabelSom: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_actions',
+          role: 'main',
+          elements: [
+            { id: 'save_primary', role: 'button', text: 'Save', actions: ['click'] },
+            { id: 'save_secondary', role: 'button', text: 'Save', actions: ['click'] },
+            { id: 'cancel', role: 'button', text: 'Cancel', actions: ['click'] },
+          ],
+        },
+      ],
+      meta: {
+        html_bytes: 400,
+        som_bytes: 200,
+        element_count: 3,
+        interactive_count: 3,
+      },
+    };
+
+    const index = getActionPlanIndex(duplicateLabelSom);
+
+    assert.equal(index.byLabel.Save.id, 'save_primary');
+    assert.deepEqual(index.byLabelAll.Save.map((target) => target.id), [
+      'save_primary',
+      'save_secondary',
+    ]);
+    assert.equal(findActionTargetByLabel(duplicateLabelSom, 'Save')?.id, 'save_primary');
+    assert.equal(findUniqueActionTargetByLabel(duplicateLabelSom, 'Save'), undefined);
+    assert.equal(findUniqueActionTargetByLabel(duplicateLabelSom, 'Cancel')?.id, 'cancel');
   });
 });
 

@@ -60,6 +60,7 @@ export {
   findActionTargetsByAction,
   findActionTargetsByLabel,
   findActionTargetsByRole,
+  findUniqueActionTargetByLabel,
   findById,
   findByHtmlId,
   findByLabel,

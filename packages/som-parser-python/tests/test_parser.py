@@ -23,6 +23,7 @@ from som_parser import (
     find_action_targets_by_action,
     find_action_targets_by_label,
     find_action_targets_by_role,
+    find_unique_action_target_by_label,
     find_by_action,
     find_by_hint,
     find_by_html_id,
@@ -630,6 +631,7 @@ class TestGetActionPlan:
         assert index["by_html_id"]["save-button"] == save
         assert index["by_test_id"]["settings-save"] == save
         assert index["by_label"]["Save"] == save
+        assert index["by_label_all"]["Save"] == [save]
         assert [target["id"] for target in index["by_role"]["button"]] == [
             "e_save",
             "e_preview",
@@ -680,6 +682,54 @@ class TestGetActionPlan:
         assert "button" not in index["by_role"]
         assert [target["id"] for target in index["by_action"]["click"]] == ["e_billing"]
         assert "e_plan" in index["by_id"]
+
+    def test_duplicate_label_buckets_do_not_imply_unique_replay(self):
+        duplicate_label_som = parse_som({
+            **FIXTURE_SOM,
+            "regions": [
+                {
+                    "id": "r_actions",
+                    "role": "main",
+                    "elements": [
+                        {
+                            "id": "save_primary",
+                            "role": "button",
+                            "text": "Save",
+                            "actions": ["click"],
+                        },
+                        {
+                            "id": "save_secondary",
+                            "role": "button",
+                            "text": "Save",
+                            "actions": ["click"],
+                        },
+                        {
+                            "id": "cancel",
+                            "role": "button",
+                            "text": "Cancel",
+                            "actions": ["click"],
+                        },
+                    ],
+                }
+            ],
+            "meta": {
+                "html_bytes": 400,
+                "som_bytes": 200,
+                "element_count": 3,
+                "interactive_count": 3,
+            },
+        })
+
+        index = get_action_plan_index(duplicate_label_som)
+
+        assert index["by_label"]["Save"]["id"] == "save_primary"
+        assert [target["id"] for target in index["by_label_all"]["Save"]] == [
+            "save_primary",
+            "save_secondary",
+        ]
+        assert find_action_target_by_label(duplicate_label_som, "Save")["id"] == "save_primary"
+        assert find_unique_action_target_by_label(duplicate_label_som, "Save") is None
+        assert find_unique_action_target_by_label(duplicate_label_som, "Cancel")["id"] == "cancel"
 
 
 class TestGetLinks:

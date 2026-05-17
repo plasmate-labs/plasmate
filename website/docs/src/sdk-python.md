@@ -152,6 +152,7 @@ from plasmate.query import get_action_plan_index
 index = get_action_plan_index(som, enabled_only=True)
 buttons = index["by_role"].get("button", [])
 click_targets = index["by_action"].get("click", [])
+save_label_matches = index["by_label_all"].get("Save", [])
 ```
 
 ### `find_action_targets_by_role(som, role, enabled_only=False)`
@@ -172,6 +173,18 @@ Return compact action targets exposing one action.
 from plasmate.query import find_action_targets_by_action
 
 clicks = find_action_targets_by_action(som, "click", enabled_only=True)
+```
+
+### `find_unique_action_target_by_label(som, label, enabled_only=False)`
+
+Resolve an exact accessible label only when it maps to one compact action
+target. Use stable ids or cache keys for unattended replay when this returns
+`None`.
+
+```python
+from plasmate.query import find_unique_action_target_by_label
+
+save = find_unique_action_target_by_label(som, "Save", enabled_only=True)
 ```
 
 ### `find_by_text(som, text)`

@@ -95,6 +95,7 @@ import {
   findActionTargetsByAction,
   findActionTargetsByLabel,
   findActionTargetsByRole,
+  findUniqueActionTargetByLabel,
   findByRole, findById, findByTag, findInteractive,
   findByLabel, findByText, flatElements, getActionPlan, getTokenEstimate,
 } from 'plasmate';
@@ -121,6 +122,7 @@ console.log(actionPlan.map((target) => [target.id, target.cache_key, target.acti
 // Resolve a stored replay id from SOM id, cache key, HTML id, test id, or explicit label
 const save = findActionTarget(som, 'plasmate-action:v1:...', { enabledOnly: true });
 const saveByLabel = findActionTarget(som, 'Save', { by: 'label', enabledOnly: true });
+const uniqueSave = findUniqueActionTargetByLabel(som, 'Save', { enabledOnly: true });
 const labeledActions = findActionTargetsByLabel(som, 'save');
 const enabledButtons = findActionTargetsByRole(som, 'button', { enabledOnly: true });
 const enabledClicks = findActionTargetsByAction(som, 'click', { enabledOnly: true });
@@ -148,6 +150,7 @@ browser.close();
 | `getActionPlan(som)` | `ActionPlanItem[]` | Compact action targets with cache keys, availability, link target/rel/download cues, form/list and form submission context, submitter override cues, popover/command relation cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues |
 | `getActionPlanCacheKey(item)` | `string` | Deterministic key for caching or comparing action targets |
 | `findActionTarget(som, value, options?)` | `ActionPlanItem \| undefined` | Resolve a target by SOM id, cache key, HTML id, test id, or explicit label |
+| `findUniqueActionTargetByLabel(som, label, options?)` | `ActionPlanItem \| undefined` | Resolve an exact label only when it maps to one target |
 | `findActionTargetsByLabel(som, label, options?)` | `ActionPlanItem[]` | Find compact action targets by accessible label |
 | `findActionTargetsByRole(som, role, options?)` | `ActionPlanItem[]` | Find compact action targets by exact SOM role |
 | `findActionTargetsByAction(som, action, options?)` | `ActionPlanItem[]` | Find compact action targets that expose an action |

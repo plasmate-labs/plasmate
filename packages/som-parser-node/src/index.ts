@@ -33,6 +33,7 @@ export {
   findActionTargetsByAction,
   findActionTargetsByLabel,
   findActionTargetsByRole,
+  findUniqueActionTargetByLabel,
   findByHint,
   findByRole,
   findById,

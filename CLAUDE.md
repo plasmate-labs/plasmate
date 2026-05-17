@@ -49,6 +49,43 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-17T19:08:44Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch origin --prune` was attempted first in the
+  linked automation worktree and failed because shared worktree metadata
+  `FETCH_HEAD` could not be opened (`Operation not permitted`). Work continued
+  from the already-local detached `HEAD` / `origin/master` `48c03d6`.
+- Market direction: current trend research still supports the local-first SOM
+  action-surface wedge. Playwright MCP keeps accessibility refs scoped to fresh
+  snapshots, Browserbase/Stagehand markets `observe()`/action caching with
+  validation before replay, Firecrawl keeps distributing scrape/search/extract
+  plus browser interaction through MCP/API surfaces, and Cloudflare Browser Run
+  is normalizing CDP/MCP compatibility for hosted browser sessions. No hosted
+  browser pivot is recommended; the sticky move remains portable local action
+  plans with explicit replay safety.
+- Code changes: Node SDK, Node parser package, Python parser package, and Go
+  SDK action-plan indexes now expose all exact-label matches via `byLabelAll`
+  / `by_label_all` / `ByLabelAll` while preserving first-match `byLabel` /
+  `by_label` compatibility. Node, Python, and Go now add unique-label helpers
+  that return a target only when an exact accessible label maps to one compact
+  action target.
+- Docs changes: PRD and roadmap now document the label-collision safety
+  rationale and next steps. Node/Python/Go SDK docs plus generated website docs
+  now describe duplicate-label buckets and unique-label replay helpers.
+- Verification passed: `npm test` in `sdk/node`, `npm run build` in
+  `packages/som-parser-node`, `PYTHONPATH=. python3 -m pytest tests/test_parser.py -q`
+  in `packages/som-parser-python`, `GOCACHE=/tmp/plasmate-go-cache go test ./...`
+  in `sdk/go`, `node website/build.mjs`, `git diff --check`,
+  `RUSTY_V8_ARCHIVE=/Users/steve/Git/plasmate/target/debug/gn_out/obj/librusty_v8.a cargo build --quiet`,
+  `cargo test --lib --quiet` (281), and `cargo clippy --quiet` with existing
+  warnings.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`.
+- Commit/push state: normal `git add` remains blocked by linked-worktree
+  `index.lock` permissions; commit/push will use an alternate index from this
+  verified state.
+
 ### 2026-05-17T07:06:05Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch --prune origin` was attempted first in the
