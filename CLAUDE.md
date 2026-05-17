@@ -84,7 +84,8 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Verification blocked: full `cargo test --quiet` still fails only in
   sandboxed `tests/awp_integration_test.rs` because local listener setup
   returns `Operation not permitted`.
-- Commit/push state: pending final commit and push from this run.
+- Commit/push state: alternate-index code/docs commit `3e6b737` was created
+  for this run; a follow-up state commit should be pushed with it.
 
 ### 2026-05-17T07:06:05Z - Plasmate Improvements Automation
 
