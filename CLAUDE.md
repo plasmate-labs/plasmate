@@ -80,8 +80,11 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   sandboxed `tests/awp_integration_test.rs` because local listener setup
   returns `Operation not permitted`.
 - Commit/push state: normal `git add` is still blocked by linked worktree
-  `index.lock` permissions, so this run will use the alternate-index commit
-  path before pushing/fast-forwarding remote `master`.
+  `index.lock` permissions, so alternate-index commit `2254733` (`chore:
+  improve action plan label parity docs`) was pushed directly to remote
+  `master` (`5bb1c6b..2254733`). A follow-up `git ls-remote` DNS check failed,
+  but the push itself succeeded. The detached worktree still appears dirty
+  relative to local `HEAD`; `git diff 2254733` is empty.
 
 ### 2026-05-17T00:11:02Z - Plasmate Improvements Automation
 
