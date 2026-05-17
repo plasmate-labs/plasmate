@@ -80,9 +80,13 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   sandboxed `tests/awp_integration_test.rs` because local listener setup
   returns `Operation not permitted`. Full `cargo fmt --check` still reports
   unrelated pre-existing formatting drift in AWP/bench/proxy files.
-- Commit/push state: pending commit/push/merge; network fetch and later push
-  may be blocked by the same sandbox DNS restrictions unless remote access is
-  restored.
+- Commit/push state: code/docs commit `d8228e3` (`chore: improve CDP action
+  menu parity`) was pushed to
+  `origin/codex/plasmate-improvements-2026-05-17-replay-readiness` and
+  fast-forwarded to remote `master` (`3084ab7..d8228e3`). Local checkout of
+  `master` was blocked because another worktree owns that branch, so the merge
+  used `git push origin HEAD:master`. A follow-up `git ls-remote` DNS check
+  failed after the successful push.
 
 ### 2026-05-17T01:09:42Z - Plasmate Improvements Automation
 
