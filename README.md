@@ -267,6 +267,13 @@ before calling an LLM. Each target includes SOM role names, deterministic
 `cache_key`, `html_id`, `test_id`, `enabled`, and `blocked_reason` when
 available.
 
+`DOM.querySelector` / `DOM.querySelectorAll` walk the SOM-backed node tree in
+document order and understand stable replay selectors such as `#html_id`,
+`#som_id`, `[data-testid="..."]`, `[data-test-id="..."]`, SOM role names, text,
+and labels. `Accessibility.getFullAXTree` is also SOM-backed and includes
+nested and shadow-root elements with backend node ids plus disabled/readonly
+properties when available.
+
 CDP is a compatibility layer. AWP is the native protocol, designed for agents rather than debuggers.
 
 ## Architecture

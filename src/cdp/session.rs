@@ -467,54 +467,95 @@ impl CdpTarget {
         None
     }
 
-    /// Find a node by CSS selector (simplified: tag, #id, .class).
+    /// Find a node by CSS selector (simplified: tag, #id, data-testid, SOM role, text).
     pub fn query_selector(&self, selector: &str) -> Option<u64> {
         // Ensure a page is loaded
         let _ = self.current_som.as_ref()?;
 
-        for (node_id, entry) in &self.node_map {
-            if entry.node_type != 1 {
-                continue;
-            }
-
-            // Match by tag name
-            if entry.node_name == selector {
-                return Some(*node_id);
-            }
-
-            // Match by SOM element role mapping
-            if let Some(ref som_id) = entry.som_element_id {
-                if let Some(element) = self.find_element_by_som_id(som_id) {
-                    // Match by role name (e.g., "link", "button")
-                    let role_str = format!("{:?}", element.role).to_lowercase();
-                    if selector == role_str {
-                        return Some(*node_id);
-                    }
-
-                    // Match by text content
-                    if let Some(ref text) = element.text {
-                        if text.contains(selector) {
-                            return Some(*node_id);
-                        }
-                    }
-                }
-            }
-        }
-        None
+        self.query_selector_all(selector).into_iter().next()
     }
 
     /// Query all matching selectors.
     pub fn query_selector_all(&self, selector: &str) -> Vec<u64> {
         let mut results = Vec::new();
+        if self.document_node_id != 0 {
+            self.collect_matching_node_ids(self.document_node_id, selector, &mut results);
+            return results;
+        }
+
         for (node_id, entry) in &self.node_map {
-            if entry.node_type != 1 {
-                continue;
-            }
-            if entry.node_name == selector {
+            if self.node_matches_selector(entry, selector) {
                 results.push(*node_id);
             }
         }
         results
+    }
+
+    fn collect_matching_node_ids(&self, node_id: u64, selector: &str, out: &mut Vec<u64>) {
+        let Some(entry) = self.node_map.get(&node_id) else {
+            return;
+        };
+
+        if self.node_matches_selector(entry, selector) {
+            out.push(node_id);
+        }
+
+        for child_id in &entry.children_ids {
+            self.collect_matching_node_ids(*child_id, selector, out);
+        }
+    }
+
+    fn node_matches_selector(&self, entry: &NodeEntry, selector: &str) -> bool {
+        if entry.node_type != 1 {
+            return false;
+        }
+
+        let selector = selector.trim();
+        if selector.is_empty() {
+            return false;
+        }
+
+        if entry.node_name == selector {
+            return true;
+        }
+
+        let Some(som_id) = &entry.som_element_id else {
+            return false;
+        };
+        let Some(element) = self.find_element_by_som_id(som_id) else {
+            return false;
+        };
+
+        if let Some(id) = selector.strip_prefix('#') {
+            return element.html_id.as_deref() == Some(id) || element.id == id;
+        }
+
+        if let Some(test_id) = selector_test_id(selector) {
+            return element
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("test_id"))
+                .and_then(|value| value.as_str())
+                == Some(test_id);
+        }
+
+        if element.role.as_str() == selector {
+            return true;
+        }
+
+        if let Some(text) = element.text.as_deref() {
+            if text.contains(selector) {
+                return true;
+            }
+        }
+
+        if let Some(label) = element.label.as_deref() {
+            if label.contains(selector) {
+                return true;
+            }
+        }
+
+        false
     }
 
     /// Evaluate JavaScript expression against the post-navigation DOM.
@@ -746,6 +787,37 @@ fn role_to_tag(role: &ElementRole) -> String {
     }
 }
 
+fn selector_test_id(selector: &str) -> Option<&str> {
+    let selector = selector.trim();
+    let keys = [
+        "data-testid",
+        "data-test-id",
+        "data-test",
+        "data-qa",
+        "test_id",
+    ];
+
+    for key in keys {
+        let single = format!("[{key}='");
+        if let Some(value) = selector
+            .strip_prefix(&single)
+            .and_then(|rest| rest.strip_suffix("']"))
+        {
+            return Some(value);
+        }
+
+        let double = format!("[{key}=\"");
+        if let Some(value) = selector
+            .strip_prefix(&double)
+            .and_then(|rest| rest.strip_suffix("\"]"))
+        {
+            return Some(value);
+        }
+    }
+
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -819,5 +891,69 @@ mod tests {
             .node_map
             .values()
             .any(|entry| entry.som_element_id.as_deref() == Some("shadow-button")));
+    }
+
+    #[test]
+    fn test_query_selector_matches_stable_replay_selectors() {
+        let mut save = element("e_save", ElementRole::Button, Some("Save"));
+        save.html_id = Some("save-button".to_string());
+        save.label = Some("Save settings".to_string());
+        save.attrs = Some(serde_json::json!({
+            "test_id": "settings-save"
+        }));
+
+        let mut alt = element("e_alt", ElementRole::Button, Some("Save draft"));
+        alt.attrs = Some(serde_json::json!({
+            "test_id": "draft-save"
+        }));
+
+        let mut target = CdpTarget::new().unwrap();
+        target.current_som = Some(Som {
+            som_version: "0.1".to_string(),
+            url: "https://example.com/app".to_string(),
+            title: "App".to_string(),
+            lang: "en".to_string(),
+            regions: vec![Region {
+                id: "r1".to_string(),
+                role: RegionRole::Main,
+                label: None,
+                action: None,
+                method: None,
+                target: None,
+                enctype: None,
+                novalidate: None,
+                accept_charset: None,
+                autocomplete: None,
+                elements: vec![save, alt],
+            }],
+            meta: SomMeta {
+                html_bytes: 100,
+                som_bytes: 100,
+                element_count: 2,
+                interactive_count: 2,
+            },
+            structured_data: None,
+        });
+        target.rebuild_node_map();
+
+        let by_html_id = target.query_selector("#save-button").unwrap();
+        let by_som_id = target.query_selector("#e_save").unwrap();
+        let by_test_id = target
+            .query_selector("[data-testid=\"settings-save\"]")
+            .unwrap();
+        let by_role = target.query_selector("button").unwrap();
+        let by_label = target.query_selector("Save settings").unwrap();
+
+        assert_eq!(by_html_id, by_som_id);
+        assert_eq!(by_html_id, by_test_id);
+        assert_eq!(by_html_id, by_role);
+        assert_eq!(by_html_id, by_label);
+        assert_eq!(target.query_selector_all("button").len(), 2);
+        assert_eq!(
+            target
+                .query_selector_all("[data-test-id='draft-save']")
+                .len(),
+            1
+        );
     }
 }

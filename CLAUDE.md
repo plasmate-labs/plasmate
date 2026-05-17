@@ -49,6 +49,49 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-17T06:20:17Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch --prune origin` was attempted first and failed
+  in the linked automation worktree because shared worktree metadata
+  `FETCH_HEAD` could not be opened. Work continued from local `HEAD` /
+  `origin/master` `d1c8fbb`, then rebased this patch onto the newer local
+  `origin/master` `45e55d1` after the first master push was rejected as
+  non-fast-forward.
+- Market direction: current official docs keep validating structured
+  snapshots, protocol compatibility, cached actions, and hosted browser-session
+  observability as the sticky browser-agent surfaces. Playwright MCP documents
+  accessibility snapshots with refs scoped to the current page snapshot,
+  Stagehand/Browserbase documents `observe()` and local/managed action caches,
+  Firecrawl continues broad MCP scrape/search/extract distribution, and
+  Cloudflare Browser Run now markets CDP/MCP sessions, structured-data
+  endpoints, and recordings. No hosted-browser pivot is recommended; the sticky
+  local move is making CDP resolve the same stable SOM targets used by MCP,
+  SDKs, and adapters.
+- Code changes: CDP `DOM.querySelector` / `DOM.querySelectorAll` now traverse
+  the SOM-backed node tree in document order and resolve `#html_id`, `#som_id`,
+  `[data-testid]`, `[data-test-id]`, `[data-test]`, `[data-qa]`, SOM role
+  names, visible text, and labels. `Accessibility.getFullAXTree` now includes
+  nested children and shadow-root elements, returns backend node ids from the
+  CDP node map, and exposes disabled/readonly AX properties for replay
+  validation.
+- Docs changes: README, PRD, roadmap source, and generated website docs now
+  record the CDP DOM/AX selector-parity rationale and the new completed
+  roadmap items.
+- Verification passed: focused CDP Rust tests, `cargo test cdp:: --quiet`,
+  `node website/build.mjs` with a temporary local `website/node_modules`
+  symlink to the primary checkout, `git diff --check`,
+  `RUSTY_V8_ARCHIVE=/Users/steve/Git/plasmate/target/debug/gn_out/obj/librusty_v8.a cargo build --quiet`,
+  and `cargo test --lib --quiet` (277).
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`. Initial focused tests without
+  `RUSTY_V8_ARCHIVE` also hit the known offline `rusty_v8` archive download
+  path.
+- Commit/push state: the first alternate-index commit `f14ccec` pushed to
+  `origin/codex/plasmate-improvements-2026-05-17-cdp-dom-ax`; direct push to
+  `master` was rejected because remote master had advanced. The patch was then
+  replayed onto `45e55d1` for the final integrated commit.
+
 ### 2026-05-17T06:16:27Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch --prune origin` was attempted first in the

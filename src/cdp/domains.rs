@@ -1526,7 +1526,7 @@ pub async fn plasmate_list_plugins(id: u64, target: &CdpTarget) -> CdpResponse {
 /// Return a basic a11y tree derived from the SOM.
 /// Each SOM region becomes a landmark node; each element becomes an AX node.
 pub fn accessibility_get_full_ax_tree(id: u64, target: &CdpTarget) -> CdpResponse {
-    use crate::som::types::{ElementRole, RegionRole};
+    use crate::som::types::RegionRole;
 
     let som = match &target.current_som {
         Some(s) => s,
@@ -1563,47 +1563,9 @@ pub fn accessibility_get_full_ax_tree(id: u64, target: &CdpTarget) -> CdpRespons
         let mut region_children = Vec::new();
 
         for element in &region.elements {
-            let el_ax_id = next_id;
-            next_id += 1;
+            let el_ax_id =
+                push_ax_element_nodes(element, region_ax_id, target, &mut nodes, &mut next_id);
             region_children.push(json!({"nodeId": format!("{}", el_ax_id)}));
-
-            let ax_role = match element.role {
-                ElementRole::Link => "link",
-                ElementRole::Button => "button",
-                ElementRole::TextInput => "textbox",
-                ElementRole::Textarea => "textbox",
-                ElementRole::Select => "combobox",
-                ElementRole::Checkbox => "checkbox",
-                ElementRole::Radio => "radio",
-                ElementRole::Heading => "heading",
-                ElementRole::Image => "img",
-                ElementRole::List => "list",
-                ElementRole::Table => "table",
-                ElementRole::Paragraph => "paragraph",
-                ElementRole::Section => "Section",
-                ElementRole::Group => "group",
-                ElementRole::Separator => "separator",
-                ElementRole::Details => "group",
-                ElementRole::Iframe => "Iframe",
-            };
-
-            let name = element
-                .label
-                .as_deref()
-                .or(element.text.as_deref())
-                .unwrap_or("");
-
-            nodes.push(json!({
-                "nodeId": format!("{}", el_ax_id),
-                "ignored": false,
-                "role": {"type": "role", "value": ax_role},
-                "name": {"type": "computedString", "value": name},
-                "parentId": format!("{}", region_ax_id),
-                "backendDOMNodeId": target.node_map.iter()
-                    .find(|(_, entry)| entry.som_element_id.as_deref() == Some(&element.id))
-                    .map(|(nid, _)| *nid)
-                    .unwrap_or(0),
-            }));
         }
 
         nodes.push(json!({
@@ -1629,6 +1591,103 @@ pub fn accessibility_get_full_ax_tree(id: u64, target: &CdpTarget) -> CdpRespons
     );
 
     CdpResponse::success(id, json!({"nodes": nodes}))
+}
+
+fn push_ax_element_nodes(
+    element: &Element,
+    parent_ax_id: u64,
+    target: &CdpTarget,
+    nodes: &mut Vec<serde_json::Value>,
+    next_id: &mut u64,
+) -> u64 {
+    let el_ax_id = *next_id;
+    *next_id += 1;
+
+    let mut child_ids = Vec::new();
+    if let Some(children) = &element.children {
+        for child in children {
+            let child_ax_id = push_ax_element_nodes(child, el_ax_id, target, nodes, next_id);
+            child_ids.push(json!({"nodeId": format!("{}", child_ax_id)}));
+        }
+    }
+    if let Some(shadow) = &element.shadow {
+        for child in &shadow.elements {
+            let child_ax_id = push_ax_element_nodes(child, el_ax_id, target, nodes, next_id);
+            child_ids.push(json!({"nodeId": format!("{}", child_ax_id)}));
+        }
+    }
+
+    let name = element
+        .label
+        .as_deref()
+        .or(element.text.as_deref())
+        .unwrap_or("");
+    let (enabled, blocked_reason) = interactive_enabled_state(element);
+    let mut properties = Vec::new();
+    if !enabled {
+        properties.push(json!({
+            "name": "disabled",
+            "value": {"type": "boolean", "value": true},
+        }));
+    }
+    if blocked_reason == Some("readonly") {
+        properties.push(json!({
+            "name": "readonly",
+            "value": {"type": "boolean", "value": true},
+        }));
+    }
+
+    let mut node = json!({
+        "nodeId": format!("{}", el_ax_id),
+        "ignored": false,
+        "role": {"type": "role", "value": element_role_to_ax_role(element)},
+        "name": {"type": "computedString", "value": name},
+        "parentId": format!("{}", parent_ax_id),
+        "backendDOMNodeId": backend_node_id_for_element(target, element),
+    });
+
+    if !child_ids.is_empty() {
+        node["childIds"] = json!(child_ids);
+    }
+    if !properties.is_empty() {
+        node["properties"] = json!(properties);
+    }
+
+    nodes.push(node);
+    el_ax_id
+}
+
+fn backend_node_id_for_element(target: &CdpTarget, element: &Element) -> u64 {
+    target
+        .node_map
+        .iter()
+        .find(|(_, entry)| entry.som_element_id.as_deref() == Some(&element.id))
+        .map(|(_, entry)| entry.backend_node_id)
+        .unwrap_or(0)
+}
+
+fn element_role_to_ax_role(element: &Element) -> &'static str {
+    use crate::som::types::ElementRole;
+
+    match element.role {
+        ElementRole::Link => "link",
+        ElementRole::Button => "button",
+        ElementRole::TextInput => "textbox",
+        ElementRole::Textarea => "textbox",
+        ElementRole::Select => "combobox",
+        ElementRole::Checkbox => "checkbox",
+        ElementRole::Radio => "radio",
+        ElementRole::Heading => "heading",
+        ElementRole::Image => "img",
+        ElementRole::List => "list",
+        ElementRole::Table => "table",
+        ElementRole::Paragraph => "paragraph",
+        ElementRole::Section => "Section",
+        ElementRole::Group => "group",
+        ElementRole::Separator => "separator",
+        ElementRole::Details => "group",
+        ElementRole::Iframe => "Iframe",
+    }
 }
 
 // ============================================================
@@ -1896,6 +1955,7 @@ mod tests {
     fn cdp_target_with_som(som: Som) -> CdpTarget {
         let mut target = CdpTarget::new().unwrap();
         target.current_som = Some(som);
+        target.rebuild_node_map();
         target
     }
 
@@ -2095,5 +2155,31 @@ mod tests {
         assert_eq!(result["offset"], 1);
         assert_eq!(result["limit"], 1);
         assert_eq!(elements[0]["id"], "nested-link");
+    }
+
+    #[test]
+    fn get_full_ax_tree_includes_nested_shadow_and_availability_properties() {
+        let target = cdp_target_with_som(fixture_som());
+        let response = accessibility_get_full_ax_tree(1, &target);
+        let result = response.result.unwrap();
+        let nodes = result["nodes"].as_array().unwrap();
+
+        let node_by_name = |name: &str| {
+            nodes
+                .iter()
+                .find(|node| node["name"]["value"].as_str() == Some(name))
+                .unwrap_or_else(|| panic!("missing AX node named {name}"))
+        };
+
+        let host = node_by_name("Host");
+        let nested = node_by_name("Docs");
+        let shadow = node_by_name("Shadow save");
+        let disabled = node_by_name("Save");
+
+        assert_eq!(nested["parentId"], host["nodeId"]);
+        assert_eq!(shadow["parentId"], host["nodeId"]);
+        assert!(nested["backendDOMNodeId"].as_u64().unwrap() > 0);
+        assert!(shadow["backendDOMNodeId"].as_u64().unwrap() > 0);
+        assert_eq!(disabled["properties"][0]["name"], "disabled");
     }
 }

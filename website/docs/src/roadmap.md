@@ -14,6 +14,14 @@ Plasmate should keep its local-first position, but the roadmap now emphasizes th
 
 Near-term target: make Plasmate the fastest local way to turn authenticated or repetitive web workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 CDP DOM/AX Selector Parity Adjustment
+
+Current browser-agent tools are turning structured page state into a protocol-level adoption path. Playwright MCP uses accessibility snapshots and snapshot-scoped refs, Stagehand/Browserbase caches observed actions and selectors for repeated workflows, Firecrawl distributes scrape/search/extract through MCP, and Cloudflare Browser Run now positions CDP, MCP, recordings, and structured-data endpoints as hosted browser-session features. Plasmate should keep the local-first wedge and make existing CDP clients resolve SOM-backed targets without raw DOM recovery:
+
+- **Replay selectors should work through CDP DOM**: `DOM.querySelector` and `DOM.querySelectorAll` should resolve `#html_id`, `#som_id`, test-id selectors, SOM role names, text, and labels against the SOM-backed node tree in document order.
+- **AX trees should match SOM reachability**: `Accessibility.getFullAXTree` should include nested children and shadow-root elements, not just top-level region children.
+- **Availability belongs in compatibility output**: AX nodes should carry backend node ids and disabled/readonly properties so Puppeteer, Playwright, and MCP bridge clients can validate cached targets before replay.
+
 ### 2026-05-17 CDP Action-Menu Parity Adjustment
 
 Current browser-agent tools increasingly expose action state at the protocol edge, not only in SDK helpers. Playwright MCP uses fresh accessibility snapshot refs for interaction, Stagehand/Browserbase caches validated actions to remove repeat LLM calls, Firecrawl exposes browser sandbox sessions through API, CLI, SDK, and MCP surfaces, and Cloudflare Browser Rendering/Browser Run now supports CDP plus MCP client workflows. Plasmate should keep the local-first SOM wedge and make CDP compatibility more agent-native:
@@ -769,6 +777,9 @@ Competitor pressure keeps moving reusable action state from browser engines into
 - [x] Browser Use, LangChain, and Vercel AI direct replay lookup helpers auto-resolve stored replay ids while preserving enabled-only filtering
 - [x] Package and adapter tests cover auto replay lookup without bespoke action-menu scans
 - [x] Python/Node parser packages and SDKs expose explicit accessible-label lookup for elements and compact action targets
+- [x] CDP DOM query selectors resolve `#html_id`, `#som_id`, test-id selectors, roles, text, and labels in SOM document order
+- [x] CDP accessibility trees include nested and shadow-root SOM elements with backend node ids
+- [x] CDP accessibility nodes expose disabled/readonly availability properties for replay validation
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures

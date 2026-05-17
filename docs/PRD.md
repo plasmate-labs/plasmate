@@ -32,6 +32,21 @@ cloud API.
 - Crawl4AI remains strong for open-source Python crawling and extraction, but
   carries Chromium/Playwright operational weight.
 
+2026-05-17 CDP DOM/AX selector parity read: current official docs keep making
+structured snapshots and protocol compatibility the adoption bridge. Playwright
+MCP states that agents act through accessibility snapshots with refs that are
+stable only inside the current page snapshot, Stagehand documents `observe()`
+and cached actions that reuse discovered selectors, Firecrawl keeps packaging
+scrape/search/extract through MCP, and Cloudflare Browser Run now markets CDP,
+MCP, structured-data endpoints, and recordings as hosted browser-session
+features. Plasmate should not pivot toward hosted sessions; the sticky local
+countermove is to make CDP compatibility resolve the same stable SOM targets
+agents already store elsewhere. `DOM.querySelector` and `DOM.querySelectorAll`
+should understand `#html_id`, `#som_id`, test-id selectors, role names, text,
+and labels in document order, while `Accessibility.getFullAXTree` should expose
+nested and shadow-root SOM elements with backend node ids and availability
+properties.
+
 2026-05-17 CDP action-menu parity read: current competitor docs make the
 protocol edge part of the sticky action surface. Playwright MCP documents
 accessibility snapshot refs that refresh after page changes, Stagehand
