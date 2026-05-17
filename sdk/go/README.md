@@ -100,6 +100,7 @@ if err != nil {
 el := plasmate.FindByID(som, "e3")
 navs := plasmate.FindByRole(som, "navigation")
 buttons := plasmate.FindByTag(som, "button")
+labels := plasmate.FindByLabel(som, "billing")
 results := plasmate.FindByText(som, "sign in")
 clickable := plasmate.FindByAction(som, "click")
 required := plasmate.FindByHint(som, "required")
@@ -109,6 +110,9 @@ buttons := plasmate.FindActionTargetsByRole(som, "button", true)
 clicks := plasmate.FindActionTargetsByAction(som, "click", true)
 matches := plasmate.FindActionTargetsByLabel(som, "billing", false, true)
 all := plasmate.FlatElements(som)
+
+// Parse raw CLI/MCP output with progress lines or wrapped {"som": ...} payloads.
+somFromOutput, err := plasmate.FromPlasmate(rawOutput)
 ```
 
 ## API Reference
@@ -132,9 +136,11 @@ all := plasmate.FlatElements(som)
 | Function | Description |
 |----------|-------------|
 | `Parse(data)` | Parse SOM JSON bytes |
+| `FromPlasmate(output)` | Parse raw CLI/MCP output, including progress lines and wrapped `{ "som": ... }` payloads |
 | `FindByRole(som, role)` | Find regions by role |
 | `FindByID(som, id)` | Find element by ID |
 | `FindByTag(som, tag)` | Find elements by role/tag |
+| `FindByLabel(som, label, exact...)` | Find elements by accessible label; substring by default, exact when requested |
 | `FindInteractive(som)` | Find elements with actions |
 | `FindByText(som, text)` | Case-insensitive text search |
 | `FindByAction(som, action)` | Find elements exposing an action |

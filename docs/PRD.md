@@ -99,6 +99,18 @@ need the same exact-label action-target lookup as Python and Node, while public
 SDK and integration docs should teach role/action grouping as the cheap
 pre-prompt step before replay.
 
+2026-05-17 Go parser-tolerance read: current competitor docs keep showing that
+browser-agent retention comes from making repeated workflows cheap and boring:
+Playwright MCP uses structured snapshots with snapshot-scoped refs, Stagehand/
+Browserbase validates cached action selectors before skipping model calls,
+Firecrawl distributes scrape/search/extract/browser sessions through MCP, and
+Cloudflare Browser Run now sells CDP/MCP browser infrastructure. Plasmate should
+not pivot into hosted execution. The sticky local move is to remove SDK
+adoption friction across the repo surface: Go should parse the same mixed CLI
+and wrapped MCP SOM output as Python and Node, expose element-level label
+lookup, and route SOM-returning client methods through the tolerant parser so
+durable workers survive progress/log text without bespoke cleanup.
+
 2026-05-16 role/action grouping read: current docs keep pushing action menus
 toward cheap, reusable selection surfaces. Playwright MCP exposes accessible
 refs from the current snapshot, Stagehand `observe()` returns structured actions
@@ -782,6 +794,17 @@ and adapter docs over one-off integration logic.
 ## Current Run Changes
 
 - 2026-05-17:
+  - Go SDK now exposes `FromPlasmate()` for raw CLI/MCP output, including
+    progress/log lines and wrapped `{ "som": ... }` payloads, matching the
+    parser tolerance already available in Python and Node.
+  - Go `FetchPage`, `FetchPageWithOptions`, and `Click` now parse SOM-returning
+    tool output through the tolerant parser instead of assuming a clean JSON
+    payload.
+  - Go SDK now includes element-level `FindByLabel()` with substring and exact
+    modes, closing the remaining Python/Node parity gap for accessible-label
+    lookup.
+  - Go tests now cover mixed wrapped SOM output, missing-SOM rejection, and
+    label lookup through shadow-root controls.
   - Go SDK `ActionPlanIndex` now includes `ByLabel`, plus
     `FindActionTargetByLabel()` and `FindActionTargetsByLabel()` helpers so
     durable worker code matches Python/Node label-addressable action lookup.

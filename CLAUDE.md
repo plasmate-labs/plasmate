@@ -49,6 +49,38 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-17T12:08:27Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch --prune origin` was attempted first and failed
+  in the linked automation worktree because shared worktree metadata
+  `FETCH_HEAD` could not be opened (`Operation not permitted`). Work continued
+  from local `HEAD` / `origin/master` `48c03d6`, which was already the newest
+  locally known remote head.
+- Market direction: current docs continue to validate the same local-first
+  retention path. Playwright MCP uses structured accessibility snapshots with
+  snapshot-scoped refs, Browserbase/Stagehand is pushing validated action
+  caching, Firecrawl distributes scrape/search/extract/browser sessions through
+  MCP/API surfaces, and Cloudflare Browser Run is widening CDP/MCP browser
+  infrastructure. No hosted-browser pivot is recommended; the useful
+  stickiness step is lowering SDK adoption friction across the many package and
+  integration surfaces.
+- Code changes: Go SDK now exposes `FromPlasmate()` for clean SOM JSON, wrapped
+  `{ "som": ... }` payloads, and mixed CLI/MCP output with progress/log lines.
+  Go `FetchPage`, `FetchPageWithOptions`, and `Click` now use the tolerant SOM
+  parser for tool responses. Go also adds element-level `FindByLabel()` with
+  substring and exact modes, including shadow-root elements.
+- Docs changes: Go SDK README, generated Go SDK website docs, PRD, roadmap, and
+  generated website PRD/roadmap docs now describe the parser-tolerance and
+  label-lookup rationale.
+- Verification passed: `GOCACHE=/private/tmp/plasmate-go-cache go test ./...`
+  in `sdk/go`, `node website/build.mjs` with a temporary
+  primary-checkout `website/node_modules` symlink removed afterward,
+  `git diff --check`, `cargo build --quiet`, `cargo test --lib --quiet` (281),
+  and `cargo clippy --quiet` with existing warnings.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`.
+
 ### 2026-05-17T07:06:05Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch --prune origin` was attempted first in the

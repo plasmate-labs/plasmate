@@ -101,6 +101,15 @@ Parse raw JSON bytes into a `Som` struct.
 som, err := plasmate.Parse(jsonBytes)
 ```
 
+### `FromPlasmate(output)`
+
+Parse raw Plasmate CLI or MCP output into a `Som`, including progress/log lines
+and wrapped `{ "som": ... }` payloads.
+
+```go
+som, err := plasmate.FromPlasmate(rawOutput)
+```
+
 ### `FindByRole(som, role)`
 
 Find all regions matching a given role.
@@ -183,6 +192,16 @@ Find elements whose text content contains the given string (case-insensitive).
 
 ```go
 matches := plasmate.FindByText(som, "Sign in")
+```
+
+### `FindByLabel(som, label, exact...)`
+
+Find elements by accessible label. By default this is a case-insensitive
+substring search; pass `true` for exact matching.
+
+```go
+matches := plasmate.FindByLabel(som, "billing")
+exact := plasmate.FindByLabel(som, "Billing settings", true)
 ```
 
 ### `FlatElements(som)`

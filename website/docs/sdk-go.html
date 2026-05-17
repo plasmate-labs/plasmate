@@ -522,6 +522,10 @@ func main() {
 <h2 id="query-functions">Query Functions</h2><h3 id="parsedata">`Parse(data)`</h3><p>Parse raw JSON bytes into a <code>Som</code> struct.</p>
 <pre><code class="language-go">som, err := plasmate.Parse(jsonBytes)
 </code></pre>
+<h3 id="fromplasmateoutput">`FromPlasmate(output)`</h3><p>Parse raw Plasmate CLI or MCP output into a <code>Som</code>, including progress/log lines
+and wrapped <code>{ &quot;som&quot;: ... }</code> payloads.</p>
+<pre><code class="language-go">som, err := plasmate.FromPlasmate(rawOutput)
+</code></pre>
 <h3 id="findbyrolesom-role">`FindByRole(som, role)`</h3><p>Find all regions matching a given role.</p>
 <pre><code class="language-go">navRegions := plasmate.FindByRole(som, &quot;navigation&quot;)
 </code></pre>
@@ -560,6 +564,11 @@ test ids for unattended replay.</p>
 </code></pre>
 <h3 id="findbytextsom-text">`FindByText(som, text)`</h3><p>Find elements whose text content contains the given string (case-insensitive).</p>
 <pre><code class="language-go">matches := plasmate.FindByText(som, &quot;Sign in&quot;)
+</code></pre>
+<h3 id="findbylabelsom-label-exact">`FindByLabel(som, label, exact...)`</h3><p>Find elements by accessible label. By default this is a case-insensitive
+substring search; pass <code>true</code> for exact matching.</p>
+<pre><code class="language-go">matches := plasmate.FindByLabel(som, &quot;billing&quot;)
+exact := plasmate.FindByLabel(som, &quot;Billing settings&quot;, true)
 </code></pre>
 <h3 id="flatelementssom">`FlatElements(som)`</h3><p>Flatten all elements across all regions into a single slice.</p>
 <pre><code class="language-go">all := plasmate.FlatElements(som)

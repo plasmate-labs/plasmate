@@ -280,6 +280,29 @@ func TestParseInvalidJSON(t *testing.T) {
 	}
 }
 
+func TestFromPlasmateMixedWrappedOutput(t *testing.T) {
+	output := "Fetching https://example.com\n" +
+		`{"log":"ignore {not json}"}` + "\n" +
+		`{"som":` + testSOM + `}` + "\nDone\n"
+
+	som, err := FromPlasmate(output)
+	if err != nil {
+		t.Fatalf("FromPlasmate failed: %v", err)
+	}
+	if som.Title != "Example Page" {
+		t.Errorf("Title = %q, want Example Page", som.Title)
+	}
+	if len(som.Regions) != 3 {
+		t.Fatalf("len(Regions) = %d, want 3", len(som.Regions))
+	}
+}
+
+func TestFromPlasmateRejectsMissingSOM(t *testing.T) {
+	if _, err := FromPlasmate(`progress {"ok":true}`); err == nil {
+		t.Fatal("expected error for output without SOM payload")
+	}
+}
+
 func TestFindByRole(t *testing.T) {
 	som := mustParse(t)
 
@@ -394,6 +417,27 @@ func TestFindByText(t *testing.T) {
 	}
 	if results[0].ID != "e10" {
 		t.Errorf("ID = %q, want e10", results[0].ID)
+	}
+}
+
+func TestFindByLabel(t *testing.T) {
+	som := mustParse(t)
+
+	results := FindByLabel(som, "filters")
+	if len(results) != 1 {
+		t.Fatalf("FindByLabel(filters) = %d, want 1", len(results))
+	}
+	if results[0].ID != "e10" {
+		t.Errorf("ID = %q, want e10", results[0].ID)
+	}
+
+	exact := FindByLabel(som, "Open filters", true)
+	if len(exact) != 1 || exact[0].ID != "e10" {
+		t.Fatalf("FindByLabel(exact Open filters) = %#v, want e10", exact)
+	}
+
+	if got := FindByLabel(som, "open filters", true); len(got) != 0 {
+		t.Fatalf("FindByLabel(exact open filters) = %#v, want none", got)
 	}
 }
 

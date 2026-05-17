@@ -86,6 +86,26 @@ query in every SDK and adapter:
 3. **Replay ids stay the default**: labels are lookup hints; unattended replay
    should continue storing SOM ids, cache keys, HTML ids, or test ids.
 
+### 2026-05-17 Go Parser Tolerance Adjustment
+
+Current browser-agent products reduce churn by making structured action state
+easy to reuse in ordinary application code. Playwright MCP keeps interaction
+refs tied to fresh structured snapshots, Stagehand/Browserbase validates cached
+selectors before skipping LLM calls, Firecrawl distributes scraping and browser
+sessions through MCP, and Cloudflare Browser Run is widening CDP/MCP browser
+infrastructure. Plasmate should keep the local-first wedge and remove parser
+friction in the durable-worker SDK:
+
+1. **Go should ingest real Plasmate output**: `FromPlasmate()` should accept
+   clean SOM JSON, wrapped `{ "som": ... }` payloads, and mixed CLI/MCP output
+   with progress lines.
+2. **Client calls should inherit tolerance**: Go `FetchPage`,
+   `FetchPageWithOptions`, and `Click` should use the tolerant SOM parser so
+   application code does not need cleanup shims.
+3. **Element labels need parity too**: Go should expose element-level
+   `FindByLabel()` with substring and exact modes, not only action-target label
+   lookup.
+
 ### 2026-05-16 Role/Action Grouping Adjustment
 
 Current browser-agent products are making action discovery a reusable app-layer
@@ -1753,6 +1773,12 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 - Python/Node parser packages and SDKs now expose explicit accessible-label
   lookup for elements and compact action targets, plus exact label buckets in
   action-plan indexes, while keeping auto replay lookup on stable ids.
+- Go SDK `FromPlasmate()` now accepts clean SOM JSON, wrapped `{ "som": ... }`
+  payloads, and mixed CLI/MCP output with progress/log lines.
+- Go `FetchPage`, `FetchPageWithOptions`, and `Click` now reuse the tolerant
+  parser for SOM-returning tool output.
+- Go SDK now exposes element-level `FindByLabel()` with substring and exact
+  matching, including shadow-root elements.
 - Next conformance step: promote upload-affordance, form-submission context,
   submit-button override, expanded ARIA action-role, hidden descendant text,
   select-option parser/SDK/adaptor parity, `html_id` DOM-provenance cases,

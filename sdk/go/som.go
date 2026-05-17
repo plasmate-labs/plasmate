@@ -4,7 +4,11 @@
 // and provides typed access to the Semantic Object Model (SOM).
 package plasmate
 
-import "encoding/json"
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+)
 
 // Som represents a complete Semantic Object Model document.
 type Som struct {
@@ -220,4 +224,64 @@ func Parse(data []byte) (*Som, error) {
 		return nil, err
 	}
 	return &som, nil
+}
+
+// FromPlasmate parses raw Plasmate CLI or MCP text into a Som.
+//
+// The output may be the SOM object directly, wrapped as {"som": {...}}, or
+// mixed with progress/log lines before or after the JSON payload.
+func FromPlasmate(output string) (*Som, error) {
+	raw, err := extractPlasmateSOMJSON([]byte(output))
+	if err != nil {
+		return nil, err
+	}
+	return Parse(raw)
+}
+
+func extractPlasmateSOMJSON(data []byte) (json.RawMessage, error) {
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) == 0 {
+		return nil, errors.New("plasmate: no JSON object found in output")
+	}
+
+	for pos := len(trimmed) - 1; pos >= 0; pos-- {
+		if trimmed[pos] != '{' {
+			continue
+		}
+		decoder := json.NewDecoder(bytes.NewReader(trimmed[pos:]))
+		var raw json.RawMessage
+		if err := decoder.Decode(&raw); err != nil {
+			continue
+		}
+		if som, ok := unwrapSOMPayload(raw); ok {
+			return som, nil
+		}
+	}
+	return nil, errors.New("plasmate: no SOM JSON object found in output")
+}
+
+func unwrapSOMPayload(raw json.RawMessage) (json.RawMessage, bool) {
+	var obj map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &obj); err != nil {
+		return nil, false
+	}
+	if hasSOMShape(obj) {
+		return raw, true
+	}
+	if nested, ok := obj["som"]; ok {
+		var nestedObj map[string]json.RawMessage
+		if err := json.Unmarshal(nested, &nestedObj); err == nil && hasSOMShape(nestedObj) {
+			return nested, true
+		}
+	}
+	return nil, false
+}
+
+func hasSOMShape(obj map[string]json.RawMessage) bool {
+	_, hasVersion := obj["som_version"]
+	_, hasURL := obj["url"]
+	_, hasTitle := obj["title"]
+	_, hasRegions := obj["regions"]
+	_, hasMeta := obj["meta"]
+	return hasVersion && hasURL && hasTitle && hasRegions && hasMeta
 }

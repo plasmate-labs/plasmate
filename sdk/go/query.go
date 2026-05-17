@@ -127,6 +127,31 @@ func collectByText(elements []Element, lowerText string, result *[]Element) {
 	}
 }
 
+// FindByLabel returns all elements whose accessible label matches.
+//
+// By default it performs a case-insensitive substring match. Pass true as the
+// optional exact argument to require a case-sensitive full-label match.
+func FindByLabel(som *Som, label string, exact ...bool) []Element {
+	var result []Element
+	matchExact := len(exact) > 0 && exact[0]
+	needle := strings.ToLower(label)
+	for _, el := range FlatElements(som) {
+		if el.Label == nil {
+			continue
+		}
+		if matchExact {
+			if *el.Label == label {
+				result = append(result, el)
+			}
+			continue
+		}
+		if strings.Contains(strings.ToLower(*el.Label), needle) {
+			result = append(result, el)
+		}
+	}
+	return result
+}
+
 // FindByAction returns all elements that expose a specific action.
 func FindByAction(som *Som, action string) []Element {
 	var result []Element

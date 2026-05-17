@@ -59,10 +59,10 @@ type jsonRPCRequest struct {
 
 // jsonRPCResponse is a JSON-RPC 2.0 response.
 type jsonRPCResponse struct {
-	JSONRPC string           `json:"jsonrpc"`
-	ID      *int             `json:"id"`
-	Result  json.RawMessage  `json:"result,omitempty"`
-	Error   *jsonRPCError    `json:"error,omitempty"`
+	JSONRPC string          `json:"jsonrpc"`
+	ID      *int            `json:"id"`
+	Result  json.RawMessage `json:"result,omitempty"`
+	Error   *jsonRPCError   `json:"error,omitempty"`
 }
 
 type jsonRPCError struct {
@@ -239,7 +239,7 @@ func (c *Client) FetchPage(url string) (*Som, error) {
 	if err != nil {
 		return nil, err
 	}
-	return Parse(raw)
+	return FromPlasmate(string(raw))
 }
 
 // FetchPageOptions holds optional parameters for FetchPageWithOptions.
@@ -261,7 +261,7 @@ func (c *Client) FetchPageWithOptions(url string, opts FetchPageOptions) (*Som, 
 	if err != nil {
 		return nil, err
 	}
-	return Parse(raw)
+	return FromPlasmate(string(raw))
 }
 
 // OpenPage opens a page in a persistent browser session.
@@ -306,7 +306,7 @@ func (c *Client) Click(sessionID string, elementID string) (*Som, error) {
 	if err != nil {
 		return nil, err
 	}
-	return Parse(raw)
+	return FromPlasmate(string(raw))
 }
 
 // ClosePage closes a browser session and frees resources.

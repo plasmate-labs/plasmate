@@ -54,6 +54,14 @@ Current browser-agent competitors keep converging on compact action menus that c
 - **Docs should teach pre-prompt scoping**: public SDK and integration pages should show role/action grouping before agents spend tokens on a full SOM.
 - **Replay ids stay the default**: labels are lookup hints; unattended replay should continue storing SOM ids, cache keys, HTML ids, or test ids.
 
+### 2026-05-17 Go Parser Tolerance Adjustment
+
+Current browser-agent products reduce churn by making structured action state easy to reuse in ordinary application code. Playwright MCP keeps interaction refs tied to fresh structured snapshots, Stagehand/Browserbase validates cached selectors before skipping LLM calls, Firecrawl distributes scraping and browser sessions through MCP, and Cloudflare Browser Run is widening CDP/MCP browser infrastructure. Plasmate should keep the local-first wedge and remove parser friction in the durable-worker SDK:
+
+- **Go should ingest real Plasmate output**: `FromPlasmate()` should accept clean SOM JSON, wrapped `{ "som": ... }` payloads, and mixed CLI/MCP output with progress lines.
+- **Client calls should inherit tolerance**: Go `FetchPage`, `FetchPageWithOptions`, and `Click` should use the tolerant SOM parser so application code does not need cleanup shims.
+- **Element labels need parity too**: Go should expose element-level `FindByLabel()` with substring and exact modes, not only action-target label lookup.
+
 ### 2026-05-16 Role/Action Grouping Adjustment
 
 Current browser-agent products are making action discovery a reusable app-layer surface. Playwright MCP gives agents current snapshot refs, Stagehand `observe()` produces cacheable action plans, Firecrawl keeps broad MCP/browser session distribution, and Cloudflare Browser Run/WebMCP points toward typed browser-native tools. Plasmate should keep the local-first wedge and make action menus easier to scope in ordinary SDK code:
@@ -788,6 +796,9 @@ Competitor pressure keeps moving reusable action state from browser engines into
 - [x] CDP DOM query selectors resolve `#html_id`, `#som_id`, test-id selectors, roles, text, and labels in SOM document order
 - [x] CDP accessibility trees include nested and shadow-root SOM elements with backend node ids
 - [x] CDP accessibility nodes expose disabled/readonly availability properties for replay validation
+- [x] Go SDK `FromPlasmate()` accepts clean, wrapped, and mixed CLI/MCP SOM output
+- [x] Go SOM-returning client calls use tolerant parser handling for fetch and click responses
+- [x] Go SDK exposes element-level `FindByLabel()` with substring and exact modes
 - [ ] Session replay/trace export for debugging agent runs
 - [ ] Wire `016-action-semantics` into parser/SDK and adapter conformance runners for fallback roles and hidden-state variants
 - [ ] Promote shadow-DOM and web-component cases into shared cross-adapter fixtures
