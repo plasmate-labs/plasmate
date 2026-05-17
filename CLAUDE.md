@@ -83,8 +83,14 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Verification blocked: full `cargo test --quiet` still fails only in
   sandboxed `tests/awp_integration_test.rs` because local listener setup
   returns `Operation not permitted`.
-- Commit/push state: pending at this entry; changed files are `src/cdp/`,
-  README, PRD/roadmap docs, generated website docs, and this running state.
+- Commit/push state: normal `git add` remains blocked by linked-worktree
+  `index.lock` permissions, so alternate-index commit `36903e3` (`chore:
+  improve CDP selector ergonomics`) was created and pushed to
+  `origin/codex/plasmate-improvements-2026-05-17-selector-ergonomics`. Direct
+  push to remote `master` was rejected because the remote advanced after local
+  `origin/master` `48c03d6`; follow-up fetch/ls-remote attempts failed DNS for
+  `github.com`, so the master fast-forward/merge is still blocked on remote
+  sync.
 
 ### 2026-05-17T07:06:05Z - Plasmate Improvements Automation
 
