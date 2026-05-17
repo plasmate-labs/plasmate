@@ -32,6 +32,18 @@ cloud API.
 - Crawl4AI remains strong for open-source Python crawling and extraction, but
   carries Chromium/Playwright operational weight.
 
+2026-05-17 duplicate-label index read: current browser-agent competitors keep
+teaching users to select actions from human-facing labels, but repeated SaaS
+screens often contain duplicate labels such as Save, Edit, Open, or Delete.
+Playwright MCP refs are snapshot-scoped, Stagehand/Browserbase cached actions
+need validation against current selectors, Firecrawl packages hosted browser
+sessions and extraction behind MCP/API surfaces, and Cloudflare Browser Run
+continues widening CDP/MCP browser infrastructure. Plasmate should keep labels
+as explicit lookup hints, not default replay ids, while making duplicate labels
+cheap to inspect across SDKs. Go, Python, Node, and parser users should get an
+all-target label bucket (`ByLabelAll`, `by_label_all`, `byLabelAll`) beside the
+first-match exact-label index so agents can detect ambiguity before replay.
+
 2026-05-17 CDP attribute-selector read: fresh trend research keeps reinforcing
 that protocol compatibility is now part of browser-agent distribution.
 Browserbase/Stagehand markets `act`, `extract`, `observe`, `agent`, local

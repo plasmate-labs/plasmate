@@ -206,6 +206,7 @@ export interface ActionPlanIndex {
   byHtmlId: Record<string, ActionPlanItem>;
   byTestId: Record<string, ActionPlanItem>;
   byLabel: Record<string, ActionPlanItem>;
+  byLabelAll: Record<string, ActionPlanItem[]>;
   byRole: Record<string, ActionPlanItem[]>;
   byAction: Record<string, ActionPlanItem[]>;
 }
@@ -415,6 +416,7 @@ export function getActionPlanIndex(
     byHtmlId: {},
     byTestId: {},
     byLabel: {},
+    byLabelAll: {},
     byRole: {},
     byAction: {},
   };
@@ -430,6 +432,7 @@ export function getActionPlanIndex(
     if (item.label && index.byLabel[item.label] === undefined) {
       index.byLabel[item.label] = item;
     }
+    if (item.label) (index.byLabelAll[item.label] ??= []).push(item);
     (index.byRole[item.role] ??= []).push(item);
     for (const action of item.actions) {
       (index.byAction[action] ??= []).push(item);

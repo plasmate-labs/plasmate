@@ -492,6 +492,7 @@ describe('getActionPlan', () => {
     expect(index.byHtmlId['save-button']).toEqual(save);
     expect(index.byTestId['settings-save']).toEqual(save);
     expect(index.byLabel.Save).toEqual(save);
+    expect(index.byLabelAll.Save.map((target) => target.id)).toEqual(['e_save']);
     expect(index.byRole.button.map((target) => target.id)).toEqual(['e_save', 'e_preview']);
     expect(index.byAction.click.map((target) => target.id)).toEqual([
       'e_save',
@@ -510,6 +511,14 @@ describe('getActionPlan', () => {
     expect(findActionTargetByTestId(som, 'settings-save')).toEqual(save);
     expect(findActionTargetByLabel(som, 'Save')).toEqual(save);
     expect(findActionTargetsByLabel(som, 'save')).toEqual([save]);
+    const { som: duplicateSom } = loadActionAvailabilityFixture();
+    duplicateSom.regions[0].elements[3].label = 'Save';
+    const duplicateIndex = getActionPlanIndex(duplicateSom);
+    expect(duplicateIndex.byLabel.Save.id).toBe('e_save');
+    expect(duplicateIndex.byLabelAll.Save.map((target) => target.id)).toEqual([
+      'e_save',
+      'e_preview',
+    ]);
     expect(findActionTargetsByRole(som, 'button')).toEqual([
       action_targets[2],
       action_targets[3],
@@ -536,6 +545,7 @@ describe('getActionPlan', () => {
     expect(index.byId.e_save).toBeUndefined();
     expect(index.byTestId['settings-save']).toBeUndefined();
     expect(index.byLabel.Save).toBeUndefined();
+    expect(index.byLabelAll.Save).toBeUndefined();
     expect(index.byRole.button).toBeUndefined();
     expect(index.byAction.click.map((target) => target.id)).toEqual(['e_billing']);
     expect(index.byId.e_plan).toBeDefined();

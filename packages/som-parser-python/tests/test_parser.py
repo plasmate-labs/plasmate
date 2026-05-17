@@ -630,6 +630,7 @@ class TestGetActionPlan:
         assert index["by_html_id"]["save-button"] == save
         assert index["by_test_id"]["settings-save"] == save
         assert index["by_label"]["Save"] == save
+        assert [target["id"] for target in index["by_label_all"]["Save"]] == ["e_save"]
         assert [target["id"] for target in index["by_role"]["button"]] == [
             "e_save",
             "e_preview",
@@ -651,6 +652,14 @@ class TestGetActionPlan:
         assert find_action_target_by_test_id(som, "settings-save") == save
         assert find_action_target_by_label(som, "Save") == save
         assert find_action_targets_by_label(som, "save") == [save]
+        duplicate_som, _ = _load_action_availability_fixture()
+        duplicate_som.regions[0].elements[3].label = "Save"
+        duplicate_index = get_action_plan_index(duplicate_som)
+        assert duplicate_index["by_label"]["Save"]["id"] == "e_save"
+        assert [target["id"] for target in duplicate_index["by_label_all"]["Save"]] == [
+            "e_save",
+            "e_preview",
+        ]
         assert find_action_targets_by_role(som, ElementRole.BUTTON) == [
             expected_targets[2],
             expected_targets[3],
@@ -677,6 +686,7 @@ class TestGetActionPlan:
         assert "e_save" not in index["by_id"]
         assert "settings-save" not in index["by_test_id"]
         assert "Save" not in index["by_label"]
+        assert "Save" not in index["by_label_all"]
         assert "button" not in index["by_role"]
         assert [target["id"] for target in index["by_action"]["click"]] == ["e_billing"]
         assert "e_plan" in index["by_id"]

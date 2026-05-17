@@ -102,6 +102,7 @@ const ratio = getCompressionRatio(som);
 | `findByAction(som, action): SomElement[]` | Find elements that expose a specific action. |
 | `findByHint(som, hint): SomElement[]` | Find elements tagged with a semantic hint. |
 | `getActionPlan(som): ActionPlanItem[]` | Return compact action targets with cache keys, availability, link target/rel/download cues, form/list and form submission context, submitter override cues, popover/command relation cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues for agent planning. |
+| `getActionPlanIndex(som, options?): ActionPlanIndex` | Index compact targets by replay ids and group them by role/action/label, including `byLabelAll` for duplicate labels. |
 | `getActionPlanCacheKey(item): string` | Return a deterministic key for caching or comparing an action target. |
 | `findActionTarget(som, value, options?): ActionPlanItem \| undefined` | Resolve a target by SOM id, cache key, HTML id, test id, explicit label, or auto lookup. |
 | `findActionTargetsByLabel(som, label, options?): ActionPlanItem[]` | Find compact action targets by accessible label. |

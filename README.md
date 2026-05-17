@@ -192,7 +192,7 @@ const { text } = await generateText({
 await mcp.close()
 ```
 
-This wires all 17 Plasmate tools directly into any Vercel AI SDK agent. See [Vercel AI SDK MCP docs](https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#mcp-tools) for details.
+This wires all 18 Plasmate tools directly into any Vercel AI SDK agent. See [Vercel AI SDK MCP docs](https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#mcp-tools) for details.
 
 ### LLM context
 

@@ -140,7 +140,7 @@ all := plasmate.FlatElements(som)
 | `FindByAction(som, action)` | Find elements exposing an action |
 | `FindByHint(som, hint)` | Find elements tagged with a semantic hint |
 | `GetActionPlan(som)` | Return compact action targets with cache keys, availability, link target/rel/download cues, form submission context, submitter override cues, text-entry/input-affordance cues, popover/command relationship cues, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, range constraints, orientation/sort/value state, and set-position cues for agents |
-| `GetActionPlanIndex(som, enabledOnly...)` | Index compact targets by replay ids and group them by role/action |
+| `GetActionPlanIndex(som, enabledOnly...)` | Index compact targets by replay ids and group them by role/action/label, including `ByLabelAll` for duplicate labels |
 | `GetActionPlanCacheKey(item)` | Return a deterministic key for caching or comparing an action target |
 | `FindActionTarget(som, value, by...)` | Resolve a replay id by SOM id, cache key, HTML id, test id, exact label, or auto lookup |
 | `FindActionTargetByLabel(som, label)` | Resolve the first compact target with an exact accessible label |
@@ -170,6 +170,7 @@ They also include deterministic `CacheKey` values plus `Autocomplete`,
 `AutoCapitalize`, `DirName`, `Spellcheck`, `AriaPlaceholder`, `MinLength`,
 `MaxLength`, `Pattern`, and `Invalid` cues for local action-plan caches,
 prompt dedupe, and trace correlation.
-`GetActionPlanIndex` also includes `ByRole` and `ByAction` buckets so Go
-workers can scope a replay plan to, for example, enabled click targets or all
-text inputs without scanning the full SOM.
+`GetActionPlanIndex` also includes `ByRole`, `ByAction`, and `ByLabelAll`
+buckets so Go workers can scope a replay plan to enabled click targets, all
+text inputs, or every target sharing an accessible label without scanning the
+full SOM.

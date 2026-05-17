@@ -110,7 +110,7 @@ Search and traverse SOM documents:
 from plasmate import Som, find_by_role, find_by_id, find_by_tag
 from plasmate import find_interactive, find_by_label, find_by_text, flat_elements
 from plasmate import find_action_target, find_action_targets_by_action, find_action_targets_by_label
-from plasmate import find_action_targets_by_role, get_action_plan, get_token_estimate
+from plasmate import find_action_targets_by_role, get_action_plan, get_action_plan_index, get_token_estimate
 
 # Find all navigation regions
 navs = find_by_role(som, "navigation")
@@ -138,6 +138,7 @@ save_by_label = find_action_target(som, "Save", by="label", enabled_only=True)
 buttons = find_action_targets_by_label(som, "save")
 enabled_buttons = find_action_targets_by_role(som, "button", enabled_only=True)
 enabled_clicks = find_action_targets_by_action(som, "click", enabled_only=True)
+same_label_targets = get_action_plan_index(som)["by_label_all"].get("Save", [])
 
 # Search by visible text or accessible label (case-insensitive)
 results = find_by_text(som, "sign up")

@@ -293,6 +293,7 @@ type ActionPlanIndex struct {
 	ByHTMLID   map[string]ActionPlanItem   `json:"by_html_id"`
 	ByTestID   map[string]ActionPlanItem   `json:"by_test_id"`
 	ByLabel    map[string]ActionPlanItem   `json:"by_label"`
+	ByLabelAll map[string][]ActionPlanItem `json:"by_label_all"`
 	ByRole     map[string][]ActionPlanItem `json:"by_role"`
 	ByAction   map[string][]ActionPlanItem `json:"by_action"`
 }
@@ -508,6 +509,7 @@ func GetActionPlanIndex(som *Som, enabledOnly ...bool) ActionPlanIndex {
 		ByHTMLID:   map[string]ActionPlanItem{},
 		ByTestID:   map[string]ActionPlanItem{},
 		ByLabel:    map[string]ActionPlanItem{},
+		ByLabelAll: map[string][]ActionPlanItem{},
 		ByRole:     map[string][]ActionPlanItem{},
 		ByAction:   map[string][]ActionPlanItem{},
 	}
@@ -532,6 +534,7 @@ func GetActionPlanIndex(som *Som, enabledOnly ...bool) ActionPlanIndex {
 			if _, ok := index.ByLabel[*item.Label]; !ok {
 				index.ByLabel[*item.Label] = item
 			}
+			index.ByLabelAll[*item.Label] = append(index.ByLabelAll[*item.Label], item)
 		}
 		if item.Role != "" {
 			index.ByRole[item.Role] = append(index.ByRole[item.Role], item)

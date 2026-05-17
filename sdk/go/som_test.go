@@ -596,6 +596,9 @@ func TestActionPlanLookupHelpers(t *testing.T) {
 	if index.ByLabel["Plan"].ID != "e_plan" {
 		t.Fatalf("ByLabel[Plan] = %#v, want e_plan", index.ByLabel["Plan"])
 	}
+	if got := index.ByLabelAll["Plan"]; len(got) != 1 || got[0].ID != "e_plan" {
+		t.Fatalf("ByLabelAll[Plan] = %#v, want e_plan", got)
+	}
 	if got := index.ByRole["button"]; len(got) != 2 || got[0].ID != "e_save" || got[1].ID != "e_preview" {
 		t.Fatalf("ByRole[button] = %#v, want e_save/e_preview", got)
 	}
@@ -625,6 +628,16 @@ func TestActionPlanLookupHelpers(t *testing.T) {
 	}
 	if found := FindActionTargetInIndex(index, "Plan", "label"); found == nil || found.ID != "e_plan" {
 		t.Fatalf("FindActionTargetInIndex(label) = %#v, want e_plan", found)
+	}
+
+	duplicateLabel := "Save"
+	som.Regions[0].Elements[3].Label = &duplicateLabel
+	duplicateIndex := GetActionPlanIndex(som)
+	if duplicateIndex.ByLabel["Save"].ID != "e_save" {
+		t.Fatalf("ByLabel[Save] = %#v, want first matching e_save", duplicateIndex.ByLabel["Save"])
+	}
+	if got := duplicateIndex.ByLabelAll["Save"]; len(got) != 2 || got[0].ID != "e_save" || got[1].ID != "e_preview" {
+		t.Fatalf("ByLabelAll[Save] = %#v, want e_save/e_preview", got)
 	}
 }
 
@@ -658,6 +671,9 @@ func TestEnabledActionPlanIndexFiltersBlockedTargets(t *testing.T) {
 	}
 	if index.ByLabel["Plan"].ID != "e_plan" {
 		t.Fatalf("enabled-only ByLabel[Plan] = %#v, want e_plan", index.ByLabel["Plan"])
+	}
+	if got := index.ByLabelAll["Plan"]; len(got) != 1 || got[0].ID != "e_plan" {
+		t.Fatalf("enabled-only ByLabelAll[Plan] = %#v, want e_plan", got)
 	}
 	if _, ok := index.ByRole["button"]; ok {
 		t.Fatal("enabled-only index included blocked button targets")

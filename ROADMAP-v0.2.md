@@ -29,6 +29,25 @@ Near-term stickiness target: developers should keep Plasmate installed because
 it becomes the fastest local way to turn authenticated or repetitive web
 workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 Duplicate-Label Index Adjustment
+
+Current browser-agent tools keep converging on human-readable action menus, but
+labels alone are not replay-safe. Playwright MCP exposes fresh snapshot refs,
+Stagehand/Browserbase caches validated actions, Firecrawl packages hosted MCP
+browser sessions, and Cloudflare Browser Run keeps expanding CDP/MCP browser
+infrastructure. Plasmate should keep stable ids and cache keys as the replay
+contract while making label ambiguity visible in app code:
+
+1. **Label collisions should be inspectable**: action-plan indexes should keep
+   first-match exact-label lookup for compatibility and add all-target label
+   buckets for ambiguity checks.
+2. **Parity matters across repositories**: Go, Python SDK, Node SDK, Python
+   parser, and Node parser should expose the same duplicate-label bucket shape
+   so integrations do not invent custom scans.
+3. **Docs should warn through examples**: public SDK docs should show label
+   buckets as a pre-replay inspection tool while preserving SOM ids, cache
+   keys, HTML ids, and test ids as unattended replay identifiers.
+
 ### 2026-05-17 CDP Action-Menu Parity Adjustment
 
 Current browser-agent tools increasingly expose action state at the protocol

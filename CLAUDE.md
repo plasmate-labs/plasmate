@@ -2978,6 +2978,27 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   failed only in `tests/awp_integration_test.rs` because the sandbox denied
   local socket binding with `Operation not permitted`.
 
+### 2026-05-17 - Plasmate Improvements Automation
+
+- Git sync: attempted `git fetch origin --prune`, but the sandbox denied
+  updating shared worktree metadata at
+  `/Users/steve/Git/plasmate/.git/worktrees/plasmate135/FETCH_HEAD`. Local
+  detached HEAD matched the available `origin/master` snapshot before edits.
+- Market direction: Playwright MCP, Stagehand/Browserbase, Firecrawl, and
+  Cloudflare Browser Run continue pushing browser-agent tools toward
+  human-readable action menus plus validated replay. Plasmate should keep the
+  local-first SOM replay contract centered on stable ids/cache keys while
+  making label ambiguity easy to inspect in SDK code.
+- Code changes: added duplicate-label action-plan buckets across Go
+  (`ByLabelAll`), Python SDK/parser (`by_label_all`), and Node SDK/parser
+  (`byLabelAll`) while preserving existing first-match exact-label lookup.
+- Docs changes: updated the PRD, roadmap, website docs source, SDK/parser
+  READMEs, and corrected the README Vercel AI SDK MCP tool count from 17 to
+  18.
+- Next focus: extend duplicate-label ambiguity cues into framework adapter
+  examples and consider a compact action-menu warning/count field for CDP/MCP
+  surfaces so agents can avoid unsafe label-only replay without manual scans.
+
 ### 2026-05-05 - Plasmate Improvements Automation
 
 - Git sync: attempted `git fetch --prune origin`, but the sandbox still cannot

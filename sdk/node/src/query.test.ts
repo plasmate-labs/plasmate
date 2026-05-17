@@ -324,6 +324,7 @@ describe('getActionPlan', () => {
     assert.deepEqual(index.byHtmlId['save-button'], save);
     assert.deepEqual(index.byTestId['settings-save'], save);
     assert.deepEqual(index.byLabel.Save, save);
+    assert.deepEqual(index.byLabelAll.Save.map((target) => target.id), ['e_save']);
     assert.deepEqual(index.byRole.button.map((target) => target.id), ['e_save', 'e_preview']);
     assert.deepEqual(index.byAction.click.map((target) => target.id), [
       'e_save',
@@ -342,6 +343,14 @@ describe('getActionPlan', () => {
     assert.deepEqual(findActionTargetByTestId(som, 'settings-save'), save);
     assert.deepEqual(findActionTargetByLabel(som, 'Save'), save);
     assert.deepEqual(findActionTargetsByLabel(som, 'save'), [save]);
+    const { som: duplicateSom } = loadActionAvailabilityFixture();
+    duplicateSom.regions[0].elements[3].label = 'Save';
+    const duplicateIndex = getActionPlanIndex(duplicateSom);
+    assert.equal(duplicateIndex.byLabel.Save.id, 'e_save');
+    assert.deepEqual(duplicateIndex.byLabelAll.Save.map((target) => target.id), [
+      'e_save',
+      'e_preview',
+    ]);
     assert.deepEqual(findActionTargetsByRole(som, 'button'), [
       action_targets[2],
       action_targets[3],
@@ -368,6 +377,7 @@ describe('getActionPlan', () => {
     assert.equal(index.byId.e_save, undefined);
     assert.equal(index.byTestId['settings-save'], undefined);
     assert.equal(index.byLabel.Save, undefined);
+    assert.equal(index.byLabelAll.Save, undefined);
     assert.equal(index.byRole.button, undefined);
     assert.deepEqual(index.byAction.click.map((target) => target.id), ['e_billing']);
     assert.notEqual(index.byId.e_plan, undefined);

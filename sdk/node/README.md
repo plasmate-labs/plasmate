@@ -96,7 +96,7 @@ import {
   findActionTargetsByLabel,
   findActionTargetsByRole,
   findByRole, findById, findByTag, findInteractive,
-  findByLabel, findByText, flatElements, getActionPlan, getTokenEstimate,
+  findByLabel, findByText, flatElements, getActionPlan, getActionPlanIndex, getTokenEstimate,
 } from 'plasmate';
 
 const browser = new Plasmate();
@@ -124,6 +124,7 @@ const saveByLabel = findActionTarget(som, 'Save', { by: 'label', enabledOnly: tr
 const labeledActions = findActionTargetsByLabel(som, 'save');
 const enabledButtons = findActionTargetsByRole(som, 'button', { enabledOnly: true });
 const enabledClicks = findActionTargetsByAction(som, 'click', { enabledOnly: true });
+const sameLabelTargets = getActionPlanIndex(som).byLabelAll.Save ?? [];
 
 // Search by visible text or accessible label (case-insensitive)
 const matches = findByText(som, 'sign in');
@@ -146,6 +147,7 @@ browser.close();
 | `findByTag(som, tag)` | `SomElement[]` | Find elements by element role |
 | `findInteractive(som)` | `SomElement[]` | All elements with actions |
 | `getActionPlan(som)` | `ActionPlanItem[]` | Compact action targets with cache keys, availability, link target/rel/download cues, form/list and form submission context, submitter override cues, popover/command relation cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues |
+| `getActionPlanIndex(som, options?)` | `ActionPlanIndex` | Index compact targets by replay ids and group them by role/action/label, including `byLabelAll` for duplicate labels |
 | `getActionPlanCacheKey(item)` | `string` | Deterministic key for caching or comparing action targets |
 | `findActionTarget(som, value, options?)` | `ActionPlanItem \| undefined` | Resolve a target by SOM id, cache key, HTML id, test id, or explicit label |
 | `findActionTargetsByLabel(som, label, options?)` | `ActionPlanItem[]` | Find compact action targets by accessible label |
