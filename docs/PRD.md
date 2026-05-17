@@ -1,6 +1,6 @@
 # Plasmate PRD: Agent Stickiness and Roadmap Direction
 
-Last updated: 2026-05-16
+Last updated: 2026-05-17
 
 ## Product Thesis
 
@@ -31,6 +31,18 @@ cloud API.
   repeated automation flows.
 - Crawl4AI remains strong for open-source Python crawling and extraction, but
   carries Chromium/Playwright operational weight.
+
+2026-05-17 SDK discoverability and Go label-parity read: current competitor
+docs keep pushing browser-agent products toward small, validated action menus.
+Playwright MCP documents snapshot-scoped accessibility refs, Browserbase/
+Stagehand documents cached selectors for repeated actions, Firecrawl packages
+search/scrape/extract plus browser interaction behind MCP and APIs, and
+Cloudflare Browser Run/WebMCP is widening hosted browser-native tool surfaces.
+Plasmate should keep the local-first wedge and make the portable SOM action
+contract easier to adopt across the full repo surface. Go durable workers now
+need the same exact-label action-target lookup as Python and Node, while public
+SDK and integration docs should teach role/action grouping as the cheap
+pre-prompt step before replay.
 
 2026-05-16 role/action grouping read: current docs keep pushing action menus
 toward cheap, reusable selection surfaces. Playwright MCP exposes accessible
@@ -714,6 +726,16 @@ and adapter docs over one-off integration logic.
 
 ## Current Run Changes
 
+- 2026-05-17:
+  - Go SDK `ActionPlanIndex` now includes `ByLabel`, plus
+    `FindActionTargetByLabel()` and `FindActionTargetsByLabel()` helpers so
+    durable worker code matches Python/Node label-addressable action lookup.
+  - Go tests now cover exact-label index lookup, substring label search,
+    index-based label resolution, and enabled-only label filtering.
+  - Public SDK docs now show role/action grouped action menus for Python,
+    Node, and Go, making the intended pre-prompt scoping workflow clearer.
+  - Browser Use and LangChain public integration docs now show how to narrow
+    compact action targets by role/action before prompt construction or replay.
 - 2026-05-16:
   - Python and Node parser packages, Python and Node SDKs, and Go SDK now
     expose generic replay lookup helpers that auto-resolve SOM ids,

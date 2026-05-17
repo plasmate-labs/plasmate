@@ -546,6 +546,24 @@ const availableTargets = getActionPlan(som).filter((target) =&gt; target.enabled
 
 const cacheKey = getActionPlanCacheKey(target);
 </code></pre>
+<h3 id="getactionplanindexsom-options">`getActionPlanIndex(som, options)`</h3><p>Return compact action targets indexed by replay ids and grouped by role/action.
+Use this when an agent needs a small action menu instead of the full SOM.</p>
+<pre><code class="language-typescript">import { getActionPlanIndex } from &#39;plasmate&#39;;
+
+const index = getActionPlanIndex(som, { enabledOnly: true });
+const buttons = index.byRole.button ?? [];
+const clickTargets = index.byAction.click ?? [];
+</code></pre>
+<h3 id="findactiontargetsbyrolesom-role-options">`findActionTargetsByRole(som, role, options)`</h3><p>Return compact action targets for one SOM role without scanning the full plan.</p>
+<pre><code class="language-typescript">import { findActionTargetsByRole } from &#39;plasmate&#39;;
+
+const buttons = findActionTargetsByRole(som, &#39;button&#39;, { enabledOnly: true });
+</code></pre>
+<h3 id="findactiontargetsbyactionsom-action-options">`findActionTargetsByAction(som, action, options)`</h3><p>Return compact action targets exposing one action.</p>
+<pre><code class="language-typescript">import { findActionTargetsByAction } from &#39;plasmate&#39;;
+
+const clicks = findActionTargetsByAction(som, &#39;click&#39;, { enabledOnly: true });
+</code></pre>
 <h3 id="findbytextsom-text">`findByText(som, text)`</h3><p>Find elements whose text content contains the given string (case-insensitive).</p>
 <pre><code class="language-typescript">import { findByText } from &#39;plasmate&#39;;
 

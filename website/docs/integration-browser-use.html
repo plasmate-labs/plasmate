@@ -547,6 +547,22 @@ targets. Those targets carry <code>enabled</code>, disabled/inert <code>blocked_
 context when Plasmate emits it, so Browser Use agents can skip unavailable
 controls and understand popup/controlled-panel targets before spending a
 browser action.</p>
+<p>For repetitive workflows, scope targets before prompting:</p>
+<pre><code class="language-python">from plasmate_browser_use import PlasmateExtractor
+
+extractor = PlasmateExtractor()
+plan = extractor.extract_action_plan(&quot;https://example.com/settings&quot;)
+buttons = extractor.find_action_targets_by_role(
+    &quot;https://example.com/settings&quot;,
+    &quot;button&quot;,
+    enabled_only=True,
+)
+clicks = extractor.find_action_targets_by_action(
+    &quot;https://example.com/settings&quot;,
+    &quot;click&quot;,
+    enabled_only=True,
+)
+</code></pre>
 <h2 id="token-savings">Token Savings</h2><table>
 <thead>
 <tr>

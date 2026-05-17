@@ -49,6 +49,40 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-17T01:09:42Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch --prune origin` was attempted first and failed
+  in the linked automation worktree because shared `FETCH_HEAD` cannot be
+  opened. Work continued from local `HEAD`/`origin/master` `5bb1c6b`, which
+  was the newest locally known remote head at start.
+- Market direction: current docs still favor compact, validated action menus
+  over raw browser dumps. Playwright MCP documents accessibility snapshot refs,
+  Stagehand/Browserbase documents selector/action caching for repeated flows,
+  Firecrawl packages search/scrape/extract plus browser interaction behind MCP
+  and APIs, and Cloudflare Browser Run/WebMCP is widening hosted browser-native
+  tool surfaces. No hosted-browser pivot is recommended; the sticky local step
+  is SDK discoverability plus parity across durable worker and adapter surfaces.
+- Code changes: Go SDK `ActionPlanIndex` now includes `ByLabel`, and Go now
+  exposes `FindActionTargetByLabel()` plus `FindActionTargetsByLabel()` for
+  exact-label recovery and substring label search. Auto replay lookup still
+  prefers stable SOM ids, cache keys, HTML ids, and test ids.
+- Docs changes: public Python, Node, and Go SDK pages now show role/action
+  grouped action-plan examples for pre-prompt scoping. Browser Use and
+  LangChain public integration pages now show role/action narrowing before
+  prompt construction or cached replay. PRD and roadmap docs now record the
+  2026-05-17 SDK discoverability and Go label-parity rationale.
+- Verification passed: `GOCACHE=/tmp/plasmate-go-cache go test ./...` in
+  `sdk/go`, `node website/build.mjs` using a temporary local `node_modules`
+  symlink to the primary checkout, `git diff --check`,
+  `RUSTY_V8_ARCHIVE=/Users/steve/Git/plasmate/target/debug/gn_out/obj/librusty_v8.a cargo build --quiet`,
+  and `cargo test --lib --quiet` (273).
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`.
+- Commit/push state: normal `git add` is still blocked by linked worktree
+  `index.lock` permissions, so this run will use the alternate-index commit
+  path before pushing/fast-forwarding remote `master`.
+
 ### 2026-05-17T00:11:02Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch origin --prune` was attempted first and still

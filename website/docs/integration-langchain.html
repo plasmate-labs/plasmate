@@ -463,6 +463,18 @@
 <code>[controls=&quot;panel-id&quot;]</code>, <code>[haspopup=&quot;menu&quot;]</code>, and <code>[description=&quot;...&quot;]</code>
 when Plasmate emits those SOM attrs. Agents should use those cues before
 calling <code>plasmate_click</code> or <code>plasmate_type</code>.</p>
+<p>For agent prompts that need a compact action menu, use the shared action-plan
+helpers before constructing messages:</p>
+<pre><code class="language-python">from langchain_plasmate import (
+    action_target_index,
+    find_action_targets_by_action,
+    find_action_targets_by_role,
+)
+
+index = action_target_index(som, enabled_only=True)
+buttons = find_action_targets_by_role(som, &quot;button&quot;, enabled_only=True)
+clicks = find_action_targets_by_action(som, &quot;click&quot;, enabled_only=True)
+</code></pre>
 <p>Source: <a href="https://github.com/nicepkg/plasmate/tree/master/integrations/langchain"><code>integrations/langchain/</code></a></p>
 <h2 id="installation">Installation</h2><pre><code class="language-bash">pip install langchain-plasmate
 </code></pre>

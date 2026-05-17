@@ -10,6 +10,21 @@ Interactive form controls include action-state cues such as `[disabled]`,
 when Plasmate emits those SOM attrs. Agents should use those cues before
 calling `plasmate_click` or `plasmate_type`.
 
+For agent prompts that need a compact action menu, use the shared action-plan
+helpers before constructing messages:
+
+```python
+from langchain_plasmate import (
+    action_target_index,
+    find_action_targets_by_action,
+    find_action_targets_by_role,
+)
+
+index = action_target_index(som, enabled_only=True)
+buttons = find_action_targets_by_role(som, "button", enabled_only=True)
+clicks = find_action_targets_by_action(som, "click", enabled_only=True)
+```
+
 Source: [`integrations/langchain/`](https://github.com/nicepkg/plasmate/tree/master/integrations/langchain)
 
 ## Installation

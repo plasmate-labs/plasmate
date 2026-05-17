@@ -14,6 +14,14 @@ Plasmate should keep its local-first position, but the roadmap now emphasizes th
 
 Near-term target: make Plasmate the fastest local way to turn authenticated or repetitive web workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 SDK Discoverability and Label Parity Adjustment
+
+Current browser-agent competitors keep converging on compact action menus that can be validated before replay. Playwright MCP keeps refs scoped to the current accessibility snapshot, Stagehand/Browserbase makes action caching a repeated workflow feature, Firecrawl exposes scrape/search/extract/browser interaction through MCP and APIs, and Cloudflare Browser Run/WebMCP is expanding hosted browser-native tool surfaces. Plasmate should not pivot into hosted execution; the stickier move is to make local SOM action menus easier to discover and query in every SDK and adapter:
+
+- **Go should match Python/Node label lookup**: durable worker code needs `ByLabel`, exact-label resolution, and label search helpers for debugging and human-facing recovery.
+- **Docs should teach pre-prompt scoping**: public SDK and integration pages should show role/action grouping before agents spend tokens on a full SOM.
+- **Replay ids stay the default**: labels are lookup hints; unattended replay should continue storing SOM ids, cache keys, HTML ids, or test ids.
+
 ### 2026-05-16 Role/Action Grouping Adjustment
 
 Current browser-agent products are making action discovery a reusable app-layer surface. Playwright MCP gives agents current snapshot refs, Stagehand `observe()` produces cacheable action plans, Firecrawl keeps broad MCP/browser session distribution, and Cloudflare Browser Run/WebMCP points toward typed browser-native tools. Plasmate should keep the local-first wedge and make action menus easier to scope in ordinary SDK code:

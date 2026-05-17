@@ -155,6 +155,39 @@ import { getActionPlanCacheKey } from 'plasmate';
 const cacheKey = getActionPlanCacheKey(target);
 ```
 
+### `getActionPlanIndex(som, options)`
+
+Return compact action targets indexed by replay ids and grouped by role/action.
+Use this when an agent needs a small action menu instead of the full SOM.
+
+```typescript
+import { getActionPlanIndex } from 'plasmate';
+
+const index = getActionPlanIndex(som, { enabledOnly: true });
+const buttons = index.byRole.button ?? [];
+const clickTargets = index.byAction.click ?? [];
+```
+
+### `findActionTargetsByRole(som, role, options)`
+
+Return compact action targets for one SOM role without scanning the full plan.
+
+```typescript
+import { findActionTargetsByRole } from 'plasmate';
+
+const buttons = findActionTargetsByRole(som, 'button', { enabledOnly: true });
+```
+
+### `findActionTargetsByAction(som, action, options)`
+
+Return compact action targets exposing one action.
+
+```typescript
+import { findActionTargetsByAction } from 'plasmate';
+
+const clicks = findActionTargetsByAction(som, 'click', { enabledOnly: true });
+```
+
 ### `findByText(som, text)`
 
 Find elements whose text content contains the given string (case-insensitive).

@@ -536,6 +536,24 @@ for target in get_action_plan(som):
 
 cache_key = get_action_plan_cache_key(target)
 </code></pre>
+<h3 id="getactionplanindexsom-enabledonlyfalse">`get_action_plan_index(som, enabled_only=False)`</h3><p>Return compact action targets indexed by replay ids and grouped by role/action.
+Use this when an agent needs a small action menu instead of the full SOM.</p>
+<pre><code class="language-python">from plasmate.query import get_action_plan_index
+
+index = get_action_plan_index(som, enabled_only=True)
+buttons = index[&quot;by_role&quot;].get(&quot;button&quot;, [])
+click_targets = index[&quot;by_action&quot;].get(&quot;click&quot;, [])
+</code></pre>
+<h3 id="findactiontargetsbyrolesom-role-enabledonlyfalse">`find_action_targets_by_role(som, role, enabled_only=False)`</h3><p>Return compact action targets for one SOM role without scanning the full plan.</p>
+<pre><code class="language-python">from plasmate.query import find_action_targets_by_role
+
+buttons = find_action_targets_by_role(som, &quot;button&quot;, enabled_only=True)
+</code></pre>
+<h3 id="findactiontargetsbyactionsom-action-enabledonlyfalse">`find_action_targets_by_action(som, action, enabled_only=False)`</h3><p>Return compact action targets exposing one action.</p>
+<pre><code class="language-python">from plasmate.query import find_action_targets_by_action
+
+clicks = find_action_targets_by_action(som, &quot;click&quot;, enabled_only=True)
+</code></pre>
 <h3 id="findbytextsom-text">`find_by_text(som, text)`</h3><p>Find elements whose text content contains the given string (case-insensitive).</p>
 <pre><code class="language-python">from plasmate.query import find_by_text
 

@@ -82,6 +82,25 @@ context when Plasmate emits it, so Browser Use agents can skip unavailable
 controls and understand popup/controlled-panel targets before spending a
 browser action.
 
+For repetitive workflows, scope targets before prompting:
+
+```python
+from plasmate_browser_use import PlasmateExtractor
+
+extractor = PlasmateExtractor()
+plan = extractor.extract_action_plan("https://example.com/settings")
+buttons = extractor.find_action_targets_by_role(
+    "https://example.com/settings",
+    "button",
+    enabled_only=True,
+)
+clicks = extractor.find_action_targets_by_action(
+    "https://example.com/settings",
+    "click",
+    enabled_only=True,
+)
+```
+
 ## Token Savings
 
 | Site | HTML tokens | SOM tokens | Savings |

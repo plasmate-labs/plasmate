@@ -137,6 +137,46 @@ interactive := plasmate.FindInteractive(som)
 fmt.Printf("%d interactive elements\n", len(interactive))
 ```
 
+### `GetActionPlanIndex(som, enabledOnly...)`
+
+Return compact action targets indexed by replay ids and grouped by role/action.
+Use this before prompt construction or replay validation when you only need a
+menu of enabled buttons, links, inputs, or one action type.
+
+```go
+index := plasmate.GetActionPlanIndex(som, true)
+
+buttons := index.ByRole["button"]
+clickTargets := index.ByAction["click"]
+planSelect := index.ByLabel["Plan"]
+```
+
+### `FindActionTargetsByRole(som, role, enabledOnly...)`
+
+Return compact action targets for one SOM role without scanning the full plan.
+
+```go
+buttons := plasmate.FindActionTargetsByRole(som, "button", true)
+```
+
+### `FindActionTargetsByAction(som, action, enabledOnly...)`
+
+Return compact action targets exposing one action.
+
+```go
+clicks := plasmate.FindActionTargetsByAction(som, "click", true)
+```
+
+### `FindActionTargetByLabel(som, label)`
+
+Resolve the first compact action target with an exact accessible label. Treat
+labels as human-facing recovery hints; store SOM ids, cache keys, HTML ids, or
+test ids for unattended replay.
+
+```go
+target := plasmate.FindActionTargetByLabel(som, "Plan")
+```
+
 ### `FindByText(som, text)`
 
 Find elements whose text content contains the given string (case-insensitive).

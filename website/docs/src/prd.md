@@ -1,6 +1,6 @@
 # PRD: Agent Stickiness and Roadmap Direction
 
-Last updated: 2026-05-16
+Last updated: 2026-05-17
 
 ## Product Thesis
 
@@ -19,6 +19,8 @@ Plasmate should be the local-first browser engine agents keep installed because 
 - Firecrawl is broadening from scraping into MCP search, extraction, browser sessions, and hosted deep research.
 - Browserbase/Stagehand is emphasizing action caching and observability for repeated automation flows.
 - Crawl4AI remains strong for open-source Python crawling and extraction, but carries Chromium/Playwright operational weight.
+
+2026-05-17 SDK discoverability and Go label-parity read: current competitor docs keep pushing browser-agent products toward small, validated action menus. Playwright MCP documents snapshot-scoped accessibility refs, Browserbase/Stagehand documents cached selectors for repeated actions, Firecrawl packages search/scrape/extract plus browser interaction behind MCP and APIs, and Cloudflare Browser Run/WebMCP is widening hosted browser-native tool surfaces. Plasmate should keep the local-first wedge and make the portable SOM action contract easier to adopt across the full repo surface. Go durable workers now need the same exact-label action-target lookup as Python and Node, while public SDK and integration docs should teach role/action grouping as the cheap pre-prompt step before replay.
 
 2026-05-16 role/action grouping read: current docs keep pushing action menus toward cheap, reusable selection surfaces. Playwright MCP exposes accessible refs from the current snapshot, Stagehand `observe()` returns structured actions that can be cached locally or in Browserbase, Firecrawl keeps packaging browser sessions behind MCP, and Cloudflare Browser Run/WebMCP is experimenting with typed website-provided tools. Plasmate should not pivot into hosted execution; the sticky local move is to let SDK/parser users group compact action targets by role and action directly (`button`, `text_input`, `click`, `type`, `select`) so agents can scope a plan before asking an LLM or rewalking the full SOM.
 
@@ -168,6 +170,11 @@ The project already spans a large number of package and integration surfaces: Ru
 
 ## Current Run Changes
 
+- 2026-05-17:
+  - Go SDK `ActionPlanIndex` now includes `ByLabel`, plus `FindActionTargetByLabel()` and `FindActionTargetsByLabel()` helpers so durable worker code matches Python/Node label-addressable action lookup.
+  - Go tests now cover exact-label index lookup, substring label search, index-based label resolution, and enabled-only label filtering.
+  - Public SDK docs now show role/action grouped action menus for Python, Node, and Go, making the intended pre-prompt scoping workflow clearer.
+  - Browser Use and LangChain public integration docs now show how to narrow compact action targets by role/action before prompt construction or replay.
 - 2026-05-16:
   - Python and Node parser packages, Python and Node SDKs, and Go SDK now expose generic replay lookup helpers that auto-resolve SOM ids, deterministic `cache_key` values, original `html_id` values, and `test_id` locators.
   - Browser Use now adds sync/async `find_action_target()` helpers, LangChain `find_action_target()` now defaults to auto bucket resolution, and Vercel AI `findPlasmateActionTarget()` now defaults to auto lookup while preserving explicit bucket selection.

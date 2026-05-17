@@ -292,6 +292,7 @@ type ActionPlanIndex struct {
 	ByCacheKey map[string]ActionPlanItem   `json:"by_cache_key"`
 	ByHTMLID   map[string]ActionPlanItem   `json:"by_html_id"`
 	ByTestID   map[string]ActionPlanItem   `json:"by_test_id"`
+	ByLabel    map[string]ActionPlanItem   `json:"by_label"`
 	ByRole     map[string][]ActionPlanItem `json:"by_role"`
 	ByAction   map[string][]ActionPlanItem `json:"by_action"`
 }
@@ -506,6 +507,7 @@ func GetActionPlanIndex(som *Som, enabledOnly ...bool) ActionPlanIndex {
 		ByCacheKey: map[string]ActionPlanItem{},
 		ByHTMLID:   map[string]ActionPlanItem{},
 		ByTestID:   map[string]ActionPlanItem{},
+		ByLabel:    map[string]ActionPlanItem{},
 		ByRole:     map[string][]ActionPlanItem{},
 		ByAction:   map[string][]ActionPlanItem{},
 	}
@@ -524,6 +526,11 @@ func GetActionPlanIndex(som *Som, enabledOnly ...bool) ActionPlanIndex {
 		if item.TestID != nil {
 			if _, ok := index.ByTestID[*item.TestID]; !ok {
 				index.ByTestID[*item.TestID] = item
+			}
+		}
+		if item.Label != nil {
+			if _, ok := index.ByLabel[*item.Label]; !ok {
+				index.ByLabel[*item.Label] = item
 			}
 		}
 		if item.Role != "" {
@@ -548,7 +555,7 @@ func FindActionTargetByID(som *Som, id string) *ActionPlanItem {
 
 // FindActionTarget returns the compact action target matching a replay id.
 //
-// The optional lookup key can be "auto", "id", "cache_key", "html_id", or "test_id".
+// The optional lookup key can be "auto", "id", "cache_key", "html_id", "test_id", or "label".
 // Auto lookup checks SOM id, deterministic cache key, HTML id, then test id.
 func FindActionTarget(som *Som, value string, by ...string) *ActionPlanItem {
 	lookup := "auto"
@@ -573,6 +580,11 @@ func FindActionTarget(som *Som, value string, by ...string) *ActionPlanItem {
 	}
 	if lookup == "test_id" || lookup == "auto" {
 		if item, ok := index.ByTestID[value]; ok {
+			return &item
+		}
+	}
+	if lookup == "label" {
+		if item, ok := index.ByLabel[value]; ok {
 			return &item
 		}
 	}
@@ -605,6 +617,11 @@ func FindActionTargetInIndex(index ActionPlanIndex, value string, by ...string) 
 			return &item
 		}
 	}
+	if lookup == "label" {
+		if item, ok := index.ByLabel[value]; ok {
+			return &item
+		}
+	}
 	return nil
 }
 
@@ -621,6 +638,36 @@ func FindActionTargetByHTMLID(som *Som, htmlID string) *ActionPlanItem {
 // FindActionTargetByTestID returns the compact action target matching a test locator attribute.
 func FindActionTargetByTestID(som *Som, testID string) *ActionPlanItem {
 	return FindActionTarget(som, testID, "test_id")
+}
+
+// FindActionTargetByLabel returns the first compact action target matching an exact accessible label.
+func FindActionTargetByLabel(som *Som, label string) *ActionPlanItem {
+	return FindActionTarget(som, label, "label")
+}
+
+// FindActionTargetsByLabel returns compact action targets whose accessible label matches text.
+func FindActionTargetsByLabel(som *Som, label string, exact bool, enabledOnly ...bool) []ActionPlanItem {
+	plan := GetActionPlan(som)
+	if len(enabledOnly) > 0 && enabledOnly[0] {
+		plan = EnabledActionPlan(som)
+	}
+	results := []ActionPlanItem{}
+	needle := strings.ToLower(label)
+	for _, item := range plan {
+		if item.Label == nil {
+			continue
+		}
+		if exact {
+			if *item.Label == label {
+				results = append(results, item)
+			}
+			continue
+		}
+		if strings.Contains(strings.ToLower(*item.Label), needle) {
+			results = append(results, item)
+		}
+	}
+	return results
 }
 
 // FindActionTargetsByRole returns compact action targets whose SOM role matches exactly.

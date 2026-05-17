@@ -538,6 +538,26 @@ if el != nil {
 <pre><code class="language-go">interactive := plasmate.FindInteractive(som)
 fmt.Printf(&quot;%d interactive elements\n&quot;, len(interactive))
 </code></pre>
+<h3 id="getactionplanindexsom-enabledonly">`GetActionPlanIndex(som, enabledOnly...)`</h3><p>Return compact action targets indexed by replay ids and grouped by role/action.
+Use this before prompt construction or replay validation when you only need a
+menu of enabled buttons, links, inputs, or one action type.</p>
+<pre><code class="language-go">index := plasmate.GetActionPlanIndex(som, true)
+
+buttons := index.ByRole[&quot;button&quot;]
+clickTargets := index.ByAction[&quot;click&quot;]
+planSelect := index.ByLabel[&quot;Plan&quot;]
+</code></pre>
+<h3 id="findactiontargetsbyrolesom-role-enabledonly">`FindActionTargetsByRole(som, role, enabledOnly...)`</h3><p>Return compact action targets for one SOM role without scanning the full plan.</p>
+<pre><code class="language-go">buttons := plasmate.FindActionTargetsByRole(som, &quot;button&quot;, true)
+</code></pre>
+<h3 id="findactiontargetsbyactionsom-action-enabledonly">`FindActionTargetsByAction(som, action, enabledOnly...)`</h3><p>Return compact action targets exposing one action.</p>
+<pre><code class="language-go">clicks := plasmate.FindActionTargetsByAction(som, &quot;click&quot;, true)
+</code></pre>
+<h3 id="findactiontargetbylabelsom-label">`FindActionTargetByLabel(som, label)`</h3><p>Resolve the first compact action target with an exact accessible label. Treat
+labels as human-facing recovery hints; store SOM ids, cache keys, HTML ids, or
+test ids for unattended replay.</p>
+<pre><code class="language-go">target := plasmate.FindActionTargetByLabel(som, &quot;Plan&quot;)
+</code></pre>
 <h3 id="findbytextsom-text">`FindByText(som, text)`</h3><p>Find elements whose text content contains the given string (case-insensitive).</p>
 <pre><code class="language-go">matches := plasmate.FindByText(som, &quot;Sign in&quot;)
 </code></pre>

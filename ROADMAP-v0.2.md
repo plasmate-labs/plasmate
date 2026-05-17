@@ -29,6 +29,25 @@ Near-term stickiness target: developers should keep Plasmate installed because
 it becomes the fastest local way to turn authenticated or repetitive web
 workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 SDK Discoverability and Label Parity Adjustment
+
+Current browser-agent competitors keep converging on compact action menus that
+can be validated before replay. Playwright MCP keeps refs scoped to the current
+accessibility snapshot, Stagehand/Browserbase makes action caching a repeated
+workflow feature, Firecrawl exposes scrape/search/extract/browser interaction
+through MCP and APIs, and Cloudflare Browser Run/WebMCP is expanding hosted
+browser-native tool surfaces. Plasmate should not pivot into hosted execution;
+the stickier move is to make local SOM action menus easier to discover and
+query in every SDK and adapter:
+
+1. **Go should match Python/Node label lookup**: durable worker code needs
+   `ByLabel`, exact-label resolution, and label search helpers for debugging
+   and human-facing recovery.
+2. **Docs should teach pre-prompt scoping**: public SDK and integration pages
+   should show role/action grouping before agents spend tokens on a full SOM.
+3. **Replay ids stay the default**: labels are lookup hints; unattended replay
+   should continue storing SOM ids, cache keys, HTML ids, or test ids.
+
 ### 2026-05-16 Role/Action Grouping Adjustment
 
 Current browser-agent products are making action discovery a reusable app-layer
@@ -1299,6 +1318,12 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
 
 ## Current Minor Improvements Logged
 
+- Go SDK action-plan indexes now expose `ByLabel` and exact-label helper
+  functions, bringing durable worker lookup parity closer to Python and Node.
+- Public Python, Node, and Go SDK docs now show grouped role/action action-plan
+  examples for pre-prompt scoping.
+- Browser Use and LangChain public integration docs now show role/action
+  narrowing before prompt construction or cached replay.
 - Cache prefetch extraction walks nested children and shadow-root elements,
   dedupes discovered HTTP(S) URLs, and filters out non-navigation schemes.
 - Cache URL normalization now uses structured URL parsing so host casing is

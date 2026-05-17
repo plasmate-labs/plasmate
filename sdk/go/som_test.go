@@ -593,6 +593,9 @@ func TestActionPlanLookupHelpers(t *testing.T) {
 	if index.ByTestID["settings-save"].ID != save.ID {
 		t.Fatalf("ByTestID[settings-save] missing save target")
 	}
+	if index.ByLabel["Plan"].ID != "e_plan" {
+		t.Fatalf("ByLabel[Plan] = %#v, want e_plan", index.ByLabel["Plan"])
+	}
 	if got := index.ByRole["button"]; len(got) != 2 || got[0].ID != "e_save" || got[1].ID != "e_preview" {
 		t.Fatalf("ByRole[button] = %#v, want e_save/e_preview", got)
 	}
@@ -605,8 +608,23 @@ func TestActionPlanLookupHelpers(t *testing.T) {
 	if got := FindActionTargetsByAction(som, "click"); len(got) != 3 || got[0].ID != "e_save" || got[1].ID != "e_preview" || got[2].ID != "e_billing" {
 		t.Fatalf("FindActionTargetsByAction(click) = %#v, want e_save/e_preview/e_billing", got)
 	}
+	if found := FindActionTargetByLabel(som, "Plan"); found == nil || found.ID != "e_plan" {
+		t.Fatalf("FindActionTargetByLabel(Plan) = %#v, want e_plan", found)
+	}
+	if found := FindActionTarget(som, "Plan", "label"); found == nil || found.ID != "e_plan" {
+		t.Fatalf("FindActionTarget(label) = %#v, want e_plan", found)
+	}
+	if got := FindActionTargetsByLabel(som, "billing", false); len(got) != 2 || got[0].ID != "e_annual" || got[1].ID != "e_billing" {
+		t.Fatalf("FindActionTargetsByLabel(billing) = %#v, want e_annual/e_billing", got)
+	}
+	if got := FindActionTargetsByLabel(som, "Billing settings", true); len(got) != 1 || got[0].ID != "e_billing" {
+		t.Fatalf("FindActionTargetsByLabel(exact Billing settings) = %#v, want e_billing", got)
+	}
 	if found := FindActionTargetInIndex(index, save.CacheKey); found == nil || found.ID != save.ID {
 		t.Fatalf("FindActionTargetInIndex(cache_key) = %#v, want %s", found, save.ID)
+	}
+	if found := FindActionTargetInIndex(index, "Plan", "label"); found == nil || found.ID != "e_plan" {
+		t.Fatalf("FindActionTargetInIndex(label) = %#v, want e_plan", found)
 	}
 }
 
@@ -632,8 +650,14 @@ func TestEnabledActionPlanIndexFiltersBlockedTargets(t *testing.T) {
 	if _, ok := index.ByTestID["settings-save"]; ok {
 		t.Fatal("enabled-only index included blocked settings-save target")
 	}
+	if _, ok := index.ByLabel["Preview changes"]; ok {
+		t.Fatal("enabled-only index included blocked Preview changes label")
+	}
 	if _, ok := index.ByID["e_plan"]; !ok {
 		t.Fatal("enabled-only index omitted enabled e_plan target")
+	}
+	if index.ByLabel["Plan"].ID != "e_plan" {
+		t.Fatalf("enabled-only ByLabel[Plan] = %#v, want e_plan", index.ByLabel["Plan"])
 	}
 	if _, ok := index.ByRole["button"]; ok {
 		t.Fatal("enabled-only index included blocked button targets")
@@ -643,6 +667,9 @@ func TestEnabledActionPlanIndexFiltersBlockedTargets(t *testing.T) {
 	}
 	if got := FindActionTargetsByAction(som, "click", true); len(got) != 1 || got[0].ID != "e_billing" {
 		t.Fatalf("enabled-only FindActionTargetsByAction(click) = %#v, want e_billing", got)
+	}
+	if got := FindActionTargetsByLabel(som, "preview", false, true); len(got) != 0 {
+		t.Fatalf("enabled-only FindActionTargetsByLabel(preview) = %#v, want none", got)
 	}
 }
 

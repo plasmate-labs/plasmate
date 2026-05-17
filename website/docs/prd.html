@@ -456,7 +456,7 @@
       </div>
     </nav>
     <main class="content">
-      <h1 id="prd-agent-stickiness-and-roadmap-direction">PRD: Agent Stickiness and Roadmap Direction</h1><p>Last updated: 2026-05-16</p>
+      <h1 id="prd-agent-stickiness-and-roadmap-direction">PRD: Agent Stickiness and Roadmap Direction</h1><p>Last updated: 2026-05-17</p>
 <h2 id="product-thesis">Product Thesis</h2><p>Plasmate should be the local-first browser engine agents keep installed because it turns web pages into compact, stable, actionable state. The product is not a general scraper and should not compete feature-for-feature with hosted browser clouds. Its advantage is fast SOM output, predictable element ids, MCP-native tooling, and reusable page understanding without sending browsing data to a cloud API.</p>
 <h2 id="target-audience">Target Audience</h2><ul>
 <li>AI agent developers building MCP tools, coding agents, and research agents.</li>
@@ -470,6 +470,7 @@
 <li>Browserbase/Stagehand is emphasizing action caching and observability for repeated automation flows.</li>
 <li>Crawl4AI remains strong for open-source Python crawling and extraction, but carries Chromium/Playwright operational weight.</li>
 </ul>
+<p>2026-05-17 SDK discoverability and Go label-parity read: current competitor docs keep pushing browser-agent products toward small, validated action menus. Playwright MCP documents snapshot-scoped accessibility refs, Browserbase/Stagehand documents cached selectors for repeated actions, Firecrawl packages search/scrape/extract plus browser interaction behind MCP and APIs, and Cloudflare Browser Run/WebMCP is widening hosted browser-native tool surfaces. Plasmate should keep the local-first wedge and make the portable SOM action contract easier to adopt across the full repo surface. Go durable workers now need the same exact-label action-target lookup as Python and Node, while public SDK and integration docs should teach role/action grouping as the cheap pre-prompt step before replay.</p>
 <p>2026-05-16 role/action grouping read: current docs keep pushing action menus toward cheap, reusable selection surfaces. Playwright MCP exposes accessible refs from the current snapshot, Stagehand <code>observe()</code> returns structured actions that can be cached locally or in Browserbase, Firecrawl keeps packaging browser sessions behind MCP, and Cloudflare Browser Run/WebMCP is experimenting with typed website-provided tools. Plasmate should not pivot into hosted execution; the sticky local move is to let SDK/parser users group compact action targets by role and action directly (<code>button</code>, <code>text_input</code>, <code>click</code>, <code>type</code>, <code>select</code>) so agents can scope a plan before asking an LLM or rewalking the full SOM.</p>
 <p>2026-05-16 adapter grouping read: the role/action grouping contract is only sticky when it reaches the many repositories where users actually wire agents: Browser Use, LangChain, Vercel AI, and Go services now need the same buckets as the parser packages and SDKs. This keeps Plasmate from becoming a Rust-only engine with thin docs around it; the product promise is a portable local action surface that framework apps can filter before prompt construction, cached replay, or trace logging.</p>
 <p>2026-05-16 label-addressable action read: current docs keep reinforcing that agents choose targets from human-facing structured names, then need a cheap way to reuse those choices in app code. Playwright MCP returns accessibility snapshot refs, Stagehand caches observed actions after validation, and Cloudflare Browser Run is pairing hosted sessions with Live View, recordings, and WebMCP experiments. Plasmate should keep the local-first wedge and make accessible labels first-class lookup hints across parser and SDK surfaces: exact label buckets/search should help humans and agents recover compact targets, while default replay lookup should continue to prefer stable ids, cache keys, HTML ids, and test ids because labels can collide.</p>
@@ -546,6 +547,13 @@
 <li>Stay local-first by default: hosted competitors can own scale infrastructure; Plasmate should own local speed, privacy, and open protocol fit.</li>
 </ol>
 <h2 id="current-run-changes">Current Run Changes</h2><ul>
+<li>2026-05-17:<ul>
+<li>Go SDK <code>ActionPlanIndex</code> now includes <code>ByLabel</code>, plus <code>FindActionTargetByLabel()</code> and <code>FindActionTargetsByLabel()</code> helpers so durable worker code matches Python/Node label-addressable action lookup.</li>
+<li>Go tests now cover exact-label index lookup, substring label search, index-based label resolution, and enabled-only label filtering.</li>
+<li>Public SDK docs now show role/action grouped action menus for Python, Node, and Go, making the intended pre-prompt scoping workflow clearer.</li>
+<li>Browser Use and LangChain public integration docs now show how to narrow compact action targets by role/action before prompt construction or replay.</li>
+</ul>
+</li>
 <li>2026-05-16:<ul>
 <li>Python and Node parser packages, Python and Node SDKs, and Go SDK now expose generic replay lookup helpers that auto-resolve SOM ids, deterministic <code>cache_key</code> values, original <code>html_id</code> values, and <code>test_id</code> locators.</li>
 <li>Browser Use now adds sync/async <code>find_action_target()</code> helpers, LangChain <code>find_action_target()</code> now defaults to auto bucket resolution, and Vercel AI <code>findPlasmateActionTarget()</code> now defaults to auto lookup while preserving explicit bucket selection.</li>

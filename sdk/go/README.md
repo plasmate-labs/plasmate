@@ -49,6 +49,15 @@ func main() {
         }
     }
 
+    index := plasmate.GetActionPlanIndex(som, true)
+    fmt.Printf("Enabled buttons: %d\n", len(index.ByRole["button"]))
+    fmt.Printf("Enabled click targets: %d\n", len(index.ByAction["click"]))
+
+    planSelect := plasmate.FindActionTargetByLabel(som, "Plan")
+    if planSelect != nil {
+        fmt.Println("Plan target:", planSelect.ID)
+    }
+
     fmt.Printf("~%d tokens\n", plasmate.TokenEstimate(som))
 }
 ```
@@ -95,6 +104,10 @@ results := plasmate.FindByText(som, "sign in")
 clickable := plasmate.FindByAction(som, "click")
 required := plasmate.FindByHint(som, "required")
 plan := plasmate.GetActionPlan(som)
+index := plasmate.GetActionPlanIndex(som, true)
+buttons := plasmate.FindActionTargetsByRole(som, "button", true)
+clicks := plasmate.FindActionTargetsByAction(som, "click", true)
+matches := plasmate.FindActionTargetsByLabel(som, "billing", false, true)
 all := plasmate.FlatElements(som)
 ```
 
@@ -129,7 +142,9 @@ all := plasmate.FlatElements(som)
 | `GetActionPlan(som)` | Return compact action targets with cache keys, availability, link target/rel/download cues, form submission context, submitter override cues, text-entry/input-affordance cues, popover/command relationship cues, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, range constraints, orientation/sort/value state, and set-position cues for agents |
 | `GetActionPlanIndex(som, enabledOnly...)` | Index compact targets by replay ids and group them by role/action |
 | `GetActionPlanCacheKey(item)` | Return a deterministic key for caching or comparing an action target |
-| `FindActionTarget(som, value, by...)` | Resolve a replay id by SOM id, cache key, HTML id, test id, or auto lookup |
+| `FindActionTarget(som, value, by...)` | Resolve a replay id by SOM id, cache key, HTML id, test id, exact label, or auto lookup |
+| `FindActionTargetByLabel(som, label)` | Resolve the first compact target with an exact accessible label |
+| `FindActionTargetsByLabel(som, label, exact, enabledOnly...)` | Return compact targets whose label matches exactly or by substring |
 | `FindActionTargetsByRole(som, role, enabledOnly...)` | Return compact action targets for one SOM role |
 | `FindActionTargetsByAction(som, action, enabledOnly...)` | Return compact action targets exposing one action |
 | `FlatElements(som)` | Flatten all elements, including shadow roots |
