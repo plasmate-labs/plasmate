@@ -83,8 +83,15 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   sandboxed `tests/awp_integration_test.rs` because local listener setup
   returns `Operation not permitted`.
 - Commit/push state: normal `git add` remains blocked by linked-worktree
-  `index.lock` permissions; commit/push will use an alternate index from this
-  verified state.
+  `index.lock` permissions, so alternate-index commit `e3013b9` (`chore:
+  improve action label collision safety`) was created and pushed to
+  `origin/codex/plasmate-improvements-2026-05-17-label-collision`. Direct
+  fast-forward push to remote `master` was rejected because remote `master`
+  advanced after the local fetch failed. GitHub connector PR creation is also
+  blocked by integration permissions (`403 Resource not accessible by
+  integration`), and follow-up `git ls-remote` / primary-checkout fetch attempts
+  are currently blocked by DNS for `github.com`. Merge to `master` remains
+  waiting on a successful fetch/PR path; do not force-push over remote master.
 
 ### 2026-05-17T07:06:05Z - Plasmate Improvements Automation
 
