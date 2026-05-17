@@ -88,8 +88,10 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
   `origin/codex/plasmate-improvements-2026-05-17-adapter-label-recovery`.
   Direct push to remote `master` was rejected as non-fast-forward because the
   remote advanced. Follow-up fetch/ls-remote attempts then failed DNS for
-  `github.com`, so merge to `master` remains blocked until the latest remote
-  head can be fetched and the branch replayed.
+  `github.com`, and the GitHub connector returned 403 when asked to open a PR,
+  so merge to `master` remains blocked until the latest remote head can be
+  fetched and the branch replayed or a PR can be opened with valid write
+  permissions.
 
 ### 2026-05-17T02:40:09Z - Plasmate Improvements Automation
 
