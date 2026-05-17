@@ -467,7 +467,8 @@ impl CdpTarget {
         None
     }
 
-    /// Find a node by CSS selector (simplified: tag, #id, common attrs, SOM role, text).
+    /// Find a node by CSS selector (simplified: tag, #id, tag#id, selector lists,
+    /// common attrs, SOM role, text).
     pub fn query_selector(&self, selector: &str) -> Option<u64> {
         // Ensure a page is loaded
         let _ = self.current_som.as_ref()?;
@@ -506,6 +507,18 @@ impl CdpTarget {
     }
 
     fn node_matches_selector(&self, entry: &NodeEntry, selector: &str) -> bool {
+        let selector = selector.trim();
+        let parts = selector_list(selector);
+        if parts.len() > 1 {
+            return parts
+                .into_iter()
+                .any(|part| self.node_matches_simple_selector(entry, part));
+        }
+
+        self.node_matches_simple_selector(entry, selector)
+    }
+
+    fn node_matches_simple_selector(&self, entry: &NodeEntry, selector: &str) -> bool {
         if entry.node_type != 1 {
             return false;
         }
@@ -528,6 +541,11 @@ impl CdpTarget {
 
         if let Some(id) = selector.strip_prefix('#') {
             return element.html_id.as_deref() == Some(id) || element.id == id;
+        }
+
+        if let Some((tag, id)) = selector_tag_id(selector) {
+            return entry.node_name.eq_ignore_ascii_case(tag)
+                && (element.html_id.as_deref() == Some(id) || element.id == id);
         }
 
         if let Some(test_id) = selector_test_id(selector) {
@@ -797,6 +815,65 @@ fn role_to_tag(role: &ElementRole) -> String {
     }
 }
 
+fn selector_list(selector: &str) -> Vec<&str> {
+    let selector = selector.trim();
+    if selector.is_empty() {
+        return vec![];
+    }
+
+    let mut parts = Vec::new();
+    let mut start = 0;
+    let mut bracket_depth = 0u32;
+    let mut quote: Option<char> = None;
+
+    for (index, ch) in selector.char_indices() {
+        if let Some(active_quote) = quote {
+            if ch == active_quote {
+                quote = None;
+            }
+            continue;
+        }
+
+        match ch {
+            '"' | '\'' => quote = Some(ch),
+            '[' => bracket_depth += 1,
+            ']' => bracket_depth = bracket_depth.saturating_sub(1),
+            ',' if bracket_depth == 0 => {
+                let part = selector[start..index].trim();
+                if !part.is_empty() {
+                    parts.push(part);
+                }
+                start = index + ch.len_utf8();
+            }
+            _ => {}
+        }
+    }
+
+    let part = selector[start..].trim();
+    if !part.is_empty() {
+        parts.push(part);
+    }
+
+    parts
+}
+
+fn selector_tag_id(selector: &str) -> Option<(&str, &str)> {
+    let selector = selector.trim();
+    if selector.starts_with('#')
+        || selector.contains('[')
+        || selector.chars().any(char::is_whitespace)
+    {
+        return None;
+    }
+
+    let (tag, id) = selector.split_once('#')?;
+    if tag.is_empty() || id.is_empty() || id.contains('#') {
+        None
+    } else {
+        Some((tag, id))
+    }
+}
+
 fn selector_test_id(selector: &str) -> Option<&str> {
     let selector = selector.trim();
     let keys = [
@@ -1058,6 +1135,16 @@ mod tests {
         assert_eq!(by_html_id, by_role);
         assert_eq!(by_html_id, by_label);
         assert_eq!(target.query_selector_all("button").len(), 2);
+        assert_eq!(
+            target
+                .query_selector_all("button#save-button, [data-test-id='draft-save']")
+                .len(),
+            2
+        );
+        assert_eq!(
+            target.query_selector("button#save-button"),
+            Some(by_html_id)
+        );
         assert_eq!(
             target
                 .query_selector_all("[data-test-id='draft-save']")

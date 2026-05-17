@@ -22,6 +22,14 @@ Current browser-agent infrastructure keeps turning protocol compatibility into d
 - **Human labels should be forgiving**: text and label selector matching should be case-insensitive so agents can reuse natural-language targets without exact casing.
 - **DOM nodes should expose replay cues**: CDP DOM nodes should include `data-plasmate-id`, `data-som-role`, HTML id, test id, ARIA label, href/name/type, and disabled/readonly/required flags when the SOM has them.
 
+### 2026-05-17 CDP Selector Ergonomics Adjustment
+
+Current browser-agent distribution is increasingly protocol-shaped: Playwright MCP proves structured snapshots can replace screenshots for many agent loops, Stagehand makes repeatable action discovery part of the developer workflow, Cloudflare Browser Run now documents CDP, Puppeteer, Playwright, Stagehand, and MCP paths, and Firecrawl keeps broad scrape/search/interact surfaces available through APIs and MCP. Plasmate should keep the local-first SOM wedge while making existing CDP scripts require fewer special cases:
+
+- **Attributes should be first-class CDP output**: `DOM.getAttributes` should return the same replay identifiers and availability cues already embedded in `DOM.getDocument` and `DOM.describeNode`.
+- **Standard selector shapes should resolve locally**: `DOM.querySelector` and `DOM.querySelectorAll` should support comma-separated selector lists and `tag#id` forms against SOM-backed node maps.
+- **Compatibility should reduce raw DOM fallback**: Puppeteer and Playwright users should be able to inspect attributes and resolve common selector shapes before paying for raw HTML recovery or another LLM pass.
+
 ### 2026-05-17 CDP DOM/AX Selector Parity Adjustment
 
 Current browser-agent tools are turning structured page state into a protocol-level adoption path. Playwright MCP uses accessibility snapshots and snapshot-scoped refs, Stagehand/Browserbase caches observed actions and selectors for repeated workflows, Firecrawl distributes scrape/search/extract through MCP, and Cloudflare Browser Run now positions CDP, MCP, recordings, and structured-data endpoints as hosted browser-session features. Plasmate should keep the local-first wedge and make existing CDP clients resolve SOM-backed targets without raw DOM recovery:
@@ -785,6 +793,9 @@ Competitor pressure keeps moving reusable action state from browser engines into
 - [x] Browser Use, LangChain, and Vercel AI direct replay lookup helpers auto-resolve stored replay ids while preserving enabled-only filtering
 - [x] Package and adapter tests cover auto replay lookup without bespoke action-menu scans
 - [x] Python/Node parser packages and SDKs expose explicit accessible-label lookup for elements and compact action targets
+- [x] CDP DOM.getAttributes returns replay-oriented node attributes for SOM-backed DOM nodes
+- [x] CDP DOM query selectors support comma-separated selector lists in SOM document order
+- [x] CDP DOM query selectors support `tag#id` against HTML ids and SOM ids
 - [x] CDP DOM query selectors resolve `#html_id`, `#som_id`, test-id selectors, roles, text, and labels in SOM document order
 - [x] CDP accessibility trees include nested and shadow-root SOM elements with backend node ids
 - [x] CDP accessibility nodes expose disabled/readonly availability properties for replay validation

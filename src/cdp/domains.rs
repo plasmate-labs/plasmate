@@ -687,6 +687,31 @@ pub fn dom_describe_node(id: u64, params: &serde_json::Value, target: &CdpTarget
     }
 }
 
+pub fn dom_get_attributes(id: u64, params: &serde_json::Value, target: &CdpTarget) -> CdpResponse {
+    let node_id = params
+        .get("nodeId")
+        .and_then(|v| v.as_u64())
+        .or_else(|| params.get("backendNodeId").and_then(|v| v.as_u64()))
+        .unwrap_or(0);
+
+    let entry = target.node_map.get(&node_id).or_else(|| {
+        target
+            .node_map
+            .values()
+            .find(|entry| entry.backend_node_id == node_id)
+    });
+
+    match entry {
+        Some(entry) => CdpResponse::success(
+            id,
+            json!({
+                "attributes": node_attributes(entry, target).unwrap_or_default(),
+            }),
+        ),
+        None => CdpResponse::error(id, CDP_ERR_NOT_FOUND, "Node not found"),
+    }
+}
+
 pub fn dom_resolve_node(id: u64, params: &serde_json::Value, target: &CdpTarget) -> CdpResponse {
     let node_id = params
         .get("nodeId")
@@ -2137,6 +2162,14 @@ mod tests {
         assert_eq!(attr("aria-label"), Some("Save"));
         assert_eq!(attr("data-testid"), Some("settings-save"));
         assert_eq!(attr("disabled"), Some("true"));
+
+        let response = dom_get_attributes(1, &json!({"nodeId": node_id}), &target);
+        let result = response.result.unwrap();
+        let attrs = result["attributes"].as_array().unwrap();
+        assert!(attrs
+            .chunks(2)
+            .any(|pair| pair[0].as_str() == Some("data-plasmate-id")
+                && pair[1].as_str() == Some("top-button")));
     }
 
     #[test]

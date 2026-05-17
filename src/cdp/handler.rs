@@ -327,6 +327,7 @@ async fn handle_cdp_request_inner(
         "DOM.querySelector" => (domains::dom_query_selector(id, params, target), vec![]),
         "DOM.querySelectorAll" => (domains::dom_query_selector_all(id, params, target), vec![]),
         "DOM.describeNode" => (domains::dom_describe_node(id, params, target), vec![]),
+        "DOM.getAttributes" => (domains::dom_get_attributes(id, params, target), vec![]),
         "DOM.resolveNode" => (domains::dom_resolve_node(id, params, target), vec![]),
         "DOM.getBoxModel" => (domains::dom_get_box_model(id, params, target), vec![]),
         "DOM.enable" => (CdpResponse::success(id, serde_json::json!({})), vec![]),

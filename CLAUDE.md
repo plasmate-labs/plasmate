@@ -49,6 +49,38 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-17T11:27:54Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch --prune origin` was attempted first in the
+  linked automation worktree and failed because shared worktree metadata
+  `FETCH_HEAD` could not be opened (`Operation not permitted`). Fallback fetch
+  from `/Users/steve/Git/plasmate` failed DNS for `github.com`, so work
+  continued from already-local `HEAD`/`origin/master` `48c03d6`.
+- Market direction: current official docs still validate protocol-compatible,
+  structured browser state as the retention surface. Playwright MCP centers
+  structured accessibility snapshots, Stagehand emphasizes `act`, `extract`,
+  `observe`, `agent`, repeatability, and action caching, Cloudflare Browser Run
+  now documents CDP/Puppeteer/Playwright/Stagehand/MCP session paths, and
+  Firecrawl exposes search/scrape/interact plus MCP distribution. No hosted
+  browser pivot is recommended; the local-first wedge is making existing CDP
+  clients resolve and inspect SOM-backed targets without raw DOM recovery.
+- Code changes: CDP `DOM.getAttributes` now returns the same replay-oriented
+  attributes as `DOM.getDocument` / `DOM.describeNode`; `DOM.querySelector` and
+  `DOM.querySelectorAll` now support comma-separated selector lists; and CDP
+  selector matching now supports `tag#id` against both HTML ids and SOM ids.
+- Docs changes: README, PRD, roadmap source docs, generated website docs, and
+  this running state document record the selector/getAttributes rationale and
+  next direction.
+- Verification passed: `node website/build.mjs` with a temporary
+  primary-checkout `website/node_modules` symlink removed afterward, touched
+  CDP rustfmt check, `git diff --check`, focused `cargo test cdp:: --quiet`
+  (19), `cargo build --quiet`, `cargo test --lib --quiet` (281), and
+  `cargo clippy --quiet` with existing warnings. Rust commands used
+  `RUSTY_V8_ARCHIVE=/Users/steve/Git/plasmate/target/debug/gn_out/obj/librusty_v8.a`.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`.
+
 ### 2026-05-17T07:06:05Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch --prune origin` was attempted first in the

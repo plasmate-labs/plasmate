@@ -48,6 +48,17 @@ return replay-oriented node attributes (`data-plasmate-id`, `data-som-role`,
 HTML id, test id, ARIA label, href/name/type, and availability flags) from CDP
 DOM nodes.
 
+2026-05-17 CDP selector ergonomics read: current official docs keep showing the
+same adoption path. Playwright MCP has trained agents to work from structured
+snapshots, Stagehand emphasizes repeatable `act`/`observe` flows, Cloudflare
+Browser Run presents CDP, Puppeteer, Playwright, Stagehand, and MCP as browser
+session entrypoints, and Firecrawl keeps packaging search/scrape/interact
+through APIs and MCP. Plasmate should make the compatibility layer feel boring
+to existing Puppeteer/Playwright code: `DOM.getAttributes` should return the
+same replay cues as `DOM.getDocument`, and selector matching should accept
+comma-separated selector lists plus `tag#id` forms so existing scripts can
+resolve SOM-backed targets before a raw DOM fallback.
+
 2026-05-17 CDP DOM/AX selector parity read: current official docs keep making
 structured snapshots and protocol compatibility the adoption bridge. Playwright
 MCP states that agents act through accessibility snapshots with refs that are

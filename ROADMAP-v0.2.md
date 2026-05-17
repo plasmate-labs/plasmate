@@ -29,6 +29,26 @@ Near-term stickiness target: developers should keep Plasmate installed because
 it becomes the fastest local way to turn authenticated or repetitive web
 workflows into compact, inspectable, reusable state.
 
+### 2026-05-17 CDP Selector Ergonomics Adjustment
+
+Current browser-agent distribution is increasingly protocol-shaped: Playwright
+MCP proves structured snapshots can replace screenshots for many agent loops,
+Stagehand makes repeatable action discovery part of the developer workflow,
+Cloudflare Browser Run now documents CDP, Puppeteer, Playwright, Stagehand, and
+MCP paths, and Firecrawl keeps broad scrape/search/interact surfaces available
+through APIs and MCP. Plasmate should keep the local-first SOM wedge while
+making existing CDP scripts require fewer special cases:
+
+1. **Attributes should be first-class CDP output**: `DOM.getAttributes` should
+   return the same replay identifiers and availability cues already embedded in
+   `DOM.getDocument` and `DOM.describeNode`.
+2. **Standard selector shapes should resolve locally**: `DOM.querySelector` and
+   `DOM.querySelectorAll` should support comma-separated selector lists and
+   `tag#id` forms against SOM-backed node maps.
+3. **Compatibility should reduce raw DOM fallback**: Puppeteer and Playwright
+   users should be able to inspect attributes and resolve common selector
+   shapes before paying for raw HTML recovery or another LLM pass.
+
 ### 2026-05-17 CDP Action-Menu Parity Adjustment
 
 Current browser-agent tools increasingly expose action state at the protocol
@@ -1700,6 +1720,15 @@ revisits or predictable next-pages. SOM Cache makes those effectively free.
   and `describedby` without changing deterministic action `cache_key` values.
 - The shared action-availability manifest now asserts ARIA naming provenance
   alongside resolved `description` text.
+- CDP `DOM.getAttributes` now returns the same replay-oriented node attributes
+  as `DOM.getDocument` and `DOM.describeNode`, including SOM ids, SOM roles,
+  HTML ids, test ids, labels, locator attrs, and availability flags.
+- CDP `DOM.querySelector` / `DOM.querySelectorAll` now support
+  comma-separated selector lists while preserving document-order results from
+  the SOM-backed node map.
+- CDP selector matching now supports `tag#id` against both HTML ids and SOM
+  ids, covering common Puppeteer/Playwright locator shapes without raw DOM
+  fallback.
 - The SOM cache now has selector-aware lookup/store APIs, distinct full-page
   versus selector cache entries, case-normalized role/action selector keys,
   case-preserving `#id` selector keys, and full-SOM-derived selector cache

@@ -471,6 +471,12 @@
 <li><strong>Human labels should be forgiving</strong>: text and label selector matching should be case-insensitive so agents can reuse natural-language targets without exact casing.</li>
 <li><strong>DOM nodes should expose replay cues</strong>: CDP DOM nodes should include <code>data-plasmate-id</code>, <code>data-som-role</code>, HTML id, test id, ARIA label, href/name/type, and disabled/readonly/required flags when the SOM has them.</li>
 </ul>
+<h3 id="2026-05-17-cdp-selector-ergonomics-adjustment">2026-05-17 CDP Selector Ergonomics Adjustment</h3><p>Current browser-agent distribution is increasingly protocol-shaped: Playwright MCP proves structured snapshots can replace screenshots for many agent loops, Stagehand makes repeatable action discovery part of the developer workflow, Cloudflare Browser Run now documents CDP, Puppeteer, Playwright, Stagehand, and MCP paths, and Firecrawl keeps broad scrape/search/interact surfaces available through APIs and MCP. Plasmate should keep the local-first SOM wedge while making existing CDP scripts require fewer special cases:</p>
+<ul>
+<li><strong>Attributes should be first-class CDP output</strong>: <code>DOM.getAttributes</code> should return the same replay identifiers and availability cues already embedded in <code>DOM.getDocument</code> and <code>DOM.describeNode</code>.</li>
+<li><strong>Standard selector shapes should resolve locally</strong>: <code>DOM.querySelector</code> and <code>DOM.querySelectorAll</code> should support comma-separated selector lists and <code>tag#id</code> forms against SOM-backed node maps.</li>
+<li><strong>Compatibility should reduce raw DOM fallback</strong>: Puppeteer and Playwright users should be able to inspect attributes and resolve common selector shapes before paying for raw HTML recovery or another LLM pass.</li>
+</ul>
 <h3 id="2026-05-17-cdp-domax-selector-parity-adjustment">2026-05-17 CDP DOM/AX Selector Parity Adjustment</h3><p>Current browser-agent tools are turning structured page state into a protocol-level adoption path. Playwright MCP uses accessibility snapshots and snapshot-scoped refs, Stagehand/Browserbase caches observed actions and selectors for repeated workflows, Firecrawl distributes scrape/search/extract through MCP, and Cloudflare Browser Run now positions CDP, MCP, recordings, and structured-data endpoints as hosted browser-session features. Plasmate should keep the local-first wedge and make existing CDP clients resolve SOM-backed targets without raw DOM recovery:</p>
 <ul>
 <li><strong>Replay selectors should work through CDP DOM</strong>: <code>DOM.querySelector</code> and <code>DOM.querySelectorAll</code> should resolve <code>#html_id</code>, <code>#som_id</code>, test-id selectors, SOM role names, text, and labels against the SOM-backed node tree in document order.</li>
@@ -1095,6 +1101,9 @@
 <li><input checked="" disabled="" type="checkbox"> Browser Use, LangChain, and Vercel AI direct replay lookup helpers auto-resolve stored replay ids while preserving enabled-only filtering</li>
 <li><input checked="" disabled="" type="checkbox"> Package and adapter tests cover auto replay lookup without bespoke action-menu scans</li>
 <li><input checked="" disabled="" type="checkbox"> Python/Node parser packages and SDKs expose explicit accessible-label lookup for elements and compact action targets</li>
+<li><input checked="" disabled="" type="checkbox"> CDP DOM.getAttributes returns replay-oriented node attributes for SOM-backed DOM nodes</li>
+<li><input checked="" disabled="" type="checkbox"> CDP DOM query selectors support comma-separated selector lists in SOM document order</li>
+<li><input checked="" disabled="" type="checkbox"> CDP DOM query selectors support <code>tag#id</code> against HTML ids and SOM ids</li>
 <li><input checked="" disabled="" type="checkbox"> CDP DOM query selectors resolve <code>#html_id</code>, <code>#som_id</code>, test-id selectors, roles, text, and labels in SOM document order</li>
 <li><input checked="" disabled="" type="checkbox"> CDP accessibility trees include nested and shadow-root SOM elements with backend node ids</li>
 <li><input checked="" disabled="" type="checkbox"> CDP accessibility nodes expose disabled/readonly availability properties for replay validation</li>
