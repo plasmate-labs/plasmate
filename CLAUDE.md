@@ -49,6 +49,44 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 
 ## Running State
 
+### 2026-05-17T06:16:27Z - Plasmate Improvements Automation
+
+- Git sync: required `git fetch --prune origin` was attempted first in the
+  linked automation worktree and failed because shared worktree metadata
+  `FETCH_HEAD` could not be opened (`Operation not permitted`). Work continued
+  from local `HEAD`/`origin/master` `d1c8fbb`, which was the newest locally
+  known remote head at start.
+- Market direction: current docs continue to make validated, protocol-level
+  action state the sticky layer. Playwright MCP documents accessibility
+  snapshot refs that stay valid only for the current snapshot, Browserbase/
+  Stagehand documents local/managed action caching for repeated workflows,
+  Firecrawl keeps MCP scrape/extract/browser-session distribution, and
+  Cloudflare Browser Run positions CDP/MCP browser sessions as AI-agent
+  infrastructure. No hosted-browser pivot is recommended; the local-first
+  wedge is making CDP action menus reusable before an LLM call.
+- Code changes: `Plasmate.getInteractiveElements` now returns deterministic
+  `cache_key` values for CDP action targets, resolves targets by direct
+  `id`/`cacheKey`/`htmlId`/`testId` params or `value` plus `by`, and supports
+  `offset`/`limit` paging with `filtered_count` so large action menus can be
+  searched or streamed without dumping every target into context.
+- Docs changes: README, PRD, roadmap source docs, and generated website docs
+  now describe the CDP replay-key rationale and public lookup/paging params.
+- Verification passed: focused CDP Rust tests for `getInteractiveElements`,
+  touched-file rustfmt check (`rustfmt --edition 2021 --check
+  src/cdp/domains.rs`), `node website/build.mjs` with the temporary
+  primary-checkout `node_modules` symlink, `git diff --check`,
+  `cargo build --quiet`, and `cargo test --lib --quiet` (277). Rust commands
+  used
+  `RUSTY_V8_ARCHIVE=/Users/steve/Git/plasmate/target/debug/gn_out/obj/librusty_v8.a`.
+- Verification blocked: full `cargo test --quiet` still fails only in
+  sandboxed `tests/awp_integration_test.rs` because local listener setup
+  returns `Operation not permitted`. Full `cargo fmt --check` still reports
+  unrelated pre-existing formatting drift in AWP/bench/proxy files.
+- Commit/push state: normal `git add` remains blocked by linked-worktree
+  `index.lock` permissions, so alternate-index commit `f1cabd8` (`chore:
+  improve CDP replay action lookup`) was created for the code/docs changes;
+  final state push is pending from the same alternate-index path.
+
 ### 2026-05-17T02:40:09Z - Plasmate Improvements Automation
 
 - Git sync: required `git fetch --prune origin` was attempted first in the
