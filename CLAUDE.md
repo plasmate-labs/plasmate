@@ -81,6 +81,15 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Verification blocked: full `cargo test --quiet` still fails only in
   sandboxed `tests/awp_integration_test.rs` because local listener setup
   returns `Operation not permitted`.
+- Commit/push state: normal `git add` is still blocked by the linked worktree
+  index lock, so an alternate-index commit was created. The feature branch
+  pushed to
+  `origin/codex/plasmate-improvements-2026-05-17-combined-action-filters`.
+  Direct `master` update was rejected as non-fast-forward because remote
+  `master` is five commits ahead of local `d1c8fbb`; subsequent SSH fetch and
+  `gh pr create` attempts were blocked by DNS/API connectivity, and the GitHub
+  connector returned `403 Resource not accessible by integration` for PR/branch
+  creation. No force push was attempted.
 - Pending next step: promote the combined filter helper into framework
   adapters (Browser Use, LangChain, Vercel AI) and shared action-manifest
   conformance so app-layer filtering stays aligned across the full repo
