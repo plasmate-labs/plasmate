@@ -80,7 +80,15 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Verification blocked: full `cargo test --quiet` still fails only in
   sandboxed `tests/awp_integration_test.rs` because local listener setup
   returns `Operation not permitted`.
-- Commit/push state: pending in this run.
+- Commit/push state: normal `git add` remains blocked by linked-worktree
+  `index.lock` permissions, so alternate-index commit `26141e5` (`chore:
+  improve shared selector recovery`) was pushed to
+  `origin/codex/plasmate-improvements-2026-05-17-shared-selector-recovery-2`.
+  Direct push to `master` was rejected because remote `master` advanced to
+  `96fa6df` with newer coverage-scorecard commits. Shell fetch/ls-remote still
+  fails DNS for `github.com`, GitHub connector PR/tree writes returned 403, and
+  the local `gh` token is invalid, so no PR or merge could be completed from
+  this sandbox. No force push was attempted.
 
 ### 2026-05-17T07:06:05Z - Plasmate Improvements Automation
 
