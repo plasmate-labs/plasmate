@@ -3181,8 +3181,104 @@ impl JsRuntime {
         }
     }
 
+    /// Execute an ES module in the persistent page context.
+    ///
+    /// ES modules have their own scope and support `import`/`export` syntax.
+    /// Note: Import resolution is limited - imports from other URLs are not fetched.
+    pub fn execute_module(&mut self, source: &str, filename: &str) -> Result<String, JsError> {
+        let context = self
+            .context
+            .as_ref()
+            .ok_or_else(|| JsError::Runtime("No context available".into()))?;
+
+        let scope = &mut v8::HandleScope::new(&mut self.isolate);
+        let context = v8::Local::new(scope, context);
+        let scope = &mut v8::ContextScope::new(scope, context);
+
+        let source_str = v8::String::new(scope, source)
+            .ok_or_else(|| JsError::Runtime("Failed to create source string".into()))?;
+
+        let name = v8::String::new(scope, filename).unwrap();
+        // ScriptOrigin with is_module=true (8th parameter)
+        let origin = v8::ScriptOrigin::new(
+            scope,
+            name.into(),
+            0,     // line offset
+            0,     // column offset
+            false, // is_shared_cross_origin
+            0,     // script_id
+            None,  // source_map_url
+            false, // is_opaque
+            false, // is_wasm
+            true,  // is_module <-- This enables ES module parsing
+            None,  // host_defined_options
+        );
+
+        let tc = &mut v8::TryCatch::new(scope);
+
+        // Create a Source with the origin for module compilation
+        let mut source = v8::script_compiler::Source::new(source_str, Some(&origin));
+
+        // Compile as module
+        let module = match v8::script_compiler::compile_module(tc, &mut source) {
+            Some(m) => m,
+            None => {
+                let msg = tc
+                    .exception()
+                    .map(|e| e.to_rust_string_lossy(tc))
+                    .unwrap_or_else(|| "Unknown module compile error".into());
+                return Err(JsError::Compile(msg));
+            }
+        };
+
+        // Simple resolver that fails on dynamic imports (for now)
+        // In the future, this could resolve and fetch imported modules
+        fn resolve_callback<'a>(
+            context: v8::Local<'a, v8::Context>,
+            specifier: v8::Local<'a, v8::String>,
+            _import_assertions: v8::Local<'a, v8::FixedArray>,
+            _referrer: v8::Local<'a, v8::Module>,
+        ) -> Option<v8::Local<'a, v8::Module>> {
+            let scope = unsafe { &mut v8::CallbackScope::new(context) };
+            let spec = specifier.to_rust_string_lossy(scope);
+            debug!(specifier = %spec, "Module import not resolved (imports not yet supported)");
+            None
+        }
+
+        // Instantiate the module
+        if module.instantiate_module(tc, resolve_callback).is_none() {
+            let msg = tc
+                .exception()
+                .map(|e| e.to_rust_string_lossy(tc))
+                .unwrap_or_else(|| "Module instantiation failed".into());
+            return Err(JsError::Runtime(format!("Module instantiation failed: {}", msg)));
+        }
+
+        // Evaluate the module
+        match module.evaluate(tc) {
+            Some(result) => {
+                self.scripts_executed += 1;
+                // Module evaluation returns a Promise for top-level await
+                // For now, we just return the immediate result
+                let result_str = result
+                    .to_string(tc)
+                    .map(|s| s.to_rust_string_lossy(tc))
+                    .unwrap_or_default();
+                Ok(result_str)
+            }
+            None => {
+                let msg = tc
+                    .exception()
+                    .map(|e| e.to_rust_string_lossy(tc))
+                    .unwrap_or_else(|| "Module evaluation failed".into());
+                Err(JsError::Runtime(msg))
+            }
+        }
+    }
+
     /// Execute multiple script blocks in order (state accumulates).
-    pub fn execute_page_scripts(&mut self, scripts: &[(String, String)]) -> JsExecutionReport {
+    /// Handles both classic scripts and ES modules.
+    pub fn execute_page_scripts(&mut self, scripts: &[(String, String, bool)]) -> JsExecutionReport {
         let mut report = JsExecutionReport {
             total: scripts.len(),
             succeeded: 0,
@@ -3190,11 +3286,16 @@ impl JsRuntime {
             errors: Vec::new(),
         };
 
-        for (source, filename) in scripts {
+        for (source, filename, is_module) in scripts {
             if source.trim().is_empty() {
                 continue;
             }
-            match self.execute_in_context(source, filename) {
+            let result = if *is_module {
+                self.execute_module(source, filename)
+            } else {
+                self.execute_in_context(source, filename)
+            };
+            match result {
                 Ok(_) => report.succeeded += 1,
                 Err(e) => {
                     report.failed += 1;
@@ -4370,15 +4471,48 @@ mod tests {
     fn test_page_scripts_execution() {
         let mut rt = JsRuntime::new(RuntimeConfig::default());
         let scripts = vec![
-            ("var counter = 0;".to_string(), "init.js".to_string()),
-            ("counter += 10;".to_string(), "add.js".to_string()),
-            ("counter += 5;".to_string(), "add2.js".to_string()),
+            ("var counter = 0;".to_string(), "init.js".to_string(), false),
+            ("counter += 10;".to_string(), "add.js".to_string(), false),
+            ("counter += 5;".to_string(), "add2.js".to_string(), false),
         ];
         let report = rt.execute_page_scripts(&scripts);
         assert_eq!(report.succeeded, 3);
         assert_eq!(report.failed, 0);
         let val = rt.execute_in_context("counter", "check.js").unwrap();
         assert_eq!(val, "15");
+    }
+
+    #[test]
+    fn test_execute_module_basic() {
+        let mut rt = JsRuntime::new(RuntimeConfig::default());
+        // ES modules can use const/let at top level without issues
+        let result = rt.execute_module("const x = 42; x;", "test.mjs");
+        assert!(result.is_ok(), "Module should compile and run: {:?}", result);
+    }
+
+    #[test]
+    fn test_execute_module_export_syntax() {
+        let mut rt = JsRuntime::new(RuntimeConfig::default());
+        // Module with export declaration (valid ES module syntax)
+        let result = rt.execute_module("export const value = 123;", "exports.mjs");
+        assert!(result.is_ok(), "Module with exports should compile: {:?}", result);
+    }
+
+    #[test]
+    fn test_page_scripts_with_modules() {
+        let mut rt = JsRuntime::new(RuntimeConfig::default());
+        let scripts = vec![
+            // Classic script
+            ("var globalVal = 100;".to_string(), "classic.js".to_string(), false),
+            // ES module (modules have separate scope but can still run)
+            ("const moduleVal = 200;".to_string(), "module.mjs".to_string(), true),
+        ];
+        let report = rt.execute_page_scripts(&scripts);
+        assert_eq!(report.succeeded, 2, "Both classic and module should succeed");
+        assert_eq!(report.failed, 0);
+        // Classic script's var should be accessible
+        let val = rt.execute_in_context("globalVal", "check.js").unwrap();
+        assert_eq!(val, "100");
     }
 
     #[test]

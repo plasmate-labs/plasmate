@@ -236,14 +236,15 @@ pub async fn process_page_async(
                     source: s.source.clone(),
                     label: s.label.clone(),
                     index: s.index,
+                    is_module: s.is_module,
                 })
                 .collect()
         };
 
-        let exec_scripts: Vec<(String, String)> = resolved
+        let exec_scripts: Vec<(String, String, bool)> = resolved
             .iter()
             .filter(|s| !s.source.is_empty())
-            .map(|s| (s.source.clone(), s.label.clone()))
+            .map(|s| (s.source.clone(), s.label.clone(), s.is_module))
             .collect();
 
         // Always create runtime to bootstrap DOM, even if no scripts
@@ -260,7 +261,7 @@ pub async fn process_page_async(
         wire_dom_bridge(&mut runtime, html);
 
         if !exec_scripts.is_empty() {
-            // Execute page scripts
+            // Execute page scripts (classic and ES modules)
             let report = runtime.execute_page_scripts(&exec_scripts);
 
             // Pump microtasks after script execution (resolves Promise.then chains)
@@ -369,10 +370,10 @@ pub fn process_page_with_client(
         let scripts = extract::extract_scripts(html);
         extract_us = t0.elapsed().as_micros();
 
-        let inline_scripts: Vec<(String, String)> = scripts
+        let inline_scripts: Vec<(String, String, bool)> = scripts
             .iter()
             .filter(|s| s.is_inline)
-            .map(|s| (s.source.clone(), s.label.clone()))
+            .map(|s| (s.source.clone(), s.label.clone(), s.is_module))
             .collect();
 
         // Phase 2: Bootstrap DOM and execute JS
@@ -492,14 +493,15 @@ pub async fn process_page_async_with_plugins(
                     source: s.source.clone(),
                     label: s.label.clone(),
                     index: s.index,
+                    is_module: s.is_module,
                 })
                 .collect()
         };
 
-        let exec_scripts: Vec<(String, String)> = resolved
+        let exec_scripts: Vec<(String, String, bool)> = resolved
             .iter()
             .filter(|s| !s.source.is_empty())
-            .map(|s| (s.source.clone(), s.label.clone()))
+            .map(|s| (s.source.clone(), s.label.clone(), s.is_module))
             .collect();
 
         let mut runtime = JsRuntime::new(config.js_config.clone());
@@ -589,10 +591,10 @@ pub fn process_page_with_plugins(
         let scripts = extract::extract_scripts(html);
         extract_us = t0.elapsed().as_micros();
 
-        let inline_scripts: Vec<(String, String)> = scripts
+        let inline_scripts: Vec<(String, String, bool)> = scripts
             .iter()
             .filter(|s| s.is_inline)
-            .map(|s| (s.source.clone(), s.label.clone()))
+            .map(|s| (s.source.clone(), s.label.clone(), s.is_module))
             .collect();
 
         let t1 = Instant::now();
