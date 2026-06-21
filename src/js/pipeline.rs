@@ -987,7 +987,7 @@ mod tests {
         assert!(!result.som.regions.is_empty());
 
         // Should have navigation, main, form regions
-        let region_roles: Vec<_> = result.som.regions.iter().map(|r| &r.role).collect();
+        let _region_roles: Vec<_> = result.som.regions.iter().map(|r| &r.role).collect();
         assert!(
             result.som.regions.iter().any(|r| !r.elements.is_empty()),
             "Regions should have elements"

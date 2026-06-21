@@ -1,3 +1,4 @@
+#![allow(dead_code, unused_imports, unused_variables, unused_assignments)]
 use clap::{Args, Parser, Subcommand};
 use std::sync::Arc;
 use tracing::info;
