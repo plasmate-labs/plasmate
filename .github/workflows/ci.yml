@@ -105,12 +105,29 @@ jobs:
         env:
           PLASMATE_UNSAFE_ALLOW_PRIVATE_NETWORK: '1'
         run: |
+          server_pid=""
+          cleanup() {
+            if [[ -n "$server_pid" ]]; then
+              kill "$server_pid" 2>/dev/null || true
+              wait "$server_pid" 2>/dev/null || true
+            fi
+          }
+          trap cleanup EXIT
           cargo build --release
           ./target/release/plasmate serve --protocol cdp --host 127.0.0.1 --port 9222 2>/dev/null &
-          PID=$!
-          sleep 1
-          node smoke/puppeteer-smoke.mjs
-          kill $PID
+          server_pid=$!
+          for _ in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:9222/json/version >/dev/null; then
+              break
+            fi
+            if ! kill -0 "$server_pid" 2>/dev/null; then
+              echo "CDP server exited before becoming ready" >&2
+              exit 1
+            fi
+            sleep 1
+          done
+          curl --fail --silent --show-error http://127.0.0.1:9222/json/version >/dev/null
+          timeout 60s node smoke/puppeteer-smoke.mjs
 
       - name: MCP smoke test
         if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -154,10 +171,28 @@ jobs:
         env:
           PLASMATE_UNSAFE_ALLOW_PRIVATE_NETWORK: '1'
         run: |
+          server_pid=""
+          cleanup() {
+            if [[ -n "$server_pid" ]]; then
+              kill "$server_pid" 2>/dev/null || true
+              wait "$server_pid" 2>/dev/null || true
+            fi
+          }
+          trap cleanup EXIT
           python3 bench/local_server.py 8765 &
-          sleep 1
-          ./target/release/plasmate throughput-bench 2>&1 | tee bench-results.txt
-          kill $(lsof -ti:8765) 2>/dev/null || true
+          server_pid=$!
+          for _ in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:8765/ >/dev/null; then
+              break
+            fi
+            if ! kill -0 "$server_pid" 2>/dev/null; then
+              echo "benchmark fixture server exited before becoming ready" >&2
+              exit 1
+            fi
+            sleep 1
+          done
+          curl --fail --silent --show-error http://127.0.0.1:8765/ >/dev/null
+          timeout 5m ./target/release/plasmate throughput-bench 2>&1 | tee bench-results.txt
 
           # Extract sequential ms/page and fail if regression > 2x baseline
           MS_PER_PAGE=$(grep "Sequential:" bench-results.txt | grep -oP '[\d.]+ms/page' | grep -oP '[\d.]+')

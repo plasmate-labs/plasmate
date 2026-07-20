@@ -96,6 +96,7 @@ pub enum FailureKind {
     NonHtml,
     PipelineError,
     WorkerCrash,
+    WorkerResourceExhaustion,
     WorkerExit,
     WorkerProtocolError,
     WorkerSpawnError,
@@ -125,8 +126,41 @@ pub struct CoverageResult {
     pub js_succeeded: Option<usize>,
     pub js_failed: Option<usize>,
 
+    /// Parent-observed evidence for an isolated JS coverage worker. This is
+    /// absent for non-JS/in-process coverage and populated for every attempted
+    /// supervised worker, including launch and protocol failures.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub worker: Option<CoverageWorkerEvidence>,
+
     pub failure_kind: Option<FailureKind>,
     pub error: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CoverageWorkerOutcome {
+    Success,
+    Blocked,
+    PageError,
+    Timeout,
+    Signaled,
+    Exited,
+    ResourceExhaustion,
+    OutputLimit,
+    MalformedOutput,
+    LaunchFailure,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CoverageWorkerEvidence {
+    pub outcome: CoverageWorkerOutcome,
+    pub duration_ms: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub exit_code: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub signal: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub diagnostic_excerpt: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -148,6 +182,8 @@ pub struct CoverageSummary {
     pub timed_out: usize,
     #[serde(default)]
     pub worker_crashes: usize,
+    #[serde(default)]
+    pub worker_resource_exhaustions: usize,
     #[serde(default)]
     pub worker_exits: usize,
     /// Coordinator setup or worker-protocol errors, excluding page crashes.
@@ -176,6 +212,8 @@ pub struct CoverageOutcomes {
     pub blocked: usize,
     pub failed: usize,
     pub crash: usize,
+    #[serde(default)]
+    pub resource_exhaustion: usize,
     pub timeout: usize,
 }
 
@@ -433,6 +471,9 @@ fn classify_outcomes(results: &[CoverageResult]) -> CoverageOutcomes {
             (CoverageStatus::Ok, _) => outcomes.success += 1,
             (CoverageStatus::Blocked, _) => outcomes.blocked += 1,
             (CoverageStatus::Failed, Some(FailureKind::WorkerCrash)) => outcomes.crash += 1,
+            (CoverageStatus::Failed, Some(FailureKind::WorkerResourceExhaustion)) => {
+                outcomes.resource_exhaustion += 1
+            }
             (CoverageStatus::Failed, Some(FailureKind::Timeout)) => outcomes.timeout += 1,
             (CoverageStatus::Failed, _) => outcomes.failed += 1,
         }
@@ -519,6 +560,7 @@ pub fn validate_evidence(report: &CoverageReport) -> Result<(), String> {
         + report.summary.outcomes.blocked
         + report.summary.outcomes.failed
         + report.summary.outcomes.crash
+        + report.summary.outcomes.resource_exhaustion
         + report.summary.outcomes.timeout;
     if classified != report.summary.outcomes.inputs_total {
         return Err("coverage outcome buckets do not partition inputs_total".to_string());
@@ -532,9 +574,16 @@ pub fn validate_evidence(report: &CoverageReport) -> Result<(), String> {
         || report.summary.failed
             != report.summary.outcomes.failed
                 + report.summary.outcomes.crash
+                + report.summary.outcomes.resource_exhaustion
                 + report.summary.outcomes.timeout
     {
         return Err("legacy coverage aggregates disagree with outcome buckets".to_string());
+    }
+    if report.summary.timed_out != report.summary.outcomes.timeout
+        || report.summary.worker_crashes != report.summary.outcomes.crash
+        || report.summary.worker_resource_exhaustions != report.summary.outcomes.resource_exhaustion
+    {
+        return Err("worker outcome aggregates disagree with outcome buckets".to_string());
     }
     if report.measurement.cache.collected
         || report.measurement.cache.repetitions_per_input != 1
@@ -625,6 +674,7 @@ pub async fn run(urls: &[String], opts: &CoverageOptions) -> CoverageReport {
                         js_total_scripts: None,
                         js_succeeded: None,
                         js_failed: None,
+                        worker: None,
                         failure_kind: Some(FailureKind::Timeout),
                         error: Some(format!("Overall timeout after {}ms", opts.timeout_ms)),
                     },
@@ -656,6 +706,7 @@ pub async fn run(urls: &[String], opts: &CoverageOptions) -> CoverageReport {
     let mut failed = 0usize;
     let mut timed_out = 0usize;
     let mut worker_crashes = 0usize;
+    let mut worker_resource_exhaustions = 0usize;
     let mut worker_exits = 0usize;
     let mut worker_errors = 0usize;
     let mut ratios: Vec<f64> = Vec::new();
@@ -678,6 +729,7 @@ pub async fn run(urls: &[String], opts: &CoverageOptions) -> CoverageReport {
         match &r.failure_kind {
             Some(FailureKind::Timeout) => timed_out += 1,
             Some(FailureKind::WorkerCrash) => worker_crashes += 1,
+            Some(FailureKind::WorkerResourceExhaustion) => worker_resource_exhaustions += 1,
             Some(FailureKind::WorkerExit) => worker_exits += 1,
             Some(FailureKind::WorkerProtocolError | FailureKind::WorkerSpawnError) => {
                 worker_errors += 1
@@ -780,6 +832,7 @@ pub async fn run(urls: &[String], opts: &CoverageOptions) -> CoverageReport {
             success_percent,
             timed_out,
             worker_crashes,
+            worker_resource_exhaustions,
             worker_exits,
             worker_errors,
             infrastructure_failures: worker_errors,
@@ -813,6 +866,7 @@ fn failed_result(input_url: String, kind: FailureKind, error: String) -> Coverag
         js_total_scripts: None,
         js_succeeded: None,
         js_failed: None,
+        worker: None,
         failure_kind: Some(kind),
         error: Some(error),
     }
@@ -830,16 +884,64 @@ fn bounded_diagnostic(stderr: &[u8], truncated: bool) -> String {
     diagnostic
 }
 
+fn diagnostic_is_resource_exhaustion(diagnostic: &str) -> bool {
+    let normalized = diagnostic.to_ascii_lowercase();
+    [
+        "heap out of memory",
+        "out of memory",
+        "memory allocation of",
+        "allocation failed",
+        "failed to reserve address space",
+    ]
+    .iter()
+    .any(|marker| normalized.contains(marker))
+}
+
+fn worker_evidence(
+    outcome: CoverageWorkerOutcome,
+    duration_ms: u64,
+    exit_code: Option<i32>,
+    signal: Option<i32>,
+    diagnostic: &str,
+) -> CoverageWorkerEvidence {
+    CoverageWorkerEvidence {
+        outcome,
+        duration_ms,
+        exit_code,
+        signal,
+        diagnostic_excerpt: (!diagnostic.is_empty()).then(|| diagnostic.to_string()),
+    }
+}
+
+fn with_worker_evidence(
+    mut result: CoverageResult,
+    evidence: CoverageWorkerEvidence,
+) -> CoverageResult {
+    result.worker = Some(evidence);
+    result
+}
+
 async fn cover_single_supervised(input_url: &str, opts: &CoverageOptions) -> CoverageResult {
+    let worker_start = Instant::now();
     let executable = match &opts.worker_executable {
         Some(path) => path.clone(),
         None => match std::env::current_exe() {
             Ok(path) => path,
             Err(error) => {
-                return failed_result(
-                    input_url.to_string(),
-                    FailureKind::WorkerSpawnError,
-                    format!("Cannot resolve coverage worker executable: {error}"),
+                let message = format!("Cannot resolve coverage worker executable: {error}");
+                return with_worker_evidence(
+                    failed_result(
+                        input_url.to_string(),
+                        FailureKind::WorkerSpawnError,
+                        message.clone(),
+                    ),
+                    worker_evidence(
+                        CoverageWorkerOutcome::LaunchFailure,
+                        worker_start.elapsed().as_millis() as u64,
+                        None,
+                        None,
+                        &message,
+                    ),
                 );
             }
         },
@@ -878,74 +980,177 @@ async fn cover_single_supervised(input_url: &str, opts: &CoverageOptions) -> Cov
     let output = match output {
         Ok(output) => output,
         Err(error) => {
-            return failed_result(
-                input_url.to_string(),
-                FailureKind::WorkerSpawnError,
-                error.to_string(),
+            let message = error.to_string();
+            return with_worker_evidence(
+                failed_result(
+                    input_url.to_string(),
+                    FailureKind::WorkerSpawnError,
+                    message.clone(),
+                ),
+                worker_evidence(
+                    CoverageWorkerOutcome::LaunchFailure,
+                    worker_start.elapsed().as_millis() as u64,
+                    None,
+                    None,
+                    &message,
+                ),
             );
         }
     };
-    classify_worker_output(input_url, opts.timeout_ms, output)
+    classify_worker_output(
+        input_url,
+        opts.timeout_ms,
+        worker_start.elapsed().as_millis() as u64,
+        output,
+    )
 }
 
 fn classify_worker_output(
     input_url: &str,
     timeout_ms: u64,
+    duration_ms: u64,
     output: ProcessOutput,
 ) -> CoverageResult {
     let diagnostic = bounded_diagnostic(&output.stderr, output.stderr_truncated);
+    if diagnostic_is_resource_exhaustion(&diagnostic)
+        && !matches!(output.outcome, ProcessOutcome::Exited { code: 0 })
+    {
+        let (exit_code, signal) = match output.outcome {
+            ProcessOutcome::Exited { code } => (Some(code), None),
+            ProcessOutcome::Signaled { signal } => (None, Some(signal)),
+            ProcessOutcome::TimedOut => (None, None),
+        };
+        return with_worker_evidence(
+            failed_result(
+                input_url.to_string(),
+                FailureKind::WorkerResourceExhaustion,
+                format!("Supervised JS worker exhausted resources: {diagnostic}"),
+            ),
+            worker_evidence(
+                CoverageWorkerOutcome::ResourceExhaustion,
+                duration_ms,
+                exit_code,
+                signal,
+                &diagnostic,
+            ),
+        );
+    }
 
     match output.outcome {
-        ProcessOutcome::TimedOut => failed_result(
-            input_url.to_string(),
-            FailureKind::Timeout,
-            format!(
-                "Supervised JS worker exceeded {}ms{}",
-                timeout_ms,
-                if diagnostic.is_empty() {
-                    String::new()
-                } else {
-                    format!(": {diagnostic}")
-                }
+        ProcessOutcome::TimedOut => with_worker_evidence(
+            failed_result(
+                input_url.to_string(),
+                FailureKind::Timeout,
+                format!(
+                    "Supervised JS worker exceeded {}ms{}",
+                    timeout_ms,
+                    if diagnostic.is_empty() {
+                        String::new()
+                    } else {
+                        format!(": {diagnostic}")
+                    }
+                ),
+            ),
+            worker_evidence(
+                CoverageWorkerOutcome::Timeout,
+                duration_ms,
+                None,
+                None,
+                &diagnostic,
             ),
         ),
-        ProcessOutcome::Signaled { signal } => failed_result(
-            input_url.to_string(),
-            FailureKind::WorkerCrash,
-            format!(
-                "Supervised JS worker terminated by signal {signal}{}",
-                if diagnostic.is_empty() {
-                    String::new()
-                } else {
-                    format!(": {diagnostic}")
-                }
+        ProcessOutcome::Signaled { signal } => with_worker_evidence(
+            failed_result(
+                input_url.to_string(),
+                FailureKind::WorkerCrash,
+                format!(
+                    "Supervised JS worker terminated by signal {signal}{}",
+                    if diagnostic.is_empty() {
+                        String::new()
+                    } else {
+                        format!(": {diagnostic}")
+                    }
+                ),
+            ),
+            worker_evidence(
+                CoverageWorkerOutcome::Signaled,
+                duration_ms,
+                None,
+                Some(signal),
+                &diagnostic,
             ),
         ),
-        ProcessOutcome::Exited { code } if code != 0 => failed_result(
-            input_url.to_string(),
-            FailureKind::WorkerExit,
-            format!(
-                "Supervised JS worker exited with code {code}{}",
-                if diagnostic.is_empty() {
-                    String::new()
-                } else {
-                    format!(": {diagnostic}")
-                }
+        ProcessOutcome::Exited { code } if code != 0 => with_worker_evidence(
+            failed_result(
+                input_url.to_string(),
+                FailureKind::WorkerExit,
+                format!(
+                    "Supervised JS worker exited with code {code}{}",
+                    if diagnostic.is_empty() {
+                        String::new()
+                    } else {
+                        format!(": {diagnostic}")
+                    }
+                ),
+            ),
+            worker_evidence(
+                CoverageWorkerOutcome::Exited,
+                duration_ms,
+                Some(code),
+                None,
+                &diagnostic,
             ),
         ),
-        ProcessOutcome::Exited { .. } if output.stdout_truncated => failed_result(
-            input_url.to_string(),
-            FailureKind::WorkerProtocolError,
-            "Supervised JS worker response exceeded the output limit".to_string(),
-        ),
-        ProcessOutcome::Exited { .. } => match serde_json::from_slice(&output.stdout) {
-            Ok(result) => result,
-            Err(error) => failed_result(
+        ProcessOutcome::Exited { code } if output.stdout_truncated => with_worker_evidence(
+            failed_result(
                 input_url.to_string(),
                 FailureKind::WorkerProtocolError,
-                format!("Invalid coverage worker response: {error}"),
+                "Supervised JS worker response exceeded the output limit".to_string(),
             ),
-        },
+            worker_evidence(
+                CoverageWorkerOutcome::OutputLimit,
+                duration_ms,
+                Some(code),
+                None,
+                &diagnostic,
+            ),
+        ),
+        ProcessOutcome::Exited { code } => {
+            match serde_json::from_slice::<CoverageResult>(&output.stdout) {
+                Ok(result) => {
+                    let outcome = match &result.status {
+                        CoverageStatus::Ok => CoverageWorkerOutcome::Success,
+                        CoverageStatus::Blocked => CoverageWorkerOutcome::Blocked,
+                        CoverageStatus::Failed => CoverageWorkerOutcome::PageError,
+                    };
+                    with_worker_evidence(
+                        result,
+                        worker_evidence(outcome, duration_ms, Some(code), None, &diagnostic),
+                    )
+                }
+                Err(error) => {
+                    let message = format!("Invalid coverage worker response: {error}");
+                    with_worker_evidence(
+                        failed_result(
+                            input_url.to_string(),
+                            FailureKind::WorkerProtocolError,
+                            message.clone(),
+                        ),
+                        worker_evidence(
+                            CoverageWorkerOutcome::MalformedOutput,
+                            duration_ms,
+                            Some(code),
+                            None,
+                            if diagnostic.is_empty() {
+                                &message
+                            } else {
+                                &diagnostic
+                            },
+                        ),
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -996,6 +1201,7 @@ async fn cover_single(
                         js_total_scripts: None,
                         js_succeeded: None,
                         js_failed: None,
+                        worker: None,
                         failure_kind: None,
                         error: Some(format!("HTTP {status} — site blocked request")),
                     };
@@ -1019,6 +1225,7 @@ async fn cover_single(
                 js_total_scripts: None,
                 js_succeeded: None,
                 js_failed: None,
+                worker: None,
                 failure_kind: Some(kind),
                 error: Some(msg),
             };
@@ -1050,6 +1257,7 @@ async fn cover_single(
             js_total_scripts: None,
             js_succeeded: None,
             js_failed: None,
+            worker: None,
             failure_kind: Some(FailureKind::NonHtml),
             error: Some("Non-HTML content-type".into()),
         };
@@ -1107,6 +1315,7 @@ async fn cover_single(
                     js_total_scripts: None,
                     js_succeeded: None,
                     js_failed: None,
+                    worker: None,
                     failure_kind: Some(FailureKind::PipelineError),
                     error: Some(format!("{e:?}")),
                 };
@@ -1164,6 +1373,7 @@ async fn cover_single(
         js_total_scripts: js_total,
         js_succeeded,
         js_failed,
+        worker: None,
         failure_kind: None,
         error: None,
     }
@@ -1188,10 +1398,12 @@ mod tests {
         let result = classify_worker_output(
             "https://example.test",
             123,
+            17,
             worker_output(ProcessOutcome::TimedOut),
         );
         assert!(matches!(result.failure_kind, Some(FailureKind::Timeout)));
         assert!(result.error.unwrap().contains("123ms"));
+        assert_eq!(result.worker.unwrap().duration_ms, 17);
     }
 
     #[test]
@@ -1199,12 +1411,14 @@ mod tests {
         let result = classify_worker_output(
             "https://example.test",
             123,
+            18,
             worker_output(ProcessOutcome::Signaled { signal: 9 }),
         );
         assert!(matches!(
             result.failure_kind,
             Some(FailureKind::WorkerCrash)
         ));
+        assert_eq!(result.worker.unwrap().signal, Some(9));
     }
 
     #[test]
@@ -1212,16 +1426,35 @@ mod tests {
         let result = classify_worker_output(
             "https://example.test",
             123,
+            19,
             worker_output(ProcessOutcome::Exited { code: 17 }),
         );
         assert!(matches!(result.failure_kind, Some(FailureKind::WorkerExit)));
+        assert_eq!(result.worker.unwrap().exit_code, Some(17));
+    }
+
+    #[test]
+    fn worker_oom_diagnostic_is_distinct_resource_exhaustion() {
+        let mut output = worker_output(ProcessOutcome::Signaled { signal: 6 });
+        output.stderr =
+            b"FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory"
+                .to_vec();
+        let result = classify_worker_output("https://example.test", 123, 20, output);
+        assert!(matches!(
+            result.failure_kind,
+            Some(FailureKind::WorkerResourceExhaustion)
+        ));
+        let evidence = result.worker.unwrap();
+        assert_eq!(evidence.outcome, CoverageWorkerOutcome::ResourceExhaustion);
+        assert_eq!(evidence.signal, Some(6));
+        assert_eq!(evidence.duration_ms, 20);
     }
 
     #[test]
     fn malformed_worker_response_is_an_infrastructure_error() {
         let mut output = worker_output(ProcessOutcome::Exited { code: 0 });
         output.stdout = b"not-json".to_vec();
-        let result = classify_worker_output("https://example.test", 123, output);
+        let result = classify_worker_output("https://example.test", 123, 21, output);
         assert!(matches!(
             result.failure_kind,
             Some(FailureKind::WorkerProtocolError)
@@ -1265,16 +1498,22 @@ mod tests {
             },
             failed_result("failed".to_string(), FailureKind::HttpError, String::new()),
             failed_result("crash".to_string(), FailureKind::WorkerCrash, String::new()),
+            failed_result(
+                "resource".to_string(),
+                FailureKind::WorkerResourceExhaustion,
+                String::new(),
+            ),
             failed_result("timeout".to_string(), FailureKind::Timeout, String::new()),
         ];
         assert_eq!(
             classify_outcomes(&results),
             CoverageOutcomes {
-                inputs_total: 5,
+                inputs_total: 6,
                 success: 1,
                 blocked: 1,
                 failed: 1,
                 crash: 1,
+                resource_exhaustion: 1,
                 timeout: 1,
             }
         );

@@ -256,8 +256,35 @@ mod tests {
         assert!(policy.validate_url_syntax("file:///etc/passwd").is_err());
         assert!(policy.validate_url_syntax("ftp://example.com/a").is_err());
         assert!(policy
+            .validate_url_syntax("data:text/plain,secret")
+            .is_err());
+        assert!(policy
+            .validate_url_syntax("unix:///var/run/docker.sock")
+            .is_err());
+        assert!(policy
+            .validate_url_syntax("http+unix://%2Fvar%2Frun%2Fdocker.sock/info")
+            .is_err());
+        assert!(policy.validate_url_syntax("not a URL").is_err());
+        assert!(policy.validate_url_syntax("http://[::1").is_err());
+        assert!(policy
             .validate_url_syntax("https://user:pass@example.com")
             .is_err());
+    }
+
+    #[test]
+    fn rejects_whatwg_numeric_ipv4_forms_that_normalize_to_loopback() {
+        let policy = OutboundUrlPolicy::deny_private_network();
+        for value in [
+            "http://2130706433/",
+            "http://0x7f000001/",
+            "http://017700000001/",
+            "http://127.1/",
+        ] {
+            assert!(
+                policy.validate_url_syntax(value).is_err(),
+                "allowed numeric loopback form {value}"
+            );
+        }
     }
 
     #[test]

@@ -467,18 +467,14 @@ async fn fetch_url_inner_with_policy(
                         "redirect response missing a valid Location".into(),
                     )
                 })?;
-            let next = current.join(location).map_err(|e| {
-                FetchError::NavigationFailed(format!("invalid redirect Location: {e}"))
-            })?;
-            if same_origin_only && origin_key(&next) != initial_origin {
-                return Err(FetchError::UrlBlocked(
-                    "cross-origin redirect is not allowed for this operation".to_string(),
-                ));
-            }
-            current = policy
-                .validate_url(next.as_str())
-                .await
-                .map_err(FetchError::UrlBlocked)?;
+            current = validated_redirect_target(
+                &current,
+                location,
+                &initial_origin,
+                same_origin_only,
+                policy,
+            )
+            .await?;
             continue;
         }
 
@@ -491,6 +487,27 @@ async fn fetch_url_inner_with_policy(
     }
 
     Err(FetchError::TooManyRedirects(limits.max_redirects))
+}
+
+async fn validated_redirect_target(
+    current: &Url,
+    location: &str,
+    initial_origin: &(String, String, Option<u16>),
+    same_origin_only: bool,
+    policy: OutboundUrlPolicy,
+) -> Result<Url, FetchError> {
+    let next = current
+        .join(location)
+        .map_err(|e| FetchError::NavigationFailed(format!("invalid redirect Location: {e}")))?;
+    if same_origin_only && origin_key(&next) != *initial_origin {
+        return Err(FetchError::UrlBlocked(
+            "cross-origin redirect is not allowed for this operation".to_string(),
+        ));
+    }
+    policy
+        .validate_url(next.as_str())
+        .await
+        .map_err(FetchError::UrlBlocked)
 }
 
 fn document_request(client: &Client, url: &str) -> reqwest::RequestBuilder {
@@ -697,6 +714,25 @@ mod security_tests {
         format!("http://{address}/")
     }
 
+    async fn redirect_loop_fixture_server(requests: usize) -> String {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        tokio::spawn(async move {
+            for _ in 0..requests {
+                let (mut stream, _) = listener.accept().await.unwrap();
+                let mut request = [0u8; 1024];
+                let _ = stream.read(&mut request).await;
+                stream
+                    .write_all(
+                        b"HTTP/1.1 302 Found\r\nLocation: /loop\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
+                    )
+                    .await
+                    .unwrap();
+            }
+        });
+        format!("http://{address}/loop")
+    }
+
     fn fixture_client() -> Client {
         Client::builder()
             .redirect(reqwest::redirect::Policy::none())
@@ -760,6 +796,42 @@ mod security_tests {
         )
         .await;
         assert!(matches!(result, Err(FetchError::UrlBlocked(_))));
+    }
+
+    #[tokio::test]
+    async fn public_redirect_to_private_destination_is_blocked_before_request() {
+        let current = Url::parse("https://public.example/start").unwrap();
+        let initial_origin = origin_key(&current);
+        let result = validated_redirect_target(
+            &current,
+            "http://127.0.0.1/private",
+            &initial_origin,
+            false,
+            OutboundUrlPolicy::deny_private_network(),
+        )
+        .await;
+        assert!(matches!(result, Err(FetchError::UrlBlocked(_))));
+    }
+
+    #[tokio::test]
+    async fn redirect_loop_stops_at_configured_count() {
+        let limits = FetchLimits {
+            max_compressed_bytes: 100,
+            max_body_bytes: 100,
+            max_redirects: 2,
+        };
+        let url = redirect_loop_fixture_server(limits.max_redirects + 1).await;
+        let result = fetch_url_inner_with_policy(
+            &fixture_client(),
+            &url,
+            1_000,
+            None,
+            limits,
+            OutboundUrlPolicy::for_test_fixtures(),
+            false,
+        )
+        .await;
+        assert!(matches!(result, Err(FetchError::TooManyRedirects(2))));
     }
 
     #[tokio::test]
@@ -831,6 +903,29 @@ mod security_tests {
         )
         .await;
         assert!(matches!(result, Err(FetchError::BodyTooLarge { limit: 4 })));
+    }
+
+    #[tokio::test]
+    async fn oversized_chunked_wire_body_stops_at_hard_limit() {
+        let url = fixture_server(
+            b"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nTransfer-Encoding: chunked\r\n\r\n4\r\n0123\r\n4\r\n4567\r\n0\r\n\r\n",
+        )
+        .await;
+        let result = fetch_url_inner_with_policy(
+            &fixture_client(),
+            &url,
+            1_000,
+            None,
+            FetchLimits {
+                max_compressed_bytes: 6,
+                max_body_bytes: 100,
+                max_redirects: 1,
+            },
+            OutboundUrlPolicy::for_test_fixtures(),
+            false,
+        )
+        .await;
+        assert!(matches!(result, Err(FetchError::BodyTooLarge { limit: 6 })));
     }
 
     #[test]

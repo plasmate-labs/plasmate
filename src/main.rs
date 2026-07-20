@@ -1817,7 +1817,7 @@ async fn cmd_coverage(
         report.summary.ok as f64 / report.summary.urls_total as f64 * 100.0
     };
     println!(
-        "Coverage: overall {} / {} ({:.1}%); parseable-site {} / {} ({:.1}%, excludes blocked); blocked {}; failed {}; worker crashes {}; worker exits {}; infrastructure failures {}; median compression {:.1}x",
+        "Coverage: overall {} / {} ({:.1}%); parseable-site {} / {} ({:.1}%, excludes blocked); blocked {}; failed {}; worker crashes {}; worker resource exhaustions {}; worker exits {}; infrastructure failures {}; median compression {:.1}x",
         report.summary.ok,
         report.summary.urls_total,
         overall_percent,
@@ -1827,6 +1827,7 @@ async fn cmd_coverage(
         report.summary.blocked,
         report.summary.failed,
         report.summary.worker_crashes,
+        report.summary.worker_resource_exhaustions,
         report.summary.worker_exits,
         report.summary.infrastructure_failures,
         report.summary.median_ratio
