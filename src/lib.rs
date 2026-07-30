@@ -11,6 +11,7 @@ pub mod crawl_policy;
 pub mod daemon;
 pub mod inspection;
 pub mod js;
+pub mod measurement;
 pub mod network;
 pub mod plugin;
 pub mod process_supervisor;

@@ -127,7 +127,7 @@ async fn load_som_for_mcp(
     url: &str,
     javascript: bool,
     selector: Option<&str>,
-) -> Result<Som, String> {
+) -> Result<(Som, bool), String> {
     let fetch_result = fetch::fetch_url(client, url, DEFAULT_TIMEOUT_MS)
         .await
         .map_err(|e| format!("Failed to fetch {}: {}", url, e))?;
@@ -146,7 +146,7 @@ async fn load_som_for_mcp(
             CacheLookup::Hit(entry) => {
                 if let Ok(som) = serde_json::from_slice::<Som>(&entry.som_json) {
                     debug!(url = %fetch_result.url, selector = ?selector, "MCP SOM cache hit");
-                    return Ok(som);
+                    return Ok((som, true));
                 }
             }
             CacheLookup::Stale { .. } | CacheLookup::Miss => {}
@@ -176,22 +176,25 @@ async fn load_som_for_mcp(
     );
 
     if javascript {
-        Ok(select_and_store_mcp_som(
-            cache,
-            &fetch_result.url,
-            content_hash,
-            page_result.som,
-            fetch_result.html_bytes,
-            Some((page_result.effective_html, page_result.webmcp)),
-            selector,
+        Ok((
+            select_and_store_mcp_som(
+                cache,
+                &fetch_result.url,
+                content_hash,
+                page_result.som,
+                fetch_result.html_bytes,
+                Some((page_result.effective_html, page_result.webmcp)),
+                selector,
+            ),
+            false,
         ))
     } else if let Some(selector) = selector {
-        Ok(crate::som::filter::apply_selector(
-            &page_result.som,
-            selector,
+        Ok((
+            crate::som::filter::apply_selector(&page_result.som, selector),
+            false,
         ))
     } else {
-        Ok(page_result.som)
+        Ok((page_result.som, false))
     }
 }
 
@@ -478,7 +481,7 @@ pub async fn handle_fetch_page(
 
     info!(url = %params.url, javascript = params.javascript, "fetch_page");
 
-    let som_to_serialize = match load_som_for_mcp(
+    let (som_to_serialize, cache_restored) = match load_som_for_mcp(
         client,
         cache,
         &params.url,
@@ -487,7 +490,7 @@ pub async fn handle_fetch_page(
     )
     .await
     {
-        Ok(som) => som,
+        Ok(result) => result,
         Err(e) => {
             return error_response(&e);
         }
@@ -502,42 +505,33 @@ pub async fn handle_fetch_page(
     };
 
     // Apply budget truncation if specified
-    let result = if let Some(budget) = params.budget {
+    let delivered_text = if let Some(budget) = params.budget {
         // Rough approximation: 1 token ≈ 4 characters
         let max_chars = budget * 4;
         let som_str = som_json.to_string();
         if som_str.len() > max_chars {
-            // Return truncated JSON with a note
-            json!({
-                "content": [
-                    {
-                        "type": "text",
-                        "text": format!("{{\"truncated\": true, \"original_bytes\": {}, \"message\": \"SOM exceeded budget of {} tokens\"}}", som_str.len(), budget)
-                    }
-                ]
-            })
+            format!(
+                "{{\"truncated\": true, \"original_bytes\": {}, \"message\": \"SOM exceeded budget of {} tokens\"}}",
+                som_str.len(),
+                budget
+            )
         } else {
-            json!({
-                "content": [
-                    {
-                        "type": "text",
-                        "text": som_str
-                    }
-                ]
-            })
+            som_str
         }
     } else {
-        json!({
-            "content": [
-                {
-                    "type": "text",
-                    "text": som_json.to_string()
-                }
-            ]
-        })
+        som_json.to_string()
     };
 
-    result
+    plasmate::measurement::record_delivery(
+        "fetch_page",
+        "som",
+        &params.url,
+        params.selector.as_deref(),
+        som_to_serialize.meta.html_bytes,
+        &delivered_text,
+        Some(cache_restored),
+    );
+    tool_response(delivered_text)
 }
 
 /// Handle the extract_text tool call.
@@ -556,7 +550,7 @@ pub async fn handle_extract_text(
 
     info!(url = %params.url, "extract_text");
 
-    let effective_som = match load_som_for_mcp(
+    let (effective_som, cache_restored) = match load_som_for_mcp(
         client,
         cache,
         &params.url,
@@ -565,7 +559,7 @@ pub async fn handle_extract_text(
     )
     .await
     {
-        Ok(som) => som,
+        Ok(result) => result,
         Err(e) => {
             return error_response(&e);
         }
@@ -594,14 +588,16 @@ pub async fn handle_extract_text(
         truncate_text_to_chars(&mut text, max_chars);
     }
 
-    json!({
-        "content": [
-            {
-                "type": "text",
-                "text": text
-            }
-        ]
-    })
+    plasmate::measurement::record_delivery(
+        "extract_text",
+        "text",
+        &params.url,
+        params.selector.as_deref(),
+        effective_som.meta.html_bytes,
+        &text,
+        Some(cache_restored),
+    );
+    tool_response(text)
 }
 
 /// Truncate readable text by character count without splitting UTF-8 codepoints.
@@ -873,6 +869,8 @@ pub async fn handle_inspect_page(arguments: &Value, client: &reqwest::Client) ->
         &effective_som,
         mode,
     );
+    let measurement_url = fetch_result.url.clone();
+    let source_html_bytes = effective_som.meta.html_bytes;
     let mut image = None;
     if report.visual.screenshot_attempted {
         let html = page_result.effective_html;
@@ -938,7 +936,26 @@ pub async fn handle_inspect_page(arguments: &Value, client: &reqwest::Client) ->
         }
     }
     match build_bounded_inspection_result(report, image) {
-        Ok(result) => result,
+        Ok(result) => {
+            if let Some(delivered_text) = result
+                .get("content")
+                .and_then(Value::as_array)
+                .and_then(|content| content.first())
+                .and_then(|item| item.get("text"))
+                .and_then(Value::as_str)
+            {
+                plasmate::measurement::record_delivery(
+                    "inspect_page",
+                    "inspection",
+                    &measurement_url,
+                    params.selector.as_deref(),
+                    source_html_bytes,
+                    delivered_text,
+                    None,
+                );
+            }
+            result
+        }
         Err(error) => error_response(&format!("Failed to serialize inspection: {error}")),
     }
 }
@@ -1248,7 +1265,7 @@ pub async fn handle_extract_links(
 
     info!(url = %params.url, "extract_links");
 
-    let effective_som = match load_som_for_mcp(
+    let (effective_som, cache_restored) = match load_som_for_mcp(
         client,
         cache,
         &params.url,
@@ -1257,7 +1274,7 @@ pub async fn handle_extract_links(
     )
     .await
     {
-        Ok(som) => som,
+        Ok(result) => result,
         Err(e) => {
             return error_response(&e);
         }
@@ -1274,14 +1291,17 @@ pub async fn handle_extract_links(
     let mut seen = std::collections::HashSet::new();
     urls.retain(|u| seen.insert(u.clone()));
 
-    json!({
-        "content": [
-            {
-                "type": "text",
-                "text": urls.join("\n")
-            }
-        ]
-    })
+    let delivered_text = urls.join("\n");
+    plasmate::measurement::record_delivery(
+        "extract_links",
+        "links",
+        &params.url,
+        params.selector.as_deref(),
+        effective_som.meta.html_bytes,
+        &delivered_text,
+        Some(cache_restored),
+    );
+    tool_response(delivered_text)
 }
 
 /// Recursively collect link URLs from a SOM element tree.
@@ -1699,10 +1719,11 @@ pub async fn handle_open_page(
         }
     };
 
+    let source_html_bytes = page_result.som.meta.html_bytes;
     let mut payload = json!({
         "session_id": session_id,
         "title": page_result.som.title,
-        "url": final_url,
+        "url": final_url.clone(),
         "cache_restored": cache_restored,
         "regions": som_json.get("regions"),
         "webmcp": page_result.webmcp
@@ -1710,18 +1731,21 @@ pub async fn handle_open_page(
     if let Some(report) = &page_result.js_report {
         payload["js"] = js_report_summary(report);
     }
+    let delivered_text = payload.to_string();
+    plasmate::measurement::record_delivery(
+        "open_page",
+        "som",
+        &final_url,
+        None,
+        source_html_bytes,
+        &delivered_text,
+        Some(cache_restored),
+    );
 
     // Return session ID + SOM. A contained page-worker failure is successful
     // structured fallback, so expose it in the JS summary instead of turning
     // the whole tool call into an error.
-    json!({
-        "content": [
-            {
-                "type": "text",
-                "text": payload.to_string()
-            }
-        ]
-    })
+    tool_response(delivered_text)
 }
 
 /// Handle the evaluate tool call.
@@ -2253,21 +2277,26 @@ pub async fn handle_navigate_to(
         }
     };
 
-    json!({
-        "content": [
-            {
-                "type": "text",
-                "text": json!({
-                    "session_id": params.session_id,
-                    "title": page_result.som.title,
-                    "url": final_url,
-                    "cache_restored": cache_restored,
-                    "regions": som_json.get("regions"),
-                    "webmcp": page_result.webmcp
-                }).to_string()
-            }
-        ]
+    let source_html_bytes = page_result.som.meta.html_bytes;
+    let delivered_text = json!({
+        "session_id": params.session_id,
+        "title": page_result.som.title,
+        "url": final_url,
+        "cache_restored": cache_restored,
+        "regions": som_json.get("regions"),
+        "webmcp": page_result.webmcp
     })
+    .to_string();
+    plasmate::measurement::record_delivery(
+        "navigate_to",
+        "som",
+        &params.url,
+        None,
+        source_html_bytes,
+        &delivered_text,
+        Some(cache_restored),
+    );
+    tool_response(delivered_text)
 }
 
 /// Handle the type_text tool call.
