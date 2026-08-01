@@ -141,3 +141,13 @@ let effective_som = if let Some(ref sel) = params.selector {
 ## CI
 
 GitHub Actions runs `cargo test` and `cargo clippy` on every PR. Both must pass.
+
+## Governed automation
+
+Recurring work must follow
+[`docs/automation/HOURLY_BUILDER_LOOP.md`](docs/automation/HOURLY_BUILDER_LOOP.md)
+and
+[`docs/automation/FOUR_HOUR_GOVERNOR_LOOP.md`](docs/automation/FOUR_HOUR_GOVERNOR_LOOP.md).
+The clock creates an opportunity to ship, never an obligation to commit. Each
+run must finish on `master` with a clean tree and no automation-created PR,
+issue, persistent branch, or worktree.
