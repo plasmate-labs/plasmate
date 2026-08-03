@@ -645,6 +645,60 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn codex_stdio_version_is_echoed_and_tool_errors_keep_session_healthy() {
+        let mut state = ProtocolState::default();
+        let initialized = route(
+            &request(
+                Some(1),
+                "initialize",
+                Some(json!({
+                    "protocolVersion": protocol::CODEX_COMPAT_VERSION,
+                    "capabilities": {},
+                    "clientInfo": { "name": "codex", "version": "test" }
+                })),
+            ),
+            &mut state,
+        )
+        .await;
+        assert_eq!(
+            initialized.result.unwrap()["protocolVersion"],
+            protocol::CODEX_COMPAT_VERSION
+        );
+
+        route(
+            &request(None, "notifications/initialized", None),
+            &mut state,
+        )
+        .await;
+
+        let failed = route(
+            &request(
+                Some(2),
+                "tools/call",
+                Some(json!({ "name": "fetch_page", "arguments": {} })),
+            ),
+            &mut state,
+        )
+        .await;
+        assert_eq!(failed.result.unwrap()["isError"], true);
+
+        for id in 3..13 {
+            let status = route(
+                &request(
+                    Some(id),
+                    "tools/call",
+                    Some(json!({ "name": "cache_status", "arguments": {} })),
+                ),
+                &mut state,
+            )
+            .await;
+            let result = status.result.unwrap();
+            assert_ne!(result["isError"], true);
+            assert!(result["content"].is_array());
+        }
+    }
+
+    #[tokio::test]
     async fn stable_tool_call_returns_schema_compatible_structured_content() {
         let mut state = ProtocolState::default();
         route(

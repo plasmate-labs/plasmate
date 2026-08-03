@@ -106,28 +106,45 @@ class Plasmate:
             stderr=subprocess.PIPE,
         )
 
-        # Initialize MCP session
-        self._rpc("initialize", {
-            "protocolVersion": "2024-11-05",
-            "capabilities": {},
-            "clientInfo": {"name": "plasmate-python-sdk", "version": SDK_VERSION},
-        })
+        try:
+            # Initialize MCP session
+            self._rpc("initialize", {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "plasmate-python-sdk", "version": SDK_VERSION},
+            })
 
-        # Send initialized notification
-        self._send({
-            "jsonrpc": "2.0",
-            "method": "notifications/initialized",
-        })
+            # Send initialized notification
+            self._send({
+                "jsonrpc": "2.0",
+                "method": "notifications/initialized",
+            })
+        except BaseException:
+            self.close()
+            raise
         self._initialized = True
 
     def close(self) -> None:
         """Shut down the plasmate process."""
-        if self._process:
-            self._process.terminate()
+        process = self._process
+        if process:
+            if process.stdin:
+                try:
+                    process.stdin.close()
+                except OSError:
+                    pass
             try:
-                self._process.wait(timeout=5)
+                process.wait(timeout=5)
             except subprocess.TimeoutExpired:
-                self._process.kill()
+                process.terminate()
+                try:
+                    process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait(timeout=5)
+            for stream in (process.stdout, process.stderr):
+                if stream:
+                    stream.close()
             self._process = None
         self._initialized = False
 
@@ -149,7 +166,7 @@ class Plasmate:
         self._process.stdin.write(line.encode())
         self._process.stdin.flush()
 
-    def _read_response(self) -> dict:
+    def _read_response(self, request_id: int) -> dict:
         if not self._process or not self._process.stdout:
             raise RuntimeError("Plasmate process is not running")
         while True:
@@ -160,9 +177,11 @@ class Plasmate:
             if not line:
                 continue
             try:
-                return json.loads(line)
+                response = json.loads(line)
             except json.JSONDecodeError:
                 continue  # Skip non-JSON lines (tracing output)
+            if isinstance(response, dict) and response.get("id") == request_id:
+                return response
 
     def _rpc(self, method: str, params: Any = None) -> Any:
         with self._lock:
@@ -172,7 +191,7 @@ class Plasmate:
             if params is not None:
                 request["params"] = params
             self._send(request)
-            response = self._read_response()
+            response = self._read_response(request_id)
 
         if "error" in response and response["error"]:
             raise RuntimeError(response["error"]["message"])
@@ -338,26 +357,41 @@ class AsyncPlasmate:
             stderr=asyncio.subprocess.PIPE,
         )
 
-        await self._rpc("initialize", {
-            "protocolVersion": "2024-11-05",
-            "capabilities": {},
-            "clientInfo": {"name": "plasmate-python-sdk", "version": SDK_VERSION},
-        })
+        try:
+            await self._rpc("initialize", {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "plasmate-python-sdk", "version": SDK_VERSION},
+            })
 
-        await self._send({
-            "jsonrpc": "2.0",
-            "method": "notifications/initialized",
-        })
+            await self._send({
+                "jsonrpc": "2.0",
+                "method": "notifications/initialized",
+            })
+        except BaseException:
+            await self.close()
+            raise
         self._initialized = True
 
     async def close(self) -> None:
         """Shut down the plasmate process."""
-        if self._process:
-            self._process.terminate()
+        process = self._process
+        if process:
+            if process.stdin:
+                process.stdin.close()
+                try:
+                    await process.stdin.wait_closed()
+                except (BrokenPipeError, ConnectionResetError):
+                    pass
             try:
-                await asyncio.wait_for(self._process.wait(), timeout=5)
+                await asyncio.wait_for(process.wait(), timeout=5)
             except asyncio.TimeoutError:
-                self._process.kill()
+                process.terminate()
+                try:
+                    await asyncio.wait_for(process.wait(), timeout=5)
+                except asyncio.TimeoutError:
+                    process.kill()
+                    await process.wait()
             self._process = None
         self._initialized = False
 
@@ -374,7 +408,7 @@ class AsyncPlasmate:
         self._process.stdin.write(line.encode())
         await self._process.stdin.drain()
 
-    async def _read_response(self) -> dict:
+    async def _read_response(self, request_id: int) -> dict:
         if not self._process or not self._process.stdout:
             raise RuntimeError("Plasmate process is not running")
         while True:
@@ -385,9 +419,11 @@ class AsyncPlasmate:
             if not text:
                 continue
             try:
-                return json.loads(text)
+                response = json.loads(text)
             except json.JSONDecodeError:
                 continue
+            if isinstance(response, dict) and response.get("id") == request_id:
+                return response
 
     async def _rpc(self, method: str, params: Any = None) -> Any:
         async with self._lock:
@@ -397,7 +433,7 @@ class AsyncPlasmate:
             if params is not None:
                 request["params"] = params
             await self._send(request)
-            response = await self._read_response()
+            response = await self._read_response(request_id)
 
         if "error" in response and response["error"]:
             raise RuntimeError(response["error"]["message"])

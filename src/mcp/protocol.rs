@@ -1,6 +1,7 @@
 //! Versioned MCP wire adapters.
 //!
-//! MCP 2024-11-05 and 2025-11-25 use the initialize/initialized lifecycle.
+//! MCP 2024-11-05, 2025-06-18, and 2025-11-25 use the
+//! initialize/initialized lifecycle.
 //! The locked 2026-07-28 release candidate removes that handshake in favor of
 //! `server/discover` and per-request metadata. Keeping those eras explicit
 //! prevents transport and tool handlers from accumulating version checks.
@@ -18,6 +19,7 @@
 use serde_json::{json, Value};
 
 pub const LEGACY_VERSION: &str = "2024-11-05";
+pub const CODEX_COMPAT_VERSION: &str = "2025-06-18";
 pub const STABLE_VERSION: &str = "2025-11-25";
 pub const MODERN_RC_VERSION: &str = "2026-07-28";
 
@@ -32,6 +34,7 @@ const SERVER_INSTRUCTIONS: &str = "Plasmate is the mandatory first route for pub
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ProtocolAdapter {
     Legacy2024,
+    Stable2025June,
     Stable2025,
     Modern2026,
 }
@@ -40,6 +43,7 @@ impl ProtocolAdapter {
     pub fn version(self) -> &'static str {
         match self {
             Self::Legacy2024 => LEGACY_VERSION,
+            Self::Stable2025June => CODEX_COMPAT_VERSION,
             Self::Stable2025 => STABLE_VERSION,
             Self::Modern2026 => MODERN_RC_VERSION,
         }
@@ -66,6 +70,7 @@ impl ProtocolState {
     pub fn negotiate_initialize(&mut self, requested: Option<&str>) -> ProtocolAdapter {
         let adapter = match requested {
             Some(LEGACY_VERSION) => ProtocolAdapter::Legacy2024,
+            Some(CODEX_COMPAT_VERSION) => ProtocolAdapter::Stable2025June,
             Some(STABLE_VERSION) => ProtocolAdapter::Stable2025,
             _ => ProtocolAdapter::Stable2025,
         };
@@ -172,7 +177,10 @@ pub fn initialize_result(
     server_version: &str,
 ) -> Value {
     debug_assert!(adapter.uses_initialize());
-    let server_info = if matches!(adapter, ProtocolAdapter::Stable2025) {
+    let server_info = if matches!(
+        adapter,
+        ProtocolAdapter::Stable2025June | ProtocolAdapter::Stable2025
+    ) {
         json!({
             "name": server_name,
             "title": "Plasmate Semantic Browser",
@@ -502,6 +510,10 @@ mod tests {
         assert_eq!(
             state.negotiate_initialize(Some(LEGACY_VERSION)),
             ProtocolAdapter::Legacy2024
+        );
+        assert_eq!(
+            state.negotiate_initialize(Some(CODEX_COMPAT_VERSION)),
+            ProtocolAdapter::Stable2025June
         );
         assert_eq!(
             state.negotiate_initialize(Some(STABLE_VERSION)),

@@ -76,6 +76,8 @@ def main():
     base_url = f"http://127.0.0.1:{server.server_port}"
 
     stderr_log = tempfile.TemporaryFile(mode="w+")
+    child_env = os.environ.copy()
+    child_env["PLASMATE_UNSAFE_ALLOW_PRIVATE_NETWORK"] = "1"
     proc = subprocess.Popen(
         [binary, "mcp"],
         stdin=subprocess.PIPE,
@@ -83,6 +85,7 @@ def main():
         stderr=stderr_log,
         text=True,
         bufsize=1,
+        env=child_env,
     )
     selector = selectors.DefaultSelector()
     selector.register(proc.stdout, selectors.EVENT_READ)
@@ -193,17 +196,29 @@ def main():
         # 1. Initialize
         print("1. Initialize")
         r = rpc("initialize", {
-            "protocolVersion": "2024-11-05",
+            "protocolVersion": "2025-06-18",
             "capabilities": {},
             "clientInfo": {"name": "smoke-test", "version": "1.0"},
         })
         check("server responds", r.get("result") is not None)
         check("server name", r["result"]["serverInfo"]["name"] == "plasmate")
+        check("Codex protocol version", r["result"]["protocolVersion"] == "2025-06-18")
         notify("notifications/initialized")
 
-        # 2. fetch_page (stateless)
-        print("\n2. fetch_page (stateless)")
-        r = rpc("tools/call", {"name": "fetch_page", "arguments": {"url": f"{base_url}/"}})
+        # 2. repeated fetch_page calls on one long-lived transport
+        print("\n2. fetch_page (10 consecutive stateless calls)")
+        fetch_responses = [
+            rpc("tools/call", {
+                "name": "fetch_page",
+                "arguments": {"url": f"{base_url}/", "javascript": False},
+            })
+            for _ in range(10)
+        ]
+        check(
+            "10 calls keep transport healthy",
+            all(not response.get("result", {}).get("isError", False) for response in fetch_responses),
+        )
+        r = fetch_responses[-1]
         som = json.loads(r["result"]["content"][0]["text"])
         check("title", som.get("title") == "MCP Smoke Test", f'got: {som.get("title")}')
         check("has regions", len(som.get("regions", [])) > 0)
@@ -291,6 +306,19 @@ def main():
         check("closed", close_payload.get("closed") is True)
         final_events = close_payload.get("final_trace", {}).get("events", [])
         check("close returns final trace", bool(final_events) and final_events[-1].get("action") == "close_page")
+
+        # 9. A tool error is structured and does not poison the transport.
+        print("\n9. tool error recovery")
+        error_response = rpc("tools/call", {"name": "fetch_page", "arguments": {}})
+        check("fetch error is structured", error_response.get("result", {}).get("isError") is True)
+        healthy = rpc("tools/call", {"name": "cache_status", "arguments": {}})
+        check("cache_status works after error", healthy.get("result", {}).get("isError") is not True)
+
+        # 10. Closing the client pipe must let the stdio child exit cleanly.
+        print("\n10. client disconnect")
+        proc.stdin.close()
+        proc.wait(timeout=5)
+        check("stdio child exits on EOF", proc.returncode == 0, f"status: {proc.returncode}")
 
         print(f"\n=== Results: {passed} passed, {failed} failed ===")
         if failed == 0:
