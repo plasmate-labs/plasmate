@@ -303,19 +303,30 @@ class PlasmateExtractor:
             )
         return som
 
-    def extract_markdown(self, url: str) -> str:
+    def extract_markdown(self, url: str, *, selector: Optional[str] = None) -> str:
         """Fetch a URL and return SOM content as markdown.
 
         This is the simplest integration -- just get readable text
-        with structure preserved.
+        with structure preserved. ``selector`` may scope the SOM before
+        markdown conversion.
         """
-        som_data = self.extract(url)
+        som_data = (
+            self.extract(url, selector=selector)
+            if selector is not None
+            else self.extract(url)
+        )
         som = parse_som(som_data)
         return to_markdown(som)
 
-    async def extract_markdown_async(self, url: str) -> str:
-        """Async version of extract_markdown."""
-        som_data = await self.extract_async(url)
+    async def extract_markdown_async(
+        self, url: str, *, selector: Optional[str] = None
+    ) -> str:
+        """Async version of extract_markdown with optional SOM scoping."""
+        som_data = (
+            await self.extract_async(url, selector=selector)
+            if selector is not None
+            else await self.extract_async(url)
+        )
         som = parse_som(som_data)
         return to_markdown(som)
 

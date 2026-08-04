@@ -137,9 +137,15 @@ stay aligned with other adapters.
 ### Markdown extraction
 
 ```python
-md = extractor.extract_markdown("https://example.com")
+md = extractor.extract_markdown(
+    "https://example.com",
+    selector="main",
+)
 print(md)
 ```
+
+Pass any supported SOM selector to keep only the page region or action surface
+needed by the agent before Markdown conversion.
 
 ### Async support
 
