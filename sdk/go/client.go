@@ -63,10 +63,10 @@ type jsonRPCRequest struct {
 
 // jsonRPCResponse is a JSON-RPC 2.0 response.
 type jsonRPCResponse struct {
-	JSONRPC string           `json:"jsonrpc"`
-	ID      *int             `json:"id"`
-	Result  json.RawMessage  `json:"result,omitempty"`
-	Error   *jsonRPCError    `json:"error,omitempty"`
+	JSONRPC string          `json:"jsonrpc"`
+	ID      *int            `json:"id"`
+	Result  json.RawMessage `json:"result,omitempty"`
+	Error   *jsonRPCError   `json:"error,omitempty"`
 }
 
 type jsonRPCError struct {
@@ -248,12 +248,12 @@ func (c *Client) FetchPage(url string) (*Som, error) {
 
 // FetchPageOptions holds optional parameters for FetchPageWithOptions.
 type FetchPageOptions struct {
-	Budget     *int  // Maximum output tokens
-	JavaScript *bool // Enable JS execution
+	Budget     *int    // Maximum output tokens
+	JavaScript *bool   // Enable JS execution
+	Selector   *string // Optional SOM region, role, action, or element-id filter
 }
 
-// FetchPageWithOptions fetches a page with additional options.
-func (c *Client) FetchPageWithOptions(url string, opts FetchPageOptions) (*Som, error) {
+func fetchPageArguments(url string, opts FetchPageOptions) map[string]interface{} {
 	args := map[string]interface{}{"url": url}
 	if opts.Budget != nil {
 		args["budget"] = *opts.Budget
@@ -261,6 +261,15 @@ func (c *Client) FetchPageWithOptions(url string, opts FetchPageOptions) (*Som, 
 	if opts.JavaScript != nil {
 		args["javascript"] = *opts.JavaScript
 	}
+	if opts.Selector != nil {
+		args["selector"] = *opts.Selector
+	}
+	return args
+}
+
+// FetchPageWithOptions fetches a page with additional options.
+func (c *Client) FetchPageWithOptions(url string, opts FetchPageOptions) (*Som, error) {
+	args := fetchPageArguments(url, opts)
 	raw, err := c.callTool("fetch_page", args)
 	if err != nil {
 		return nil, err

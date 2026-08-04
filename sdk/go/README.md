@@ -33,6 +33,16 @@ func main() {
     }
     fmt.Println(som.Title, len(som.Regions), "regions")
 
+    // Scope a read when the agent only needs one page region or action surface.
+    selector := "interactive"
+    scoped, err := client.FetchPageWithOptions("https://example.com", plasmate.FetchPageOptions{
+        Selector: &selector,
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Println("Scoped regions:", len(scoped.Regions))
+
     // Query helpers
     links := plasmate.FindByTag(som, "link")
     fmt.Printf("Found %d links\n", len(links))
@@ -119,7 +129,7 @@ all := plasmate.FlatElements(som)
 |--------|-------------|
 | `NewClient(opts...)` | Create client (spawns `plasmate mcp` on first call) |
 | `FetchPage(url)` | Fetch page as SOM |
-| `FetchPageWithOptions(url, opts)` | Fetch with budget/JS options |
+| `FetchPageWithOptions(url, opts)` | Fetch with budget, JS, or an optional SOM selector |
 | `ExtractText(url)` | Fetch page as plain text |
 | `OpenPage(url)` | Open interactive session |
 | `Evaluate(sessionID, expr)` | Run JS in page context |
