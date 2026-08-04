@@ -43,6 +43,17 @@ func main() {
     }
     fmt.Println("Scoped regions:", len(scoped.Regions))
 
+    // Scope plain-text reads and optionally cap their size.
+    maxChars := 1200
+    text, err := client.ExtractTextWithOptions("https://example.com", plasmate.ExtractTextOptions{
+        MaxChars: &maxChars,
+        Selector: &selector,
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Println(text)
+
     // Query helpers
     links := plasmate.FindByTag(som, "link")
     fmt.Printf("Found %d links\n", len(links))
@@ -131,6 +142,7 @@ all := plasmate.FlatElements(som)
 | `FetchPage(url)` | Fetch page as SOM |
 | `FetchPageWithOptions(url, opts)` | Fetch with budget, JS, or an optional SOM selector |
 | `ExtractText(url)` | Fetch page as plain text |
+| `ExtractTextWithOptions(url, opts)` | Fetch plain text with max-character and SOM selector options |
 | `OpenPage(url)` | Open interactive session |
 | `Evaluate(sessionID, expr)` | Run JS in page context |
 | `Click(sessionID, elementID)` | Click element, get updated SOM |

@@ -330,9 +330,32 @@ func (c *Client) ClosePage(sessionID string) error {
 	return err
 }
 
+// ExtractTextOptions holds optional parameters for ExtractTextWithOptions.
+type ExtractTextOptions struct {
+	MaxChars *int    // Maximum characters to return
+	Selector *string // Optional SOM region, role, action, or element-id filter
+}
+
+func extractTextArguments(url string, opts ExtractTextOptions) map[string]interface{} {
+	args := map[string]interface{}{"url": url}
+	if opts.MaxChars != nil {
+		args["max_chars"] = *opts.MaxChars
+	}
+	if opts.Selector != nil {
+		args["selector"] = *opts.Selector
+	}
+	return args
+}
+
 // ExtractText fetches a page and returns clean, readable text.
 func (c *Client) ExtractText(url string) (string, error) {
-	raw, err := c.callTool("extract_text", map[string]interface{}{"url": url})
+	return c.ExtractTextWithOptions(url, ExtractTextOptions{})
+}
+
+// ExtractTextWithOptions fetches a page and returns clean, readable text with
+// optional character and SOM selector limits.
+func (c *Client) ExtractTextWithOptions(url string, opts ExtractTextOptions) (string, error) {
+	raw, err := c.callTool("extract_text", extractTextArguments(url, opts))
 	if err != nil {
 		return "", err
 	}
