@@ -34,6 +34,8 @@ print(result)
 # the rest of the page.
 result = fetch.invoke({
     "url": "https://news.ycombinator.com",
+    "budget": 2000,
+    "javascript": False,
     "selector": "interactive",
 })
 ```
@@ -172,7 +174,7 @@ Stateless page fetch — returns SOM text for a single URL.
 | Field | Value |
 |-------|-------|
 | Name | `plasmate_fetch` |
-| Input | `url` (string), optional `selector` (string) |
+| Input | `url` (string), optional `budget` (integer), `javascript` (boolean), and `selector` (string) |
 | Output | SOM text with element IDs |
 
 ### `PlasmateNavigateTool`

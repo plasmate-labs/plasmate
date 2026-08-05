@@ -96,6 +96,14 @@ class _ClickInput(BaseModel):
 
 class _FetchInput(BaseModel):
     url: str = Field(description="The URL to fetch.")
+    budget: Optional[int] = Field(
+        default=None,
+        description="Optional maximum output token budget.",
+    )
+    javascript: bool = Field(
+        default=True,
+        description="Whether to execute JavaScript for dynamic pages.",
+    )
     selector: Optional[str] = Field(
         default=None,
         description="Optional SOM region, role, action, or element-id filter.",
@@ -126,8 +134,8 @@ class PlasmateFetchTool(BaseTool):
         "(navigation, content, forms, interactive elements). "
         "Returns a compact text representation with element IDs "
         "that can be referenced by other tools. "
-        "Input: the URL to fetch, with an optional SOM selector such as "
-        "'main' or 'interactive'."
+        "Input: the URL to fetch, with optional budget, JavaScript, and SOM "
+        "selector controls such as 'main' or 'interactive'."
     )
     args_schema: Type[BaseModel] = _FetchInput
     client: Any = None  # Plasmate instance
@@ -138,15 +146,31 @@ class PlasmateFetchTool(BaseTool):
         super().__init__(**kwargs)
         self.client = client or Plasmate()
 
-    def _run(self, url: str, selector: Optional[str] = None) -> str:
+    def _run(
+        self,
+        url: str,
+        budget: Optional[int] = None,
+        javascript: bool = True,
+        selector: Optional[str] = None,
+    ) -> str:
         kwargs: dict[str, Any] = {}
+        if budget is not None:
+            kwargs["budget"] = budget
+        if not javascript:
+            kwargs["javascript"] = False
         if selector is not None:
             kwargs["selector"] = selector
         som = self.client.fetch_page(url, **kwargs)
         return som_to_text(som)
 
-    async def _arun(self, url: str, selector: Optional[str] = None) -> str:
-        return self._run(url, selector)
+    async def _arun(
+        self,
+        url: str,
+        budget: Optional[int] = None,
+        javascript: bool = True,
+        selector: Optional[str] = None,
+    ) -> str:
+        return self._run(url, budget, javascript, selector)
 
 
 class PlasmateNavigateTool(BaseTool):
