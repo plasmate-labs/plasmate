@@ -159,6 +159,43 @@ assert.deepEqual(
   ['e_billing']
 )
 
+const prototypeKeyTarget = {
+  id: '__proto__',
+  html_id: 'constructor',
+  test_id: 'hasOwnProperty',
+  role: 'button',
+  actions: ['click'],
+}
+const prototypeBucketTarget = {
+  id: 'e_prototype_bucket',
+  role: '__proto__',
+  actions: ['__proto__'],
+}
+const prototypeIndex = indexPlasmateActionTargets(
+  [prototypeKeyTarget, prototypeBucketTarget],
+  { includeUnavailable: true }
+)
+assert.equal(Object.hasOwn(prototypeIndex.by_id, '__proto__'), true)
+assert.equal(prototypeIndex.by_id['__proto__']?.id, '__proto__')
+assert.equal(Object.hasOwn(prototypeIndex.by_html_id, 'constructor'), true)
+assert.equal(prototypeIndex.by_html_id.constructor?.id, '__proto__')
+assert.equal(Object.hasOwn(prototypeIndex.by_test_id, 'hasOwnProperty'), true)
+assert.equal(prototypeIndex.by_test_id.hasOwnProperty?.id, '__proto__')
+assert.deepEqual(
+  findPlasmateActionTarget(
+    [prototypeKeyTarget],
+    '__proto__',
+    { includeUnavailable: true }
+  )?.id,
+  '__proto__'
+)
+assert.deepEqual(prototypeIndex.by_role['__proto__']?.map((target) => target.id), [
+  'e_prototype_bucket',
+])
+assert.deepEqual(prototypeIndex.by_action['__proto__']?.map((target) => target.id), [
+  'e_prototype_bucket',
+])
+
 const preview = targets.find((target) => target.id === 'e_preview')
 assert.equal(isPlasmateActionTargetAvailable(preview), false)
 assert.equal(preview.enabled, false)

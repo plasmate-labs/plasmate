@@ -193,6 +193,11 @@ export interface PlasmateActionTargetIndex {
   by_action: Record<string, PlasmateActionTarget[]>
 }
 
+function createActionTargetIndexMap<T>(): Record<string, T> {
+  // SOM identifiers come from page content and may collide with Object.prototype.
+  return Object.create(null) as Record<string, T>
+}
+
 /**
  * System prompt guidance for Vercel AI SDK agents using Plasmate tools.
  *
@@ -607,25 +612,37 @@ export function indexPlasmateActionTargets(
   options: PreparePlasmateActionPlanOptions = {}
 ): PlasmateActionTargetIndex {
   const index: PlasmateActionTargetIndex = {
-    by_id: {},
-    by_cache_key: {},
-    by_html_id: {},
-    by_test_id: {},
-    by_role: {},
-    by_action: {},
+    by_id: createActionTargetIndexMap(),
+    by_cache_key: createActionTargetIndexMap(),
+    by_html_id: createActionTargetIndexMap(),
+    by_test_id: createActionTargetIndexMap(),
+    by_role: createActionTargetIndexMap(),
+    by_action: createActionTargetIndexMap(),
   }
 
   for (const target of preparePlasmateActionPlan(targets, options)) {
-    if (typeof target.id === 'string' && !index.by_id[target.id]) {
+    if (
+      typeof target.id === 'string' &&
+      !Object.prototype.hasOwnProperty.call(index.by_id, target.id)
+    ) {
       index.by_id[target.id] = target
     }
-    if (typeof target.cache_key === 'string' && !index.by_cache_key[target.cache_key]) {
+    if (
+      typeof target.cache_key === 'string' &&
+      !Object.prototype.hasOwnProperty.call(index.by_cache_key, target.cache_key)
+    ) {
       index.by_cache_key[target.cache_key] = target
     }
-    if (typeof target.html_id === 'string' && !index.by_html_id[target.html_id]) {
+    if (
+      typeof target.html_id === 'string' &&
+      !Object.prototype.hasOwnProperty.call(index.by_html_id, target.html_id)
+    ) {
       index.by_html_id[target.html_id] = target
     }
-    if (typeof target.test_id === 'string' && !index.by_test_id[target.test_id]) {
+    if (
+      typeof target.test_id === 'string' &&
+      !Object.prototype.hasOwnProperty.call(index.by_test_id, target.test_id)
+    ) {
       index.by_test_id[target.test_id] = target
     }
     if (typeof target.role === 'string') {
