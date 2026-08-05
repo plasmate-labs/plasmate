@@ -60,6 +60,34 @@ def _extract_last_json(text: str) -> Any:
     return None
 
 
+def _fetch_command(
+    binary: str,
+    url: str,
+    *,
+    selector: Optional[str] = None,
+    javascript: bool = True,
+) -> list[str]:
+    """Build the bounded CLI command shared by sync and async reads."""
+    command = [binary, "fetch", url]
+    if not javascript:
+        command.append("--no-js")
+    if selector is not None:
+        command.extend(["--selector", selector])
+    return command
+
+
+def _read_options(
+    *, selector: Optional[str] = None, javascript: bool = True
+) -> dict[str, object]:
+    """Keep default helper calls backward-compatible while forwarding options."""
+    options: dict[str, object] = {}
+    if selector is not None:
+        options["selector"] = selector
+    if not javascript:
+        options["javascript"] = False
+    return options
+
+
 def _format_action_plan_item(item: dict[str, object]) -> str:
     """Render one compact action target for LLM page context."""
     actions = ", ".join(str(action) for action in item.get("actions", []))
@@ -259,15 +287,26 @@ class PlasmateExtractor:
                 "Or: curl -fsSL https://plasmate.app/install.sh | sh"
             )
 
-    def extract(self, url: str, *, selector: Optional[str] = None) -> dict:
+    def extract(
+        self,
+        url: str,
+        *,
+        selector: Optional[str] = None,
+        javascript: bool = True,
+    ) -> dict:
         """Fetch a URL and return parsed SOM output.
 
         ``selector`` may scope the result to a SOM region, role, action, or
-        element id. Without it, returns the full SOM dict.
+        element id. Set ``javascript=False`` to pass ``--no-js`` to the CLI.
+        Without either option, returns the full SOM dict with default fetch
+        behavior.
         """
-        command = [self.plasmate_bin, "fetch", url]
-        if selector is not None:
-            command.extend(["--selector", selector])
+        command = _fetch_command(
+            self.plasmate_bin,
+            url,
+            selector=selector,
+            javascript=javascript,
+        )
         result = subprocess.run(
             command,
             capture_output=True, text=True, timeout=30
@@ -282,12 +321,19 @@ class PlasmateExtractor:
         return som
 
     async def extract_async(
-        self, url: str, *, selector: Optional[str] = None
+        self,
+        url: str,
+        *,
+        selector: Optional[str] = None,
+        javascript: bool = True,
     ) -> dict:
-        """Async version of extract."""
-        command = [self.plasmate_bin, "fetch", url]
-        if selector is not None:
-            command.extend(["--selector", selector])
+        """Async version of extract with optional SOM scoping and JS control."""
+        command = _fetch_command(
+            self.plasmate_bin,
+            url,
+            selector=selector,
+            javascript=javascript,
+        )
         proc = await asyncio.create_subprocess_exec(
             *command,
             stdout=asyncio.subprocess.PIPE,
@@ -303,53 +349,67 @@ class PlasmateExtractor:
             )
         return som
 
-    def extract_markdown(self, url: str, *, selector: Optional[str] = None) -> str:
+    def extract_markdown(
+        self,
+        url: str,
+        *,
+        selector: Optional[str] = None,
+        javascript: bool = True,
+    ) -> str:
         """Fetch a URL and return SOM content as markdown.
 
         This is the simplest integration -- just get readable text
         with structure preserved. ``selector`` may scope the SOM before
-        markdown conversion.
+        markdown conversion. Set ``javascript=False`` to skip JavaScript.
         """
-        som_data = (
-            self.extract(url, selector=selector)
-            if selector is not None
-            else self.extract(url)
+        som_data = self.extract(
+            url, **_read_options(selector=selector, javascript=javascript)
         )
         som = parse_som(som_data)
         return to_markdown(som)
 
     async def extract_markdown_async(
-        self, url: str, *, selector: Optional[str] = None
+        self,
+        url: str,
+        *,
+        selector: Optional[str] = None,
+        javascript: bool = True,
     ) -> str:
-        """Async version of extract_markdown with optional SOM scoping."""
-        som_data = (
-            await self.extract_async(url, selector=selector)
-            if selector is not None
-            else await self.extract_async(url)
+        """Async version of extract_markdown with optional SOM and JS controls."""
+        som_data = await self.extract_async(
+            url, **_read_options(selector=selector, javascript=javascript)
         )
         som = parse_som(som_data)
         return to_markdown(som)
 
-    def extract_action_plan(self, url: str) -> list[dict[str, object]]:
+    def extract_action_plan(
+        self, url: str, *, javascript: bool = True
+    ) -> list[dict[str, object]]:
         """Fetch a URL and return compact action targets.
 
         Each target includes the SOM id, role, actions, label/context fields,
         and availability fields such as ``enabled`` and ``blocked_reason``.
+        Set ``javascript=False`` to skip JavaScript during the fetch.
         """
-        som_data = self.extract(url)
+        som_data = self.extract(url, **_read_options(javascript=javascript))
         som = parse_som(som_data)
         return get_action_plan(som)
 
     def extract_action_plan_index(
-        self, url: str, *, enabled_only: bool = False
+        self,
+        url: str,
+        *,
+        enabled_only: bool = False,
+        javascript: bool = True,
     ) -> dict[str, dict[str, dict[str, object]]]:
         """Fetch a URL and return action targets indexed for replay lookups.
 
         The returned buckets are ``by_id``, ``by_cache_key``, ``by_html_id``,
         and ``by_test_id`` so Browser Use agents can resolve cached action
-        targets without scanning the whole plan.
+        targets without scanning the whole plan. Set ``javascript=False`` to
+        skip JavaScript during the fetch.
         """
-        som_data = self.extract(url)
+        som_data = self.extract(url, **_read_options(javascript=javascript))
         som = parse_som(som_data)
         return get_action_plan_index(som, enabled_only=enabled_only)
 
@@ -360,39 +420,69 @@ class PlasmateExtractor:
         *,
         by: str = "auto",
         enabled_only: bool = False,
+        javascript: bool = True,
     ) -> dict[str, object] | None:
-        """Fetch a URL and resolve one replay target by SOM id, cache key, HTML id, or test id."""
-        som_data = self.extract(url)
+        """Fetch a URL and resolve one replay target by SOM id, cache key, HTML id, or test id.
+
+        Set ``javascript=False`` to skip JavaScript during the fetch.
+        """
+        som_data = self.extract(url, **_read_options(javascript=javascript))
         som = parse_som(som_data)
         return find_action_target(som, value, by=by, enabled_only=enabled_only)
 
     def find_action_targets_by_role(
-        self, url: str, role: str, *, enabled_only: bool = False
+        self,
+        url: str,
+        role: str,
+        *,
+        enabled_only: bool = False,
+        javascript: bool = True,
     ) -> list[dict[str, object]]:
-        """Fetch a URL and return compact action targets with the requested SOM role."""
-        som_data = self.extract(url)
+        """Fetch a URL and return compact action targets with the requested SOM role.
+
+        Set ``javascript=False`` to skip JavaScript during the fetch.
+        """
+        som_data = self.extract(url, **_read_options(javascript=javascript))
         som = parse_som(som_data)
         return find_action_targets_by_role(som, role, enabled_only=enabled_only)
 
     def find_action_targets_by_action(
-        self, url: str, action: str, *, enabled_only: bool = False
+        self,
+        url: str,
+        action: str,
+        *,
+        enabled_only: bool = False,
+        javascript: bool = True,
     ) -> list[dict[str, object]]:
-        """Fetch a URL and return compact action targets exposing the requested action."""
-        som_data = self.extract(url)
+        """Fetch a URL and return compact action targets exposing the requested action.
+
+        Set ``javascript=False`` to skip JavaScript during the fetch.
+        """
+        som_data = self.extract(url, **_read_options(javascript=javascript))
         som = parse_som(som_data)
         return find_action_targets_by_action(som, action, enabled_only=enabled_only)
 
-    async def extract_action_plan_async(self, url: str) -> list[dict[str, object]]:
-        """Async version of extract_action_plan."""
-        som_data = await self.extract_async(url)
+    async def extract_action_plan_async(
+        self, url: str, *, javascript: bool = True
+    ) -> list[dict[str, object]]:
+        """Async version of extract_action_plan with optional JS control."""
+        som_data = await self.extract_async(
+            url, **_read_options(javascript=javascript)
+        )
         som = parse_som(som_data)
         return get_action_plan(som)
 
     async def extract_action_plan_index_async(
-        self, url: str, *, enabled_only: bool = False
+        self,
+        url: str,
+        *,
+        enabled_only: bool = False,
+        javascript: bool = True,
     ) -> dict[str, dict[str, dict[str, object]]]:
-        """Async version of extract_action_plan_index."""
-        som_data = await self.extract_async(url)
+        """Async version of extract_action_plan_index with optional JS control."""
+        som_data = await self.extract_async(
+            url, **_read_options(javascript=javascript)
+        )
         som = parse_som(som_data)
         return get_action_plan_index(som, enabled_only=enabled_only)
 
@@ -403,29 +493,52 @@ class PlasmateExtractor:
         *,
         by: str = "auto",
         enabled_only: bool = False,
+        javascript: bool = True,
     ) -> dict[str, object] | None:
-        """Async version of find_action_target."""
-        som_data = await self.extract_async(url)
+        """Async version of find_action_target with optional JS control."""
+        som_data = await self.extract_async(
+            url, **_read_options(javascript=javascript)
+        )
         som = parse_som(som_data)
         return find_action_target(som, value, by=by, enabled_only=enabled_only)
 
     async def find_action_targets_by_role_async(
-        self, url: str, role: str, *, enabled_only: bool = False
+        self,
+        url: str,
+        role: str,
+        *,
+        enabled_only: bool = False,
+        javascript: bool = True,
     ) -> list[dict[str, object]]:
-        """Async version of find_action_targets_by_role."""
-        som_data = await self.extract_async(url)
+        """Async version of find_action_targets_by_role with optional JS control."""
+        som_data = await self.extract_async(
+            url, **_read_options(javascript=javascript)
+        )
         som = parse_som(som_data)
         return find_action_targets_by_role(som, role, enabled_only=enabled_only)
 
     async def find_action_targets_by_action_async(
-        self, url: str, action: str, *, enabled_only: bool = False
+        self,
+        url: str,
+        action: str,
+        *,
+        enabled_only: bool = False,
+        javascript: bool = True,
     ) -> list[dict[str, object]]:
-        """Async version of find_action_targets_by_action."""
-        som_data = await self.extract_async(url)
+        """Async version of find_action_targets_by_action with optional JS control."""
+        som_data = await self.extract_async(
+            url, **_read_options(javascript=javascript)
+        )
         som = parse_som(som_data)
         return find_action_targets_by_action(som, action, enabled_only=enabled_only)
 
-    def get_page_context(self, url: str, *, selector: Optional[str] = None) -> str:
+    def get_page_context(
+        self,
+        url: str,
+        *,
+        selector: Optional[str] = None,
+        javascript: bool = True,
+    ) -> str:
         """Get a structured page context string for LLM consumption.
 
         Returns a formatted string with:
@@ -435,23 +548,24 @@ class PlasmateExtractor:
         - Compression stats
 
         ``selector`` may scope the context to a SOM region, role, action, or
-        element id before it is formatted.
+        element id before it is formatted. Set ``javascript=False`` to skip
+        JavaScript during the fetch.
         """
-        som_data = (
-            self.extract(url, selector=selector)
-            if selector is not None
-            else self.extract(url)
+        som_data = self.extract(
+            url, **_read_options(selector=selector, javascript=javascript)
         )
         return self._build_context(som_data)
 
     async def get_page_context_async(
-        self, url: str, *, selector: Optional[str] = None
+        self,
+        url: str,
+        *,
+        selector: Optional[str] = None,
+        javascript: bool = True,
     ) -> str:
-        """Async version of get_page_context."""
-        som_data = (
-            await self.extract_async(url, selector=selector)
-            if selector is not None
-            else await self.extract_async(url)
+        """Async version of get_page_context with optional JS control."""
+        som_data = await self.extract_async(
+            url, **_read_options(selector=selector, javascript=javascript)
         )
         return self._build_context(som_data)
 

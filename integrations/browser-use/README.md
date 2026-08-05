@@ -62,7 +62,17 @@ interactive_context = extractor.get_page_context(
     "https://example.com/settings",
     selector="interactive",
 )
+
+# Skip JavaScript when the page does not need dynamic rendering.
+static_context = extractor.get_page_context(
+    "https://example.com/help",
+    javascript=False,
+)
 ```
+
+The page-read helpers accept `javascript=False` and pass the existing
+Plasmate CLI `--no-js` flag through for static reads. The default remains
+JavaScript-enabled.
 
 Output:
 
@@ -84,7 +94,7 @@ Elements: 5 (1 interactive)
 
 ### Get an action plan
 
-Use `extract_action_plan()` when an agent needs reusable targets without the rest of the page text. Targets include `cache_key` for local action memory. Disabled, inert, and read-only controls include `enabled: false` plus `blocked_reason` so Browser Use agents can skip unavailable actions before spending a tool call:
+Use `extract_action_plan()` when an agent needs reusable targets without the rest of the page text. Targets include `cache_key` for local action memory. Pass `javascript=False` when the action plan does not need dynamic rendering. Disabled, inert, and read-only controls include `enabled: false` plus `blocked_reason` so Browser Use agents can skip unavailable actions before spending a tool call:
 
 ```python
 actions = extractor.extract_action_plan("https://example.com/settings")
@@ -145,7 +155,8 @@ print(md)
 ```
 
 Pass any supported SOM selector to keep only the page region or action surface
-needed by the agent before Markdown conversion.
+needed by the agent before Markdown conversion. Set `javascript=False` to skip
+JavaScript during the fetch.
 
 ### Async support
 
@@ -156,7 +167,10 @@ import asyncio
 
 async def main():
     extractor = PlasmateExtractor()
-    context = await extractor.get_page_context_async("https://example.com")
+    context = await extractor.get_page_context_async(
+        "https://example.com",
+        javascript=False,
+    )
     som = await extractor.extract_async("https://example.com")
     md = await extractor.extract_markdown_async("https://example.com")
 

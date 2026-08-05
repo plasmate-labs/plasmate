@@ -52,6 +52,30 @@ def test_page_context_forwards_selector_to_cli():
     )
 
 
+def test_extract_forwards_no_javascript_to_cli():
+    extractor = PlasmateExtractor.__new__(PlasmateExtractor)
+    extractor.plasmate_bin = "plasmate"
+    som = load_action_availability_fixture()
+    completed = SimpleNamespace(
+        returncode=0,
+        stdout=json.dumps(som),
+        stderr="",
+    )
+
+    with patch(
+        "plasmate_browser_use.extractor.subprocess.run",
+        return_value=completed,
+    ) as run:
+        extractor.extract("fixture", javascript=False)
+
+    run.assert_called_once_with(
+        ["plasmate", "fetch", "fixture", "--no-js"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+
+
 def test_async_page_context_forwards_selector_to_cli():
     extractor = PlasmateExtractor.__new__(PlasmateExtractor)
     extractor.plasmate_bin = "plasmate"
@@ -83,6 +107,36 @@ def test_async_page_context_forwards_selector_to_cli():
         "fixture",
         "--selector",
         "interactive",
+    )
+
+
+def test_async_extract_forwards_no_javascript_to_cli():
+    extractor = PlasmateExtractor.__new__(PlasmateExtractor)
+    extractor.plasmate_bin = "plasmate"
+    som = load_action_availability_fixture()
+    calls = []
+
+    class FakeProcess:
+        returncode = 0
+
+        async def communicate(self):
+            return json.dumps(som).encode(), b""
+
+    async def fake_create_subprocess_exec(*args, **kwargs):
+        calls.append((args, kwargs))
+        return FakeProcess()
+
+    with patch(
+        "plasmate_browser_use.extractor.asyncio.create_subprocess_exec",
+        new=fake_create_subprocess_exec,
+    ):
+        asyncio.run(extractor.extract_async("fixture", javascript=False))
+
+    assert calls[0][0] == (
+        "plasmate",
+        "fetch",
+        "fixture",
+        "--no-js",
     )
 
 
