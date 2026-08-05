@@ -28,10 +28,17 @@ for line in sys.stdin:
         if "id" in request:
             send({"jsonrpc": "2.0", "id": request["id"], "result": {"stale": True}})
     elif method == "tools/call":
+        tool_name = request.get("params", {}).get("name")
+        content = {
+            "type": "text",
+            "text": "Plain text fixture"
+            if tool_name == "extract_text"
+            else json.dumps({"ok": True}),
+        }
         send({
             "jsonrpc": "2.0",
             "id": request.get("id"),
-            "result": {"content": [{"type": "text", "text": json.dumps({"ok": True})}]},
+            "result": {"content": [content]},
         })
 ''',
         encoding="utf-8",
@@ -53,6 +60,25 @@ def test_async_first_tool_call_does_not_consume_notification_response(tmp_path: 
         client = AsyncPlasmate(binary=_fixture(tmp_path))
         try:
             assert await client._call_tool("fixture_tool", {}) == {"ok": True}
+        finally:
+            await client.close()
+
+    asyncio.run(exercise())
+
+
+def test_sync_extract_text_preserves_plain_text(tmp_path: Path) -> None:
+    client = Plasmate(binary=_fixture(tmp_path))
+    try:
+        assert client.extract_text("fixture") == "Plain text fixture"
+    finally:
+        client.close()
+
+
+def test_async_extract_text_preserves_plain_text(tmp_path: Path) -> None:
+    async def exercise() -> None:
+        client = AsyncPlasmate(binary=_fixture(tmp_path))
+        try:
+            assert await client.extract_text("fixture") == "Plain text fixture"
         finally:
             await client.close()
 

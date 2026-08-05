@@ -187,6 +187,8 @@ class Plasmate:
             raise RuntimeError(msg)
 
         text = result.get("content", [{}])[0].get("text", "")
+        if name == "extract_text":
+            return text
         if not text:
             return None
 
@@ -412,6 +414,8 @@ class AsyncPlasmate:
             raise RuntimeError(msg)
 
         text = result.get("content", [{}])[0].get("text", "")
+        if name == "extract_text":
+            return text
         if not text:
             return None
 
