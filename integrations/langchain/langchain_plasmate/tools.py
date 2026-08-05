@@ -163,16 +163,6 @@ class PlasmateFetchTool(BaseTool):
         som = self.client.fetch_page(url, **kwargs)
         return som_to_text(som)
 
-    async def _arun(
-        self,
-        url: str,
-        budget: Optional[int] = None,
-        javascript: bool = True,
-        selector: Optional[str] = None,
-    ) -> str:
-        return self._run(url, budget, javascript, selector)
-
-
 class PlasmateNavigateTool(BaseTool):
     """Navigate to a URL in a persistent browser session.
 
@@ -195,10 +185,6 @@ class PlasmateNavigateTool(BaseTool):
         som = self.browser.navigate(url)
         return som_to_text(som)
 
-    async def _arun(self, url: str) -> str:
-        return self._run(url)
-
-
 class PlasmateClickTool(BaseTool):
     """Click an interactive element by its SOM ID."""
 
@@ -217,10 +203,6 @@ class PlasmateClickTool(BaseTool):
         som = self.browser.click(element_id)
         return som_to_text(som)
 
-    async def _arun(self, element_id: str) -> str:
-        return self._run(element_id)
-
-
 class PlasmateTypeTool(BaseTool):
     """Type text into a form field by its SOM ID."""
 
@@ -238,10 +220,6 @@ class PlasmateTypeTool(BaseTool):
     def _run(self, element_id: str, text: str) -> str:
         som = self.browser.type_text(element_id, text)
         return som_to_text(som)
-
-    async def _arun(self, element_id: str, text: str) -> str:
-        return self._run(element_id, text)
-
 
 # ---------------------------------------------------------------------------
 # Convenience constructor
