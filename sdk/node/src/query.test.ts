@@ -372,6 +372,59 @@ describe('getActionPlan', () => {
     assert.deepEqual(index.byAction.click.map((target) => target.id), ['e_billing']);
     assert.notEqual(index.byId.e_plan, undefined);
   });
+
+  it('preserves replay targets with reserved object-property names', () => {
+    const identifierSom: Som = {
+      som_version: '1.0',
+      url: 'fixture',
+      title: '',
+      lang: 'en',
+      regions: [
+        {
+          id: 'r_main',
+          role: 'main',
+          elements: [
+            {
+              id: '__proto__',
+              role: 'button',
+              html_id: 'constructor',
+              label: 'toString',
+              actions: ['click'],
+              attrs: { test_id: 'hasOwnProperty' },
+            },
+          ],
+        },
+      ],
+      meta: { html_bytes: 1, som_bytes: 1, element_count: 1, interactive_count: 1 },
+    };
+    const index = getActionPlanIndex(identifierSom);
+    const byHtmlId = index.byHtmlId as Record<string, { id?: string }>;
+    const byTestId = index.byTestId as Record<string, { id?: string }>;
+    const byLabel = index.byLabel as Record<string, { id?: string }>;
+
+    assert.equal(index.byId['__proto__']?.id, '__proto__');
+    assert.equal(byHtmlId['constructor']?.id, '__proto__');
+    assert.equal(byTestId['hasOwnProperty']?.id, '__proto__');
+    assert.equal(byLabel['toString']?.id, '__proto__');
+
+    const bucketSom = {
+      ...identifierSom,
+      regions: [
+        {
+          ...identifierSom.regions[0],
+          elements: [{ id: 'bucket-collision', role: '__proto__', actions: ['__proto__'] }],
+        },
+      ],
+    } as unknown as Som;
+    const bucketIndex = getActionPlanIndex(bucketSom);
+
+    assert.deepEqual(bucketIndex.byRole['__proto__'].map((target) => target.id), [
+      'bucket-collision',
+    ]);
+    assert.deepEqual(bucketIndex.byAction['__proto__'].map((target) => target.id), [
+      'bucket-collision',
+    ]);
+  });
 });
 
 describe('flatElements', () => {

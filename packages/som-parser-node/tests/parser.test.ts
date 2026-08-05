@@ -540,6 +540,56 @@ describe('getActionPlan', () => {
     expect(index.byAction.click.map((target) => target.id)).toEqual(['e_billing']);
     expect(index.byId.e_plan).toBeDefined();
   });
+
+  it('preserves replay targets with reserved object-property names', () => {
+    const identifierSom: Som = {
+      som_version: '1.0',
+      url: 'fixture',
+      title: '',
+      lang: 'en',
+      regions: [
+        {
+          id: 'r_main',
+          role: 'main',
+          elements: [
+            {
+              id: '__proto__',
+              role: 'button',
+              html_id: 'constructor',
+              label: 'toString',
+              actions: ['click'],
+              attrs: { test_id: 'hasOwnProperty' },
+            },
+          ],
+        },
+      ],
+      meta: { html_bytes: 1, som_bytes: 1, element_count: 1, interactive_count: 1 },
+    };
+    const index = getActionPlanIndex(identifierSom);
+
+    expect(index.byId['__proto__']?.id).toBe('__proto__');
+    expect(index.byHtmlId.constructor?.id).toBe('__proto__');
+    expect(index.byTestId.hasOwnProperty?.id).toBe('__proto__');
+    expect(index.byLabel.toString?.id).toBe('__proto__');
+
+    const bucketSom = {
+      ...identifierSom,
+      regions: [
+        {
+          ...identifierSom.regions[0],
+          elements: [{ id: 'bucket-collision', role: '__proto__', actions: ['__proto__'] }],
+        },
+      ],
+    } as unknown as Som;
+    const bucketIndex = getActionPlanIndex(bucketSom);
+
+    expect(bucketIndex.byRole['__proto__'].map((target) => target.id)).toEqual([
+      'bucket-collision',
+    ]);
+    expect(bucketIndex.byAction['__proto__'].map((target) => target.id)).toEqual([
+      'bucket-collision',
+    ]);
+  });
 });
 
 describe('getLinks', () => {

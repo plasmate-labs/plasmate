@@ -210,6 +210,14 @@ export interface ActionPlanIndex {
   byAction: Record<string, ActionPlanItem[]>;
 }
 
+function createActionPlanIndexMap<T>(): Record<string, T> {
+  return Object.create(null) as Record<string, T>;
+}
+
+function hasOwnActionPlanKey<T>(map: Record<string, T>, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(map, key);
+}
+
 export type ActionTargetLookupKey = 'auto' | 'id' | 'cache_key' | 'html_id' | 'test_id' | 'label';
 
 export interface ActionTargetLookupOptions {
@@ -410,24 +418,26 @@ export function getActionPlanIndex(
 ): ActionPlanIndex {
   const plan = options?.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
   const index: ActionPlanIndex = {
-    byId: {},
-    byCacheKey: {},
-    byHtmlId: {},
-    byTestId: {},
-    byLabel: {},
-    byRole: {},
-    byAction: {},
+    byId: createActionPlanIndexMap(),
+    byCacheKey: createActionPlanIndexMap(),
+    byHtmlId: createActionPlanIndexMap(),
+    byTestId: createActionPlanIndexMap(),
+    byLabel: createActionPlanIndexMap(),
+    byRole: createActionPlanIndexMap(),
+    byAction: createActionPlanIndexMap(),
   };
   for (const item of plan) {
-    if (index.byId[item.id] === undefined) index.byId[item.id] = item;
-    if (index.byCacheKey[item.cache_key] === undefined) index.byCacheKey[item.cache_key] = item;
-    if (item.html_id && index.byHtmlId[item.html_id] === undefined) {
+    if (!hasOwnActionPlanKey(index.byId, item.id)) index.byId[item.id] = item;
+    if (!hasOwnActionPlanKey(index.byCacheKey, item.cache_key)) {
+      index.byCacheKey[item.cache_key] = item;
+    }
+    if (item.html_id && !hasOwnActionPlanKey(index.byHtmlId, item.html_id)) {
       index.byHtmlId[item.html_id] = item;
     }
-    if (item.test_id && index.byTestId[item.test_id] === undefined) {
+    if (item.test_id && !hasOwnActionPlanKey(index.byTestId, item.test_id)) {
       index.byTestId[item.test_id] = item;
     }
-    if (item.label && index.byLabel[item.label] === undefined) {
+    if (item.label && !hasOwnActionPlanKey(index.byLabel, item.label)) {
       index.byLabel[item.label] = item;
     }
     (index.byRole[item.role] ??= []).push(item);
