@@ -40,7 +40,7 @@ result = fetch.invoke({
 })
 ```
 
-Output:
+Example output (values are illustrative; actual values vary by page, options, and serializer):
 ```
 Page: Hacker News
 URL: https://news.ycombinator.com
@@ -155,15 +155,20 @@ for doc in docs:
     print()
 ```
 
-## Token Comparison
+## Token usage
 
-| Source | Hacker News | Example.com | Typical News Article |
-|--------|-------------|-------------|---------------------|
-| Raw HTML (WebBaseLoader) | ~22,000 tokens | ~400 tokens | ~45,000 tokens |
-| **SOM (PlasmateSOMLoader)** | **~1,500 tokens** | **~80 tokens** | **~3,000 tokens** |
-| **Savings** | **~15x** | **~5x** | **~15x** |
+Token counts depend on the page, selected SOM scope, serializer, and target
+model tokenizer. This integration does not retain a LangChain token benchmark,
+so it does not publish fixed token or savings values as measured results.
 
-SOM preserves all interactive elements, headings, and content structure while stripping scripts, styles, hidden elements, and layout-only markup.
+The loader exposes `html_bytes` and `som_bytes` in document metadata. Those are
+serialized byte counts, not token counts, and do not imply a fixed savings ratio.
+For a task-specific comparison, run the raw and SOM outputs through the target
+model tokenizer and retain the page set, configuration, tokenizer version, and
+complete input denominator.
+
+SOM preserves supported interactive elements, headings, and content structure
+while stripping scripts, styles, hidden elements, and layout-only markup.
 
 ## Tools Reference
 
