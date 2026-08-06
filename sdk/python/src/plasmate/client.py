@@ -67,6 +67,18 @@ def _extract_last_json(text: str) -> Any:
     return None
 
 
+def _tool_text(result: Any) -> str:
+    """Return the first MCP text block, or an empty string when absent."""
+    content = result.get("content") if isinstance(result, dict) else None
+    if not isinstance(content, list) or not content:
+        return ""
+    first = content[0]
+    if not isinstance(first, dict):
+        return ""
+    text = first.get("text", "")
+    return text if isinstance(text, str) else ""
+
+
 class Plasmate:
     """
     Synchronous Plasmate client.
@@ -182,11 +194,10 @@ class Plasmate:
         self._ensure_started()
         result = self._rpc("tools/call", {"name": name, "arguments": arguments})
 
+        text = _tool_text(result)
         if result and result.get("isError"):
-            msg = result.get("content", [{}])[0].get("text", "Unknown error")
-            raise RuntimeError(msg)
+            raise RuntimeError(text or "Unknown error")
 
-        text = result.get("content", [{}])[0].get("text", "")
         if name == "extract_text":
             return text
         if not text:
@@ -409,11 +420,10 @@ class AsyncPlasmate:
         await self._ensure_started()
         result = await self._rpc("tools/call", {"name": name, "arguments": arguments})
 
+        text = _tool_text(result)
         if result and result.get("isError"):
-            msg = result.get("content", [{}])[0].get("text", "Unknown error")
-            raise RuntimeError(msg)
+            raise RuntimeError(text or "Unknown error")
 
-        text = result.get("content", [{}])[0].get("text", "")
         if name == "extract_text":
             return text
         if not text:
