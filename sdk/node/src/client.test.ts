@@ -71,4 +71,43 @@ input.on('line', (line) => {
       rmSync(directory, { recursive: true, force: true });
     }
   });
+
+  it('keeps a bounded message for empty tool errors', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'plasmate-node-sdk-'));
+    const fixture = join(directory, 'mcp-fixture.js');
+    writeFileSync(
+      fixture,
+      `#!/usr/bin/env node
+import { createInterface } from 'node:readline';
+
+const send = (value) => process.stdout.write(JSON.stringify(value) + '\\n');
+const input = createInterface({ input: process.stdin });
+
+input.on('line', (line) => {
+  const request = JSON.parse(line);
+  if (request.method === 'initialize') {
+    send({ jsonrpc: '2.0', id: request.id, result: { protocolVersion: '2024-11-05' } });
+  } else if (request.method === 'tools/call') {
+    send({
+      jsonrpc: '2.0',
+      id: request.id,
+      result: { isError: true, content: [{ type: 'text', text: '' }] },
+    });
+  }
+});
+`,
+      'utf8',
+    );
+    chmodSync(fixture, 0o755);
+
+    const browser = new Plasmate({ binary: fixture });
+    try {
+      await assert.rejects(browser.fetchPage('fixture'), (error: unknown) => {
+        return error instanceof Error && error.message === 'Unknown error';
+      });
+    } finally {
+      browser.close();
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
 });

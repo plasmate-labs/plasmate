@@ -242,7 +242,7 @@ export class Plasmate extends EventEmitter {
     };
 
     if (result.isError) {
-      const msg = result.content?.[0]?.text ?? 'Unknown error';
+      const msg = result.content?.[0]?.text || 'Unknown error';
       throw new Error(msg);
     }
 
