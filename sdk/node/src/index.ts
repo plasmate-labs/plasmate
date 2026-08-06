@@ -74,7 +74,7 @@ export {
   getActionPlanIndex,
   getEnabledActionPlan,
   getTokenEstimate,
-} from './query';
+} from './query.js';
 
 import type { Som } from './types';
 

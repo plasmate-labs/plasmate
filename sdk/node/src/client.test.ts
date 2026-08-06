@@ -1,8 +1,9 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { chmodSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { Plasmate } from './index';
 
 type ToolCall = { name: string; args: Record<string, unknown> };
@@ -109,5 +110,23 @@ input.on('line', (line) => {
       browser.close();
       rmSync(directory, { recursive: true, force: true });
     }
+  });
+});
+
+describe('package entry points', () => {
+  it('loads the advertised ESM package entry', () => {
+    const script = `
+      const module = await import('plasmate');
+      if (typeof module.Plasmate !== 'function' || typeof module.findByRole !== 'function') {
+        throw new Error('missing ESM SDK exports');
+      }
+    `;
+
+    assert.doesNotThrow(() => {
+      execFileSync(process.execPath, ['--input-type=module', '-e', script], {
+        cwd: resolve(__dirname, '..'),
+        stdio: 'pipe',
+      });
+    });
   });
 });
