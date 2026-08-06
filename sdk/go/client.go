@@ -226,7 +226,7 @@ func (c *Client) callTool(name string, args map[string]interface{}) (json.RawMes
 	}
 	if result.IsError {
 		msg := "unknown error"
-		if len(result.Content) > 0 {
+		if len(result.Content) > 0 && result.Content[0].Text != "" {
 			msg = result.Content[0].Text
 		}
 		return nil, errors.New(msg)

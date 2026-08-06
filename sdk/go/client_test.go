@@ -1,6 +1,8 @@
 package plasmate
 
 import (
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 )
@@ -57,5 +59,31 @@ func TestExtractTextArgumentsOmitNilOptions(t *testing.T) {
 	got := extractTextArguments("fixture", ExtractTextOptions{})
 	if len(got) != 1 || got["url"] != "fixture" {
 		t.Fatalf("extract_text arguments = %#v, want only fixture URL", got)
+	}
+}
+
+func TestEmptyToolErrorKeepsBoundedMessage(t *testing.T) {
+	dir := t.TempDir()
+	fixture := filepath.Join(dir, "mcp-fixture.sh")
+	if err := os.WriteFile(fixture, []byte(`#!/bin/sh
+while IFS= read -r request; do
+  case "$request" in
+    *'"method":"initialize"'*)
+      printf '%s\n' '{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05"}}'
+      ;;
+    *'"method":"tools/call"'*)
+      printf '%s\n' '{"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":""}],"isError":true}}'
+      ;;
+  esac
+done
+`), 0o700); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+
+	client := NewClient(WithBinary(fixture))
+	defer client.Close()
+	_, err := client.FetchPage("fixture")
+	if err == nil || err.Error() != "unknown error" {
+		t.Fatalf("FetchPage error = %v, want bounded unknown error", err)
 	}
 }
