@@ -1,7 +1,8 @@
 """Plasmate SOM extractor for Browser Use.
 
 Provides SOM-based content extraction that can replace or complement
-Browser Use's default DOM serialization, reducing token costs by 90%+.
+Browser Use's default DOM serialization. Output size, tokenization, and cost
+depend on the page and workflow; measure the target workload before estimating.
 """
 
 import asyncio
