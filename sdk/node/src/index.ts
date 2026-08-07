@@ -134,20 +134,30 @@ export class Plasmate extends EventEmitter {
     if (this.initialized) return;
     if (this.initPromise) return this.initPromise;
 
-    this.initPromise = this.start();
-    return this.initPromise;
+    const initPromise = this.start();
+    this.initPromise = initPromise;
+    try {
+      await initPromise;
+    } catch (error) {
+      if (this.initPromise === initPromise) {
+        this.close();
+      }
+      throw error;
+    }
   }
 
   private async start(): Promise<void> {
-    this.process = spawn(this.binary, ['mcp'], {
+    const child = spawn(this.binary, ['mcp'], {
       stdio: ['pipe', 'pipe', 'pipe'],
     });
+    this.process = child;
 
-    this.process.on('error', (err) => {
+    child.on('error', (err) => {
       this.emit('error', err);
     });
 
-    this.process.on('exit', (code) => {
+    child.on('exit', (code) => {
+      if (this.process !== child) return;
       this.initialized = false;
       this.initPromise = null;
       // Reject all pending requests
@@ -159,12 +169,12 @@ export class Plasmate extends EventEmitter {
     });
 
     // Capture stderr for debugging
-    this.process.stderr?.on('data', (data: Buffer) => {
+    child.stderr?.on('data', (data: Buffer) => {
       this.emit('log', data.toString());
     });
 
     // Parse stdout as newline-delimited JSON
-    this.readline = createInterface({ input: this.process.stdout! });
+    this.readline = createInterface({ input: child.stdout! });
     this.readline.on('line', (line: string) => {
       if (!line.trim()) return;
       try {

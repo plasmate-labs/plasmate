@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { chmodSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { Plasmate } from './index';
@@ -106,6 +106,52 @@ input.on('line', (line) => {
       await assert.rejects(browser.fetchPage('fixture'), (error: unknown) => {
         return error instanceof Error && error.message === 'Unknown error';
       });
+    } finally {
+      browser.close();
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it('restarts initialization after a timeout', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'plasmate-node-sdk-'));
+    const fixture = join(directory, 'mcp-fixture.js');
+    const marker = join(directory, 'initialized-once');
+    writeFileSync(
+      fixture,
+      `#!/usr/bin/env node
+import { existsSync, writeFileSync } from 'node:fs';
+import { createInterface } from 'node:readline';
+
+const marker = ${JSON.stringify(marker)};
+const send = (value) => process.stdout.write(JSON.stringify(value) + '\\n');
+const input = createInterface({ input: process.stdin });
+
+input.on('line', (line) => {
+  const request = JSON.parse(line);
+  if (request.method === 'initialize') {
+    if (!existsSync(marker)) {
+      writeFileSync(marker, 'delayed');
+      return;
+    }
+    send({ jsonrpc: '2.0', id: request.id, result: { protocolVersion: '2024-11-05' } });
+  } else if (request.method === 'tools/call') {
+    send({
+      jsonrpc: '2.0',
+      id: request.id,
+      result: { content: [{ type: 'text', text: JSON.stringify({ ok: true }) }] },
+    });
+  }
+});
+`,
+      'utf8',
+    );
+    chmodSync(fixture, 0o755);
+
+    const browser = new Plasmate({ binary: fixture, timeout: 500 });
+    try {
+      await assert.rejects(browser.fetchPage('fixture'), /Timeout waiting for response to initialize/);
+      assert.equal(existsSync(marker), true);
+      assert.deepEqual(await browser.fetchPage('fixture'), { ok: true });
     } finally {
       browser.close();
       rmSync(directory, { recursive: true, force: true });
