@@ -4,6 +4,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
+import pytest
+
 from plasmate_browser_use.extractor import PlasmateExtractor
 
 
@@ -138,6 +140,45 @@ def test_async_extract_forwards_no_javascript_to_cli():
         "fixture",
         "--no-js",
     )
+
+
+def test_extract_cli_error_uses_bounded_fallback_for_empty_stderr():
+    extractor = PlasmateExtractor.__new__(PlasmateExtractor)
+    extractor.plasmate_bin = "plasmate"
+    completed = SimpleNamespace(returncode=1, stdout="", stderr="")
+
+    with patch(
+        "plasmate_browser_use.extractor.subprocess.run",
+        return_value=completed,
+    ):
+        with pytest.raises(RuntimeError, match="plasmate fetch failed: Unknown error"):
+            extractor.extract("fixture")
+
+
+def test_async_extract_cli_error_is_bounded():
+    extractor = PlasmateExtractor.__new__(PlasmateExtractor)
+    extractor.plasmate_bin = "plasmate"
+
+    class FakeProcess:
+        returncode = 1
+
+        async def communicate(self):
+            return b"", b"E" * 600
+
+    async def fake_create_subprocess_exec(*args, **kwargs):
+        return FakeProcess()
+
+    async def exercise():
+        with patch(
+            "plasmate_browser_use.extractor.asyncio.create_subprocess_exec",
+            new=fake_create_subprocess_exec,
+        ):
+            with pytest.raises(RuntimeError) as error:
+                await extractor.extract_async("fixture")
+        assert str(error.value).startswith("plasmate fetch failed: ")
+        assert len(str(error.value)) <= 256
+
+    asyncio.run(exercise())
 
 
 def test_markdown_forwards_selector_to_cli():

@@ -22,6 +22,15 @@ from som_parser import (
 )
 
 
+_CLI_ERROR_DETAIL_LIMIT = 200
+
+
+def _format_cli_failure(stderr: str) -> str:
+    """Return a useful, bounded error for a failed Plasmate CLI read."""
+    detail = " ".join(stderr.split())[:_CLI_ERROR_DETAIL_LIMIT]
+    return f"plasmate fetch failed: {detail or 'Unknown error'}"
+
+
 def _extract_last_json(text: str) -> Any:
     """Extract the last complete JSON object from potentially mixed output.
 
@@ -312,7 +321,7 @@ class PlasmateExtractor:
             capture_output=True, text=True, timeout=30
         )
         if result.returncode != 0:
-            raise RuntimeError(f"plasmate fetch failed: {result.stderr}")
+            raise RuntimeError(_format_cli_failure(result.stderr))
         som = _extract_last_json(result.stdout)
         if som is None:
             raise RuntimeError(
@@ -341,7 +350,7 @@ class PlasmateExtractor:
         )
         stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30)
         if proc.returncode != 0:
-            raise RuntimeError(f"plasmate fetch failed: {stderr.decode()}")
+            raise RuntimeError(_format_cli_failure(stderr.decode(errors="replace")))
         som = _extract_last_json(stdout.decode())
         if som is None:
             raise RuntimeError(
