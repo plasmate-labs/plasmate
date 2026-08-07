@@ -3,6 +3,7 @@
 import asyncio
 import json
 import os
+import threading
 from pathlib import Path
 
 import pytest
@@ -31,6 +32,8 @@ for line in sys.stdin:
             send({"jsonrpc": "2.0", "id": request["id"], "result": {"stale": True}})
     elif method == "tools/call":
         tool_name = request.get("params", {}).get("name")
+        if tool_name == "silent_tool":
+            continue
         if tool_name == "empty_error":
             send({
                 "jsonrpc": "2.0",
@@ -109,6 +112,49 @@ def test_async_empty_error_content_has_bounded_message(tmp_path: Path) -> None:
         try:
             with pytest.raises(RuntimeError, match="Unknown error"):
                 await client._call_tool("empty_error", {})
+        finally:
+            await client.close()
+
+    asyncio.run(exercise())
+
+
+def test_sync_response_timeout_is_bounded(tmp_path: Path) -> None:
+    client = Plasmate(binary=_fixture(tmp_path), timeout=1)
+    errors: list[Exception] = []
+    thread = None
+
+    def call_tool() -> None:
+        try:
+            client._call_tool("silent_tool", {})
+        except Exception as exc:
+            errors.append(exc)
+
+    try:
+        client._ensure_started()
+        client._timeout = 0.05
+        thread = threading.Thread(target=call_tool)
+        thread.start()
+        thread.join(timeout=0.2)
+        assert not thread.is_alive(), "silent MCP tool call exceeded response timeout"
+        assert len(errors) == 1
+        assert str(errors[0]) == "Timed out waiting for response"
+    finally:
+        client.close()
+        if thread is not None:
+            thread.join(timeout=1)
+
+
+def test_async_response_timeout_is_bounded(tmp_path: Path) -> None:
+    async def exercise() -> None:
+        client = AsyncPlasmate(binary=_fixture(tmp_path), timeout=1)
+        try:
+            await client._ensure_started()
+            client._timeout = 0.05
+            with pytest.raises(RuntimeError, match="Timed out waiting for response"):
+                await asyncio.wait_for(
+                    client._call_tool("silent_tool", {}),
+                    timeout=0.2,
+                )
         finally:
             await client.close()
 

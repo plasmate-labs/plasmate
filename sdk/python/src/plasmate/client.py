@@ -164,8 +164,28 @@ class Plasmate:
     def _read_response(self) -> dict:
         if not self._process or not self._process.stdout:
             raise RuntimeError("Plasmate process is not running")
+        stdout = self._process.stdout
         while True:
-            line = self._process.stdout.readline()
+            line_result: list[bytes] = []
+            read_error: list[Exception] = []
+            finished = threading.Event()
+
+            def read_line() -> None:
+                try:
+                    line_result.append(stdout.readline())
+                except Exception as exc:
+                    read_error.append(exc)
+                finally:
+                    finished.set()
+
+            threading.Thread(target=read_line, daemon=True).start()
+            if not finished.wait(self._timeout):
+                self.close()
+                raise RuntimeError("Timed out waiting for response")
+            if read_error:
+                raise read_error[0]
+
+            line = line_result[0]
             if not line:
                 raise RuntimeError("Plasmate process closed unexpectedly")
             line = line.decode().strip()
@@ -390,8 +410,13 @@ class AsyncPlasmate:
     async def _read_response(self) -> dict:
         if not self._process or not self._process.stdout:
             raise RuntimeError("Plasmate process is not running")
+        stdout = self._process.stdout
         while True:
-            line = await self._process.stdout.readline()
+            try:
+                line = await asyncio.wait_for(stdout.readline(), timeout=self._timeout)
+            except asyncio.TimeoutError as exc:
+                await self.close()
+                raise RuntimeError("Timed out waiting for response") from exc
             if not line:
                 raise RuntimeError("Plasmate process closed unexpectedly")
             text = line.decode().strip()
