@@ -1,9 +1,11 @@
 package plasmate
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -85,5 +87,37 @@ done
 	_, err := client.FetchPage("fixture")
 	if err == nil || err.Error() != "unknown error" {
 		t.Fatalf("FetchPage error = %v, want bounded unknown error", err)
+	}
+}
+
+func TestToolErrorDiagnosticIsBounded(t *testing.T) {
+	diagnostic := strings.Repeat("x", 5000)
+	dir := t.TempDir()
+	fixture := filepath.Join(dir, "mcp-fixture.sh")
+	script := fmt.Sprintf(`#!/bin/sh
+while IFS= read -r request; do
+  case "$request" in
+    *'"method":"initialize"'*)
+      printf '%%s\n' '{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05"}}'
+      ;;
+    *'"method":"tools/call"'*)
+      printf '%%s\n' '{"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"%s"}],"isError":true}}'
+      ;;
+  esac
+done
+`, diagnostic)
+	if err := os.WriteFile(fixture, []byte(script), 0o700); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+
+	client := NewClient(WithBinary(fixture))
+	defer client.Close()
+	_, err := client.FetchPage("fixture")
+	if err == nil {
+		t.Fatal("FetchPage returned nil error for a failed tool result")
+	}
+	got := []rune(err.Error())
+	if len(got) != 200 || got[len(got)-1] != '…' {
+		t.Fatalf("FetchPage error length/marker = %d/%q, want 200/ellipsis", len(got), got[len(got)-1])
 	}
 }

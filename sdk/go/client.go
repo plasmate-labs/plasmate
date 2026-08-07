@@ -84,6 +84,19 @@ type toolContent struct {
 	Text string `json:"text"`
 }
 
+const maxToolErrorChars = 200
+
+func boundedToolError(text string) string {
+	if text == "" {
+		return "unknown error"
+	}
+	runes := []rune(text)
+	if len(runes) <= maxToolErrorChars {
+		return text
+	}
+	return string(runes[:maxToolErrorChars-1]) + "…"
+}
+
 func (c *Client) ensureStarted() error {
 	if c.initialized {
 		return nil
@@ -225,11 +238,10 @@ func (c *Client) callTool(name string, args map[string]interface{}) (json.RawMes
 		return nil, fmt.Errorf("plasmate: unmarshal tool result: %w", err)
 	}
 	if result.IsError {
-		msg := "unknown error"
-		if len(result.Content) > 0 && result.Content[0].Text != "" {
-			msg = result.Content[0].Text
+		if len(result.Content) == 0 {
+			return nil, errors.New("unknown error")
 		}
-		return nil, errors.New(msg)
+		return nil, errors.New(boundedToolError(result.Content[0].Text))
 	}
 	if len(result.Content) == 0 || result.Content[0].Text == "" {
 		return nil, nil
