@@ -14,7 +14,7 @@ This page is a best-practices guide for site owners and a checklist for Plasmate
 ## Goals
 
 - Make pages easier for agents to understand
-- Reduce token costs by avoiding boilerplate and duplicated content
+- Keep agent context focused by avoiding boilerplate and duplicated content; measure token use with the target tokenizer
 - Make automation more reliable by keeping element structure stable
 - Make caching easier by publishing stable, machine-readable representations
 
@@ -124,4 +124,3 @@ All Plasmate Labs properties should aim to:
 - Publish `/.well-known/som.json` and link it from HTML
 
 If a property cannot publish SOM yet, it should at least meet the Level 1 DOM guidelines.
-
