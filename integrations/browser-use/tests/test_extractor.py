@@ -181,6 +181,21 @@ def test_async_extract_cli_error_is_bounded():
     asyncio.run(exercise())
 
 
+def test_binary_verification_error_is_bounded():
+    extractor = PlasmateExtractor.__new__(PlasmateExtractor)
+    extractor.plasmate_bin = "plasmate"
+    completed = SimpleNamespace(returncode=1, stderr="E" * 5000)
+
+    with patch(
+        "plasmate_browser_use.extractor.subprocess.run",
+        return_value=completed,
+    ):
+        with pytest.raises(RuntimeError) as error:
+            extractor._verify_binary()
+
+    assert str(error.value) == "plasmate binary not working: " + "E" * 200
+
+
 def test_markdown_forwards_selector_to_cli():
     extractor = PlasmateExtractor.__new__(PlasmateExtractor)
     extractor.plasmate_bin = "plasmate"
