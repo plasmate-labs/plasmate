@@ -92,6 +92,17 @@ assert.deepEqual(email, {
 const save = targets.find((target) => target.id === 'e_save')
 assert.equal(isPlasmateActionTargetAvailable(save), false)
 assert.equal(getPlasmateActionTargetCacheKey(save), save.cache_key)
+
+assert.equal(
+  getPlasmateActionTargetCacheKey({
+    id: 'e_é',
+    role: 'button',
+    actions: ['click'],
+    enabled: true,
+    label: 'Réserver',
+  }),
+  'plasmate-action:v1:0fe120a1',
+)
 assert.equal(save.enabled, false)
 assert.equal(save.disabled, true)
 assert.equal(save.blocked_reason, 'disabled')

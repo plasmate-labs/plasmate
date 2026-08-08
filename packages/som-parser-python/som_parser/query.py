@@ -137,8 +137,8 @@ def get_interactive_elements(som: Som) -> List[SomElement]:
 
 def _fnv1a32(value: str) -> str:
     hash_value = 0x811C9DC5
-    for char in value:
-        hash_value ^= ord(char)
+    for byte in value.encode("utf-8"):
+        hash_value ^= byte
         hash_value = (hash_value * 0x01000193) & 0xFFFFFFFF
     return f"{hash_value:08x}"
 
@@ -162,7 +162,7 @@ def get_action_plan_cache_key(item: Dict[str, object]) -> str:
         _compact_string(item.get("group")),
         _compact_string(item.get("placeholder")),
     ]
-    encoded = json.dumps(parts, separators=(",", ":"))
+    encoded = json.dumps(parts, ensure_ascii=False, separators=(",", ":"))
     return f"plasmate-action:v1:{_fnv1a32(encoded)}"
 
 

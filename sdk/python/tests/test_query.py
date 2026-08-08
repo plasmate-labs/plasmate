@@ -353,6 +353,20 @@ class TestGetActionPlan:
             == "plasmate-action:v1:5b218ab1"
         )
 
+    def test_uses_utf8_bytes_for_unicode_cache_keys(self) -> None:
+        assert (
+            get_action_plan_cache_key(
+                {
+                    "id": "e_é",
+                    "role": "button",
+                    "actions": ["click"],
+                    "enabled": True,
+                    "label": "Réserver",
+                }
+            )
+            == "plasmate-action:v1:0fe120a1"
+        )
+
     def test_indexes_action_targets_for_replay(self) -> None:
         fixture_dir = REPO_ROOT / "integrations" / "fixtures"
         som = Som.model_validate(

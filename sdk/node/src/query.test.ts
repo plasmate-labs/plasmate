@@ -313,6 +313,19 @@ describe('getActionPlan', () => {
     );
   });
 
+  it('uses UTF-8 bytes for Unicode cache keys', () => {
+    assert.equal(
+      getActionPlanCacheKey({
+        id: 'e_é',
+        role: 'button',
+        actions: ['click'],
+        enabled: true,
+        label: 'Réserver',
+      }),
+      'plasmate-action:v1:0fe120a1',
+    );
+  });
+
   it('indexes action targets for replay', () => {
     const { som, action_targets } = loadActionAvailabilityFixture();
     const save = action_targets.find((target) => target.id === 'e_save')!;

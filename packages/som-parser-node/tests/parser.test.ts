@@ -475,6 +475,18 @@ describe('getActionPlan', () => {
     ).toBe('plasmate-action:v1:0b6b537f');
   });
 
+  it('uses UTF-8 bytes for Unicode cache keys', () => {
+    expect(
+      getActionPlanCacheKey({
+        id: 'e_é',
+        role: 'button',
+        actions: ['click'],
+        enabled: true,
+        label: 'Réserver',
+      }),
+    ).toBe('plasmate-action:v1:0fe120a1');
+  });
+
   it('matches the shared action availability manifest', () => {
     const { som, action_targets } = loadActionAvailabilityFixture();
 

@@ -199,3 +199,25 @@ def test_action_target_index_resolves_replay_targets():
     ]
     assert "e_plan" in enabled_index["by_id"]
     assert find_action_target(som, "settings-save", enabled_only=True) is None
+
+
+def test_uses_utf8_bytes_for_unicode_cache_keys():
+    som = {
+        "regions": [
+            {
+                "elements": [
+                    {
+                        "id": "e_é",
+                        "role": "button",
+                        "actions": ["click"],
+                        "label": "Réserver",
+                    }
+                ]
+            }
+        ]
+    }
+
+    assert (
+        action_target_index(som)["by_id"]["e_é"]["cache_key"]
+        == "plasmate-action:v1:0fe120a1"
+    )

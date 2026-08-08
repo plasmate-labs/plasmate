@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer'
 import { createMCPClient } from '@ai-sdk/mcp'
 import { Experimental_StdioMCPTransport } from '@ai-sdk/mcp/mcp-stdio'
 
@@ -231,8 +232,8 @@ function stableActionTargetParts(target: PlasmateActionTarget) {
 function fnv1a32(input: string): string {
   let hash = 0x811c9dc5
 
-  for (let index = 0; index < input.length; index += 1) {
-    hash ^= input.charCodeAt(index)
+  for (const byte of Buffer.from(input, 'utf8')) {
+    hash ^= byte
     hash = Math.imul(hash, 0x01000193)
   }
 

@@ -614,6 +614,20 @@ class TestGetActionPlan:
             == "plasmate-action:v1:0b6b537f"
         )
 
+    def test_uses_utf8_bytes_for_unicode_cache_keys(self):
+        assert (
+            get_action_plan_cache_key(
+                {
+                    "id": "e_é",
+                    "role": "button",
+                    "actions": ["click"],
+                    "enabled": True,
+                    "label": "Réserver",
+                }
+            )
+            == "plasmate-action:v1:0fe120a1"
+        )
+
     def test_matches_shared_action_availability_manifest(self):
         som, expected_targets = _load_action_availability_fixture()
 

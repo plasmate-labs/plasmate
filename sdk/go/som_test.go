@@ -508,6 +508,21 @@ func TestGetActionPlanDisabledTarget(t *testing.T) {
 	}
 }
 
+func TestGetActionPlanCacheKeyUsesUTF8Bytes(t *testing.T) {
+	label := "Réserver"
+	item := ActionPlanItem{
+		ID:      "e_é",
+		Role:    "button",
+		Actions: []string{"click"},
+		Enabled: true,
+		Label:   &label,
+	}
+
+	if got := GetActionPlanCacheKey(item); got != "plasmate-action:v1:0fe120a1" {
+		t.Fatalf("GetActionPlanCacheKey = %q, want plasmate-action:v1:0fe120a1", got)
+	}
+}
+
 func TestGetActionPlanMatchesSharedAvailabilityManifest(t *testing.T) {
 	somBytes, err := os.ReadFile("../../integrations/fixtures/action-availability.som.json")
 	if err != nil {
