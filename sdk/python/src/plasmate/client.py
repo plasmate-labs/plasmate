@@ -79,6 +79,18 @@ def _tool_text(result: Any) -> str:
     return text if isinstance(text, str) else ""
 
 
+MAX_TOOL_ERROR_CHARS = 200
+
+
+def _bounded_tool_error(text: str) -> str:
+    """Keep agent-visible MCP tool diagnostics within a small Unicode limit."""
+    if not text:
+        return "Unknown error"
+    if len(text) <= MAX_TOOL_ERROR_CHARS:
+        return text
+    return f"{text[: MAX_TOOL_ERROR_CHARS - 1]}…"
+
+
 class Plasmate:
     """
     Synchronous Plasmate client.
@@ -216,7 +228,7 @@ class Plasmate:
 
         text = _tool_text(result)
         if result and result.get("isError"):
-            raise RuntimeError(text or "Unknown error")
+            raise RuntimeError(_bounded_tool_error(text))
 
         if name == "extract_text":
             return text
@@ -447,7 +459,7 @@ class AsyncPlasmate:
 
         text = _tool_text(result)
         if result and result.get("isError"):
-            raise RuntimeError(text or "Unknown error")
+            raise RuntimeError(_bounded_tool_error(text))
 
         if name == "extract_text":
             return text
