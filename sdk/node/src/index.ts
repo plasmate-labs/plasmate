@@ -106,6 +106,15 @@ interface JsonRpcResponse {
   error?: { code: number; message: string; data?: unknown };
 }
 
+const MAX_TOOL_ERROR_CHARS = 200;
+
+function boundedToolError(text: unknown): string {
+  if (typeof text !== 'string' || text.length === 0) return 'Unknown error';
+  const characters = Array.from(text);
+  if (characters.length <= MAX_TOOL_ERROR_CHARS) return text;
+  return `${characters.slice(0, MAX_TOOL_ERROR_CHARS - 1).join('')}…`;
+}
+
 // ---- Client ----
 
 export class Plasmate extends EventEmitter {
@@ -242,8 +251,7 @@ export class Plasmate extends EventEmitter {
     };
 
     if (result.isError) {
-      const msg = result.content?.[0]?.text || 'Unknown error';
-      throw new Error(msg);
+      throw new Error(boundedToolError(result.content?.[0]?.text));
     }
 
     const text = result.content?.[0]?.text;
