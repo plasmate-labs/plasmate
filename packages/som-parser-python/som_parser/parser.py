@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 from pydantic import ValidationError
 
@@ -52,18 +52,23 @@ def is_valid_som(input: Any) -> bool:
         return False
 
 
-def _extract_json_object(text: str) -> Any:
-    """Extract the first valid JSON object from mixed Plasmate CLI output."""
+def _extract_json_objects(text: str) -> list[Any]:
+    """Extract complete JSON objects from mixed Plasmate CLI output."""
     decoder = json.JSONDecoder()
-    for idx, char in enumerate(text):
-        if char != "{":
-            continue
+    objects: list[Any] = []
+    position = 0
+    while position < len(text):
+        idx = text.find("{", position)
+        if idx == -1:
+            break
         try:
-            data, _ = decoder.raw_decode(text[idx:])
-            return data
+            data, end = decoder.raw_decode(text, idx)
         except json.JSONDecodeError:
+            position = idx + 1
             continue
-    raise ValueError("No JSON object found in Plasmate output")
+        objects.append(data)
+        position = end
+    return objects
 
 
 def from_plasmate(json_output: str) -> Som:
@@ -82,10 +87,23 @@ def from_plasmate(json_output: str) -> Som:
     Raises:
         ValueError: If the output cannot be parsed.
     """
-    data = _extract_json_object(json_output)
+    objects = _extract_json_objects(json_output)
+    if not objects:
+        raise ValueError("No JSON object found in Plasmate output")
 
-    # Handle wrapped output: {"som": {...}}
-    if isinstance(data, dict) and "som" in data and "som_version" not in data:
-        data = data["som"]
+    last_error: Optional[ValidationError] = None
+    result: Optional[Som] = None
+    for data in objects:
+        # Handle wrapped output: {"som": {...}}
+        if isinstance(data, dict) and "som" in data and "som_version" not in data:
+            data = data["som"]
 
-    return Som.model_validate(data)
+        try:
+            result = Som.model_validate(data)
+        except ValidationError as exc:
+            last_error = exc
+
+    if result is not None:
+        return result
+    assert last_error is not None
+    raise last_error

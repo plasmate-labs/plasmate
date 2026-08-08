@@ -271,6 +271,19 @@ class TestFromPlasmate:
         result = from_plasmate(output)
         assert result.title == "Example Domain"
 
+    def test_uses_last_valid_som_when_progress_records_are_json(self):
+        output = "\n".join(
+            [
+                json.dumps({"progress": "starting"}),
+                json.dumps(FIXTURE_SOM),
+                json.dumps({"progress": "done"}),
+            ]
+        )
+
+        result = from_plasmate(output)
+
+        assert result.title == "Example Domain"
+
     def test_invalid_json(self):
         with pytest.raises(ValueError, match="No JSON object"):
             from_plasmate("not json")
