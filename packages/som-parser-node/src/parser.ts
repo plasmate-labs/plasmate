@@ -23,7 +23,60 @@ export function isValidSom(input: unknown): input is Som {
   if (typeof o.title !== 'string') return false;
   if (!Array.isArray(o.regions)) return false;
   if (o.meta == null || typeof o.meta !== 'object') return false;
+  if (!o.regions.every(isValidRegion)) return false;
   return true;
+}
+
+function isRecord(input: unknown): input is Record<string, unknown> {
+  return input !== null && typeof input === 'object' && !Array.isArray(input);
+}
+
+function isValidElementTree(input: unknown): boolean {
+  if (!isRecord(input) || typeof input.id !== 'string' || typeof input.role !== 'string') {
+    return false;
+  }
+
+  if (
+    input.actions !== undefined &&
+    (!Array.isArray(input.actions) || !input.actions.every((action) => typeof action === 'string'))
+  ) {
+    return false;
+  }
+  if (
+    input.hints !== undefined &&
+    (!Array.isArray(input.hints) || !input.hints.every((hint) => typeof hint === 'string'))
+  ) {
+    return false;
+  }
+  if (
+    input.children !== undefined &&
+    (!Array.isArray(input.children) || !input.children.every(isValidElementTree))
+  ) {
+    return false;
+  }
+
+  if (input.shadow !== undefined) {
+    if (
+      !isRecord(input.shadow) ||
+      typeof input.shadow.mode !== 'string' ||
+      !Array.isArray(input.shadow.elements) ||
+      !input.shadow.elements.every(isValidElementTree)
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function isValidRegion(input: unknown): boolean {
+  return (
+    isRecord(input) &&
+    typeof input.id === 'string' &&
+    typeof input.role === 'string' &&
+    Array.isArray(input.elements) &&
+    input.elements.every(isValidElementTree)
+  );
 }
 
 function extractJsonObjects(text: string): unknown[] {

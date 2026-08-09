@@ -201,6 +201,16 @@ describe('parseSom', () => {
     expect(() => parseSom({ som_version: '0.1' })).toThrow('Invalid SOM');
     expect(() => parseSom({ som_version: '0.1', url: 'x', title: 'y' })).toThrow('Invalid SOM');
   });
+
+  it('rejects malformed region containers before query helpers can crash', () => {
+    const malformed: unknown = {
+      ...FIXTURE,
+      regions: [null],
+    };
+
+    expect(isValidSom(malformed)).toBe(false);
+    expect(() => parseSom(malformed as object)).toThrow('Invalid SOM');
+  });
 });
 
 describe('isValidSom', () => {
