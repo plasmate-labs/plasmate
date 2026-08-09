@@ -247,6 +247,16 @@ describe('fromPlasmate', () => {
     expect(som.title).toBe('Example Domain');
   });
 
+  it('uses the last valid SOM when JSON progress records surround it', () => {
+    const output = [
+      JSON.stringify({ progress: 'starting' }),
+      FIXTURE_JSON,
+      JSON.stringify({ progress: 'done' }),
+    ].join('\n');
+    const som = fromPlasmate(output);
+    expect(som.title).toBe('Example Domain');
+  });
+
   it('throws when no JSON found', () => {
     expect(() => fromPlasmate('no json here')).toThrow();
   });

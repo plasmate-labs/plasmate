@@ -26,6 +26,50 @@ export function isValidSom(input: unknown): input is Som {
   return true;
 }
 
+function extractJsonObjects(text: string): unknown[] {
+  const objects: unknown[] = [];
+
+  for (let start = 0; start < text.length; start += 1) {
+    if (text[start] !== '{') continue;
+
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+    for (let index = start; index < text.length; index += 1) {
+      const character = text[index];
+      if (inString) {
+        if (escaped) {
+          escaped = false;
+        } else if (character === '\\') {
+          escaped = true;
+        } else if (character === '"') {
+          inString = false;
+        }
+        continue;
+      }
+
+      if (character === '"') {
+        inString = true;
+      } else if (character === '{') {
+        depth += 1;
+      } else if (character === '}') {
+        depth -= 1;
+        if (depth === 0) {
+          try {
+            objects.push(JSON.parse(text.slice(start, index + 1)));
+          } catch {
+            // Keep scanning for a later complete JSON object.
+          }
+          start = index;
+          break;
+        }
+      }
+    }
+  }
+
+  return objects;
+}
+
 /**
  * Parse raw Plasmate CLI JSON output into a typed Som.
  * Handles cases where the CLI may emit extra text before or after the JSON.
@@ -47,12 +91,23 @@ export function fromPlasmate(jsonOutput: string): Som {
   try {
     return unwrap(JSON.parse(jsonOutput));
   } catch {
-    // Fall back: look for the first { ... } block
-    const start = jsonOutput.indexOf('{');
-    const end = jsonOutput.lastIndexOf('}');
-    if (start === -1 || end === -1 || end <= start) {
+    // Fall back: scan complete objects and ignore non-SOM progress records.
+    const objects = extractJsonObjects(jsonOutput);
+    if (objects.length === 0) {
       throw new Error('No JSON object found in Plasmate output');
     }
-    return unwrap(JSON.parse(jsonOutput.slice(start, end + 1)));
+
+    let result: Som | undefined;
+    let lastError: unknown;
+    for (const value of objects) {
+      try {
+        result = unwrap(value);
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    if (result) return result;
+    if (lastError !== undefined) throw lastError;
+    throw new Error('Invalid SOM in Plasmate output');
   }
 }
