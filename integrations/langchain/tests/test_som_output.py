@@ -30,6 +30,56 @@ def load_action_availability_expectations():
     return json.loads(EXPECTATIONS_PATH.read_text())["action_targets"]
 
 
+def test_som_to_text_includes_nested_and_shadow_interactive_elements():
+    som = {
+        "title": "Nested fixture",
+        "url": "fixture",
+        "regions": [
+            {
+                "role": "main",
+                "elements": [
+                    {
+                        "id": "container",
+                        "role": "section",
+                        "attrs": {"section_label": "Nested controls"},
+                        "children": [
+                            {
+                                "id": "child-button",
+                                "role": "button",
+                                "text": "Child",
+                                "actions": ["click"],
+                            }
+                        ],
+                        "shadow": {
+                            "mode": "open",
+                            "elements": [
+                                {
+                                    "id": "shadow-link",
+                                    "role": "link",
+                                    "label": "Shadow",
+                                    "actions": ["click"],
+                                    "attrs": {"href": "/shadow"},
+                                }
+                            ],
+                        },
+                    }
+                ],
+            }
+        ],
+        "meta": {
+            "html_bytes": 1,
+            "som_bytes": 1,
+            "element_count": 3,
+            "interactive_count": 2,
+        },
+    }
+
+    text = som_to_text(som)
+
+    assert '[child-button] button "Child"' in text
+    assert '[shadow-link] link "Shadow" -> /shadow' in text
+
+
 def test_som_to_text_surfaces_interactive_state():
     som = load_action_availability_fixture()
     expected_targets = load_action_availability_expectations()

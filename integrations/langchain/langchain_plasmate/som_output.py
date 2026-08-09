@@ -39,9 +39,7 @@ def som_to_text(som: dict[str, Any]) -> str:
     for region in som.get("regions", []):
         lines.append(_region_header(region))
         for elem in region.get("elements", []):
-            text = _element_to_text(elem)
-            if text:
-                lines.append(text)
+            _append_element_text(lines, elem)
         lines.append("")
 
     # Compression stats
@@ -57,6 +55,27 @@ def som_to_text(som: dict[str, Any]) -> str:
     )
 
     return "\n".join(lines)
+
+
+def _append_element_text(
+    lines: list[str], elem: dict[str, Any], indent: int = 1
+) -> None:
+    text = _element_to_text(elem, indent)
+    if text:
+        lines.append(text)
+
+    children = elem.get("children")
+    if isinstance(children, list):
+        for child in children:
+            if isinstance(child, dict):
+                _append_element_text(lines, child, indent + 1)
+
+    shadow = elem.get("shadow")
+    shadow_elements = shadow.get("elements") if isinstance(shadow, dict) else None
+    if isinstance(shadow_elements, list):
+        for child in shadow_elements:
+            if isinstance(child, dict):
+                _append_element_text(lines, child, indent + 1)
 
 
 def _region_header(region: dict[str, Any]) -> str:
