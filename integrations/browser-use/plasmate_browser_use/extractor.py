@@ -6,11 +6,11 @@ depend on the page and workflow; measure the target workload before estimating.
 """
 
 import asyncio
-import json
 import subprocess
 from typing import Any, Optional
 
 from som_parser import (
+    from_plasmate,
     find_action_target,
     find_action_targets_by_action,
     find_action_targets_by_role,
@@ -37,42 +37,12 @@ def _format_cli_failure(stderr: str) -> str:
     return f"plasmate fetch failed: {_bounded_cli_detail(stderr)}"
 
 
-def _extract_last_json(text: str) -> Any:
-    """Extract the last complete JSON object from potentially mixed output.
-
-    Handles cases where Plasmate emits progress/log lines alongside the
-    JSON payload.  Returns None if no valid JSON object is found.
-    """
-    if not text:
-        return None
-
-    stripped = text.strip()
-
-    # Fast path: clean output
+def _parse_som_output(text: str) -> Optional[dict[str, Any]]:
+    """Parse the last valid SOM from potentially mixed CLI output."""
     try:
-        return json.loads(stripped)
-    except (json.JSONDecodeError, ValueError):
-        pass
-
-    # Line scan: JSON on its own line (progress line before payload)
-    for line in reversed(stripped.splitlines()):
-        line = line.strip()
-        if line.startswith(("{", "[")):
-            try:
-                return json.loads(line)
-            except (json.JSONDecodeError, ValueError):
-                pass
-
-    # Brace walk: JSON embedded in a longer string
-    decoder = json.JSONDecoder()
-    for pos in reversed([i for i, ch in enumerate(stripped) if ch == "{"]):
-        try:
-            value, _ = decoder.raw_decode(stripped, pos)
-            return value
-        except (json.JSONDecodeError, ValueError):
-            continue
-
-    return None
+        return from_plasmate(text).model_dump(mode="json")
+    except (TypeError, ValueError):
+        return None
 
 
 def _fetch_command(
@@ -330,7 +300,7 @@ class PlasmateExtractor:
         )
         if result.returncode != 0:
             raise RuntimeError(_format_cli_failure(result.stderr))
-        som = _extract_last_json(result.stdout)
+        som = _parse_som_output(result.stdout)
         if som is None:
             raise RuntimeError(
                 f"plasmate returned no valid JSON: {_bounded_cli_detail(result.stdout)}"
@@ -360,7 +330,7 @@ class PlasmateExtractor:
         if proc.returncode != 0:
             raise RuntimeError(_format_cli_failure(stderr.decode(errors="replace")))
         stdout_text = stdout.decode()
-        som = _extract_last_json(stdout_text)
+        som = _parse_som_output(stdout_text)
         if som is None:
             raise RuntimeError(
                 f"plasmate returned no valid JSON: {_bounded_cli_detail(stdout_text)}"

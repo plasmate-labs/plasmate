@@ -181,6 +181,60 @@ def test_async_extract_cli_error_is_bounded():
     asyncio.run(exercise())
 
 
+def test_extract_uses_last_valid_som_when_progress_records_follow_it():
+    extractor = PlasmateExtractor.__new__(PlasmateExtractor)
+    extractor.plasmate_bin = "plasmate"
+    som = load_action_availability_fixture()
+    output = "\n".join(
+        [
+            json.dumps({"progress": "starting"}),
+            json.dumps(som),
+            json.dumps({"progress": "done"}),
+        ]
+    )
+    completed = SimpleNamespace(returncode=0, stdout=output, stderr="")
+
+    with patch(
+        "plasmate_browser_use.extractor.subprocess.run",
+        return_value=completed,
+    ):
+        result = extractor.extract("fixture")
+
+    assert result["title"] == som["title"]
+
+
+def test_async_extract_uses_last_valid_som_when_progress_records_follow_it():
+    extractor = PlasmateExtractor.__new__(PlasmateExtractor)
+    extractor.plasmate_bin = "plasmate"
+    som = load_action_availability_fixture()
+    output = "\n".join(
+        [
+            json.dumps({"progress": "starting"}),
+            json.dumps(som),
+            json.dumps({"progress": "done"}),
+        ]
+    )
+
+    class FakeProcess:
+        returncode = 0
+
+        async def communicate(self):
+            return output.encode(), b""
+
+    async def fake_create_subprocess_exec(*args, **kwargs):
+        return FakeProcess()
+
+    async def exercise():
+        with patch(
+            "plasmate_browser_use.extractor.asyncio.create_subprocess_exec",
+            new=fake_create_subprocess_exec,
+        ):
+            result = await extractor.extract_async("fixture")
+        assert result["title"] == som["title"]
+
+    asyncio.run(exercise())
+
+
 def test_invalid_json_error_is_bounded_and_omits_unbounded_url():
     extractor = PlasmateExtractor.__new__(PlasmateExtractor)
     extractor.plasmate_bin = "plasmate"
