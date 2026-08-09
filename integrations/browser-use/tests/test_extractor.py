@@ -181,6 +181,60 @@ def test_async_extract_cli_error_is_bounded():
     asyncio.run(exercise())
 
 
+def test_invalid_json_error_is_bounded_and_omits_unbounded_url():
+    extractor = PlasmateExtractor.__new__(PlasmateExtractor)
+    extractor.plasmate_bin = "plasmate"
+    url = "U" * 5000
+    completed = SimpleNamespace(
+        returncode=0,
+        stdout="not-json-" + "x" * 5000,
+        stderr="",
+    )
+
+    with patch(
+        "plasmate_browser_use.extractor.subprocess.run",
+        return_value=completed,
+    ):
+        with pytest.raises(RuntimeError) as error:
+            extractor.extract(url)
+
+    message = str(error.value)
+    assert message.startswith("plasmate returned no valid JSON: ")
+    assert "not-json-" in message
+    assert len(message) <= 256
+    assert url not in message
+
+
+def test_async_invalid_json_error_is_bounded_and_omits_unbounded_url():
+    extractor = PlasmateExtractor.__new__(PlasmateExtractor)
+    extractor.plasmate_bin = "plasmate"
+    url = "U" * 5000
+
+    class FakeProcess:
+        returncode = 0
+
+        async def communicate(self):
+            return b"not-json-" + b"x" * 5000, b""
+
+    async def fake_create_subprocess_exec(*args, **kwargs):
+        return FakeProcess()
+
+    async def exercise():
+        with patch(
+            "plasmate_browser_use.extractor.asyncio.create_subprocess_exec",
+            new=fake_create_subprocess_exec,
+        ):
+            with pytest.raises(RuntimeError) as error:
+                await extractor.extract_async(url)
+        message = str(error.value)
+        assert message.startswith("plasmate returned no valid JSON: ")
+        assert "not-json-" in message
+        assert len(message) <= 256
+        assert url not in message
+
+    asyncio.run(exercise())
+
+
 def test_binary_verification_error_is_bounded():
     extractor = PlasmateExtractor.__new__(PlasmateExtractor)
     extractor.plasmate_bin = "plasmate"

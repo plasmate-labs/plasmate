@@ -333,7 +333,7 @@ class PlasmateExtractor:
         som = _extract_last_json(result.stdout)
         if som is None:
             raise RuntimeError(
-                f"plasmate returned no valid JSON for {url}: {result.stdout[:200]}"
+                f"plasmate returned no valid JSON: {_bounded_cli_detail(result.stdout)}"
             )
         return som
 
@@ -359,10 +359,11 @@ class PlasmateExtractor:
         stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30)
         if proc.returncode != 0:
             raise RuntimeError(_format_cli_failure(stderr.decode(errors="replace")))
-        som = _extract_last_json(stdout.decode())
+        stdout_text = stdout.decode()
+        som = _extract_last_json(stdout_text)
         if som is None:
             raise RuntimeError(
-                f"plasmate returned no valid JSON for {url}: {stdout.decode()[:200]}"
+                f"plasmate returned no valid JSON: {_bounded_cli_detail(stdout_text)}"
             )
         return som
 
