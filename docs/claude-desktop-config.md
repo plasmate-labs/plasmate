@@ -51,7 +51,7 @@ Claude now has access to these tools:
 | `type_text` | Type into form fields |
 | `navigate_to` | Navigate to a new URL in an open session; reports `cache_restored` on validated page-state cache hits |
 | `scroll` | Scroll the page |
-| `screenshot` | Take a screenshot |
+| `screenshot_page` | Take a screenshot |
 | `evaluate` | Run JavaScript on the page |
 
 ### Tips

@@ -3305,6 +3305,15 @@ mod tests {
     use crate::som::metadata::StructuredData;
     use crate::som::types::{Element, ElementRole, Region, RegionRole, ShadowRoot, SomMeta};
 
+    #[test]
+    fn claude_desktop_setup_names_registered_screenshot_tool() {
+        let docs = include_str!("../../docs/claude-desktop-config.md");
+        let registered_name = screenshot_page_definition().name;
+
+        assert!(docs.contains(&format!("| `{registered_name}` |")));
+        assert!(!docs.contains("| `screenshot` |"));
+    }
+
     fn stateful_worker_fixture() -> PathBuf {
         static FIXTURE: OnceLock<PathBuf> = OnceLock::new();
         FIXTURE
