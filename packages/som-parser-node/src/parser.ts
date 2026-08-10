@@ -22,13 +22,27 @@ export function isValidSom(input: unknown): input is Som {
   if (typeof o.url !== 'string') return false;
   if (typeof o.title !== 'string') return false;
   if (!Array.isArray(o.regions)) return false;
-  if (o.meta == null || typeof o.meta !== 'object') return false;
+  if (!isValidMeta(o.meta)) return false;
   if (!o.regions.every(isValidRegion)) return false;
   return true;
 }
 
 function isRecord(input: unknown): input is Record<string, unknown> {
   return input !== null && typeof input === 'object' && !Array.isArray(input);
+}
+
+function isNonNegativeInteger(input: unknown): input is number {
+  return typeof input === 'number' && Number.isInteger(input) && input >= 0;
+}
+
+function isValidMeta(input: unknown): boolean {
+  if (!isRecord(input)) return false;
+  return (
+    isNonNegativeInteger(input.html_bytes) &&
+    isNonNegativeInteger(input.som_bytes) &&
+    isNonNegativeInteger(input.element_count) &&
+    isNonNegativeInteger(input.interactive_count)
+  );
 }
 
 function isValidElementTree(input: unknown): boolean {

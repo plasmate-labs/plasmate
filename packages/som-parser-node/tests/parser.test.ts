@@ -211,6 +211,20 @@ describe('parseSom', () => {
     expect(isValidSom(malformed)).toBe(false);
     expect(() => parseSom(malformed as object)).toThrow('Invalid SOM');
   });
+
+  it('rejects incomplete or invalid metadata before query helpers can misread it', () => {
+    const malformedInputs: unknown[] = [
+      { ...FIXTURE, meta: {} },
+      { ...FIXTURE, meta: { ...FIXTURE.meta, som_bytes: -1 } },
+      { ...FIXTURE, meta: { ...FIXTURE.meta, som_bytes: 1.5 } },
+      { ...FIXTURE, meta: { ...FIXTURE.meta, som_bytes: '50' } },
+    ];
+
+    for (const malformed of malformedInputs) {
+      expect(isValidSom(malformed)).toBe(false);
+      expect(() => parseSom(malformed as object)).toThrow('Invalid SOM');
+    }
+  });
 });
 
 describe('isValidSom', () => {
