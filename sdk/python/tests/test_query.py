@@ -475,6 +475,21 @@ class TestFlatElements:
 
 
 class TestGetTokenEstimate:
+    def test_uses_canonical_som_bytes_for_dict(self) -> None:
+        som = {
+            "som_version": "1.0",
+            "url": "fixture",
+            "title": "Fixture",
+            "regions": [],
+            "meta": {
+                "html_bytes": 20,
+                "som_bytes": 5,
+                "element_count": 0,
+                "interactive_count": 0,
+            },
+        }
+        assert get_token_estimate(som) == 2
+
     def test_returns_positive_int(self, sample_som: Som) -> None:
         estimate = get_token_estimate(sample_som)
         assert isinstance(estimate, int)

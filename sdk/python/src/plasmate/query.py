@@ -490,13 +490,21 @@ def flat_elements(som: Som) -> List[SomElement]:
 def get_token_estimate(som: Union[Som, dict]) -> int:
     """Estimate the token count of a SOM document.
 
-    Uses a simple heuristic of ~4 characters per token on the JSON representation.
+    Uses the canonical ``meta.som_bytes`` count with a ~4 bytes-per-token
+    heuristic. Dicts without SOM metadata keep the legacy JSON-size fallback.
     """
     if isinstance(som, Som):
-        text = som.model_dump_json()
+        som_bytes = som.meta.som_bytes
     else:
-        text = json.dumps(som)
-    return len(text) // 4
+        meta = som.get("meta")
+        som_bytes = meta.get("som_bytes") if isinstance(meta, dict) else None
+        if (
+            not isinstance(som_bytes, int)
+            or isinstance(som_bytes, bool)
+            or som_bytes < 0
+        ):
+            return len(json.dumps(som)) // 4
+    return (som_bytes + 3) // 4
 
 
 # ---- Internal helpers ----
