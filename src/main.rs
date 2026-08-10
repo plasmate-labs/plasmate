@@ -1640,6 +1640,11 @@ fn collect_links(el: &som::types::Element, urls: &mut Vec<String>) {
             collect_links(child, urls);
         }
     }
+    if let Some(ref shadow) = el.shadow {
+        for child in &shadow.elements {
+            collect_links(child, urls);
+        }
+    }
 }
 
 /// Recursively render a SOM element to Markdown.
@@ -2018,4 +2023,71 @@ async fn cmd_throughput_bench(
     eprintln!("  Plasmate:   {}ms sequential", seq_ms);
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use plasmate::som::types::{
+        Element, ElementRole, Region, RegionRole, ShadowRoot, Som, SomMeta,
+    };
+
+    #[test]
+    fn links_format_includes_shadow_dom_links() {
+        let som = Som {
+            som_version: "0.1".to_string(),
+            url: "https://example.test".to_string(),
+            title: "Shadow links".to_string(),
+            lang: "en".to_string(),
+            regions: vec![Region {
+                id: "r_main".to_string(),
+                role: RegionRole::Main,
+                label: None,
+                action: None,
+                method: None,
+                target: None,
+                enctype: None,
+                novalidate: None,
+                accept_charset: None,
+                autocomplete: None,
+                elements: vec![Element {
+                    id: "e_host".to_string(),
+                    role: ElementRole::Section,
+                    html_id: None,
+                    text: None,
+                    label: None,
+                    actions: None,
+                    attrs: None,
+                    children: None,
+                    hints: None,
+                    shadow: Some(ShadowRoot {
+                        mode: "open".to_string(),
+                        elements: vec![Element {
+                            id: "e_shadow_link".to_string(),
+                            role: ElementRole::Link,
+                            html_id: None,
+                            text: Some("Docs".to_string()),
+                            label: None,
+                            actions: Some(vec!["click".to_string()]),
+                            attrs: Some(serde_json::json!({"href": "/docs"})),
+                            children: None,
+                            hints: None,
+                            shadow: None,
+                        }],
+                    }),
+                }],
+            }],
+            meta: SomMeta {
+                html_bytes: 1,
+                som_bytes: 1,
+                element_count: 2,
+                interactive_count: 1,
+            },
+            structured_data: None,
+        };
+
+        let links = render_som_output(&som, "links").expect("links output should render");
+
+        assert_eq!(links, "/docs");
+    }
 }
