@@ -721,6 +721,11 @@ export function formatPlasmateActionPlan(
       const id = target.id ? `[${target.id}] ` : ''
       const cacheKey = target.cache_key ? ` [cache_key=${target.cache_key}]` : ''
       const htmlId = target.html_id ? ` [html_id=${target.html_id}]` : ''
+      const href = target.href ? ` [href=${target.href}]` : ''
+      const hreflang = target.hreflang ? ` [hreflang=${target.hreflang}]` : ''
+      const referrerpolicy = target.referrerpolicy
+        ? ` [referrerpolicy=${target.referrerpolicy}]`
+        : ''
       const role = target.role ?? 'target'
       const name = target.label ?? target.text ?? ''
       const actions = target.actions?.length
@@ -881,7 +886,7 @@ export function formatPlasmateActionPlan(
         ? ` [description=${target.description}]`
         : ''
 
-      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${htmlId}${blockedReason}${required}${readonly}${inert}${linkTarget}${rel}${download}${inputType}${value}${nameAttr}${accept}${capture}${multiple}${selectedValues}${size}${autocomplete}${inputmode}${enterkeyhint}${autocapitalize}${dirname}${form}${formAction}${formMethod}${formTarget}${formEnctype}${formNoValidate}${formAcceptCharset}${formAutocomplete}${list}${popovertarget}${popovertargetaction}${commandfor}${command}${popover}${buttonType}${submitFormAction}${submitFormMethod}${submitFormEnctype}${submitFormTarget}${submitNoValidate}${accesskey}${title}${sourceRole}${testId}${spellcheck}${draggable}${placeholder}${minlength}${maxlength}${min}${max}${step}${pattern}${checked}${expanded}${pressed}${selected}${multiline}${multiselectable}${current}${controls}${haspopup}${invalid}${ariaLabel}${labelledby}${describedby}${ariaPlaceholder}${ariaAutocomplete}${activeDescendant}${errorMessage}${keyshortcuts}${roledescription}${grabbed}${dropeffect}${busy}${live}${atomic}${relevant}${owns}${flowto}${details}${orientation}${sort}${level}${posinset}${setsize}${valuemin}${valuemax}${valuenow}${valuetext}${group}${description}`
+      return `${id}${role}${name ? ` "${name}"` : ''}${actions}${state}${cacheKey}${htmlId}${href}${hreflang}${referrerpolicy}${blockedReason}${required}${readonly}${inert}${linkTarget}${rel}${download}${inputType}${value}${nameAttr}${accept}${capture}${multiple}${selectedValues}${size}${autocomplete}${inputmode}${enterkeyhint}${autocapitalize}${dirname}${form}${formAction}${formMethod}${formTarget}${formEnctype}${formNoValidate}${formAcceptCharset}${formAutocomplete}${list}${popovertarget}${popovertargetaction}${commandfor}${command}${popover}${buttonType}${submitFormAction}${submitFormMethod}${submitFormEnctype}${submitFormTarget}${submitNoValidate}${accesskey}${title}${sourceRole}${testId}${spellcheck}${draggable}${placeholder}${minlength}${maxlength}${min}${max}${step}${pattern}${checked}${expanded}${pressed}${selected}${multiline}${multiselectable}${current}${controls}${haspopup}${invalid}${ariaLabel}${labelledby}${describedby}${ariaPlaceholder}${ariaAutocomplete}${activeDescendant}${errorMessage}${keyshortcuts}${roledescription}${grabbed}${dropeffect}${busy}${live}${atomic}${relevant}${owns}${flowto}${details}${orientation}${sort}${level}${posinset}${setsize}${valuemin}${valuemax}${valuenow}${valuetext}${group}${description}`
     })
     .join('\n')
 }

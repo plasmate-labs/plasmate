@@ -237,6 +237,7 @@ assert.match(
   /\[e_quota\].*\[orientation=horizontal\].*\[valuemin=1\].*\[valuemax=100\].*\[valuenow=40\].*\[valuetext=40 seats\]/
 )
 assert.match(formatted, /\[e_billing\].*\[current=page\]/)
+assert.match(formatted, /\[e_billing\].*\[href=\/billing\].*\[hreflang=en-US\].*\[referrerpolicy=no-referrer\]/)
 assert.match(formatted, /\[e_billing\].*\[target=_blank\]/)
 assert.match(formatted, /\[e_billing\].*\[rel=noopener\]/)
 assert.match(formatted, /\[e_billing\].*\[download=billing\.csv\]/)
