@@ -683,6 +683,14 @@ func TestTokenEstimate(t *testing.T) {
 	}
 }
 
+func TestTokenEstimateRoundsUpCanonicalBytes(t *testing.T) {
+	som := &Som{Meta: SomMeta{SOMBytes: 5}}
+
+	if est := TokenEstimate(som); est != 2 {
+		t.Errorf("TokenEstimate = %d, want 2 for 5 SOM bytes", est)
+	}
+}
+
 func TestSDKVersionMatchesVersionFile(t *testing.T) {
 	version, err := os.ReadFile("VERSION")
 	if err != nil {

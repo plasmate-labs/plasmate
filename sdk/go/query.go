@@ -699,10 +699,15 @@ func copyFormContext(item *ActionPlanItem, region Region) {
 }
 
 // TokenEstimate returns a rough estimate of the number of tokens in the SOM.
-// Uses the heuristic of SOM bytes / 4.
+// Uses the heuristic of SOM bytes / 4, rounding up partial tokens.
 func TokenEstimate(som *Som) int {
-	if som.Meta.SOMBytes == 0 {
+	somBytes := som.Meta.SOMBytes
+	if somBytes == 0 {
 		return 0
 	}
-	return som.Meta.SOMBytes / 4
+	estimate := somBytes / 4
+	if somBytes > 0 && somBytes%4 != 0 {
+		estimate++
+	}
+	return estimate
 }
