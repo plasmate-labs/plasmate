@@ -686,10 +686,22 @@ fn detect_content_changes(
             continue;
         }
         if let Some(ref elems) = d.element_changes {
-            for e in elems {
-                if e.text_change.is_some() {
-                    return true;
-                }
+            if detect_text_changes_in_elements(elems) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn detect_text_changes_in_elements(elements: &[ElementDiff]) -> bool {
+    for element in elements {
+        if element.text_change.is_some() {
+            return true;
+        }
+        if let Some(ref children) = element.children_changes {
+            if detect_text_changes_in_elements(children) {
+                return true;
             }
         }
     }

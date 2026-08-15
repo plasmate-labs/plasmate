@@ -363,6 +363,17 @@ fn test_nested_children_changes() {
     let diff = diff_soms(&old, &new, false);
     // e1 is modified (children differ).
     assert_eq!(diff.summary.elements_modified, 1);
+    assert!(diff.summary.has_content_changes);
+
+    let mut old_navigation = old.clone();
+    old_navigation.regions[0].role = RegionRole::Navigation;
+    let mut new_navigation = new.clone();
+    new_navigation.regions[0].role = RegionRole::Navigation;
+    assert!(
+        !diff_soms(&old_navigation, &new_navigation, false)
+            .summary
+            .has_content_changes
+    );
 
     let elem_diff = &diff.regions[0].element_changes.as_ref().unwrap()[0];
     let children = elem_diff.children_changes.as_ref().unwrap();
