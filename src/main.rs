@@ -1764,6 +1764,11 @@ fn render_element_markdown(el: &som::types::Element, out: &mut String, depth: us
             }
         }
     }
+    if let Some(ref shadow) = el.shadow {
+        for child in &shadow.elements {
+            render_element_markdown(child, out, depth);
+        }
+    }
 }
 
 /// Delegate to `som::filter::apply_selector` (shared with MCP tools).
@@ -2174,5 +2179,92 @@ mod tests {
         let text = render_som_output(&som, "text").expect("text output should render");
 
         assert_eq!(text, "Settings\nNested paragraph\nShadow copy");
+    }
+
+    #[test]
+    fn markdown_format_includes_nested_and_shadow_content() {
+        let som = Som {
+            som_version: "0.1".to_string(),
+            url: "https://example.test".to_string(),
+            title: "Settings".to_string(),
+            lang: "en".to_string(),
+            regions: vec![Region {
+                id: "r_main".to_string(),
+                role: RegionRole::Main,
+                label: None,
+                action: None,
+                method: None,
+                target: None,
+                enctype: None,
+                novalidate: None,
+                accept_charset: None,
+                autocomplete: None,
+                elements: vec![Element {
+                    id: "e_host".to_string(),
+                    role: ElementRole::Section,
+                    html_id: None,
+                    text: None,
+                    label: None,
+                    actions: None,
+                    attrs: None,
+                    children: Some(vec![
+                        Element {
+                            id: "e_nested_heading".to_string(),
+                            role: ElementRole::Heading,
+                            html_id: None,
+                            text: Some("Nested heading".to_string()),
+                            label: None,
+                            actions: None,
+                            attrs: None,
+                            children: None,
+                            hints: None,
+                            shadow: None,
+                        },
+                        Element {
+                            id: "e_nested".to_string(),
+                            role: ElementRole::Paragraph,
+                            html_id: None,
+                            text: Some("Nested paragraph".to_string()),
+                            label: None,
+                            actions: None,
+                            attrs: None,
+                            children: None,
+                            hints: None,
+                            shadow: None,
+                        },
+                    ]),
+                    hints: None,
+                    shadow: Some(ShadowRoot {
+                        mode: "open".to_string(),
+                        elements: vec![Element {
+                            id: "e_shadow_link".to_string(),
+                            role: ElementRole::Link,
+                            html_id: None,
+                            text: Some("Shadow docs".to_string()),
+                            label: None,
+                            actions: None,
+                            attrs: Some(serde_json::json!({"href": "/docs"})),
+                            children: None,
+                            hints: None,
+                            shadow: None,
+                        }],
+                    }),
+                }],
+            }],
+            meta: SomMeta {
+                html_bytes: 1,
+                som_bytes: 1,
+                element_count: 4,
+                interactive_count: 1,
+            },
+            structured_data: None,
+        };
+
+        let markdown = render_som_output(&som, "markdown").expect("markdown output should render");
+
+        assert!(markdown.contains("# Settings"));
+        assert!(markdown.contains("## Nested heading"));
+        assert!(markdown.contains("Nested paragraph"));
+        assert!(markdown.contains("[Shadow docs](/docs)"));
     }
 }
