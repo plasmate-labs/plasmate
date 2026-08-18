@@ -1954,7 +1954,6 @@ fn timestamp_sec() -> f64 {
 
 /// Convert SOM to markdown for Lightpanda-compatible output.
 fn som_to_markdown(som: &crate::som::types::Som) -> String {
-    use crate::som::types::ElementRole;
     let mut md = String::new();
 
     if !som.title.is_empty() {
@@ -1963,54 +1962,71 @@ fn som_to_markdown(som: &crate::som::types::Som) -> String {
 
     for region in &som.regions {
         for element in &region.elements {
-            match &element.role {
-                ElementRole::Heading => {
-                    let text = element.text.as_deref().unwrap_or("");
-                    md.push_str(&format!("## {}\n\n", text));
+            render_markdown_element(element, &mut md);
+        }
+    }
+
+    md
+}
+
+fn render_markdown_element(element: &Element, md: &mut String) {
+    use crate::som::types::ElementRole;
+
+    match &element.role {
+        ElementRole::Heading => {
+            let text = element.text.as_deref().unwrap_or("");
+            md.push_str(&format!("## {}\n\n", text));
+        }
+        ElementRole::Paragraph => {
+            if let Some(text) = &element.text {
+                md.push_str(text);
+                md.push_str("\n\n");
+            }
+        }
+        ElementRole::Link => {
+            let text = element.text.as_deref().unwrap_or("link");
+            let href = element
+                .attrs
+                .as_ref()
+                .and_then(|a| a.get("href"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("#");
+            md.push_str(&format!("[{}]({})\n", text, href));
+        }
+        ElementRole::List => {
+            let text = element.text.as_deref().unwrap_or("");
+            md.push_str(&format!("- {}\n", text));
+        }
+        ElementRole::Image => {
+            let alt = element.label.as_deref().unwrap_or("image");
+            let src = element
+                .attrs
+                .as_ref()
+                .and_then(|a| a.get("src"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            md.push_str(&format!("![{}]({})\n", alt, src));
+        }
+        _ => {
+            if let Some(text) = &element.text {
+                if !text.is_empty() {
+                    md.push_str(text);
+                    md.push('\n');
                 }
-                ElementRole::Paragraph => {
-                    if let Some(text) = &element.text {
-                        md.push_str(text);
-                        md.push_str("\n\n");
-                    }
-                }
-                ElementRole::Link => {
-                    let text = element.text.as_deref().unwrap_or("link");
-                    let href = element
-                        .attrs
-                        .as_ref()
-                        .and_then(|a| a.get("href"))
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("#");
-                    md.push_str(&format!("[{}]({})\n", text, href));
-                }
-                ElementRole::List => {
-                    let text = element.text.as_deref().unwrap_or("");
-                    md.push_str(&format!("- {}\n", text));
-                }
-                ElementRole::Image => {
-                    let alt = element.label.as_deref().unwrap_or("image");
-                    let src = element
-                        .attrs
-                        .as_ref()
-                        .and_then(|a| a.get("src"))
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("");
-                    md.push_str(&format!("![{}]({})\n", alt, src));
-                }
-                _ => {
-                    if let Some(text) = &element.text {
-                        if !text.is_empty() {
-                            md.push_str(text);
-                            md.push('\n');
-                        }
-                    }
+            }
+            if let Some(children) = &element.children {
+                for child in children {
+                    render_markdown_element(child, md);
                 }
             }
         }
     }
 
-    md
+    if let Some(shadow) = &element.shadow {
+        for child in &shadow.elements {
+            render_markdown_element(child, md);
+        }
+    }
 }
 
 #[cfg(test)]
@@ -2284,5 +2300,63 @@ mod tests {
         assert!(nested["backendDOMNodeId"].as_u64().unwrap() > 0);
         assert!(shadow["backendDOMNodeId"].as_u64().unwrap() > 0);
         assert_eq!(disabled["properties"][0]["name"], "disabled");
+    }
+
+    #[test]
+    fn get_markdown_includes_nested_and_shadow_content() {
+        let mut nested_heading = element("nested-heading", ElementRole::Heading, None);
+        nested_heading.text = Some("Nested heading".to_string());
+
+        let mut nested_paragraph = element("nested-paragraph", ElementRole::Paragraph, None);
+        nested_paragraph.text = Some("Nested paragraph".to_string());
+
+        let mut shadow_link = element("shadow-link", ElementRole::Link, None);
+        shadow_link.text = Some("Shadow docs".to_string());
+        shadow_link.attrs = Some(json!({"href": "/docs"}));
+
+        let mut host = element("host", ElementRole::Section, None);
+        host.children = Some(vec![nested_heading, nested_paragraph]);
+        host.shadow = Some(ShadowRoot {
+            mode: "open".to_string(),
+            elements: vec![shadow_link],
+        });
+
+        let som = Som {
+            som_version: "0.1".to_string(),
+            url: "https://example.com/app".to_string(),
+            title: "Settings".to_string(),
+            lang: "en".to_string(),
+            regions: vec![Region {
+                id: "main".to_string(),
+                role: RegionRole::Main,
+                label: None,
+                action: None,
+                method: None,
+                target: None,
+                enctype: None,
+                novalidate: None,
+                accept_charset: None,
+                autocomplete: None,
+                elements: vec![host],
+            }],
+            meta: SomMeta {
+                html_bytes: 100,
+                som_bytes: 100,
+                element_count: 4,
+                interactive_count: 1,
+            },
+            structured_data: None,
+        };
+
+        let target = cdp_target_with_som(som);
+        let markdown = plasmate_get_markdown(1, &target).result.unwrap()["markdown"]
+            .as_str()
+            .unwrap()
+            .to_string();
+
+        assert!(markdown.contains("# Settings"));
+        assert!(markdown.contains("## Nested heading"));
+        assert!(markdown.contains("Nested paragraph"));
+        assert!(markdown.contains("[Shadow docs](/docs)"));
     }
 }
