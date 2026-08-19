@@ -387,6 +387,66 @@ fn test_nested_children_changes() {
 }
 
 #[test]
+fn test_shadow_root_content_changes() {
+    let mut old_host = make_element("host", ElementRole::Section, Some("Card"));
+    old_host.shadow = Some(ShadowRoot {
+        mode: "open".into(),
+        elements: vec![
+            make_element("s1", ElementRole::Paragraph, Some("Was $49.99")),
+            make_element("s2", ElementRole::Button, Some("Buy")),
+        ],
+    });
+
+    let mut new_host = make_element("host", ElementRole::Section, Some("Card"));
+    new_host.shadow = Some(ShadowRoot {
+        mode: "open".into(),
+        elements: vec![
+            make_element("s1", ElementRole::Paragraph, Some("Now $39.99")),
+            make_element("s2", ElementRole::Button, Some("Buy")),
+            make_element("s3", ElementRole::Link, Some("Details")),
+        ],
+    });
+
+    let old = Som {
+        regions: vec![make_region("r1", RegionRole::Main, vec![old_host])],
+        ..empty_som()
+    };
+    let new = Som {
+        regions: vec![make_region("r1", RegionRole::Main, vec![new_host])],
+        ..empty_som()
+    };
+
+    let diff = diff_soms(&old, &new, false);
+    assert_eq!(diff.summary.elements_modified, 1);
+    assert!(diff.summary.has_content_changes);
+    assert!(diff.summary.has_price_changes);
+
+    let mut old_navigation = old.clone();
+    old_navigation.regions[0].role = RegionRole::Navigation;
+    let mut new_navigation = new.clone();
+    new_navigation.regions[0].role = RegionRole::Navigation;
+    assert!(
+        !diff_soms(&old_navigation, &new_navigation, false)
+            .summary
+            .has_content_changes
+    );
+
+    let elem_diff = &diff.regions[0].element_changes.as_ref().unwrap()[0];
+    assert!(elem_diff.children_changes.is_none());
+    let shadow = elem_diff.shadow_changes.as_ref().unwrap();
+    assert!(shadow
+        .iter()
+        .any(|c| c.id == "s1" && c.change_type == ChangeType::Modified));
+    assert!(shadow
+        .iter()
+        .any(|c| c.id == "s3" && c.change_type == ChangeType::Added));
+
+    let text = render_text(&diff);
+    assert!(text.contains("Was $49.99"));
+    assert!(text.contains("Now $39.99"));
+}
+
+#[test]
 fn test_role_change() {
     let old = Som {
         regions: vec![make_region(
