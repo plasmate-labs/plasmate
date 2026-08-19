@@ -1986,9 +1986,9 @@ fn timestamp_sec() -> f64 {
 }
 
 fn som_to_text(som: &crate::som::types::Som) -> String {
-    let mut parts: Vec<&str> = Vec::new();
+    let mut parts: Vec<String> = Vec::new();
     if !som.title.is_empty() {
-        parts.push(&som.title);
+        parts.push(som.title.clone());
     }
     for region in &som.regions {
         for element in &region.elements {
@@ -1998,11 +1998,34 @@ fn som_to_text(som: &crate::som::types::Som) -> String {
     parts.join("\n")
 }
 
-fn collect_text<'a>(element: &'a Element, parts: &mut Vec<&'a str>) {
+fn collect_text(element: &Element, parts: &mut Vec<String>) {
     if let Some(text) = &element.text {
         let trimmed = text.trim();
         if !trimmed.is_empty() {
-            parts.push(trimmed);
+            parts.push(trimmed.to_string());
+        }
+    }
+    if let Some(attrs) = &element.attrs {
+        if let Some(caption) = attrs.get("caption").and_then(|v| v.as_str()) {
+            if !caption.is_empty() {
+                parts.push(caption.to_string());
+            }
+        }
+        if let Some(headers) = attrs.get("headers").and_then(|v| v.as_array()) {
+            let header_text: Vec<&str> = headers.iter().filter_map(|h| h.as_str()).collect();
+            if !header_text.is_empty() {
+                parts.push(header_text.join(" | "));
+            }
+        }
+        if let Some(rows) = attrs.get("rows").and_then(|v| v.as_array()) {
+            for row in rows {
+                if let Some(cells) = row.as_array() {
+                    let cell_text: Vec<&str> = cells.iter().filter_map(|c| c.as_str()).collect();
+                    if !cell_text.is_empty() {
+                        parts.push(cell_text.join(" | "));
+                    }
+                }
+            }
         }
     }
     if let Some(children) = &element.children {
@@ -2506,6 +2529,54 @@ mod tests {
             .to_string();
 
         assert_eq!(text, "Settings\nNested paragraph\nShadow copy");
+    }
+
+    #[test]
+    fn get_text_includes_compiled_table_rows() {
+        let mut table = element("pricing", ElementRole::Table, None);
+        table.attrs = Some(json!({
+            "caption": "Plans",
+            "headers": ["Plan", "Price"],
+            "rows": [["Starter", "$9"], ["Pro", "$29"]]
+        }));
+
+        let som = Som {
+            som_version: "0.1".to_string(),
+            url: "https://example.test".to_string(),
+            title: "Pricing".to_string(),
+            lang: "en".to_string(),
+            regions: vec![Region {
+                id: "main".to_string(),
+                role: RegionRole::Main,
+                label: None,
+                action: None,
+                method: None,
+                target: None,
+                enctype: None,
+                novalidate: None,
+                accept_charset: None,
+                autocomplete: None,
+                elements: vec![table],
+            }],
+            meta: SomMeta {
+                html_bytes: 1,
+                som_bytes: 1,
+                element_count: 1,
+                interactive_count: 0,
+            },
+            structured_data: None,
+        };
+
+        let target = cdp_target_with_som(som);
+        let text = plasmate_get_text(1, &target).result.unwrap()["text"]
+            .as_str()
+            .unwrap()
+            .to_string();
+
+        assert_eq!(
+            text,
+            "Pricing\nPlans\nPlan | Price\nStarter | $9\nPro | $29"
+        );
     }
 
     #[test]
