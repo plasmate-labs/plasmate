@@ -17,7 +17,7 @@
 //!   - Input.*       (dispatchMouseEvent, dispatchKeyEvent)
 //!   - Network.*     (enable, setCookies, getCookies, deleteCookies, clearBrowserCookies)
 //!   - Fetch.*       (enable, disable, fulfillRequest, failRequest, continueRequest, continueResponse, getResponseBody)
-//!   - Plasmate.*    (getSom, getStructuredData, getInteractiveElements, getMarkdown, getText, act)
+//!   - Plasmate.*    (getSom, getStructuredData, getInteractiveElements, getMarkdown, getText, getLinks, act)
 
 pub mod cookies;
 pub mod domains;
