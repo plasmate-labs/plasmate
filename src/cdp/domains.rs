@@ -2114,8 +2114,42 @@ fn render_markdown_element(element: &Element, md: &mut String) {
             md.push_str(&format!("[{}]({})\n", text, href));
         }
         ElementRole::List => {
-            let text = element.text.as_deref().unwrap_or("");
-            md.push_str(&format!("- {}\n", text));
+            let mut emitted = false;
+            if let Some(items) = element
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("items"))
+                .and_then(|value| value.as_array())
+            {
+                for item in items {
+                    if let Some(text) = item.get("text").and_then(|value| value.as_str()) {
+                        let trimmed = text.trim();
+                        if !trimmed.is_empty() {
+                            md.push_str(&format!("- {}\n", trimmed));
+                            emitted = true;
+                        }
+                    }
+                }
+            } else if let Some(children) = &element.children {
+                for child in children {
+                    if let Some(text) = child.text.as_deref() {
+                        let trimmed = text.trim();
+                        if !trimmed.is_empty() {
+                            md.push_str(&format!("- {}\n", trimmed));
+                            emitted = true;
+                        }
+                    }
+                }
+            } else if let Some(text) = element.text.as_deref() {
+                let trimmed = text.trim();
+                if !trimmed.is_empty() {
+                    md.push_str(&format!("- {}\n", trimmed));
+                    emitted = true;
+                }
+            }
+            if emitted {
+                md.push('\n');
+            }
         }
         ElementRole::Image => {
             let alt = element.label.as_deref().unwrap_or("image");
@@ -2478,6 +2512,24 @@ mod tests {
         assert!(markdown.contains("## Nested heading"));
         assert!(markdown.contains("Nested paragraph"));
         assert!(markdown.contains("[Shadow docs](/docs)"));
+    }
+
+    #[test]
+    fn get_markdown_includes_compiled_list_items() {
+        let som = crate::som::compiler::compile(
+            "<main><h1>Docs</h1><ul><li>Install</li><li>Configure</li></ul></main>",
+            "https://example.test/docs",
+        )
+        .expect("list fixture should compile");
+
+        let target = cdp_target_with_som(som);
+        let markdown = plasmate_get_markdown(1, &target).result.unwrap()["markdown"]
+            .as_str()
+            .unwrap()
+            .to_string();
+
+        assert!(markdown.contains("- Install"));
+        assert!(markdown.contains("- Configure"));
     }
 
     #[test]
