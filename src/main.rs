@@ -1580,9 +1580,9 @@ fn render_som_output(
 ) -> Result<String, Box<dyn std::error::Error>> {
     match format {
         "text" => {
-            let mut parts: Vec<&str> = Vec::new();
+            let mut parts: Vec<String> = Vec::new();
             if !som.title.is_empty() {
-                parts.push(&som.title);
+                parts.push(som.title.clone());
             }
             for region in &som.regions {
                 for el in &region.elements {
@@ -1620,11 +1620,34 @@ fn render_som_output(
 }
 
 /// Recursively collect visible text from a SOM element tree.
-fn collect_text<'a>(el: &'a som::types::Element, parts: &mut Vec<&'a str>) {
+fn collect_text(el: &som::types::Element, parts: &mut Vec<String>) {
     if let Some(ref text) = el.text {
         let t = text.trim();
         if !t.is_empty() {
-            parts.push(t);
+            parts.push(t.to_string());
+        }
+    }
+    if let Some(ref attrs) = el.attrs {
+        if let Some(caption) = attrs.get("caption").and_then(|v| v.as_str()) {
+            if !caption.is_empty() {
+                parts.push(caption.to_string());
+            }
+        }
+        if let Some(headers) = attrs.get("headers").and_then(|v| v.as_array()) {
+            let header_text: Vec<&str> = headers.iter().filter_map(|h| h.as_str()).collect();
+            if !header_text.is_empty() {
+                parts.push(header_text.join(" | "));
+            }
+        }
+        if let Some(rows) = attrs.get("rows").and_then(|v| v.as_array()) {
+            for row in rows {
+                if let Some(cells) = row.as_array() {
+                    let cell_text: Vec<&str> = cells.iter().filter_map(|c| c.as_str()).collect();
+                    if !cell_text.is_empty() {
+                        parts.push(cell_text.join(" | "));
+                    }
+                }
+            }
         }
     }
     if let Some(ref children) = el.children {
@@ -2179,6 +2202,58 @@ mod tests {
         let text = render_som_output(&som, "text").expect("text output should render");
 
         assert_eq!(text, "Settings\nNested paragraph\nShadow copy");
+    }
+
+    #[test]
+    fn text_format_includes_compiled_table_rows() {
+        let som = Som {
+            som_version: "0.1".to_string(),
+            url: "https://example.test".to_string(),
+            title: "Pricing".to_string(),
+            lang: "en".to_string(),
+            regions: vec![Region {
+                id: "r_main".to_string(),
+                role: RegionRole::Main,
+                label: None,
+                action: None,
+                method: None,
+                target: None,
+                enctype: None,
+                novalidate: None,
+                accept_charset: None,
+                autocomplete: None,
+                elements: vec![Element {
+                    id: "e_table".to_string(),
+                    role: ElementRole::Table,
+                    html_id: None,
+                    text: None,
+                    label: None,
+                    actions: None,
+                    attrs: Some(serde_json::json!({
+                        "caption": "Plans",
+                        "headers": ["Plan", "Price"],
+                        "rows": [["Starter", "$9"], ["Pro", "$29"]]
+                    })),
+                    children: None,
+                    hints: None,
+                    shadow: None,
+                }],
+            }],
+            meta: SomMeta {
+                html_bytes: 1,
+                som_bytes: 1,
+                element_count: 1,
+                interactive_count: 0,
+            },
+            structured_data: None,
+        };
+
+        let text = render_som_output(&som, "text").expect("text output should render");
+
+        assert_eq!(
+            text,
+            "Pricing\nPlans\nPlan | Price\nStarter | $9\nPro | $29"
+        );
     }
 
     #[test]
