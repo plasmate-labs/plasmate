@@ -59,6 +59,8 @@ pub struct ElementDiff {
     pub hints_change: Option<TextChange>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub children_changes: Option<Vec<ElementDiff>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub shadow_changes: Option<Vec<ElementDiff>>,
 }
 
 // ---------------------------------------------------------------------------
@@ -362,19 +364,7 @@ fn diff_elements(old: &[Element], new: &[Element]) -> (Vec<ElementDiff>, (usize,
     for e in old {
         if !new_map.contains_key(e.id.as_str()) {
             removed += 1;
-            diffs.push(ElementDiff {
-                id: e.id.clone(),
-                change_type: ChangeType::Removed,
-                role: Some(e.role.as_str().to_string()),
-                text: e.text.clone(),
-                attrs: e.attrs.clone(),
-                text_change: None,
-                role_change: None,
-                attr_changes: None,
-                actions_change: None,
-                hints_change: None,
-                children_changes: None,
-            });
+            diffs.push(added_or_removed_diff(e, ChangeType::Removed));
         }
     }
 
@@ -388,19 +378,7 @@ fn diff_elements(old: &[Element], new: &[Element]) -> (Vec<ElementDiff>, (usize,
             }
         } else {
             added += 1;
-            diffs.push(ElementDiff {
-                id: e.id.clone(),
-                change_type: ChangeType::Added,
-                role: Some(e.role.as_str().to_string()),
-                text: e.text.clone(),
-                attrs: e.attrs.clone(),
-                text_change: None,
-                role_change: None,
-                attr_changes: None,
-                actions_change: None,
-                hints_change: None,
-                children_changes: None,
-            });
+            diffs.push(added_or_removed_diff(e, ChangeType::Added));
         }
     }
 
@@ -463,63 +441,19 @@ fn diff_single_element(old: &Element, new: &Element) -> Option<ElementDiff> {
         }
     };
 
-    // Children diff.
-    let children_changes = match (&old.children, &new.children) {
-        (Some(old_c), Some(new_c)) => {
-            let (cdiffs, _) = diff_elements(old_c, new_c);
-            if cdiffs.is_empty() {
-                None
-            } else {
-                Some(cdiffs)
-            }
-        }
-        (None, Some(new_c)) if !new_c.is_empty() => {
-            let cdiffs: Vec<ElementDiff> = new_c
-                .iter()
-                .map(|e| ElementDiff {
-                    id: e.id.clone(),
-                    change_type: ChangeType::Added,
-                    role: Some(e.role.as_str().to_string()),
-                    text: e.text.clone(),
-                    attrs: e.attrs.clone(),
-                    text_change: None,
-                    role_change: None,
-                    attr_changes: None,
-                    actions_change: None,
-                    hints_change: None,
-                    children_changes: None,
-                })
-                .collect();
-            Some(cdiffs)
-        }
-        (Some(old_c), None) if !old_c.is_empty() => {
-            let cdiffs: Vec<ElementDiff> = old_c
-                .iter()
-                .map(|e| ElementDiff {
-                    id: e.id.clone(),
-                    change_type: ChangeType::Removed,
-                    role: Some(e.role.as_str().to_string()),
-                    text: e.text.clone(),
-                    attrs: e.attrs.clone(),
-                    text_change: None,
-                    role_change: None,
-                    attr_changes: None,
-                    actions_change: None,
-                    hints_change: None,
-                    children_changes: None,
-                })
-                .collect();
-            Some(cdiffs)
-        }
-        _ => None,
-    };
+    let children_changes = diff_optional_elements(old.children.as_deref(), new.children.as_deref());
+    let shadow_changes = diff_optional_elements(
+        old.shadow.as_ref().map(|shadow| shadow.elements.as_slice()),
+        new.shadow.as_ref().map(|shadow| shadow.elements.as_slice()),
+    );
 
     let has_changes = text_change.is_some()
         || role_change.is_some()
         || attr_changes.is_some()
         || actions_change.is_some()
         || hints_change.is_some()
-        || children_changes.is_some();
+        || children_changes.is_some()
+        || shadow_changes.is_some();
 
     if !has_changes {
         return None;
@@ -537,7 +471,54 @@ fn diff_single_element(old: &Element, new: &Element) -> Option<ElementDiff> {
         actions_change,
         hints_change,
         children_changes,
+        shadow_changes,
     })
+}
+
+fn added_or_removed_diff(element: &Element, change_type: ChangeType) -> ElementDiff {
+    ElementDiff {
+        id: element.id.clone(),
+        change_type,
+        role: Some(element.role.as_str().to_string()),
+        text: element.text.clone(),
+        attrs: element.attrs.clone(),
+        text_change: None,
+        role_change: None,
+        attr_changes: None,
+        actions_change: None,
+        hints_change: None,
+        children_changes: None,
+        shadow_changes: None,
+    }
+}
+
+fn diff_optional_elements(
+    old: Option<&[Element]>,
+    new: Option<&[Element]>,
+) -> Option<Vec<ElementDiff>> {
+    match (old, new) {
+        (Some(old_elements), Some(new_elements)) => {
+            let (diffs, _) = diff_elements(old_elements, new_elements);
+            if diffs.is_empty() {
+                None
+            } else {
+                Some(diffs)
+            }
+        }
+        (None, Some(new_elements)) if !new_elements.is_empty() => Some(
+            new_elements
+                .iter()
+                .map(|element| added_or_removed_diff(element, ChangeType::Added))
+                .collect(),
+        ),
+        (Some(old_elements), None) if !old_elements.is_empty() => Some(
+            old_elements
+                .iter()
+                .map(|element| added_or_removed_diff(element, ChangeType::Removed))
+                .collect(),
+        ),
+        _ => None,
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -660,6 +641,11 @@ fn detect_price_changes_in_elements(elements: &[ElementDiff]) -> bool {
                 return true;
             }
         }
+        if let Some(ref shadow) = e.shadow_changes {
+            if detect_price_changes_in_elements(shadow) {
+                return true;
+            }
+        }
     }
     false
 }
@@ -701,6 +687,11 @@ fn detect_text_changes_in_elements(elements: &[ElementDiff]) -> bool {
         }
         if let Some(ref children) = element.children_changes {
             if detect_text_changes_in_elements(children) {
+                return true;
+            }
+        }
+        if let Some(ref shadow) = element.shadow_changes {
+            if detect_text_changes_in_elements(shadow) {
                 return true;
             }
         }
@@ -835,6 +826,9 @@ fn render_element_diffs(out: &mut String, diffs: &[ElementDiff], indent: usize) 
                 }
                 if let Some(ref children) = e.children_changes {
                     render_element_diffs(out, children, indent + 4);
+                }
+                if let Some(ref shadow) = e.shadow_changes {
+                    render_element_diffs(out, shadow, indent + 4);
                 }
             }
         }
