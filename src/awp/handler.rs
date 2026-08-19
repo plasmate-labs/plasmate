@@ -1448,6 +1448,9 @@ fn collect_elements_recursive(elements: &[Element], out: &mut Vec<Element>) {
         if let Some(children) = &el.children {
             collect_elements_recursive(children, out);
         }
+        if let Some(shadow) = &el.shadow {
+            collect_elements_recursive(&shadow.elements, out);
+        }
     }
 }
 
@@ -1616,6 +1619,9 @@ fn update_element_value_in_list(elements: &mut [Element], element_id: &str, valu
         if let Some(children) = &mut el.children {
             update_element_value_in_list(children, element_id, value);
         }
+        if let Some(shadow) = &mut el.shadow {
+            update_element_value_in_list(&mut shadow.elements, element_id, value);
+        }
     }
 }
 
@@ -1645,6 +1651,9 @@ fn toggle_element_in_list(elements: &mut [Element], element_id: &str) {
         }
         if let Some(children) = &mut el.children {
             toggle_element_in_list(children, element_id);
+        }
+        if let Some(shadow) = &mut el.shadow {
+            toggle_element_in_list(&mut shadow.elements, element_id);
         }
     }
 }
@@ -1811,5 +1820,143 @@ fn handle_proxy_pool_report(
             ErrorCode::InvalidRequest,
             "Missing proxy_url or no pool configured",
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::som::types::{Region, RegionRole, ShadowRoot, Som, SomMeta};
+
+    fn test_element(id: &str, role: ElementRole, text: Option<&str>) -> Element {
+        Element {
+            id: id.to_string(),
+            role,
+            html_id: None,
+            text: text.map(str::to_string),
+            label: None,
+            actions: None,
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        }
+    }
+
+    fn shadow_host_som() -> Som {
+        let mut host = test_element("e_host", ElementRole::Section, None);
+        host.children = Some(vec![test_element(
+            "e_nested_button",
+            ElementRole::Button,
+            Some("Nested save"),
+        )]);
+        host.shadow = Some(ShadowRoot {
+            mode: "open".to_string(),
+            elements: vec![
+                test_element("e_shadow_button", ElementRole::Button, Some("Shadow save")),
+                {
+                    let mut input = test_element("e_shadow_input", ElementRole::TextInput, None);
+                    input.attrs = Some(json!({ "value": "" }));
+                    input
+                },
+                {
+                    let mut checkbox = test_element("e_shadow_check", ElementRole::Checkbox, None);
+                    checkbox.attrs = Some(json!({ "checked": false }));
+                    checkbox
+                },
+            ],
+        });
+
+        Som {
+            som_version: "0.1".to_string(),
+            url: "https://example.test/settings".to_string(),
+            title: "Settings".to_string(),
+            lang: "en".to_string(),
+            regions: vec![Region {
+                id: "r_main".to_string(),
+                role: RegionRole::Main,
+                label: None,
+                action: None,
+                method: None,
+                target: None,
+                enctype: None,
+                novalidate: None,
+                accept_charset: None,
+                autocomplete: None,
+                elements: vec![host],
+            }],
+            meta: SomMeta {
+                html_bytes: 1,
+                som_bytes: 1,
+                element_count: 5,
+                interactive_count: 4,
+            },
+            structured_data: None,
+        }
+    }
+
+    #[test]
+    fn collect_all_elements_includes_nested_and_shadow_content() {
+        let som = shadow_host_som();
+        let elements = collect_all_elements(&som);
+        let ids: Vec<&str> = elements.iter().map(|element| element.id.as_str()).collect();
+
+        assert_eq!(
+            ids,
+            vec![
+                "e_host",
+                "e_nested_button",
+                "e_shadow_button",
+                "e_shadow_input",
+                "e_shadow_check"
+            ]
+        );
+    }
+
+    #[test]
+    fn resolve_target_finds_shadow_button_by_ref_and_text() {
+        let som = shadow_host_som();
+
+        let by_ref = resolve_target(&json!({ "ref": "e_shadow_button" }), &som)
+            .expect("shadow ref should resolve");
+        assert_eq!(by_ref.id, "e_shadow_button");
+
+        let by_text = resolve_target(&json!({ "role": "button", "text": "Shadow save" }), &som)
+            .expect("shadow text should resolve");
+        assert_eq!(by_text.id, "e_shadow_button");
+    }
+
+    #[test]
+    fn update_and_toggle_reach_shadow_controls() {
+        let mut som = shadow_host_som();
+
+        update_element_value(&mut som, "e_shadow_input", "typed");
+        toggle_element(&mut som, "e_shadow_check");
+
+        let input = collect_all_elements(&som)
+            .into_iter()
+            .find(|element| element.id == "e_shadow_input")
+            .expect("shadow input should remain collectable");
+        assert_eq!(
+            input
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("value"))
+                .and_then(|value| value.as_str()),
+            Some("typed")
+        );
+
+        let checkbox = collect_all_elements(&som)
+            .into_iter()
+            .find(|element| element.id == "e_shadow_check")
+            .expect("shadow checkbox should remain collectable");
+        assert_eq!(
+            checkbox
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("checked"))
+                .and_then(|value| value.as_bool()),
+            Some(true)
+        );
     }
 }
