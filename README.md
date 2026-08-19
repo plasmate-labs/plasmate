@@ -377,7 +377,7 @@ Playwright, CDP, or web-platform compatibility. Supported CDP methods include:
 - `DOM.getDocument`, `DOM.querySelector`, `DOM.querySelectorAll`
 - `Input.dispatchMouseEvent`, `Input.dispatchKeyEvent`
 - Target management (create, attach, close)
-- `Plasmate.getSom`, `Plasmate.getStructuredData`, `Plasmate.getInteractiveElements`, `Plasmate.getMarkdown`, `Plasmate.getText`
+- `Plasmate.getSom`, `Plasmate.getStructuredData`, `Plasmate.getInteractiveElements`, `Plasmate.getMarkdown`, `Plasmate.getText`, `Plasmate.getLinks`
 
 `Plasmate.getInteractiveElements` returns a full-tree action menu, including
 nested and shadow-root targets. It accepts optional `role`, `action`, `label`,

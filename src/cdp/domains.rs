@@ -1515,6 +1515,23 @@ pub fn plasmate_get_text(id: u64, target: &CdpTarget) -> CdpResponse {
     )
 }
 
+pub fn plasmate_get_links(id: u64, target: &CdpTarget) -> CdpResponse {
+    let links = if let Some(som) = &target.current_som {
+        som_to_links(som)
+    } else {
+        Vec::new()
+    };
+
+    CdpResponse::success(
+        id,
+        json!({
+            "links": links,
+            "count": links.len(),
+            "url": target.current_url,
+        }),
+    )
+}
+
 pub async fn plasmate_list_plugins(id: u64, target: &CdpTarget) -> CdpResponse {
     let manifests = if let Some(ref pm) = target.plugins {
         let pm = pm.lock().await;
@@ -2000,6 +2017,38 @@ fn collect_text<'a>(element: &'a Element, parts: &mut Vec<&'a str>) {
     }
 }
 
+fn som_to_links(som: &crate::som::types::Som) -> Vec<String> {
+    let mut urls = Vec::new();
+    for region in &som.regions {
+        for element in &region.elements {
+            collect_links(element, &mut urls);
+        }
+    }
+    let mut seen = std::collections::HashSet::new();
+    urls.retain(|url| seen.insert(url.clone()));
+    urls
+}
+
+fn collect_links(element: &Element, urls: &mut Vec<String>) {
+    if element.role == crate::som::types::ElementRole::Link {
+        if let Some(href) = attr_string(element.attrs.as_ref(), "href") {
+            if href != "#" {
+                urls.push(href.to_string());
+            }
+        }
+    }
+    if let Some(children) = &element.children {
+        for child in children {
+            collect_links(child, urls);
+        }
+    }
+    if let Some(shadow) = &element.shadow {
+        for child in &shadow.elements {
+            collect_links(child, urls);
+        }
+    }
+}
+
 /// Convert SOM to markdown for Lightpanda-compatible output.
 fn som_to_markdown(som: &crate::som::types::Som) -> String {
     let mut md = String::new();
@@ -2457,5 +2506,61 @@ mod tests {
             .to_string();
 
         assert_eq!(text, "Settings\nNested paragraph\nShadow copy");
+    }
+
+    #[test]
+    fn get_links_includes_nested_and_shadow_hrefs() {
+        let mut nested_link = element("nested-link", ElementRole::Link, Some("Nested"));
+        nested_link.attrs = Some(json!({"href": "/nested"}));
+
+        let mut duplicate_link = element("duplicate-link", ElementRole::Link, Some("Dup"));
+        duplicate_link.attrs = Some(json!({"href": "/nested"}));
+
+        let mut hash_link = element("hash-link", ElementRole::Link, Some("Skip"));
+        hash_link.attrs = Some(json!({"href": "#"}));
+
+        let mut shadow_link = element("shadow-link", ElementRole::Link, Some("Shadow"));
+        shadow_link.attrs = Some(json!({"href": "/docs"}));
+
+        let mut host = element("host", ElementRole::Section, None);
+        host.children = Some(vec![nested_link, duplicate_link, hash_link]);
+        host.shadow = Some(ShadowRoot {
+            mode: "open".to_string(),
+            elements: vec![shadow_link],
+        });
+
+        let som = Som {
+            som_version: "0.1".to_string(),
+            url: "https://example.com/app".to_string(),
+            title: "Settings".to_string(),
+            lang: "en".to_string(),
+            regions: vec![Region {
+                id: "main".to_string(),
+                role: RegionRole::Main,
+                label: None,
+                action: None,
+                method: None,
+                target: None,
+                enctype: None,
+                novalidate: None,
+                accept_charset: None,
+                autocomplete: None,
+                elements: vec![host],
+            }],
+            meta: SomMeta {
+                html_bytes: 100,
+                som_bytes: 100,
+                element_count: 5,
+                interactive_count: 4,
+            },
+            structured_data: None,
+        };
+
+        let target = cdp_target_with_som(som);
+        let result = plasmate_get_links(1, &target).result.unwrap();
+        let links = result["links"].as_array().unwrap();
+
+        assert_eq!(result["count"], 2);
+        assert_eq!(links, &vec![json!("/nested"), json!("/docs")]);
     }
 }
