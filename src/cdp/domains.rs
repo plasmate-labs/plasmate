@@ -1499,6 +1499,22 @@ pub fn plasmate_get_markdown(id: u64, target: &CdpTarget) -> CdpResponse {
     )
 }
 
+pub fn plasmate_get_text(id: u64, target: &CdpTarget) -> CdpResponse {
+    let text = if let Some(som) = &target.current_som {
+        som_to_text(som)
+    } else {
+        String::new()
+    };
+
+    CdpResponse::success(
+        id,
+        json!({
+            "text": text,
+            "url": target.current_url,
+        }),
+    )
+}
+
 pub async fn plasmate_list_plugins(id: u64, target: &CdpTarget) -> CdpResponse {
     let manifests = if let Some(ref pm) = target.plugins {
         let pm = pm.lock().await;
@@ -1952,6 +1968,38 @@ fn timestamp_sec() -> f64 {
         .as_secs_f64()
 }
 
+fn som_to_text(som: &crate::som::types::Som) -> String {
+    let mut parts: Vec<&str> = Vec::new();
+    if !som.title.is_empty() {
+        parts.push(&som.title);
+    }
+    for region in &som.regions {
+        for element in &region.elements {
+            collect_text(element, &mut parts);
+        }
+    }
+    parts.join("\n")
+}
+
+fn collect_text<'a>(element: &'a Element, parts: &mut Vec<&'a str>) {
+    if let Some(text) = &element.text {
+        let trimmed = text.trim();
+        if !trimmed.is_empty() {
+            parts.push(trimmed);
+        }
+    }
+    if let Some(children) = &element.children {
+        for child in children {
+            collect_text(child, parts);
+        }
+    }
+    if let Some(shadow) = &element.shadow {
+        for child in &shadow.elements {
+            collect_text(child, parts);
+        }
+    }
+}
+
 /// Convert SOM to markdown for Lightpanda-compatible output.
 fn som_to_markdown(som: &crate::som::types::Som) -> String {
     let mut md = String::new();
@@ -2358,5 +2406,56 @@ mod tests {
         assert!(markdown.contains("## Nested heading"));
         assert!(markdown.contains("Nested paragraph"));
         assert!(markdown.contains("[Shadow docs](/docs)"));
+    }
+
+    #[test]
+    fn get_text_includes_nested_and_shadow_content() {
+        let mut nested_paragraph = element("nested-paragraph", ElementRole::Paragraph, None);
+        nested_paragraph.text = Some("Nested paragraph".to_string());
+
+        let mut shadow_copy = element("shadow-copy", ElementRole::Paragraph, None);
+        shadow_copy.text = Some("Shadow copy".to_string());
+
+        let mut host = element("host", ElementRole::Section, None);
+        host.children = Some(vec![nested_paragraph]);
+        host.shadow = Some(ShadowRoot {
+            mode: "open".to_string(),
+            elements: vec![shadow_copy],
+        });
+
+        let som = Som {
+            som_version: "0.1".to_string(),
+            url: "https://example.com/app".to_string(),
+            title: "Settings".to_string(),
+            lang: "en".to_string(),
+            regions: vec![Region {
+                id: "main".to_string(),
+                role: RegionRole::Main,
+                label: None,
+                action: None,
+                method: None,
+                target: None,
+                enctype: None,
+                novalidate: None,
+                accept_charset: None,
+                autocomplete: None,
+                elements: vec![host],
+            }],
+            meta: SomMeta {
+                html_bytes: 100,
+                som_bytes: 100,
+                element_count: 3,
+                interactive_count: 0,
+            },
+            structured_data: None,
+        };
+
+        let target = cdp_target_with_som(som);
+        let text = plasmate_get_text(1, &target).result.unwrap()["text"]
+            .as_str()
+            .unwrap()
+            .to_string();
+
+        assert_eq!(text, "Settings\nNested paragraph\nShadow copy");
     }
 }
