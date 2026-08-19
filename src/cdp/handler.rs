@@ -514,6 +514,7 @@ async fn handle_cdp_request_inner(
             vec![],
         ),
         "Plasmate.getMarkdown" => (domains::plasmate_get_markdown(id, target), vec![]),
+        "Plasmate.getText" => (domains::plasmate_get_text(id, target), vec![]),
         "Plasmate.listPlugins" => (domains::plasmate_list_plugins(id, target).await, vec![]),
 
         // ---- Unknown: acknowledge to avoid breaking clients ----
