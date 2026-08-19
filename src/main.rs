@@ -1719,21 +1719,41 @@ fn render_element_markdown(el: &som::types::Element, out: &mut String, depth: us
             out.push_str(&format!("![{}]({})\n", alt, src));
         }
         ElementRole::List => {
-            if let Some(ref children) = el.children {
+            let mut emitted = false;
+            if let Some(items) = el
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("items"))
+                .and_then(|value| value.as_array())
+            {
+                for item in items {
+                    if let Some(text) = item.get("text").and_then(|value| value.as_str()) {
+                        let trimmed = text.trim();
+                        if !trimmed.is_empty() {
+                            out.push_str(&format!("- {}\n", trimmed));
+                            emitted = true;
+                        }
+                    }
+                }
+            } else if let Some(ref children) = el.children {
                 for child in children {
                     if let Some(ref t) = child.text {
                         let trimmed = t.trim();
                         if !trimmed.is_empty() {
                             out.push_str(&format!("- {}\n", trimmed));
+                            emitted = true;
                         }
                     }
                 }
-                out.push('\n');
             } else if let Some(ref t) = el.text {
                 let trimmed = t.trim();
                 if !trimmed.is_empty() {
-                    out.push_str(&format!("- {}\n\n", trimmed));
+                    out.push_str(&format!("- {}\n", trimmed));
+                    emitted = true;
                 }
+            }
+            if emitted {
+                out.push('\n');
             }
         }
         ElementRole::Table => {
@@ -2266,5 +2286,19 @@ mod tests {
         assert!(markdown.contains("## Nested heading"));
         assert!(markdown.contains("Nested paragraph"));
         assert!(markdown.contains("[Shadow docs](/docs)"));
+    }
+
+    #[test]
+    fn markdown_format_includes_compiled_list_items() {
+        let som = som::compiler::compile(
+            "<main><h1>Docs</h1><ul><li>Install</li><li>Configure</li></ul></main>",
+            "https://example.test/docs",
+        )
+        .expect("list fixture should compile");
+
+        let markdown = render_som_output(&som, "markdown").expect("markdown output should render");
+
+        assert!(markdown.contains("- Install"));
+        assert!(markdown.contains("- Configure"));
     }
 }
