@@ -2128,6 +2128,62 @@ fn render_markdown_element(element: &Element, md: &mut String) {
                 md.push('\n');
             }
         }
+        ElementRole::Table => {
+            let mut emitted = false;
+            if let Some(attrs) = &element.attrs {
+                if let Some(caption) = attrs.get("caption").and_then(|value| value.as_str()) {
+                    let trimmed = caption.trim();
+                    if !trimmed.is_empty() {
+                        md.push_str(trimmed);
+                        md.push_str("\n\n");
+                        emitted = true;
+                    }
+                }
+                let headers: Vec<&str> = attrs
+                    .get("headers")
+                    .and_then(|value| value.as_array())
+                    .map(|arr| arr.iter().filter_map(|h| h.as_str()).collect())
+                    .unwrap_or_default();
+                if !headers.is_empty() {
+                    md.push_str("| ");
+                    md.push_str(&headers.join(" | "));
+                    md.push_str(" |\n| ");
+                    md.push_str(
+                        &headers
+                            .iter()
+                            .map(|_| "---")
+                            .collect::<Vec<_>>()
+                            .join(" | "),
+                    );
+                    md.push_str(" |\n");
+                    emitted = true;
+                }
+                if let Some(rows) = attrs.get("rows").and_then(|value| value.as_array()) {
+                    for row in rows {
+                        if let Some(cells) = row.as_array() {
+                            let cell_text: Vec<&str> =
+                                cells.iter().filter_map(|c| c.as_str()).collect();
+                            if !cell_text.is_empty() {
+                                md.push_str("| ");
+                                md.push_str(&cell_text.join(" | "));
+                                md.push_str(" |\n");
+                                emitted = true;
+                            }
+                        }
+                    }
+                }
+            } else if let Some(text) = element.text.as_deref() {
+                let trimmed = text.trim();
+                if !trimmed.is_empty() {
+                    md.push_str(trimmed);
+                    md.push('\n');
+                    emitted = true;
+                }
+            }
+            if emitted {
+                md.push('\n');
+            }
+        }
         ElementRole::Image => {
             let alt = element.label.as_deref().unwrap_or("image");
             let src = element
@@ -2507,6 +2563,26 @@ mod tests {
 
         assert!(markdown.contains("- Install"));
         assert!(markdown.contains("- Configure"));
+    }
+
+    #[test]
+    fn get_markdown_includes_compiled_table_rows() {
+        let som = crate::som::compiler::compile(
+            "<main><h1>Pricing</h1><table><caption>Plans</caption><thead><tr><th>Plan</th><th>Price</th></tr></thead><tbody><tr><td>Starter</td><td>$9</td></tr><tr><td>Pro</td><td>$29</td></tr></tbody></table></main>",
+            "https://example.test/pricing",
+        )
+        .expect("table fixture should compile");
+
+        let target = cdp_target_with_som(som);
+        let markdown = plasmate_get_markdown(1, &target).result.unwrap()["markdown"]
+            .as_str()
+            .unwrap()
+            .to_string();
+
+        assert!(markdown.contains("Plans"));
+        assert!(markdown.contains("| Plan | Price |"));
+        assert!(markdown.contains("| Starter | $9 |"));
+        assert!(markdown.contains("| Pro | $29 |"));
     }
 
     #[test]
