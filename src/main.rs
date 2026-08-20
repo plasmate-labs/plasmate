@@ -1737,13 +1737,59 @@ fn render_element_markdown(el: &som::types::Element, out: &mut String, depth: us
             }
         }
         ElementRole::Table => {
-            // Tables are complex structures; emit their text content for now
-            if let Some(ref t) = el.text {
+            let mut emitted = false;
+            if let Some(attrs) = &el.attrs {
+                if let Some(caption) = attrs.get("caption").and_then(|value| value.as_str()) {
+                    let trimmed = caption.trim();
+                    if !trimmed.is_empty() {
+                        out.push_str(trimmed);
+                        out.push_str("\n\n");
+                        emitted = true;
+                    }
+                }
+                let headers: Vec<&str> = attrs
+                    .get("headers")
+                    .and_then(|value| value.as_array())
+                    .map(|arr| arr.iter().filter_map(|h| h.as_str()).collect())
+                    .unwrap_or_default();
+                if !headers.is_empty() {
+                    out.push_str("| ");
+                    out.push_str(&headers.join(" | "));
+                    out.push_str(" |\n| ");
+                    out.push_str(
+                        &headers
+                            .iter()
+                            .map(|_| "---")
+                            .collect::<Vec<_>>()
+                            .join(" | "),
+                    );
+                    out.push_str(" |\n");
+                    emitted = true;
+                }
+                if let Some(rows) = attrs.get("rows").and_then(|value| value.as_array()) {
+                    for row in rows {
+                        if let Some(cells) = row.as_array() {
+                            let cell_text: Vec<&str> =
+                                cells.iter().filter_map(|c| c.as_str()).collect();
+                            if !cell_text.is_empty() {
+                                out.push_str("| ");
+                                out.push_str(&cell_text.join(" | "));
+                                out.push_str(" |\n");
+                                emitted = true;
+                            }
+                        }
+                    }
+                }
+            } else if let Some(ref t) = el.text {
                 let trimmed = t.trim();
                 if !trimmed.is_empty() {
                     out.push_str(trimmed);
-                    out.push_str("\n\n");
+                    out.push('\n');
+                    emitted = true;
                 }
+            }
+            if emitted {
+                out.push('\n');
             }
         }
         ElementRole::Separator => {
@@ -2266,5 +2312,21 @@ mod tests {
         assert!(markdown.contains("## Nested heading"));
         assert!(markdown.contains("Nested paragraph"));
         assert!(markdown.contains("[Shadow docs](/docs)"));
+    }
+
+    #[test]
+    fn markdown_format_includes_compiled_table_rows() {
+        let som = plasmate::som::compiler::compile(
+            "<main><h1>Pricing</h1><table><caption>Plans</caption><thead><tr><th>Plan</th><th>Price</th></tr></thead><tbody><tr><td>Starter</td><td>$9</td></tr><tr><td>Pro</td><td>$29</td></tr></tbody></table></main>",
+            "https://example.test/pricing",
+        )
+        .expect("table fixture should compile");
+
+        let markdown = render_som_output(&som, "markdown").expect("markdown output should render");
+
+        assert!(markdown.contains("Plans"));
+        assert!(markdown.contains("| Plan | Price |"));
+        assert!(markdown.contains("| Starter | $9 |"));
+        assert!(markdown.contains("| Pro | $29 |"));
     }
 }
