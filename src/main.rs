@@ -1580,9 +1580,9 @@ fn render_som_output(
 ) -> Result<String, Box<dyn std::error::Error>> {
     match format {
         "text" => {
-            let mut parts: Vec<&str> = Vec::new();
+            let mut parts: Vec<String> = Vec::new();
             if !som.title.is_empty() {
-                parts.push(&som.title);
+                parts.push(som.title.clone());
             }
             for region in &som.regions {
                 for el in &region.elements {
@@ -1620,11 +1620,35 @@ fn render_som_output(
 }
 
 /// Recursively collect visible text from a SOM element tree.
-fn collect_text<'a>(el: &'a som::types::Element, parts: &mut Vec<&'a str>) {
+fn collect_text(el: &som::types::Element, parts: &mut Vec<String>) {
     if let Some(ref text) = el.text {
         let t = text.trim();
         if !t.is_empty() {
-            parts.push(t);
+            parts.push(t.to_string());
+        }
+    }
+    if let Some(ref attrs) = el.attrs {
+        if let Some(caption) = attrs.get("caption").and_then(|value| value.as_str()) {
+            let trimmed = caption.trim();
+            if !trimmed.is_empty() {
+                parts.push(trimmed.to_string());
+            }
+        }
+        if let Some(headers) = attrs.get("headers").and_then(|value| value.as_array()) {
+            let header_text: Vec<&str> = headers.iter().filter_map(|h| h.as_str()).collect();
+            if !header_text.is_empty() {
+                parts.push(header_text.join(" | "));
+            }
+        }
+        if let Some(rows) = attrs.get("rows").and_then(|value| value.as_array()) {
+            for row in rows {
+                if let Some(cells) = row.as_array() {
+                    let cell_text: Vec<&str> = cells.iter().filter_map(|c| c.as_str()).collect();
+                    if !cell_text.is_empty() {
+                        parts.push(cell_text.join(" | "));
+                    }
+                }
+            }
         }
     }
     if let Some(ref children) = el.children {
@@ -2245,6 +2269,22 @@ mod tests {
         let text = render_som_output(&som, "text").expect("text output should render");
 
         assert_eq!(text, "Settings\nNested paragraph\nShadow copy");
+    }
+
+    #[test]
+    fn text_format_includes_compiled_table_rows() {
+        let som = plasmate::som::compiler::compile(
+            "<main><h1>Pricing</h1><table><caption>Plans</caption><thead><tr><th>Plan</th><th>Price</th></tr></thead><tbody><tr><td>Starter</td><td>$9</td></tr><tr><td>Pro</td><td>$29</td></tr></tbody></table></main>",
+            "https://example.test/pricing",
+        )
+        .expect("table fixture should compile");
+
+        let text = render_som_output(&som, "text").expect("text output should render");
+
+        assert!(text.contains("Plans"));
+        assert!(text.contains("Plan | Price"));
+        assert!(text.contains("Starter | $9"));
+        assert!(text.contains("Pro | $29"));
     }
 
     #[test]
