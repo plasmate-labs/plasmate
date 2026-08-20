@@ -639,6 +639,27 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
                 }
             }
         }
+        if let Some(caption) = attrs.get("caption").and_then(|v| v.as_str()) {
+            if !caption.is_empty() {
+                parts.push(caption.to_string());
+            }
+        }
+        if let Some(headers) = attrs.get("headers").and_then(|v| v.as_array()) {
+            let header_text: Vec<&str> = headers.iter().filter_map(|h| h.as_str()).collect();
+            if !header_text.is_empty() {
+                parts.push(header_text.join(" | "));
+            }
+        }
+        if let Some(rows) = attrs.get("rows").and_then(|v| v.as_array()) {
+            for row in rows {
+                if let Some(cells) = row.as_array() {
+                    let cell_text: Vec<&str> = cells.iter().filter_map(|c| c.as_str()).collect();
+                    if !cell_text.is_empty() {
+                        parts.push(cell_text.join(" | "));
+                    }
+                }
+            }
+        }
     }
 
     // Recurse into children
@@ -3658,6 +3679,29 @@ mod tests {
         extract_element_text(&host, &mut parts);
 
         assert_eq!(parts, vec!["Host".to_string(), "Shadow text".to_string()]);
+    }
+
+    #[test]
+    fn test_extract_element_text_includes_compiled_table_rows() {
+        let mut table = test_element("pricing", ElementRole::Table, None, None);
+        table.attrs = Some(json!({
+            "caption": "Plans",
+            "headers": ["Plan", "Price"],
+            "rows": [["Starter", "$9"], ["Pro", "$29"]]
+        }));
+
+        let mut parts = Vec::new();
+        extract_element_text(&table, &mut parts);
+
+        assert_eq!(
+            parts,
+            vec![
+                "Plans".to_string(),
+                "Plan | Price".to_string(),
+                "Starter | $9".to_string(),
+                "Pro | $29".to_string()
+            ]
+        );
     }
 
     #[test]
