@@ -112,6 +112,7 @@ class SomElementAttrs(BaseModel):
     items: Optional[List[ListItem]] = None
     headers: Optional[List[str]] = None
     rows: Optional[List[List[str]]] = None
+    caption: Optional[str] = None
     section_label: Optional[str] = None
     legend: Optional[str] = None
     open: Optional[bool] = None
