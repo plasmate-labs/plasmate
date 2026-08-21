@@ -733,6 +733,49 @@ describe('getText', () => {
     expect(byRegion[0].text).toContain('Install');
     expect(byRegion[0].text).toContain('Configure');
   });
+
+  it('includes compiled table rows', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_main',
+          role: 'main',
+          elements: [
+            {
+              id: 'e_table',
+              role: 'table',
+              attrs: {
+                headers: ['Plan', 'Price'],
+                rows: [
+                  ['Starter', '$9'],
+                  ['Pro', '$29'],
+                ],
+              },
+            },
+          ],
+        },
+      ],
+      meta: {
+        html_bytes: 100,
+        som_bytes: 50,
+        element_count: 1,
+        interactive_count: 0,
+      },
+    };
+
+    const text = getText(som);
+    expect(text).toContain('Plan | Price');
+    expect(text).toContain('Starter | $9');
+    expect(text).toContain('Pro | $29');
+
+    const byRegion = getTextByRegion(som);
+    expect(byRegion).toHaveLength(1);
+    expect(byRegion[0].role).toBe('main');
+    expect(byRegion[0].text).toContain('Plan | Price');
+    expect(byRegion[0].text).toContain('Starter | $9');
+    expect(byRegion[0].text).toContain('Pro | $29');
+  });
 });
 
 describe('getTextByRegion', () => {

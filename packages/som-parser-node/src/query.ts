@@ -590,6 +590,15 @@ function visibleTextParts(el: SomElement): string[] {
       parts.push(item.text);
     }
   }
+  const headers = el.attrs?.headers ?? [];
+  if (headers.length) {
+    parts.push(headers.join(' | '));
+  }
+  for (const row of el.attrs?.rows ?? []) {
+    if (row.length) {
+      parts.push(row.join(' | '));
+    }
+  }
   return parts;
 }
 
