@@ -575,14 +575,25 @@ def get_headings(som: Som) -> List[Dict[str, object]]:
     return headings
 
 
+def _visible_text_parts(el: SomElement) -> List[str]:
+    """Return element text plus compiled list items when present."""
+    parts: List[str] = []
+    if el.text:
+        parts.append(el.text)
+    elif el.label:
+        parts.append(el.label)
+    if el.attrs and el.attrs.items:
+        for item in el.attrs.items:
+            if item.text:
+                parts.append(item.text)
+    return parts
+
+
 def get_text(som: Som) -> str:
     """Extract all visible text content from the SOM."""
     parts: List[str] = []
     for el in get_all_elements(som):
-        if el.text:
-            parts.append(el.text)
-        elif el.label:
-            parts.append(el.label)
+        parts.extend(_visible_text_parts(el))
     return "\n".join(parts)
 
 
@@ -592,10 +603,7 @@ def get_text_by_region(som: Som) -> List[Dict[str, object]]:
     for region in som.regions:
         texts: List[str] = []
         for el in _collect_elements(region.elements):
-            if el.text:
-                texts.append(el.text)
-            elif el.label:
-                texts.append(el.label)
+            texts.extend(_visible_text_parts(el))
         results.append({
             "region_id": region.id,
             "role": region.role.value,

@@ -770,6 +770,45 @@ class TestGetText:
         assert "Search" in text
         assert "Go" in text
 
+    def test_includes_compiled_list_items(self):
+        som = parse_som({
+            **FIXTURE_SOM,
+            "regions": [
+                {
+                    "id": "r_main",
+                    "role": "main",
+                    "elements": [
+                        {
+                            "id": "e_list",
+                            "role": "list",
+                            "attrs": {
+                                "ordered": False,
+                                "items": [
+                                    {"text": "Install"},
+                                    {"text": "Configure"},
+                                ],
+                            },
+                        }
+                    ],
+                }
+            ],
+            "meta": {
+                "html_bytes": 100,
+                "som_bytes": 50,
+                "element_count": 1,
+                "interactive_count": 0,
+            },
+        })
+
+        text = get_text(som)
+        assert "Install" in text
+        assert "Configure" in text
+
+        regions = get_text_by_region(som)
+        assert regions[0]["role"] == "main"
+        assert "Install" in regions[0]["text"]
+        assert "Configure" in regions[0]["text"]
+
 
 class TestGetTextByRegion:
     def test_regions(self, som: Som):
