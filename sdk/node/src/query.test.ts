@@ -262,6 +262,37 @@ describe('findByText', () => {
   it('returns empty for no match', () => {
     assert.deepEqual(findByText(fixture, 'nonexistent'), []);
   });
+
+  it('finds compiled list items', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_main',
+          role: 'main',
+          elements: [
+            {
+              id: 'e_list',
+              role: 'list',
+              attrs: {
+                ordered: false,
+                items: [{ text: 'Install' }, { text: 'Configure' }],
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    const results = findByText(som, 'install');
+    assert.equal(results.length, 1);
+    assert.equal(results[0].id, 'e_list');
+    assert.deepEqual(
+      findByText(som, 'Configure').map((el) => el.id),
+      ['e_list'],
+    );
+    assert.deepEqual(findByText(som, 'nonexistent'), []);
+  });
 });
 
 describe('getActionPlan', () => {
