@@ -8,6 +8,7 @@ import pytest
 from plasmate.types import (
     ElementAttrs,
     ElementRole,
+    ListItem,
     RegionRole,
     SemanticHint,
     SelectOption,
@@ -452,6 +453,44 @@ class TestFindByText:
 
     def test_no_match_returns_empty(self, sample_som: Som) -> None:
         assert find_by_text(sample_som, "zzz_no_match") == []
+
+    def test_finds_compiled_list_items(self) -> None:
+        som = Som(
+            som_version="1.0",
+            url="https://example.com/list",
+            title="List Page",
+            lang="en",
+            regions=[
+                SomRegion(
+                    id="r_main",
+                    role=RegionRole.main,
+                    elements=[
+                        SomElement(
+                            id="e_list",
+                            role=ElementRole.list,
+                            attrs=ElementAttrs(
+                                ordered=False,
+                                items=[
+                                    ListItem(text="Install"),
+                                    ListItem(text="Configure"),
+                                ],
+                            ),
+                        )
+                    ],
+                )
+            ],
+            meta=SomMeta(
+                html_bytes=100,
+                som_bytes=50,
+                element_count=1,
+                interactive_count=0,
+            ),
+        )
+
+        results = find_by_text(som, "install")
+        assert [el.id for el in results] == ["e_list"]
+        assert find_by_text(som, "Configure")[0].id == "e_list"
+        assert find_by_text(som, "zzz_no_match") == []
 
 
 class TestFlatElements:
