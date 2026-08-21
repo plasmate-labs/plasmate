@@ -386,6 +386,40 @@ describe('findByText', () => {
   it('returns empty for no match', () => {
     expect(findByText(FIXTURE, 'nonexistent')).toHaveLength(0);
   });
+
+  it('finds compiled list items', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_main',
+          role: 'main',
+          elements: [
+            {
+              id: 'e_list',
+              role: 'list',
+              attrs: {
+                ordered: false,
+                items: [{ text: 'Install' }, { text: 'Configure' }],
+              },
+            },
+          ],
+        },
+      ],
+      meta: {
+        html_bytes: 100,
+        som_bytes: 50,
+        element_count: 1,
+        interactive_count: 0,
+      },
+    };
+
+    expect(findByText(som, 'install').map((el) => el.id)).toEqual(['e_list']);
+    expect(findByText(som, 'Configure', { exact: true }).map((el) => el.id)).toEqual([
+      'e_list',
+    ]);
+    expect(findByText(som, 'configure', { exact: true })).toEqual([]);
+  });
 });
 
 describe('getInteractiveElements', () => {

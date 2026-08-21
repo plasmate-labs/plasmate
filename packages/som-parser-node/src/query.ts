@@ -46,6 +46,22 @@ export function findByHtmlId(som: Som, htmlId: string): SomElement | undefined {
   return getAllElements(som).find((el) => el.html_id === htmlId);
 }
 
+function searchableTextParts(el: SomElement): string[] {
+  const parts: string[] = [];
+  if (el.text) {
+    parts.push(el.text);
+  }
+  if (el.label) {
+    parts.push(el.label);
+  }
+  for (const item of el.attrs?.items ?? []) {
+    if (item.text) {
+      parts.push(item.text);
+    }
+  }
+  return parts;
+}
+
 /** Find elements containing text (case-insensitive substring by default). */
 export function findByText(
   som: Som,
@@ -54,13 +70,11 @@ export function findByText(
 ): SomElement[] {
   const all = getAllElements(som);
   if (options?.exact) {
-    return all.filter((el) => el.text === text || el.label === text);
+    return all.filter((el) => searchableTextParts(el).includes(text));
   }
   const lower = text.toLowerCase();
-  return all.filter(
-    (el) =>
-      (el.text && el.text.toLowerCase().includes(lower)) ||
-      (el.label && el.label.toLowerCase().includes(lower)),
+  return all.filter((el) =>
+    searchableTextParts(el).some((part) => part.toLowerCase().includes(lower)),
   );
 }
 
