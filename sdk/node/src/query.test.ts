@@ -293,6 +293,41 @@ describe('findByText', () => {
     );
     assert.deepEqual(findByText(som, 'nonexistent'), []);
   });
+
+  it('finds compiled table captions', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_main',
+          role: 'main',
+          elements: [
+            {
+              id: 'e_table',
+              role: 'table',
+              attrs: {
+                caption: 'Plans',
+                headers: ['Plan', 'Price'],
+                rows: [
+                  ['Starter', '$9'],
+                  ['Pro', '$29'],
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    const results = findByText(som, 'plans');
+    assert.equal(results.length, 1);
+    assert.equal(results[0].id, 'e_table');
+    assert.deepEqual(
+      findByText(som, 'Plans').map((el) => el.id),
+      ['e_table'],
+    );
+    assert.deepEqual(findByText(som, 'nonexistent'), []);
+  });
 });
 
 describe('getActionPlan', () => {
