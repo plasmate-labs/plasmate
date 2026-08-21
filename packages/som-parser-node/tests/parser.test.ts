@@ -902,6 +902,42 @@ describe('toMarkdown', () => {
     expect(md).toContain('**Search** (text_input)');
     expect(md).toContain('[Go] (button)');
   });
+
+  it('includes compiled table rows', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_main',
+          role: 'main',
+          elements: [
+            {
+              id: 'e_table',
+              role: 'table',
+              attrs: {
+                headers: ['Plan', 'Price'],
+                rows: [
+                  ['Starter', '$9'],
+                  ['Pro', '$29'],
+                ],
+              },
+            },
+          ],
+        },
+      ],
+      meta: {
+        html_bytes: 100,
+        som_bytes: 50,
+        element_count: 1,
+        interactive_count: 0,
+      },
+    };
+
+    const md = toMarkdown(som);
+    expect(md).toContain('| Plan | Price |');
+    expect(md).toContain('| Starter | $9 |');
+    expect(md).toContain('| Pro | $29 |');
+  });
 });
 
 describe('filter', () => {
