@@ -469,7 +469,7 @@ def find_action_target_by_label(
 
 
 def find_by_text(som: Som, text: str) -> List[SomElement]:
-    """Find all elements whose text or label contains the substring."""
+    """Find all elements whose text, label, or compiled list items contain the substring."""
     results: List[SomElement] = []
     lower = text.lower()
     for region in som.regions:
@@ -549,9 +549,14 @@ def _collect_interactive(element: SomElement, results: List[SomElement]) -> None
 
 
 def _collect_by_text(element: SomElement, lower_text: str, results: List[SomElement]) -> None:
-    if (element.text and lower_text in element.text.lower()) or (
-        element.label and lower_text in element.label.lower()
-    ):
+    parts = []
+    if element.text:
+        parts.append(element.text)
+    if element.label:
+        parts.append(element.label)
+    if element.attrs and element.attrs.items:
+        parts.extend(item.text for item in element.attrs.items if item.text)
+    if any(lower_text in part.lower() for part in parts):
         results.append(element)
     if element.children:
         for child in element.children:
