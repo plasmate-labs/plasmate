@@ -453,6 +453,44 @@ class TestFindByText:
     def test_no_match_returns_empty(self, sample_som: Som) -> None:
         assert find_by_text(sample_som, "zzz_no_match") == []
 
+    def test_finds_compiled_table_rows(self) -> None:
+        som = Som(
+            som_version="1.0",
+            url="https://example.com/table",
+            title="Table Page",
+            lang="en",
+            regions=[
+                SomRegion(
+                    id="r_main",
+                    role=RegionRole.main,
+                    elements=[
+                        SomElement(
+                            id="e_table",
+                            role=ElementRole.table,
+                            attrs=ElementAttrs(
+                                headers=["Plan", "Price"],
+                                rows=[
+                                    ["Starter", "$9"],
+                                    ["Pro", "$29"],
+                                ],
+                            ),
+                        )
+                    ],
+                )
+            ],
+            meta=SomMeta(
+                html_bytes=100,
+                som_bytes=50,
+                element_count=1,
+                interactive_count=0,
+            ),
+        )
+
+        results = find_by_text(som, "starter")
+        assert [el.id for el in results] == ["e_table"]
+        assert find_by_text(som, "Price")[0].id == "e_table"
+        assert find_by_text(som, "zzz_no_match") == []
+
 
 class TestFlatElements:
     def test_flattens_all_elements(self, sample_som: Som) -> None:
