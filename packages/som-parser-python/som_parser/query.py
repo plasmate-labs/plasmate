@@ -576,16 +576,23 @@ def get_headings(som: Som) -> List[Dict[str, object]]:
 
 
 def _visible_text_parts(el: SomElement) -> List[str]:
-    """Return element text plus compiled list items when present."""
+    """Return element text plus compiled list items and table headers/rows."""
     parts: List[str] = []
     if el.text:
         parts.append(el.text)
     elif el.label:
         parts.append(el.label)
-    if el.attrs and el.attrs.items:
-        for item in el.attrs.items:
-            if item.text:
-                parts.append(item.text)
+    if el.attrs:
+        if el.attrs.items:
+            for item in el.attrs.items:
+                if item.text:
+                    parts.append(item.text)
+        if el.attrs.headers:
+            parts.append(" | ".join(el.attrs.headers))
+        if el.attrs.rows:
+            for row in el.attrs.rows:
+                if row:
+                    parts.append(" | ".join(row))
     return parts
 
 

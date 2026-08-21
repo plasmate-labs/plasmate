@@ -809,6 +809,47 @@ class TestGetText:
         assert "Install" in regions[0]["text"]
         assert "Configure" in regions[0]["text"]
 
+    def test_includes_compiled_table_rows(self):
+        som = parse_som({
+            **FIXTURE_SOM,
+            "regions": [
+                {
+                    "id": "r_main",
+                    "role": "main",
+                    "elements": [
+                        {
+                            "id": "e_table",
+                            "role": "table",
+                            "attrs": {
+                                "headers": ["Plan", "Price"],
+                                "rows": [
+                                    ["Starter", "$9"],
+                                    ["Pro", "$29"],
+                                ],
+                            },
+                        }
+                    ],
+                }
+            ],
+            "meta": {
+                "html_bytes": 100,
+                "som_bytes": 50,
+                "element_count": 1,
+                "interactive_count": 0,
+            },
+        })
+
+        text = get_text(som)
+        assert "Plan | Price" in text
+        assert "Starter | $9" in text
+        assert "Pro | $29" in text
+
+        regions = get_text_by_region(som)
+        assert regions[0]["role"] == "main"
+        assert "Plan | Price" in regions[0]["text"]
+        assert "Starter | $9" in regions[0]["text"]
+        assert "Pro | $29" in regions[0]["text"]
+
 
 class TestGetTextByRegion:
     def test_regions(self, som: Som):
