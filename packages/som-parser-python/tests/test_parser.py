@@ -550,6 +550,43 @@ class TestFindByText:
         assert [el.id for el in find_by_text(som, "Pro", exact=True)] == ["e_table"]
         assert find_by_text(som, "pro", exact=True) == []
 
+    def test_finds_compiled_table_captions(self):
+        som = parse_som(
+            {
+                **FIXTURE_SOM,
+                "regions": [
+                    {
+                        "id": "r_main",
+                        "role": "main",
+                        "elements": [
+                            {
+                                "id": "e_table",
+                                "role": "table",
+                                "attrs": {
+                                    "caption": "Plans",
+                                    "headers": ["Plan", "Price"],
+                                    "rows": [
+                                        ["Starter", "$9"],
+                                        ["Pro", "$29"],
+                                    ],
+                                },
+                            }
+                        ],
+                    }
+                ],
+                "meta": {
+                    "html_bytes": 100,
+                    "som_bytes": 50,
+                    "element_count": 1,
+                    "interactive_count": 0,
+                },
+            }
+        )
+
+        assert [el.id for el in find_by_text(som, "plans")] == ["e_table"]
+        assert [el.id for el in find_by_text(som, "Plans", exact=True)] == ["e_table"]
+        assert find_by_text(som, "plans", exact=True) == []
+
 
 class TestGetInteractiveElements:
     def test_count(self, som: Som):
