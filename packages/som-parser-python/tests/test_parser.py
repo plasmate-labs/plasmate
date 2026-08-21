@@ -479,6 +479,41 @@ class TestFindByText:
         )
         assert find_by_text(som, "inside shadow")[0].id == "shadow_text"
 
+    def test_finds_compiled_list_items(self):
+        som = parse_som({
+            **FIXTURE_SOM,
+            "regions": [
+                {
+                    "id": "r_main",
+                    "role": "main",
+                    "elements": [
+                        {
+                            "id": "e_list",
+                            "role": "list",
+                            "attrs": {
+                                "ordered": False,
+                                "items": [
+                                    {"text": "Install"},
+                                    {"text": "Configure"},
+                                ],
+                            },
+                        }
+                    ],
+                }
+            ],
+            "meta": {
+                "html_bytes": 100,
+                "som_bytes": 50,
+                "element_count": 1,
+                "interactive_count": 0,
+            },
+        })
+
+        results = find_by_text(som, "install")
+        assert [el.id for el in results] == ["e_list"]
+        assert [el.id for el in find_by_text(som, "Configure", exact=True)] == ["e_list"]
+        assert find_by_text(som, "configure", exact=True) == []
+
 
 class TestGetInteractiveElements:
     def test_count(self, som: Som):

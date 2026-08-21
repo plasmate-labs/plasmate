@@ -77,14 +77,15 @@ def find_by_text(
     """
     results: List[SomElement] = []
     for el in get_all_elements(som):
-        el_text = el.text or ""
-        el_label = el.label or ""
+        parts = [el.text or "", el.label or ""]
+        if el.attrs and el.attrs.items:
+            parts.extend(item.text for item in el.attrs.items if item.text)
         if exact:
-            if text == el_text or text == el_label:
+            if text in parts:
                 results.append(el)
         else:
             text_lower = text.lower()
-            if text_lower in el_text.lower() or text_lower in el_label.lower():
+            if any(text_lower in part.lower() for part in parts):
                 results.append(el)
     return results
 
