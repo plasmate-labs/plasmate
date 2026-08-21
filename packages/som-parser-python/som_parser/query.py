@@ -687,6 +687,23 @@ def _element_to_markdown(el: SomElement, lines: List[str]) -> None:
         if el.attrs and el.attrs.items:
             for item in el.attrs.items:
                 lines.append(f"- {item.text}")
+    elif role == ElementRole.TABLE:
+        emitted = False
+        if el.attrs:
+            headers = el.attrs.headers or []
+            if headers:
+                lines.append("| " + " | ".join(headers) + " |")
+                lines.append("| " + " | ".join("---" for _ in headers) + " |")
+                emitted = True
+            for row in el.attrs.rows or []:
+                if row:
+                    lines.append("| " + " | ".join(row) + " |")
+                    emitted = True
+        elif el.text:
+            lines.append(el.text)
+            emitted = True
+        if emitted:
+            lines.append("")
     elif role == ElementRole.SEPARATOR:
         lines.append("---")
     else:

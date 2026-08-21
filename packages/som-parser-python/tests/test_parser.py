@@ -942,6 +942,41 @@ class TestToMarkdown:
         md = to_markdown(som)
         assert "Input: Search" in md
 
+    def test_includes_compiled_table_rows(self):
+        som = parse_som({
+            **FIXTURE_SOM,
+            "regions": [
+                {
+                    "id": "r_main",
+                    "role": "main",
+                    "elements": [
+                        {
+                            "id": "e_table",
+                            "role": "table",
+                            "attrs": {
+                                "headers": ["Plan", "Price"],
+                                "rows": [
+                                    ["Starter", "$9"],
+                                    ["Pro", "$29"],
+                                ],
+                            },
+                        }
+                    ],
+                }
+            ],
+            "meta": {
+                "html_bytes": 100,
+                "som_bytes": 50,
+                "element_count": 1,
+                "interactive_count": 0,
+            },
+        })
+
+        md = to_markdown(som)
+        assert "| Plan | Price |" in md
+        assert "| Starter | $9 |" in md
+        assert "| Pro | $29 |" in md
+
 
 class TestFilterElements:
     def test_filter_by_actions(self, som: Som):
