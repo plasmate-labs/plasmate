@@ -1986,9 +1986,9 @@ fn timestamp_sec() -> f64 {
 }
 
 fn som_to_text(som: &crate::som::types::Som) -> String {
-    let mut parts: Vec<&str> = Vec::new();
+    let mut parts: Vec<String> = Vec::new();
     if !som.title.is_empty() {
-        parts.push(&som.title);
+        parts.push(som.title.clone());
     }
     for region in &som.regions {
         for element in &region.elements {
@@ -1998,11 +1998,35 @@ fn som_to_text(som: &crate::som::types::Som) -> String {
     parts.join("\n")
 }
 
-fn collect_text<'a>(element: &'a Element, parts: &mut Vec<&'a str>) {
+fn collect_text(element: &Element, parts: &mut Vec<String>) {
     if let Some(text) = &element.text {
         let trimmed = text.trim();
         if !trimmed.is_empty() {
-            parts.push(trimmed);
+            parts.push(trimmed.to_string());
+        }
+    }
+    if let Some(attrs) = &element.attrs {
+        if let Some(caption) = attrs.get("caption").and_then(|value| value.as_str()) {
+            let trimmed = caption.trim();
+            if !trimmed.is_empty() {
+                parts.push(trimmed.to_string());
+            }
+        }
+        if let Some(headers) = attrs.get("headers").and_then(|value| value.as_array()) {
+            let header_text: Vec<&str> = headers.iter().filter_map(|h| h.as_str()).collect();
+            if !header_text.is_empty() {
+                parts.push(header_text.join(" | "));
+            }
+        }
+        if let Some(rows) = attrs.get("rows").and_then(|value| value.as_array()) {
+            for row in rows {
+                if let Some(cells) = row.as_array() {
+                    let cell_text: Vec<&str> = cells.iter().filter_map(|c| c.as_str()).collect();
+                    if !cell_text.is_empty() {
+                        parts.push(cell_text.join(" | "));
+                    }
+                }
+            }
         }
     }
     if let Some(children) = &element.children {
@@ -2634,6 +2658,26 @@ mod tests {
             .to_string();
 
         assert_eq!(text, "Settings\nNested paragraph\nShadow copy");
+    }
+
+    #[test]
+    fn get_text_includes_compiled_table_rows() {
+        let som = crate::som::compiler::compile(
+            "<main><h1>Pricing</h1><table><caption>Plans</caption><thead><tr><th>Plan</th><th>Price</th></tr></thead><tbody><tr><td>Starter</td><td>$9</td></tr><tr><td>Pro</td><td>$29</td></tr></tbody></table></main>",
+            "https://example.test/pricing",
+        )
+        .expect("table fixture should compile");
+
+        let target = cdp_target_with_som(som);
+        let text = plasmate_get_text(1, &target).result.unwrap()["text"]
+            .as_str()
+            .unwrap()
+            .to_string();
+
+        assert!(text.contains("Plans"));
+        assert!(text.contains("Plan | Price"));
+        assert!(text.contains("Starter | $9"));
+        assert!(text.contains("Pro | $29"));
     }
 
     #[test]
