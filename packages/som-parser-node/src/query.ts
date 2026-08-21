@@ -59,6 +59,9 @@ function searchableTextParts(el: SomElement): string[] {
       parts.push(item.text);
     }
   }
+  if (el.attrs?.caption) {
+    parts.push(el.attrs.caption);
+  }
   for (const header of el.attrs?.headers ?? []) {
     if (header) {
       parts.push(header);

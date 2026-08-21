@@ -457,6 +457,44 @@ describe('findByText', () => {
     ]);
     expect(findByText(som, 'pro', { exact: true })).toEqual([]);
   });
+
+  it('finds compiled table captions', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_main',
+          role: 'main',
+          elements: [
+            {
+              id: 'e_table',
+              role: 'table',
+              attrs: {
+                caption: 'Plans',
+                headers: ['Plan', 'Price'],
+                rows: [
+                  ['Starter', '$9'],
+                  ['Pro', '$29'],
+                ],
+              },
+            },
+          ],
+        },
+      ],
+      meta: {
+        html_bytes: 100,
+        som_bytes: 50,
+        element_count: 1,
+        interactive_count: 0,
+      },
+    };
+
+    expect(findByText(som, 'plans').map((el) => el.id)).toEqual(['e_table']);
+    expect(findByText(som, 'Plans', { exact: true }).map((el) => el.id)).toEqual([
+      'e_table',
+    ]);
+    expect(findByText(som, 'plans', { exact: true })).toEqual([]);
+  });
 });
 
 describe('getInteractiveElements', () => {

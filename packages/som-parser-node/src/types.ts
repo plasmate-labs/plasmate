@@ -103,6 +103,7 @@ export interface SomElementAttrs {
   items?: ListItem[];
   headers?: string[];
   rows?: string[][];
+  caption?: string;
   section_label?: string;
   legend?: string;
   open?: boolean;
