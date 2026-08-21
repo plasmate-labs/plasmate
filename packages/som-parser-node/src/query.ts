@@ -578,12 +578,24 @@ export function getHeadings(som: Som): Array<{ level: number; text: string; id: 
   }));
 }
 
+function visibleTextParts(el: SomElement): string[] {
+  const parts: string[] = [];
+  if (el.text) {
+    parts.push(el.text);
+  } else if (el.label) {
+    parts.push(el.label);
+  }
+  for (const item of el.attrs?.items ?? []) {
+    if (item.text) {
+      parts.push(item.text);
+    }
+  }
+  return parts;
+}
+
 /** Extract all visible text content, joined with newlines. */
 export function getText(som: Som): string {
-  return getAllElements(som)
-    .map((el) => el.text ?? el.label ?? '')
-    .filter(Boolean)
-    .join('\n');
+  return getAllElements(som).flatMap(visibleTextParts).join('\n');
 }
 
 /** Extract text grouped by region. */
@@ -593,10 +605,7 @@ export function getTextByRegion(
   return som.regions.map((r) => ({
     region: r.id,
     role: r.role,
-    text: collectElements(r.elements)
-      .map((el) => el.text ?? el.label ?? '')
-      .filter(Boolean)
-      .join('\n'),
+    text: collectElements(r.elements).flatMap(visibleTextParts).join('\n'),
   }));
 }
 
