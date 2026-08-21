@@ -2029,6 +2029,21 @@ fn collect_text(element: &Element, parts: &mut Vec<String>) {
             }
         }
     }
+    if let Some(items) = element
+        .attrs
+        .as_ref()
+        .and_then(|attrs| attrs.get("items"))
+        .and_then(|value| value.as_array())
+    {
+        for item in items {
+            if let Some(text) = item.get("text").and_then(|value| value.as_str()) {
+                let trimmed = text.trim();
+                if !trimmed.is_empty() {
+                    parts.push(trimmed.to_string());
+                }
+            }
+        }
+    }
     if let Some(children) = &element.children {
         for child in children {
             collect_text(child, parts);
@@ -2678,6 +2693,24 @@ mod tests {
         assert!(text.contains("Plan | Price"));
         assert!(text.contains("Starter | $9"));
         assert!(text.contains("Pro | $29"));
+    }
+
+    #[test]
+    fn get_text_includes_compiled_list_items() {
+        let som = crate::som::compiler::compile(
+            "<main><h1>Docs</h1><ul><li>Install</li><li>Configure</li></ul></main>",
+            "https://example.test/docs",
+        )
+        .expect("list fixture should compile");
+
+        let target = cdp_target_with_som(som);
+        let text = plasmate_get_text(1, &target).result.unwrap()["text"]
+            .as_str()
+            .unwrap()
+            .to_string();
+
+        assert!(text.contains("Install"));
+        assert!(text.contains("Configure"));
     }
 
     #[test]
