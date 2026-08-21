@@ -398,6 +398,56 @@ func TestFindByText(t *testing.T) {
 	}
 }
 
+func TestFindByTextCompiledListItems(t *testing.T) {
+	ordered := false
+	som := &Som{
+		SOMVersion: "1.0",
+		URL:        "https://example.com",
+		Title:      "Lists",
+		Lang:       "en",
+		Regions: []Region{
+			{
+				ID:   "r_main",
+				Role: "main",
+				Elements: []Element{
+					{
+						ID:   "e_list",
+						Role: "list",
+						Attrs: &ElementAttrs{
+							Ordered: &ordered,
+							Items: []ListItem{
+								{Text: "Install"},
+								{Text: "Configure"},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	results := FindByText(som, "install")
+	if len(results) != 1 {
+		t.Fatalf("FindByText(install) = %d, want 1", len(results))
+	}
+	if results[0].ID != "e_list" {
+		t.Errorf("ID = %q, want e_list", results[0].ID)
+	}
+
+	results = FindByText(som, "Configure")
+	if len(results) != 1 {
+		t.Fatalf("FindByText(Configure) = %d, want 1", len(results))
+	}
+	if results[0].ID != "e_list" {
+		t.Errorf("ID = %q, want e_list", results[0].ID)
+	}
+
+	empty := FindByText(som, "nonexistent")
+	if len(empty) != 0 {
+		t.Errorf("FindByText(nonexistent) = %d, want 0", len(empty))
+	}
+}
+
 func TestFlatElements(t *testing.T) {
 	som := mustParse(t)
 
