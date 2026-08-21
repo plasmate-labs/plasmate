@@ -679,6 +679,27 @@ export function toMarkdown(som: Som): string {
           if (items.length) lines.push('');
           break;
         }
+        case 'table': {
+          const headers = el.attrs?.headers ?? [];
+          let emitted = false;
+          if (headers.length) {
+            lines.push('| ' + headers.join(' | ') + ' |');
+            lines.push('| ' + headers.map(() => '---').join(' | ') + ' |');
+            emitted = true;
+          }
+          for (const row of el.attrs?.rows ?? []) {
+            if (row.length) {
+              lines.push('| ' + row.join(' | ') + ' |');
+              emitted = true;
+            }
+          }
+          if (!emitted && el.text) {
+            lines.push(el.text);
+            emitted = true;
+          }
+          if (emitted) lines.push('');
+          break;
+        }
         default:
           if (el.text) {
             lines.push(el.text);
