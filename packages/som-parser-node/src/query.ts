@@ -629,6 +629,9 @@ function visibleTextParts(el: SomElement): string[] {
       parts.push(option.text);
     }
   }
+  if (el.attrs?.caption) {
+    parts.push(el.attrs.caption);
+  }
   const headers = el.attrs?.headers ?? [];
   if (headers.length) {
     parts.push(headers.join(' | '));
