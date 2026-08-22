@@ -495,6 +495,43 @@ describe('findByText', () => {
     ]);
     expect(findByText(som, 'plans', { exact: true })).toEqual([]);
   });
+
+  it('finds compiled select options', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_main',
+          role: 'main',
+          elements: [
+            {
+              id: 'e_select',
+              role: 'select',
+              attrs: {
+                options: [
+                  { value: 'us', text: 'United States' },
+                  { value: 'ca', text: 'Canada' },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+      meta: {
+        html_bytes: 100,
+        som_bytes: 50,
+        element_count: 1,
+        interactive_count: 0,
+      },
+    };
+
+    expect(findByText(som, 'united states').map((el) => el.id)).toEqual(['e_select']);
+    expect(findByText(som, 'Canada', { exact: true }).map((el) => el.id)).toEqual([
+      'e_select',
+    ]);
+    expect(findByText(som, 'canada', { exact: true })).toEqual([]);
+    expect(findByText(som, 'nonexistent')).toEqual([]);
+  });
 });
 
 describe('getInteractiveElements', () => {
