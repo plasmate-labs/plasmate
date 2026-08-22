@@ -962,6 +962,54 @@ describe('getText', () => {
     expect(byRegion[0].text).toContain('United States');
     expect(byRegion[0].text).toContain('Canada');
   });
+
+  it('includes compiled table captions', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_main',
+          role: 'main',
+          elements: [
+            {
+              id: 'e_table',
+              role: 'table',
+              attrs: {
+                caption: 'Plans',
+                headers: ['Plan', 'Price'],
+                rows: [
+                  ['Starter', '$9'],
+                  ['Pro', '$29'],
+                ],
+              },
+            },
+          ],
+        },
+      ],
+      meta: {
+        html_bytes: 100,
+        som_bytes: 50,
+        element_count: 1,
+        interactive_count: 0,
+      },
+    };
+
+    const text = getText(som);
+    expect(text).toContain('Plans');
+    expect(text.indexOf('Plans')).toBeLessThan(text.indexOf('Plan | Price'));
+    expect(text).toContain('Plan | Price');
+    expect(text).toContain('Starter | $9');
+
+    const byRegion = getTextByRegion(som);
+    expect(byRegion).toHaveLength(1);
+    expect(byRegion[0].role).toBe('main');
+    expect(byRegion[0].text).toContain('Plans');
+    expect(byRegion[0].text.indexOf('Plans')).toBeLessThan(
+      byRegion[0].text.indexOf('Plan | Price'),
+    );
+    expect(byRegion[0].text).toContain('Plan | Price');
+    expect(byRegion[0].text).toContain('Starter | $9');
+  });
 });
 
 describe('getTextByRegion', () => {
