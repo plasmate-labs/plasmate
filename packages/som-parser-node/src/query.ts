@@ -711,6 +711,11 @@ export function toMarkdown(som: Som): string {
         case 'table': {
           const headers = el.attrs?.headers ?? [];
           let emitted = false;
+          if (el.attrs?.caption) {
+            lines.push(el.attrs.caption);
+            lines.push('');
+            emitted = true;
+          }
           if (headers.length) {
             lines.push('| ' + headers.join(' | ') + ' |');
             lines.push('| ' + headers.map(() => '---').join(' | ') + ' |');
