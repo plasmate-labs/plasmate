@@ -1013,6 +1013,44 @@ describe('toMarkdown', () => {
     expect(md).toContain('| Starter | $9 |');
     expect(md).toContain('| Pro | $29 |');
   });
+
+  it('includes compiled table captions', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_main',
+          role: 'main',
+          elements: [
+            {
+              id: 'e_table',
+              role: 'table',
+              attrs: {
+                caption: 'Plans',
+                headers: ['Plan', 'Price'],
+                rows: [
+                  ['Starter', '$9'],
+                  ['Pro', '$29'],
+                ],
+              },
+            },
+          ],
+        },
+      ],
+      meta: {
+        html_bytes: 100,
+        som_bytes: 50,
+        element_count: 1,
+        interactive_count: 0,
+      },
+    };
+
+    const md = toMarkdown(som);
+    expect(md).toContain('Plans');
+    expect(md.indexOf('Plans')).toBeLessThan(md.indexOf('| Plan | Price |'));
+    expect(md).toContain('| Plan | Price |');
+    expect(md).toContain('| Starter | $9 |');
+  });
 });
 
 describe('filter', () => {
