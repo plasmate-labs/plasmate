@@ -994,6 +994,44 @@ class TestGetText:
         assert "Starter | $9" in regions[0]["text"]
         assert "Pro | $29" in regions[0]["text"]
 
+    def test_includes_compiled_select_options(self):
+        som = parse_som({
+            **FIXTURE_SOM,
+            "regions": [
+                {
+                    "id": "r_main",
+                    "role": "main",
+                    "elements": [
+                        {
+                            "id": "e_select",
+                            "role": "select",
+                            "attrs": {
+                                "options": [
+                                    {"value": "us", "text": "United States"},
+                                    {"value": "ca", "text": "Canada"},
+                                ],
+                            },
+                        }
+                    ],
+                }
+            ],
+            "meta": {
+                "html_bytes": 100,
+                "som_bytes": 50,
+                "element_count": 1,
+                "interactive_count": 0,
+            },
+        })
+
+        text = get_text(som)
+        assert "United States" in text
+        assert "Canada" in text
+
+        regions = get_text_by_region(som)
+        assert regions[0]["role"] == "main"
+        assert "United States" in regions[0]["text"]
+        assert "Canada" in regions[0]["text"]
+
 
 class TestGetTextByRegion:
     def test_regions(self, som: Som):
