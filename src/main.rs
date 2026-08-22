@@ -1660,6 +1660,16 @@ fn collect_text(el: &som::types::Element, parts: &mut Vec<String>) {
                 }
             }
         }
+        if let Some(options) = attrs.get("options").and_then(|value| value.as_array()) {
+            for option in options {
+                if let Some(text) = option.get("text").and_then(|value| value.as_str()) {
+                    let trimmed = text.trim();
+                    if !trimmed.is_empty() {
+                        parts.push(trimmed.to_string());
+                    }
+                }
+            }
+        }
     }
     if let Some(ref children) = el.children {
         for child in children {
@@ -2309,6 +2319,57 @@ mod tests {
 
         assert!(text.contains("Install"));
         assert!(text.contains("Configure"));
+    }
+
+    #[test]
+    fn text_format_includes_compiled_select_options() {
+        let som = Som {
+            som_version: "0.1".to_string(),
+            url: "https://example.test/country".to_string(),
+            title: "Country".to_string(),
+            lang: "en".to_string(),
+            regions: vec![Region {
+                id: "r_main".to_string(),
+                role: RegionRole::Main,
+                label: None,
+                action: None,
+                method: None,
+                target: None,
+                enctype: None,
+                novalidate: None,
+                accept_charset: None,
+                autocomplete: None,
+                elements: vec![Element {
+                    id: "e_select".to_string(),
+                    role: ElementRole::Select,
+                    html_id: None,
+                    text: None,
+                    label: None,
+                    actions: None,
+                    attrs: Some(serde_json::json!({
+                        "options": [
+                            {"value": "us", "text": "United States"},
+                            {"value": "ca", "text": "Canada"}
+                        ]
+                    })),
+                    children: None,
+                    hints: None,
+                    shadow: None,
+                }],
+            }],
+            meta: SomMeta {
+                html_bytes: 1,
+                som_bytes: 1,
+                element_count: 1,
+                interactive_count: 1,
+            },
+            structured_data: None,
+        };
+
+        let text = render_som_output(&som, "text").expect("text output should render");
+
+        assert!(text.contains("United States"));
+        assert!(text.contains("Canada"));
     }
 
     #[test]
