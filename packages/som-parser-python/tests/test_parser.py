@@ -1158,6 +1158,42 @@ class TestToMarkdown:
         assert "| Plan | Price |" in md
         assert "| Starter | $9 |" in md
 
+    def test_includes_compiled_select_options(self):
+        som = parse_som({
+            **FIXTURE_SOM,
+            "regions": [
+                {
+                    "id": "r_main",
+                    "role": "main",
+                    "elements": [
+                        {
+                            "id": "e_select",
+                            "role": "select",
+                            "attrs": {
+                                "options": [
+                                    {"value": "us", "text": "United States"},
+                                    {"value": "ca", "text": "Canada"},
+                                ],
+                            },
+                        }
+                    ],
+                }
+            ],
+            "meta": {
+                "html_bytes": 100,
+                "som_bytes": 50,
+                "element_count": 1,
+                "interactive_count": 0,
+            },
+        })
+
+        md = to_markdown(som)
+        assert "[Select: ]" in md
+        assert "- United States" in md
+        assert "- Canada" in md
+        assert md.index("[Select: ]") < md.index("- United States")
+        assert md.index("- United States") < md.index("- Canada")
+
 
 class TestFilterElements:
     def test_filter_by_actions(self, som: Som):

@@ -702,6 +702,10 @@ def _element_to_markdown(el: SomElement, lines: List[str]) -> None:
         lines.append(f"[Input: {label}{placeholder}]")
     elif role == ElementRole.SELECT:
         lines.append(f"[Select: {el.label or el.text or ''}]")
+        if el.attrs and el.attrs.options:
+            for option in el.attrs.options:
+                if option.text:
+                    lines.append(f"- {option.text}")
     elif role in (ElementRole.CHECKBOX, ElementRole.RADIO):
         checked = ""
         if el.attrs and el.attrs.checked:
