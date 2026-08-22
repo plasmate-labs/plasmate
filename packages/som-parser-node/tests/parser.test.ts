@@ -1088,6 +1088,43 @@ describe('toMarkdown', () => {
     expect(md).toContain('| Plan | Price |');
     expect(md).toContain('| Starter | $9 |');
   });
+
+  it('includes compiled select options', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_main',
+          role: 'main',
+          elements: [
+            {
+              id: 'e_select',
+              role: 'select',
+              attrs: {
+                options: [
+                  { value: 'us', text: 'United States' },
+                  { value: 'ca', text: 'Canada' },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+      meta: {
+        html_bytes: 100,
+        som_bytes: 50,
+        element_count: 1,
+        interactive_count: 0,
+      },
+    };
+
+    const md = toMarkdown(som);
+    expect(md).toContain('[Select: ]');
+    expect(md).toContain('- United States');
+    expect(md).toContain('- Canada');
+    expect(md.indexOf('[Select: ]')).toBeLessThan(md.indexOf('- United States'));
+    expect(md.indexOf('- United States')).toBeLessThan(md.indexOf('- Canada'));
+  });
 });
 
 describe('filter', () => {

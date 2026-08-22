@@ -705,6 +705,16 @@ export function toMarkdown(som: Som): string {
           lines.push(`![${el.attrs?.alt ?? ''}](${el.attrs?.src ?? ''})`);
           lines.push('');
           break;
+        case 'select': {
+          lines.push(`[Select: ${el.label ?? el.text ?? ''}]`);
+          for (const option of el.attrs?.options ?? []) {
+            if (option.text) {
+              lines.push(`- ${option.text}`);
+            }
+          }
+          lines.push('');
+          break;
+        }
         case 'list': {
           const items = el.attrs?.items ?? [];
           for (const item of items) {
