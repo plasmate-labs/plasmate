@@ -499,6 +499,55 @@ func TestFindByTextCompiledTableCaptions(t *testing.T) {
 	}
 }
 
+func TestFindByTextCompiledTableRows(t *testing.T) {
+	som := &Som{
+		SOMVersion: "1.0",
+		URL:        "https://example.com",
+		Title:      "Tables",
+		Lang:       "en",
+		Regions: []Region{
+			{
+				ID:   "r_main",
+				Role: "main",
+				Elements: []Element{
+					{
+						ID:   "e_table",
+						Role: "table",
+						Attrs: &ElementAttrs{
+							Headers: []string{"Plan", "Price"},
+							Rows: [][]string{
+								{"Starter", "$9"},
+								{"Pro", "$29"},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	results := FindByText(som, "starter")
+	if len(results) != 1 {
+		t.Fatalf("FindByText(starter) = %d, want 1", len(results))
+	}
+	if results[0].ID != "e_table" {
+		t.Errorf("ID = %q, want e_table", results[0].ID)
+	}
+
+	results = FindByText(som, "Price")
+	if len(results) != 1 {
+		t.Fatalf("FindByText(Price) = %d, want 1", len(results))
+	}
+	if results[0].ID != "e_table" {
+		t.Errorf("ID = %q, want e_table", results[0].ID)
+	}
+
+	empty := FindByText(som, "nonexistent")
+	if len(empty) != 0 {
+		t.Errorf("FindByText(nonexistent) = %d, want 0", len(empty))
+	}
+}
+
 func TestFlatElements(t *testing.T) {
 	som := mustParse(t)
 
