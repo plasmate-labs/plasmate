@@ -639,6 +639,15 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
                 }
             }
         }
+        if let Some(options) = attrs.get("options").and_then(|value| value.as_array()) {
+            for option in options {
+                if let Some(text) = option.get("text").and_then(|v| v.as_str()) {
+                    if !text.is_empty() {
+                        parts.push(text.to_string());
+                    }
+                }
+            }
+        }
         if let Some(caption) = attrs.get("caption").and_then(|v| v.as_str()) {
             if !caption.is_empty() {
                 parts.push(caption.to_string());
@@ -3701,6 +3710,25 @@ mod tests {
                 "Starter | $9".to_string(),
                 "Pro | $29".to_string()
             ]
+        );
+    }
+
+    #[test]
+    fn test_extract_element_text_includes_compiled_select_options() {
+        let mut select = test_element("country", ElementRole::Select, None, None);
+        select.attrs = Some(json!({
+            "options": [
+                {"value": "us", "text": "United States"},
+                {"value": "ca", "text": "Canada"}
+            ]
+        }));
+
+        let mut parts = Vec::new();
+        extract_element_text(&select, &mut parts);
+
+        assert_eq!(
+            parts,
+            vec!["United States".to_string(), "Canada".to_string()]
         );
     }
 
