@@ -624,6 +624,11 @@ function visibleTextParts(el: SomElement): string[] {
       parts.push(item.text);
     }
   }
+  for (const option of el.attrs?.options ?? []) {
+    if (option.text) {
+      parts.push(option.text);
+    }
+  }
   const headers = el.attrs?.headers ?? [];
   if (headers.length) {
     parts.push(headers.join(' | '));
