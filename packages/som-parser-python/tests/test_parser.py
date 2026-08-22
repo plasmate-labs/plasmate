@@ -587,6 +587,42 @@ class TestFindByText:
         assert [el.id for el in find_by_text(som, "Plans", exact=True)] == ["e_table"]
         assert find_by_text(som, "plans", exact=True) == []
 
+    def test_finds_compiled_select_options(self):
+        som = parse_som(
+            {
+                **FIXTURE_SOM,
+                "regions": [
+                    {
+                        "id": "r_main",
+                        "role": "main",
+                        "elements": [
+                            {
+                                "id": "e_select",
+                                "role": "select",
+                                "attrs": {
+                                    "options": [
+                                        {"value": "us", "text": "United States"},
+                                        {"value": "ca", "text": "Canada"},
+                                    ],
+                                },
+                            }
+                        ],
+                    }
+                ],
+                "meta": {
+                    "html_bytes": 100,
+                    "som_bytes": 50,
+                    "element_count": 1,
+                    "interactive_count": 0,
+                },
+            }
+        )
+
+        assert [el.id for el in find_by_text(som, "united states")] == ["e_select"]
+        assert [el.id for el in find_by_text(som, "Canada", exact=True)] == ["e_select"]
+        assert find_by_text(som, "canada", exact=True) == []
+        assert find_by_text(som, "nonexistent") == []
+
 
 class TestGetInteractiveElements:
     def test_count(self, som: Som):

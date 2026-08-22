@@ -73,6 +73,8 @@ def _searchable_text_parts(el: SomElement) -> List[str]:
     if el.attrs:
         if el.attrs.items:
             parts.extend(item.text for item in el.attrs.items if item.text)
+        if el.attrs.options:
+            parts.extend(option.text for option in el.attrs.options if option.text)
         if el.attrs.caption:
             parts.append(el.attrs.caption)
         if el.attrs.headers:
