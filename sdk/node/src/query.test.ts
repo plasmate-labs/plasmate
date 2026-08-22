@@ -362,6 +362,39 @@ describe('findByText', () => {
     );
     assert.deepEqual(findByText(som, 'nonexistent'), []);
   });
+
+  it('finds compiled select options', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_main',
+          role: 'main',
+          elements: [
+            {
+              id: 'e_select',
+              role: 'select',
+              attrs: {
+                options: [
+                  { value: 'us', text: 'United States' },
+                  { value: 'ca', text: 'Canada' },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    const results = findByText(som, 'united states');
+    assert.equal(results.length, 1);
+    assert.equal(results[0].id, 'e_select');
+    assert.deepEqual(
+      findByText(som, 'Canada').map((el) => el.id),
+      ['e_select'],
+    );
+    assert.deepEqual(findByText(som, 'nonexistent'), []);
+  });
 });
 
 describe('getActionPlan', () => {

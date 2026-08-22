@@ -516,6 +516,11 @@ function searchableTextParts(el: SomElement): string[] {
       parts.push(item.text);
     }
   }
+  for (const option of el.attrs?.options ?? []) {
+    if (option.text) {
+      parts.push(option.text);
+    }
+  }
   if (el.attrs?.caption) {
     parts.push(el.attrs.caption);
   }
