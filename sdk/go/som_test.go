@@ -548,6 +548,54 @@ func TestFindByTextCompiledTableRows(t *testing.T) {
 	}
 }
 
+func TestFindByTextCompiledSelectOptions(t *testing.T) {
+	som := &Som{
+		SOMVersion: "1.0",
+		URL:        "https://example.com/form",
+		Title:      "Form Page",
+		Lang:       "en",
+		Regions: []Region{
+			{
+				ID:   "r_main",
+				Role: "main",
+				Elements: []Element{
+					{
+						ID:   "e_select",
+						Role: "select",
+						Attrs: &ElementAttrs{
+							Options: []SelectOption{
+								{Value: "us", Text: "United States"},
+								{Value: "ca", Text: "Canada"},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	results := FindByText(som, "united states")
+	if len(results) != 1 {
+		t.Fatalf("FindByText(united states) = %d, want 1", len(results))
+	}
+	if results[0].ID != "e_select" {
+		t.Errorf("ID = %q, want e_select", results[0].ID)
+	}
+
+	results = FindByText(som, "Canada")
+	if len(results) != 1 {
+		t.Fatalf("FindByText(Canada) = %d, want 1", len(results))
+	}
+	if results[0].ID != "e_select" {
+		t.Errorf("ID = %q, want e_select", results[0].ID)
+	}
+
+	empty := FindByText(som, "nonexistent")
+	if len(empty) != 0 {
+		t.Errorf("FindByText(nonexistent) = %d, want 0", len(empty))
+	}
+}
+
 func TestFlatElements(t *testing.T) {
 	som := mustParse(t)
 
