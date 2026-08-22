@@ -102,10 +102,11 @@ func collectInteractive(elements []Element, result *[]Element) {
 }
 
 // FindByText returns all elements whose text contains the given substring
-// (case-insensitive). Labels, compiled list-item copy, table captions, and
-// table header/cell copy are searched as well because lists keep item text
-// in attrs.items and tables keep titles and cells in attrs.caption /
-// attrs.headers / attrs.rows, leaving element.text empty.
+// (case-insensitive). Labels, compiled list-item copy, select options, table
+// captions, and table header/cell copy are searched as well because lists keep
+// item text in attrs.items, selects keep option labels in attrs.options, and
+// tables keep titles and cells in attrs.caption / attrs.headers / attrs.rows,
+// leaving element.text empty.
 func FindByText(som *Som, text string) []Element {
 	lower := strings.ToLower(text)
 	var result []Element
@@ -142,6 +143,11 @@ func elementMatchesText(el Element, lowerText string) bool {
 		}
 		if el.Attrs.Caption != nil && strings.Contains(strings.ToLower(*el.Attrs.Caption), lowerText) {
 			return true
+		}
+		for _, option := range el.Attrs.Options {
+			if strings.Contains(strings.ToLower(option.Text), lowerText) {
+				return true
+			}
 		}
 		for _, header := range el.Attrs.Headers {
 			if strings.Contains(strings.ToLower(header), lowerText) {
