@@ -600,7 +600,7 @@ def get_headings(som: Som) -> List[Dict[str, object]]:
 
 
 def _visible_text_parts(el: SomElement) -> List[str]:
-    """Return element text plus compiled list items, select options, and table headers/rows."""
+    """Return element text plus compiled list items, select options, table captions, and table headers/rows."""
     parts: List[str] = []
     if el.text:
         parts.append(el.text)
@@ -615,6 +615,8 @@ def _visible_text_parts(el: SomElement) -> List[str]:
             for option in el.attrs.options:
                 if option.text:
                     parts.append(option.text)
+        if el.attrs.caption:
+            parts.append(el.attrs.caption)
         if el.attrs.headers:
             parts.append(" | ".join(el.attrs.headers))
         if el.attrs.rows:
