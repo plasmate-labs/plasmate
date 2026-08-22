@@ -531,6 +531,43 @@ class TestFindByText:
         assert find_by_text(som, "Plans")[0].id == "e_table"
         assert find_by_text(som, "zzz_no_match") == []
 
+    def test_finds_compiled_select_options(self) -> None:
+        som = Som(
+            som_version="1.0",
+            url="https://example.com/form",
+            title="Form Page",
+            lang="en",
+            regions=[
+                SomRegion(
+                    id="r_main",
+                    role=RegionRole.main,
+                    elements=[
+                        SomElement(
+                            id="e_select",
+                            role=ElementRole.select,
+                            attrs=ElementAttrs(
+                                options=[
+                                    SelectOption(value="us", text="United States"),
+                                    SelectOption(value="ca", text="Canada"),
+                                ],
+                            ),
+                        )
+                    ],
+                )
+            ],
+            meta=SomMeta(
+                html_bytes=100,
+                som_bytes=50,
+                element_count=1,
+                interactive_count=1,
+            ),
+        )
+
+        results = find_by_text(som, "united states")
+        assert [el.id for el in results] == ["e_select"]
+        assert find_by_text(som, "Canada")[0].id == "e_select"
+        assert find_by_text(som, "zzz_no_match") == []
+
     def test_finds_compiled_table_rows(self) -> None:
         som = Som(
             som_version="1.0",
