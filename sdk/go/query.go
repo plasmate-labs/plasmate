@@ -102,8 +102,9 @@ func collectInteractive(elements []Element, result *[]Element) {
 }
 
 // FindByText returns all elements whose text contains the given substring
-// (case-insensitive). Labels are searched as well because many controls expose
-// their human-facing text through label instead of text.
+// (case-insensitive). Labels, compiled list-item copy, and table captions are
+// searched as well because lists keep item text in attrs.items and tables keep
+// titles in attrs.caption, leaving element.text empty.
 func FindByText(som *Som, text string) []Element {
 	lower := strings.ToLower(text)
 	var result []Element
@@ -115,9 +116,7 @@ func FindByText(som *Som, text string) []Element {
 
 func collectByText(elements []Element, lowerText string, result *[]Element) {
 	for _, el := range elements {
-		if el.Text != nil && strings.Contains(strings.ToLower(*el.Text), lowerText) {
-			*result = append(*result, el)
-		} else if el.Label != nil && strings.Contains(strings.ToLower(*el.Label), lowerText) {
+		if elementMatchesText(el, lowerText) {
 			*result = append(*result, el)
 		}
 		collectByText(el.Children, lowerText, result)
@@ -125,6 +124,26 @@ func collectByText(elements []Element, lowerText string, result *[]Element) {
 			collectByText(el.Shadow.Elements, lowerText, result)
 		}
 	}
+}
+
+func elementMatchesText(el Element, lowerText string) bool {
+	if el.Text != nil && strings.Contains(strings.ToLower(*el.Text), lowerText) {
+		return true
+	}
+	if el.Label != nil && strings.Contains(strings.ToLower(*el.Label), lowerText) {
+		return true
+	}
+	if el.Attrs != nil {
+		for _, item := range el.Attrs.Items {
+			if strings.Contains(strings.ToLower(item.Text), lowerText) {
+				return true
+			}
+		}
+		if el.Attrs.Caption != nil && strings.Contains(strings.ToLower(*el.Attrs.Caption), lowerText) {
+			return true
+		}
+	}
+	return false
 }
 
 // FindByAction returns all elements that expose a specific action.

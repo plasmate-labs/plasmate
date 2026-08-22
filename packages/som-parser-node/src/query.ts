@@ -59,6 +59,21 @@ function searchableTextParts(el: SomElement): string[] {
       parts.push(item.text);
     }
   }
+  if (el.attrs?.caption) {
+    parts.push(el.attrs.caption);
+  }
+  for (const header of el.attrs?.headers ?? []) {
+    if (header) {
+      parts.push(header);
+    }
+  }
+  for (const row of el.attrs?.rows ?? []) {
+    for (const cell of row) {
+      if (cell) {
+        parts.push(cell);
+      }
+    }
+  }
   return parts;
 }
 
@@ -691,6 +706,32 @@ export function toMarkdown(som: Som): string {
             lines.push(`- ${item.text}`);
           }
           if (items.length) lines.push('');
+          break;
+        }
+        case 'table': {
+          const headers = el.attrs?.headers ?? [];
+          let emitted = false;
+          if (el.attrs?.caption) {
+            lines.push(el.attrs.caption);
+            lines.push('');
+            emitted = true;
+          }
+          if (headers.length) {
+            lines.push('| ' + headers.join(' | ') + ' |');
+            lines.push('| ' + headers.map(() => '---').join(' | ') + ' |');
+            emitted = true;
+          }
+          for (const row of el.attrs?.rows ?? []) {
+            if (row.length) {
+              lines.push('| ' + row.join(' | ') + ' |');
+              emitted = true;
+            }
+          }
+          if (!emitted && el.text) {
+            lines.push(el.text);
+            emitted = true;
+          }
+          if (emitted) lines.push('');
           break;
         }
         default:

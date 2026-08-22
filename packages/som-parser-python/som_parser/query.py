@@ -64,6 +64,29 @@ def find_by_html_id(som: Som, html_id: str) -> Optional[SomElement]:
     return None
 
 
+def _searchable_text_parts(el: SomElement) -> List[str]:
+    parts: List[str] = []
+    if el.text:
+        parts.append(el.text)
+    if el.label:
+        parts.append(el.label)
+    if el.attrs:
+        if el.attrs.items:
+            parts.extend(item.text for item in el.attrs.items if item.text)
+        if el.attrs.caption:
+            parts.append(el.attrs.caption)
+        if el.attrs.headers:
+            for header in el.attrs.headers:
+                if header:
+                    parts.append(header)
+        if el.attrs.rows:
+            for row in el.attrs.rows:
+                for cell in row:
+                    if cell:
+                        parts.append(cell)
+    return parts
+
+
 def find_by_text(
     som: Som, text: str, *, exact: bool = False
 ) -> List[SomElement]:
@@ -77,14 +100,13 @@ def find_by_text(
     """
     results: List[SomElement] = []
     for el in get_all_elements(som):
-        el_text = el.text or ""
-        el_label = el.label or ""
+        parts = _searchable_text_parts(el)
         if exact:
-            if text == el_text or text == el_label:
+            if text in parts:
                 results.append(el)
         else:
             text_lower = text.lower()
-            if text_lower in el_text.lower() or text_lower in el_label.lower():
+            if any(text_lower in part.lower() for part in parts):
                 results.append(el)
     return results
 
@@ -690,6 +712,10 @@ def _element_to_markdown(el: SomElement, lines: List[str]) -> None:
     elif role == ElementRole.TABLE:
         emitted = False
         if el.attrs:
+            if el.attrs.caption:
+                lines.append(el.attrs.caption)
+                lines.append("")
+                emitted = True
             headers = el.attrs.headers or []
             if headers:
                 lines.append("| " + " | ".join(headers) + " |")

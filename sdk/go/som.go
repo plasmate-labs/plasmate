@@ -75,6 +75,7 @@ type ElementAttrs struct {
 	Items           []ListItem     `json:"items,omitempty"`
 	Headers         []string       `json:"headers,omitempty"`
 	Rows            [][]string     `json:"rows,omitempty"`
+	Caption         *string        `json:"caption,omitempty"`
 	SectionLabel    *string        `json:"section_label,omitempty"`
 	Legend          *string        `json:"legend,omitempty"`
 	Open            *bool          `json:"open,omitempty"`

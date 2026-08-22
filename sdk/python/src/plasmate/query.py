@@ -469,7 +469,7 @@ def find_action_target_by_label(
 
 
 def find_by_text(som: Som, text: str) -> List[SomElement]:
-    """Find all elements whose text, label, or compiled table cells contain the substring."""
+    """Find all elements whose text, label, compiled list items, table captions, or table cells contain the substring."""
     results: List[SomElement] = []
     lower = text.lower()
     for region in som.regions:
@@ -548,24 +548,22 @@ def _collect_interactive(element: SomElement, results: List[SomElement]) -> None
             _collect_interactive(child, results)
 
 
-def _compiled_table_text_contains(element: SomElement, lower_text: str) -> bool:
-    attrs = element.attrs
-    if attrs is None:
-        return False
-    if attrs.headers:
-        if any(lower_text in header.lower() for header in attrs.headers):
-            return True
-    if attrs.rows:
-        for row in attrs.rows:
-            if any(lower_text in cell.lower() for cell in row):
-                return True
-    return False
-
-
 def _collect_by_text(element: SomElement, lower_text: str, results: List[SomElement]) -> None:
-    if (element.text and lower_text in element.text.lower()) or (
-        element.label and lower_text in element.label.lower()
-    ) or _compiled_table_text_contains(element, lower_text):
+    parts = []
+    if element.text:
+        parts.append(element.text)
+    if element.label:
+        parts.append(element.label)
+    if element.attrs and element.attrs.items:
+        parts.extend(item.text for item in element.attrs.items if item.text)
+    if element.attrs and element.attrs.caption:
+        parts.append(element.attrs.caption)
+    if element.attrs and element.attrs.headers:
+        parts.extend(header for header in element.attrs.headers if header)
+    if element.attrs and element.attrs.rows:
+        for row in element.attrs.rows:
+            parts.extend(cell for cell in row if cell)
+    if any(lower_text in part.lower() for part in parts):
         results.append(element)
     if element.children:
         for child in element.children:

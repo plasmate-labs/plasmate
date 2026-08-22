@@ -420,6 +420,81 @@ describe('findByText', () => {
     ]);
     expect(findByText(som, 'configure', { exact: true })).toEqual([]);
   });
+
+  it('finds compiled table rows', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_main',
+          role: 'main',
+          elements: [
+            {
+              id: 'e_table',
+              role: 'table',
+              attrs: {
+                headers: ['Plan', 'Price'],
+                rows: [
+                  ['Starter', '$9'],
+                  ['Pro', '$29'],
+                ],
+              },
+            },
+          ],
+        },
+      ],
+      meta: {
+        html_bytes: 100,
+        som_bytes: 50,
+        element_count: 1,
+        interactive_count: 0,
+      },
+    };
+
+    expect(findByText(som, 'starter').map((el) => el.id)).toEqual(['e_table']);
+    expect(findByText(som, 'Pro', { exact: true }).map((el) => el.id)).toEqual([
+      'e_table',
+    ]);
+    expect(findByText(som, 'pro', { exact: true })).toEqual([]);
+  });
+
+  it('finds compiled table captions', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_main',
+          role: 'main',
+          elements: [
+            {
+              id: 'e_table',
+              role: 'table',
+              attrs: {
+                caption: 'Plans',
+                headers: ['Plan', 'Price'],
+                rows: [
+                  ['Starter', '$9'],
+                  ['Pro', '$29'],
+                ],
+              },
+            },
+          ],
+        },
+      ],
+      meta: {
+        html_bytes: 100,
+        som_bytes: 50,
+        element_count: 1,
+        interactive_count: 0,
+      },
+    };
+
+    expect(findByText(som, 'plans').map((el) => el.id)).toEqual(['e_table']);
+    expect(findByText(som, 'Plans', { exact: true }).map((el) => el.id)).toEqual([
+      'e_table',
+    ]);
+    expect(findByText(som, 'plans', { exact: true })).toEqual([]);
+  });
 });
 
 describe('getInteractiveElements', () => {
@@ -901,6 +976,80 @@ describe('toMarkdown', () => {
     expect(md).toContain('### Form');
     expect(md).toContain('**Search** (text_input)');
     expect(md).toContain('[Go] (button)');
+  });
+
+  it('includes compiled table rows', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_main',
+          role: 'main',
+          elements: [
+            {
+              id: 'e_table',
+              role: 'table',
+              attrs: {
+                headers: ['Plan', 'Price'],
+                rows: [
+                  ['Starter', '$9'],
+                  ['Pro', '$29'],
+                ],
+              },
+            },
+          ],
+        },
+      ],
+      meta: {
+        html_bytes: 100,
+        som_bytes: 50,
+        element_count: 1,
+        interactive_count: 0,
+      },
+    };
+
+    const md = toMarkdown(som);
+    expect(md).toContain('| Plan | Price |');
+    expect(md).toContain('| Starter | $9 |');
+    expect(md).toContain('| Pro | $29 |');
+  });
+
+  it('includes compiled table captions', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_main',
+          role: 'main',
+          elements: [
+            {
+              id: 'e_table',
+              role: 'table',
+              attrs: {
+                caption: 'Plans',
+                headers: ['Plan', 'Price'],
+                rows: [
+                  ['Starter', '$9'],
+                  ['Pro', '$29'],
+                ],
+              },
+            },
+          ],
+        },
+      ],
+      meta: {
+        html_bytes: 100,
+        som_bytes: 50,
+        element_count: 1,
+        interactive_count: 0,
+      },
+    };
+
+    const md = toMarkdown(som);
+    expect(md).toContain('Plans');
+    expect(md.indexOf('Plans')).toBeLessThan(md.indexOf('| Plan | Price |'));
+    expect(md).toContain('| Plan | Price |');
+    expect(md).toContain('| Starter | $9 |');
   });
 });
 

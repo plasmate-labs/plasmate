@@ -479,6 +479,114 @@ class TestFindByText:
         )
         assert find_by_text(som, "inside shadow")[0].id == "shadow_text"
 
+    def test_finds_compiled_list_items(self):
+        som = parse_som({
+            **FIXTURE_SOM,
+            "regions": [
+                {
+                    "id": "r_main",
+                    "role": "main",
+                    "elements": [
+                        {
+                            "id": "e_list",
+                            "role": "list",
+                            "attrs": {
+                                "ordered": False,
+                                "items": [
+                                    {"text": "Install"},
+                                    {"text": "Configure"},
+                                ],
+                            },
+                        }
+                    ],
+                }
+            ],
+            "meta": {
+                "html_bytes": 100,
+                "som_bytes": 50,
+                "element_count": 1,
+                "interactive_count": 0,
+            },
+        })
+
+        results = find_by_text(som, "install")
+        assert [el.id for el in results] == ["e_list"]
+        assert [el.id for el in find_by_text(som, "Configure", exact=True)] == ["e_list"]
+        assert find_by_text(som, "configure", exact=True) == []
+
+    def test_finds_compiled_table_rows(self):
+        som = parse_som(
+            {
+                **FIXTURE_SOM,
+                "regions": [
+                    {
+                        "id": "r_main",
+                        "role": "main",
+                        "elements": [
+                            {
+                                "id": "e_table",
+                                "role": "table",
+                                "attrs": {
+                                    "headers": ["Plan", "Price"],
+                                    "rows": [
+                                        ["Starter", "$9"],
+                                        ["Pro", "$29"],
+                                    ],
+                                },
+                            }
+                        ],
+                    }
+                ],
+                "meta": {
+                    "html_bytes": 100,
+                    "som_bytes": 50,
+                    "element_count": 1,
+                    "interactive_count": 0,
+                },
+            }
+        )
+
+        assert [el.id for el in find_by_text(som, "starter")] == ["e_table"]
+        assert [el.id for el in find_by_text(som, "Pro", exact=True)] == ["e_table"]
+        assert find_by_text(som, "pro", exact=True) == []
+
+    def test_finds_compiled_table_captions(self):
+        som = parse_som(
+            {
+                **FIXTURE_SOM,
+                "regions": [
+                    {
+                        "id": "r_main",
+                        "role": "main",
+                        "elements": [
+                            {
+                                "id": "e_table",
+                                "role": "table",
+                                "attrs": {
+                                    "caption": "Plans",
+                                    "headers": ["Plan", "Price"],
+                                    "rows": [
+                                        ["Starter", "$9"],
+                                        ["Pro", "$29"],
+                                    ],
+                                },
+                            }
+                        ],
+                    }
+                ],
+                "meta": {
+                    "html_bytes": 100,
+                    "som_bytes": 50,
+                    "element_count": 1,
+                    "interactive_count": 0,
+                },
+            }
+        )
+
+        assert [el.id for el in find_by_text(som, "plans")] == ["e_table"]
+        assert [el.id for el in find_by_text(som, "Plans", exact=True)] == ["e_table"]
+        assert find_by_text(som, "plans", exact=True) == []
+
 
 class TestGetInteractiveElements:
     def test_count(self, som: Som):
@@ -976,6 +1084,43 @@ class TestToMarkdown:
         assert "| Plan | Price |" in md
         assert "| Starter | $9 |" in md
         assert "| Pro | $29 |" in md
+
+    def test_includes_compiled_table_captions(self):
+        som = parse_som({
+            **FIXTURE_SOM,
+            "regions": [
+                {
+                    "id": "r_main",
+                    "role": "main",
+                    "elements": [
+                        {
+                            "id": "e_table",
+                            "role": "table",
+                            "attrs": {
+                                "caption": "Plans",
+                                "headers": ["Plan", "Price"],
+                                "rows": [
+                                    ["Starter", "$9"],
+                                    ["Pro", "$29"],
+                                ],
+                            },
+                        }
+                    ],
+                }
+            ],
+            "meta": {
+                "html_bytes": 100,
+                "som_bytes": 50,
+                "element_count": 1,
+                "interactive_count": 0,
+            },
+        })
+
+        md = to_markdown(som)
+        assert "Plans" in md
+        assert md.index("Plans") < md.index("| Plan | Price |")
+        assert "| Plan | Price |" in md
+        assert "| Starter | $9 |" in md
 
 
 class TestFilterElements:

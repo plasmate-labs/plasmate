@@ -503,13 +503,42 @@ export function findActionTargetByLabel(
   return findActionTarget(som, label, { ...options, by: 'label' });
 }
 
+function searchableTextParts(el: SomElement): string[] {
+  const parts: string[] = [];
+  if (el.text != null) {
+    parts.push(el.text);
+  }
+  if (el.label != null) {
+    parts.push(el.label);
+  }
+  for (const item of el.attrs?.items ?? []) {
+    if (item.text) {
+      parts.push(item.text);
+    }
+  }
+  if (el.attrs?.caption) {
+    parts.push(el.attrs.caption);
+  }
+  for (const header of el.attrs?.headers ?? []) {
+    if (header) {
+      parts.push(header);
+    }
+  }
+  for (const row of el.attrs?.rows ?? []) {
+    for (const cell of row) {
+      if (cell) {
+        parts.push(cell);
+      }
+    }
+  }
+  return parts;
+}
+
 /** Find all elements containing the given text (case-insensitive substring match). */
 export function findByText(som: Som, text: string): SomElement[] {
   const lower = text.toLowerCase();
-  return flatElements(som).filter(
-    (el) =>
-      (el.text != null && el.text.toLowerCase().includes(lower)) ||
-      (el.label != null && el.label.toLowerCase().includes(lower)),
+  return flatElements(som).filter((el) =>
+    searchableTextParts(el).some((part) => part.toLowerCase().includes(lower)),
   );
 }
 
