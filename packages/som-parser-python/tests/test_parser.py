@@ -1032,6 +1032,50 @@ class TestGetText:
         assert "United States" in regions[0]["text"]
         assert "Canada" in regions[0]["text"]
 
+    def test_includes_compiled_table_captions(self):
+        som = parse_som({
+            **FIXTURE_SOM,
+            "regions": [
+                {
+                    "id": "r_main",
+                    "role": "main",
+                    "elements": [
+                        {
+                            "id": "e_table",
+                            "role": "table",
+                            "attrs": {
+                                "caption": "Plans",
+                                "headers": ["Plan", "Price"],
+                                "rows": [
+                                    ["Starter", "$9"],
+                                    ["Pro", "$29"],
+                                ],
+                            },
+                        }
+                    ],
+                }
+            ],
+            "meta": {
+                "html_bytes": 100,
+                "som_bytes": 50,
+                "element_count": 1,
+                "interactive_count": 0,
+            },
+        })
+
+        text = get_text(som)
+        assert "Plans" in text
+        assert text.index("Plans") < text.index("Plan | Price")
+        assert "Plan | Price" in text
+        assert "Starter | $9" in text
+
+        regions = get_text_by_region(som)
+        assert regions[0]["role"] == "main"
+        assert "Plans" in regions[0]["text"]
+        assert regions[0]["text"].index("Plans") < regions[0]["text"].index("Plan | Price")
+        assert "Plan | Price" in regions[0]["text"]
+        assert "Starter | $9" in regions[0]["text"]
+
 
 class TestGetTextByRegion:
     def test_regions(self, som: Som):
