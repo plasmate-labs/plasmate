@@ -712,6 +712,10 @@ def _element_to_markdown(el: SomElement, lines: List[str]) -> None:
     elif role == ElementRole.TABLE:
         emitted = False
         if el.attrs:
+            if el.attrs.caption:
+                lines.append(el.attrs.caption)
+                lines.append("")
+                emitted = True
             headers = el.attrs.headers or []
             if headers:
                 lines.append("| " + " | ".join(headers) + " |")
