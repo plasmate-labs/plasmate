@@ -702,7 +702,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return all outbound URLs found in the page, one per line, deduplicated. Useful for crawling, sitemap discovery, and finding related pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Includes link hrefs and iframe src destinations. Useful for crawling, sitemap discovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1334,15 +1334,22 @@ pub async fn handle_extract_links(
     tool_response(delivered_text)
 }
 
-/// Recursively collect link URLs from a SOM element tree.
+fn push_attr_url(attrs: &Value, key: &str, urls: &mut Vec<String>) {
+    if let Some(url) = attrs.get(key).and_then(|v| v.as_str()) {
+        if !url.is_empty() && url != "#" {
+            urls.push(url.to_string());
+        }
+    }
+}
+
+/// Recursively collect outbound URLs from a SOM element tree.
 fn collect_element_links(element: &crate::som::types::Element, urls: &mut Vec<String>) {
-    if element.role == crate::som::types::ElementRole::Link {
-        if let Some(ref attrs) = element.attrs {
-            if let Some(href) = attrs.get("href").and_then(|v| v.as_str()) {
-                if !href.is_empty() && href != "#" {
-                    urls.push(href.to_string());
-                }
-            }
+    if let Some(ref attrs) = element.attrs {
+        if element.role == crate::som::types::ElementRole::Link {
+            push_attr_url(attrs, "href", urls);
+        }
+        if element.role == crate::som::types::ElementRole::Iframe {
+            push_attr_url(attrs, "src", urls);
         }
     }
     if let Some(ref children) = element.children {
@@ -3931,6 +3938,38 @@ mod tests {
                 "https://example.com/shadow".to_string()
             ]
         );
+    }
+
+    #[test]
+    fn collect_element_links_includes_compiled_iframe_src() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head><title>Embed</title></head><body>
+<main>
+  <a href="https://example.test/docs">Docs</a>
+  <iframe src="https://example.test/embed" title="Help"></iframe>
+  <iframe src="#" title="Ignored"></iframe>
+</main>
+</body></html>"##,
+            "https://example.test/",
+        )
+        .expect("fixture HTML should compile");
+
+        let mut urls = Vec::new();
+        for region in &som.regions {
+            for element in &region.elements {
+                collect_element_links(element, &mut urls);
+            }
+        }
+
+        assert!(
+            urls.contains(&"https://example.test/docs".to_string()),
+            "{urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/embed".to_string()),
+            "{urls:?}"
+        );
+        assert!(!urls.iter().any(|url| url == "#"), "{urls:?}");
     }
 
     #[test]
