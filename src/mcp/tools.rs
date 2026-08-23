@@ -1391,6 +1391,27 @@ fn find_element_by_id_in_tree<'a>(
     None
 }
 
+fn typing_block_reason(element: &crate::som::types::Element) -> Option<&'static str> {
+    let attrs = element.attrs.as_ref()?;
+    if attr_flag_true(attrs, "disabled") {
+        return Some("disabled");
+    }
+    if attr_flag_true(attrs, "readonly") {
+        return Some("readonly");
+    }
+    None
+}
+
+fn attr_flag_true(attrs: &Value, key: &str) -> bool {
+    match attrs.get(key) {
+        Some(Value::Bool(true)) => true,
+        Some(Value::String(value)) => {
+            value.eq_ignore_ascii_case("true") || value.eq_ignore_ascii_case(key)
+        }
+        _ => false,
+    }
+}
+
 // ============================================================================
 // Screenshot tool
 // ============================================================================
@@ -2137,7 +2158,7 @@ pub fn navigate_to_definition() -> ToolDefinition {
 pub fn type_text_definition() -> ToolDefinition {
     ToolDefinition {
         name: "type_text".to_string(),
-        description: "Type text into a form input or textarea by its SOM element ID. Returns the updated page SOM.".to_string(),
+        description: "Type text into a form input or textarea by its SOM element ID. Returns the updated page SOM. Fails closed when the compiled SOM marks the target disabled or readonly, without mutating session HTML.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -2380,6 +2401,9 @@ pub async fn handle_type_text(
             "Element does not support type: {}",
             params.element_id
         ));
+    }
+    if let Some(reason) = typing_block_reason(element) {
+        return error_response(&format!("Element is {reason}: {}", params.element_id));
     }
     let html_id = element.html_id.clone();
 
@@ -3558,6 +3582,101 @@ mod tests {
         assert_eq!(
             failed["content"][0]["text"].as_str(),
             Some("Element not found in DOM")
+        );
+        assert_eq!(state_fingerprint(&sessions, &session_id).await, before);
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn type_text_disabled_or_readonly_fails_closed_and_preserves_session() {
+        let options = stateful_worker_options(Duration::from_secs(5));
+        let sessions = Arc::new(SessionManager::with_worker_options(options));
+        let session_id = sessions.create_session().await.unwrap();
+        let html = "<html><head><title>Locked fields</title></head><body><main><input id='coupon' disabled value='SAVE'><textarea id='notes' readonly>Draft</textarea></main></body></html>";
+        sessions
+            .with_session(&session_id, |session| {
+                session.target.current_url = Some("https://example.test/locked".to_string());
+                session.target.current_html = Some(html.to_string());
+                session.target.effective_html = Some(html.to_string());
+                session.target.current_som = Some(
+                    plasmate::som::compiler::compile(html, "https://example.test/locked").unwrap(),
+                );
+                session.target.rebuild_node_map();
+            })
+            .await
+            .unwrap();
+        let (disabled_id, readonly_id) = sessions
+            .with_session(&session_id, |session| {
+                let som = session.target.current_som.as_ref().unwrap();
+                let elements: Vec<_> = som
+                    .regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .collect();
+                let disabled_id = elements
+                    .iter()
+                    .find(|element| {
+                        element
+                            .attrs
+                            .as_ref()
+                            .and_then(|attrs| attrs.get("disabled"))
+                            .and_then(Value::as_bool)
+                            == Some(true)
+                    })
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose a disabled input");
+                let readonly_id = elements
+                    .iter()
+                    .find(|element| {
+                        element
+                            .attrs
+                            .as_ref()
+                            .and_then(|attrs| attrs.get("readonly"))
+                            .and_then(Value::as_bool)
+                            == Some(true)
+                    })
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose a readonly textarea");
+                (disabled_id, readonly_id)
+            })
+            .await
+            .unwrap();
+        let before = state_fingerprint(&sessions, &session_id).await;
+        let client = reqwest::Client::new();
+
+        let disabled = handle_type_text(
+            &json!({
+                "session_id": session_id,
+                "element_id": disabled_id,
+                "text": "HACK"
+            }),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert_eq!(disabled["isError"], true, "{disabled}");
+        let disabled_message = format!("Element is disabled: {disabled_id}");
+        assert_eq!(
+            disabled["content"][0]["text"].as_str(),
+            Some(disabled_message.as_str())
+        );
+        assert_eq!(state_fingerprint(&sessions, &session_id).await, before);
+
+        let readonly = handle_type_text(
+            &json!({
+                "session_id": session_id,
+                "element_id": readonly_id,
+                "text": "HACK"
+            }),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert_eq!(readonly["isError"], true, "{readonly}");
+        let readonly_message = format!("Element is readonly: {readonly_id}");
+        assert_eq!(
+            readonly["content"][0]["text"].as_str(),
+            Some(readonly_message.as_str())
         );
         assert_eq!(state_fingerprint(&sessions, &session_id).await, before);
     }
