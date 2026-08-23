@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-23)
 
-- Window: `3da02c6` .. `bafeba3`
+- Window: `dde0a45` .. `fde7b04`
 - Decision: `NARROW`
-- Merged this run: #167, #168
+- Merged this run: #170
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -48,9 +48,12 @@ overwrite, reset, or absorb unrelated work.
   Do not copy #165 `session_status` disabled/readonly counts onto other
   tools, traces, or SDKs. Do not copy #167 iframe `src` collection onto
   CLI or CDP link extractors. Do not copy #168 Python `extract_links` onto
-  Node or Go SDKs as a one-surface method add.
+  Node or Go SDKs as a one-surface method add. Do not copy #170 Go module
+  path / `FetchPageOptions` docs onto marketing, tweets, or remaining
+  nickel-org mentions outside published SDK install surfaces.
 - Allowed next (pick one distinct journey): a real missed regression, or
-  docs that remove an integration failure.
+  a published-docs integration failure that is not another SDK install-path
+  rewrite.
 
 ## Preferred lanes
 
