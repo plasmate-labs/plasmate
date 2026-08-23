@@ -223,6 +223,9 @@ som = client.fetch_page("https://example.com")
 # Extract plain text
 text = client.extract_text("https://example.com")
 
+# Extract deduplicated outbound URLs (plain text, one per line)
+links = client.extract_links("https://example.com", selector="nav")
+
 # Stateful sessions
 session = client.open_page("https://example.com")
 session_id = session["session_id"]
@@ -251,6 +254,7 @@ from plasmate import AsyncPlasmate
 async with AsyncPlasmate() as client:
     som = await client.fetch_page("https://example.com")
     text = await client.extract_text("https://example.com")
+    links = await client.extract_links("https://example.com", selector="nav")
 
     session = await client.open_page("https://example.com")
     session_id = session["session_id"]

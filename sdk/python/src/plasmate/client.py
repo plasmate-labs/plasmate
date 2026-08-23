@@ -242,7 +242,7 @@ class Plasmate:
         if result and result.get("isError"):
             raise RuntimeError(_bounded_tool_error(text))
 
-        if name == "extract_text":
+        if name in ("extract_text", "extract_links"):
             return text
         return _parse_structured_tool_text(text)
 
@@ -301,6 +301,27 @@ class Plasmate:
         if selector is not None:
             args["selector"] = selector
         return self._call_tool("extract_text", args)
+
+    def extract_links(
+        self,
+        url: str,
+        *,
+        selector: Optional[str] = None,
+    ) -> str:
+        """
+        Fetch a page and return deduplicated outbound URLs, one per line.
+
+        Args:
+            url: URL to fetch
+            selector: Optional SOM region, role, action, or element-id filter
+
+        Returns:
+            Newline-separated URLs (plain text, not JSON)
+        """
+        args: dict[str, Any] = {"url": url}
+        if selector is not None:
+            args["selector"] = selector
+        return self._call_tool("extract_links", args)
 
     # ---- Stateful Tools ----
 
@@ -470,7 +491,7 @@ class AsyncPlasmate:
         if result and result.get("isError"):
             raise RuntimeError(_bounded_tool_error(text))
 
-        if name == "extract_text":
+        if name in ("extract_text", "extract_links"):
             return text
         return _parse_structured_tool_text(text)
 
@@ -506,6 +527,18 @@ class AsyncPlasmate:
         if selector is not None:
             args["selector"] = selector
         return await self._call_tool("extract_text", args)
+
+    async def extract_links(
+        self,
+        url: str,
+        *,
+        selector: Optional[str] = None,
+    ) -> str:
+        """Fetch a page and return deduplicated outbound URLs, one per line."""
+        args: dict[str, Any] = {"url": url}
+        if selector is not None:
+            args["selector"] = selector
+        return await self._call_tool("extract_links", args)
 
     async def open_page(self, url: str) -> dict:
         """Open a page in a persistent browser session."""
