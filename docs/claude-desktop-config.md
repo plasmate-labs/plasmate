@@ -41,7 +41,7 @@ Claude now has access to these tools:
 | `extract_text` | Get clean, readable text from any web page |
 | `extract_links` | Get all outbound URLs from a page (deduplicated) |
 | `cache_status` | Inspect MCP SOM cache hits, misses, selector/effective-HTML entries, and avoided HTML work |
-| `session_status` | Inspect active MCP browser sessions, loaded URLs, raw/effective HTML, SOM/node inventory, capacity, age, and idle time |
+| `session_status` | Inspect active MCP browser sessions, loaded URLs, raw/effective HTML, SOM/node inventory, disabled/readonly interactive counts, capacity, age, and idle time |
 | `trace_status` | Inspect whether a session's bounded, memory-only action trace is enabled and retained |
 | `trace_export` | Export redacted `plasmate.trace.v1` events for one live session |
 | `trace_clear` | Clear retained trace events while preserving the monotonic sequence |

@@ -136,7 +136,7 @@ This exposes Plasmate over stdio as MCP tools:
 - `crawl_policy` - evaluate RFC 9309 robots.txt policy without changing fetch behavior
 - `inspect_page` - return bounded SOM first, with deterministic optional visual fallback
 - `cache_status` - inspect MCP SOM cache reuse and restorable page-state entries
-- `session_status` - inspect active sessions, loaded URLs, HTML/SOM/node inventory
+- `session_status` - inspect active sessions, loaded URLs, HTML/SOM/node inventory, and disabled/readonly interactive counts
 - `trace_status` - inspect bounded action-trace retention for one session
 - `trace_export` - export privacy-safe `plasmate.trace.v1` events
 - `trace_clear` - discard retained events without resetting their sequence
@@ -224,7 +224,8 @@ Use `cache_status` after repeated fetches to inspect local MCP SOM cache hits,
 misses, selector entries, effective-HTML entries, and avoided HTML work.
 Use `session_status` before long interactive runs to inspect active browser
 session count, capacity, loaded URLs, raw/effective HTML sizes, SOM sizes,
-node-map counts, structured data presence, age, and idle time. Stateful
+node-map counts, structured data presence, disabled/readonly interactive
+counts, age, and idle time. Stateful
 `open_page` and `navigate_to` return `cache_restored=true` when they reuse a
 content-hash-validated cache entry with both SOM and effective HTML.
 Set `trace=true` on `open_page` to opt into bounded, memory-only action tracing,

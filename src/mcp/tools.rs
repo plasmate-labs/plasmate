@@ -1117,7 +1117,7 @@ pub fn cache_status_definition() -> ToolDefinition {
 pub fn session_status_definition() -> ToolDefinition {
     ToolDefinition {
         name: "session_status".to_string(),
-        description: "Return Plasmate's MCP browser-session inventory: capacity, age/idle timing, loaded URLs, raw/effective HTML sizes, SOM sizes, node-map counts, and structured-data presence. Use this to inspect stateful open_page/navigate_to workflows before creating more sessions or debugging repeated actions.".to_string(),
+        description: "Return Plasmate's MCP browser-session inventory: capacity, age/idle timing, loaded URLs, raw/effective HTML sizes, SOM sizes, node-map counts, structured-data presence, and compiled disabled/readonly interactive counts. Use this to inspect stateful open_page/navigate_to workflows before creating more sessions or retrying type_text on locked fields.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {}
@@ -4159,6 +4159,31 @@ mod tests {
             snapshot["sessions"].as_array().unwrap()[0]["has_effective_html"].as_bool(),
             Some(false)
         );
+        assert!(snapshot["sessions"].as_array().unwrap()[0]["disabled_count"].is_null());
+        assert!(snapshot["sessions"].as_array().unwrap()[0]["readonly_count"].is_null());
+        assert!(sessions.close_session(&session_id).await);
+    }
+
+    #[tokio::test]
+    async fn test_session_status_reports_disabled_and_readonly_counts() {
+        let sessions = Arc::new(SessionManager::new());
+        let session_id = sessions.create_session().await.unwrap();
+        let html = "<html><head><title>Locked fields</title></head><body><main><input id='coupon' disabled value='SAVE'><textarea id='notes' readonly>Draft</textarea></main></body></html>";
+        sessions
+            .with_session(&session_id, |session| {
+                session.target.current_som = Some(
+                    plasmate::som::compiler::compile(html, "https://example.test/locked").unwrap(),
+                );
+            })
+            .await
+            .unwrap();
+
+        let result = handle_session_status(&sessions).await;
+        let text = result["content"][0]["text"].as_str().unwrap();
+        let snapshot: serde_json::Value = serde_json::from_str(text).unwrap();
+        let summary = &snapshot["sessions"].as_array().unwrap()[0];
+        assert_eq!(summary["disabled_count"], 1);
+        assert_eq!(summary["readonly_count"], 1);
         assert!(sessions.close_session(&session_id).await);
     }
 

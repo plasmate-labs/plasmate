@@ -48,6 +48,8 @@ pub struct SessionSummary {
     pub som_bytes: Option<usize>,
     pub element_count: Option<usize>,
     pub interactive_count: Option<usize>,
+    pub disabled_count: Option<usize>,
+    pub readonly_count: Option<usize>,
 }
 
 /// State for a single MCP browser session.
@@ -357,18 +359,16 @@ impl SessionManager {
         let mut session_summaries: Vec<SessionSummary> = sessions
             .iter()
             .map(|(session_id, session)| {
-                let som_meta = session.target.current_som.as_ref().map(|som| &som.meta);
+                let som = session.target.current_som.as_ref();
+                let som_meta = som.map(|som| &som.meta);
+                let blocked = som.map(blocked_interactive_counts);
                 SessionSummary {
                     session_id: session_id.clone(),
                     url: session.target.current_url.clone(),
-                    title: session
-                        .target
-                        .current_som
-                        .as_ref()
-                        .map(|som| som.title.clone()),
+                    title: som.map(|som| som.title.clone()),
                     age_ms: now.duration_since(session.created_at).as_millis(),
                     idle_ms: now.duration_since(session.last_accessed).as_millis(),
-                    has_page: session.target.current_som.is_some(),
+                    has_page: som.is_some(),
                     has_structured_data: session.target.current_structured_data.is_some(),
                     has_effective_html: session.target.effective_html.is_some(),
                     node_count: session.target.node_map.len(),
@@ -377,6 +377,8 @@ impl SessionManager {
                     som_bytes: som_meta.map(|meta| meta.som_bytes),
                     element_count: som_meta.map(|meta| meta.element_count),
                     interactive_count: som_meta.map(|meta| meta.interactive_count),
+                    disabled_count: blocked.map(|(disabled, _)| disabled),
+                    readonly_count: blocked.map(|(_, readonly)| readonly),
                 }
             })
             .collect();
@@ -391,6 +393,50 @@ impl SessionManager {
             longest_idle_ms,
             sessions: session_summaries,
         }
+    }
+}
+
+fn blocked_interactive_counts(som: &crate::som::types::Som) -> (usize, usize) {
+    let mut disabled = 0;
+    let mut readonly = 0;
+    for region in &som.regions {
+        count_blocked_interactives(&region.elements, &mut disabled, &mut readonly);
+    }
+    (disabled, readonly)
+}
+
+fn count_blocked_interactives(
+    elements: &[crate::som::types::Element],
+    disabled: &mut usize,
+    readonly: &mut usize,
+) {
+    for element in elements {
+        if element.role.is_interactive() {
+            if let Some(attrs) = &element.attrs {
+                if attr_flag_true(attrs, "disabled") {
+                    *disabled += 1;
+                }
+                if attr_flag_true(attrs, "readonly") {
+                    *readonly += 1;
+                }
+            }
+        }
+        if let Some(children) = &element.children {
+            count_blocked_interactives(children, disabled, readonly);
+        }
+        if let Some(shadow) = &element.shadow {
+            count_blocked_interactives(&shadow.elements, disabled, readonly);
+        }
+    }
+}
+
+fn attr_flag_true(attrs: &serde_json::Value, key: &str) -> bool {
+    match attrs.get(key) {
+        Some(serde_json::Value::Bool(true)) => true,
+        Some(serde_json::Value::String(value)) => {
+            value.eq_ignore_ascii_case("true") || value.eq_ignore_ascii_case(key)
+        }
+        _ => false,
     }
 }
 
@@ -454,6 +500,32 @@ mod tests {
         assert!(snapshot.sessions[0].has_effective_html);
         assert_eq!(snapshot.sessions[0].html_bytes, Some(13));
         assert_eq!(snapshot.sessions[0].effective_html_bytes, Some(31));
+        assert_eq!(snapshot.sessions[0].disabled_count, None);
+        assert_eq!(snapshot.sessions[0].readonly_count, None);
+        assert!(manager.close_session(&id).await);
+    }
+
+    #[tokio::test]
+    async fn snapshot_counts_disabled_and_readonly_interactives() {
+        let manager = SessionManager::new();
+        let id = manager.create_session().await.unwrap();
+        let html = "<html><head><title>Locked fields</title></head><body><main><input id='coupon' disabled value='SAVE'><textarea id='notes' readonly>Draft</textarea><button>Ok</button></main></body></html>";
+        manager
+            .with_session(&id, |session| {
+                session.target.current_url = Some("https://example.test/locked".to_string());
+                session.target.current_html = Some(html.to_string());
+                session.target.effective_html = Some(html.to_string());
+                session.target.current_som = Some(
+                    crate::som::compiler::compile(html, "https://example.test/locked").unwrap(),
+                );
+            })
+            .await
+            .unwrap();
+
+        let snapshot = manager.snapshot().await;
+        assert_eq!(snapshot.sessions[0].interactive_count, Some(3));
+        assert_eq!(snapshot.sessions[0].disabled_count, Some(1));
+        assert_eq!(snapshot.sessions[0].readonly_count, Some(1));
         assert!(manager.close_session(&id).await);
     }
 
