@@ -35,16 +35,18 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-23)
 
-- Window: `583225b` .. `0cf807d`
+- Window: `9348eac` .. `7971625`
 - Decision: `NARROW`
-- Merged this run: #158
+- Merged this run: #160, #161
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
   element id, or `html_id`); #158 closed that advertised contract gap.
-- Allowed next (pick one distinct journey): bounded error recovery,
-  privacy-safe diagnostics, a real missed regression, or docs that remove
-  an integration failure.
+  Do not copy #160 click DOM-miss fail-closed or #161 unparseable Python
+  tool-JSON fail-closed onto adjacent handlers or SDKs.
+- Allowed next (pick one distinct journey): a different bounded error
+  recovery, privacy-safe diagnostics, a real missed regression, or docs
+  that remove an integration failure.
 
 ## Preferred lanes
 
