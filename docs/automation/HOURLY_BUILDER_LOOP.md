@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-23)
 
-- Window: `457915d` .. `8286203`
+- Window: `f26ec41` .. `9fd6c87`
 - Decision: `NARROW`
-- Merged this run: #163
+- Merged this run: #165
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -45,8 +45,10 @@ overwrite, reset, or absorb unrelated work.
   Do not copy #160 click DOM-miss fail-closed, #161 unparseable Python
   tool-JSON fail-closed, or #163 `type_text` disabled/readonly fail-closed
   onto adjacent handlers (`clear`, `toggle`, `select_option`) or SDKs.
-- Allowed next (pick one distinct journey): privacy-safe diagnostics, a
-  real missed regression, or docs that remove an integration failure.
+  Do not copy #165 `session_status` disabled/readonly counts onto other
+  tools, traces, or SDKs.
+- Allowed next (pick one distinct journey): a real missed regression, or
+  docs that remove an integration failure.
 
 ## Preferred lanes
 
