@@ -5,7 +5,7 @@ The official Go SDK for Plasmate, with typed structs and SOM query functions.
 ## Installation
 
 ```sh
-go get github.com/nickel-org/plasmate-go
+go get github.com/plasmate-labs/plasmate/sdk/go
 ```
 
 Requires Go 1.21+ and the `plasmate` binary on your PATH.
@@ -19,7 +19,7 @@ import (
     "fmt"
     "log"
 
-    plasmate "github.com/nickel-org/plasmate-go"
+    plasmate "github.com/plasmate-labs/plasmate/sdk/go"
 )
 
 func main() {
@@ -221,9 +221,11 @@ client := plasmate.NewClient(plasmate.WithBinary("/usr/local/bin/plasmate"))
 som, err := client.FetchPage("https://example.com")
 
 // Fetch with options
-som, err := client.FetchPageWithOptions("https://example.com", plasmate.FetchOptions{
-    Budget:     8000,
-    JavaScript: true,
+budget := 8000
+javascript := true
+som, err := client.FetchPageWithOptions("https://example.com", plasmate.FetchPageOptions{
+    Budget:     &budget,
+    JavaScript: &javascript,
 })
 
 // Extract plain text

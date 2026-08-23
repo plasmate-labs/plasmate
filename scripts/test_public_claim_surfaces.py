@@ -18,6 +18,12 @@ SURFACES = (
 )
 
 
+GO_SDK_SURFACES = (
+    "website/docs/src/sdk-go.md",
+    "website/docs/sdk-go.html",
+)
+
+
 class PublicClaimSurfaceTests(unittest.TestCase):
     def test_public_guidance_uses_evidence_aligned_wording(self) -> None:
         for paths, stale_wording, aligned_wording in SURFACES:
@@ -26,6 +32,15 @@ class PublicClaimSurfaceTests(unittest.TestCase):
                     text = (ROOT / relative_path).read_text(encoding="utf-8")
                     self.assertNotIn(stale_wording, text)
                     self.assertIn(aligned_wording, text)
+
+    def test_go_sdk_docs_use_published_module_and_options_type(self) -> None:
+        for relative_path in GO_SDK_SURFACES:
+            with self.subTest(path=relative_path):
+                text = (ROOT / relative_path).read_text(encoding="utf-8")
+                self.assertIn("github.com/plasmate-labs/plasmate/sdk/go", text)
+                self.assertIn("FetchPageOptions", text)
+                self.assertNotIn("github.com/nickel-org/plasmate-go", text)
+                self.assertNotIn("plasmate.FetchOptions{", text)
 
 
 if __name__ == "__main__":

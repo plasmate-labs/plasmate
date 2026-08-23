@@ -458,7 +458,7 @@
     </nav>
     <main class="content">
       <h1 id="go-sdk">Go SDK</h1><p>The official Go SDK for Plasmate, with typed structs and SOM query functions.</p>
-<h2 id="installation">Installation</h2><pre><code class="language-sh">go get github.com/nickel-org/plasmate-go
+<h2 id="installation">Installation</h2><pre><code class="language-sh">go get github.com/plasmate-labs/plasmate/sdk/go
 </code></pre>
 <p>Requires Go 1.21+ and the <code>plasmate</code> binary on your PATH.</p>
 <h2 id="quick-start">Quick Start</h2><pre><code class="language-go">package main
@@ -467,7 +467,7 @@ import (
     &quot;fmt&quot;
     &quot;log&quot;
 
-    plasmate &quot;github.com/nickel-org/plasmate-go&quot;
+    plasmate &quot;github.com/plasmate-labs/plasmate/sdk/go&quot;
 )
 
 func main() {
@@ -579,9 +579,11 @@ client := plasmate.NewClient(plasmate.WithBinary(&quot;/usr/local/bin/plasmate&q
 som, err := client.FetchPage(&quot;https://example.com&quot;)
 
 // Fetch with options
-som, err := client.FetchPageWithOptions(&quot;https://example.com&quot;, plasmate.FetchOptions{
-    Budget:     8000,
-    JavaScript: true,
+budget := 8000
+javascript := true
+som, err := client.FetchPageWithOptions(&quot;https://example.com&quot;, plasmate.FetchPageOptions{
+    Budget:     &amp;budget,
+    JavaScript: &amp;javascript,
 })
 
 // Extract plain text
