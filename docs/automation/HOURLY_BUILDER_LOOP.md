@@ -33,17 +33,18 @@ frequency.
 If these gates are not met, report a no-change or blocked run. Never stash,
 overwrite, reset, or absorb unrelated work.
 
-## Active governor constraint (2026-08-22)
+## Active governor constraint (2026-08-23)
 
-- Window: `a50ff51` .. `2cdca53`
+- Window: `583225b` .. `0cf807d`
 - Decision: `NARROW`
-- Merged this run: #153, #154, #155, #156
+- Merged this run: #158
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
-  text extractors. Those surfaces were the last four hours of accepted work.
-- Allowed next (pick one distinct journey): bounded error recovery, a
-  selector/action contract gap, privacy-safe diagnostics, a real missed
-  regression, or docs that remove an integration failure.
+  text extractors. Do not reopen `#` selector matching (region id, SOM
+  element id, or `html_id`); #158 closed that advertised contract gap.
+- Allowed next (pick one distinct journey): bounded error recovery,
+  privacy-safe diagnostics, a real missed regression, or docs that remove
+  an integration failure.
 
 ## Preferred lanes
 
