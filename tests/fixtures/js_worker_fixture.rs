@@ -19,5 +19,11 @@ fn main() {
         eprintln!("secret environment leaked into worker");
         std::process::exit(17);
     }
+    if input.contains("__fixture_dom_miss__") {
+        println!(
+            r#"{{"status":"evaluation","value":{{"result":"{{\"error\":\"Element not found in DOM\"}}","effective_html":"<html><body><p>mutated</p></body></html>"}}}}"#
+        );
+        return;
+    }
     println!(r#"{{"status":"evaluation","value":{{"result":"ok"}}}}"#);
 }

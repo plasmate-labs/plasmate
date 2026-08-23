@@ -1963,6 +1963,9 @@ pub async fn handle_click(
 
     // Parse click result to check for navigation
     let click_data: Value = serde_json::from_str(&click_result_json).unwrap_or(json!({}));
+    if let Some(err) = click_data.get("error").and_then(|v| v.as_str()) {
+        return error_response(err);
+    }
 
     // Check if we need to navigate to a new URL
     let new_url = if click_data
@@ -3508,6 +3511,54 @@ mod tests {
         .await;
         assert!(survived.get("isError").is_none(), "{survived}");
         assert_eq!(tool_payload(&survived)["result"], "ok");
+        assert_eq!(state_fingerprint(&sessions, &session_id).await, before);
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn click_dom_miss_fails_closed_and_preserves_session() {
+        let options = stateful_worker_options(Duration::from_secs(5));
+        let sessions = Arc::new(SessionManager::with_worker_options(options));
+        let session_id = sessions.create_session().await.unwrap();
+        let html = "<html><head><title>Last good</title></head><body><main id='state'><button>Pay</button><!-- __fixture_dom_miss__ --></main></body></html>";
+        sessions
+            .with_session(&session_id, |session| {
+                session.target.current_url = Some("https://example.test/state".to_string());
+                session.target.current_html = Some(html.to_string());
+                session.target.effective_html = Some(html.to_string());
+                session.target.current_som = Some(
+                    plasmate::som::compiler::compile(html, "https://example.test/state").unwrap(),
+                );
+                session.target.rebuild_node_map();
+            })
+            .await
+            .unwrap();
+        let element_id = sessions
+            .with_session(&session_id, |session| {
+                let som = session.target.current_som.as_ref().unwrap();
+                som.regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .find(|element| element.role.is_interactive())
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose a clickable element")
+            })
+            .await
+            .unwrap();
+        let before = state_fingerprint(&sessions, &session_id).await;
+        let client = reqwest::Client::new();
+
+        let failed = handle_click(
+            &json!({"session_id": session_id, "element_id": element_id}),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert_eq!(failed["isError"], true, "{failed}");
+        assert_eq!(
+            failed["content"][0]["text"].as_str(),
+            Some("Element not found in DOM")
+        );
         assert_eq!(state_fingerprint(&sessions, &session_id).await, before);
     }
 
