@@ -2,7 +2,7 @@
 
 import pytest
 
-from plasmate.client import _extract_last_json
+from plasmate.client import _extract_last_json, _parse_structured_tool_text
 
 
 class TestExtractLastJson:
@@ -69,3 +69,18 @@ class TestExtractLastJson:
         text = '{"ok": true}\nDone in 0.3s'
         result = _extract_last_json(text)
         assert result == {"ok": True}
+
+
+class TestParseStructuredToolText:
+    def test_empty_text_is_none(self):
+        assert _parse_structured_tool_text("") is None
+
+    def test_json_null_is_none(self):
+        assert _parse_structured_tool_text("null") is None
+
+    def test_valid_object(self):
+        assert _parse_structured_tool_text('{"ok": true}') == {"ok": True}
+
+    def test_unparseable_text_raises(self):
+        with pytest.raises(RuntimeError, match="Tool returned unparseable output"):
+            _parse_structured_tool_text("Fetching fixture...\nnot-json")

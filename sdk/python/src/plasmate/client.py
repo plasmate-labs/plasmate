@@ -91,6 +91,18 @@ def _bounded_tool_error(text: str) -> str:
     return f"{text[: MAX_TOOL_ERROR_CHARS - 1]}…"
 
 
+def _parse_structured_tool_text(text: str) -> Any:
+    """Parse structured MCP tool text, failing closed when no JSON is present."""
+    if not text:
+        return None
+    parsed = _extract_last_json(text)
+    if parsed is not None:
+        return parsed
+    if text.strip() == "null":
+        return None
+    raise RuntimeError(_bounded_tool_error("Tool returned unparseable output"))
+
+
 class Plasmate:
     """
     Synchronous Plasmate client.
@@ -232,10 +244,7 @@ class Plasmate:
 
         if name == "extract_text":
             return text
-        if not text:
-            return None
-
-        return _extract_last_json(text)
+        return _parse_structured_tool_text(text)
 
     # ---- Stateless Tools ----
 
@@ -463,10 +472,7 @@ class AsyncPlasmate:
 
         if name == "extract_text":
             return text
-        if not text:
-            return None
-
-        return _extract_last_json(text)
+        return _parse_structured_tool_text(text)
 
     async def fetch_page(
         self,
