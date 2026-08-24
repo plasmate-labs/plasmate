@@ -1972,11 +1972,33 @@ fn build_element_attrs(
             map.insert("level".into(), json!(6));
         }
         "img" | "picture" => {
-            if let Some(alt) = attrs.iter().find(|(n, _)| n == "alt") {
-                map.insert("alt".into(), json!(alt.1));
+            if let Some(alt) = attrs
+                .iter()
+                .find(|(n, _)| n == "alt")
+                .map(|(_, value)| value.clone())
+                .or_else(|| {
+                    if tag == "picture" {
+                        first_descendant_img_attr(node, "alt", &ctx.css_rules)
+                    } else {
+                        None
+                    }
+                })
+            {
+                map.insert("alt".into(), json!(alt));
             }
-            if let Some(src) = attrs.iter().find(|(n, _)| n == "src") {
-                map.insert("src".into(), json!(src.1));
+            if let Some(src) = attrs
+                .iter()
+                .find(|(n, _)| n == "src")
+                .map(|(_, value)| value.clone())
+                .or_else(|| {
+                    if tag == "picture" {
+                        first_descendant_img_attr(node, "src", &ctx.css_rules)
+                    } else {
+                        None
+                    }
+                })
+            {
+                map.insert("src".into(), json!(src));
             }
         }
         "ul" => {
@@ -2344,6 +2366,32 @@ fn extract_summary_text(node: &Handle, css_rules: &VisibilityRules) -> Option<St
                 if !trimmed.is_empty() {
                     return Some(trimmed);
                 }
+            }
+        }
+    }
+    None
+}
+
+fn first_descendant_img_attr(
+    node: &Handle,
+    attr_name: &str,
+    css_rules: &VisibilityRules,
+) -> Option<String> {
+    for child in node.children.borrow().iter() {
+        if heuristics::should_strip(child) || is_css_hidden_element(child, css_rules) {
+            continue;
+        }
+        if let NodeData::Element { name, .. } = &child.data {
+            if name.local.as_ref() == "img" {
+                let child_attrs = get_attr_pairs(child);
+                if let Some((_, value)) = child_attrs.iter().find(|(n, _)| n == attr_name) {
+                    if !value.is_empty() {
+                        return Some(value.clone());
+                    }
+                }
+            }
+            if let Some(found) = first_descendant_img_attr(child, attr_name, css_rules) {
+                return Some(found);
             }
         }
     }
@@ -3361,6 +3409,64 @@ mod tests {
                 .iter()
                 .any(|element| element.label.as_deref() == Some("No destination")),
             "{links:?}"
+        );
+    }
+
+    #[test]
+    fn test_picture_inherits_nested_img_src_and_alt() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Hero</title></head>
+<body>
+<main>
+  <picture>
+    <source srcset="/hero.avif" type="image/avif">
+    <img src="/hero.jpg" alt="Harbor at dusk">
+  </picture>
+  <picture>
+    <source srcset="/empty.avif" type="image/avif">
+  </picture>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/").unwrap();
+        let images: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .filter(|element| element.role == ElementRole::Image)
+            .collect();
+
+        let hero = images
+            .iter()
+            .find(|element| {
+                element
+                    .attrs
+                    .as_ref()
+                    .and_then(|attrs| attrs.get("src").and_then(|value| value.as_str()))
+                    == Some("/hero.jpg")
+            })
+            .expect("picture should inherit fallback img src");
+        let hero_attrs = hero.attrs.as_ref().expect("picture attrs should compile");
+        assert_eq!(hero_attrs["alt"], "Harbor at dusk");
+        assert_ne!(
+            hero_attrs.get("src").and_then(|value| value.as_str()),
+            Some("/hero.avif")
+        );
+        assert!(
+            !images.iter().any(|element| {
+                element
+                    .attrs
+                    .as_ref()
+                    .and_then(|attrs| attrs.get("src").and_then(|value| value.as_str()))
+                    == Some("/empty.avif")
+                    || element
+                        .attrs
+                        .as_ref()
+                        .and_then(|attrs| attrs.get("src").and_then(|value| value.as_str()))
+                        == Some("/hero.avif")
+            }),
+            "source srcset must not become picture src: {images:?}"
         );
     }
 }
