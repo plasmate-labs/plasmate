@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-24)
 
-- Window: `91266c8` .. `4a0988c`
+- Window: `3b81e84` .. `8ae98f2`
 - Decision: `NARROW`
-- Merged this run: #172, #173
+- Merged this run: #175
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -54,9 +54,11 @@ overwrite, reset, or absorb unrelated work.
   #172 SOM-reference field/table rewrites onto other docs, marketing, or
   SDK READMEs. Do not copy #173 `<area href>` compile work onto
   extract_links, CLI, CDP, or adjacent tags (`object`, `embed`, `source`).
+  Do not copy #175 `extract_text` compiled-label fallback onto CLI, CDP,
+  parser, or SDK text extractors.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
-  rewrite or SOM-reference field rewrite.
+  rewrite, SOM-reference field rewrite, or extract_text label fallback copy.
 
 ## Preferred lanes
 
