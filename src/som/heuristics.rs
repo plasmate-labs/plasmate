@@ -246,6 +246,7 @@ pub fn landmark_role(tag: &str, attrs: &[(String, String)]) -> Option<&'static s
         "header" => Some("header"),
         "footer" => Some("footer"),
         "dialog" => Some("dialog"),
+        "search" => Some("search"),
         _ => None,
     }
 }
