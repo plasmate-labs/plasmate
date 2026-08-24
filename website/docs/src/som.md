@@ -22,31 +22,32 @@ Where the DOM is a faithful representation of every tag, attribute, and style in
 
 ```json
 {
-  "version": "0.1",
+  "som_version": "0.1",
   "url": "https://example.com",
   "title": "Page Title",
+  "lang": "en",
   "meta": {
     "html_bytes": 589546,
     "som_bytes": 56625,
     "element_count": 325,
-    "compression_ratio": 10.4
+    "interactive_count": 20
   },
   "structured_data": {
-    "json_ld": [...],
-    "opengraph": {...},
-    "twitter_cards": {...},
-    "meta_tags": [...]
+    "json_ld": [],
+    "open_graph": {},
+    "twitter_card": {},
+    "meta": {}
   },
   "regions": [
     {
       "id": "r_navigation",
-      "role": "Navigation",
-      "elements": [...]
+      "role": "navigation",
+      "elements": []
     },
     {
       "id": "r_main",
-      "role": "Main",
-      "elements": [...]
+      "role": "main",
+      "elements": []
     }
   ]
 }
@@ -58,14 +59,14 @@ SOM organizes page content into semantic regions. Region detection uses HTML5 la
 
 | Role | Detection |
 |------|-----------|
-| **Navigation** | `<nav>`, class/ID containing "nav", "menu", "header-links" |
-| **Main** | `<main>`, `<article>`, class/ID containing "content", "main", "post" |
-| **Header** | `<header>`, class/ID containing "header", "masthead", "banner" |
-| **Footer** | `<footer>`, class/ID containing "footer", "colophon" |
-| **Aside** | `<aside>`, class/ID containing "sidebar", "aside", "widget" |
-| **Form** | `<form>`, class/ID containing "form", "login", "signup" |
-| **Dialog** | `<dialog>`, role="dialog", class containing "modal", "popup" |
-| **Content** | Fallback for regions that do not match other roles |
+| `navigation` | `<nav>`, class/ID containing "nav", "menu", "header-links" |
+| `main` | `<main>`, `<article>`, class/ID containing "content", "main", "post" |
+| `header` | `<header>`, class/ID containing "header", "masthead", "banner" |
+| `footer` | `<footer>`, class/ID containing "footer", "colophon" |
+| `aside` | `<aside>`, class/ID containing "sidebar", "aside", "widget" |
+| `form` | `<form>`, class/ID containing "form", "login", "signup" |
+| `dialog` | `<dialog>`, role="dialog", class containing "modal", "popup" |
+| `content` | Fallback for regions that do not match other roles |
 
 ### Region ID Format
 
@@ -74,7 +75,7 @@ Region IDs use the format `r_` + a descriptor derived from the region's role and
 - `r_navigation` (primary nav)
 - `r_main` (primary content)
 - `r_footer` (page footer)
-- `r_aside_0`, `r_aside_1` (multiple sidebars)
+- `r_aside`, `r_aside_1` (multiple sidebars)
 
 ## Elements
 
@@ -83,12 +84,12 @@ Each element in a region has:
 | Field | Type | Description |
 |-------|------|-------------|
 | `id` | string | Deterministic ID: `e_` + hex(sha256(origin\|role\|name\|dom_path))[0..12] |
-| `role` | string | Semantic role: link, button, input, select, textarea, heading, paragraph, image, list, table |
-| `name` | string | Accessible name from aria-label, label[for], placeholder, alt, or visible text |
+| `role` | string | Semantic role: link, button, text_input, select, textarea, checkbox, radio, heading, paragraph, image, list, table, section, group, separator, details, iframe |
+| `html_id` | string | Original HTML `id` when present |
+| `label` | string | Accessible name from aria-label, label[for], placeholder, alt, or visible text |
 | `text` | string | Summarized text content (budget-limited) |
-| `href` | string | For links: the target URL |
-| `type` | string | For inputs: the input type (text, email, password, etc.) |
-| `value` | string | Current value for form elements |
+| `actions` | array | Compact operations such as click, type, clear, select, toggle |
+| `attrs` | object | Role-specific attributes such as href, type, value, and src |
 | `hints` | array | CSS class-inferred hints: primary, secondary, danger, disabled, active, etc. |
 
 ### Element ID Stability
