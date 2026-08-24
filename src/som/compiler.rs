@@ -1620,7 +1620,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
     }
 
     match tag {
-        "a" => {
+        "a" | "area" => {
             // Only count as link if it has href
             if attrs.iter().any(|(n, _)| n == "href") {
                 Some(ElementRole::Link)
@@ -1735,6 +1735,14 @@ fn resolve_label(
             }
         }
     }
+    if tag == "area" {
+        if let Some((_, alt)) = attrs.iter().find(|(n, _)| n == "alt") {
+            let normalized = heuristics::normalize_text(alt);
+            if !normalized.is_empty() && text.as_deref() != Some(&normalized) {
+                return Some(normalized);
+            }
+        }
+    }
     None
 }
 
@@ -1804,9 +1812,14 @@ fn build_element_attrs(
     let mut map = serde_json::Map::new();
 
     match tag {
-        "a" => {
+        "a" | "area" => {
             if let Some(href) = attrs.iter().find(|(n, _)| n == "href") {
                 map.insert("href".into(), json!(href.1));
+            }
+            if tag == "area" {
+                if let Some(alt) = attrs.iter().find(|(n, _)| n == "alt") {
+                    map.insert("alt".into(), json!(alt.1));
+                }
             }
             if let Some((_, target)) = attrs.iter().find(|(n, _)| n == "target") {
                 map.insert("target".into(), json!(target));
@@ -3299,5 +3312,55 @@ mod tests {
         assert_eq!(attrs["draggable"], true);
         assert_eq!(attrs["aria"]["grabbed"], true);
         assert_eq!(attrs["aria"]["dropeffect"], "move");
+    }
+
+    #[test]
+    fn test_area_href_compiles_as_link() {
+        let html = r##"<!DOCTYPE html>
+<html><head><title>Campus map</title></head>
+<body>
+<main>
+  <img src="/campus.png" alt="Campus" usemap="#campus">
+  <map name="campus">
+    <area href="https://example.test/library" alt="Library" shape="rect" coords="0,0,40,40">
+    <area href="#" alt="Ignored hash" shape="rect" coords="40,0,80,40">
+    <area alt="No destination" shape="circle" coords="10,10,5">
+  </map>
+</main>
+</body>
+</html>"##;
+
+        let som = compile(html, "https://example.test/").unwrap();
+        let links: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .filter(|element| element.role == ElementRole::Link)
+            .collect();
+
+        assert_eq!(links.len(), 2, "{links:?}");
+        let library = links
+            .iter()
+            .find(|element| element.label.as_deref() == Some("Library"))
+            .expect("library area should compile as a named link");
+        let attrs = library.attrs.as_ref().expect("area attrs should compile");
+        assert_eq!(attrs["href"], "https://example.test/library");
+        assert_eq!(attrs["alt"], "Library");
+        assert!(
+            links.iter().any(|element| {
+                element
+                    .attrs
+                    .as_ref()
+                    .and_then(|attrs| attrs.get("href").and_then(|value| value.as_str()))
+                    == Some("#")
+            }),
+            "{links:?}"
+        );
+        assert!(
+            !links
+                .iter()
+                .any(|element| element.label.as_deref() == Some("No destination")),
+            "{links:?}"
+        );
     }
 }
