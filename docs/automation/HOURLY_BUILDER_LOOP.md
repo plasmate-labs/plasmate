@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-24)
 
-- Window: `f4ec07b` .. `f383513`
+- Window: `b201c4a` .. `b00837d`
 - Decision: `NARROW`
-- Merged this run: #179
+- Merged this run: #181
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -59,11 +59,15 @@ overwrite, reset, or absorb unrelated work.
   src/alt inheritance onto extract_links, CLI, CDP, or adjacent tags
   (`object`, `embed`, `source`). Do not copy #179 native `<search>`
   landmark mapping onto extract_links, CLI, CDP, selectors, or adjacent
-  tags (`form`, `object`, `embed`, `source`).
+  tags (`form`, `object`, `embed`, `source`). Do not copy #181
+  `hidden="until-found"` compile work onto extract_text, CLI, CDP,
+  extract_links, or adjacent hide attributes (`aria-hidden`,
+  `style=display:none`).
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
-  picture-img fallback copy, or native-search landmark copy.
+  picture-img fallback copy, native-search landmark copy, or
+  hidden-until-found copy.
 
 ## Preferred lanes
 
