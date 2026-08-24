@@ -373,6 +373,31 @@ fn test_aria_search_landmark_maps_to_navigation_region() {
 }
 
 #[test]
+fn test_native_search_element_maps_to_navigation_region() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Native Search</title></head>
+<body>
+    <search aria-label="Site search">
+        <input type="search" aria-label="Query">
+        <button>Search</button>
+    </search>
+    <main><p>Visible content</p></main>
+</body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let search_region = som
+        .regions
+        .iter()
+        .find(|r| r.role == RegionRole::Navigation && r.label.as_deref() == Some("Site search"))
+        .expect("native search element should compile as a labelled navigation region");
+
+    assert!(search_region
+        .elements
+        .iter()
+        .any(|e| e.role == ElementRole::TextInput));
+}
+
+#[test]
 fn test_action_semantics_conformance_fixture() {
     let html = std::fs::read_to_string("specs/conformance/016-action-semantics.html")
         .expect("action semantics fixture should load");
