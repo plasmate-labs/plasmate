@@ -2111,6 +2111,12 @@ fn build_element_attrs(
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "title") {
         map.insert("title".into(), json!(value));
     }
+    if attrs
+        .iter()
+        .any(|(n, v)| n == "hidden" && v.trim().eq_ignore_ascii_case("until-found"))
+    {
+        map.insert("hidden".into(), json!("until-found"));
+    }
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "role") {
         map.insert("source_role".into(), json!(value));
     }
@@ -3409,6 +3415,61 @@ mod tests {
                 .iter()
                 .any(|element| element.label.as_deref() == Some("No destination")),
             "{links:?}"
+        );
+    }
+
+    #[test]
+    fn test_hidden_until_found_content_is_compiled() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>FAQ</title></head>
+<body>
+<main>
+  <p hidden>Boolean hidden answer</p>
+  <p hidden="hidden">Keyword hidden answer</p>
+  <p hidden="until-found">Findable until-found answer</p>
+  <div hidden="until-found">
+    <p>Wrapped until-found answer</p>
+  </div>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/faq").unwrap();
+        let paragraphs: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .filter(|element| element.role == ElementRole::Paragraph)
+            .collect();
+
+        assert!(
+            !paragraphs
+                .iter()
+                .any(|element| element.text.as_deref() == Some("Boolean hidden answer")),
+            "{paragraphs:?}"
+        );
+        assert!(
+            !paragraphs
+                .iter()
+                .any(|element| element.text.as_deref() == Some("Keyword hidden answer")),
+            "{paragraphs:?}"
+        );
+
+        let findable = paragraphs
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Findable until-found answer"))
+            .expect("hidden=until-found paragraph should compile");
+        let findable_attrs = findable
+            .attrs
+            .as_ref()
+            .expect("until-found attrs should compile");
+        assert_eq!(findable_attrs["hidden"], "until-found");
+
+        assert!(
+            paragraphs
+                .iter()
+                .any(|element| element.text.as_deref() == Some("Wrapped until-found answer")),
+            "{paragraphs:?}"
         );
     }
 

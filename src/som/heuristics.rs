@@ -95,7 +95,10 @@ pub fn should_strip(node: &Handle) -> bool {
             }
             // Check for hidden elements
             let attrs = attrs.borrow();
-            if attrs.iter().any(|a| a.name.local.as_ref() == "hidden") {
+            if attrs.iter().any(|a| {
+                a.name.local.as_ref() == "hidden"
+                    && !a.value.as_ref().trim().eq_ignore_ascii_case("until-found")
+            }) {
                 return true;
             }
             if attrs.iter().any(|a| {
