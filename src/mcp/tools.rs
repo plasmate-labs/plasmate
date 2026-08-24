@@ -621,11 +621,13 @@ fn truncate_text_to_chars(text: &mut String, max_chars: usize) {
 
 /// Recursively extract text from a SOM element.
 fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<String>) {
-    // Add element text if present
-    if let Some(text) = &element.text {
-        if !text.is_empty() {
-            parts.push(text.clone());
-        }
+    let readable = element
+        .text
+        .as_deref()
+        .filter(|text| !text.is_empty())
+        .or_else(|| element.label.as_deref().filter(|label| !label.is_empty()));
+    if let Some(readable) = readable {
+        parts.push(readable.to_string());
     }
 
     // Handle list items
@@ -3846,6 +3848,38 @@ mod tests {
             hints: None,
             shadow: None,
         }
+    }
+
+    #[test]
+    fn test_extract_element_text_includes_compiled_accessible_label() {
+        let html = r#"<html><head><title>Drafts</title></head>
+<body>
+<main>
+  <button aria-label="Save draft"></button>
+  <button>Visible submit</button>
+</main>
+</body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/drafts").unwrap();
+        let mut parts = Vec::new();
+        for region in &som.regions {
+            for element in &region.elements {
+                extract_element_text(element, &mut parts);
+            }
+        }
+
+        assert!(parts.iter().any(|part| part == "Save draft"), "{parts:?}");
+        assert!(
+            parts.iter().any(|part| part == "Visible submit"),
+            "{parts:?}"
+        );
+        assert_eq!(
+            parts
+                .iter()
+                .filter(|part| *part == "Save draft" || *part == "Visible submit")
+                .count(),
+            2,
+            "{parts:?}"
+        );
     }
 
     #[test]
