@@ -33,11 +33,11 @@ frequency.
 If these gates are not met, report a no-change or blocked run. Never stash,
 overwrite, reset, or absorb unrelated work.
 
-## Active governor constraint (2026-08-23)
+## Active governor constraint (2026-08-24)
 
-- Window: `dde0a45` .. `fde7b04`
+- Window: `91266c8` .. `4a0988c`
 - Decision: `NARROW`
-- Merged this run: #170
+- Merged this run: #172, #173
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -50,10 +50,13 @@ overwrite, reset, or absorb unrelated work.
   CLI or CDP link extractors. Do not copy #168 Python `extract_links` onto
   Node or Go SDKs as a one-surface method add. Do not copy #170 Go module
   path / `FetchPageOptions` docs onto marketing, tweets, or remaining
-  nickel-org mentions outside published SDK install surfaces.
+  nickel-org mentions outside published SDK install surfaces. Do not copy
+  #172 SOM-reference field/table rewrites onto other docs, marketing, or
+  SDK READMEs. Do not copy #173 `<area href>` compile work onto
+  extract_links, CLI, CDP, or adjacent tags (`object`, `embed`, `source`).
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
-  rewrite.
+  rewrite or SOM-reference field rewrite.
 
 ## Preferred lanes
 
