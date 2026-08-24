@@ -1,4 +1,7 @@
+from html import unescape
 from pathlib import Path
+import json
+import re
 import unittest
 
 
@@ -24,6 +27,22 @@ GO_SDK_SURFACES = (
 )
 
 
+SOM_REFERENCE_SURFACES = (
+    "website/docs/src/som.md",
+    "website/docs/som.html",
+)
+
+
+def first_json_example(text: str) -> dict:
+    markdown = re.search(r"```json\n(\{.*?\n\})\n```", text, re.S)
+    if markdown:
+        return json.loads(markdown.group(1))
+    html = re.search(r'<code class="language-json">(.*?)</code>', text, re.S)
+    if not html:
+        raise AssertionError("published SOM reference is missing a JSON example")
+    return json.loads(unescape(html.group(1)))
+
+
 class PublicClaimSurfaceTests(unittest.TestCase):
     def test_public_guidance_uses_evidence_aligned_wording(self) -> None:
         for paths, stale_wording, aligned_wording in SURFACES:
@@ -41,6 +60,25 @@ class PublicClaimSurfaceTests(unittest.TestCase):
                 self.assertIn("FetchPageOptions", text)
                 self.assertNotIn("github.com/nickel-org/plasmate-go", text)
                 self.assertNotIn("plasmate.FetchOptions{", text)
+
+    def test_som_reference_example_matches_compiled_contract(self) -> None:
+        for relative_path in SOM_REFERENCE_SURFACES:
+            with self.subTest(path=relative_path):
+                text = (ROOT / relative_path).read_text(encoding="utf-8")
+                self.assertNotIn('"compression_ratio"', text)
+                self.assertNotIn('"version": "0.1"', text)
+                self.assertNotIn("&quot;version&quot;: &quot;0.1&quot;", text)
+                self.assertNotIn('"role": "Navigation"', text)
+                self.assertNotIn("r_aside_0", text)
+                self.assertIn("text_input", text)
+                example = first_json_example(text)
+                self.assertEqual(example["som_version"], "0.1")
+                self.assertEqual(example["lang"], "en")
+                self.assertEqual(example["meta"]["interactive_count"], 20)
+                self.assertNotIn("compression_ratio", example["meta"])
+                self.assertEqual(example["regions"][0]["role"], "navigation")
+                self.assertIn("open_graph", example["structured_data"])
+                self.assertIn("twitter_card", example["structured_data"])
 
 
 if __name__ == "__main__":

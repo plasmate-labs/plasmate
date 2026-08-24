@@ -472,31 +472,32 @@ that the retained representation is sufficient for the target task.</p>
 </li>
 </ol>
 <h2 id="structure">Structure</h2><pre><code class="language-json">{
-  &quot;version&quot;: &quot;0.1&quot;,
+  &quot;som_version&quot;: &quot;0.1&quot;,
   &quot;url&quot;: &quot;https://example.com&quot;,
   &quot;title&quot;: &quot;Page Title&quot;,
+  &quot;lang&quot;: &quot;en&quot;,
   &quot;meta&quot;: {
     &quot;html_bytes&quot;: 589546,
     &quot;som_bytes&quot;: 56625,
     &quot;element_count&quot;: 325,
-    &quot;compression_ratio&quot;: 10.4
+    &quot;interactive_count&quot;: 20
   },
   &quot;structured_data&quot;: {
-    &quot;json_ld&quot;: [...],
-    &quot;opengraph&quot;: {...},
-    &quot;twitter_cards&quot;: {...},
-    &quot;meta_tags&quot;: [...]
+    &quot;json_ld&quot;: [],
+    &quot;open_graph&quot;: {},
+    &quot;twitter_card&quot;: {},
+    &quot;meta&quot;: {}
   },
   &quot;regions&quot;: [
     {
       &quot;id&quot;: &quot;r_navigation&quot;,
-      &quot;role&quot;: &quot;Navigation&quot;,
-      &quot;elements&quot;: [...]
+      &quot;role&quot;: &quot;navigation&quot;,
+      &quot;elements&quot;: []
     },
     {
       &quot;id&quot;: &quot;r_main&quot;,
-      &quot;role&quot;: &quot;Main&quot;,
-      &quot;elements&quot;: [...]
+      &quot;role&quot;: &quot;main&quot;,
+      &quot;elements&quot;: []
     }
   ]
 }
@@ -510,35 +511,35 @@ that the retained representation is sufficient for the target task.</p>
 </tr>
 </thead>
 <tbody><tr>
-<td><strong>Navigation</strong></td>
-<td><code>&lt;nav&gt;</code>, class/ID containing &quot;nav&quot;, &quot;menu&quot;, &quot;header-links&quot;</td>
-</tr>
-<tr>
-<td><strong>Main</strong></td>
-<td><code>&lt;main&gt;</code>, <code>&lt;article&gt;</code>, class/ID containing &quot;content&quot;, &quot;main&quot;, &quot;post&quot;</td>
-</tr>
-<tr>
-<td><strong>Header</strong></td>
-<td><code>&lt;header&gt;</code>, class/ID containing &quot;header&quot;, &quot;masthead&quot;, &quot;banner&quot;</td>
-</tr>
-<tr>
-<td><strong>Footer</strong></td>
-<td><code>&lt;footer&gt;</code>, class/ID containing &quot;footer&quot;, &quot;colophon&quot;</td>
-</tr>
-<tr>
-<td><strong>Aside</strong></td>
-<td><code>&lt;aside&gt;</code>, class/ID containing &quot;sidebar&quot;, &quot;aside&quot;, &quot;widget&quot;</td>
-</tr>
-<tr>
-<td><strong>Form</strong></td>
-<td><code>&lt;form&gt;</code>, class/ID containing &quot;form&quot;, &quot;login&quot;, &quot;signup&quot;</td>
-</tr>
-<tr>
-<td><strong>Dialog</strong></td>
-<td><code>&lt;dialog&gt;</code>, role=&quot;dialog&quot;, class containing &quot;modal&quot;, &quot;popup&quot;</td>
-</tr>
-<tr>
-<td><strong>Content</strong></td>
+<td><code>navigation</code></td>
+        <td><code>&lt;nav&gt;</code>, class/ID containing &quot;nav&quot;, &quot;menu&quot;, &quot;header-links&quot;</td>
+      </tr>
+      <tr>
+        <td><code>main</code></td>
+        <td><code>&lt;main&gt;</code>, <code>&lt;article&gt;</code>, class/ID containing &quot;content&quot;, &quot;main&quot;, &quot;post&quot;</td>
+      </tr>
+      <tr>
+        <td><code>header</code></td>
+        <td><code>&lt;header&gt;</code>, class/ID containing &quot;header&quot;, &quot;masthead&quot;, &quot;banner&quot;</td>
+      </tr>
+      <tr>
+        <td><code>footer</code></td>
+        <td><code>&lt;footer&gt;</code>, class/ID containing &quot;footer&quot;, &quot;colophon&quot;</td>
+      </tr>
+      <tr>
+        <td><code>aside</code></td>
+        <td><code>&lt;aside&gt;</code>, class/ID containing &quot;sidebar&quot;, &quot;aside&quot;, &quot;widget&quot;</td>
+      </tr>
+      <tr>
+        <td><code>form</code></td>
+        <td><code>&lt;form&gt;</code>, class/ID containing &quot;form&quot;, &quot;login&quot;, &quot;signup&quot;</td>
+      </tr>
+      <tr>
+        <td><code>dialog</code></td>
+        <td><code>&lt;dialog&gt;</code>, role=&quot;dialog&quot;, class containing &quot;modal&quot;, &quot;popup&quot;</td>
+      </tr>
+      <tr>
+        <td><code>content</code></td>
 <td>Fallback for regions that do not match other roles</td>
 </tr>
 </tbody></table>
@@ -547,7 +548,7 @@ that the retained representation is sufficient for the target task.</p>
 <li><code>r_navigation</code> (primary nav)</li>
 <li><code>r_main</code> (primary content)</li>
 <li><code>r_footer</code> (page footer)</li>
-<li><code>r_aside_0</code>, <code>r_aside_1</code> (multiple sidebars)</li>
+<li><code>r_aside</code>, <code>r_aside_1</code> (multiple sidebars)</li>
 </ul>
 <h2 id="elements">Elements</h2><p>Each element in a region has:</p>
 <table>
@@ -565,36 +566,36 @@ that the retained representation is sufficient for the target task.</p>
 </tr>
 <tr>
 <td><code>role</code></td>
-<td>string</td>
-<td>Semantic role: link, button, input, select, textarea, heading, paragraph, image, list, table</td>
-</tr>
-<tr>
-<td><code>name</code></td>
-<td>string</td>
-<td>Accessible name from aria-label, label[for], placeholder, alt, or visible text</td>
-</tr>
-<tr>
-<td><code>text</code></td>
-<td>string</td>
-<td>Summarized text content (budget-limited)</td>
-</tr>
-<tr>
-<td><code>href</code></td>
-<td>string</td>
-<td>For links: the target URL</td>
-</tr>
-<tr>
-<td><code>type</code></td>
-<td>string</td>
-<td>For inputs: the input type (text, email, password, etc.)</td>
-</tr>
-<tr>
-<td><code>value</code></td>
-<td>string</td>
-<td>Current value for form elements</td>
-</tr>
-<tr>
-<td><code>hints</code></td>
+        <td>string</td>
+        <td>Semantic role: link, button, text_input, select, textarea, checkbox, radio, heading, paragraph, image, list, table, section, group, separator, details, iframe</td>
+      </tr>
+      <tr>
+        <td><code>html_id</code></td>
+        <td>string</td>
+        <td>Original HTML <code>id</code> when present</td>
+      </tr>
+      <tr>
+        <td><code>label</code></td>
+        <td>string</td>
+        <td>Accessible name from aria-label, label[for], placeholder, alt, or visible text</td>
+      </tr>
+      <tr>
+        <td><code>text</code></td>
+        <td>string</td>
+        <td>Summarized text content (budget-limited)</td>
+      </tr>
+      <tr>
+        <td><code>actions</code></td>
+        <td>array</td>
+        <td>Compact operations such as click, type, clear, select, toggle</td>
+      </tr>
+      <tr>
+        <td><code>attrs</code></td>
+        <td>object</td>
+        <td>Role-specific attributes such as href, type, value, and src</td>
+      </tr>
+      <tr>
+        <td><code>hints</code></td>
 <td>array</td>
 <td>CSS class-inferred hints: primary, secondary, danger, disabled, active, etc.</td>
 </tr>
