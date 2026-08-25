@@ -708,3 +708,63 @@ class TestPydanticModels:
     def test_select_option(self) -> None:
         opt = SelectOption(value="us", text="United States", selected=True)
         assert opt.selected is True
+
+    def test_model_validate_accepts_compiled_time_meter_and_hidden_attrs(self) -> None:
+        som = Som.model_validate(
+            {
+                "som_version": "1.0",
+                "url": "https://example.test/status",
+                "title": "Status",
+                "lang": "en",
+                "regions": [
+                    {
+                        "id": "r1",
+                        "role": "main",
+                        "elements": [
+                            {
+                                "id": "e1",
+                                "role": "paragraph",
+                                "html_id": "published",
+                                "text": "Shipped",
+                                "attrs": {"datetime": "2026-08-25"},
+                            },
+                            {
+                                "id": "e2",
+                                "role": "group",
+                                "html_id": "quota",
+                                "text": "40",
+                                "attrs": {
+                                    "source_role": "meter",
+                                    "value": "40",
+                                    "low": "20",
+                                    "high": "80",
+                                    "optimum": "50",
+                                },
+                            },
+                            {
+                                "id": "e3",
+                                "role": "paragraph",
+                                "html_id": "note",
+                                "text": "Findable",
+                                "attrs": {"hidden": "until-found"},
+                            },
+                        ],
+                    }
+                ],
+                "meta": {
+                    "html_bytes": 1,
+                    "som_bytes": 1,
+                    "element_count": 3,
+                    "interactive_count": 0,
+                },
+            }
+        )
+        published, quota, note = som.regions[0].elements
+        assert published.attrs is not None
+        assert published.attrs.datetime == "2026-08-25"
+        assert quota.attrs is not None
+        assert quota.attrs.low == "20"
+        assert quota.attrs.high == "80"
+        assert quota.attrs.optimum == "50"
+        assert note.attrs is not None
+        assert note.attrs.hidden == "until-found"

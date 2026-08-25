@@ -170,6 +170,11 @@ class ElementAttrs(BaseModel):
     allow: Optional[str] = None
     width: Optional[str] = None
     height: Optional[str] = None
+    datetime: Optional[str] = None
+    hidden: Optional[Union[bool, str]] = None
+    low: Optional[str] = None
+    high: Optional[str] = None
+    optimum: Optional[str] = None
 
 
 class SomElement(BaseModel):
