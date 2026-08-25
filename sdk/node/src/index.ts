@@ -83,6 +83,42 @@ export interface PageSession {
   som: Som;
 }
 
+interface OpenPagePayload {
+  session_id?: string;
+  som?: Som;
+  title?: string;
+  url?: string;
+  lang?: string;
+  som_version?: string;
+  regions?: Som['regions'];
+  meta?: Som['meta'];
+  structured_data?: Som['structured_data'];
+}
+
+function emptySomMeta(): Som['meta'] {
+  return {
+    html_bytes: 0,
+    som_bytes: 0,
+    element_count: 0,
+    interactive_count: 0,
+  };
+}
+
+function somFromOpenPage(result: OpenPagePayload): Som {
+  if (result.som && typeof result.som === 'object') {
+    return result.som;
+  }
+  return {
+    som_version: result.som_version ?? '1.0',
+    url: result.url ?? '',
+    title: result.title ?? '',
+    lang: result.lang ?? '',
+    regions: Array.isArray(result.regions) ? result.regions : [],
+    meta: result.meta ?? emptySomMeta(),
+    ...(result.structured_data ? { structured_data: result.structured_data } : {}),
+  };
+}
+
 export interface PlasmateOptions {
   /** Path to the plasmate binary. Default: "plasmate" (found in PATH) */
   binary?: string;
@@ -329,11 +365,11 @@ export class Plasmate extends EventEmitter {
    * @param url - URL to open
    */
   async openPage(url: string): Promise<PageSession> {
-    const result = await this.callTool('open_page', { url }) as {
-      session_id: string;
-      som: Som;
+    const result = await this.callTool('open_page', { url }) as OpenPagePayload;
+    return {
+      sessionId: result.session_id ?? '',
+      som: somFromOpenPage(result),
     };
-    return { sessionId: result.session_id, som: result.som };
   }
 
   /**
