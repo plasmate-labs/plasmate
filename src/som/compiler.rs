@@ -1612,6 +1612,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                     "menuitem" | "tab" | "option" => return Some(ElementRole::Button),
                     "img" => return Some(ElementRole::Image),
                     "group" | "radiogroup" => return Some(ElementRole::Group),
+                    "progressbar" | "meter" => return Some(ElementRole::Group),
                     _ => {}
                 }
             }
@@ -1663,6 +1664,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "hr" => Some(ElementRole::Separator),
         "details" => Some(ElementRole::Details),
         "iframe" => Some(ElementRole::Iframe),
+        "progress" | "meter" => Some(ElementRole::Group),
         _ => None,
     }
 }
@@ -2123,6 +2125,30 @@ fn build_element_attrs(
             }
             if let Some(height) = attrs.iter().find(|(n, _)| n == "height") {
                 map.insert("height".into(), json!(height.1));
+            }
+        }
+        "progress" | "meter" => {
+            map.insert(
+                "source_role".into(),
+                json!(if tag == "progress" {
+                    "progressbar"
+                } else {
+                    "meter"
+                }),
+            );
+            if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "value") {
+                if !value.trim().is_empty() {
+                    map.insert("value".into(), json!(value));
+                }
+            }
+            if tag == "meter" {
+                for key in ["low", "high", "optimum"] {
+                    if let Some((_, value)) = attrs.iter().find(|(n, _)| n == key) {
+                        if !value.trim().is_empty() {
+                            map.insert(key.into(), json!(value));
+                        }
+                    }
+                }
             }
         }
         _ => {}
@@ -3736,5 +3762,94 @@ mod tests {
             .expect("native button should keep its role");
         assert_eq!(button.text.as_deref(), Some("Keep button"));
         assert_eq!(button.actions.as_deref(), Some(&["click".into()][..]));
+    }
+
+    #[test]
+    fn test_meter_and_progress_values_are_compiled() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Status</title></head>
+<body>
+<main>
+  <label for="upload">Upload</label>
+  <progress id="upload" value="40" max="100">40%</progress>
+  <progress id="pending">Waiting</progress>
+  <label for="score">Score</label>
+  <meter id="score" min="0" max="100" low="30" high="80" optimum="90" value="72">72</meter>
+  <div role="progressbar" aria-label="Sync" aria-valuemin="0" aria-valuemax="100" aria-valuenow="15">15%</div>
+  <div>Just text</div>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/status").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let upload = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("upload"))
+            .expect("native progress should compile");
+        assert_eq!(upload.role, ElementRole::Group);
+        let upload_attrs = upload
+            .attrs
+            .as_ref()
+            .expect("progress attrs should compile");
+        assert_eq!(upload_attrs["source_role"], "progressbar");
+        assert_eq!(upload_attrs["value"], "40");
+        assert_eq!(upload_attrs["max"], 100);
+
+        let pending = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pending"))
+            .expect("indeterminate progress should still compile");
+        let pending_attrs = pending
+            .attrs
+            .as_ref()
+            .expect("indeterminate progress attrs should compile");
+        assert_eq!(pending_attrs["source_role"], "progressbar");
+        assert!(
+            pending_attrs.get("value").is_none(),
+            "indeterminate progress must not invent a value: {pending:?}"
+        );
+
+        let score = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("score"))
+            .expect("native meter should compile");
+        assert_eq!(score.role, ElementRole::Group);
+        let score_attrs = score.attrs.as_ref().expect("meter attrs should compile");
+        assert_eq!(score_attrs["source_role"], "meter");
+        assert_eq!(score_attrs["value"], "72");
+        assert_eq!(score_attrs["min"], 0);
+        assert_eq!(score_attrs["max"], 100);
+        assert_eq!(score_attrs["low"], "30");
+        assert_eq!(score_attrs["high"], "80");
+        assert_eq!(score_attrs["optimum"], "90");
+
+        let sync = elements
+            .iter()
+            .find(|element| {
+                element
+                    .attrs
+                    .as_ref()
+                    .and_then(|attrs| attrs.get("source_role"))
+                    .and_then(|value| value.as_str())
+                    == Some("progressbar")
+                    && element.html_id.is_none()
+            })
+            .expect("ARIA progressbar should compile");
+        assert_eq!(sync.role, ElementRole::Group);
+        assert_eq!(sync.attrs.as_ref().unwrap()["aria"]["valuenow"], "15");
+
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Paragraph
+                    && element.text.as_deref() == Some("Just text")
+            }),
+            "plain text must stay a paragraph: {elements:?}"
+        );
     }
 }
