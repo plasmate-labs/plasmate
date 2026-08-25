@@ -33,11 +33,11 @@ frequency.
 If these gates are not met, report a no-change or blocked run. Never stash,
 overwrite, reset, or absorb unrelated work.
 
-## Active governor constraint (2026-08-24)
+## Active governor constraint (2026-08-25)
 
-- Window: `b201c4a` .. `b00837d`
+- Window: `be4ebb4` .. `9b99e8d`
 - Decision: `NARROW`
-- Merged this run: #181
+- Merged this run: #183
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -62,12 +62,14 @@ overwrite, reset, or absorb unrelated work.
   tags (`form`, `object`, `embed`, `source`). Do not copy #181
   `hidden="until-found"` compile work onto extract_text, CLI, CDP,
   extract_links, or adjacent hide attributes (`aria-hidden`,
-  `style=display:none`).
+  `style=display:none`). Do not copy #183 click compiled `html_id`
+  lookup onto adjacent handlers (`clear`, `toggle`, `select_option`) or
+  SDKs; `type_text` already has this path.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
-  picture-img fallback copy, native-search landmark copy, or
-  hidden-until-found copy.
+  picture-img fallback copy, native-search landmark copy,
+  hidden-until-found copy, or click compiled-html_id lookup copy.
 
 ## Preferred lanes
 
