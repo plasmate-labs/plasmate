@@ -1653,7 +1653,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "img" | "picture" => Some(ElementRole::Image),
         "ul" | "ol" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
-        "p" => Some(ElementRole::Paragraph),
+        "p" | "time" => Some(ElementRole::Paragraph),
         "section" | "article" => Some(ElementRole::Section),
         "fieldset" => Some(ElementRole::Group),
         "hr" => Some(ElementRole::Separator),
@@ -1970,6 +1970,18 @@ fn build_element_attrs(
         }
         "h6" => {
             map.insert("level".into(), json!(6));
+        }
+        "p" => {
+            if let Some(datetime) = first_descendant_time_datetime(node, &ctx.css_rules) {
+                map.insert("datetime".into(), json!(datetime));
+            }
+        }
+        "time" => {
+            if let Some((_, datetime)) = attrs.iter().find(|(n, _)| n == "datetime") {
+                if !datetime.trim().is_empty() {
+                    map.insert("datetime".into(), json!(datetime));
+                }
+            }
         }
         "img" | "picture" => {
             if let Some(alt) = attrs
@@ -2372,6 +2384,28 @@ fn extract_summary_text(node: &Handle, css_rules: &VisibilityRules) -> Option<St
                 if !trimmed.is_empty() {
                     return Some(trimmed);
                 }
+            }
+        }
+    }
+    None
+}
+
+fn first_descendant_time_datetime(node: &Handle, css_rules: &VisibilityRules) -> Option<String> {
+    for child in node.children.borrow().iter() {
+        if heuristics::should_strip(child) || is_css_hidden_element(child, css_rules) {
+            continue;
+        }
+        if let NodeData::Element { name, .. } = &child.data {
+            if name.local.as_ref() == "time" {
+                let child_attrs = get_attr_pairs(child);
+                if let Some((_, value)) = child_attrs.iter().find(|(n, _)| n == "datetime") {
+                    if !value.trim().is_empty() {
+                        return Some(value.clone());
+                    }
+                }
+            }
+            if let Some(found) = first_descendant_time_datetime(child, css_rules) {
+                return Some(found);
             }
         }
     }
@@ -3528,6 +3562,75 @@ mod tests {
                         == Some("/hero.avif")
             }),
             "source srcset must not become picture src: {images:?}"
+        );
+    }
+
+    #[test]
+    fn test_time_datetime_is_compiled() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Schedule</title></head>
+<body>
+<main>
+  <p>Published <time datetime="2026-08-24">today</time></p>
+  <time datetime="2026-08-25T18:00:00Z">Tomorrow evening</time>
+  <p>No machine date</p>
+  <time datetime="   ">Empty datetime</time>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/schedule").unwrap();
+        let paragraphs: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .filter(|element| element.role == ElementRole::Paragraph)
+            .collect();
+
+        let published = paragraphs
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Published today"))
+            .expect("byline paragraph should compile");
+        let published_attrs = published
+            .attrs
+            .as_ref()
+            .expect("byline should expose nested time datetime");
+        assert_eq!(published_attrs["datetime"], "2026-08-24");
+
+        let standalone = paragraphs
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Tomorrow evening"))
+            .expect("standalone time should compile as a paragraph");
+        let standalone_attrs = standalone
+            .attrs
+            .as_ref()
+            .expect("standalone time should expose datetime");
+        assert_eq!(standalone_attrs["datetime"], "2026-08-25T18:00:00Z");
+
+        let undated = paragraphs
+            .iter()
+            .find(|element| element.text.as_deref() == Some("No machine date"))
+            .expect("undated paragraph should compile");
+        assert!(
+            undated
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("datetime"))
+                .is_none(),
+            "{undated:?}"
+        );
+
+        let empty_datetime = paragraphs
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Empty datetime"))
+            .expect("time without a usable datetime should still compile as text");
+        assert!(
+            empty_datetime
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("datetime"))
+                .is_none(),
+            "{empty_datetime:?}"
         );
     }
 }
