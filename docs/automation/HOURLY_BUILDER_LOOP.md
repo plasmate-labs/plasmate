@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-25)
 
-- Window: `1f89e14` .. `098427e`
+- Window: `9b90f16` .. `7cc7a0a`
 - Decision: `NARROW`
-- Merged this run: #193
+- Merged this run: #196
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -78,7 +78,10 @@ overwrite, reset, or absorb unrelated work.
   switch/checkbox onto adjacent handlers (`clear`, `select_option`,
   `click`) or SDKs; do not extend toggle to other ARIA roles (`tab`,
   `option`, `treeitem`) or add html_id lookup / disabled fail-closed
-  to toggle.
+  to toggle. Do not copy #196 wrapping `<label>` without control-id
+  compile work onto extract_text, CLI, CDP, extract_links, or SDKs;
+  do not extend wrapping-label node indexing onto explicit `for=` /
+  `aria-labelledby` paths already covered.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -86,7 +89,8 @@ overwrite, reset, or absorb unrelated work.
   hidden-until-found copy, click compiled-html_id lookup copy,
   time-datetime compile copy, contenteditable type-target compile copy,
   Node openPage flat-SOM copy, LangChain type_text rename copy,
-  progress/meter compile copy, or toggle ARIA-switch copy.
+  progress/meter compile copy, toggle ARIA-switch copy, or wrapping-label
+  without control-id compile copy.
 
 ## Preferred lanes
 
