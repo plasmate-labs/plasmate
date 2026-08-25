@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-25)
 
-- Window: `be4ebb4` .. `9b99e8d`
+- Window: `c75ed7b` .. `035db24`
 - Decision: `NARROW`
-- Merged this run: #183
+- Merged this run: #185
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -64,12 +64,15 @@ overwrite, reset, or absorb unrelated work.
   extract_links, or adjacent hide attributes (`aria-hidden`,
   `style=display:none`). Do not copy #183 click compiled `html_id`
   lookup onto adjacent handlers (`clear`, `toggle`, `select_option`) or
-  SDKs; `type_text` already has this path.
+  SDKs; `type_text` already has this path. Do not copy #185
+  `<time datetime>` compile work onto extract_text, CLI, CDP,
+  extract_links, or adjacent tags (`data-*`, `ins`, `del`).
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
   picture-img fallback copy, native-search landmark copy,
-  hidden-until-found copy, or click compiled-html_id lookup copy.
+  hidden-until-found copy, click compiled-html_id lookup copy, or
+  time-datetime compile copy.
 
 ## Preferred lanes
 
