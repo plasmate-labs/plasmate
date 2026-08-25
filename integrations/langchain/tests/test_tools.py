@@ -5,6 +5,7 @@ from unittest.mock import Mock, call
 import pytest
 
 from langchain_plasmate import (
+    PlasmateBrowser,
     PlasmateClickTool,
     PlasmateFetchTool,
     PlasmateNavigateTool,
@@ -136,3 +137,22 @@ def test_fetch_tool_async_forwards_fetch_options() -> None:
         javascript=False,
         selector="main",
     )
+
+
+def test_browser_type_text_calls_mcp_type_text() -> None:
+    client = Mock()
+    client._call_tool.return_value = _som()
+    browser = PlasmateBrowser(client=client)
+    browser.session_id = "sess-1"
+
+    result = browser.type_text("e1", "hello")
+
+    client._call_tool.assert_called_once_with(
+        "type_text",
+        {
+            "session_id": "sess-1",
+            "element_id": "e1",
+            "text": "hello",
+        },
+    )
+    assert result == _som()

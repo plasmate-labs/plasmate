@@ -60,7 +60,7 @@ class PlasmateBrowser:
         """Type *text* into an element in the current session."""
         self._require_session()
         return self.client._call_tool(
-            "type",
+            "type_text",
             {
                 "session_id": self.session_id,
                 "element_id": element_id,
