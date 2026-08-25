@@ -4,6 +4,7 @@ use markup5ever_rcdom::{Handle, NodeData, RcDom};
 use serde_json::json;
 use std::cell::Cell;
 use std::collections::{HashMap, HashSet};
+use std::rc::Rc;
 
 use super::css_visibility::VisibilityRules;
 use super::element_id::{generate_element_id, generate_region_id, ElementIdTracker};
@@ -27,6 +28,7 @@ struct CompileContext {
 struct LabelIndex {
     by_id: HashMap<String, String>,
     by_for: HashMap<String, String>,
+    by_node: HashMap<usize, String>,
 }
 
 /// Tracks heading hierarchy for a region.
@@ -244,8 +246,20 @@ fn build_label_index(root: &Handle, css_rules: &VisibilityRules) -> LabelIndex {
                         if !target.trim().is_empty() {
                             index.by_for.insert(target.trim().to_string(), text.clone());
                         }
-                    } else if let Some(target) = first_labelable_descendant_id(node) {
-                        index.by_for.insert(target, text.clone());
+                    } else if let Some(target) = first_labelable_descendant(node) {
+                        let target_attrs = get_attr_pairs(&target);
+                        if let Some(id) = target_attrs
+                            .iter()
+                            .find(|(n, _)| n == "id")
+                            .map(|(_, id)| id.trim())
+                            .filter(|id| !id.is_empty())
+                        {
+                            index.by_for.insert(id.to_string(), text.clone());
+                        } else {
+                            index
+                                .by_node
+                                .insert(Rc::as_ptr(&target) as usize, text.clone());
+                        }
                     }
                 }
             }
@@ -261,23 +275,16 @@ fn build_label_index(root: &Handle, css_rules: &VisibilityRules) -> LabelIndex {
     index
 }
 
-fn first_labelable_descendant_id(node: &Handle) -> Option<String> {
+fn first_labelable_descendant(node: &Handle) -> Option<Handle> {
     for child in node.children.borrow().iter() {
         if let NodeData::Element { name, .. } = &child.data {
-            let tag = name.local.as_ref();
-            if is_labelable_tag(tag) {
-                let attrs = get_attr_pairs(child);
-                if let Some((_, id)) = attrs.iter().find(|(n, _)| n == "id") {
-                    let id = id.trim();
-                    if !id.is_empty() {
-                        return Some(id.to_string());
-                    }
-                }
+            if is_labelable_tag(name.local.as_ref()) {
+                return Some(child.clone());
             }
         }
 
-        if let Some(id) = first_labelable_descendant_id(child) {
-            return Some(id);
+        if let Some(found) = first_labelable_descendant(child) {
+            return Some(found);
         }
     }
 
@@ -1317,7 +1324,7 @@ fn interactive_node_to_element(
         } else {
             Some(heuristics::normalize_text(&text_content))
         };
-        let label = resolve_label(tag, &attr_pairs, &text, &ctx.label_index);
+        let label = resolve_label(tag, &attr_pairs, &text, &ctx.label_index, node);
         let accessible_name = label.as_deref().or(text.as_deref()).unwrap_or("");
         let raw_id = generate_element_id(origin, role.as_str(), accessible_name, dom_path);
         let id = id_tracker.register(raw_id);
@@ -1408,13 +1415,14 @@ fn node_to_element(
                 text = None;
             }
 
-            let label = resolve_label(tag, &attr_pairs, &text, &ctx.label_index).or_else(|| {
-                if tag == "fieldset" {
-                    extract_legend_text(node, &ctx.css_rules)
-                } else {
-                    None
-                }
-            });
+            let label =
+                resolve_label(tag, &attr_pairs, &text, &ctx.label_index, node).or_else(|| {
+                    if tag == "fieldset" {
+                        extract_legend_text(node, &ctx.css_rules)
+                    } else {
+                        None
+                    }
+                });
             let accessible_name = label.as_deref().or(text.as_deref()).unwrap_or("");
             let raw_id = generate_element_id(origin, role.as_str(), accessible_name, dom_path);
             let id = id_tracker.register(raw_id);
@@ -1674,6 +1682,7 @@ fn resolve_label(
     attrs: &[(String, String)],
     text: &Option<String>,
     label_index: &LabelIndex,
+    node: &Handle,
 ) -> Option<String> {
     if let Some((_, ids)) = attrs.iter().find(|(n, _)| n == "aria-labelledby") {
         let label = ids
@@ -1703,6 +1712,11 @@ fn resolve_label(
             if text.as_deref() != Some(label.as_str()) {
                 return Some(label.clone());
             }
+        }
+    }
+    if let Some(label) = label_index.by_node.get(&(Rc::as_ptr(node) as usize)) {
+        if text.as_deref() != Some(label.as_str()) {
+            return Some(label.clone());
         }
     }
     if let Some(title) = attrs.iter().find(|(n, _)| n == "title") {
