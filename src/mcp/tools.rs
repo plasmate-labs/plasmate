@@ -1933,18 +1933,19 @@ pub async fn handle_click(
     }
 
     // Generate JavaScript to simulate click
-    // We look for the element by its data-plasmate-id attribute or by finding
-    // an element that matches the SOM element's characteristics
+    // Resolve by data-plasmate-id, then compiled html_id, then tag/text fallback.
     let element_id = params.element_id.clone();
+    let html_id = serde_json::to_string(&element.html_id).unwrap_or_else(|_| "null".to_string());
     let click_js = format!(
         r#"
         (function() {{
-            // Try to find element by data attribute first
+            var htmlId = {};
             var el = document.querySelector('[data-plasmate-id="{}"]');
+            if (!el && htmlId !== null) {{
+                el = document.getElementById(htmlId);
+            }}
 
-            // If not found, try other strategies based on element characteristics
             if (!el) {{
-                // Try by tag and text content for links/buttons
                 var allEls = document.querySelectorAll('a, button, input[type="submit"], [role="button"]');
                 for (var i = 0; i < allEls.length; i++) {{
                     if (allEls[i].textContent && allEls[i].textContent.trim() === '{}') {{
@@ -1955,7 +1956,6 @@ pub async fn handle_click(
             }}
 
             if (el) {{
-                // Dispatch click event
                 var evt = new MouseEvent('click', {{
                     bubbles: true,
                     cancelable: true,
@@ -1963,7 +1963,6 @@ pub async fn handle_click(
                 }});
                 el.dispatchEvent(evt);
 
-                // For links, check if we need to navigate
                 if (el.tagName === 'A' && el.href) {{
                     return JSON.stringify({{ navigated: true, href: el.href }});
                 }}
@@ -1972,6 +1971,7 @@ pub async fn handle_click(
             return JSON.stringify({{ error: 'Element not found in DOM' }});
         }})()
         "#,
+        html_id,
         element_id,
         element
             .text
@@ -3593,6 +3593,54 @@ mod tests {
             Some("Element not found in DOM")
         );
         assert_eq!(state_fingerprint(&sessions, &session_id).await, before);
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn click_resolves_compiled_html_id_when_data_plasmate_id_is_absent() {
+        let options = stateful_worker_options(Duration::from_secs(5));
+        let sessions = Arc::new(SessionManager::with_worker_options(options));
+        let session_id = sessions.create_session().await.unwrap();
+        let html = "<html><head><title>Pay</title></head><body><main><!-- __fixture_html_id__ --><button id='pay-now'>Pay</button></main></body></html>";
+        sessions
+            .with_session(&session_id, |session| {
+                session.target.current_url = Some("https://example.test/pay".to_string());
+                session.target.current_html = Some(html.to_string());
+                session.target.effective_html = Some(html.to_string());
+                session.target.current_som = Some(
+                    plasmate::som::compiler::compile(html, "https://example.test/pay").unwrap(),
+                );
+                session.target.rebuild_node_map();
+            })
+            .await
+            .unwrap();
+        let element_id = sessions
+            .with_session(&session_id, |session| {
+                let som = session.target.current_som.as_ref().unwrap();
+                som.regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .find(|element| {
+                        element.role.is_interactive()
+                            && element.html_id.as_deref() == Some("pay-now")
+                    })
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose the html_id button")
+            })
+            .await
+            .unwrap();
+        let client = reqwest::Client::new();
+
+        let clicked = handle_click(
+            &json!({"session_id": session_id, "element_id": element_id}),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert!(clicked.get("isError").is_none(), "{clicked}");
+        let payload = tool_payload(&clicked);
+        assert_eq!(payload["title"], "Pay");
+        assert!(payload["regions"].is_array(), "{payload}");
     }
 
     #[tokio::test]

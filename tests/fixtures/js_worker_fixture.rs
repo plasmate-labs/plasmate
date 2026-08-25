@@ -12,7 +12,9 @@ fn main() {
         return;
     }
     if input.contains("__fixture_output__") {
-        std::io::stdout().write_all(&vec![b'x'; 1024 * 1024]).unwrap();
+        std::io::stdout()
+            .write_all(&vec![b'x'; 1024 * 1024])
+            .unwrap();
         return;
     }
     if input.contains("__fixture_env__") && std::env::var_os("PLASMATE_TEST_SECRET").is_some() {
@@ -23,6 +25,18 @@ fn main() {
         println!(
             r#"{{"status":"evaluation","value":{{"result":"{{\"error\":\"Element not found in DOM\"}}","effective_html":"<html><body><p>mutated</p></body></html>"}}}}"#
         );
+        return;
+    }
+    if input.contains("__fixture_html_id__") {
+        if input.contains("getElementById") && input.contains("pay-now") {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"clicked\":true}}","effective_html":"<html><head><title>Pay</title></head><body><main><!-- __fixture_html_id__ --><button id='pay-now'>Pay</button></main></body></html>"}}}}"#
+            );
+        } else {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"error\":\"Element not found in DOM\"}}","effective_html":"<html><body><p>mutated</p></body></html>"}}}}"#
+            );
+        }
         return;
     }
     println!(r#"{{"status":"evaluation","value":{{"result":"ok"}}}}"#);
