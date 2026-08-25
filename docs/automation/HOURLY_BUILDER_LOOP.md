@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-25)
 
-- Window: `b4a2516` .. `b84e2d9`
+- Window: `1f89e14` .. `098427e`
 - Decision: `NARROW`
-- Merged this run: #189, #190, #191
+- Merged this run: #193
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -74,15 +74,19 @@ overwrite, reset, or absorb unrelated work.
   copy #190 LangChain `type_text` tool-name fix onto other integrations
   or SDK wrappers. Do not copy #191 `<progress>` / `<meter>` compile
   work onto extract_text, CLI, CDP, extract_links, or adjacent tags
-  (`output`, `dialog`, `data`).
+  (`output`, `dialog`, `data`). Do not copy #193 toggle compiled ARIA
+  switch/checkbox onto adjacent handlers (`clear`, `select_option`,
+  `click`) or SDKs; do not extend toggle to other ARIA roles (`tab`,
+  `option`, `treeitem`) or add html_id lookup / disabled fail-closed
+  to toggle.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
   picture-img fallback copy, native-search landmark copy,
   hidden-until-found copy, click compiled-html_id lookup copy,
   time-datetime compile copy, contenteditable type-target compile copy,
-  Node openPage flat-SOM copy, LangChain type_text rename copy, or
-  progress/meter compile copy.
+  Node openPage flat-SOM copy, LangChain type_text rename copy,
+  progress/meter compile copy, or toggle ARIA-switch copy.
 
 ## Preferred lanes
 
