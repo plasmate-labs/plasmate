@@ -1615,8 +1615,12 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                     _ => {}
                 }
             }
-            return None;
+            return contenteditable_type_role(tag, attrs);
         }
+    }
+
+    if let Some(role) = contenteditable_type_role(tag, attrs) {
+        return Some(role);
     }
 
     match tag {
@@ -1784,6 +1788,32 @@ fn resolve_description(attrs: &[(String, String)], label_index: &LabelIndex) -> 
 
 fn has_attr(attrs: &[(String, String)], name: &str) -> bool {
     attrs.iter().any(|(n, _)| n == name)
+}
+
+fn is_enabled_contenteditable(attrs: &[(String, String)]) -> bool {
+    attrs.iter().any(|(name, value)| {
+        name == "contenteditable"
+            && matches!(
+                value.trim().to_ascii_lowercase().as_str(),
+                "" | "true" | "plaintext-only"
+            )
+    })
+}
+
+fn is_native_typed_control(tag: &str, attrs: &[(String, String)]) -> bool {
+    match tag {
+        "button" | "input" | "textarea" | "select" | "details" => true,
+        "a" | "area" => attrs.iter().any(|(name, _)| name == "href"),
+        _ => false,
+    }
+}
+
+fn contenteditable_type_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
+    if is_enabled_contenteditable(attrs) && !is_native_typed_control(tag, attrs) {
+        Some(ElementRole::TextInput)
+    } else {
+        None
+    }
 }
 
 fn has_aria_true(attrs: &[(String, String)], name: &str) -> bool {
@@ -3632,5 +3662,79 @@ mod tests {
                 .is_none(),
             "{empty_datetime:?}"
         );
+    }
+
+    #[test]
+    fn test_bare_contenteditable_is_a_type_target() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Composer</title></head>
+<body>
+<main>
+  <div id="note" contenteditable="true">Draft note</div>
+  <p contenteditable="plaintext-only">Plain draft</p>
+  <div contenteditable="false">Not editable</div>
+  <div>Static copy</div>
+  <button contenteditable="true">Keep button</button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/composer").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("bare contenteditable div should compile");
+        assert_eq!(note.role, ElementRole::TextInput);
+        assert_eq!(
+            note.actions.as_deref(),
+            Some(&["type".into(), "clear".into()][..])
+        );
+        assert_eq!(
+            note.attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("contenteditable")),
+            Some(&json!(true))
+        );
+
+        let plain = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Plain draft"))
+            .expect("plaintext-only paragraph should compile as a type target");
+        assert_eq!(plain.role, ElementRole::TextInput);
+        assert_eq!(
+            plain
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("contenteditable")),
+            Some(&json!("plaintext-only"))
+        );
+
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Paragraph
+                    && element.text.as_deref() == Some("Not editable")
+            }),
+            "contenteditable=false must stay non-interactive: {elements:?}"
+        );
+        assert!(
+            !elements.iter().any(|element| {
+                element.role == ElementRole::TextInput
+                    && element.text.as_deref() == Some("Static copy")
+            }),
+            "static copy must not become a type target: {elements:?}"
+        );
+
+        let button = elements
+            .iter()
+            .find(|element| element.role == ElementRole::Button)
+            .expect("native button should keep its role");
+        assert_eq!(button.text.as_deref(), Some("Keep button"));
+        assert_eq!(button.actions.as_deref(), Some(&["click".into()][..]));
     }
 }
