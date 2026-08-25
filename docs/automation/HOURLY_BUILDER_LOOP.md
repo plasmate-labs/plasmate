@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-25)
 
-- Window: `c75ed7b` .. `035db24`
+- Window: `f1bd869` .. `6fef1ac`
 - Decision: `NARROW`
-- Merged this run: #185
+- Merged this run: #187
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -66,13 +66,16 @@ overwrite, reset, or absorb unrelated work.
   lookup onto adjacent handlers (`clear`, `toggle`, `select_option`) or
   SDKs; `type_text` already has this path. Do not copy #185
   `<time datetime>` compile work onto extract_text, CLI, CDP,
-  extract_links, or adjacent tags (`data-*`, `ins`, `del`).
+  extract_links, or adjacent tags (`data-*`, `ins`, `del`). Do not copy
+  #187 bare `contenteditable` type-target compile work onto `type_text` /
+  `clear` mutation, extract_text, CLI, CDP, extract_links, or adjacent
+  attributes (`spellcheck`, `inputmode`, `enterkeyhint`).
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
   picture-img fallback copy, native-search landmark copy,
-  hidden-until-found copy, click compiled-html_id lookup copy, or
-  time-datetime compile copy.
+  hidden-until-found copy, click compiled-html_id lookup copy,
+  time-datetime compile copy, or contenteditable type-target compile copy.
 
 ## Preferred lanes
 
