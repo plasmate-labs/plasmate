@@ -2254,7 +2254,7 @@ pub fn scroll_definition() -> ToolDefinition {
 pub fn toggle_definition() -> ToolDefinition {
     ToolDefinition {
         name: "toggle".to_string(),
-        description: "Toggle a checkbox, radio button, or details/summary widget by its SOM element ID. Returns the updated page SOM.".to_string(),
+        description: "Toggle a checkbox, radio button, details/summary widget, or ARIA switch/checkbox by its SOM element ID. Returns the updated page SOM.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -2825,6 +2825,7 @@ pub async fn handle_toggle(
                     return JSON.stringify({{ error: 'Element not found in DOM' }});
                 }}
                 var tag = el.tagName.toUpperCase();
+                var role = (el.getAttribute('role') || '').toLowerCase();
                 if (tag === 'INPUT' && (el.type === 'checkbox' || el.type === 'radio')) {{
                     el.checked = !el.checked;
                     var changeEvt = new Event('change', {{ bubbles: true }});
@@ -2835,8 +2836,15 @@ pub async fn handle_toggle(
                     var toggleEvt = new Event('toggle', {{ bubbles: true }});
                     el.dispatchEvent(toggleEvt);
                     return JSON.stringify({{ toggled: true, open: el.open }});
+                }} else if (role === 'switch' || role === 'checkbox' || role === 'menuitemcheckbox' || role === 'radio' || role === 'menuitemradio') {{
+                    var checked = (el.getAttribute('aria-checked') || '').toLowerCase() === 'true';
+                    el.setAttribute('aria-checked', checked ? 'false' : 'true');
+                    el.dispatchEvent(new Event('click', {{ bubbles: true }}));
+                    el.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                    el.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                    return JSON.stringify({{ toggled: true, checked: !checked }});
                 }} else {{
-                    return JSON.stringify({{ error: 'Element is not a checkbox, radio button, or details element' }});
+                    return JSON.stringify({{ error: 'Element is not a checkbox, radio button, details, or ARIA switch' }});
                 }}
             }})()
             "#,
@@ -3641,6 +3649,62 @@ mod tests {
         let payload = tool_payload(&clicked);
         assert_eq!(payload["title"], "Pay");
         assert!(payload["regions"].is_array(), "{payload}");
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn toggle_flips_compiled_aria_switch() {
+        let options = stateful_worker_options(Duration::from_secs(5));
+        let sessions = Arc::new(SessionManager::with_worker_options(options));
+        let session_id = sessions.create_session().await.unwrap();
+        let html = "<html><head><title>Alerts</title></head><body><main><!-- __fixture_aria_switch__ --><button role='switch' id='alerts' aria-checked='true'>Email alerts</button></main></body></html>";
+        sessions
+            .with_session(&session_id, |session| {
+                session.target.current_url = Some("https://example.test/alerts".to_string());
+                session.target.current_html = Some(html.to_string());
+                session.target.effective_html = Some(html.to_string());
+                session.target.current_som = Some(
+                    plasmate::som::compiler::compile(html, "https://example.test/alerts").unwrap(),
+                );
+                session.target.rebuild_node_map();
+            })
+            .await
+            .unwrap();
+        let element_id = sessions
+            .with_session(&session_id, |session| {
+                let som = session.target.current_som.as_ref().unwrap();
+                som.regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .find(|element| {
+                        element.role == ElementRole::Checkbox
+                            && element.html_id.as_deref() == Some("alerts")
+                    })
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose the ARIA switch")
+            })
+            .await
+            .unwrap();
+        let client = reqwest::Client::new();
+
+        let toggled = handle_toggle(
+            &json!({"session_id": session_id, "element_id": element_id}),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert!(toggled.get("isError").is_none(), "{toggled}");
+        let payload = tool_payload(&toggled);
+        assert_eq!(payload["title"], "Alerts");
+        let switch = payload["regions"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .flat_map(|region| region["elements"].as_array().into_iter().flatten())
+            .find(|element| element["html_id"] == "alerts")
+            .expect("toggled SOM must keep the ARIA switch");
+        assert_eq!(switch["role"], "checkbox", "{switch}");
+        assert_eq!(switch["attrs"]["aria"]["checked"], false, "{switch}");
     }
 
     #[tokio::test]
