@@ -39,5 +39,17 @@ fn main() {
         }
         return;
     }
+    if input.contains("__fixture_aria_switch__") {
+        if input.contains("role") && input.contains("switch") && input.contains("aria-checked") {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"toggled\":true,\"checked\":false}}","effective_html":"<html><head><title>Alerts</title></head><body><main><!-- __fixture_aria_switch__ --><button role='switch' id='alerts' aria-checked='false'>Email alerts</button></main></body></html>"}}}}"#
+            );
+        } else {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"error\":\"Element is not a checkbox, radio button, or details element\"}}","effective_html":"<html><body><p>mutated</p></body></html>"}}}}"#
+            );
+        }
+        return;
+    }
     println!(r#"{{"status":"evaluation","value":{{"result":"ok"}}}}"#);
 }
