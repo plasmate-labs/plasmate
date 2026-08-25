@@ -791,6 +791,85 @@ fn test_wrapped_label_controls_get_accessible_label() {
 }
 
 #[test]
+fn test_wrapping_label_without_for_or_control_id() {
+    let html = r#"<!DOCTYPE html>
+<html><head><title>Implicit Labels</title></head>
+<body><main>
+    <form>
+        <label>Work email <input type="email" name="email"></label>
+        <label>
+            <input type="radio" name="contact" value="email"> Email
+        </label>
+        <label>
+            <input type="radio" name="contact" value="sms"> SMS
+        </label>
+        <label for="other">Other field</label>
+        <input id="other" name="other">
+        <input type="email" name="unlabelled" placeholder="you@example.com">
+    </form>
+</main></body></html>"#;
+
+    let som = compiler::compile(html, "https://example.com").unwrap();
+    let elems = all_elements(&som);
+
+    let email = elems
+        .iter()
+        .find(|e| {
+            e.attrs
+                .as_ref()
+                .and_then(|a| a.get("name"))
+                .and_then(|v| v.as_str())
+                == Some("email")
+        })
+        .expect("wrapping email input should be preserved");
+    assert_eq!(email.label.as_deref(), Some("Work email"));
+
+    let email_radio = elems
+        .iter()
+        .find(|e| {
+            e.role == ElementRole::Radio
+                && e.attrs
+                    .as_ref()
+                    .and_then(|a| a.get("value"))
+                    .and_then(|v| v.as_str())
+                    == Some("email")
+        })
+        .expect("email radio should be preserved");
+    assert_eq!(email_radio.label.as_deref(), Some("Email"));
+
+    let sms_radio = elems
+        .iter()
+        .find(|e| {
+            e.role == ElementRole::Radio
+                && e.attrs
+                    .as_ref()
+                    .and_then(|a| a.get("value"))
+                    .and_then(|v| v.as_str())
+                    == Some("sms")
+        })
+        .expect("sms radio should be preserved");
+    assert_eq!(sms_radio.label.as_deref(), Some("SMS"));
+
+    let other = elems
+        .iter()
+        .find(|e| e.html_id.as_deref() == Some("other"))
+        .expect("explicit for= control should be preserved");
+    assert_eq!(other.label.as_deref(), Some("Other field"));
+
+    let unlabelled = elems
+        .iter()
+        .find(|e| {
+            e.attrs
+                .as_ref()
+                .and_then(|a| a.get("name"))
+                .and_then(|v| v.as_str())
+                == Some("unlabelled")
+        })
+        .expect("unlabelled input should be preserved");
+    assert_eq!(unlabelled.label.as_deref(), Some("you@example.com"));
+}
+
+#[test]
 fn test_region_labels_resolve_aria_labelledby() {
     let html = r#"<!DOCTYPE html>
 <html><head><title>Region Labels</title></head>
