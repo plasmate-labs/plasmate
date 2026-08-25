@@ -33,6 +33,34 @@ describe('read selectors', () => {
   });
 });
 
+describe('openPage payload', () => {
+  it('builds session.som from the flat MCP open_page fields', async () => {
+    const browser = new Plasmate({ binary: 'unused' });
+    const client = browser as unknown as {
+      callTool: (name: string, args: Record<string, unknown>) => Promise<unknown>;
+    };
+    client.callTool = async (name, args) => {
+      assert.equal(name, 'open_page');
+      assert.deepEqual(args, { url: 'fixture' });
+      return {
+        session_id: 's1',
+        title: 'Example',
+        url: 'https://example.test/',
+        cache_restored: false,
+        regions: [{ id: 'r_main', role: 'main', elements: [] }],
+      };
+    };
+
+    const session = await browser.openPage('fixture');
+    assert.equal(session.sessionId, 's1');
+    assert.equal(session.som.title, 'Example');
+    assert.equal(session.som.url, 'https://example.test/');
+    assert.equal(session.som.regions.length, 1);
+    assert.equal(session.som.regions[0]?.id, 'r_main');
+    browser.close();
+  });
+});
+
 describe('protocol lifecycle', () => {
   it('uses a true notification for initialized', async () => {
     const directory = mkdtempSync(join(tmpdir(), 'plasmate-node-sdk-'));
