@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-25)
 
-- Window: `f1bd869` .. `6fef1ac`
+- Window: `b4a2516` .. `b84e2d9`
 - Decision: `NARROW`
-- Merged this run: #187
+- Merged this run: #189, #190, #191
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -69,13 +69,20 @@ overwrite, reset, or absorb unrelated work.
   extract_links, or adjacent tags (`data-*`, `ins`, `del`). Do not copy
   #187 bare `contenteditable` type-target compile work onto `type_text` /
   `clear` mutation, extract_text, CLI, CDP, extract_links, or adjacent
-  attributes (`spellcheck`, `inputmode`, `enterkeyhint`).
+  attributes (`spellcheck`, `inputmode`, `enterkeyhint`). Do not copy
+  #189 Node `openPage` flat-SOM mapping onto Python or Go SDKs. Do not
+  copy #190 LangChain `type_text` tool-name fix onto other integrations
+  or SDK wrappers. Do not copy #191 `<progress>` / `<meter>` compile
+  work onto extract_text, CLI, CDP, extract_links, or adjacent tags
+  (`output`, `dialog`, `data`).
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
   picture-img fallback copy, native-search landmark copy,
   hidden-until-found copy, click compiled-html_id lookup copy,
-  time-datetime compile copy, or contenteditable type-target compile copy.
+  time-datetime compile copy, contenteditable type-target compile copy,
+  Node openPage flat-SOM copy, LangChain type_text rename copy, or
+  progress/meter compile copy.
 
 ## Preferred lanes
 
