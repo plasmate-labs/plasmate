@@ -1328,12 +1328,7 @@ fn interactive_node_to_element(
         let accessible_name = label.as_deref().or(text.as_deref()).unwrap_or("");
         let raw_id = generate_element_id(origin, role.as_str(), accessible_name, dom_path);
         let id = id_tracker.register(raw_id);
-        let actions = role.default_actions();
-        let actions = if actions.is_empty() {
-            None
-        } else {
-            Some(actions)
-        };
+        let actions = actions_for_role(&role, tag, &attr_pairs);
         let element_attrs = build_element_attrs(
             tag,
             &attr_pairs,
@@ -1426,12 +1421,7 @@ fn node_to_element(
             let accessible_name = label.as_deref().or(text.as_deref()).unwrap_or("");
             let raw_id = generate_element_id(origin, role.as_str(), accessible_name, dom_path);
             let id = id_tracker.register(raw_id);
-            let actions = role.default_actions();
-            let actions = if actions.is_empty() {
-                None
-            } else {
-                Some(actions)
-            };
+            let actions = actions_for_role(&role, tag, &attr_pairs);
             let element_attrs = build_element_attrs(
                 tag,
                 &attr_pairs,
@@ -1821,6 +1811,29 @@ fn is_native_typed_control(tag: &str, attrs: &[(String, String)]) -> bool {
         "button" | "input" | "textarea" | "select" | "details" => true,
         "a" | "area" => attrs.iter().any(|(name, _)| name == "href"),
         _ => false,
+    }
+}
+
+fn actions_for_role(
+    role: &ElementRole,
+    tag: &str,
+    attrs: &[(String, String)],
+) -> Option<Vec<String>> {
+    if tag == "input" {
+        let input_type = attrs
+            .iter()
+            .find(|(name, _)| name == "type")
+            .map(|(_, value)| value.as_str())
+            .unwrap_or("text");
+        if input_type.eq_ignore_ascii_case("file") {
+            return None;
+        }
+    }
+    let actions = role.default_actions();
+    if actions.is_empty() {
+        None
+    } else {
+        Some(actions)
     }
 }
 
@@ -4044,6 +4057,67 @@ mod tests {
         assert!(
             fallback_attrs.get("src").is_none(),
             "nested source must not become video src: {fallback:?}"
+        );
+
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Paragraph
+                    && element.text.as_deref() == Some("Just text")
+            }),
+            "plain text must stay a paragraph: {elements:?}"
+        );
+    }
+
+    #[test]
+    fn test_file_inputs_do_not_advertise_type_or_clear() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Uploads</title></head>
+<body>
+<main>
+  <label for="evidence">Evidence files</label>
+  <input id="evidence" name="evidence" type="FILE" accept="image/png,.pdf" multiple>
+  <label for="notes">Notes</label>
+  <input id="notes" name="notes" type="text">
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/uploads").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let evidence = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("evidence"))
+            .expect("file input should compile");
+        assert_eq!(evidence.role, ElementRole::TextInput);
+        assert_eq!(evidence.label.as_deref(), Some("Evidence files"));
+        assert!(
+            evidence.actions.is_none(),
+            "file input must not advertise type/clear: {evidence:?}"
+        );
+        let evidence_attrs = evidence
+            .attrs
+            .as_ref()
+            .expect("file input attrs should compile");
+        assert_eq!(evidence_attrs["input_type"], "file");
+        assert_eq!(evidence_attrs["name"], "evidence");
+        assert_eq!(evidence_attrs["accept"], "image/png,.pdf");
+        assert_eq!(evidence_attrs["multiple"], true);
+
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("text input should still compile");
+        assert_eq!(notes.role, ElementRole::TextInput);
+        assert_eq!(
+            notes.actions.as_deref(),
+            Some(["type".to_string(), "clear".to_string()].as_slice()),
+            "ordinary text inputs must keep type/clear: {notes:?}"
         );
 
         assert!(
