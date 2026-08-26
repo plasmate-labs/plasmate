@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-26)
 
-- Window: `b8576f6` .. `fb9c41e`
+- Window: `d508001` .. `0ab2432`
 - Decision: `NARROW`
-- Merged this run: #200, #201, #202
+- Merged this run: #204
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -92,7 +92,8 @@ overwrite, reset, or absorb unrelated work.
   not add `enctype` / `target` / `novalidate`. Do not copy #202 `<img
   usemap>` compile work onto extract_links, CLI, CDP, or adjacent tags
   (`object`, `embed`, `source`); do not inherit usemap onto `<picture>`
-  or compile `ismap`.
+  or compile `ismap`. Do not copy #204 inspect compact link `href` onto
+  fetch_page, CLI, CDP, or SDKs; do not add `target` / `rel` / `download`.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -103,7 +104,7 @@ overwrite, reset, or absorb unrelated work.
   progress/meter compile copy, toggle ARIA-switch copy, wrapping-label
   without control-id compile copy, native-radio select_option copy,
   video src/poster compile copy, inspect compact form action/method copy,
-  or img usemap compile copy.
+  img usemap compile copy, or inspect compact link href copy.
 
 ## Preferred lanes
 
