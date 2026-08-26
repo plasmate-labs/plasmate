@@ -2058,6 +2058,13 @@ fn build_element_attrs(
             {
                 map.insert("src".into(), json!(src));
             }
+            if tag == "img" {
+                if let Some((_, usemap)) = attrs.iter().find(|(n, _)| n == "usemap") {
+                    if !usemap.trim().is_empty() {
+                        map.insert("usemap".into(), json!(usemap));
+                    }
+                }
+            }
         }
         "ul" => {
             map.insert("ordered".into(), json!(false));
@@ -3470,6 +3477,89 @@ mod tests {
         assert_eq!(attrs["draggable"], true);
         assert_eq!(attrs["aria"]["grabbed"], true);
         assert_eq!(attrs["aria"]["dropeffect"], "move");
+    }
+
+    #[test]
+    fn test_img_usemap_is_compiled() {
+        let html = r##"<!DOCTYPE html>
+<html><head><title>Campus map</title></head>
+<body>
+<main>
+  <img id="campus-img" src="/campus.png" alt="Campus" usemap="#campus">
+  <img id="plain" src="/plain.png" alt="Plain">
+  <img id="empty-map" src="/empty.png" alt="Empty" usemap="   ">
+  <picture>
+    <img src="/hero.png" alt="Hero" usemap="#hero">
+  </picture>
+  <map name="campus">
+    <area href="https://example.test/library" alt="Library" shape="rect" coords="0,0,40,40">
+  </map>
+</main>
+</body>
+</html>"##;
+
+        let som = compile(html, "https://example.test/").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let campus = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("campus-img"))
+            .expect("native img with usemap should compile");
+        assert_eq!(campus.role, ElementRole::Image);
+        assert_eq!(
+            campus.attrs.as_ref().and_then(|attrs| attrs.get("usemap")),
+            Some(&json!("#campus"))
+        );
+
+        let plain = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plain"))
+            .expect("plain img should compile");
+        assert!(
+            plain
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("usemap"))
+                .is_none(),
+            "img without usemap must not invent one: {plain:?}"
+        );
+
+        let empty_map = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("empty-map"))
+            .expect("img with empty usemap should still compile");
+        assert!(
+            empty_map
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("usemap"))
+                .is_none(),
+            "whitespace usemap must be omitted: {empty_map:?}"
+        );
+
+        let picture = elements
+            .iter()
+            .find(|element| {
+                element.role == ElementRole::Image
+                    && element
+                        .attrs
+                        .as_ref()
+                        .and_then(|attrs| attrs.get("src").and_then(|value| value.as_str()))
+                        == Some("/hero.png")
+            })
+            .expect("picture should still compile from nested img src");
+        assert!(
+            picture
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("usemap"))
+                .is_none(),
+            "picture must not inherit nested img usemap: {picture:?}"
+        );
     }
 
     #[test]
