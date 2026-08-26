@@ -699,6 +699,10 @@ fn test_file_upload_action_cues_are_preserved() {
     assert_eq!(evidence_attrs["capture"], "environment");
     assert_eq!(evidence_attrs["multiple"], true);
     assert_eq!(evidence_attrs["required"], true);
+    assert!(
+        evidence.actions.is_none(),
+        "file input must not advertise type/clear: {evidence:?}"
+    );
 
     let photo = elems
         .iter()
