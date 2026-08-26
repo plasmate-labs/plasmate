@@ -2089,6 +2089,19 @@ fn build_element_attrs(
         }
         "ol" => {
             map.insert("ordered".into(), json!(true));
+            if let Some((_, start)) = attrs.iter().find(|(n, _)| n == "start") {
+                let start = start.trim();
+                if !start.is_empty() {
+                    let parsed = start
+                        .parse::<i64>()
+                        .map(serde_json::Value::from)
+                        .unwrap_or_else(|_| json!(start));
+                    map.insert("start".into(), parsed);
+                }
+            }
+            if has_attr(attrs, "reversed") {
+                map.insert("reversed".into(), json!(true));
+            }
             let items =
                 extract_list_items_with_limit(node, ctx.config.max_list_items, &ctx.css_rules);
             if !items.is_empty() {
@@ -4118,6 +4131,108 @@ mod tests {
             notes.actions.as_deref(),
             Some(["type".to_string(), "clear".to_string()].as_slice()),
             "ordinary text inputs must keep type/clear: {notes:?}"
+        );
+
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Paragraph
+                    && element.text.as_deref() == Some("Just text")
+            }),
+            "plain text must stay a paragraph: {elements:?}"
+        );
+    }
+
+    #[test]
+    fn test_ordered_list_start_and_reversed_are_compiled() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Clauses</title></head>
+<body>
+<main>
+  <ol id="continued" start="10" reversed>
+    <li>Tenth</li>
+    <li>Ninth</li>
+  </ol>
+  <ol id="plain">
+    <li>First</li>
+  </ol>
+  <ol id="blank" start="   "></ol>
+  <ul id="bullets" start="4" reversed>
+    <li>Dot</li>
+  </ul>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/clauses").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let continued = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("continued"))
+            .expect("continued ordered list should compile");
+        assert_eq!(continued.role, ElementRole::List);
+        let continued_attrs = continued
+            .attrs
+            .as_ref()
+            .expect("continued list attrs should compile");
+        assert_eq!(continued_attrs["ordered"], true);
+        assert_eq!(continued_attrs["start"], 10);
+        assert_eq!(continued_attrs["reversed"], true);
+        assert_eq!(continued_attrs["items"][0]["text"], "Tenth");
+        assert_eq!(continued_attrs["items"][1]["text"], "Ninth");
+
+        let plain = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plain"))
+            .expect("plain ordered list should compile");
+        let plain_attrs = plain
+            .attrs
+            .as_ref()
+            .expect("plain list attrs should compile");
+        assert_eq!(plain_attrs["ordered"], true);
+        assert!(
+            plain_attrs.get("start").is_none(),
+            "default ordered lists must not invent start: {plain:?}"
+        );
+        assert!(
+            plain_attrs.get("reversed").is_none(),
+            "forward ordered lists must not invent reversed: {plain:?}"
+        );
+
+        let blank = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("blank"))
+            .expect("blank-start ordered list should compile");
+        let blank_attrs = blank
+            .attrs
+            .as_ref()
+            .expect("blank-start list attrs should compile");
+        assert!(
+            blank_attrs.get("start").is_none(),
+            "whitespace start must not be invented: {blank:?}"
+        );
+
+        let bullets = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("bullets"))
+            .expect("unordered list should compile");
+        let bullets_attrs = bullets
+            .attrs
+            .as_ref()
+            .expect("unordered list attrs should compile");
+        assert_eq!(bullets_attrs["ordered"], false);
+        assert!(
+            bullets_attrs.get("start").is_none(),
+            "unordered lists must not inherit start: {bullets:?}"
+        );
+        assert!(
+            bullets_attrs.get("reversed").is_none(),
+            "unordered lists must not inherit reversed: {bullets:?}"
         );
 
         assert!(
