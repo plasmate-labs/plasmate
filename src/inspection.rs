@@ -80,6 +80,10 @@ pub struct CompactRegion {
     pub role: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub action: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub method: Option<String>,
     pub elements: Vec<CompactElement>,
 }
 
@@ -232,6 +236,14 @@ pub fn compact_structure(som: &Som) -> CompactStructure {
                     .label
                     .as_deref()
                     .map(|value| bound_string(value, 512)),
+                action: region
+                    .action
+                    .as_deref()
+                    .map(|value| bound_string(value, 4096)),
+                method: region
+                    .method
+                    .as_deref()
+                    .map(|value| bound_string(value, 16)),
                 elements,
             }
         })
@@ -395,6 +407,34 @@ mod tests {
         let always = build_report("x", "x", html, &som, VisualMode::Always);
         assert_eq!(always.visual.trigger_reasons, vec!["explicit_always_mode"]);
         assert!(always.visual.screenshot_attempted);
+    }
+
+    #[test]
+    fn compact_som_preserves_form_action_and_method() {
+        let html = r#"<form aria-label="Checkout" action="/checkout" method="post"><label for="q">Query</label><input id="q" name="q"><button>Go</button></form><main><p>Just text</p></main>"#;
+        let som = compiler::compile(html, "https://example.com/").unwrap();
+        let compact = compact_structure(&som);
+        let form = compact
+            .regions
+            .iter()
+            .find(|region| region.role == "form")
+            .expect("form region should be compact");
+        assert_eq!(form.action.as_deref(), Some("/checkout"));
+        assert_eq!(form.method.as_deref(), Some("POST"));
+        assert_eq!(form.label.as_deref(), Some("Checkout"));
+        let main = compact
+            .regions
+            .iter()
+            .find(|region| region.role == "main")
+            .expect("main region should stay compact");
+        assert!(
+            main.action.is_none(),
+            "non-form regions must not invent action"
+        );
+        assert!(
+            main.method.is_none(),
+            "non-form regions must not invent method"
+        );
     }
 
     #[test]
