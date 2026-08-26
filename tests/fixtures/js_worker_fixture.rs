@@ -51,5 +51,17 @@ fn main() {
         }
         return;
     }
+    if input.contains("__fixture_native_radio__") {
+        if input.contains("type === 'radio'") {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"selected\":true,\"value\":\"email\"}}","effective_html":"<html><head><title>Contact</title></head><body><main><!-- __fixture_native_radio__ --><form><label><input type='radio' name='contact' value='email' checked> Email</label><label><input type='radio' name='contact' value='sms'> SMS</label></form></main></body></html>"}}}}"#
+            );
+        } else {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"error\":\"Element is not a <select>\"}}","effective_html":"<html><body><p>mutated</p></body></html>"}}}}"#
+            );
+        }
+        return;
+    }
     println!(r#"{{"status":"evaluation","value":{{"result":"ok"}}}}"#);
 }

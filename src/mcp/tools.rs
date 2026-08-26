@@ -2197,7 +2197,7 @@ pub fn type_text_definition() -> ToolDefinition {
 pub fn select_option_definition() -> ToolDefinition {
     ToolDefinition {
         name: "select_option".to_string(),
-        description: "Select an option in a <select> dropdown by element ID and option value or label. Returns the updated page SOM.".to_string(),
+        description: "Select an option in a <select> dropdown or a native radio group by element ID and option value or visible label. Returns the updated page SOM. Use this when a compiled element advertises action:select, including radios.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -2207,7 +2207,7 @@ pub fn select_option_definition() -> ToolDefinition {
                 },
                 "element_id": {
                     "type": "string",
-                    "description": "Element ID of the <select> from SOM (e.g. 'e5')"
+                    "description": "Element ID of the <select> or native radio from SOM (e.g. 'e5')"
                 },
                 "value": {
                     "type": "string",
@@ -2565,26 +2565,53 @@ pub async fn handle_select_option(
                 if (!el) {{
                     return JSON.stringify({{ error: 'Element not found in DOM' }});
                 }}
-                if (el.tagName !== 'SELECT') {{
-                    return JSON.stringify({{ error: 'Element is not a <select>' }});
-                }}
-                var found = false;
-                for (var i = 0; i < el.options.length; i++) {{
-                    if (el.options[i].value === '{}' || el.options[i].text === '{}') {{
-                        el.selectedIndex = i;
-                        found = true;
-                        break;
+                if (el.tagName === 'SELECT') {{
+                    var found = false;
+                    for (var i = 0; i < el.options.length; i++) {{
+                        if (el.options[i].value === '{}' || el.options[i].text === '{}') {{
+                            el.selectedIndex = i;
+                            found = true;
+                            break;
+                        }}
                     }}
+                    if (!found) {{
+                        return JSON.stringify({{ error: 'Option not found: {}' }});
+                    }}
+                    var changeEvt = new Event('change', {{ bubbles: true }});
+                    el.dispatchEvent(changeEvt);
+                    return JSON.stringify({{ selected: true, value: el.value }});
                 }}
-                if (!found) {{
-                    return JSON.stringify({{ error: 'Option not found: {}' }});
+                if (el.tagName === 'INPUT' && el.type === 'radio') {{
+                    var labelText = '';
+                    if (el.labels && el.labels.length) {{
+                        labelText = (el.labels[0].textContent || '').replace(/\s+/g, ' ').trim();
+                    }}
+                    if (el.value !== '{}' && labelText !== '{}') {{
+                        return JSON.stringify({{ error: 'Option not found: {}' }});
+                    }}
+                    if (el.name) {{
+                        var radios = document.getElementsByTagName('input');
+                        for (var j = 0; j < radios.length; j++) {{
+                            if (radios[j].type === 'radio' && radios[j].name === el.name) {{
+                                radios[j].checked = false;
+                            }}
+                        }}
+                    }}
+                    el.checked = true;
+                    var radioChange = new Event('change', {{ bubbles: true }});
+                    el.dispatchEvent(radioChange);
+                    return JSON.stringify({{ selected: true, value: el.value }});
                 }}
-                var changeEvt = new Event('change', {{ bubbles: true }});
-                el.dispatchEvent(changeEvt);
-                return JSON.stringify({{ selected: true, value: el.value }});
+                return JSON.stringify({{ error: 'Element is not a <select>' }});
             }})()
             "#,
-        element_id, escaped_value, escaped_value, escaped_value
+        element_id,
+        escaped_value,
+        escaped_value,
+        escaped_value,
+        escaped_value,
+        escaped_value,
+        escaped_value
     );
     let select_result =
         run_session_javascript(sessions, effective_html, url.clone(), select_js, true).await;
@@ -3705,6 +3732,82 @@ mod tests {
             .expect("toggled SOM must keep the ARIA switch");
         assert_eq!(switch["role"], "checkbox", "{switch}");
         assert_eq!(switch["attrs"]["aria"]["checked"], false, "{switch}");
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn select_option_selects_native_radio_by_value() {
+        let options = stateful_worker_options(Duration::from_secs(5));
+        let sessions = Arc::new(SessionManager::with_worker_options(options));
+        let session_id = sessions.create_session().await.unwrap();
+        let html = "<html><head><title>Contact</title></head><body><main><!-- __fixture_native_radio__ --><form><label><input type='radio' name='contact' value='email'> Email</label><label><input type='radio' name='contact' value='sms' checked> SMS</label></form></main></body></html>";
+        sessions
+            .with_session(&session_id, |session| {
+                session.target.current_url = Some("https://example.test/contact".to_string());
+                session.target.current_html = Some(html.to_string());
+                session.target.effective_html = Some(html.to_string());
+                session.target.current_som = Some(
+                    plasmate::som::compiler::compile(html, "https://example.test/contact").unwrap(),
+                );
+                session.target.rebuild_node_map();
+            })
+            .await
+            .unwrap();
+        let element_id = sessions
+            .with_session(&session_id, |session| {
+                let som = session.target.current_som.as_ref().unwrap();
+                som.regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .find(|element| {
+                        element.role == ElementRole::Radio
+                            && element
+                                .attrs
+                                .as_ref()
+                                .and_then(|attrs| attrs.get("value"))
+                                .and_then(Value::as_str)
+                                == Some("email")
+                    })
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose the email radio")
+            })
+            .await
+            .unwrap();
+        let client = reqwest::Client::new();
+
+        let selected = handle_select_option(
+            &json!({
+                "session_id": session_id,
+                "element_id": element_id,
+                "value": "email"
+            }),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert!(selected.get("isError").is_none(), "{selected}");
+        let payload = tool_payload(&selected);
+        assert_eq!(payload["title"], "Contact");
+        let radios: Vec<_> = payload["regions"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .flat_map(|region| region["elements"].as_array().into_iter().flatten())
+            .filter(|element| element["role"] == "radio")
+            .collect();
+        let email = radios
+            .iter()
+            .find(|element| element["attrs"]["value"] == "email")
+            .expect("selected SOM must keep the email radio");
+        let sms = radios
+            .iter()
+            .find(|element| element["attrs"]["value"] == "sms")
+            .expect("selected SOM must keep the sms radio");
+        assert_eq!(email["attrs"]["checked"], true, "{email}");
+        assert!(
+            sms["attrs"].get("checked").is_none(),
+            "sms sibling must be unchecked: {sms}"
+        );
     }
 
     #[tokio::test]
