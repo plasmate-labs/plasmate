@@ -1609,6 +1609,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                     "combobox" | "listbox" => return Some(ElementRole::Select),
                     "menuitem" | "tab" | "option" => return Some(ElementRole::Button),
                     "img" => return Some(ElementRole::Image),
+                    "heading" => return Some(ElementRole::Heading),
                     "group" | "radiogroup" => return Some(ElementRole::Group),
                     "progressbar" | "meter" => return Some(ElementRole::Group),
                     _ => {}
@@ -1849,6 +1850,25 @@ fn has_aria_true(attrs: &[(String, String)], name: &str) -> bool {
     attrs
         .iter()
         .any(|(n, v)| n == name && v.eq_ignore_ascii_case("true"))
+}
+
+fn aria_heading_level(attrs: &[(String, String)]) -> Option<u8> {
+    let is_heading = attrs.iter().any(|(name, value)| {
+        name == "role"
+            && value
+                .split_whitespace()
+                .any(|role| role.eq_ignore_ascii_case("heading"))
+    });
+    if !is_heading {
+        return None;
+    }
+    attrs
+        .iter()
+        .find(|(name, _)| name == "aria-level")
+        .and_then(|(_, value)| {
+            let parsed = value.trim().parse::<u8>().ok()?;
+            (1..=6).contains(&parsed).then_some(parsed)
+        })
 }
 
 fn is_disabled_fieldset(node: &Handle) -> bool {
@@ -2220,6 +2240,12 @@ fn build_element_attrs(
             }
         }
         _ => {}
+    }
+
+    if !map.contains_key("level") {
+        if let Some(level) = aria_heading_level(attrs) {
+            map.insert("level".into(), json!(level));
+        }
     }
 
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "contenteditable") {
@@ -4234,6 +4260,102 @@ mod tests {
             bullets_attrs.get("reversed").is_none(),
             "unordered lists must not inherit reversed: {bullets:?}"
         );
+
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Paragraph
+                    && element.text.as_deref() == Some("Just text")
+            }),
+            "plain text must stay a paragraph: {elements:?}"
+        );
+    }
+
+    #[test]
+    fn test_aria_heading_role_and_level_are_compiled() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Headings</title></head>
+<body>
+<main>
+  <div id="section" role="heading" aria-level="3">Section</div>
+  <div id="untitled" role="heading">Untitled</div>
+  <div id="invalid" role="heading" aria-level="9">Invalid</div>
+  <h2 id="native">Native</h2>
+  <button id="tree" aria-level="2">Billing</button>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/headings").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let section = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("section"))
+            .expect("ARIA heading should compile");
+        assert_eq!(section.role, ElementRole::Heading);
+        assert_eq!(section.text.as_deref(), Some("Section"));
+        let section_attrs = section
+            .attrs
+            .as_ref()
+            .expect("ARIA heading attrs should compile");
+        assert_eq!(section_attrs["level"], 3);
+        assert_eq!(section_attrs["source_role"], "heading");
+
+        let untitled = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("untitled"))
+            .expect("ARIA heading without level should compile");
+        assert_eq!(untitled.role, ElementRole::Heading);
+        let untitled_attrs = untitled
+            .attrs
+            .as_ref()
+            .expect("untitled heading attrs should compile");
+        assert!(
+            untitled_attrs.get("level").is_none(),
+            "missing aria-level must not invent a heading level: {untitled:?}"
+        );
+
+        let invalid = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("invalid"))
+            .expect("out-of-range ARIA heading should still compile");
+        assert_eq!(invalid.role, ElementRole::Heading);
+        let invalid_attrs = invalid
+            .attrs
+            .as_ref()
+            .expect("invalid heading attrs should compile");
+        assert!(
+            invalid_attrs.get("level").is_none(),
+            "aria-level outside 1-6 must not become compact level: {invalid:?}"
+        );
+
+        let native = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("native"))
+            .expect("native heading should compile");
+        assert_eq!(native.role, ElementRole::Heading);
+        let native_attrs = native
+            .attrs
+            .as_ref()
+            .expect("native heading attrs should compile");
+        assert_eq!(native_attrs["level"], 2);
+
+        let tree = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("tree"))
+            .expect("non-heading aria-level should still compile");
+        assert_eq!(tree.role, ElementRole::Button);
+        let tree_attrs = tree.attrs.as_ref().expect("button attrs should compile");
+        assert!(
+            tree_attrs.get("level").is_none(),
+            "compact level must not copy onto non-heading roles: {tree:?}"
+        );
+        assert_eq!(tree_attrs["aria"]["level"], "2");
 
         assert!(
             elements.iter().any(|element| {
