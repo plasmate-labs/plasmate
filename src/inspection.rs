@@ -96,6 +96,8 @@ pub struct CompactElement {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub href: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub actions: Option<Vec<String>>,
 }
 
@@ -286,6 +288,7 @@ fn flatten_elements(
                 .label
                 .as_deref()
                 .map(|value| bound_string(value, 512)),
+            href: compact_href(element),
             actions: element.actions.as_ref().map(|actions| {
                 actions
                     .iter()
@@ -338,6 +341,17 @@ fn meaningful_elements(som: &Som) -> usize {
 
 fn count_occurrences(haystack: &str, needle: &str) -> usize {
     haystack.match_indices(needle).count()
+}
+
+fn compact_href(element: &Element) -> Option<String> {
+    element.attrs.as_ref().and_then(|attrs| {
+        attrs
+            .get("href")
+            .and_then(|value| value.as_str())
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .map(|value| bound_string(value, 4096))
+    })
 }
 
 fn bound_string(input: &str, max_bytes: usize) -> String {
@@ -434,6 +448,67 @@ mod tests {
         assert!(
             main.method.is_none(),
             "non-form regions must not invent method"
+        );
+    }
+
+    #[test]
+    fn compact_som_preserves_link_href() {
+        let html = r#"<main>
+  <a href="/docs">Docs</a>
+  <a href="https://example.test/guide">Guide</a>
+  <a href="   ">Empty</a>
+  <button>Save</button>
+  <p>Just text</p>
+</main>"#;
+        let som = compiler::compile(html, "https://example.com/").unwrap();
+        let compact = compact_structure(&som);
+        let elements: Vec<_> = compact
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let docs = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Docs"))
+            .expect("docs link should be compact");
+        assert_eq!(docs.role, "link");
+        assert_eq!(docs.href.as_deref(), Some("/docs"));
+
+        let guide = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Guide"))
+            .expect("guide link should be compact");
+        assert_eq!(guide.href.as_deref(), Some("https://example.test/guide"));
+
+        let empty = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Empty"))
+            .expect("whitespace href link should still be compact");
+        assert!(
+            empty.href.is_none(),
+            "empty href must not be invented: {empty:?}"
+        );
+
+        let button = elements
+            .iter()
+            .find(|element| element.role == "button")
+            .expect("button should stay compact");
+        assert!(
+            button.href.is_none(),
+            "buttons must not invent href: {button:?}"
+        );
+        assert!(
+            elements.iter().any(|element| {
+                element.role == "paragraph" && element.text.as_deref() == Some("Just text")
+            }),
+            "plain text must stay a paragraph: {elements:?}"
+        );
+        assert!(
+            !elements
+                .iter()
+                .any(|element| element.role == "paragraph" && element.href.is_some()),
+            "paragraphs must not invent href: {elements:?}"
         );
     }
 
