@@ -1672,7 +1672,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "hr" => Some(ElementRole::Separator),
         "details" => Some(ElementRole::Details),
         "iframe" => Some(ElementRole::Iframe),
-        "progress" | "meter" => Some(ElementRole::Group),
+        "progress" | "meter" | "video" => Some(ElementRole::Group),
         _ => None,
     }
 }
@@ -2139,6 +2139,27 @@ fn build_element_attrs(
             }
             if let Some(height) = attrs.iter().find(|(n, _)| n == "height") {
                 map.insert("height".into(), json!(height.1));
+            }
+        }
+        "video" => {
+            map.insert("source_role".into(), json!("video"));
+            if let Some((_, src)) = attrs.iter().find(|(n, _)| n == "src") {
+                if !src.trim().is_empty() {
+                    map.insert("src".into(), json!(src));
+                }
+            }
+            if let Some((_, poster)) = attrs.iter().find(|(n, _)| n == "poster") {
+                if !poster.trim().is_empty() {
+                    map.insert("poster".into(), json!(poster));
+                }
+            }
+            if let Some((_, duration)) = attrs.iter().find(|(n, _)| n == "duration") {
+                if !duration.trim().is_empty() {
+                    map.insert("duration".into(), json!(duration));
+                }
+            }
+            if has_attr(attrs, "controls") {
+                map.insert("controls".into(), json!(true));
             }
         }
         "progress" | "meter" => {
@@ -3857,6 +3878,83 @@ mod tests {
             .expect("ARIA progressbar should compile");
         assert_eq!(sync.role, ElementRole::Group);
         assert_eq!(sync.attrs.as_ref().unwrap()["aria"]["valuenow"], "15");
+
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Paragraph
+                    && element.text.as_deref() == Some("Just text")
+            }),
+            "plain text must stay a paragraph: {elements:?}"
+        );
+    }
+
+    #[test]
+    fn test_native_video_src_and_poster_are_compiled() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Media</title></head>
+<body>
+<main>
+  <video id="tour" src="/tour.mp4" poster="/tour.jpg" duration="90" aria-label="Product tour" controls></video>
+  <video id="empty" aria-label="Empty player"></video>
+  <video id="fallback">
+    <source src="/clip.webm" type="video/webm">
+  </video>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/media").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let tour = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("tour"))
+            .expect("native video should compile");
+        assert_eq!(tour.role, ElementRole::Group);
+        assert_eq!(tour.label.as_deref(), Some("Product tour"));
+        assert!(
+            tour.actions.is_none(),
+            "video must not advertise play: {tour:?}"
+        );
+        let tour_attrs = tour.attrs.as_ref().expect("video attrs should compile");
+        assert_eq!(tour_attrs["source_role"], "video");
+        assert_eq!(tour_attrs["src"], "/tour.mp4");
+        assert_eq!(tour_attrs["poster"], "/tour.jpg");
+        assert_eq!(tour_attrs["duration"], "90");
+        assert_eq!(tour_attrs["controls"], true);
+
+        let empty = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("empty"))
+            .expect("src-less video should still compile");
+        let empty_attrs = empty
+            .attrs
+            .as_ref()
+            .expect("empty video attrs should compile");
+        assert_eq!(empty_attrs["source_role"], "video");
+        assert!(
+            empty_attrs.get("src").is_none(),
+            "src-less video must not invent a src: {empty:?}"
+        );
+
+        let fallback = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("fallback"))
+            .expect("video with nested source should compile");
+        let fallback_attrs = fallback
+            .attrs
+            .as_ref()
+            .expect("fallback video attrs should compile");
+        assert_eq!(fallback_attrs["source_role"], "video");
+        assert!(
+            fallback_attrs.get("src").is_none(),
+            "nested source must not become video src: {fallback:?}"
+        );
 
         assert!(
             elements.iter().any(|element| {
