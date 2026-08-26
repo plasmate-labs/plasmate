@@ -33,11 +33,11 @@ frequency.
 If these gates are not met, report a no-change or blocked run. Never stash,
 overwrite, reset, or absorb unrelated work.
 
-## Active governor constraint (2026-08-25)
+## Active governor constraint (2026-08-26)
 
-- Window: `ede2a69` .. `3f48eef`
+- Window: `b8576f6` .. `fb9c41e`
 - Decision: `NARROW`
-- Merged this run: #198
+- Merged this run: #200, #201, #202
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -84,7 +84,15 @@ overwrite, reset, or absorb unrelated work.
   `aria-labelledby` paths already covered. Do not copy #198 native radio
   `select_option` onto adjacent handlers (`clear`, `toggle`, `click`) or
   SDKs; do not extend `select_option` to ARIA radio roles or add html_id
-  lookup / disabled fail-closed.
+  lookup / disabled fail-closed. Do not copy #200 `<video>` src/poster
+  compile work onto extract_text, CLI, CDP, extract_links, or adjacent
+  tags (`audio`, `object`, `embed`, `source`); do not inherit nested
+  `<source>` or advertise play/pause/seek. Do not copy #201 inspect
+  compact form `action`/`method` onto fetch_page, CLI, CDP, or SDKs; do
+  not add `enctype` / `target` / `novalidate`. Do not copy #202 `<img
+  usemap>` compile work onto extract_links, CLI, CDP, or adjacent tags
+  (`object`, `embed`, `source`); do not inherit usemap onto `<picture>`
+  or compile `ismap`.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -93,7 +101,9 @@ overwrite, reset, or absorb unrelated work.
   time-datetime compile copy, contenteditable type-target compile copy,
   Node openPage flat-SOM copy, LangChain type_text rename copy,
   progress/meter compile copy, toggle ARIA-switch copy, wrapping-label
-  without control-id compile copy, or native-radio select_option copy.
+  without control-id compile copy, native-radio select_option copy,
+  video src/poster compile copy, inspect compact form action/method copy,
+  or img usemap compile copy.
 
 ## Preferred lanes
 
