@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-26)
 
-- Window: `d508001` .. `0ab2432`
+- Window: `07a6ff0` .. `e7faf42`
 - Decision: `NARROW`
-- Merged this run: #204
+- Merged this run: #206
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -94,6 +94,10 @@ overwrite, reset, or absorb unrelated work.
   (`object`, `embed`, `source`); do not inherit usemap onto `<picture>`
   or compile `ismap`. Do not copy #204 inspect compact link `href` onto
   fetch_page, CLI, CDP, or SDKs; do not add `target` / `rel` / `download`.
+  Do not copy #206 file-input omit `type`/`clear` onto `type_text` /
+  `clear` mutation, extract_text, CLI, CDP, or SDKs; do not add an upload
+  API, a new file role, or html_id lookup, and do not extend the omit to
+  adjacent input types (`password`, `hidden`, `range`).
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -104,7 +108,8 @@ overwrite, reset, or absorb unrelated work.
   progress/meter compile copy, toggle ARIA-switch copy, wrapping-label
   without control-id compile copy, native-radio select_option copy,
   video src/poster compile copy, inspect compact form action/method copy,
-  img usemap compile copy, or inspect compact link href copy.
+  img usemap compile copy, inspect compact link href copy, or file-input
+  type/clear omit copy.
 
 ## Preferred lanes
 
