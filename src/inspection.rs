@@ -100,6 +100,8 @@ pub struct CompactElement {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub src: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub level: Option<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub actions: Option<Vec<String>>,
 }
 
@@ -292,6 +294,7 @@ fn flatten_elements(
                 .map(|value| bound_string(value, 512)),
             href: compact_href(element),
             src: compact_src(element),
+            level: compact_level(element),
             actions: element.actions.as_ref().map(|actions| {
                 actions
                     .iter()
@@ -368,6 +371,19 @@ fn compact_src(element: &Element) -> Option<String> {
             .map(str::trim)
             .filter(|value| !value.is_empty())
             .map(|value| bound_string(value, 4096))
+    })
+}
+
+fn compact_level(element: &Element) -> Option<u8> {
+    if element.role != ElementRole::Heading {
+        return None;
+    }
+    element.attrs.as_ref().and_then(|attrs| {
+        attrs
+            .get("level")
+            .and_then(|value| value.as_u64())
+            .and_then(|value| u8::try_from(value).ok())
+            .filter(|value| (1..=6).contains(value))
     })
 }
 
@@ -584,6 +600,88 @@ mod tests {
                 .filter(|element| element.role != "image")
                 .all(|element| element.src.is_none()),
             "non-images must not copy src: {elements:?}"
+        );
+        assert!(
+            elements.iter().any(|element| {
+                element.role == "paragraph" && element.text.as_deref() == Some("Just text")
+            }),
+            "plain text must stay a paragraph: {elements:?}"
+        );
+    }
+
+    #[test]
+    fn compact_som_preserves_heading_level() {
+        let html = r#"<main>
+  <h1>Title</h1>
+  <h2>Section</h2>
+  <div role="heading" aria-level="3">ARIA section</div>
+  <div role="heading">Untitled</div>
+  <div role="heading" aria-level="9">Invalid</div>
+  <button aria-level="2">Billing</button>
+  <p>Just text</p>
+</main>"#;
+        let som = compiler::compile(html, "https://example.com/").unwrap();
+        let compact = compact_structure(&som);
+        let elements: Vec<_> = compact
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let title = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Title"))
+            .expect("h1 should be compact");
+        assert_eq!(title.role, "heading");
+        assert_eq!(title.level, Some(1));
+
+        let section = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Section"))
+            .expect("h2 should be compact");
+        assert_eq!(section.level, Some(2));
+
+        let aria_section = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("ARIA section"))
+            .expect("ARIA heading should be compact");
+        assert_eq!(aria_section.role, "heading");
+        assert_eq!(aria_section.level, Some(3));
+
+        let untitled = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Untitled"))
+            .expect("heading without level should still be compact");
+        assert_eq!(untitled.role, "heading");
+        assert!(
+            untitled.level.is_none(),
+            "missing heading level must not be invented: {untitled:?}"
+        );
+
+        let invalid = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Invalid"))
+            .expect("out-of-range ARIA heading should still be compact");
+        assert_eq!(invalid.role, "heading");
+        assert!(
+            invalid.level.is_none(),
+            "aria-level outside 1-6 must not become compact level: {invalid:?}"
+        );
+
+        let button = elements
+            .iter()
+            .find(|element| element.role == "button")
+            .expect("button should stay compact");
+        assert!(
+            button.level.is_none(),
+            "non-headings must not copy level: {button:?}"
+        );
+        assert!(
+            elements
+                .iter()
+                .filter(|element| element.role != "heading")
+                .all(|element| element.level.is_none()),
+            "non-headings must not copy level: {elements:?}"
         );
         assert!(
             elements.iter().any(|element| {
