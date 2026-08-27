@@ -6,7 +6,7 @@
 
 use serde::Serialize;
 
-use crate::som::types::{Element, Som};
+use crate::som::types::{Element, ElementRole, Som};
 
 pub const RESULT_SCHEMA_VERSION: &str = "plasmate.structured-inspection.v1";
 pub const MAX_MCP_OUTPUT_BYTES: usize = 512 * 1024;
@@ -97,6 +97,8 @@ pub struct CompactElement {
     pub label: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub href: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub src: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub actions: Option<Vec<String>>,
 }
@@ -289,6 +291,7 @@ fn flatten_elements(
                 .as_deref()
                 .map(|value| bound_string(value, 512)),
             href: compact_href(element),
+            src: compact_src(element),
             actions: element.actions.as_ref().map(|actions| {
                 actions
                     .iter()
@@ -347,6 +350,20 @@ fn compact_href(element: &Element) -> Option<String> {
     element.attrs.as_ref().and_then(|attrs| {
         attrs
             .get("href")
+            .and_then(|value| value.as_str())
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .map(|value| bound_string(value, 4096))
+    })
+}
+
+fn compact_src(element: &Element) -> Option<String> {
+    if element.role != ElementRole::Image {
+        return None;
+    }
+    element.attrs.as_ref().and_then(|attrs| {
+        attrs
+            .get("src")
             .and_then(|value| value.as_str())
             .map(str::trim)
             .filter(|value| !value.is_empty())
@@ -509,6 +526,70 @@ mod tests {
                 .iter()
                 .any(|element| element.role == "paragraph" && element.href.is_some()),
             "paragraphs must not invent href: {elements:?}"
+        );
+    }
+
+    #[test]
+    fn compact_som_preserves_image_src() {
+        let html = r#"<main>
+  <img src="/logo.png" alt="Logo">
+  <img src="https://cdn.example.test/hero.jpg" alt="Hero">
+  <img src="   " alt="Empty">
+  <img srcset="/logo-2x.png 2x" alt="Srcset only">
+  <a href="/docs">Docs</a>
+  <iframe src="/embed"></iframe>
+  <video src="/tour.mp4"></video>
+  <p>Just text</p>
+</main>"#;
+        let som = compiler::compile(html, "https://example.com/").unwrap();
+        let compact = compact_structure(&som);
+        let elements: Vec<_> = compact
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let images: Vec<_> = elements
+            .iter()
+            .filter(|element| element.role == "image")
+            .collect();
+        assert_eq!(
+            images.len(),
+            4,
+            "all images should stay compact: {images:?}"
+        );
+        assert!(
+            images.iter().all(|element| element.href.is_none()),
+            "images must not invent href: {images:?}"
+        );
+        let srcs: Vec<_> = images
+            .iter()
+            .filter_map(|element| element.src.as_deref())
+            .collect();
+        assert_eq!(
+            srcs,
+            vec!["/logo.png", "https://cdn.example.test/hero.jpg"],
+            "only compiled image src should be compact: {images:?}"
+        );
+
+        let docs = elements
+            .iter()
+            .find(|element| element.role == "link")
+            .expect("link should stay compact");
+        assert!(docs.src.is_none(), "links must not invent src: {docs:?}");
+
+        assert!(
+            elements
+                .iter()
+                .filter(|element| element.role != "image")
+                .all(|element| element.src.is_none()),
+            "non-images must not copy src: {elements:?}"
+        );
+        assert!(
+            elements.iter().any(|element| {
+                element.role == "paragraph" && element.text.as_deref() == Some("Just text")
+            }),
+            "plain text must stay a paragraph: {elements:?}"
         );
     }
 
