@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-26)
 
-- Window: `e40a1ed` .. `61d60ba`
+- Window: `a6fc39a` .. `39c551d`
 - Decision: `NARROW`
-- Merged this run: #210
+- Merged this run: #212
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -104,7 +104,10 @@ overwrite, reset, or absorb unrelated work.
   `role=heading` / `aria-level` compile work onto extract_text, CLI, CDP,
   extract_links, or SDKs; do not invent default levels, copy compact
   `level` onto non-heading roles, or extend to other ARIA outline
-  attributes.
+  attributes. Do not copy #212 native `<img srcset>` compile work onto
+  extract_links, CLI, CDP, or adjacent tags (`object`, `embed`, `source`);
+  do not invent `src` from `srcset`, copy `srcset` onto `<picture>`, or
+  add `sizes`.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -116,8 +119,8 @@ overwrite, reset, or absorb unrelated work.
   without control-id compile copy, native-radio select_option copy,
   video src/poster compile copy, inspect compact form action/method copy,
   img usemap compile copy, inspect compact link href copy, file-input
-  type/clear omit copy, ol start/reversed compile copy, or aria heading
-  role/level compile copy.
+  type/clear omit copy, ol start/reversed compile copy, aria heading
+  role/level compile copy, or img srcset compile copy.
 
 ## Preferred lanes
 
