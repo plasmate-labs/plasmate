@@ -1899,6 +1899,16 @@ fn build_element_attrs(
                 if let Some(alt) = attrs.iter().find(|(n, _)| n == "alt") {
                     map.insert("alt".into(), json!(alt.1));
                 }
+                if let Some((_, shape)) = attrs.iter().find(|(n, _)| n == "shape") {
+                    if !shape.trim().is_empty() {
+                        map.insert("shape".into(), json!(shape));
+                    }
+                }
+                if let Some((_, coords)) = attrs.iter().find(|(n, _)| n == "coords") {
+                    if !coords.trim().is_empty() {
+                        map.insert("coords".into(), json!(coords));
+                    }
+                }
             }
             if let Some((_, target)) = attrs.iter().find(|(n, _)| n == "target") {
                 map.insert("target".into(), json!(target));
@@ -3809,6 +3819,127 @@ mod tests {
                 .iter()
                 .any(|element| element.label.as_deref() == Some("No destination")),
             "{links:?}"
+        );
+    }
+
+    #[test]
+    fn test_area_shape_and_coords_are_compiled() {
+        let html = r##"<!DOCTYPE html>
+<html><head><title>Campus map</title></head>
+<body>
+<main>
+  <img src="/campus.png" alt="Campus" usemap="#campus">
+  <map name="campus">
+    <area href="https://example.test/library" alt="Library" shape="rect" coords="0,0,40,40">
+    <area href="https://example.test/quad" alt="Quad" shape="   " coords="   ">
+    <area href="https://example.test/plain" alt="Plain">
+  </map>
+  <a href="https://example.test/docs" shape="circle" coords="10,10,5">Docs</a>
+</main>
+</body>
+</html>"##;
+
+        let som = compile(html, "https://example.test/").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let links: Vec<_> = elements
+            .iter()
+            .filter(|element| element.role == ElementRole::Link)
+            .collect();
+
+        let library = links
+            .iter()
+            .find(|element| element.label.as_deref() == Some("Library"))
+            .expect("library area should compile as a named link");
+        let library_attrs = library
+            .attrs
+            .as_ref()
+            .expect("library area attrs should compile");
+        assert_eq!(library_attrs["href"], "https://example.test/library");
+        assert_eq!(library_attrs["shape"], "rect");
+        assert_eq!(library_attrs["coords"], "0,0,40,40");
+
+        let quad = links
+            .iter()
+            .find(|element| element.label.as_deref() == Some("Quad"))
+            .expect("whitespace geometry area should still compile");
+        assert!(
+            quad.attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("shape"))
+                .is_none(),
+            "whitespace shape must be omitted: {quad:?}"
+        );
+        assert!(
+            quad.attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("coords"))
+                .is_none(),
+            "whitespace coords must be omitted: {quad:?}"
+        );
+
+        let plain = links
+            .iter()
+            .find(|element| element.label.as_deref() == Some("Plain"))
+            .expect("geometry-less area should still compile");
+        assert!(
+            plain
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("shape"))
+                .is_none(),
+            "area without shape must not invent one: {plain:?}"
+        );
+        assert!(
+            plain
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("coords"))
+                .is_none(),
+            "area without coords must not invent one: {plain:?}"
+        );
+
+        let docs = links
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Docs"))
+            .expect("ordinary link should still compile");
+        assert!(
+            docs.attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("shape"))
+                .is_none(),
+            "anchor must not copy area shape: {docs:?}"
+        );
+        assert!(
+            docs.attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("coords"))
+                .is_none(),
+            "anchor must not copy area coords: {docs:?}"
+        );
+
+        let campus = elements
+            .iter()
+            .find(|element| element.role == ElementRole::Image)
+            .expect("campus image should compile");
+        assert!(
+            campus
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("shape"))
+                .is_none(),
+            "img must not inherit area shape: {campus:?}"
+        );
+        assert!(
+            campus
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("coords"))
+                .is_none(),
+            "img must not inherit area coords: {campus:?}"
         );
     }
 
