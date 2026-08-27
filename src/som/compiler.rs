@@ -1663,7 +1663,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "hr" => Some(ElementRole::Separator),
         "details" => Some(ElementRole::Details),
         "iframe" => Some(ElementRole::Iframe),
-        "progress" | "meter" | "video" => Some(ElementRole::Group),
+        "progress" | "meter" | "video" | "canvas" => Some(ElementRole::Group),
         _ => None,
     }
 }
@@ -2218,6 +2218,19 @@ fn build_element_attrs(
             }
             if has_attr(attrs, "controls") {
                 map.insert("controls".into(), json!(true));
+            }
+        }
+        "canvas" => {
+            map.insert("source_role".into(), json!("canvas"));
+            if let Some((_, width)) = attrs.iter().find(|(n, _)| n == "width") {
+                if !width.trim().is_empty() {
+                    map.insert("width".into(), json!(width));
+                }
+            }
+            if let Some((_, height)) = attrs.iter().find(|(n, _)| n == "height") {
+                if !height.trim().is_empty() {
+                    map.insert("height".into(), json!(height));
+                }
             }
         }
         "progress" | "meter" => {
@@ -4203,6 +4216,108 @@ mod tests {
         assert!(
             fallback_attrs.get("src").is_none(),
             "nested source must not become video src: {fallback:?}"
+        );
+
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Paragraph
+                    && element.text.as_deref() == Some("Just text")
+            }),
+            "plain text must stay a paragraph: {elements:?}"
+        );
+    }
+
+    #[test]
+    fn test_native_canvas_is_compiled() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Charts</title></head>
+<body>
+<main>
+  <canvas id="chart" width="640" height="360" aria-label="Revenue chart"></canvas>
+  <canvas id="empty" aria-label="Empty board"></canvas>
+  <canvas id="blank" width="   " height="   " aria-label="Blank board"></canvas>
+  <canvas id="nested">
+    <img src="/fallback.png" alt="Fallback chart">
+  </canvas>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/charts").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let chart = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("chart"))
+            .expect("native canvas should compile");
+        assert_eq!(chart.role, ElementRole::Group);
+        assert_eq!(chart.label.as_deref(), Some("Revenue chart"));
+        assert!(
+            chart.actions.is_none(),
+            "canvas must not advertise draw: {chart:?}"
+        );
+        let chart_attrs = chart.attrs.as_ref().expect("canvas attrs should compile");
+        assert_eq!(chart_attrs["source_role"], "canvas");
+        assert_eq!(chart_attrs["width"], "640");
+        assert_eq!(chart_attrs["height"], "360");
+        assert!(
+            chart_attrs.get("src").is_none(),
+            "canvas must not invent a src: {chart:?}"
+        );
+
+        let empty = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("empty"))
+            .expect("dimension-less canvas should still compile");
+        let empty_attrs = empty
+            .attrs
+            .as_ref()
+            .expect("empty canvas attrs should compile");
+        assert_eq!(empty_attrs["source_role"], "canvas");
+        assert!(
+            empty_attrs.get("width").is_none(),
+            "dimension-less canvas must not invent width: {empty:?}"
+        );
+        assert!(
+            empty_attrs.get("height").is_none(),
+            "dimension-less canvas must not invent height: {empty:?}"
+        );
+
+        let blank = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("blank"))
+            .expect("whitespace canvas dimensions should still compile");
+        let blank_attrs = blank
+            .attrs
+            .as_ref()
+            .expect("blank canvas attrs should compile");
+        assert_eq!(blank_attrs["source_role"], "canvas");
+        assert!(
+            blank_attrs.get("width").is_none(),
+            "whitespace width must be omitted: {blank:?}"
+        );
+        assert!(
+            blank_attrs.get("height").is_none(),
+            "whitespace height must be omitted: {blank:?}"
+        );
+
+        let nested = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("nested"))
+            .expect("canvas with nested img should compile");
+        let nested_attrs = nested
+            .attrs
+            .as_ref()
+            .expect("nested canvas attrs should compile");
+        assert_eq!(nested_attrs["source_role"], "canvas");
+        assert!(
+            nested_attrs.get("src").is_none(),
+            "nested img must not become canvas src: {nested:?}"
         );
 
         assert!(
