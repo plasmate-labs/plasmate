@@ -2097,6 +2097,11 @@ fn build_element_attrs(
                         map.insert("usemap".into(), json!(usemap));
                     }
                 }
+                if let Some((_, srcset)) = attrs.iter().find(|(n, _)| n == "srcset") {
+                    if !srcset.trim().is_empty() {
+                        map.insert("srcset".into(), json!(srcset));
+                    }
+                }
             }
         }
         "ul" => {
@@ -3632,6 +3637,108 @@ mod tests {
                 .and_then(|attrs| attrs.get("usemap"))
                 .is_none(),
             "picture must not inherit nested img usemap: {picture:?}"
+        );
+    }
+
+    #[test]
+    fn test_img_srcset_is_compiled() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Responsive</title></head>
+<body>
+<main>
+  <img id="hero" src="/hero.jpg" alt="Harbor" srcset="/hero.jpg 1x, /hero@2x.jpg 2x">
+  <img id="lazy" alt="Lazy harbor" srcset="/lazy.jpg 1x, /lazy@2x.jpg 2x">
+  <img id="plain" src="/plain.jpg" alt="Plain">
+  <img id="blank" src="/blank.jpg" alt="Blank" srcset="   ">
+  <picture>
+    <source srcset="/hero.avif" type="image/avif">
+    <img src="/nested.jpg" alt="Nested" srcset="/nested.jpg 1x">
+  </picture>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/responsive").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let hero = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("hero"))
+            .expect("native img with srcset should compile");
+        assert_eq!(hero.role, ElementRole::Image);
+        let hero_attrs = hero.attrs.as_ref().expect("hero attrs should compile");
+        assert_eq!(hero_attrs["src"], "/hero.jpg");
+        assert_eq!(hero_attrs["srcset"], "/hero.jpg 1x, /hero@2x.jpg 2x");
+        assert_eq!(hero_attrs["alt"], "Harbor");
+
+        let lazy = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("lazy"))
+            .expect("srcset-only img should compile");
+        let lazy_attrs = lazy.attrs.as_ref().expect("lazy attrs should compile");
+        assert!(
+            lazy_attrs.get("src").is_none(),
+            "missing src must not be invented from srcset: {lazy:?}"
+        );
+        assert_eq!(lazy_attrs["srcset"], "/lazy.jpg 1x, /lazy@2x.jpg 2x");
+
+        let plain = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plain"))
+            .expect("plain img should compile");
+        assert!(
+            plain
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("srcset"))
+                .is_none(),
+            "img without srcset must not invent one: {plain:?}"
+        );
+
+        let blank = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("blank"))
+            .expect("img with empty srcset should still compile");
+        assert!(
+            blank
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("srcset"))
+                .is_none(),
+            "whitespace srcset must be omitted: {blank:?}"
+        );
+
+        let picture = elements
+            .iter()
+            .find(|element| {
+                element.role == ElementRole::Image
+                    && element
+                        .attrs
+                        .as_ref()
+                        .and_then(|attrs| attrs.get("src").and_then(|value| value.as_str()))
+                        == Some("/nested.jpg")
+            })
+            .expect("picture should still compile from nested img src");
+        assert!(
+            picture
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("srcset"))
+                .is_none(),
+            "picture must not inherit nested img or source srcset: {picture:?}"
+        );
+
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Paragraph
+                    && element.text.as_deref() == Some("Just text")
+            }),
+            "plain text must stay a paragraph: {elements:?}"
         );
     }
 
