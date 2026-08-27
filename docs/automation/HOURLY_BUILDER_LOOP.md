@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-27)
 
-- Window: `ae609a1` .. `5d559e2`
+- Window: `b7ca953` .. `9a4428d`
 - Decision: `NARROW`
-- Merged this run: #220
+- Merged this run: #222
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -119,7 +119,10 @@ overwrite, reset, or absorb unrelated work.
   roles, or add outline attrs beyond compiled 1-6. Do not copy #220
   `<blockquote cite>` compile work onto extract_text, CLI, CDP, or
   adjacent tags (`q`, `ins`, `del`); do not invent cite from nested
-  `<cite>` text or inline `<q cite>`.
+  `<cite>` text or inline `<q cite>`. Do not copy #222 `<area>`
+  shape/coords compile work onto extract_links, CLI, CDP, or adjacent
+  tags (`object`, `embed`, `source`, `a`, `img`); do not invent default
+  `shape=rect` or copy whitespace/absent geometry.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -134,7 +137,8 @@ overwrite, reset, or absorb unrelated work.
   type/clear omit copy, ol start/reversed compile copy, aria heading
   role/level compile copy, img srcset compile copy, canvas
   width/height compile copy, inspect compact image src copy, inspect
-  compact heading level copy, or blockquote cite compile copy.
+  compact heading level copy, blockquote cite compile copy, or area
+  shape/coords compile copy.
 
 ## Preferred lanes
 
