@@ -33,11 +33,11 @@ frequency.
 If these gates are not met, report a no-change or blocked run. Never stash,
 overwrite, reset, or absorb unrelated work.
 
-## Active governor constraint (2026-08-26)
+## Active governor constraint (2026-08-27)
 
-- Window: `a6fc39a` .. `39c551d`
+- Window: `377769b` .. `eb54c5a`
 - Decision: `NARROW`
-- Merged this run: #212
+- Merged this run: #214
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -107,7 +107,11 @@ overwrite, reset, or absorb unrelated work.
   attributes. Do not copy #212 native `<img srcset>` compile work onto
   extract_links, CLI, CDP, or adjacent tags (`object`, `embed`, `source`);
   do not invent `src` from `srcset`, copy `srcset` onto `<picture>`, or
-  add `sizes`.
+  add `sizes`. Do not copy #214 native `<canvas>` width/height compile
+  work onto extract_text, CLI, CDP, extract_links, or adjacent tags
+  (`svg`, `object`, `embed`); do not invent `src` from nested `<img>`,
+  advertise draw/play actions, or copy these attrs onto `svg`/`object`/
+  `embed`.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -120,7 +124,8 @@ overwrite, reset, or absorb unrelated work.
   video src/poster compile copy, inspect compact form action/method copy,
   img usemap compile copy, inspect compact link href copy, file-input
   type/clear omit copy, ol start/reversed compile copy, aria heading
-  role/level compile copy, or img srcset compile copy.
+  role/level compile copy, img srcset compile copy, or canvas
+  width/height compile copy.
 
 ## Preferred lanes
 
