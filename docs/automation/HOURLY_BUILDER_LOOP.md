@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-27)
 
-- Window: `bb14ade` .. `92d79ad`
+- Window: `ae609a1` .. `5d559e2`
 - Decision: `NARROW`
-- Merged this run: #218
+- Merged this run: #220
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -116,7 +116,10 @@ overwrite, reset, or absorb unrelated work.
   links, iframes, or video, or add `srcset`/`sizes`. Do not copy #218
   inspect compact heading `level` onto fetch_page, CLI, CDP, or SDKs; do
   not invent missing or out-of-range levels, copy `level` onto non-heading
-  roles, or add outline attrs beyond compiled 1-6.
+  roles, or add outline attrs beyond compiled 1-6. Do not copy #220
+  `<blockquote cite>` compile work onto extract_text, CLI, CDP, or
+  adjacent tags (`q`, `ins`, `del`); do not invent cite from nested
+  `<cite>` text or inline `<q cite>`.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -130,8 +133,8 @@ overwrite, reset, or absorb unrelated work.
   img usemap compile copy, inspect compact link href copy, file-input
   type/clear omit copy, ol start/reversed compile copy, aria heading
   role/level compile copy, img srcset compile copy, canvas
-  width/height compile copy, inspect compact image src copy, or inspect
-  compact heading level copy.
+  width/height compile copy, inspect compact image src copy, inspect
+  compact heading level copy, or blockquote cite compile copy.
 
 ## Preferred lanes
 
