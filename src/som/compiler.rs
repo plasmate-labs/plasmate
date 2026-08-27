@@ -1657,7 +1657,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "img" | "picture" => Some(ElementRole::Image),
         "ul" | "ol" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
-        "p" | "time" => Some(ElementRole::Paragraph),
+        "p" | "time" | "blockquote" => Some(ElementRole::Paragraph),
         "section" | "article" => Some(ElementRole::Section),
         "fieldset" => Some(ElementRole::Group),
         "hr" => Some(ElementRole::Separator),
@@ -2059,6 +2059,13 @@ fn build_element_attrs(
             if let Some((_, datetime)) = attrs.iter().find(|(n, _)| n == "datetime") {
                 if !datetime.trim().is_empty() {
                     map.insert("datetime".into(), json!(datetime));
+                }
+            }
+        }
+        "blockquote" => {
+            if let Some((_, cite)) = attrs.iter().find(|(n, _)| n == "cite") {
+                if !cite.trim().is_empty() {
+                    map.insert("cite".into(), json!(cite));
                 }
             }
         }
@@ -3984,6 +3991,108 @@ mod tests {
                 .and_then(|attrs| attrs.get("datetime"))
                 .is_none(),
             "{empty_datetime:?}"
+        );
+    }
+
+    #[test]
+    fn test_blockquote_cite_is_compiled() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Quotes</title></head>
+<body>
+<main>
+  <blockquote id="sourced" cite="https://example.test/speech">Agents need sources.</blockquote>
+  <blockquote id="empty" cite="   ">Whitespace cite.</blockquote>
+  <blockquote id="plain">Unsourced quote.</blockquote>
+  <p>She said <q cite="https://example.test/inline">hello</q> yesterday.</p>
+  <blockquote cite="https://example.test/nested">
+    Nested <cite>Author</cite> must not replace cite.
+  </blockquote>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/quotes").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let sourced = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("sourced"))
+            .expect("cited blockquote should compile");
+        assert_eq!(sourced.role, ElementRole::Paragraph);
+        assert_eq!(sourced.text.as_deref(), Some("Agents need sources."));
+        let sourced_attrs = sourced
+            .attrs
+            .as_ref()
+            .expect("cited blockquote attrs should compile");
+        assert_eq!(sourced_attrs["cite"], "https://example.test/speech");
+
+        let empty = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("empty"))
+            .expect("whitespace cite blockquote should still compile");
+        assert_eq!(empty.role, ElementRole::Paragraph);
+        assert!(
+            empty
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("cite"))
+                .is_none(),
+            "whitespace cite must be omitted: {empty:?}"
+        );
+
+        let plain = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plain"))
+            .expect("unsourced blockquote should still compile");
+        assert_eq!(plain.role, ElementRole::Paragraph);
+        assert!(
+            plain
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("cite"))
+                .is_none(),
+            "blockquote without cite must not invent one: {plain:?}"
+        );
+
+        let inline = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("She said hello yesterday."))
+            .expect("paragraph with inline q should compile");
+        assert!(
+            inline
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("cite"))
+                .is_none(),
+            "inline q cite must not copy onto the parent paragraph: {inline:?}"
+        );
+
+        let nested = elements
+            .iter()
+            .find(|element| {
+                element
+                    .text
+                    .as_deref()
+                    .is_some_and(|text| text.contains("Nested Author must not replace cite."))
+            })
+            .expect("blockquote with nested cite element should compile");
+        let nested_attrs = nested
+            .attrs
+            .as_ref()
+            .expect("nested blockquote attrs should compile");
+        assert_eq!(nested_attrs["cite"], "https://example.test/nested");
+
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Paragraph
+                    && element.text.as_deref() == Some("Just text")
+            }),
+            "plain text must stay a paragraph: {elements:?}"
         );
     }
 
