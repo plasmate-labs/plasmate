@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-27)
 
-- Window: `b7ca953` .. `9a4428d`
+- Window: `6d4b122` .. `236eeee`
 - Decision: `NARROW`
-- Merged this run: #222
+- Merged this run: #224, #225
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -122,7 +122,14 @@ overwrite, reset, or absorb unrelated work.
   `<cite>` text or inline `<q cite>`. Do not copy #222 `<area>`
   shape/coords compile work onto extract_links, CLI, CDP, or adjacent
   tags (`object`, `embed`, `source`, `a`, `img`); do not invent default
-  `shape=rect` or copy whitespace/absent geometry.
+  `shape=rect` or copy whitespace/absent geometry. Do not copy #224
+  native `autofocus` compile work onto extract_text, CLI, CDP,
+  extract_links, or adjacent attributes (`required`, `disabled`,
+  `readonly`); do not invent autofocus when absent or copy it onto
+  links or paragraphs. Do not copy #225 inspect compact control `name`
+  onto fetch_page, CLI, CDP, or SDKs; do not invent missing or
+  whitespace names, copy `name` onto paragraphs or unnamed links, or
+  add `id`/`for`.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -137,8 +144,9 @@ overwrite, reset, or absorb unrelated work.
   type/clear omit copy, ol start/reversed compile copy, aria heading
   role/level compile copy, img srcset compile copy, canvas
   width/height compile copy, inspect compact image src copy, inspect
-  compact heading level copy, blockquote cite compile copy, or area
-  shape/coords compile copy.
+  compact heading level copy, blockquote cite compile copy, area
+  shape/coords compile copy, autofocus compile copy, or inspect compact
+  control name copy.
 
 ## Preferred lanes
 
