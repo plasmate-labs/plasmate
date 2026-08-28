@@ -2295,6 +2295,9 @@ fn build_element_attrs(
     if inherited_inert || has_attr(attrs, "inert") {
         map.insert("inert".into(), json!(true));
     }
+    if has_attr(attrs, "autofocus") {
+        map.insert("autofocus".into(), json!(true));
+    }
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "tabindex") {
         let tabindex = value
             .parse::<i64>()
@@ -3940,6 +3943,120 @@ mod tests {
                 .and_then(|attrs| attrs.get("coords"))
                 .is_none(),
             "img must not inherit area coords: {campus:?}"
+        );
+    }
+
+    #[test]
+    fn test_autofocus_is_compiled() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Sign in</title></head>
+<body>
+<main>
+  <form>
+    <input type="email" name="email" autofocus>
+    <input type="password" name="password">
+    <button type="submit">Sign in</button>
+    <button type="button" autofocus="autofocus">Help</button>
+  </form>
+  <a href="/docs">Docs</a>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let email = elements
+            .iter()
+            .find(|element| {
+                element
+                    .attrs
+                    .as_ref()
+                    .and_then(|attrs| attrs.get("name"))
+                    .and_then(|value| value.as_str())
+                    == Some("email")
+            })
+            .expect("email field should compile");
+        assert_eq!(
+            email
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("autofocus")),
+            Some(&json!(true)),
+            "native autofocus must compile: {email:?}"
+        );
+
+        let password = elements
+            .iter()
+            .find(|element| {
+                element
+                    .attrs
+                    .as_ref()
+                    .and_then(|attrs| attrs.get("name"))
+                    .and_then(|value| value.as_str())
+                    == Some("password")
+            })
+            .expect("password field should compile");
+        assert!(
+            password
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("autofocus"))
+                .is_none(),
+            "missing autofocus must not be invented: {password:?}"
+        );
+
+        let help = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Help"))
+            .expect("help button should compile");
+        assert_eq!(
+            help.attrs.as_ref().and_then(|attrs| attrs.get("autofocus")),
+            Some(&json!(true)),
+            "boolean autofocus token must compile: {help:?}"
+        );
+
+        let submit = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Sign in"))
+            .expect("submit button should compile");
+        assert!(
+            submit
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("autofocus"))
+                .is_none(),
+            "submit without autofocus must not invent it: {submit:?}"
+        );
+
+        let docs = elements
+            .iter()
+            .find(|element| element.role == ElementRole::Link)
+            .expect("docs link should compile");
+        assert!(
+            docs.attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("autofocus"))
+                .is_none(),
+            "links must not invent autofocus: {docs:?}"
+        );
+
+        let paragraph = elements
+            .iter()
+            .find(|element| element.role == ElementRole::Paragraph)
+            .expect("paragraph should compile");
+        assert!(
+            paragraph
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("autofocus"))
+                .is_none(),
+            "paragraphs must not invent autofocus: {paragraph:?}"
         );
     }
 
