@@ -96,6 +96,8 @@ pub struct CompactElement {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub href: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub src: Option<String>,
@@ -292,6 +294,7 @@ fn flatten_elements(
                 .label
                 .as_deref()
                 .map(|value| bound_string(value, 512)),
+            name: compact_name(element),
             href: compact_href(element),
             src: compact_src(element),
             level: compact_level(element),
@@ -347,6 +350,17 @@ fn meaningful_elements(som: &Som) -> usize {
 
 fn count_occurrences(haystack: &str, needle: &str) -> usize {
     haystack.match_indices(needle).count()
+}
+
+fn compact_name(element: &Element) -> Option<String> {
+    element.attrs.as_ref().and_then(|attrs| {
+        attrs
+            .get("name")
+            .and_then(|value| value.as_str())
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .map(|value| bound_string(value, 256))
+    })
 }
 
 fn compact_href(element: &Element) -> Option<String> {
@@ -688,6 +702,88 @@ mod tests {
                 element.role == "paragraph" && element.text.as_deref() == Some("Just text")
             }),
             "plain text must stay a paragraph: {elements:?}"
+        );
+    }
+
+    #[test]
+    fn compact_som_preserves_control_name() {
+        let html = r#"<main>
+  <label for="email">Email</label>
+  <input id="email" name="user_email">
+  <input aria-label="Empty name" name="   ">
+  <input aria-label="Plain">
+  <button name="save">Save</button>
+  <iframe name="embed" src="/frame"></iframe>
+  <a href="/docs">Docs</a>
+  <p>Just text</p>
+</main>"#;
+        let som = compiler::compile(html, "https://example.com/").unwrap();
+        let compact = compact_structure(&som);
+        let elements: Vec<_> = compact
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let email = elements
+            .iter()
+            .find(|element| element.label.as_deref() == Some("Email"))
+            .expect("named email input should be compact");
+        assert_eq!(email.role, "text_input");
+        assert_eq!(email.name.as_deref(), Some("user_email"));
+
+        let empty = elements
+            .iter()
+            .find(|element| element.label.as_deref() == Some("Empty name"))
+            .expect("whitespace name input should still be compact");
+        assert_eq!(empty.role, "text_input");
+        assert!(
+            empty.name.is_none(),
+            "whitespace name must not be invented: {empty:?}"
+        );
+
+        let plain = elements
+            .iter()
+            .find(|element| element.label.as_deref() == Some("Plain"))
+            .expect("unnamed input should still be compact");
+        assert_eq!(plain.role, "text_input");
+        assert!(
+            plain.name.is_none(),
+            "missing name must not be invented: {plain:?}"
+        );
+
+        let button = elements
+            .iter()
+            .find(|element| element.role == "button")
+            .expect("named button should stay compact");
+        assert_eq!(button.name.as_deref(), Some("save"));
+
+        let frame = elements
+            .iter()
+            .find(|element| element.role == "iframe")
+            .expect("named iframe should stay compact");
+        assert_eq!(frame.name.as_deref(), Some("embed"));
+
+        let docs = elements
+            .iter()
+            .find(|element| element.role == "link")
+            .expect("link should stay compact");
+        assert!(
+            docs.name.is_none(),
+            "links without name must not invent one: {docs:?}"
+        );
+        assert!(
+            elements.iter().any(|element| {
+                element.role == "paragraph" && element.text.as_deref() == Some("Just text")
+            }),
+            "plain text must stay a paragraph: {elements:?}"
+        );
+        assert!(
+            elements
+                .iter()
+                .filter(|element| element.role == "paragraph")
+                .all(|element| element.name.is_none()),
+            "paragraphs must not invent name: {elements:?}"
         );
     }
 
