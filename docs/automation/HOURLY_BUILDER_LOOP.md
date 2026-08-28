@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-28)
 
-- Window: `9ccaa96` .. `ecf5a0c`
+- Window: `2db3ca9` .. `80dd27f`
 - Decision: `NARROW`
-- Merged this run: #227
+- Merged this run: #229
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -132,7 +132,11 @@ overwrite, reset, or absorb unrelated work.
   add `id`/`for`. Do not copy #227 native element `lang` compile work
   onto extract_text, CLI, CDP, extract_links, or adjacent attributes
   (`xml:lang`, `dir`, `translate`); do not inherit `html lang`, invent
-  whitespace/absent lang, or copy `hreflang` into `lang`.
+  whitespace/absent lang, or copy `hreflang` into `lang`. Do not copy
+  #229 Python `ElementAttrs` extra=allow onto Node or Go SDKs, CLI,
+  CDP, parsers, or other Python models (`Som`, `Region`, `Element`);
+  structural models stay fail-closed. Do not add named `lang` /
+  `autofocus` fields to Python `ElementAttrs` as a follow-on.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -149,7 +153,8 @@ overwrite, reset, or absorb unrelated work.
   width/height compile copy, inspect compact image src copy, inspect
   compact heading level copy, blockquote cite compile copy, area
   shape/coords compile copy, autofocus compile copy, inspect compact
-  control name copy, or element lang compile copy.
+  control name copy, element lang compile copy, or Python ElementAttrs
+  extra=allow copy.
 
 ## Preferred lanes
 
