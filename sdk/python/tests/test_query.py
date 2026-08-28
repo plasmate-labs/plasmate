@@ -686,6 +686,47 @@ class TestPydanticModels:
                 unknown_field="oops",
             )
 
+    def test_element_attrs_preserve_unmodeled_compiled_fields(self) -> None:
+        som = Som.model_validate(
+            {
+                "som_version": "0.1",
+                "url": "https://example.test/fr",
+                "title": "Accueil",
+                "lang": "fr",
+                "regions": [
+                    {
+                        "id": "r_main",
+                        "role": "main",
+                        "elements": [
+                            {
+                                "id": "e1",
+                                "role": "link",
+                                "text": "Accueil",
+                                "actions": ["click"],
+                                "attrs": {
+                                    "href": "/fr",
+                                    "lang": "fr",
+                                    "autofocus": True,
+                                },
+                            }
+                        ],
+                    }
+                ],
+                "meta": {
+                    "html_bytes": 32,
+                    "som_bytes": 16,
+                    "element_count": 1,
+                    "interactive_count": 1,
+                },
+            }
+        )
+        attrs = som.regions[0].elements[0].attrs
+        assert attrs is not None
+        dumped = attrs.model_dump(exclude_none=True)
+        assert dumped["href"] == "/fr"
+        assert dumped["lang"] == "fr"
+        assert dumped["autofocus"] is True
+
     def test_validates_level_range(self) -> None:
         attrs = ElementAttrs(level=3)
         assert attrs.level == 3
