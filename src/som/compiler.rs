@@ -2311,6 +2311,11 @@ fn build_element_attrs(
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "title") {
         map.insert("title".into(), json!(value));
     }
+    if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "lang") {
+        if !value.trim().is_empty() {
+            map.insert("lang".into(), json!(value));
+        }
+    }
     if attrs
         .iter()
         .any(|(n, v)| n == "hidden" && v.trim().eq_ignore_ascii_case("until-found"))
@@ -4057,6 +4062,122 @@ mod tests {
                 .and_then(|attrs| attrs.get("autofocus"))
                 .is_none(),
             "paragraphs must not invent autofocus: {paragraph:?}"
+        );
+    }
+
+    #[test]
+    fn test_element_lang_is_compiled() {
+        let html = r#"<!DOCTYPE html>
+<html lang="en"><head><title>Mixed language</title></head>
+<body>
+<main>
+  <p lang="fr">Bonjour</p>
+  <p lang="   ">Whitespace lang</p>
+  <p>Just text</p>
+  <a href="/docs" hreflang="de">Docs</a>
+  <a href="/fr" lang="fr" hreflang="fr">Francais</a>
+  <input type="email" name="email">
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/").unwrap();
+        assert_eq!(som.lang, "en");
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let french = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Bonjour"))
+            .expect("french paragraph should compile");
+        assert_eq!(
+            french.attrs.as_ref().and_then(|attrs| attrs.get("lang")),
+            Some(&json!("fr")),
+            "native element lang must compile: {french:?}"
+        );
+
+        let whitespace = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Whitespace lang"))
+            .expect("whitespace lang paragraph should compile");
+        assert!(
+            whitespace
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("lang"))
+                .is_none(),
+            "whitespace lang must not be invented: {whitespace:?}"
+        );
+
+        let paragraph = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Just text"))
+            .expect("plain paragraph should compile");
+        assert!(
+            paragraph
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("lang"))
+                .is_none(),
+            "missing element lang must not inherit html lang: {paragraph:?}"
+        );
+
+        let docs = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Docs"))
+            .expect("hreflang link should compile");
+        assert_eq!(
+            docs.attrs.as_ref().and_then(|attrs| attrs.get("hreflang")),
+            Some(&json!("de")),
+            "link hreflang must stay hreflang: {docs:?}"
+        );
+        assert!(
+            docs.attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("lang"))
+                .is_none(),
+            "hreflang must not copy into lang: {docs:?}"
+        );
+
+        let francais = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Francais"))
+            .expect("lang+hreflang link should compile");
+        assert_eq!(
+            francais.attrs.as_ref().and_then(|attrs| attrs.get("lang")),
+            Some(&json!("fr")),
+            "link lang must compile beside hreflang: {francais:?}"
+        );
+        assert_eq!(
+            francais
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("hreflang")),
+            Some(&json!("fr")),
+            "link hreflang must remain: {francais:?}"
+        );
+
+        let email = elements
+            .iter()
+            .find(|element| {
+                element
+                    .attrs
+                    .as_ref()
+                    .and_then(|attrs| attrs.get("name"))
+                    .and_then(|value| value.as_str())
+                    == Some("email")
+            })
+            .expect("email field should compile");
+        assert!(
+            email
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("lang"))
+                .is_none(),
+            "controls without lang must not invent it: {email:?}"
         );
     }
 
