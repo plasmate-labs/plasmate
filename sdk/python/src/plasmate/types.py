@@ -93,7 +93,7 @@ class ListItem(BaseModel):
 class ElementAttrs(BaseModel):
     """Role-specific attributes for an element."""
 
-    model_config = {"extra": "forbid"}
+    model_config = {"extra": "allow"}
 
     href: Optional[str] = None
     target: Optional[str] = None
