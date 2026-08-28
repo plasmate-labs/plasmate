@@ -106,6 +106,8 @@ pub struct CompactElement {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub disabled: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub checked: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub actions: Option<Vec<String>>,
 }
 
@@ -301,6 +303,7 @@ fn flatten_elements(
             src: compact_src(element),
             level: compact_level(element),
             disabled: compact_disabled(element),
+            checked: compact_checked(element),
             actions: element.actions.as_ref().map(|actions| {
                 actions
                     .iter()
@@ -412,6 +415,24 @@ fn compact_disabled(element: &Element) -> Option<bool> {
             Some(serde_json::Value::Bool(true)) => Some(true),
             Some(serde_json::Value::String(value))
                 if value.eq_ignore_ascii_case("true") || value.eq_ignore_ascii_case("disabled") =>
+            {
+                Some(true)
+            }
+            _ => None,
+        })
+}
+
+fn compact_checked(element: &Element) -> Option<bool> {
+    if !matches!(element.role, ElementRole::Checkbox | ElementRole::Radio) {
+        return None;
+    }
+    element
+        .attrs
+        .as_ref()
+        .and_then(|attrs| match attrs.get("checked") {
+            Some(serde_json::Value::Bool(true)) => Some(true),
+            Some(serde_json::Value::String(value))
+                if value.eq_ignore_ascii_case("true") || value.eq_ignore_ascii_case("checked") =>
             {
                 Some(true)
             }
@@ -877,6 +898,92 @@ mod tests {
                 .filter(|element| element.role == "paragraph")
                 .all(|element| element.disabled.is_none()),
             "paragraphs must not invent disabled: {elements:?}"
+        );
+    }
+
+    #[test]
+    fn compact_som_preserves_checked() {
+        let html = r#"<main>
+  <input type="checkbox" aria-label="Subscribe" checked>
+  <input type="checkbox" aria-label="Offers">
+  <input type="radio" name="plan" aria-label="Monthly" checked="checked">
+  <input type="radio" name="plan" aria-label="Yearly">
+  <button>Save</button>
+  <a href="/docs">Docs</a>
+  <p>Just text</p>
+</main>"#;
+        let som = compiler::compile(html, "https://example.com/").unwrap();
+        let compact = compact_structure(&som);
+        let elements: Vec<_> = compact
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let subscribe = elements
+            .iter()
+            .find(|element| element.label.as_deref() == Some("Subscribe"))
+            .expect("checked subscribe checkbox should be compact");
+        assert_eq!(subscribe.role, "checkbox");
+        assert_eq!(subscribe.checked, Some(true));
+
+        let offers = elements
+            .iter()
+            .find(|element| element.label.as_deref() == Some("Offers"))
+            .expect("unchecked offers checkbox should still be compact");
+        assert_eq!(offers.role, "checkbox");
+        assert!(
+            offers.checked.is_none(),
+            "missing checked must not be invented: {offers:?}"
+        );
+
+        let monthly = elements
+            .iter()
+            .find(|element| element.label.as_deref() == Some("Monthly"))
+            .expect("checked monthly radio should be compact");
+        assert_eq!(monthly.role, "radio");
+        assert_eq!(monthly.checked, Some(true));
+
+        let yearly = elements
+            .iter()
+            .find(|element| element.label.as_deref() == Some("Yearly"))
+            .expect("unchecked yearly radio should still be compact");
+        assert_eq!(yearly.role, "radio");
+        assert!(
+            yearly.checked.is_none(),
+            "unchecked radio must not invent checked: {yearly:?}"
+        );
+
+        let save = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Save"))
+            .expect("button should stay compact");
+        assert_eq!(save.role, "button");
+        assert!(
+            save.checked.is_none(),
+            "buttons must not invent checked: {save:?}"
+        );
+
+        let docs = elements
+            .iter()
+            .find(|element| element.role == "link")
+            .expect("link should stay compact");
+        assert!(
+            docs.checked.is_none(),
+            "links without checked must not invent it: {docs:?}"
+        );
+        assert!(
+            elements.iter().any(|element| {
+                element.role == "paragraph" && element.text.as_deref() == Some("Just text")
+            }),
+            "plain text must stay a paragraph: {elements:?}"
+        );
+        assert!(
+            elements
+                .iter()
+                .filter(|element| element.role == "paragraph")
+                .all(|element| element.checked.is_none()),
+            "paragraphs must not invent checked: {elements:?}"
         );
     }
 
