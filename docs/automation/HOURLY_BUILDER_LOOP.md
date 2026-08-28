@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-28)
 
-- Window: `4c9a9a5` .. `1d96eac`
+- Window: `e0d0bb3` .. `e7a7feb`
 - Decision: `NARROW`
-- Merged this run: #231
+- Merged this run: #233
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -140,7 +140,10 @@ overwrite, reset, or absorb unrelated work.
   copy #231 textarea `.value` IDL child-text mapping onto `select`,
   `contenteditable`, `clear` handler changes, or SDK wrappers; do not
   invent a textarea `value` content attribute or change input attribute
-  persistence.
+  persistence. Do not copy #233 inspect compact `disabled` onto
+  fetch_page, CLI, CDP, or SDKs; do not invent missing disabled, copy it
+  onto paragraphs or unnamed links, or add `readonly` / `required`
+  compact fields.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -158,7 +161,8 @@ overwrite, reset, or absorb unrelated work.
   compact heading level copy, blockquote cite compile copy, area
   shape/coords compile copy, autofocus compile copy, inspect compact
   control name copy, element lang compile copy, Python ElementAttrs
-  extra=allow copy, or textarea value IDL child-text copy.
+  extra=allow copy, textarea value IDL child-text copy, or inspect
+  compact disabled copy.
 
 ## Preferred lanes
 
