@@ -1128,7 +1128,10 @@ PlasElement.prototype.replaceWith = function() {
 // Form element properties
 Object.defineProperty(PlasElement.prototype, 'value', {
     get: function() {
-        if (this.tagName === 'INPUT' || this.tagName === 'TEXTAREA') {
+        if (this.tagName === 'TEXTAREA') {
+            return this.textContent;
+        }
+        if (this.tagName === 'INPUT') {
             return this._attrs.value || '';
         }
         if (this.tagName === 'SELECT') {
@@ -1143,6 +1146,13 @@ Object.defineProperty(PlasElement.prototype, 'value', {
         return '';
     },
     set: function(v) {
+        if (this.tagName === 'TEXTAREA') {
+            this.textContent = String(v);
+            if (this._attrs && Object.prototype.hasOwnProperty.call(this._attrs, 'value')) {
+                delete this._attrs.value;
+            }
+            return;
+        }
         this._attrs.value = String(v);
     }
 });
@@ -5835,6 +5845,96 @@ mod tests {
         assert!(
             serialized.contains("$244.99"),
             "Serialized HTML should contain $244.99"
+        );
+    }
+
+    #[test]
+    fn textarea_value_idl_updates_child_text_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><textarea id="notes">Draft</textarea><textarea id="blank"></textarea><input id="name" value="a"></body></html>"#,
+            "https://example.test/notes",
+        );
+
+        let before = rt
+            .execute_in_context("document.getElementById('notes').value", "test.js")
+            .unwrap();
+        assert_eq!(before, "Draft");
+
+        rt.execute_in_context(
+            "document.getElementById('notes').value = 'Shipped'; document.getElementById('blank').value = 'Hello'; document.getElementById('name').value = 'b';",
+            "test.js",
+        )
+        .unwrap();
+
+        let notes_value = rt
+            .execute_in_context("document.getElementById('notes').value", "test.js")
+            .unwrap();
+        let blank_value = rt
+            .execute_in_context("document.getElementById('blank').value", "test.js")
+            .unwrap();
+        let input_value = rt
+            .execute_in_context("document.getElementById('name').value", "test.js")
+            .unwrap();
+        assert_eq!(notes_value, "Shipped");
+        assert_eq!(blank_value, "Hello");
+        assert_eq!(input_value, "b");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains(">Shipped</textarea>"),
+            "textarea children must persist the typed value: {serialized}"
+        );
+        assert!(
+            !serialized.contains(">Draft</textarea>"),
+            "stale textarea children must be replaced: {serialized}"
+        );
+        assert!(
+            !serialized.contains("value=\"Shipped\""),
+            "textarea must not invent a value content attribute: {serialized}"
+        );
+        assert!(
+            serialized.contains(">Hello</textarea>"),
+            "empty textarea children must persist the typed value: {serialized}"
+        );
+        assert!(
+            serialized.contains("value=\"b\""),
+            "input value must still persist as an attribute: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/notes").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(
+            notes.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("Shipped"))
+        );
+        let blank = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("blank"))
+            .expect("blank textarea should compile");
+        assert_eq!(
+            blank.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("Hello"))
+        );
+        let name = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("name"))
+            .expect("name input should compile");
+        assert_eq!(
+            name.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("b"))
         );
     }
 
