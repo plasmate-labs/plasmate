@@ -104,6 +104,8 @@ pub struct CompactElement {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub level: Option<u8>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub disabled: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub actions: Option<Vec<String>>,
 }
 
@@ -298,6 +300,7 @@ fn flatten_elements(
             href: compact_href(element),
             src: compact_src(element),
             level: compact_level(element),
+            disabled: compact_disabled(element),
             actions: element.actions.as_ref().map(|actions| {
                 actions
                     .iter()
@@ -399,6 +402,21 @@ fn compact_level(element: &Element) -> Option<u8> {
             .and_then(|value| u8::try_from(value).ok())
             .filter(|value| (1..=6).contains(value))
     })
+}
+
+fn compact_disabled(element: &Element) -> Option<bool> {
+    element
+        .attrs
+        .as_ref()
+        .and_then(|attrs| match attrs.get("disabled") {
+            Some(serde_json::Value::Bool(true)) => Some(true),
+            Some(serde_json::Value::String(value))
+                if value.eq_ignore_ascii_case("true") || value.eq_ignore_ascii_case("disabled") =>
+            {
+                Some(true)
+            }
+            _ => None,
+        })
 }
 
 fn bound_string(input: &str, max_bytes: usize) -> String {
@@ -784,6 +802,81 @@ mod tests {
                 .filter(|element| element.role == "paragraph")
                 .all(|element| element.name.is_none()),
             "paragraphs must not invent name: {elements:?}"
+        );
+    }
+
+    #[test]
+    fn compact_som_preserves_disabled() {
+        let html = r#"<main>
+  <input aria-label="Coupon" disabled value="SAVE">
+  <input aria-label="Notes">
+  <button disabled="disabled">Pay</button>
+  <button>Save</button>
+  <a href="/docs">Docs</a>
+  <p>Just text</p>
+</main>"#;
+        let som = compiler::compile(html, "https://example.com/").unwrap();
+        let compact = compact_structure(&som);
+        let elements: Vec<_> = compact
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let coupon = elements
+            .iter()
+            .find(|element| element.label.as_deref() == Some("Coupon"))
+            .expect("disabled coupon input should be compact");
+        assert_eq!(coupon.role, "text_input");
+        assert_eq!(coupon.disabled, Some(true));
+
+        let notes = elements
+            .iter()
+            .find(|element| element.label.as_deref() == Some("Notes"))
+            .expect("enabled notes input should still be compact");
+        assert_eq!(notes.role, "text_input");
+        assert!(
+            notes.disabled.is_none(),
+            "missing disabled must not be invented: {notes:?}"
+        );
+
+        let pay = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Pay"))
+            .expect("boolean disabled button should be compact");
+        assert_eq!(pay.role, "button");
+        assert_eq!(pay.disabled, Some(true));
+
+        let save = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Save"))
+            .expect("enabled button should stay compact");
+        assert_eq!(save.role, "button");
+        assert!(
+            save.disabled.is_none(),
+            "enabled button must not invent disabled: {save:?}"
+        );
+
+        let docs = elements
+            .iter()
+            .find(|element| element.role == "link")
+            .expect("link should stay compact");
+        assert!(
+            docs.disabled.is_none(),
+            "links without disabled must not invent it: {docs:?}"
+        );
+        assert!(
+            elements.iter().any(|element| {
+                element.role == "paragraph" && element.text.as_deref() == Some("Just text")
+            }),
+            "plain text must stay a paragraph: {elements:?}"
+        );
+        assert!(
+            elements
+                .iter()
+                .filter(|element| element.role == "paragraph")
+                .all(|element| element.disabled.is_none()),
+            "paragraphs must not invent disabled: {elements:?}"
         );
     }
 
