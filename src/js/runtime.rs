@@ -1162,6 +1162,22 @@ Object.defineProperty(PlasElement.prototype, 'checked', {
     set: function(v) { if (v) this.setAttribute('checked', ''); else this.removeAttribute('checked'); }
 });
 
+Object.defineProperty(PlasElement.prototype, 'open', {
+    get: function() {
+        if (this.tagName === 'DETAILS') {
+            return this.hasAttribute('open');
+        }
+        return false;
+    },
+    set: function(v) {
+        if (this.tagName !== 'DETAILS') {
+            return;
+        }
+        if (v) this.setAttribute('open', '');
+        else this.removeAttribute('open');
+    }
+});
+
 Object.defineProperty(PlasElement.prototype, 'selected', {
     get: function() { return this.hasAttribute('selected'); },
     set: function(v) { if (v) this.setAttribute('selected', ''); else this.removeAttribute('selected'); }
@@ -5935,6 +5951,110 @@ mod tests {
         assert_eq!(
             name.attrs.as_ref().and_then(|attrs| attrs.get("value")),
             Some(&serde_json::json!("b"))
+        );
+    }
+
+    #[test]
+    fn details_open_idl_updates_open_attribute_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><details id="faq"><summary>FAQ</summary><p>Hidden</p></details><details id="help" open><summary>Help</summary><p>Shown</p></details><p id="note">Just text</p><input id="alerts" type="checkbox" checked></body></html>"#,
+            "https://example.test/faq",
+        );
+
+        let before_faq = rt
+            .execute_in_context("String(document.getElementById('faq').open)", "test.js")
+            .unwrap();
+        let before_help = rt
+            .execute_in_context("String(document.getElementById('help').open)", "test.js")
+            .unwrap();
+        assert_eq!(before_faq, "false");
+        assert_eq!(before_help, "true");
+
+        rt.execute_in_context(
+            "var faq = document.getElementById('faq'); faq.open = !faq.open; var help = document.getElementById('help'); help.open = !help.open; document.getElementById('note').open = true;",
+            "test.js",
+        )
+        .unwrap();
+
+        let after_faq = rt
+            .execute_in_context("String(document.getElementById('faq').open)", "test.js")
+            .unwrap();
+        let after_help = rt
+            .execute_in_context("String(document.getElementById('help').open)", "test.js")
+            .unwrap();
+        let note_open = rt
+            .execute_in_context("String(document.getElementById('note').open)", "test.js")
+            .unwrap();
+        assert_eq!(after_faq, "true");
+        assert_eq!(after_help, "false");
+        assert_eq!(note_open, "false");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"faq\" open=") || serialized.contains("open=\"\" id=\"faq\""),
+            "opened details must persist the open attribute: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"help\" open")
+                && !serialized.contains("open=\"\" id=\"help\""),
+            "closed details must drop the open attribute: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"note\" open")
+                && !serialized.contains("open=\"\" id=\"note\""),
+            "paragraphs must not invent open: {serialized}"
+        );
+        assert!(
+            serialized.contains("checked"),
+            "checkbox checked must stay independent: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/faq").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let faq = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("faq"))
+            .expect("faq details should compile");
+        assert_eq!(faq.role, crate::som::types::ElementRole::Details);
+        assert_eq!(
+            faq.attrs.as_ref().and_then(|attrs| attrs.get("open")),
+            Some(&serde_json::json!(true))
+        );
+        let help = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("help"))
+            .expect("help details should compile");
+        assert_eq!(
+            help.attrs.as_ref().and_then(|attrs| attrs.get("open")),
+            Some(&serde_json::json!(false))
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("open").is_none()),
+            "paragraphs must not compile open: {note:?}"
+        );
+        let alerts = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("alerts"))
+            .expect("alerts checkbox should compile");
+        assert_eq!(
+            alerts.attrs.as_ref().and_then(|attrs| attrs.get("checked")),
+            Some(&serde_json::json!(true))
         );
     }
 
