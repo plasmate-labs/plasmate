@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-29)
 
-- Window: `0929266` .. `a12bc22`
+- Window: `2eadf9d` .. `67f4eb2`
 - Decision: `NARROW`
-- Merged this run: #239
+- Merged this run: #243
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -155,6 +155,17 @@ overwrite, reset, or absorb unrelated work.
   `contenteditable`, `clear` handler changes, or SDK wrappers; do not
   invent an `open` content attribute on non-details tags, change checkbox
   `checked` or textarea value persistence, or add inspect compact `open`.
+  Do not copy #241 select `.options` / `.selectedIndex` IDL onto `input`,
+  `textarea`, `contenteditable`, `clear` handler changes, or SDK wrappers;
+  do not invent `selected` on non-option tags, change textarea value or
+  details open persistence, or add inspect compact `selectedIndex`.
+  Do not copy #242 table `rowspan` grid fill onto extract_text, CLI, CDP,
+  SDKs, or adjacent tags (`ul`, `ol`, `dl`); do not invent a compiled
+  `rowspan` attr, change `colspan`, or copy table headers onto lists.
+  Do not copy #243 input/textarea `.readOnly` IDL onto `select`,
+  `contenteditable`, `dialog`, paragraphs, `clear`/`toggle`/`select_option`
+  handlers, or SDK wrappers; do not invent readonly on non-field tags,
+  change disabled IDL, or add inspect compact `readonly`.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -174,7 +185,8 @@ overwrite, reset, or absorb unrelated work.
   control name copy, element lang compile copy, Python ElementAttrs
   extra=allow copy, textarea value IDL child-text copy, inspect
   compact disabled copy, inspect compact checked copy, inspect
-  compact value copy, or details open IDL copy.
+  compact value copy, details open IDL copy, select selectedIndex
+  IDL copy, table rowspan grid copy, or input readOnly IDL copy.
 
 ## Preferred lanes
 
