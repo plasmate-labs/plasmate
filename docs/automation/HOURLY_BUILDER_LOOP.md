@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-28)
 
-- Window: `d3d9094` .. `bc17318`
+- Window: `8fccd40` .. `f1e6ded`
 - Decision: `NARROW`
-- Merged this run: #235
+- Merged this run: #237
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -146,7 +146,11 @@ overwrite, reset, or absorb unrelated work.
   compact fields. Do not copy #235 inspect compact `checked` onto
   fetch_page, CLI, CDP, or SDKs; do not invent missing checked, copy it
   onto paragraphs, buttons, or links, add `readonly` / `required`
-  compact fields, or read `attrs.aria.checked`.
+  compact fields, or read `attrs.aria.checked`. Do not copy #237 inspect
+  compact `value` onto fetch_page, CLI, CDP, or SDKs; do not invent
+  missing or whitespace-only values, copy `value` onto paragraphs,
+  buttons, links, or checkboxes, stringify non-string compiled values,
+  or add `readonly` / `required` / `placeholder` compact fields.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -165,7 +169,8 @@ overwrite, reset, or absorb unrelated work.
   shape/coords compile copy, autofocus compile copy, inspect compact
   control name copy, element lang compile copy, Python ElementAttrs
   extra=allow copy, textarea value IDL child-text copy, inspect
-  compact disabled copy, or inspect compact checked copy.
+  compact disabled copy, inspect compact checked copy, or inspect
+  compact value copy.
 
 ## Preferred lanes
 
