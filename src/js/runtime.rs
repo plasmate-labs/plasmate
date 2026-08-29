@@ -1143,6 +1143,12 @@ Object.defineProperty(PlasElement.prototype, 'value', {
             }
             return options.length > 0 ? (options[0].value || options[0].textContent) : '';
         }
+        if (this.tagName === 'OPTION') {
+            if (this.hasAttribute('value')) {
+                return this.getAttribute('value') || '';
+            }
+            return this.textContent;
+        }
         return '';
     },
     set: function(v) {
@@ -1181,6 +1187,55 @@ Object.defineProperty(PlasElement.prototype, 'open', {
 Object.defineProperty(PlasElement.prototype, 'selected', {
     get: function() { return this.hasAttribute('selected'); },
     set: function(v) { if (v) this.setAttribute('selected', ''); else this.removeAttribute('selected'); }
+});
+
+Object.defineProperty(PlasElement.prototype, 'options', {
+    get: function() {
+        if (this.tagName !== 'SELECT') {
+            return undefined;
+        }
+        return this.getElementsByTagName('option');
+    }
+});
+
+Object.defineProperty(PlasElement.prototype, 'selectedIndex', {
+    get: function() {
+        if (this.tagName !== 'SELECT') {
+            return -1;
+        }
+        var options = this.getElementsByTagName('option');
+        for (var i = 0; i < options.length; i++) {
+            if (options[i].selected || options[i].hasAttribute('selected')) {
+                return i;
+            }
+        }
+        return -1;
+    },
+    set: function(v) {
+        if (this.tagName !== 'SELECT') {
+            return;
+        }
+        var options = this.getElementsByTagName('option');
+        var index = Number(v);
+        for (var i = 0; i < options.length; i++) {
+            options[i].selected = (i === index);
+        }
+    }
+});
+
+Object.defineProperty(PlasElement.prototype, 'text', {
+    get: function() {
+        if (this.tagName !== 'OPTION') {
+            return undefined;
+        }
+        return this.textContent;
+    },
+    set: function(v) {
+        if (this.tagName !== 'OPTION') {
+            return;
+        }
+        this.textContent = String(v);
+    }
 });
 
 Object.defineProperty(PlasElement.prototype, 'disabled', {
@@ -6055,6 +6110,158 @@ mod tests {
         assert_eq!(
             alerts.attrs.as_ref().and_then(|attrs| attrs.get("checked")),
             Some(&serde_json::json!(true))
+        );
+    }
+
+    #[test]
+    fn select_selected_index_idl_updates_selected_option_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><select id="plan"><option value="free">Free</option><option value="pro" selected>Pro</option></select><p id="note">Just text</p><input id="name" value="a"></body></html>"#,
+            "https://example.test/plan",
+        );
+
+        let before_index = rt
+            .execute_in_context(
+                "String(document.getElementById('plan').selectedIndex)",
+                "test.js",
+            )
+            .unwrap();
+        let before_value = rt
+            .execute_in_context("document.getElementById('plan').value", "test.js")
+            .unwrap();
+        let option_count = rt
+            .execute_in_context(
+                "String(document.getElementById('plan').options.length)",
+                "test.js",
+            )
+            .unwrap();
+        let first_value = rt
+            .execute_in_context(
+                "document.getElementById('plan').options[0].value",
+                "test.js",
+            )
+            .unwrap();
+        let second_text = rt
+            .execute_in_context("document.getElementById('plan').options[1].text", "test.js")
+            .unwrap();
+        let note_options = rt
+            .execute_in_context("String(document.getElementById('note').options)", "test.js")
+            .unwrap();
+        assert_eq!(before_index, "1");
+        assert_eq!(before_value, "pro");
+        assert_eq!(option_count, "2");
+        assert_eq!(first_value, "free");
+        assert_eq!(second_text, "Pro");
+        assert_eq!(note_options, "undefined");
+
+        rt.execute_in_context(
+            r#"
+            var el = document.getElementById('plan');
+            for (var i = 0; i < el.options.length; i++) {
+                if (el.options[i].value === 'free' || el.options[i].text === 'free') {
+                    el.selectedIndex = i;
+                    break;
+                }
+            }
+            document.getElementById('note').selectedIndex = 0;
+            document.getElementById('note').text = 'Changed';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let after_index = rt
+            .execute_in_context(
+                "String(document.getElementById('plan').selectedIndex)",
+                "test.js",
+            )
+            .unwrap();
+        let after_value = rt
+            .execute_in_context("document.getElementById('plan').value", "test.js")
+            .unwrap();
+        let note_index = rt
+            .execute_in_context(
+                "String(document.getElementById('note').selectedIndex)",
+                "test.js",
+            )
+            .unwrap();
+        let note_text = rt
+            .execute_in_context("document.getElementById('note').textContent", "test.js")
+            .unwrap();
+        assert_eq!(after_index, "0");
+        assert_eq!(after_value, "free");
+        assert_eq!(note_index, "-1");
+        assert_eq!(note_text, "Just text");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("value=\"free\" selected=")
+                || serialized.contains("selected=\"\" value=\"free\"")
+                || serialized.contains("<option selected=\"\" value=\"free\">")
+                || serialized.contains("<option value=\"free\" selected=\"\">"),
+            "selected option must persist selected: {serialized}"
+        );
+        assert!(
+            !serialized.contains("value=\"pro\" selected")
+                && !serialized.contains("selected=\"\" value=\"pro\""),
+            "previous option must drop selected: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"note\" selected")
+                && !serialized.contains("selected=\"\" id=\"note\""),
+            "paragraphs must not invent selected: {serialized}"
+        );
+        assert!(
+            serialized.contains("value=\"a\""),
+            "input value must stay independent: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/plan").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let plan = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plan"))
+            .expect("plan select should compile");
+        assert_eq!(plan.role, crate::som::types::ElementRole::Select);
+        assert_eq!(
+            plan.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("free"))
+        );
+        let options = plan
+            .attrs
+            .as_ref()
+            .and_then(|attrs| attrs.get("options"))
+            .and_then(|value| value.as_array())
+            .expect("select must compile options");
+        assert_eq!(options[0].get("value"), Some(&serde_json::json!("free")));
+        assert_eq!(options[0].get("selected"), Some(&serde_json::json!(true)));
+        assert_eq!(options[1].get("value"), Some(&serde_json::json!("pro")));
+        assert!(
+            options[1].get("selected").is_none(),
+            "pro must not stay selected: {options:?}"
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(note.text.as_deref(), Some("Just text"));
+        let name = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("name"))
+            .expect("name input should compile");
+        assert_eq!(
+            name.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("a"))
         );
     }
 
