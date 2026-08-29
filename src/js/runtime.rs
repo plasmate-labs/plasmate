@@ -1243,6 +1243,22 @@ Object.defineProperty(PlasElement.prototype, 'disabled', {
     set: function(v) { if (v) this.setAttribute('disabled', ''); else this.removeAttribute('disabled'); }
 });
 
+Object.defineProperty(PlasElement.prototype, 'readOnly', {
+    get: function() {
+        if (this.tagName !== 'INPUT' && this.tagName !== 'TEXTAREA') {
+            return false;
+        }
+        return this.hasAttribute('readonly');
+    },
+    set: function(v) {
+        if (this.tagName !== 'INPUT' && this.tagName !== 'TEXTAREA') {
+            return;
+        }
+        if (v) this.setAttribute('readonly', '');
+        else this.removeAttribute('readonly');
+    }
+});
+
 Object.defineProperty(PlasElement.prototype, 'type', {
     get: function() { return this._attrs.type || (this.tagName === 'INPUT' ? 'text' : ''); },
     set: function(v) { this._attrs.type = v; }
@@ -6262,6 +6278,187 @@ mod tests {
         assert_eq!(
             name.attrs.as_ref().and_then(|attrs| attrs.get("value")),
             Some(&serde_json::json!("a"))
+        );
+    }
+
+    #[test]
+    fn input_readonly_idl_updates_readonly_attribute_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><input id="name" value="a"><textarea id="notes" readonly>Draft</textarea><p id="note">Just text</p><input id="alerts" type="checkbox" checked><select id="plan"><option value="free" selected>Free</option></select></body></html>"#,
+            "https://example.test/lock",
+        );
+
+        let before_name = rt
+            .execute_in_context(
+                "String(document.getElementById('name').readOnly)",
+                "test.js",
+            )
+            .unwrap();
+        let before_notes = rt
+            .execute_in_context(
+                "String(document.getElementById('notes').readOnly)",
+                "test.js",
+            )
+            .unwrap();
+        let before_note = rt
+            .execute_in_context(
+                "String(document.getElementById('note').readOnly)",
+                "test.js",
+            )
+            .unwrap();
+        let before_plan = rt
+            .execute_in_context(
+                "String(document.getElementById('plan').readOnly)",
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before_name, "false");
+        assert_eq!(before_notes, "true");
+        assert_eq!(before_note, "false");
+        assert_eq!(before_plan, "false");
+
+        rt.execute_in_context(
+            "document.getElementById('name').readOnly = true; document.getElementById('notes').readOnly = false; document.getElementById('note').readOnly = true; document.getElementById('plan').readOnly = true;",
+            "test.js",
+        )
+        .unwrap();
+
+        let after_name = rt
+            .execute_in_context(
+                "String(document.getElementById('name').readOnly)",
+                "test.js",
+            )
+            .unwrap();
+        let after_notes = rt
+            .execute_in_context(
+                "String(document.getElementById('notes').readOnly)",
+                "test.js",
+            )
+            .unwrap();
+        let after_note = rt
+            .execute_in_context(
+                "String(document.getElementById('note').readOnly)",
+                "test.js",
+            )
+            .unwrap();
+        let after_plan = rt
+            .execute_in_context(
+                "String(document.getElementById('plan').readOnly)",
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after_name, "true");
+        assert_eq!(after_notes, "false");
+        assert_eq!(after_note, "false");
+        assert_eq!(after_plan, "false");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"name\"") && serialized.contains("readonly"),
+            "locked input must persist readonly: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"name\" readonly=")
+                || serialized.contains("readonly=\"\" id=\"name\"")
+                || serialized.contains("value=\"a\" readonly=")
+                || serialized.contains("readonly=\"\" value=\"a\""),
+            "name input must persist readonly: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"notes\" readonly")
+                && !serialized.contains("readonly=\"\" id=\"notes\""),
+            "unlocked textarea must drop readonly: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"note\" readonly")
+                && !serialized.contains("readonly=\"\" id=\"note\""),
+            "paragraphs must not invent readonly: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"plan\" readonly")
+                && !serialized.contains("readonly=\"\" id=\"plan\""),
+            "select must not invent readonly: {serialized}"
+        );
+        assert!(
+            serialized.contains("checked"),
+            "checkbox checked must stay independent: {serialized}"
+        );
+        assert!(
+            serialized.contains(">Draft</textarea>"),
+            "textarea child text must stay independent: {serialized}"
+        );
+        assert!(
+            serialized.contains("value=\"a\""),
+            "input value must stay independent: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/lock").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let name = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("name"))
+            .expect("name input should compile");
+        assert_eq!(
+            name.attrs.as_ref().and_then(|attrs| attrs.get("readonly")),
+            Some(&serde_json::json!(true))
+        );
+        assert_eq!(
+            name.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("a"))
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert!(
+            notes
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("readonly").is_none()),
+            "unlocked textarea must not compile readonly: {notes:?}"
+        );
+        assert_eq!(
+            notes.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("Draft"))
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("readonly").is_none()),
+            "paragraphs must not compile readonly: {note:?}"
+        );
+        let plan = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plan"))
+            .expect("plan select should compile");
+        assert_eq!(plan.role, crate::som::types::ElementRole::Select);
+        assert!(
+            plan.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("readonly").is_none()),
+            "select must not compile readonly: {plan:?}"
+        );
+        let alerts = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("alerts"))
+            .expect("alerts checkbox should compile");
+        assert_eq!(
+            alerts.attrs.as_ref().and_then(|attrs| attrs.get("checked")),
+            Some(&serde_json::json!(true))
         );
     }
 
