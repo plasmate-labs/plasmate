@@ -33,11 +33,11 @@ frequency.
 If these gates are not met, report a no-change or blocked run. Never stash,
 overwrite, reset, or absorb unrelated work.
 
-## Active governor constraint (2026-08-28)
+## Active governor constraint (2026-08-29)
 
-- Window: `8fccd40` .. `f1e6ded`
+- Window: `0929266` .. `a12bc22`
 - Decision: `NARROW`
-- Merged this run: #237
+- Merged this run: #239
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -151,6 +151,10 @@ overwrite, reset, or absorb unrelated work.
   missing or whitespace-only values, copy `value` onto paragraphs,
   buttons, links, or checkboxes, stringify non-string compiled values,
   or add `readonly` / `required` / `placeholder` compact fields.
+  Do not copy #239 details `.open` IDL onto `dialog`, `select`,
+  `contenteditable`, `clear` handler changes, or SDK wrappers; do not
+  invent an `open` content attribute on non-details tags, change checkbox
+  `checked` or textarea value persistence, or add inspect compact `open`.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -169,8 +173,8 @@ overwrite, reset, or absorb unrelated work.
   shape/coords compile copy, autofocus compile copy, inspect compact
   control name copy, element lang compile copy, Python ElementAttrs
   extra=allow copy, textarea value IDL child-text copy, inspect
-  compact disabled copy, inspect compact checked copy, or inspect
-  compact value copy.
+  compact disabled copy, inspect compact checked copy, inspect
+  compact value copy, or details open IDL copy.
 
 ## Preferred lanes
 
