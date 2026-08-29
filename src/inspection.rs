@@ -108,6 +108,8 @@ pub struct CompactElement {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub checked: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub value: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub actions: Option<Vec<String>>,
 }
 
@@ -304,6 +306,7 @@ fn flatten_elements(
             level: compact_level(element),
             disabled: compact_disabled(element),
             checked: compact_checked(element),
+            value: compact_value(element),
             actions: element.actions.as_ref().map(|actions| {
                 actions
                     .iter()
@@ -438,6 +441,23 @@ fn compact_checked(element: &Element) -> Option<bool> {
             }
             _ => None,
         })
+}
+
+fn compact_value(element: &Element) -> Option<String> {
+    if !matches!(
+        element.role,
+        ElementRole::TextInput | ElementRole::Textarea | ElementRole::Select
+    ) {
+        return None;
+    }
+    element.attrs.as_ref().and_then(|attrs| {
+        attrs
+            .get("value")
+            .and_then(|value| value.as_str())
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .map(|value| bound_string(value, 512))
+    })
 }
 
 fn bound_string(input: &str, max_bytes: usize) -> String {
@@ -984,6 +1004,114 @@ mod tests {
                 .filter(|element| element.role == "paragraph")
                 .all(|element| element.checked.is_none()),
             "paragraphs must not invent checked: {elements:?}"
+        );
+    }
+
+    #[test]
+    fn compact_som_preserves_value() {
+        let html = r#"<main>
+  <input aria-label="Email" value="ada@example.com">
+  <input aria-label="Notes" value="   ">
+  <input aria-label="Empty">
+  <textarea aria-label="Bio">Agent bio</textarea>
+  <select aria-label="Plan">
+    <option value="free">Free</option>
+    <option value="pro" selected>Pro</option>
+  </select>
+  <input type="checkbox" aria-label="Subscribe" value="yes" checked>
+  <button value="save">Save</button>
+  <a href="/docs">Docs</a>
+  <p>Just text</p>
+</main>"#;
+        let som = compiler::compile(html, "https://example.com/").unwrap();
+        let compact = compact_structure(&som);
+        let elements: Vec<_> = compact
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let email = elements
+            .iter()
+            .find(|element| element.label.as_deref() == Some("Email"))
+            .expect("named email input should be compact");
+        assert_eq!(email.role, "text_input");
+        assert_eq!(email.value.as_deref(), Some("ada@example.com"));
+
+        let notes = elements
+            .iter()
+            .find(|element| element.label.as_deref() == Some("Notes"))
+            .expect("whitespace value input should still be compact");
+        assert_eq!(notes.role, "text_input");
+        assert!(
+            notes.value.is_none(),
+            "whitespace value must not become compact value: {notes:?}"
+        );
+
+        let empty = elements
+            .iter()
+            .find(|element| element.label.as_deref() == Some("Empty"))
+            .expect("input without value should still be compact");
+        assert_eq!(empty.role, "text_input");
+        assert!(
+            empty.value.is_none(),
+            "missing value must not be invented: {empty:?}"
+        );
+
+        let bio = elements
+            .iter()
+            .find(|element| element.label.as_deref() == Some("Bio"))
+            .expect("textarea should be compact");
+        assert_eq!(bio.role, "textarea");
+        assert_eq!(bio.value.as_deref(), Some("Agent bio"));
+
+        let plan = elements
+            .iter()
+            .find(|element| element.label.as_deref() == Some("Plan"))
+            .expect("select should be compact");
+        assert_eq!(plan.role, "select");
+        assert_eq!(plan.value.as_deref(), Some("pro"));
+
+        let subscribe = elements
+            .iter()
+            .find(|element| element.label.as_deref() == Some("Subscribe"))
+            .expect("checkbox should stay compact");
+        assert_eq!(subscribe.role, "checkbox");
+        assert!(
+            subscribe.value.is_none(),
+            "checkbox value must not copy onto compact value: {subscribe:?}"
+        );
+
+        let save = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Save"))
+            .expect("button should stay compact");
+        assert_eq!(save.role, "button");
+        assert!(
+            save.value.is_none(),
+            "buttons must not invent compact value: {save:?}"
+        );
+
+        let docs = elements
+            .iter()
+            .find(|element| element.role == "link")
+            .expect("link should stay compact");
+        assert!(
+            docs.value.is_none(),
+            "links without value must not invent it: {docs:?}"
+        );
+        assert!(
+            elements.iter().any(|element| {
+                element.role == "paragraph" && element.text.as_deref() == Some("Just text")
+            }),
+            "plain text must stay a paragraph: {elements:?}"
+        );
+        assert!(
+            elements
+                .iter()
+                .filter(|element| element.role == "paragraph")
+                .all(|element| element.value.is_none()),
+            "paragraphs must not invent value: {elements:?}"
         );
     }
 
