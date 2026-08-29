@@ -1275,6 +1275,14 @@ Object.defineProperty(PlasElement.prototype, 'required', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'hidden', {
+    get: function() { return this.hasAttribute('hidden'); },
+    set: function(v) {
+        if (v) this.setAttribute('hidden', '');
+        else this.removeAttribute('hidden');
+    }
+});
+
 Object.defineProperty(PlasElement.prototype, 'type', {
     get: function() { return this._attrs.type || (this.tagName === 'INPUT' ? 'text' : ''); },
     set: function(v) { this._attrs.type = v; }
@@ -6653,6 +6661,159 @@ mod tests {
         assert_eq!(
             alerts.attrs.as_ref().and_then(|attrs| attrs.get("checked")),
             Some(&serde_json::json!(true))
+        );
+    }
+
+    #[test]
+    fn element_hidden_idl_updates_hidden_attribute_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><p id="panel">Visible panel</p><p id="note" hidden>Secret note</p><p id="findable" hidden="until-found">Findable answer</p><input id="name" value="a"><button id="go">Go</button></body></html>"#,
+            "https://example.test/hide",
+        );
+
+        let before_panel = rt
+            .execute_in_context("String(document.getElementById('panel').hidden)", "test.js")
+            .unwrap();
+        let before_note = rt
+            .execute_in_context("String(document.getElementById('note').hidden)", "test.js")
+            .unwrap();
+        let before_findable = rt
+            .execute_in_context(
+                "String(document.getElementById('findable').hidden)",
+                "test.js",
+            )
+            .unwrap();
+        let before_name = rt
+            .execute_in_context("String(document.getElementById('name').hidden)", "test.js")
+            .unwrap();
+        let before_go = rt
+            .execute_in_context("String(document.getElementById('go').hidden)", "test.js")
+            .unwrap();
+        assert_eq!(before_panel, "false");
+        assert_eq!(before_note, "true");
+        assert_eq!(before_findable, "true");
+        assert_eq!(before_name, "false");
+        assert_eq!(before_go, "false");
+
+        rt.execute_in_context(
+            "document.getElementById('panel').hidden = true; document.getElementById('note').hidden = false; document.getElementById('name').hidden = true;",
+            "test.js",
+        )
+        .unwrap();
+
+        let after_panel = rt
+            .execute_in_context("String(document.getElementById('panel').hidden)", "test.js")
+            .unwrap();
+        let after_note = rt
+            .execute_in_context("String(document.getElementById('note').hidden)", "test.js")
+            .unwrap();
+        let after_findable = rt
+            .execute_in_context(
+                "String(document.getElementById('findable').hidden)",
+                "test.js",
+            )
+            .unwrap();
+        let after_name = rt
+            .execute_in_context("String(document.getElementById('name').hidden)", "test.js")
+            .unwrap();
+        let after_go = rt
+            .execute_in_context("String(document.getElementById('go').hidden)", "test.js")
+            .unwrap();
+        assert_eq!(after_panel, "true");
+        assert_eq!(after_note, "false");
+        assert_eq!(after_findable, "true");
+        assert_eq!(after_name, "true");
+        assert_eq!(after_go, "false");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"panel\"") && serialized.contains("hidden"),
+            "hidden panel must persist hidden: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"panel\" hidden=")
+                || serialized.contains("hidden=\"\" id=\"panel\""),
+            "panel must persist hidden: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"note\" hidden")
+                && !serialized.contains("hidden=\"\" id=\"note\""),
+            "revealed paragraph must drop hidden: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"findable\"") && serialized.contains("until-found"),
+            "until-found must stay independent: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"name\"") && serialized.contains("hidden"),
+            "hidden input must persist hidden: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"go\" hidden")
+                && !serialized.contains("hidden=\"\" id=\"go\""),
+            "untouched button must not invent hidden: {serialized}"
+        );
+        assert!(
+            serialized.contains("value=\"a\""),
+            "input value must stay independent: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/hide").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("panel")),
+            "hidden panel must be stripped from SOM: {elements:?}"
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("revealed note should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(note.text.as_deref(), Some("Secret note"));
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("hidden").is_none()),
+            "revealed paragraph must not compile hidden: {note:?}"
+        );
+        let findable = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("findable"))
+            .expect("until-found paragraph should compile");
+        assert_eq!(
+            findable
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("hidden")),
+            Some(&serde_json::json!("until-found"))
+        );
+        assert!(
+            elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("name")),
+            "hidden input must be stripped from SOM: {elements:?}"
+        );
+        let go = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("go"))
+            .expect("go button should compile");
+        assert_eq!(go.role, crate::som::types::ElementRole::Button);
+        assert!(
+            go.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("hidden").is_none()),
+            "untouched button must not compile hidden: {go:?}"
         );
     }
 
