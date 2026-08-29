@@ -2775,6 +2775,30 @@ fn extract_table_data(
     let mut rows = Vec::new();
     let max_columns = 12;
     let max_rows = 30;
+    let mut pending_rowspans: Vec<Option<(usize, String)>> = Vec::new();
+
+    fn consume_rowspan_slots(
+        row: &mut Vec<String>,
+        pending: &mut [Option<(usize, String)>],
+        col: &mut usize,
+        max_columns: usize,
+    ) {
+        while *col < max_columns {
+            let Some((left, text)) = pending.get(*col).cloned().flatten() else {
+                break;
+            };
+            if left == 0 {
+                break;
+            }
+            row.push(text.clone());
+            pending[*col] = if left > 1 {
+                Some((left - 1, text))
+            } else {
+                None
+            };
+            *col += 1;
+        }
+    }
 
     fn visit_table(
         node: &Handle,
@@ -2784,6 +2808,7 @@ fn extract_table_data(
         max_columns: usize,
         max_rows: usize,
         css_rules: &VisibilityRules,
+        pending_rowspans: &mut Vec<Option<(usize, String)>>,
     ) {
         let children = node.children.borrow();
         for child in children.iter() {
@@ -2802,11 +2827,13 @@ fn extract_table_data(
                             max_columns,
                             max_rows,
                             css_rules,
+                            pending_rowspans,
                         );
                     }
                     "tr" => {
                         let cells = child.children.borrow();
                         let mut row = Vec::new();
+                        let mut col = 0;
                         let mut is_header_row = true;
                         for cell in cells.iter() {
                             if heuristics::should_strip(cell)
@@ -2816,6 +2843,12 @@ fn extract_table_data(
                             }
                             if let NodeData::Element { name, attrs, .. } = &cell.data {
                                 let cell_tag = name.local.as_ref();
+                                consume_rowspan_slots(
+                                    &mut row,
+                                    pending_rowspans,
+                                    &mut col,
+                                    max_columns,
+                                );
                                 if row.len() >= max_columns {
                                     break;
                                 }
@@ -2823,30 +2856,44 @@ fn extract_table_data(
                                     &get_visible_text_content(cell, css_rules),
                                     max_cell_chars,
                                 );
-                                // Handle colspan: repeat the cell text for spanned columns
-                                let colspan: usize = attrs
-                                    .borrow()
+                                let cell_attrs = attrs.borrow();
+                                let colspan: usize = cell_attrs
                                     .iter()
                                     .find(|a| a.name.local.as_ref() == "colspan")
                                     .and_then(|a| a.value.parse().ok())
                                     .unwrap_or(1)
                                     .min(max_columns - row.len());
-                                if cell_tag == "th" {
-                                    for _ in 0..colspan {
-                                        if row.len() < max_columns {
-                                            row.push(cell_text.clone());
-                                        }
-                                    }
-                                } else if cell_tag == "td" {
+                                let rowspan: usize = cell_attrs
+                                    .iter()
+                                    .find(|a| a.name.local.as_ref() == "rowspan")
+                                    .and_then(|a| a.value.parse().ok())
+                                    .filter(|&value| value > 1)
+                                    .unwrap_or(1);
+                                if cell_tag != "th" && cell_tag != "td" {
+                                    continue;
+                                }
+                                if cell_tag == "td" {
                                     is_header_row = false;
-                                    for _ in 0..colspan {
-                                        if row.len() < max_columns {
-                                            row.push(cell_text.clone());
+                                }
+                                let start_col = col;
+                                for _ in 0..colspan {
+                                    if row.len() < max_columns {
+                                        row.push(cell_text.clone());
+                                        col += 1;
+                                    }
+                                }
+                                if rowspan > 1 {
+                                    for occupied in start_col..col {
+                                        while pending_rowspans.len() <= occupied {
+                                            pending_rowspans.push(None);
                                         }
+                                        pending_rowspans[occupied] =
+                                            Some((rowspan - 1, cell_text.clone()));
                                     }
                                 }
                             }
                         }
+                        consume_rowspan_slots(&mut row, pending_rowspans, &mut col, max_columns);
                         if !row.is_empty() {
                             if is_header_row && headers.is_empty() {
                                 headers.extend(row);
@@ -2864,6 +2911,7 @@ fn extract_table_data(
                             max_columns,
                             max_rows,
                             css_rules,
+                            pending_rowspans,
                         );
                     }
                 }
@@ -2879,6 +2927,7 @@ fn extract_table_data(
         max_columns,
         max_rows,
         css_rules,
+        &mut pending_rowspans,
     );
     (headers, rows)
 }
@@ -5056,6 +5105,107 @@ mod tests {
             "compact level must not copy onto non-heading roles: {tree:?}"
         );
         assert_eq!(tree_attrs["aria"]["level"], "2");
+
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Paragraph
+                    && element.text.as_deref() == Some("Just text")
+            }),
+            "plain text must stay a paragraph: {elements:?}"
+        );
+    }
+
+    #[test]
+    fn test_table_rowspan_keeps_later_cells_in_their_columns() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Plans</title></head>
+<body>
+<main>
+  <table id="pricing">
+    <tr><th>Plan</th><th>Monthly</th><th>Seats</th></tr>
+    <tr><td rowspan="2">Pro</td><td>$10</td><td>3</td></tr>
+    <tr><td>$12</td><td>5</td></tr>
+  </table>
+  <table id="plain">
+    <tr><th>Name</th><th>Qty</th></tr>
+    <tr><td>Gadget</td><td>2</td></tr>
+  </table>
+  <table id="blank">
+    <tr><th>Note</th></tr>
+    <tr><td rowspan="  ">Loose</td></tr>
+  </table>
+  <ul id="bullets" rowspan="2">
+    <li>Dot</li>
+  </ul>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/plans").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let pricing = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pricing"))
+            .expect("pricing table should compile");
+        assert_eq!(pricing.role, ElementRole::Table);
+        let pricing_attrs = pricing
+            .attrs
+            .as_ref()
+            .expect("pricing table attrs should compile");
+        assert_eq!(
+            pricing_attrs["headers"],
+            json!(["Plan", "Monthly", "Seats"])
+        );
+        assert_eq!(
+            pricing_attrs["rows"],
+            json!([["Pro", "$10", "3"], ["Pro", "$12", "5"]])
+        );
+
+        let plain = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plain"))
+            .expect("plain table should compile");
+        let plain_attrs = plain
+            .attrs
+            .as_ref()
+            .expect("plain table attrs should compile");
+        assert_eq!(plain_attrs["headers"], json!(["Name", "Qty"]));
+        assert_eq!(plain_attrs["rows"], json!([["Gadget", "2"]]));
+
+        let blank = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("blank"))
+            .expect("whitespace rowspan table should compile");
+        let blank_attrs = blank
+            .attrs
+            .as_ref()
+            .expect("blank rowspan table attrs should compile");
+        assert_eq!(blank_attrs["headers"], json!(["Note"]));
+        assert_eq!(blank_attrs["rows"], json!([["Loose"]]));
+
+        let bullets = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("bullets"))
+            .expect("unordered list should compile");
+        assert_eq!(bullets.role, ElementRole::List);
+        let bullets_attrs = bullets
+            .attrs
+            .as_ref()
+            .expect("unordered list attrs should compile");
+        assert!(
+            bullets_attrs.get("headers").is_none(),
+            "lists must not inherit table headers: {bullets:?}"
+        );
+        assert!(
+            bullets_attrs.get("rows").is_none(),
+            "lists must not inherit table rows: {bullets:?}"
+        );
 
         assert!(
             elements.iter().any(|element| {
