@@ -1259,6 +1259,22 @@ Object.defineProperty(PlasElement.prototype, 'readOnly', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'required', {
+    get: function() {
+        if (this.tagName !== 'INPUT' && this.tagName !== 'TEXTAREA' && this.tagName !== 'SELECT') {
+            return false;
+        }
+        return this.hasAttribute('required');
+    },
+    set: function(v) {
+        if (this.tagName !== 'INPUT' && this.tagName !== 'TEXTAREA' && this.tagName !== 'SELECT') {
+            return;
+        }
+        if (v) this.setAttribute('required', '');
+        else this.removeAttribute('required');
+    }
+});
+
 Object.defineProperty(PlasElement.prototype, 'type', {
     get: function() { return this._attrs.type || (this.tagName === 'INPUT' ? 'text' : ''); },
     set: function(v) { this._attrs.type = v; }
@@ -6451,6 +6467,184 @@ mod tests {
                 .as_ref()
                 .is_none_or(|attrs| attrs.get("readonly").is_none()),
             "select must not compile readonly: {plan:?}"
+        );
+        let alerts = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("alerts"))
+            .expect("alerts checkbox should compile");
+        assert_eq!(
+            alerts.attrs.as_ref().and_then(|attrs| attrs.get("checked")),
+            Some(&serde_json::json!(true))
+        );
+    }
+
+    #[test]
+    fn input_required_idl_updates_required_attribute_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><input id="name" value="a"><textarea id="notes" required>Draft</textarea><p id="note">Just text</p><input id="alerts" type="checkbox" checked><select id="plan"><option value="free" selected>Free</option></select></body></html>"#,
+            "https://example.test/need",
+        );
+
+        let before_name = rt
+            .execute_in_context(
+                "String(document.getElementById('name').required)",
+                "test.js",
+            )
+            .unwrap();
+        let before_notes = rt
+            .execute_in_context(
+                "String(document.getElementById('notes').required)",
+                "test.js",
+            )
+            .unwrap();
+        let before_note = rt
+            .execute_in_context(
+                "String(document.getElementById('note').required)",
+                "test.js",
+            )
+            .unwrap();
+        let before_plan = rt
+            .execute_in_context(
+                "String(document.getElementById('plan').required)",
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before_name, "false");
+        assert_eq!(before_notes, "true");
+        assert_eq!(before_note, "false");
+        assert_eq!(before_plan, "false");
+
+        rt.execute_in_context(
+            "document.getElementById('name').required = true; document.getElementById('notes').required = false; document.getElementById('note').required = true; document.getElementById('plan').required = true;",
+            "test.js",
+        )
+        .unwrap();
+
+        let after_name = rt
+            .execute_in_context(
+                "String(document.getElementById('name').required)",
+                "test.js",
+            )
+            .unwrap();
+        let after_notes = rt
+            .execute_in_context(
+                "String(document.getElementById('notes').required)",
+                "test.js",
+            )
+            .unwrap();
+        let after_note = rt
+            .execute_in_context(
+                "String(document.getElementById('note').required)",
+                "test.js",
+            )
+            .unwrap();
+        let after_plan = rt
+            .execute_in_context(
+                "String(document.getElementById('plan').required)",
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after_name, "true");
+        assert_eq!(after_notes, "false");
+        assert_eq!(after_note, "false");
+        assert_eq!(after_plan, "true");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"name\"") && serialized.contains("required"),
+            "required input must persist required: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"name\" required=")
+                || serialized.contains("required=\"\" id=\"name\"")
+                || serialized.contains("value=\"a\" required=")
+                || serialized.contains("required=\"\" value=\"a\""),
+            "name input must persist required: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"notes\" required")
+                && !serialized.contains("required=\"\" id=\"notes\""),
+            "optional textarea must drop required: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"note\" required")
+                && !serialized.contains("required=\"\" id=\"note\""),
+            "paragraphs must not invent required: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"plan\"") && serialized.contains("required"),
+            "required select must persist required: {serialized}"
+        );
+        assert!(
+            serialized.contains("checked"),
+            "checkbox checked must stay independent: {serialized}"
+        );
+        assert!(
+            serialized.contains(">Draft</textarea>"),
+            "textarea child text must stay independent: {serialized}"
+        );
+        assert!(
+            serialized.contains("value=\"a\""),
+            "input value must stay independent: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/need").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let name = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("name"))
+            .expect("name input should compile");
+        assert_eq!(
+            name.attrs.as_ref().and_then(|attrs| attrs.get("required")),
+            Some(&serde_json::json!(true))
+        );
+        assert_eq!(
+            name.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("a"))
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert!(
+            notes
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("required").is_none()),
+            "optional textarea must not compile required: {notes:?}"
+        );
+        assert_eq!(
+            notes.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("Draft"))
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("required").is_none()),
+            "paragraphs must not compile required: {note:?}"
+        );
+        let plan = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plan"))
+            .expect("plan select should compile");
+        assert_eq!(plan.role, crate::som::types::ElementRole::Select);
+        assert_eq!(
+            plan.attrs.as_ref().and_then(|attrs| attrs.get("required")),
+            Some(&serde_json::json!(true))
         );
         let alerts = elements
             .iter()
