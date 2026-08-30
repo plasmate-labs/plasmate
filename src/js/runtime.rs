@@ -1364,6 +1364,63 @@ Object.defineProperty(PlasElement.prototype, 'src', {
     set: function(v) { this._attrs.src = v; }
 });
 
+function _listedFormControl(node) {
+    return node.tagName === 'INPUT' || node.tagName === 'SELECT' || node.tagName === 'TEXTAREA' || node.tagName === 'BUTTON';
+}
+
+function _collectFormElements(form) {
+    var results = [];
+    var formId = form.id || '';
+    function visit(node) {
+        if (!node || !node.childNodes) return;
+        for (var i = 0; i < node.childNodes.length; i++) {
+            var child = node.childNodes[i];
+            if (child.nodeType !== Node.ELEMENT_NODE) continue;
+            if (_listedFormControl(child)) {
+                if (child.hasAttribute('form')) {
+                    if (formId && child.getAttribute('form') === formId) results.push(child);
+                } else {
+                    var ancestor = child.parentNode;
+                    while (ancestor && ancestor.nodeType === Node.ELEMENT_NODE) {
+                        if (ancestor.tagName === 'FORM') {
+                            if (ancestor === form) results.push(child);
+                            break;
+                        }
+                        ancestor = ancestor.parentNode;
+                    }
+                }
+            }
+            visit(child);
+        }
+    }
+    visit(document.documentElement);
+    results.item = function(index) {
+        return results[index] || null;
+    };
+    results.namedItem = function(name) {
+        for (var i = 0; i < results.length; i++) {
+            if (results[i].name === name || results[i].id === name) return results[i];
+        }
+        return null;
+    };
+    for (var i = 0; i < results.length; i++) {
+        var key = results[i].name || results[i].id;
+        if (key && !Object.prototype.hasOwnProperty.call(results, key)) {
+            results[key] = results[i];
+        }
+    }
+    return results;
+}
+
+Object.defineProperty(PlasElement.prototype, 'elements', {
+    get: function() {
+        if (this.tagName !== 'FORM') {
+            return undefined;
+        }
+        return _collectFormElements(this);
+    }
+});
+
 // ============================================================================
 // Query helper functions
 // ============================================================================
@@ -7230,6 +7287,131 @@ mod tests {
         assert_eq!(
             plan.attrs.as_ref().and_then(|attrs| attrs.get("value")),
             Some(&serde_json::json!("free"))
+        );
+    }
+
+    #[test]
+    fn form_elements_idl_updates_listed_controls_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="signup"><input id="email" name="email" value="old"><textarea id="notes" name="notes">draft</textarea></form><input id="company" name="company" form="signup" value="acme"><p id="note">Just text</p><input id="orphan" name="orphan" value="x"></body></html>"#,
+            "https://example.test/signup",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"
+                (function() {
+                    var form = document.getElementById('signup');
+                    return [String(form.elements.length), form.elements.email.value, form.elements.namedItem('company').value, String(document.getElementById('note').elements)].join('|');
+                })()
+                "#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "3|old|acme|undefined");
+
+        rt.execute_in_context(
+            r#"
+            (function() {
+                var form = document.getElementById('signup');
+                form.elements.email.value = 'ops@example.com';
+                form.elements.namedItem('company').value = 'labs';
+                form.elements.notes.value = 'hello';
+                document.getElementById('note').elements = 1;
+                document.getElementById('orphan').value = 'y';
+            })();
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let after = rt
+            .execute_in_context(
+                "document.getElementById('signup').elements.namedItem('email').value",
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after, "ops@example.com");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("value=\"ops@example.com\""),
+            "form.elements email value must persist: {serialized}"
+        );
+        assert!(
+            serialized.contains("value=\"labs\""),
+            "form-associated company value must persist: {serialized}"
+        );
+        assert!(
+            serialized.contains(">hello</textarea>"),
+            "form.elements textarea value must persist: {serialized}"
+        );
+        assert!(
+            serialized.contains("value=\"y\""),
+            "orphan input stays independent: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/signup").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(
+            email.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("ops@example.com"))
+        );
+        let company = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("company"))
+            .expect("company input should compile");
+        assert_eq!(
+            company.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("labs"))
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(
+            notes.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("hello"))
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("elements").is_none()),
+            "paragraphs must not compile elements: {note:?}"
+        );
+        let orphan = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("orphan"))
+            .expect("orphan input should compile");
+        assert_eq!(
+            orphan.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("y"))
+        );
+        assert!(
+            !elements.iter().any(|element| element
+                .attrs
+                .as_ref()
+                .is_some_and(|attrs| attrs.get("elements").is_some())),
+            "elements collection must not compile as an attr"
         );
     }
 
