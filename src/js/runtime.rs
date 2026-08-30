@@ -1349,6 +1349,21 @@ Object.defineProperty(PlasElement.prototype, 'maxLength', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'alt', {
+    get: function() {
+        if (this.tagName !== 'IMG' && this.tagName !== 'AREA') {
+            return '';
+        }
+        return this.getAttribute('alt') || '';
+    },
+    set: function(v) {
+        if (this.tagName !== 'IMG' && this.tagName !== 'AREA') {
+            return;
+        }
+        this.setAttribute('alt', String(v));
+    }
+});
+
 Object.defineProperty(PlasElement.prototype, 'labels', {
     get: function() {
         if (this.tagName !== 'INPUT' && this.tagName !== 'TEXTAREA' && this.tagName !== 'SELECT') {
@@ -7399,6 +7414,138 @@ mod tests {
                 .as_ref()
                 .is_none_or(|attrs| attrs.get("maxlength").is_none()),
             "contenteditable must not compile maxlength: {editor:?}"
+        );
+    }
+
+    #[test]
+    fn img_alt_idl_updates_alt_attribute_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><img id="hero" src="/hero.png" alt="Old"><area id="hit" href="/x" alt="Old hit"><p id="note">Just text</p><input id="name" value="a"><video id="clip" src="/clip.mp4"></video></body></html>"#,
+            "https://example.test/alt",
+        );
+
+        let before_hero = rt
+            .execute_in_context("String(document.getElementById('hero').alt)", "test.js")
+            .unwrap();
+        let before_hit = rt
+            .execute_in_context("String(document.getElementById('hit').alt)", "test.js")
+            .unwrap();
+        let before_note = rt
+            .execute_in_context("String(document.getElementById('note').alt)", "test.js")
+            .unwrap();
+        let before_name = rt
+            .execute_in_context("String(document.getElementById('name').alt)", "test.js")
+            .unwrap();
+        let before_clip = rt
+            .execute_in_context("String(document.getElementById('clip').alt)", "test.js")
+            .unwrap();
+        assert_eq!(before_hero, "Old");
+        assert_eq!(before_hit, "Old hit");
+        assert_eq!(before_note, "");
+        assert_eq!(before_name, "");
+        assert_eq!(before_clip, "");
+
+        rt.execute_in_context(
+            "document.getElementById('hero').alt = 'Q4 revenue chart'; document.getElementById('hit').alt = 'Campus map'; document.getElementById('note').alt = 'Invented'; document.getElementById('name').alt = 'Invented'; document.getElementById('clip').alt = 'Invented';",
+            "test.js",
+        )
+        .unwrap();
+
+        let after_hero = rt
+            .execute_in_context("String(document.getElementById('hero').alt)", "test.js")
+            .unwrap();
+        let after_hit = rt
+            .execute_in_context("String(document.getElementById('hit').alt)", "test.js")
+            .unwrap();
+        let after_note = rt
+            .execute_in_context("String(document.getElementById('note').alt)", "test.js")
+            .unwrap();
+        let after_name = rt
+            .execute_in_context("String(document.getElementById('name').alt)", "test.js")
+            .unwrap();
+        let after_clip = rt
+            .execute_in_context("String(document.getElementById('clip').alt)", "test.js")
+            .unwrap();
+        assert_eq!(after_hero, "Q4 revenue chart");
+        assert_eq!(after_hit, "Campus map");
+        assert_eq!(after_note, "");
+        assert_eq!(after_name, "");
+        assert_eq!(after_clip, "");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"hero\"") && serialized.contains("alt=\"Q4 revenue chart\""),
+            "img must persist alt: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"hit\"") && serialized.contains("alt=\"Campus map\""),
+            "area must persist alt: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"note\" alt")
+                && !serialized.contains("id=\"name\" alt")
+                && !serialized.contains("id=\"clip\" alt")
+                && !serialized.contains("alt=\"Invented\""),
+            "paragraphs, inputs, and video must not invent alt: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/alt").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let hero = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("hero"))
+            .expect("hero image should compile");
+        assert_eq!(
+            hero.attrs.as_ref().and_then(|attrs| attrs.get("alt")),
+            Some(&serde_json::json!("Q4 revenue chart"))
+        );
+        let hit = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("hit"))
+            .expect("hit area should compile");
+        assert_eq!(
+            hit.attrs.as_ref().and_then(|attrs| attrs.get("alt")),
+            Some(&serde_json::json!("Campus map"))
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("alt").is_none()),
+            "paragraphs must not compile alt: {note:?}"
+        );
+        let name = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("name"))
+            .expect("name input should compile");
+        assert!(
+            name.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("alt").is_none()),
+            "text inputs must not compile alt: {name:?}"
+        );
+        let clip = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("clip"))
+            .expect("clip video should compile");
+        assert!(
+            clip.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("alt").is_none()),
+            "video must not compile alt: {clip:?}"
         );
     }
 
