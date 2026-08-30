@@ -33,11 +33,11 @@ frequency.
 If these gates are not met, report a no-change or blocked run. Never stash,
 overwrite, reset, or absorb unrelated work.
 
-## Active governor constraint (2026-08-29)
+## Active governor constraint (2026-08-30)
 
-- Window: `189a11c` .. `9e60fbf`
+- Window: `b44d06e` .. `02b6078`
 - Decision: `NARROW`
-- Merged this run: #245 #246 (already on master)
+- Merged this run: `02b6078` labelable `.labels` (already on master)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -175,6 +175,10 @@ overwrite, reset, or absorb unrelated work.
   (`aria-hidden`, `style=display:none`); do not change `hidden="until-found"`
   compile behavior, invent hidden on untouched elements, or add inspect
   compact `hidden`.
+  Do not copy labelable control `.labels` onto `button`, `meter`,
+  `progress`, `output`, `click`/`clear`/`toggle` handlers, SDKs, or
+  inspect compact fields; do not add `htmlFor` IDL or invent labels on
+  paragraphs.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -196,7 +200,8 @@ overwrite, reset, or absorb unrelated work.
   compact disabled copy, inspect compact checked copy, inspect
   compact value copy, details open IDL copy, select selectedIndex
   IDL copy, table rowspan grid copy, input readOnly IDL copy,
-  field required IDL copy, or element hidden IDL copy.
+  field required IDL copy, element hidden IDL copy, or labelable
+  control `.labels` copy.
 
 ## Preferred lanes
 

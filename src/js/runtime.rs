@@ -1293,6 +1293,35 @@ Object.defineProperty(PlasElement.prototype, 'name', {
     set: function(v) { this._attrs.name = v; }
 });
 
+Object.defineProperty(PlasElement.prototype, 'labels', {
+    get: function() {
+        if (this.tagName !== 'INPUT' && this.tagName !== 'TEXTAREA' && this.tagName !== 'SELECT') {
+            return undefined;
+        }
+        var results = [];
+        var id = this.id;
+        if (id) {
+            var all = document.getElementsByTagName('label');
+            for (var i = 0; i < all.length; i++) {
+                if (all[i].getAttribute('for') === id) {
+                    results.push(all[i]);
+                }
+            }
+        }
+        var ancestor = this.parentNode;
+        while (ancestor && ancestor.nodeType === Node.ELEMENT_NODE) {
+            if (ancestor.tagName === 'LABEL') {
+                if (!ancestor.getAttribute('for')) {
+                    results.push(ancestor);
+                }
+                break;
+            }
+            ancestor = ancestor.parentNode;
+        }
+        return results;
+    }
+});
+
 Object.defineProperty(PlasElement.prototype, 'href', {
     get: function() { return this._attrs.href || ''; },
     set: function(v) { this._attrs.href = v; }
@@ -6815,6 +6844,118 @@ mod tests {
                 .is_none_or(|attrs| attrs.get("hidden").is_none()),
             "untouched button must not compile hidden: {go:?}"
         );
+    }
+
+    #[test]
+    fn labelable_control_labels_include_for_and_wrapping_labels() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><label for="plan">Billing plan</label><input id="plan" type="radio" name="plan" value="pro"><label><input id="email" type="radio" name="contact" value="email"> Email</label><p id="note">Just text</p><button id="go">Go</button></body></html>"#,
+            "https://example.test/labels",
+        );
+
+        let plan_count = rt
+            .execute_in_context(
+                "String(document.getElementById('plan').labels.length)",
+                "test.js",
+            )
+            .unwrap();
+        let plan_text = rt
+            .execute_in_context(
+                "document.getElementById('plan').labels[0].textContent.replace(/\\s+/g, ' ').trim()",
+                "test.js",
+            )
+            .unwrap();
+        let email_count = rt
+            .execute_in_context(
+                "String(document.getElementById('email').labels.length)",
+                "test.js",
+            )
+            .unwrap();
+        let email_text = rt
+            .execute_in_context(
+                "document.getElementById('email').labels[0].textContent.replace(/\\s+/g, ' ').trim()",
+                "test.js",
+            )
+            .unwrap();
+        let note_labels = rt
+            .execute_in_context("String(document.getElementById('note').labels)", "test.js")
+            .unwrap();
+        let go_labels = rt
+            .execute_in_context("String(document.getElementById('go').labels)", "test.js")
+            .unwrap();
+        assert_eq!(plan_count, "1");
+        assert_eq!(plan_text, "Billing plan");
+        assert_eq!(email_count, "1");
+        assert_eq!(email_text, "Email");
+        assert_eq!(note_labels, "undefined");
+        assert_eq!(go_labels, "undefined");
+
+        rt.execute_in_context(
+            r#"
+            (function() {
+                var el = document.getElementById('email');
+                var wanted = 'Email';
+                var labelText = '';
+                if (el.labels && el.labels.length) {
+                    labelText = (el.labels[0].textContent || '').replace(/\s+/g, ' ').trim();
+                }
+                if (el.value !== wanted && labelText !== wanted) {
+                    throw new Error('Option not found: ' + wanted);
+                }
+                var radios = document.getElementsByTagName('input');
+                for (var j = 0; j < radios.length; j++) {
+                    if (radios[j].type === 'radio' && radios[j].name === el.name) {
+                        radios[j].checked = false;
+                    }
+                }
+                el.checked = true;
+            })();
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/labels").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email radio should compile");
+        assert_eq!(
+            email.attrs.as_ref().and_then(|attrs| attrs.get("checked")),
+            Some(&serde_json::json!(true))
+        );
+        let plan = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plan"))
+            .expect("plan radio should compile");
+        assert!(
+            plan.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("checked").is_none()),
+            "unrelated radio must stay independent: {plan:?}"
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        let go = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("go"))
+            .expect("go button should compile");
+        assert_eq!(go.role, crate::som::types::ElementRole::Button);
     }
 
     // =========================================================================
