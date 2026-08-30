@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-30)
 
-- Window: `2af4b9a` .. `206bcaf`
+- Window: `6a40645` .. `61e35f7`
 - Decision: `NARROW`
-- Merged this run: `206bcaf` form `.elements` (already on master)
+- Merged this run: `81ec738` field `.maxLength` and `61e35f7` textarea `rows`/`cols` (already on master)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -191,6 +191,14 @@ overwrite, reset, or absorb unrelated work.
   RadioNodeList, form named getters, inspect compact fields, CLI, CDP, or
   SDKs; do not invent `elements` on non-form tags or compile the collection
   as an attribute.
+  Do not copy #255 input/textarea `.maxLength` IDL onto `select`,
+  `contenteditable`, paragraphs, `clear`/`type_text` handlers, or SDK
+  wrappers; do not invent maxlength on non-field tags, change
+  value/readonly IDL, add `minLength`, or add inspect compact `maxlength`.
+  Do not copy #256 textarea `rows`/`cols` compile onto extract_text, CLI,
+  CDP, extract_links, input, select, paragraphs, or SDKs; do not invent
+  HTML defaults (2/20), add JS `rows`/`cols` IDL, or change table
+  `attrs.rows`.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -214,7 +222,8 @@ overwrite, reset, or absorb unrelated work.
   IDL copy, table rowspan grid copy, input readOnly IDL copy,
   field required IDL copy, element hidden IDL copy, labelable
   control `.labels` copy, field placeholder IDL copy, field
-  setSelectionRange/select copy, or form `.elements` IDL copy.
+  setSelectionRange/select copy, form `.elements` IDL copy, field
+  maxLength IDL copy, or textarea rows/cols compile copy.
 
 ## Preferred lanes
 
