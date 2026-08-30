@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-29)
 
-- Window: `2eadf9d` .. `67f4eb2`
+- Window: `189a11c` .. `9e60fbf`
 - Decision: `NARROW`
-- Merged this run: #243
+- Merged this run: #245 #246 (already on master)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -166,6 +166,15 @@ overwrite, reset, or absorb unrelated work.
   `contenteditable`, `dialog`, paragraphs, `clear`/`toggle`/`select_option`
   handlers, or SDK wrappers; do not invent readonly on non-field tags,
   change disabled IDL, or add inspect compact `readonly`.
+  Do not copy #245 input/textarea/select `.required` IDL onto
+  `contenteditable`, `dialog`, paragraphs, `clear`/`toggle` handlers,
+  or SDK wrappers; do not invent required on non-field tags, change
+  readonly/disabled IDL, or add inspect compact `required`.
+  Do not copy #246 element `.hidden` IDL onto extract_text, CLI, CDP,
+  extract_links, inspect compact fields, or adjacent hide attributes
+  (`aria-hidden`, `style=display:none`); do not change `hidden="until-found"`
+  compile behavior, invent hidden on untouched elements, or add inspect
+  compact `hidden`.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -186,7 +195,8 @@ overwrite, reset, or absorb unrelated work.
   extra=allow copy, textarea value IDL child-text copy, inspect
   compact disabled copy, inspect compact checked copy, inspect
   compact value copy, details open IDL copy, select selectedIndex
-  IDL copy, table rowspan grid copy, or input readOnly IDL copy.
+  IDL copy, table rowspan grid copy, input readOnly IDL copy,
+  field required IDL copy, or element hidden IDL copy.
 
 ## Preferred lanes
 
