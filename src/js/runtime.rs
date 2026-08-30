@@ -1058,6 +1058,23 @@ PlasElement.prototype.blur = function() {};
 PlasElement.prototype.click = function() {
     this.dispatchEvent(new Event('click'));
 };
+PlasElement.prototype.setSelectionRange = function(start, end, direction) {
+    if (this.tagName !== 'INPUT' && this.tagName !== 'TEXTAREA') {
+        return;
+    }
+    this._selectionStart = Number(start) || 0;
+    this._selectionEnd = end === undefined ? this._selectionStart : Number(end) || 0;
+    if (direction !== undefined) {
+        this._selectionDirection = String(direction);
+    }
+};
+PlasElement.prototype.select = function() {
+    if (this.tagName !== 'INPUT' && this.tagName !== 'TEXTAREA') {
+        return;
+    }
+    this._selectionStart = 0;
+    this._selectionEnd = String(this.value || '').length;
+};
 
 PlasElement.prototype.remove = function() {
     if (this.parentNode) this.parentNode.removeChild(this);
@@ -7137,6 +7154,82 @@ mod tests {
                 .as_ref()
                 .is_none_or(|attrs| attrs.get("placeholder").is_none()),
             "contenteditable must not compile placeholder: {editor:?}"
+        );
+    }
+
+    #[test]
+    fn input_set_selection_range_does_not_abort_value_update() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><input id="q" value="old"><textarea id="notes">draft</textarea><p id="note">Just text</p><select id="plan"><option value="free" selected>Free</option></select></body></html>"#,
+            "https://example.test/caret",
+        );
+
+        rt.execute_in_context(
+            r#"
+            (function() {
+                var q = document.getElementById('q');
+                q.setSelectionRange(0, 1);
+                q.value = 'hello';
+                var notes = document.getElementById('notes');
+                notes.select();
+                notes.value = 'updated';
+                document.getElementById('note').setSelectionRange(0, 1);
+                document.getElementById('plan').select();
+            })();
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"q\"") && serialized.contains("value=\"hello\""),
+            "input value update after setSelectionRange must persist: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"notes\"") && serialized.contains(">updated<"),
+            "textarea value update after select must persist: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/caret").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let q = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("q"))
+            .expect("query input should compile");
+        assert_eq!(
+            q.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("hello"))
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(
+            notes.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("updated"))
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        let plan = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plan"))
+            .expect("plan select should compile");
+        assert_eq!(
+            plan.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("free"))
         );
     }
 
