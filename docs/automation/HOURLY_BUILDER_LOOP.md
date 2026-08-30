@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-30)
 
-- Window: `20c20f0` .. `983be59`
+- Window: `03c2ef5` .. `9f9815e`
 - Decision: `NARROW`
-- Merged this run: `983be59` field `.placeholder` (already on master)
+- Merged this run: `9f9815e` field `setSelectionRange`/`select` (already on master)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -183,6 +183,10 @@ overwrite, reset, or absorb unrelated work.
   `contenteditable`, paragraphs, `clear`/`type_text` handlers, or SDK
   wrappers; do not invent placeholder on non-field tags, change
   value/readonly IDL, or add inspect compact `placeholder`.
+  Do not copy #251 input/textarea `setSelectionRange`/`select` onto other
+  tags, `selectionStart`/`selectionEnd`/`setRangeText`, handlers, or SDK
+  wrappers; do not invent compiled caret/selection attrs or inspect
+  compact selection fields.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -205,7 +209,8 @@ overwrite, reset, or absorb unrelated work.
   compact value copy, details open IDL copy, select selectedIndex
   IDL copy, table rowspan grid copy, input readOnly IDL copy,
   field required IDL copy, element hidden IDL copy, labelable
-  control `.labels` copy, or field placeholder IDL copy.
+  control `.labels` copy, field placeholder IDL copy, or field
+  setSelectionRange/select copy.
 
 ## Preferred lanes
 
