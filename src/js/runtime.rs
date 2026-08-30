@@ -1325,6 +1325,30 @@ Object.defineProperty(PlasElement.prototype, 'placeholder', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'maxLength', {
+    get: function() {
+        if (this.tagName !== 'INPUT' && this.tagName !== 'TEXTAREA') {
+            return -1;
+        }
+        var raw = this.getAttribute('maxlength');
+        if (raw === null || raw === '') {
+            return -1;
+        }
+        var n = parseInt(raw, 10);
+        return (isFinite(n) && n >= 0) ? n : -1;
+    },
+    set: function(v) {
+        if (this.tagName !== 'INPUT' && this.tagName !== 'TEXTAREA') {
+            return;
+        }
+        var n = Number(v);
+        if (!isFinite(n) || n < 0) {
+            return;
+        }
+        this.setAttribute('maxlength', String(Math.floor(n)));
+    }
+});
+
 Object.defineProperty(PlasElement.prototype, 'labels', {
     get: function() {
         if (this.tagName !== 'INPUT' && this.tagName !== 'TEXTAREA' && this.tagName !== 'SELECT') {
@@ -7211,6 +7235,170 @@ mod tests {
                 .as_ref()
                 .is_none_or(|attrs| attrs.get("placeholder").is_none()),
             "contenteditable must not compile placeholder: {editor:?}"
+        );
+    }
+
+    #[test]
+    fn input_maxlength_idl_updates_maxlength_attribute_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><input id="name" value="a"><textarea id="notes" maxlength="20">Draft</textarea><p id="note">Just text</p><select id="plan"><option value="free" selected>Free</option></select><div id="editor" contenteditable="true">Edit me</div></body></html>"#,
+            "https://example.test/limit",
+        );
+
+        let before_name = rt
+            .execute_in_context(
+                "String(document.getElementById('name').maxLength)",
+                "test.js",
+            )
+            .unwrap();
+        let before_notes = rt
+            .execute_in_context(
+                "String(document.getElementById('notes').maxLength)",
+                "test.js",
+            )
+            .unwrap();
+        let before_note = rt
+            .execute_in_context(
+                "String(document.getElementById('note').maxLength)",
+                "test.js",
+            )
+            .unwrap();
+        let before_plan = rt
+            .execute_in_context(
+                "String(document.getElementById('plan').maxLength)",
+                "test.js",
+            )
+            .unwrap();
+        let before_editor = rt
+            .execute_in_context(
+                "String(document.getElementById('editor').maxLength)",
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before_name, "-1");
+        assert_eq!(before_notes, "20");
+        assert_eq!(before_note, "-1");
+        assert_eq!(before_plan, "-1");
+        assert_eq!(before_editor, "-1");
+
+        rt.execute_in_context(
+            "document.getElementById('name').maxLength = 80; document.getElementById('notes').maxLength = 40; document.getElementById('note').maxLength = 12; document.getElementById('plan').maxLength = 12; document.getElementById('editor').maxLength = 12;",
+            "test.js",
+        )
+        .unwrap();
+
+        let after_name = rt
+            .execute_in_context(
+                "String(document.getElementById('name').maxLength)",
+                "test.js",
+            )
+            .unwrap();
+        let after_notes = rt
+            .execute_in_context(
+                "String(document.getElementById('notes').maxLength)",
+                "test.js",
+            )
+            .unwrap();
+        let after_note = rt
+            .execute_in_context(
+                "String(document.getElementById('note').maxLength)",
+                "test.js",
+            )
+            .unwrap();
+        let after_plan = rt
+            .execute_in_context(
+                "String(document.getElementById('plan').maxLength)",
+                "test.js",
+            )
+            .unwrap();
+        let after_editor = rt
+            .execute_in_context(
+                "String(document.getElementById('editor').maxLength)",
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after_name, "80");
+        assert_eq!(after_notes, "40");
+        assert_eq!(after_note, "-1");
+        assert_eq!(after_plan, "-1");
+        assert_eq!(after_editor, "-1");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"name\"") && serialized.contains("maxlength=\"80\""),
+            "named input must persist maxlength: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"notes\"") && serialized.contains("maxlength=\"40\""),
+            "textarea must persist maxlength: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"note\" maxlength")
+                && !serialized.contains("maxlength=\"12\""),
+            "paragraphs, selects, and contenteditable must not invent maxlength: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/limit").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let name = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("name"))
+            .expect("name input should compile");
+        assert_eq!(
+            name.attrs.as_ref().and_then(|attrs| attrs.get("maxlength")),
+            Some(&serde_json::json!(80))
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(
+            notes
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("maxlength")),
+            Some(&serde_json::json!(40))
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("maxlength").is_none()),
+            "paragraphs must not compile maxlength: {note:?}"
+        );
+        let plan = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plan"))
+            .expect("plan select should compile");
+        assert!(
+            plan.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("maxlength").is_none()),
+            "selects must not compile maxlength: {plan:?}"
+        );
+        let editor = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("editor"))
+            .expect("editor should compile");
+        assert!(
+            editor
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("maxlength").is_none()),
+            "contenteditable must not compile maxlength: {editor:?}"
         );
     }
 
