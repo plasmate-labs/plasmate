@@ -1995,6 +1995,18 @@ fn build_element_attrs(
             if inherited_disabled || has_attr(attrs, "disabled") {
                 map.insert("disabled".into(), json!(true));
             }
+            for key in ["rows", "cols"] {
+                if let Some((_, value)) = attrs.iter().find(|(n, _)| n == key) {
+                    let value = value.trim();
+                    if !value.is_empty() {
+                        let parsed = value
+                            .parse::<i64>()
+                            .map(serde_json::Value::from)
+                            .unwrap_or_else(|_| json!(value));
+                        map.insert(key.into(), parsed);
+                    }
+                }
+            }
         }
         "button" => {
             let button_type = attrs
@@ -5213,6 +5225,123 @@ mod tests {
                     && element.text.as_deref() == Some("Just text")
             }),
             "plain text must stay a paragraph: {elements:?}"
+        );
+    }
+
+    #[test]
+    fn test_textarea_rows_and_cols_are_compiled() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Reply</title></head>
+<body>
+<main>
+  <textarea id="notes" rows="8" cols="40">Draft</textarea>
+  <textarea id="plain">Short</textarea>
+  <textarea id="blank" rows="   " cols="  "></textarea>
+  <input id="name" rows="6" cols="20" value="Ada">
+  <select id="plan" rows="4" cols="12">
+    <option value="free" selected>Free</option>
+  </select>
+  <table id="pricing">
+    <tr><th>Plan</th><th>Seats</th></tr>
+    <tr><td>Pro</td><td>3</td></tr>
+  </table>
+  <p rows="3" cols="10">Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/reply").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("sized textarea should compile");
+        assert_eq!(notes.role, ElementRole::Textarea);
+        let notes_attrs = notes
+            .attrs
+            .as_ref()
+            .expect("sized textarea attrs should compile");
+        assert_eq!(notes_attrs["rows"], 8);
+        assert_eq!(notes_attrs["cols"], 40);
+
+        let plain = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plain"))
+            .expect("plain textarea should compile");
+        let plain_attrs = plain
+            .attrs
+            .as_ref()
+            .expect("plain textarea attrs should compile");
+        assert!(
+            plain_attrs.get("rows").is_none(),
+            "plain textareas must not invent rows: {plain:?}"
+        );
+        assert!(
+            plain_attrs.get("cols").is_none(),
+            "plain textareas must not invent cols: {plain:?}"
+        );
+
+        let blank = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("blank"))
+            .expect("whitespace textarea should compile");
+        let blank_attrs = blank.attrs.as_ref();
+        assert!(
+            blank_attrs.is_none_or(|attrs| attrs.get("rows").is_none()),
+            "whitespace rows must not be invented: {blank:?}"
+        );
+        assert!(
+            blank_attrs.is_none_or(|attrs| attrs.get("cols").is_none()),
+            "whitespace cols must not be invented: {blank:?}"
+        );
+
+        let name = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("name"))
+            .expect("input should compile");
+        assert!(
+            name.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("rows").is_none() && attrs.get("cols").is_none()),
+            "inputs must not compile textarea rows/cols: {name:?}"
+        );
+
+        let plan = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plan"))
+            .expect("select should compile");
+        assert!(
+            plan.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("rows").is_none() && attrs.get("cols").is_none()),
+            "selects must not compile textarea rows/cols: {plan:?}"
+        );
+
+        let pricing = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pricing"))
+            .expect("pricing table should compile");
+        assert_eq!(pricing.role, ElementRole::Table);
+        let pricing_attrs = pricing
+            .attrs
+            .as_ref()
+            .expect("pricing table attrs should compile");
+        assert_eq!(pricing_attrs["rows"], json!([["Pro", "3"]]));
+
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Paragraph
+                    && element.text.as_deref() == Some("Just text")
+                    && element.attrs.as_ref().is_none_or(|attrs| {
+                        attrs.get("rows").is_none() && attrs.get("cols").is_none()
+                    })
+            }),
+            "paragraphs must not compile textarea rows/cols: {elements:?}"
         );
     }
 }
