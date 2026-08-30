@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-30)
 
-- Window: `b44d06e` .. `02b6078`
+- Window: `20c20f0` .. `983be59`
 - Decision: `NARROW`
-- Merged this run: `02b6078` labelable `.labels` (already on master)
+- Merged this run: `983be59` field `.placeholder` (already on master)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -179,6 +179,10 @@ overwrite, reset, or absorb unrelated work.
   `progress`, `output`, `click`/`clear`/`toggle` handlers, SDKs, or
   inspect compact fields; do not add `htmlFor` IDL or invent labels on
   paragraphs.
+  Do not copy #249 input/textarea `.placeholder` IDL onto `select`,
+  `contenteditable`, paragraphs, `clear`/`type_text` handlers, or SDK
+  wrappers; do not invent placeholder on non-field tags, change
+  value/readonly IDL, or add inspect compact `placeholder`.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -200,8 +204,8 @@ overwrite, reset, or absorb unrelated work.
   compact disabled copy, inspect compact checked copy, inspect
   compact value copy, details open IDL copy, select selectedIndex
   IDL copy, table rowspan grid copy, input readOnly IDL copy,
-  field required IDL copy, element hidden IDL copy, or labelable
-  control `.labels` copy.
+  field required IDL copy, element hidden IDL copy, labelable
+  control `.labels` copy, or field placeholder IDL copy.
 
 ## Preferred lanes
 
