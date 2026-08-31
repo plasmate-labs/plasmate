@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-31)
 
-- Window: `ec87ee9` .. `e061a62`
+- Window: `2fa83ef` .. `923611b`
 - Decision: `NARROW`
-- Merged this run: `66f2325` img/area `.alt` IDL (`e061a62` merge)
+- Merged this run: `ff1ed00` setAttribute ASCII-lowercase (`ab26854`), `f169282` insertAdjacentHTML (`d930d47`), `ac4fa1f` replaceChildren (`654b6f2`), and `c026004` table insertRow (`923611b`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -203,6 +203,20 @@ overwrite, reset, or absorb unrelated work.
   input, video, paragraphs, or adjacent attributes (`srcset`, `sizes`,
   `title`); do not invent `alt` on non-image tags, add inspect compact
   `alt`, or change compile of present `alt`.
+  Do not copy #260 HTML `setAttribute` ASCII-lowercasing onto XML/SVG
+  case-sensitive names, IDL properties, extract_text, CLI, CDP, or SDKs;
+  do not fold attribute values or invent lowercase names on serialize of
+  already-lowercased attrs.
+  Do not copy #261 `insertAdjacentHTML` onto `insertAdjacentText` /
+  `insertAdjacentElement` / `outerHTML`, extract_text, CLI, CDP, SDKs, or
+  the native DOM bridge; do not add `afterend` script execution.
+  Do not copy #262 `replaceChildren` onto `replaceWith` copies,
+  `innerHTML` setters, extract_text, CLI, CDP, SDKs, or the native DOM
+  bridge.
+  Do not copy #263 table `insertRow`/`insertCell` onto `deleteRow` /
+  `deleteCell`, extract_text, CLI, CDP, SDKs, parser `attrs.rows` copies,
+  or the native DOM bridge; do not invent table rows on paragraphs or
+  lists.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -227,8 +241,10 @@ overwrite, reset, or absorb unrelated work.
   field required IDL copy, element hidden IDL copy, labelable
   control `.labels` copy, field placeholder IDL copy, field
   setSelectionRange/select copy, form `.elements` IDL copy, field
-  maxLength IDL copy, textarea rows/cols compile copy, or
-  img/area alt IDL copy.
+  maxLength IDL copy, textarea rows/cols compile copy,
+  img/area alt IDL copy, setAttribute ASCII-lowercase copy,
+  insertAdjacentHTML copy, replaceChildren copy, or table
+  insertRow/insertCell copy.
 
 ## Preferred lanes
 
