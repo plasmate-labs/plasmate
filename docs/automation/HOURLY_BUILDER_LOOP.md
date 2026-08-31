@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-31)
 
-- Window: `f998ce4` .. `617273a`
+- Window: `77ebbd4` .. `c38d862`
 - Decision: `NARROW`
-- Merged this run: `bb84a9d` toggleAttribute (`617273a`)
+- Merged this run: `3d08d62` ARIA alert/status compile (`89bb5dd`) and `4655729` form.reset (`c38d862`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -224,6 +224,14 @@ overwrite, reset, or absorb unrelated work.
   extract_text, CLI, CDP, SDKs, or the native DOM bridge; do not invent
   toggle on non-element nodes, add inspect compact toggled attrs, or copy
   force=true/false onto adjacent APIs.
+  Do not copy #269 ARIA `role=alert`/`role=status` live-region compile onto
+  extract_text, CLI, CDP, extract_links, SDKs, or other ARIA live roles
+  (`log`, `timer`, `marquee`); do not invent actions, compact live fields,
+  or a new element role.
+  Do not copy #270 form.reset onto form.submit, fieldset, document.forms,
+  extract_text, CLI, CDP, SDKs, or the native DOM bridge; do not invent
+  defaultValue public IDL, reset orphan controls/paragraphs, or add inspect
+  compact reset fields.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -251,7 +259,8 @@ overwrite, reset, or absorb unrelated work.
   maxLength IDL copy, textarea rows/cols compile copy,
   img/area alt IDL copy, setAttribute ASCII-lowercase copy,
   insertAdjacentHTML copy, replaceChildren copy, table
-  insertRow/insertCell copy, select.add copy, or toggleAttribute copy.
+  insertRow/insertCell copy, select.add copy, toggleAttribute copy,
+  ARIA alert/status live-region compile copy, or form.reset copy.
 
 ## Preferred lanes
 
