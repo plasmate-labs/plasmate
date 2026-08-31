@@ -1253,6 +1253,40 @@ PlasElement.prototype.insertCell = function(index) {
     return cell;
 };
 
+PlasElement.prototype.add = function(element, before) {
+    if (this.tagName !== 'SELECT') {
+        return;
+    }
+    if (!element || element.nodeType !== Node.ELEMENT_NODE) {
+        return;
+    }
+    if (element.tagName !== 'OPTION' && element.tagName !== 'OPTGROUP') {
+        return;
+    }
+    var ref = null;
+    if (before !== undefined && before !== null) {
+        if (typeof before === 'number') {
+            var items = [];
+            for (var i = 0; i < this.childNodes.length; i++) {
+                var child = this.childNodes[i];
+                if (child.nodeType === Node.ELEMENT_NODE && (child.tagName === 'OPTION' || child.tagName === 'OPTGROUP')) {
+                    items.push(child);
+                }
+            }
+            if (before >= 0 && before < items.length) {
+                ref = items[before];
+            }
+        } else if (before.parentNode === this) {
+            ref = before;
+        }
+    }
+    if (ref) {
+        this.insertBefore(element, ref);
+    } else {
+        this.appendChild(element);
+    }
+};
+
 // Form element properties
 Object.defineProperty(PlasElement.prototype, 'value', {
     get: function() {
@@ -8032,6 +8066,104 @@ mod tests {
                 .as_ref()
                 .is_none_or(|attrs| attrs.get("rows").is_none()),
             "lists must not compile table rows: {bullets:?}"
+        );
+    }
+
+    #[test]
+    fn select_add_compiles_inserted_options_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><select id="mailbox" name="box"><option value="inbox" selected>Inbox</option></select><p id="note">Just text</p><input id="q" name="q"></body></html>"#,
+            "https://example.test/mail",
+        );
+
+        let before = rt
+            .execute_in_context("typeof document.getElementById('mailbox').add", "test.js")
+            .unwrap();
+        assert_eq!(before, "function");
+
+        rt.execute_in_context(
+            r#"
+            var mailbox = document.getElementById('mailbox');
+            var sent = document.createElement('option');
+            sent.id = 'sent';
+            sent.value = 'sent';
+            sent.text = 'Sent';
+            mailbox.add(sent);
+            var draft = document.createElement('option');
+            draft.value = 'drafts';
+            draft.text = 'Drafts';
+            mailbox.add(draft, 1);
+            document.getElementById('note').add(sent);
+            document.getElementById('q').add(draft);
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"sent\"")
+                && serialized.contains("value=\"sent\"")
+                && serialized.contains(">Sent<")
+                && serialized.contains("value=\"drafts\"")
+                && serialized.contains(">Drafts<"),
+            "select.add must persist inserted options: {serialized}"
+        );
+        assert!(
+            serialized.contains("Just text") && serialized.contains("name=\"q\""),
+            "paragraphs and inputs must stay intact: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/mail").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let mailbox = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("mailbox"))
+            .expect("mailbox select should compile");
+        assert_eq!(mailbox.role, crate::som::types::ElementRole::Select);
+        let mailbox_attrs = mailbox
+            .attrs
+            .as_ref()
+            .expect("mailbox select attrs should compile");
+        assert_eq!(
+            mailbox_attrs["options"],
+            serde_json::json!([
+                {"value": "inbox", "text": "Inbox", "selected": true},
+                {"value": "drafts", "text": "Drafts"},
+                {"value": "sent", "text": "Sent"}
+            ])
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("options").is_none()),
+            "paragraphs must not compile select options: {note:?}"
+        );
+        let query = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("q"))
+            .expect("query input should compile");
+        assert_eq!(query.role, crate::som::types::ElementRole::TextInput);
+        assert!(
+            query
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("options").is_none()),
+            "inputs must not compile select options: {query:?}"
         );
     }
 
