@@ -1181,6 +1181,25 @@ PlasElement.prototype.insertAdjacentHTML = function(position, html) {
     throw new TypeError("Failed to execute 'insertAdjacentHTML' on 'Element': The value provided ('" + position + "') is not one of 'beforebegin', 'afterbegin', 'beforeend', or 'afterend'.");
 };
 
+PlasElement.prototype.replaceChildren = function() {
+    var removedNodes = this.childNodes.slice();
+    this.childNodes = [];
+    for (var i = 0; i < removedNodes.length; i++) {
+        removedNodes[i].parentNode = null;
+    }
+    if (removedNodes.length > 0) {
+        _queueMutationRecord(this, {
+            type: 'childList',
+            target: this,
+            addedNodes: [],
+            removedNodes: removedNodes,
+            previousSibling: null,
+            nextSibling: null
+        });
+    }
+    this.append.apply(this, arguments);
+};
+
 // Form element properties
 Object.defineProperty(PlasElement.prototype, 'value', {
     get: function() {
@@ -5946,6 +5965,97 @@ mod tests {
             .find(|element| element.html_id.as_deref() == Some("title"))
             .expect("title heading should compile");
         assert_eq!(title.role, crate::som::types::ElementRole::Heading);
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("href").is_none()),
+            "paragraphs must not compile href: {note:?}"
+        );
+    }
+
+    #[test]
+    fn replace_children_compiles_replaced_controls_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><div id="app"><button id="stale" name="old">Old</button></div><p id="note">Just text</p></body></html>"#,
+            "https://example.test/inbox",
+        );
+
+        let before = rt
+            .execute_in_context(
+                "typeof document.getElementById('app').replaceChildren",
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "function");
+
+        rt.execute_in_context(
+            r#"
+            var btn = document.createElement('button');
+            btn.id = 'save';
+            btn.setAttribute('name', 'commit');
+            btn.textContent = 'Save';
+            var link = document.createElement('a');
+            link.id = 'next';
+            link.setAttribute('href', '/inbox');
+            link.textContent = 'Next';
+            document.getElementById('app').replaceChildren(btn, link);
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"save\"") && serialized.contains("name=\"commit\""),
+            "replaceChildren must persist replacement button: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"next\"") && serialized.contains("href=\"/inbox\""),
+            "replaceChildren must persist replacement link: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"stale\"") && !serialized.contains("name=\"old\""),
+            "replaceChildren must drop replaced controls: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/inbox").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("stale")),
+            "stale button must not compile after replaceChildren"
+        );
+        let save = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("save"))
+            .expect("save button should compile");
+        assert_eq!(
+            save.attrs.as_ref().and_then(|attrs| attrs.get("name")),
+            Some(&serde_json::json!("commit"))
+        );
+        let next = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("next"))
+            .expect("next link should compile");
+        assert_eq!(
+            next.attrs.as_ref().and_then(|attrs| attrs.get("href")),
+            Some(&serde_json::json!("/inbox"))
+        );
         let note = elements
             .iter()
             .find(|element| element.html_id.as_deref() == Some("note"))
