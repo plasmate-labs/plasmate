@@ -780,6 +780,25 @@ PlasElement.prototype.removeAttribute = function(name) {
     }
 };
 
+PlasElement.prototype.toggleAttribute = function(name, force) {
+    name = String(name).toLowerCase();
+    var has = this.hasAttribute(name);
+    if (arguments.length > 1) {
+        if (force) {
+            if (!has) this.setAttribute(name, '');
+            return true;
+        }
+        if (has) this.removeAttribute(name);
+        return false;
+    }
+    if (has) {
+        this.removeAttribute(name);
+        return false;
+    }
+    this.setAttribute(name, '');
+    return true;
+};
+
 PlasElement.prototype.getAttributeNames = function() {
     return Object.keys(this._attrs);
 };
@@ -8164,6 +8183,95 @@ mod tests {
                 .as_ref()
                 .is_none_or(|attrs| attrs.get("options").is_none()),
             "inputs must not compile select options: {query:?}"
+        );
+    }
+
+    #[test]
+    fn toggle_attribute_compiles_toggled_disabled_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><button id="save" name="commit">Save</button><button id="more" disabled>More</button><p id="note">Just text</p></body></html>"#,
+            "https://example.test/toggle",
+        );
+
+        let before = rt
+            .execute_in_context(
+                "typeof document.getElementById('save').toggleAttribute",
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "function");
+
+        rt.execute_in_context(
+            r#"
+            document.getElementById('save').toggleAttribute('DISABLED');
+            document.getElementById('more').toggleAttribute('disabled');
+            document.getElementById('note').toggleAttribute('disabled', false);
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"save\"") && serialized.contains("disabled"),
+            "toggleAttribute must persist disabled on save: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"more\"")
+                && !serialized
+                    .split("<button")
+                    .find(|chunk| chunk.contains("id=\"more\""))
+                    .expect("more button should serialize")
+                    .contains("disabled"),
+            "toggleAttribute must remove disabled from more: {serialized}"
+        );
+        assert!(
+            serialized.contains("Just text"),
+            "paragraphs must stay intact: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/toggle").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let save = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("save"))
+            .expect("save button should compile");
+        assert_eq!(save.role, crate::som::types::ElementRole::Button);
+        assert_eq!(
+            save.attrs.as_ref().and_then(|attrs| attrs.get("disabled")),
+            Some(&serde_json::json!(true))
+        );
+        let more = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("more"))
+            .expect("more button should compile");
+        assert_eq!(more.role, crate::som::types::ElementRole::Button);
+        assert!(
+            more.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("disabled").is_none()),
+            "toggled-off disabled must not compile: {more:?}"
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("disabled").is_none()),
+            "paragraphs must not compile disabled: {note:?}"
         );
     }
 
