@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-31)
 
-- Window: `41ae2fa` .. `537b173`
+- Window: `f998ce4` .. `617273a`
 - Decision: `NARROW`
-- Merged this run: `61df55d` select.add (`537b173`)
+- Merged this run: `bb84a9d` toggleAttribute (`617273a`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -220,6 +220,10 @@ overwrite, reset, or absorb unrelated work.
   Do not copy #265 select.add onto HTMLOptionsCollection.add, select.remove,
   extract_text, CLI, CDP, SDKs, or the native DOM bridge; do not invent
   options on paragraphs or inputs, or add inspect compact option lists.
+  Do not copy #267 toggleAttribute onto classList.toggle, setAttributeNS,
+  extract_text, CLI, CDP, SDKs, or the native DOM bridge; do not invent
+  toggle on non-element nodes, add inspect compact toggled attrs, or copy
+  force=true/false onto adjacent APIs.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -247,7 +251,7 @@ overwrite, reset, or absorb unrelated work.
   maxLength IDL copy, textarea rows/cols compile copy,
   img/area alt IDL copy, setAttribute ASCII-lowercase copy,
   insertAdjacentHTML copy, replaceChildren copy, table
-  insertRow/insertCell copy, or select.add copy.
+  insertRow/insertCell copy, select.add copy, or toggleAttribute copy.
 
 ## Preferred lanes
 
