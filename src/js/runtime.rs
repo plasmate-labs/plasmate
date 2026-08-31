@@ -745,6 +745,7 @@ PlasElement.prototype.constructor = PlasElement;
 
 // Attributes
 PlasElement.prototype.setAttribute = function(name, value) {
+    name = String(name).toLowerCase();
     var oldValue = this._attrs.hasOwnProperty(name) ? this._attrs[name] : null;
     this._attrs[name] = String(value);
     _queueMutationRecord(this, {
@@ -756,14 +757,17 @@ PlasElement.prototype.setAttribute = function(name, value) {
 };
 
 PlasElement.prototype.getAttribute = function(name) {
+    name = String(name).toLowerCase();
     return this._attrs.hasOwnProperty(name) ? this._attrs[name] : null;
 };
 
 PlasElement.prototype.hasAttribute = function(name) {
+    name = String(name).toLowerCase();
     return this._attrs.hasOwnProperty(name);
 };
 
 PlasElement.prototype.removeAttribute = function(name) {
+    name = String(name).toLowerCase();
     var oldValue = this._attrs.hasOwnProperty(name) ? this._attrs[name] : null;
     delete this._attrs[name];
     if (oldValue !== null) {
@@ -5730,6 +5734,110 @@ mod tests {
             )
             .unwrap();
         assert_eq!(removed, "false");
+    }
+
+    #[test]
+    fn set_attribute_ascii_lowercases_names_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><input id="email" name="old"><a id="next" href="/old">Next</a><p id="note">Just text</p></body></html>"#,
+            "https://example.test/attrs",
+        );
+
+        let before_name = rt
+            .execute_in_context(
+                "String(document.getElementById('email').getAttribute('NAME'))",
+                "test.js",
+            )
+            .unwrap();
+        let before_href = rt
+            .execute_in_context(
+                "String(document.getElementById('next').getAttribute('HREF'))",
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before_name, "old");
+        assert_eq!(before_href, "/old");
+
+        rt.execute_in_context(
+            "document.getElementById('email').setAttribute('NAME', 'work-email'); document.getElementById('next').setAttribute('HREF', '/inbox'); document.getElementById('note').setAttribute('HREF', '/invented');",
+            "test.js",
+        )
+        .unwrap();
+
+        let after_name = rt
+            .execute_in_context(
+                "String(document.getElementById('email').getAttribute('name'))",
+                "test.js",
+            )
+            .unwrap();
+        let after_name_mixed = rt
+            .execute_in_context(
+                "String(document.getElementById('email').getAttribute('NaMe'))",
+                "test.js",
+            )
+            .unwrap();
+        let after_href = rt
+            .execute_in_context(
+                "String(document.getElementById('next').hasAttribute('Href'))",
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after_name, "work-email");
+        assert_eq!(after_name_mixed, "work-email");
+        assert_eq!(after_href, "true");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"email\"") && serialized.contains("name=\"work-email\""),
+            "input must persist lowercased name: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"next\"") && serialized.contains("href=\"/inbox\""),
+            "link must persist lowercased href: {serialized}"
+        );
+        assert!(
+            !serialized.contains("NAME=") && !serialized.contains("HREF="),
+            "serialized HTML must not keep mixed-case attribute names: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/attrs").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(
+            email.attrs.as_ref().and_then(|attrs| attrs.get("name")),
+            Some(&serde_json::json!("work-email"))
+        );
+        let next = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("next"))
+            .expect("next link should compile");
+        assert_eq!(
+            next.attrs.as_ref().and_then(|attrs| attrs.get("href")),
+            Some(&serde_json::json!("/inbox"))
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("href").is_none()),
+            "paragraphs must not compile href: {note:?}"
+        );
     }
 
     #[test]
