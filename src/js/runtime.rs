@@ -1146,6 +1146,41 @@ PlasElement.prototype.replaceWith = function() {
     }
 };
 
+PlasElement.prototype.insertAdjacentHTML = function(position, html) {
+    var pos = String(position).toLowerCase();
+    var nodes = _parseHTML(String(html == null ? '' : html));
+    var i;
+    if (pos === 'beforebegin') {
+        if (!this.parentNode) return;
+        for (i = 0; i < nodes.length; i++) {
+            this.parentNode.insertBefore(nodes[i], this);
+        }
+        return;
+    }
+    if (pos === 'afterbegin') {
+        var first = this.firstChild;
+        for (i = 0; i < nodes.length; i++) {
+            this.insertBefore(nodes[i], first);
+        }
+        return;
+    }
+    if (pos === 'beforeend') {
+        for (i = 0; i < nodes.length; i++) {
+            this.appendChild(nodes[i]);
+        }
+        return;
+    }
+    if (pos === 'afterend') {
+        if (!this.parentNode) return;
+        var ref = this.nextSibling;
+        for (i = 0; i < nodes.length; i++) {
+            this.parentNode.insertBefore(nodes[i], ref);
+        }
+        return;
+    }
+    throw new TypeError("Failed to execute 'insertAdjacentHTML' on 'Element': The value provided ('" + position + "') is not one of 'beforebegin', 'afterbegin', 'beforeend', or 'afterend'.");
+};
+
 // Form element properties
 Object.defineProperty(PlasElement.prototype, 'value', {
     get: function() {
@@ -5827,6 +5862,90 @@ mod tests {
             next.attrs.as_ref().and_then(|attrs| attrs.get("href")),
             Some(&serde_json::json!("/inbox"))
         );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("href").is_none()),
+            "paragraphs must not compile href: {note:?}"
+        );
+    }
+
+    #[test]
+    fn insert_adjacent_html_compiles_injected_controls_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><div id="app"><p id="note">Just text</p></div></body></html>"#,
+            "https://example.test/inbox",
+        );
+
+        let before = rt
+            .execute_in_context(
+                "typeof document.getElementById('app').insertAdjacentHTML",
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "function");
+
+        rt.execute_in_context(
+            r#"
+            document.getElementById('app').insertAdjacentHTML('beforeend', '<button id="save" name="commit">Save</button>');
+            document.getElementById('note').insertAdjacentHTML('afterend', '<a id="next" href="/inbox">Next</a>');
+            document.getElementById('note').insertAdjacentHTML('beforebegin', '<h2 id="title">Inbox</h2>');
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"save\"") && serialized.contains("name=\"commit\""),
+            "beforeend must persist injected button: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"next\"") && serialized.contains("href=\"/inbox\""),
+            "afterend must persist injected link: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"title\""),
+            "beforebegin must persist injected heading: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/inbox").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let save = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("save"))
+            .expect("save button should compile");
+        assert_eq!(
+            save.attrs.as_ref().and_then(|attrs| attrs.get("name")),
+            Some(&serde_json::json!("commit"))
+        );
+        let next = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("next"))
+            .expect("next link should compile");
+        assert_eq!(
+            next.attrs.as_ref().and_then(|attrs| attrs.get("href")),
+            Some(&serde_json::json!("/inbox"))
+        );
+        let title = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("title"))
+            .expect("title heading should compile");
+        assert_eq!(title.role, crate::som::types::ElementRole::Heading);
         let note = elements
             .iter()
             .find(|element| element.html_id.as_deref() == Some("note"))
