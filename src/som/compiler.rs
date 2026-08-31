@@ -1610,6 +1610,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                     "menuitem" | "tab" | "option" => return Some(ElementRole::Button),
                     "img" => return Some(ElementRole::Image),
                     "heading" => return Some(ElementRole::Heading),
+                    "alert" | "status" => return Some(ElementRole::Paragraph),
                     "group" | "radiogroup" => return Some(ElementRole::Group),
                     "progressbar" | "meter" => return Some(ElementRole::Group),
                     _ => {}
@@ -5342,6 +5343,92 @@ mod tests {
                     })
             }),
             "paragraphs must not compile textarea rows/cols: {elements:?}"
+        );
+    }
+
+    #[test]
+    fn test_aria_live_region_roles_compile_as_paragraphs() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Live</title></head>
+<body>
+<main>
+  <div id="err" role="alert">Invalid email</div>
+  <div id="ok" role="status">Saved</div>
+  <div id="log" role="log">Audit trail</div>
+  <button id="save">Save</button>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/live").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let err = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("err"))
+            .expect("ARIA alert should compile");
+        assert_eq!(err.role, ElementRole::Paragraph);
+        assert_eq!(err.text.as_deref(), Some("Invalid email"));
+        let err_attrs = err.attrs.as_ref().expect("alert attrs should compile");
+        assert_eq!(err_attrs["source_role"], "alert");
+        assert!(
+            err.actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "alerts must not invent actions: {err:?}"
+        );
+
+        let ok = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("ok"))
+            .expect("ARIA status should compile");
+        assert_eq!(ok.role, ElementRole::Paragraph);
+        assert_eq!(ok.text.as_deref(), Some("Saved"));
+        let ok_attrs = ok.attrs.as_ref().expect("status attrs should compile");
+        assert_eq!(ok_attrs["source_role"], "status");
+
+        let log = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("log"));
+        assert!(
+            log.is_none_or(|element| {
+                element.role == ElementRole::Paragraph
+                    && element
+                        .attrs
+                        .as_ref()
+                        .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("log")))
+            }),
+            "role=log must not copy live-region mapping: {elements:?}"
+        );
+
+        let save = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("save"))
+            .expect("save button should compile");
+        assert_eq!(save.role, ElementRole::Button);
+        assert!(
+            save.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "buttons must not invent live-region source_role: {save:?}"
+        );
+
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Paragraph
+                    && element.text.as_deref() == Some("Just text")
+                    && element.html_id.is_none()
+                    && element
+                        .attrs
+                        .as_ref()
+                        .is_none_or(|attrs| attrs.get("source_role").is_none())
+            }),
+            "plain text must stay a paragraph: {elements:?}"
         );
     }
 }
