@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-31)
 
-- Window: `2fa83ef` .. `923611b`
+- Window: `41ae2fa` .. `537b173`
 - Decision: `NARROW`
-- Merged this run: `ff1ed00` setAttribute ASCII-lowercase (`ab26854`), `f169282` insertAdjacentHTML (`d930d47`), `ac4fa1f` replaceChildren (`654b6f2`), and `c026004` table insertRow (`923611b`)
+- Merged this run: `61df55d` select.add (`537b173`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -217,6 +217,9 @@ overwrite, reset, or absorb unrelated work.
   `deleteCell`, extract_text, CLI, CDP, SDKs, parser `attrs.rows` copies,
   or the native DOM bridge; do not invent table rows on paragraphs or
   lists.
+  Do not copy #265 select.add onto HTMLOptionsCollection.add, select.remove,
+  extract_text, CLI, CDP, SDKs, or the native DOM bridge; do not invent
+  options on paragraphs or inputs, or add inspect compact option lists.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -243,8 +246,8 @@ overwrite, reset, or absorb unrelated work.
   setSelectionRange/select copy, form `.elements` IDL copy, field
   maxLength IDL copy, textarea rows/cols compile copy,
   img/area alt IDL copy, setAttribute ASCII-lowercase copy,
-  insertAdjacentHTML copy, replaceChildren copy, or table
-  insertRow/insertCell copy.
+  insertAdjacentHTML copy, replaceChildren copy, table
+  insertRow/insertCell copy, or select.add copy.
 
 ## Preferred lanes
 
