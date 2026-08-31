@@ -33,11 +33,11 @@ frequency.
 If these gates are not met, report a no-change or blocked run. Never stash,
 overwrite, reset, or absorb unrelated work.
 
-## Active governor constraint (2026-08-30)
+## Active governor constraint (2026-08-31)
 
-- Window: `6a40645` .. `61e35f7`
+- Window: `ec87ee9` .. `e061a62`
 - Decision: `NARROW`
-- Merged this run: `81ec738` field `.maxLength` and `61e35f7` textarea `rows`/`cols` (already on master)
+- Merged this run: `66f2325` img/area `.alt` IDL (`e061a62` merge)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -199,6 +199,10 @@ overwrite, reset, or absorb unrelated work.
   CDP, extract_links, input, select, paragraphs, or SDKs; do not invent
   HTML defaults (2/20), add JS `rows`/`cols` IDL, or change table
   `attrs.rows`.
+  Do not copy #258 img/area `.alt` IDL onto extract_text, CLI, CDP, SDKs,
+  input, video, paragraphs, or adjacent attributes (`srcset`, `sizes`,
+  `title`); do not invent `alt` on non-image tags, add inspect compact
+  `alt`, or change compile of present `alt`.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -223,7 +227,8 @@ overwrite, reset, or absorb unrelated work.
   field required IDL copy, element hidden IDL copy, labelable
   control `.labels` copy, field placeholder IDL copy, field
   setSelectionRange/select copy, form `.elements` IDL copy, field
-  maxLength IDL copy, or textarea rows/cols compile copy.
+  maxLength IDL copy, textarea rows/cols compile copy, or
+  img/area alt IDL copy.
 
 ## Preferred lanes
 
