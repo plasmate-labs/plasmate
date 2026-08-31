@@ -1059,6 +1059,9 @@ PlasElement.prototype.cloneNode = function(deep) {
     for (var k in this._attrs) {
         if (this._attrs.hasOwnProperty(k)) clone._attrs[k] = this._attrs[k];
     }
+    if (this._defaultValue !== undefined) clone._defaultValue = this._defaultValue;
+    if (this._defaultChecked !== undefined) clone._defaultChecked = this._defaultChecked;
+    if (this._defaultSelected !== undefined) clone._defaultSelected = this._defaultSelected;
     if (deep) {
         for (var i = 0; i < this.childNodes.length; i++) {
             clone.appendChild(this.childNodes[i].cloneNode(true));
@@ -1305,6 +1308,41 @@ PlasElement.prototype.add = function(element, before) {
         this.appendChild(element);
     }
 };
+
+PlasElement.prototype.reset = function() {
+    if (this.tagName !== 'FORM') {
+        return;
+    }
+    var controls = _collectFormElements(this);
+    for (var i = 0; i < controls.length; i++) {
+        _resetListedControl(controls[i]);
+    }
+};
+
+function _resetListedControl(el) {
+    if (el.tagName === 'INPUT') {
+        var type = (el.getAttribute('type') || 'text').toLowerCase();
+        if (type === 'checkbox' || type === 'radio') {
+            el.checked = !!el._defaultChecked;
+            return;
+        }
+        if (type === 'hidden' || type === 'button' || type === 'submit' || type === 'reset' || type === 'image' || type === 'file') {
+            return;
+        }
+        el.value = el._defaultValue != null ? el._defaultValue : '';
+        return;
+    }
+    if (el.tagName === 'TEXTAREA') {
+        el.value = el._defaultValue != null ? el._defaultValue : '';
+        return;
+    }
+    if (el.tagName === 'SELECT') {
+        var options = el.getElementsByTagName('option');
+        for (var i = 0; i < options.length; i++) {
+            options[i].selected = !!options[i]._defaultSelected;
+        }
+    }
+}
 
 // Form element properties
 Object.defineProperty(PlasElement.prototype, 'value', {
@@ -2048,7 +2086,24 @@ function _parseTag(html, start) {
         if (closeEnd !== -1) i = closeEnd + 1;
     }
 
+    _captureResetDefaults(element);
     return { element: element, end: i };
+}
+
+function _captureResetDefaults(el) {
+    if (el.tagName === 'INPUT') {
+        var value = el.getAttribute('value');
+        el._defaultValue = value == null ? '' : value;
+        el._defaultChecked = el.hasAttribute('checked');
+        return;
+    }
+    if (el.tagName === 'TEXTAREA') {
+        el._defaultValue = el.textContent;
+        return;
+    }
+    if (el.tagName === 'OPTION') {
+        el._defaultSelected = el.hasAttribute('selected');
+    }
 }
 
 function _decodeEntities(text) {
@@ -8473,6 +8528,133 @@ mod tests {
                 .as_ref()
                 .is_some_and(|attrs| attrs.get("elements").is_some())),
             "elements collection must not compile as an attr"
+        );
+    }
+
+    #[test]
+    fn form_reset_restores_listed_control_defaults_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="signup"><input id="email" name="email" value="ops@example.com"><textarea id="notes" name="notes">hello</textarea><select id="plan" name="plan"><option value="free">Free</option><option value="pro" selected>Pro</option></select><input id="agree" name="agree" type="checkbox" checked></form><input id="company" name="company" form="signup" value="labs"><p id="note">Just text</p><input id="orphan" name="orphan" value="keep"></body></html>"#,
+            "https://example.test/reset",
+        );
+
+        let before = rt
+            .execute_in_context(
+                "typeof document.getElementById('signup').reset",
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "function");
+
+        rt.execute_in_context(
+            r#"
+            (function() {
+                var form = document.getElementById('signup');
+                form.elements.email.value = 'changed@example.com';
+                form.elements.notes.value = 'draft';
+                form.elements.plan.selectedIndex = 0;
+                form.elements.agree.checked = false;
+                form.elements.namedItem('company').value = 'other';
+                document.getElementById('orphan').value = 'gone';
+                document.getElementById('note').reset();
+                form.reset();
+            })();
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("value=\"ops@example.com\""),
+            "form.reset must restore email default: {serialized}"
+        );
+        assert!(
+            serialized.contains(">hello</textarea>"),
+            "form.reset must restore textarea default: {serialized}"
+        );
+        assert!(
+            serialized.contains("value=\"labs\""),
+            "form.reset must restore form-associated default: {serialized}"
+        );
+        assert!(
+            serialized.contains("value=\"gone\""),
+            "orphan input stays independent: {serialized}"
+        );
+        assert!(
+            serialized.contains("Just text"),
+            "paragraphs must stay intact: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/reset").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(
+            email.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("ops@example.com"))
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(
+            notes.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("hello"))
+        );
+        let plan = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plan"))
+            .expect("plan select should compile");
+        assert_eq!(
+            plan.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("pro"))
+        );
+        let agree = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("agree"))
+            .expect("agree checkbox should compile");
+        assert_eq!(
+            agree.attrs.as_ref().and_then(|attrs| attrs.get("checked")),
+            Some(&serde_json::json!(true))
+        );
+        let company = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("company"))
+            .expect("company input should compile");
+        assert_eq!(
+            company.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("labs"))
+        );
+        let orphan = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("orphan"))
+            .expect("orphan input should compile");
+        assert_eq!(
+            orphan.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("gone"))
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("value").is_none()),
+            "paragraphs must not compile form values: {note:?}"
         );
     }
 
