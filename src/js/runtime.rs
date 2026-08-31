@@ -1200,6 +1200,59 @@ PlasElement.prototype.replaceChildren = function() {
     this.append.apply(this, arguments);
 };
 
+PlasElement.prototype.insertRow = function(index) {
+    if (this.tagName !== 'TABLE' && this.tagName !== 'TBODY' && this.tagName !== 'THEAD' && this.tagName !== 'TFOOT') {
+        return null;
+    }
+    var parent = this;
+    if (this.tagName === 'TABLE') {
+        var tbody = null;
+        for (var i = 0; i < this.childNodes.length; i++) {
+            var child = this.childNodes[i];
+            if (child.nodeType === Node.ELEMENT_NODE && child.tagName === 'TBODY') {
+                tbody = child;
+            }
+        }
+        if (tbody) parent = tbody;
+    }
+    var rows = [];
+    for (var i = 0; i < parent.childNodes.length; i++) {
+        var child = parent.childNodes[i];
+        if (child.nodeType === Node.ELEMENT_NODE && child.tagName === 'TR') {
+            rows.push(child);
+        }
+    }
+    var row = document.createElement('tr');
+    var idx = (index === undefined || index === null) ? -1 : Number(index);
+    if (idx < 0 || idx >= rows.length) {
+        parent.appendChild(row);
+    } else {
+        parent.insertBefore(row, rows[idx]);
+    }
+    return row;
+};
+
+PlasElement.prototype.insertCell = function(index) {
+    if (this.tagName !== 'TR') {
+        return null;
+    }
+    var cells = [];
+    for (var i = 0; i < this.childNodes.length; i++) {
+        var child = this.childNodes[i];
+        if (child.nodeType === Node.ELEMENT_NODE && (child.tagName === 'TD' || child.tagName === 'TH')) {
+            cells.push(child);
+        }
+    }
+    var cell = document.createElement('td');
+    var idx = (index === undefined || index === null) ? -1 : Number(index);
+    if (idx < 0 || idx >= cells.length) {
+        this.appendChild(cell);
+    } else {
+        this.insertBefore(cell, cells[idx]);
+    }
+    return cell;
+};
+
 // Form element properties
 Object.defineProperty(PlasElement.prototype, 'value', {
     get: function() {
@@ -7883,6 +7936,102 @@ mod tests {
                 .as_ref()
                 .is_none_or(|attrs| attrs.get("alt").is_none()),
             "video must not compile alt: {clip:?}"
+        );
+    }
+
+    #[test]
+    fn table_insert_row_compiles_inserted_cells_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><table id="pricing"><tr><th>Plan</th><th>Seats</th></tr><tr><td>Starter</td><td>1</td></tr></table><p id="note">Just text</p><ul id="bullets"><li>Dot</li></ul></body></html>"#,
+            "https://example.test/plans",
+        );
+
+        let before = rt
+            .execute_in_context(
+                "typeof document.getElementById('pricing').insertRow",
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "function");
+
+        rt.execute_in_context(
+            r#"
+            var table = document.getElementById('pricing');
+            var row = table.insertRow();
+            var plan = row.insertCell();
+            plan.id = 'pro';
+            plan.textContent = 'Pro';
+            var seats = row.insertCell();
+            seats.textContent = '3';
+            document.getElementById('note').insertRow();
+            document.getElementById('bullets').insertRow();
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"pro\"")
+                && serialized.contains("Pro")
+                && serialized.contains(">3<"),
+            "insertRow must persist replacement cells: {serialized}"
+        );
+        assert!(
+            serialized.contains("Just text") && serialized.contains("<li>Dot</li>"),
+            "paragraphs and lists must stay intact: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/plans").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let pricing = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pricing"))
+            .expect("pricing table should compile");
+        assert_eq!(pricing.role, crate::som::types::ElementRole::Table);
+        let pricing_attrs = pricing
+            .attrs
+            .as_ref()
+            .expect("pricing table attrs should compile");
+        assert_eq!(
+            pricing_attrs["headers"],
+            serde_json::json!(["Plan", "Seats"])
+        );
+        assert_eq!(
+            pricing_attrs["rows"],
+            serde_json::json!([["Starter", "1"], ["Pro", "3"]])
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("rows").is_none()),
+            "paragraphs must not compile table rows: {note:?}"
+        );
+        let bullets = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("bullets"))
+            .expect("bullets list should compile");
+        assert_eq!(bullets.role, crate::som::types::ElementRole::List);
+        assert!(
+            bullets
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("rows").is_none()),
+            "lists must not compile table rows: {bullets:?}"
         );
     }
 
