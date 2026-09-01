@@ -1610,6 +1610,21 @@ Object.defineProperty(PlasElement.prototype, 'pattern', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'accept', {
+    get: function() {
+        if (this.tagName !== 'INPUT') {
+            return '';
+        }
+        return this.getAttribute('accept') || '';
+    },
+    set: function(v) {
+        if (this.tagName !== 'INPUT') {
+            return;
+        }
+        this.setAttribute('accept', String(v));
+    }
+});
+
 Object.defineProperty(PlasElement.prototype, 'alt', {
     get: function() {
         if (this.tagName !== 'IMG' && this.tagName !== 'AREA') {
@@ -9204,6 +9219,158 @@ mod tests {
                 .as_ref()
                 .is_none_or(|attrs| attrs.get("pattern").is_none()),
             "contenteditable must not compile pattern: {editor:?}"
+        );
+    }
+
+    #[test]
+    fn input_accept_idl_compiles_constraint_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><input id="photo" name="photo" type="file"><textarea id="notes">draft</textarea><p id="note">Just text</p><select id="plan"><option value="free" selected>Free</option></select><div id="editor" contenteditable="true">Edit me</div></body></html>"#,
+            "https://example.test/accept",
+        );
+
+        let before_photo = rt
+            .execute_in_context("String(document.getElementById('photo').accept)", "test.js")
+            .unwrap();
+        let before_notes = rt
+            .execute_in_context("String(document.getElementById('notes').accept)", "test.js")
+            .unwrap();
+        let before_note = rt
+            .execute_in_context("String(document.getElementById('note').accept)", "test.js")
+            .unwrap();
+        let before_plan = rt
+            .execute_in_context("String(document.getElementById('plan').accept)", "test.js")
+            .unwrap();
+        let before_editor = rt
+            .execute_in_context(
+                "String(document.getElementById('editor').accept)",
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before_photo, "");
+        assert_eq!(before_notes, "");
+        assert_eq!(before_note, "");
+        assert_eq!(before_plan, "");
+        assert_eq!(before_editor, "");
+
+        rt.execute_in_context(
+            r#"
+            document.getElementById('photo').accept = 'image/png,.pdf';
+            document.getElementById('notes').accept = 'text/plain';
+            document.getElementById('note').accept = 'nope';
+            document.getElementById('plan').accept = 'application/json';
+            document.getElementById('editor').accept = 'image/*';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let after_photo = rt
+            .execute_in_context("String(document.getElementById('photo').accept)", "test.js")
+            .unwrap();
+        let after_notes = rt
+            .execute_in_context("String(document.getElementById('notes').accept)", "test.js")
+            .unwrap();
+        let after_note = rt
+            .execute_in_context("String(document.getElementById('note').accept)", "test.js")
+            .unwrap();
+        let after_plan = rt
+            .execute_in_context("String(document.getElementById('plan').accept)", "test.js")
+            .unwrap();
+        let after_editor = rt
+            .execute_in_context(
+                "String(document.getElementById('editor').accept)",
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after_photo, "image/png,.pdf");
+        assert_eq!(after_notes, "");
+        assert_eq!(after_note, "");
+        assert_eq!(after_plan, "");
+        assert_eq!(after_editor, "");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"photo\"") && serialized.contains("accept=\"image/png,.pdf\""),
+            "file input must persist accept: {serialized}"
+        );
+        assert!(
+            serialized.contains("Just text") && serialized.contains(">draft</textarea>"),
+            "paragraphs and textareas must stay intact: {serialized}"
+        );
+        assert!(
+            !serialized.contains("accept=\"text/plain\"")
+                && !serialized.contains("accept=\"nope\"")
+                && !serialized.contains("accept=\"application/json\"")
+                && !serialized.contains("accept=\"image/*\""),
+            "textarea, paragraph, select, and contenteditable must not invent accept: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/accept").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let photo = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("photo"))
+            .expect("photo input should compile");
+        assert_eq!(photo.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            photo.attrs.as_ref().and_then(|attrs| attrs.get("accept")),
+            Some(&serde_json::json!("image/png,.pdf"))
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert!(
+            notes
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("accept").is_none()),
+            "textarea must not compile accept: {notes:?}"
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("accept").is_none()),
+            "paragraphs must not compile accept: {note:?}"
+        );
+        let plan = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plan"))
+            .expect("plan select should compile");
+        assert_eq!(plan.role, crate::som::types::ElementRole::Select);
+        assert!(
+            plan.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("accept").is_none()),
+            "selects must not compile accept: {plan:?}"
+        );
+        let editor = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("editor"))
+            .expect("editor should compile");
+        assert!(
+            editor
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("accept").is_none()),
+            "contenteditable must not compile accept: {editor:?}"
         );
     }
 
