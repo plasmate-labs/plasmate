@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-01)
 
-- Window: `eb2a235` .. `f84832f`
+- Window: `1aa4f83` .. `8c8b1aa`
 - Decision: `NARROW`
-- Merged this run: `3b82e71` input min/max IDL (`f84832f`)
+- Merged this run: `8145b84` input pattern IDL (`8c8b1aa`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -241,6 +241,10 @@ overwrite, reset, or absorb unrelated work.
   handlers, or SDK wrappers; do not invent min/max on non-input tags,
   change maxLength IDL, add `minLength`/`step`, or add inspect compact
   `min`/`max`.
+  Do not copy #276 input `.pattern` IDL onto `textarea`, `select`,
+  `contenteditable`, paragraphs, `clear`/`type_text` handlers, or SDK
+  wrappers; do not invent pattern on non-input tags, change min/max/
+  maxLength IDL, add `step`, or add inspect compact `pattern`.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -270,7 +274,8 @@ overwrite, reset, or absorb unrelated work.
   insertAdjacentHTML copy, replaceChildren copy, table
   insertRow/insertCell copy, select.add copy, toggleAttribute copy,
   ARIA alert/status live-region compile copy, form.reset copy,
-  figcaption paragraph compile copy, or input min/max IDL copy.
+  figcaption paragraph compile copy, input min/max IDL copy, or
+  input pattern IDL copy.
 
 ## Preferred lanes
 
