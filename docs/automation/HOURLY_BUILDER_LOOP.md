@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-01)
 
-- Window: `a92e348` .. `7508fe5`
+- Window: `f82b7e9` .. `9324ce0`
 - Decision: `NARROW`
-- Merged this run: `efc38a1` select.value IDL (`7508fe5`)
+- Merged this run: `0ebcc44` input.accept IDL (`9324ce0`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -249,6 +249,10 @@ overwrite, reset, or absorb unrelated work.
   `contenteditable`, paragraphs, `clear`/`type_text` handlers, or SDK
   wrappers; do not invent `selected` on non-option tags, change textarea
   value or input pattern persistence, or add inspect compact `value`.
+  Do not copy #280 input `.accept` IDL onto `textarea`, `select`,
+  `contenteditable`, paragraphs, `clear`/`type_text` handlers, or SDK
+  wrappers; do not invent accept on non-input tags, change pattern/
+  min/max IDL, add inspect compact `accept`, or add upload APIs.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -279,7 +283,8 @@ overwrite, reset, or absorb unrelated work.
   insertRow/insertCell copy, select.add copy, toggleAttribute copy,
   ARIA alert/status live-region compile copy, form.reset copy,
   figcaption paragraph compile copy, input min/max IDL copy,
-  input pattern IDL copy, or select value IDL copy.
+  input pattern IDL copy, select value IDL copy, or input accept
+  IDL copy.
 
 ## Preferred lanes
 
