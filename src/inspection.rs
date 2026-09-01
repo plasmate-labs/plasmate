@@ -110,6 +110,8 @@ pub struct CompactElement {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub value: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub expanded: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub actions: Option<Vec<String>>,
 }
 
@@ -307,6 +309,7 @@ fn flatten_elements(
             disabled: compact_disabled(element),
             checked: compact_checked(element),
             value: compact_value(element),
+            expanded: compact_expanded(element),
             actions: element.actions.as_ref().map(|actions| {
                 actions
                     .iter()
@@ -457,6 +460,21 @@ fn compact_value(element: &Element) -> Option<String> {
             .map(str::trim)
             .filter(|value| !value.is_empty())
             .map(|value| bound_string(value, 512))
+    })
+}
+
+fn compact_expanded(element: &Element) -> Option<bool> {
+    if !matches!(
+        element.role,
+        ElementRole::Button | ElementRole::Link | ElementRole::TextInput | ElementRole::Select
+    ) {
+        return None;
+    }
+    element.attrs.as_ref().and_then(|attrs| {
+        match attrs.get("aria").and_then(|aria| aria.get("expanded")) {
+            Some(serde_json::Value::Bool(value)) => Some(*value),
+            _ => None,
+        }
     })
 }
 
@@ -1112,6 +1130,86 @@ mod tests {
                 .filter(|element| element.role == "paragraph")
                 .all(|element| element.value.is_none()),
             "paragraphs must not invent value: {elements:?}"
+        );
+    }
+
+    #[test]
+    fn compact_som_preserves_expanded() {
+        let html = r#"<main>
+  <button aria-label="Filters" aria-expanded="true">Filters</button>
+  <button aria-label="Menu" aria-expanded=" FALSE ">Menu</button>
+  <button aria-label="Save">Save</button>
+  <a href="/docs" aria-expanded="false">Docs</a>
+  <div role="combobox" aria-label="Country" aria-expanded="true"></div>
+  <input type="checkbox" aria-label="Subscribe" aria-expanded="true" checked>
+  <p aria-expanded="true">Just text</p>
+</main>"#;
+        let som = compiler::compile(html, "https://example.com/").unwrap();
+        let compact = compact_structure(&som);
+        let elements: Vec<_> = compact
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let filters = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Filters"))
+            .expect("expanded filters button should be compact");
+        assert_eq!(filters.role, "button");
+        assert_eq!(filters.expanded, Some(true));
+
+        let menu = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Menu"))
+            .expect("collapsed menu button should be compact");
+        assert_eq!(menu.role, "button");
+        assert_eq!(menu.expanded, Some(false));
+
+        let save = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Save"))
+            .expect("plain button should stay compact");
+        assert_eq!(save.role, "button");
+        assert!(
+            save.expanded.is_none(),
+            "missing expanded must not be invented: {save:?}"
+        );
+
+        let docs = elements
+            .iter()
+            .find(|element| element.role == "link")
+            .expect("link should stay compact");
+        assert_eq!(docs.expanded, Some(false));
+
+        let country = elements
+            .iter()
+            .find(|element| element.label.as_deref() == Some("Country"))
+            .expect("combobox should be compact");
+        assert_eq!(country.role, "select");
+        assert_eq!(country.expanded, Some(true));
+
+        let subscribe = elements
+            .iter()
+            .find(|element| element.label.as_deref() == Some("Subscribe"))
+            .expect("checkbox should stay compact");
+        assert_eq!(subscribe.role, "checkbox");
+        assert!(
+            subscribe.expanded.is_none(),
+            "checkboxes must not copy aria-expanded onto compact expanded: {subscribe:?}"
+        );
+        assert!(
+            elements.iter().any(|element| {
+                element.role == "paragraph" && element.text.as_deref() == Some("Just text")
+            }),
+            "plain text must stay a paragraph: {elements:?}"
+        );
+        assert!(
+            elements
+                .iter()
+                .filter(|element| element.role == "paragraph")
+                .all(|element| element.expanded.is_none()),
+            "paragraphs must not invent expanded: {elements:?}"
         );
     }
 
