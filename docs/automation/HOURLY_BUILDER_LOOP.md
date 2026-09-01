@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-08-31)
 
-- Window: `77ebbd4` .. `c38d862`
+- Window: `c9e348a` .. `2c62bc4`
 - Decision: `NARROW`
-- Merged this run: `3d08d62` ARIA alert/status compile (`89bb5dd`) and `4655729` form.reset (`c38d862`)
+- Merged this run: `c2bf49d` figcaption compile (`2c62bc4`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -232,6 +232,10 @@ overwrite, reset, or absorb unrelated work.
   extract_text, CLI, CDP, SDKs, or the native DOM bridge; do not invent
   defaultValue public IDL, reset orphan controls/paragraphs, or add inspect
   compact reset fields.
+  Do not copy #272 `<figcaption>` compile work onto extract_text, CLI, CDP,
+  extract_links, SDKs, or adjacent tags (`figure`, `caption`, `legend`);
+  do not invent `attrs.caption` from figcaption or copy caption text onto
+  the image label.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -260,7 +264,8 @@ overwrite, reset, or absorb unrelated work.
   img/area alt IDL copy, setAttribute ASCII-lowercase copy,
   insertAdjacentHTML copy, replaceChildren copy, table
   insertRow/insertCell copy, select.add copy, toggleAttribute copy,
-  ARIA alert/status live-region compile copy, or form.reset copy.
+  ARIA alert/status live-region compile copy, form.reset copy, or
+  figcaption paragraph compile copy.
 
 ## Preferred lanes
 
