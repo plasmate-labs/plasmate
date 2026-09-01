@@ -33,11 +33,11 @@ frequency.
 If these gates are not met, report a no-change or blocked run. Never stash,
 overwrite, reset, or absorb unrelated work.
 
-## Active governor constraint (2026-08-31)
+## Active governor constraint (2026-09-01)
 
-- Window: `c9e348a` .. `2c62bc4`
+- Window: `eb2a235` .. `f84832f`
 - Decision: `NARROW`
-- Merged this run: `c2bf49d` figcaption compile (`2c62bc4`)
+- Merged this run: `3b82e71` input min/max IDL (`f84832f`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -236,6 +236,11 @@ overwrite, reset, or absorb unrelated work.
   extract_links, SDKs, or adjacent tags (`figure`, `caption`, `legend`);
   do not invent `attrs.caption` from figcaption or copy caption text onto
   the image label.
+  Do not copy #274 input `.min`/`.max` IDL onto `textarea`, `select`,
+  `contenteditable`, paragraphs, meter, progress, `clear`/`type_text`
+  handlers, or SDK wrappers; do not invent min/max on non-input tags,
+  change maxLength IDL, add `minLength`/`step`, or add inspect compact
+  `min`/`max`.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -264,8 +269,8 @@ overwrite, reset, or absorb unrelated work.
   img/area alt IDL copy, setAttribute ASCII-lowercase copy,
   insertAdjacentHTML copy, replaceChildren copy, table
   insertRow/insertCell copy, select.add copy, toggleAttribute copy,
-  ARIA alert/status live-region compile copy, form.reset copy, or
-  figcaption paragraph compile copy.
+  ARIA alert/status live-region compile copy, form.reset copy,
+  figcaption paragraph compile copy, or input min/max IDL copy.
 
 ## Preferred lanes
 
