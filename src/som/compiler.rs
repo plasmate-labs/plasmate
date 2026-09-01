@@ -1658,7 +1658,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "img" | "picture" => Some(ElementRole::Image),
         "ul" | "ol" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
-        "p" | "time" | "blockquote" => Some(ElementRole::Paragraph),
+        "p" | "time" | "blockquote" | "figcaption" => Some(ElementRole::Paragraph),
         "section" | "article" => Some(ElementRole::Section),
         "fieldset" => Some(ElementRole::Group),
         "hr" => Some(ElementRole::Separator),
@@ -5430,5 +5430,75 @@ mod tests {
             }),
             "plain text must stay a paragraph: {elements:?}"
         );
+    }
+
+    #[test]
+    fn test_figcaption_compiles_as_paragraph() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Chart</title></head>
+<body>
+<main>
+  <figure>
+    <img id="chart" src="/q3.png" alt="Sales">
+    <figcaption id="caption">Q3 revenue in <a href="/wiki/EMEA">EMEA</a>, 2009</figcaption>
+  </figure>
+  <p id="note">Body copy</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/fig").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let img = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("chart"))
+            .expect("figure image should compile");
+        assert_eq!(img.role, ElementRole::Image);
+        assert_eq!(
+            img.attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("alt"))
+                .and_then(|value| value.as_str()),
+            Some("Sales")
+        );
+        assert_ne!(img.label.as_deref(), Some("Q3 revenue in EMEA, 2009"));
+        assert!(
+            img.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("caption").is_none()),
+            "images must not invent caption from figcaption: {img:?}"
+        );
+
+        let caption = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("caption"))
+            .expect("figcaption html_id should compile");
+        assert_eq!(caption.role, ElementRole::Paragraph);
+        assert_eq!(caption.text.as_deref(), Some("Q3 revenue in EMEA, 2009"));
+        assert!(
+            caption
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("caption").is_none()),
+            "figcaption must not compile attrs.caption: {caption:?}"
+        );
+
+        let link = elements
+            .iter()
+            .find(|element| element.role == ElementRole::Link)
+            .expect("nested figcaption link should remain interactive");
+        assert_eq!(link.text.as_deref(), Some("EMEA"));
+
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("body copy should compile");
+        assert_eq!(note.role, ElementRole::Paragraph);
+        assert_eq!(note.text.as_deref(), Some("Body copy"));
     }
 }
