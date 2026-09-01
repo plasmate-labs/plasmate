@@ -1581,6 +1581,21 @@ Object.defineProperty(PlasElement.prototype, 'max', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'pattern', {
+    get: function() {
+        if (this.tagName !== 'INPUT') {
+            return '';
+        }
+        return this.getAttribute('pattern') || '';
+    },
+    set: function(v) {
+        if (this.tagName !== 'INPUT') {
+            return;
+        }
+        this.setAttribute('pattern', String(v));
+    }
+});
+
 Object.defineProperty(PlasElement.prototype, 'alt', {
     get: function() {
         if (this.tagName !== 'IMG' && this.tagName !== 'AREA') {
@@ -8850,6 +8865,165 @@ mod tests {
                 .as_ref()
                 .is_none_or(|attrs| attrs.get("min").is_none() && attrs.get("max").is_none()),
             "contenteditable must not compile min/max: {editor:?}"
+        );
+    }
+
+    #[test]
+    fn input_pattern_idl_compiles_constraint_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><input id="sku" name="sku" type="text" value="AB"><textarea id="notes">draft</textarea><p id="note">Just text</p><select id="plan"><option value="free" selected>Free</option></select><div id="editor" contenteditable="true">Edit me</div></body></html>"#,
+            "https://example.test/pattern",
+        );
+
+        let before_sku = rt
+            .execute_in_context("String(document.getElementById('sku').pattern)", "test.js")
+            .unwrap();
+        let before_notes = rt
+            .execute_in_context(
+                "String(document.getElementById('notes').pattern)",
+                "test.js",
+            )
+            .unwrap();
+        let before_note = rt
+            .execute_in_context("String(document.getElementById('note').pattern)", "test.js")
+            .unwrap();
+        let before_plan = rt
+            .execute_in_context("String(document.getElementById('plan').pattern)", "test.js")
+            .unwrap();
+        let before_editor = rt
+            .execute_in_context(
+                "String(document.getElementById('editor').pattern)",
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before_sku, "");
+        assert_eq!(before_notes, "");
+        assert_eq!(before_note, "");
+        assert_eq!(before_plan, "");
+        assert_eq!(before_editor, "");
+
+        rt.execute_in_context(
+            r#"
+            document.getElementById('sku').pattern = '[A-Z]{2}[0-9]{3}';
+            document.getElementById('notes').pattern = '[0-9]+';
+            document.getElementById('note').pattern = 'nope';
+            document.getElementById('plan').pattern = 'free|pro';
+            document.getElementById('editor').pattern = '.+';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let after_sku = rt
+            .execute_in_context("String(document.getElementById('sku').pattern)", "test.js")
+            .unwrap();
+        let after_notes = rt
+            .execute_in_context(
+                "String(document.getElementById('notes').pattern)",
+                "test.js",
+            )
+            .unwrap();
+        let after_note = rt
+            .execute_in_context("String(document.getElementById('note').pattern)", "test.js")
+            .unwrap();
+        let after_plan = rt
+            .execute_in_context("String(document.getElementById('plan').pattern)", "test.js")
+            .unwrap();
+        let after_editor = rt
+            .execute_in_context(
+                "String(document.getElementById('editor').pattern)",
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after_sku, "[A-Z]{2}[0-9]{3}");
+        assert_eq!(after_notes, "");
+        assert_eq!(after_note, "");
+        assert_eq!(after_plan, "");
+        assert_eq!(after_editor, "");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"sku\"")
+                && serialized.contains("pattern=\"[A-Z]{2}[0-9]{3}\""),
+            "text input must persist pattern: {serialized}"
+        );
+        assert!(
+            serialized.contains("Just text") && serialized.contains(">draft</textarea>"),
+            "paragraphs and textareas must stay intact: {serialized}"
+        );
+        assert!(
+            !serialized.contains("pattern=\"[0-9]+\"")
+                && !serialized.contains("pattern=\"nope\"")
+                && !serialized.contains("pattern=\"free|pro\"")
+                && !serialized.contains("pattern=\".+\""),
+            "textarea, paragraph, select, and contenteditable must not invent pattern: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/pattern").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let sku = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("sku"))
+            .expect("sku input should compile");
+        assert_eq!(sku.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            sku.attrs.as_ref().and_then(|attrs| attrs.get("pattern")),
+            Some(&serde_json::json!("[A-Z]{2}[0-9]{3}"))
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert!(
+            notes
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("pattern").is_none()),
+            "textarea must not compile pattern: {notes:?}"
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("pattern").is_none()),
+            "paragraphs must not compile pattern: {note:?}"
+        );
+        let plan = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plan"))
+            .expect("plan select should compile");
+        assert_eq!(plan.role, crate::som::types::ElementRole::Select);
+        assert!(
+            plan.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("pattern").is_none()),
+            "selects must not compile pattern: {plan:?}"
+        );
+        let editor = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("editor"))
+            .expect("editor should compile");
+        assert!(
+            editor
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("pattern").is_none()),
+            "contenteditable must not compile pattern: {editor:?}"
         );
     }
 
