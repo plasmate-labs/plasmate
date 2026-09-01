@@ -1378,6 +1378,20 @@ Object.defineProperty(PlasElement.prototype, 'value', {
             }
             return;
         }
+        if (this.tagName === 'SELECT') {
+            var options = this.getElementsByTagName('option');
+            var wanted = String(v);
+            var matched = false;
+            for (var i = 0; i < options.length; i++) {
+                if (!matched && options[i].value === wanted) {
+                    options[i].selected = true;
+                    matched = true;
+                } else {
+                    options[i].selected = false;
+                }
+            }
+            return;
+        }
         this._attrs.value = String(v);
     }
 });
@@ -6995,6 +7009,172 @@ mod tests {
             .expect("note paragraph should compile");
         assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
         assert_eq!(note.text.as_deref(), Some("Just text"));
+        let name = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("name"))
+            .expect("name input should compile");
+        assert_eq!(
+            name.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("a"))
+        );
+    }
+
+    #[test]
+    fn select_value_idl_updates_selected_option_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><select id="plan"><option value="free" selected>Free</option><option value="pro">Pro</option></select><textarea id="notes">draft</textarea><p id="note">Just text</p><input id="name" value="a"></body></html>"#,
+            "https://example.test/plan-value",
+        );
+
+        let before_value = rt
+            .execute_in_context("String(document.getElementById('plan').value)", "test.js")
+            .unwrap();
+        let before_index = rt
+            .execute_in_context(
+                "String(document.getElementById('plan').selectedIndex)",
+                "test.js",
+            )
+            .unwrap();
+        let before_notes = rt
+            .execute_in_context("String(document.getElementById('notes').value)", "test.js")
+            .unwrap();
+        let before_note = rt
+            .execute_in_context("document.getElementById('note').textContent", "test.js")
+            .unwrap();
+        let before_name = rt
+            .execute_in_context("String(document.getElementById('name').value)", "test.js")
+            .unwrap();
+        assert_eq!(before_value, "free");
+        assert_eq!(before_index, "0");
+        assert_eq!(before_notes, "draft");
+        assert_eq!(before_note, "Just text");
+        assert_eq!(before_name, "a");
+
+        rt.execute_in_context(
+            r#"
+            document.getElementById('plan').value = 'pro';
+            document.getElementById('notes').value = 'changed';
+            document.getElementById('note').value = 'invented';
+            document.getElementById('name').value = 'a';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let after_value = rt
+            .execute_in_context("String(document.getElementById('plan').value)", "test.js")
+            .unwrap();
+        let after_index = rt
+            .execute_in_context(
+                "String(document.getElementById('plan').selectedIndex)",
+                "test.js",
+            )
+            .unwrap();
+        let after_notes = rt
+            .execute_in_context("String(document.getElementById('notes').value)", "test.js")
+            .unwrap();
+        let after_note = rt
+            .execute_in_context("document.getElementById('note').textContent", "test.js")
+            .unwrap();
+        let after_name = rt
+            .execute_in_context("String(document.getElementById('name').value)", "test.js")
+            .unwrap();
+        assert_eq!(after_value, "pro");
+        assert_eq!(after_index, "1");
+        assert_eq!(after_notes, "changed");
+        assert_eq!(after_note, "Just text");
+        assert_eq!(after_name, "a");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("value=\"pro\" selected=")
+                || serialized.contains("selected=\"\" value=\"pro\"")
+                || serialized.contains("<option selected=\"\" value=\"pro\">")
+                || serialized.contains("<option value=\"pro\" selected=\"\">"),
+            "select.value must persist the matching option selected: {serialized}"
+        );
+        assert!(
+            !serialized.contains("value=\"free\" selected")
+                && !serialized.contains("selected=\"\" value=\"free\""),
+            "previous option must drop selected: {serialized}"
+        );
+        assert!(
+            serialized.contains(">changed</textarea>"),
+            "textarea value IDL must stay independent: {serialized}"
+        );
+        assert!(
+            serialized.contains("Just text"),
+            "paragraphs must stay intact: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"note\" selected")
+                && !serialized.contains("selected=\"\" id=\"note\""),
+            "paragraphs must not invent selected: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"name\"") && serialized.contains("value=\"a\""),
+            "input value must stay independent: {serialized}"
+        );
+        assert!(
+            !serialized.contains("<select") || !serialized.contains("id=\"plan\" value="),
+            "select.value must not serialize as a select content attribute: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/plan-value").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let plan = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plan"))
+            .expect("plan select should compile");
+        assert_eq!(plan.role, crate::som::types::ElementRole::Select);
+        assert_eq!(
+            plan.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("pro"))
+        );
+        let options = plan
+            .attrs
+            .as_ref()
+            .and_then(|attrs| attrs.get("options"))
+            .and_then(|value| value.as_array())
+            .expect("select must compile options");
+        assert_eq!(options[0].get("value"), Some(&serde_json::json!("free")));
+        assert!(
+            options[0].get("selected").is_none(),
+            "free must not stay selected: {options:?}"
+        );
+        assert_eq!(options[1].get("value"), Some(&serde_json::json!("pro")));
+        assert_eq!(options[1].get("selected"), Some(&serde_json::json!(true)));
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert_eq!(
+            notes.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("changed"))
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(note.text.as_deref(), Some("Just text"));
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("selected").is_none()),
+            "paragraphs must not compile selected: {note:?}"
+        );
         let name = elements
             .iter()
             .find(|element| element.html_id.as_deref() == Some("name"))
