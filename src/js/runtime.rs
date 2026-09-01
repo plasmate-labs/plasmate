@@ -1551,6 +1551,36 @@ Object.defineProperty(PlasElement.prototype, 'maxLength', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'min', {
+    get: function() {
+        if (this.tagName !== 'INPUT') {
+            return '';
+        }
+        return this.getAttribute('min') || '';
+    },
+    set: function(v) {
+        if (this.tagName !== 'INPUT') {
+            return;
+        }
+        this.setAttribute('min', String(v));
+    }
+});
+
+Object.defineProperty(PlasElement.prototype, 'max', {
+    get: function() {
+        if (this.tagName !== 'INPUT') {
+            return '';
+        }
+        return this.getAttribute('max') || '';
+    },
+    set: function(v) {
+        if (this.tagName !== 'INPUT') {
+            return;
+        }
+        this.setAttribute('max', String(v));
+    }
+});
+
 Object.defineProperty(PlasElement.prototype, 'alt', {
     get: function() {
         if (this.tagName !== 'IMG' && this.tagName !== 'AREA') {
@@ -8544,10 +8574,7 @@ mod tests {
         );
 
         let before = rt
-            .execute_in_context(
-                "typeof document.getElementById('signup').reset",
-                "test.js",
-            )
+            .execute_in_context("typeof document.getElementById('signup').reset", "test.js")
             .unwrap();
         assert_eq!(before, "function");
 
@@ -8655,6 +8682,174 @@ mod tests {
                 .as_ref()
                 .is_none_or(|attrs| attrs.get("value").is_none()),
             "paragraphs must not compile form values: {note:?}"
+        );
+    }
+
+    #[test]
+    fn input_min_max_idl_compiles_constraints_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><input id="qty" name="qty" type="number" value="2"><textarea id="notes">draft</textarea><p id="note">Just text</p><select id="plan"><option value="free" selected>Free</option></select><div id="editor" contenteditable="true">Edit me</div></body></html>"#,
+            "https://example.test/range",
+        );
+
+        let before_qty_min = rt
+            .execute_in_context("String(document.getElementById('qty').min)", "test.js")
+            .unwrap();
+        let before_qty_max = rt
+            .execute_in_context("String(document.getElementById('qty').max)", "test.js")
+            .unwrap();
+        let before_notes_min = rt
+            .execute_in_context("String(document.getElementById('notes').min)", "test.js")
+            .unwrap();
+        let before_note_min = rt
+            .execute_in_context("String(document.getElementById('note').min)", "test.js")
+            .unwrap();
+        let before_plan_max = rt
+            .execute_in_context("String(document.getElementById('plan').max)", "test.js")
+            .unwrap();
+        let before_editor_max = rt
+            .execute_in_context("String(document.getElementById('editor').max)", "test.js")
+            .unwrap();
+        assert_eq!(before_qty_min, "");
+        assert_eq!(before_qty_max, "");
+        assert_eq!(before_notes_min, "");
+        assert_eq!(before_note_min, "");
+        assert_eq!(before_plan_max, "");
+        assert_eq!(before_editor_max, "");
+
+        rt.execute_in_context(
+            r#"
+            document.getElementById('qty').min = '1';
+            document.getElementById('qty').max = '9';
+            document.getElementById('notes').min = '2';
+            document.getElementById('notes').max = '8';
+            document.getElementById('note').min = '3';
+            document.getElementById('note').max = '7';
+            document.getElementById('plan').min = '4';
+            document.getElementById('plan').max = '6';
+            document.getElementById('editor').min = '0';
+            document.getElementById('editor').max = '5';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let after_qty_min = rt
+            .execute_in_context("String(document.getElementById('qty').min)", "test.js")
+            .unwrap();
+        let after_qty_max = rt
+            .execute_in_context("String(document.getElementById('qty').max)", "test.js")
+            .unwrap();
+        let after_notes_min = rt
+            .execute_in_context("String(document.getElementById('notes').min)", "test.js")
+            .unwrap();
+        let after_note_min = rt
+            .execute_in_context("String(document.getElementById('note').min)", "test.js")
+            .unwrap();
+        let after_plan_max = rt
+            .execute_in_context("String(document.getElementById('plan').max)", "test.js")
+            .unwrap();
+        let after_editor_max = rt
+            .execute_in_context("String(document.getElementById('editor').max)", "test.js")
+            .unwrap();
+        assert_eq!(after_qty_min, "1");
+        assert_eq!(after_qty_max, "9");
+        assert_eq!(after_notes_min, "");
+        assert_eq!(after_note_min, "");
+        assert_eq!(after_plan_max, "");
+        assert_eq!(after_editor_max, "");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"qty\"")
+                && serialized.contains("min=\"1\"")
+                && serialized.contains("max=\"9\""),
+            "number input must persist min/max: {serialized}"
+        );
+        assert!(
+            serialized.contains("Just text") && serialized.contains(">draft</textarea>"),
+            "paragraphs and textareas must stay intact: {serialized}"
+        );
+        assert!(
+            !serialized.contains("min=\"2\"")
+                && !serialized.contains("max=\"8\"")
+                && !serialized.contains("min=\"3\"")
+                && !serialized.contains("max=\"7\"")
+                && !serialized.contains("min=\"4\"")
+                && !serialized.contains("max=\"6\"")
+                && !serialized.contains("min=\"0\"")
+                && !serialized.contains("max=\"5\""),
+            "textarea, paragraph, select, and contenteditable must not invent min/max: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/range").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let qty = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("qty"))
+            .expect("qty input should compile");
+        assert_eq!(qty.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            qty.attrs.as_ref().and_then(|attrs| attrs.get("min")),
+            Some(&serde_json::json!(1))
+        );
+        assert_eq!(
+            qty.attrs.as_ref().and_then(|attrs| attrs.get("max")),
+            Some(&serde_json::json!(9))
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert!(
+            notes
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("min").is_none() && attrs.get("max").is_none()),
+            "textarea must not compile min/max: {notes:?}"
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("min").is_none() && attrs.get("max").is_none()),
+            "paragraphs must not compile min/max: {note:?}"
+        );
+        let plan = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plan"))
+            .expect("plan select should compile");
+        assert_eq!(plan.role, crate::som::types::ElementRole::Select);
+        assert!(
+            plan.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("min").is_none() && attrs.get("max").is_none()),
+            "selects must not compile min/max: {plan:?}"
+        );
+        let editor = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("editor"))
+            .expect("editor should compile");
+        assert!(
+            editor
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("min").is_none() && attrs.get("max").is_none()),
+            "contenteditable must not compile min/max: {editor:?}"
         );
     }
 
