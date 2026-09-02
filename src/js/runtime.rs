@@ -2122,6 +2122,13 @@ function _matchesSimpleSelector(el, selector) {
                     return false;
                 }
                 break;
+            case 'empty':
+                for (var ei = 0; ei < el.childNodes.length; ei++) {
+                    var emptyChild = el.childNodes[ei];
+                    if (emptyChild.nodeType === Node.ELEMENT_NODE) return false;
+                    if (emptyChild.nodeType === Node.TEXT_NODE && emptyChild.textContent !== '') return false;
+                }
+                break;
         }
     }
 
@@ -10932,6 +10939,88 @@ mod tests {
         assert_eq!(
             skip.attrs.as_ref().and_then(|attrs| attrs.get("tabindex")),
             Some(&serde_json::json!(-1))
+        );
+    }
+
+    #[test]
+    fn query_selector_empty_pseudo_fills_vacant_slot_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><p id="note">Just text</p><p id="status"></p><div id="filled"><span>x</span></div><div id="slot"></div><textarea id="notes">draft</textarea><input id="name" value="a"></body></html>"#,
+            "https://example.test/empty",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    document.querySelector('p:empty') ? document.querySelector('p:empty').id : 'none',
+                    document.querySelector('div:empty') ? document.querySelector('div:empty').id : 'none',
+                    String(document.querySelectorAll('p:empty').length),
+                    String(document.querySelector('#note:empty')),
+                    String(document.querySelector('#filled:empty')),
+                    String(document.querySelector('textarea:empty')),
+                    String(document.querySelector('input:empty') ? document.querySelector('input:empty').id : 'none')
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "status|slot|1|null|null|null|name");
+
+        rt.execute_in_context(
+            r#"
+            var slot = document.querySelector('p:empty');
+            if (slot) slot.textContent = 'Ready';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"status\"") && serialized.contains("Ready"),
+            "checkout JS must persist the :empty paragraph text: {serialized}"
+        );
+        assert!(
+            serialized.contains("Just text") && serialized.contains(">draft</textarea>"),
+            "filled paragraphs and textareas must stay intact: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/empty").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let status = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("status"))
+            .expect("status paragraph should compile");
+        assert_eq!(status.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(status.text.as_deref(), Some("Ready"));
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(note.text.as_deref(), Some("Just text"));
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert_eq!(notes.text.as_deref(), Some("draft"));
+        let name = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("name"))
+            .expect("name input should compile");
+        assert_eq!(name.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            name.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("a"))
         );
     }
 }
