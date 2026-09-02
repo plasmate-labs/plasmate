@@ -1640,6 +1640,22 @@ Object.defineProperty(PlasElement.prototype, 'step', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'multiple', {
+    get: function() {
+        if (this.tagName !== 'INPUT' && this.tagName !== 'SELECT') {
+            return false;
+        }
+        return this.hasAttribute('multiple');
+    },
+    set: function(v) {
+        if (this.tagName !== 'INPUT' && this.tagName !== 'SELECT') {
+            return;
+        }
+        if (v) this.setAttribute('multiple', '');
+        else this.removeAttribute('multiple');
+    }
+});
+
 Object.defineProperty(PlasElement.prototype, 'alt', {
     get: function() {
         if (this.tagName !== 'IMG' && this.tagName !== 'AREA') {
@@ -9924,6 +9940,180 @@ mod tests {
                 .as_ref()
                 .is_none_or(|attrs| attrs.get("form").is_none()),
             "contenteditable must not compile form owner: {editor:?}"
+        );
+    }
+
+    #[test]
+    fn input_select_multiple_idl_compiles_multi_value_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><input id="photos" name="photos" type="file"><select id="plan"><option value="free" selected>Free</option><option value="pro">Pro</option></select><textarea id="notes">draft</textarea><p id="note">Just text</p><div id="editor" contenteditable="true">Edit me</div></body></html>"#,
+            "https://example.test/upload",
+        );
+
+        let before_photos = rt
+            .execute_in_context(
+                "String(document.getElementById('photos').multiple)",
+                "test.js",
+            )
+            .unwrap();
+        let before_plan = rt
+            .execute_in_context(
+                "String(document.getElementById('plan').multiple)",
+                "test.js",
+            )
+            .unwrap();
+        let before_notes = rt
+            .execute_in_context(
+                "String(document.getElementById('notes').multiple)",
+                "test.js",
+            )
+            .unwrap();
+        let before_note = rt
+            .execute_in_context(
+                "String(document.getElementById('note').multiple)",
+                "test.js",
+            )
+            .unwrap();
+        let before_editor = rt
+            .execute_in_context(
+                "String(document.getElementById('editor').multiple)",
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before_photos, "false");
+        assert_eq!(before_plan, "false");
+        assert_eq!(before_notes, "false");
+        assert_eq!(before_note, "false");
+        assert_eq!(before_editor, "false");
+
+        rt.execute_in_context(
+            r#"
+            document.getElementById('photos').multiple = true;
+            document.getElementById('plan').multiple = true;
+            document.getElementById('notes').multiple = true;
+            document.getElementById('note').multiple = true;
+            document.getElementById('editor').multiple = true;
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let after_photos = rt
+            .execute_in_context(
+                "String(document.getElementById('photos').multiple)",
+                "test.js",
+            )
+            .unwrap();
+        let after_plan = rt
+            .execute_in_context(
+                "String(document.getElementById('plan').multiple)",
+                "test.js",
+            )
+            .unwrap();
+        let after_notes = rt
+            .execute_in_context(
+                "String(document.getElementById('notes').multiple)",
+                "test.js",
+            )
+            .unwrap();
+        let after_note = rt
+            .execute_in_context(
+                "String(document.getElementById('note').multiple)",
+                "test.js",
+            )
+            .unwrap();
+        let after_editor = rt
+            .execute_in_context(
+                "String(document.getElementById('editor').multiple)",
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after_photos, "true");
+        assert_eq!(after_plan, "true");
+        assert_eq!(after_notes, "false");
+        assert_eq!(after_note, "false");
+        assert_eq!(after_editor, "false");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"photos\"") && serialized.contains("multiple"),
+            "file input must persist multiple: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"plan\"") && serialized.contains("<select"),
+            "select must stay intact: {serialized}"
+        );
+        assert!(
+            serialized.contains("Just text") && serialized.contains(">draft</textarea>"),
+            "paragraphs and textareas must stay intact: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/upload").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let photos = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("photos"))
+            .expect("photos input should compile");
+        assert_eq!(photos.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            photos
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("multiple")),
+            Some(&serde_json::json!(true))
+        );
+        let plan = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plan"))
+            .expect("plan select should compile");
+        assert_eq!(plan.role, crate::som::types::ElementRole::Select);
+        assert_eq!(
+            plan.attrs.as_ref().and_then(|attrs| attrs.get("multiple")),
+            Some(&serde_json::json!(true))
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert!(
+            notes
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("multiple").is_none()),
+            "textarea must not compile multiple: {notes:?}"
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("multiple").is_none()),
+            "paragraphs must not compile multiple: {note:?}"
+        );
+        let editor = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("editor"))
+            .expect("editor should compile");
+        assert!(
+            editor
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("multiple").is_none()),
+            "contenteditable must not compile multiple: {editor:?}"
         );
     }
 
