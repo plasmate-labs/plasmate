@@ -87,7 +87,9 @@ class ListItem(BaseModel):
 
     model_config = {"extra": "forbid"}
 
-    text: str
+    text: Optional[str] = None
+    term: Optional[str] = None
+    description: Optional[str] = None
 
 
 class ElementAttrs(BaseModel):
