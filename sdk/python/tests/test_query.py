@@ -492,6 +492,64 @@ class TestFindByText:
         assert find_by_text(som, "Configure")[0].id == "e_list"
         assert find_by_text(som, "zzz_no_match") == []
 
+    def test_finds_compiled_description_list_items(self) -> None:
+        som = Som.model_validate(
+            {
+                "som_version": "1.0",
+                "url": "https://example.test/glossary",
+                "title": "Glossary",
+                "lang": "en",
+                "regions": [
+                    {
+                        "id": "r_main",
+                        "role": "main",
+                        "elements": [
+                            {
+                                "id": "e_glossary",
+                                "role": "list",
+                                "html_id": "glossary",
+                                "attrs": {
+                                    "items": [
+                                        {
+                                            "term": "SOM",
+                                            "description": "Semantic Object Model",
+                                        },
+                                        {
+                                            "term": "AWP",
+                                            "description": "Agent Web Protocol",
+                                        },
+                                    ]
+                                },
+                            },
+                            {
+                                "id": "e_bullets",
+                                "role": "list",
+                                "html_id": "bullets",
+                                "attrs": {"items": [{"text": "Dot"}]},
+                            },
+                        ],
+                    }
+                ],
+                "meta": {
+                    "html_bytes": 100,
+                    "som_bytes": 50,
+                    "element_count": 2,
+                    "interactive_count": 0,
+                },
+            }
+        )
+
+        glossary = som.regions[0].elements[0]
+        items = glossary.attrs.items if glossary.attrs else None
+        assert items is not None
+        assert items[0].term == "SOM"
+        assert items[0].description == "Semantic Object Model"
+        assert items[0].text is None
+        assert find_by_text(som, "SOM")[0].id == "e_glossary"
+        assert find_by_text(som, "Semantic Object Model")[0].id == "e_glossary"
+        assert find_by_text(som, "Dot")[0].id == "e_bullets"
+        assert find_by_text(som, "zzz_no_match") == []
+
     def test_finds_compiled_table_captions(self) -> None:
         som = Som(
             som_version="1.0",
@@ -749,3 +807,17 @@ class TestPydanticModels:
     def test_select_option(self) -> None:
         opt = SelectOption(value="us", text="United States", selected=True)
         assert opt.selected is True
+
+    def test_list_item_accepts_compiled_description_list_fields(self) -> None:
+        item = ListItem.model_validate(
+            {"term": "SOM", "description": "Semantic Object Model"}
+        )
+        assert item.term == "SOM"
+        assert item.description == "Semantic Object Model"
+        assert item.text is None
+        bullet = ListItem.model_validate({"text": "Dot"})
+        assert bullet.text == "Dot"
+        assert bullet.term is None
+        assert bullet.description is None
+        with pytest.raises(Exception):
+            ListItem.model_validate({"text": "Dot", "unknown_field": "oops"})
