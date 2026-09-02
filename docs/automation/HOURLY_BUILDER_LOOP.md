@@ -33,11 +33,11 @@ frequency.
 If these gates are not met, report a no-change or blocked run. Never stash,
 overwrite, reset, or absorb unrelated work.
 
-## Active governor constraint (2026-09-01)
+## Active governor constraint (2026-09-02)
 
-- Window: `447a84b` .. `00720dc`
+- Window: `ea88c4b` .. `4fd539a`
 - Decision: `NARROW`
-- Merged this run: `fc304ee` input.step IDL (`00720dc`)
+- Merged this run: `02491cf` dl term/description compile (`4fd539a`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -262,6 +262,10 @@ overwrite, reset, or absorb unrelated work.
   wrappers; do not invent step on non-input tags, change pattern/
   min/max/accept IDL, add `stepUp`/`stepDown`/`minLength`, or add
   inspect compact `step`.
+  Do not copy #286 `<dl>` term/description `attrs.items` compile work onto
+  extract_text, CLI, CDP, extract_links, or SDKs; do not invent
+  ordered/start/reversed on `dl`, copy term/description onto `ul`, or
+  flatten `dt`/`dd` as sibling paragraph extractors.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -293,7 +297,8 @@ overwrite, reset, or absorb unrelated work.
   ARIA alert/status live-region compile copy, form.reset copy,
   figcaption paragraph compile copy, input min/max IDL copy,
   input pattern IDL copy, select value IDL copy, input accept
-  IDL copy, inspect compact expanded copy, or input step IDL copy.
+  IDL copy, inspect compact expanded copy, input step IDL copy, or
+  description-list compile copy.
 
 ## Preferred lanes
 
