@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-02)
 
-- Window: `ea88c4b` .. `4fd539a`
+- Window: `0ce8210` .. `0267031`
 - Decision: `NARROW`
-- Merged this run: `02491cf` dl term/description compile (`4fd539a`)
+- Merged this run: `6cc2484` Python ListItem term/description (`165aac1`), `26cdb20` Python type_text (`0267031`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -263,9 +263,15 @@ overwrite, reset, or absorb unrelated work.
   min/max/accept IDL, add `stepUp`/`stepDown`/`minLength`, or add
   inspect compact `step`.
   Do not copy #286 `<dl>` term/description `attrs.items` compile work onto
-  extract_text, CLI, CDP, extract_links, or SDKs; do not invent
+  extract_text, CLI, CDP, extract_links, Node, or Go; do not invent
   ordered/start/reversed on `dl`, copy term/description onto `ul`, or
   flatten `dt`/`dd` as sibling paragraph extractors.
+  Do not copy #288 Python `ListItem` term/description onto Node or Go
+  SDKs, extract_text, CLI, CDP, or other Python models; do not require
+  `text` again or copy term/description onto unordered-list-only parsers.
+  Do not copy #289 Python `type_text` onto Node or Go SDKs, other
+  integrations, or adjacent wrappers (`clear`, `toggle`, `select_option`);
+  do not add html_id lookup or disabled/readonly fail-closed copies.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -297,8 +303,9 @@ overwrite, reset, or absorb unrelated work.
   ARIA alert/status live-region compile copy, form.reset copy,
   figcaption paragraph compile copy, input min/max IDL copy,
   input pattern IDL copy, select value IDL copy, input accept
-  IDL copy, inspect compact expanded copy, input step IDL copy, or
-  description-list compile copy.
+  IDL copy, inspect compact expanded copy, input step IDL copy,
+  description-list compile copy, Python ListItem term/description copy,
+  or Python type_text wrapper copy.
 
 ## Preferred lanes
 
