@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-02)
 
-- Window: `0ce8210` .. `0267031`
+- Window: `0218cc2` .. `e15b5e2`
 - Decision: `NARROW`
-- Merged this run: `6cc2484` Python ListItem term/description (`165aac1`), `26cdb20` Python type_text (`0267031`)
+- Merged this run: `29aed61` querySelector `:checked` (`b4adcbb`), `063aab2` form action/method IDL (`e15b5e2`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -272,6 +272,13 @@ overwrite, reset, or absorb unrelated work.
   Do not copy #289 Python `type_text` onto Node or Go SDKs, other
   integrations, or adjacent wrappers (`clear`, `toggle`, `select_option`);
   do not add html_id lookup or disabled/readonly fail-closed copies.
+  Do not copy #291 form `action`/`method` IDL onto input, textarea, select,
+  contenteditable, paragraphs, inspect compact fields, `form.submit`, or
+  SDK wrappers; do not add `enctype` / `target` / `novalidate`.
+  Do not copy #292 querySelector `:checked` onto other pseudos
+  (`:indeterminate`, `:disabled`, `:required`), inspect compact checked,
+  native-bridge copies, or SDK wrappers; do not invent `checked` on text
+  inputs, textareas, selects, or paragraphs.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -305,7 +312,8 @@ overwrite, reset, or absorb unrelated work.
   input pattern IDL copy, select value IDL copy, input accept
   IDL copy, inspect compact expanded copy, input step IDL copy,
   description-list compile copy, Python ListItem term/description copy,
-  or Python type_text wrapper copy.
+  Python type_text wrapper copy, form action/method IDL copy, or
+  querySelector :checked copy.
 
 ## Preferred lanes
 
