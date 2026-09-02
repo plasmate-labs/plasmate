@@ -1516,6 +1516,34 @@ Object.defineProperty(PlasElement.prototype, 'hidden', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'tabIndex', {
+    get: function() {
+        var raw = this.getAttribute('tabindex');
+        if (raw === null || raw === '') {
+            var tag = this.tagName;
+            if (tag === 'BUTTON' || tag === 'SELECT' || tag === 'TEXTAREA' || tag === 'SUMMARY' || tag === 'IFRAME') {
+                return 0;
+            }
+            if (tag === 'INPUT' && this.type !== 'hidden') {
+                return 0;
+            }
+            if (tag === 'A' && this.getAttribute('href') !== null) {
+                return 0;
+            }
+            return -1;
+        }
+        var n = parseInt(raw, 10);
+        return isFinite(n) ? n : -1;
+    },
+    set: function(v) {
+        var n = Number(v);
+        if (!isFinite(n)) {
+            return;
+        }
+        this.setAttribute('tabindex', String(Math.trunc(n)));
+    }
+});
+
 Object.defineProperty(PlasElement.prototype, 'type', {
     get: function() { return this._attrs.type || (this.tagName === 'INPUT' ? 'text' : ''); },
     set: function(v) { this._attrs.type = v; }
@@ -10722,4 +10750,188 @@ mod tests {
         assert_eq!(plan.role, crate::som::types::ElementRole::Select);
     }
 
+    #[test]
+    fn tab_index_idl_updates_tabindex_attribute_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><div id="widget" role="button">Save</div><button id="go">Go</button><button id="stay">Stay</button><input id="name" value="a"><select id="plan"><option value="free">Free</option></select><textarea id="notes">draft</textarea><p id="note">Just text</p><p id="skip" tabindex="-1">Skip target</p></body></html>"#,
+            "https://example.test/focus",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('widget').tabIndex),
+                    String(document.getElementById('go').tabIndex),
+                    String(document.getElementById('stay').tabIndex),
+                    String(document.getElementById('name').tabIndex),
+                    String(document.getElementById('plan').tabIndex),
+                    String(document.getElementById('notes').tabIndex),
+                    String(document.getElementById('note').tabIndex),
+                    String(document.getElementById('skip').tabIndex)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "-1|0|0|0|0|0|-1|-1");
+
+        rt.execute_in_context(
+            r#"
+            document.getElementById('widget').tabIndex = 0;
+            document.getElementById('go').tabIndex = -1;
+            document.getElementById('name').tabIndex = 2;
+            document.getElementById('note').tabIndex = 3;
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let after = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('widget').tabIndex),
+                    String(document.getElementById('go').tabIndex),
+                    String(document.getElementById('stay').tabIndex),
+                    String(document.getElementById('name').tabIndex),
+                    String(document.getElementById('plan').tabIndex),
+                    String(document.getElementById('notes').tabIndex),
+                    String(document.getElementById('note').tabIndex),
+                    String(document.getElementById('skip').tabIndex)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after, "0|-1|0|2|0|0|3|-1");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"widget\"")
+                && serialized.contains("tabindex=\"0\"")
+                && (serialized.contains("id=\"widget\" role=\"button\" tabindex=\"0\"")
+                    || serialized.contains("id=\"widget\" tabindex=\"0\"")),
+            "custom widget must persist tabindex=0: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"go\" tabindex=\"-1\"")
+                || serialized.contains("tabindex=\"-1\" id=\"go\""),
+            "button tabIndex=-1 must persist even when it matches the IDL default: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"name\"") && serialized.contains("tabindex=\"2\""),
+            "input must persist tabindex=2: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"note\" tabindex=\"3\"")
+                || serialized.contains("tabindex=\"3\" id=\"note\""),
+            "paragraph tabIndex must persist as HTMLElement-global: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"skip\" tabindex=\"-1\"")
+                || serialized.contains("tabindex=\"-1\" id=\"skip\""),
+            "untouched skip target must keep tabindex=-1: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"stay\" tabindex")
+                && !serialized.contains("id=\"plan\" tabindex")
+                && !serialized.contains("id=\"notes\" tabindex")
+                && serialized.contains("value=\"a\"")
+                && serialized.contains("Just text")
+                && serialized.contains(">draft</textarea>"),
+            "untouched default-focusable controls must not invent tabindex: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/focus").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let widget = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("widget"))
+            .expect("widget should compile");
+        assert_eq!(widget.role, crate::som::types::ElementRole::Button);
+        assert_eq!(
+            widget
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("tabindex")),
+            Some(&serde_json::json!(0))
+        );
+        let go = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("go"))
+            .expect("go button should compile");
+        assert_eq!(go.role, crate::som::types::ElementRole::Button);
+        assert_eq!(
+            go.attrs.as_ref().and_then(|attrs| attrs.get("tabindex")),
+            Some(&serde_json::json!(-1))
+        );
+        let stay = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("stay"))
+            .expect("stay button should compile");
+        assert_eq!(stay.role, crate::som::types::ElementRole::Button);
+        assert!(
+            stay.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("tabindex").is_none()),
+            "untouched button must not compile tabindex: {stay:?}"
+        );
+        let name = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("name"))
+            .expect("name input should compile");
+        assert_eq!(name.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            name.attrs.as_ref().and_then(|attrs| attrs.get("tabindex")),
+            Some(&serde_json::json!(2))
+        );
+        let plan = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plan"))
+            .expect("plan select should compile");
+        assert_eq!(plan.role, crate::som::types::ElementRole::Select);
+        assert!(
+            plan.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("tabindex").is_none()),
+            "untouched select must not compile tabindex: {plan:?}"
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert_eq!(notes.text.as_deref(), Some("draft"));
+        assert!(
+            notes
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("tabindex").is_none()),
+            "untouched textarea must not compile tabindex: {notes:?}"
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(
+            note.attrs.as_ref().and_then(|attrs| attrs.get("tabindex")),
+            Some(&serde_json::json!(3))
+        );
+        let skip = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("skip"))
+            .expect("skip paragraph should compile");
+        assert_eq!(skip.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(
+            skip.attrs.as_ref().and_then(|attrs| attrs.get("tabindex")),
+            Some(&serde_json::json!(-1))
+        );
+    }
 }
