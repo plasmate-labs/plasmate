@@ -1902,7 +1902,7 @@ function _matchesSelector(el, selector) {
 }
 
 function _matchesSingleSelector(el, selector) {
-    // Handle compound selectors with combinators (space = descendant, > = child)
+    // Handle compound selectors with combinators (space = descendant, > = child, + = adjacent)
     // Split while keeping the combinator info
     var tokens = [];
     var current = '';
@@ -1913,12 +1913,16 @@ function _matchesSingleSelector(el, selector) {
             if (current.trim()) tokens.push({type: 'sel', val: current.trim()});
             tokens.push({type: 'child'});
             current = '';
-        } else if (c === ' ' && current.trim() && (i + 1 >= selector.length || selector[i+1] !== '>')) {
-            // Space combinator (descendant), but not if followed by >
+        } else if (c === '+') {
+            if (current.trim()) tokens.push({type: 'sel', val: current.trim()});
+            tokens.push({type: 'adjacent'});
+            current = '';
+        } else if (c === ' ' && current.trim() && (i + 1 >= selector.length || (selector[i+1] !== '>' && selector[i+1] !== '+'))) {
+            // Space combinator (descendant), but not if followed by > or +
             var nextNonSpace = i + 1;
             while (nextNonSpace < selector.length && selector[nextNonSpace] === ' ') nextNonSpace++;
-            if (nextNonSpace < selector.length && selector[nextNonSpace] === '>') {
-                // Skip spaces before >
+            if (nextNonSpace < selector.length && (selector[nextNonSpace] === '>' || selector[nextNonSpace] === '+')) {
+                // Skip spaces before > or +
                 i++;
                 continue;
             }
@@ -1954,6 +1958,14 @@ function _matchesSingleSelector(el, selector) {
             if (!parent || parent.nodeType !== Node.ELEMENT_NODE) return false;
             if (!_matchesSimpleSelector(parent, tokens[idx].val)) return false;
             current_el = parent;
+            idx--;
+        } else if (combinator.type === 'adjacent') {
+            idx--;
+            if (idx < 0 || tokens[idx].type !== 'sel') return false;
+            var prev = current_el.previousElementSibling;
+            if (!prev || prev.nodeType !== Node.ELEMENT_NODE) return false;
+            if (!_matchesSimpleSelector(prev, tokens[idx].val)) return false;
+            current_el = prev;
             idx--;
         } else if (combinator.type === 'descendant') {
             // Must have ancestor selector before it
@@ -10617,4 +10629,97 @@ mod tests {
             "textareas must not compile optgroup label: {notes:?}"
         );
     }
+
+    #[test]
+    fn query_selector_adjacent_sibling_compiles_labeled_control_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout"><label id="email-label">Email</label><input id="email" name="email"><p id="note">Just text</p><input id="extra" name="extra"><textarea id="notes">draft</textarea><select id="plan"><option value="free">Free</option></select></form></body></html>"#,
+            "https://example.test/adjacent",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    document.querySelector('label + input') ? document.querySelector('label + input').id : 'none',
+                    document.querySelector('label+input') ? document.querySelector('label+input').id : 'none',
+                    document.querySelector('p + input') ? document.querySelector('p + input').id : 'none',
+                    document.querySelector('input + textarea') ? document.querySelector('input + textarea').id : 'none',
+                    String(document.querySelector('label + p')),
+                    String(document.querySelector('label + textarea')),
+                    String(document.querySelector('p + select')),
+                    String(document.querySelectorAll('label + input').length)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "email|email|extra|notes|null|null|null|1");
+
+        rt.execute_in_context(
+            r#"
+            var field = document.querySelector('label + input');
+            if (field) field.value = 'ops@example.com';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"email\"") && serialized.contains("value=\"ops@example.com\""),
+            "checkout JS must persist the label + input value: {serialized}"
+        );
+        assert!(
+            serialized.contains("Just text") && serialized.contains(">draft</textarea>"),
+            "paragraphs and textareas must stay intact: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/adjacent").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(email.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            email.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("ops@example.com"))
+        );
+        let extra = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("extra"))
+            .expect("extra input should compile");
+        assert_eq!(extra.role, crate::som::types::ElementRole::TextInput);
+        assert_ne!(
+            extra.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("ops@example.com")),
+            "non-adjacent input must not receive the labeled value: {extra:?}"
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert_eq!(notes.text.as_deref(), Some("draft"));
+        let plan = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plan"))
+            .expect("plan select should compile");
+        assert_eq!(plan.role, crate::som::types::ElementRole::Select);
+    }
+
 }
