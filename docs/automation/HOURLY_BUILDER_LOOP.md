@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-01)
 
-- Window: `688d58b` .. `7db8cf6`
+- Window: `447a84b` .. `00720dc`
 - Decision: `NARROW`
-- Merged this run: `155b7b8` inspect compact expanded (`7db8cf6`)
+- Merged this run: `fc304ee` input.step IDL (`00720dc`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -257,6 +257,11 @@ overwrite, reset, or absorb unrelated work.
   or SDKs; do not invent missing expanded, copy it onto paragraphs or
   checkboxes, read non-boolean compiled aria-expanded, or add
   `aria-pressed` / `aria-selected` compact fields.
+  Do not copy #284 input `.step` IDL onto `textarea`, `select`,
+  `contenteditable`, paragraphs, `clear`/`type_text` handlers, or SDK
+  wrappers; do not invent step on non-input tags, change pattern/
+  min/max/accept IDL, add `stepUp`/`stepDown`/`minLength`, or add
+  inspect compact `step`.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -288,7 +293,7 @@ overwrite, reset, or absorb unrelated work.
   ARIA alert/status live-region compile copy, form.reset copy,
   figcaption paragraph compile copy, input min/max IDL copy,
   input pattern IDL copy, select value IDL copy, input accept
-  IDL copy, or inspect compact expanded copy.
+  IDL copy, inspect compact expanded copy, or input step IDL copy.
 
 ## Preferred lanes
 
