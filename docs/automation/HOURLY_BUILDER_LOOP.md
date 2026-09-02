@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-02)
 
-- Window: `5df8c1e` .. `cf7783f`
+- Window: `f02d7be` .. `a76ccde`
 - Decision: `NARROW`
-- Merged this run: `030d437` listed-control `.form` owner IDL (`51f84b2`), `d7936c3` optgroup `.label` IDL (`e3e26c0`), `f11e519` input/select `.multiple` IDL (`c7c12dc`), `dd397b5` querySelector adjacent-sibling (`cf7783f`)
+- Merged this run: `3703c12` HTMLElement.tabIndex IDL (`a76ccde`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -292,6 +292,9 @@ overwrite, reset, or absorb unrelated work.
   Do not copy #297 querySelector adjacent-sibling (`+`) onto later-sibling
   (`~`), child (`>`), descendant, `:nth-child`, other combinators,
   extract_text, CLI, CDP, or SDK wrappers.
+  Do not copy #299 HTMLElement.tabIndex IDL onto extract_text, CLI, CDP,
+  SDKs, inspect compact fields, or adjacent attributes (`accesskey`,
+  `autofocus`).
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -327,8 +330,9 @@ overwrite, reset, or absorb unrelated work.
   description-list compile copy, Python ListItem term/description copy,
   Python type_text wrapper copy, form action/method IDL copy,
   querySelector :checked copy, listed-control form owner IDL copy,
-  optgroup.label IDL copy, input/select multiple IDL copy, or
-  querySelector adjacent-sibling combinator copy.
+  optgroup.label IDL copy, input/select multiple IDL copy,
+  querySelector adjacent-sibling combinator copy, or
+  HTMLElement tabIndex IDL copy.
 
 ## Preferred lanes
 
