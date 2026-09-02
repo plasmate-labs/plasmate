@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-02)
 
-- Window: `0218cc2` .. `e15b5e2`
+- Window: `5df8c1e` .. `cf7783f`
 - Decision: `NARROW`
-- Merged this run: `29aed61` querySelector `:checked` (`b4adcbb`), `063aab2` form action/method IDL (`e15b5e2`)
+- Merged this run: `030d437` listed-control `.form` owner IDL (`51f84b2`), `d7936c3` optgroup `.label` IDL (`e3e26c0`), `f11e519` input/select `.multiple` IDL (`c7c12dc`), `dd397b5` querySelector adjacent-sibling (`cf7783f`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -279,6 +279,19 @@ overwrite, reset, or absorb unrelated work.
   (`:indeterminate`, `:disabled`, `:required`), inspect compact checked,
   native-bridge copies, or SDK wrappers; do not invent `checked` on text
   inputs, textareas, selects, or paragraphs.
+  Do not copy #294 listed-control `.form` owner IDL onto FORM, paragraph,
+  contenteditable, orphan listed controls, inspect compact `form`,
+  `form.submit`, or SDK wrappers; do not copy form action/method onto
+  inputs.
+  Do not copy #295 `optgroup.label` IDL onto SELECT, paragraph, input,
+  textarea, `HTMLOptionElement.label`, inspect compact `label`/`group`,
+  extract_text, CLI, CDP, or SDK wrappers.
+  Do not copy #296 input/select `.multiple` IDL onto TEXTAREA, paragraph,
+  contenteditable, an upload API, a new file role, html_id lookup,
+  inspect compact `multiple`, extract_text, CLI, CDP, or SDK wrappers.
+  Do not copy #297 querySelector adjacent-sibling (`+`) onto later-sibling
+  (`~`), child (`>`), descendant, `:nth-child`, other combinators,
+  extract_text, CLI, CDP, or SDK wrappers.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -312,8 +325,10 @@ overwrite, reset, or absorb unrelated work.
   input pattern IDL copy, select value IDL copy, input accept
   IDL copy, inspect compact expanded copy, input step IDL copy,
   description-list compile copy, Python ListItem term/description copy,
-  Python type_text wrapper copy, form action/method IDL copy, or
-  querySelector :checked copy.
+  Python type_text wrapper copy, form action/method IDL copy,
+  querySelector :checked copy, listed-control form owner IDL copy,
+  optgroup.label IDL copy, input/select multiple IDL copy, or
+  querySelector adjacent-sibling combinator copy.
 
 ## Preferred lanes
 
