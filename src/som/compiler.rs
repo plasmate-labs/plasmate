@@ -1656,7 +1656,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "select" => Some(ElementRole::Select),
         "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => Some(ElementRole::Heading),
         "img" | "picture" => Some(ElementRole::Image),
-        "ul" | "ol" => Some(ElementRole::List),
+        "ul" | "ol" | "dl" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
         "p" | "time" | "blockquote" | "figcaption" => Some(ElementRole::Paragraph),
         "section" | "article" => Some(ElementRole::Section),
@@ -2159,6 +2159,13 @@ fn build_element_attrs(
             }
             let items =
                 extract_list_items_with_limit(node, ctx.config.max_list_items, &ctx.css_rules);
+            if !items.is_empty() {
+                map.insert("items".into(), json!(items));
+            }
+        }
+        "dl" => {
+            let items =
+                extract_dl_items_with_limit(node, ctx.config.max_list_items, &ctx.css_rules);
             if !items.is_empty() {
                 map.insert("items".into(), json!(items));
             }
@@ -2752,6 +2759,85 @@ fn extract_list_items_with_limit(
     }
 
     // Add summary if items were truncated
+    if total_count > max_items {
+        let remaining = total_count - max_items;
+        let mut summary = serde_json::Map::new();
+        summary.insert("text".into(), json!(format!("[{} more items]", remaining)));
+        items.push(serde_json::Value::Object(summary));
+    }
+
+    items
+}
+
+fn extract_dl_items_with_limit(
+    node: &Handle,
+    max_items: usize,
+    css_rules: &VisibilityRules,
+) -> Vec<serde_json::Value> {
+    let mut items = Vec::new();
+    let mut total_count = 0;
+    let mut current_term = String::new();
+
+    fn visit(
+        node: &Handle,
+        css_rules: &VisibilityRules,
+        current_term: &mut String,
+        items: &mut Vec<serde_json::Value>,
+        total_count: &mut usize,
+        max_items: usize,
+    ) {
+        for child in node.children.borrow().iter() {
+            if heuristics::should_strip(child) || is_css_hidden_element(child, css_rules) {
+                continue;
+            }
+            let NodeData::Element { name, .. } = &child.data else {
+                continue;
+            };
+            match name.local.as_ref() {
+                "dt" => {
+                    *current_term =
+                        heuristics::normalize_text(&get_visible_text_content(child, css_rules));
+                }
+                "dd" => {
+                    let description =
+                        heuristics::normalize_text(&get_visible_text_content(child, css_rules));
+                    if current_term.is_empty() && description.is_empty() {
+                        continue;
+                    }
+                    *total_count += 1;
+                    if items.len() < max_items {
+                        let mut item = serde_json::Map::new();
+                        if !current_term.is_empty() {
+                            item.insert("term".into(), json!(current_term.as_str()));
+                        }
+                        if !description.is_empty() {
+                            item.insert("description".into(), json!(description));
+                        }
+                        items.push(serde_json::Value::Object(item));
+                    }
+                }
+                "div" => visit(
+                    child,
+                    css_rules,
+                    current_term,
+                    items,
+                    total_count,
+                    max_items,
+                ),
+                _ => {}
+            }
+        }
+    }
+
+    visit(
+        node,
+        css_rules,
+        &mut current_term,
+        &mut items,
+        &mut total_count,
+        max_items,
+    );
+
     if total_count > max_items {
         let remaining = total_count - max_items;
         let mut summary = serde_json::Map::new();
@@ -5500,5 +5586,153 @@ mod tests {
             .expect("body copy should compile");
         assert_eq!(note.role, ElementRole::Paragraph);
         assert_eq!(note.text.as_deref(), Some("Body copy"));
+    }
+
+    #[test]
+    fn test_description_list_term_and_description_are_compiled() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Glossary</title></head>
+<body>
+<main>
+  <dl id="glossary">
+    <dt>SOM</dt>
+    <dd>Semantic Object Model</dd>
+    <dt>AWP</dt>
+    <dd>Agent Web Protocol</dd>
+    <dd>Also the wire format</dd>
+  </dl>
+  <dl id="wrapped">
+    <div>
+      <dt>MCP</dt>
+      <dd>Model Context Protocol</dd>
+    </div>
+  </dl>
+  <dl id="empty"></dl>
+  <dl id="blank">
+    <dt>   </dt>
+    <dd>   </dd>
+  </dl>
+  <ul id="bullets">
+    <li>Dot</li>
+  </ul>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/glossary").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let glossary = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("glossary"))
+            .expect("glossary description list should compile");
+        assert_eq!(glossary.role, ElementRole::List);
+        let glossary_attrs = glossary
+            .attrs
+            .as_ref()
+            .expect("glossary list attrs should compile");
+        assert_eq!(glossary_attrs["items"][0]["term"], "SOM");
+        assert_eq!(
+            glossary_attrs["items"][0]["description"],
+            "Semantic Object Model"
+        );
+        assert_eq!(glossary_attrs["items"][1]["term"], "AWP");
+        assert_eq!(
+            glossary_attrs["items"][1]["description"],
+            "Agent Web Protocol"
+        );
+        assert_eq!(glossary_attrs["items"][2]["term"], "AWP");
+        assert_eq!(
+            glossary_attrs["items"][2]["description"],
+            "Also the wire format"
+        );
+        assert!(
+            glossary_attrs.get("ordered").is_none(),
+            "description lists must not invent ordered: {glossary:?}"
+        );
+        assert!(
+            glossary_attrs.get("start").is_none(),
+            "description lists must not invent start: {glossary:?}"
+        );
+        assert!(
+            glossary_attrs.get("reversed").is_none(),
+            "description lists must not invent reversed: {glossary:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.text.as_deref() != Some("SOM")
+                    && element.text.as_deref() != Some("Semantic Object Model")
+            }),
+            "dt/dd text must not flatten into sibling paragraphs: {elements:?}"
+        );
+
+        let wrapped = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("wrapped"))
+            .expect("wrapped description list should compile");
+        let wrapped_attrs = wrapped
+            .attrs
+            .as_ref()
+            .expect("wrapped list attrs should compile");
+        assert_eq!(wrapped_attrs["items"][0]["term"], "MCP");
+        assert_eq!(
+            wrapped_attrs["items"][0]["description"],
+            "Model Context Protocol"
+        );
+
+        let empty = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("empty"))
+            .expect("empty description list should compile");
+        assert!(
+            empty
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("items").is_none()),
+            "empty description lists must not invent items: {empty:?}"
+        );
+
+        let blank = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("blank"))
+            .expect("whitespace description list should compile");
+        assert!(
+            blank
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("items").is_none()),
+            "whitespace dt/dd must not invent items: {blank:?}"
+        );
+
+        let bullets = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("bullets"))
+            .expect("unordered list should compile");
+        let bullets_attrs = bullets
+            .attrs
+            .as_ref()
+            .expect("unordered list attrs should compile");
+        assert_eq!(bullets_attrs["items"][0]["text"], "Dot");
+        assert!(
+            bullets_attrs["items"][0].get("term").is_none(),
+            "unordered lists must not compile dt/dd term: {bullets:?}"
+        );
+        assert!(
+            bullets_attrs["items"][0].get("description").is_none(),
+            "unordered lists must not compile dt/dd description: {bullets:?}"
+        );
+
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Paragraph
+                    && element.text.as_deref() == Some("Just text")
+            }),
+            "plain text must stay a paragraph: {elements:?}"
+        );
     }
 }
