@@ -39,3 +39,40 @@ def test_async_read_methods_forward_selector() -> None:
         ]
 
     asyncio.run(exercise())
+
+
+def test_sync_type_text_forwards_session_target_and_append() -> None:
+    browser = Plasmate()
+    calls = Mock(side_effect=[{}, {}])
+    browser._call_tool = calls  # type: ignore[method-assign]
+
+    assert browser.type_text("s1", "e5", "hello") == {}
+    assert browser.type_text("s1", "e5", "!", append=True) == {}
+
+    assert calls.call_args_list == [
+        call("type_text", {"session_id": "s1", "element_id": "e5", "text": "hello"}),
+        call(
+            "type_text",
+            {"session_id": "s1", "element_id": "e5", "text": "!", "append": True},
+        ),
+    ]
+
+
+def test_async_type_text_forwards_session_target_and_append() -> None:
+    async def exercise() -> None:
+        browser = AsyncPlasmate()
+        calls = AsyncMock(side_effect=[{}, {}])
+        browser._call_tool = calls  # type: ignore[method-assign]
+
+        assert await browser.type_text("s1", "e5", "hello") == {}
+        assert await browser.type_text("s1", "e5", "!", append=True) == {}
+
+        assert calls.call_args_list == [
+            call("type_text", {"session_id": "s1", "element_id": "e5", "text": "hello"}),
+            call(
+                "type_text",
+                {"session_id": "s1", "element_id": "e5", "text": "!", "append": True},
+            ),
+        ]
+
+    asyncio.run(exercise())

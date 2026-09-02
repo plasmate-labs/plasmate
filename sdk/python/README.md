@@ -78,6 +78,7 @@ with Plasmate() as browser:
 - **`open_page(url)`** - Returns dict with `session_id` and `som`
 - **`evaluate(session_id, expression)`** - Run JS, get result
 - **`click(session_id, element_id)`** - Click element, get updated SOM
+- **`type_text(session_id, element_id, text, *, append=False)`** - Type into an input or textarea, get updated SOM
 - **`close_page(session_id)`** - Close session
 
 ### Lifecycle
