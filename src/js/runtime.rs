@@ -1781,6 +1781,40 @@ Object.defineProperty(PlasElement.prototype, 'method', {
     }
 });
 
+function _formOwner(el) {
+    if (!_listedFormControl(el)) {
+        return null;
+    }
+    if (el.hasAttribute('form')) {
+        var formId = el.getAttribute('form');
+        if (!formId) {
+            return null;
+        }
+        var owner = document.getElementById(formId);
+        if (owner && owner.tagName === 'FORM') {
+            return owner;
+        }
+        return null;
+    }
+    var ancestor = el.parentNode;
+    while (ancestor && ancestor.nodeType === Node.ELEMENT_NODE) {
+        if (ancestor.tagName === 'FORM') {
+            return ancestor;
+        }
+        ancestor = ancestor.parentNode;
+    }
+    return null;
+}
+
+Object.defineProperty(PlasElement.prototype, 'form', {
+    get: function() {
+        if (!_listedFormControl(this)) {
+            return undefined;
+        }
+        return _formOwner(this);
+    }
+});
+
 // ============================================================================
 // Query helper functions
 // ============================================================================
@@ -9749,6 +9783,132 @@ mod tests {
                 .as_ref()
                 .is_none_or(|attrs| attrs.get("action").is_none() && attrs.get("method").is_none()),
             "contenteditable must not compile form action/method: {editor:?}"
+        );
+    }
+
+    #[test]
+    fn form_owner_idl_compiles_associated_form_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout" action="/old" method="get"><input id="email" name="email" value="ops@example.com"><input id="choice" name="choice" value="miss"><button id="go" type="submit">Go</button></form><input id="coupon" name="coupon" form="checkout" value="SAVE"><textarea id="notes">draft</textarea><p id="note">Just text</p><select id="plan"><option value="free" selected>Free</option></select><div id="editor" contenteditable="true">Edit me</div></body></html>"#,
+            "https://example.test/checkout",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    document.getElementById('email').form ? document.getElementById('email').form.id : 'none',
+                    document.getElementById('coupon').form ? document.getElementById('coupon').form.id : 'none',
+                    document.getElementById('go').form ? document.getElementById('go').form.id : 'none',
+                    String(document.getElementById('checkout').form),
+                    String(document.getElementById('note').form),
+                    String(document.getElementById('notes').form),
+                    String(document.getElementById('plan').form),
+                    String(document.getElementById('editor').form)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(
+            before,
+            "checkout|checkout|checkout|undefined|undefined|null|null|undefined"
+        );
+
+        rt.execute_in_context(
+            r#"
+            var form = document.getElementById('email').form;
+            form.querySelector('[name=choice]').value = 'pro';
+            document.getElementById('coupon').form.action = '/checkout';
+            document.getElementById('coupon').form.method = 'post';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"choice\"") && serialized.contains("value=\"pro\""),
+            "checkout JS must persist the form-owner sibling value: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"checkout\"")
+                && serialized.contains("action=\"/checkout\"")
+                && serialized.contains("method=\"post\""),
+            "associated form must persist action and method: {serialized}"
+        );
+        assert!(
+            serialized.contains("Just text") && serialized.contains(">draft</textarea>"),
+            "paragraphs and textareas must stay intact: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/checkout").unwrap();
+        let checkout = som
+            .regions
+            .iter()
+            .find(|region| region.role == crate::som::types::RegionRole::Form)
+            .expect("checkout form should compile");
+        assert_eq!(checkout.action.as_deref(), Some("/checkout"));
+        assert_eq!(checkout.method.as_deref(), Some("POST"));
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let choice = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("choice"))
+            .expect("choice input should compile");
+        assert_eq!(choice.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            choice.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("pro"))
+        );
+        let coupon = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("coupon"))
+            .expect("coupon input should compile");
+        assert_eq!(
+            coupon.attrs.as_ref().and_then(|attrs| attrs.get("form")),
+            Some(&serde_json::json!("checkout"))
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("form").is_none()),
+            "paragraphs must not compile form owner: {note:?}"
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert!(
+            notes
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("form").is_none()),
+            "orphan textareas must not compile form owner: {notes:?}"
+        );
+        let editor = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("editor"))
+            .expect("editor should compile");
+        assert!(
+            editor
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("form").is_none()),
+            "contenteditable must not compile form owner: {editor:?}"
         );
     }
 
