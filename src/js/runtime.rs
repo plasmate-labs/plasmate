@@ -1751,6 +1751,36 @@ Object.defineProperty(PlasElement.prototype, 'elements', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'action', {
+    get: function() {
+        if (this.tagName !== 'FORM') {
+            return '';
+        }
+        return this.getAttribute('action') || '';
+    },
+    set: function(v) {
+        if (this.tagName !== 'FORM') {
+            return;
+        }
+        this.setAttribute('action', String(v));
+    }
+});
+
+Object.defineProperty(PlasElement.prototype, 'method', {
+    get: function() {
+        if (this.tagName !== 'FORM') {
+            return '';
+        }
+        return this.getAttribute('method') || '';
+    },
+    set: function(v) {
+        if (this.tagName !== 'FORM') {
+            return;
+        }
+        this.setAttribute('method', String(v));
+    }
+});
+
 // ============================================================================
 // Query helper functions
 // ============================================================================
@@ -9531,6 +9561,183 @@ mod tests {
                 .as_ref()
                 .is_none_or(|attrs| attrs.get("step").is_none()),
             "contenteditable must not compile step: {editor:?}"
+        );
+    }
+
+    #[test]
+    fn form_action_method_idl_compiles_submit_target_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="login" action="/old" method="get"><input id="user" name="user" type="text"><button type="submit">Go</button></form><textarea id="notes">draft</textarea><p id="note">Just text</p><select id="plan"><option value="free" selected>Free</option></select><div id="editor" contenteditable="true">Edit me</div></body></html>"#,
+            "https://example.test/login",
+        );
+
+        let before_login_action = rt
+            .execute_in_context("String(document.getElementById('login').action)", "test.js")
+            .unwrap();
+        let before_login_method = rt
+            .execute_in_context("String(document.getElementById('login').method)", "test.js")
+            .unwrap();
+        let before_user = rt
+            .execute_in_context("String(document.getElementById('user').action)", "test.js")
+            .unwrap();
+        let before_notes = rt
+            .execute_in_context("String(document.getElementById('notes').method)", "test.js")
+            .unwrap();
+        let before_note = rt
+            .execute_in_context("String(document.getElementById('note').action)", "test.js")
+            .unwrap();
+        let before_plan = rt
+            .execute_in_context("String(document.getElementById('plan').method)", "test.js")
+            .unwrap();
+        let before_editor = rt
+            .execute_in_context(
+                "String(document.getElementById('editor').action)",
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before_login_action, "/old");
+        assert_eq!(before_login_method, "get");
+        assert_eq!(before_user, "");
+        assert_eq!(before_notes, "");
+        assert_eq!(before_note, "");
+        assert_eq!(before_plan, "");
+        assert_eq!(before_editor, "");
+
+        rt.execute_in_context(
+            r#"
+            document.getElementById('login').action = '/api/login';
+            document.getElementById('login').method = 'post';
+            document.getElementById('user').action = '/nope';
+            document.getElementById('notes').method = 'dialog';
+            document.getElementById('note').action = '/para';
+            document.getElementById('plan').method = 'put';
+            document.getElementById('editor').action = '/edit';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let after_login_action = rt
+            .execute_in_context("String(document.getElementById('login').action)", "test.js")
+            .unwrap();
+        let after_login_method = rt
+            .execute_in_context("String(document.getElementById('login').method)", "test.js")
+            .unwrap();
+        let after_user = rt
+            .execute_in_context("String(document.getElementById('user').action)", "test.js")
+            .unwrap();
+        let after_notes = rt
+            .execute_in_context("String(document.getElementById('notes').method)", "test.js")
+            .unwrap();
+        let after_note = rt
+            .execute_in_context("String(document.getElementById('note').action)", "test.js")
+            .unwrap();
+        let after_plan = rt
+            .execute_in_context("String(document.getElementById('plan').method)", "test.js")
+            .unwrap();
+        let after_editor = rt
+            .execute_in_context(
+                "String(document.getElementById('editor').action)",
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after_login_action, "/api/login");
+        assert_eq!(after_login_method, "post");
+        assert_eq!(after_user, "");
+        assert_eq!(after_notes, "");
+        assert_eq!(after_note, "");
+        assert_eq!(after_plan, "");
+        assert_eq!(after_editor, "");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"login\"")
+                && serialized.contains("action=\"/api/login\"")
+                && serialized.contains("method=\"post\""),
+            "form must persist action and method: {serialized}"
+        );
+        assert!(
+            serialized.contains("Just text") && serialized.contains(">draft</textarea>"),
+            "paragraphs and textareas must stay intact: {serialized}"
+        );
+        assert!(
+            !serialized.contains("action=\"/nope\"")
+                && !serialized.contains("method=\"dialog\"")
+                && !serialized.contains("action=\"/para\"")
+                && !serialized.contains("method=\"put\"")
+                && !serialized.contains("action=\"/edit\""),
+            "input, textarea, paragraph, select, and contenteditable must not invent action/method: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/login").unwrap();
+        let login = som
+            .regions
+            .iter()
+            .find(|region| region.role == crate::som::types::RegionRole::Form)
+            .expect("login form should compile");
+        assert_eq!(login.action.as_deref(), Some("/api/login"));
+        assert_eq!(login.method.as_deref(), Some("POST"));
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let user = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("user"))
+            .expect("user input should compile");
+        assert!(
+            user.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("action").is_none() && attrs.get("method").is_none()),
+            "inputs must not compile form action/method: {user:?}"
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert!(
+            notes
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("action").is_none() && attrs.get("method").is_none()),
+            "textarea must not compile form action/method: {notes:?}"
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("action").is_none() && attrs.get("method").is_none()),
+            "paragraphs must not compile form action/method: {note:?}"
+        );
+        let plan = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plan"))
+            .expect("plan select should compile");
+        assert!(
+            plan.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("action").is_none() && attrs.get("method").is_none()),
+            "selects must not compile form action/method: {plan:?}"
+        );
+        let editor = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("editor"))
+            .expect("editor should compile");
+        assert!(
+            editor
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("action").is_none() && attrs.get("method").is_none()),
+            "contenteditable must not compile form action/method: {editor:?}"
         );
     }
 
