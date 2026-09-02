@@ -1655,6 +1655,21 @@ Object.defineProperty(PlasElement.prototype, 'alt', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'label', {
+    get: function() {
+        if (this.tagName !== 'OPTGROUP') {
+            return '';
+        }
+        return this.getAttribute('label') || '';
+    },
+    set: function(v) {
+        if (this.tagName !== 'OPTGROUP') {
+            return;
+        }
+        this.setAttribute('label', String(v));
+    }
+});
+
 Object.defineProperty(PlasElement.prototype, 'labels', {
     get: function() {
         if (this.tagName !== 'INPUT' && this.tagName !== 'TEXTAREA' && this.tagName !== 'SELECT') {
@@ -10270,6 +10285,146 @@ mod tests {
                 .as_ref()
                 .is_none_or(|attrs| attrs.get("checked").is_none()),
             "selects must not compile :checked: {plan:?}"
+        );
+    }
+
+    #[test]
+    fn optgroup_label_idl_compiles_grouped_options_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><select id="plan"><optgroup id="personal" label="Personal"><option value="free">Free</option></optgroup></select><p id="note">Just text</p><input id="name" value="a"><textarea id="notes">draft</textarea></body></html>"#,
+            "https://example.test/optgroup",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('personal').label),
+                    String(document.getElementById('plan').label),
+                    String(document.getElementById('note').label),
+                    String(document.getElementById('name').label),
+                    String(document.getElementById('notes').label)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "Personal||||");
+
+        rt.execute_in_context(
+            r#"
+            document.getElementById('personal').label = 'Business plans';
+            var group = document.createElement('optgroup');
+            group.id = 'teams';
+            group.label = 'Teams';
+            var pro = document.createElement('option');
+            pro.value = 'pro';
+            pro.text = 'Pro';
+            group.appendChild(pro);
+            document.getElementById('plan').appendChild(group);
+            document.getElementById('plan').label = 'Invented';
+            document.getElementById('note').label = 'Invented';
+            document.getElementById('name').label = 'Invented';
+            document.getElementById('notes').label = 'Invented';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let after = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('personal').label),
+                    String(document.getElementById('teams').label),
+                    String(document.getElementById('plan').label),
+                    String(document.getElementById('note').label),
+                    String(document.getElementById('name').label),
+                    String(document.getElementById('notes').label)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after, "Business plans|Teams||||");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"personal\"")
+                && serialized.contains("label=\"Business plans\"")
+                && serialized.contains("id=\"teams\"")
+                && serialized.contains("label=\"Teams\""),
+            "optgroup must persist label: {serialized}"
+        );
+        assert!(
+            serialized.contains("Just text") && serialized.contains(">draft</textarea>"),
+            "paragraphs and textareas must stay intact: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"plan\" label")
+                && !serialized.contains("id=\"note\" label")
+                && !serialized.contains("id=\"name\" label")
+                && !serialized.contains("id=\"notes\" label")
+                && !serialized.contains("label=\"Invented\""),
+            "select, paragraph, input, and textarea must not invent label: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/optgroup").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let plan = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plan"))
+            .expect("plan select should compile");
+        assert_eq!(plan.role, crate::som::types::ElementRole::Select);
+        let plan_attrs = plan
+            .attrs
+            .as_ref()
+            .expect("plan select attrs should compile");
+        assert_eq!(
+            plan_attrs["options"],
+            serde_json::json!([
+                {"value": "free", "text": "Free", "group": "Business plans", "selected": true},
+                {"value": "pro", "text": "Pro", "group": "Teams"}
+            ])
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("label").is_none() && attrs.get("group").is_none()),
+            "paragraphs must not compile optgroup label: {note:?}"
+        );
+        let name = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("name"))
+            .expect("name input should compile");
+        assert!(
+            name.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("label").is_none() && attrs.get("group").is_none()),
+            "inputs must not compile optgroup label: {name:?}"
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert!(
+            notes
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("label").is_none() && attrs.get("group").is_none()),
+            "textareas must not compile optgroup label: {notes:?}"
         );
     }
 }
