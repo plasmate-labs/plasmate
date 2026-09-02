@@ -1625,6 +1625,21 @@ Object.defineProperty(PlasElement.prototype, 'accept', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'step', {
+    get: function() {
+        if (this.tagName !== 'INPUT') {
+            return '';
+        }
+        return this.getAttribute('step') || '';
+    },
+    set: function(v) {
+        if (this.tagName !== 'INPUT') {
+            return;
+        }
+        this.setAttribute('step', String(v));
+    }
+});
+
 Object.defineProperty(PlasElement.prototype, 'alt', {
     get: function() {
         if (this.tagName !== 'IMG' && this.tagName !== 'AREA') {
@@ -9371,6 +9386,151 @@ mod tests {
                 .as_ref()
                 .is_none_or(|attrs| attrs.get("accept").is_none()),
             "contenteditable must not compile accept: {editor:?}"
+        );
+    }
+
+    #[test]
+    fn input_step_idl_compiles_constraint_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><input id="qty" name="qty" type="number"><textarea id="notes">draft</textarea><p id="note">Just text</p><select id="plan"><option value="free" selected>Free</option></select><div id="editor" contenteditable="true">Edit me</div></body></html>"#,
+            "https://example.test/step",
+        );
+
+        let before_qty = rt
+            .execute_in_context("String(document.getElementById('qty').step)", "test.js")
+            .unwrap();
+        let before_notes = rt
+            .execute_in_context("String(document.getElementById('notes').step)", "test.js")
+            .unwrap();
+        let before_note = rt
+            .execute_in_context("String(document.getElementById('note').step)", "test.js")
+            .unwrap();
+        let before_plan = rt
+            .execute_in_context("String(document.getElementById('plan').step)", "test.js")
+            .unwrap();
+        let before_editor = rt
+            .execute_in_context("String(document.getElementById('editor').step)", "test.js")
+            .unwrap();
+        assert_eq!(before_qty, "");
+        assert_eq!(before_notes, "");
+        assert_eq!(before_note, "");
+        assert_eq!(before_plan, "");
+        assert_eq!(before_editor, "");
+
+        rt.execute_in_context(
+            r#"
+            document.getElementById('qty').step = '0.5';
+            document.getElementById('notes').step = '2';
+            document.getElementById('note').step = 'nope';
+            document.getElementById('plan').step = '3';
+            document.getElementById('editor').step = 'any';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let after_qty = rt
+            .execute_in_context("String(document.getElementById('qty').step)", "test.js")
+            .unwrap();
+        let after_notes = rt
+            .execute_in_context("String(document.getElementById('notes').step)", "test.js")
+            .unwrap();
+        let after_note = rt
+            .execute_in_context("String(document.getElementById('note').step)", "test.js")
+            .unwrap();
+        let after_plan = rt
+            .execute_in_context("String(document.getElementById('plan').step)", "test.js")
+            .unwrap();
+        let after_editor = rt
+            .execute_in_context("String(document.getElementById('editor').step)", "test.js")
+            .unwrap();
+        assert_eq!(after_qty, "0.5");
+        assert_eq!(after_notes, "");
+        assert_eq!(after_note, "");
+        assert_eq!(after_plan, "");
+        assert_eq!(after_editor, "");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"qty\"") && serialized.contains("step=\"0.5\""),
+            "number input must persist step: {serialized}"
+        );
+        assert!(
+            serialized.contains("Just text") && serialized.contains(">draft</textarea>"),
+            "paragraphs and textareas must stay intact: {serialized}"
+        );
+        assert!(
+            !serialized.contains("step=\"2\"")
+                && !serialized.contains("step=\"nope\"")
+                && !serialized.contains("step=\"3\"")
+                && !serialized.contains("step=\"any\""),
+            "textarea, paragraph, select, and contenteditable must not invent step: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/step").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let qty = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("qty"))
+            .expect("qty input should compile");
+        assert_eq!(qty.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            qty.attrs.as_ref().and_then(|attrs| attrs.get("step")),
+            Some(&serde_json::json!("0.5"))
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert!(
+            notes
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("step").is_none()),
+            "textarea must not compile step: {notes:?}"
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("step").is_none()),
+            "paragraphs must not compile step: {note:?}"
+        );
+        let plan = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plan"))
+            .expect("plan select should compile");
+        assert_eq!(plan.role, crate::som::types::ElementRole::Select);
+        assert!(
+            plan.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("step").is_none()),
+            "selects must not compile step: {plan:?}"
+        );
+        let editor = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("editor"))
+            .expect("editor should compile");
+        assert!(
+            editor
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("step").is_none()),
+            "contenteditable must not compile step: {editor:?}"
         );
     }
 
