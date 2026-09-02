@@ -369,6 +369,35 @@ class Plasmate:
             "element_id": element_id,
         })
 
+    def type_text(
+        self,
+        session_id: str,
+        element_id: str,
+        text: str,
+        *,
+        append: bool = False,
+    ) -> dict:
+        """
+        Type text into a form input or textarea by its SOM element ID.
+
+        Args:
+            session_id: Session ID from open_page
+            element_id: Element ID from SOM (e.g. 'e5')
+            text: Text to type into the element
+            append: If true, append instead of replacing. Default: false
+
+        Returns:
+            Updated SOM after typing
+        """
+        args: dict[str, Any] = {
+            "session_id": session_id,
+            "element_id": element_id,
+            "text": text,
+        }
+        if append:
+            args["append"] = True
+        return self._call_tool("type_text", args)
+
     def close_page(self, session_id: str) -> None:
         """
         Close a browser session and free resources.
@@ -557,6 +586,24 @@ class AsyncPlasmate:
             "session_id": session_id,
             "element_id": element_id,
         })
+
+    async def type_text(
+        self,
+        session_id: str,
+        element_id: str,
+        text: str,
+        *,
+        append: bool = False,
+    ) -> dict:
+        """Type text into a form input or textarea by its SOM element ID."""
+        args: dict[str, Any] = {
+            "session_id": session_id,
+            "element_id": element_id,
+            "text": text,
+        }
+        if append:
+            args["append"] = True
+        return await self._call_tool("type_text", args)
 
     async def close_page(self, session_id: str) -> None:
         """Close a browser session and free resources."""
