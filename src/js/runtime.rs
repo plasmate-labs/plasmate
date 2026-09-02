@@ -1976,6 +1976,17 @@ function _matchesSimpleSelector(el, selector) {
             case 'not':
                 if (_matchesSelector(el, pseudo.arg)) return false;
                 break;
+            case 'checked':
+                if (el.tagName === 'INPUT') {
+                    var checkedType = String(el.type || '').toLowerCase();
+                    if (checkedType !== 'checkbox' && checkedType !== 'radio') return false;
+                    if (!el.checked) return false;
+                } else if (el.tagName === 'OPTION') {
+                    if (!el.selected) return false;
+                } else {
+                    return false;
+                }
+                break;
         }
     }
 
@@ -9781,5 +9792,117 @@ mod tests {
             .execute_in_context("rafTimestamp > 0", "test.js")
             .unwrap();
         assert_eq!(ts, "true");
+    }
+
+    #[test]
+    fn query_selector_checked_pseudo_compiles_selected_control_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout"><input id="email" name="email" value="ops@example.com"><input id="free" type="radio" name="plan" value="free"><input id="pro" type="radio" name="plan" value="pro" checked><input id="choice" name="choice" value="miss"><textarea id="notes">draft</textarea><p id="note">Just text</p><select id="plan"><option value="free">Free</option><option value="pro" selected>Pro</option></select></form></body></html>"#,
+            "https://example.test/checked",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    document.querySelector('input:checked') ? document.querySelector('input:checked').id : 'none',
+                    document.querySelector('input[name="plan"]:checked') ? document.querySelector('input[name="plan"]:checked').value : 'none',
+                    String(document.querySelectorAll('input:checked').length),
+                    document.querySelector('option:checked') ? document.querySelector('option:checked').value : 'none',
+                    String(document.querySelector('#email:checked')),
+                    String(document.querySelector('p:checked')),
+                    String(document.querySelector('textarea:checked')),
+                    String(document.querySelector('select:checked'))
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "pro|pro|1|pro|null|null|null|null");
+
+        rt.execute_in_context(
+            r#"
+            var selected = document.querySelector('input[name="plan"]:checked');
+            document.getElementById('choice').value = selected ? selected.value : 'miss';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"choice\"") && serialized.contains("value=\"pro\""),
+            "checkout JS must persist the :checked radio value: {serialized}"
+        );
+        assert!(
+            serialized.contains("Just text") && serialized.contains(">draft</textarea>"),
+            "paragraphs and textareas must stay intact: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/checked").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let choice = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("choice"))
+            .expect("choice input should compile");
+        assert_eq!(choice.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            choice.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("pro"))
+        );
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(email.role, crate::som::types::ElementRole::TextInput);
+        assert!(
+            email
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("checked").is_none()),
+            "text inputs must not compile :checked: {email:?}"
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("checked").is_none()),
+            "paragraphs must not compile :checked: {note:?}"
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert!(
+            notes
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("checked").is_none()),
+            "textareas must not compile :checked: {notes:?}"
+        );
+        let plan = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plan"))
+            .expect("plan select should compile");
+        assert_eq!(plan.role, crate::som::types::ElementRole::Select);
+        assert!(
+            plan.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("checked").is_none()),
+            "selects must not compile :checked: {plan:?}"
+        );
     }
 }
