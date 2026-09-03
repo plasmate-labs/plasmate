@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-02)
 
-- Window: `f02d7be` .. `a76ccde`
+- Window: `4942f9c` .. `c8510a8`
 - Decision: `NARROW`
-- Merged this run: `3703c12` HTMLElement.tabIndex IDL (`a76ccde`)
+- Merged this run: `220e3d9` querySelector `:empty` (`c8510a8`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -295,6 +295,9 @@ overwrite, reset, or absorb unrelated work.
   Do not copy #299 HTMLElement.tabIndex IDL onto extract_text, CLI, CDP,
   SDKs, inspect compact fields, or adjacent attributes (`accesskey`,
   `autofocus`).
+  Do not copy #301 querySelector `:empty` onto other pseudos
+  (`:disabled`, `:required`, `:nth-child`, `:blank`), later-sibling
+  (`~`), extract_text, CLI, CDP, SDKs, or inspect compact fields.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -331,8 +334,8 @@ overwrite, reset, or absorb unrelated work.
   Python type_text wrapper copy, form action/method IDL copy,
   querySelector :checked copy, listed-control form owner IDL copy,
   optgroup.label IDL copy, input/select multiple IDL copy,
-  querySelector adjacent-sibling combinator copy, or
-  HTMLElement tabIndex IDL copy.
+  querySelector adjacent-sibling combinator copy,
+  HTMLElement tabIndex IDL copy, or querySelector :empty copy.
 
 ## Preferred lanes
 
