@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-03)
 
-- Window: `46f7346` .. `8929c23`
+- Window: `5a189dc` .. `f262508`
 - Decision: `NARROW`
-- Merged this run: `d1e52ea` document.getElementsByName (`8929c23`)
+- Merged this run: `e4be6af` autocomplete IDL (`d30f5e2`) and `51a0638` HTMLElement.title IDL (`f262508`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -301,6 +301,12 @@ overwrite, reset, or absorb unrelated work.
   Do not copy #303 document.getElementsByName onto form.elements,
   document.forms, RadioNodeList, form named getters, extract_text, CLI,
   CDP, SDKs, or inspect compact fields.
+  Do not copy #305 form/listed-control autocomplete IDL onto BUTTON,
+  paragraph, contenteditable, extract_text, CLI, CDP, SDKs, or inspect
+  compact fields.
+  Do not copy #306 HTMLElement.title IDL onto extract_text, CLI, CDP,
+  SDKs, inspect compact fields, or adjacent attributes (`alt`, `lang`,
+  `accesskey`, `tabIndex`).
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -338,8 +344,9 @@ overwrite, reset, or absorb unrelated work.
   querySelector :checked copy, listed-control form owner IDL copy,
   optgroup.label IDL copy, input/select multiple IDL copy,
   querySelector adjacent-sibling combinator copy,
-  HTMLElement tabIndex IDL copy, querySelector :empty copy, or
-  document.getElementsByName copy.
+  HTMLElement tabIndex IDL copy, querySelector :empty copy,
+  document.getElementsByName copy, form/listed-control autocomplete
+  IDL copy, or HTMLElement title IDL copy.
 
 ## Preferred lanes
 
