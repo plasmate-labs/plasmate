@@ -1079,8 +1079,57 @@ PlasElement.prototype.getClientRects = function() {
     return [this.getBoundingClientRect()];
 };
 
-PlasElement.prototype.focus = function() {};
-PlasElement.prototype.blur = function() {};
+var _focusedElement = null;
+
+function _isConnected(el) {
+    var n = el;
+    while (n) {
+        if (n === _docEl) return true;
+        n = n.parentNode;
+    }
+    return false;
+}
+
+function _liveFocusedElement() {
+    if (_focusedElement && _isConnected(_focusedElement)) {
+        return _focusedElement;
+    }
+    _focusedElement = null;
+    return null;
+}
+
+function _isFocusable(el) {
+    if (!el || el.nodeType !== Node.ELEMENT_NODE) return false;
+    if (!_isConnected(el)) return false;
+    var tag = el.tagName;
+    if (tag === 'INPUT' || tag === 'BUTTON' || tag === 'SELECT' || tag === 'TEXTAREA') {
+        if (el.hasAttribute('disabled')) return false;
+    }
+    if (tag === 'INPUT' && String(el.type || '').toLowerCase() === 'hidden') return false;
+    if (tag === 'BUTTON' || tag === 'SELECT' || tag === 'TEXTAREA' || tag === 'SUMMARY' || tag === 'IFRAME') return true;
+    if (tag === 'INPUT') return true;
+    if (tag === 'A' && el.getAttribute('href') !== null) return true;
+    if (el.getAttribute('tabindex') !== null) return true;
+    var ce = el.contentEditable;
+    if (ce === 'true' || ce === 'plaintext-only') return true;
+    return false;
+}
+
+PlasElement.prototype.focus = function() {
+    if (!_isFocusable(this)) return;
+    if (_liveFocusedElement() === this) return;
+    var prev = _liveFocusedElement();
+    _focusedElement = this;
+    if (prev && prev !== this) {
+        try { prev.dispatchEvent(new Event('blur')); } catch (e) {}
+    }
+    try { this.dispatchEvent(new Event('focus')); } catch (e) {}
+};
+PlasElement.prototype.blur = function() {
+    if (_liveFocusedElement() !== this) return;
+    _focusedElement = null;
+    try { this.dispatchEvent(new Event('blur')); } catch (e) {}
+};
 PlasElement.prototype.click = function() {
     this.dispatchEvent(new Event('click'));
 };
@@ -2188,6 +2237,9 @@ function _matchesSimpleSelector(el, selector) {
                     if (emptyChild.nodeType === Node.TEXT_NODE && emptyChild.textContent !== '') return false;
                 }
                 break;
+            case 'focus':
+                if (_liveFocusedElement() !== el) return false;
+                break;
         }
     }
 
@@ -2742,6 +2794,12 @@ var document = {
 _docEl.ownerDocument = document;
 _docHead.ownerDocument = document;
 _docBody.ownerDocument = document;
+
+Object.defineProperty(document, 'activeElement', {
+    get: function() {
+        return _liveFocusedElement() || _docBody;
+    }
+});
 
 Object.defineProperty(document, 'title', {
     get: function() {
@@ -3491,6 +3549,7 @@ function __plasmate_bootstrap(html, url) {
     }
 
     // Clear existing document
+    _focusedElement = null;
     _docHead.childNodes = [];
     _docBody.childNodes = [];
 
@@ -11630,5 +11689,141 @@ mod tests {
                 .is_none_or(|attrs| attrs.get("contenteditable").is_none()),
             "textareas must not compile invented contenteditable: {notes:?}"
         );
+    }
+
+    #[test]
+    fn document_active_element_tracks_focusable_targets_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><input id="name" value="a"><input id="locked" disabled value="b"><button id="go">Go</button><p id="note">Just text</p><div id="editor" contenteditable="true">Draft</div><a id="about" href="/about">About</a></body></html>"#,
+            "https://example.test/focus-target",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    document.activeElement === document.body ? 'body' : (document.activeElement && document.activeElement.id || 'missing'),
+                    String(document.querySelectorAll(':focus').length),
+                    String(document.querySelectorAll('input:focus').length)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "body|0|0");
+
+        let after_name = rt
+            .execute_in_context(
+                r#"
+                document.getElementById('name').focus();
+                [
+                    document.activeElement && document.activeElement.id,
+                    document.querySelector(':focus') && document.querySelector(':focus').id,
+                    String(document.querySelectorAll(':focus').length),
+                    String(document.querySelectorAll('input:focus').length)
+                ].join('|')
+                "#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after_name, "name|name|1|1");
+
+        let blocked = rt
+            .execute_in_context(
+                r#"
+                document.getElementById('locked').focus();
+                document.getElementById('note').focus();
+                document.activeElement && document.activeElement.id
+                "#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(
+            blocked, "name",
+            "disabled inputs and inert paragraphs must not steal focus"
+        );
+
+        let after_button = rt
+            .execute_in_context(
+                r#"
+                document.getElementById('go').focus();
+                [
+                    document.activeElement && document.activeElement.id,
+                    document.querySelector('button:focus') && document.querySelector('button:focus').id,
+                    String(document.querySelectorAll('input:focus').length)
+                ].join('|')
+                "#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after_button, "go|go|0");
+
+        let after_editor = rt
+            .execute_in_context(
+                r#"
+                document.getElementById('editor').focus();
+                document.activeElement && document.activeElement.id
+                "#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after_editor, "editor");
+
+        let after_blur = rt
+            .execute_in_context(
+                r#"
+                document.getElementById('editor').blur();
+                [
+                    document.activeElement === document.body ? 'body' : (document.activeElement && document.activeElement.id || 'missing'),
+                    String(document.querySelectorAll(':focus').length)
+                ].join('|')
+                "#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after_blur, "body|0");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            !serialized.contains("focused") && !serialized.contains("autofocus"),
+            "focus tracking must not invent focused/autofocus attributes: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/focus-target")
+            .unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let name = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("name"))
+            .expect("name input should compile");
+        assert_eq!(name.role, crate::som::types::ElementRole::TextInput);
+        assert!(
+            name.attrs.as_ref().is_none_or(
+                |attrs| attrs.get("focused").is_none() && attrs.get("autofocus").is_none()
+            ),
+            "inputs must not compile invented focus attrs: {name:?}"
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        let go = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("go"))
+            .expect("go button should compile");
+        assert_eq!(go.role, crate::som::types::ElementRole::Button);
+        let editor = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("editor"))
+            .expect("editor should compile");
+        assert_eq!(editor.role, crate::som::types::ElementRole::TextInput);
     }
 }
