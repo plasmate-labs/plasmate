@@ -1840,6 +1840,21 @@ Object.defineProperty(PlasElement.prototype, 'method', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'autocomplete', {
+    get: function() {
+        if (this.tagName !== 'FORM' && this.tagName !== 'INPUT' && this.tagName !== 'TEXTAREA' && this.tagName !== 'SELECT') {
+            return '';
+        }
+        return this.getAttribute('autocomplete') || '';
+    },
+    set: function(v) {
+        if (this.tagName !== 'FORM' && this.tagName !== 'INPUT' && this.tagName !== 'TEXTAREA' && this.tagName !== 'SELECT') {
+            return;
+        }
+        this.setAttribute('autocomplete', String(v));
+    }
+});
+
 function _formOwner(el) {
     if (!_listedFormControl(el)) {
         return null;
@@ -11124,6 +11139,173 @@ mod tests {
         assert_eq!(
             unnamed.attrs.as_ref().and_then(|attrs| attrs.get("value")),
             Some(&serde_json::json!("x"))
+        );
+    }
+
+    #[test]
+    fn autocomplete_idl_compiles_autofill_tokens_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout"><input id="email" value="a"><textarea id="notes">draft</textarea><select id="plan"><option value="free">Free</option></select><button id="go">Go</button><p id="note">Just text</p><div id="editor" contenteditable="true">Edit me</div></form></body></html>"#,
+            "https://example.test/checkout",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('checkout').autocomplete),
+                    String(document.getElementById('email').autocomplete),
+                    String(document.getElementById('notes').autocomplete),
+                    String(document.getElementById('plan').autocomplete),
+                    String(document.getElementById('go').autocomplete),
+                    String(document.getElementById('note').autocomplete),
+                    String(document.getElementById('editor').autocomplete)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "||||||");
+
+        rt.execute_in_context(
+            r#"
+            document.getElementById('checkout').autocomplete = 'off';
+            document.getElementById('email').autocomplete = 'email';
+            document.getElementById('notes').autocomplete = 'off';
+            document.getElementById('plan').autocomplete = 'organization';
+            document.getElementById('go').autocomplete = 'Invented';
+            document.getElementById('note').autocomplete = 'Invented';
+            document.getElementById('editor').autocomplete = 'Invented';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let after = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('checkout').autocomplete),
+                    String(document.getElementById('email').autocomplete),
+                    String(document.getElementById('notes').autocomplete),
+                    String(document.getElementById('plan').autocomplete),
+                    String(document.getElementById('go').autocomplete),
+                    String(document.getElementById('note').autocomplete),
+                    String(document.getElementById('editor').autocomplete)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after, "off|email|off|organization|||");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"checkout\"") && serialized.contains("autocomplete=\"off\""),
+            "checkout form must persist autocomplete: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"email\"") && serialized.contains("autocomplete=\"email\""),
+            "email input must persist autocomplete: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"notes\"") && serialized.contains("autocomplete=\"off\""),
+            "textarea must persist autocomplete: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"plan\"")
+                && serialized.contains("autocomplete=\"organization\""),
+            "select must persist autocomplete: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"go\" autocomplete")
+                && !serialized.contains("id=\"note\" autocomplete")
+                && !serialized.contains("id=\"editor\" autocomplete")
+                && !serialized.contains("autocomplete=\"Invented\""),
+            "buttons, paragraphs, and contenteditable must not invent autocomplete: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/checkout").unwrap();
+        let form = som
+            .regions
+            .iter()
+            .find(|region| region.role == crate::som::types::RegionRole::Form)
+            .expect("form region should compile");
+        assert_eq!(form.autocomplete.as_deref(), Some("off"));
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(email.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            email
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("autocomplete")),
+            Some(&serde_json::json!("email"))
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert_eq!(
+            notes
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("autocomplete")),
+            Some(&serde_json::json!("off"))
+        );
+        let plan = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plan"))
+            .expect("plan select should compile");
+        assert_eq!(plan.role, crate::som::types::ElementRole::Select);
+        assert_eq!(
+            plan.attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("autocomplete")),
+            Some(&serde_json::json!("organization"))
+        );
+        let go = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("go"))
+            .expect("go button should compile");
+        assert_eq!(go.role, crate::som::types::ElementRole::Button);
+        assert!(
+            go.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("autocomplete").is_none()),
+            "buttons must not compile autocomplete: {go:?}"
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("autocomplete").is_none()),
+            "paragraphs must not compile autocomplete: {note:?}"
+        );
+        let editor = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("editor"))
+            .expect("editor should compile");
+        assert!(
+            editor
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("autocomplete").is_none()),
+            "contenteditable must not compile autocomplete: {editor:?}"
         );
     }
 }
