@@ -1516,6 +1516,28 @@ Object.defineProperty(PlasElement.prototype, 'hidden', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'contentEditable', {
+    get: function() {
+        var raw = this.getAttribute('contenteditable');
+        if (raw === null) return 'inherit';
+        var normalized = String(raw).trim().toLowerCase();
+        if (normalized === '' || normalized === 'true') return 'true';
+        if (normalized === 'false') return 'false';
+        if (normalized === 'plaintext-only') return 'plaintext-only';
+        return 'inherit';
+    },
+    set: function(v) {
+        var normalized = String(v).trim().toLowerCase();
+        if (normalized === 'inherit') {
+            this.removeAttribute('contenteditable');
+            return;
+        }
+        if (normalized === 'true' || normalized === 'false' || normalized === 'plaintext-only') {
+            this.setAttribute('contenteditable', normalized);
+        }
+    }
+});
+
 Object.defineProperty(PlasElement.prototype, 'tabIndex', {
     get: function() {
         var raw = this.getAttribute('tabindex');
@@ -11444,6 +11466,169 @@ mod tests {
                 .as_ref()
                 .is_none_or(|attrs| attrs.get("autocomplete").is_none()),
             "contenteditable must not compile autocomplete: {editor:?}"
+        );
+    }
+
+    #[test]
+    fn content_editable_idl_compiles_type_target_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><div id="editor">Draft note</div><p id="plain">Static copy</p><div id="locked" contenteditable="true">Locked draft</div><button id="go">Go</button><input id="name" value="a"><textarea id="notes">draft</textarea></body></html>"#,
+            "https://example.test/composer",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('editor').contentEditable),
+                    String(document.getElementById('plain').contentEditable),
+                    String(document.getElementById('locked').contentEditable),
+                    String(document.getElementById('go').contentEditable),
+                    String(document.getElementById('name').contentEditable),
+                    String(document.getElementById('notes').contentEditable)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "inherit|inherit|true|inherit|inherit|inherit");
+
+        rt.execute_in_context(
+            r#"
+            document.getElementById('editor').contentEditable = 'true';
+            document.getElementById('locked').contentEditable = 'false';
+            document.getElementById('plain').contentEditable = 'plaintext-only';
+            document.getElementById('go').contentEditable = 'Invented';
+            document.getElementById('name').contentEditable = 'Invented';
+            document.getElementById('notes').contentEditable = 'Invented';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let after = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('editor').contentEditable),
+                    String(document.getElementById('plain').contentEditable),
+                    String(document.getElementById('locked').contentEditable),
+                    String(document.getElementById('go').contentEditable),
+                    String(document.getElementById('name').contentEditable),
+                    String(document.getElementById('notes').contentEditable)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after, "true|plaintext-only|false|inherit|inherit|inherit");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"editor\"") && serialized.contains("contenteditable=\"true\""),
+            "editor must persist contenteditable=true: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"plain\"")
+                && serialized.contains("contenteditable=\"plaintext-only\""),
+            "paragraph must persist plaintext-only: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"locked\"")
+                && serialized.contains("contenteditable=\"false\""),
+            "locked draft must persist contenteditable=false: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"go\" contenteditable")
+                && !serialized.contains("id=\"name\" contenteditable")
+                && !serialized.contains("id=\"notes\" contenteditable")
+                && !serialized.contains("contenteditable=\"Invented\""),
+            "buttons, inputs, and textareas must not invent contenteditable: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/composer").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let editor = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("editor"))
+            .expect("editor should compile");
+        assert_eq!(editor.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            editor.actions.as_deref(),
+            Some(&["type".into(), "clear".into()][..])
+        );
+        assert_eq!(
+            editor
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("contenteditable")),
+            Some(&serde_json::json!(true))
+        );
+        let plain = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plain"))
+            .expect("plaintext-only paragraph should compile");
+        assert_eq!(plain.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            plain
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("contenteditable")),
+            Some(&serde_json::json!("plaintext-only"))
+        );
+        assert!(
+            elements.iter().any(|element| {
+                element.role == crate::som::types::ElementRole::Paragraph
+                    && element.text.as_deref() == Some("Locked draft")
+            }),
+            "contentEditable=false must drop the type target: {elements:?}"
+        );
+        assert!(
+            !elements.iter().any(|element| {
+                element.role == crate::som::types::ElementRole::TextInput
+                    && element.text.as_deref() == Some("Locked draft")
+            }),
+            "locked draft must not stay a type target: {elements:?}"
+        );
+        let go = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("go"))
+            .expect("go button should compile");
+        assert_eq!(go.role, crate::som::types::ElementRole::Button);
+        assert!(
+            go.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("contenteditable").is_none()),
+            "buttons must not compile invented contenteditable: {go:?}"
+        );
+        let name = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("name"))
+            .expect("name input should compile");
+        assert_eq!(name.role, crate::som::types::ElementRole::TextInput);
+        assert!(
+            name.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("contenteditable").is_none()),
+            "native inputs must not compile invented contenteditable: {name:?}"
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert!(
+            notes
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("contenteditable").is_none()),
+            "textareas must not compile invented contenteditable: {notes:?}"
         );
     }
 }
