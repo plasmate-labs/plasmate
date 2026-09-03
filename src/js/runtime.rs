@@ -1544,6 +1544,15 @@ Object.defineProperty(PlasElement.prototype, 'tabIndex', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'title', {
+    get: function() {
+        return this.getAttribute('title') || '';
+    },
+    set: function(v) {
+        this.setAttribute('title', String(v));
+    }
+});
+
 Object.defineProperty(PlasElement.prototype, 'type', {
     get: function() { return this._attrs.type || (this.tagName === 'INPUT' ? 'text' : ''); },
     set: function(v) { this._attrs.type = v; }
@@ -10956,6 +10965,135 @@ mod tests {
         assert_eq!(
             skip.attrs.as_ref().and_then(|attrs| attrs.get("tabindex")),
             Some(&serde_json::json!(-1))
+        );
+    }
+
+    #[test]
+    fn element_title_idl_compiles_accessible_name_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout"><input id="email" name="email" type="email"><button id="go">Pay</button></form><p id="note">Just text</p><div id="editor" contenteditable="true">draft</div><img id="logo" alt="Brand"></body></html>"#,
+            "https://example.test/checkout",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('email').title),
+                    String(document.getElementById('go').title),
+                    String(document.getElementById('note').title),
+                    String(document.getElementById('editor').title),
+                    String(document.getElementById('logo').title)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "||||");
+
+        rt.execute_in_context(
+            r#"
+            document.getElementById('email').title = 'Work email';
+            document.getElementById('go').title = 'Submit payment';
+            document.getElementById('note').title = 'Helper';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let after = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('email').title),
+                    String(document.getElementById('go').title),
+                    String(document.getElementById('note').title),
+                    String(document.getElementById('editor').title),
+                    String(document.getElementById('logo').title)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after, "Work email|Submit payment|Helper||");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"email\"") && serialized.contains("title=\"Work email\""),
+            "email input must persist title: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"go\"") && serialized.contains("title=\"Submit payment\""),
+            "checkout button must persist title: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"note\"") && serialized.contains("title=\"Helper\""),
+            "paragraph title must persist as HTMLElement-global: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"editor\" title")
+                && !serialized.contains("id=\"logo\" title")
+                && serialized.contains("alt=\"Brand\"")
+                && serialized.contains("Just text")
+                && serialized.contains("contenteditable"),
+            "untouched editor and img must not invent title: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/checkout").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(email.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            email.attrs.as_ref().and_then(|attrs| attrs.get("title")),
+            Some(&serde_json::json!("Work email"))
+        );
+        let go = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("go"))
+            .expect("go button should compile");
+        assert_eq!(go.role, crate::som::types::ElementRole::Button);
+        assert_eq!(
+            go.attrs.as_ref().and_then(|attrs| attrs.get("title")),
+            Some(&serde_json::json!("Submit payment"))
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(
+            note.attrs.as_ref().and_then(|attrs| attrs.get("title")),
+            Some(&serde_json::json!("Helper"))
+        );
+        let editor = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("editor"))
+            .expect("editor should compile");
+        assert!(
+            editor
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("title").is_none()),
+            "untouched contenteditable must not compile title: {editor:?}"
+        );
+        let logo = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("logo"))
+            .expect("logo should compile");
+        assert!(
+            logo.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("title").is_none()),
+            "untouched img must not compile title: {logo:?}"
         );
     }
 
