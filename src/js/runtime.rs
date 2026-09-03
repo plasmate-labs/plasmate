@@ -1917,6 +1917,19 @@ function _getElementsByClassName(root, className) {
     return results;
 }
 
+function _getElementsByName(root, name) {
+    var results = [];
+    var wanted = String(name);
+    for (var i = 0; i < root.childNodes.length; i++) {
+        var node = root.childNodes[i];
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            if (node.getAttribute('name') === wanted) results.push(node);
+            results = results.concat(_getElementsByName(node, wanted));
+        }
+    }
+    return results;
+}
+
 // CSS Selector matching (basic support)
 function _matchesSelector(el, selector) {
     if (!selector || el.nodeType !== Node.ELEMENT_NODE) return false;
@@ -2503,6 +2516,10 @@ var document = {
 
     getElementsByClassName: function(className) {
         return _getElementsByClassName(_docEl, className);
+    },
+
+    getElementsByName: function(name) {
+        return _getElementsByName(_docEl, name);
     },
 
     querySelector: function(selector) {
@@ -11021,6 +11038,92 @@ mod tests {
         assert_eq!(
             name.attrs.as_ref().and_then(|attrs| attrs.get("value")),
             Some(&serde_json::json!("a"))
+        );
+    }
+
+    #[test]
+    fn get_elements_by_name_fills_named_control_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form><input id="email" name="email" value=""><input id="plan-free" name="plan" type="radio" value="free"><input id="plan-pro" name="plan" type="radio" value="pro"><textarea id="notes" name="notes">draft</textarea><p id="note">Just text</p><input id="unnamed" value="x"></form></body></html>"#,
+            "https://example.test/checkout",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    document.getElementsByName('email')[0] ? document.getElementsByName('email')[0].id : 'none',
+                    String(document.getElementsByName('plan').length),
+                    document.getElementsByName('plan')[1] ? document.getElementsByName('plan')[1].id : 'none',
+                    document.getElementsByName('notes')[0] ? document.getElementsByName('notes')[0].id : 'none',
+                    String(document.getElementsByName('note').length),
+                    String(document.getElementsByName('unnamed').length),
+                    String(document.getElementsByName('missing').length)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "email|2|plan-pro|notes|0|0|0");
+
+        rt.execute_in_context(
+            r#"
+            var email = document.getElementsByName('email')[0];
+            if (email) email.value = 'ops@example.test';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"email\"") && serialized.contains("ops@example.test"),
+            "checkout JS must persist the named email value: {serialized}"
+        );
+        assert!(
+            serialized.contains(">draft</textarea>") && serialized.contains("Just text"),
+            "named textarea and unnamed paragraph must stay intact: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/checkout").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(email.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            email.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("ops@example.test"))
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert_eq!(notes.text.as_deref(), Some("draft"));
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(note.text.as_deref(), Some("Just text"));
+        let unnamed = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("unnamed"))
+            .expect("unnamed input should compile");
+        assert_eq!(unnamed.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            unnamed.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("x"))
         );
     }
 }
