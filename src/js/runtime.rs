@@ -2269,6 +2269,20 @@ function _matchesSimpleSelector(el, selector) {
             case 'last-child':
                 if (el.parentNode && el.parentNode.lastElementChild !== el) return false;
                 break;
+            case 'first-of-type':
+                var firstTypePrev = el.previousElementSibling;
+                while (firstTypePrev) {
+                    if (firstTypePrev.tagName === el.tagName) return false;
+                    firstTypePrev = firstTypePrev.previousElementSibling;
+                }
+                break;
+            case 'last-of-type':
+                var lastTypeNext = el.nextElementSibling;
+                while (lastTypeNext) {
+                    if (lastTypeNext.tagName === el.tagName) return false;
+                    lastTypeNext = lastTypeNext.nextElementSibling;
+                }
+                break;
             case 'not':
                 if (_matchesSelector(el, pseudo.arg)) return false;
                 break;
@@ -12358,5 +12372,109 @@ mod tests {
             }),
             "untouched buttons must not invent inert or hidden: {go:?}"
         );
+    }
+
+    #[test]
+    fn query_selector_first_last_of_type_compiles_typed_sibling_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout"><p id="intro">Intro</p><input id="email" name="email" value="ops@example.com"><input id="choice" name="choice" value="miss"><button id="pay">Pay</button><button id="cancel">Cancel</button><p id="note">Just text</p><textarea id="notes">draft</textarea></form></body></html>"#,
+            "https://example.test/of-type",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    document.querySelector('p:first-of-type') ? document.querySelector('p:first-of-type').id : 'none',
+                    document.querySelector('p:last-of-type') ? document.querySelector('p:last-of-type').id : 'none',
+                    String(document.querySelectorAll('p:first-of-type').length),
+                    String(document.querySelectorAll('p:last-of-type').length),
+                    document.querySelector('button:first-of-type') ? document.querySelector('button:first-of-type').id : 'none',
+                    document.querySelector('button:last-of-type') ? document.querySelector('button:last-of-type').id : 'none',
+                    document.querySelector('input:first-of-type') ? document.querySelector('input:first-of-type').id : 'none',
+                    document.querySelector('input:last-of-type') ? document.querySelector('input:last-of-type').id : 'none',
+                    String(document.querySelector('textarea:first-of-type') ? document.querySelector('textarea:first-of-type').id : 'none'),
+                    String(document.querySelector('#email:last-of-type')),
+                    String(document.querySelector('#pay:last-of-type')),
+                    String(document.querySelector('form:first-of-type') ? document.querySelector('form:first-of-type').id : 'none')
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(
+            before,
+            "intro|note|1|1|pay|cancel|email|choice|notes|null|null|checkout"
+        );
+
+        rt.execute_in_context(
+            r#"
+            var lastCopy = document.querySelector('p:last-of-type');
+            var firstButton = document.querySelector('button:first-of-type');
+            document.getElementById('choice').value = (lastCopy ? lastCopy.textContent : 'miss') + ':' + (firstButton ? firstButton.id : 'miss');
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"choice\"") && serialized.contains("value=\"Just text:pay\""),
+            "checkout JS must persist the :last-of-type paragraph plus :first-of-type button: {serialized}"
+        );
+        assert!(
+            serialized.contains("Just text") && serialized.contains(">draft</textarea>"),
+            "paragraphs and textareas must stay intact: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/of-type").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let choice = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("choice"))
+            .expect("choice input should compile");
+        assert_eq!(choice.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            choice.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("Just text:pay"))
+        );
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(email.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            email.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("ops@example.com"))
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert_eq!(notes.text.as_deref(), Some("draft"));
+        let pay = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pay"))
+            .expect("pay button should compile");
+        assert_eq!(pay.role, crate::som::types::ElementRole::Button);
+        let cancel = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("cancel"))
+            .expect("cancel button should compile");
+        assert_eq!(cancel.role, crate::som::types::ElementRole::Button);
     }
 }
