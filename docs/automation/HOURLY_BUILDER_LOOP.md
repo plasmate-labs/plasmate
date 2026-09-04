@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-04)
 
-- Window: `a84ea0e` .. `6ba76b9`
+- Window: `0e459f9` .. `59abf2c`
 - Decision: `NARROW`
-- Merged this run: `e552617` radio-group `checked` IDL (`6ba76b9`)
+- Merged this run: `cece132` HTMLElement.inert IDL (`59abf2c`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -321,6 +321,10 @@ overwrite, reset, or absorb unrelated work.
   Do not copy #314 radio-group `checked` IDL exclusivity onto checkboxes,
   nameless radios, inspect compact checked, `:checked` matching,
   `select_option`, extract_text, CLI, CDP, or SDKs.
+  Do not copy #316 HTMLElement.inert IDL onto extract_text, CLI, CDP,
+  extract_links, SDKs, inspect compact fields, adjacent hide attributes
+  (`hidden`, `aria-hidden`, `style=display:none`), or invented inert
+  on untouched inputs, textareas, paragraphs, or buttons.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -362,7 +366,8 @@ overwrite, reset, or absorb unrelated work.
   document.getElementsByName copy, form/listed-control autocomplete
   IDL copy, HTMLElement title IDL copy, HTMLElement contentEditable
   IDL copy, document.activeElement / :focus copy, HTMLSelectElement
-  size IDL copy, or radio-group checked IDL copy.
+  size IDL copy, radio-group checked IDL copy, or HTMLElement
+  inert IDL copy.
 
 ## Preferred lanes
 
