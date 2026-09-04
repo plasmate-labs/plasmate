@@ -1594,6 +1594,24 @@ Object.defineProperty(PlasElement.prototype, 'inert', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'draggable', {
+    get: function() {
+        var raw = this.getAttribute('draggable');
+        if (raw !== null) {
+            var normalized = String(raw).trim().toLowerCase();
+            if (normalized === 'true') return true;
+            if (normalized === 'false') return false;
+        }
+        if (this.tagName === 'IMG') return true;
+        if (this.tagName === 'A' && this.getAttribute('href') !== null) return true;
+        return false;
+    },
+    set: function(v) {
+        if (v) this.setAttribute('draggable', 'true');
+        else this.setAttribute('draggable', 'false');
+    }
+});
+
 Object.defineProperty(PlasElement.prototype, 'contentEditable', {
     get: function() {
         var raw = this.getAttribute('contenteditable');
@@ -12476,5 +12494,186 @@ mod tests {
             .find(|element| element.html_id.as_deref() == Some("cancel"))
             .expect("cancel button should compile");
         assert_eq!(cancel.role, crate::som::types::ElementRole::Button);
+    }
+
+    #[test]
+    fn element_draggable_idl_persists_drag_source_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout"><input id="email" name="email" value="ops@example.com"><textarea id="notes">draft</textarea><button id="edit">Edit</button></form><button id="card" draggable="true">Card</button><img id="logo" src="/logo.png" alt="Logo"><a id="docs" href="/docs">Docs</a><p id="note">Just text</p><button id="go">Go</button></body></html>"#,
+            "https://example.test/draggable-target",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('card').draggable),
+                    String(document.getElementById('edit').draggable),
+                    String(document.getElementById('email').draggable),
+                    String(document.getElementById('notes').draggable),
+                    String(document.getElementById('note').draggable),
+                    String(document.getElementById('go').draggable),
+                    String(document.getElementById('logo').draggable),
+                    String(document.getElementById('docs').draggable)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "true|false|false|false|false|false|true|true");
+
+        rt.execute_in_context(
+            r#"
+            document.getElementById('edit').draggable = true;
+            document.getElementById('card').draggable = false;
+            document.getElementById('email').inert = true;
+            document.getElementById('email').inert = false;
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let after = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('card').draggable),
+                    String(document.getElementById('edit').draggable),
+                    String(document.getElementById('email').draggable),
+                    String(document.getElementById('notes').draggable),
+                    String(document.getElementById('note').draggable),
+                    String(document.getElementById('go').draggable),
+                    String(document.getElementById('logo').draggable),
+                    String(document.getElementById('docs').draggable)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after, "false|true|false|false|false|false|true|true");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"edit\"") && serialized.contains("draggable=\"true\""),
+            "checkout JS must persist element.draggable=true: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"card\"") && serialized.contains("draggable=\"false\""),
+            "cleared drag source must persist draggable=false: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"email\"") && serialized.contains(">draft</textarea>"),
+            "inputs and textareas must stay intact: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"email\" draggable")
+                && !serialized.contains("draggable=\"true\" id=\"email\"")
+                && !serialized.contains("id=\"notes\" draggable")
+                && !serialized.contains("id=\"note\" draggable")
+                && !serialized.contains("id=\"go\" draggable")
+                && !serialized.contains("id=\"logo\" draggable")
+                && !serialized.contains("id=\"docs\" draggable"),
+            "untouched controls must not invent draggable: {serialized}"
+        );
+        assert!(
+            !serialized.contains("aria-grabbed") && !serialized.contains("aria-dropeffect"),
+            "draggable IDL must not copy onto aria-grabbed or aria-dropeffect: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/draggable-target")
+                .unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let edit = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("edit"))
+            .expect("edit button should compile");
+        assert_eq!(edit.role, crate::som::types::ElementRole::Button);
+        assert_eq!(
+            edit.attrs.as_ref().and_then(|attrs| attrs.get("draggable")),
+            Some(&serde_json::json!(true))
+        );
+        let card = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("card"))
+            .expect("card button should compile");
+        assert_eq!(card.role, crate::som::types::ElementRole::Button);
+        assert_eq!(
+            card.attrs.as_ref().and_then(|attrs| attrs.get("draggable")),
+            Some(&serde_json::json!(false))
+        );
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(email.role, crate::som::types::ElementRole::TextInput);
+        assert!(
+            email
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("draggable").is_none()),
+            "untouched inputs must not compile draggable: {email:?}"
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert!(
+            notes
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("draggable").is_none()),
+            "untouched textareas must not compile draggable: {notes:?}"
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("draggable").is_none()),
+            "paragraphs must not invent draggable: {note:?}"
+        );
+        let go = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("go"))
+            .expect("go button should compile");
+        assert_eq!(go.role, crate::som::types::ElementRole::Button);
+        assert!(
+            go.attrs.as_ref().is_none_or(|attrs| {
+                attrs.get("draggable").is_none() && attrs.get("inert").is_none()
+            }),
+            "untouched buttons must not invent draggable or inert: {go:?}"
+        );
+        let logo = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("logo"))
+            .expect("logo image should compile");
+        assert_eq!(logo.role, crate::som::types::ElementRole::Image);
+        assert!(
+            logo.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("draggable").is_none()),
+            "auto-draggable images must not invent the content attribute: {logo:?}"
+        );
+        let docs = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("docs"))
+            .expect("docs link should compile");
+        assert_eq!(docs.role, crate::som::types::ElementRole::Link);
+        assert!(
+            docs.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("draggable").is_none()),
+            "auto-draggable links must not invent the content attribute: {docs:?}"
+        );
     }
 }
