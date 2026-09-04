@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-03)
 
-- Window: `cc8abba` .. `dd0ead4`
+- Window: `dddf1df` .. `a0c61bd`
 - Decision: `NARROW`
-- Merged this run: `13e4812` document.activeElement / `:focus` (`dd0ead4`)
+- Merged this run: `324c2e4` HTMLSelectElement.size IDL (`a0c61bd`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -315,6 +315,9 @@ overwrite, reset, or absorb unrelated work.
   CLI, CDP, SDKs, inspect compact fields, adjacent pseudos (`:hover`,
   `:active`, `:focus-visible`, `:focus-within`), or invented
   `focused` / `autofocus` attributes.
+  Do not copy #312 HTMLSelectElement.size IDL onto input size, textarea
+  rows/cols, extract_text, CLI, CDP, extract_links, SDKs, inspect
+  compact fields, or invented defaults on plain dropdowns.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -355,7 +358,8 @@ overwrite, reset, or absorb unrelated work.
   HTMLElement tabIndex IDL copy, querySelector :empty copy,
   document.getElementsByName copy, form/listed-control autocomplete
   IDL copy, HTMLElement title IDL copy, HTMLElement contentEditable
-  IDL copy, or document.activeElement / :focus copy.
+  IDL copy, document.activeElement / :focus copy, or HTMLSelectElement
+  size IDL copy.
 
 ## Preferred lanes
 
