@@ -1586,6 +1586,14 @@ Object.defineProperty(PlasElement.prototype, 'hidden', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'inert', {
+    get: function() { return this.hasAttribute('inert'); },
+    set: function(v) {
+        if (v) this.setAttribute('inert', '');
+        else this.removeAttribute('inert');
+    }
+});
+
 Object.defineProperty(PlasElement.prototype, 'contentEditable', {
     get: function() {
         var raw = this.getAttribute('contenteditable');
@@ -12175,6 +12183,180 @@ mod tests {
                 .as_ref()
                 .is_none_or(|attrs| attrs.get("checked").is_none()),
             "paragraphs must not compile checked: {note:?}"
+        );
+    }
+
+    #[test]
+    fn element_inert_idl_marks_subtree_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout"><input id="email" name="email" value="ops@example.com"><textarea id="notes">draft</textarea><button id="edit">Edit</button></form><section id="backdrop"><button id="save">Save</button></section><section id="modal" inert><button id="ok">OK</button></section><p id="note">Just text</p><button id="go">Go</button></body></html>"#,
+            "https://example.test/inert-target",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('backdrop').inert),
+                    String(document.getElementById('modal').inert),
+                    String(document.getElementById('edit').inert),
+                    String(document.getElementById('email').inert),
+                    String(document.getElementById('notes').inert),
+                    String(document.getElementById('note').inert),
+                    String(document.getElementById('go').inert)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "false|true|false|false|false|false|false");
+
+        rt.execute_in_context(
+            r#"
+            document.getElementById('backdrop').inert = true;
+            document.getElementById('modal').inert = false;
+            document.getElementById('edit').inert = true;
+            document.getElementById('email').inert = false;
+            document.getElementById('notes').inert = false;
+            document.getElementById('note').inert = false;
+            document.getElementById('go').hidden = true;
+            document.getElementById('go').hidden = false;
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let after = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('backdrop').inert),
+                    String(document.getElementById('modal').inert),
+                    String(document.getElementById('edit').inert),
+                    String(document.getElementById('email').inert),
+                    String(document.getElementById('notes').inert),
+                    String(document.getElementById('note').inert),
+                    String(document.getElementById('go').inert),
+                    String(document.getElementById('go').hidden)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after, "true|false|true|false|false|false|false|false");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"backdrop\"") && serialized.contains("inert"),
+            "checkout JS must persist element.inert: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"edit\"") && serialized.contains("inert"),
+            "direct inert assignment must persist: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"modal\" inert")
+                && !serialized.contains("inert=\"\" id=\"modal\""),
+            "cleared modal must drop inert: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"email\"") && serialized.contains(">draft</textarea>"),
+            "inputs and textareas must stay intact: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"go\" inert")
+                && !serialized.contains("inert=\"\" id=\"go\"")
+                && !serialized.contains("id=\"go\" hidden"),
+            "untouched controls must not invent inert or hidden: {serialized}"
+        );
+        assert!(
+            !serialized.contains("aria-hidden") && !serialized.contains("display:none"),
+            "inert IDL must not copy onto aria-hidden or style=display:none: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/inert-target")
+            .unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let edit = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("edit"))
+            .expect("edit button should compile");
+        assert_eq!(edit.role, crate::som::types::ElementRole::Button);
+        assert_eq!(
+            edit.attrs.as_ref().and_then(|attrs| attrs.get("inert")),
+            Some(&serde_json::json!(true))
+        );
+        let save = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("save"))
+            .expect("save button should compile");
+        assert_eq!(save.role, crate::som::types::ElementRole::Button);
+        assert_eq!(
+            save.attrs.as_ref().and_then(|attrs| attrs.get("inert")),
+            Some(&serde_json::json!(true)),
+            "inert ancestors must mark descendants: {save:?}"
+        );
+        let ok = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("ok"))
+            .expect("ok button should compile");
+        assert_eq!(ok.role, crate::som::types::ElementRole::Button);
+        assert!(
+            ok.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("inert").is_none()),
+            "cleared modal descendants must not compile inert: {ok:?}"
+        );
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(email.role, crate::som::types::ElementRole::TextInput);
+        assert!(
+            email
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("inert").is_none()),
+            "untouched inputs must not compile inert: {email:?}"
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert!(
+            notes
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("inert").is_none()),
+            "untouched textareas must not compile inert: {notes:?}"
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("inert").is_none()),
+            "paragraphs must not invent inert: {note:?}"
+        );
+        let go = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("go"))
+            .expect("go button should compile");
+        assert_eq!(go.role, crate::som::types::ElementRole::Button);
+        assert!(
+            go.attrs.as_ref().is_none_or(|attrs| {
+                attrs.get("inert").is_none() && attrs.get("hidden").is_none()
+            }),
+            "untouched buttons must not invent inert or hidden: {go:?}"
         );
     }
 }
