@@ -1447,7 +1447,28 @@ Object.defineProperty(PlasElement.prototype, 'value', {
 
 Object.defineProperty(PlasElement.prototype, 'checked', {
     get: function() { return this.hasAttribute('checked'); },
-    set: function(v) { if (v) this.setAttribute('checked', ''); else this.removeAttribute('checked'); }
+    set: function(v) {
+        if (v) {
+            if (this.tagName === 'INPUT' && String(this.type || '').toLowerCase() === 'radio') {
+                var name = this.name || '';
+                if (name) {
+                    var owner = _formOwner(this);
+                    var radios = document.getElementsByTagName('input');
+                    for (var i = 0; i < radios.length; i++) {
+                        var other = radios[i];
+                        if (other === this) continue;
+                        if (String(other.type || '').toLowerCase() !== 'radio') continue;
+                        if ((other.name || '') !== name) continue;
+                        if (_formOwner(other) !== owner) continue;
+                        other.removeAttribute('checked');
+                    }
+                }
+            }
+            this.setAttribute('checked', '');
+        } else {
+            this.removeAttribute('checked');
+        }
+    }
 });
 
 Object.defineProperty(PlasElement.prototype, 'open', {
@@ -11987,6 +12008,173 @@ mod tests {
                 .as_ref()
                 .is_none_or(|attrs| attrs.get("size").is_none()),
             "contenteditable must not compile size: {editor:?}"
+        );
+    }
+
+    #[test]
+    fn radio_checked_idl_unchecks_group_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout"><input id="free" type="radio" name="plan" value="free" checked><input id="pro" type="radio" name="plan" value="pro"><input id="team" type="radio" name="plan" value="team"><input id="terms" type="checkbox" name="terms" checked><input id="solo" type="radio" value="solo" checked><input id="email" name="email" value="ops@example.com"><textarea id="notes">draft</textarea><p id="note">Just text</p></form><form id="billing"><input id="monthly" type="radio" name="plan" value="monthly" checked><input id="yearly" type="radio" name="plan" value="yearly"></form></body></html>"#,
+            "https://example.test/radio-group",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('free').checked),
+                    String(document.getElementById('pro').checked),
+                    String(document.getElementById('team').checked),
+                    String(document.getElementById('terms').checked),
+                    String(document.getElementById('solo').checked),
+                    String(document.getElementById('monthly').checked),
+                    String(document.getElementById('yearly').checked),
+                    String(document.getElementById('email').checked),
+                    String(document.getElementById('note').checked)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "true|false|false|true|true|true|false|false|false");
+
+        rt.execute_in_context(
+            r#"
+            document.getElementById('pro').checked = true;
+            document.getElementById('email').checked = true;
+            document.getElementById('notes').checked = true;
+            document.getElementById('note').checked = true;
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let after = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('free').checked),
+                    String(document.getElementById('pro').checked),
+                    String(document.getElementById('team').checked),
+                    String(document.getElementById('terms').checked),
+                    String(document.getElementById('solo').checked),
+                    String(document.getElementById('monthly').checked),
+                    String(document.getElementById('yearly').checked),
+                    String(document.getElementById('email').checked),
+                    String(document.getElementById('notes').checked),
+                    String(document.getElementById('note').checked)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(
+            after,
+            "false|true|false|true|true|true|false|true|true|true"
+        );
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"pro\"") && serialized.contains("checked"),
+            "checkout JS must persist radio.checked: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"email\"") && serialized.contains(">draft</textarea>"),
+            "inputs and textareas must stay intact: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/radio-group").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let pro = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pro"))
+            .expect("pro radio should compile");
+        assert_eq!(pro.role, crate::som::types::ElementRole::Radio);
+        assert_eq!(
+            pro.attrs.as_ref().and_then(|attrs| attrs.get("checked")),
+            Some(&serde_json::json!(true))
+        );
+        let free = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("free"))
+            .expect("free radio should compile");
+        assert_eq!(free.role, crate::som::types::ElementRole::Radio);
+        assert!(
+            free.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("checked").is_none()),
+            "sibling radios in the same group must uncheck: {free:?}"
+        );
+        let terms = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("terms"))
+            .expect("terms checkbox should compile");
+        assert_eq!(terms.role, crate::som::types::ElementRole::Checkbox);
+        assert_eq!(
+            terms.attrs.as_ref().and_then(|attrs| attrs.get("checked")),
+            Some(&serde_json::json!(true))
+        );
+        let solo = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("solo"))
+            .expect("nameless radio should compile");
+        assert_eq!(solo.role, crate::som::types::ElementRole::Radio);
+        assert_eq!(
+            solo.attrs.as_ref().and_then(|attrs| attrs.get("checked")),
+            Some(&serde_json::json!(true))
+        );
+        let monthly = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("monthly"))
+            .expect("billing radio should compile");
+        assert_eq!(monthly.role, crate::som::types::ElementRole::Radio);
+        assert_eq!(
+            monthly
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("checked")),
+            Some(&serde_json::json!(true))
+        );
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(email.role, crate::som::types::ElementRole::TextInput);
+        assert!(
+            email
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("checked").is_none()),
+            "text inputs must not compile checked: {email:?}"
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert!(
+            notes
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("checked").is_none()),
+            "textareas must not compile checked: {notes:?}"
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("checked").is_none()),
+            "paragraphs must not compile checked: {note:?}"
         );
     }
 }
