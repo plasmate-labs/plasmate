@@ -33,11 +33,11 @@ frequency.
 If these gates are not met, report a no-change or blocked run. Never stash,
 overwrite, reset, or absorb unrelated work.
 
-## Active governor constraint (2026-09-03)
+## Active governor constraint (2026-09-04)
 
-- Window: `dddf1df` .. `a0c61bd`
+- Window: `a84ea0e` .. `6ba76b9`
 - Decision: `NARROW`
-- Merged this run: `324c2e4` HTMLSelectElement.size IDL (`a0c61bd`)
+- Merged this run: `e552617` radio-group `checked` IDL (`6ba76b9`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -318,6 +318,9 @@ overwrite, reset, or absorb unrelated work.
   Do not copy #312 HTMLSelectElement.size IDL onto input size, textarea
   rows/cols, extract_text, CLI, CDP, extract_links, SDKs, inspect
   compact fields, or invented defaults on plain dropdowns.
+  Do not copy #314 radio-group `checked` IDL exclusivity onto checkboxes,
+  nameless radios, inspect compact checked, `:checked` matching,
+  `select_option`, extract_text, CLI, CDP, or SDKs.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -358,8 +361,8 @@ overwrite, reset, or absorb unrelated work.
   HTMLElement tabIndex IDL copy, querySelector :empty copy,
   document.getElementsByName copy, form/listed-control autocomplete
   IDL copy, HTMLElement title IDL copy, HTMLElement contentEditable
-  IDL copy, document.activeElement / :focus copy, or HTMLSelectElement
-  size IDL copy.
+  IDL copy, document.activeElement / :focus copy, HTMLSelectElement
+  size IDL copy, or radio-group checked IDL copy.
 
 ## Preferred lanes
 
