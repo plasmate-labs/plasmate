@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-04)
 
-- Window: `0e459f9` .. `59abf2c`
+- Window: `65f4206` .. `66f8e38`
 - Decision: `NARROW`
-- Merged this run: `cece132` HTMLElement.inert IDL (`59abf2c`)
+- Merged this run: `5277adb` querySelector `:first-of-type` / `:last-of-type` (`66f8e38`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -325,6 +325,9 @@ overwrite, reset, or absorb unrelated work.
   extract_links, SDKs, inspect compact fields, adjacent hide attributes
   (`hidden`, `aria-hidden`, `style=display:none`), or invented inert
   on untouched inputs, textareas, paragraphs, or buttons.
+  Do not copy #318 querySelector `:first-of-type` / `:last-of-type` onto
+  other pseudos (`:nth-child`, `:nth-of-type`, `:only-of-type`, `:disabled`),
+  later-sibling (`~`), extract_text, CLI, CDP, or SDKs.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -366,8 +369,9 @@ overwrite, reset, or absorb unrelated work.
   document.getElementsByName copy, form/listed-control autocomplete
   IDL copy, HTMLElement title IDL copy, HTMLElement contentEditable
   IDL copy, document.activeElement / :focus copy, HTMLSelectElement
-  size IDL copy, radio-group checked IDL copy, or HTMLElement
-  inert IDL copy.
+  size IDL copy, radio-group checked IDL copy, HTMLElement
+  inert IDL copy, or querySelector :first-of-type / :last-of-type
+  copy.
 
 ## Preferred lanes
 
