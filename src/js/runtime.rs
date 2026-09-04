@@ -1764,6 +1764,30 @@ Object.defineProperty(PlasElement.prototype, 'multiple', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'size', {
+    get: function() {
+        if (this.tagName !== 'SELECT') {
+            return 0;
+        }
+        var raw = this.getAttribute('size');
+        if (raw === null || raw === '') {
+            return 0;
+        }
+        var n = parseInt(raw, 10);
+        return (isFinite(n) && n >= 0) ? n : 0;
+    },
+    set: function(v) {
+        if (this.tagName !== 'SELECT') {
+            return;
+        }
+        var n = Number(v);
+        if (!isFinite(n) || n < 0) {
+            return;
+        }
+        this.setAttribute('size', String(Math.floor(n)));
+    }
+});
+
 Object.defineProperty(PlasElement.prototype, 'alt', {
     get: function() {
         if (this.tagName !== 'IMG' && this.tagName !== 'AREA') {
@@ -11825,5 +11849,144 @@ mod tests {
             .find(|element| element.html_id.as_deref() == Some("editor"))
             .expect("editor should compile");
         assert_eq!(editor.role, crate::som::types::ElementRole::TextInput);
+    }
+
+    #[test]
+    fn select_size_idl_compiles_listbox_rows_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout"><select id="plan"><option value="free" selected>Free</option><option value="pro">Pro</option></select><select id="qty" size="3"><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option></select><input id="email" name="email" value="ops@example.com"><textarea id="notes">draft</textarea><p id="note">Just text</p><div id="editor" contenteditable="true">Edit me</div></form></body></html>"#,
+            "https://example.test/listbox",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('plan').size),
+                    String(document.getElementById('qty').size),
+                    String(document.getElementById('email').size),
+                    String(document.getElementById('notes').size),
+                    String(document.getElementById('note').size),
+                    String(document.getElementById('editor').size)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "0|3|0|0|0|0");
+
+        rt.execute_in_context(
+            r#"
+            document.getElementById('plan').size = 5;
+            document.getElementById('qty').size = 0;
+            document.getElementById('email').size = 12;
+            document.getElementById('notes').size = 8;
+            document.getElementById('note').size = 4;
+            document.getElementById('editor').size = 2;
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let after = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('plan').size),
+                    String(document.getElementById('qty').size),
+                    String(document.getElementById('email').size),
+                    String(document.getElementById('notes').size),
+                    String(document.getElementById('note').size),
+                    String(document.getElementById('editor').size)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after, "5|0|0|0|0|0");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"plan\"") && serialized.contains("size=\"5\""),
+            "checkout JS must persist select.size: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"email\"") && serialized.contains(">draft</textarea>"),
+            "inputs and textareas must stay intact: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/listbox").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let plan = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plan"))
+            .expect("plan select should compile");
+        assert_eq!(plan.role, crate::som::types::ElementRole::Select);
+        assert_eq!(
+            plan.attrs.as_ref().and_then(|attrs| attrs.get("size")),
+            Some(&serde_json::json!(5))
+        );
+        let qty = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("qty"))
+            .expect("qty select should compile");
+        assert_eq!(qty.role, crate::som::types::ElementRole::Select);
+        assert_eq!(
+            qty.attrs.as_ref().and_then(|attrs| attrs.get("size")),
+            Some(&serde_json::json!(0))
+        );
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(email.role, crate::som::types::ElementRole::TextInput);
+        assert!(
+            email
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("size").is_none()),
+            "inputs must not compile size: {email:?}"
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert!(
+            notes
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("size").is_none()),
+            "textareas must not compile size: {notes:?}"
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("size").is_none()),
+            "paragraphs must not compile size: {note:?}"
+        );
+        let editor = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("editor"))
+            .expect("editor should compile");
+        assert_eq!(editor.role, crate::som::types::ElementRole::TextInput);
+        assert!(
+            editor
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("size").is_none()),
+            "contenteditable must not compile size: {editor:?}"
+        );
     }
 }
