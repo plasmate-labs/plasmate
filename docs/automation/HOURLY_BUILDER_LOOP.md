@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-04)
 
-- Window: `65f4206` .. `66f8e38`
+- Window: `b075ba8` .. `b07c24a`
 - Decision: `NARROW`
-- Merged this run: `5277adb` querySelector `:first-of-type` / `:last-of-type` (`66f8e38`)
+- Merged this run: `d9c7a7e` HTMLElement.draggable IDL (`b07c24a`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -328,6 +328,11 @@ overwrite, reset, or absorb unrelated work.
   Do not copy #318 querySelector `:first-of-type` / `:last-of-type` onto
   other pseudos (`:nth-child`, `:nth-of-type`, `:only-of-type`, `:disabled`),
   later-sibling (`~`), extract_text, CLI, CDP, or SDKs.
+  Do not copy #320 HTMLElement.draggable IDL onto extract_text, CLI, CDP,
+  extract_links, SDKs, inspect compact fields, adjacent attributes
+  (`aria-grabbed`, `aria-dropeffect`, `inert`, `hidden`), or invented
+  draggable on untouched inputs, textareas, paragraphs, buttons, or auto
+  img/a defaults.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -370,8 +375,8 @@ overwrite, reset, or absorb unrelated work.
   IDL copy, HTMLElement title IDL copy, HTMLElement contentEditable
   IDL copy, document.activeElement / :focus copy, HTMLSelectElement
   size IDL copy, radio-group checked IDL copy, HTMLElement
-  inert IDL copy, or querySelector :first-of-type / :last-of-type
-  copy.
+  inert IDL copy, querySelector :first-of-type / :last-of-type
+  copy, or HTMLElement draggable IDL copy.
 
 ## Preferred lanes
 
