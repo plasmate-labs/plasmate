@@ -2137,6 +2137,29 @@ function _getElementsByName(root, name) {
     return results;
 }
 
+function _isSubmitButton(el) {
+    if (el.tagName === 'INPUT') {
+        var inputType = String(el.type || '').toLowerCase();
+        return inputType === 'submit' || inputType === 'image';
+    }
+    if (el.tagName === 'BUTTON') {
+        var buttonType = String(el.getAttribute('type') || 'submit').trim().toLowerCase();
+        return buttonType !== 'reset' && buttonType !== 'button';
+    }
+    return false;
+}
+
+function _isDefaultSubmitButton(el) {
+    if (!_isSubmitButton(el)) return false;
+    var form = _formOwner(el);
+    if (!form) return false;
+    var controls = _collectFormElements(form);
+    for (var si = 0; si < controls.length; si++) {
+        if (_isSubmitButton(controls[si])) return controls[si] === el;
+    }
+    return false;
+}
+
 // CSS Selector matching (basic support)
 function _matchesSelector(el, selector) {
     if (!selector || el.nodeType !== Node.ELEMENT_NODE) return false;
@@ -2366,6 +2389,25 @@ function _matchesSimpleSelector(el, selector) {
             case 'focus':
                 if (_liveFocusedElement() !== el) return false;
                 break;
+            case 'default':
+                if (el.tagName === 'INPUT') {
+                    var defaultType = String(el.type || '').toLowerCase();
+                    if (defaultType === 'checkbox' || defaultType === 'radio') {
+                        if (!el._defaultChecked) return false;
+                        break;
+                    }
+                    if (!_isDefaultSubmitButton(el)) return false;
+                    break;
+                }
+                if (el.tagName === 'BUTTON') {
+                    if (!_isDefaultSubmitButton(el)) return false;
+                    break;
+                }
+                if (el.tagName === 'OPTION') {
+                    if (!el._defaultSelected) return false;
+                    break;
+                }
+                return false;
         }
     }
 
@@ -13034,5 +13076,97 @@ mod tests {
             Some(&serde_json::json!(true)),
             "popover IDL must not force details open: {more:?}"
         );
+    }
+
+    #[test]
+    fn query_selector_default_pseudo_compiles_submit_control_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout"><input id="email" name="email" value="ops@example.com"><button id="cancel" type="button">Cancel</button><button id="pay" type="submit">Pay</button><input id="choice" name="choice" value="miss"><textarea id="notes">draft</textarea><p id="note">Just text</p></form></body></html>"#,
+            "https://example.test/default-pseudo",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    document.querySelector('button:default') ? document.querySelector('button:default').id : 'none',
+                    document.querySelector('#pay:default') ? document.querySelector('#pay:default').id : 'none',
+                    String(document.querySelectorAll('button:default').length),
+                    String(document.querySelector('#cancel:default')),
+                    String(document.querySelector('#email:default')),
+                    String(document.querySelector('p:default')),
+                    String(document.querySelector('textarea:default')),
+                    String(document.querySelector('select:default'))
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "pay|pay|1|null|null|null|null|null");
+
+        rt.execute_in_context(
+            r#"
+            var submit = document.querySelector('button:default');
+            document.getElementById('choice').value = submit ? submit.id : 'miss';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"choice\"") && serialized.contains("value=\"pay\""),
+            "checkout JS must persist the :default submit button id: {serialized}"
+        );
+        assert!(
+            serialized.contains("Just text") && serialized.contains(">draft</textarea>"),
+            "paragraphs and textareas must stay intact: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/default-pseudo")
+            .unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let choice = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("choice"))
+            .expect("choice input should compile");
+        assert_eq!(choice.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            choice.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("pay"))
+        );
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(email.role, crate::som::types::ElementRole::TextInput);
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert_eq!(notes.text.as_deref(), Some("draft"));
+        let pay = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pay"))
+            .expect("pay button should compile");
+        assert_eq!(pay.role, crate::som::types::ElementRole::Button);
+        let cancel = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("cancel"))
+            .expect("cancel button should compile");
+        assert_eq!(cancel.role, crate::som::types::ElementRole::Button);
     }
 }
