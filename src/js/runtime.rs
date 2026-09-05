@@ -2342,6 +2342,9 @@ function _matchesSimpleSelector(el, selector) {
                     lastTypeNext = lastTypeNext.nextElementSibling;
                 }
                 break;
+            case 'only-child':
+                if (!el.parentNode || el.parentNode.firstElementChild !== el || el.parentNode.lastElementChild !== el) return false;
+                break;
             case 'not':
                 if (_matchesSelector(el, pseudo.arg)) return false;
                 break;
@@ -13034,5 +13037,94 @@ mod tests {
             Some(&serde_json::json!(true)),
             "popover IDL must not force details open: {more:?}"
         );
+    }
+
+    #[test]
+    fn query_selector_only_child_compiles_singleton_control_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout"><label id="email-label">Email<input id="email" name="email" value="ops@example.com"></label><div id="actions"><button id="pay">Pay</button><button id="cancel">Cancel</button></div><p id="note">Just text</p><textarea id="notes">draft</textarea></form></body></html>"#,
+            "https://example.test/only-child",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    document.querySelector('input:only-child') ? document.querySelector('input:only-child').id : 'none',
+                    document.querySelector('label input:only-child') ? document.querySelector('label input:only-child').id : 'none',
+                    String(document.querySelectorAll('input:only-child').length),
+                    String(document.querySelector('button:only-child')),
+                    String(document.querySelector('#pay:only-child')),
+                    String(document.querySelector('p:only-child')),
+                    String(document.querySelector('textarea:only-child')),
+                    String(document.querySelector('#email:only-child') ? document.querySelector('#email:only-child').id : 'none')
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "email|email|1|null|null|null|null|email");
+
+        rt.execute_in_context(
+            r#"
+            var field = document.querySelector('input:only-child');
+            if (field) field.value = 'ready@example.com';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"email\"")
+                && serialized.contains("value=\"ready@example.com\""),
+            "checkout JS must persist the :only-child input value: {serialized}"
+        );
+        assert!(
+            serialized.contains("Just text") && serialized.contains(">draft</textarea>"),
+            "sibling paragraphs and textareas must stay intact: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/only-child").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(email.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            email.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("ready@example.com"))
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(note.text.as_deref(), Some("Just text"));
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert_eq!(notes.text.as_deref(), Some("draft"));
+        let pay = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pay"))
+            .expect("pay button should compile");
+        assert_eq!(pay.role, crate::som::types::ElementRole::Button);
+        let cancel = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("cancel"))
+            .expect("cancel button should compile");
+        assert_eq!(cancel.role, crate::som::types::ElementRole::Button);
     }
 }
