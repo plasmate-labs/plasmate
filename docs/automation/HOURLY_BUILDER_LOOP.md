@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-05)
 
-- Window: `3a6be44` .. `d52da38`
+- Window: `aedd590` .. `2312f3f`
 - Decision: `NARROW`
-- Merged this run: `766c934` HTMLElement.popover IDL (`d52da38`)
+- Merged this run: `54b47e8` querySelector `:only-child` (`f49adcc`); `726e96e` querySelector `:default` (`2312f3f`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -342,6 +342,13 @@ overwrite, reset, or absorb unrelated work.
   (`popovertarget`, `showPopover`, `hidePopover`, `togglePopover`,
   `command`), or invented popover on untouched inputs, textareas,
   paragraphs, buttons, or details `open`.
+  Do not copy #326 querySelector `:only-child` onto other pseudos
+  (`:nth-child`, `:nth-of-type`, `:only-of-type`, `:disabled`),
+  later-sibling (`~`), extract_text, CLI, CDP, or SDKs.
+  Do not copy #327 querySelector `:default` onto other pseudos
+  (`:indeterminate`, `:disabled`, `:required`, `:checked`), inspect
+  compact fields, native-bridge copies, or SDK wrappers; do not invent
+  default on paragraphs, textareas, or non-submit controls.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -386,7 +393,8 @@ overwrite, reset, or absorb unrelated work.
   size IDL copy, radio-group checked IDL copy, HTMLElement
   inert IDL copy, querySelector :first-of-type / :last-of-type
   copy, HTMLElement draggable IDL copy, a/area download IDL
-  copy, or HTMLElement popover IDL copy.
+  copy, HTMLElement popover IDL copy, querySelector :only-child
+  copy, or querySelector :default copy.
 
 ## Preferred lanes
 
