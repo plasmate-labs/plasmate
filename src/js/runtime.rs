@@ -1899,6 +1899,21 @@ Object.defineProperty(PlasElement.prototype, 'href', {
     set: function(v) { this._attrs.href = v; }
 });
 
+Object.defineProperty(PlasElement.prototype, 'download', {
+    get: function() {
+        if (this.tagName !== 'A' && this.tagName !== 'AREA') {
+            return '';
+        }
+        return this.getAttribute('download') || '';
+    },
+    set: function(v) {
+        if (this.tagName !== 'A' && this.tagName !== 'AREA') {
+            return;
+        }
+        this.setAttribute('download', String(v));
+    }
+});
+
 Object.defineProperty(PlasElement.prototype, 'src', {
     get: function() { return this._attrs.src || ''; },
     set: function(v) { this._attrs.src = v; }
@@ -12674,6 +12689,155 @@ mod tests {
                 .as_ref()
                 .is_none_or(|attrs| attrs.get("draggable").is_none()),
             "auto-draggable links must not invent the content attribute: {docs:?}"
+        );
+    }
+
+    #[test]
+    fn anchor_download_idl_persists_export_filename_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><a id="export" href="/report.csv">Export</a><a id="invoice" href="/invoice.pdf">Invoice</a><map name="campus"><area id="hit" href="/map.png" alt="Campus"></map><button id="go">Go</button><input id="name" value="a"><p id="note">Just text</p></body></html>"#,
+            "https://example.test/download-target",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('export').download),
+                    String(document.getElementById('invoice').download),
+                    String(document.getElementById('hit').download),
+                    String(document.getElementById('go').download),
+                    String(document.getElementById('name').download),
+                    String(document.getElementById('note').download)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "|||||");
+
+        rt.execute_in_context(
+            r#"
+            document.getElementById('export').download = 'report.csv';
+            document.getElementById('invoice').download = '';
+            document.getElementById('hit').download = 'campus.png';
+            document.getElementById('go').download = 'Invented';
+            document.getElementById('name').download = 'Invented';
+            document.getElementById('note').download = 'Invented';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let after = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('export').download),
+                    String(document.getElementById('invoice').download),
+                    String(document.getElementById('hit').download),
+                    String(document.getElementById('go').download),
+                    String(document.getElementById('name').download),
+                    String(document.getElementById('note').download)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after, "report.csv||campus.png|||");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"export\"") && serialized.contains("download=\"report.csv\""),
+            "anchor JS must persist download filename: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"invoice\"") && serialized.contains("download=\"\""),
+            "empty download must persist as a boolean download attribute: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"hit\"") && serialized.contains("download=\"campus.png\""),
+            "area JS must persist download filename: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"go\" download")
+                && !serialized.contains("id=\"name\" download")
+                && !serialized.contains("id=\"note\" download")
+                && !serialized.contains("download=\"Invented\""),
+            "buttons, inputs, and paragraphs must not invent download: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/download-target")
+                .unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let export = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("export"))
+            .expect("export link should compile");
+        assert_eq!(export.role, crate::som::types::ElementRole::Link);
+        assert_eq!(
+            export
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("download")),
+            Some(&serde_json::json!("report.csv"))
+        );
+        let invoice = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("invoice"))
+            .expect("invoice link should compile");
+        assert_eq!(
+            invoice
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("download")),
+            Some(&serde_json::json!(true))
+        );
+        let hit = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("hit"))
+            .expect("hit area should compile");
+        assert_eq!(
+            hit.attrs.as_ref().and_then(|attrs| attrs.get("download")),
+            Some(&serde_json::json!("campus.png"))
+        );
+        let go = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("go"))
+            .expect("go button should compile");
+        assert_eq!(go.role, crate::som::types::ElementRole::Button);
+        assert!(
+            go.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("download").is_none()),
+            "buttons must not invent download: {go:?}"
+        );
+        let name = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("name"))
+            .expect("name input should compile");
+        assert!(
+            name.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("download").is_none()),
+            "inputs must not invent download: {name:?}"
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("download").is_none()),
+            "paragraphs must not invent download: {note:?}"
         );
     }
 }
