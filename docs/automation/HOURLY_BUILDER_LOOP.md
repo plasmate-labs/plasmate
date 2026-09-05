@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-05)
 
-- Window: `5ff4691` .. `a895720`
+- Window: `3a6be44` .. `d52da38`
 - Decision: `NARROW`
-- Merged this run: `9144f0c` a/area download IDL (`a895720`)
+- Merged this run: `766c934` HTMLElement.popover IDL (`d52da38`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -337,6 +337,11 @@ overwrite, reset, or absorb unrelated work.
   extract_links, SDKs, inspect compact fields, adjacent attributes
   (`target`, `rel`, `hreflang`, `ping`, `type`), or invented download on
   buttons, inputs, paragraphs, or non-a/area tags.
+  Do not copy #324 HTMLElement.popover IDL onto extract_text, CLI, CDP,
+  extract_links, SDKs, inspect compact fields, adjacent APIs
+  (`popovertarget`, `showPopover`, `hidePopover`, `togglePopover`,
+  `command`), or invented popover on untouched inputs, textareas,
+  paragraphs, buttons, or details `open`.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -380,8 +385,8 @@ overwrite, reset, or absorb unrelated work.
   IDL copy, document.activeElement / :focus copy, HTMLSelectElement
   size IDL copy, radio-group checked IDL copy, HTMLElement
   inert IDL copy, querySelector :first-of-type / :last-of-type
-  copy, HTMLElement draggable IDL copy, or a/area download IDL
-  copy.
+  copy, HTMLElement draggable IDL copy, a/area download IDL
+  copy, or HTMLElement popover IDL copy.
 
 ## Preferred lanes
 
