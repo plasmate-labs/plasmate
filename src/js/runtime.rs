@@ -1671,6 +1671,32 @@ Object.defineProperty(PlasElement.prototype, 'title', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'popover', {
+    get: function() {
+        var raw = this.getAttribute('popover');
+        if (raw === null) return null;
+        var normalized = String(raw).trim().toLowerCase();
+        if (normalized === '' || normalized === 'auto') return 'auto';
+        if (normalized === 'manual') return 'manual';
+        if (normalized === 'hint') return 'hint';
+        return null;
+    },
+    set: function(v) {
+        if (v === null) {
+            this.removeAttribute('popover');
+            return;
+        }
+        var normalized = String(v).trim().toLowerCase();
+        if (normalized === '' || normalized === 'auto') {
+            this.setAttribute('popover', 'auto');
+            return;
+        }
+        if (normalized === 'manual' || normalized === 'hint') {
+            this.setAttribute('popover', normalized);
+        }
+    }
+});
+
 Object.defineProperty(PlasElement.prototype, 'type', {
     get: function() { return this._attrs.type || (this.tagName === 'INPUT' ? 'text' : ''); },
     set: function(v) { this._attrs.type = v; }
@@ -12838,6 +12864,175 @@ mod tests {
                 .as_ref()
                 .is_none_or(|attrs| attrs.get("download").is_none()),
             "paragraphs must not invent download: {note:?}"
+        );
+    }
+
+    #[test]
+    fn element_popover_idl_persists_overlay_state_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><section id="filters">Filter options</section><button id="open">Open</button><button id="go">Go</button><input id="email" name="email" value="ops@example.com"><textarea id="notes">draft</textarea><p id="note">Just text</p><details id="more"><summary>More</summary></details></body></html>"#,
+            "https://example.test/popover-target",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('filters').popover),
+                    String(document.getElementById('open').popover),
+                    String(document.getElementById('go').popover),
+                    String(document.getElementById('email').popover),
+                    String(document.getElementById('notes').popover),
+                    String(document.getElementById('note').popover),
+                    String(document.getElementById('more').popover)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "null|null|null|null|null|null|null");
+
+        rt.execute_in_context(
+            r#"
+            document.getElementById('filters').popover = 'auto';
+            document.getElementById('open').popover = 'manual';
+            document.getElementById('note').popover = 'hint';
+            document.getElementById('notes').popover = 'auto';
+            document.getElementById('notes').popover = null;
+            document.getElementById('go').popover = 'Invented';
+            document.getElementById('email').popover = 'Invented';
+            document.getElementById('more').popover = 'Invented';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let after = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('filters').popover),
+                    String(document.getElementById('open').popover),
+                    String(document.getElementById('go').popover),
+                    String(document.getElementById('email').popover),
+                    String(document.getElementById('notes').popover),
+                    String(document.getElementById('note').popover),
+                    String(document.getElementById('more').popover)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after, "auto|manual|null|null|null|hint|null");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"filters\"") && serialized.contains("popover=\"auto\""),
+            "section JS must persist popover=auto: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"open\"") && serialized.contains("popover=\"manual\""),
+            "button JS must persist popover=manual: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"note\"") && serialized.contains("popover=\"hint\""),
+            "paragraph JS must persist popover=hint: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"go\" popover")
+                && !serialized.contains("id=\"email\" popover")
+                && !serialized.contains("id=\"notes\" popover")
+                && !serialized.contains("id=\"more\" popover")
+                && !serialized.contains("popover=\"Invented\"")
+                && !serialized.contains("popovertarget")
+                && !serialized.contains(" command="),
+            "invalid assignments must not invent popover, popovertarget, or command: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/popover-target")
+            .unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let filters = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("filters"))
+            .expect("filters section should compile");
+        assert_eq!(
+            filters
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("popover")),
+            Some(&serde_json::json!("auto"))
+        );
+        let open = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("open"))
+            .expect("open button should compile");
+        assert_eq!(open.role, crate::som::types::ElementRole::Button);
+        assert_eq!(
+            open.attrs.as_ref().and_then(|attrs| attrs.get("popover")),
+            Some(&serde_json::json!("manual"))
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(
+            note.attrs.as_ref().and_then(|attrs| attrs.get("popover")),
+            Some(&serde_json::json!("hint"))
+        );
+        let go = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("go"))
+            .expect("go button should compile");
+        assert!(
+            go.attrs.as_ref().is_none_or(
+                |attrs| attrs.get("popover").is_none() && attrs.get("popovertarget").is_none()
+            ),
+            "untouched buttons must not invent popover: {go:?}"
+        );
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert!(
+            email
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("popover").is_none()),
+            "invalid input assignment must not invent popover: {email:?}"
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert!(
+            notes
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("popover").is_none()),
+            "cleared textarea must drop popover: {notes:?}"
+        );
+        let more = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("more"))
+            .expect("more details should compile");
+        assert!(
+            more.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("popover").is_none()),
+            "invalid details assignment must not invent popover: {more:?}"
+        );
+        assert_ne!(
+            more.attrs.as_ref().and_then(|attrs| attrs.get("open")),
+            Some(&serde_json::json!(true)),
+            "popover IDL must not force details open: {more:?}"
         );
     }
 }
