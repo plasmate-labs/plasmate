@@ -1983,6 +1983,34 @@ Object.defineProperty(PlasElement.prototype, 'download', {
     }
 });
 
+function _hyperlinkHashParts(href) {
+    href = String(href || '');
+    var idx = href.indexOf('#');
+    if (idx === -1) return { base: href, hash: '' };
+    return { base: href.substring(0, idx), hash: href.substring(idx) };
+}
+
+Object.defineProperty(PlasElement.prototype, 'hash', {
+    get: function() {
+        if (this.tagName !== 'A' && this.tagName !== 'AREA') {
+            return '';
+        }
+        var href = this.getAttribute('href');
+        if (href === null) return '';
+        return _hyperlinkHashParts(href).hash;
+    },
+    set: function(v) {
+        if (this.tagName !== 'A' && this.tagName !== 'AREA') {
+            return;
+        }
+        var href = this.getAttribute('href');
+        if (href === null) return;
+        var hash = String(v);
+        if (hash && hash.charAt(0) !== '#') hash = '#' + hash;
+        this.setAttribute('href', _hyperlinkHashParts(href).base + hash);
+    }
+});
+
 Object.defineProperty(PlasElement.prototype, 'src', {
     get: function() { return this._attrs.src || ''; },
     set: function(v) { this._attrs.src = v; }
@@ -13600,4 +13628,151 @@ mod tests {
             .expect("pay button should compile");
         assert_eq!(pay.role, crate::som::types::ElementRole::Button);
     }
+
+    #[test]
+    fn anchor_hash_idl_persists_fragment_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><a id="continue" href="/checkout">Continue</a><a id="help" href="/help#old">Help</a><map name="campus"><area id="hit" href="/map.png" alt="Campus"></map><a id="plain">No href</a><button id="go">Go</button><input id="name" value="a"><p id="note">Just text</p></body></html>"#,
+            "https://example.test/hash-target",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('continue').hash),
+                    String(document.getElementById('help').hash),
+                    String(document.getElementById('hit').hash),
+                    String(document.getElementById('plain').hash),
+                    String(document.getElementById('go').hash),
+                    String(document.getElementById('name').hash),
+                    String(document.getElementById('note').hash)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "|#old|||||");
+
+        rt.execute_in_context(
+            r#"
+            document.getElementById('continue').hash = 'billing';
+            document.getElementById('help').hash = '';
+            document.getElementById('hit').hash = '#campus';
+            document.getElementById('plain').hash = '#invented';
+            document.getElementById('go').hash = '#invented';
+            document.getElementById('name').hash = '#invented';
+            document.getElementById('note').hash = '#invented';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let after = rt
+            .execute_in_context(
+                r#"[
+                    String(document.getElementById('continue').hash),
+                    String(document.getElementById('help').hash),
+                    String(document.getElementById('hit').hash),
+                    String(document.getElementById('plain').hash),
+                    String(document.getElementById('go').hash),
+                    String(document.getElementById('name').hash),
+                    String(document.getElementById('note').hash)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after, "#billing||#campus||||");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"continue\"")
+                && serialized.contains("href=\"/checkout#billing\""),
+            "continue JS must persist hash onto href: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"help\"") && serialized.contains("href=\"/help\""),
+            "clearing hash must drop the fragment: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"hit\"") && serialized.contains("href=\"/map.png#campus\""),
+            "area JS must persist hash onto href: {serialized}"
+        );
+        assert!(
+            !serialized.contains("href=\"#invented\"")
+                && !serialized.contains("id=\"go\" href")
+                && !serialized.contains("id=\"name\" href")
+                && !serialized.contains("id=\"note\" href"),
+            "hash IDL must not invent href on href-less anchors, buttons, inputs, or paragraphs: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/hash-target").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let cont = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("continue"))
+            .expect("continue link should compile");
+        assert_eq!(cont.role, crate::som::types::ElementRole::Link);
+        assert_eq!(
+            cont.attrs.as_ref().and_then(|attrs| attrs.get("href")),
+            Some(&serde_json::json!("/checkout#billing"))
+        );
+        let help = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("help"))
+            .expect("help link should compile");
+        assert_eq!(
+            help.attrs.as_ref().and_then(|attrs| attrs.get("href")),
+            Some(&serde_json::json!("/help"))
+        );
+        let hit = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("hit"))
+            .expect("hit area should compile");
+        assert_eq!(
+            hit.attrs.as_ref().and_then(|attrs| attrs.get("href")),
+            Some(&serde_json::json!("/map.png#campus"))
+        );
+        let go = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("go"))
+            .expect("go button should compile");
+        assert_eq!(go.role, crate::som::types::ElementRole::Button);
+        assert!(
+            go.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("href").is_none()),
+            "buttons must not invent href: {go:?}"
+        );
+        let name = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("name"))
+            .expect("name input should compile");
+        assert!(
+            name.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("href").is_none()),
+            "inputs must not invent href: {name:?}"
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("href").is_none()),
+            "paragraphs must not invent href: {note:?}"
+        );
+    }
+
 }
