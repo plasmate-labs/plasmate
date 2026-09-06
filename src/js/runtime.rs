@@ -2386,9 +2386,12 @@ function _matchesSimpleSelector(el, selector) {
             } else break;
         } else if (s[0] === '[') {
             // Attribute
-            var attrMatch = s.match(/^\[([a-zA-Z0-9_-]+)(?:([~|^$*]?=)"?([^"\]]*)"?)?\]/);
+            var attrMatch = s.match(/^\[([a-zA-Z0-9_-]+)(?:([~|^$*]?=)(?:"([^"]*)"|'([^']*)'|([^\]]*)))?\]/);
             if (attrMatch) {
-                attrs.push({ name: attrMatch[1], op: attrMatch[2], value: attrMatch[3] });
+                var attrValue = attrMatch[3];
+                if (attrValue === undefined) attrValue = attrMatch[4];
+                if (attrValue === undefined) attrValue = attrMatch[5];
+                attrs.push({ name: attrMatch[1], op: attrMatch[2], value: attrValue });
                 s = s.substr(attrMatch[0].length);
             } else break;
         } else if (s[0] === ':') {
@@ -14050,6 +14053,108 @@ mod tests {
                 .iter()
                 .all(|element| element.html_id.as_deref() != Some("ghost")),
             "detached ghost input must not compile: {elements:?}"
+        );
+        let pay = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pay"))
+            .expect("pay button should compile");
+        assert_eq!(pay.role, crate::som::types::ElementRole::Button);
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(note.text.as_deref(), Some("Just text"));
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert_eq!(notes.text.as_deref(), Some("draft"));
+    }
+
+    #[test]
+    fn query_selector_single_quoted_attr_compiles_named_control_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout"><input id="email" name="email" value="ops@example.com"><input id="choice" name="choice" value="miss"><button id="pay">Pay</button><p id="note">Just text</p><textarea id="notes" name="notes">draft</textarea></form></body></html>"#,
+            "https://example.test/single-quoted-attr",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    document.querySelector("input[name='email']") ? document.querySelector("input[name='email']").id : 'none',
+                    document.querySelector('input[name="email"]') ? document.querySelector('input[name="email"]').id : 'none',
+                    document.querySelector('input[name=email]') ? document.querySelector('input[name=email]').id : 'none',
+                    document.querySelector("button[id='pay']") ? document.querySelector("button[id='pay']").id : 'none',
+                    document.querySelector("textarea[name='notes']") ? document.querySelector("textarea[name='notes']").id : 'none',
+                    String(document.querySelector("p[id='note']") ? document.querySelector("p[id='note']").id : null),
+                    String(document.querySelector("input[name='choice']") ? document.querySelector("input[name='choice']").id : null),
+                    String(document.querySelector("input[name='missing']")),
+                    String(document.querySelector("p[name='email']"))
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "email|email|email|pay|notes|note|choice|null|null");
+
+        rt.execute_in_context(
+            r#"
+            var field = document.querySelector("input[name='email']");
+            if (field) field.value = 'ready@example.com';
+            var blocked = document.querySelector("input[name='missing']");
+            if (blocked) blocked.value = 'should-not-write';
+            var para = document.querySelector("p[name='email']");
+            if (para) para.textContent = 'leaked';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"email\"")
+                && serialized.contains("value=\"ready@example.com\""),
+            "checkout JS must persist the single-quoted name selector value: {serialized}"
+        );
+        assert!(
+            serialized.contains("value=\"miss\""),
+            "non-matching named inputs must stay intact: {serialized}"
+        );
+        assert!(
+            serialized.contains("Just text") && serialized.contains(">draft</textarea>"),
+            "paragraphs and textareas must stay intact: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/single-quoted-attr")
+                .unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(email.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            email.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("ready@example.com"))
+        );
+        let choice = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("choice"))
+            .expect("choice input should compile");
+        assert_eq!(
+            choice.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("miss"))
         );
         let pay = elements
             .iter()
