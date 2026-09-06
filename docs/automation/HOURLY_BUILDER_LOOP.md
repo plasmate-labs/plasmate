@@ -33,11 +33,11 @@ frequency.
 If these gates are not met, report a no-change or blocked run. Never stash,
 overwrite, reset, or absorb unrelated work.
 
-## Active governor constraint (2026-09-05)
+## Active governor constraint (2026-09-06)
 
-- Window: `aedd590` .. `2312f3f`
+- Window: `83bd2b4` .. `0ca6769`
 - Decision: `NARROW`
-- Merged this run: `54b47e8` querySelector `:only-child` (`f49adcc`); `726e96e` querySelector `:default` (`2312f3f`)
+- Merged this run: `231381b` input/button type IDL (`0ca6769`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -349,6 +349,10 @@ overwrite, reset, or absorb unrelated work.
   (`:indeterminate`, `:disabled`, `:required`, `:checked`), inspect
   compact fields, native-bridge copies, or SDK wrappers; do not invent
   default on paragraphs, textareas, or non-submit controls.
+  Do not copy #328 input/button type IDL onto textarea, select, paragraphs,
+  inspect compact fields, extract_text, CLI, CDP, or SDKs; do not invent
+  type on non-input/button tags, change popover IDL, or add inspect
+  compact `input_type` / `button_type`.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -394,7 +398,7 @@ overwrite, reset, or absorb unrelated work.
   inert IDL copy, querySelector :first-of-type / :last-of-type
   copy, HTMLElement draggable IDL copy, a/area download IDL
   copy, HTMLElement popover IDL copy, querySelector :only-child
-  copy, or querySelector :default copy.
+  copy, querySelector :default copy, or input/button type IDL copy.
 
 ## Preferred lanes
 
