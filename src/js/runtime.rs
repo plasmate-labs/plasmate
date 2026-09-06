@@ -1697,9 +1697,52 @@ Object.defineProperty(PlasElement.prototype, 'popover', {
     }
 });
 
+function _inputTypeKeyword(raw) {
+    var normalized = String(raw).trim().toLowerCase();
+    if (normalized === 'hidden' || normalized === 'text' || normalized === 'search' ||
+        normalized === 'tel' || normalized === 'url' || normalized === 'email' ||
+        normalized === 'password' || normalized === 'date' || normalized === 'month' ||
+        normalized === 'week' || normalized === 'time' || normalized === 'datetime-local' ||
+        normalized === 'number' || normalized === 'range' || normalized === 'color' ||
+        normalized === 'checkbox' || normalized === 'radio' || normalized === 'file' ||
+        normalized === 'submit' || normalized === 'image' || normalized === 'reset' ||
+        normalized === 'button') {
+        return normalized;
+    }
+    return null;
+}
+
 Object.defineProperty(PlasElement.prototype, 'type', {
-    get: function() { return this._attrs.type || (this.tagName === 'INPUT' ? 'text' : ''); },
-    set: function(v) { this._attrs.type = v; }
+    get: function() {
+        if (this.tagName === 'INPUT') {
+            var inputRaw = this.getAttribute('type');
+            if (inputRaw === null || inputRaw === '') return 'text';
+            return _inputTypeKeyword(inputRaw) || 'text';
+        }
+        if (this.tagName === 'BUTTON') {
+            var buttonRaw = this.getAttribute('type');
+            if (buttonRaw === null || buttonRaw === '') return 'submit';
+            var buttonType = String(buttonRaw).trim().toLowerCase();
+            if (buttonType === 'submit' || buttonType === 'reset' || buttonType === 'button') {
+                return buttonType;
+            }
+            return 'submit';
+        }
+        return '';
+    },
+    set: function(v) {
+        if (this.tagName === 'INPUT') {
+            var inputType = _inputTypeKeyword(v);
+            if (inputType) this.setAttribute('type', inputType);
+            return;
+        }
+        if (this.tagName === 'BUTTON') {
+            var buttonType = String(v).trim().toLowerCase();
+            if (buttonType === 'submit' || buttonType === 'reset' || buttonType === 'button') {
+                this.setAttribute('type', buttonType);
+            }
+        }
+    }
 });
 
 Object.defineProperty(PlasElement.prototype, 'name', {
@@ -13260,5 +13303,174 @@ mod tests {
             .find(|element| element.html_id.as_deref() == Some("cancel"))
             .expect("cancel button should compile");
         assert_eq!(cancel.role, crate::som::types::ElementRole::Button);
+    }
+
+    #[test]
+    fn input_button_type_idl_persists_control_kind_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout"><input id="email" name="email" value="ops@example.com"><button id="pay">Pay</button><button id="cancel">Cancel</button><textarea id="notes">draft</textarea><select id="country"><option>US</option></select><p id="note">Just text</p><button id="go">Go</button></form></body></html>"#,
+            "https://example.test/type-target",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    document.getElementById('email').type,
+                    document.getElementById('pay').type,
+                    document.getElementById('cancel').type,
+                    String(document.getElementById('notes').type),
+                    String(document.getElementById('country').type),
+                    String(document.getElementById('note').type),
+                    document.getElementById('go').type
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "text|submit|submit||||submit");
+
+        rt.execute_in_context(
+            r#"
+            document.getElementById('email').type = 'EMAIL';
+            document.getElementById('cancel').type = 'button';
+            document.getElementById('pay').type = 'submit';
+            document.getElementById('notes').type = 'text';
+            document.getElementById('country').type = 'text';
+            document.getElementById('note').type = 'submit';
+            document.getElementById('go').type = 'Invented';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let after = rt
+            .execute_in_context(
+                r#"[
+                    document.getElementById('email').type,
+                    document.getElementById('pay').type,
+                    document.getElementById('cancel').type,
+                    String(document.getElementById('notes').type),
+                    String(document.getElementById('country').type),
+                    String(document.getElementById('note').type),
+                    document.getElementById('go').type
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(after, "email|submit|button||||submit");
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"email\"") && serialized.contains("type=\"email\""),
+            "email JS must persist type=email: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"cancel\"") && serialized.contains("type=\"button\""),
+            "cancel JS must persist type=button: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"pay\"") && serialized.contains("type=\"submit\""),
+            "pay JS must persist type=submit: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"notes\" type")
+                && !serialized.contains("type=\"text\" id=\"notes\"")
+                && !serialized.contains("id=\"country\" type")
+                && !serialized.contains("id=\"note\" type")
+                && !serialized.contains("id=\"go\" type")
+                && !serialized.contains("type=\"Invented\""),
+            "type IDL must not invent type on textarea, select, paragraphs, or invalid buttons: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/type-target").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(email.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            email
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("input_type")),
+            Some(&serde_json::json!("email"))
+        );
+        let cancel = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("cancel"))
+            .expect("cancel button should compile");
+        assert_eq!(cancel.role, crate::som::types::ElementRole::Button);
+        assert_eq!(
+            cancel
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("button_type")),
+            Some(&serde_json::json!("button"))
+        );
+        let pay = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pay"))
+            .expect("pay button should compile");
+        assert_eq!(pay.role, crate::som::types::ElementRole::Button);
+        assert_eq!(
+            pay.attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("button_type")),
+            Some(&serde_json::json!("submit"))
+        );
+        let go = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("go"))
+            .expect("go button should compile");
+        assert_eq!(go.role, crate::som::types::ElementRole::Button);
+        assert_eq!(
+            go.attrs.as_ref().and_then(|attrs| attrs.get("button_type")),
+            Some(&serde_json::json!("submit"))
+        );
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert!(
+            notes.attrs.as_ref().is_none_or(|attrs| {
+                attrs.get("input_type").is_none() && attrs.get("type").is_none()
+            }),
+            "textarea type assignment must not persist: {notes:?}"
+        );
+        let country = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("country"))
+            .expect("country select should compile");
+        assert_eq!(country.role, crate::som::types::ElementRole::Select);
+        assert!(
+            country.attrs.as_ref().is_none_or(|attrs| {
+                attrs.get("input_type").is_none() && attrs.get("type").is_none()
+            }),
+            "select type assignment must not persist: {country:?}"
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert!(
+            note.attrs.as_ref().is_none_or(|attrs| {
+                attrs.get("input_type").is_none()
+                    && attrs.get("button_type").is_none()
+                    && attrs.get("type").is_none()
+            }),
+            "paragraphs must not invent type: {note:?}"
+        );
     }
 }
