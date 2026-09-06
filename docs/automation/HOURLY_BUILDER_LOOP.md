@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-06)
 
-- Window: `baf3a44` .. `529c77d`
+- Window: `ee3d76d` .. `8ba73e6`
 - Decision: `NARROW`
-- Merged this run: `1887b78` querySelector `:placeholder-shown` (`df129a4`); `14b439e` a/area hash IDL (`529c77d`)
+- Merged this run: `8d4b401` querySelector `:root` (`8ba73e6`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -360,6 +360,10 @@ overwrite, reset, or absorb unrelated work.
   (`:disabled`, `:required`, `:indeterminate`, `:blank`), placeholder IDL,
   inspect compact `placeholder`, extract_text, CLI, CDP, or SDKs; do not
   invent placeholder-shown on buttons, selects, hidden inputs, or paragraphs.
+  Do not copy #334 querySelector `:root` onto other pseudos
+  (`:scope`, `:defined`, `:has`, `:is`, `:host`), extract_text, CLI, CDP,
+  SDKs, or the native DOM bridge; do not invent `:root` on body, paragraphs,
+  inputs, buttons, or textareas.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -406,7 +410,8 @@ overwrite, reset, or absorb unrelated work.
   copy, HTMLElement draggable IDL copy, a/area download IDL
   copy, HTMLElement popover IDL copy, querySelector :only-child
   copy, querySelector :default copy, input/button type IDL copy,
-  a/area hash IDL copy, or querySelector :placeholder-shown copy.
+  a/area hash IDL copy, querySelector :placeholder-shown copy,
+  or querySelector :root copy.
 
 ## Preferred lanes
 
