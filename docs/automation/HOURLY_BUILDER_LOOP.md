@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-06)
 
-- Window: `83bd2b4` .. `0ca6769`
+- Window: `baf3a44` .. `529c77d`
 - Decision: `NARROW`
-- Merged this run: `231381b` input/button type IDL (`0ca6769`)
+- Merged this run: `1887b78` querySelector `:placeholder-shown` (`df129a4`); `14b439e` a/area hash IDL (`529c77d`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -353,6 +353,13 @@ overwrite, reset, or absorb unrelated work.
   inspect compact fields, extract_text, CLI, CDP, or SDKs; do not invent
   type on non-input/button tags, change popover IDL, or add inspect
   compact `input_type` / `button_type`.
+  Do not copy #331 a/area `.hash` IDL onto pathname/search/protocol/host,
+  extract_text, CLI, CDP, SDKs, inspect compact `href`, or invented href
+  on buttons, inputs, paragraphs, or href-less anchors.
+  Do not copy #332 querySelector `:placeholder-shown` onto other pseudos
+  (`:disabled`, `:required`, `:indeterminate`, `:blank`), placeholder IDL,
+  inspect compact `placeholder`, extract_text, CLI, CDP, or SDKs; do not
+  invent placeholder-shown on buttons, selects, hidden inputs, or paragraphs.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -398,7 +405,8 @@ overwrite, reset, or absorb unrelated work.
   inert IDL copy, querySelector :first-of-type / :last-of-type
   copy, HTMLElement draggable IDL copy, a/area download IDL
   copy, HTMLElement popover IDL copy, querySelector :only-child
-  copy, querySelector :default copy, or input/button type IDL copy.
+  copy, querySelector :default copy, input/button type IDL copy,
+  a/area hash IDL copy, or querySelector :placeholder-shown copy.
 
 ## Preferred lanes
 
