@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-06)
 
-- Window: `cbd7db4` .. `30ae4d7`
+- Window: `c9602ae` .. `8712560`
 - Decision: `NARROW`
-- Merged this run: `3b77a8b` Node.isConnected (`30ae4d7`)
+- Merged this run: `60991ad` querySelector single-quoted attrs (`8bb91e4`) and `09c70d5` querySelector `:enabled` (`8712560`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -373,6 +373,15 @@ overwrite, reset, or absorb unrelated work.
   `isSameNode`), inspect compact `isConnected`, native-bridge copies,
   extract_text, CLI, CDP, or SDKs; do not invent `isConnected` as a
   content attribute or serialize it.
+  Do not copy #340 querySelector `:enabled` onto other pseudos
+  (`:disabled`, `:required`, `:optional`, `:read-only`, `:read-write`,
+  `:hover`, `:nth-child`), extract_text, CLI, CDP, SDKs, or the native
+  DOM bridge; do not invent `:enabled` on paragraphs or non-form
+  controls.
+  Do not copy #341 single-quoted querySelector attrs onto other selector
+  syntax (`~=`, `|=`, `^=`, `$=`, `*=`, combinators), extract_text, CLI,
+  CDP, SDKs, or the native DOM bridge; do not treat quotes as part of
+  the value or match missing names / wrong tags.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -421,7 +430,8 @@ overwrite, reset, or absorb unrelated work.
   copy, querySelector :default copy, input/button type IDL copy,
   a/area hash IDL copy, querySelector :placeholder-shown copy,
   querySelector :root copy, querySelector unknown-pseudo
-  fail-closed copy, or Node isConnected copy.
+  fail-closed copy, Node isConnected copy, querySelector :enabled
+  copy, or querySelector single-quoted attr copy.
 
 ## Preferred lanes
 
