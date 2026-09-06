@@ -2251,6 +2251,24 @@ function _placeholderShown(el) {
     return String(el.value || '') === '';
 }
 
+function _isEnabledControl(el) {
+    var tag = el.tagName;
+    if (tag !== 'BUTTON' && tag !== 'INPUT' && tag !== 'SELECT' && tag !== 'TEXTAREA' &&
+        tag !== 'OPTGROUP' && tag !== 'OPTION' && tag !== 'FIELDSET') {
+        return false;
+    }
+    if (el.disabled) return false;
+    var n = el.parentNode;
+    while (n && n.nodeType === Node.ELEMENT_NODE) {
+        if (n.tagName === 'FIELDSET' && n.disabled) return false;
+        if ((tag === 'OPTION' || tag === 'OPTGROUP') && n.tagName === 'OPTGROUP' && n.disabled) {
+            return false;
+        }
+        n = n.parentNode;
+    }
+    return true;
+}
+
 // CSS Selector matching (basic support)
 function _matchesSelector(el, selector) {
     if (!selector || el.nodeType !== Node.ELEMENT_NODE) return false;
@@ -2507,6 +2525,9 @@ function _matchesSimpleSelector(el, selector) {
                 return false;
             case 'placeholder-shown':
                 if (!_placeholderShown(el)) return false;
+                break;
+            case 'enabled':
+                if (!_isEnabledControl(el)) return false;
                 break;
             case 'root':
                 if (el !== document.documentElement) return false;
@@ -14161,6 +14182,121 @@ mod tests {
             .find(|element| element.html_id.as_deref() == Some("pay"))
             .expect("pay button should compile");
         assert_eq!(pay.role, crate::som::types::ElementRole::Button);
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(note.text.as_deref(), Some("Just text"));
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert_eq!(notes.text.as_deref(), Some("draft"));
+    }
+
+    #[test]
+    fn query_selector_enabled_pseudo_compiles_live_control_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout"><input id="email" name="email" value="ops@example.com"><input id="blocked" name="blocked" value="skip" disabled><fieldset disabled><input id="nested" name="nested" value="held"></fieldset><button id="pay">Pay</button><button id="wait" disabled>Wait</button><p id="note">Just text</p><textarea id="notes">draft</textarea></form></body></html>"#,
+            "https://example.test/enabled-pseudo",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    document.querySelector('input:enabled') ? document.querySelector('input:enabled').id : 'none',
+                    document.querySelector('#pay:enabled') ? document.querySelector('#pay:enabled').id : 'none',
+                    document.querySelector('textarea:enabled') ? document.querySelector('textarea:enabled').id : 'none',
+                    String(document.querySelectorAll('input:enabled').length),
+                    String(document.querySelector('#blocked:enabled')),
+                    String(document.querySelector('#wait:enabled')),
+                    String(document.querySelector('#nested:enabled')),
+                    String(document.querySelector('p:enabled')),
+                    String(document.querySelector('button:disabled'))
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "email|pay|notes|1|null|null|null|null|null");
+
+        rt.execute_in_context(
+            r#"
+            var field = document.querySelector('input:enabled');
+            if (field) field.value = 'ready@example.com';
+            var blocked = document.querySelector('#blocked:enabled');
+            if (blocked) blocked.value = 'should-not-write';
+            var nested = document.querySelector('#nested:enabled');
+            if (nested) nested.value = 'should-not-write';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"email\"")
+                && serialized.contains("value=\"ready@example.com\""),
+            "checkout JS must persist the :enabled input value: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"blocked\"")
+                && serialized.contains("value=\"skip\"")
+                && serialized.contains("id=\"nested\"")
+                && serialized.contains("value=\"held\"")
+                && serialized.contains("Just text")
+                && serialized.contains(">draft</textarea>"),
+            "disabled fields, paragraphs, and textareas must stay intact: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/enabled-pseudo")
+            .unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(email.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            email.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("ready@example.com"))
+        );
+        let blocked = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("blocked"))
+            .expect("blocked input should compile");
+        assert_eq!(
+            blocked.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("skip"))
+        );
+        let nested = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("nested"))
+            .expect("nested input should compile");
+        assert_eq!(
+            nested.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("held"))
+        );
+        let pay = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pay"))
+            .expect("pay button should compile");
+        assert_eq!(pay.role, crate::som::types::ElementRole::Button);
+        let wait = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("wait"))
+            .expect("wait button should compile");
+        assert_eq!(wait.role, crate::som::types::ElementRole::Button);
         let note = elements
             .iter()
             .find(|element| element.html_id.as_deref() == Some("note"))
