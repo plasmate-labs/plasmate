@@ -2501,6 +2501,9 @@ function _matchesSimpleSelector(el, selector) {
             case 'placeholder-shown':
                 if (!_placeholderShown(el)) return false;
                 break;
+            case 'root':
+                if (el !== document.documentElement) return false;
+                break;
         }
     }
 
@@ -2882,11 +2885,14 @@ var document = {
     },
 
     querySelector: function(selector) {
+        if (_matchesSelector(_docEl, selector)) return _docEl;
         return _querySelector(_docEl, selector);
     },
 
     querySelectorAll: function(selector) {
-        return _querySelectorAll(_docEl, selector);
+        var results = [];
+        if (_matchesSelector(_docEl, selector)) results.push(_docEl);
+        return results.concat(_querySelectorAll(_docEl, selector));
     },
 
     addEventListener: function(type, listener, options) {
@@ -13773,6 +13779,92 @@ mod tests {
                 .is_none_or(|attrs| attrs.get("href").is_none()),
             "paragraphs must not invent href: {note:?}"
         );
+    }
+
+    #[test]
+    fn query_selector_root_pseudo_compiles_descendant_field_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout"><input id="email" name="email" value="ops@example.com"><button id="pay">Pay</button><p id="note">Just text</p><textarea id="notes">draft</textarea></form></body></html>"#,
+            "https://example.test/root-pseudo",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    document.querySelector(':root') ? document.querySelector(':root').tagName : 'none',
+                    document.querySelector(':root #email') ? document.querySelector(':root #email').id : 'none',
+                    document.querySelector('html:root #email') ? document.querySelector('html:root #email').id : 'none',
+                    String(document.querySelectorAll(':root').length),
+                    String(document.querySelector('body:root')),
+                    String(document.querySelector('p:root')),
+                    String(document.querySelector('input:root')),
+                    String(document.querySelector('button:root')),
+                    String(document.querySelector('textarea:root')),
+                    String(document.querySelector('#email:root'))
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "HTML|email|email|1|null|null|null|null|null|null");
+
+        rt.execute_in_context(
+            r#"
+            var field = document.querySelector(':root #email');
+            if (field) field.value = 'ready@example.com';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"email\"")
+                && serialized.contains("value=\"ready@example.com\""),
+            "checkout JS must persist the :root descendant input value: {serialized}"
+        );
+        assert!(
+            serialized.contains("Just text") && serialized.contains(">draft</textarea>"),
+            "paragraphs and textareas must stay intact: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/root-pseudo").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(email.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            email.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("ready@example.com"))
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(note.text.as_deref(), Some("Just text"));
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert_eq!(notes.text.as_deref(), Some("draft"));
+        let pay = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pay"))
+            .expect("pay button should compile");
+        assert_eq!(pay.role, crate::som::types::ElementRole::Button);
     }
 
 }
