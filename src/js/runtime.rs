@@ -2504,6 +2504,8 @@ function _matchesSimpleSelector(el, selector) {
             case 'root':
                 if (el !== document.documentElement) return false;
                 break;
+            default:
+                return false;
         }
     }
 
@@ -13867,4 +13869,93 @@ mod tests {
         assert_eq!(pay.role, crate::som::types::ElementRole::Button);
     }
 
+    #[test]
+    fn query_selector_unknown_pseudo_does_not_match_first_element() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout"><input id="email" name="email" value="ops@example.com"><button id="pay">Pay</button><button id="wait" disabled>Wait</button><p id="note">Just text</p><textarea id="notes">draft</textarea></form></body></html>"#,
+            "https://example.test/unknown-pseudo",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    document.querySelector('button:hover') ? document.querySelector('button:hover').id : 'none',
+                    document.querySelector('#pay:hover') ? document.querySelector('#pay:hover').id : 'none',
+                    document.querySelector('input:nth-child(2)') ? document.querySelector('input:nth-child(2)').id : 'none',
+                    document.querySelector('button:disabled') ? document.querySelector('button:disabled').id : 'none',
+                    document.querySelector(':root') ? document.querySelector(':root').tagName : 'none',
+                    document.querySelector('#email') ? document.querySelector('#email').id : 'none',
+                    String(document.querySelector('p:hover')),
+                    String(document.querySelector('textarea:nth-child(1)')),
+                    String(document.querySelectorAll('button:hover').length)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "none|none|none|none|HTML|email|null|null|0");
+
+        rt.execute_in_context(
+            r#"
+            var field = document.querySelector('#email');
+            if (field) field.value = 'ready@example.com';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"email\"")
+                && serialized.contains("value=\"ready@example.com\""),
+            "checkout JS must persist the email value after unknown-pseudo miss: {serialized}"
+        );
+        assert!(
+            serialized.contains("Just text") && serialized.contains(">draft</textarea>"),
+            "paragraphs and textareas must stay intact: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/unknown-pseudo")
+            .unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(email.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            email.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("ready@example.com"))
+        );
+        let pay = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pay"))
+            .expect("pay button should compile");
+        assert_eq!(pay.role, crate::som::types::ElementRole::Button);
+        let wait = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("wait"))
+            .expect("wait button should compile");
+        assert_eq!(wait.role, crate::som::types::ElementRole::Button);
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(note.text.as_deref(), Some("Just text"));
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert_eq!(notes.text.as_deref(), Some("draft"));
+    }
 }
