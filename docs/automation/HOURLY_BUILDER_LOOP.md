@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-06)
 
-- Window: `94d66e8` .. `1898abb`
+- Window: `cbd7db4` .. `30ae4d7`
 - Decision: `NARROW`
-- Merged this run: `71bd522` querySelector unknown-pseudo fail-closed (`1898abb`)
+- Merged this run: `3b77a8b` Node.isConnected (`30ae4d7`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -368,6 +368,11 @@ overwrite, reset, or absorb unrelated work.
   implementing `:hover`, `:nth-child`, `:disabled`, `:scope`, `:defined`,
   `:has`, or `:is`; do not copy the switch default onto extract_text, CLI,
   CDP, SDKs, or the native DOM bridge.
+  Do not copy #338 Node.isConnected onto other Node tree APIs
+  (`compareDocumentPosition`, `getRootNode`, `contains`, `isEqualNode`,
+  `isSameNode`), inspect compact `isConnected`, native-bridge copies,
+  extract_text, CLI, CDP, or SDKs; do not invent `isConnected` as a
+  content attribute or serialize it.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -415,8 +420,8 @@ overwrite, reset, or absorb unrelated work.
   copy, HTMLElement popover IDL copy, querySelector :only-child
   copy, querySelector :default copy, input/button type IDL copy,
   a/area hash IDL copy, querySelector :placeholder-shown copy,
-  querySelector :root copy, or querySelector unknown-pseudo
-  fail-closed copy.
+  querySelector :root copy, querySelector unknown-pseudo
+  fail-closed copy, or Node isConnected copy.
 
 ## Preferred lanes
 
