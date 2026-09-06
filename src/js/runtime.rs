@@ -2203,6 +2203,22 @@ function _isDefaultSubmitButton(el) {
     return false;
 }
 
+function _placeholderShown(el) {
+    var hint = String(el.placeholder || '');
+    if (hint === '') return false;
+    if (el.tagName === 'TEXTAREA') {
+        return String(el.value || '') === '';
+    }
+    if (el.tagName !== 'INPUT') return false;
+    var shownType = String(el.type || '').toLowerCase();
+    if (shownType !== 'text' && shownType !== 'search' && shownType !== 'url' &&
+        shownType !== 'tel' && shownType !== 'email' && shownType !== 'password' &&
+        shownType !== 'number') {
+        return false;
+    }
+    return String(el.value || '') === '';
+}
+
 // CSS Selector matching (basic support)
 function _matchesSelector(el, selector) {
     if (!selector || el.nodeType !== Node.ELEMENT_NODE) return false;
@@ -2454,6 +2470,9 @@ function _matchesSimpleSelector(el, selector) {
                     break;
                 }
                 return false;
+            case 'placeholder-shown':
+                if (!_placeholderShown(el)) return false;
+                break;
         }
     }
 
@@ -13472,5 +13491,113 @@ mod tests {
             }),
             "paragraphs must not invent type: {note:?}"
         );
+    }
+
+    #[test]
+    fn query_selector_placeholder_shown_pseudo_compiles_empty_field_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout"><input id="name" name="name" value="Ada"><input id="email" name="email" placeholder="you@example.com"><input id="filled" name="filled" placeholder="hint" value="kept"><input id="secret" type="hidden" placeholder="token"><input id="choice" name="choice" value="miss"><textarea id="notes" placeholder="Notes">draft</textarea><textarea id="bio" placeholder="Bio"></textarea><button id="pay">Pay</button><select id="plan"><option>Free</option></select><p id="note">Just text</p></form></body></html>"#,
+            "https://example.test/placeholder-shown",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    document.querySelector('input:placeholder-shown') ? document.querySelector('input:placeholder-shown').id : 'none',
+                    document.querySelector('#email:placeholder-shown') ? document.querySelector('#email:placeholder-shown').id : 'none',
+                    String(document.querySelectorAll('input:placeholder-shown').length),
+                    String(document.querySelector('#name:placeholder-shown')),
+                    String(document.querySelector('#filled:placeholder-shown')),
+                    String(document.querySelector('#secret:placeholder-shown')),
+                    String(document.querySelector('p:placeholder-shown')),
+                    String(document.querySelector('button:placeholder-shown')),
+                    String(document.querySelector('select:placeholder-shown')),
+                    document.querySelector('textarea:placeholder-shown') ? document.querySelector('textarea:placeholder-shown').id : 'none'
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "email|email|1|null|null|null|null|null|null|bio");
+
+        rt.execute_in_context(
+            r#"
+            var field = document.querySelector('input:placeholder-shown');
+            if (field) field.value = 'ready@example.com';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"email\"")
+                && serialized.contains("value=\"ready@example.com\""),
+            "checkout JS must persist the :placeholder-shown input value: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"name\"")
+                && serialized.contains("value=\"Ada\"")
+                && serialized.contains("id=\"filled\"")
+                && serialized.contains("value=\"kept\"")
+                && serialized.contains("Just text")
+                && serialized.contains(">draft</textarea>"),
+            "filled fields, paragraphs, and textareas must stay intact: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/placeholder-shown")
+                .unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(email.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            email.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("ready@example.com"))
+        );
+        let name = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("name"))
+            .expect("name input should compile");
+        assert_eq!(
+            name.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("Ada"))
+        );
+        let filled = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("filled"))
+            .expect("filled input should compile");
+        assert_eq!(
+            filled.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("kept"))
+        );
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(note.text.as_deref(), Some("Just text"));
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert_eq!(notes.text.as_deref(), Some("draft"));
+        let pay = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pay"))
+            .expect("pay button should compile");
+        assert_eq!(pay.role, crate::som::types::ElementRole::Button);
     }
 }
