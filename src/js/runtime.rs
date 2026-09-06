@@ -1090,6 +1090,10 @@ function _isConnected(el) {
     return false;
 }
 
+Object.defineProperty(PlasNode.prototype, 'isConnected', {
+    get: function() { return _isConnected(this); }
+});
+
 function _liveFocusedElement() {
     if (_focusedElement && _isConnected(_focusedElement)) {
         return _focusedElement;
@@ -2931,6 +2935,7 @@ var document = {
     },
 
     hasFocus: function() { return true; },
+    get isConnected() { return true; },
     getSelection: function() { return { toString: function() { return ''; }, getRangeAt: function() { return document.createRange(); }, rangeCount: 0, removeAllRanges: function() {}, addRange: function() {}, collapse: function() {} }; },
     execCommand: function() { return false; },
 
@@ -13945,6 +13950,112 @@ mod tests {
             .find(|element| element.html_id.as_deref() == Some("wait"))
             .expect("wait button should compile");
         assert_eq!(wait.role, crate::som::types::ElementRole::Button);
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(note.text.as_deref(), Some("Just text"));
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert_eq!(notes.text.as_deref(), Some("draft"));
+    }
+
+    #[test]
+    fn node_is_connected_gates_checkout_field_update() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout"><input id="email" name="email" value="ops@example.com"><button id="pay">Pay</button><p id="note">Just text</p><textarea id="notes">draft</textarea></form></body></html>"#,
+            "https://example.test/is-connected",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    String(document.isConnected),
+                    String(document.getElementById('email').isConnected),
+                    String(document.getElementById('pay').isConnected),
+                    String(document.getElementById('note').isConnected),
+                    String(document.getElementById('notes').isConnected),
+                    String(document.createElement('input').isConnected),
+                    String(document.createTextNode('x').isConnected),
+                    String(document.createDocumentFragment().isConnected),
+                    String(document.createElement('p').isConnected)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "true|true|true|true|true|false|false|false|false");
+
+        rt.execute_in_context(
+            r#"
+            var field = document.getElementById('email');
+            var detached = document.createElement('input');
+            detached.id = 'ghost';
+            detached.value = 'skip';
+            if (field && field.isConnected) field.value = 'ready@example.com';
+            if (detached.isConnected) detached.value = 'should-not-write';
+            var scratch = document.createElement('div');
+            scratch.appendChild(detached);
+            if (scratch.isConnected || detached.isConnected) field.value = 'nested-detach-leak';
+            document.body.appendChild(scratch);
+            if (!detached.isConnected) field.value = 'attach-miss';
+            document.body.removeChild(scratch);
+            if (detached.isConnected) field.value = 'detach-miss';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"email\"")
+                && serialized.contains("value=\"ready@example.com\""),
+            "checkout JS must persist the connected input value: {serialized}"
+        );
+        assert!(
+            !serialized.contains("id=\"ghost\""),
+            "detached ghost input must not serialize into the live tree: {serialized}"
+        );
+        assert!(
+            serialized.contains("Just text") && serialized.contains(">draft</textarea>"),
+            "paragraphs and textareas must stay intact: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/is-connected")
+            .unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(email.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            email.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("ready@example.com"))
+        );
+        assert!(
+            elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("ghost")),
+            "detached ghost input must not compile: {elements:?}"
+        );
+        let pay = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pay"))
+            .expect("pay button should compile");
+        assert_eq!(pay.role, crate::som::types::ElementRole::Button);
         let note = elements
             .iter()
             .find(|element| element.html_id.as_deref() == Some("note"))
