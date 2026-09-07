@@ -2156,6 +2156,23 @@ Object.defineProperty(PlasElement.prototype, 'form', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'list', {
+    get: function() {
+        if (this.tagName !== 'INPUT') {
+            return undefined;
+        }
+        var listId = this.getAttribute('list');
+        if (!listId) {
+            return null;
+        }
+        var found = document.getElementById(listId);
+        if (found && found.tagName === 'DATALIST') {
+            return found;
+        }
+        return null;
+    }
+});
+
 // ============================================================================
 // Query helper functions
 // ============================================================================
@@ -14297,6 +14314,121 @@ mod tests {
             .find(|element| element.html_id.as_deref() == Some("wait"))
             .expect("wait button should compile");
         assert_eq!(wait.role, crate::som::types::ElementRole::Button);
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(note.text.as_deref(), Some("Just text"));
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert_eq!(notes.text.as_deref(), Some("draft"));
+    }
+
+    #[test]
+    fn input_list_idl_compiles_suggestion_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout"><input id="email" name="email" list="email-suggestions" value="ops@example.com"><input id="plain" name="plain" value="skip"><input id="broken" name="broken" list="note" value="held"><datalist id="email-suggestions"><option value="ready@example.com"></option></datalist><button id="pay">Pay</button><p id="note">Just text</p><textarea id="notes">draft</textarea></form></body></html>"#,
+            "https://example.test/input-list",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    document.getElementById('email').list ? document.getElementById('email').list.id : 'none',
+                    document.getElementById('email').list && document.getElementById('email').list.querySelector('option') ? document.getElementById('email').list.querySelector('option').value : 'none',
+                    String(document.getElementById('plain').list),
+                    String(document.getElementById('broken').list),
+                    String(document.getElementById('note').list),
+                    String(document.getElementById('notes').list),
+                    String(document.getElementById('pay').list)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(
+            before,
+            "email-suggestions|ready@example.com|null|null|undefined|undefined|undefined"
+        );
+
+        rt.execute_in_context(
+            r#"
+            var field = document.getElementById('email');
+            var list = field.list;
+            if (list) {
+                var opt = list.querySelector('option');
+                if (opt) field.value = opt.value;
+            }
+            var plain = document.getElementById('plain');
+            if (plain.list) plain.value = 'should-not-write';
+            var broken = document.getElementById('broken');
+            if (broken.list) broken.value = 'should-not-write';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"email\"")
+                && serialized.contains("value=\"ready@example.com\""),
+            "checkout JS must persist the datalist suggestion: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"plain\"")
+                && serialized.contains("value=\"skip\"")
+                && serialized.contains("id=\"broken\"")
+                && serialized.contains("value=\"held\"")
+                && serialized.contains("Just text")
+                && serialized.contains(">draft</textarea>"),
+            "unlisted fields, paragraphs, and textareas must stay intact: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/input-list").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(email.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            email.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("ready@example.com"))
+        );
+        let plain = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plain"))
+            .expect("plain input should compile");
+        assert_eq!(
+            plain.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("skip"))
+        );
+        let broken = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("broken"))
+            .expect("broken input should compile");
+        assert_eq!(
+            broken.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("held"))
+        );
+        let pay = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pay"))
+            .expect("pay button should compile");
+        assert_eq!(pay.role, crate::som::types::ElementRole::Button);
         let note = elements
             .iter()
             .find(|element| element.html_id.as_deref() == Some("note"))
