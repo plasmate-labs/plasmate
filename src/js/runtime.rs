@@ -1987,6 +1987,21 @@ Object.defineProperty(PlasElement.prototype, 'download', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'rel', {
+    get: function() {
+        if (this.tagName !== 'A' && this.tagName !== 'AREA') {
+            return '';
+        }
+        return this.getAttribute('rel') || '';
+    },
+    set: function(v) {
+        if (this.tagName !== 'A' && this.tagName !== 'AREA') {
+            return;
+        }
+        this.setAttribute('rel', String(v));
+    }
+});
+
 function _hyperlinkHashParts(href) {
     href = String(href || '');
     var idx = href.indexOf('#');
@@ -2173,6 +2188,21 @@ Object.defineProperty(PlasElement.prototype, 'list', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'content', {
+    get: function() {
+        if (this.tagName !== 'META') {
+            return undefined;
+        }
+        return this.getAttribute('content') || '';
+    },
+    set: function(v) {
+        if (this.tagName !== 'META') {
+            return;
+        }
+        this.setAttribute('content', String(v));
+    }
+});
+
 function _dirNameSupported(el) {
     if (el.tagName === 'TEXTAREA') {
         return true;
@@ -2318,6 +2348,26 @@ function _isEnabledControl(el) {
         n = n.parentNode;
     }
     return true;
+}
+
+function _isInvalidControl(el) {
+    var tag = el.tagName;
+    if (tag !== 'INPUT' && tag !== 'SELECT' && tag !== 'TEXTAREA') {
+        return false;
+    }
+    if (!_isEnabledControl(el)) return false;
+    if ((tag === 'INPUT' || tag === 'TEXTAREA') && el.readOnly) return false;
+    if (tag === 'INPUT') {
+        var invalidType = String(el.type || '').toLowerCase();
+        if (invalidType === 'hidden' || invalidType === 'button' || invalidType === 'reset' ||
+            invalidType === 'submit' || invalidType === 'image' || invalidType === 'checkbox' ||
+            invalidType === 'radio' || invalidType === 'file' || invalidType === 'range' ||
+            invalidType === 'color') {
+            return false;
+        }
+    }
+    if (!el.required) return false;
+    return String(el.value || '') === '';
 }
 
 // CSS Selector matching (basic support)
@@ -2579,6 +2629,9 @@ function _matchesSimpleSelector(el, selector) {
                 break;
             case 'enabled':
                 if (!_isEnabledControl(el)) return false;
+                break;
+            case 'invalid':
+                if (!_isInvalidControl(el)) return false;
                 break;
             case 'root':
                 if (el !== document.documentElement) return false;
@@ -14457,6 +14510,317 @@ mod tests {
         assert_eq!(
             broken.attrs.as_ref().and_then(|attrs| attrs.get("value")),
             Some(&serde_json::json!("held"))
+        );
+        let pay = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pay"))
+            .expect("pay button should compile");
+        assert_eq!(pay.role, crate::som::types::ElementRole::Button);
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(note.text.as_deref(), Some("Just text"));
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert_eq!(notes.text.as_deref(), Some("draft"));
+    }
+
+    #[test]
+    fn query_selector_invalid_pseudo_compiles_required_empty_field_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout"><input id="email" name="email" required value=""><input id="ok" name="ok" required value="ops@example.com"><input id="optional" name="optional" value=""><input id="blocked" name="blocked" required value="" disabled><input id="locked" name="locked" required value="" readonly><button id="pay">Pay</button><p id="note">Just text</p><textarea id="notes">draft</textarea></form></body></html>"#,
+            "https://example.test/invalid-pseudo",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    document.querySelector('input:invalid') ? document.querySelector('input:invalid').id : 'none',
+                    String(document.querySelectorAll('input:invalid').length),
+                    String(document.querySelector('#ok:invalid')),
+                    String(document.querySelector('#optional:invalid')),
+                    String(document.querySelector('#blocked:invalid')),
+                    String(document.querySelector('#locked:invalid')),
+                    String(document.querySelector('p:invalid')),
+                    String(document.querySelector('button:invalid')),
+                    String(document.querySelector('textarea:invalid')),
+                    String(document.querySelector('input:valid'))
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "email|1|null|null|null|null|null|null|null|null");
+
+        rt.execute_in_context(
+            r#"
+            var field = document.querySelector('input:invalid');
+            if (field) field.value = 'ready@example.com';
+            var ok = document.querySelector('#ok:invalid');
+            if (ok) ok.value = 'should-not-write';
+            var optional = document.querySelector('#optional:invalid');
+            if (optional) optional.value = 'should-not-write';
+            var blocked = document.querySelector('#blocked:invalid');
+            if (blocked) blocked.value = 'should-not-write';
+            var locked = document.querySelector('#locked:invalid');
+            if (locked) locked.value = 'should-not-write';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"email\"")
+                && serialized.contains("value=\"ready@example.com\""),
+            "checkout JS must persist the :invalid input value: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"ok\"")
+                && serialized.contains("value=\"ops@example.com\"")
+                && serialized.contains("id=\"optional\"")
+                && serialized.contains("id=\"blocked\"")
+                && serialized.contains("id=\"locked\"")
+                && serialized.contains("Just text")
+                && serialized.contains(">draft</textarea>"),
+            "valid, optional, barred fields, paragraphs, and textareas must stay intact: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/invalid-pseudo")
+            .unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let email = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("email"))
+            .expect("email input should compile");
+        assert_eq!(email.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            email.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("ready@example.com"))
+        );
+        let ok = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("ok"))
+            .expect("ok input should compile");
+        assert_eq!(
+            ok.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("ops@example.com"))
+        );
+        let pay = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pay"))
+            .expect("pay button should compile");
+        assert_eq!(pay.role, crate::som::types::ElementRole::Button);
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(note.text.as_deref(), Some("Just text"));
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert_eq!(notes.text.as_deref(), Some("draft"));
+    }
+
+    #[test]
+    fn meta_content_idl_compiles_csrf_token_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><head><meta name="csrf-token" content="tok-ready"><meta id="empty" name="description"></head><body><form id="checkout"><input id="token" name="authenticity_token" value=""><input id="plain" name="plain" value="skip"><button id="pay">Pay</button><p id="note">Just text</p><textarea id="notes">draft</textarea></form></body></html>"#,
+            "https://example.test/meta-content",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    document.querySelector('meta[name="csrf-token"]').content,
+                    String(document.getElementById('empty').content),
+                    String(document.getElementById('token').content),
+                    String(document.getElementById('note').content),
+                    String(document.getElementById('pay').content),
+                    String(document.getElementById('notes').content)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "tok-ready||undefined|undefined|undefined|undefined");
+
+        rt.execute_in_context(
+            r#"
+            var token = document.querySelector('meta[name="csrf-token"]').content;
+            var field = document.getElementById('token');
+            if (token) field.value = token;
+            var empty = document.getElementById('empty');
+            if (empty.content) field.value = 'should-not-write';
+            var plain = document.getElementById('plain');
+            if (plain.content) plain.value = 'should-not-write';
+            var note = document.getElementById('note');
+            if (note.content) note.textContent = 'should-not-write';
+            var notes = document.getElementById('notes');
+            if (notes.content) notes.value = 'should-not-write';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"token\"") && serialized.contains("value=\"tok-ready\""),
+            "checkout JS must persist the meta.content CSRF token: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"plain\"")
+                && serialized.contains("value=\"skip\"")
+                && serialized.contains("Just text")
+                && serialized.contains(">draft</textarea>"),
+            "inputs, paragraphs, and textareas without meta.content must stay intact: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/meta-content")
+            .unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let token = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("token"))
+            .expect("token input should compile");
+        assert_eq!(token.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            token.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("tok-ready"))
+        );
+        let plain = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plain"))
+            .expect("plain input should compile");
+        assert_eq!(
+            plain.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("skip"))
+        );
+        let pay = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pay"))
+            .expect("pay button should compile");
+        assert_eq!(pay.role, crate::som::types::ElementRole::Button);
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(note.text.as_deref(), Some("Just text"));
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert_eq!(notes.text.as_deref(), Some("draft"));
+    }
+
+    #[test]
+    fn anchor_rel_idl_compiles_continue_url_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout"><input id="next" name="continue_url" value=""><input id="plain" name="plain" value="skip"><a id="continue" rel="next" href="/pay">Continue</a><a id="help" href="/help">Help</a><map name="nav"><area id="spot" rel="next" href="/spot" alt="Spot"></map><button id="pay" rel="next">Pay</button><p id="note" rel="next">Just text</p><textarea id="notes">draft</textarea></form></body></html>"#,
+            "https://example.test/anchor-rel",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    document.getElementById('continue').rel,
+                    document.getElementById('spot').rel,
+                    String(document.getElementById('help').rel),
+                    String(document.getElementById('pay').rel),
+                    String(document.getElementById('note').rel),
+                    String(document.getElementById('next').rel),
+                    String(document.getElementById('notes').rel)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "next|next|||||");
+
+        rt.execute_in_context(
+            r#"
+            var cont = document.getElementById('continue');
+            var field = document.getElementById('next');
+            if (cont.rel === 'next') field.value = cont.getAttribute('href');
+            var help = document.getElementById('help');
+            if (help.rel === 'next') field.value = 'should-not-write';
+            var pay = document.getElementById('pay');
+            if (pay.rel === 'next') field.value = 'should-not-write';
+            var note = document.getElementById('note');
+            if (note.rel === 'next') note.textContent = 'should-not-write';
+            var notes = document.getElementById('notes');
+            if (notes.rel === 'next') notes.value = 'should-not-write';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"next\"") && serialized.contains("value=\"/pay\""),
+            "checkout JS must persist the a.rel continue URL: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"plain\"")
+                && serialized.contains("value=\"skip\"")
+                && serialized.contains("Just text")
+                && serialized.contains(">draft</textarea>"),
+            "inputs, paragraphs, and textareas without a/area rel must stay intact: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/anchor-rel").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let next = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("next"))
+            .expect("next input should compile");
+        assert_eq!(next.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            next.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("/pay"))
+        );
+        let plain = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plain"))
+            .expect("plain input should compile");
+        assert_eq!(
+            plain.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("skip"))
         );
         let pay = elements
             .iter()

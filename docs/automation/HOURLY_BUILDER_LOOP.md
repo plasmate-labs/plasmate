@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-07)
 
-- Window: `3061b17` .. `a684edb`
+- Window: `417431a` .. `a76e317`
 - Decision: `NARROW`
-- Merged this run: `657b9e9` input.list IDL (`a684edb`)
+- Merged this run: `5c31942` inspect compact `current` (`e02df86`), `cd4669c` aria-modal compile (`431869f`), `3405e42` ARIA tooltip compile (`10b36d2`), and `2e7a3b6` a/area rel IDL (`a76e317`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -386,6 +386,33 @@ overwrite, reset, or absorb unrelated work.
   paragraph, `datalist.options`, inspect compact `list`, extract_text,
   CLI, CDP, or SDK wrappers; do not invent list on non-input tags
   or serialize list as a content attribute.
+  Do not copy #345 querySelector `:invalid` onto other pseudos
+  (`:valid`, `:user-invalid`, `:required`, `:optional`, `:disabled`,
+  `:read-only`, `:read-write`), extract_text, CLI, CDP, SDKs, or the
+  native DOM bridge; do not invent `:invalid` on paragraphs, buttons,
+  optional/filled/disabled/readonly fields, or `:valid`.
+  Do not copy #346 meta.content IDL onto input, button, paragraph,
+  textarea, `template.content`, inspect compact `content`, extract_text,
+  CLI, CDP, or SDK wrappers; do not invent content on non-meta tags
+  or add `http-equiv` / `charset` / `media`.
+  Do not copy #350 inspect compact `current` onto fetch_page, CLI, CDP,
+  or SDKs; do not add `aria-pressed` / `aria-selected` compact fields,
+  invent current on checkboxes or paragraphs, or copy token strings
+  onto non-link/button roles.
+  Do not copy #351 compiled `aria-modal` onto Region.modal, inspect
+  compact `modal`, extract_text, CLI, CDP, SDKs, or adjacent tags
+  (`output`, `dialog`, `data`); do not invent modal on checkboxes or
+  paragraphs.
+  Do not copy #352 ARIA `role=tooltip` paragraph compile onto
+  extract_text, CLI, CDP, SDKs, or live roles (`log` / `timer` /
+  `marquee`); do not add a new ElementRole or inspect compact tooltip
+  field.
+  Do not copy #347 a/area `.rel` IDL onto extract_links, CLI, CDP,
+  inspect compact `rel`, SDK wrappers, or non-a/area tags; do not
+  invent rel on buttons, paragraphs, or inputs.
+  Do not open another PlasElement IDL getter or querySelector pseudo
+  copy onto `src/js/runtime.rs` while #348 (`input.dirName`) remains
+  open.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -435,8 +462,10 @@ overwrite, reset, or absorb unrelated work.
   a/area hash IDL copy, querySelector :placeholder-shown copy,
   querySelector :root copy, querySelector unknown-pseudo
   fail-closed copy, Node isConnected copy, querySelector :enabled
-  copy, querySelector single-quoted attr copy, or input.list IDL
-  copy.
+  copy, querySelector single-quoted attr copy, input.list IDL
+  copy, querySelector :invalid copy, meta.content IDL copy,
+  inspect compact current copy, aria-modal compile copy, ARIA
+  tooltip compile copy, or a/area rel IDL copy.
 
 ## Preferred lanes
 
