@@ -2,7 +2,7 @@
 
 **Plasmate browser tools for the [Vercel AI SDK](https://sdk.vercel.ai)**
 
-Plasmate is a headless browser MCP server that gives AI models structured access to the web via a [Set of Marks (SOM)](https://plasmate.dev/docs/som) representation. This package is a thin wrapper that connects Plasmate to the Vercel AI SDK in one function call.
+Plasmate is a headless browser MCP server that gives AI models structured access to the web via a [Semantic Object Model (SOM)](https://docs.plasmate.app/som) representation. This package is a thin wrapper that connects Plasmate to the Vercel AI SDK in one function call.
 
 ## Install
 
@@ -10,7 +10,7 @@ Plasmate is a headless browser MCP server that gives AI models structured access
 npm install @plasmate/ai ai
 ```
 
-You also need [Plasmate](https://plasmate.dev/docs/install) installed locally:
+You also need [Plasmate](https://docs.plasmate.app/install) installed locally:
 
 ```bash
 npm install -g plasmate
