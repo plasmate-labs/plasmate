@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-07)
 
-- Window: `3061b17` .. `a684edb`
+- Window: `de4de20` .. `b98f270`
 - Decision: `NARROW`
-- Merged this run: `657b9e9` input.list IDL (`a684edb`)
+- Merged this run: `59e9085` querySelector `:invalid` (`bb79f30`) and `3e343b0` meta.content IDL (`b98f270`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -386,6 +386,18 @@ overwrite, reset, or absorb unrelated work.
   paragraph, `datalist.options`, inspect compact `list`, extract_text,
   CLI, CDP, or SDK wrappers; do not invent list on non-input tags
   or serialize list as a content attribute.
+  Do not copy #345 querySelector `:invalid` onto other pseudos
+  (`:valid`, `:user-invalid`, `:required`, `:optional`, `:disabled`,
+  `:read-only`, `:read-write`), extract_text, CLI, CDP, SDKs, or the
+  native DOM bridge; do not invent `:invalid` on paragraphs, buttons,
+  optional/filled/disabled/readonly fields, or `:valid`.
+  Do not copy #346 meta.content IDL onto input, button, paragraph,
+  textarea, `template.content`, inspect compact `content`, extract_text,
+  CLI, CDP, or SDK wrappers; do not invent content on non-meta tags
+  or add `http-equiv` / `charset` / `media`.
+  Do not open another PlasElement IDL getter or querySelector pseudo
+  copy onto `src/js/runtime.rs` while #347 (a/area `.rel`) or #348
+  (`input.dirName`) remain open.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -435,8 +447,8 @@ overwrite, reset, or absorb unrelated work.
   a/area hash IDL copy, querySelector :placeholder-shown copy,
   querySelector :root copy, querySelector unknown-pseudo
   fail-closed copy, Node isConnected copy, querySelector :enabled
-  copy, querySelector single-quoted attr copy, or input.list IDL
-  copy.
+  copy, querySelector single-quoted attr copy, input.list IDL
+  copy, querySelector :invalid copy, or meta.content IDL copy.
 
 ## Preferred lanes
 
