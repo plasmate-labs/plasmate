@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-07)
 
-- Window: `417431a` .. `a76e317`
+- Window: `a649d9f` .. `6088eef`
 - Decision: `NARROW`
-- Merged this run: `5c31942` inspect compact `current` (`e02df86`), `cd4669c` aria-modal compile (`431869f`), `3405e42` ARIA tooltip compile (`10b36d2`), and `2e7a3b6` a/area rel IDL (`a76e317`)
+- Merged this run: `6d173d0` input.dirName IDL (`6088eef`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -407,65 +407,21 @@ overwrite, reset, or absorb unrelated work.
   extract_text, CLI, CDP, SDKs, or live roles (`log` / `timer` /
   `marquee`); do not add a new ElementRole or inspect compact tooltip
   field.
-  Do not copy #347 a/area `.rel` IDL onto extract_links, CLI, CDP,
-  inspect compact `rel`, SDK wrappers, or non-a/area tags; do not
-  invent rel on buttons, paragraphs, or inputs.
-  Do not open another PlasElement IDL getter or querySelector pseudo
-  copy onto `src/js/runtime.rs` while #348 (`input.dirName`) remains
-  open.
-- Allowed next (pick one distinct journey): a real missed regression, or
-  a published-docs integration failure that is not another SDK install-path
-  rewrite, SOM-reference field rewrite, extract_text label fallback copy,
-  picture-img fallback copy, native-search landmark copy,
-  hidden-until-found copy, click compiled-html_id lookup copy,
-  time-datetime compile copy, contenteditable type-target compile copy,
-  Node openPage flat-SOM copy, LangChain type_text rename copy,
-  progress/meter compile copy, toggle ARIA-switch copy, wrapping-label
-  without control-id compile copy, native-radio select_option copy,
-  video src/poster compile copy, inspect compact form action/method copy,
-  img usemap compile copy, inspect compact link href copy, file-input
-  type/clear omit copy, ol start/reversed compile copy, aria heading
-  role/level compile copy, img srcset compile copy, canvas
-  width/height compile copy, inspect compact image src copy, inspect
-  compact heading level copy, blockquote cite compile copy, area
-  shape/coords compile copy, autofocus compile copy, inspect compact
-  control name copy, element lang compile copy, Python ElementAttrs
-  extra=allow copy, textarea value IDL child-text copy, inspect
-  compact disabled copy, inspect compact checked copy, inspect
-  compact value copy, details open IDL copy, select selectedIndex
-  IDL copy, table rowspan grid copy, input readOnly IDL copy,
-  field required IDL copy, element hidden IDL copy, labelable
-  control `.labels` copy, field placeholder IDL copy, field
-  setSelectionRange/select copy, form `.elements` IDL copy, field
-  maxLength IDL copy, textarea rows/cols compile copy,
-  img/area alt IDL copy, setAttribute ASCII-lowercase copy,
-  insertAdjacentHTML copy, replaceChildren copy, table
-  insertRow/insertCell copy, select.add copy, toggleAttribute copy,
-  ARIA alert/status live-region compile copy, form.reset copy,
-  figcaption paragraph compile copy, input min/max IDL copy,
-  input pattern IDL copy, select value IDL copy, input accept
-  IDL copy, inspect compact expanded copy, input step IDL copy,
-  description-list compile copy, Python ListItem term/description copy,
-  Python type_text wrapper copy, form action/method IDL copy,
-  querySelector :checked copy, listed-control form owner IDL copy,
-  optgroup.label IDL copy, input/select multiple IDL copy,
-  querySelector adjacent-sibling combinator copy,
-  HTMLElement tabIndex IDL copy, querySelector :empty copy,
-  document.getElementsByName copy, form/listed-control autocomplete
-  IDL copy, HTMLElement title IDL copy, HTMLElement contentEditable
-  IDL copy, document.activeElement / :focus copy, HTMLSelectElement
-  size IDL copy, radio-group checked IDL copy, HTMLElement
-  inert IDL copy, querySelector :first-of-type / :last-of-type
-  copy, HTMLElement draggable IDL copy, a/area download IDL
-  copy, HTMLElement popover IDL copy, querySelector :only-child
-  copy, querySelector :default copy, input/button type IDL copy,
-  a/area hash IDL copy, querySelector :placeholder-shown copy,
-  querySelector :root copy, querySelector unknown-pseudo
-  fail-closed copy, Node isConnected copy, querySelector :enabled
-  copy, querySelector single-quoted attr copy, input.list IDL
-  copy, querySelector :invalid copy, meta.content IDL copy,
-  inspect compact current copy, aria-modal compile copy, ARIA
-  tooltip compile copy, or a/area rel IDL copy.
+   Do not copy #347 a/area `.rel` IDL onto extract_links, CLI, CDP,
+   inspect compact `rel`, SDK wrappers, or non-a/area tags; do not
+   invent rel on buttons, paragraphs, or inputs.
+   Do not copy #348 input.dirName IDL onto select, checkbox, button,
+   paragraph, inspect compact `dirname`, extract_text, CLI, CDP, SDK
+   wrappers, or adjacent attributes (`dir`, `lang`, `spellcheck`,
+   `inputmode`, `enterkeyhint`); do not invent dirname on non-text
+   fields or copy whitespace-only values.
+   Do not open another PlasElement IDL getter or querySelector pseudo
+   copy onto `src/js/runtime.rs`.
+- Allowed next (pick one distinct journey): a real missed regression;
+   a published-docs integration failure that is not another SDK
+   install-path or SOM-reference rewrite; or bounded agent-task
+   recovery that is not another IDL getter, querySelector pseudo,
+   inspect-compact field, or one-surface compile-attr copy.
 
 ## Preferred lanes
 
