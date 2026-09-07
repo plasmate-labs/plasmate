@@ -2203,6 +2203,40 @@ Object.defineProperty(PlasElement.prototype, 'content', {
     }
 });
 
+function _dirNameSupported(el) {
+    if (el.tagName === 'TEXTAREA') {
+        return true;
+    }
+    if (el.tagName !== 'INPUT') {
+        return false;
+    }
+    var t = String(el.type || '').toLowerCase();
+    return t === 'text' || t === 'search' || t === 'tel' || t === 'url' || t === 'email';
+}
+
+Object.defineProperty(PlasElement.prototype, 'dirName', {
+    get: function() {
+        if (!_dirNameSupported(this)) {
+            return undefined;
+        }
+        var raw = this.getAttribute('dirname');
+        if (raw === null) {
+            return '';
+        }
+        raw = String(raw);
+        if (raw.trim() === '') {
+            return '';
+        }
+        return raw;
+    },
+    set: function(v) {
+        if (!_dirNameSupported(this)) {
+            return;
+        }
+        this.setAttribute('dirname', String(v));
+    }
+});
+
 // ============================================================================
 // Query helper functions
 // ============================================================================
@@ -14787,6 +14821,124 @@ mod tests {
         assert_eq!(
             plain.attrs.as_ref().and_then(|attrs| attrs.get("value")),
             Some(&serde_json::json!("skip"))
+        );
+        let pay = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pay"))
+            .expect("pay button should compile");
+        assert_eq!(pay.role, crate::som::types::ElementRole::Button);
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(note.text.as_deref(), Some("Just text"));
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert_eq!(notes.text.as_deref(), Some("draft"));
+    }
+
+    #[test]
+    fn input_dirname_idl_compiles_direction_field_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout"><input id="email" name="email" dirname="email.dir" value="ops@example.com"><input id="dir" name="dir" value=""><input id="plain" name="plain" value="skip"><input id="blank" name="blank" dirname="   " value="held"><input id="choice" name="choice" type="checkbox" dirname="choice.dir"><button id="pay" dirname="pay.dir">Pay</button><p id="note" dirname="note.dir">Just text</p><textarea id="notes" dirname="notes.dir">draft</textarea></form></body></html>"#,
+            "https://example.test/input-dirname",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    document.getElementById('email').dirName,
+                    document.getElementById('notes').dirName,
+                    String(document.getElementById('plain').dirName),
+                    String(document.getElementById('blank').dirName),
+                    String(document.getElementById('dir').dirName),
+                    String(document.getElementById('choice').dirName),
+                    String(document.getElementById('pay').dirName),
+                    String(document.getElementById('note').dirName)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(
+            before,
+            "email.dir|notes.dir||||undefined|undefined|undefined"
+        );
+
+        rt.execute_in_context(
+            r#"
+            var field = document.getElementById('email');
+            var dir = document.getElementById('dir');
+            if (field.dirName) dir.value = field.dirName;
+            var blank = document.getElementById('blank');
+            if (blank.dirName) dir.value = 'should-not-write';
+            var choice = document.getElementById('choice');
+            if (choice.dirName) dir.value = 'should-not-write';
+            var pay = document.getElementById('pay');
+            if (pay.dirName) dir.value = 'should-not-write';
+            var note = document.getElementById('note');
+            if (note.dirName) note.textContent = 'leaked';
+            var notes = document.getElementById('notes');
+            if (!notes.dirName) notes.value = 'should-not-write';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"dir\"") && serialized.contains("value=\"email.dir\""),
+            "checkout JS must persist the input.dirName field name: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"plain\"")
+                && serialized.contains("value=\"skip\"")
+                && serialized.contains("id=\"blank\"")
+                && serialized.contains("value=\"held\"")
+                && serialized.contains("Just text")
+                && serialized.contains(">draft</textarea>"),
+            "unlisted fields, paragraphs, and textareas must stay intact: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/input-dirname")
+            .unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let dir = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("dir"))
+            .expect("dir input should compile");
+        assert_eq!(dir.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            dir.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("email.dir"))
+        );
+        let plain = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plain"))
+            .expect("plain input should compile");
+        assert_eq!(
+            plain.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("skip"))
+        );
+        let blank = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("blank"))
+            .expect("blank input should compile");
+        assert_eq!(
+            blank.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("held"))
         );
         let pay = elements
             .iter()
