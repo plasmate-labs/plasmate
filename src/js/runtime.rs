@@ -1987,6 +1987,21 @@ Object.defineProperty(PlasElement.prototype, 'download', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'rel', {
+    get: function() {
+        if (this.tagName !== 'A' && this.tagName !== 'AREA') {
+            return '';
+        }
+        return this.getAttribute('rel') || '';
+    },
+    set: function(v) {
+        if (this.tagName !== 'A' && this.tagName !== 'AREA') {
+            return;
+        }
+        this.setAttribute('rel', String(v));
+    }
+});
+
 function _hyperlinkHashParts(href) {
     href = String(href || '');
     var idx = href.indexOf('#');
@@ -14662,6 +14677,108 @@ mod tests {
         assert_eq!(
             token.attrs.as_ref().and_then(|attrs| attrs.get("value")),
             Some(&serde_json::json!("tok-ready"))
+        );
+        let plain = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plain"))
+            .expect("plain input should compile");
+        assert_eq!(
+            plain.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("skip"))
+        );
+        let pay = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pay"))
+            .expect("pay button should compile");
+        assert_eq!(pay.role, crate::som::types::ElementRole::Button);
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(note.text.as_deref(), Some("Just text"));
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert_eq!(notes.text.as_deref(), Some("draft"));
+    }
+
+    #[test]
+    fn anchor_rel_idl_compiles_continue_url_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><body><form id="checkout"><input id="next" name="continue_url" value=""><input id="plain" name="plain" value="skip"><a id="continue" rel="next" href="/pay">Continue</a><a id="help" href="/help">Help</a><map name="nav"><area id="spot" rel="next" href="/spot" alt="Spot"></map><button id="pay" rel="next">Pay</button><p id="note" rel="next">Just text</p><textarea id="notes">draft</textarea></form></body></html>"#,
+            "https://example.test/anchor-rel",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    document.getElementById('continue').rel,
+                    document.getElementById('spot').rel,
+                    String(document.getElementById('help').rel),
+                    String(document.getElementById('pay').rel),
+                    String(document.getElementById('note').rel),
+                    String(document.getElementById('next').rel),
+                    String(document.getElementById('notes').rel)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "next|next|||||");
+
+        rt.execute_in_context(
+            r#"
+            var cont = document.getElementById('continue');
+            var field = document.getElementById('next');
+            if (cont.rel === 'next') field.value = cont.getAttribute('href');
+            var help = document.getElementById('help');
+            if (help.rel === 'next') field.value = 'should-not-write';
+            var pay = document.getElementById('pay');
+            if (pay.rel === 'next') field.value = 'should-not-write';
+            var note = document.getElementById('note');
+            if (note.rel === 'next') note.textContent = 'should-not-write';
+            var notes = document.getElementById('notes');
+            if (notes.rel === 'next') notes.value = 'should-not-write';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"next\"") && serialized.contains("value=\"/pay\""),
+            "checkout JS must persist the a.rel continue URL: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"plain\"")
+                && serialized.contains("value=\"skip\"")
+                && serialized.contains("Just text")
+                && serialized.contains(">draft</textarea>"),
+            "inputs, paragraphs, and textareas without a/area rel must stay intact: {serialized}"
+        );
+
+        let som =
+            crate::som::compiler::compile(&serialized, "https://example.test/anchor-rel").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let next = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("next"))
+            .expect("next input should compile");
+        assert_eq!(next.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            next.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("/pay"))
         );
         let plain = elements
             .iter()
