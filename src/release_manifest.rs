@@ -1114,6 +1114,34 @@ mod tests {
     }
 
     #[test]
+    fn openclaw_docs_do_not_point_at_missing_in_tree_files_or_a_closed_tool_list() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        for rel in [
+            "website/docs/src/integration-openclaw.md",
+            "website/docs/integration-openclaw.html",
+        ] {
+            let content = fs::read_to_string(root.join(rel))
+                .unwrap_or_else(|error| panic!("read OpenClaw docs {rel}: {error}"));
+            assert!(
+                !content.contains("integrations/openclaw/"),
+                "{rel} still points at missing in-tree OpenClaw files"
+            );
+            assert!(
+                !content.contains("Available MCP tools:"),
+                "{rel} still hard-codes a closed MCP tool list"
+            );
+            assert!(
+                content.contains("tools/list"),
+                "{rel} should tell agents to discover MCP tools"
+            );
+            assert!(
+                content.contains("inspect") && content.contains("ARD"),
+                "{rel} should name inspection and ARD instead of omitting them"
+            );
+        }
+    }
+
+    #[test]
     fn public_claim_registry_matches_retained_coverage_evidence() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
         let registry: serde_json::Value = serde_json::from_str(
