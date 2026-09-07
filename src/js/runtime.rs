@@ -2173,6 +2173,21 @@ Object.defineProperty(PlasElement.prototype, 'list', {
     }
 });
 
+Object.defineProperty(PlasElement.prototype, 'content', {
+    get: function() {
+        if (this.tagName !== 'META') {
+            return undefined;
+        }
+        return this.getAttribute('content') || '';
+    },
+    set: function(v) {
+        if (this.tagName !== 'META') {
+            return;
+        }
+        this.setAttribute('content', String(v));
+    }
+});
+
 // ============================================================================
 // Query helper functions
 // ============================================================================
@@ -14423,6 +14438,107 @@ mod tests {
         assert_eq!(
             broken.attrs.as_ref().and_then(|attrs| attrs.get("value")),
             Some(&serde_json::json!("held"))
+        );
+        let pay = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pay"))
+            .expect("pay button should compile");
+        assert_eq!(pay.role, crate::som::types::ElementRole::Button);
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("note paragraph should compile");
+        assert_eq!(note.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(note.text.as_deref(), Some("Just text"));
+        let notes = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("notes"))
+            .expect("notes textarea should compile");
+        assert_eq!(notes.role, crate::som::types::ElementRole::Textarea);
+        assert_eq!(notes.text.as_deref(), Some("draft"));
+    }
+
+    #[test]
+    fn meta_content_idl_compiles_csrf_token_for_som() {
+        let mut rt = JsRuntime::new(RuntimeConfig {
+            inject_dom_shim: true,
+            execute_inline_scripts: false,
+            ..Default::default()
+        });
+        rt.bootstrap_dom(
+            r#"<html><head><meta name="csrf-token" content="tok-ready"><meta id="empty" name="description"></head><body><form id="checkout"><input id="token" name="authenticity_token" value=""><input id="plain" name="plain" value="skip"><button id="pay">Pay</button><p id="note">Just text</p><textarea id="notes">draft</textarea></form></body></html>"#,
+            "https://example.test/meta-content",
+        );
+
+        let before = rt
+            .execute_in_context(
+                r#"[
+                    document.querySelector('meta[name="csrf-token"]').content,
+                    String(document.getElementById('empty').content),
+                    String(document.getElementById('token').content),
+                    String(document.getElementById('note').content),
+                    String(document.getElementById('pay').content),
+                    String(document.getElementById('notes').content)
+                ].join('|')"#,
+                "test.js",
+            )
+            .unwrap();
+        assert_eq!(before, "tok-ready||undefined|undefined|undefined|undefined");
+
+        rt.execute_in_context(
+            r#"
+            var token = document.querySelector('meta[name="csrf-token"]').content;
+            var field = document.getElementById('token');
+            if (token) field.value = token;
+            var empty = document.getElementById('empty');
+            if (empty.content) field.value = 'should-not-write';
+            var plain = document.getElementById('plain');
+            if (plain.content) plain.value = 'should-not-write';
+            var note = document.getElementById('note');
+            if (note.content) note.textContent = 'should-not-write';
+            var notes = document.getElementById('notes');
+            if (notes.content) notes.value = 'should-not-write';
+            "#,
+            "test.js",
+        )
+        .unwrap();
+
+        let serialized = rt.serialize_dom().unwrap();
+        assert!(
+            serialized.contains("id=\"token\"") && serialized.contains("value=\"tok-ready\""),
+            "checkout JS must persist the meta.content CSRF token: {serialized}"
+        );
+        assert!(
+            serialized.contains("id=\"plain\"")
+                && serialized.contains("value=\"skip\"")
+                && serialized.contains("Just text")
+                && serialized.contains(">draft</textarea>"),
+            "inputs, paragraphs, and textareas without meta.content must stay intact: {serialized}"
+        );
+
+        let som = crate::som::compiler::compile(&serialized, "https://example.test/meta-content")
+            .unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let token = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("token"))
+            .expect("token input should compile");
+        assert_eq!(token.role, crate::som::types::ElementRole::TextInput);
+        assert_eq!(
+            token.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("tok-ready"))
+        );
+        let plain = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plain"))
+            .expect("plain input should compile");
+        assert_eq!(
+            plain.attrs.as_ref().and_then(|attrs| attrs.get("value")),
+            Some(&serde_json::json!("skip"))
         );
         let pay = elements
             .iter()
