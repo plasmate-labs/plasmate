@@ -33,11 +33,11 @@ frequency.
 If these gates are not met, report a no-change or blocked run. Never stash,
 overwrite, reset, or absorb unrelated work.
 
-## Active governor constraint (2026-09-06)
+## Active governor constraint (2026-09-07)
 
-- Window: `c9602ae` .. `8712560`
+- Window: `3061b17` .. `a684edb`
 - Decision: `NARROW`
-- Merged this run: `60991ad` querySelector single-quoted attrs (`8bb91e4`) and `09c70d5` querySelector `:enabled` (`8712560`)
+- Merged this run: `657b9e9` input.list IDL (`a684edb`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -382,6 +382,10 @@ overwrite, reset, or absorb unrelated work.
   syntax (`~=`, `|=`, `^=`, `$=`, `*=`, combinators), extract_text, CLI,
   CDP, SDKs, or the native DOM bridge; do not treat quotes as part of
   the value or match missing names / wrong tags.
+  Do not copy #343 input.list IDL onto textarea, select, button,
+  paragraph, `datalist.options`, inspect compact `list`, extract_text,
+  CLI, CDP, or SDK wrappers; do not invent list on non-input tags
+  or serialize list as a content attribute.
 - Allowed next (pick one distinct journey): a real missed regression, or
   a published-docs integration failure that is not another SDK install-path
   rewrite, SOM-reference field rewrite, extract_text label fallback copy,
@@ -431,7 +435,8 @@ overwrite, reset, or absorb unrelated work.
   a/area hash IDL copy, querySelector :placeholder-shown copy,
   querySelector :root copy, querySelector unknown-pseudo
   fail-closed copy, Node isConnected copy, querySelector :enabled
-  copy, or querySelector single-quoted attr copy.
+  copy, querySelector single-quoted attr copy, or input.list IDL
+  copy.
 
 ## Preferred lanes
 
