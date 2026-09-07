@@ -2451,6 +2451,7 @@ fn build_element_attrs(
         ("aria-keyshortcuts", "keyshortcuts"),
         ("aria-roledescription", "roledescription"),
         ("aria-busy", "busy"),
+        ("aria-modal", "modal"),
         ("aria-live", "live"),
         ("aria-atomic", "atomic"),
         ("aria-relevant", "relevant"),
@@ -3467,6 +3468,91 @@ mod tests {
         assert_eq!(attrs["aria"]["live"], "polite");
         assert_eq!(attrs["aria"]["atomic"], false);
         assert_eq!(attrs["aria"]["relevant"], "additions text");
+    }
+
+    #[test]
+    fn aria_modal_compiles_checkout_overlay_for_som() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Checkout</title></head>
+<body>
+<main>
+  <section id="paywall" aria-modal="true" aria-label="Subscribe">
+    <button>Continue</button>
+  </section>
+  <section id="tips" aria-modal=" FALSE " aria-label="Tips">
+    <button>Dismiss</button>
+  </section>
+  <section id="article" aria-label="Story">
+    <button>Read</button>
+  </section>
+  <input type="checkbox" id="subscribe" checked>
+  <p id="note">Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/checkout").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let paywall = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("paywall"))
+            .expect("modal paywall should compile");
+        assert_eq!(paywall.role, ElementRole::Section);
+        let paywall_attrs = paywall
+            .attrs
+            .as_ref()
+            .expect("paywall attrs should compile");
+        assert_eq!(paywall_attrs["aria"]["modal"], true);
+
+        let tips = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("tips"))
+            .expect("non-modal overlay should compile");
+        let tips_attrs = tips.attrs.as_ref().expect("tips attrs should compile");
+        assert_eq!(tips_attrs["aria"]["modal"], false);
+
+        let article = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("article"))
+            .expect("article section should compile");
+        assert!(
+            article.attrs.as_ref().is_none_or(|attrs| attrs
+                .get("aria")
+                .and_then(|aria| aria.get("modal"))
+                .is_none()),
+            "missing aria-modal must not be invented: {article:?}"
+        );
+
+        let subscribe = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("subscribe"))
+            .expect("checkbox should compile");
+        assert_eq!(subscribe.role, ElementRole::Checkbox);
+        assert!(
+            subscribe.attrs.as_ref().is_none_or(|attrs| attrs
+                .get("aria")
+                .and_then(|aria| aria.get("modal"))
+                .is_none()),
+            "checkboxes must not invent aria-modal: {subscribe:?}"
+        );
+
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("paragraph should compile");
+        assert_eq!(note.role, ElementRole::Paragraph);
+        assert!(
+            note.attrs.as_ref().is_none_or(|attrs| attrs
+                .get("aria")
+                .and_then(|aria| aria.get("modal"))
+                .is_none()),
+            "paragraphs must not invent aria-modal: {note:?}"
+        );
     }
 
     #[test]
