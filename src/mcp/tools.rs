@@ -1596,6 +1596,12 @@ fn error_response(message: &str) -> Value {
     })
 }
 
+fn no_page_loaded_response() -> Value {
+    error_response(
+        "No page loaded in session. Call navigate_to with a URL to load a page in this session.",
+    )
+}
+
 fn tool_response(text: String) -> Value {
     json!({
         "content": [
@@ -1835,7 +1841,7 @@ pub async fn handle_evaluate(arguments: &Value, sessions: &Arc<SessionManager>) 
     let (effective_html, url) = match session_data {
         Some((Some(html), url)) => (html, url.unwrap_or_else(|| "about:blank".to_string())),
         Some((None, _)) => {
-            return error_response("No page loaded in session");
+            return no_page_loaded_response();
         }
         None => {
             return error_response(&format!("Session not found: {}", params.session_id));
@@ -1911,7 +1917,7 @@ pub async fn handle_click(
     let (effective_html, url, som) = match session_data {
         Some((Some(html), Some(url), Some(som))) => (html, url, som),
         Some((None, _, _)) | Some((_, None, _)) | Some((_, _, None)) => {
-            return error_response("No page loaded in session");
+            return no_page_loaded_response();
         }
         None => {
             return error_response(&format!("Session not found: {}", params.session_id));
@@ -2390,7 +2396,7 @@ pub async fn handle_type_text(
     let (effective_html, url, som) = match session_data {
         Some((Some(html), Some(url), Some(som))) => (html, url, som),
         Some((None, _, _)) | Some((_, None, _)) | Some((_, _, None)) => {
-            return error_response("No page loaded in session");
+            return no_page_loaded_response();
         }
         None => {
             return error_response(&format!("Session not found: {}", params.session_id));
@@ -2547,7 +2553,7 @@ pub async fn handle_select_option(
     let (effective_html, url) = match session_data {
         Some((Some(html), Some(url))) => (html, url),
         Some((None, _)) | Some((_, None)) => {
-            return error_response("No page loaded in session");
+            return no_page_loaded_response();
         }
         None => {
             return error_response(&format!("Session not found: {}", params.session_id));
@@ -2700,7 +2706,7 @@ pub async fn handle_scroll(
     let (effective_html, url) = match session_data {
         Some((Some(html), Some(url))) => (html, url),
         Some((None, _)) | Some((_, None)) => {
-            return error_response("No page loaded in session");
+            return no_page_loaded_response();
         }
         None => {
             return error_response(&format!("Session not found: {}", params.session_id));
@@ -2835,7 +2841,7 @@ pub async fn handle_toggle(
     let (effective_html, url) = match session_data {
         Some((Some(html), Some(url))) => (html, url),
         Some((None, _)) | Some((_, None)) => {
-            return error_response("No page loaded in session");
+            return no_page_loaded_response();
         }
         None => {
             return error_response(&format!("Session not found: {}", params.session_id));
@@ -2964,7 +2970,7 @@ pub async fn handle_clear(
     let (effective_html, url) = match session_data {
         Some((Some(html), Some(url))) => (html, url),
         Some((None, _)) | Some((_, None)) => {
-            return error_response("No page loaded in session");
+            return no_page_loaded_response();
         }
         None => {
             return error_response(&format!("Session not found: {}", params.session_id));
@@ -3580,6 +3586,27 @@ mod tests {
         assert!(survived.get("isError").is_none(), "{survived}");
         assert_eq!(tool_payload(&survived)["result"], "ok");
         assert_eq!(state_fingerprint(&sessions, &session_id).await, before);
+    }
+
+    #[tokio::test]
+    async fn evaluate_empty_session_names_navigate_to() {
+        let sessions = Arc::new(SessionManager::new());
+        let session_id = sessions.create_session().await.unwrap();
+
+        let result = handle_evaluate(
+            &json!({"session_id": session_id, "expression": "1 + 1"}),
+            &sessions,
+        )
+        .await;
+
+        assert_eq!(result["isError"], true);
+        let text = result["content"][0]["text"].as_str().unwrap();
+        assert!(text.contains("No page loaded in session"), "{text}");
+        assert!(text.contains("navigate_to"), "{text}");
+        assert!(
+            !text.contains("open_page"),
+            "empty sessions should reuse navigate_to, not open another session: {text}"
+        );
     }
 
     #[tokio::test]
