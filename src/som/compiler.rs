@@ -1611,6 +1611,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                     "img" => return Some(ElementRole::Image),
                     "heading" => return Some(ElementRole::Heading),
                     "alert" | "status" => return Some(ElementRole::Paragraph),
+                    "tooltip" => return Some(ElementRole::Paragraph),
                     "group" | "radiogroup" => return Some(ElementRole::Group),
                     "progressbar" | "meter" => return Some(ElementRole::Group),
                     _ => {}
@@ -5588,6 +5589,84 @@ mod tests {
                 .as_ref()
                 .is_none_or(|attrs| attrs.get("source_role").is_none()),
             "buttons must not invent live-region source_role: {save:?}"
+        );
+
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Paragraph
+                    && element.text.as_deref() == Some("Just text")
+                    && element.html_id.is_none()
+                    && element
+                        .attrs
+                        .as_ref()
+                        .is_none_or(|attrs| attrs.get("source_role").is_none())
+            }),
+            "plain text must stay a paragraph: {elements:?}"
+        );
+    }
+
+    #[test]
+    fn aria_tooltip_compiles_checkout_hint_for_som() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Checkout</title></head>
+<body>
+<main>
+  <label for="email">Email</label>
+  <input id="email" type="email">
+  <div id="hint" role="tooltip">Use your work email</div>
+  <div id="log" role="log">Audit trail</div>
+  <button id="pay">Pay</button>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/checkout").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let hint = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("hint"))
+            .expect("ARIA tooltip should compile");
+        assert_eq!(hint.role, ElementRole::Paragraph);
+        assert_eq!(hint.text.as_deref(), Some("Use your work email"));
+        let hint_attrs = hint.attrs.as_ref().expect("tooltip attrs should compile");
+        assert_eq!(hint_attrs["source_role"], "tooltip");
+        assert!(
+            hint.actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "tooltips must not invent actions: {hint:?}"
+        );
+
+        let log = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("log"));
+        assert!(
+            log.is_none_or(|element| {
+                element.role == ElementRole::Paragraph
+                    && element
+                        .attrs
+                        .as_ref()
+                        .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("log")))
+            }),
+            "role=log must not copy tooltip mapping: {elements:?}"
+        );
+
+        let pay = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pay"))
+            .expect("pay button should compile");
+        assert_eq!(pay.role, ElementRole::Button);
+        assert!(
+            pay.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "buttons must not invent tooltip source_role: {pay:?}"
         );
 
         assert!(
