@@ -1114,6 +1114,30 @@ mod tests {
     }
 
     #[test]
+    fn crewai_docs_use_shipped_python_sdk_not_a_missing_in_tree_module() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        for rel in [
+            "website/docs/src/integration-crewai.md",
+            "website/docs/integration-crewai.html",
+        ] {
+            let content = fs::read_to_string(root.join(rel))
+                .unwrap_or_else(|error| panic!("read CrewAI docs {rel}: {error}"));
+            assert!(
+                !content.contains("from plasmate.integrations.crewai"),
+                "{rel} still imports a missing CrewAI integration module"
+            );
+            assert!(
+                !content.contains("integrations/crewai/"),
+                "{rel} still points at missing in-tree CrewAI files"
+            );
+            assert!(
+                content.contains("from plasmate import Plasmate"),
+                "{rel} should use the shipped Python SDK"
+            );
+        }
+    }
+
+    #[test]
     fn openclaw_docs_do_not_point_at_missing_in_tree_files_or_a_closed_tool_list() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
         for rel in [
