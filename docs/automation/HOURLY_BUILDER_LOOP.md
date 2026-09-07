@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-07)
 
-- Window: `a649d9f` .. `6088eef`
+- Window: `4626896` .. `28d97cc`
 - Decision: `NARROW`
-- Merged this run: `6d173d0` input.dirName IDL (`6088eef`)
+- Merged this run: `7fc620b` OpenClaw docs MCP discovery (`5404cde`), `d975f5a` open_page capacity `close_page` (`dcdab1b`), and `77ea97a` empty-session `navigate_to` (`28d97cc`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -417,11 +417,20 @@ overwrite, reset, or absorb unrelated work.
    fields or copy whitespace-only values.
    Do not open another PlasElement IDL getter or querySelector pseudo
    copy onto `src/js/runtime.rs`.
+   Do not copy #355 open_page capacity `close_page` / live session IDs
+   onto other tools, traces, AWP, CDP, or SDKs; do not leak URLs,
+   titles, or page content in capacity errors.
+   Do not copy #357 empty-session `navigate_to` naming onto AWP, CDP,
+   SDKs, or session-not-found errors; do not suggest `open_page` for an
+   empty loaded session.
+   Do not copy #356 OpenClaw `tools/list` / skill-openclaw install onto
+   Pi or other integration pages.
 - Allowed next (pick one distinct journey): a real missed regression;
    a published-docs integration failure that is not another SDK
-   install-path or SOM-reference rewrite; or bounded agent-task
-   recovery that is not another IDL getter, querySelector pseudo,
-   inspect-compact field, or one-surface compile-attr copy.
+   install-path, SOM-reference, or OpenClaw/Pi rewrite; or bounded
+   agent-task recovery that is not another IDL getter, querySelector
+   pseudo, inspect-compact field, compile-attr copy, MCP empty-session
+   error-text copy, or open_page capacity error-text copy.
 
 ## Preferred lanes
 
