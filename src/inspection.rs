@@ -112,6 +112,8 @@ pub struct CompactElement {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub expanded: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub current: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub actions: Option<Vec<String>>,
 }
 
@@ -310,6 +312,7 @@ fn flatten_elements(
             checked: compact_checked(element),
             value: compact_value(element),
             expanded: compact_expanded(element),
+            current: compact_current(element),
             actions: element.actions.as_ref().map(|actions| {
                 actions
                     .iter()
@@ -473,6 +476,26 @@ fn compact_expanded(element: &Element) -> Option<bool> {
     element.attrs.as_ref().and_then(|attrs| {
         match attrs.get("aria").and_then(|aria| aria.get("expanded")) {
             Some(serde_json::Value::Bool(value)) => Some(*value),
+            _ => None,
+        }
+    })
+}
+
+fn compact_current(element: &Element) -> Option<serde_json::Value> {
+    if !matches!(element.role, ElementRole::Link | ElementRole::Button) {
+        return None;
+    }
+    element.attrs.as_ref().and_then(|attrs| {
+        match attrs.get("aria").and_then(|aria| aria.get("current")) {
+            Some(serde_json::Value::Bool(value)) => Some(serde_json::Value::Bool(*value)),
+            Some(serde_json::Value::String(value)) => {
+                let trimmed = value.trim();
+                if trimmed.is_empty() {
+                    None
+                } else {
+                    Some(serde_json::Value::String(bound_string(trimmed, 64)))
+                }
+            }
             _ => None,
         }
     })
@@ -1210,6 +1233,109 @@ mod tests {
                 .filter(|element| element.role == "paragraph")
                 .all(|element| element.expanded.is_none()),
             "paragraphs must not invent expanded: {elements:?}"
+        );
+    }
+
+    #[test]
+    fn compact_som_preserves_current() {
+        let html = r#"<main>
+  <a href="/billing" aria-current="page">Billing</a>
+  <a href="/profile">Profile</a>
+  <button aria-current="step">Details</button>
+  <button>Pay</button>
+  <a href="/docs" aria-current="false">Docs</a>
+  <button aria-current="true">Active</button>
+  <input type="checkbox" aria-label="Subscribe" aria-current="true" checked>
+  <p aria-current="page">Just text</p>
+</main>"#;
+        let som = compiler::compile(html, "https://example.com/").unwrap();
+        let compact = compact_structure(&som);
+        let elements: Vec<_> = compact
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let billing = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Billing"))
+            .expect("current billing link should be compact");
+        assert_eq!(billing.role, "link");
+        assert_eq!(billing.current.as_ref(), Some(&serde_json::json!("page")));
+
+        let profile = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Profile"))
+            .expect("plain profile link should stay compact");
+        assert_eq!(profile.role, "link");
+        assert!(
+            profile.current.is_none(),
+            "missing current must not be invented: {profile:?}"
+        );
+
+        let details = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Details"))
+            .expect("current details button should be compact");
+        assert_eq!(details.role, "button");
+        assert_eq!(details.current.as_ref(), Some(&serde_json::json!("step")));
+
+        let pay = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Pay"))
+            .expect("plain button should stay compact");
+        assert_eq!(pay.role, "button");
+        assert!(
+            pay.current.is_none(),
+            "missing current must not be invented: {pay:?}"
+        );
+
+        let docs = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Docs"))
+            .expect("explicitly uncurrent link should be compact");
+        assert_eq!(docs.role, "link");
+        assert_eq!(docs.current.as_ref(), Some(&serde_json::json!(false)));
+
+        let active = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Active"))
+            .expect("boolean current button should be compact");
+        assert_eq!(active.role, "button");
+        assert_eq!(active.current.as_ref(), Some(&serde_json::json!(true)));
+        assert!(
+            active.expanded.is_none(),
+            "current must not invent expanded: {active:?}"
+        );
+
+        let subscribe = elements
+            .iter()
+            .find(|element| element.label.as_deref() == Some("Subscribe"))
+            .expect("checkbox should stay compact");
+        assert_eq!(subscribe.role, "checkbox");
+        assert!(
+            subscribe.current.is_none(),
+            "checkboxes must not copy aria-current onto compact current: {subscribe:?}"
+        );
+        assert!(
+            elements.iter().any(|element| {
+                element.role == "paragraph" && element.text.as_deref() == Some("Just text")
+            }),
+            "plain text must stay a paragraph: {elements:?}"
+        );
+        assert!(
+            elements
+                .iter()
+                .filter(|element| element.role == "paragraph")
+                .all(|element| element.current.is_none()),
+            "paragraphs must not invent current: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| element
+                .current
+                .as_ref()
+                .is_none_or(|value| value.is_boolean() || value.as_str().is_some())),
+            "compact current must stay bool or token string: {elements:?}"
         );
     }
 
