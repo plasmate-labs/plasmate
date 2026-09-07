@@ -128,9 +128,26 @@ impl SessionManager {
         let mut sessions = self.sessions.write().await;
 
         if sessions.len() >= MAX_SESSIONS {
+            let now = Instant::now();
+            let mut occupied: Vec<(u128, String)> = sessions
+                .iter()
+                .map(|(id, session)| {
+                    (
+                        now.saturating_duration_since(session.last_accessed)
+                            .as_millis(),
+                        id.clone(),
+                    )
+                })
+                .collect();
+            occupied.sort_by(|a, b| b.0.cmp(&a.0).then_with(|| a.1.cmp(&b.1)));
+            let ids = occupied
+                .into_iter()
+                .map(|(_, id)| id)
+                .collect::<Vec<_>>()
+                .join(", ");
             return Err(format!(
-                "Maximum sessions ({}) reached. Close a session first.",
-                MAX_SESSIONS
+                "Maximum sessions ({}) reached. Call close_page on a live session_id: {}.",
+                MAX_SESSIONS, ids
             ));
         }
 
@@ -467,9 +484,18 @@ mod tests {
             session_ids.push(id);
         }
 
-        // Next one should fail
         let result = manager.create_session().await;
-        assert!(result.is_err());
+        let err = result.expect_err("capacity should reject the extra session");
+        assert!(err.contains("close_page"), "{err}");
+        assert!(
+            err.contains(&format!("Maximum sessions ({MAX_SESSIONS}) reached")),
+            "{err}"
+        );
+        for id in &session_ids {
+            assert!(err.contains(id), "missing {id} in {err}");
+        }
+        assert!(!err.contains("http"), "{err}");
+        assert!(!err.contains('/'), "{err}");
 
         // Close one and try again
         manager.close_session(&session_ids[0]).await;

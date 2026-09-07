@@ -1709,7 +1709,7 @@ pub fn click_definition() -> ToolDefinition {
 pub fn close_page_definition() -> ToolDefinition {
     ToolDefinition {
         name: "close_page".to_string(),
-        description: "Close a browser session and free resources.".to_string(),
+        description: "Close a browser session and free its slot. Use this when open_page reports maximum sessions reached; pass one live session_id from that error or from session_status.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -4425,6 +4425,37 @@ mod tests {
         assert_eq!(snapshot["effective_html_entries"], 1);
         assert_eq!(snapshot["total_effective_html_bytes"], 31);
         assert_eq!(snapshot["max_hot_entries"], 1000);
+    }
+
+    #[tokio::test]
+    async fn open_page_capacity_error_names_close_page_and_live_session_ids() {
+        let sessions = Arc::new(SessionManager::new());
+        let mut ids = Vec::new();
+        for _ in 0..crate::mcp::sessions::MAX_SESSIONS {
+            ids.push(sessions.create_session().await.unwrap());
+        }
+        let client = reqwest::Client::new();
+        let cache = Arc::new(SomCache::new(CacheConfig::default()));
+        let result = handle_open_page(
+            &json!({"url": "https://example.com/checkout"}),
+            &client,
+            &sessions,
+            &cache,
+        )
+        .await;
+
+        assert_eq!(result["isError"], true);
+        let text = result["content"][0]["text"].as_str().unwrap();
+        assert!(text.contains("close_page"), "{text}");
+        for id in &ids {
+            assert!(text.contains(id), "missing {id} in {text}");
+        }
+        assert!(!text.contains("https://example.com/checkout"), "{text}");
+        assert!(!text.contains("http"), "{text}");
+
+        for id in ids {
+            assert!(sessions.close_session(&id).await);
+        }
     }
 
     #[tokio::test]
