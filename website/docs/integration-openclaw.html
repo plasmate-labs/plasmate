@@ -461,12 +461,11 @@
 <p>Skill repo: <a href="https://github.com/plasmate-labs/skill-openclaw"><code>plasmate-labs/skill-openclaw</code></a></p>
 <h2 id="installation">Installation</h2><h3 id="install-plasmate">1. Install Plasmate</h3><pre><code class="language-bash">curl -fsSL https://plasmate.app/install.sh | sh
 </code></pre>
-<h3 id="install-the-skill">2. Install the skill</h3><pre><code class="language-bash">clawhub install plasmate
+<h3 id="install-the-skill-and-pf-wrapper">2. Install the skill and `pf` wrapper</h3><pre><code class="language-bash">clawhub install plasmate
 </code></pre>
-<p>Or manually copy <code>integrations/openclaw/SKILL.md</code> to <code>~/.openclaw/skills/plasmate/SKILL.md</code>.</p>
-<h3 id="install-the-pf-wrapper">3. Install the `pf` wrapper</h3><pre><code class="language-bash">cp integrations/openclaw/scripts/pf /usr/local/bin/pf
-chmod +x /usr/local/bin/pf
-</code></pre>
+<p>The skill and optional <code>pf</code> wrapper live in
+<a href="https://github.com/plasmate-labs/skill-openclaw"><code>plasmate-labs/skill-openclaw</code></a>.
+This repository does not ship those OpenClaw skill files.</p>
 <h2 id="quick-start">Quick Start</h2><p>Replace <code>web_fetch</code> calls with <code>pf</code>:</p>
 <pre><code class="language-bash"># Before
 web_fetch https://docs.stripe.com/api
@@ -495,7 +494,12 @@ estimates; use your model&#39;s tokenizer when evaluating an OpenClaw workflow.<
   }
 }
 </code></pre>
-<p>Available MCP tools: <code>fetch_page</code>, <code>extract_text</code>, <code>extract_links</code>, <code>cache_status</code>, <code>session_status</code>, <code>screenshot_page</code>, <code>open_page</code>, <code>navigate_to</code>, <code>click</code>, <code>type_text</code>, <code>select_option</code>, <code>scroll</code>, <code>toggle</code>, <code>clear</code>, <code>evaluate</code>, <code>close_page</code>, <code>get_cookies</code>, <code>set_cookies</code>, <code>clear_cookies</code>.</p>
+<p>The native server advertises its current tools through MCP <code>tools/list</code>; clients
+should discover them rather than depend on a hard-coded list. The surface
+includes stateless fetch, text/link extraction, ARD discovery, crawl-policy, and
+page inspection; cache, session, trace, and validation-only replay; screenshots
+and persistent page sessions; navigation and click/type/select/scroll/toggle/clear
+interactions; and cookie read, write, and clear operations.</p>
 <h2 id="cdp-mode-puppeteer-compatible">CDP Mode (Puppeteer-compatible)</h2><p>Run Plasmate&#39;s CDP compatibility server for workflows that use its documented
 supported Puppeteer/CDP subset:</p>
 <pre><code class="language-bash">plasmate serve --protocol cdp --port 9222

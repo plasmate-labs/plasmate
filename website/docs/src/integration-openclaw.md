@@ -12,20 +12,15 @@ Skill repo: [`plasmate-labs/skill-openclaw`](https://github.com/plasmate-labs/sk
 curl -fsSL https://plasmate.app/install.sh | sh
 ```
 
-### 2. Install the skill
+### 2. Install the skill and `pf` wrapper
 
 ```bash
 clawhub install plasmate
 ```
 
-Or manually copy `integrations/openclaw/SKILL.md` to `~/.openclaw/skills/plasmate/SKILL.md`.
-
-### 3. Install the `pf` wrapper
-
-```bash
-cp integrations/openclaw/scripts/pf /usr/local/bin/pf
-chmod +x /usr/local/bin/pf
-```
+The skill and optional `pf` wrapper live in
+[`plasmate-labs/skill-openclaw`](https://github.com/plasmate-labs/skill-openclaw).
+This repository does not ship those OpenClaw skill files.
 
 ## Quick Start
 
@@ -72,7 +67,12 @@ Add to your agent's MCP config:
 }
 ```
 
-Available MCP tools: `fetch_page`, `extract_text`, `extract_links`, `cache_status`, `session_status`, `screenshot_page`, `open_page`, `navigate_to`, `click`, `type_text`, `select_option`, `scroll`, `toggle`, `clear`, `evaluate`, `close_page`, `get_cookies`, `set_cookies`, `clear_cookies`.
+The native server advertises its current tools through MCP `tools/list`; clients
+should discover them rather than depend on a hard-coded list. The surface
+includes stateless fetch, text/link extraction, ARD discovery, crawl-policy, and
+page inspection; cache, session, trace, and validation-only replay; screenshots
+and persistent page sessions; navigation and click/type/select/scroll/toggle/clear
+interactions; and cookie read, write, and clear operations.
 
 ## CDP Mode (Puppeteer-compatible)
 
