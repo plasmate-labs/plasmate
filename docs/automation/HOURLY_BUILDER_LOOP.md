@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-08)
 
-- Window: `960eb5a` .. `66c963e`
+- Window: `582d0f6` .. `2d177b3`
 - Decision: `NARROW`
-- Merged this run: `5b87255` LlamaIndex shipped Python SDK docs (`2b0e391`), `d1c77bb` Python SDK `navigate_to` (`5e239ec`), and `24cd690` LangChain session navigate (`66c963e`)
+- Merged this run: `831f2b8` Node evaluate MCP result unwrap (`b88ac3a`) and `fd423f7` click non-http href in-page skip (`2d177b3`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -449,6 +449,13 @@ overwrite, reset, or absorb unrelated work.
    one-surface method add.
    Do not copy #369 LangChain session `navigate_to` reuse onto other
    integrations or SDK wrappers.
+   Do not copy #371 Node evaluate MCP result-envelope unwrap onto
+   Python or Go SDKs, other Node methods, or integrations; do not
+   unwrap multi-key payloads or change the evaluate MCP wire format.
+   Do not copy #372 click non-http href in-page skip onto
+   `navigate_to`, `type_text`, extract_links, or other handlers; do
+   not treat `javascript:` / `mailto:` / `tel:` as fetch targets or
+   change http(s) click navigation.
 - Allowed next (pick one distinct journey): a real missed regression;
    a published-docs integration failure that is not another SDK
    install-path, SOM-reference, OpenClaw/Pi, CrewAI, Vercel AI,
@@ -457,7 +464,8 @@ overwrite, reset, or absorb unrelated work.
    inspect-compact field, compile-attr copy, MCP empty-session
    error-text copy, open_page capacity error-text copy, navigate_to
    missing-session error-text copy, close_page idempotent-success copy,
-   Python/Node/Go SDK method add, or LangChain session-navigate copy.
+   Python/Node/Go SDK method add, LangChain session-navigate copy,
+   Node evaluate envelope unwrap, or click non-http scheme skip.
 
 ## Preferred lanes
 
