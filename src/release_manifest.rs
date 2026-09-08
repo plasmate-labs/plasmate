@@ -1166,6 +1166,46 @@ mod tests {
     }
 
     #[test]
+    fn llamaindex_docs_use_shipped_python_sdk_not_a_missing_reader_package() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        for rel in [
+            "website/docs/src/integration-llamaindex.md",
+            "website/docs/integration-llamaindex.html",
+        ] {
+            let content = fs::read_to_string(root.join(rel))
+                .unwrap_or_else(|error| panic!("read LlamaIndex docs {rel}: {error}"));
+            assert!(
+                !content.contains("pip install plasmate llama-index-readers-plasmate"),
+                "{rel} still installs a missing llama-index-readers-plasmate package"
+            );
+            assert!(
+                !content.contains("PlasmateWebReader("),
+                "{rel} still constructs a missing PlasmateWebReader"
+            );
+            assert!(
+                !content.contains("from llama_index.readers.plasmate"),
+                "{rel} still imports a missing llama_index.readers.plasmate module"
+            );
+            assert!(
+                !content.contains("github.com/run-llama/llama_index/pull/21144"),
+                "{rel} still points at the closed unmerged LlamaIndex reader PR"
+            );
+            assert!(
+                content.contains("from plasmate import Plasmate"),
+                "{rel} should use the shipped Python SDK"
+            );
+            assert!(
+                content.contains("extract_text"),
+                "{rel} should show the shipped extract_text helper"
+            );
+            assert!(
+                content.contains("llama_index.core"),
+                "{rel} should wrap shipped SDK output in llama_index.core.Document"
+            );
+        }
+    }
+
+    #[test]
     fn scrapy_docs_use_shipped_python_sdk_not_a_missing_middleware_package() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
         for rel in [

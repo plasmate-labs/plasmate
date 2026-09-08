@@ -457,73 +457,34 @@
       </div>
     </nav>
     <main class="content">
-      <h1 id="llamaindex-integration">LlamaIndex Integration</h1><p>Use Plasmate as a document reader in your LlamaIndex RAG pipelines, returning structured SOM instead of raw HTML. Output size and token use vary by page and tokenizer.</p>
-<p>Source: <a href="https://github.com/run-llama/llama_index/pull/21144"><code>llama-index-readers-plasmate</code></a></p>
-<h2 id="installation">Installation</h2><pre><code class="language-bash">pip install plasmate llama-index-readers-plasmate
+      <h1 id="llamaindex-integration">LlamaIndex Integration</h1><p>Use the shipped <a href="sdk-python">Python SDK</a> to load web pages into LlamaIndex RAG pipelines as clean SOM text instead of raw HTML. Output size and token use vary by page and tokenizer.</p>
+<p>This repository does not ship <code>llama-index-readers-plasmate</code> or <code>PlasmateWebReader</code>. Call <code>Plasmate.extract_text</code> and wrap the result in <code>llama_index.core.Document</code>.</p>
+<h2 id="installation">Installation</h2><pre><code class="language-bash">pip install plasmate llama-index
 </code></pre>
-<h2 id="quick-start">Quick Start</h2><pre><code class="language-python">from llama_index.readers.plasmate import PlasmateWebReader
+<p>Requires the <code>plasmate</code> binary on your PATH.</p>
+<h2 id="quick-start">Quick Start</h2><pre><code class="language-python">from llama_index.core import Document, VectorStoreIndex
+from plasmate import Plasmate
 
-reader = PlasmateWebReader()
-documents = reader.load_data(urls=[
-    &quot;https://example.com&quot;,
-    &quot;https://docs.python.org/3/&quot;,
-])
+with Plasmate() as client:
+    text = client.extract_text(&quot;https://example.com&quot;, selector=&quot;main&quot;)
 
-# Use in your RAG pipeline
-from llama_index.core import VectorStoreIndex
+documents = [
+    Document(text=text, metadata={&quot;url&quot;: &quot;https://example.com&quot;}),
+]
 index = VectorStoreIndex.from_documents(documents)
 query_engine = index.as_query_engine()
 response = query_engine.query(&quot;What is this page about?&quot;)
 </code></pre>
-<h2 id="why-plasmate-for-rag">Why Plasmate for RAG?</h2><p>Standard web readers (<code>SimpleWebPageReader</code>, <code>BeautifulSoupWebReader</code>) return raw HTML or basic text extraction. Plasmate returns structured semantic content:</p>
+<p>When the index also needs title or SOM sizes, call <code>fetch_page</code> on the same client and copy those fields into <code>Document.metadata</code>. Persistent click/type flows use <code>open_page</code>; see the Python SDK.</p>
+<h2 id="why-plasmate-for-rag">Why Plasmate for RAG?</h2><p>Standard web readers (<code>SimpleWebPageReader</code>, <code>BeautifulSoupWebReader</code>) return raw HTML or basic text extraction. The shipped SDK returns compiled page text:</p>
 <ul>
-<li><strong>Compact by design</strong> -  non-semantic markup is removed; benchmark embedding and query costs on your corpus</li>
-<li><strong>Preserved document hierarchy</strong> -  headings, sections, lists stay structured</li>
-<li><strong>Clean text extraction</strong> -  no scripts, styles, or layout noise</li>
-<li><strong>Metadata included</strong> -  title, language, byte sizes, element counts</li>
+<li><strong>Compact by design</strong> - non-semantic markup is removed; benchmark embedding and query costs on your corpus</li>
+<li><strong>Region filters</strong> - <code>selector=&quot;main&quot;</code> strips nav/footer before indexing</li>
+<li><strong>Clean text extraction</strong> - no scripts, styles, or layout noise</li>
+<li><strong>Optional structure</strong> - <code>fetch_page</code> still exposes title, language, and byte sizes when you need them</li>
 </ul>
-<h2 id="configuration">Configuration</h2><pre><code class="language-python">PlasmateWebReader(
-    binary=&quot;plasmate&quot;,    # Path to plasmate binary
-    timeout=30,           # Timeout per page in seconds
-    budget=None,          # Optional SOM token budget
-    javascript=True,      # Enable JS execution
-)
-</code></pre>
-<h2 id="document-metadata">Document Metadata</h2><p>Each loaded document includes metadata:</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>url</code></td>
-<td>Source URL</td>
-</tr>
-<tr>
-<td><code>title</code></td>
-<td>Page title</td>
-</tr>
-<tr>
-<td><code>html_bytes</code></td>
-<td>Original HTML size</td>
-</tr>
-<tr>
-<td><code>som_bytes</code></td>
-<td>SOM output size</td>
-</tr>
-<tr>
-<td><code>element_count</code></td>
-<td>Total SOM elements</td>
-</tr>
-<tr>
-<td><code>compression_ratio</code></td>
-<td>HTML → SOM ratio</td>
-</tr>
-</tbody></table>
+<p>There is no shipped LlamaIndex reader class, <code>load_data()</code> helper, or automatic HTML fallback.</p>
 <h2 id="links">Links</h2><ul>
-<li><a href="https://github.com/run-llama/llama_index/pull/21144">GitHub PR #21144</a></li>
 <li><a href="https://docs.llamaindex.ai">LlamaIndex Docs</a></li>
 <li><a href="sdk-python">Plasmate Python SDK</a></li>
 </ul>
