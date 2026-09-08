@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-08)
 
-- Window: `07d26ba` .. `c5428ac`
+- Window: `960eb5a` .. `66c963e`
 - Decision: `NARROW`
-- Merged this run: `ecca971` Browser Use shipped extractor docs (`142f4f9`) and `09a1b80` Scrapy shipped Python SDK docs (`c5428ac`)
+- Merged this run: `5b87255` LlamaIndex shipped Python SDK docs (`2b0e391`), `d1c77bb` Python SDK `navigate_to` (`5e239ec`), and `24cd690` LangChain session navigate (`66c963e`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -442,14 +442,22 @@ overwrite, reset, or absorb unrelated work.
    Do not copy #365 Scrapy Python SDK spider docs onto Browser Use,
    Smolagents, AutoGen, or other scraper pages; do not invent
    `scrapy-plasmate` or `PlasmateDownloaderMiddleware`.
+   Do not copy #367 LlamaIndex shipped Python SDK docs onto Smolagents,
+   AutoGen, or other remaining integration pages; do not invent
+   `llama-index-readers-plasmate` or `PlasmateWebReader`.
+   Do not copy #368 Python SDK `navigate_to` onto Node or Go SDKs as a
+   one-surface method add.
+   Do not copy #369 LangChain session `navigate_to` reuse onto other
+   integrations or SDK wrappers.
 - Allowed next (pick one distinct journey): a real missed regression;
    a published-docs integration failure that is not another SDK
    install-path, SOM-reference, OpenClaw/Pi, CrewAI, Vercel AI,
-   Browser Use, or Scrapy rewrite; or bounded agent-task recovery that
-   is not another IDL getter, querySelector pseudo, inspect-compact
-   field, compile-attr copy, MCP empty-session error-text copy,
-   open_page capacity error-text copy, navigate_to missing-session
-   error-text copy, or close_page idempotent-success copy.
+   Browser Use, Scrapy, or LlamaIndex rewrite; or bounded agent-task
+   recovery that is not another IDL getter, querySelector pseudo,
+   inspect-compact field, compile-attr copy, MCP empty-session
+   error-text copy, open_page capacity error-text copy, navigate_to
+   missing-session error-text copy, close_page idempotent-success copy,
+   Python/Node/Go SDK method add, or LangChain session-navigate copy.
 
 ## Preferred lanes
 
