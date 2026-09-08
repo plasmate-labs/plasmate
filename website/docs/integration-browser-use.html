@@ -457,91 +457,60 @@
       </div>
     </nav>
     <main class="content">
-      <h1 id="browser-use-integration">Browser Use Integration</h1><p>Use Plasmate as the browser backend for <a href="https://github.com/browser-use/browser-use">Browser Use</a>, replacing Chrome + Playwright with structured SOM output. Output size and token use depend on the page and model tokenizer.</p>
-<p>Browser Use is an open-source AI browser agent framework. Plasmate&#39;s adapter
-uses the Semantic Object Model instead of a DOM-derived page representation,
-retaining supported interactive elements while stripping layout noise.</p>
+      <h1 id="browser-use-integration">Browser Use Integration</h1><p>Use Plasmate&#39;s shipped extractor to give <a href="https://github.com/browser-use/browser-use">Browser Use</a> agents structured SOM page context instead of raw HTML. Output size and token use depend on the page and model tokenizer.</p>
+<p>This repository ships <code>plasmate_browser_use.PlasmateExtractor</code>. It does not ship <code>PlasmateBrowser</code>, session <code>navigate()</code> / <code>click()</code> / <code>type_text()</code>, or a Playwright replacement.</p>
 <p>Source: <a href="https://github.com/plasmate-labs/plasmate/tree/master/integrations/browser-use"><code>integrations/browser-use/</code></a></p>
 <h2 id="installation">Installation</h2><pre><code class="language-bash">pip install plasmate-browser-use
 </code></pre>
 <p>Requires the <code>plasmate</code> binary on your PATH:</p>
 <pre><code class="language-bash">curl -fsSL https://plasmate.app/install.sh | sh
 </code></pre>
-<h2 id="quick-start">Quick Start</h2><pre><code class="language-python">import asyncio
-from plasmate_browser_use import PlasmateBrowser
+<h2 id="quick-start">Quick Start</h2><pre><code class="language-python">from plasmate_browser_use import PlasmateExtractor
 
-async def main():
-    async with PlasmateBrowser() as browser:
-        # Navigate and get SOM state
-        state = await browser.navigate(&quot;https://news.ycombinator.com&quot;)
-        print(state.text)  # What the LLM sees
+extractor = PlasmateExtractor()
+context = extractor.get_page_context(&quot;https://example.com&quot;)
+print(context)
 
-        # Click an element by its index
-        link = state.interactive_elements[0]
-        state = await browser.click(link.index)
-
-        # Type into a form field
-        inputs = [el for el in state.interactive_elements if el.role == &quot;text_input&quot;]
-        if inputs:
-            state = await browser.type_text(inputs[0].index, &quot;hello world&quot;)
-
-asyncio.run(main())
+som = extractor.extract(&quot;https://example.com&quot;)
+md = extractor.extract_markdown(&quot;https://example.com&quot;, selector=&quot;main&quot;)
 </code></pre>
-<h2 id="how-it-works">How It Works</h2><p><code>PlasmateBrowser</code> wraps a Plasmate MCP subprocess. When you call <code>navigate()</code>, <code>click()</code>, or <code>type_text()</code>, it sends AWP commands to Plasmate and returns SOM output formatted for Browser Use compatibility.</p>
+<p>Feed <code>get_page_context()</code> into your Browser Use agent as page context. Persistent click/type still uses Browser Use&#39;s own browser backend or the <a href="sdk-python">Python SDK</a> <code>open_page</code> tools.</p>
+<h2 id="how-it-works">How It Works</h2><p><code>PlasmateExtractor</code> runs <code>plasmate fetch</code> and returns a SOM dict, markdown, or formatted page context. It does not wrap an MCP subprocess or hold a browser session.</p>
 <table>
 <thead>
 <tr>
 <th></th>
-<th>Browser Use (Playwright)</th>
-<th>Browser Use (Plasmate)</th>
+<th>Browser Use default</th>
+<th>PlasmateExtractor</th>
 </tr>
 </thead>
 <tbody><tr>
-<td><strong>Backend</strong></td>
-<td>Chrome via Playwright</td>
-<td>Plasmate MCP subprocess</td>
+<td><strong>Role</strong></td>
+<td>Browser agent runtime</td>
+<td>Read-only SOM page context</td>
 </tr>
 <tr>
 <td><strong>Output to LLM</strong></td>
-<td>Raw DOM tree</td>
-<td>SOM (Semantic Object Model)</td>
-</tr>
-<tr>
-<td><strong>Context representation</strong></td>
-<td>DOM and optional visual state</td>
+<td>DOM-derived page text</td>
 <td>Structured SOM text</td>
 </tr>
 <tr>
 <td><strong>Interactive elements</strong></td>
-<td><code>[backend_node_id]&lt;tag&gt;</code></td>
-<td><code>[N] role &quot;label&quot;</code></td>
+<td>Backend node ids</td>
+<td>SOM roles, ids, and actions</td>
 </tr>
 <tr>
 <td><strong>Dependencies</strong></td>
 <td>Chrome, Playwright</td>
-<td><code>plasmate</code> binary only</td>
+<td><code>plasmate</code> binary</td>
 </tr>
 <tr>
-<td><strong>Runtime</strong></td>
-<td>Full browser process</td>
-<td>Native Plasmate subprocess</td>
+<td><strong>Click / type</strong></td>
+<td>Playwright session</td>
+<td>Not included; use Browser Use or the Python SDK</td>
 </tr>
 </tbody></table>
-<p>SOM replaces DOM screenshots with structured text. Instead of parsing a raw DOM tree with thousands of nodes, the LLM sees a compact summary with numbered interactive elements:</p>
-<pre><code>[Tab] Hacker News
-[URL] https://news.ycombinator.com
-
---- navigation &quot;Main menu&quot; ---
-  [1] link &quot;Hacker News&quot; -&gt; /
-  [2] link &quot;new&quot; -&gt; /newest
-  [3] link &quot;past&quot; -&gt; /front
-
---- main ---
-  [4] link &quot;Show HN: Something Cool&quot; -&gt; https://example.com
-  142 points by someone
-  [5] link &quot;89 comments&quot; -&gt; /item?id=12345678
-</code></pre>
-<p>The lightweight extractor package also exposes <code>extract_action_plan()</code> and
+<p>The lightweight extractor also exposes <code>extract_action_plan()</code> and
 <code>extract_action_plan_async()</code> for agents that want only reusable action
 targets. Those targets carry <code>enabled</code>, disabled/inert <code>blocked_reason</code>, <code>required</code>,
 <code>description</code>, <code>placeholder</code>, <code>group</code>, <code>current</code>, <code>controls</code>, and <code>haspopup</code>
@@ -570,10 +539,8 @@ attempted, and by a median 9.32x across 82 successful JavaScript inputs out of
 98 attempted. Results vary by page. These are serialized-byte ratios, not
 universal token, cost, latency, or task-success guarantees; measure the complete
 Browser Use workflow with your target pages and model.</p>
-<h2 id="api-reference">API Reference</h2><h3 id="plasmatebrowser">`PlasmateBrowser`</h3><pre><code class="language-python">PlasmateBrowser(
-    binary=&quot;plasmate&quot;,   # Path to plasmate binary
-    timeout=30,          # Response timeout in seconds
-    budget=None,         # Optional SOM token budget
+<h2 id="api-reference">API Reference</h2><h3 id="plasmateextractor">`PlasmateExtractor`</h3><pre><code class="language-python">PlasmateExtractor(
+    plasmate_bin=&quot;plasmate&quot;,  # Path to plasmate binary
 )
 </code></pre>
 <table>
@@ -585,130 +552,51 @@ Browser Use workflow with your target pages and model.</p>
 </tr>
 </thead>
 <tbody><tr>
-<td><code>navigate(url)</code></td>
-<td>Open a URL in a persistent session</td>
-<td><code>PageState</code></td>
-</tr>
-<tr>
-<td><code>click(element_index)</code></td>
-<td>Click element by its <code>[N]</code> index</td>
-<td><code>PageState</code></td>
-</tr>
-<tr>
-<td><code>type_text(element_index, text)</code></td>
-<td>Type into an input/textarea</td>
-<td><code>PageState</code></td>
-</tr>
-<tr>
-<td><code>get_state()</code></td>
-<td>Get current page state as SOM</td>
-<td><code>PageState</code></td>
-</tr>
-<tr>
-<td><code>screenshot()</code></td>
-<td>Returns <code>None</code> (no visual rendering)</td>
-<td><code>None</code></td>
-</tr>
-<tr>
-<td><code>close()</code></td>
-<td>Close session and shut down process</td>
-<td>-</td>
-</tr>
-</tbody></table>
-<h3 id="pagestate">`PageState`</h3><table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>url</code></td>
-<td><code>str</code></td>
-<td>Current page URL</td>
-</tr>
-<tr>
-<td><code>title</code></td>
-<td><code>str</code></td>
-<td>Page title</td>
-</tr>
-<tr>
-<td><code>text</code></td>
-<td><code>str</code></td>
-<td>SOM text for the LLM</td>
-</tr>
-<tr>
-<td><code>interactive_elements</code></td>
-<td><code>list[InteractiveElement]</code></td>
-<td>All clickable/typeable elements</td>
-</tr>
-<tr>
-<td><code>selector_map</code></td>
-<td><code>dict[int, InteractiveElement]</code></td>
-<td>Index -&gt; element lookup</td>
-</tr>
-<tr>
-<td><code>som</code></td>
+<td><code>extract(url, selector=None, javascript=True)</code></td>
+<td>Fetch a URL as parsed SOM</td>
 <td><code>dict</code></td>
-<td>Raw SOM dict</td>
 </tr>
 <tr>
-<td><code>som_tokens</code></td>
-<td><code>int</code></td>
-<td>Estimated token count</td>
-</tr>
-<tr>
-<td><code>html_bytes</code></td>
-<td><code>int</code></td>
-<td>Original HTML size</td>
-</tr>
-<tr>
-<td><code>som_bytes</code></td>
-<td><code>int</code></td>
-<td>SOM output size</td>
-</tr>
-</tbody></table>
-<h3 id="interactiveelement">`InteractiveElement`</h3><table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>index</code></td>
-<td><code>int</code></td>
-<td>Integer index (<code>[N]</code> in SOM text)</td>
-</tr>
-<tr>
-<td><code>som_id</code></td>
+<td><code>get_page_context(url, selector=None, javascript=True)</code></td>
+<td>Formatted SOM text for an LLM</td>
 <td><code>str</code></td>
-<td>Original SOM element ID</td>
 </tr>
 <tr>
-<td><code>role</code></td>
+<td><code>extract_markdown(url, selector=None, javascript=True)</code></td>
+<td>SOM content as markdown</td>
 <td><code>str</code></td>
-<td><code>link</code>, <code>button</code>, <code>text_input</code>, etc.</td>
 </tr>
 <tr>
-<td><code>text</code></td>
-<td><code>str</code></td>
-<td>Display text or label</td>
+<td><code>extract_action_plan(url, javascript=True)</code></td>
+<td>Compact reusable action targets</td>
+<td><code>list[dict]</code></td>
 </tr>
 <tr>
-<td><code>attrs</code></td>
+<td><code>extract_action_plan_index(url, enabled_only=False, javascript=True)</code></td>
+<td>Action targets indexed for replay</td>
 <td><code>dict</code></td>
-<td>Role-specific attributes</td>
+</tr>
+<tr>
+<td><code>find_action_target(url, value, ...)</code></td>
+<td>Resolve one target by SOM id, cache key, HTML id, or test id</td>
+<td><code>dict</code> or <code>None</code></td>
+</tr>
+<tr>
+<td><code>find_action_targets_by_role(url, role, ...)</code></td>
+<td>Action targets with a SOM role</td>
+<td><code>list[dict]</code></td>
+</tr>
+<tr>
+<td><code>find_action_targets_by_action(url, action, ...)</code></td>
+<td>Action targets exposing an action</td>
+<td><code>list[dict]</code></td>
 </tr>
 </tbody></table>
+<p>Async variants exist for each method (<code>extract_async</code>, <code>get_page_context_async</code>, and so on).</p>
 <h2 id="known-limitations">Known Limitations</h2><ul>
-<li><strong>No screenshots</strong> -  Plasmate has no visual rendering. Agents that rely on screenshots (CAPTCHA, visual layout) should use the Playwright backend.</li>
-<li><strong>No coordinate-based clicking</strong> -  all interactions use SOM element IDs, not pixel coordinates.</li>
-<li><strong>No file uploads</strong> -  the <code>upload_file</code> action is not supported.</li>
-<li><strong>No scroll position</strong> -  Plasmate renders the full page. No concept of viewport or scroll.</li>
-<li><strong>Single tab</strong> -  each <code>PlasmateBrowser</code> instance maintains one session. Create multiple instances for multi-tab workflows.</li>
+<li><strong>Read-only extractor</strong> - <code>PlasmateExtractor</code> does not click, type, navigate a session, or replace Playwright.</li>
+<li><strong>No screenshots</strong> - agents that need pixels should keep Browser Use&#39;s Playwright backend or use Plasmate <code>inspect_page</code>.</li>
+<li><strong>No file uploads</strong> - the extractor has no upload API.</li>
 </ul>
 
     </main>

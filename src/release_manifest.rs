@@ -1138,6 +1138,34 @@ mod tests {
     }
 
     #[test]
+    fn browser_use_docs_use_shipped_extractor_not_missing_browser() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        for rel in [
+            "website/docs/src/integration-browser-use.md",
+            "website/docs/integration-browser-use.html",
+        ] {
+            let content = fs::read_to_string(root.join(rel))
+                .unwrap_or_else(|error| panic!("read Browser Use docs {rel}: {error}"));
+            assert!(
+                !content.contains("from plasmate_browser_use import PlasmateBrowser"),
+                "{rel} still imports a missing PlasmateBrowser class"
+            );
+            assert!(
+                !content.contains("PlasmateBrowser("),
+                "{rel} still constructs a missing PlasmateBrowser"
+            );
+            assert!(
+                content.contains("from plasmate_browser_use import PlasmateExtractor"),
+                "{rel} should use the shipped PlasmateExtractor"
+            );
+            assert!(
+                content.contains("get_page_context"),
+                "{rel} should show the shipped page-context helper"
+            );
+        }
+    }
+
+    #[test]
     fn vercel_ai_docs_point_at_live_install_docs_not_plasmate_dev() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
         for rel in [
