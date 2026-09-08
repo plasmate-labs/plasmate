@@ -1883,6 +1883,24 @@ pub async fn handle_evaluate(arguments: &Value, sessions: &Arc<SessionManager>) 
     }
 }
 
+fn resolve_click_fetch_url(current_url: &str, href: &str) -> Option<String> {
+    let href = href.trim();
+    if href.is_empty() {
+        return None;
+    }
+    let resolved = if let Ok(parsed) = url::Url::parse(href) {
+        parsed
+    } else if let Ok(base) = url::Url::parse(current_url) {
+        base.join(href).ok()?
+    } else {
+        return None;
+    };
+    match resolved.scheme() {
+        "http" | "https" => Some(resolved.to_string()),
+        _ => None,
+    }
+}
+
 /// Handle the click tool call.
 ///
 /// Simulates a click on an element by:
@@ -2003,7 +2021,6 @@ pub async fn handle_click(
         return error_response(err);
     }
 
-    // Check if we need to navigate to a new URL
     let new_url = if click_data
         .get("navigated")
         .and_then(|v| v.as_bool())
@@ -2012,21 +2029,13 @@ pub async fn handle_click(
         click_data
             .get("href")
             .and_then(|v| v.as_str())
-            .map(|s| s.to_string())
+            .and_then(|href| resolve_click_fetch_url(&url, href))
     } else {
         None
     };
 
     // If we navigated, fetch the new page
-    let (final_html, final_url) = if let Some(href) = new_url {
-        // Resolve relative URLs against the current page URL
-        let resolved = if href.starts_with("http://") || href.starts_with("https://") {
-            href
-        } else if let Ok(base) = url::Url::parse(&url) {
-            base.join(&href).map(|u| u.to_string()).unwrap_or(href)
-        } else {
-            href
-        };
+    let (final_html, final_url) = if let Some(resolved) = new_url {
         match fetch::fetch_url(client, &resolved, DEFAULT_TIMEOUT_MS).await {
             Ok(r) => (r.html, r.url),
             Err(e) => {
@@ -3756,6 +3765,42 @@ mod tests {
         let payload = tool_payload(&clicked);
         assert_eq!(payload["title"], "Pay");
         assert!(payload["regions"].is_array(), "{payload}");
+    }
+
+    #[test]
+    fn resolve_click_fetch_url_keeps_http_targets() {
+        assert_eq!(
+            resolve_click_fetch_url("https://example.test/page", "https://example.test/next"),
+            Some("https://example.test/next".to_string())
+        );
+        assert_eq!(
+            resolve_click_fetch_url("https://example.test/page", "/relative"),
+            Some("https://example.test/relative".to_string())
+        );
+        assert_eq!(
+            resolve_click_fetch_url("https://example.test/page", "http://example.test/insecure"),
+            Some("http://example.test/insecure".to_string())
+        );
+    }
+
+    #[test]
+    fn resolve_click_fetch_url_skips_non_http_schemes() {
+        assert_eq!(
+            resolve_click_fetch_url("https://example.test/page", "javascript:void(0)"),
+            None
+        );
+        assert_eq!(
+            resolve_click_fetch_url("https://example.test/page", "mailto:team@example.test"),
+            None
+        );
+        assert_eq!(
+            resolve_click_fetch_url("https://example.test/page", "tel:+15555550100"),
+            None
+        );
+        assert_eq!(
+            resolve_click_fetch_url("https://example.test/page", "  "),
+            None
+        );
     }
 
     #[tokio::test]
