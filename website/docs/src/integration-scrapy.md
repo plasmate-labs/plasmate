@@ -1,70 +1,47 @@
 # Scrapy Integration
 
-Use Plasmate through a downloader middleware for supported Scrapy workflows.
-Verify the adapter's current package, Scrapy version range, and tests.
+Use the shipped [Python SDK](sdk-python) inside Scrapy spiders when you need structured SOM instead of raw HTML. Output size and token use depend on the page and model tokenizer.
 
-## Install
+This repository does not ship a `scrapy_plasmate` package or downloader middleware. Call `Plasmate.fetch_page` from spider code.
+
+## Installation
 
 ```bash
-pip install plasmate scrapy-plasmate
+pip install plasmate scrapy
 ```
 
-## Setup
+Requires the `plasmate` binary on your PATH.
 
-Add to your Scrapy project's `settings.py`:
-
-```python
-DOWNLOADER_MIDDLEWARES = {
-    'scrapy_plasmate.PlasmateDownloaderMiddleware': 543,
-}
-```
-
-## Usage
+## Quick Start
 
 ```python
 import scrapy
-from scrapy_plasmate.utils import extract_text, extract_links
+from plasmate import Plasmate
 
-class MySpider(scrapy.Spider):
-    name = 'my_spider'
-    start_urls = ['https://example.com']
+
+class ExampleSpider(scrapy.Spider):
+    name = "example"
+    start_urls = ["https://example.com"]
 
     def parse(self, response):
-        som = response.meta.get('plasmate_som', {})
+        with Plasmate() as client:
+            som = client.fetch_page(response.url, selector="main")
         yield {
-            'url': response.url,
-            'title': som.get('title', ''),
-            'text': extract_text(som),
-            'links': extract_links(som),
+            "url": response.url,
+            "title": som.get("title", ""),
+            "regions": som.get("regions"),
         }
 ```
 
-## How It Works
+When the spider only needs readable text or outbound URLs, use `extract_text` or `extract_links` on the same client instead of a second HTML parse.
 
-The middleware intercepts requests and routes them through Plasmate instead of the default HTTP downloader. The SOM is stored in `response.meta['plasmate_som']` for easy access in your spider.
+## Fetch vs middleware
 
-If Plasmate fails for any URL, the middleware falls back to the standard Scrapy downloader automatically.
+There is no shipped downloader middleware, `response.meta` SOM hook, or automatic Scrapy fallback. Persistent click/type flows use `open_page` on the same client; see the Python SDK.
 
-## Utilities
-
-```python
-from scrapy_plasmate.utils import (
-    extract_text,      # All text content
-    extract_links,     # All links with text
-    extract_headings,  # All headings with levels
-    extract_tables,    # Table data
-)
-```
-
-## Settings
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `PLASMATE_ENABLED` | `True` | Enable/disable the middleware |
-| `PLASMATE_TIMEOUT` | `30` | Timeout in seconds per request |
-| `PLASMATE_JAVASCRIPT` | `True` | Enable JavaScript execution |
+SOM removes non-semantic markup, but token and cost differences vary with the pages and model tokenizer. Benchmark the full crawl before planning context or spend.
 
 ## Links
 
-- [GitHub](https://github.com/plasmate-labs/scrapy-plasmate)
 - [Scrapy Docs](https://docs.scrapy.org)
+- [Plasmate Python SDK](sdk-python)

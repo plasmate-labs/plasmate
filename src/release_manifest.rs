@@ -1166,6 +1166,42 @@ mod tests {
     }
 
     #[test]
+    fn scrapy_docs_use_shipped_python_sdk_not_a_missing_middleware_package() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        for rel in [
+            "website/docs/src/integration-scrapy.md",
+            "website/docs/integration-scrapy.html",
+        ] {
+            let content = fs::read_to_string(root.join(rel))
+                .unwrap_or_else(|error| panic!("read Scrapy docs {rel}: {error}"));
+            assert!(
+                !content.contains("from scrapy_plasmate"),
+                "{rel} still imports a missing scrapy_plasmate module"
+            );
+            assert!(
+                !content.contains("pip install plasmate scrapy-plasmate"),
+                "{rel} still installs a missing scrapy-plasmate package"
+            );
+            assert!(
+                !content.contains("PlasmateDownloaderMiddleware"),
+                "{rel} still names a missing downloader middleware"
+            );
+            assert!(
+                !content.contains("github.com/plasmate-labs/scrapy-plasmate"),
+                "{rel} still points at a missing scrapy-plasmate GitHub repo"
+            );
+            assert!(
+                content.contains("from plasmate import Plasmate"),
+                "{rel} should use the shipped Python SDK"
+            );
+            assert!(
+                content.contains("fetch_page"),
+                "{rel} should show the shipped fetch_page helper"
+            );
+        }
+    }
+
+    #[test]
     fn vercel_ai_docs_point_at_live_install_docs_not_plasmate_dev() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
         for rel in [
