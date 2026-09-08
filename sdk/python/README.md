@@ -76,6 +76,7 @@ with Plasmate() as browser:
 ### Stateful (interactive sessions)
 
 - **`open_page(url)`** - Returns dict with `session_id` and `som`
+- **`navigate_to(session_id, url)`** - Load a new URL in the same session, get updated SOM
 - **`evaluate(session_id, expression)`** - Run JS, get result
 - **`click(session_id, element_id)`** - Click element, get updated SOM
 - **`type_text(session_id, element_id, text, *, append=False)`** - Type into an input or textarea, get updated SOM

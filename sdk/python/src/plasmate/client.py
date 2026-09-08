@@ -337,6 +337,22 @@ class Plasmate:
         """
         return self._call_tool("open_page", {"url": url})
 
+    def navigate_to(self, session_id: str, url: str) -> dict:
+        """
+        Navigate to a new URL within an existing browser session.
+
+        Args:
+            session_id: Session ID from open_page
+            url: URL to navigate to
+
+        Returns:
+            Updated page SOM for the same session
+        """
+        return self._call_tool("navigate_to", {
+            "session_id": session_id,
+            "url": url,
+        })
+
     def evaluate(self, session_id: str, expression: str) -> Any:
         """
         Execute JavaScript in the page context.
@@ -572,6 +588,13 @@ class AsyncPlasmate:
     async def open_page(self, url: str) -> dict:
         """Open a page in a persistent browser session."""
         return await self._call_tool("open_page", {"url": url})
+
+    async def navigate_to(self, session_id: str, url: str) -> dict:
+        """Navigate to a new URL within an existing browser session."""
+        return await self._call_tool("navigate_to", {
+            "session_id": session_id,
+            "url": url,
+        })
 
     async def evaluate(self, session_id: str, expression: str) -> Any:
         """Execute JavaScript in the page context."""
