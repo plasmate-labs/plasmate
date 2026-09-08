@@ -33,6 +33,51 @@ describe('read selectors', () => {
   });
 });
 
+describe('extractText payload', () => {
+  it('keeps JSON-looking and empty extract_text as strings', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'plasmate-node-sdk-'));
+    const fixture = join(directory, 'mcp-fixture.js');
+    writeFileSync(
+      fixture,
+      `#!/usr/bin/env node
+import { createInterface } from 'node:readline';
+
+const send = (value) => process.stdout.write(JSON.stringify(value) + '\\n');
+const input = createInterface({ input: process.stdin });
+
+input.on('line', (line) => {
+  const request = JSON.parse(line);
+  if (request.method === 'initialize') {
+    send({ jsonrpc: '2.0', id: request.id, result: { protocolVersion: '2024-11-05' } });
+  } else if (request.method === 'tools/call') {
+    const name = request.params.name;
+    const text = name === 'extract_text'
+      ? (request.params.arguments.url === 'empty' ? '' : '{"headline":"ok"}')
+      : JSON.stringify({ title: 'Example' });
+    send({
+      jsonrpc: '2.0',
+      id: request.id,
+      result: { content: [{ type: 'text', text }] },
+    });
+  }
+});
+`,
+      'utf8',
+    );
+    chmodSync(fixture, 0o755);
+
+    const browser = new Plasmate({ binary: fixture });
+    try {
+      assert.equal(await browser.extractText('json-page'), '{"headline":"ok"}');
+      assert.equal(await browser.extractText('empty'), '');
+      assert.deepEqual(await browser.fetchPage('fixture'), { title: 'Example' });
+    } finally {
+      browser.close();
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+});
+
 describe('evaluate payload', () => {
   it('returns the JS value instead of the MCP result envelope', async () => {
     const browser = new Plasmate({ binary: 'unused' });
