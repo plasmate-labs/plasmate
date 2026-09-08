@@ -2321,7 +2321,10 @@ pub async fn handle_navigate_to(
         .with_session(&params.session_id, |_session| {})
         .await;
     if exists.is_none() {
-        return error_response(&format!("Session not found: {}", params.session_id));
+        return error_response(&format!(
+            "Session not found: {}. Call open_page with a URL to create a session.",
+            params.session_id
+        ));
     }
 
     let (html, final_url, page_result, cache_restored) =
@@ -3607,6 +3610,32 @@ mod tests {
             !text.contains("open_page"),
             "empty sessions should reuse navigate_to, not open another session: {text}"
         );
+    }
+
+    #[tokio::test]
+    async fn navigate_to_missing_session_names_open_page() {
+        let sessions = Arc::new(SessionManager::new());
+        let client = reqwest::Client::new();
+        let cache = Arc::new(SomCache::new(CacheConfig::default()));
+
+        let result = handle_navigate_to(
+            &json!({"session_id": "sess-missing", "url": "https://example.com/checkout"}),
+            &client,
+            &sessions,
+            &cache,
+        )
+        .await;
+
+        assert_eq!(result["isError"], true);
+        let text = result["content"][0]["text"].as_str().unwrap();
+        assert!(text.contains("Session not found: sess-missing"), "{text}");
+        assert!(text.contains("open_page"), "{text}");
+        assert!(
+            !text.contains("navigate_to"),
+            "missing sessions need open_page, not another navigate_to: {text}"
+        );
+        assert!(!text.contains("https://example.com/checkout"), "{text}");
+        assert!(!text.contains("http"), "{text}");
     }
 
     #[tokio::test]
