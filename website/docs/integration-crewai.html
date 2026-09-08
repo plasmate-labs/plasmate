@@ -458,81 +458,52 @@
     </nav>
     <main class="content">
       <h1 id="crewai-integration">CrewAI Integration</h1><p>Give your CrewAI agents structured SOM pages instead of raw HTML scraping. The resulting context size depends on the page and model tokenizer.</p>
-<p>Source: <a href="https://github.com/plasmate-labs/plasmate/tree/master/integrations/crewai"><code>integrations/crewai/</code></a></p>
-<h2 id="installation">Installation</h2><pre><code class="language-bash">pip install plasmate crewai crewai-tools
+<p>This repository does not ship a <code>plasmate.integrations.crewai</code> package. Wrap the shipped <a href="sdk-python">Python SDK</a> as a CrewAI tool.</p>
+<h2 id="installation">Installation</h2><pre><code class="language-bash">pip install plasmate crewai
 </code></pre>
-<h2 id="quick-start">Quick Start</h2><pre><code class="language-python">from crewai import Agent, Task, Crew
-from plasmate.integrations.crewai import PlasmateWebTool
+<p>Requires the <code>plasmate</code> binary on your PATH.</p>
+<h2 id="quick-start">Quick Start</h2><pre><code class="language-python">from typing import Type
 
-# Create the Plasmate browsing tool
-browse = PlasmateWebTool()
+from crewai import Agent, Task, Crew
+from crewai.tools import BaseTool
+from pydantic import BaseModel, Field
+from plasmate import Plasmate
 
-# Create an agent with web access
+
+class FetchPageInput(BaseModel):
+    url: str = Field(..., description=&quot;Public URL to fetch as SOM&quot;)
+
+
+class PlasmateFetchTool(BaseTool):
+    name: str = &quot;plasmate_fetch&quot;
+    description: str = (
+        &quot;Fetch a web page and return structured SOM instead of raw HTML.&quot;
+    )
+    args_schema: Type[BaseModel] = FetchPageInput
+
+    def _run(self, url: str) -&gt; str:
+        with Plasmate() as client:
+            return str(client.fetch_page(url))
+
+
 researcher = Agent(
     role=&quot;Web Researcher&quot;,
     goal=&quot;Find and summarize information from the web&quot;,
     backstory=&quot;Expert at extracting key information from web pages.&quot;,
-    tools=[browse],
+    tools=[PlasmateFetchTool()],
 )
 
-# Define a task
 task = Task(
     description=&quot;Research the top stories on Hacker News and summarize them.&quot;,
     expected_output=&quot;A bullet-point summary of the top 5 stories.&quot;,
     agent=researcher,
 )
 
-# Run the crew
 crew = Crew(agents=[researcher], tasks=[task])
 result = crew.kickoff()
 print(result)
 </code></pre>
-<h2 id="available-tools">Available Tools</h2><h3 id="plasmatewebtool">`PlasmateWebTool`</h3><p>Fetches a URL and returns SOM text. Use it in place of <code>ScrapeWebsiteTool</code> when your workflow benefits from semantic regions and indexed actions.</p>
-<pre><code class="language-python">from plasmate.integrations.crewai import PlasmateWebTool
-
-tool = PlasmateWebTool()
-# Agents invoke it automatically when they need web content
-</code></pre>
-<h3 id="plasmatebrowsetool">`PlasmateBrowseTool`</h3><p>Persistent browser session with navigate, click, and type actions for multi-step workflows.</p>
-<pre><code class="language-python">from plasmate.integrations.crewai import PlasmateBrowseTool
-
-tool = PlasmateBrowseTool()
-# Supports: navigate(url), click(index), type(index, text)
-</code></pre>
-<h2 id="why-plasmate-for-crewai">Why Plasmate for CrewAI?</h2><table>
-<thead>
-<tr>
-<th></th>
-<th>ScrapeWebsiteTool</th>
-<th>PlasmateWebTool</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><strong>Output</strong></td>
-<td>Raw HTML/text</td>
-<td>Structured SOM</td>
-</tr>
-<tr>
-<td><strong>Context representation</strong></td>
-<td>Raw HTML/text</td>
-<td>Structured SOM</td>
-</tr>
-<tr>
-<td><strong>Interactive elements</strong></td>
-<td>Lost</td>
-<td>Indexed <code>[N]</code></td>
-</tr>
-<tr>
-<td><strong>Multi-step browsing</strong></td>
-<td>❌</td>
-<td>✅</td>
-</tr>
-<tr>
-<td><strong>Dependencies</strong></td>
-<td>requests + beautifulsoup</td>
-<td><code>plasmate</code> binary</td>
-</tr>
-</tbody></table>
+<h2 id="fetch-vs-scrape">Fetch vs scrape</h2><p>Use <code>Plasmate.fetch_page</code> in place of HTML scrapers when the crew needs semantic regions and actions. Persistent click/type flows use <code>open_page</code> on the same client; see the Python SDK.</p>
 <p>SOM removes non-semantic markup, but token and cost differences vary with the
 pages, prompts, and model tokenizer. Benchmark the full crew workflow before
 planning context or spend.</p>
