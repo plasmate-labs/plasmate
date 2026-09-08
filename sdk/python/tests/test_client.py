@@ -41,6 +41,39 @@ def test_async_read_methods_forward_selector() -> None:
     asyncio.run(exercise())
 
 
+def test_sync_navigate_to_forwards_session_and_url() -> None:
+    browser = Plasmate()
+    calls = Mock(side_effect=[{}])
+    browser._call_tool = calls  # type: ignore[method-assign]
+
+    assert browser.navigate_to("s1", "https://example.test/next") == {}
+
+    assert calls.call_args_list == [
+        call(
+            "navigate_to",
+            {"session_id": "s1", "url": "https://example.test/next"},
+        ),
+    ]
+
+
+def test_async_navigate_to_forwards_session_and_url() -> None:
+    async def exercise() -> None:
+        browser = AsyncPlasmate()
+        calls = AsyncMock(side_effect=[{}])
+        browser._call_tool = calls  # type: ignore[method-assign]
+
+        assert await browser.navigate_to("s1", "https://example.test/next") == {}
+
+        assert calls.call_args_list == [
+            call(
+                "navigate_to",
+                {"session_id": "s1", "url": "https://example.test/next"},
+            ),
+        ]
+
+    asyncio.run(exercise())
+
+
 def test_sync_type_text_forwards_session_target_and_append() -> None:
     browser = Plasmate()
     calls = Mock(side_effect=[{}, {}])
