@@ -33,11 +33,11 @@ frequency.
 If these gates are not met, report a no-change or blocked run. Never stash,
 overwrite, reset, or absorb unrelated work.
 
-## Active governor constraint (2026-09-07)
+## Active governor constraint (2026-09-08)
 
-- Window: `2de5a66` .. `1f06fa2`
+- Window: `07d26ba` .. `c5428ac`
 - Decision: `NARROW`
-- Merged this run: `4193616` CrewAI shipped Python SDK docs (`812b2ba`), `1b4523f` navigate_to missing-session `open_page` (`e038d6b`), `d830e84` close_page missing-session idempotent (`ed20373`), and `9c9237a` Vercel AI live install docs (`1f06fa2`)
+- Merged this run: `ecca971` Browser Use shipped extractor docs (`142f4f9`) and `09a1b80` Scrapy shipped Python SDK docs (`c5428ac`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -436,14 +436,20 @@ overwrite, reset, or absorb unrelated work.
    do not suggest `open_page` on close_page.
    Do not copy #362 Vercel AI `docs.plasmate.app/install` recovery onto
    Go SDK, schema `$id`, marketing, CrewAI, OpenClaw, or Pi.
+   Do not copy #364 Browser Use `PlasmateExtractor` docs onto Scrapy,
+   Smolagents, AutoGen, Pi, or OpenClaw pages; do not invent
+   `PlasmateBrowser` session `navigate()` / `click()` / `type_text()`.
+   Do not copy #365 Scrapy Python SDK spider docs onto Browser Use,
+   Smolagents, AutoGen, or other scraper pages; do not invent
+   `scrapy-plasmate` or `PlasmateDownloaderMiddleware`.
 - Allowed next (pick one distinct journey): a real missed regression;
    a published-docs integration failure that is not another SDK
-   install-path, SOM-reference, OpenClaw/Pi, CrewAI, or Vercel AI
-   rewrite; or bounded agent-task recovery that is not another IDL
-   getter, querySelector pseudo, inspect-compact field, compile-attr
-   copy, MCP empty-session error-text copy, open_page capacity
-   error-text copy, navigate_to missing-session error-text copy, or
-   close_page idempotent-success copy.
+   install-path, SOM-reference, OpenClaw/Pi, CrewAI, Vercel AI,
+   Browser Use, or Scrapy rewrite; or bounded agent-task recovery that
+   is not another IDL getter, querySelector pseudo, inspect-compact
+   field, compile-attr copy, MCP empty-session error-text copy,
+   open_page capacity error-text copy, navigate_to missing-session
+   error-text copy, or close_page idempotent-success copy.
 
 ## Preferred lanes
 
