@@ -139,6 +139,43 @@ def test_fetch_tool_async_forwards_fetch_options() -> None:
     )
 
 
+def test_browser_navigate_opens_when_no_session() -> None:
+    client = Mock()
+    som = _som()
+    client.open_page.return_value = {"session_id": "sess-1", "som": som}
+    browser = PlasmateBrowser(client=client)
+
+    result = browser.navigate("https://example.test/")
+
+    client.open_page.assert_called_once_with("https://example.test/")
+    client.close_page.assert_not_called()
+    client._call_tool.assert_not_called()
+    assert browser.session_id == "sess-1"
+    assert result == som
+
+
+def test_browser_navigate_reuses_session_via_navigate_to() -> None:
+    client = Mock()
+    som = _som()
+    client._call_tool.return_value = som
+    browser = PlasmateBrowser(client=client)
+    browser.session_id = "sess-1"
+
+    result = browser.navigate("https://example.test/next")
+
+    client._call_tool.assert_called_once_with(
+        "navigate_to",
+        {
+            "session_id": "sess-1",
+            "url": "https://example.test/next",
+        },
+    )
+    client.close_page.assert_not_called()
+    client.open_page.assert_not_called()
+    assert browser.session_id == "sess-1"
+    assert result == som
+
+
 def test_browser_type_text_calls_mcp_type_text() -> None:
     client = Mock()
     client._call_tool.return_value = _som()

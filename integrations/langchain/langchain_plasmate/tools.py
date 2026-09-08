@@ -41,12 +41,22 @@ class PlasmateBrowser:
         self.session_id: Optional[str] = None
 
     def navigate(self, url: str) -> dict:
-        """Open *url* in a new or replacement session. Returns the SOM."""
+        """Open *url*, reusing the live session when one already exists.
+
+        First call uses ``open_page``. Later calls forward MCP ``navigate_to``
+        so cookies and session state are not dropped by close/reopen.
+        """
         if self.session_id:
-            try:
-                self.client.close_page(self.session_id)
-            except Exception:
-                pass
+            result = self.client._call_tool(
+                "navigate_to",
+                {
+                    "session_id": self.session_id,
+                    "url": url,
+                },
+            )
+            if isinstance(result, dict):
+                return result.get("som", result)
+            return result
         result = self.client.open_page(url)
         self.session_id = result["session_id"]
         return result.get("som", result)
@@ -166,8 +176,9 @@ class PlasmateFetchTool(BaseTool):
 class PlasmateNavigateTool(BaseTool):
     """Navigate to a URL in a persistent browser session.
 
-    Opens (or replaces) the current browser session. Subsequent
-    ``plasmate_click`` and ``plasmate_type`` calls will target this page.
+    Opens a session on the first call and reuses it via ``navigate_to``
+    afterwards. Subsequent ``plasmate_click`` and ``plasmate_type`` calls
+    target this page.
     """
 
     name: str = "plasmate_navigate"
