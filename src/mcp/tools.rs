@@ -1715,7 +1715,7 @@ pub fn click_definition() -> ToolDefinition {
 pub fn close_page_definition() -> ToolDefinition {
     ToolDefinition {
         name: "close_page".to_string(),
-        description: "Close a browser session and free its slot. Use this when open_page reports maximum sessions reached; pass one live session_id from that error or from session_status.".to_string(),
+        description: "Close a browser session and free its slot. Use this when open_page reports maximum sessions reached; pass one live session_id from that error or from session_status. A missing session_id still returns closed=true so cleanup does not retry.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -3071,23 +3071,19 @@ pub async fn handle_close_page(arguments: &Value, sessions: &Arc<SessionManager>
 
     info!(session_id = %params.session_id, "close_page");
 
-    let closed = sessions.close_session(&params.session_id).await;
+    sessions.close_session(&params.session_id).await;
 
-    if closed {
-        json!({
-            "content": [
-                {
-                    "type": "text",
-                    "text": json!({
-                        "closed": true,
-                        "session_id": params.session_id
-                    }).to_string()
-                }
-            ]
-        })
-    } else {
-        error_response(&format!("Session not found: {}", params.session_id))
-    }
+    json!({
+        "content": [
+            {
+                "type": "text",
+                "text": json!({
+                    "closed": true,
+                    "session_id": params.session_id
+                }).to_string()
+            }
+        ]
+    })
 }
 
 // ============================================================================
@@ -3636,6 +3632,34 @@ mod tests {
         );
         assert!(!text.contains("https://example.com/checkout"), "{text}");
         assert!(!text.contains("http"), "{text}");
+    }
+
+    #[tokio::test]
+    async fn close_page_missing_session_is_idempotent() {
+        let sessions = Arc::new(SessionManager::new());
+        let session_id = sessions.create_session().await.unwrap();
+
+        let first = handle_close_page(&json!({"session_id": session_id}), &sessions).await;
+        assert!(first.get("isError").is_none(), "{first}");
+        let first_payload: serde_json::Value =
+            serde_json::from_str(first["content"][0]["text"].as_str().unwrap()).unwrap();
+        assert_eq!(first_payload["closed"], true);
+        assert_eq!(first_payload["session_id"], session_id);
+
+        let second = handle_close_page(&json!({"session_id": session_id}), &sessions).await;
+        assert!(second.get("isError").is_none(), "{second}");
+        let second_payload: serde_json::Value =
+            serde_json::from_str(second["content"][0]["text"].as_str().unwrap()).unwrap();
+        assert_eq!(second_payload["closed"], true);
+        assert_eq!(second_payload["session_id"], session_id);
+        assert!(
+            !second.to_string().contains("Session not found"),
+            "repeat close_page must not fail closed: {second}"
+        );
+        assert!(
+            !second.to_string().contains("open_page"),
+            "close_page cleanup must not start a new session: {second}"
+        );
     }
 
     #[tokio::test]
