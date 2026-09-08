@@ -1138,6 +1138,40 @@ mod tests {
     }
 
     #[test]
+    fn vercel_ai_docs_point_at_live_install_docs_not_plasmate_dev() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        for rel in [
+            "integrations/vercel-ai/README.md",
+            "integrations/vercel-ai/src/index.ts",
+        ] {
+            let content = fs::read_to_string(root.join(rel))
+                .unwrap_or_else(|error| panic!("read Vercel AI docs {rel}: {error}"));
+            assert!(
+                !content.contains("plasmate.dev"),
+                "{rel} still points agents at the 404 plasmate.dev host"
+            );
+            assert!(
+                content.contains("https://docs.plasmate.app/install"),
+                "{rel} should recover via the live install docs"
+            );
+            assert!(
+                !content.contains("Set of Marks"),
+                "{rel} still misnames SOM as Set of Marks"
+            );
+        }
+        let readme = fs::read_to_string(root.join("integrations/vercel-ai/README.md"))
+            .expect("read Vercel AI README");
+        assert!(
+            readme.contains("Semantic Object Model (SOM)"),
+            "README should name SOM as Semantic Object Model"
+        );
+        assert!(
+            readme.contains("https://docs.plasmate.app/som"),
+            "README should link the live SOM reference"
+        );
+    }
+
+    #[test]
     fn openclaw_docs_do_not_point_at_missing_in_tree_files_or_a_closed_tool_list() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
         for rel in [

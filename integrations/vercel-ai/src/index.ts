@@ -930,7 +930,7 @@ export async function createPlasmateTools(
   } catch (err) {
     throw new Error(
       `Failed to create Plasmate MCP transport (binary: "${binary}").\n` +
-        `Make sure plasmate is installed: https://plasmate.dev/docs/install\n` +
+        `Make sure plasmate is installed: https://docs.plasmate.app/install\n` +
         `Original error: ${err instanceof Error ? err.message : String(err)}`
     )
   }
@@ -942,7 +942,7 @@ export async function createPlasmateTools(
   } catch (err) {
     throw new Error(
       `Failed to start Plasmate MCP server (binary: "${binary}").\n` +
-        `Make sure plasmate is installed: https://plasmate.dev/docs/install\n` +
+        `Make sure plasmate is installed: https://docs.plasmate.app/install\n` +
         `Original error: ${err instanceof Error ? err.message : String(err)}`
     )
   }
