@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-08)
 
-- Window: `582d0f6` .. `2d177b3`
+- Window: `e4a6b2c` .. `0e2c469`
 - Decision: `NARROW`
-- Merged this run: `831f2b8` Node evaluate MCP result unwrap (`b88ac3a`) and `fd423f7` click non-http href in-page skip (`2d177b3`)
+- Merged this run: `7566aba` Node extract_text raw MCP string (`0e2c469`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -456,6 +456,10 @@ overwrite, reset, or absorb unrelated work.
    `navigate_to`, `type_text`, extract_links, or other handlers; do
    not treat `javascript:` / `mailto:` / `tel:` as fetch targets or
    change http(s) click navigation.
+   Do not copy #374 Node extract_text raw-string keep onto
+   fetch_page, extract_links, evaluate, or other tools that
+   still JSON.parse structured MCP payloads; do not change
+   the extract_text MCP wire format.
 - Allowed next (pick one distinct journey): a real missed regression;
    a published-docs integration failure that is not another SDK
    install-path, SOM-reference, OpenClaw/Pi, CrewAI, Vercel AI,
@@ -465,7 +469,8 @@ overwrite, reset, or absorb unrelated work.
    error-text copy, open_page capacity error-text copy, navigate_to
    missing-session error-text copy, close_page idempotent-success copy,
    Python/Node/Go SDK method add, LangChain session-navigate copy,
-   Node evaluate envelope unwrap, or click non-http scheme skip.
+   Node evaluate envelope unwrap, click non-http scheme skip, or
+   Node extract_text raw-string keep.
 
 ## Preferred lanes
 
