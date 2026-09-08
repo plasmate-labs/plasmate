@@ -119,6 +119,19 @@ function somFromOpenPage(result: OpenPagePayload): Som {
   };
 }
 
+function evaluateResult(payload: unknown): unknown {
+  if (
+    payload !== null &&
+    typeof payload === 'object' &&
+    !Array.isArray(payload) &&
+    Object.keys(payload).length === 1 &&
+    Object.prototype.hasOwnProperty.call(payload, 'result')
+  ) {
+    return (payload as { result: unknown }).result;
+  }
+  return payload;
+}
+
 export interface PlasmateOptions {
   /** Path to the plasmate binary. Default: "plasmate" (found in PATH) */
   binary?: string;
@@ -379,10 +392,12 @@ export class Plasmate extends EventEmitter {
    * @param expression - JavaScript expression to evaluate
    */
   async evaluate(sessionId: string, expression: string): Promise<unknown> {
-    return await this.callTool('evaluate', {
-      session_id: sessionId,
-      expression,
-    });
+    return evaluateResult(
+      await this.callTool('evaluate', {
+        session_id: sessionId,
+        expression,
+      }),
+    );
   }
 
   /**

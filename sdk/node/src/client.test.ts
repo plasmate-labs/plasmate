@@ -33,6 +33,37 @@ describe('read selectors', () => {
   });
 });
 
+describe('evaluate payload', () => {
+  it('returns the JS value instead of the MCP result envelope', async () => {
+    const browser = new Plasmate({ binary: 'unused' });
+    const client = browser as unknown as {
+      callTool: (name: string, args: Record<string, unknown>) => Promise<unknown>;
+    };
+    client.callTool = async (name, args) => {
+      assert.equal(name, 'evaluate');
+      assert.deepEqual(args, { session_id: 's1', expression: 'document.title' });
+      return { result: 'Example' };
+    };
+
+    assert.equal(await browser.evaluate('s1', 'document.title'), 'Example');
+    browser.close();
+  });
+
+  it('keeps non-envelope payloads unchanged', async () => {
+    const browser = new Plasmate({ binary: 'unused' });
+    const client = browser as unknown as {
+      callTool: (name: string, args: Record<string, unknown>) => Promise<unknown>;
+    };
+    client.callTool = async () => ({ result: 'Example', extra: true });
+
+    assert.deepEqual(await browser.evaluate('s1', 'document.title'), {
+      result: 'Example',
+      extra: true,
+    });
+    browser.close();
+  });
+});
+
 describe('openPage payload', () => {
   it('builds session.som from the flat MCP open_page fields', async () => {
     const browser = new Plasmate({ binary: 'unused' });
