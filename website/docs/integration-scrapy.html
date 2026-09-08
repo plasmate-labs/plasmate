@@ -457,67 +457,34 @@
       </div>
     </nav>
     <main class="content">
-      <h1 id="scrapy-integration">Scrapy Integration</h1><p>Use Plasmate through a downloader middleware for supported Scrapy workflows.
-Verify the adapter&#39;s current package, Scrapy version range, and tests.</p>
-<h2 id="install">Install</h2><pre><code class="language-bash">pip install plasmate scrapy-plasmate
+      <h1 id="scrapy-integration">Scrapy Integration</h1><p>Use the shipped <a href="sdk-python">Python SDK</a> inside Scrapy spiders when you need structured SOM instead of raw HTML. Output size and token use depend on the page and model tokenizer.</p>
+<p>This repository does not ship a <code>scrapy_plasmate</code> package or downloader middleware. Call <code>Plasmate.fetch_page</code> from spider code.</p>
+<h2 id="installation">Installation</h2><pre><code class="language-bash">pip install plasmate scrapy
 </code></pre>
-<h2 id="setup">Setup</h2><p>Add to your Scrapy project&#39;s <code>settings.py</code>:</p>
-<pre><code class="language-python">DOWNLOADER_MIDDLEWARES = {
-    &#39;scrapy_plasmate.PlasmateDownloaderMiddleware&#39;: 543,
-}
-</code></pre>
-<h2 id="usage">Usage</h2><pre><code class="language-python">import scrapy
-from scrapy_plasmate.utils import extract_text, extract_links
+<p>Requires the <code>plasmate</code> binary on your PATH.</p>
+<h2 id="quick-start">Quick Start</h2><pre><code class="language-python">import scrapy
+from plasmate import Plasmate
 
-class MySpider(scrapy.Spider):
-    name = &#39;my_spider&#39;
-    start_urls = [&#39;https://example.com&#39;]
+
+class ExampleSpider(scrapy.Spider):
+    name = &quot;example&quot;
+    start_urls = [&quot;https://example.com&quot;]
 
     def parse(self, response):
-        som = response.meta.get(&#39;plasmate_som&#39;, {})
+        with Plasmate() as client:
+            som = client.fetch_page(response.url, selector=&quot;main&quot;)
         yield {
-            &#39;url&#39;: response.url,
-            &#39;title&#39;: som.get(&#39;title&#39;, &#39;&#39;),
-            &#39;text&#39;: extract_text(som),
-            &#39;links&#39;: extract_links(som),
+            &quot;url&quot;: response.url,
+            &quot;title&quot;: som.get(&quot;title&quot;, &quot;&quot;),
+            &quot;regions&quot;: som.get(&quot;regions&quot;),
         }
 </code></pre>
-<h2 id="how-it-works">How It Works</h2><p>The middleware intercepts requests and routes them through Plasmate instead of the default HTTP downloader. The SOM is stored in <code>response.meta[&#39;plasmate_som&#39;]</code> for easy access in your spider.</p>
-<p>If Plasmate fails for any URL, the middleware falls back to the standard Scrapy downloader automatically.</p>
-<h2 id="utilities">Utilities</h2><pre><code class="language-python">from scrapy_plasmate.utils import (
-    extract_text,      # All text content
-    extract_links,     # All links with text
-    extract_headings,  # All headings with levels
-    extract_tables,    # Table data
-)
-</code></pre>
-<h2 id="settings">Settings</h2><table>
-<thead>
-<tr>
-<th>Setting</th>
-<th>Default</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>PLASMATE_ENABLED</code></td>
-<td><code>True</code></td>
-<td>Enable/disable the middleware</td>
-</tr>
-<tr>
-<td><code>PLASMATE_TIMEOUT</code></td>
-<td><code>30</code></td>
-<td>Timeout in seconds per request</td>
-</tr>
-<tr>
-<td><code>PLASMATE_JAVASCRIPT</code></td>
-<td><code>True</code></td>
-<td>Enable JavaScript execution</td>
-</tr>
-</tbody></table>
+<p>When the spider only needs readable text or outbound URLs, use <code>extract_text</code> or <code>extract_links</code> on the same client instead of a second HTML parse.</p>
+<h2 id="fetch-vs-middleware">Fetch vs middleware</h2><p>There is no shipped downloader middleware, <code>response.meta</code> SOM hook, or automatic Scrapy fallback. Persistent click/type flows use <code>open_page</code> on the same client; see the Python SDK.</p>
+<p>SOM removes non-semantic markup, but token and cost differences vary with the pages and model tokenizer. Benchmark the full crawl before planning context or spend.</p>
 <h2 id="links">Links</h2><ul>
-<li><a href="https://github.com/plasmate-labs/scrapy-plasmate">GitHub</a></li>
 <li><a href="https://docs.scrapy.org">Scrapy Docs</a></li>
+<li><a href="sdk-python">Plasmate Python SDK</a></li>
 </ul>
 
     </main>
