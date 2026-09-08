@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-07)
 
-- Window: `4626896` .. `28d97cc`
+- Window: `2de5a66` .. `1f06fa2`
 - Decision: `NARROW`
-- Merged this run: `7fc620b` OpenClaw docs MCP discovery (`5404cde`), `d975f5a` open_page capacity `close_page` (`dcdab1b`), and `77ea97a` empty-session `navigate_to` (`28d97cc`)
+- Merged this run: `4193616` CrewAI shipped Python SDK docs (`812b2ba`), `1b4523f` navigate_to missing-session `open_page` (`e038d6b`), `d830e84` close_page missing-session idempotent (`ed20373`), and `9c9237a` Vercel AI live install docs (`1f06fa2`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -425,12 +425,25 @@ overwrite, reset, or absorb unrelated work.
    empty loaded session.
    Do not copy #356 OpenClaw `tools/list` / skill-openclaw install onto
    Pi or other integration pages.
+   Do not copy #359 CrewAI shipped-SDK wrapper onto Smolagents, AutoGen,
+   Pi, or OpenClaw pages; do not invent `integrations/crewai/` or
+   `plasmate.integrations.crewai`.
+   Do not copy #360 navigate_to missing-session `open_page` onto click,
+   type_text, close_page, empty-session, capacity, AWP, CDP, or SDKs;
+   do not leak the requested URL.
+   Do not copy #361 close_page missing-session `closed=true` onto click,
+   type_text, navigate_to, empty-session, capacity, AWP, CDP, or SDKs;
+   do not suggest `open_page` on close_page.
+   Do not copy #362 Vercel AI `docs.plasmate.app/install` recovery onto
+   Go SDK, schema `$id`, marketing, CrewAI, OpenClaw, or Pi.
 - Allowed next (pick one distinct journey): a real missed regression;
    a published-docs integration failure that is not another SDK
-   install-path, SOM-reference, or OpenClaw/Pi rewrite; or bounded
-   agent-task recovery that is not another IDL getter, querySelector
-   pseudo, inspect-compact field, compile-attr copy, MCP empty-session
-   error-text copy, or open_page capacity error-text copy.
+   install-path, SOM-reference, OpenClaw/Pi, CrewAI, or Vercel AI
+   rewrite; or bounded agent-task recovery that is not another IDL
+   getter, querySelector pseudo, inspect-compact field, compile-attr
+   copy, MCP empty-session error-text copy, open_page capacity
+   error-text copy, navigate_to missing-session error-text copy, or
+   close_page idempotent-success copy.
 
 ## Preferred lanes
 
