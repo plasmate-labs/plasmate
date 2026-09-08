@@ -304,6 +304,8 @@ export class Plasmate extends EventEmitter {
     }
 
     const text = result.content?.[0]?.text;
+    if (typeof text !== 'string') return null;
+    if (name === 'extract_text') return text;
     if (!text) return null;
 
     // Try to parse as JSON, fall back to raw text
