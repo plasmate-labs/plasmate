@@ -33,11 +33,11 @@ frequency.
 If these gates are not met, report a no-change or blocked run. Never stash,
 overwrite, reset, or absorb unrelated work.
 
-## Active governor constraint (2026-09-08)
+## Active governor constraint (2026-09-09)
 
-- Window: `59e19da` .. `a57a109`
+- Window: `05b1aca` .. `1930b42`
 - Decision: `NARROW`
-- Merged this run: `1da467c` click compiled SOM envelope (`a57a109`)
+- Merged this run: `82b8d30` evaluate expression wrap normalize (`1930b42`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -464,6 +464,10 @@ overwrite, reset, or absorb unrelated work.
    `type_text`, `clear`, `toggle`, `select_option`, `scroll`,
    `navigate_to`, or SDKs; do not change those truncated
    title/url/regions/webmcp payloads as a one-surface copy.
+   Do not copy #378 evaluate trailing-semicolon / leading-return wrap
+   normalize onto other MCP handlers, SDKs, CLI, or CDP; do not change
+   the evaluate wrap IIFE or wrap other statement forms (`const`,
+   `let`, `await`, `throw`).
 - Allowed next (pick one distinct journey): a real missed regression;
    a published-docs integration failure that is not another SDK
    install-path, SOM-reference, OpenClaw/Pi, CrewAI, Vercel AI,
@@ -474,7 +478,8 @@ overwrite, reset, or absorb unrelated work.
    missing-session error-text copy, close_page idempotent-success copy,
    Python/Node/Go SDK method add, LangChain session-navigate copy,
    Node evaluate envelope unwrap, click non-http scheme skip,
-   Node extract_text raw-string keep, or click compiled SOM envelope.
+   Node extract_text raw-string keep, click compiled SOM envelope, or
+   evaluate expression wrap normalize.
 
 ## Preferred lanes
 
