@@ -1951,6 +1951,22 @@ fn compiled_link_href(element: &crate::som::types::Element) -> Option<&str> {
         .and_then(|value| value.as_str())
 }
 
+fn click_target_label(element: &crate::som::types::Element) -> &str {
+    element
+        .text
+        .as_deref()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+        .or_else(|| {
+            element
+                .label
+                .as_deref()
+                .map(str::trim)
+                .filter(|label| !label.is_empty())
+        })
+        .unwrap_or("")
+}
+
 fn resolve_click_navigation_url(
     click_data: &Value,
     current_url: &str,
@@ -2026,23 +2042,30 @@ pub async fn handle_click(
     }
 
     // Generate JavaScript to simulate click
-    // Resolve by data-plasmate-id, then compiled html_id, then tag/text fallback.
+    // Resolve by data-plasmate-id, then compiled html_id, then tag/text/value fallback.
     let element_id = params.element_id.clone();
     let html_id = serde_json::to_string(&element.html_id).unwrap_or_else(|_| "null".to_string());
+    let expected_label =
+        serde_json::to_string(click_target_label(element)).unwrap_or_else(|_| "\"\"".to_string());
     let click_js = format!(
         r#"
         (function() {{
             var htmlId = {};
+            var expected = {};
             var el = document.querySelector('[data-plasmate-id="{}"]');
             if (!el && htmlId !== null) {{
                 el = document.getElementById(htmlId);
             }}
 
-            if (!el) {{
-                var allEls = document.querySelectorAll('a, button, input[type="submit"], [role="button"]');
+            if (!el && expected) {{
+                var allEls = document.querySelectorAll('a, button, input[type="submit"], input[type="button"], input[type="reset"], input[type="image"], [role="button"]');
                 for (var i = 0; i < allEls.length; i++) {{
-                    if (allEls[i].textContent && allEls[i].textContent.trim() === '{}') {{
-                        el = allEls[i];
+                    var candidate = allEls[i];
+                    var candidateLabel = candidate.tagName === 'INPUT'
+                        ? (candidate.value || candidate.getAttribute('alt') || '').trim()
+                        : (candidate.textContent || '').trim();
+                    if (candidateLabel === expected) {{
+                        el = candidate;
                         break;
                     }}
                 }}
@@ -2064,14 +2087,7 @@ pub async fn handle_click(
             return JSON.stringify({{ error: 'Element not found in DOM' }});
         }})()
         "#,
-        html_id,
-        element_id,
-        element
-            .text
-            .as_deref()
-            .unwrap_or("")
-            .replace('\'', "\\'")
-            .replace('\n', " ")
+        html_id, expected_label, element_id,
     );
 
     let click_result =
@@ -4012,6 +4028,82 @@ mod tests {
             payload["meta"]["element_count"].as_u64().unwrap_or(0) > 0,
             "{payload}"
         );
+        assert!(payload["regions"].is_array(), "{payload}");
+    }
+
+    #[test]
+    fn click_target_label_prefers_visible_text_then_compiled_label() {
+        let mut button = Element {
+            id: "e_pay".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: Some("  Pay  ".to_string()),
+            label: Some("Ignored".to_string()),
+            actions: Some(vec!["click".into()]),
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        };
+        assert_eq!(click_target_label(&button), "Pay");
+
+        button.text = Some("   ".to_string());
+        assert_eq!(click_target_label(&button), "Ignored");
+
+        button.label = Some("  Pay now  ".to_string());
+        button.text = None;
+        assert_eq!(click_target_label(&button), "Pay now");
+
+        button.label = Some("   ".to_string());
+        assert_eq!(click_target_label(&button), "");
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn click_resolves_input_value_when_textcontent_is_empty() {
+        let options = stateful_worker_options(Duration::from_secs(5));
+        let sessions = Arc::new(SessionManager::with_worker_options(options));
+        let session_id = sessions.create_session().await.unwrap();
+        let html = "<html><head><title>Pay</title></head><body><main><!-- __fixture_input_value__ --><input type='submit' value='Pay now'></main></body></html>";
+        sessions
+            .with_session(&session_id, |session| {
+                session.target.current_url = Some("https://example.test/pay".to_string());
+                session.target.current_html = Some(html.to_string());
+                session.target.effective_html = Some(html.to_string());
+                session.target.current_som = Some(
+                    plasmate::som::compiler::compile(html, "https://example.test/pay").unwrap(),
+                );
+                session.target.rebuild_node_map();
+            })
+            .await
+            .unwrap();
+        let element_id = sessions
+            .with_session(&session_id, |session| {
+                let som = session.target.current_som.as_ref().unwrap();
+                som.regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .find(|element| {
+                        element.role == ElementRole::Button
+                            && element.html_id.is_none()
+                            && click_target_label(element) == "Pay now"
+                    })
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose the value-labeled submit")
+            })
+            .await
+            .unwrap();
+        let client = reqwest::Client::new();
+
+        let clicked = handle_click(
+            &json!({"session_id": session_id, "element_id": element_id}),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert!(clicked.get("isError").is_none(), "{clicked}");
+        let payload = tool_payload(&clicked);
+        assert_eq!(payload["title"], "Pay");
         assert!(payload["regions"].is_array(), "{payload}");
     }
 
