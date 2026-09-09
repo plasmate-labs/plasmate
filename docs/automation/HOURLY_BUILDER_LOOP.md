@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-09)
 
-- Window: `f5500d3` .. `7792c78`
+- Window: `612538b` .. `d31704b`
 - Decision: `NARROW`
-- Merged this run: `5fee27e` click input-button compiled value/alt label (`7792c78`)
+- Merged this run: `0d88253` extract_links relative href resolve (`753b22d`), `b2e54d8` click disabled fail-closed (`a311572`), and `fc034a7` click empty-text aria-label (`d31704b`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -479,6 +479,16 @@ overwrite, reset, or absorb unrelated work.
    fallback onto adjacent handlers (`clear`, `toggle`,
    `select_option`) or SDKs; do not reopen html_id lookup, area href
    navigation, or DOM-miss fail-closed.
+   Do not copy #385 click empty-text aria-label fallback onto
+   adjacent handlers (`clear`, `toggle`, `select_option`) or SDKs;
+   do not reopen html_id lookup, input value/alt, or DOM-miss
+   fail-closed.
+   Do not copy #386 click compiled disabled fail-closed onto
+   adjacent handlers (`clear`, `toggle`, `select_option`) or SDKs;
+   do not add readonly fail-closed on click.
+   Do not copy #387 extract_links relative href resolve onto CLI,
+   CDP, or SDKs; do not copy click non-http skip or iframe src
+   collection onto CLI/CDP; keep `javascript:` / `mailto:` unchanged.
 - Allowed next (pick one distinct journey): a real missed regression;
    a published-docs integration failure that is not another SDK
    install-path, SOM-reference, OpenClaw/Pi, CrewAI, Vercel AI,
@@ -491,7 +501,9 @@ overwrite, reset, or absorb unrelated work.
    Node evaluate envelope unwrap, click non-http scheme skip,
    Node extract_text raw-string keep, click compiled SOM envelope,
    evaluate expression wrap normalize, click compiled area href,
-   scroll compiled html_id, or click input value label.
+   scroll compiled html_id, click input value label, click empty-text
+   aria-label, click disabled fail-closed, or extract_links relative
+   href resolve.
 
 ## Preferred lanes
 
