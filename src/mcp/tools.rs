@@ -1814,10 +1814,30 @@ pub async fn handle_open_page(
     tool_response(delivered_text)
 }
 
-fn normalize_evaluate_expression(expression: &str) -> &str {
+fn strip_trailing_evaluate_semicolons(expression: &str) -> &str {
     let mut expression = expression.trim();
     while let Some(stripped) = expression.strip_suffix(';') {
         expression = stripped.trim_end();
+    }
+    expression
+}
+
+fn strip_leading_return_keyword(expression: &str) -> Option<&str> {
+    let rest = expression.strip_prefix("return")?;
+    if rest.is_empty() {
+        return Some("");
+    }
+    let first = rest.chars().next()?;
+    if first.is_ascii_alphanumeric() || first == '_' || first == '$' {
+        return None;
+    }
+    Some(rest.trim_start())
+}
+
+fn normalize_evaluate_expression(expression: &str) -> &str {
+    let mut expression = strip_trailing_evaluate_semicolons(expression);
+    if let Some(stripped) = strip_leading_return_keyword(expression) {
+        expression = strip_trailing_evaluate_semicolons(stripped);
     }
     expression
 }
@@ -3631,6 +3651,28 @@ mod tests {
         assert!(inner_semicolon.contains("('hello;')"), "{inner_semicolon}");
     }
 
+    #[test]
+    fn wrap_evaluate_expression_strips_leading_return() {
+        let wrapped = wrap_evaluate_expression("return document.title").unwrap();
+        assert_eq!(wrapped, wrap_evaluate_expression("document.title").unwrap());
+        assert!(wrapped.contains("(document.title)"));
+        assert!(!wrapped.contains("return document.title"));
+
+        let with_semi = wrap_evaluate_expression("  return 1 + 1 ; ").unwrap();
+        assert_eq!(with_semi, wrap_evaluate_expression("1 + 1").unwrap());
+        assert!(with_semi.contains("(1 + 1)"));
+
+        let paren = wrap_evaluate_expression("return(document.title)").unwrap();
+        assert_eq!(paren, wrap_evaluate_expression("(document.title)").unwrap());
+
+        let identifier = wrap_evaluate_expression("returning").unwrap();
+        assert!(identifier.contains("(returning)"), "{identifier}");
+        assert_ne!(identifier, wrap_evaluate_expression("ing").unwrap());
+
+        let quoted = wrap_evaluate_expression("'return document.title'").unwrap();
+        assert!(quoted.contains("('return document.title')"), "{quoted}");
+    }
+
     #[tokio::test]
     async fn evaluate_empty_expression_fails_closed_before_session() {
         let sessions = Arc::new(SessionManager::new());
@@ -3647,6 +3689,25 @@ mod tests {
         assert!(
             !text.contains("Session not found"),
             "empty expressions must fail before session lookup: {text}"
+        );
+    }
+
+    #[tokio::test]
+    async fn evaluate_bare_return_fails_closed_before_session() {
+        let sessions = Arc::new(SessionManager::new());
+
+        let result = handle_evaluate(
+            &json!({"session_id": "sess-unused", "expression": "return;"}),
+            &sessions,
+        )
+        .await;
+
+        assert_eq!(result["isError"], true);
+        let text = result["content"][0]["text"].as_str().unwrap();
+        assert!(text.contains("Evaluate expression is empty"), "{text}");
+        assert!(
+            !text.contains("Session not found"),
+            "bare return must fail before session lookup: {text}"
         );
     }
 
