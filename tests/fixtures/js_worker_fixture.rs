@@ -39,6 +39,21 @@ fn main() {
         }
         return;
     }
+    if input.contains("__fixture_input_value__") {
+        if input.contains("candidate.value")
+            && input.contains("input[type=")
+            && input.contains("Pay now")
+        {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"clicked\":true}}","effective_html":"<html><head><title>Pay</title></head><body><main><!-- __fixture_input_value__ --><input type='submit' value='Pay now'></main></body></html>"}}}}"#
+            );
+        } else {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"error\":\"Element not found in DOM\"}}","effective_html":"<html><body><p>mutated</p></body></html>"}}}}"#
+            );
+        }
+        return;
+    }
     if input.contains("__fixture_aria_switch__") {
         if input.contains("role") && input.contains("switch") && input.contains("aria-checked") {
             println!(
