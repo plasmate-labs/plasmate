@@ -1693,7 +1693,7 @@ pub fn evaluate_definition() -> ToolDefinition {
 pub fn click_definition() -> ToolDefinition {
     ToolDefinition {
         name: "click".to_string(),
-        description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click.".to_string(),
+        description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click. Fails closed when the compiled SOM marks the target disabled, without mutating session HTML.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -2034,6 +2034,13 @@ pub async fn handle_click(
             return error_response(&format!("Element not found: {}", params.element_id));
         }
     };
+    if element
+        .attrs
+        .as_ref()
+        .is_some_and(|attrs| attr_flag_true(attrs, "disabled"))
+    {
+        return error_response(&format!("Element is disabled: {}", params.element_id));
+    }
 
     // Check if element is clickable (has actions or is interactive)
     let is_interactive = element.role.is_interactive();
@@ -4105,6 +4112,63 @@ mod tests {
         let payload = tool_payload(&clicked);
         assert_eq!(payload["title"], "Pay");
         assert!(payload["regions"].is_array(), "{payload}");
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn click_disabled_fails_closed_and_preserves_session() {
+        let options = stateful_worker_options(Duration::from_secs(5));
+        let sessions = Arc::new(SessionManager::with_worker_options(options));
+        let session_id = sessions.create_session().await.unwrap();
+        let html = "<html><head><title>Pay</title></head><body><main><button id='pay-now' disabled>Pay</button></main></body></html>";
+        sessions
+            .with_session(&session_id, |session| {
+                session.target.current_url = Some("https://example.test/pay".to_string());
+                session.target.current_html = Some(html.to_string());
+                session.target.effective_html = Some(html.to_string());
+                session.target.current_som = Some(
+                    plasmate::som::compiler::compile(html, "https://example.test/pay").unwrap(),
+                );
+                session.target.rebuild_node_map();
+            })
+            .await
+            .unwrap();
+        let element_id = sessions
+            .with_session(&session_id, |session| {
+                let som = session.target.current_som.as_ref().unwrap();
+                som.regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .find(|element| {
+                        element.role == ElementRole::Button
+                            && element
+                                .attrs
+                                .as_ref()
+                                .and_then(|attrs| attrs.get("disabled"))
+                                .and_then(Value::as_bool)
+                                == Some(true)
+                    })
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose a disabled button")
+            })
+            .await
+            .unwrap();
+        let before = state_fingerprint(&sessions, &session_id).await;
+        let client = reqwest::Client::new();
+
+        let clicked = handle_click(
+            &json!({"session_id": session_id, "element_id": element_id}),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert_eq!(clicked["isError"], true, "{clicked}");
+        let disabled_message = format!("Element is disabled: {element_id}");
+        assert_eq!(
+            clicked["content"][0]["text"].as_str(),
+            Some(disabled_message.as_str())
+        );
+        assert_eq!(state_fingerprint(&sessions, &session_id).await, before);
     }
 
     #[test]
