@@ -1940,6 +1940,36 @@ fn resolve_click_fetch_url(current_url: &str, href: &str) -> Option<String> {
     }
 }
 
+fn compiled_link_href(element: &crate::som::types::Element) -> Option<&str> {
+    if element.role != crate::som::types::ElementRole::Link {
+        return None;
+    }
+    element
+        .attrs
+        .as_ref()
+        .and_then(|attrs| attrs.get("href"))
+        .and_then(|value| value.as_str())
+}
+
+fn resolve_click_navigation_url(
+    click_data: &Value,
+    current_url: &str,
+    element: &crate::som::types::Element,
+) -> Option<String> {
+    if click_data
+        .get("navigated")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false)
+    {
+        if let Some(href) = click_data.get("href").and_then(|v| v.as_str()) {
+            if let Some(url) = resolve_click_fetch_url(current_url, href) {
+                return Some(url);
+            }
+        }
+    }
+    compiled_link_href(element).and_then(|href| resolve_click_fetch_url(current_url, href))
+}
+
 /// Handle the click tool call.
 ///
 /// Simulates a click on an element by:
@@ -2026,7 +2056,7 @@ pub async fn handle_click(
                 }});
                 el.dispatchEvent(evt);
 
-                if (el.tagName === 'A' && el.href) {{
+                if ((el.tagName === 'A' || el.tagName === 'AREA') && el.href) {{
                     return JSON.stringify({{ navigated: true, href: el.href }});
                 }}
                 return JSON.stringify({{ clicked: true }});
@@ -2060,18 +2090,7 @@ pub async fn handle_click(
         return error_response(err);
     }
 
-    let new_url = if click_data
-        .get("navigated")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false)
-    {
-        click_data
-            .get("href")
-            .and_then(|v| v.as_str())
-            .and_then(|href| resolve_click_fetch_url(&url, href))
-    } else {
-        None
-    };
+    let new_url = resolve_click_navigation_url(&click_data, &url, element);
 
     // If we navigated, fetch the new page
     let (final_html, final_url) = if let Some(resolved) = new_url {
@@ -3969,6 +3988,88 @@ mod tests {
         );
         assert_eq!(
             resolve_click_fetch_url("https://example.test/page", "  "),
+            None
+        );
+    }
+
+    #[test]
+    fn resolve_click_navigation_url_follows_compiled_area_href() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head><title>Map</title></head><body>
+<main>
+  <img src="/campus.png" alt="Campus" usemap="#campus">
+  <map name="campus">
+    <area href="/library" alt="Library" shape="rect" coords="0,0,10,10">
+  </map>
+  <button>Stay</button>
+</main>
+</body></html>"##,
+            "https://example.test/map",
+        )
+        .expect("fixture HTML should compile");
+        let area = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| {
+                element.role == ElementRole::Link && compiled_link_href(element) == Some("/library")
+            })
+            .expect("compiled area href should exist");
+        let button = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| element.role == ElementRole::Button)
+            .expect("compiled button should exist");
+
+        assert_eq!(
+            resolve_click_navigation_url(
+                &json!({"clicked": true}),
+                "https://example.test/map",
+                area
+            ),
+            Some("https://example.test/library".to_string())
+        );
+        assert_eq!(
+            resolve_click_navigation_url(
+                &json!({"navigated": true, "href": "https://example.test/from-dom"}),
+                "https://example.test/map",
+                area
+            ),
+            Some("https://example.test/from-dom".to_string())
+        );
+        assert_eq!(
+            resolve_click_navigation_url(
+                &json!({"clicked": true}),
+                "https://example.test/map",
+                button
+            ),
+            None
+        );
+        assert_eq!(
+            resolve_click_navigation_url(
+                &json!({"clicked": true}),
+                "https://example.test/map",
+                &test_element(
+                    "mail",
+                    ElementRole::Link,
+                    Some("Email"),
+                    Some("mailto:team@example.test")
+                )
+            ),
+            None
+        );
+        assert_eq!(
+            resolve_click_navigation_url(
+                &json!({"navigated": true, "href": "javascript:void(0)"}),
+                "https://example.test/map",
+                &test_element(
+                    "js",
+                    ElementRole::Link,
+                    Some("No-op"),
+                    Some("javascript:void(0)")
+                )
+            ),
             None
         );
     }
