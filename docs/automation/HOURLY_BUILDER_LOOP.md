@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-09)
 
-- Window: `d7007d3` .. `f5500d3`
+- Window: `f5500d3` .. `7792c78`
 - Decision: `NARROW`
-- Merged this run: `78098d2` click compiled area href (`40555f3`) and `351c6ba` scroll compiled html_id (`f5500d3`)
+- Merged this run: `5fee27e` click input-button compiled value/alt label (`7792c78`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -475,6 +475,10 @@ overwrite, reset, or absorb unrelated work.
    Do not copy #381 scroll compiled `html_id` lookup onto adjacent
    handlers (`clear`, `toggle`, `select_option`) or SDKs; click and
    `type_text` already have this path.
+   Do not copy #383 click input-button compiled value/alt label
+   fallback onto adjacent handlers (`clear`, `toggle`,
+   `select_option`) or SDKs; do not reopen html_id lookup, area href
+   navigation, or DOM-miss fail-closed.
 - Allowed next (pick one distinct journey): a real missed regression;
    a published-docs integration failure that is not another SDK
    install-path, SOM-reference, OpenClaw/Pi, CrewAI, Vercel AI,
@@ -486,8 +490,8 @@ overwrite, reset, or absorb unrelated work.
    Python/Node/Go SDK method add, LangChain session-navigate copy,
    Node evaluate envelope unwrap, click non-http scheme skip,
    Node extract_text raw-string keep, click compiled SOM envelope,
-   evaluate expression wrap normalize, click compiled area href, or
-   scroll compiled html_id.
+   evaluate expression wrap normalize, click compiled area href,
+   scroll compiled html_id, or click input value label.
 
 ## Preferred lanes
 
