@@ -704,7 +704,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Includes link hrefs and iframe src destinations. Useful for crawling, sitemap discovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the page URL so follow-up fetch_page calls can use them. Includes link hrefs and iframe src destinations. Useful for crawling, sitemap discovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1319,7 +1319,9 @@ pub async fn handle_extract_links(
             collect_element_links(element, &mut urls);
         }
     }
-    // Deduplicate while preserving order
+    for url in &mut urls {
+        *url = resolve_extracted_link(&effective_som.url, url);
+    }
     let mut seen = std::collections::HashSet::new();
     urls.retain(|u| seen.insert(u.clone()));
 
@@ -1364,6 +1366,22 @@ fn collect_element_links(element: &crate::som::types::Element, urls: &mut Vec<St
             collect_element_links(child, urls);
         }
     }
+}
+
+fn resolve_extracted_link(page_url: &str, href: &str) -> String {
+    let href = href.trim();
+    if href.is_empty() {
+        return href.to_string();
+    }
+    if href.starts_with("http://") || href.starts_with("https://") {
+        return href.to_string();
+    }
+    if let Ok(base) = url::Url::parse(page_url) {
+        if let Ok(joined) = base.join(href) {
+            return joined.to_string();
+        }
+    }
+    href.to_string()
 }
 
 fn find_som_element_by_id<'a>(
@@ -4766,6 +4784,66 @@ mod tests {
             "{urls:?}"
         );
         assert!(!urls.iter().any(|url| url == "#"), "{urls:?}");
+    }
+
+    #[test]
+    fn resolve_extracted_link_absolutizes_relative_paths_and_keeps_other_schemes() {
+        assert_eq!(
+            resolve_extracted_link("https://example.test/page", "/docs"),
+            "https://example.test/docs"
+        );
+        assert_eq!(
+            resolve_extracted_link("https://example.test/dir/page", "next"),
+            "https://example.test/dir/next"
+        );
+        assert_eq!(
+            resolve_extracted_link("https://example.test/page", "https://other.test/x"),
+            "https://other.test/x"
+        );
+        assert_eq!(
+            resolve_extracted_link("https://example.test/page", "javascript:void(0)"),
+            "javascript:void(0)"
+        );
+        assert_eq!(
+            resolve_extracted_link("https://example.test/page", "mailto:team@example.test"),
+            "mailto:team@example.test"
+        );
+    }
+
+    #[test]
+    fn extract_links_resolves_relative_hrefs_against_page_url() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head><title>Nav</title></head><body>
+<main>
+  <a href="/docs">Docs</a>
+  <a href="https://example.test/docs">Docs again</a>
+  <iframe src="/embed" title="Help"></iframe>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        let mut urls = Vec::new();
+        for region in &som.regions {
+            for element in &region.elements {
+                collect_element_links(element, &mut urls);
+            }
+        }
+        for url in &mut urls {
+            *url = resolve_extracted_link(&som.url, url);
+        }
+        let mut seen = std::collections::HashSet::new();
+        urls.retain(|url| seen.insert(url.clone()));
+
+        assert_eq!(
+            urls,
+            vec![
+                "https://example.test/docs".to_string(),
+                "https://example.test/embed".to_string()
+            ],
+            "{urls:?}"
+        );
     }
 
     #[test]
