@@ -1814,6 +1814,25 @@ pub async fn handle_open_page(
     tool_response(delivered_text)
 }
 
+fn normalize_evaluate_expression(expression: &str) -> &str {
+    let mut expression = expression.trim();
+    while let Some(stripped) = expression.strip_suffix(';') {
+        expression = stripped.trim_end();
+    }
+    expression
+}
+
+fn wrap_evaluate_expression(expression: &str) -> Result<String, String> {
+    let expression = normalize_evaluate_expression(expression);
+    if expression.is_empty() {
+        return Err("Evaluate expression is empty".to_string());
+    }
+    Ok(format!(
+        "(function() {{ var __r = ({}); return typeof __r === 'object' && __r !== null ? JSON.stringify(__r) : __r; }})()",
+        expression
+    ))
+}
+
 /// Handle the evaluate tool call.
 ///
 /// Runs JavaScript in a supervised child and leaves the session's last good SOM
@@ -1825,6 +1844,11 @@ pub async fn handle_evaluate(arguments: &Value, sessions: &Arc<SessionManager>) 
         Err(e) => {
             return error_response(&format!("Invalid arguments: {}", e));
         }
+    };
+
+    let wrapped_expr = match wrap_evaluate_expression(&params.expression) {
+        Ok(expr) => expr,
+        Err(e) => return error_response(&e),
     };
 
     info!(session_id = %params.session_id, expression_bytes = params.expression.len(), "evaluate");
@@ -1848,11 +1872,6 @@ pub async fn handle_evaluate(arguments: &Value, sessions: &Arc<SessionManager>) 
         }
     };
 
-    let expression = params.expression.clone();
-    let wrapped_expr = format!(
-        "(function() {{ var __r = ({}); return typeof __r === 'object' && __r !== null ? JSON.stringify(__r) : __r; }})()",
-        expression
-    );
     let eval_result =
         run_session_javascript(sessions, effective_html, url, wrapped_expr, false).await;
 
@@ -3595,6 +3614,40 @@ mod tests {
         assert!(survived.get("isError").is_none(), "{survived}");
         assert_eq!(tool_payload(&survived)["result"], "ok");
         assert_eq!(state_fingerprint(&sessions, &session_id).await, before);
+    }
+
+    #[test]
+    fn wrap_evaluate_expression_strips_trailing_semicolons() {
+        let wrapped = wrap_evaluate_expression("document.title;").unwrap();
+        assert_eq!(wrapped, wrap_evaluate_expression("document.title").unwrap());
+        assert!(wrapped.contains("(document.title)"));
+        assert!(!wrapped.contains("document.title;"));
+
+        let repeated = wrap_evaluate_expression("  1 + 1 ; ; ").unwrap();
+        assert_eq!(repeated, wrap_evaluate_expression("1 + 1").unwrap());
+        assert!(repeated.contains("(1 + 1)"));
+
+        let inner_semicolon = wrap_evaluate_expression("'hello;'").unwrap();
+        assert!(inner_semicolon.contains("('hello;')"), "{inner_semicolon}");
+    }
+
+    #[tokio::test]
+    async fn evaluate_empty_expression_fails_closed_before_session() {
+        let sessions = Arc::new(SessionManager::new());
+
+        let result = handle_evaluate(
+            &json!({"session_id": "sess-unused", "expression": " ; ; "}),
+            &sessions,
+        )
+        .await;
+
+        assert_eq!(result["isError"], true);
+        let text = result["content"][0]["text"].as_str().unwrap();
+        assert!(text.contains("Evaluate expression is empty"), "{text}");
+        assert!(
+            !text.contains("Session not found"),
+            "empty expressions must fail before session lookup: {text}"
+        );
     }
 
     #[tokio::test]
