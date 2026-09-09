@@ -2770,13 +2770,14 @@ pub async fn handle_scroll(
         .with_session(&params.session_id, |session| {
             let effective_html = session.target.effective_html.clone();
             let url = session.target.current_url.clone();
-            (effective_html, url)
+            let som = session.target.current_som.clone();
+            (effective_html, url, som)
         })
         .await;
 
-    let (effective_html, url) = match session_data {
-        Some((Some(html), Some(url))) => (html, url),
-        Some((None, _)) | Some((_, None)) => {
+    let (effective_html, url, som) = match session_data {
+        Some((Some(html), Some(url), som)) => (html, url, som),
+        Some((None, _, _)) | Some((_, None, _)) => {
             return no_page_loaded_response();
         }
         None => {
@@ -2789,10 +2790,19 @@ pub async fn handle_scroll(
     let pixels = params.pixels;
     let element_id = params.element_id.clone();
     let scroll_js = if let Some(ref eid) = element_id {
+        let html_id = som
+            .as_ref()
+            .and_then(|som| find_som_element_by_id(som, eid))
+            .and_then(|element| element.html_id.clone());
+        let html_id_json = serde_json::to_string(&html_id).unwrap_or_else(|_| "null".to_string());
         format!(
             r#"
                 (function() {{
+                    var htmlId = {};
                     var el = document.querySelector('[data-plasmate-id="{}"]');
+                    if (!el && htmlId !== null) {{
+                        el = document.getElementById(htmlId);
+                    }}
                     if (!el) {{
                         return JSON.stringify({{ error: 'Element not found in DOM' }});
                     }}
@@ -2800,7 +2810,7 @@ pub async fn handle_scroll(
                     return JSON.stringify({{ scrolled: true, scrollTop: document.documentElement.scrollTop || 0 }});
                 }})()
                 "#,
-            eid
+            html_id_json, eid
         )
     } else {
         let scroll_action = match direction.as_str() {
@@ -3898,6 +3908,55 @@ mod tests {
         assert!(clicked.get("isError").is_none(), "{clicked}");
         let payload = tool_payload(&clicked);
         assert_eq!(payload["title"], "Pay");
+        assert!(payload["regions"].is_array(), "{payload}");
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn scroll_resolves_compiled_html_id_when_data_plasmate_id_is_absent() {
+        let options = stateful_worker_options(Duration::from_secs(5));
+        let sessions = Arc::new(SessionManager::with_worker_options(options));
+        let session_id = sessions.create_session().await.unwrap();
+        let html = "<html><head><title>Pay</title></head><body><main><!-- __fixture_html_id__ --><button id='pay-now'>Pay</button></main></body></html>";
+        sessions
+            .with_session(&session_id, |session| {
+                session.target.current_url = Some("https://example.test/pay".to_string());
+                session.target.current_html = Some(html.to_string());
+                session.target.effective_html = Some(html.to_string());
+                session.target.current_som = Some(
+                    plasmate::som::compiler::compile(html, "https://example.test/pay").unwrap(),
+                );
+                session.target.rebuild_node_map();
+            })
+            .await
+            .unwrap();
+        let element_id = sessions
+            .with_session(&session_id, |session| {
+                let som = session.target.current_som.as_ref().unwrap();
+                som.regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .find(|element| {
+                        element.role.is_interactive()
+                            && element.html_id.as_deref() == Some("pay-now")
+                    })
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose the html_id button")
+            })
+            .await
+            .unwrap();
+        let client = reqwest::Client::new();
+
+        let scrolled = handle_scroll(
+            &json!({"session_id": session_id, "element_id": element_id}),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert!(scrolled.get("isError").is_none(), "{scrolled}");
+        let payload = tool_payload(&scrolled);
+        assert_eq!(payload["title"], "Pay");
+        assert_eq!(payload["scroll_position"], 0.0);
         assert!(payload["regions"].is_array(), "{payload}");
     }
 
