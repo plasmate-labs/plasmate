@@ -90,6 +90,22 @@ fn main() {
         }
         return;
     }
+    if input.contains("__fixture_test_id__") {
+        if input.contains("var testId")
+            && input.contains("data-testid")
+            && input.contains("data-qa")
+            && input.contains("pay-now")
+        {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"clicked\":true}}","effective_html":"<html><head><title>Pay</title></head><body><main><!-- __fixture_test_id__ --><button data-testid='pay-now'></button></main></body></html>"}}}}"#
+            );
+        } else {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"error\":\"Element not found in DOM\"}}","effective_html":"<html><body><p>mutated</p></body></html>"}}}}"#
+            );
+        }
+        return;
+    }
     if input.contains("__fixture_compiled_name__") {
         if input.contains("getAttribute('name')")
             && input.contains("fieldName")
