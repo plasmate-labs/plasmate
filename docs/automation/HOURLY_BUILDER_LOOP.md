@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-09)
 
-- Window: `612538b` .. `d31704b`
+- Window: `5aa1463` .. `f314bd4`
 - Decision: `NARROW`
-- Merged this run: `0d88253` extract_links relative href resolve (`753b22d`), `b2e54d8` click disabled fail-closed (`a311572`), and `fc034a7` click empty-text aria-label (`d31704b`)
+- Merged this run: `632e7d6` click compiled ARIA tab lookup (`b1ae35d`), `308ed51` AutoGen missing-module docs (`37b07fe`), and `b394072` type_text compiled name lookup (`f314bd4`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -489,12 +489,22 @@ overwrite, reset, or absorb unrelated work.
    Do not copy #387 extract_links relative href resolve onto CLI,
    CDP, or SDKs; do not copy click non-http skip or iframe src
    collection onto CLI/CDP; keep `javascript:` / `mailto:` unchanged.
+   Do not copy #389 click compiled ARIA tab lookup onto adjacent
+   handlers (`clear`, `toggle`, `select_option`) or SDKs; do not
+   extend click to other ARIA roles (`option`, `treeitem`,
+   `menuitem`) or reopen html_id lookup / DOM-miss fail-closed.
+   Do not copy #390 AutoGen missing-module docs onto Smolagents, Pi,
+   OpenClaw, or remaining integration pages; do not invent
+   `integrations/autogen/` or `plasmate.integrations.autogen`.
+   Do not copy #391 type_text compiled name lookup onto adjacent
+   handlers (`clear`, `toggle`, `select_option`, `click`) or SDKs;
+   do not scan button names or reopen html_id lookup.
 - Allowed next (pick one distinct journey): a real missed regression;
    a published-docs integration failure that is not another SDK
    install-path, SOM-reference, OpenClaw/Pi, CrewAI, Vercel AI,
-   Browser Use, Scrapy, or LlamaIndex rewrite; or bounded agent-task
-   recovery that is not another IDL getter, querySelector pseudo,
-   inspect-compact field, compile-attr copy, MCP empty-session
+   Browser Use, Scrapy, LlamaIndex, or AutoGen rewrite; or bounded
+   agent-task recovery that is not another IDL getter, querySelector
+   pseudo, inspect-compact field, compile-attr copy, MCP empty-session
    error-text copy, open_page capacity error-text copy, navigate_to
    missing-session error-text copy, close_page idempotent-success copy,
    Python/Node/Go SDK method add, LangChain session-navigate copy,
@@ -502,8 +512,9 @@ overwrite, reset, or absorb unrelated work.
    Node extract_text raw-string keep, click compiled SOM envelope,
    evaluate expression wrap normalize, click compiled area href,
    scroll compiled html_id, click input value label, click empty-text
-   aria-label, click disabled fail-closed, or extract_links relative
-   href resolve.
+   aria-label, click disabled fail-closed, extract_links relative
+   href resolve, click compiled ARIA tab, AutoGen missing-module
+   docs, or type_text compiled name lookup.
 
 ## Preferred lanes
 
