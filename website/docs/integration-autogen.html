@@ -458,63 +458,20 @@
     </nav>
     <main class="content">
       <h1 id="autogen-integration">AutoGen Integration</h1><p>Add structured web browsing to your Microsoft AutoGen multi-agent conversations. Plasmate returns SOM instead of raw HTML; the size difference depends on the page and tokenizer.</p>
-<p>Source: <a href="https://github.com/plasmate-labs/plasmate/tree/master/integrations/autogen"><code>integrations/autogen/</code></a></p>
-<h2 id="installation">Installation</h2><pre><code class="language-bash">pip install plasmate pyautogen
+<p>Published AutoGen samples imported <code>plasmate.integrations.autogen</code>. That module is not in this repository. Point AutoGen at the <a href="integration-mcp">native MCP server</a>, or have an AutoGen-owned tool call the shipped <a href="sdk-python">Python SDK</a>. Do not install a framework-specific Plasmate AutoGen package.</p>
+<h2 id="installation">Installation</h2><pre><code class="language-bash">curl -fsSL https://plasmate.app/install.sh | sh
+pip install plasmate
 </code></pre>
-<h2 id="quick-start">Quick Start</h2><pre><code class="language-python">import autogen
-from plasmate.integrations.autogen import plasmate_fetch
-
-# Configure the LLM
-config_list = [{&quot;model&quot;: &quot;gpt-4o&quot;, &quot;api_key&quot;: &quot;sk-...&quot;}]
-
-# Create an assistant with web browsing
-assistant = autogen.AssistantAgent(
-    name=&quot;WebResearcher&quot;,
-    llm_config={&quot;config_list&quot;: config_list},
-)
-
-# Create a user proxy that can execute the tool
-user_proxy = autogen.UserProxyAgent(
-    name=&quot;User&quot;,
-    human_input_mode=&quot;NEVER&quot;,
-    code_execution_config={&quot;work_dir&quot;: &quot;workspace&quot;},
-)
-
-# Register the Plasmate tool
-autogen.register_function(
-    plasmate_fetch,
-    caller=assistant,
-    executor=user_proxy,
-    name=&quot;plasmate_fetch&quot;,
-    description=&quot;Fetch a web page and return structured SOM content.&quot;,
-)
-
-# Start the conversation
-user_proxy.initiate_chat(
-    assistant,
-    message=&quot;Fetch https://news.ycombinator.com and summarize the top 5 stories.&quot;,
-)
-</code></pre>
-<h2 id="available-functions">Available Functions</h2><h3 id="plasmatefetchurl-str-str">`plasmate_fetch(url: str) -> str`</h3><p>Stateless fetch -  returns SOM text for a single URL.</p>
-<h3 id="plasmatebrowseurl-str-actions-list-str">`plasmate_browse(url: str, actions: list) -> str`</h3><p>Multi-step browsing session. Actions can be <code>navigate</code>, <code>click</code>, or <code>type</code>.</p>
-<pre><code class="language-python">from plasmate.integrations.autogen import plasmate_browse
-
-result = plasmate_browse(
-    url=&quot;https://github.com&quot;,
-    actions=[
-        {&quot;type&quot;: &quot;type&quot;, &quot;index&quot;: 1, &quot;text&quot;: &quot;plasmate&quot;},
-        {&quot;type&quot;: &quot;click&quot;, &quot;index&quot;: 2},
-    ],
-)
-</code></pre>
+<p>Requires the <code>plasmate</code> binary on PATH.</p>
 <h2 id="why-plasmate-for-autogen">Why Plasmate for AutoGen?</h2><ul>
 <li><strong>Compact by design</strong> -  SOM removes markup that does not contribute to the semantic page model; measure token use with your pages and model</li>
 <li><strong>Structured output</strong> -  SOM exposes explicit regions, roles, and actions instead of raw markup</li>
 <li><strong>No Chrome installation required</strong> -  runs headlessly in server-based AutoGen deployments</li>
-<li><strong>Tool-compatible</strong> -  works with AutoGen&#39;s function calling and tool registration</li>
+<li><strong>Tool-compatible</strong> -  works with AutoGen&#39;s function calling once the agent attaches MCP or its own SDK wrapper</li>
 </ul>
 <h2 id="links">Links</h2><ul>
 <li><a href="https://microsoft.github.io/autogen/">AutoGen Docs</a></li>
+<li><a href="integration-mcp">Native MCP Server</a></li>
 <li><a href="sdk-python">Plasmate Python SDK</a></li>
 </ul>
 
