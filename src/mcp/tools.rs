@@ -2077,17 +2077,18 @@ pub async fn handle_click(
         }
     };
 
-    // Return updated SOM
+    let mut payload = som_json;
+    if let Some(obj) = payload.as_object_mut() {
+        obj.insert("title".to_string(), json!(page_result.som.title));
+        obj.insert("url".to_string(), json!(final_url));
+        obj.insert("webmcp".to_string(), json!(page_result.webmcp));
+    }
+
     json!({
         "content": [
             {
                 "type": "text",
-                "text": json!({
-                    "title": page_result.som.title,
-                    "url": final_url,
-                    "regions": som_json.get("regions"),
-                    "webmcp": page_result.webmcp
-                }).to_string()
+                "text": payload.to_string()
             }
         ]
     })
@@ -3764,6 +3765,61 @@ mod tests {
         assert!(clicked.get("isError").is_none(), "{clicked}");
         let payload = tool_payload(&clicked);
         assert_eq!(payload["title"], "Pay");
+        assert!(payload["regions"].is_array(), "{payload}");
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn click_returns_compiled_som_envelope() {
+        let options = stateful_worker_options(Duration::from_secs(5));
+        let sessions = Arc::new(SessionManager::with_worker_options(options));
+        let session_id = sessions.create_session().await.unwrap();
+        let html = "<html lang='en'><head><title>Pay</title></head><body><main><!-- __fixture_html_id__ --><button id='pay-now'>Pay</button></main></body></html>";
+        sessions
+            .with_session(&session_id, |session| {
+                session.target.current_url = Some("https://example.test/pay".to_string());
+                session.target.current_html = Some(html.to_string());
+                session.target.effective_html = Some(html.to_string());
+                session.target.current_som = Some(
+                    plasmate::som::compiler::compile(html, "https://example.test/pay").unwrap(),
+                );
+                session.target.rebuild_node_map();
+            })
+            .await
+            .unwrap();
+        let element_id = sessions
+            .with_session(&session_id, |session| {
+                let som = session.target.current_som.as_ref().unwrap();
+                som.regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .find(|element| element.role.is_interactive())
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose a clickable button")
+            })
+            .await
+            .unwrap();
+        let client = reqwest::Client::new();
+
+        let clicked = handle_click(
+            &json!({"session_id": session_id, "element_id": element_id}),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert!(clicked.get("isError").is_none(), "{clicked}");
+        let payload = tool_payload(&clicked);
+        assert_eq!(payload["title"], "Pay");
+        assert_eq!(payload["som_version"], "0.1");
+        assert_eq!(payload["lang"], "en");
+        assert!(
+            payload["meta"]["html_bytes"].as_u64().unwrap_or(0) > 0,
+            "{payload}"
+        );
+        assert!(
+            payload["meta"]["element_count"].as_u64().unwrap_or(0) > 0,
+            "{payload}"
+        );
         assert!(payload["regions"].is_array(), "{payload}");
     }
 
