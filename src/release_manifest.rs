@@ -1114,6 +1114,38 @@ mod tests {
     }
 
     #[test]
+    fn autogen_docs_do_not_import_a_missing_in_tree_module() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        for rel in [
+            "website/docs/src/integration-autogen.md",
+            "website/docs/integration-autogen.html",
+        ] {
+            let content = fs::read_to_string(root.join(rel))
+                .unwrap_or_else(|error| panic!("read AutoGen docs {rel}: {error}"));
+            assert!(
+                !content.contains("from plasmate.integrations.autogen"),
+                "{rel} still imports a missing AutoGen integration module"
+            );
+            assert!(
+                !content.contains("integrations/autogen/"),
+                "{rel} still points at missing in-tree AutoGen files"
+            );
+            assert!(
+                !content.contains("plasmate_browse"),
+                "{rel} still advertises a missing plasmate_browse helper"
+            );
+            assert!(
+                content.contains("integration-mcp"),
+                "{rel} should send AutoGen agents to the native MCP server"
+            );
+            assert!(
+                content.contains("sdk-python"),
+                "{rel} should link the shipped Python SDK"
+            );
+        }
+    }
+
+    #[test]
     fn crewai_docs_use_shipped_python_sdk_not_a_missing_in_tree_module() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
         for rel in [
