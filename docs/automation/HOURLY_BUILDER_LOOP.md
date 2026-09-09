@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-09)
 
-- Window: `05b1aca` .. `1930b42`
+- Window: `d7007d3` .. `f5500d3`
 - Decision: `NARROW`
-- Merged this run: `82b8d30` evaluate expression wrap normalize (`1930b42`)
+- Merged this run: `78098d2` click compiled area href (`40555f3`) and `351c6ba` scroll compiled html_id (`f5500d3`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -468,6 +468,13 @@ overwrite, reset, or absorb unrelated work.
    normalize onto other MCP handlers, SDKs, CLI, or CDP; do not change
    the evaluate wrap IIFE or wrap other statement forms (`const`,
    `let`, `await`, `throw`).
+   Do not copy #380 click compiled image-map area href navigation onto
+   extract_links, CLI, CDP, `navigate_to`, or adjacent tags (`object`,
+   `embed`, `source`); do not treat `javascript:` / `mailto:` / `tel:`
+   as fetch targets or change existing http(s) `<a>` navigation.
+   Do not copy #381 scroll compiled `html_id` lookup onto adjacent
+   handlers (`clear`, `toggle`, `select_option`) or SDKs; click and
+   `type_text` already have this path.
 - Allowed next (pick one distinct journey): a real missed regression;
    a published-docs integration failure that is not another SDK
    install-path, SOM-reference, OpenClaw/Pi, CrewAI, Vercel AI,
@@ -478,8 +485,9 @@ overwrite, reset, or absorb unrelated work.
    missing-session error-text copy, close_page idempotent-success copy,
    Python/Node/Go SDK method add, LangChain session-navigate copy,
    Node evaluate envelope unwrap, click non-http scheme skip,
-   Node extract_text raw-string keep, click compiled SOM envelope, or
-   evaluate expression wrap normalize.
+   Node extract_text raw-string keep, click compiled SOM envelope,
+   evaluate expression wrap normalize, click compiled area href, or
+   scroll compiled html_id.
 
 ## Preferred lanes
 
