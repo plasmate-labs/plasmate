@@ -78,6 +78,21 @@ fn main() {
         }
         return;
     }
+    if input.contains("__fixture_compiled_name__") {
+        if input.contains("getAttribute('name')")
+            && input.contains("fieldName")
+            && input.contains("q")
+        {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"typed\":true}}","effective_html":"<html><head><title>Search</title></head><body><main><!-- __fixture_compiled_name__ --><input name='q' placeholder='Search'><input name='other'></main></body></html>"}}}}"#
+            );
+        } else {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"error\":\"Element not found in DOM\"}}","effective_html":"<html><body><p>mutated</p></body></html>"}}}}"#
+            );
+        }
+        return;
+    }
     if input.contains("__fixture_native_radio__") {
         if input.contains("type === 'radio'") {
             println!(
