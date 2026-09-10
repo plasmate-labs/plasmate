@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-10)
 
-- Window: `1591482` .. `d231b93`
+- Window: `f6d052a` .. `248749d`
 - Decision: `NARROW`
-- Merged this run: `a28a390` clear compiled action:clear (`63f9866`) and `4a6a791` install MCP tool names (`d231b93`)
+- Merged this run: `d8280de` click compiled ARIA link (`47637a0`), `3497ac2` searchbox selector alias (`45e954b`), and `1e1c36c` combobox selector alias (`248749d`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -511,30 +511,41 @@ overwrite, reset, or absorb unrelated work.
    do not scan buttons or placeholder / wrapping-label text.
    Do not copy #398 clear compiled action:clear fail-closed onto
    adjacent handlers (`toggle`, `select_option`, `click`) or SDKs;
-   do not add html_id lookup or disabled/readonly fail-closed to clear.
-   Do not copy #399 install native MCP tool names onto other
-   integration pages, SDK install-paths, SOM-reference, OpenClaw/Pi,
-   CrewAI, Vercel AI, Browser Use, Scrapy, LlamaIndex, or AutoGen.
+    do not add html_id lookup or disabled/readonly fail-closed to clear.
+    Do not copy #399 install native MCP tool names onto other
+    integration pages, SDK install-paths, SOM-reference, OpenClaw/Pi,
+    CrewAI, Vercel AI, Browser Use, Scrapy, LlamaIndex, or AutoGen.
+    Do not copy #401 click compiled ARIA link lookup onto adjacent
+    handlers (`clear`, `toggle`, `select_option`) or SDKs; do not
+    extend click to other ARIA roles (`option`, `treeitem`,
+    `menuitem`) or reopen html_id lookup / DOM-miss fail-closed.
+    Do not copy #402 `searchbox` selector alias onto other element-role
+    aliases, landmarks, extract_links, CLI, or CDP; do not reopen
+    `#` selector matching or native `<search>` landmark mapping.
+    Do not copy #403 `combobox` / `listbox` selector alias onto other
+    element-role aliases, compile-attr copies, extract_links, CLI, or
+    CDP.
 - Allowed next (pick one distinct journey): a real missed regression;
-   a published-docs integration failure that is not another SDK
-   install-path, SOM-reference, OpenClaw/Pi, CrewAI, Vercel AI,
-   Browser Use, Scrapy, LlamaIndex, AutoGen, or install MCP
-   tool-name rewrite; or bounded agent-task recovery that is not
-   another IDL getter, querySelector
-   pseudo, inspect-compact field, compile-attr copy, MCP empty-session
-   error-text copy, open_page capacity error-text copy, navigate_to
-   missing-session error-text copy, close_page idempotent-success copy,
-   Python/Node/Go SDK method add, LangChain session-navigate copy,
-   Node evaluate envelope unwrap, click non-http scheme skip,
-   Node extract_text raw-string keep, click compiled SOM envelope,
-   evaluate expression wrap normalize, click compiled area href,
-   scroll compiled html_id, click input value label, click empty-text
-   aria-label, click disabled fail-closed, extract_links relative
-   href resolve, click compiled ARIA tab, AutoGen missing-module
-   docs, type_text compiled name lookup, click compiled test_id
-   lookup, type_text compiled aria-label lookup, click compiled
-   href lookup, clear compiled action:clear fail-closed, or install
-   native MCP tool names.
+    a published-docs integration failure that is not another SDK
+    install-path, SOM-reference, OpenClaw/Pi, CrewAI, Vercel AI,
+    Browser Use, Scrapy, LlamaIndex, AutoGen, or install MCP
+    tool-name rewrite; or bounded agent-task recovery that is not
+    another IDL getter, querySelector
+    pseudo, inspect-compact field, compile-attr copy, MCP empty-session
+    error-text copy, open_page capacity error-text copy, navigate_to
+    missing-session error-text copy, close_page idempotent-success copy,
+    Python/Node/Go SDK method add, LangChain session-navigate copy,
+    Node evaluate envelope unwrap, click non-http scheme skip,
+    Node extract_text raw-string keep, click compiled SOM envelope,
+    evaluate expression wrap normalize, click compiled area href,
+    scroll compiled html_id, click input value label, click empty-text
+    aria-label, click disabled fail-closed, extract_links relative
+    href resolve, click compiled ARIA tab, AutoGen missing-module
+    docs, type_text compiled name lookup, click compiled test_id
+    lookup, type_text compiled aria-label lookup, click compiled
+    href lookup, clear compiled action:clear fail-closed, install
+    native MCP tool names, click compiled ARIA link lookup,
+    searchbox selector alias, or combobox/listbox selector alias.
 
 ## Preferred lanes
 
