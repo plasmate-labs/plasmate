@@ -1610,6 +1610,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                     "menuitem" | "tab" | "option" => return Some(ElementRole::Button),
                     "img" => return Some(ElementRole::Image),
                     "heading" => return Some(ElementRole::Heading),
+                    "article" => return Some(ElementRole::Section),
                     "alert" | "status" => return Some(ElementRole::Paragraph),
                     "tooltip" => return Some(ElementRole::Paragraph),
                     "group" | "radiogroup" => return Some(ElementRole::Group),
@@ -5680,6 +5681,90 @@ mod tests {
                         .is_none_or(|attrs| attrs.get("source_role").is_none())
             }),
             "plain text must stay a paragraph: {elements:?}"
+        );
+    }
+
+    #[test]
+    fn aria_article_compiles_as_section_for_selector() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Feed</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <div id="story" role="article">Q3 revenue beat guidance</div>
+  <div id="doc" role="document">Not an article</div>
+  <button id="share">Share</button>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/feed").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let story = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("story"))
+            .expect("ARIA article should compile");
+        assert_eq!(story.role, ElementRole::Section);
+        assert_eq!(story.text.as_deref(), Some("Q3 revenue beat guidance"));
+        let story_attrs = story.attrs.as_ref().expect("article attrs should compile");
+        assert_eq!(story_attrs["source_role"], "article");
+        assert!(
+            story
+                .actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "articles must not invent actions: {story:?}"
+        );
+        assert!(
+            !som.regions
+                .iter()
+                .any(|region| region.role == RegionRole::Main && region.id.contains("article")),
+            "role=article must not copy landmark mapping: {:?}",
+            som.regions
+        );
+
+        let doc = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("doc"));
+        assert!(
+            doc.is_none_or(|element| element.role != ElementRole::Section
+                && element
+                    .attrs
+                    .as_ref()
+                    .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("article")))),
+            "role=document must not copy article mapping: {elements:?}"
+        );
+
+        let share = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("share"))
+            .expect("share button should compile");
+        assert_eq!(share.role, ElementRole::Button);
+
+        let filtered = crate::som::filter::apply_selector(&som, "section");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements
+                .iter()
+                .any(|element| element.html_id.as_deref() == Some("story")
+                    && element.role == ElementRole::Section),
+            "selector=section should keep compiled ARIA articles: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("share")),
+            "selector=section should drop buttons: {filtered_elements:?}"
         );
     }
 
