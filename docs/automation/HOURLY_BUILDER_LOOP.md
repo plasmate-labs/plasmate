@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-09)
 
-- Window: `5aa1463` .. `f314bd4`
+- Window: `fc82781` .. `7b5007c`
 - Decision: `NARROW`
-- Merged this run: `632e7d6` click compiled ARIA tab lookup (`b1ae35d`), `308ed51` AutoGen missing-module docs (`37b07fe`), and `b394072` type_text compiled name lookup (`f314bd4`)
+- Merged this run: `120c8df` click compiled test_id lookup (`7b5007c`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -499,6 +499,10 @@ overwrite, reset, or absorb unrelated work.
    Do not copy #391 type_text compiled name lookup onto adjacent
    handlers (`clear`, `toggle`, `select_option`, `click`) or SDKs;
    do not scan button names or reopen html_id lookup.
+   Do not copy #393 click compiled test_id lookup onto adjacent
+   handlers (`clear`, `toggle`, `select_option`, `type_text`) or
+   SDKs; do not scan extra test-id attributes or reopen html_id
+   lookup / DOM-miss fail-closed.
 - Allowed next (pick one distinct journey): a real missed regression;
    a published-docs integration failure that is not another SDK
    install-path, SOM-reference, OpenClaw/Pi, CrewAI, Vercel AI,
@@ -514,7 +518,8 @@ overwrite, reset, or absorb unrelated work.
    scroll compiled html_id, click input value label, click empty-text
    aria-label, click disabled fail-closed, extract_links relative
    href resolve, click compiled ARIA tab, AutoGen missing-module
-   docs, or type_text compiled name lookup.
+   docs, type_text compiled name lookup, or click compiled test_id
+   lookup.
 
 ## Preferred lanes
 
