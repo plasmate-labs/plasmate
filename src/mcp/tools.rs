@@ -1985,6 +1985,23 @@ fn compiled_field_name(element: &crate::som::types::Element) -> Option<&str> {
         .filter(|name| !name.is_empty())
 }
 
+fn compiled_field_aria_label(element: &crate::som::types::Element) -> Option<&str> {
+    if !matches!(
+        element.role,
+        crate::som::types::ElementRole::TextInput | crate::som::types::ElementRole::Textarea
+    ) {
+        return None;
+    }
+    element
+        .attrs
+        .as_ref()
+        .and_then(|attrs| attrs.get("aria"))
+        .and_then(|aria| aria.get("label"))
+        .and_then(|value| value.as_str())
+        .map(str::trim)
+        .filter(|label| !label.is_empty())
+}
+
 fn compiled_test_id(element: &crate::som::types::Element) -> Option<&str> {
     element
         .attrs
@@ -2324,7 +2341,7 @@ pub fn navigate_to_definition() -> ToolDefinition {
 pub fn type_text_definition() -> ToolDefinition {
     ToolDefinition {
         name: "type_text".to_string(),
-        description: "Type text into a form input or textarea by its SOM element ID. Returns the updated page SOM. Resolves the live control by compiled name when html_id is absent. Fails closed when the compiled SOM marks the target disabled or readonly, without mutating session HTML.".to_string(),
+        description: "Type text into a form input or textarea by its SOM element ID. Returns the updated page SOM. Resolves the live control by compiled name, or compiled aria-label when name and html_id are absent. Fails closed when the compiled SOM marks the target disabled or readonly, without mutating session HTML.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -2576,6 +2593,7 @@ pub async fn handle_type_text(
     }
     let html_id = element.html_id.clone();
     let field_name = compiled_field_name(element);
+    let field_aria_label = compiled_field_aria_label(element);
 
     // Run JS to type text into the element
     let element_id = params.element_id.clone();
@@ -2584,6 +2602,8 @@ pub async fn handle_type_text(
     let element_id = serde_json::to_string(&element_id).unwrap_or_else(|_| "null".to_string());
     let html_id = serde_json::to_string(&html_id).unwrap_or_else(|_| "null".to_string());
     let field_name = serde_json::to_string(&field_name).unwrap_or_else(|_| "null".to_string());
+    let field_aria_label =
+        serde_json::to_string(&field_aria_label).unwrap_or_else(|_| "null".to_string());
     let text = serde_json::to_string(&text).unwrap_or_else(|_| "null".to_string());
     let type_js = format!(
         r#"
@@ -2591,6 +2611,7 @@ pub async fn handle_type_text(
                 var somId = {};
                 var htmlId = {};
                 var fieldName = {};
+                var fieldAriaLabel = {};
                 var value = {};
                 var el = null;
                 var identified = document.querySelectorAll('[data-plasmate-id]');
@@ -2608,6 +2629,15 @@ pub async fn handle_type_text(
                     for (var j = 0; j < fields.length; j++) {{
                         if ((fields[j].getAttribute('name') || '') === fieldName) {{
                             el = fields[j];
+                            break;
+                        }}
+                    }}
+                }}
+                if (!el && fieldAriaLabel) {{
+                    var labelled = document.querySelectorAll('input, textarea');
+                    for (var k = 0; k < labelled.length; k++) {{
+                        if ((labelled[k].getAttribute('aria-label') || '').trim() === fieldAriaLabel) {{
+                            el = labelled[k];
                             break;
                         }}
                     }}
@@ -2630,6 +2660,7 @@ pub async fn handle_type_text(
         element_id,
         html_id,
         field_name,
+        field_aria_label,
         text,
         if append { "true" } else { "false" },
     );
@@ -4769,6 +4800,42 @@ mod tests {
     }
 
     #[test]
+    fn type_text_compiled_field_aria_label_keeps_nonempty_input_labels() {
+        let labelled = Element {
+            id: "e_q".to_string(),
+            role: ElementRole::TextInput,
+            html_id: None,
+            text: None,
+            label: Some("From placeholder".to_string()),
+            actions: Some(vec!["type".into()]),
+            attrs: Some(json!({"aria": {"label": "Search"}})),
+            children: None,
+            hints: None,
+            shadow: None,
+        };
+        assert_eq!(compiled_field_aria_label(&labelled), Some("Search"));
+
+        let blank = Element {
+            attrs: Some(json!({"aria": {"label": "  "}})),
+            ..labelled.clone()
+        };
+        assert_eq!(compiled_field_aria_label(&blank), None);
+
+        let placeholder_only = Element {
+            attrs: Some(json!({"placeholder": "Search"})),
+            ..labelled.clone()
+        };
+        assert_eq!(compiled_field_aria_label(&placeholder_only), None);
+
+        let button = Element {
+            role: ElementRole::Button,
+            attrs: Some(json!({"aria": {"label": "Search"}})),
+            ..labelled
+        };
+        assert_eq!(compiled_field_aria_label(&button), None);
+    }
+
+    #[test]
     fn compiled_test_id_keeps_nonempty_locator_values() {
         let button = Element {
             id: "e_pay".to_string(),
@@ -4829,6 +4896,60 @@ mod tests {
                     })
                     .map(|element| element.id.clone())
                     .expect("seeded page must expose the named search input")
+            })
+            .await
+            .unwrap();
+        let client = reqwest::Client::new();
+
+        let typed = handle_type_text(
+            &json!({
+                "session_id": session_id,
+                "element_id": element_id,
+                "text": "plasmate"
+            }),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert!(typed.get("isError").is_none(), "{typed}");
+        let payload = tool_payload(&typed);
+        assert_eq!(payload["title"], "Search");
+        assert!(payload["regions"].is_array(), "{payload}");
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn type_text_resolves_compiled_aria_label_when_name_is_absent() {
+        let options = stateful_worker_options(Duration::from_secs(5));
+        let sessions = Arc::new(SessionManager::with_worker_options(options));
+        let session_id = sessions.create_session().await.unwrap();
+        let html = "<html><head><title>Search</title></head><body><main><!-- __fixture_compiled_aria_label__ --><input type='search' aria-label='Search'><input aria-label='Other'></main></body></html>";
+        sessions
+            .with_session(&session_id, |session| {
+                session.target.current_url = Some("https://example.test/search".to_string());
+                session.target.current_html = Some(html.to_string());
+                session.target.effective_html = Some(html.to_string());
+                session.target.current_som = Some(
+                    plasmate::som::compiler::compile(html, "https://example.test/search").unwrap(),
+                );
+                session.target.rebuild_node_map();
+            })
+            .await
+            .unwrap();
+        let element_id = sessions
+            .with_session(&session_id, |session| {
+                let som = session.target.current_som.as_ref().unwrap();
+                som.regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .find(|element| {
+                        element.role == ElementRole::TextInput
+                            && element.html_id.is_none()
+                            && compiled_field_name(element).is_none()
+                            && compiled_field_aria_label(element) == Some("Search")
+                    })
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose the aria-labelled search input")
             })
             .await
             .unwrap();
