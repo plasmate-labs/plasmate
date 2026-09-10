@@ -2117,7 +2117,8 @@ pub async fn handle_click(
 
     // Generate JavaScript to simulate click
     // Resolve by data-plasmate-id, then compiled html_id, then compiled test_id,
-    // then icon-only <a href>, then tag/text/value/aria-label fallback.
+    // then icon-only <a href>, then tag/text/value/aria-label fallback
+    // including compiled ARIA links.
     let element_id = params.element_id.clone();
     let html_id = serde_json::to_string(&element.html_id).unwrap_or_else(|_| "null".to_string());
     let test_id =
@@ -2157,7 +2158,7 @@ pub async fn handle_click(
             }}
 
             if (!el && expected) {{
-                var allEls = document.querySelectorAll('a, button, input[type="submit"], input[type="button"], input[type="reset"], input[type="image"], [role="button"], [role="tab"]');
+                var allEls = document.querySelectorAll('a, button, input[type="submit"], input[type="button"], input[type="reset"], input[type="image"], [role="button"], [role="tab"], [role="link"]');
                 for (var i = 0; i < allEls.length; i++) {{
                     var candidate = allEls[i];
                     var candidateLabel = candidate.tagName === 'INPUT'
@@ -4395,6 +4396,56 @@ mod tests {
         assert!(clicked.get("isError").is_none(), "{clicked}");
         let payload = tool_payload(&clicked);
         assert_eq!(payload["title"], "Settings");
+        assert!(payload["regions"].is_array(), "{payload}");
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn click_resolves_aria_link_when_html_id_is_absent() {
+        let options = stateful_worker_options(Duration::from_secs(5));
+        let sessions = Arc::new(SessionManager::with_worker_options(options));
+        let session_id = sessions.create_session().await.unwrap();
+        let html = "<html><head><title>Library</title></head><body><main><!-- __fixture_aria_link__ --><div role='link'>Catalog</div></main></body></html>";
+        sessions
+            .with_session(&session_id, |session| {
+                session.target.current_url = Some("https://example.test/library".to_string());
+                session.target.current_html = Some(html.to_string());
+                session.target.effective_html = Some(html.to_string());
+                session.target.current_som = Some(
+                    plasmate::som::compiler::compile(html, "https://example.test/library").unwrap(),
+                );
+                session.target.rebuild_node_map();
+            })
+            .await
+            .unwrap();
+        let element_id = sessions
+            .with_session(&session_id, |session| {
+                let som = session.target.current_som.as_ref().unwrap();
+                som.regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .find(|element| {
+                        element.role == ElementRole::Link
+                            && element.html_id.is_none()
+                            && compiled_click_href(element).is_none()
+                            && click_target_label(element) == "Catalog"
+                    })
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose the ARIA link")
+            })
+            .await
+            .unwrap();
+        let client = reqwest::Client::new();
+
+        let clicked = handle_click(
+            &json!({"session_id": session_id, "element_id": element_id}),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert!(clicked.get("isError").is_none(), "{clicked}");
+        let payload = tool_payload(&clicked);
+        assert_eq!(payload["title"], "Library");
         assert!(payload["regions"].is_array(), "{payload}");
     }
 
