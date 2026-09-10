@@ -2468,7 +2468,7 @@ pub fn toggle_definition() -> ToolDefinition {
 pub fn clear_definition() -> ToolDefinition {
     ToolDefinition {
         name: "clear".to_string(),
-        description: "Clear the value of a text input or textarea by its SOM element ID. Returns the updated page SOM.".to_string(),
+        description: "Clear the value of a text input or textarea by its SOM element ID. Returns the updated page SOM. Fails closed when the compiled SOM element does not advertise action:clear, without mutating session HTML.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -3189,19 +3189,35 @@ pub async fn handle_clear(
         .with_session(&params.session_id, |session| {
             let effective_html = session.target.effective_html.clone();
             let url = session.target.current_url.clone();
-            (effective_html, url)
+            let som = session.target.current_som.clone();
+            (effective_html, url, som)
         })
         .await;
 
-    let (effective_html, url) = match session_data {
-        Some((Some(html), Some(url))) => (html, url),
-        Some((None, _)) | Some((_, None)) => {
+    let (effective_html, url, som) = match session_data {
+        Some((Some(html), Some(url), Some(som))) => (html, url, som),
+        Some((None, _, _)) | Some((_, None, _)) | Some((_, _, None)) => {
             return no_page_loaded_response();
         }
         None => {
             return error_response(&format!("Session not found: {}", params.session_id));
         }
     };
+
+    let element = match find_som_element_by_id(&som, &params.element_id) {
+        Some(element) => element,
+        None => return error_response(&format!("Element not found: {}", params.element_id)),
+    };
+    if !element
+        .actions
+        .as_ref()
+        .is_some_and(|actions| actions.iter().any(|action| action == "clear"))
+    {
+        return error_response(&format!(
+            "Element does not support clear: {}",
+            params.element_id
+        ));
+    }
 
     // Run JS to clear the element value
     let element_id = params.element_id.clone();
@@ -3958,6 +3974,53 @@ mod tests {
             !second.to_string().contains("open_page"),
             "close_page cleanup must not start a new session: {second}"
         );
+    }
+
+    #[tokio::test]
+    async fn clear_without_compiled_clear_action_fails_closed_and_preserves_session() {
+        let sessions = Arc::new(SessionManager::new());
+        let session_id = sessions.create_session().await.unwrap();
+        let html = "<html><head><title>Pay</title></head><body><main><button>Pay</button><input name='coupon' value='SAVE'></main></body></html>";
+        sessions
+            .with_session(&session_id, |session| {
+                session.target.current_url = Some("https://example.test/pay".to_string());
+                session.target.current_html = Some(html.to_string());
+                session.target.effective_html = Some(html.to_string());
+                session.target.current_som = Some(
+                    plasmate::som::compiler::compile(html, "https://example.test/pay").unwrap(),
+                );
+                session.target.rebuild_node_map();
+            })
+            .await
+            .unwrap();
+        let button_id = sessions
+            .with_session(&session_id, |session| {
+                let som = session.target.current_som.as_ref().unwrap();
+                som.regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .find(|element| element.role == ElementRole::Button)
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose a button")
+            })
+            .await
+            .unwrap();
+        let before = state_fingerprint(&sessions, &session_id).await;
+        let client = reqwest::Client::new();
+
+        let failed = handle_clear(
+            &json!({"session_id": session_id, "element_id": button_id}),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert_eq!(failed["isError"], true, "{failed}");
+        let message = format!("Element does not support clear: {button_id}");
+        assert_eq!(
+            failed["content"][0]["text"].as_str(),
+            Some(message.as_str())
+        );
+        assert_eq!(state_fingerprint(&sessions, &session_id).await, before);
     }
 
     #[tokio::test]
