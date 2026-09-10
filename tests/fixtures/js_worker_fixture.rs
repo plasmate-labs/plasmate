@@ -78,6 +78,23 @@ fn main() {
         }
         return;
     }
+    if input.contains("__fixture_aria_link__") {
+        if input.contains(r#"[role=\"link\"]"#)
+            && input.contains("Catalog")
+            && !input.contains(r#"[role=\"option\"]"#)
+            && !input.contains(r#"[role=\"treeitem\"]"#)
+            && !input.contains(r#"[role=\"menuitem\"]"#)
+        {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"clicked\":true}}","effective_html":"<html><head><title>Library</title></head><body><main><!-- __fixture_aria_link__ --><div role='link'>Catalog</div></main></body></html>"}}}}"#
+            );
+        } else {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"error\":\"Element not found in DOM\"}}","effective_html":"<html><body><p>mutated</p></body></html>"}}}}"#
+            );
+        }
+        return;
+    }
     if input.contains("__fixture_aria_switch__") {
         if input.contains("role") && input.contains("switch") && input.contains("aria-checked") {
             println!(
