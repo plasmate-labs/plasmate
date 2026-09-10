@@ -12,9 +12,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// - Region roles: `main`, `nav`/`navigation`, `aside`, `header`, `footer`,
 ///   `form`, `dialog`, `content`
 /// - Element roles: `link`, `button`, `text_input` / `textbox` / `searchbox` /
-///   `input`, `textarea`, `select`, `checkbox`, `radio`, `heading`, `image`,
-///   `list`, `table`, `paragraph`, `section`, `group`, `separator`, `details`,
-///   `iframe`
+///   `input`, `textarea`, `select` / `combobox` / `listbox`, `checkbox`,
+///   `radio`, `heading`, `image`, `list`, `table`, `paragraph`, `section`,
+///   `group`, `separator`, `details`, `iframe`
 /// - Action surfaces: `interactive` or `action:click` / `action:type` /
 ///   `action:clear` / `action:select` / `action:toggle`
 /// - Id: `#some-id` - region id first, then SOM element `id` or `html_id`
@@ -135,7 +135,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         "button" => Some(ElementRole::Button),
         "text_input" | "textbox" | "searchbox" | "input" => Some(ElementRole::TextInput),
         "textarea" => Some(ElementRole::Textarea),
-        "select" => Some(ElementRole::Select),
+        "select" | "combobox" | "listbox" => Some(ElementRole::Select),
         "checkbox" => Some(ElementRole::Checkbox),
         "radio" => Some(ElementRole::Radio),
         "heading" => Some(ElementRole::Heading),
@@ -413,6 +413,37 @@ mod tests {
         assert_eq!(
             apply_selector(&som, "textbox").regions[0].elements[0].id,
             "e-search"
+        );
+    }
+
+    #[test]
+    fn test_selector_combobox_matches_compiled_select() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-combo".to_string(),
+            role: ElementRole::Select,
+            html_id: None,
+            text: None,
+            label: Some("Country".to_string()),
+            actions: Some(vec!["select".to_string()]),
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        let filtered = apply_selector(&som, "combobox");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-combo");
+        assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Select);
+        assert_eq!(
+            apply_selector(&som, "listbox").regions[0].elements[0].id,
+            "e-combo"
+        );
+        assert_eq!(
+            apply_selector(&som, "select").regions[0].elements[0].id,
+            "e-combo"
         );
     }
 
