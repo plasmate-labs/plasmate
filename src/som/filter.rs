@@ -11,9 +11,10 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// Supported selectors:
 /// - Region roles: `main`, `nav`/`navigation`, `aside`, `header`, `footer`,
 ///   `form`, `dialog`, `content`
-/// - Element roles: `link`, `button`, `text_input`, `textarea`, `select`,
-///   `checkbox`, `radio`, `heading`, `image`, `list`, `table`, `paragraph`,
-///   `section`, `group`, `separator`, `details`, `iframe`
+/// - Element roles: `link`, `button`, `text_input` / `textbox` / `searchbox` /
+///   `input`, `textarea`, `select`, `checkbox`, `radio`, `heading`, `image`,
+///   `list`, `table`, `paragraph`, `section`, `group`, `separator`, `details`,
+///   `iframe`
 /// - Action surfaces: `interactive` or `action:click` / `action:type` /
 ///   `action:clear` / `action:select` / `action:toggle`
 /// - Id: `#some-id` - region id first, then SOM element `id` or `html_id`
@@ -132,7 +133,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
     {
         "link" => Some(ElementRole::Link),
         "button" => Some(ElementRole::Button),
-        "text_input" | "textbox" | "input" => Some(ElementRole::TextInput),
+        "text_input" | "textbox" | "searchbox" | "input" => Some(ElementRole::TextInput),
         "textarea" => Some(ElementRole::Textarea),
         "select" => Some(ElementRole::Select),
         "checkbox" => Some(ElementRole::Checkbox),
@@ -386,6 +387,33 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Button);
+    }
+
+    #[test]
+    fn test_selector_searchbox_matches_compiled_text_input() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-search".to_string(),
+            role: ElementRole::TextInput,
+            html_id: None,
+            text: None,
+            label: Some("Search".to_string()),
+            actions: Some(vec!["type".to_string(), "clear".to_string()]),
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        let filtered = apply_selector(&som, "searchbox");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-search");
+        assert_eq!(filtered.regions[0].elements[0].role, ElementRole::TextInput);
+        assert_eq!(
+            apply_selector(&som, "textbox").regions[0].elements[0].id,
+            "e-search"
+        );
     }
 
     #[test]
