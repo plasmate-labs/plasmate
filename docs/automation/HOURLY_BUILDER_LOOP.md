@@ -33,11 +33,11 @@ frequency.
 If these gates are not met, report a no-change or blocked run. Never stash,
 overwrite, reset, or absorb unrelated work.
 
-## Active governor constraint (2026-09-09)
+## Active governor constraint (2026-09-10)
 
-- Window: `fc82781` .. `7b5007c`
+- Window: `fd14f5e` .. `031195d`
 - Decision: `NARROW`
-- Merged this run: `120c8df` click compiled test_id lookup (`7b5007c`)
+- Merged this run: `ae9c588` type_text compiled aria-label (`4f6d32e`) and `b1e2a3d` click compiled href (`031195d`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -503,6 +503,12 @@ overwrite, reset, or absorb unrelated work.
    handlers (`clear`, `toggle`, `select_option`, `type_text`) or
    SDKs; do not scan extra test-id attributes or reopen html_id
    lookup / DOM-miss fail-closed.
+   Do not copy #395 click compiled href lookup onto adjacent
+   handlers (`clear`, `toggle`, `select_option`, `type_text`) or
+   SDKs; do not scan `area[href]` or reopen html_id / test_id lookup.
+   Do not copy #396 type_text compiled aria-label lookup onto adjacent
+   handlers (`clear`, `toggle`, `select_option`, `click`) or SDKs;
+   do not scan buttons or placeholder / wrapping-label text.
 - Allowed next (pick one distinct journey): a real missed regression;
    a published-docs integration failure that is not another SDK
    install-path, SOM-reference, OpenClaw/Pi, CrewAI, Vercel AI,
@@ -518,8 +524,9 @@ overwrite, reset, or absorb unrelated work.
    scroll compiled html_id, click input value label, click empty-text
    aria-label, click disabled fail-closed, extract_links relative
    href resolve, click compiled ARIA tab, AutoGen missing-module
-   docs, type_text compiled name lookup, or click compiled test_id
-   lookup.
+   docs, type_text compiled name lookup, click compiled test_id
+   lookup, type_text compiled aria-label lookup, or click compiled
+   href lookup.
 
 ## Preferred lanes
 
