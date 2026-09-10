@@ -106,6 +106,22 @@ fn main() {
         }
         return;
     }
+    if input.contains("__fixture_compiled_href__") {
+        if input.contains("var href")
+            && input.contains("a[href]")
+            && input.contains("javascript:void(0)")
+            && !input.contains("area[href]")
+        {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"clicked\":true}}","effective_html":"<html><head><title>Shop</title></head><body><main><!-- __fixture_compiled_href__ --><a href='javascript:void(0)'></a></main></body></html>"}}}}"#
+            );
+        } else {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"error\":\"Element not found in DOM\"}}","effective_html":"<html><body><p>mutated</p></body></html>"}}}}"#
+            );
+        }
+        return;
+    }
     if input.contains("__fixture_compiled_name__") {
         if input.contains("getAttribute('name')")
             && input.contains("fieldName")
