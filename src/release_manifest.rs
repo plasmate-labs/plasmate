@@ -1274,6 +1274,38 @@ mod tests {
     }
 
     #[test]
+    fn install_docs_name_native_mcp_tools_not_aliases() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let md =
+            fs::read_to_string(root.join("website/docs/src/install.md")).expect("read install.md");
+        assert!(
+            !md.contains("`fetch`, `navigate`, `click`, and `type`"),
+            "install.md still advertises non-existent MCP tool aliases"
+        );
+        assert!(
+            md.contains("`fetch_page`")
+                && md.contains("`navigate_to`")
+                && md.contains("`type_text`"),
+            "install.md should name fetch_page, navigate_to, and type_text"
+        );
+
+        let html =
+            fs::read_to_string(root.join("website/docs/install.html")).expect("read install.html");
+        assert!(
+            !html.contains(
+                "<code>fetch</code>, <code>navigate</code>, <code>click</code>, and <code>type</code>"
+            ),
+            "install.html still advertises non-existent MCP tool aliases"
+        );
+        assert!(
+            html.contains("<code>fetch_page</code>")
+                && html.contains("<code>navigate_to</code>")
+                && html.contains("<code>type_text</code>"),
+            "install.html should name fetch_page, navigate_to, and type_text"
+        );
+    }
+
+    #[test]
     fn vercel_ai_docs_point_at_live_install_docs_not_plasmate_dev() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
         for rel in [

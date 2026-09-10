@@ -30,7 +30,7 @@ If you see SOM output, you're good to go.
 
 ## MCP Server (Claude Code / Cursor / Windsurf)
 
-Plasmate ships an MCP server that exposes `fetch`, `navigate`, `click`, and `type` as tools for any MCP-compatible AI client.
+Plasmate ships an MCP server that exposes `fetch_page`, `navigate_to`, `click`, and `type_text` as tools for any MCP-compatible AI client.
 
 ### Claude Code (one-liner)
 
