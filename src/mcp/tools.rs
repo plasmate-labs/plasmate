@@ -1711,7 +1711,7 @@ pub fn evaluate_definition() -> ToolDefinition {
 pub fn click_definition() -> ToolDefinition {
     ToolDefinition {
         name: "click".to_string(),
-        description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click. Resolves the live control by compiled test_id when html_id is absent. Fails closed when the compiled SOM marks the target disabled, without mutating session HTML.".to_string(),
+        description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click. Resolves the live control by compiled test_id, or an icon-only link href, when html_id is absent. Fails closed when the compiled SOM marks the target disabled, without mutating session HTML.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1969,6 +1969,12 @@ fn compiled_link_href(element: &crate::som::types::Element) -> Option<&str> {
         .and_then(|value| value.as_str())
 }
 
+fn compiled_click_href(element: &crate::som::types::Element) -> Option<&str> {
+    compiled_link_href(element)
+        .map(str::trim)
+        .filter(|href| !href.is_empty())
+}
+
 fn compiled_field_name(element: &crate::som::types::Element) -> Option<&str> {
     if !matches!(
         element.role,
@@ -2111,11 +2117,13 @@ pub async fn handle_click(
 
     // Generate JavaScript to simulate click
     // Resolve by data-plasmate-id, then compiled html_id, then compiled test_id,
-    // then tag/text/value/aria-label fallback.
+    // then icon-only <a href>, then tag/text/value/aria-label fallback.
     let element_id = params.element_id.clone();
     let html_id = serde_json::to_string(&element.html_id).unwrap_or_else(|_| "null".to_string());
     let test_id =
         serde_json::to_string(&compiled_test_id(element)).unwrap_or_else(|_| "null".to_string());
+    let href =
+        serde_json::to_string(&compiled_click_href(element)).unwrap_or_else(|_| "null".to_string());
     let expected_label =
         serde_json::to_string(click_target_label(element)).unwrap_or_else(|_| "\"\"".to_string());
     let click_js = format!(
@@ -2123,6 +2131,7 @@ pub async fn handle_click(
         (function() {{
             var htmlId = {};
             var testId = {};
+            var href = {};
             var expected = {};
             var el = document.querySelector('[data-plasmate-id="{}"]');
             if (!el && htmlId !== null) {{
@@ -2135,6 +2144,15 @@ pub async fn handle_click(
                 }}
                 if (!el) {{
                     el = document.querySelector('[data-qa="' + testId + '"]');
+                }}
+            }}
+            if (!el && href) {{
+                var anchors = document.querySelectorAll('a[href]');
+                for (var h = 0; h < anchors.length; h++) {{
+                    if ((anchors[h].getAttribute('href') || '') === href) {{
+                        el = anchors[h];
+                        break;
+                    }}
                 }}
             }}
 
@@ -2171,7 +2189,7 @@ pub async fn handle_click(
             return JSON.stringify({{ error: 'Element not found in DOM' }});
         }})()
         "#,
-        html_id, test_id, expected_label, element_id,
+        html_id, test_id, href, expected_label, element_id,
     );
 
     let click_result =
@@ -4369,6 +4387,56 @@ mod tests {
 
     #[tokio::test]
     #[serial_test::serial]
+    async fn click_resolves_compiled_href_when_html_id_is_absent() {
+        let options = stateful_worker_options(Duration::from_secs(5));
+        let sessions = Arc::new(SessionManager::with_worker_options(options));
+        let session_id = sessions.create_session().await.unwrap();
+        let html = "<html><head><title>Shop</title></head><body><main><!-- __fixture_compiled_href__ --><a href='javascript:void(0)'></a></main></body></html>";
+        sessions
+            .with_session(&session_id, |session| {
+                session.target.current_url = Some("https://example.test/shop".to_string());
+                session.target.current_html = Some(html.to_string());
+                session.target.effective_html = Some(html.to_string());
+                session.target.current_som = Some(
+                    plasmate::som::compiler::compile(html, "https://example.test/shop").unwrap(),
+                );
+                session.target.rebuild_node_map();
+            })
+            .await
+            .unwrap();
+        let element_id = sessions
+            .with_session(&session_id, |session| {
+                let som = session.target.current_som.as_ref().unwrap();
+                som.regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .find(|element| {
+                        element.role == ElementRole::Link
+                            && element.html_id.is_none()
+                            && click_target_label(element).is_empty()
+                            && compiled_click_href(element) == Some("javascript:void(0)")
+                    })
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose the icon-only href link")
+            })
+            .await
+            .unwrap();
+        let client = reqwest::Client::new();
+
+        let clicked = handle_click(
+            &json!({"session_id": session_id, "element_id": element_id}),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert!(clicked.get("isError").is_none(), "{clicked}");
+        let payload = tool_payload(&clicked);
+        assert_eq!(payload["title"], "Shop");
+        assert!(payload["regions"].is_array(), "{payload}");
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
     async fn click_disabled_fails_closed_and_preserves_session() {
         let options = stateful_worker_options(Duration::from_secs(5));
         let sessions = Arc::new(SessionManager::with_worker_options(options));
@@ -4862,6 +4930,36 @@ mod tests {
             ..button
         };
         assert_eq!(compiled_test_id(&missing), None);
+    }
+
+    #[test]
+    fn compiled_click_href_keeps_nonempty_anchor_values() {
+        let link = Element {
+            id: "e_cart".to_string(),
+            role: ElementRole::Link,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: Some(vec!["click".into()]),
+            attrs: Some(json!({"href": "/cart"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        };
+        assert_eq!(compiled_click_href(&link), Some("/cart"));
+
+        let blank = Element {
+            attrs: Some(json!({"href": "  "})),
+            ..link.clone()
+        };
+        assert_eq!(compiled_click_href(&blank), None);
+
+        let button = Element {
+            role: ElementRole::Button,
+            attrs: Some(json!({"href": "/cart"})),
+            ..link
+        };
+        assert_eq!(compiled_click_href(&button), None);
     }
 
     #[tokio::test]
