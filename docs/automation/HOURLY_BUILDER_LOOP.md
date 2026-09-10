@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-10)
 
-- Window: `fd14f5e` .. `031195d`
+- Window: `1591482` .. `d231b93`
 - Decision: `NARROW`
-- Merged this run: `ae9c588` type_text compiled aria-label (`4f6d32e`) and `b1e2a3d` click compiled href (`031195d`)
+- Merged this run: `a28a390` clear compiled action:clear (`63f9866`) and `4a6a791` install MCP tool names (`d231b93`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -509,11 +509,18 @@ overwrite, reset, or absorb unrelated work.
    Do not copy #396 type_text compiled aria-label lookup onto adjacent
    handlers (`clear`, `toggle`, `select_option`, `click`) or SDKs;
    do not scan buttons or placeholder / wrapping-label text.
+   Do not copy #398 clear compiled action:clear fail-closed onto
+   adjacent handlers (`toggle`, `select_option`, `click`) or SDKs;
+   do not add html_id lookup or disabled/readonly fail-closed to clear.
+   Do not copy #399 install native MCP tool names onto other
+   integration pages, SDK install-paths, SOM-reference, OpenClaw/Pi,
+   CrewAI, Vercel AI, Browser Use, Scrapy, LlamaIndex, or AutoGen.
 - Allowed next (pick one distinct journey): a real missed regression;
    a published-docs integration failure that is not another SDK
    install-path, SOM-reference, OpenClaw/Pi, CrewAI, Vercel AI,
-   Browser Use, Scrapy, LlamaIndex, or AutoGen rewrite; or bounded
-   agent-task recovery that is not another IDL getter, querySelector
+   Browser Use, Scrapy, LlamaIndex, AutoGen, or install MCP
+   tool-name rewrite; or bounded agent-task recovery that is not
+   another IDL getter, querySelector
    pseudo, inspect-compact field, compile-attr copy, MCP empty-session
    error-text copy, open_page capacity error-text copy, navigate_to
    missing-session error-text copy, close_page idempotent-success copy,
@@ -525,8 +532,9 @@ overwrite, reset, or absorb unrelated work.
    aria-label, click disabled fail-closed, extract_links relative
    href resolve, click compiled ARIA tab, AutoGen missing-module
    docs, type_text compiled name lookup, click compiled test_id
-   lookup, type_text compiled aria-label lookup, or click compiled
-   href lookup.
+   lookup, type_text compiled aria-label lookup, click compiled
+   href lookup, clear compiled action:clear fail-closed, or install
+   native MCP tool names.
 
 ## Preferred lanes
 
