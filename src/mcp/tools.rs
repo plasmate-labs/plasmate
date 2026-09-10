@@ -1711,7 +1711,7 @@ pub fn evaluate_definition() -> ToolDefinition {
 pub fn click_definition() -> ToolDefinition {
     ToolDefinition {
         name: "click".to_string(),
-        description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click. Resolves the live control by compiled test_id, or an icon-only link href, when html_id is absent. Follows a compiled GET form action when clicking a submit button. Fails closed when the compiled SOM marks the target disabled, without mutating session HTML.".to_string(),
+        description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click. Resolves the live control by compiled test_id, or an icon-only link href, when html_id is absent. Follows a compiled GET form action or submitter formaction when clicking a submit button. Fails closed when the compiled SOM marks the target disabled, without mutating session HTML.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -2005,25 +2005,50 @@ fn form_region_is_get(region: &crate::som::types::Region) -> bool {
     }
 }
 
+fn compiled_submit_attr<'a>(element: &'a crate::som::types::Element, key: &str) -> Option<&'a str> {
+    element
+        .attrs
+        .as_ref()
+        .and_then(|attrs| attrs.get(key))
+        .and_then(|value| value.as_str())
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+}
+
+fn submit_effective_is_get(
+    element: &crate::som::types::Element,
+    region: &crate::som::types::Region,
+) -> bool {
+    match compiled_submit_attr(element, "formmethod") {
+        Some(method) => method.eq_ignore_ascii_case("get"),
+        None => form_region_is_get(region),
+    }
+}
+
 fn compiled_submit_form_get_action<'a>(
     som: &'a crate::som::types::Som,
-    element: &crate::som::types::Element,
+    element: &'a crate::som::types::Element,
 ) -> Option<&'a str> {
     if !is_compiled_submit_button(element) {
         return None;
     }
     som.regions.iter().find_map(|region| {
-        if region.role != crate::som::types::RegionRole::Form || !form_region_is_get(region) {
+        if region.role != crate::som::types::RegionRole::Form {
             return None;
         }
         if find_element_by_id_in_tree(&region.elements, &element.id).is_none() {
             return None;
         }
-        region
-            .action
-            .as_deref()
-            .map(str::trim)
-            .filter(|action| !action.is_empty())
+        if !submit_effective_is_get(element, region) {
+            return None;
+        }
+        compiled_submit_attr(element, "formaction").or_else(|| {
+            region
+                .action
+                .as_deref()
+                .map(str::trim)
+                .filter(|action| !action.is_empty())
+        })
     })
 }
 
@@ -4847,6 +4872,56 @@ mod tests {
                 .and_then(|action| resolve_click_fetch_url("https://example.test/js", action)),
             None
         );
+    }
+
+    #[test]
+    fn compiled_submit_form_get_action_prefers_formaction_and_formmethod() {
+        let get_som = crate::som::compiler::compile(
+            r##"<html><head><title>Search</title></head><body>
+<form action="/results" method="get">
+  <button formaction="/preview">Preview</button>
+  <button formmethod="post" formaction="/export">Export</button>
+  <button>Search</button>
+</form>
+</body></html>"##,
+            "https://example.test/search",
+        )
+        .expect("fixture HTML should compile");
+        let preview = compiled_form_submit_button(&get_som, "Preview");
+        let export = compiled_form_submit_button(&get_som, "Export");
+        let search = compiled_form_submit_button(&get_som, "Search");
+        assert_eq!(
+            compiled_submit_form_get_action(&get_som, preview),
+            Some("/preview")
+        );
+        assert_eq!(
+            compiled_submit_form_get_action(&get_som, preview)
+                .and_then(|action| resolve_click_fetch_url("https://example.test/search", action)),
+            Some("https://example.test/preview".to_string())
+        );
+        assert_eq!(compiled_submit_form_get_action(&get_som, export), None);
+        assert_eq!(
+            compiled_submit_form_get_action(&get_som, search),
+            Some("/results")
+        );
+
+        let post_som = crate::som::compiler::compile(
+            r##"<html><head><title>Login</title></head><body>
+<form action="/login" method="post">
+  <button formmethod="get" formaction="/preview">Preview</button>
+  <button>Sign in</button>
+</form>
+</body></html>"##,
+            "https://example.test/login",
+        )
+        .expect("fixture HTML should compile");
+        let preview = compiled_form_submit_button(&post_som, "Preview");
+        let sign_in = compiled_form_submit_button(&post_som, "Sign in");
+        assert_eq!(
+            compiled_submit_form_get_action(&post_som, preview),
+            Some("/preview")
+        );
+        assert_eq!(compiled_submit_form_get_action(&post_som, sign_in), None);
     }
 
     #[tokio::test]
