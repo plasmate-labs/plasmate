@@ -35,9 +35,9 @@ overwrite, reset, or absorb unrelated work.
 
 ## Active governor constraint (2026-09-10)
 
-- Window: `f6d052a` .. `248749d`
+- Window: `248749d` .. `ec546e2`
 - Decision: `NARROW`
-- Merged this run: `d8280de` click compiled ARIA link (`47637a0`), `3497ac2` searchbox selector alias (`45e954b`), and `1e1c36c` combobox selector alias (`248749d`)
+- Merged this run: `5aa2208` ARIA role=article as section (`ec546e2`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -519,12 +519,16 @@ overwrite, reset, or absorb unrelated work.
     handlers (`clear`, `toggle`, `select_option`) or SDKs; do not
     extend click to other ARIA roles (`option`, `treeitem`,
     `menuitem`) or reopen html_id lookup / DOM-miss fail-closed.
-    Do not copy #402 `searchbox` selector alias onto other element-role
-    aliases, landmarks, extract_links, CLI, or CDP; do not reopen
-    `#` selector matching or native `<search>` landmark mapping.
-    Do not copy #403 `combobox` / `listbox` selector alias onto other
-    element-role aliases, compile-attr copies, extract_links, CLI, or
-    CDP.
+     Do not copy #402 `searchbox` selector alias onto other element-role
+     aliases, landmarks, extract_links, CLI, or CDP; do not reopen
+     `#` selector matching or native `<search>` landmark mapping.
+     Do not copy #403 `combobox` / `listbox` selector alias onto other
+     element-role aliases, compile-attr copies, extract_links, CLI, or
+     CDP.
+     Do not copy #405 ARIA `role=article` Section compile onto
+     extract_text, CLI, CDP, extract_links, SDKs, landmarks, or other
+     ARIA roles (`document`, `feed`, `region`, `note`); do not add a
+     new ElementRole or inspect compact article field.
 - Allowed next (pick one distinct journey): a real missed regression;
     a published-docs integration failure that is not another SDK
     install-path, SOM-reference, OpenClaw/Pi, CrewAI, Vercel AI,
@@ -543,9 +547,10 @@ overwrite, reset, or absorb unrelated work.
     href resolve, click compiled ARIA tab, AutoGen missing-module
     docs, type_text compiled name lookup, click compiled test_id
     lookup, type_text compiled aria-label lookup, click compiled
-    href lookup, clear compiled action:clear fail-closed, install
-    native MCP tool names, click compiled ARIA link lookup,
-    searchbox selector alias, or combobox/listbox selector alias.
+     href lookup, clear compiled action:clear fail-closed, install
+     native MCP tool names, click compiled ARIA link lookup,
+     searchbox selector alias, combobox/listbox selector alias,
+     or ARIA role=article Section compile.
 
 ## Preferred lanes
 
