@@ -54,7 +54,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         }
         let mut result = som.clone();
         result.regions = filtered;
-        return result;
+        return refresh_meta(result);
     }
 
     // Match element roles, preserving parent containers and shadow roots that
@@ -91,7 +91,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         if !region_matches.is_empty() {
             let mut result = som.clone();
             result.regions = region_matches;
-            return result;
+            return refresh_meta(result);
         }
 
         let filtered_regions: Vec<_> = som
@@ -114,7 +114,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         }
         let mut result = som.clone();
         result.regions = filtered_regions;
-        return result;
+        return refresh_meta(result);
     }
 
     eprintln!(
@@ -181,7 +181,44 @@ where
 
     let mut result = som.clone();
     result.regions = filtered_regions;
-    result
+    refresh_meta(result)
+}
+
+fn refresh_meta(mut som: Som) -> Som {
+    let mut element_count = 0;
+    let mut interactive_count = 0;
+    for region in &som.regions {
+        count_elements(&region.elements, &mut element_count, &mut interactive_count);
+    }
+    som.meta.element_count = element_count;
+    som.meta.interactive_count = interactive_count;
+
+    // `som_bytes` describes the serialized snapshot, so it must be refreshed
+    // after narrowing the regions. Iterate because the metadata value itself
+    // is part of the serialized payload and its digit count can affect length.
+    for _ in 0..3 {
+        let serialized_len = serde_json::to_string(&som).map(|json| json.len()).unwrap_or(0);
+        if som.meta.som_bytes == serialized_len {
+            break;
+        }
+        som.meta.som_bytes = serialized_len;
+    }
+    som
+}
+
+fn count_elements(elements: &[Element], element_count: &mut usize, interactive_count: &mut usize) {
+    for element in elements {
+        *element_count += 1;
+        if element.role.is_interactive() {
+            *interactive_count += 1;
+        }
+        if let Some(children) = &element.children {
+            count_elements(children, element_count, interactive_count);
+        }
+        if let Some(shadow) = &element.shadow {
+            count_elements(&shadow.elements, element_count, interactive_count);
+        }
+    }
 }
 
 fn filter_elements_by<F>(elements: &[Element], matches: &F) -> Vec<Element>
@@ -389,6 +426,12 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Button);
+        assert_eq!(filtered.meta.element_count, 1);
+        assert_eq!(filtered.meta.interactive_count, 1);
+        assert_eq!(
+            filtered.meta.som_bytes,
+            serde_json::to_string(&filtered).unwrap().len()
+        );
     }
 
     #[test]
