@@ -2405,7 +2405,12 @@ fn build_element_attrs(
     if has_attr(attrs, "formnovalidate") {
         map.insert("formnovalidate".into(), json!(true));
     }
-    for key in ["minlength", "maxlength", "min", "max"] {
+    for key in ["minlength", "maxlength"] {
+        if let Some((_, value)) = attrs.iter().find(|(n, _)| n == key) {
+            map.insert(key.into(), parse_integer_attribute(value));
+        }
+    }
+    for key in ["min", "max"] {
         if let Some((_, value)) = attrs.iter().find(|(n, _)| n == key) {
             map.insert(key.into(), parse_numeric_attribute(value));
         }
@@ -2516,6 +2521,16 @@ fn parse_numeric_attribute(value: &str) -> serde_json::Value {
         }
     }
     json!(value)
+}
+
+/// Preserve integer-only HTML constraints as JSON integers.
+/// Fractional or invalid values remain strings rather than being coerced.
+fn parse_integer_attribute(value: &str) -> serde_json::Value {
+    value
+        .trim()
+        .parse::<i64>()
+        .map(serde_json::Value::from)
+        .unwrap_or_else(|_| json!(value))
 }
 
 fn selected_select_value(options: &[serde_json::Value]) -> Option<String> {
@@ -3732,6 +3747,23 @@ mod tests {
             .expect("sort button should compile");
         let attrs = sort.attrs.as_ref().expect("sort attrs should compile");
         assert_eq!(attrs["aria"]["sort"], "ascending");
+    }
+
+    #[test]
+    fn test_length_constraints_remain_integer_only() {
+        let html = r#"<main>
+  <input minlength="2" maxlength="12.5" aria-label="Name">
+</main>"#;
+        let som = compile(html, "https://example.com").unwrap();
+        let input = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| element.role == ElementRole::TextInput)
+            .expect("input should compile");
+        let attrs = input.attrs.as_ref().expect("input attrs should compile");
+        assert_eq!(attrs["minlength"], 2);
+        assert_eq!(attrs["maxlength"], "12.5");
     }
 
     #[test]
