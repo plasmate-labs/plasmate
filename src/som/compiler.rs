@@ -3788,6 +3788,23 @@ mod tests {
     }
 
     #[test]
+    fn test_length_constraints_accept_whitespace_padded_integers() {
+        let html = r#"<main>
+  <input minlength=" 2 " maxlength=" 12 " aria-label="Name">
+</main>"#;
+        let som = compile(html, "https://example.com").unwrap();
+        let input = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| element.role == ElementRole::TextInput)
+            .expect("input should compile");
+        let attrs = input.attrs.as_ref().expect("input attrs should compile");
+        assert_eq!(attrs["minlength"], 2);
+        assert_eq!(attrs["maxlength"], 12);
+    }
+
+    #[test]
     fn test_aria_widget_state_cues_are_preserved() {
         let html = r#"<!DOCTYPE html>
 <html><head><title>Widgets</title></head>
