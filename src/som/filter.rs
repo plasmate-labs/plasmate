@@ -192,6 +192,17 @@ fn refresh_meta(mut som: Som) -> Som {
     }
     som.meta.element_count = element_count;
     som.meta.interactive_count = interactive_count;
+
+    // `som_bytes` describes the serialized snapshot, so it must be refreshed
+    // after narrowing the regions. Iterate because the metadata value itself
+    // is part of the serialized payload and its digit count can affect length.
+    for _ in 0..3 {
+        let serialized_len = serde_json::to_string(&som).map(|json| json.len()).unwrap_or(0);
+        if som.meta.som_bytes == serialized_len {
+            break;
+        }
+        som.meta.som_bytes = serialized_len;
+    }
     som
 }
 
@@ -415,6 +426,10 @@ mod tests {
         assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Button);
         assert_eq!(filtered.meta.element_count, 1);
         assert_eq!(filtered.meta.interactive_count, 1);
+        assert_eq!(
+            filtered.meta.som_bytes,
+            serde_json::to_string(&filtered).unwrap().len()
+        );
     }
 
     #[test]
