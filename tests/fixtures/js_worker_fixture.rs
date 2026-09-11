@@ -139,6 +139,19 @@ fn main() {
         }
         return;
     }
+    if input.contains("__fixture_same_document_fragment__") {
+        if input.contains("var href") && input.contains("#pricing") && !input.contains("area[href]")
+        {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"navigated\":true,\"href\":\"https://example.test/shop#pricing\"}}","effective_html":"<html><head><title>Shop</title></head><body><main><!-- __fixture_same_document_fragment__ --><a href='#pricing'>Pricing</a><h2 id='pricing'>Plans</h2></main></body></html>"}}}}"#
+            );
+        } else {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"error\":\"Element not found in DOM\"}}","effective_html":"<html><body><p>mutated</p></body></html>"}}}}"#
+            );
+        }
+        return;
+    }
     if input.contains("__fixture_compiled_name__") {
         if input.contains("getAttribute('name')")
             && input.contains("fieldName")

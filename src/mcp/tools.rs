@@ -1958,6 +1958,20 @@ fn resolve_click_fetch_url(current_url: &str, href: &str) -> Option<String> {
     }
 }
 
+fn is_same_document_url(current_url: &str, resolved: &str) -> bool {
+    let Ok(current) = url::Url::parse(current_url) else {
+        return false;
+    };
+    let Ok(resolved) = url::Url::parse(resolved) else {
+        return false;
+    };
+    current.scheme() == resolved.scheme()
+        && current.host() == resolved.host()
+        && current.port_or_known_default() == resolved.port_or_known_default()
+        && current.path() == resolved.path()
+        && current.query() == resolved.query()
+}
+
 fn compiled_link_href(element: &crate::som::types::Element) -> Option<&str> {
     if element.role != crate::som::types::ElementRole::Link {
         return None;
@@ -2388,16 +2402,18 @@ pub async fn handle_click(
     let new_url = resolve_click_navigation_url(&click_data, &url, element)
         .or_else(|| compiled_submit_form_get_navigation_url(&som, element, &url));
 
-    // If we navigated, fetch the new page
     let (final_html, final_url) = if let Some(resolved) = new_url {
-        match fetch::fetch_url(client, &resolved, DEFAULT_TIMEOUT_MS).await {
-            Ok(r) => (r.html, r.url),
-            Err(e) => {
-                return error_response(&format!("Navigation failed: {}", e));
+        if is_same_document_url(&url, &resolved) {
+            (updated_html, resolved)
+        } else {
+            match fetch::fetch_url(client, &resolved, DEFAULT_TIMEOUT_MS).await {
+                Ok(r) => (r.html, r.url),
+                Err(e) => {
+                    return error_response(&format!("Navigation failed: {}", e));
+                }
             }
         }
     } else {
-        // Use the updated HTML from click handlers
         (updated_html, url.clone())
     };
 
@@ -4728,6 +4744,60 @@ mod tests {
 
     #[tokio::test]
     #[serial_test::serial]
+    async fn click_same_document_fragment_skips_fetch() {
+        let options = stateful_worker_options(Duration::from_secs(5));
+        let sessions = Arc::new(SessionManager::with_worker_options(options));
+        let session_id = sessions.create_session().await.unwrap();
+        let html = "<html><head><title>Shop</title></head><body><main><!-- __fixture_same_document_fragment__ --><a href='#pricing'>Pricing</a><h2 id='pricing'>Plans</h2></main></body></html>";
+        sessions
+            .with_session(&session_id, |session| {
+                session.target.current_url = Some("https://example.test/shop".to_string());
+                session.target.current_html = Some(html.to_string());
+                session.target.effective_html = Some(html.to_string());
+                session.target.current_som = Some(
+                    plasmate::som::compiler::compile(html, "https://example.test/shop").unwrap(),
+                );
+                session.target.rebuild_node_map();
+            })
+            .await
+            .unwrap();
+        let element_id = sessions
+            .with_session(&session_id, |session| {
+                let som = session.target.current_som.as_ref().unwrap();
+                som.regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .find(|element| {
+                        element.role == ElementRole::Link
+                            && compiled_click_href(element) == Some("#pricing")
+                    })
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose the in-page fragment link")
+            })
+            .await
+            .unwrap();
+        let client = reqwest::Client::new();
+
+        let clicked = handle_click(
+            &json!({"session_id": session_id, "element_id": element_id}),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert!(clicked.get("isError").is_none(), "{clicked}");
+        let payload = tool_payload(&clicked);
+        assert_eq!(payload["title"], "Shop");
+        assert_eq!(payload["url"], "https://example.test/shop#pricing");
+        assert!(payload["regions"].is_array(), "{payload}");
+        let text = payload.to_string();
+        assert!(
+            !text.contains("Navigation failed"),
+            "same-document fragments must not fetch: {text}"
+        );
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
     async fn click_disabled_fails_closed_and_preserves_session() {
         let options = stateful_worker_options(Duration::from_secs(5));
         let sessions = Arc::new(SessionManager::with_worker_options(options));
@@ -4816,6 +4886,38 @@ mod tests {
         assert_eq!(
             resolve_click_fetch_url("https://example.test/page", "  "),
             None
+        );
+    }
+
+    #[test]
+    fn is_same_document_url_ignores_fragments_and_keeps_path_query() {
+        assert!(is_same_document_url(
+            "https://example.test/page",
+            "https://example.test/page#pricing"
+        ));
+        assert!(is_same_document_url(
+            "https://example.test/page?q=old",
+            "https://example.test/page?q=old#results"
+        ));
+        assert!(is_same_document_url(
+            "https://example.test/page#old",
+            "https://example.test/page#"
+        ));
+        assert!(!is_same_document_url(
+            "https://example.test/page",
+            "https://example.test/other#pricing"
+        ));
+        assert!(!is_same_document_url(
+            "https://example.test/page?q=old",
+            "https://example.test/page?q=new#pricing"
+        ));
+        assert!(!is_same_document_url(
+            "https://example.test/page",
+            "http://example.test/page#pricing"
+        ));
+        assert_eq!(
+            resolve_click_fetch_url("https://example.test/page", "#pricing"),
+            Some("https://example.test/page#pricing".to_string())
         );
     }
 
