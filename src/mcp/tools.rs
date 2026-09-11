@@ -1711,7 +1711,7 @@ pub fn evaluate_definition() -> ToolDefinition {
 pub fn click_definition() -> ToolDefinition {
     ToolDefinition {
         name: "click".to_string(),
-        description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click. Resolves the live control by compiled test_id, or an icon-only link href, when html_id is absent. Follows a compiled GET form action or submitter formaction when clicking a submit button, encoding named text_input/textarea values as the query. Fails closed when the compiled SOM marks the target disabled, without mutating session HTML.".to_string(),
+    description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click. Resolves the live control by compiled test_id, or an icon-only link href, when html_id is absent. Follows a compiled GET form action or submitter formaction when clicking a submit button, encoding named text_input/textarea/select/checkbox/radio values as the query. Fails closed when the compiled SOM marks the target disabled, without mutating session HTML.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -2121,6 +2121,44 @@ fn collect_compiled_form_get_pairs(
         if is_compiled_file_input(element) {
             continue;
         }
+        if element.role == crate::som::types::ElementRole::Select {
+            if let Some(name) = compiled_field_name(element) {
+                if let Some(options) = element
+                    .attrs
+                    .as_ref()
+                    .and_then(|attrs| attrs.get("options"))
+                    .and_then(|options| options.as_array())
+                {
+                    let multiple = element
+                        .attrs
+                        .as_ref()
+                        .and_then(|attrs| attrs.get("multiple"))
+                        .and_then(|value| value.as_bool())
+                        .unwrap_or(false);
+                    for option in options.iter().filter(|option| {
+                        option
+                            .get("selected")
+                            .and_then(|value| value.as_bool())
+                            .unwrap_or(false)
+                            && !option
+                                .get("disabled")
+                                .and_then(|value| value.as_bool())
+                                .unwrap_or(false)
+                    }) {
+                        if let Some(value) = option.get("value").and_then(|value| value.as_str()) {
+                            pairs.push((name.to_string(), value.to_string()));
+                            if !multiple {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            if let Some(children) = &element.children {
+                collect_compiled_form_get_pairs(children, pairs);
+            }
+            continue;
+        }
         if matches!(
             element.role,
             crate::som::types::ElementRole::Checkbox | crate::som::types::ElementRole::Radio
@@ -2213,6 +2251,7 @@ fn compiled_field_name(element: &crate::som::types::Element) -> Option<&str> {
             | crate::som::types::ElementRole::Textarea
             | crate::som::types::ElementRole::Checkbox
             | crate::som::types::ElementRole::Radio
+            | crate::som::types::ElementRole::Select
     ) {
         return None;
     }
@@ -5396,6 +5435,27 @@ mod tests {
                 "https://example.test/preferences"
             ),
             Some("https://example.test/results?alerts=on&layout=grid".to_string())
+        );
+    }
+
+    #[test]
+    fn compiled_submit_form_get_navigation_url_includes_selected_select_values() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head><title>Filters</title></head><body>
+<form action="/results" method="get">
+  <select name="region"><option value="us" selected>US</option><option value="eu">EU</option></select>
+  <select name="tag" multiple><option value="rust" selected>Rust</option><option value="som" selected>SOM</option><option value="hidden" selected disabled>Hidden</option></select>
+  <button>Apply</button>
+</form>
+</body></html>"##,
+            "https://example.test/filters",
+        )
+        .expect("fixture HTML should compile");
+        let apply = compiled_form_submit_button(&som, "Apply");
+
+        assert_eq!(
+            compiled_submit_form_get_navigation_url(&som, apply, "https://example.test/filters"),
+            Some("https://example.test/results?region=us&tag=rust&tag=som".to_string())
         );
     }
 
