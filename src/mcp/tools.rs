@@ -2135,16 +2135,24 @@ fn collect_compiled_form_get_pairs(
                         .and_then(|attrs| attrs.get("multiple"))
                         .and_then(|value| value.as_bool())
                         .unwrap_or(false);
-                    for option in options.iter().filter(|option| {
+                    let enabled_options = options.iter().filter(|option| {
+                        !option
+                            .get("disabled")
+                            .and_then(|value| value.as_bool())
+                            .unwrap_or(false)
+                    });
+                    let selected_options = enabled_options.clone().filter(|option| {
                         option
                             .get("selected")
                             .and_then(|value| value.as_bool())
                             .unwrap_or(false)
-                            && !option
-                                .get("disabled")
-                                .and_then(|value| value.as_bool())
-                                .unwrap_or(false)
-                    }) {
+                    });
+                    let options = if multiple || selected_options.clone().next().is_some() {
+                        selected_options.collect::<Vec<_>>()
+                    } else {
+                        enabled_options.take(1).collect::<Vec<_>>()
+                    };
+                    for option in options {
                         if let Some(value) = option.get("value").and_then(|value| value.as_str()) {
                             pairs.push((name.to_string(), value.to_string()));
                             if !multiple {
@@ -5456,6 +5464,26 @@ mod tests {
         assert_eq!(
             compiled_submit_form_get_navigation_url(&som, apply, "https://example.test/filters"),
             Some("https://example.test/results?region=us&tag=rust&tag=som".to_string())
+        );
+    }
+
+    #[test]
+    fn compiled_submit_form_get_navigation_url_defaults_single_select_to_first_enabled_option() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head><title>Filters</title></head><body>
+<form action="/results" method="get">
+  <select name="region"><option value="blocked" disabled>Blocked</option><option value="us">US</option><option value="eu">EU</option></select>
+  <button>Apply</button>
+</form>
+</body></html>"##,
+            "https://example.test/filters",
+        )
+        .expect("fixture HTML should compile");
+        let apply = compiled_form_submit_button(&som, "Apply");
+
+        assert_eq!(
+            compiled_submit_form_get_navigation_url(&som, apply, "https://example.test/filters"),
+            Some("https://example.test/results?region=us".to_string())
         );
     }
 
