@@ -2121,8 +2121,26 @@ fn collect_compiled_form_get_pairs(
         if is_compiled_file_input(element) {
             continue;
         }
+        if matches!(
+            element.role,
+            crate::som::types::ElementRole::Checkbox | crate::som::types::ElementRole::Radio
+        ) && !element_is_checked(element)
+        {
+            continue;
+        }
         if let Some(name) = compiled_field_name(element) {
-            pairs.push((name.to_string(), compiled_field_string_value(element)));
+            let value = if matches!(
+                element.role,
+                crate::som::types::ElementRole::Checkbox | crate::som::types::ElementRole::Radio
+            ) {
+                compiled_field_string_value(element)
+                    .is_empty()
+                    .then(|| "on".to_string())
+                    .unwrap_or_else(|| compiled_field_string_value(element))
+            } else {
+                compiled_field_string_value(element)
+            };
+            pairs.push((name.to_string(), value));
         }
         if let Some(children) = &element.children {
             collect_compiled_form_get_pairs(children, pairs);
@@ -2135,6 +2153,13 @@ fn element_is_disabled(element: &crate::som::types::Element) -> bool {
         .attrs
         .as_ref()
         .is_some_and(|attrs| attr_flag_true(attrs, "disabled"))
+}
+
+fn element_is_checked(element: &crate::som::types::Element) -> bool {
+    element
+        .attrs
+        .as_ref()
+        .is_some_and(|attrs| attr_flag_true(attrs, "checked"))
 }
 
 fn compiled_form_get_pairs(
@@ -2184,7 +2209,10 @@ fn compiled_submit_form_get_navigation_url(
 fn compiled_field_name(element: &crate::som::types::Element) -> Option<&str> {
     if !matches!(
         element.role,
-        crate::som::types::ElementRole::TextInput | crate::som::types::ElementRole::Textarea
+        crate::som::types::ElementRole::TextInput
+            | crate::som::types::ElementRole::Textarea
+            | crate::som::types::ElementRole::Checkbox
+            | crate::som::types::ElementRole::Radio
     ) {
         return None;
     }
@@ -5341,6 +5369,33 @@ mod tests {
                 "https://example.test/login"
             ),
             None
+        );
+    }
+
+    #[test]
+    fn compiled_submit_form_get_navigation_url_includes_successful_checkboxes_and_radios() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head><title>Preferences</title></head><body>
+<form action="/results" method="get">
+  <input type="checkbox" name="alerts" checked>
+  <input type="checkbox" name="marketing">
+  <input type="radio" name="layout" value="grid" checked>
+  <input type="radio" name="layout" value="list">
+  <button>Apply</button>
+</form>
+</body></html>"##,
+            "https://example.test/preferences",
+        )
+        .expect("fixture HTML should compile");
+        let apply = compiled_form_submit_button(&som, "Apply");
+
+        assert_eq!(
+            compiled_submit_form_get_navigation_url(
+                &som,
+                apply,
+                "https://example.test/preferences"
+            ),
+            Some("https://example.test/results?alerts=on&layout=grid".to_string())
         );
     }
 
