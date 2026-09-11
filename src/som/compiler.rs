@@ -2407,15 +2407,11 @@ fn build_element_attrs(
     }
     for key in ["minlength", "maxlength", "min", "max"] {
         if let Some((_, value)) = attrs.iter().find(|(n, _)| n == key) {
-            let parsed = value
-                .parse::<i64>()
-                .map(serde_json::Value::from)
-                .unwrap_or_else(|_| json!(value));
-            map.insert(key.into(), parsed);
+            map.insert(key.into(), parse_numeric_attribute(value));
         }
     }
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "step") {
-        map.insert("step".into(), json!(value));
+        map.insert("step".into(), parse_numeric_attribute(value));
     }
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "pattern") {
         map.insert("pattern".into(), json!(value));
@@ -2505,6 +2501,21 @@ fn build_element_attrs(
     } else {
         Some(serde_json::Value::Object(map))
     }
+}
+
+/// Preserve numeric HTML constraints as JSON numbers, including fractional values.
+/// Invalid or non-numeric values remain strings so the compiler never invents a value.
+fn parse_numeric_attribute(value: &str) -> serde_json::Value {
+    let trimmed = value.trim();
+    if let Ok(integer) = trimmed.parse::<i64>() {
+        return json!(integer);
+    }
+    if let Ok(float) = trimmed.parse::<f64>() {
+        if float.is_finite() {
+            return json!(float);
+        }
+    }
+    json!(value)
 }
 
 fn selected_select_value(options: &[serde_json::Value]) -> Option<String> {
@@ -3688,7 +3699,7 @@ mod tests {
 <body>
 <main>
   <label for="quota">Seat quota</label>
-  <input id="quota" type="range" min="1" max="100" step="5" value="40" aria-valuemin="1" aria-valuemax="100" aria-valuenow="40" aria-valuetext="40 seats" aria-orientation="horizontal">
+  <input id="quota" type="range" min="0.5" max="100.5" step="2.5" value="40" aria-valuemin="0.5" aria-valuemax="100.5" aria-valuenow="40" aria-valuetext="40 seats" aria-orientation="horizontal">
   <button aria-sort="ascending">Sort by name</button>
 </main>
 </body>
@@ -3706,11 +3717,11 @@ mod tests {
             .find(|element| element.role == ElementRole::TextInput)
             .expect("range input should compile");
         let attrs = range.attrs.as_ref().expect("range attrs should compile");
-        assert_eq!(attrs["min"], 1);
-        assert_eq!(attrs["max"], 100);
-        assert_eq!(attrs["step"], "5");
-        assert_eq!(attrs["aria"]["valuemin"], "1");
-        assert_eq!(attrs["aria"]["valuemax"], "100");
+        assert_eq!(attrs["min"], 0.5);
+        assert_eq!(attrs["max"], 100.5);
+        assert_eq!(attrs["step"], 2.5);
+        assert_eq!(attrs["aria"]["valuemin"], "0.5");
+        assert_eq!(attrs["aria"]["valuemax"], "100.5");
         assert_eq!(attrs["aria"]["valuenow"], "40");
         assert_eq!(attrs["aria"]["valuetext"], "40 seats");
         assert_eq!(attrs["aria"]["orientation"], "horizontal");
