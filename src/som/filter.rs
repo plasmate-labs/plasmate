@@ -204,6 +204,7 @@ where
             let shadow_match = if let Some(shadow) = &element.shadow {
                 let filtered_shadow_elements = filter_elements_by(&shadow.elements, matches);
                 if filtered_shadow_elements.is_empty() {
+                    cloned.shadow = None;
                     false
                 } else {
                     cloned.shadow = Some(ShadowRoot {
@@ -556,6 +557,31 @@ mod tests {
         let children = filtered.regions[0].elements[0].children.as_ref().unwrap();
         assert_eq!(children.len(), 1);
         assert_eq!(children[0].html_id.as_deref(), Some("nested-action"));
+    }
+
+    #[test]
+    fn test_selector_matching_element_filters_unmatched_shadow_content() {
+        let mut som = make_test_som();
+        som.regions[1].elements[1].shadow = Some(ShadowRoot {
+            mode: "open".to_string(),
+            elements: vec![Element {
+                id: "shadow-text".to_string(),
+                role: ElementRole::Paragraph,
+                html_id: None,
+                text: Some("Do not leak".to_string()),
+                label: None,
+                actions: None,
+                attrs: None,
+                children: None,
+                hints: None,
+                shadow: None,
+            }],
+        });
+
+        let filtered = apply_selector(&som, "button");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert!(filtered.regions[0].elements[0].shadow.is_none());
     }
 
     #[test]
