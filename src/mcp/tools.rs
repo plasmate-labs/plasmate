@@ -1711,7 +1711,7 @@ pub fn evaluate_definition() -> ToolDefinition {
 pub fn click_definition() -> ToolDefinition {
     ToolDefinition {
         name: "click".to_string(),
-        description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click. Resolves the live control by compiled test_id, or an icon-only link href, when html_id is absent. Follows a compiled GET form action or submitter formaction when clicking a submit button, encoding named text_input/textarea values as the query. Fails closed when the compiled SOM marks the target disabled, without mutating session HTML.".to_string(),
+        description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click. Resolves the live control by compiled test_id, or an icon-only link href, when html_id is absent. Follows a compiled GET form action or submitter formaction when clicking a submit button, encoding named text_input/textarea/select/checkbox/radio values as the query (including selected options and the clicked submitter). Fails closed when the compiled SOM marks the target disabled, without mutating session HTML.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -2121,8 +2121,72 @@ fn collect_compiled_form_get_pairs(
         if is_compiled_file_input(element) {
             continue;
         }
+        if element.role == crate::som::types::ElementRole::Select {
+            if let Some(name) = compiled_field_name(element) {
+                if let Some(options) = element
+                    .attrs
+                    .as_ref()
+                    .and_then(|attrs| attrs.get("options"))
+                    .and_then(|options| options.as_array())
+                {
+                    let multiple = element
+                        .attrs
+                        .as_ref()
+                        .and_then(|attrs| attrs.get("multiple"))
+                        .and_then(|value| value.as_bool())
+                        .unwrap_or(false);
+                    let enabled_options = options.iter().filter(|option| {
+                        !option
+                            .get("disabled")
+                            .and_then(|value| value.as_bool())
+                            .unwrap_or(false)
+                    });
+                    let selected_options = enabled_options.clone().filter(|option| {
+                        option
+                            .get("selected")
+                            .and_then(|value| value.as_bool())
+                            .unwrap_or(false)
+                    });
+                    let options = if multiple || selected_options.clone().next().is_some() {
+                        selected_options.collect::<Vec<_>>()
+                    } else {
+                        enabled_options.take(1).collect::<Vec<_>>()
+                    };
+                    for option in options {
+                        if let Some(value) = option.get("value").and_then(|value| value.as_str()) {
+                            pairs.push((name.to_string(), value.to_string()));
+                            if !multiple {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            if let Some(children) = &element.children {
+                collect_compiled_form_get_pairs(children, pairs);
+            }
+            continue;
+        }
+        if matches!(
+            element.role,
+            crate::som::types::ElementRole::Checkbox | crate::som::types::ElementRole::Radio
+        ) && !element_is_checked(element)
+        {
+            continue;
+        }
         if let Some(name) = compiled_field_name(element) {
-            pairs.push((name.to_string(), compiled_field_string_value(element)));
+            let value = if matches!(
+                element.role,
+                crate::som::types::ElementRole::Checkbox | crate::som::types::ElementRole::Radio
+            ) {
+                compiled_field_string_value(element)
+                    .is_empty()
+                    .then(|| "on".to_string())
+                    .unwrap_or_else(|| compiled_field_string_value(element))
+            } else {
+                compiled_field_string_value(element)
+            };
+            pairs.push((name.to_string(), value));
         }
         if let Some(children) = &element.children {
             collect_compiled_form_get_pairs(children, pairs);
@@ -2135,6 +2199,13 @@ fn element_is_disabled(element: &crate::som::types::Element) -> bool {
         .attrs
         .as_ref()
         .is_some_and(|attrs| attr_flag_true(attrs, "disabled"))
+}
+
+fn element_is_checked(element: &crate::som::types::Element) -> bool {
+    element
+        .attrs
+        .as_ref()
+        .is_some_and(|attrs| attr_flag_true(attrs, "checked"))
 }
 
 fn compiled_form_get_pairs(
@@ -2184,7 +2255,11 @@ fn compiled_submit_form_get_navigation_url(
 fn compiled_field_name(element: &crate::som::types::Element) -> Option<&str> {
     if !matches!(
         element.role,
-        crate::som::types::ElementRole::TextInput | crate::som::types::ElementRole::Textarea
+        crate::som::types::ElementRole::TextInput
+            | crate::som::types::ElementRole::Textarea
+            | crate::som::types::ElementRole::Checkbox
+            | crate::som::types::ElementRole::Radio
+            | crate::som::types::ElementRole::Select
     ) {
         return None;
     }
@@ -5341,6 +5416,98 @@ mod tests {
                 "https://example.test/login"
             ),
             None
+        );
+    }
+
+    #[test]
+    fn compiled_submit_form_get_navigation_url_includes_successful_checkboxes_and_radios() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head><title>Preferences</title></head><body>
+<form action="/results" method="get">
+  <input type="checkbox" name="alerts" checked>
+  <input type="checkbox" name="marketing">
+  <input type="radio" name="layout" value="grid" checked>
+  <input type="radio" name="layout" value="list">
+  <button>Apply</button>
+</form>
+</body></html>"##,
+            "https://example.test/preferences",
+        )
+        .expect("fixture HTML should compile");
+        let apply = compiled_form_submit_button(&som, "Apply");
+
+        assert_eq!(
+            compiled_submit_form_get_navigation_url(
+                &som,
+                apply,
+                "https://example.test/preferences"
+            ),
+            Some("https://example.test/results?alerts=on&layout=grid".to_string())
+        );
+    }
+
+    #[test]
+    fn compiled_submit_form_get_navigation_url_includes_selected_select_values() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head><title>Filters</title></head><body>
+<form action="/results" method="get">
+  <select name="region"><option value="us" selected>US</option><option value="eu">EU</option></select>
+  <select name="tag" multiple><option value="rust" selected>Rust</option><option value="som" selected>SOM</option><option value="hidden" selected disabled>Hidden</option></select>
+  <button>Apply</button>
+</form>
+</body></html>"##,
+            "https://example.test/filters",
+        )
+        .expect("fixture HTML should compile");
+        let apply = compiled_form_submit_button(&som, "Apply");
+
+        assert_eq!(
+            compiled_submit_form_get_navigation_url(&som, apply, "https://example.test/filters"),
+            Some("https://example.test/results?region=us&tag=rust&tag=som".to_string())
+        );
+    }
+
+    #[test]
+    fn compiled_submit_form_get_navigation_url_defaults_single_select_to_first_enabled_option() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head><title>Filters</title></head><body>
+<form action="/results" method="get">
+  <select name="region"><option value="blocked" disabled>Blocked</option><option value="us">US</option><option value="eu">EU</option></select>
+  <button>Apply</button>
+</form>
+</body></html>"##,
+            "https://example.test/filters",
+        )
+        .expect("fixture HTML should compile");
+        let apply = compiled_form_submit_button(&som, "Apply");
+
+        assert_eq!(
+            compiled_submit_form_get_navigation_url(&som, apply, "https://example.test/filters"),
+            Some("https://example.test/results?region=us".to_string())
+        );
+    }
+
+    #[test]
+    fn compiled_submit_form_get_navigation_url_includes_textarea_value() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head><title>Feedback</title></head><body>
+<form action="/feedback" method="get">
+  <textarea name="message">hello agents</textarea>
+  <button>Send</button>
+</form>
+</body></html>"##,
+            "https://example.test/feedback",
+        )
+        .expect("fixture HTML should compile");
+        let send = compiled_submit_form_get_navigation_url(
+            &som,
+            &compiled_form_submit_button(&som, "Send"),
+            "https://example.test/feedback",
+        );
+
+        assert_eq!(
+            send,
+            Some("https://example.test/feedback?message=hello+agents".to_string())
         );
     }
 

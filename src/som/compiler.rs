@@ -2726,7 +2726,12 @@ fn extract_select_options(
                 .unwrap_or(false)
         })
     {
-        if let Some(serde_json::Value::Object(option)) = options.first_mut() {
+        if let Some(serde_json::Value::Object(option)) = options.iter_mut().find(|option| {
+            !option
+                .get("disabled")
+                .and_then(|disabled| disabled.as_bool())
+                .unwrap_or(false)
+        }) {
             option.insert("selected".into(), json!(true));
         }
     }
@@ -5518,6 +5523,31 @@ mod tests {
             }),
             "paragraphs must not compile textarea rows/cols: {elements:?}"
         );
+    }
+
+    #[test]
+    fn test_select_defaults_to_first_enabled_option() {
+        let som = compile(
+            r#"<html><body><main>
+                <select id="region">
+                    <option value="blocked" disabled>Blocked</option>
+                    <option value="us">US</option>
+                </select>
+            </main></body></html>"#,
+            "https://example.test/filters",
+        )
+        .unwrap();
+        let select = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| element.html_id.as_deref() == Some("region"))
+            .expect("select should compile");
+        let attrs = select.attrs.as_ref().expect("select attrs should compile");
+
+        assert_eq!(attrs["value"], "us");
+        assert_eq!(attrs["options"][0]["disabled"], true);
+        assert_eq!(attrs["options"][1]["selected"], true);
     }
 
     #[test]
