@@ -33,11 +33,11 @@ frequency.
 If these gates are not met, report a no-change or blocked run. Never stash,
 overwrite, reset, or absorb unrelated work.
 
-## Active governor constraint (2026-09-10)
+## Active governor constraint (2026-09-11)
 
-- Window: `e40c54f` .. `e3b4aae`
+- Window: `73efbef` .. `a79a568`
 - Decision: `NARROW`
-- Merged this run: `47b3fe6` click compiled GET submit (`e3b4aae`)
+- Merged this run: `7c7e122` navigate_to relative URL (`bf75c0a`), `15dd3ba` click same-document fragment (`f02c089`), `8f18fde` click GET submit form owner id (`a79a568`)
 - Prohibited next: another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
@@ -534,6 +534,16 @@ overwrite, reset, or absorb unrelated work.
      `type_text`) or SDKs; do not add `form.submit` IDL, POST
      navigation, `enctype` / `target` / `novalidate`, or
      select/checkbox/radio encoding.
+     Do not copy #409 navigate_to session-relative URL join onto click,
+     extract_links, CLI, CDP, or SDKs; do not reopen missing-session
+     `open_page` copy or echo requested relative paths.
+     Do not copy #410 click same-document fragment skip-fetch onto
+     `navigate_to`, extract_links, CLI, CDP, or SDKs; do not reopen
+     click non-http skip or treat path/query changes as same-document.
+     Do not copy #411 click compiled GET submit form owner id onto
+     extract_links, CLI, CDP, adjacent handlers (`clear`, `toggle`,
+     `select_option`, `type_text`) or SDKs; do not add `form.submit`
+     IDL, POST navigation, or select/checkbox/radio encoding.
 - Allowed next (pick one distinct journey): a real missed regression;
     a published-docs integration failure that is not another SDK
     install-path, SOM-reference, OpenClaw/Pi, CrewAI, Vercel AI,
@@ -555,8 +565,10 @@ overwrite, reset, or absorb unrelated work.
      href lookup, clear compiled action:clear fail-closed, install
      native MCP tool names, click compiled ARIA link lookup,
      searchbox selector alias, combobox/listbox selector alias,
-     ARIA role=article Section compile, or click compiled GET form
-     submit.
+     ARIA role=article Section compile, click compiled GET form
+     submit, navigate_to session-relative URL join, click
+     same-document fragment skip-fetch, or click compiled GET
+     submit form owner id.
 
 ## Preferred lanes
 
