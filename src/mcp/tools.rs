@@ -2515,7 +2515,7 @@ fn default_pixels() -> i32 {
 pub fn navigate_to_definition() -> ToolDefinition {
     ToolDefinition {
         name: "navigate_to".to_string(),
-        description: "Navigate to a new URL within an existing browser session. Returns the updated page SOM and whether validated local page-state cache restored the SOM/effective HTML.".to_string(),
+        description: "Navigate to a new URL within an existing browser session. Returns the updated page SOM and whether validated local page-state cache restored the SOM/effective HTML. Relative paths, query strings, and fragments resolve against the session's already-loaded page URL; pass an absolute http(s) URL when no page is loaded.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -2664,6 +2664,28 @@ pub fn clear_definition() -> ToolDefinition {
     }
 }
 
+fn resolve_session_navigation_url(
+    current_url: Option<&str>,
+    requested: &str,
+) -> Result<String, String> {
+    let requested = requested.trim();
+    if requested.is_empty() {
+        return Err("URL is required".to_string());
+    }
+    if url::Url::parse(requested).is_ok() {
+        return Ok(requested.to_string());
+    }
+    let Some(base) = current_url.map(str::trim).filter(|url| !url.is_empty()) else {
+        return Err("Relative URL requires a loaded page in this session.".to_string());
+    };
+    let Ok(base) = url::Url::parse(base) else {
+        return Err("Relative URL requires a loaded page in this session.".to_string());
+    };
+    base.join(requested)
+        .map(|joined| joined.to_string())
+        .map_err(|_| "Relative URL requires a loaded page in this session.".to_string())
+}
+
 /// Handle the navigate_to tool call.
 pub async fn handle_navigate_to(
     arguments: &Value,
@@ -2680,19 +2702,24 @@ pub async fn handle_navigate_to(
 
     info!(session_id = %params.session_id, url_bytes = params.url.len(), "navigate_to");
 
-    // Verify session exists
-    let exists = sessions
-        .with_session(&params.session_id, |_session| {})
+    let session_url = sessions
+        .with_session(&params.session_id, |session| {
+            session.target.current_url.clone()
+        })
         .await;
-    if exists.is_none() {
+    let Some(session_url) = session_url else {
         return error_response(&format!(
             "Session not found: {}. Call open_page with a URL to create a session.",
             params.session_id
         ));
-    }
+    };
+    let url = match resolve_session_navigation_url(session_url.as_deref(), &params.url) {
+        Ok(url) => url,
+        Err(message) => return error_response(&message),
+    };
 
     let (html, final_url, page_result, cache_restored) =
-        match load_session_page_for_mcp(client, cache, &params.url).await {
+        match load_session_page_for_mcp(client, cache, &url).await {
             Ok(result) => result,
             Err(e) => {
                 return error_response(&e);
@@ -2726,7 +2753,7 @@ pub async fn handle_navigate_to(
     plasmate::measurement::record_delivery(
         "navigate_to",
         "som",
-        &params.url,
+        &url,
         None,
         source_html_bytes,
         &delivered_text,
@@ -4124,6 +4151,89 @@ mod tests {
         );
         assert!(!text.contains("https://example.com/checkout"), "{text}");
         assert!(!text.contains("http"), "{text}");
+    }
+
+    #[test]
+    fn resolve_session_navigation_url_joins_relative_against_loaded_page() {
+        assert_eq!(
+            resolve_session_navigation_url(
+                Some("https://example.test/search?q=old"),
+                "https://docs.example.test/api"
+            ),
+            Ok("https://docs.example.test/api".to_string())
+        );
+        assert_eq!(
+            resolve_session_navigation_url(Some("https://example.test/search?q=old"), "/results"),
+            Ok("https://example.test/results".to_string())
+        );
+        assert_eq!(
+            resolve_session_navigation_url(Some("https://example.test/search?q=old"), "?q=rust"),
+            Ok("https://example.test/search?q=rust".to_string())
+        );
+        assert_eq!(
+            resolve_session_navigation_url(Some("https://example.test/docs/guide"), "../api"),
+            Ok("https://example.test/api".to_string())
+        );
+        assert_eq!(
+            resolve_session_navigation_url(
+                Some("https://example.test/search"),
+                "javascript:void(0)"
+            ),
+            Ok("javascript:void(0)".to_string())
+        );
+        assert_eq!(
+            resolve_session_navigation_url(None, "/results").unwrap_err(),
+            "Relative URL requires a loaded page in this session."
+        );
+        assert_eq!(
+            resolve_session_navigation_url(Some("   "), "/results").unwrap_err(),
+            "Relative URL requires a loaded page in this session."
+        );
+        assert_eq!(
+            resolve_session_navigation_url(Some("https://example.test/search"), "  ").unwrap_err(),
+            "URL is required"
+        );
+        let relative_error = resolve_session_navigation_url(None, "/secret-path").unwrap_err();
+        assert!(
+            !relative_error.contains("/secret-path"),
+            "relative resolve errors must not echo the requested path: {relative_error}"
+        );
+        assert!(
+            !relative_error.contains("open_page"),
+            "loaded-session relative errors must not send agents back to open_page: {relative_error}"
+        );
+    }
+
+    #[tokio::test]
+    async fn navigate_to_relative_without_loaded_page_fails_closed() {
+        let sessions = Arc::new(SessionManager::new());
+        let session_id = sessions.create_session().await.unwrap();
+        let client = reqwest::Client::new();
+        let cache = Arc::new(SomCache::new(CacheConfig::default()));
+
+        let result = handle_navigate_to(
+            &json!({"session_id": session_id, "url": "/secret-path"}),
+            &client,
+            &sessions,
+            &cache,
+        )
+        .await;
+
+        assert_eq!(result["isError"], true);
+        let text = result["content"][0]["text"].as_str().unwrap();
+        assert!(
+            text.contains("Relative URL requires a loaded page in this session."),
+            "{text}"
+        );
+        assert!(
+            !text.contains("open_page"),
+            "empty sessions already exist; relative navigate_to must not suggest open_page: {text}"
+        );
+        assert!(
+            !text.contains("/secret-path"),
+            "relative navigate_to errors must not echo the requested path: {text}"
+        );
+        assert!(!text.contains("Failed to fetch"), "{text}");
     }
 
     #[tokio::test]
