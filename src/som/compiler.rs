@@ -2523,14 +2523,18 @@ fn parse_numeric_attribute(value: &str) -> serde_json::Value {
     json!(value)
 }
 
-/// Preserve integer-only HTML constraints as JSON integers.
-/// Fractional or invalid values remain strings rather than being coerced.
+/// Preserve non-negative integer HTML constraints as JSON integers.
+/// Fractional, negative, or otherwise invalid values remain strings rather
+/// than being coerced. `minlength` and `maxlength` use the HTML
+/// non-negative-integer syntax.
 fn parse_integer_attribute(value: &str) -> serde_json::Value {
-    value
-        .trim()
-        .parse::<i64>()
-        .map(serde_json::Value::from)
-        .unwrap_or_else(|_| json!(value))
+    let trimmed = value.trim();
+    if !trimmed.is_empty() && trimmed.bytes().all(|byte| byte.is_ascii_digit()) {
+        if let Ok(integer) = trimmed.parse::<u64>() {
+            return json!(integer);
+        }
+    }
+    json!(value)
 }
 
 fn selected_select_value(options: &[serde_json::Value]) -> Option<String> {
@@ -3764,6 +3768,23 @@ mod tests {
         let attrs = input.attrs.as_ref().expect("input attrs should compile");
         assert_eq!(attrs["minlength"], 2);
         assert_eq!(attrs["maxlength"], "12.5");
+    }
+
+    #[test]
+    fn test_length_constraints_reject_negative_values() {
+        let html = r#"<main>
+  <input minlength="-2" maxlength="+4" aria-label="Name">
+</main>"#;
+        let som = compile(html, "https://example.com").unwrap();
+        let input = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| element.role == ElementRole::TextInput)
+            .expect("input should compile");
+        let attrs = input.attrs.as_ref().expect("input attrs should compile");
+        assert_eq!(attrs["minlength"], "-2");
+        assert_eq!(attrs["maxlength"], "+4");
     }
 
     #[test]
