@@ -1711,7 +1711,7 @@ pub fn evaluate_definition() -> ToolDefinition {
 pub fn click_definition() -> ToolDefinition {
     ToolDefinition {
         name: "click".to_string(),
-    description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click. Resolves the live control by compiled test_id, or an icon-only link href, when html_id is absent. Follows a compiled GET form action or submitter formaction when clicking a submit button, encoding named text_input/textarea/select/checkbox/radio values as the query. Fails closed when the compiled SOM marks the target disabled, without mutating session HTML.".to_string(),
+        description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click. Resolves the live control by compiled test_id, or an icon-only link href, when html_id is absent. Follows a compiled GET form action or submitter formaction when clicking a submit button, encoding named text_input/textarea/select/checkbox/radio values as the query (including selected options and the clicked submitter). Fails closed when the compiled SOM marks the target disabled, without mutating session HTML.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -5456,6 +5456,30 @@ mod tests {
         assert_eq!(
             compiled_submit_form_get_navigation_url(&som, apply, "https://example.test/filters"),
             Some("https://example.test/results?region=us&tag=rust&tag=som".to_string())
+        );
+    }
+
+    #[test]
+    fn compiled_submit_form_get_navigation_url_includes_textarea_value() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head><title>Feedback</title></head><body>
+<form action="/feedback" method="get">
+  <textarea name="message">hello agents</textarea>
+  <button>Send</button>
+</form>
+</body></html>"##,
+            "https://example.test/feedback",
+        )
+        .expect("fixture HTML should compile");
+        let send = compiled_submit_form_get_navigation_url(
+            &som,
+            &compiled_form_submit_button(&som, "Send"),
+            "https://example.test/feedback",
+        );
+
+        assert_eq!(
+            send,
+            Some("https://example.test/feedback?message=hello+agents".to_string())
         );
     }
 
