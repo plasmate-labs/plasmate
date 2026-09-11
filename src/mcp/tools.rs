@@ -2039,12 +2039,28 @@ fn submit_effective_is_get(
     }
 }
 
+fn form_region_matches_owner_id(region: &crate::som::types::Region, owner_id: &str) -> bool {
+    region
+        .label
+        .as_deref()
+        .map(str::trim)
+        .filter(|label| !label.is_empty())
+        == Some(owner_id)
+}
+
 fn compiled_submit_get_form_region<'a>(
     som: &'a crate::som::types::Som,
     element: &'a crate::som::types::Element,
 ) -> Option<&'a crate::som::types::Region> {
     if !is_compiled_submit_button(element) {
         return None;
+    }
+    if let Some(owner_id) = compiled_submit_attr(element, "form") {
+        return som.regions.iter().find(|region| {
+            region.role == crate::som::types::RegionRole::Form
+                && form_region_matches_owner_id(region, owner_id)
+                && submit_effective_is_get(element, region)
+        });
     }
     som.regions.iter().find(|region| {
         region.role == crate::som::types::RegionRole::Form
@@ -5124,6 +5140,16 @@ mod tests {
             .unwrap_or_else(|| panic!("compiled form should expose button '{text}'"))
     }
 
+    fn compiled_page_button<'a>(som: &'a Som, text: &str) -> &'a Element {
+        som.regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| {
+                element.role == ElementRole::Button && element.text.as_deref() == Some(text)
+            })
+            .unwrap_or_else(|| panic!("page should expose button '{text}'"))
+    }
+
     #[test]
     fn compiled_submit_form_get_action_follows_http_get_and_skips_post_or_non_submit() {
         let get_som = crate::som::compiler::compile(
@@ -5315,6 +5341,91 @@ mod tests {
                 "https://example.test/login"
             ),
             None
+        );
+    }
+
+    #[test]
+    fn compiled_submit_form_get_follows_form_owner_id() {
+        let get_som = crate::som::compiler::compile(
+            r##"<html><head><title>Search</title></head><body>
+<form id="filters" action="/results" method="get">
+  <input name="q" value="rust som">
+</form>
+<button type="submit" form="filters" name="op" value="apply">Apply</button>
+<button type="submit" form="missing">Missing</button>
+<button type="button" form="filters">Stay</button>
+</body></html>"##,
+            "https://example.test/search",
+        )
+        .expect("fixture HTML should compile");
+        let apply = compiled_page_button(&get_som, "Apply");
+        let missing = compiled_page_button(&get_som, "Missing");
+        let stay = compiled_page_button(&get_som, "Stay");
+        assert_eq!(
+            compiled_submit_form_get_action(&get_som, apply),
+            Some("/results")
+        );
+        assert_eq!(
+            compiled_submit_form_get_navigation_url(&get_som, apply, "https://example.test/search"),
+            Some("https://example.test/results?q=rust+som&op=apply".to_string())
+        );
+        assert_eq!(compiled_submit_form_get_action(&get_som, missing), None);
+        assert_eq!(
+            compiled_submit_form_get_navigation_url(
+                &get_som,
+                missing,
+                "https://example.test/search"
+            ),
+            None
+        );
+        assert_eq!(compiled_submit_form_get_action(&get_som, stay), None);
+
+        let post_som = crate::som::compiler::compile(
+            r##"<html><head><title>Login</title></head><body>
+<form id="login" action="/login" method="post">
+  <input name="user" value="ada">
+</form>
+<button type="submit" form="login">Sign in</button>
+</body></html>"##,
+            "https://example.test/login",
+        )
+        .expect("fixture HTML should compile");
+        let sign_in = compiled_page_button(&post_som, "Sign in");
+        assert_eq!(compiled_submit_form_get_action(&post_som, sign_in), None);
+        assert_eq!(
+            compiled_submit_form_get_navigation_url(
+                &post_som,
+                sign_in,
+                "https://example.test/login"
+            ),
+            None
+        );
+
+        let override_som = crate::som::compiler::compile(
+            r##"<html><head><title>Search</title></head><body>
+<form id="inner" action="/inner" method="get">
+  <input name="q" value="nested">
+  <button type="submit" form="outer">Go</button>
+</form>
+<form id="outer" action="/outer" method="get">
+  <input name="q" value="owned">
+</form>
+</body></html>"##,
+            "https://example.test/search",
+        )
+        .expect("fixture HTML should compile");
+        let go = compiled_page_button(&override_som, "Go");
+        assert_eq!(
+            compiled_submit_form_get_action(&override_som, go),
+            Some("/outer")
+        );
+        assert_eq!(
+            compiled_submit_form_get_navigation_url(
+                &override_som,
+                go,
+                "https://example.test/search"
+            ),
+            Some("https://example.test/outer?q=owned".to_string())
         );
     }
 
