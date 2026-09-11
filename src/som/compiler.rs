@@ -2405,17 +2405,18 @@ fn build_element_attrs(
     if has_attr(attrs, "formnovalidate") {
         map.insert("formnovalidate".into(), json!(true));
     }
-    for key in ["minlength", "maxlength", "min", "max"] {
+    for key in ["minlength", "maxlength"] {
         if let Some((_, value)) = attrs.iter().find(|(n, _)| n == key) {
-            let parsed = value
-                .parse::<i64>()
-                .map(serde_json::Value::from)
-                .unwrap_or_else(|_| json!(value));
-            map.insert(key.into(), parsed);
+            map.insert(key.into(), parse_integer_attribute(value));
+        }
+    }
+    for key in ["min", "max"] {
+        if let Some((_, value)) = attrs.iter().find(|(n, _)| n == key) {
+            map.insert(key.into(), parse_numeric_attribute(value));
         }
     }
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "step") {
-        map.insert("step".into(), json!(value));
+        map.insert("step".into(), parse_numeric_attribute(value));
     }
     if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "pattern") {
         map.insert("pattern".into(), json!(value));
@@ -2505,6 +2506,35 @@ fn build_element_attrs(
     } else {
         Some(serde_json::Value::Object(map))
     }
+}
+
+/// Preserve numeric HTML constraints as JSON numbers, including fractional values.
+/// Invalid or non-numeric values remain strings so the compiler never invents a value.
+fn parse_numeric_attribute(value: &str) -> serde_json::Value {
+    let trimmed = value.trim();
+    if let Ok(integer) = trimmed.parse::<i64>() {
+        return json!(integer);
+    }
+    if let Ok(float) = trimmed.parse::<f64>() {
+        if float.is_finite() {
+            return json!(float);
+        }
+    }
+    json!(value)
+}
+
+/// Preserve non-negative integer HTML constraints as JSON integers.
+/// Fractional, negative, or otherwise invalid values remain strings rather
+/// than being coerced. `minlength` and `maxlength` use the HTML
+/// non-negative-integer syntax.
+fn parse_integer_attribute(value: &str) -> serde_json::Value {
+    let trimmed = value.trim();
+    if !trimmed.is_empty() && trimmed.bytes().all(|byte| byte.is_ascii_digit()) {
+        if let Ok(integer) = trimmed.parse::<u64>() {
+            return json!(integer);
+        }
+    }
+    json!(value)
 }
 
 fn selected_select_value(options: &[serde_json::Value]) -> Option<String> {
@@ -3688,7 +3718,7 @@ mod tests {
 <body>
 <main>
   <label for="quota">Seat quota</label>
-  <input id="quota" type="range" min="1" max="100" step="5" value="40" aria-valuemin="1" aria-valuemax="100" aria-valuenow="40" aria-valuetext="40 seats" aria-orientation="horizontal">
+  <input id="quota" type="range" min="0.5" max="100.5" step="2.5" value="40" aria-valuemin="0.5" aria-valuemax="100.5" aria-valuenow="40" aria-valuetext="40 seats" aria-orientation="horizontal">
   <button aria-sort="ascending">Sort by name</button>
 </main>
 </body>
@@ -3706,11 +3736,11 @@ mod tests {
             .find(|element| element.role == ElementRole::TextInput)
             .expect("range input should compile");
         let attrs = range.attrs.as_ref().expect("range attrs should compile");
-        assert_eq!(attrs["min"], 1);
-        assert_eq!(attrs["max"], 100);
-        assert_eq!(attrs["step"], "5");
-        assert_eq!(attrs["aria"]["valuemin"], "1");
-        assert_eq!(attrs["aria"]["valuemax"], "100");
+        assert_eq!(attrs["min"], 0.5);
+        assert_eq!(attrs["max"], 100.5);
+        assert_eq!(attrs["step"], 2.5);
+        assert_eq!(attrs["aria"]["valuemin"], "0.5");
+        assert_eq!(attrs["aria"]["valuemax"], "100.5");
         assert_eq!(attrs["aria"]["valuenow"], "40");
         assert_eq!(attrs["aria"]["valuetext"], "40 seats");
         assert_eq!(attrs["aria"]["orientation"], "horizontal");
@@ -3721,6 +3751,57 @@ mod tests {
             .expect("sort button should compile");
         let attrs = sort.attrs.as_ref().expect("sort attrs should compile");
         assert_eq!(attrs["aria"]["sort"], "ascending");
+    }
+
+    #[test]
+    fn test_length_constraints_remain_integer_only() {
+        let html = r#"<main>
+  <input minlength="2" maxlength="12.5" aria-label="Name">
+</main>"#;
+        let som = compile(html, "https://example.com").unwrap();
+        let input = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| element.role == ElementRole::TextInput)
+            .expect("input should compile");
+        let attrs = input.attrs.as_ref().expect("input attrs should compile");
+        assert_eq!(attrs["minlength"], 2);
+        assert_eq!(attrs["maxlength"], "12.5");
+    }
+
+    #[test]
+    fn test_length_constraints_reject_negative_values() {
+        let html = r#"<main>
+  <input minlength="-2" maxlength="+4" aria-label="Name">
+</main>"#;
+        let som = compile(html, "https://example.com").unwrap();
+        let input = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| element.role == ElementRole::TextInput)
+            .expect("input should compile");
+        let attrs = input.attrs.as_ref().expect("input attrs should compile");
+        assert_eq!(attrs["minlength"], "-2");
+        assert_eq!(attrs["maxlength"], "+4");
+    }
+
+    #[test]
+    fn test_length_constraints_accept_whitespace_padded_integers() {
+        let html = r#"<main>
+  <input minlength=" 2 " maxlength=" 12 " aria-label="Name">
+</main>"#;
+        let som = compile(html, "https://example.com").unwrap();
+        let input = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| element.role == ElementRole::TextInput)
+            .expect("input should compile");
+        let attrs = input.attrs.as_ref().expect("input attrs should compile");
+        assert_eq!(attrs["minlength"], 2);
+        assert_eq!(attrs["maxlength"], 12);
     }
 
     #[test]
