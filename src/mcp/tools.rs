@@ -1713,7 +1713,7 @@ pub fn evaluate_definition() -> ToolDefinition {
 pub fn click_definition() -> ToolDefinition {
     ToolDefinition {
         name: "click".to_string(),
-        description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click. Resolves the live control by compiled test_id, or an icon-only link href, when html_id is absent. Resolves relative link hrefs against the document <base href> when present. Follows a compiled GET form action or submitter formaction when clicking a submit button, encoding named text_input/textarea/select/checkbox/radio values as the query (including selected options, the clicked submitter, and image-submit x/y coordinates). Fails closed when the compiled SOM marks the target disabled, without mutating session HTML.".to_string(),
+        description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click. Resolves the live control by compiled test_id, or an icon-only link href, when html_id is absent. Resolves relative link hrefs and GET form actions against the document <base href> when present. Follows a compiled GET form action or submitter formaction when clicking a submit button, encoding named text_input/textarea/select/checkbox/radio values as the query (including selected options, the clicked submitter, and image-submit x/y coordinates). Missing form action still submits to the current page URL. Fails closed when the compiled SOM marks the target disabled, without mutating session HTML.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -2331,9 +2331,18 @@ fn compiled_submit_form_get_navigation_url(
     element: &crate::som::types::Element,
     current_url: &str,
 ) -> Option<String> {
+    compiled_submit_form_get_navigation_url_with_base(som, element, current_url, current_url)
+}
+
+fn compiled_submit_form_get_navigation_url_with_base(
+    som: &crate::som::types::Som,
+    element: &crate::som::types::Element,
+    current_url: &str,
+    base_url: &str,
+) -> Option<String> {
     let region = compiled_submit_get_form_region(som, element)?;
     let resolved = match compiled_submit_form_get_action(som, element) {
-        Some(action) => resolve_click_fetch_url(current_url, action)?,
+        Some(action) => resolve_click_fetch_url(base_url, action)?,
         None => resolve_click_fetch_url(current_url, current_url)?,
     };
     Some(with_compiled_form_get_query(&resolved, region, element))
@@ -2578,8 +2587,10 @@ pub async fn handle_click(
         return error_response(err);
     }
 
-    let new_url = resolve_click_navigation_url(&click_data, &navigation_base, element)
-        .or_else(|| compiled_submit_form_get_navigation_url(&som, element, &url));
+    let new_url =
+        resolve_click_navigation_url(&click_data, &navigation_base, element).or_else(|| {
+            compiled_submit_form_get_navigation_url_with_base(&som, element, &url, &navigation_base)
+        });
 
     let (final_html, final_url) = if let Some(resolved) = new_url {
         if is_same_document_url(&url, &resolved) {
@@ -5840,6 +5851,51 @@ mod tests {
                 "https://example.test/search"
             ),
             Some("https://example.test/outer?q=owned".to_string())
+        );
+    }
+
+    #[test]
+    fn compiled_submit_form_get_navigation_url_resolves_action_against_document_base() {
+        let html = r##"<html><head><!-- <base href="/ignored/"> --><base href="/app/"><title>Search</title></head><body>
+<form action="results" method="get">
+  <input name="q" value="som">
+  <button>Search</button>
+  <button formaction="preview">Preview</button>
+</form>
+</body></html>"##;
+        let page = "https://example.test/docs/search";
+        let som = crate::som::compiler::compile(html, page).expect("fixture HTML should compile");
+        let search = compiled_form_submit_button(&som, "Search");
+        let preview = compiled_form_submit_button(&som, "Preview");
+        let base = document_base_url(html, page);
+        assert_eq!(base, "https://example.test/app/");
+        assert_eq!(
+            compiled_submit_form_get_navigation_url_with_base(&som, search, page, &base),
+            Some("https://example.test/app/results?q=som".to_string())
+        );
+        assert_eq!(
+            compiled_submit_form_get_navigation_url_with_base(&som, preview, page, &base),
+            Some("https://example.test/app/preview?q=som".to_string())
+        );
+
+        let current_html = r##"<html><head><base href="/app/"><title>Search</title></head><body>
+<form method="get">
+  <input name="q" value="agents">
+  <button>Search</button>
+</form>
+</body></html>"##;
+        let current_som =
+            crate::som::compiler::compile(current_html, page).expect("fixture HTML should compile");
+        let search = compiled_form_submit_button(&current_som, "Search");
+        assert_eq!(compiled_submit_form_get_action(&current_som, search), None);
+        assert_eq!(
+            compiled_submit_form_get_navigation_url_with_base(
+                &current_som,
+                search,
+                page,
+                &document_base_url(current_html, page)
+            ),
+            Some("https://example.test/docs/search?q=agents".to_string())
         );
     }
 
