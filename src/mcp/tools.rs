@@ -1713,7 +1713,7 @@ pub fn evaluate_definition() -> ToolDefinition {
 pub fn click_definition() -> ToolDefinition {
     ToolDefinition {
         name: "click".to_string(),
-        description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click. Resolves the live control by compiled test_id, or an icon-only link href, when html_id is absent. Resolves relative link hrefs and GET form actions against the document <base href> when present. Follows a compiled GET form action or submitter formaction when clicking a submit button, encoding named text_input/textarea/select/checkbox/radio values as the query (including selected options, the clicked submitter, and image-submit x/y coordinates). Missing form action still submits to the current page URL. Fails closed when the compiled SOM marks the target disabled, without mutating session HTML.".to_string(),
+        description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click. Resolves the live control by compiled test_id, or an icon-only link href, when html_id is absent. Resolves relative link hrefs and GET form actions against the document <base href> when present. Follows a compiled GET form action or submitter formaction when clicking a submit button, encoding named text_input/textarea/select/checkbox/radio values as the query (including selected options, the clicked submitter, image-submit x/y coordinates, and listed controls associated by compiled form owner id). Missing form action still submits to the current page URL. Fails closed when the compiled SOM marks the target disabled, without mutating session HTML.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -2191,11 +2191,30 @@ fn is_compiled_file_input(element: &crate::som::types::Element) -> bool {
         .is_some_and(|input_type| input_type.eq_ignore_ascii_case("file"))
 }
 
+fn compiled_control_belongs_to_form(
+    element: &crate::som::types::Element,
+    region: &crate::som::types::Region,
+    in_form_tree: bool,
+) -> bool {
+    match compiled_submit_attr(element, "form") {
+        Some(owner_id) => form_region_matches_owner_id(region, owner_id),
+        None => in_form_tree,
+    }
+}
+
 fn collect_compiled_form_get_pairs(
     elements: &[crate::som::types::Element],
+    region: &crate::som::types::Region,
+    in_form_tree: bool,
     pairs: &mut Vec<(String, String)>,
 ) {
     for element in elements {
+        if !compiled_control_belongs_to_form(element, region, in_form_tree) {
+            if let Some(children) = &element.children {
+                collect_compiled_form_get_pairs(children, region, in_form_tree, pairs);
+            }
+            continue;
+        }
         if element_is_disabled(element) {
             continue;
         }
@@ -2244,7 +2263,7 @@ fn collect_compiled_form_get_pairs(
                 }
             }
             if let Some(children) = &element.children {
-                collect_compiled_form_get_pairs(children, pairs);
+                collect_compiled_form_get_pairs(children, region, in_form_tree, pairs);
             }
             continue;
         }
@@ -2270,7 +2289,7 @@ fn collect_compiled_form_get_pairs(
             pairs.push((name.to_string(), value));
         }
         if let Some(children) = &element.children {
-            collect_compiled_form_get_pairs(children, pairs);
+            collect_compiled_form_get_pairs(children, region, in_form_tree, pairs);
         }
     }
 }
@@ -2290,11 +2309,19 @@ fn element_is_checked(element: &crate::som::types::Element) -> bool {
 }
 
 fn compiled_form_get_pairs(
+    som: &crate::som::types::Som,
     region: &crate::som::types::Region,
     submitter: &crate::som::types::Element,
 ) -> Vec<(String, String)> {
     let mut pairs = Vec::new();
-    collect_compiled_form_get_pairs(&region.elements, &mut pairs);
+    for candidate in &som.regions {
+        collect_compiled_form_get_pairs(
+            &candidate.elements,
+            region,
+            candidate.id == region.id,
+            &mut pairs,
+        );
+    }
     if compiled_button_type(submitter) == Some("image") {
         let prefix = compiled_submit_attr(submitter, "name")
             .map(|name| format!("{name}."))
@@ -2310,10 +2337,11 @@ fn compiled_form_get_pairs(
 
 fn with_compiled_form_get_query(
     resolved: &str,
+    som: &crate::som::types::Som,
     region: &crate::som::types::Region,
     submitter: &crate::som::types::Element,
 ) -> String {
-    let pairs = compiled_form_get_pairs(region, submitter);
+    let pairs = compiled_form_get_pairs(som, region, submitter);
     if pairs.is_empty() {
         return resolved.to_string();
     }
@@ -2345,7 +2373,9 @@ fn compiled_submit_form_get_navigation_url_with_base(
         Some(action) => resolve_click_fetch_url(base_url, action)?,
         None => resolve_click_fetch_url(current_url, current_url)?,
     };
-    Some(with_compiled_form_get_query(&resolved, region, element))
+    Some(with_compiled_form_get_query(
+        &resolved, som, region, element,
+    ))
 }
 
 fn compiled_field_name(element: &crate::som::types::Element) -> Option<&str> {
@@ -5851,6 +5881,30 @@ mod tests {
                 "https://example.test/search"
             ),
             Some("https://example.test/outer?q=owned".to_string())
+        );
+    }
+
+    #[test]
+    fn compiled_submit_form_get_includes_associated_listed_controls() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head><title>Search</title></head><body>
+<form id="filters" action="/results" method="get">
+  <input name="q" value="rust som">
+  <input name="ignored" value="other" form="other">
+  <button>Apply</button>
+</form>
+<input name="sort" value="new" form="filters">
+<select name="tag" form="filters"><option value="mcp" selected>MCP</option></select>
+<form id="other" action="/other" method="get"></form>
+</body></html>"##,
+            "https://example.test/search",
+        )
+        .expect("fixture HTML should compile");
+        let apply = compiled_form_submit_button(&som, "Apply");
+
+        assert_eq!(
+            compiled_submit_form_get_navigation_url(&som, apply, "https://example.test/search"),
+            Some("https://example.test/results?q=rust+som&sort=new&tag=mcp".to_string())
         );
     }
 
