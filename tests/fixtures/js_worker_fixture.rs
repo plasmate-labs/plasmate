@@ -196,5 +196,17 @@ fn main() {
         }
         return;
     }
+    if input.contains("__fixture_multiple_select__") {
+        if input.contains("el.multiple") {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"selected\":true,\"value\":\"rust\"}}","effective_html":"<html><head><title>Filters</title></head><body><main><!-- __fixture_multiple_select__ --><select multiple name='tag' id='tags'><option value='rust' selected>Rust</option><option value='som' selected>SOM</option></select></main></body></html>"}}}}"#
+            );
+        } else {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"selected\":true,\"value\":\"som\"}}","effective_html":"<html><head><title>Filters</title></head><body><main><!-- __fixture_multiple_select__ --><select multiple name='tag' id='tags'><option value='rust'>Rust</option><option value='som' selected>SOM</option></select></main></body></html>"}}}}"#
+            );
+        }
+        return;
+    }
     println!(r#"{{"status":"evaluation","value":{{"result":"ok"}}}}"#);
 }

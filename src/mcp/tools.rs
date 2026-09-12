@@ -2676,7 +2676,7 @@ pub fn type_text_definition() -> ToolDefinition {
 pub fn select_option_definition() -> ToolDefinition {
     ToolDefinition {
         name: "select_option".to_string(),
-        description: "Select an option in a <select> dropdown or a native radio group by element ID and option value or visible label. Returns the updated page SOM. Use this when a compiled element advertises action:select, including radios.".to_string(),
+        description: "Select an option in a <select> dropdown or a native radio group by element ID and option value or visible label. Returns the updated page SOM. On a multiple select, the matched option is added without clearing other selected options. Use this when a compiled element advertises action:select, including radios.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -3105,7 +3105,11 @@ pub async fn handle_select_option(
                     var found = false;
                     for (var i = 0; i < el.options.length; i++) {{
                         if (el.options[i].value === '{}' || el.options[i].text === '{}') {{
-                            el.selectedIndex = i;
+                            if (el.multiple) {{
+                                el.options[i].selected = true;
+                            }} else {{
+                                el.selectedIndex = i;
+                            }}
                             found = true;
                             break;
                         }}
@@ -5743,6 +5747,77 @@ mod tests {
             sms["attrs"].get("checked").is_none(),
             "sms sibling must be unchecked: {sms}"
         );
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn select_option_adds_to_multiple_select_without_clearing() {
+        let options = stateful_worker_options(Duration::from_secs(5));
+        let sessions = Arc::new(SessionManager::with_worker_options(options));
+        let session_id = sessions.create_session().await.unwrap();
+        let html = "<html><head><title>Filters</title></head><body><main><!-- __fixture_multiple_select__ --><select multiple name='tag' id='tags'><option value='rust' selected>Rust</option><option value='som'>SOM</option></select></main></body></html>";
+        sessions
+            .with_session(&session_id, |session| {
+                session.target.current_url = Some("https://example.test/filters".to_string());
+                session.target.current_html = Some(html.to_string());
+                session.target.effective_html = Some(html.to_string());
+                session.target.current_som = Some(
+                    plasmate::som::compiler::compile(html, "https://example.test/filters").unwrap(),
+                );
+                session.target.rebuild_node_map();
+            })
+            .await
+            .unwrap();
+        let element_id = sessions
+            .with_session(&session_id, |session| {
+                let som = session.target.current_som.as_ref().unwrap();
+                som.regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .find(|element| {
+                        element.role == ElementRole::Select
+                            && element.html_id.as_deref() == Some("tags")
+                    })
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose the multiple select")
+            })
+            .await
+            .unwrap();
+        let client = reqwest::Client::new();
+
+        let selected = handle_select_option(
+            &json!({
+                "session_id": session_id,
+                "element_id": element_id,
+                "value": "som"
+            }),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert!(selected.get("isError").is_none(), "{selected}");
+        let payload = tool_payload(&selected);
+        assert_eq!(payload["title"], "Filters");
+        let select = payload["regions"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .flat_map(|region| region["elements"].as_array().into_iter().flatten())
+            .find(|element| element["html_id"] == "tags")
+            .expect("selected SOM must keep the multiple select");
+        let options = select["attrs"]["options"]
+            .as_array()
+            .expect("multiple select must compile options");
+        let rust = options
+            .iter()
+            .find(|option| option["value"] == "rust")
+            .expect("rust option must remain");
+        let som = options
+            .iter()
+            .find(|option| option["value"] == "som")
+            .expect("som option must remain");
+        assert_eq!(rust["selected"], true, "{rust}");
+        assert_eq!(som["selected"], true, "{som}");
     }
 
     #[tokio::test]
