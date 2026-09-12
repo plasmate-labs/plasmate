@@ -1646,7 +1646,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                 "submit" | "button" | "reset" | "image" => Some(ElementRole::Button),
                 "checkbox" => Some(ElementRole::Checkbox),
                 "radio" => Some(ElementRole::Radio),
-                "hidden" => None,
+                "hidden" => Some(ElementRole::TextInput),
                 "text" | "email" | "password" | "search" | "tel" | "url" | "number" | "date"
                 | "time" | "datetime-local" | "month" | "week" | "color" => {
                     Some(ElementRole::TextInput)
@@ -5187,6 +5187,60 @@ mod tests {
                     && element.text.as_deref() == Some("Just text")
             }),
             "plain text must stay a paragraph: {elements:?}"
+        );
+    }
+
+    #[test]
+    fn test_hidden_inputs_compile_named_values() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Search</title></head>
+<body>
+<main>
+  <form action="/results" method="get">
+    <input type="HIDDEN" name="source" value="web">
+    <input type="hidden" value="dropped">
+    <input id="q" name="q" type="text" value="plasmate">
+  </form>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/search").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let source = elements
+            .iter()
+            .find(|element| {
+                element
+                    .attrs
+                    .as_ref()
+                    .and_then(|attrs| attrs.get("name"))
+                    .and_then(|value| value.as_str())
+                    == Some("source")
+            })
+            .expect("named hidden input should compile");
+        assert_eq!(source.role, ElementRole::TextInput);
+        let source_attrs = source
+            .attrs
+            .as_ref()
+            .expect("hidden input attrs should compile");
+        assert_eq!(source_attrs["input_type"], "hidden");
+        assert_eq!(source_attrs["name"], "source");
+        assert_eq!(source_attrs["value"], "web");
+
+        let query = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("q"))
+            .expect("visible text input should still compile");
+        assert_eq!(query.role, ElementRole::TextInput);
+        assert_eq!(
+            query.actions.as_deref(),
+            Some(["type".to_string(), "clear".to_string()].as_slice()),
+            "visible text inputs must keep type/clear: {query:?}"
         );
     }
 

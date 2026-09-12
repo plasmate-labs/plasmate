@@ -5617,6 +5617,28 @@ mod tests {
     }
 
     #[test]
+    fn compiled_submit_form_get_navigation_url_includes_hidden_fields() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head><title>Search</title></head><body>
+<form action="/results" method="get">
+  <input type="hidden" name="source" value="web">
+  <input type="HIDDEN" name="token" value="csrf">
+  <input type="hidden" value="dropped">
+  <input name="q" value="plasmate">
+  <button>Search</button>
+</form>
+</body></html>"##,
+            "https://example.test/search",
+        )
+        .expect("fixture HTML should compile");
+        let search = compiled_form_submit_button(&som, "Search");
+        assert_eq!(
+            compiled_submit_form_get_navigation_url(&som, search, "https://example.test/search"),
+            Some("https://example.test/results?source=web&token=csrf&q=plasmate".to_string())
+        );
+    }
+
+    #[test]
     fn compiled_submit_form_get_navigation_url_includes_successful_checkboxes_and_radios() {
         let som = crate::som::compiler::compile(
             r##"<html><head><title>Preferences</title></head><body>
