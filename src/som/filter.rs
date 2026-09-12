@@ -10,7 +10,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///
 /// Supported selectors:
 /// - Region roles: `main`, `nav`/`navigation`, `aside`, `header`, `footer`,
-///   `form`, `dialog`, `content`
+///   `form`, `dialog`, `content`/`article`
 /// - Element roles: `link`, `button`, `text_input` / `textbox` / `searchbox` /
 ///   `input`, `textarea`, `select` / `combobox` / `listbox`, `checkbox`,
 ///   `radio`, `heading`, `image`, `list`, `table`, `paragraph`, `section`,
@@ -34,7 +34,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         "footer" => Some(RegionRole::Footer),
         "form" => Some(RegionRole::Form),
         "dialog" => Some(RegionRole::Dialog),
-        "content" => Some(RegionRole::Content),
+        "content" | "article" => Some(RegionRole::Content),
         _ => None,
     };
 
@@ -577,6 +577,15 @@ mod tests {
         let filtered = apply_selector(&som, " main ");
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].role, RegionRole::Main);
+    }
+
+    #[test]
+    fn test_selector_article_alias_matches_content_region() {
+        let mut som = make_test_som();
+        som.regions[1].role = RegionRole::Content;
+        let filtered = apply_selector(&som, "article");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].role, RegionRole::Content);
     }
 
     #[test]

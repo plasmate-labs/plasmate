@@ -39,6 +39,8 @@ pub struct ToolDefinition {
     pub input_schema: Value,
 }
 
+const SOM_SELECTOR_DESCRIPTION: &str = "Filter to a page region (main, nav/navigation, header, footer, aside, content/article, form, dialog), element role (button, link, text_input, select, etc.), action surface (interactive, action:click, action:type, action:select), or #element-id. Strips irrelevant regions/elements to reduce tokens.";
+
 /// Parameters for fetch_page tool.
 #[derive(Debug, Deserialize)]
 struct FetchPageParams {
@@ -431,7 +433,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
                 },
                 "selector": {
                     "type": "string",
-                    "description": "Filter to a page region (main, nav, header, footer, aside, content, form, dialog), element role (button, link, text_input, select, etc.), action surface (interactive, action:click, action:type, action:select), or #element-id. Strips irrelevant regions/elements to reduce tokens."
+                    "description": SOM_SELECTOR_DESCRIPTION
                 }
             },
             "required": ["url"]
@@ -457,7 +459,7 @@ pub fn extract_text_definition() -> ToolDefinition {
                 },
                 "selector": {
                     "type": "string",
-                    "description": "Filter before extracting text: page region (main, nav, header, footer, aside, content, form, dialog), element role (button, link, text_input, select, etc.), action surface (interactive, action:click, action:type, action:select), or #element-id."
+                    "description": SOM_SELECTOR_DESCRIPTION
                 }
             },
             "required": ["url"]
@@ -714,7 +716,7 @@ pub fn extract_links_definition() -> ToolDefinition {
                 },
                 "selector": {
                     "type": "string",
-                    "description": "Filter before extracting links: page region (main, nav, header, footer, aside, content, form, dialog), element role (link), action surface (interactive, action:click), or #element-id."
+                    "description": SOM_SELECTOR_DESCRIPTION
                 }
             },
             "required": ["url"]
@@ -3969,6 +3971,21 @@ mod tests {
 
         assert!(docs.contains(&format!("| `{registered_name}` |")));
         assert!(!docs.contains("| `screenshot` |"));
+    }
+
+    #[test]
+    fn selector_tool_schemas_document_region_aliases() {
+        for definition in [
+            fetch_page_definition(),
+            extract_text_definition(),
+            extract_links_definition(),
+        ] {
+            let description = definition.input_schema["properties"]["selector"]["description"]
+                .as_str()
+                .expect("selector schema should have a description");
+            assert!(description.contains("nav/navigation"));
+            assert!(description.contains("content/article"));
+        }
     }
 
     fn stateful_worker_fixture() -> PathBuf {
