@@ -1713,7 +1713,7 @@ pub fn evaluate_definition() -> ToolDefinition {
 pub fn click_definition() -> ToolDefinition {
     ToolDefinition {
         name: "click".to_string(),
-        description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click. Resolves the live control by compiled test_id, or an icon-only link href, when html_id is absent. Follows a compiled GET form action or submitter formaction when clicking a submit button, encoding named text_input/textarea/select/checkbox/radio values as the query (including selected options and the clicked submitter). Fails closed when the compiled SOM marks the target disabled, without mutating session HTML.".to_string(),
+        description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click. Resolves the live control by compiled test_id, or an icon-only link href, when html_id is absent. Resolves relative link hrefs against the document <base href> when present. Follows a compiled GET form action or submitter formaction when clicking a submit button, encoding named text_input/textarea/select/checkbox/radio values as the query (including selected options and the clicked submitter). Fails closed when the compiled SOM marks the target disabled, without mutating session HTML.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1940,6 +1940,85 @@ pub async fn handle_evaluate(arguments: &Value, sessions: &Arc<SessionManager>) 
         }
         Err(error) => containment_error_response("Evaluate failed", &error),
     }
+}
+
+fn unquote_html_attr(value: &str) -> &str {
+    match value.chars().next() {
+        Some('"') => value.get(1..).and_then(|rest| rest.split('"').next()),
+        Some('\'') => value.get(1..).and_then(|rest| rest.split('\'').next()),
+        _ => value
+            .split(|c: char| c.is_whitespace() || c == '/' || c == '>')
+            .next(),
+    }
+    .unwrap_or("")
+}
+
+fn html_attr_value<'a>(attrs: &'a str, name: &str) -> Option<&'a str> {
+    let lower = attrs.to_ascii_lowercase();
+    let needle = name.to_ascii_lowercase();
+    let mut search = 0;
+    while let Some(rel) = lower.get(search..).and_then(|rest| rest.find(&needle)) {
+        let at = search + rel;
+        let before_ok = at == 0 || lower.as_bytes()[at - 1].is_ascii_whitespace();
+        let after = at + needle.len();
+        let after_ok = after >= lower.len()
+            || lower.as_bytes()[after].is_ascii_whitespace()
+            || lower.as_bytes()[after] == b'=';
+        if before_ok && after_ok {
+            let tail = attrs.get(after..)?.trim_start();
+            let tail = tail.strip_prefix('=')?.trim_start();
+            let value = unquote_html_attr(tail).trim();
+            if !value.is_empty() {
+                return Some(value);
+            }
+            return None;
+        }
+        search = at + 1;
+    }
+    None
+}
+
+fn first_base_href(html: &str) -> Option<&str> {
+    let mut i = 0;
+    while i < html.len() {
+        if !html.is_char_boundary(i) {
+            i += 1;
+            continue;
+        }
+        let rest = html.get(i..)?;
+        if rest.starts_with("<!--") {
+            match rest.get(4..).and_then(|comment| comment.find("-->")) {
+                Some(end) => i += 4 + end + 3,
+                None => return None,
+            }
+            continue;
+        }
+        if let Some(after_lt) = rest.strip_prefix('<') {
+            if after_lt
+                .get(..4)
+                .is_some_and(|prefix| prefix.eq_ignore_ascii_case("base"))
+            {
+                let after_name = &after_lt[4..];
+                let boundary = after_name.chars().next().unwrap_or('\0');
+                if boundary.is_whitespace() || boundary == '/' || boundary == '>' {
+                    let end = after_name.find('>')?;
+                    if let Some(href) = html_attr_value(&after_name[..end], "href") {
+                        return Some(href);
+                    }
+                    i += 1 + 4 + end + 1;
+                    continue;
+                }
+            }
+        }
+        i += rest.chars().next().map(|c| c.len_utf8()).unwrap_or(1);
+    }
+    None
+}
+
+fn document_base_url(html: &str, page_url: &str) -> String {
+    first_base_href(html)
+        .and_then(|href| resolve_click_fetch_url(page_url, href))
+        .unwrap_or_else(|| page_url.to_string())
 }
 
 fn resolve_click_fetch_url(current_url: &str, href: &str) -> Option<String> {
@@ -2476,6 +2555,7 @@ pub async fn handle_click(
         html_id, test_id, href, expected_label, element_id,
     );
 
+    let navigation_base = document_base_url(&effective_html, &url);
     let click_result =
         run_session_javascript(sessions, effective_html, url.clone(), click_js, true).await;
     let (click_result_json, updated_html) = match click_result {
@@ -2492,7 +2572,7 @@ pub async fn handle_click(
         return error_response(err);
     }
 
-    let new_url = resolve_click_navigation_url(&click_data, &url, element)
+    let new_url = resolve_click_navigation_url(&click_data, &navigation_base, element)
         .or_else(|| compiled_submit_form_get_navigation_url(&som, element, &url));
 
     let (final_html, final_url) = if let Some(resolved) = new_url {
@@ -5104,6 +5184,85 @@ mod tests {
         assert_eq!(
             resolve_click_fetch_url("https://example.test/page", "  "),
             None
+        );
+    }
+
+    #[test]
+    fn document_base_url_uses_first_http_base_href() {
+        assert_eq!(
+            document_base_url(
+                r##"<html><head><title>Docs</title></head><body><a href="guide">Guide</a></body></html>"##,
+                "https://example.test/page"
+            ),
+            "https://example.test/page"
+        );
+        assert_eq!(
+            document_base_url(
+                r##"<html><head><!-- <base href="/ignored/"> --><base href="/app/"><title>Docs</title></head><body><a href="guide">Guide</a></body></html>"##,
+                "https://example.test/page"
+            ),
+            "https://example.test/app/"
+        );
+        assert_eq!(
+            document_base_url(
+                r##"<html><head><base target="_blank" href='https://cdn.example.test/app/'><title>Docs</title></head><body></body></html>"##,
+                "https://example.test/page"
+            ),
+            "https://cdn.example.test/app/"
+        );
+        assert_eq!(
+            document_base_url(
+                r##"<html><head><base href="javascript:void(0)"><title>Docs</title></head><body></body></html>"##,
+                "https://example.test/page"
+            ),
+            "https://example.test/page"
+        );
+        assert_eq!(
+            document_base_url(
+                r##"<html><head><basefont href="/nope/"><title>Docs</title></head><body></body></html>"##,
+                "https://example.test/page"
+            ),
+            "https://example.test/page"
+        );
+    }
+
+    #[test]
+    fn resolve_click_navigation_url_uses_document_base_href() {
+        let html = r##"<html><head><base href="/app/"><title>Docs</title></head><body>
+<main><a href="guide">Guide</a></main>
+</body></html>"##;
+        let som = crate::som::compiler::compile(html, "https://example.test/page")
+            .expect("fixture HTML should compile");
+        let link = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| {
+                element.role == ElementRole::Link && compiled_link_href(element) == Some("guide")
+            })
+            .expect("compiled relative link should exist");
+        let navigation_base = document_base_url(html, "https://example.test/page");
+
+        assert_eq!(navigation_base, "https://example.test/app/");
+        assert_eq!(
+            resolve_click_navigation_url(&json!({"clicked": true}), &navigation_base, link),
+            Some("https://example.test/app/guide".to_string())
+        );
+        assert_eq!(
+            resolve_click_navigation_url(
+                &json!({"navigated": true, "href": "guide"}),
+                &navigation_base,
+                link
+            ),
+            Some("https://example.test/app/guide".to_string())
+        );
+        assert_eq!(
+            resolve_click_navigation_url(
+                &json!({"clicked": true}),
+                "https://example.test/page",
+                link
+            ),
+            Some("https://example.test/guide".to_string())
         );
     }
 
