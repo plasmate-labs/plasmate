@@ -1389,6 +1389,13 @@ fn node_to_element(
             // Apply summarization for paragraphs based on position
             let mut text = if text_content.is_empty() {
                 None
+            } else if tag == "pre" {
+                let preserved = normalize_preformatted_text(&text_content, PREFORMATTED_TEXT_MAX);
+                if preserved.is_empty() {
+                    None
+                } else {
+                    Some(preserved)
+                }
             } else if role == ElementRole::Paragraph && ctx.is_main_region.get() {
                 let para_num = ctx.paragraph_count.get();
                 ctx.paragraph_count.set(para_num + 1);
@@ -1660,7 +1667,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "img" | "picture" => Some(ElementRole::Image),
         "ul" | "ol" | "dl" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
-        "p" | "time" | "blockquote" | "figcaption" => Some(ElementRole::Paragraph),
+        "p" | "time" | "blockquote" | "figcaption" | "pre" => Some(ElementRole::Paragraph),
         "section" | "article" => Some(ElementRole::Section),
         "fieldset" => Some(ElementRole::Group),
         "hr" => Some(ElementRole::Separator),
@@ -2578,6 +2585,21 @@ fn normalize_button_type(value: &str) -> String {
         "reset" => "reset".to_string(),
         _ => "submit".to_string(),
     }
+}
+
+const PREFORMATTED_TEXT_MAX: usize = 2000;
+
+fn normalize_preformatted_text(text: &str, max_chars: usize) -> String {
+    let unified = text.replace("\r\n", "\n").replace('\r', "\n");
+    let trimmed = unified.trim_matches('\n');
+    if trimmed.is_empty() {
+        return String::new();
+    }
+    if trimmed.chars().count() <= max_chars {
+        return trimmed.to_string();
+    }
+    let truncated: String = trimmed.chars().take(max_chars.saturating_sub(3)).collect();
+    format!("{truncated}...")
 }
 
 fn build_children(
@@ -6094,6 +6116,71 @@ mod tests {
                     && element.text.as_deref() == Some("Just text")
             }),
             "plain text must stay a paragraph: {elements:?}"
+        );
+    }
+
+    #[test]
+    fn normalize_preformatted_text_keeps_newlines_and_bounds_length() {
+        assert_eq!(
+            normalize_preformatted_text("\nfn main() {\n    println!(\"hi\");\n}\n", 2000),
+            "fn main() {\n    println!(\"hi\");\n}"
+        );
+        assert_eq!(
+            normalize_preformatted_text("\r\nkeep\r\nindent\r\n", 2000),
+            "keep\nindent"
+        );
+        assert_eq!(normalize_preformatted_text("abcdef", 5), "ab...");
+        assert_eq!(normalize_preformatted_text("\n\n", 2000), "");
+    }
+
+    #[test]
+    fn test_pre_compiles_as_paragraph_with_newlines() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Install</title></head>
+<body>
+<main>
+  <p>Run this:</p>
+  <pre><code>cargo install plasmate
+plasmate fetch https://example.test</code></pre>
+  <p>Then continue.</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/install").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let sample = elements
+            .iter()
+            .find(|element| {
+                element
+                    .text
+                    .as_deref()
+                    .is_some_and(|text| text.contains("cargo install plasmate"))
+            })
+            .expect("preformatted sample should compile");
+        assert_eq!(sample.role, ElementRole::Paragraph);
+        assert_eq!(
+            sample.text.as_deref(),
+            Some("cargo install plasmate\nplasmate fetch https://example.test")
+        );
+        assert!(
+            sample
+                .text
+                .as_deref()
+                .is_some_and(|text| text.contains('\n')),
+            "pre text must keep the sample newline: {sample:?}"
+        );
+        assert!(
+            !elements.iter().any(|element| {
+                element.text.as_deref()
+                    == Some("cargo install plasmate plasmate fetch https://example.test")
+            }),
+            "pre text must not collapse to a single prose line: {elements:?}"
         );
     }
 }
