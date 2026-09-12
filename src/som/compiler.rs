@@ -640,7 +640,10 @@ fn collect_regions(
         }
 
         // Check for form regions
-        if heuristics::is_form_region(tag) {
+        if heuristics::is_form_region(tag)
+            || (heuristics::has_form_role(&attr_pairs)
+                && !contains_descendant_tag(node, &["form"], 8))
+        {
             let count = region_counts.entry("form".to_string()).or_insert(0);
             let rid = generate_region_id("form", *count);
             *count += 1;
@@ -3307,6 +3310,69 @@ mod tests {
         assert_eq!(form.action.as_deref(), Some("/login"));
         assert_eq!(form.method.as_deref(), Some("POST"));
         assert!(form.elements.len() >= 3);
+    }
+
+    #[test]
+    fn test_aria_role_form_compiles_as_form_region() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Search</title></head>
+<body>
+<div role="form" action="/results" method="get" aria-label="Filters">
+  <input name="q" value="rust som">
+  <button>Search</button>
+</div>
+<div role="group" aria-label="Not a form">
+  <input name="other" value="skip">
+  <button>Go</button>
+</div>
+<div role="form">
+  <form action="/nested" method="post" aria-label="Native">
+    <input name="email" value="ops@example.test">
+    <button>Sign in</button>
+  </form>
+</div>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/search").unwrap();
+        let forms: Vec<_> = som
+            .regions
+            .iter()
+            .filter(|region| region.role == RegionRole::Form)
+            .collect();
+        assert_eq!(
+            forms.len(),
+            2,
+            "aria form and nested native form: {forms:?}"
+        );
+
+        let aria_form = forms
+            .iter()
+            .find(|region| region.label.as_deref() == Some("Filters"))
+            .expect("ARIA role=form should compile as a form region");
+        assert_eq!(aria_form.action.as_deref(), Some("/results"));
+        assert_eq!(aria_form.method.as_deref(), Some("GET"));
+        assert!(
+            aria_form.elements.iter().any(|element| {
+                element.role == ElementRole::Button && element.text.as_deref() == Some("Search")
+            }),
+            "ARIA form should keep its submit control: {aria_form:?}"
+        );
+
+        let native = forms
+            .iter()
+            .find(|region| region.label.as_deref() == Some("Native"))
+            .expect("nested native form should stay a form region");
+        assert_eq!(native.action.as_deref(), Some("/nested"));
+        assert_eq!(native.method.as_deref(), Some("POST"));
+
+        assert!(
+            !som.regions.iter().any(|region| {
+                region.role == RegionRole::Form && region.label.as_deref() == Some("Not a form")
+            }),
+            "role=group must not compile as a form region: {:?}",
+            som.regions
+        );
     }
 
     #[test]
