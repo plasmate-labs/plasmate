@@ -3112,6 +3112,15 @@ fn collect_visible_text(node: &Handle, buf: &mut String, css_rules: &VisibilityR
         NodeData::Text { contents } => {
             buf.push_str(&contents.borrow());
         }
+        NodeData::Element { name, .. } => {
+            if name.local.as_ref() == "br" {
+                buf.push('\n');
+                return;
+            }
+            for child in node.children.borrow().iter() {
+                collect_visible_text(child, buf, css_rules);
+            }
+        }
         _ => {
             for child in node.children.borrow().iter() {
                 collect_visible_text(child, buf, css_rules);
@@ -3154,6 +3163,10 @@ fn collect_text(node: &Handle, buf: &mut String) {
         NodeData::Element { name, .. } => {
             let tag = name.local.as_ref();
             if matches!(tag, "script" | "style" | "noscript") {
+                return;
+            }
+            if tag == "br" {
+                buf.push('\n');
                 return;
             }
             for child in node.children.borrow().iter() {
@@ -6302,5 +6315,53 @@ plasmate fetch https://example.test</code></pre>
             }),
             "pre text must not collapse to a single prose line: {elements:?}"
         );
+    }
+
+    #[test]
+    fn test_br_separates_compiled_paragraph_text() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Contact</title></head>
+<body>
+<main>
+  <p>123 Main St<br>Springfield, IL</p>
+  <p>Join<br/>now</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/contact").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let address = elements
+            .iter()
+            .find(|element| {
+                element
+                    .text
+                    .as_deref()
+                    .is_some_and(|text| text.contains("123 Main St"))
+            })
+            .expect("address paragraph should compile");
+        assert_eq!(address.role, ElementRole::Paragraph);
+        assert_eq!(address.text.as_deref(), Some("123 Main St Springfield, IL"));
+        assert_ne!(
+            address.text.as_deref(),
+            Some("123 Main StSpringfield, IL"),
+            "br must not glue adjacent paragraph text: {address:?}"
+        );
+
+        let cta = elements
+            .iter()
+            .find(|element| {
+                element
+                    .text
+                    .as_deref()
+                    .is_some_and(|text| text.contains("Join"))
+            })
+            .expect("cta paragraph should compile");
+        assert_eq!(cta.text.as_deref(), Some("Join now"));
     }
 }
