@@ -2729,13 +2729,19 @@ fn extract_select_options(
                 let tag = name.local.as_ref();
                 if tag == "option" {
                     let attrs = attrs.borrow();
-                    let text =
+                    let child_text =
                         heuristics::normalize_text(&get_visible_text_content(child, css_rules));
+                    let text = attrs
+                        .iter()
+                        .find(|a| a.name.local.as_ref() == "label")
+                        .map(|a| heuristics::normalize_text(&a.value))
+                        .filter(|label| !label.is_empty())
+                        .unwrap_or_else(|| child_text.clone());
                     let value = attrs
                         .iter()
                         .find(|a| a.name.local.as_ref() == "value")
                         .map(|a| a.value.to_string())
-                        .unwrap_or_else(|| text.clone());
+                        .unwrap_or(child_text);
                     let selected = attrs.iter().any(|a| a.name.local.as_ref() == "selected");
                     let disabled =
                         group_disabled || attrs.iter().any(|a| a.name.local.as_ref() == "disabled");
@@ -6171,6 +6177,66 @@ mod tests {
             }),
             "plain text must stay a paragraph: {elements:?}"
         );
+    }
+
+    #[test]
+    fn test_option_label_attr_is_compiled_as_visible_text() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Plan</title></head>
+<body>
+<main>
+  <select aria-label="Plan">
+    <option value="pro" label="Pro Plan">internal-pro</option>
+    <option label="Free Plan">free</option>
+    <option label="   ">Bare</option>
+    <option>Starter</option>
+  </select>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/pricing").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        let select = elements
+            .iter()
+            .find(|element| element.role == ElementRole::Select)
+            .expect("plan select should compile");
+        let options = select
+            .attrs
+            .as_ref()
+            .and_then(|attrs| attrs.get("options"))
+            .and_then(|options| options.as_array())
+            .expect("select options should compile");
+
+        let pro = options
+            .iter()
+            .find(|option| option["value"] == "pro")
+            .expect("named pro option should compile");
+        assert_eq!(pro["text"], "Pro Plan");
+        assert_ne!(pro["text"], "internal-pro");
+
+        let free = options
+            .iter()
+            .find(|option| option["value"] == "free")
+            .expect("child-text value should stay the option value");
+        assert_eq!(free["text"], "Free Plan");
+        assert_eq!(free["value"], "free");
+
+        let bare = options
+            .iter()
+            .find(|option| option["value"] == "Bare")
+            .expect("whitespace-only label must not invent visible text");
+        assert_eq!(bare["text"], "Bare");
+
+        let starter = options
+            .iter()
+            .find(|option| option["value"] == "Starter")
+            .expect("unlabelled option should keep child text");
+        assert_eq!(starter["text"], "Starter");
     }
 
     #[test]
