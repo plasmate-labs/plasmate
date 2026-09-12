@@ -1713,7 +1713,7 @@ pub fn evaluate_definition() -> ToolDefinition {
 pub fn click_definition() -> ToolDefinition {
     ToolDefinition {
         name: "click".to_string(),
-        description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click. Resolves the live control by compiled test_id, or an icon-only link href, when html_id is absent. Follows a compiled GET form action or submitter formaction when clicking a submit button, encoding named text_input/textarea/select/checkbox/radio values as the query (including selected options and the clicked submitter). Fails closed when the compiled SOM marks the target disabled, without mutating session HTML.".to_string(),
+        description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click. Resolves the live control by compiled test_id, or an icon-only link href, when html_id is absent. Follows a compiled GET form action or submitter formaction when clicking a submit button, encoding named text_input/textarea/select/checkbox/radio values as the query (including selected options, the clicked submitter, and image-submit x/y coordinates). Fails closed when the compiled SOM marks the target disabled, without mutating session HTML.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -2216,7 +2216,13 @@ fn compiled_form_get_pairs(
 ) -> Vec<(String, String)> {
     let mut pairs = Vec::new();
     collect_compiled_form_get_pairs(&region.elements, &mut pairs);
-    if let Some(name) = compiled_submit_attr(submitter, "name") {
+    if compiled_button_type(submitter) == Some("image") {
+        let prefix = compiled_submit_attr(submitter, "name")
+            .map(|name| format!("{name}."))
+            .unwrap_or_default();
+        pairs.push((format!("{prefix}x"), "0".to_string()));
+        pairs.push((format!("{prefix}y"), "0".to_string()));
+    } else if let Some(name) = compiled_submit_attr(submitter, "name") {
         let value = compiled_submit_attr(submitter, "value").unwrap_or("");
         pairs.push((name.to_string(), value.to_string()));
     }
@@ -5525,6 +5531,67 @@ mod tests {
         assert_eq!(
             send,
             Some("https://example.test/feedback?message=hello+agents".to_string())
+        );
+    }
+
+    #[test]
+    fn compiled_submit_form_get_navigation_url_encodes_image_submit_coordinates() {
+        let named = crate::som::compiler::compile(
+            r##"<html><head><title>Search</title></head><body>
+<form action="/results" method="get">
+  <input name="q" value="rust som">
+  <input type="image" name="go" value="search" alt="Search" src="/go.png">
+</form>
+</body></html>"##,
+            "https://example.test/search",
+        )
+        .expect("fixture HTML should compile");
+        let named_submit = named
+            .regions
+            .iter()
+            .filter(|region| region.role == RegionRole::Form)
+            .flat_map(|region| region.elements.iter())
+            .find(|element| {
+                element.role == ElementRole::Button
+                    && compiled_button_type(element) == Some("image")
+            })
+            .expect("named image submit should compile");
+        assert_eq!(
+            compiled_submit_form_get_navigation_url(
+                &named,
+                named_submit,
+                "https://example.test/search"
+            ),
+            Some("https://example.test/results?q=rust+som&go.x=0&go.y=0".to_string())
+        );
+
+        let unnamed = crate::som::compiler::compile(
+            r##"<html><head><title>Search</title></head><body>
+<form action="/results" method="get">
+  <input name="q" value="agents">
+  <input type="image" alt="Search" src="/go.png">
+</form>
+</body></html>"##,
+            "https://example.test/search",
+        )
+        .expect("fixture HTML should compile");
+        let unnamed_submit = unnamed
+            .regions
+            .iter()
+            .filter(|region| region.role == RegionRole::Form)
+            .flat_map(|region| region.elements.iter())
+            .find(|element| {
+                element.role == ElementRole::Button
+                    && compiled_button_type(element) == Some("image")
+            })
+            .expect("unnamed image submit should compile");
+        assert_eq!(
+            compiled_submit_form_get_navigation_url(
+                &unnamed,
+                unnamed_submit,
+                "https://example.test/search"
+            ),
+            Some("https://example.test/results?q=agents&x=0&y=0".to_string())
         );
     }
 
