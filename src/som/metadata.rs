@@ -172,6 +172,7 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                             | "license"
                             | "search"
                             | "prev"
+                            | "previous"
                             | "next"
                     ) {
                         let link_type = attrs_borrowed
@@ -182,8 +183,13 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                             .iter()
                             .find(|a| a.name.local.as_ref() == "hreflang")
                             .map(|a| a.value.to_string());
+                        let rel = if rel_lower == "previous" {
+                            "prev".to_string()
+                        } else {
+                            rel_lower
+                        };
                         data.links.push(LinkElement {
-                            rel: rel_lower,
+                            rel,
                             href,
                             r#type: link_type,
                             hreflang,
@@ -380,6 +386,59 @@ mod tests {
         assert!(
             !data.open_graph.contains_key("prev") && data.twitter_card.is_empty(),
             "pagination links must not copy onto OpenGraph or Twitter cards: {data:?}"
+        );
+    }
+
+    #[test]
+    fn pagination_previous_synonym_canonicalizes_to_prev() {
+        let html = r#"<html><head>
+            <link rel="Previous" href="/docs/page-1">
+            <link rel="prev" href="/docs/also-prev">
+            <link rel="next" href="/docs/page-3">
+            <link rel="previous prefetch" href="/docs/mixed">
+            <link rel="first" href="/docs/page-1">
+            <a rel="previous" href="/body-previous">Body previous</a>
+            <meta property="og:title" content="Docs">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        let rels: Vec<_> = data.links.iter().map(|link| link.rel.as_str()).collect();
+        assert!(
+            data.links
+                .iter()
+                .any(|link| link.rel == "prev" && link.href == "/docs/page-1"),
+            "rel=previous must canonicalize to prev: {data:?}"
+        );
+        assert!(
+            data.links
+                .iter()
+                .any(|link| link.rel == "prev" && link.href == "/docs/also-prev"),
+            "rel=prev must remain: {data:?}"
+        );
+        assert!(
+            data.links
+                .iter()
+                .any(|link| link.rel == "next" && link.href == "/docs/page-3"),
+            "rel=next must remain: {data:?}"
+        );
+        assert!(
+            !rels.iter().any(|rel| *rel == "previous"),
+            "previous must not be stored as a distinct rel: {data:?}"
+        );
+        assert!(
+            !rels.iter().any(|rel| *rel == "first"),
+            "first must not copy previous synonym mapping: {data:?}"
+        );
+        assert!(
+            !data
+                .links
+                .iter()
+                .any(|link| link.href == "/docs/mixed" || link.href == "/body-previous"),
+            "multi-token rel and body anchors must not copy previous mapping: {data:?}"
+        );
+        assert_eq!(data.open_graph["og:title"], "Docs");
+        assert!(
+            data.twitter_card.is_empty(),
+            "previous synonym must not copy onto Twitter cards: {data:?}"
         );
     }
 
