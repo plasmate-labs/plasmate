@@ -1621,6 +1621,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                     "img" => return Some(ElementRole::Image),
                     "heading" => return Some(ElementRole::Heading),
                     "article" => return Some(ElementRole::Section),
+                    "separator" => return Some(ElementRole::Separator),
                     "alert" | "status" => return Some(ElementRole::Paragraph),
                     "tooltip" => return Some(ElementRole::Paragraph),
                     "group" | "radiogroup" => return Some(ElementRole::Group),
@@ -6502,5 +6503,110 @@ plasmate fetch https://example.test</code></pre>
             })
             .expect("cta paragraph should compile");
         assert_eq!(cta.text.as_deref(), Some("Join now"));
+    }
+
+    #[test]
+    fn aria_separator_compiles_for_selector() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Menu</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <div id="break" role="separator"></div>
+  <hr id="rule">
+  <div id="doc" role="document">Not a separator</div>
+  <button id="share">Share</button>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/menu").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let divider = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("break"))
+            .expect("ARIA separator should compile");
+        assert_eq!(divider.role, ElementRole::Separator);
+        let divider_attrs = divider
+            .attrs
+            .as_ref()
+            .expect("separator attrs should compile");
+        assert_eq!(divider_attrs["source_role"], "separator");
+        assert!(
+            divider
+                .actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "separators must not invent actions: {divider:?}"
+        );
+        assert!(
+            !som.regions
+                .iter()
+                .any(|region| region.id.contains("separator")),
+            "role=separator must not copy landmark mapping: {:?}",
+            som.regions
+        );
+
+        let rule = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("rule"))
+            .expect("native hr should compile");
+        assert_eq!(rule.role, ElementRole::Separator);
+        assert!(
+            rule.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "native hr must not invent ARIA source_role: {rule:?}"
+        );
+
+        let doc = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("doc"));
+        assert!(
+            doc.is_none_or(|element| element.role != ElementRole::Separator
+                && element
+                    .attrs
+                    .as_ref()
+                    .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("separator")))),
+            "role=document must not copy separator mapping: {elements:?}"
+        );
+
+        let share = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("share"))
+            .expect("share button should compile");
+        assert_eq!(share.role, ElementRole::Button);
+
+        let filtered = crate::som::filter::apply_selector(&som, "separator");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("break")
+                    && element.role == ElementRole::Separator
+            }),
+            "selector=separator should keep compiled ARIA separators: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("rule") && element.role == ElementRole::Separator
+            }),
+            "selector=separator should keep native hr: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("share")),
+            "selector=separator should drop buttons: {filtered_elements:?}"
+        );
     }
 }
