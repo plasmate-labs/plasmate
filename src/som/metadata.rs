@@ -75,9 +75,7 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                         && a.value.as_ref().eq_ignore_ascii_case("application/ld+json")
                 });
                 if is_json_ld {
-                    let text = collect_text(node);
-                    if let Ok(value) = serde_json::from_str::<Value>(text.trim()) {
-                        // Handle both single objects and arrays
+                    if let Some(value) = parse_json_ld_block(&collect_text(node)) {
                         match value {
                             Value::Array(arr) => data.json_ld.extend(arr),
                             v => data.json_ld.push(v),
@@ -201,11 +199,40 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
 fn collect_text(node: &Handle) -> String {
     let mut buf = String::new();
     for child in node.children.borrow().iter() {
-        if let NodeData::Text { contents } = &child.data {
-            buf.push_str(&contents.borrow());
+        match &child.data {
+            NodeData::Text { contents } => buf.push_str(&contents.borrow()),
+            NodeData::Comment { contents } => buf.push_str(contents),
+            _ => {}
         }
     }
     buf
+}
+
+fn unwrap_json_ld_script(text: &str) -> &str {
+    let trimmed = text.trim();
+    if let Some(inner) = trimmed
+        .strip_prefix("<!--")
+        .and_then(|rest| rest.strip_suffix("-->"))
+    {
+        return inner.trim();
+    }
+    let without_open = if let Some(rest) = trimmed.strip_prefix("//<![CDATA[") {
+        rest
+    } else if let Some(rest) = trimmed.strip_prefix("<![CDATA[") {
+        rest
+    } else {
+        return trimmed;
+    };
+    let without_open = without_open.trim();
+    without_open
+        .strip_suffix("//]]>")
+        .or_else(|| without_open.strip_suffix("]]>"))
+        .unwrap_or(without_open)
+        .trim()
+}
+
+fn parse_json_ld_block(text: &str) -> Option<Value> {
+    serde_json::from_str(unwrap_json_ld_script(text)).ok()
 }
 
 #[cfg(test)]
@@ -326,5 +353,41 @@ mod tests {
         </head><body></body></html>"#;
         let data = extract_structured_data(html);
         assert_eq!(data.json_ld.len(), 1, "Invalid JSON-LD should be skipped");
+    }
+
+    #[test]
+    fn json_ld_html_comment_wrapper_is_extracted() {
+        let html = r#"<html><head>
+            <script type="application/ld+json">
+            <!--
+            {"@context":"https://schema.org","@type":"Organization","name":"Plasmate"}
+            -->
+            </script>
+            <script type="application/ld+json">
+            //<![CDATA[
+            {"@type":"WebPage","name":"Docs"}
+            //]]>
+            </script>
+            <script type="application/json">
+            <!--{"@type":"NotJsonLd"}-->
+            </script>
+            <script type="application/ld+json"><!-- not json --></script>
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        assert_eq!(
+            data.json_ld.len(),
+            2,
+            "comment/CDATA wrappers must not drop JSON-LD: {data:?}"
+        );
+        assert_eq!(data.json_ld[0]["@type"], "Organization");
+        assert_eq!(data.json_ld[0]["name"], "Plasmate");
+        assert_eq!(data.json_ld[1]["@type"], "WebPage");
+        assert_eq!(data.json_ld[1]["name"], "Docs");
+        assert!(
+            data.json_ld
+                .iter()
+                .all(|block| block["@type"] != "NotJsonLd"),
+            "non-ld+json scripts must stay unparsed: {data:?}"
+        );
     }
 }
