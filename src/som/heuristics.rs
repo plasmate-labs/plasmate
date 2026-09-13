@@ -259,6 +259,16 @@ pub fn is_form_region(tag: &str) -> bool {
     tag == "form"
 }
 
+/// True when ARIA `role` includes the `form` landmark token.
+pub fn has_form_role(attrs: &[(String, String)]) -> bool {
+    attrs.iter().any(|(name, value)| {
+        name == "role"
+            && value
+                .split_whitespace()
+                .any(|role| role.eq_ignore_ascii_case("form"))
+    })
+}
+
 /// Heuristic: check if a node looks like a navigation region
 /// (e.g., a list of links near the top of the page).
 pub fn looks_like_navigation(link_count: usize, total_children: usize) -> bool {

@@ -5931,6 +5931,32 @@ mod tests {
     }
 
     #[test]
+    fn compiled_submit_form_get_follows_aria_role_form() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head><title>Search</title></head><body>
+<div role="form" action="/results" method="get">
+  <input name="q" value="rust som">
+  <button>Search</button>
+</div>
+<button>Go</button>
+</body></html>"##,
+            "https://example.test/search",
+        )
+        .expect("fixture HTML should compile");
+        let search = compiled_form_submit_button(&som, "Search");
+        let go = compiled_page_button(&som, "Go");
+
+        assert_eq!(
+            compiled_submit_form_get_navigation_url(&som, search, "https://example.test/search"),
+            Some("https://example.test/results?q=rust+som".to_string())
+        );
+        assert_eq!(
+            compiled_submit_form_get_navigation_url(&som, go, "https://example.test/search"),
+            None
+        );
+    }
+
+    #[test]
     fn compiled_submit_form_get_navigation_url_resolves_action_against_document_base() {
         let html = r##"<html><head><!-- <base href="/ignored/"> --><base href="/app/"><title>Search</title></head><body>
 <form action="results" method="get">
