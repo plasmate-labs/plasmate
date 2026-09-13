@@ -1672,7 +1672,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "img" | "picture" => Some(ElementRole::Image),
         "ul" | "ol" | "dl" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
-        "p" | "time" | "blockquote" | "figcaption" | "pre" => Some(ElementRole::Paragraph),
+        "p" | "time" | "blockquote" | "figcaption" | "pre" | "abbr" => Some(ElementRole::Paragraph),
         "section" | "article" => Some(ElementRole::Section),
         "fieldset" => Some(ElementRole::Group),
         "hr" => Some(ElementRole::Separator),
@@ -6607,6 +6607,115 @@ plasmate fetch https://example.test</code></pre>
                 .iter()
                 .all(|element| element.html_id.as_deref() != Some("share")),
             "selector=separator should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn abbr_title_compiles_as_paragraph() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Glossary</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <abbr id="som" title="Semantic Object Model">SOM</abbr>
+  <abbr id="empty">MCP</abbr>
+  <dfn id="term" title="Not an abbreviation">Term</dfn>
+  <q id="quote" title="Cited aside">Quoted</q>
+  <button id="share">Share</button>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/glossary").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let som_abbr = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("som"))
+            .expect("native abbr should compile");
+        assert_eq!(som_abbr.role, ElementRole::Paragraph);
+        assert_eq!(som_abbr.text.as_deref(), Some("SOM"));
+        let som_attrs = som_abbr.attrs.as_ref().expect("abbr attrs should compile");
+        assert_eq!(som_attrs["title"], "Semantic Object Model");
+        assert!(
+            som_abbr
+                .actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "abbr must not invent actions: {som_abbr:?}"
+        );
+
+        let empty = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("empty"))
+            .expect("title-less abbr should still compile");
+        assert_eq!(empty.role, ElementRole::Paragraph);
+        assert_eq!(empty.text.as_deref(), Some("MCP"));
+        assert!(
+            empty
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("title").is_none()),
+            "absent abbr title must not be invented: {empty:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("term")
+                    || (element.role != ElementRole::Paragraph
+                        && element.attrs.as_ref().is_none_or(|attrs| {
+                            attrs.get("title") != Some(&json!("Not an abbreviation"))
+                        }))
+            }),
+            "dfn must not copy abbr mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("quote")
+                    || (element.role != ElementRole::Paragraph
+                        && element
+                            .attrs
+                            .as_ref()
+                            .is_none_or(|attrs| attrs.get("title") != Some(&json!("Cited aside"))))
+            }),
+            "q must not copy abbr mapping: {elements:?}"
+        );
+
+        let share = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("share"))
+            .expect("share button should compile");
+        assert_eq!(share.role, ElementRole::Button);
+
+        let filtered = crate::som::filter::apply_selector(&som, "paragraph");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("som") && element.role == ElementRole::Paragraph
+            }),
+            "selector=paragraph should keep compiled abbr: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("share")),
+            "selector=paragraph should drop buttons: {filtered_elements:?}"
         );
     }
 }
