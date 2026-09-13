@@ -1672,7 +1672,9 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "img" | "picture" => Some(ElementRole::Image),
         "ul" | "ol" | "dl" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
-        "p" | "time" | "blockquote" | "figcaption" | "pre" | "abbr" => Some(ElementRole::Paragraph),
+        "p" | "time" | "blockquote" | "figcaption" | "pre" | "abbr" | "address" => {
+            Some(ElementRole::Paragraph)
+        }
         "section" | "article" => Some(ElementRole::Section),
         "fieldset" => Some(ElementRole::Group),
         "hr" => Some(ElementRole::Separator),
@@ -6710,6 +6712,110 @@ plasmate fetch https://example.test</code></pre>
                 element.html_id.as_deref() == Some("som") && element.role == ElementRole::Paragraph
             }),
             "selector=paragraph should keep compiled abbr: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("share")),
+            "selector=paragraph should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn address_compiles_as_paragraph() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Contact</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <address id="contact">Plasmate Labs<br><a href="mailto:hello@example.test">hello@example.test</a></address>
+  <address id="plain">Support desk</address>
+  <cite id="source">Not contact</cite>
+  <mark id="hit">Not contact</mark>
+  <button id="share">Share</button>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/contact").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let contact = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("contact"))
+            .expect("native address should compile");
+        assert_eq!(contact.role, ElementRole::Paragraph);
+        assert_eq!(
+            contact.text.as_deref(),
+            Some("Plasmate Labs hello@example.test")
+        );
+        assert!(
+            contact
+                .actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "address must not invent actions: {contact:?}"
+        );
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Link
+                    && element.attrs.as_ref().and_then(|attrs| attrs.get("href"))
+                        == Some(&json!("mailto:hello@example.test"))
+            }),
+            "address must keep nested mailto links: {elements:?}"
+        );
+
+        let plain = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plain"))
+            .expect("plain address should still compile");
+        assert_eq!(plain.role, ElementRole::Paragraph);
+        assert_eq!(plain.text.as_deref(), Some("Support desk"));
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("source")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "cite must not copy address mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Paragraph
+            }),
+            "mark must not copy address mapping: {elements:?}"
+        );
+
+        let share = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("share"))
+            .expect("share button should compile");
+        assert_eq!(share.role, ElementRole::Button);
+
+        let filtered = crate::som::filter::apply_selector(&som, "paragraph");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("contact")
+                    && element.role == ElementRole::Paragraph
+            }),
+            "selector=paragraph should keep compiled address: {filtered_elements:?}"
         );
         assert!(
             filtered_elements
