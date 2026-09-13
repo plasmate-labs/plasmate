@@ -1625,10 +1625,11 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                     "tooltip" => return Some(ElementRole::Paragraph),
                     "group" | "radiogroup" => return Some(ElementRole::Group),
                     "progressbar" | "meter" => return Some(ElementRole::Group),
+                    "presentation" | "none" => return contenteditable_type_role(tag, attrs),
                     _ => {}
                 }
             }
-            return contenteditable_type_role(tag, attrs);
+            break;
         }
     }
 
@@ -6037,6 +6038,78 @@ mod tests {
                 .iter()
                 .all(|element| element.html_id.as_deref() != Some("share")),
             "selector=section should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn unknown_aria_role_keeps_native_link_and_list_semantics() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Docs</title></head>
+<body>
+<main>
+  <a id="note" href="/spec#note" role="doc-noteref">Note 1</a>
+  <ul id="toc" role="list"><li>Intro</li></ul>
+  <a id="home" href="/" role="presentation">Skip</a>
+  <div id="doc" role="document">Not an article</div>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/docs").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let note = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("note"))
+            .expect("unknown ARIA roles must not drop native links");
+        assert_eq!(note.role, ElementRole::Link);
+        assert_eq!(
+            note.attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("href"))
+                .and_then(|href| href.as_str()),
+            Some("/spec#note")
+        );
+        assert!(
+            note.actions
+                .as_ref()
+                .is_some_and(|actions| actions.iter().any(|action| action == "click")),
+            "native links with unknown ARIA roles must stay clickable: {note:?}"
+        );
+
+        let toc = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("toc"))
+            .expect("ul role=list should keep native list semantics");
+        assert_eq!(toc.role, ElementRole::List);
+
+        assert!(
+            elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("home")
+                    || element.role != ElementRole::Link),
+            "role=presentation must still suppress native link semantics: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("doc")
+                    || (element.role != ElementRole::Section
+                        && element.attrs.as_ref().is_none_or(|attrs| {
+                            attrs.get("source_role") != Some(&json!("article"))
+                        }))
+            }),
+            "role=document must not copy article mapping: {elements:?}"
         );
     }
 
