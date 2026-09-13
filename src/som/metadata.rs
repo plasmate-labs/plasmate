@@ -129,7 +129,10 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                             | "viewport"
                             | "generator"
                             | "theme-color"
-                    ) {
+                    ) || n
+                        .strip_prefix("citation_")
+                        .is_some_and(|rest| !rest.is_empty())
+                    {
                         data.meta.insert(n, content.clone());
                     }
                 }
@@ -388,6 +391,55 @@ mod tests {
                 .iter()
                 .all(|block| block["@type"] != "NotJsonLd"),
             "non-ld+json scripts must stay unparsed: {data:?}"
+        );
+    }
+
+    #[test]
+    fn highwire_citation_meta_is_extracted() {
+        let html = r#"<html><head>
+            <meta name="citation_title" content="Semantic Object Model">
+            <meta name="Citation_DOI" content="10.1000/plasmate">
+            <meta name="citation_pdf_url" content="https://example.test/paper.pdf">
+            <meta name="citation_" content="empty-suffix">
+            <meta name="citation" content="too-short">
+            <meta name="citations" content="not-highwire">
+            <meta name="description" content="A paper">
+            <meta property="citation_title" content="not-a-name-attr">
+            <meta property="og:title" content="OG Title">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        assert_eq!(data.meta["citation_title"], "Semantic Object Model");
+        assert_eq!(data.meta["citation_doi"], "10.1000/plasmate");
+        assert_eq!(
+            data.meta["citation_pdf_url"],
+            "https://example.test/paper.pdf"
+        );
+        assert_eq!(data.meta["description"], "A paper");
+        assert!(
+            !data.meta.contains_key("citation_"),
+            "bare citation_ prefix must not be kept: {data:?}"
+        );
+        assert!(
+            !data.meta.contains_key("citation"),
+            "citation without underscore must not copy Highwire mapping: {data:?}"
+        );
+        assert!(
+            !data.meta.contains_key("citations"),
+            "citations must not copy Highwire mapping: {data:?}"
+        );
+        assert_ne!(
+            data.meta.get("citation_title").map(String::as_str),
+            Some("not-a-name-attr"),
+            "property= citation_title must not copy name= mapping: {data:?}"
+        );
+        assert_eq!(data.open_graph["og:title"], "OG Title");
+        assert!(
+            !data.open_graph.contains_key("citation_title"),
+            "citation meta must not copy onto OpenGraph: {data:?}"
+        );
+        assert!(
+            data.twitter_card.is_empty(),
+            "citation meta must not copy onto Twitter cards: {data:?}"
         );
     }
 }
