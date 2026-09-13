@@ -71,8 +71,7 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
             // JSON-LD: <script type="application/ld+json">
             "script" => {
                 let is_json_ld = attrs_borrowed.iter().any(|a| {
-                    a.name.local.as_ref() == "type"
-                        && a.value.as_ref().eq_ignore_ascii_case("application/ld+json")
+                    a.name.local.as_ref() == "type" && is_json_ld_script_type(a.value.as_ref())
                 });
                 if is_json_ld {
                     if let Some(value) = parse_json_ld_block(&collect_text(node)) {
@@ -234,6 +233,14 @@ fn push_json_ld(data: &mut StructuredData, value: Value) {
         },
         other => data.json_ld.push(other),
     }
+}
+
+fn is_json_ld_script_type(value: &str) -> bool {
+    value
+        .split(';')
+        .next()
+        .map(str::trim)
+        .is_some_and(|essence| essence.eq_ignore_ascii_case("application/ld+json"))
 }
 
 fn unwrap_json_ld_script(text: &str) -> &str {
@@ -577,6 +584,45 @@ mod tests {
                 .iter()
                 .all(|block| block["@type"] != "NotJsonLd"),
             "non-ld+json scripts must stay unparsed: {data:?}"
+        );
+    }
+
+    #[test]
+    fn json_ld_mime_parameters_are_extracted() {
+        let html = r#"<html><head>
+            <script type="application/ld+json; charset=UTF-8">
+            {"@type":"Organization","name":"Plasmate"}
+            </script>
+            <script type=" Application/LD+JSON ;profile=https://www.w3.org/ns/activitystreams">
+            {"@type":"WebPage","name":"Docs"}
+            </script>
+            <script type="application/json; charset=utf-8">
+            {"@type":"NotJsonLd"}
+            </script>
+            <script type="application/ld+jsonx">
+            {"@type":"NotJsonLdEither"}
+            </script>
+            <script type="application/ld+json">
+            {"@type":"SoftwareApplication","name":"Exact"}
+            </script>
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        assert_eq!(
+            data.json_ld.len(),
+            3,
+            "JSON-LD MIME parameters must not drop Schema.org: {data:?}"
+        );
+        assert_eq!(data.json_ld[0]["@type"], "Organization");
+        assert_eq!(data.json_ld[0]["name"], "Plasmate");
+        assert_eq!(data.json_ld[1]["@type"], "WebPage");
+        assert_eq!(data.json_ld[1]["name"], "Docs");
+        assert_eq!(data.json_ld[2]["@type"], "SoftwareApplication");
+        assert_eq!(data.json_ld[2]["name"], "Exact");
+        assert!(
+            data.json_ld.iter().all(|block| {
+                block["@type"] != "NotJsonLd" && block["@type"] != "NotJsonLdEither"
+            }),
+            "application/json and ld+jsonx must not copy JSON-LD mapping: {data:?}"
         );
     }
 
