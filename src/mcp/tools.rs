@@ -2803,7 +2803,7 @@ pub fn type_text_definition() -> ToolDefinition {
 pub fn select_option_definition() -> ToolDefinition {
     ToolDefinition {
         name: "select_option".to_string(),
-        description: "Select an option in a <select> dropdown or a native radio group by element ID and option value or visible label. Returns the updated page SOM. On a multiple select, the matched option is added without clearing other selected options. Use this when a compiled element advertises action:select, including radios.".to_string(),
+        description: "Select an option in a <select> dropdown or a native radio group by element ID and option value or visible label, including a compiled option label attribute. Returns the updated page SOM. On a multiple select, the matched option is added without clearing other selected options. Use this when a compiled element advertises action:select, including radios.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -3231,7 +3231,8 @@ pub async fn handle_select_option(
                 if (el.tagName === 'SELECT') {{
                     var found = false;
                     for (var i = 0; i < el.options.length; i++) {{
-                        if (el.options[i].value === '{}' || el.options[i].text === '{}') {{
+                        var optionLabel = (el.options[i].getAttribute('label') || '').replace(/\s+/g, ' ').trim();
+                        if (el.options[i].value === '{}' || el.options[i].text === '{}' || (optionLabel && optionLabel === '{}')) {{
                             if (el.multiple) {{
                                 el.options[i].selected = true;
                             }} else {{
@@ -3273,6 +3274,7 @@ pub async fn handle_select_option(
             }})()
             "#,
         element_id,
+        escaped_value,
         escaped_value,
         escaped_value,
         escaped_value,
@@ -6202,6 +6204,81 @@ mod tests {
             .expect("som option must remain");
         assert_eq!(rust["selected"], true, "{rust}");
         assert_eq!(som["selected"], true, "{som}");
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn select_option_selects_by_compiled_option_label() {
+        let options = stateful_worker_options(Duration::from_secs(5));
+        let sessions = Arc::new(SessionManager::with_worker_options(options));
+        let session_id = sessions.create_session().await.unwrap();
+        let html = "<html><head><title>Plan</title></head><body><main><!-- __fixture_option_label__ --><select name='plan' id='plan'><option value='pro' label='Pro Plan'>internal-pro</option><option value='free' selected>Free</option></select></main></body></html>";
+        sessions
+            .with_session(&session_id, |session| {
+                session.target.current_url = Some("https://example.test/pricing".to_string());
+                session.target.current_html = Some(html.to_string());
+                session.target.effective_html = Some(html.to_string());
+                session.target.current_som = Some(
+                    plasmate::som::compiler::compile(html, "https://example.test/pricing").unwrap(),
+                );
+                session.target.rebuild_node_map();
+            })
+            .await
+            .unwrap();
+        let element_id = sessions
+            .with_session(&session_id, |session| {
+                let som = session.target.current_som.as_ref().unwrap();
+                som.regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .find(|element| {
+                        element.role == ElementRole::Select
+                            && element.html_id.as_deref() == Some("plan")
+                    })
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose the plan select")
+            })
+            .await
+            .unwrap();
+        let client = reqwest::Client::new();
+
+        let selected = handle_select_option(
+            &json!({
+                "session_id": session_id,
+                "element_id": element_id,
+                "value": "Pro Plan"
+            }),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert!(selected.get("isError").is_none(), "{selected}");
+        let payload = tool_payload(&selected);
+        assert_eq!(payload["title"], "Plan");
+        let select = payload["regions"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .flat_map(|region| region["elements"].as_array().into_iter().flatten())
+            .find(|element| element["html_id"] == "plan")
+            .expect("selected SOM must keep the plan select");
+        let options = select["attrs"]["options"]
+            .as_array()
+            .expect("plan select must compile options");
+        let pro = options
+            .iter()
+            .find(|option| option["value"] == "pro")
+            .expect("pro option must remain");
+        let free = options
+            .iter()
+            .find(|option| option["value"] == "free")
+            .expect("free option must remain");
+        assert_eq!(pro["text"], "Pro Plan", "{pro}");
+        assert_eq!(pro["selected"], true, "{pro}");
+        assert!(
+            free.get("selected").is_none() || free["selected"] == false,
+            "free sibling must be unselected: {free}"
+        );
     }
 
     #[tokio::test]
