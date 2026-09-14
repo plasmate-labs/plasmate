@@ -90,6 +90,10 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                     .iter()
                     .find(|a| a.name.local.as_ref() == "name")
                     .map(|a| a.value.to_string());
+                let itemprop = attrs_borrowed
+                    .iter()
+                    .find(|a| a.name.local.as_ref() == "itemprop")
+                    .map(|a| a.value.to_string());
                 let content = attrs_borrowed
                     .iter()
                     .find(|a| a.name.local.as_ref() == "content")
@@ -135,6 +139,13 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                         || is_prism_meta_name(&n)
                         || is_eprints_meta_name(&n)
                     {
+                        data.meta.insert(n, content.clone());
+                    }
+                }
+
+                if let (Some(itemprop), Some(content)) = (&itemprop, &content) {
+                    let n = itemprop.trim().to_lowercase();
+                    if is_schema_itemprop_name(&n) {
                         data.meta.insert(n, content.clone());
                     }
                 }
@@ -263,6 +274,10 @@ fn is_prism_meta_name(n: &str) -> bool {
 fn is_eprints_meta_name(n: &str) -> bool {
     n.strip_prefix("eprints.")
         .is_some_and(|rest| !rest.is_empty())
+}
+
+fn is_schema_itemprop_name(n: &str) -> bool {
+    !n.is_empty() && !n.chars().any(char::is_whitespace)
 }
 
 fn is_json_ld_script_type(value: &str) -> bool {
@@ -1056,6 +1071,70 @@ mod tests {
         assert!(
             data.twitter_card.is_empty(),
             "EPrints meta must not copy onto Twitter cards: {data:?}"
+        );
+    }
+
+    #[test]
+    fn schema_itemprop_meta_is_extracted() {
+        let html = r#"<html><head>
+            <meta itemprop="name" content="Semantic Object Model">
+            <meta itemprop="DatePublished" content="2026-09-14">
+            <meta itemprop="image" content="https://example.test/paper.png">
+            <meta itemprop="" content="empty-itemprop">
+            <meta itemprop="   " content="whitespace-itemprop">
+            <meta itemprop="name url" content="multi-token">
+            <meta name="datePublished" content="not-an-itemprop-name">
+            <meta name="eprints.title" content="not-itemprop">
+            <meta name="citation_title" content="Highwire Title">
+            <meta name="description" content="A paper">
+            <meta property="name" content="not-an-itemprop-attr">
+            <meta property="og:title" content="OG Title">
+        </head><body>
+            <span itemprop="sku">ABC123</span>
+            <p>Body</p>
+        </body></html>"#;
+        let data = extract_structured_data(html);
+        assert_eq!(data.meta["name"], "Semantic Object Model");
+        assert_eq!(data.meta["datepublished"], "2026-09-14");
+        assert_eq!(data.meta["image"], "https://example.test/paper.png");
+        assert_eq!(data.meta["description"], "A paper");
+        assert_eq!(data.meta["eprints.title"], "not-itemprop");
+        assert_eq!(data.meta["citation_title"], "Highwire Title");
+        assert!(
+            !data.meta.contains_key("sku"),
+            "non-meta itemprop must not copy meta mapping: {data:?}"
+        );
+        assert!(
+            data.meta.values().all(|value| {
+                value != "empty-itemprop"
+                    && value != "whitespace-itemprop"
+                    && value != "multi-token"
+            }),
+            "empty or multi-token itemprop must not be kept: {data:?}"
+        );
+        assert!(
+            !data.meta.contains_key("name url")
+                && data.meta.get("name").map(String::as_str) != Some("multi-token"),
+            "multi-token itemprop must not be kept: {data:?}"
+        );
+        assert_ne!(
+            data.meta.get("datepublished").map(String::as_str),
+            Some("not-an-itemprop-name"),
+            "name= datePublished must not copy itemprop mapping: {data:?}"
+        );
+        assert_ne!(
+            data.meta.get("name").map(String::as_str),
+            Some("not-an-itemprop-attr"),
+            "property= name must not copy itemprop mapping: {data:?}"
+        );
+        assert_eq!(data.open_graph["og:title"], "OG Title");
+        assert!(
+            !data.open_graph.contains_key("name") && !data.open_graph.contains_key("datepublished"),
+            "itemprop meta must not copy onto OpenGraph: {data:?}"
+        );
+        assert!(
+            data.twitter_card.is_empty(),
+            "itemprop meta must not copy onto Twitter cards: {data:?}"
         );
     }
 }
