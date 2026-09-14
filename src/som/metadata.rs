@@ -138,6 +138,7 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                         || is_dublin_core_meta_name(&n)
                         || is_prism_meta_name(&n)
                         || is_eprints_meta_name(&n)
+                        || is_fediverse_meta_name(&n)
                     {
                         data.meta.insert(n, content.clone());
                     }
@@ -278,6 +279,11 @@ fn is_eprints_meta_name(n: &str) -> bool {
 
 fn is_schema_itemprop_name(n: &str) -> bool {
     !n.is_empty() && !n.chars().any(char::is_whitespace)
+}
+
+fn is_fediverse_meta_name(n: &str) -> bool {
+    n.strip_prefix("fediverse:")
+        .is_some_and(|rest| !rest.is_empty())
 }
 
 fn is_json_ld_script_type(value: &str) -> bool {
@@ -1135,6 +1141,61 @@ mod tests {
         assert!(
             data.twitter_card.is_empty(),
             "itemprop meta must not copy onto Twitter cards: {data:?}"
+        );
+    }
+
+    #[test]
+    fn fediverse_creator_meta_is_extracted() {
+        let html = r#"<html><head>
+            <meta name="fediverse:creator" content="@plasmate@example.test">
+            <meta name="Fediverse:Creator" content="@alias@example.test">
+            <meta name="fediverse:creator:id" content="https://example.test/users/plasmate">
+            <meta name="fediverse:" content="empty-suffix">
+            <meta name="fediverse" content="too-short">
+            <meta name="fediverse-creator" content="hyphen-not-colon">
+            <meta name="fediverse_creator" content="underscore-not-colon">
+            <meta name="twitter:creator" content="@twitter">
+            <meta name="eprints.title" content="not-fediverse">
+            <meta name="dc.title" content="Dublin Core Title">
+            <meta name="citation_title" content="Highwire Title">
+            <meta name="description" content="A paper">
+            <meta property="fediverse:creator" content="not-a-name-attr">
+            <meta property="og:title" content="OG Title">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        assert_eq!(data.meta["fediverse:creator"], "@alias@example.test");
+        assert_eq!(
+            data.meta["fediverse:creator:id"],
+            "https://example.test/users/plasmate"
+        );
+        assert_eq!(data.meta["description"], "A paper");
+        assert_eq!(data.meta["dc.title"], "Dublin Core Title");
+        assert_eq!(data.meta["citation_title"], "Highwire Title");
+        assert_eq!(data.meta["eprints.title"], "not-fediverse");
+        assert!(
+            !data.meta.contains_key("fediverse") && !data.meta.contains_key("fediverse:"),
+            "bare fediverse / fediverse: must not be kept: {data:?}"
+        );
+        assert!(
+            !data.meta.contains_key("fediverse-creator")
+                && !data.meta.contains_key("fediverse_creator"),
+            "hyphen/underscore fediverse keys must not copy fediverse mapping: {data:?}"
+        );
+        assert_ne!(
+            data.meta.get("fediverse:creator").map(String::as_str),
+            Some("not-a-name-attr"),
+            "property= fediverse:creator must not copy name= mapping: {data:?}"
+        );
+        assert_eq!(data.open_graph["og:title"], "OG Title");
+        assert!(
+            !data.open_graph.contains_key("fediverse:creator")
+                && !data.open_graph.contains_key("fediverse:creator:id"),
+            "fediverse meta must not copy onto OpenGraph: {data:?}"
+        );
+        assert_eq!(data.twitter_card["twitter:creator"], "@twitter");
+        assert!(
+            !data.twitter_card.contains_key("fediverse:creator"),
+            "fediverse meta must not copy onto Twitter cards: {data:?}"
         );
     }
 }
