@@ -99,10 +99,13 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                     .find(|a| a.name.local.as_ref() == "charset")
                     .map(|a| a.value.to_string());
 
-                // OpenGraph: <meta property="og:*" content="...">
+                // OpenGraph: <meta property="og:*" / property="article:*" content="...">
                 if let (Some(prop), Some(content)) = (&property, &content) {
                     if prop.starts_with("og:") {
                         data.open_graph.insert(prop.clone(), content.clone());
+                    } else if is_open_graph_article_property(prop) {
+                        data.open_graph
+                            .insert(prop.to_ascii_lowercase(), content.clone());
                     }
                 }
 
@@ -233,6 +236,12 @@ fn push_json_ld(data: &mut StructuredData, value: Value) {
         },
         other => data.json_ld.push(other),
     }
+}
+
+fn is_open_graph_article_property(prop: &str) -> bool {
+    prop.to_ascii_lowercase()
+        .strip_prefix("article:")
+        .is_some_and(|rest| !rest.is_empty())
 }
 
 fn is_json_ld_script_type(value: &str) -> bool {
@@ -672,6 +681,61 @@ mod tests {
         assert!(
             data.twitter_card.is_empty(),
             "citation meta must not copy onto Twitter cards: {data:?}"
+        );
+    }
+
+    #[test]
+    fn article_open_graph_properties_are_extracted() {
+        let html = r#"<html><head>
+            <meta property="article:published_time" content="2026-09-13T00:00:00Z">
+            <meta property="Article:author" content="https://example.test/authors/ada">
+            <meta property="article:section" content="Engineering">
+            <meta property="article:" content="empty-suffix">
+            <meta property="article" content="too-short">
+            <meta property="article-published_time" content="hyphen-not-colon">
+            <meta property="book:isbn" content="not-article">
+            <meta property="og:title" content="OG Title">
+            <meta name="article:published_time" content="not-a-property-attr">
+            <meta name="citation_title" content="Highwire Title">
+            <meta name="description" content="A paper">
+            <meta name="twitter:card" content="summary">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        assert_eq!(
+            data.open_graph["article:published_time"],
+            "2026-09-13T00:00:00Z"
+        );
+        assert_eq!(
+            data.open_graph["article:author"],
+            "https://example.test/authors/ada"
+        );
+        assert_eq!(data.open_graph["article:section"], "Engineering");
+        assert_eq!(data.open_graph["og:title"], "OG Title");
+        assert!(
+            !data.open_graph.contains_key("article:")
+                && !data.open_graph.contains_key("article")
+                && !data.open_graph.contains_key("article-published_time")
+                && !data.open_graph.contains_key("book:isbn"),
+            "bare article / book:isbn must not copy article mapping: {data:?}"
+        );
+        assert_ne!(
+            data.open_graph
+                .get("article:published_time")
+                .map(String::as_str),
+            Some("not-a-property-attr"),
+            "name= article:* must not copy property= mapping: {data:?}"
+        );
+        assert!(
+            !data.meta.contains_key("article:published_time")
+                && !data.meta.contains_key("article:author"),
+            "article properties must not copy onto standard meta: {data:?}"
+        );
+        assert_eq!(data.meta["citation_title"], "Highwire Title");
+        assert_eq!(data.meta["description"], "A paper");
+        assert_eq!(data.twitter_card["twitter:card"], "summary");
+        assert!(
+            !data.twitter_card.contains_key("article:published_time"),
+            "article properties must not copy onto Twitter cards: {data:?}"
         );
     }
 }
