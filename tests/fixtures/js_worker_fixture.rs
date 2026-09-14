@@ -208,6 +208,21 @@ fn main() {
         }
         return;
     }
+    if input.contains("__fixture_option_text_ws__") {
+        if input.contains("var optionText")
+            && input.contains("el.options[i].text")
+            && input.contains("Pro Plan")
+        {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"selected\":true,\"value\":\"pro\"}}","effective_html":"<html><head><title>Plan</title></head><body><main><!-- __fixture_option_text_ws__ --><select name='plan' id='plan'><option value='pro' selected>   Pro Plan   </option><option value='free'>Free</option></select></main></body></html>"}}}}"#
+            );
+        } else {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"error\":\"Option not found: Pro Plan\"}}","effective_html":"<html><head><title>Plan</title></head><body><main><!-- __fixture_option_text_ws__ --><select name='plan' id='plan'><option value='pro'>   Pro Plan   </option><option value='free' selected>Free</option></select></main></body></html>"}}}}"#
+            );
+        }
+        return;
+    }
     if input.contains("__fixture_option_label__") {
         if input.contains("getAttribute('label')") && input.contains("Pro Plan") {
             println!(
