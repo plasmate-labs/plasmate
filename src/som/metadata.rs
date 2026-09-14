@@ -103,11 +103,14 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                     .find(|a| a.name.local.as_ref() == "charset")
                     .map(|a| a.value.to_string());
 
-                // OpenGraph: <meta property="og:*" / property="article:*" content="...">
+                // OpenGraph: <meta property="og:*" / property="article:*" / property="book:*" content="...">
                 if let (Some(prop), Some(content)) = (&property, &content) {
                     if prop.starts_with("og:") {
                         data.open_graph.insert(prop.clone(), content.clone());
                     } else if is_open_graph_article_property(prop) {
+                        data.open_graph
+                            .insert(prop.to_ascii_lowercase(), content.clone());
+                    } else if is_open_graph_book_property(prop) {
                         data.open_graph
                             .insert(prop.to_ascii_lowercase(), content.clone());
                     }
@@ -258,6 +261,12 @@ fn push_json_ld(data: &mut StructuredData, value: Value) {
 fn is_open_graph_article_property(prop: &str) -> bool {
     prop.to_ascii_lowercase()
         .strip_prefix("article:")
+        .is_some_and(|rest| !rest.is_empty())
+}
+
+fn is_open_graph_book_property(prop: &str) -> bool {
+    prop.to_ascii_lowercase()
+        .strip_prefix("book:")
         .is_some_and(|rest| !rest.is_empty())
 }
 
@@ -853,7 +862,7 @@ mod tests {
             <meta property="article:" content="empty-suffix">
             <meta property="article" content="too-short">
             <meta property="article-published_time" content="hyphen-not-colon">
-            <meta property="book:isbn" content="not-article">
+            <meta property="music:duration" content="not-article">
             <meta property="og:title" content="OG Title">
             <meta name="article:published_time" content="not-a-property-attr">
             <meta name="citation_title" content="Highwire Title">
@@ -875,8 +884,8 @@ mod tests {
             !data.open_graph.contains_key("article:")
                 && !data.open_graph.contains_key("article")
                 && !data.open_graph.contains_key("article-published_time")
-                && !data.open_graph.contains_key("book:isbn"),
-            "bare article / book:isbn must not copy article mapping: {data:?}"
+                && !data.open_graph.contains_key("music:duration"),
+            "bare article / music:duration must not copy article mapping: {data:?}"
         );
         assert_ne!(
             data.open_graph
@@ -896,6 +905,59 @@ mod tests {
         assert!(
             !data.twitter_card.contains_key("article:published_time"),
             "article properties must not copy onto Twitter cards: {data:?}"
+        );
+    }
+
+    #[test]
+    fn book_open_graph_properties_are_extracted() {
+        let html = r#"<html><head>
+            <meta property="book:isbn" content="978-0-123456-47-2">
+            <meta property="Book:author" content="https://example.test/authors/ada">
+            <meta property="book:release_date" content="2026-09-14">
+            <meta property="book:" content="empty-suffix">
+            <meta property="book" content="too-short">
+            <meta property="book-isbn" content="hyphen-not-colon">
+            <meta property="music:duration" content="not-book">
+            <meta property="profile:username" content="not-book-either">
+            <meta property="article:section" content="Engineering">
+            <meta property="og:title" content="OG Title">
+            <meta name="book:isbn" content="not-a-property-attr">
+            <meta name="citation_title" content="Highwire Title">
+            <meta name="description" content="A paper">
+            <meta name="twitter:card" content="summary">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        assert_eq!(data.open_graph["book:isbn"], "978-0-123456-47-2");
+        assert_eq!(
+            data.open_graph["book:author"],
+            "https://example.test/authors/ada"
+        );
+        assert_eq!(data.open_graph["book:release_date"], "2026-09-14");
+        assert_eq!(data.open_graph["og:title"], "OG Title");
+        assert_eq!(data.open_graph["article:section"], "Engineering");
+        assert!(
+            !data.open_graph.contains_key("book:")
+                && !data.open_graph.contains_key("book")
+                && !data.open_graph.contains_key("book-isbn")
+                && !data.open_graph.contains_key("music:duration")
+                && !data.open_graph.contains_key("profile:username"),
+            "bare book / music: / profile: must not copy book mapping: {data:?}"
+        );
+        assert_ne!(
+            data.open_graph.get("book:isbn").map(String::as_str),
+            Some("not-a-property-attr"),
+            "name= book:* must not copy property= mapping: {data:?}"
+        );
+        assert!(
+            !data.meta.contains_key("book:isbn") && !data.meta.contains_key("book:author"),
+            "book properties must not copy onto standard meta: {data:?}"
+        );
+        assert_eq!(data.meta["citation_title"], "Highwire Title");
+        assert_eq!(data.meta["description"], "A paper");
+        assert_eq!(data.twitter_card["twitter:card"], "summary");
+        assert!(
+            !data.twitter_card.contains_key("book:isbn"),
+            "book properties must not copy onto Twitter cards: {data:?}"
         );
     }
 
