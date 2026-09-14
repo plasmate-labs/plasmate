@@ -106,10 +106,10 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                     }
                 }
 
-                // Twitter Card: <meta name="twitter:*" content="...">
-                if let (Some(name), Some(content)) = (&name_attr, &content) {
-                    if name.starts_with("twitter:") {
-                        data.twitter_card.insert(name.clone(), content.clone());
+                // Twitter Card: name="twitter:*" or property="twitter:*"
+                if let Some(content) = &content {
+                    if let Some(key) = twitter_card_key(name_attr.as_deref(), property.as_deref()) {
+                        data.twitter_card.insert(key.to_string(), content.clone());
                     }
                 }
 
@@ -270,6 +270,13 @@ fn parse_json_ld_block(text: &str) -> Option<Value> {
     serde_json::from_str(unwrap_json_ld_script(text)).ok()
 }
 
+fn twitter_card_key<'a>(name: Option<&'a str>, property: Option<&'a str>) -> Option<&'a str> {
+    [name, property].into_iter().flatten().find(|key| {
+        key.strip_prefix("twitter:")
+            .is_some_and(|rest| !rest.is_empty())
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -373,6 +380,49 @@ mod tests {
         let data = extract_structured_data(html);
         assert_eq!(data.twitter_card.len(), 3);
         assert_eq!(data.twitter_card["twitter:card"], "summary_large_image");
+    }
+
+    #[test]
+    fn twitter_card_property_attr_is_extracted() {
+        let html = r#"<html><head>
+            <meta property="twitter:card" content="summary">
+            <meta property="twitter:title" content="Docs">
+            <meta name="twitter:site" content="@plasmate">
+            <meta property="twitter:" content="empty-suffix">
+            <meta property="twitter" content="too-short">
+            <meta property="twitter-card" content="hyphenated">
+            <meta name="twitter:creator" property="og:title" content="Name wins">
+            <meta property="og:image" content="https://example.test/img.png">
+            <meta name="description" content="A page">
+            <meta property="article:author" content="Not Twitter">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        assert_eq!(data.twitter_card["twitter:card"], "summary");
+        assert_eq!(data.twitter_card["twitter:title"], "Docs");
+        assert_eq!(data.twitter_card["twitter:site"], "@plasmate");
+        assert_eq!(data.twitter_card["twitter:creator"], "Name wins");
+        assert_eq!(data.open_graph["og:title"], "Name wins");
+        assert_eq!(data.open_graph["og:image"], "https://example.test/img.png");
+        assert_eq!(data.meta["description"], "A page");
+        assert!(
+            !data.twitter_card.contains_key("twitter:")
+                && !data.twitter_card.contains_key("twitter")
+                && !data.twitter_card.contains_key("twitter-card"),
+            "bare/hyphenated twitter keys must not copy twitter: mapping: {data:?}"
+        );
+        assert!(
+            !data.open_graph.contains_key("twitter:card")
+                && !data.open_graph.contains_key("twitter:title"),
+            "property=twitter:* must not copy onto OpenGraph: {data:?}"
+        );
+        assert!(
+            !data.meta.contains_key("twitter:card") && !data.meta.contains_key("article:author"),
+            "twitter property cards must not copy onto standard meta: {data:?}"
+        );
+        assert!(
+            !data.twitter_card.contains_key("article:author"),
+            "article: properties must not copy onto Twitter cards: {data:?}"
+        );
     }
 
     #[test]
