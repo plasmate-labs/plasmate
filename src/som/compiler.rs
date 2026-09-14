@@ -1672,7 +1672,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "img" | "picture" => Some(ElementRole::Image),
         "ul" | "ol" | "dl" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
-        "p" | "time" | "blockquote" | "figcaption" | "pre" | "abbr" | "address" => {
+        "p" | "time" | "blockquote" | "figcaption" | "pre" | "abbr" | "address" | "cite" => {
             Some(ElementRole::Paragraph)
         }
         "section" | "article" => Some(ElementRole::Section),
@@ -6730,7 +6730,7 @@ plasmate fetch https://example.test</code></pre>
 <main>
   <address id="contact">Plasmate Labs<br><a href="mailto:hello@example.test">hello@example.test</a></address>
   <address id="plain">Support desk</address>
-  <cite id="source">Not contact</cite>
+  <small id="source">Not contact</small>
   <mark id="hit">Not contact</mark>
   <button id="share">Share</button>
   <p>Just text</p>
@@ -6789,7 +6789,7 @@ plasmate fetch https://example.test</code></pre>
                 element.html_id.as_deref() != Some("source")
                     || element.role != ElementRole::Paragraph
             }),
-            "cite must not copy address mapping: {elements:?}"
+            "small must not copy address mapping: {elements:?}"
         );
         assert!(
             elements.iter().all(|element| {
@@ -6816,6 +6816,133 @@ plasmate fetch https://example.test</code></pre>
                     && element.role == ElementRole::Paragraph
             }),
             "selector=paragraph should keep compiled address: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("share")),
+            "selector=paragraph should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn cite_compiles_as_paragraph() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Sources</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <cite id="source">RFC 3986</cite>
+  <cite id="paper"><a href="https://example.test/paper">Semantic Object Model</a></cite>
+  <blockquote id="quote" cite="https://example.test/speech">Quoted</blockquote>
+  <q id="inline" cite="https://example.test/aside">Quoted aside</q>
+  <mark id="hit">Not a citation</mark>
+  <dfn id="term">Not a citation</dfn>
+  <button id="share">Share</button>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/sources").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let source = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("source"))
+            .expect("native cite should compile");
+        assert_eq!(source.role, ElementRole::Paragraph);
+        assert_eq!(source.text.as_deref(), Some("RFC 3986"));
+        assert!(
+            source
+                .actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "cite must not invent actions: {source:?}"
+        );
+        assert!(
+            source
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("cite").is_none()),
+            "cite must not invent a cite attribute: {source:?}"
+        );
+
+        let paper = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("paper"))
+            .expect("cite with a nested link should still compile");
+        assert_eq!(paper.role, ElementRole::Paragraph);
+        assert_eq!(paper.text.as_deref(), Some("Semantic Object Model"));
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Link
+                    && element.attrs.as_ref().and_then(|attrs| attrs.get("href"))
+                        == Some(&json!("https://example.test/paper"))
+            }),
+            "cite must keep nested links: {elements:?}"
+        );
+
+        let quote = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("quote"))
+            .expect("blockquote should remain a paragraph");
+        assert_eq!(quote.role, ElementRole::Paragraph);
+        assert_eq!(
+            quote.attrs.as_ref().and_then(|attrs| attrs.get("cite")),
+            Some(&json!("https://example.test/speech")),
+            "blockquote cite must remain: {quote:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("inline")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "q must not copy cite mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Paragraph
+            }),
+            "mark must not copy cite mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("term") || element.role != ElementRole::Paragraph
+            }),
+            "dfn must not copy cite mapping: {elements:?}"
+        );
+
+        let share = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("share"))
+            .expect("share button should compile");
+        assert_eq!(share.role, ElementRole::Button);
+
+        let filtered = crate::som::filter::apply_selector(&som, "paragraph");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("source")
+                    && element.role == ElementRole::Paragraph
+            }),
+            "selector=paragraph should keep compiled cite: {filtered_elements:?}"
         );
         assert!(
             filtered_elements
