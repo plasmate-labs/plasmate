@@ -15,6 +15,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `input`, `textarea`, `select` / `combobox` / `listbox`, `checkbox`,
 ///   `radio`, `heading`, `image`, `list`, `table`, `paragraph`, `section`,
 ///   `group`, `separator`, `details`, `iframe`
+/// - Heading levels: `h1` .. `h6` match headings whose compiled `attrs.level`
+///   is that integer. Missing or out-of-range levels are not invented.
 /// - Action surfaces: `interactive` or `action:click` / `action:type` /
 ///   `action:clear` / `action:select` / `action:toggle`
 /// - Id: `#some-id` - region id first, then SOM element `id` or `html_id`
@@ -61,6 +63,12 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // contain matching descendants.
     if let Some(role) = parse_element_role(selector) {
         return filter_som_elements(som, selector, |element| element.role == role);
+    }
+
+    if let Some(level) = parse_heading_level_selector(selector) {
+        return filter_som_elements(som, selector, |element| {
+            heading_compiled_level(element) == Some(level)
+        });
     }
 
     // Match only actionable elements. This is useful when an agent needs a
@@ -122,6 +130,31 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         selector
     );
     som.clone()
+}
+
+fn parse_heading_level_selector(selector: &str) -> Option<u8> {
+    match selector.trim().to_ascii_lowercase().as_str() {
+        "h1" => Some(1),
+        "h2" => Some(2),
+        "h3" => Some(3),
+        "h4" => Some(4),
+        "h5" => Some(5),
+        "h6" => Some(6),
+        _ => None,
+    }
+}
+
+fn heading_compiled_level(element: &Element) -> Option<u8> {
+    if element.role != ElementRole::Heading {
+        return None;
+    }
+    element
+        .attrs
+        .as_ref()
+        .and_then(|attrs| attrs.get("level"))
+        .and_then(|value| value.as_u64())
+        .and_then(|level| u8::try_from(level).ok())
+        .filter(|level| (1..=6).contains(level))
 }
 
 fn parse_element_role(selector: &str) -> Option<ElementRole> {
@@ -197,7 +230,9 @@ fn refresh_meta(mut som: Som) -> Som {
     // after narrowing the regions. Iterate because the metadata value itself
     // is part of the serialized payload and its digit count can affect length.
     for _ in 0..3 {
-        let serialized_len = serde_json::to_string(&som).map(|json| json.len()).unwrap_or(0);
+        let serialized_len = serde_json::to_string(&som)
+            .map(|json| json.len())
+            .unwrap_or(0);
         if som.meta.som_bytes == serialized_len {
             break;
         }
@@ -577,6 +612,120 @@ mod tests {
         let filtered = apply_selector(&som, " main ");
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].role, RegionRole::Main);
+    }
+
+    #[test]
+    fn test_selector_heading_level_uses_compiled_level() {
+        let mut som = make_test_som();
+        som.regions[1].elements.extend([
+            Element {
+                id: "e-h1".to_string(),
+                role: ElementRole::Heading,
+                html_id: None,
+                text: Some("Title".to_string()),
+                label: None,
+                actions: None,
+                attrs: Some(serde_json::json!({"level": 1})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+            Element {
+                id: "e-h2".to_string(),
+                role: ElementRole::Heading,
+                html_id: None,
+                text: Some("Section".to_string()),
+                label: None,
+                actions: None,
+                attrs: Some(serde_json::json!({"level": 2})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+            Element {
+                id: "e-h-missing".to_string(),
+                role: ElementRole::Heading,
+                html_id: None,
+                text: Some("No level".to_string()),
+                label: None,
+                actions: None,
+                attrs: None,
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+            Element {
+                id: "e-fake-level".to_string(),
+                role: ElementRole::Paragraph,
+                html_id: None,
+                text: Some("Not a heading".to_string()),
+                label: None,
+                actions: None,
+                attrs: Some(serde_json::json!({"level": 1})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+            Element {
+                id: "e-aria-level".to_string(),
+                role: ElementRole::Button,
+                html_id: None,
+                text: Some("Billing".to_string()),
+                label: None,
+                actions: Some(vec!["click".to_string()]),
+                attrs: Some(serde_json::json!({"aria": {"level": "1"}})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+        ]);
+
+        let h1 = apply_selector(&som, "h1");
+        let h1_ids: Vec<_> = h1
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .map(|element| element.id.as_str())
+            .collect();
+        assert_eq!(h1.regions.len(), 1, "h1 must not return full SOM: {h1:?}");
+        assert_eq!(
+            h1_ids,
+            vec!["e-h1"],
+            "h1 must keep only compiled level 1: {h1:?}"
+        );
+
+        let h2 = apply_selector(&som, " H2 ");
+        let h2_ids: Vec<_> = h2
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .map(|element| element.id.as_str())
+            .collect();
+        assert_eq!(
+            h2_ids,
+            vec!["e-h2"],
+            "h2 must keep only compiled level 2: {h2:?}"
+        );
+
+        let headings = apply_selector(&som, "heading");
+        let heading_ids: Vec<_> = headings
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .map(|element| element.id.as_str())
+            .collect();
+        assert_eq!(
+            heading_ids,
+            vec!["e-h1", "e-h2", "e-h-missing"],
+            "heading must still match every heading role"
+        );
+
+        let unrecognized = apply_selector(&som, "h7");
+        assert_eq!(
+            unrecognized.regions.len(),
+            som.regions.len(),
+            "h7 must stay unrecognized and return full SOM"
+        );
     }
 
     #[test]
