@@ -76,10 +76,7 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                 });
                 if is_json_ld {
                     if let Some(value) = parse_json_ld_block(&collect_text(node)) {
-                        match value {
-                            Value::Array(arr) => data.json_ld.extend(arr),
-                            v => data.json_ld.push(v),
-                        }
+                        push_json_ld(data, value);
                     }
                 }
             }
@@ -219,6 +216,26 @@ fn collect_text(node: &Handle) -> String {
     buf
 }
 
+fn push_json_ld(data: &mut StructuredData, value: Value) {
+    match value {
+        Value::Array(items) => {
+            for item in items {
+                push_json_ld(data, item);
+            }
+        }
+        Value::Object(map) => match map.get("@graph") {
+            Some(Value::Array(graph)) if !graph.is_empty() => {
+                for item in graph.clone() {
+                    push_json_ld(data, item);
+                }
+            }
+            Some(Value::Array(_)) => {}
+            _ => data.json_ld.push(Value::Object(map)),
+        },
+        other => data.json_ld.push(other),
+    }
+}
+
 fn unwrap_json_ld_script(text: &str) -> &str {
     let trimmed = text.trim();
     if let Some(inner) = trimmed
@@ -272,6 +289,56 @@ mod tests {
         </head><body></body></html>"#;
         let data = extract_structured_data(html);
         assert_eq!(data.json_ld.len(), 2);
+    }
+
+    #[test]
+    fn json_ld_graph_nodes_are_extracted() {
+        let html = r#"<html><head>
+            <script type="application/ld+json">
+            {"@context":"https://schema.org","@graph":[
+                {"@type":"Organization","name":"Plasmate"},
+                {"@type":"WebPage","name":"Docs"}
+            ]}
+            </script>
+            <script type="application/ld+json">
+            {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Direct"}
+            </script>
+            <script type="application/ld+json">
+            {"@graph":[]}
+            </script>
+            <script type="application/ld+json">
+            {"@graph":{"@type":"NotFlattened"}}
+            </script>
+            <script type="application/json">
+            {"@graph":[{"@type":"NotJsonLd"}]}
+            </script>
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        assert_eq!(
+            data.json_ld.len(),
+            4,
+            "JSON-LD @graph nodes must surface as entities: {data:?}"
+        );
+        assert_eq!(data.json_ld[0]["@type"], "Organization");
+        assert_eq!(data.json_ld[0]["name"], "Plasmate");
+        assert_eq!(data.json_ld[1]["@type"], "WebPage");
+        assert_eq!(data.json_ld[1]["name"], "Docs");
+        assert_eq!(data.json_ld[2]["@type"], "SoftwareApplication");
+        assert_eq!(data.json_ld[2]["name"], "Direct");
+        assert_eq!(data.json_ld[3]["@graph"]["@type"], "NotFlattened");
+        assert!(
+            data.json_ld
+                .iter()
+                .all(|block| block["@type"] != "NotJsonLd"),
+            "application/json must not copy JSON-LD @graph mapping: {data:?}"
+        );
+        assert!(
+            data.json_ld
+                .iter()
+                .all(|block| block.get("@graph").is_none()
+                    || block["@graph"]["@type"] == "NotFlattened"),
+            "empty @graph must not invent entities: {data:?}"
+        );
     }
 
     #[test]
