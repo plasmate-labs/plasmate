@@ -133,6 +133,7 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                         .is_some_and(|rest| !rest.is_empty())
                         || is_dublin_core_meta_name(&n)
                         || is_prism_meta_name(&n)
+                        || is_eprints_meta_name(&n)
                     {
                         data.meta.insert(n, content.clone());
                     }
@@ -256,6 +257,11 @@ fn is_dublin_core_meta_name(n: &str) -> bool {
 
 fn is_prism_meta_name(n: &str) -> bool {
     n.strip_prefix("prism.")
+        .is_some_and(|rest| !rest.is_empty())
+}
+
+fn is_eprints_meta_name(n: &str) -> bool {
+    n.strip_prefix("eprints.")
         .is_some_and(|rest| !rest.is_empty())
 }
 
@@ -902,6 +908,7 @@ mod tests {
         );
         assert_eq!(data.meta["description"], "A paper");
         assert_eq!(data.meta["citation_title"], "Highwire Title");
+        assert_eq!(data.meta["eprints.title"], "not-dublin-core");
         assert!(
             !data.meta.contains_key("dc") && !data.meta.contains_key("dc."),
             "bare DC / dc. must not be kept: {data:?}"
@@ -914,8 +921,9 @@ mod tests {
             !data.meta.contains_key("dc-title"),
             "hyphenated dc-title must not copy Dublin Core mapping: {data:?}"
         );
-        assert!(
-            !data.meta.contains_key("eprints.title"),
+        assert_ne!(
+            data.meta.get("dc.title").map(String::as_str),
+            Some("not-dublin-core"),
             "eprints must not copy Dublin Core mapping: {data:?}"
         );
         assert_ne!(
@@ -958,6 +966,7 @@ mod tests {
         assert_eq!(data.meta["description"], "A paper");
         assert_eq!(data.meta["dc.title"], "Dublin Core Title");
         assert_eq!(data.meta["citation_title"], "Highwire Title");
+        assert_eq!(data.meta["eprints.title"], "not-prism-either");
         assert!(
             !data.meta.contains_key("prism") && !data.meta.contains_key("prism."),
             "bare prism / prism. must not be kept: {data:?}"
@@ -967,8 +976,13 @@ mod tests {
             "hyphenated prism-title must not copy PRISM mapping: {data:?}"
         );
         assert!(
-            !data.meta.contains_key("prisms.doi") && !data.meta.contains_key("eprints.title"),
-            "prisms/eprints must not copy PRISM mapping: {data:?}"
+            !data.meta.contains_key("prisms.doi"),
+            "prisms must not copy PRISM mapping: {data:?}"
+        );
+        assert_ne!(
+            data.meta.get("prism.doi").map(String::as_str),
+            Some("not-prism-either"),
+            "eprints must not copy PRISM mapping: {data:?}"
         );
         assert_ne!(
             data.meta.get("prism.doi").map(String::as_str),
@@ -984,6 +998,64 @@ mod tests {
         assert!(
             data.twitter_card.is_empty(),
             "PRISM meta must not copy onto Twitter cards: {data:?}"
+        );
+    }
+
+    #[test]
+    fn eprints_meta_is_extracted() {
+        let html = r#"<html><head>
+            <meta name="eprints.title" content="Semantic Object Model">
+            <meta name="EPrints.creators_name" content="Plasmate Labs">
+            <meta name="eprints.abstract" content="Structured page models for agents">
+            <meta name="eprints.date" content="2026-09-14">
+            <meta name="eprints." content="empty-suffix">
+            <meta name="eprints" content="too-short">
+            <meta name="eprints-title" content="hyphen-not-dotted">
+            <meta name="eprints_title" content="underscore-not-dotted">
+            <meta name="eprint.title" content="singular-not-eprints">
+            <meta name="dc.title" content="Dublin Core Title">
+            <meta name="prism.doi" content="10.1038/example">
+            <meta name="citation_title" content="Highwire Title">
+            <meta name="description" content="A paper">
+            <meta property="eprints.title" content="not-a-name-attr">
+            <meta property="og:title" content="OG Title">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        assert_eq!(data.meta["eprints.title"], "Semantic Object Model");
+        assert_eq!(data.meta["eprints.creators_name"], "Plasmate Labs");
+        assert_eq!(
+            data.meta["eprints.abstract"],
+            "Structured page models for agents"
+        );
+        assert_eq!(data.meta["eprints.date"], "2026-09-14");
+        assert_eq!(data.meta["description"], "A paper");
+        assert_eq!(data.meta["dc.title"], "Dublin Core Title");
+        assert_eq!(data.meta["prism.doi"], "10.1038/example");
+        assert_eq!(data.meta["citation_title"], "Highwire Title");
+        assert!(
+            !data.meta.contains_key("eprints") && !data.meta.contains_key("eprints."),
+            "bare eprints / eprints. must not be kept: {data:?}"
+        );
+        assert!(
+            !data.meta.contains_key("eprints-title")
+                && !data.meta.contains_key("eprints_title")
+                && !data.meta.contains_key("eprint.title"),
+            "hyphen/underscore/singular eprints keys must not copy EPrints mapping: {data:?}"
+        );
+        assert_ne!(
+            data.meta.get("eprints.title").map(String::as_str),
+            Some("not-a-name-attr"),
+            "property= eprints.title must not copy name= mapping: {data:?}"
+        );
+        assert_eq!(data.open_graph["og:title"], "OG Title");
+        assert!(
+            !data.open_graph.contains_key("eprints.title")
+                && !data.open_graph.contains_key("eprints.creators_name"),
+            "EPrints meta must not copy onto OpenGraph: {data:?}"
+        );
+        assert!(
+            data.twitter_card.is_empty(),
+            "EPrints meta must not copy onto Twitter cards: {data:?}"
         );
     }
 }
