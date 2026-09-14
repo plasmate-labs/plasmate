@@ -128,6 +128,7 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                     ) || n
                         .strip_prefix("citation_")
                         .is_some_and(|rest| !rest.is_empty())
+                        || is_dublin_core_meta_name(&n)
                     {
                         data.meta.insert(n, content.clone());
                     }
@@ -233,6 +234,12 @@ fn push_json_ld(data: &mut StructuredData, value: Value) {
         },
         other => data.json_ld.push(other),
     }
+}
+
+fn is_dublin_core_meta_name(n: &str) -> bool {
+    n.strip_prefix("dcterms.")
+        .or_else(|| n.strip_prefix("dc."))
+        .is_some_and(|rest| !rest.is_empty())
 }
 
 fn is_json_ld_script_type(value: &str) -> bool {
@@ -672,6 +679,69 @@ mod tests {
         assert!(
             data.twitter_card.is_empty(),
             "citation meta must not copy onto Twitter cards: {data:?}"
+        );
+    }
+
+    #[test]
+    fn dublin_core_meta_is_extracted() {
+        let html = r#"<html><head>
+            <meta name="DC.title" content="Semantic Object Model">
+            <meta name="DC.Creator" content="Plasmate Labs">
+            <meta name="DCTERMS.abstract" content="Structured page models for agents">
+            <meta name="dcterms.identifier" content="https://example.test/paper">
+            <meta name="DC" content="no-qualifier">
+            <meta name="dc." content="empty-suffix">
+            <meta name="dcterms" content="too-short">
+            <meta name="dc-title" content="hyphen-not-dotted">
+            <meta name="eprints.title" content="not-dublin-core">
+            <meta name="prism.title" content="not-dublin-core-either">
+            <meta name="citation_title" content="Highwire Title">
+            <meta name="description" content="A paper">
+            <meta property="DC.title" content="not-a-name-attr">
+            <meta property="og:title" content="OG Title">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        assert_eq!(data.meta["dc.title"], "Semantic Object Model");
+        assert_eq!(data.meta["dc.creator"], "Plasmate Labs");
+        assert_eq!(
+            data.meta["dcterms.abstract"],
+            "Structured page models for agents"
+        );
+        assert_eq!(
+            data.meta["dcterms.identifier"],
+            "https://example.test/paper"
+        );
+        assert_eq!(data.meta["description"], "A paper");
+        assert_eq!(data.meta["citation_title"], "Highwire Title");
+        assert!(
+            !data.meta.contains_key("dc") && !data.meta.contains_key("dc."),
+            "bare DC / dc. must not be kept: {data:?}"
+        );
+        assert!(
+            !data.meta.contains_key("dcterms"),
+            "DCTERMS without qualifier must not copy Dublin Core mapping: {data:?}"
+        );
+        assert!(
+            !data.meta.contains_key("dc-title"),
+            "hyphenated dc-title must not copy Dublin Core mapping: {data:?}"
+        );
+        assert!(
+            !data.meta.contains_key("eprints.title") && !data.meta.contains_key("prism.title"),
+            "eprints/prism must not copy Dublin Core mapping: {data:?}"
+        );
+        assert_ne!(
+            data.meta.get("dc.title").map(String::as_str),
+            Some("not-a-name-attr"),
+            "property= DC.title must not copy name= mapping: {data:?}"
+        );
+        assert_eq!(data.open_graph["og:title"], "OG Title");
+        assert!(
+            !data.open_graph.contains_key("dc.title") && !data.open_graph.contains_key("DC.title"),
+            "Dublin Core meta must not copy onto OpenGraph: {data:?}"
+        );
+        assert!(
+            data.twitter_card.is_empty(),
+            "Dublin Core meta must not copy onto Twitter cards: {data:?}"
         );
     }
 }
