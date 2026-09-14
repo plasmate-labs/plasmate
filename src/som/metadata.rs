@@ -175,6 +175,8 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                             | "prev"
                             | "previous"
                             | "next"
+                            | "privacy-policy"
+                            | "terms-of-service"
                     ) {
                         let link_type = attrs_borrowed
                             .iter()
@@ -585,6 +587,74 @@ mod tests {
         assert!(
             data.twitter_card.is_empty(),
             "previous synonym must not copy onto Twitter cards: {data:?}"
+        );
+    }
+
+    #[test]
+    fn legal_document_link_rels_are_extracted() {
+        let html = r#"<html><head>
+            <link rel="canonical" href="https://example.test/app">
+            <link rel="privacy-policy" href="/legal/privacy">
+            <link rel="Terms-of-Service" href="/legal/terms">
+            <link rel="help" href="/help">
+            <link rel="license" href="/license">
+            <link rel="prefetch" href="/legal/privacy">
+            <link rel="stylesheet" href="/style.css">
+            <link rel="privacy-policy prefetch" href="/legal/mixed">
+            <a rel="privacy-policy" href="/body-privacy">Body privacy</a>
+            <meta name="citation_title" content="Not a link">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        let rels: Vec<_> = data.links.iter().map(|link| link.rel.as_str()).collect();
+        assert!(
+            data.links
+                .iter()
+                .any(|link| link.rel == "privacy-policy" && link.href == "/legal/privacy"),
+            "rel=privacy-policy must stay in structured data: {data:?}"
+        );
+        assert!(
+            data.links
+                .iter()
+                .any(|link| link.rel == "terms-of-service" && link.href == "/legal/terms"),
+            "rel=terms-of-service must stay in structured data: {data:?}"
+        );
+        assert!(
+            data.links
+                .iter()
+                .any(|link| link.rel == "canonical" && link.href == "https://example.test/app"),
+            "canonical must remain: {data:?}"
+        );
+        assert!(
+            data.links
+                .iter()
+                .any(|link| link.rel == "license" && link.href == "/license"),
+            "license must remain: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"help"),
+            "help must not copy legal-document mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"prefetch"),
+            "prefetch must not copy legal-document mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"stylesheet"),
+            "stylesheet must stay excluded: {data:?}"
+        );
+        assert!(
+            !data
+                .links
+                .iter()
+                .any(|link| link.href == "/legal/mixed" || link.href == "/body-privacy"),
+            "multi-token rel and body anchors must not copy head legal-document mapping: {data:?}"
+        );
+        assert_eq!(data.meta["citation_title"], "Not a link");
+        assert!(
+            !data.open_graph.contains_key("privacy-policy")
+                && !data.open_graph.contains_key("terms-of-service")
+                && data.twitter_card.is_empty(),
+            "legal-document links must not copy onto OpenGraph or Twitter cards: {data:?}"
         );
     }
 
