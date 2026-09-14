@@ -132,6 +132,7 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                         .strip_prefix("citation_")
                         .is_some_and(|rest| !rest.is_empty())
                         || is_dublin_core_meta_name(&n)
+                        || is_prism_meta_name(&n)
                     {
                         data.meta.insert(n, content.clone());
                     }
@@ -248,6 +249,11 @@ fn is_open_graph_article_property(prop: &str) -> bool {
 fn is_dublin_core_meta_name(n: &str) -> bool {
     n.strip_prefix("dcterms.")
         .or_else(|| n.strip_prefix("dc."))
+        .is_some_and(|rest| !rest.is_empty())
+}
+
+fn is_prism_meta_name(n: &str) -> bool {
+    n.strip_prefix("prism.")
         .is_some_and(|rest| !rest.is_empty())
 }
 
@@ -808,7 +814,6 @@ mod tests {
             <meta name="dcterms" content="too-short">
             <meta name="dc-title" content="hyphen-not-dotted">
             <meta name="eprints.title" content="not-dublin-core">
-            <meta name="prism.title" content="not-dublin-core-either">
             <meta name="citation_title" content="Highwire Title">
             <meta name="description" content="A paper">
             <meta property="DC.title" content="not-a-name-attr">
@@ -840,8 +845,8 @@ mod tests {
             "hyphenated dc-title must not copy Dublin Core mapping: {data:?}"
         );
         assert!(
-            !data.meta.contains_key("eprints.title") && !data.meta.contains_key("prism.title"),
-            "eprints/prism must not copy Dublin Core mapping: {data:?}"
+            !data.meta.contains_key("eprints.title"),
+            "eprints must not copy Dublin Core mapping: {data:?}"
         );
         assert_ne!(
             data.meta.get("dc.title").map(String::as_str),
@@ -856,6 +861,59 @@ mod tests {
         assert!(
             data.twitter_card.is_empty(),
             "Dublin Core meta must not copy onto Twitter cards: {data:?}"
+        );
+    }
+
+    #[test]
+    fn prism_meta_is_extracted() {
+        let html = r#"<html><head>
+            <meta name="prism.publicationName" content="Nature">
+            <meta name="Prism.doi" content="10.1038/example">
+            <meta name="prism.issn" content="0028-0836">
+            <meta name="prism." content="empty-suffix">
+            <meta name="prism" content="too-short">
+            <meta name="prism-title" content="hyphen-not-dotted">
+            <meta name="prisms.doi" content="not-prism">
+            <meta name="eprints.title" content="not-prism-either">
+            <meta name="dc.title" content="Dublin Core Title">
+            <meta name="citation_title" content="Highwire Title">
+            <meta name="description" content="A paper">
+            <meta property="prism.doi" content="not-a-name-attr">
+            <meta property="og:title" content="OG Title">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        assert_eq!(data.meta["prism.publicationname"], "Nature");
+        assert_eq!(data.meta["prism.doi"], "10.1038/example");
+        assert_eq!(data.meta["prism.issn"], "0028-0836");
+        assert_eq!(data.meta["description"], "A paper");
+        assert_eq!(data.meta["dc.title"], "Dublin Core Title");
+        assert_eq!(data.meta["citation_title"], "Highwire Title");
+        assert!(
+            !data.meta.contains_key("prism") && !data.meta.contains_key("prism."),
+            "bare prism / prism. must not be kept: {data:?}"
+        );
+        assert!(
+            !data.meta.contains_key("prism-title"),
+            "hyphenated prism-title must not copy PRISM mapping: {data:?}"
+        );
+        assert!(
+            !data.meta.contains_key("prisms.doi") && !data.meta.contains_key("eprints.title"),
+            "prisms/eprints must not copy PRISM mapping: {data:?}"
+        );
+        assert_ne!(
+            data.meta.get("prism.doi").map(String::as_str),
+            Some("not-a-name-attr"),
+            "property= prism.doi must not copy name= mapping: {data:?}"
+        );
+        assert_eq!(data.open_graph["og:title"], "OG Title");
+        assert!(
+            !data.open_graph.contains_key("prism.doi")
+                && !data.open_graph.contains_key("prism.publicationname"),
+            "PRISM meta must not copy onto OpenGraph: {data:?}"
+        );
+        assert!(
+            data.twitter_card.is_empty(),
+            "PRISM meta must not copy onto Twitter cards: {data:?}"
         );
     }
 }
