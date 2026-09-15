@@ -706,7 +706,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the page URL so follow-up fetch_page calls can use them. Includes link hrefs and iframe src destinations. Useful for crawling, sitemap discovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs and iframe src destinations. Useful for crawling, sitemap discovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1321,8 +1321,9 @@ pub async fn handle_extract_links(
             collect_element_links(element, &mut urls);
         }
     }
+    let resolve_base = extract_links_resolve_base(&effective_som);
     for url in &mut urls {
-        *url = resolve_extracted_link(&effective_som.url, url);
+        *url = resolve_extracted_link(&resolve_base, url);
     }
     let mut seen = std::collections::HashSet::new();
     urls.retain(|u| seen.insert(u.clone()));
@@ -1384,6 +1385,18 @@ fn resolve_extracted_link(page_url: &str, href: &str) -> String {
         }
     }
     href.to_string()
+}
+
+fn extract_links_resolve_base(som: &Som) -> String {
+    som.structured_data
+        .as_ref()
+        .and_then(|data| data.links.iter().find(|link| link.rel == "base"))
+        .map(|link| resolve_extracted_link(&som.url, &link.href))
+        .filter(|resolved| {
+            let lower = resolved.to_ascii_lowercase();
+            lower.starts_with("http://") || lower.starts_with("https://")
+        })
+        .unwrap_or_else(|| som.url.clone())
 }
 
 fn find_som_element_by_id<'a>(
@@ -7045,7 +7058,7 @@ mod tests {
             }
         }
         for url in &mut urls {
-            *url = resolve_extracted_link(&som.url, url);
+            *url = resolve_extracted_link(&extract_links_resolve_base(&som), url);
         }
         let mut seen = std::collections::HashSet::new();
         urls.retain(|url| seen.insert(url.clone()));
@@ -7057,6 +7070,85 @@ mod tests {
                 "https://example.test/embed".to_string()
             ],
             "{urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_resolves_relative_hrefs_against_document_base() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/app/">
+<title>Nav</title>
+</head><body>
+<main>
+  <a href="guide">Guide</a>
+  <a href="/root">Root</a>
+  <a href="https://other.test/x">Offsite</a>
+  <iframe src="embed" title="Help"></iframe>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        assert_eq!(
+            extract_links_resolve_base(&som),
+            "https://example.test/app/",
+            "compiled <base href> must become the extract_links join root"
+        );
+
+        let mut urls = Vec::new();
+        for region in &som.regions {
+            for element in &region.elements {
+                collect_element_links(element, &mut urls);
+            }
+        }
+        for url in &mut urls {
+            *url = resolve_extracted_link(&extract_links_resolve_base(&som), url);
+        }
+        let mut seen = std::collections::HashSet::new();
+        urls.retain(|url| seen.insert(url.clone()));
+
+        assert_eq!(
+            urls,
+            vec![
+                "https://example.test/app/guide".to_string(),
+                "https://example.test/root".to_string(),
+                "https://other.test/x".to_string(),
+                "https://example.test/app/embed".to_string()
+            ],
+            "{urls:?}"
+        );
+        assert!(
+            !urls.iter().any(|url| url == "https://example.test/app/"
+                || url == "https://example.test/page/guide"
+                || url == "https://example.test/guide"),
+            "base itself must not be emitted and page-URL joins must not win: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_ignores_javascript_document_base() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="javascript:void(0)">
+<title>Nav</title>
+</head><body>
+<main>
+  <a href="guide">Guide</a>
+</main>
+</body></html>"##,
+            "https://example.test/dir/page",
+        )
+        .expect("fixture HTML should compile");
+
+        assert_eq!(
+            extract_links_resolve_base(&som),
+            "https://example.test/dir/page"
+        );
+        assert_eq!(
+            resolve_extracted_link(&extract_links_resolve_base(&som), "guide"),
+            "https://example.test/dir/guide"
         );
     }
 
