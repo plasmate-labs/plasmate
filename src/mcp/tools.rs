@@ -1526,7 +1526,7 @@ fn default_format() -> String {
 pub fn screenshot_page_definition() -> ToolDefinition {
     ToolDefinition {
         name: "screenshot_page".to_string(),
-        description: "Capture a pixel-perfect screenshot of a web page using headless Chrome. Requires Chrome/Chromium to be installed. If Chrome is not available, returns the page's Semantic Object Model (SOM) as structured data instead.".to_string(),
+        description: "Capture a pixel-perfect screenshot of a web page using headless Chrome. Requires Chrome/Chromium to be installed. If Chrome is not available or the bounded capture times out, returns the page's Semantic Object Model (SOM) as structured data instead of failing closed with no page.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1617,19 +1617,41 @@ pub async fn handle_screenshot_page(arguments: &Value, client: &reqwest::Client)
                 ]
             })
         }
-        Err(screenshot::ScreenshotError::ChromeNotFound) => {
-            // Fall back to SOM as structured data
-            let fallback = screenshot::som_fallback(&page_result.som);
-            json!({
+        Err(error) => match screenshot_capture_fallback(&error, &page_result.som) {
+            Some(fallback) => json!({
                 "content": [
                     {
                         "type": "text",
                         "text": serde_json::to_string(&fallback).unwrap_or_default()
                     }
                 ]
-            })
+            }),
+            None => error_response(&format!("Screenshot failed: {}", error)),
+        },
+    }
+}
+
+fn screenshot_timeout_som_fallback(som: &crate::som::types::Som) -> Value {
+    json!({
+        "error": "screenshot_timed_out",
+        "message": "Chrome exceeded the bounded screenshot deadline. The page SOM is returned as structured data instead.",
+        "som": serde_json::to_value(som).unwrap_or(json!(null)),
+        "hint": "Use fetch_page or inspect_page for structured content extraction."
+    })
+}
+
+fn screenshot_capture_fallback(
+    error: &plasmate::screenshot::ScreenshotError,
+    som: &crate::som::types::Som,
+) -> Option<Value> {
+    match error {
+        plasmate::screenshot::ScreenshotError::ChromeNotFound => {
+            Some(plasmate::screenshot::som_fallback(som))
         }
-        Err(e) => error_response(&format!("Screenshot failed: {}", e)),
+        plasmate::screenshot::ScreenshotError::Timeout => {
+            Some(screenshot_timeout_som_fallback(som))
+        }
+        _ => None,
     }
 }
 
@@ -4160,6 +4182,55 @@ mod tests {
 
         assert!(docs.contains(&format!("| `{registered_name}` |")));
         assert!(!docs.contains("| `screenshot` |"));
+    }
+
+    #[test]
+    fn screenshot_page_times_out_to_som_fallback() {
+        let som = test_som();
+        let timeout =
+            screenshot_capture_fallback(&plasmate::screenshot::ScreenshotError::Timeout, &som)
+                .expect("timeout must keep the compiled SOM");
+        assert_eq!(timeout["error"], "screenshot_timed_out");
+        assert_eq!(timeout["som"]["title"], "App");
+        assert_eq!(timeout["som"]["url"], "https://example.com/app");
+        assert!(
+            timeout["message"]
+                .as_str()
+                .expect("timeout message")
+                .contains("deadline"),
+            "{timeout:?}"
+        );
+        assert!(
+            screenshot_page_definition()
+                .description
+                .contains("times out"),
+            "agents must be told timeout still returns SOM"
+        );
+
+        let missing_chrome = screenshot_capture_fallback(
+            &plasmate::screenshot::ScreenshotError::ChromeNotFound,
+            &som,
+        )
+        .expect("Chrome-missing must keep the compiled SOM");
+        assert_eq!(missing_chrome["error"], "screenshot_not_implemented");
+        assert_eq!(missing_chrome["som"]["title"], "App");
+
+        assert!(
+            screenshot_capture_fallback(
+                &plasmate::screenshot::ScreenshotError::CaptureFailed("renderer crashed".into()),
+                &som,
+            )
+            .is_none(),
+            "capture failures other than timeout must not copy the timeout SOM fallback"
+        );
+        assert!(
+            screenshot_capture_fallback(
+                &plasmate::screenshot::ScreenshotError::RenderError("paint failed".into()),
+                &som,
+            )
+            .is_none(),
+            "render errors must not copy the timeout SOM fallback"
+        );
     }
 
     #[test]
