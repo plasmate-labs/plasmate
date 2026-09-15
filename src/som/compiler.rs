@@ -1387,7 +1387,11 @@ fn node_to_element(
             }
 
             let role = tag_to_role(tag, &attr_pairs)?;
-            let text_content = get_visible_text_content(node, &ctx.css_rules);
+            let text_content = if tag == "math" {
+                math_readable_text(node, &attr_pairs, &ctx.css_rules)
+            } else {
+                get_visible_text_content(node, &ctx.css_rules)
+            };
 
             // Apply summarization for paragraphs based on position
             let mut text = if text_content.is_empty() {
@@ -1673,7 +1677,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "ul" | "ol" | "dl" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
         "p" | "time" | "blockquote" | "figcaption" | "pre" | "abbr" | "address" | "cite"
-        | "dfn" | "code" => Some(ElementRole::Paragraph),
+        | "dfn" | "code" | "math" => Some(ElementRole::Paragraph),
         "section" | "article" => Some(ElementRole::Section),
         "fieldset" => Some(ElementRole::Group),
         "hr" => Some(ElementRole::Separator),
@@ -2104,6 +2108,13 @@ fn build_element_attrs(
             if let Some((_, cite)) = attrs.iter().find(|(n, _)| n == "cite") {
                 if !cite.trim().is_empty() {
                     map.insert("cite".into(), json!(cite));
+                }
+            }
+        }
+        "math" => {
+            if let Some((_, alttext)) = attrs.iter().find(|(n, _)| n == "alttext") {
+                if !alttext.trim().is_empty() {
+                    map.insert("alttext".into(), json!(alttext));
                 }
             }
         }
@@ -3154,6 +3165,52 @@ fn get_visible_text_content(node: &Handle, css_rules: &VisibilityRules) -> Strin
     let mut text = String::new();
     collect_visible_text(node, &mut text, css_rules);
     text
+}
+
+fn math_readable_text(
+    node: &Handle,
+    attrs: &[(String, String)],
+    css_rules: &VisibilityRules,
+) -> String {
+    let mut text = String::new();
+    collect_math_visible_text(node, &mut text, css_rules);
+    if !text.trim().is_empty() {
+        return text;
+    }
+    attrs
+        .iter()
+        .find(|(name, value)| name == "alttext" && !value.trim().is_empty())
+        .map(|(_, value)| value.clone())
+        .unwrap_or_default()
+}
+
+fn collect_math_visible_text(node: &Handle, buf: &mut String, css_rules: &VisibilityRules) {
+    if heuristics::should_strip(node) || is_css_hidden_element(node, css_rules) {
+        return;
+    }
+    match &node.data {
+        NodeData::Text { contents } => {
+            buf.push_str(&contents.borrow());
+        }
+        NodeData::Element { name, .. } => {
+            let tag = name.local.as_ref();
+            if matches!(tag, "annotation" | "annotation-xml") {
+                return;
+            }
+            if tag == "br" {
+                buf.push('\n');
+                return;
+            }
+            for child in node.children.borrow().iter() {
+                collect_math_visible_text(child, buf, css_rules);
+            }
+        }
+        _ => {
+            for child in node.children.borrow().iter() {
+                collect_math_visible_text(child, buf, css_rules);
+            }
+        }
+    }
 }
 
 fn collect_visible_text(node: &Handle, buf: &mut String, css_rules: &VisibilityRules) {
@@ -7383,6 +7440,156 @@ plasmate fetch https://example.test</code></pre>
                 element.html_id.as_deref() == Some("api") && element.role == ElementRole::Paragraph
             }),
             "selector=paragraph should keep compiled code: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("copy")),
+            "selector=paragraph should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn math_compiles_as_paragraph() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Proof</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <math id="sum"><mn>2</mn><mo>+</mo><mn>2</mn></math>
+  <math id="energy" alttext="E = mc^2">
+    <semantics>
+      <mrow><mi>E</mi><mo>=</mo><mi>m</mi><msup><mi>c</mi><mn>2</mn></msup></mrow>
+      <annotation encoding="application/x-tex">E = mc^2</annotation>
+    </semantics>
+  </math>
+  <math id="fallback" alttext="a^2 + b^2 = c^2"></math>
+  <math id="blank" alttext="   "></math>
+  <output id="result">Not math</output>
+  <mark id="hit">Not math</mark>
+  <code id="api">fetch_page</code>
+  <button id="copy">Copy</button>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/proof").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let sum = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("sum"))
+            .expect("native math should compile");
+        assert_eq!(sum.role, ElementRole::Paragraph);
+        assert_eq!(sum.text.as_deref(), Some("2+2"));
+        assert!(
+            sum.actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "math must not invent actions: {sum:?}"
+        );
+        assert!(
+            sum.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("alttext").is_none()),
+            "absent alttext must not be invented: {sum:?}"
+        );
+
+        let energy = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("energy"))
+            .expect("math with annotation should compile");
+        assert_eq!(energy.role, ElementRole::Paragraph);
+        assert_eq!(energy.text.as_deref(), Some("E=mc2"));
+        assert_eq!(
+            energy.attrs.as_ref().and_then(|attrs| attrs.get("alttext")),
+            Some(&json!("E = mc^2"))
+        );
+        assert!(
+            energy
+                .text
+                .as_deref()
+                .is_some_and(|text| !text.contains("E = mc^2")),
+            "annotation must not duplicate math text: {energy:?}"
+        );
+
+        let fallback = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("fallback"))
+            .expect("alttext-only math should compile");
+        assert_eq!(fallback.role, ElementRole::Paragraph);
+        assert_eq!(fallback.text.as_deref(), Some("a^2 + b^2 = c^2"));
+        assert_eq!(
+            fallback
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("alttext")),
+            Some(&json!("a^2 + b^2 = c^2"))
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("blank")
+                    || (element.role == ElementRole::Paragraph
+                        && element.text.is_none()
+                        && element
+                            .attrs
+                            .as_ref()
+                            .is_none_or(|attrs| attrs.get("alttext").is_none()))
+            }),
+            "whitespace-only alttext must not be invented: {elements:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("result")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "output must not copy math mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Paragraph
+            }),
+            "mark must not copy math mapping: {elements:?}"
+        );
+
+        let api = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("api"))
+            .expect("code should remain a paragraph");
+        assert_eq!(api.role, ElementRole::Paragraph);
+        assert_eq!(api.text.as_deref(), Some("fetch_page"));
+
+        let copy = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("copy"))
+            .expect("copy button should compile");
+        assert_eq!(copy.role, ElementRole::Button);
+
+        let filtered = crate::som::filter::apply_selector(&som, "paragraph");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("sum") && element.role == ElementRole::Paragraph
+            }),
+            "selector=paragraph should keep compiled math: {filtered_elements:?}"
         );
         assert!(
             filtered_elements
