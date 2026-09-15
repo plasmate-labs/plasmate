@@ -2272,6 +2272,10 @@ fn build_element_attrs(
             if has_attr(attrs, "controls") {
                 map.insert("controls".into(), json!(true));
             }
+            let tracks = extract_video_tracks(node, &ctx.css_rules);
+            if !tracks.is_empty() {
+                map.insert("tracks".into(), json!(tracks));
+            }
         }
         "canvas" => {
             map.insert("source_role".into(), json!("canvas"));
@@ -2625,6 +2629,49 @@ fn build_children(
     }
     // For lists and tables, we include items/rows in attrs instead of children
     None
+}
+
+fn extract_video_tracks(node: &Handle, css_rules: &VisibilityRules) -> Vec<serde_json::Value> {
+    let mut tracks = Vec::new();
+    for child in node.children.borrow().iter() {
+        if heuristics::should_strip(child) || is_css_hidden_element(child, css_rules) {
+            continue;
+        }
+        let NodeData::Element { name, .. } = &child.data else {
+            continue;
+        };
+        if name.local.as_ref() != "track" {
+            continue;
+        }
+        let child_attrs = get_attr_pairs(child);
+        let Some((_, src)) = child_attrs.iter().find(|(n, _)| n == "src") else {
+            continue;
+        };
+        let src = src.trim();
+        if src.is_empty() {
+            continue;
+        }
+        let mut track = serde_json::Map::new();
+        track.insert("src".into(), json!(src));
+        if let Some((_, kind)) = child_attrs.iter().find(|(n, _)| n == "kind") {
+            if !kind.trim().is_empty() {
+                track.insert("kind".into(), json!(kind));
+            }
+        }
+        if let Some((_, srclang)) = child_attrs.iter().find(|(n, _)| n == "srclang") {
+            if !srclang.trim().is_empty() {
+                track.insert("srclang".into(), json!(srclang));
+            }
+        }
+        if let Some((_, label)) = child_attrs.iter().find(|(n, _)| n == "label") {
+            let label = heuristics::normalize_text(label);
+            if !label.is_empty() {
+                track.insert("label".into(), json!(label));
+            }
+        }
+        tracks.push(serde_json::Value::Object(track));
+    }
+    tracks
 }
 
 /// Extract text from the first `<legend>` child of a `<fieldset>` element.
@@ -5127,6 +5174,119 @@ mod tests {
         assert!(
             fallback_attrs.get("src").is_none(),
             "nested source must not become video src: {fallback:?}"
+        );
+
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Paragraph
+                    && element.text.as_deref() == Some("Just text")
+            }),
+            "plain text must stay a paragraph: {elements:?}"
+        );
+    }
+
+    #[test]
+    fn test_native_video_caption_tracks_are_compiled() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Media</title></head>
+<body>
+<main>
+  <video id="tour" src="/tour.mp4" poster="/tour.jpg" aria-label="Product tour">
+    <track kind="captions" src="/tour.en.vtt" srclang="en" label="English">
+    <track kind="captions" src="/tour.es.vtt" srclang="es" label="Español">
+    <track kind="chapters" src="   " srclang="en">
+    <track kind="metadata">
+    <source src="/tour.webm" type="video/webm">
+  </video>
+  <video id="plain" src="/plain.mp4" aria-label="Plain player"></video>
+  <audio id="song" src="/song.mp3">
+    <track kind="captions" src="/song.en.vtt" srclang="en" label="Lyrics">
+  </audio>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/media").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let tour = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("tour"))
+            .expect("captioned video should compile");
+        assert_eq!(tour.role, ElementRole::Group);
+        assert!(
+            tour.actions.is_none(),
+            "video must not advertise play: {tour:?}"
+        );
+        let tour_attrs = tour.attrs.as_ref().expect("video attrs should compile");
+        assert_eq!(tour_attrs["source_role"], "video");
+        assert_eq!(tour_attrs["src"], "/tour.mp4");
+        assert_eq!(tour_attrs["poster"], "/tour.jpg");
+        assert_eq!(
+            tour_attrs["tracks"],
+            json!([
+                {
+                    "kind": "captions",
+                    "src": "/tour.en.vtt",
+                    "srclang": "en",
+                    "label": "English"
+                },
+                {
+                    "kind": "captions",
+                    "src": "/tour.es.vtt",
+                    "srclang": "es",
+                    "label": "Español"
+                }
+            ])
+        );
+        assert!(
+            tour_attrs
+                .get("tracks")
+                .and_then(|tracks| tracks.as_array())
+                .is_some_and(|tracks| tracks
+                    .iter()
+                    .all(
+                        |track| track.get("src").and_then(|src| src.as_str()) != Some("/tour.webm")
+                    )),
+            "nested source must not copy onto video tracks: {tour:?}"
+        );
+
+        let plain = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plain"))
+            .expect("track-less video should still compile");
+        let plain_attrs = plain
+            .attrs
+            .as_ref()
+            .expect("plain video attrs should compile");
+        assert_eq!(plain_attrs["source_role"], "video");
+        assert!(
+            plain_attrs.get("tracks").is_none(),
+            "track-less video must not invent tracks: {plain:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("song")
+                    && element
+                        .attrs
+                        .as_ref()
+                        .and_then(|attrs| attrs.get("tracks"))
+                        .and_then(|tracks| tracks.as_array())
+                        .map(|tracks| {
+                            !tracks.iter().any(|track| {
+                                track.get("src").and_then(|src| src.as_str())
+                                    == Some("/song.en.vtt")
+                            })
+                        })
+                        .unwrap_or(true)
+            }),
+            "audio tracks must not copy onto video compile: {elements:?}"
         );
 
         assert!(
