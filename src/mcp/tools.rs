@@ -706,7 +706,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs and iframe src destinations. Useful for crawling, sitemap discovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, and compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, and manifest). Useful for crawling, sitemap discovery, feed/hreflang discovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1314,19 +1314,7 @@ pub async fn handle_extract_links(
         }
     };
 
-    // Collect all link URLs, deduplicated
-    let mut urls: Vec<String> = Vec::new();
-    for region in &effective_som.regions {
-        for element in &region.elements {
-            collect_element_links(element, &mut urls);
-        }
-    }
-    let resolve_base = extract_links_resolve_base(&effective_som);
-    for url in &mut urls {
-        *url = resolve_extracted_link(&resolve_base, url);
-    }
-    let mut seen = std::collections::HashSet::new();
-    urls.retain(|u| seen.insert(u.clone()));
+    let urls = collect_extract_link_urls(&effective_som);
 
     let delivered_text = urls.join("\n");
     plasmate::measurement::record_delivery(
@@ -1347,6 +1335,58 @@ fn push_attr_url(attrs: &Value, key: &str, urls: &mut Vec<String>) {
             urls.push(url.to_string());
         }
     }
+}
+
+fn collect_extract_link_urls(som: &Som) -> Vec<String> {
+    let mut urls: Vec<String> = Vec::new();
+    for region in &som.regions {
+        for element in &region.elements {
+            collect_element_links(element, &mut urls);
+        }
+    }
+    collect_structured_document_links(som, &mut urls);
+    let resolve_base = extract_links_resolve_base(som);
+    for url in &mut urls {
+        *url = resolve_extracted_link(&resolve_base, url);
+    }
+    let mut seen = std::collections::HashSet::new();
+    urls.retain(|url| seen.insert(url.clone()));
+    urls
+}
+
+fn collect_structured_document_links(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    for link in &data.links {
+        if !is_extract_links_document_rel(&link.rel) {
+            continue;
+        }
+        let href = link.href.trim();
+        if href.is_empty() || href == "#" {
+            continue;
+        }
+        urls.push(href.to_string());
+    }
+}
+
+fn is_extract_links_document_rel(rel: &str) -> bool {
+    matches!(
+        rel,
+        "canonical"
+            | "alternate"
+            | "amphtml"
+            | "author"
+            | "license"
+            | "search"
+            | "prev"
+            | "next"
+            | "privacy-policy"
+            | "terms-of-service"
+            | "help"
+            | "me"
+            | "manifest"
+    )
 }
 
 /// Recursively collect outbound URLs from a SOM element tree.
@@ -7149,6 +7189,57 @@ mod tests {
         assert_eq!(
             resolve_extracted_link(&extract_links_resolve_base(&som), "guide"),
             "https://example.test/dir/guide"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_document_head_links() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/app/">
+<link rel="canonical" href="https://example.test/app/guide">
+<link rel="alternate" hreflang="es" href="guia">
+<link rel="alternate" type="application/rss+xml" href="/feed.xml">
+<link rel="amphtml" href="https://example.test/amp/guide">
+<link rel="icon" href="/favicon.ico">
+<link rel="shortcut icon" href="/favicon-shortcut.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://cdn.example.test">
+<link rel="dns-prefetch" href="https://fonts.example.test">
+<link rel="manifest" href="manifest.json">
+<title>Guide</title>
+</head><body>
+<main>
+  <a href="guide">Guide</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert_eq!(
+            urls,
+            vec![
+                "https://example.test/app/guide".to_string(),
+                "https://example.test/app/guia".to_string(),
+                "https://example.test/feed.xml".to_string(),
+                "https://example.test/amp/guide".to_string(),
+                "https://example.test/app/manifest.json".to_string(),
+            ],
+            "{urls:?}"
+        );
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("favicon")
+                    || url.contains("apple-touch-icon")
+                    || url.contains("cdn.example.test")
+                    || url.contains("fonts.example.test")
+                    || url == "https://example.test/app/"
+                    || url == "https://example.test/page"
+            }),
+            "icons, preconnect, dns-prefetch, and base must not be emitted: {urls:?}"
         );
     }
 
