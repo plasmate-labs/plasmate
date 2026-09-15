@@ -1672,9 +1672,8 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "img" | "picture" => Some(ElementRole::Image),
         "ul" | "ol" | "dl" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
-        "p" | "time" | "blockquote" | "figcaption" | "pre" | "abbr" | "address" | "cite" => {
-            Some(ElementRole::Paragraph)
-        }
+        "p" | "time" | "blockquote" | "figcaption" | "pre" | "abbr" | "address" | "cite"
+        | "dfn" => Some(ElementRole::Paragraph),
         "section" | "article" => Some(ElementRole::Section),
         "fieldset" => Some(ElementRole::Group),
         "hr" => Some(ElementRole::Separator),
@@ -6781,7 +6780,7 @@ plasmate fetch https://example.test</code></pre>
 <main>
   <abbr id="som" title="Semantic Object Model">SOM</abbr>
   <abbr id="empty">MCP</abbr>
-  <dfn id="term" title="Not an abbreviation">Term</dfn>
+  <var id="term" title="Not an abbreviation">Term</var>
   <q id="quote" title="Cited aside">Quoted</q>
   <button id="share">Share</button>
   <p>Just text</p>
@@ -6841,7 +6840,7 @@ plasmate fetch https://example.test</code></pre>
                             attrs.get("title") != Some(&json!("Not an abbreviation"))
                         }))
             }),
-            "dfn must not copy abbr mapping: {elements:?}"
+            "var must not copy abbr mapping: {elements:?}"
         );
         assert!(
             elements.iter().all(|element| {
@@ -6997,7 +6996,7 @@ plasmate fetch https://example.test</code></pre>
   <blockquote id="quote" cite="https://example.test/speech">Quoted</blockquote>
   <q id="inline" cite="https://example.test/aside">Quoted aside</q>
   <mark id="hit">Not a citation</mark>
-  <dfn id="term">Not a citation</dfn>
+  <var id="term">Not a citation</var>
   <button id="share">Share</button>
   <p>Just text</p>
 </main>
@@ -7082,7 +7081,7 @@ plasmate fetch https://example.test</code></pre>
             elements.iter().all(|element| {
                 element.html_id.as_deref() != Some("term") || element.role != ElementRole::Paragraph
             }),
-            "dfn must not copy cite mapping: {elements:?}"
+            "var must not copy cite mapping: {elements:?}"
         );
 
         let share = elements
@@ -7103,6 +7102,145 @@ plasmate fetch https://example.test</code></pre>
                     && element.role == ElementRole::Paragraph
             }),
             "selector=paragraph should keep compiled cite: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("share")),
+            "selector=paragraph should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn dfn_compiles_as_paragraph() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Glossary</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <dfn id="term">Semantic Object Model</dfn>
+  <dfn id="linked"><a href="https://example.test/som">SOM</a></dfn>
+  <dfn id="titled" title="Semantic Object Model">SOM</dfn>
+  <abbr id="abbr" title="Model Context Protocol">MCP</abbr>
+  <cite id="source">RFC 3986</cite>
+  <mark id="hit">Not a definition</mark>
+  <var id="name">Not a definition</var>
+  <q id="quote">Quoted aside</q>
+  <button id="share">Share</button>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/glossary").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let term = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("term"))
+            .expect("native dfn should compile");
+        assert_eq!(term.role, ElementRole::Paragraph);
+        assert_eq!(term.text.as_deref(), Some("Semantic Object Model"));
+        assert!(
+            term.actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "dfn must not invent actions: {term:?}"
+        );
+
+        let linked = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("linked"))
+            .expect("dfn with a nested link should still compile");
+        assert_eq!(linked.role, ElementRole::Paragraph);
+        assert_eq!(linked.text.as_deref(), Some("SOM"));
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Link
+                    && element.attrs.as_ref().and_then(|attrs| attrs.get("href"))
+                        == Some(&json!("https://example.test/som"))
+            }),
+            "dfn must keep nested links: {elements:?}"
+        );
+
+        let titled = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("titled"))
+            .expect("titled dfn should compile");
+        assert_eq!(titled.role, ElementRole::Paragraph);
+        assert_eq!(titled.text.as_deref(), Some("SOM"));
+        assert_eq!(
+            titled.attrs.as_ref().and_then(|attrs| attrs.get("title")),
+            Some(&json!("Semantic Object Model")),
+            "dfn title must remain the defined term: {titled:?}"
+        );
+
+        let abbr = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("abbr"))
+            .expect("abbr should remain a paragraph");
+        assert_eq!(abbr.role, ElementRole::Paragraph);
+        assert_eq!(
+            abbr.attrs.as_ref().and_then(|attrs| attrs.get("title")),
+            Some(&json!("Model Context Protocol")),
+            "abbr title must remain: {abbr:?}"
+        );
+
+        let source = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("source"))
+            .expect("cite should remain a paragraph");
+        assert_eq!(source.role, ElementRole::Paragraph);
+        assert_eq!(source.text.as_deref(), Some("RFC 3986"));
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Paragraph
+            }),
+            "mark must not copy dfn mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("name") || element.role != ElementRole::Paragraph
+            }),
+            "var must not copy dfn mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("quote")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "q must not copy dfn mapping: {elements:?}"
+        );
+
+        let share = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("share"))
+            .expect("share button should compile");
+        assert_eq!(share.role, ElementRole::Button);
+
+        let filtered = crate::som::filter::apply_selector(&som, "paragraph");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("term") && element.role == ElementRole::Paragraph
+            }),
+            "selector=paragraph should keep compiled dfn: {filtered_elements:?}"
         );
         assert!(
             filtered_elements
