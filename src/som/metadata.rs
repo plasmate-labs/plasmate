@@ -138,6 +138,7 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                         || is_dublin_core_meta_name(&n)
                         || is_prism_meta_name(&n)
                         || is_eprints_meta_name(&n)
+                        || is_bepress_meta_name(&n)
                         || is_fediverse_meta_name(&n)
                     {
                         data.meta.insert(n, content.clone());
@@ -274,6 +275,11 @@ fn is_prism_meta_name(n: &str) -> bool {
 
 fn is_eprints_meta_name(n: &str) -> bool {
     n.strip_prefix("eprints.")
+        .is_some_and(|rest| !rest.is_empty())
+}
+
+fn is_bepress_meta_name(n: &str) -> bool {
+    n.strip_prefix("bepress_citation_")
         .is_some_and(|rest| !rest.is_empty())
 }
 
@@ -1077,6 +1083,69 @@ mod tests {
         assert!(
             data.twitter_card.is_empty(),
             "EPrints meta must not copy onto Twitter cards: {data:?}"
+        );
+    }
+
+    #[test]
+    fn bepress_citation_meta_is_extracted() {
+        let html = r#"<html><head>
+            <meta name="bepress_citation_title" content="Semantic Object Model">
+            <meta name="Bepress_Citation_Author" content="Plasmate Labs">
+            <meta name="bepress_citation_pdf_url" content="https://example.test/paper.pdf">
+            <meta name="bepress_citation_date" content="2026-09-14">
+            <meta name="bepress_citation_" content="empty-suffix">
+            <meta name="bepress_citation" content="too-short">
+            <meta name="bepress" content="missing-citation">
+            <meta name="bepress-citation_title" content="hyphen-not-underscore">
+            <meta name="bepress.citation_title" content="dot-not-underscore">
+            <meta name="bepresses_citation_title" content="plural-not-bepress">
+            <meta name="eprints.title" content="not-bepress">
+            <meta name="dc.title" content="Dublin Core Title">
+            <meta name="prism.doi" content="10.1038/example">
+            <meta name="citation_title" content="Highwire Title">
+            <meta name="description" content="A paper">
+            <meta property="bepress_citation_title" content="not-a-name-attr">
+            <meta property="og:title" content="OG Title">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        assert_eq!(data.meta["bepress_citation_title"], "Semantic Object Model");
+        assert_eq!(data.meta["bepress_citation_author"], "Plasmate Labs");
+        assert_eq!(
+            data.meta["bepress_citation_pdf_url"],
+            "https://example.test/paper.pdf"
+        );
+        assert_eq!(data.meta["bepress_citation_date"], "2026-09-14");
+        assert_eq!(data.meta["description"], "A paper");
+        assert_eq!(data.meta["dc.title"], "Dublin Core Title");
+        assert_eq!(data.meta["prism.doi"], "10.1038/example");
+        assert_eq!(data.meta["citation_title"], "Highwire Title");
+        assert_eq!(data.meta["eprints.title"], "not-bepress");
+        assert!(
+            !data.meta.contains_key("bepress")
+                && !data.meta.contains_key("bepress_citation")
+                && !data.meta.contains_key("bepress_citation_"),
+            "bare bepress / bepress_citation / bepress_citation_ must not be kept: {data:?}"
+        );
+        assert!(
+            !data.meta.contains_key("bepress-citation_title")
+                && !data.meta.contains_key("bepress.citation_title")
+                && !data.meta.contains_key("bepresses_citation_title"),
+            "hyphen/dot/plural bepress keys must not copy Bepress mapping: {data:?}"
+        );
+        assert_ne!(
+            data.meta.get("bepress_citation_title").map(String::as_str),
+            Some("not-a-name-attr"),
+            "property= bepress_citation_title must not copy name= mapping: {data:?}"
+        );
+        assert_eq!(data.open_graph["og:title"], "OG Title");
+        assert!(
+            !data.open_graph.contains_key("bepress_citation_title")
+                && !data.open_graph.contains_key("bepress_citation_author"),
+            "Bepress meta must not copy onto OpenGraph: {data:?}"
+        );
+        assert!(
+            data.twitter_card.is_empty(),
+            "Bepress meta must not copy onto Twitter cards: {data:?}"
         );
     }
 
