@@ -190,6 +190,7 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                             | "next"
                             | "privacy-policy"
                             | "terms-of-service"
+                            | "help"
                     ) {
                         let link_type = attrs_borrowed
                             .iter()
@@ -623,7 +624,7 @@ mod tests {
             <link rel="canonical" href="https://example.test/app">
             <link rel="privacy-policy" href="/legal/privacy">
             <link rel="Terms-of-Service" href="/legal/terms">
-            <link rel="help" href="/help">
+            <link rel="tag" href="/tags/som">
             <link rel="license" href="/license">
             <link rel="prefetch" href="/legal/privacy">
             <link rel="stylesheet" href="/style.css">
@@ -658,8 +659,8 @@ mod tests {
             "license must remain: {data:?}"
         );
         assert!(
-            !rels.contains(&"help"),
-            "help must not copy legal-document mapping: {data:?}"
+            !rels.contains(&"tag"),
+            "tag must not copy legal-document mapping: {data:?}"
         );
         assert!(
             !rels.contains(&"prefetch"),
@@ -682,6 +683,79 @@ mod tests {
                 && !data.open_graph.contains_key("terms-of-service")
                 && data.twitter_card.is_empty(),
             "legal-document links must not copy onto OpenGraph or Twitter cards: {data:?}"
+        );
+    }
+
+    #[test]
+    fn help_link_rels_are_extracted() {
+        let html = r#"<html><head>
+            <link rel="canonical" href="https://example.test/app">
+            <link rel="help" href="/docs/help">
+            <link rel="Help" href="/docs/help-alias">
+            <link rel="license" href="/license">
+            <link rel="privacy-policy" href="/legal/privacy">
+            <link rel="tag" href="/tags/som">
+            <link rel="prefetch" href="/docs/help">
+            <link rel="stylesheet" href="/style.css">
+            <link rel="help prefetch" href="/docs/mixed">
+            <a rel="help" href="/body-help">Body help</a>
+            <meta name="citation_title" content="Not a link">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        let rels: Vec<_> = data.links.iter().map(|link| link.rel.as_str()).collect();
+        assert!(
+            data.links
+                .iter()
+                .any(|link| link.rel == "help" && link.href == "/docs/help"),
+            "rel=help must stay in structured data: {data:?}"
+        );
+        assert!(
+            data.links
+                .iter()
+                .any(|link| link.rel == "help" && link.href == "/docs/help-alias"),
+            "rel=Help must canonicalize to help: {data:?}"
+        );
+        assert!(
+            data.links
+                .iter()
+                .any(|link| link.rel == "canonical" && link.href == "https://example.test/app"),
+            "canonical must remain: {data:?}"
+        );
+        assert!(
+            data.links
+                .iter()
+                .any(|link| link.rel == "license" && link.href == "/license"),
+            "license must remain: {data:?}"
+        );
+        assert!(
+            data.links
+                .iter()
+                .any(|link| link.rel == "privacy-policy" && link.href == "/legal/privacy"),
+            "privacy-policy must remain: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"tag"),
+            "tag must not copy help mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"prefetch"),
+            "prefetch must not copy help mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"stylesheet"),
+            "stylesheet must stay excluded: {data:?}"
+        );
+        assert!(
+            !data
+                .links
+                .iter()
+                .any(|link| link.href == "/docs/mixed" || link.href == "/body-help"),
+            "multi-token rel and body anchors must not copy head help mapping: {data:?}"
+        );
+        assert_eq!(data.meta["citation_title"], "Not a link");
+        assert!(
+            !data.open_graph.contains_key("help") && data.twitter_card.is_empty(),
+            "help links must not copy onto OpenGraph or Twitter cards: {data:?}"
         );
     }
 
