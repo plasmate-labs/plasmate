@@ -1673,7 +1673,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "ul" | "ol" | "dl" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
         "p" | "time" | "blockquote" | "figcaption" | "pre" | "abbr" | "address" | "cite"
-        | "dfn" => Some(ElementRole::Paragraph),
+        | "dfn" | "code" => Some(ElementRole::Paragraph),
         "section" | "article" => Some(ElementRole::Section),
         "fieldset" => Some(ElementRole::Group),
         "hr" => Some(ElementRole::Separator),
@@ -7246,6 +7246,148 @@ plasmate fetch https://example.test</code></pre>
             filtered_elements
                 .iter()
                 .all(|element| element.html_id.as_deref() != Some("share")),
+            "selector=paragraph should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn code_compiles_as_paragraph() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Install</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <code id="api">fetch_page</code>
+  <code id="linked"><a href="https://docs.plasmate.app">plasmate fetch</a></code>
+  <pre id="block"><code>cargo install plasmate
+plasmate fetch https://example.test</code></pre>
+  <dfn id="term">Semantic Object Model</dfn>
+  <mark id="hit">Not code</mark>
+  <kbd id="shortcut">Ctrl+C</kbd>
+  <samp id="output">ok</samp>
+  <var id="name">Not code</var>
+  <q id="quote">Quoted aside</q>
+  <button id="copy">Copy</button>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/install").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let api = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("api"))
+            .expect("native code should compile");
+        assert_eq!(api.role, ElementRole::Paragraph);
+        assert_eq!(api.text.as_deref(), Some("fetch_page"));
+        assert!(
+            api.actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "code must not invent actions: {api:?}"
+        );
+
+        let linked = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("linked"))
+            .expect("code with a nested link should still compile");
+        assert_eq!(linked.role, ElementRole::Paragraph);
+        assert_eq!(linked.text.as_deref(), Some("plasmate fetch"));
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Link
+                    && element.attrs.as_ref().and_then(|attrs| attrs.get("href"))
+                        == Some(&json!("https://docs.plasmate.app"))
+            }),
+            "code must keep nested links: {elements:?}"
+        );
+
+        let block = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("block"))
+            .expect("pre should remain a paragraph");
+        assert_eq!(block.role, ElementRole::Paragraph);
+        assert_eq!(
+            block.text.as_deref(),
+            Some("cargo install plasmate\nplasmate fetch https://example.test")
+        );
+
+        let term = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("term"))
+            .expect("dfn should remain a paragraph");
+        assert_eq!(term.role, ElementRole::Paragraph);
+        assert_eq!(term.text.as_deref(), Some("Semantic Object Model"));
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Paragraph
+            }),
+            "mark must not copy code mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("shortcut")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "kbd must not copy code mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("output")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "samp must not copy code mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("name") || element.role != ElementRole::Paragraph
+            }),
+            "var must not copy code mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("quote")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "q must not copy code mapping: {elements:?}"
+        );
+
+        let copy = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("copy"))
+            .expect("copy button should compile");
+        assert_eq!(copy.role, ElementRole::Button);
+
+        let filtered = crate::som::filter::apply_selector(&som, "paragraph");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("api") && element.role == ElementRole::Paragraph
+            }),
+            "selector=paragraph should keep compiled code: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("copy")),
             "selector=paragraph should drop buttons: {filtered_elements:?}"
         );
     }
