@@ -198,6 +198,7 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                             | "privacy-policy"
                             | "terms-of-service"
                             | "help"
+                            | "me"
                     ) {
                         let link_type = attrs_borrowed
                             .iter()
@@ -870,6 +871,79 @@ mod tests {
         assert!(
             !data.open_graph.contains_key("base") && data.twitter_card.is_empty(),
             "document base must not copy onto OpenGraph or Twitter cards: {data:?}"
+        );
+    }
+
+    #[test]
+    fn identity_link_rels_are_extracted() {
+        let html = r#"<html><head>
+            <link rel="canonical" href="https://example.test/app">
+            <link rel="me" href="https://github.com/plasmate-labs">
+            <link rel="Me" href="https://mastodon.social/@plasmate">
+            <link rel="help" href="/docs/help">
+            <link rel="author" href="https://example.test/authors/ada">
+            <link rel="tag" href="/tags/som">
+            <link rel="prefetch" href="https://github.com/plasmate-labs">
+            <link rel="stylesheet" href="/style.css">
+            <link rel="me prefetch" href="https://example.test/mixed">
+            <a rel="me" href="https://example.test/body-me">Body identity</a>
+            <meta name="citation_title" content="Not a link">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        let rels: Vec<_> = data.links.iter().map(|link| link.rel.as_str()).collect();
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "me" && link.href == "https://github.com/plasmate-labs"
+            }),
+            "rel=me must stay in structured data: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "me" && link.href == "https://mastodon.social/@plasmate"
+            }),
+            "rel=Me must canonicalize to me: {data:?}"
+        );
+        assert!(
+            data.links
+                .iter()
+                .any(|link| link.rel == "canonical" && link.href == "https://example.test/app"),
+            "canonical must remain: {data:?}"
+        );
+        assert!(
+            data.links
+                .iter()
+                .any(|link| link.rel == "help" && link.href == "/docs/help"),
+            "help must remain: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "author" && link.href == "https://example.test/authors/ada"
+            }),
+            "author must remain: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"tag"),
+            "tag must not copy identity mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"prefetch"),
+            "prefetch must not copy identity mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"stylesheet"),
+            "stylesheet must stay excluded: {data:?}"
+        );
+        assert!(
+            !data.links.iter().any(|link| {
+                link.href == "https://example.test/mixed"
+                    || link.href == "https://example.test/body-me"
+            }),
+            "multi-token rel and body anchors must not copy head identity mapping: {data:?}"
+        );
+        assert_eq!(data.meta["citation_title"], "Not a link");
+        assert!(
+            !data.open_graph.contains_key("me") && data.twitter_card.is_empty(),
+            "identity links must not copy onto OpenGraph or Twitter cards: {data:?}"
         );
     }
 
