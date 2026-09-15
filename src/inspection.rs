@@ -207,6 +207,7 @@ pub fn assess_insufficiency(html: &str, som: &Som) -> InsufficiencyReport {
     let meaningful = meaningful_elements(som);
     let lower = html.to_ascii_lowercase();
     let canvas = count_occurrences(&lower, "<canvas");
+    let svg = count_occurrences(&lower, "<svg");
     let image_map = count_occurrences(&lower, "<map")
         + count_occurrences(&lower, "usemap=")
         + count_occurrences(&lower, "type=\"image\"")
@@ -219,6 +220,9 @@ pub fn assess_insufficiency(html: &str, som: &Som) -> InsufficiencyReport {
     }
     if canvas > 0 && meaningful <= canvas.saturating_mul(2).saturating_add(2) {
         reasons.push("canvas_heavy_structure");
+    }
+    if svg > 0 && meaningful <= svg.saturating_mul(2).saturating_add(2) {
+        reasons.push("svg_heavy_structure");
     }
     if image_map > 0 {
         reasons.push("image_map_or_image_control_evidence");
@@ -556,6 +560,59 @@ mod tests {
             .visual
             .trigger_reasons
             .contains(&"image_map_or_image_control_evidence"));
+    }
+
+    #[test]
+    fn svg_heavy_chart_triggers_named_auto_reason() {
+        let html = "<main><h1>Revenue</h1><svg viewBox='0 0 100 100'><circle cx='50' cy='50' r='40'></circle></svg></main>";
+        let som = compiler::compile(html, "https://example.com/chart").unwrap();
+        let report = build_report(
+            "https://example.com/chart",
+            "https://example.com/chart",
+            html,
+            &som,
+            VisualMode::Auto,
+        );
+        assert!(report.visual.screenshot_attempted);
+        assert!(
+            report
+                .visual
+                .trigger_reasons
+                .contains(&"svg_heavy_structure"),
+            "chart-like SVG pages must recommend pixels: {:?}",
+            report.visual.trigger_reasons
+        );
+        assert!(
+            !report
+                .visual
+                .trigger_reasons
+                .contains(&"canvas_heavy_structure"),
+            "SVG evidence must not invent a canvas reason: {:?}",
+            report.visual.trigger_reasons
+        );
+    }
+
+    #[test]
+    fn decorative_svg_icon_with_readable_copy_does_not_trigger_svg_heavy() {
+        let html = "<main><h1>Title</h1><p>Useful content</p><p>More useful content</p><p>Still more content</p><button>Save</button><svg width='16' height='16'><circle cx='8' cy='8' r='8'></circle></svg></main>";
+        let som = compiler::compile(html, "https://example.com/").unwrap();
+        let report = build_report(
+            "https://example.com/",
+            "https://example.com/",
+            html,
+            &som,
+            VisualMode::Auto,
+        );
+        assert!(
+            !report
+                .insufficiency
+                .reasons
+                .contains(&"svg_heavy_structure"),
+            "readable pages with one icon must not request pixels: {:?}",
+            report.insufficiency.reasons
+        );
+        assert!(!report.insufficiency.insufficient);
+        assert!(!report.visual.screenshot_attempted);
     }
 
     #[test]
