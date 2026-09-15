@@ -455,7 +455,7 @@ pub fn extract_text_definition() -> ToolDefinition {
                 },
                 "max_chars": {
                     "type": "integer",
-                    "description": "Maximum characters to return. Default: no limit."
+                    "description": "Maximum characters to return, including a trailing ellipsis when truncated. Default: no limit."
                 },
                 "selector": {
                     "type": "string",
@@ -607,18 +607,40 @@ fn truncate_text_to_chars(text: &mut String, max_chars: usize) {
     if text.chars().count() <= max_chars {
         return;
     }
+    if max_chars == 0 {
+        text.clear();
+        return;
+    }
+
+    let ellipsis = "...";
+    let ellipsis_chars = 3;
+    let content_max = max_chars.saturating_sub(ellipsis_chars);
+    if content_max == 0 {
+        let truncate_at = text
+            .char_indices()
+            .nth(max_chars)
+            .map(|(idx, _)| idx)
+            .unwrap_or_else(|| text.len());
+        text.truncate(truncate_at);
+        return;
+    }
 
     let truncate_at = text
         .char_indices()
-        .nth(max_chars)
+        .nth(content_max)
         .map(|(idx, _)| idx)
         .unwrap_or_else(|| text.len());
     text.truncate(truncate_at);
 
     if let Some(last_space) = text.rfind(char::is_whitespace) {
-        text.truncate(last_space);
+        if last_space > 0 {
+            text.truncate(last_space);
+        }
     }
-    text.push_str("...");
+    while text.ends_with(char::is_whitespace) {
+        text.pop();
+    }
+    text.push_str(ellipsis);
 }
 
 /// Recursively extract text from a SOM element.
@@ -7423,7 +7445,36 @@ mod tests {
         let mut text = "Hello 😀 world".to_string();
         truncate_text_to_chars(&mut text, 7);
 
+        assert_eq!(text, "Hell...");
+        assert!(text.chars().count() <= 7);
+        assert!(!text.contains('😀'));
+    }
+
+    #[test]
+    fn test_truncate_text_to_chars_honors_max_chars_budget() {
+        let mut text = "Hello world from Plasmate".to_string();
+        truncate_text_to_chars(&mut text, 10);
         assert_eq!(text, "Hello...");
+        assert_eq!(text.chars().count(), 8);
+        assert!(text.chars().count() <= 10);
+
+        let mut emoji = "Hello 😀 world".to_string();
+        truncate_text_to_chars(&mut emoji, 8);
+        assert_eq!(emoji, "Hello...");
+        assert_eq!(emoji.chars().count(), 8);
+
+        let mut tiny = "Hello world".to_string();
+        truncate_text_to_chars(&mut tiny, 2);
+        assert_eq!(tiny, "He");
+        assert_eq!(tiny.chars().count(), 2);
+
+        let mut zero = "Hello".to_string();
+        truncate_text_to_chars(&mut zero, 0);
+        assert_eq!(zero, "");
+
+        let mut exact = "Hello".to_string();
+        truncate_text_to_chars(&mut exact, 5);
+        assert_eq!(exact, "Hello");
     }
 
     fn test_som() -> Som {
