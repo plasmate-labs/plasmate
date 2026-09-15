@@ -204,6 +204,7 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                             | "me"
                             | "shortlink"
                             | "webmention"
+                            | "pingback"
                     ) {
                         let link_type = attrs_borrowed
                             .iter()
@@ -1083,8 +1084,10 @@ mod tests {
             "shortlink must remain: {data:?}"
         );
         assert!(
-            !rels.contains(&"pingback"),
-            "pingback must not copy webmention mapping: {data:?}"
+            data.links.iter().any(|link| {
+                link.rel == "pingback" && link.href == "https://example.test/xmlrpc.php"
+            }),
+            "pingback must remain: {data:?}"
         );
         assert!(
             !rels.contains(&"micropub"),
@@ -1113,6 +1116,91 @@ mod tests {
         assert!(
             !data.open_graph.contains_key("webmention") && data.twitter_card.is_empty(),
             "webmention must not copy onto OpenGraph or Twitter cards: {data:?}"
+        );
+    }
+
+    #[test]
+    fn pingback_link_rels_are_extracted() {
+        let html = r#"<html><head>
+            <link rel="canonical" href="https://example.test/notes/som">
+            <link rel="pingback" href="https://example.test/xmlrpc.php">
+            <link rel="PingBack" href="https://pingback.example.test/xmlrpc">
+            <link rel="webmention" href="https://example.test/webmention">
+            <link rel="me" href="https://github.com/plasmate-labs">
+            <link rel="shortlink" href="https://example.test/?p=42">
+            <link rel="micropub" href="https://example.test/micropub">
+            <link rel="tag" href="/tags/som">
+            <link rel="prefetch" href="https://example.test/xmlrpc.php">
+            <link rel="stylesheet" href="/style.css">
+            <link rel="pingback prefetch" href="https://example.test/mixed">
+            <a rel="pingback" href="https://example.test/body-pingback">Body pingback</a>
+            <meta name="citation_title" content="Not a link">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        let rels: Vec<_> = data.links.iter().map(|link| link.rel.as_str()).collect();
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "pingback" && link.href == "https://example.test/xmlrpc.php"
+            }),
+            "rel=pingback must stay in structured data: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "pingback" && link.href == "https://pingback.example.test/xmlrpc"
+            }),
+            "rel=PingBack must canonicalize to pingback: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "canonical" && link.href == "https://example.test/notes/som"
+            }),
+            "canonical must remain: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "webmention" && link.href == "https://example.test/webmention"
+            }),
+            "webmention must remain: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "me" && link.href == "https://github.com/plasmate-labs"
+            }),
+            "identity me must remain: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "shortlink" && link.href == "https://example.test/?p=42"
+            }),
+            "shortlink must remain: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"micropub"),
+            "micropub must not copy pingback mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"tag"),
+            "tag must not copy pingback mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"prefetch"),
+            "prefetch must not copy pingback mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"stylesheet"),
+            "stylesheet must stay excluded: {data:?}"
+        );
+        assert!(
+            !data.links.iter().any(|link| {
+                link.href == "https://example.test/mixed"
+                    || link.href == "https://example.test/body-pingback"
+            }),
+            "multi-token rel and body anchors must not copy head pingback mapping: {data:?}"
+        );
+        assert_eq!(data.meta["citation_title"], "Not a link");
+        assert!(
+            !data.open_graph.contains_key("pingback") && data.twitter_card.is_empty(),
+            "pingback must not copy onto OpenGraph or Twitter cards: {data:?}"
         );
     }
 
