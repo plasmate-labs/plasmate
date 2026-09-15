@@ -222,6 +222,26 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                 }
             }
 
+            "base" => {
+                if !data.links.iter().any(|link| link.rel == "base") {
+                    if let Some(href) = attrs_borrowed
+                        .iter()
+                        .find(|a| a.name.local.as_ref() == "href")
+                        .map(|a| a.value.to_string())
+                    {
+                        let href = href.trim();
+                        if is_document_base_href(href) {
+                            data.links.push(LinkElement {
+                                rel: "base".to_string(),
+                                href: href.to_string(),
+                                r#type: None,
+                                hreflang: None,
+                            });
+                        }
+                    }
+                }
+            }
+
             _ => {}
         }
     }
@@ -309,6 +329,19 @@ fn is_schema_itemprop_name(n: &str) -> bool {
 fn is_fediverse_meta_name(n: &str) -> bool {
     n.strip_prefix("fediverse:")
         .is_some_and(|rest| !rest.is_empty())
+}
+
+fn is_document_base_href(href: &str) -> bool {
+    let href = href.trim();
+    if href.is_empty() {
+        return false;
+    }
+    let lower = href.to_ascii_lowercase();
+    !(lower.starts_with("javascript:")
+        || lower.starts_with("mailto:")
+        || lower.starts_with("tel:")
+        || lower.starts_with("data:")
+        || lower.starts_with("vbscript:"))
 }
 
 fn is_json_ld_script_type(value: &str) -> bool {
@@ -780,6 +813,63 @@ mod tests {
         assert!(
             !data.open_graph.contains_key("help") && data.twitter_card.is_empty(),
             "help links must not copy onto OpenGraph or Twitter cards: {data:?}"
+        );
+    }
+
+    #[test]
+    fn document_base_href_is_extracted() {
+        let html = r#"<html><head>
+            <link rel="canonical" href="https://example.test/app">
+            <!-- <base href="/ignored/"> -->
+            <base target="_blank">
+            <base href="javascript:void(0)">
+            <base href="/app/">
+            <base href="/later/">
+            <link rel="base" href="/not-a-base">
+            <link rel="help" href="/docs/help">
+            <a href="/body">Body</a>
+            <meta name="citation_title" content="Not a base">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        let rels: Vec<_> = data.links.iter().map(|link| link.rel.as_str()).collect();
+        assert!(
+            data.links
+                .iter()
+                .any(|link| link.rel == "base" && link.href == "/app/"),
+            "first usable <base href> must stay in structured data: {data:?}"
+        );
+        assert_eq!(
+            data.links.iter().filter(|link| link.rel == "base").count(),
+            1,
+            "later <base> elements must not replace the first usable href: {data:?}"
+        );
+        assert!(
+            !data.links.iter().any(|link| link.href == "/ignored/"
+                || link.href == "/later/"
+                || link.href == "javascript:void(0)"
+                || link.href == "/not-a-base"),
+            "comment, javascript, later, and link rel=base must not copy <base>: {data:?}"
+        );
+        assert!(
+            data.links
+                .iter()
+                .any(|link| link.rel == "canonical" && link.href == "https://example.test/app"),
+            "canonical must remain: {data:?}"
+        );
+        assert!(
+            data.links
+                .iter()
+                .any(|link| link.rel == "help" && link.href == "/docs/help"),
+            "help must remain: {data:?}"
+        );
+        assert!(
+            !rels.iter().any(|rel| *rel == "tag"),
+            "unrelated rels must stay excluded: {data:?}"
+        );
+        assert_eq!(data.meta["citation_title"], "Not a base");
+        assert!(
+            !data.open_graph.contains_key("base") && data.twitter_card.is_empty(),
+            "document base must not copy onto OpenGraph or Twitter cards: {data:?}"
         );
     }
 
