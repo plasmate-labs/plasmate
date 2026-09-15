@@ -199,6 +199,7 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                             | "terms-of-service"
                             | "help"
                             | "me"
+                            | "shortlink"
                     ) {
                         let link_type = attrs_borrowed
                             .iter()
@@ -944,6 +945,80 @@ mod tests {
         assert!(
             !data.open_graph.contains_key("me") && data.twitter_card.is_empty(),
             "identity links must not copy onto OpenGraph or Twitter cards: {data:?}"
+        );
+    }
+
+    #[test]
+    fn shortlink_link_rels_are_extracted() {
+        let html = r#"<html><head>
+            <link rel="canonical" href="https://example.test/wiki/Semantic_Object_Model">
+            <link rel="shortlink" href="https://example.test/?curid=42">
+            <link rel="ShortLink" href="https://example.test/?p=42">
+            <link rel="me" href="https://github.com/plasmate-labs">
+            <link rel="help" href="/docs/help">
+            <link rel="tag" href="/tags/som">
+            <link rel="prefetch" href="https://example.test/?curid=42">
+            <link rel="stylesheet" href="/style.css">
+            <link rel="shortlink prefetch" href="https://example.test/mixed">
+            <a rel="shortlink" href="https://example.test/body-short">Body shortlink</a>
+            <meta name="citation_title" content="Not a link">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        let rels: Vec<_> = data.links.iter().map(|link| link.rel.as_str()).collect();
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "shortlink" && link.href == "https://example.test/?curid=42"
+            }),
+            "rel=shortlink must stay in structured data: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "shortlink" && link.href == "https://example.test/?p=42"
+            }),
+            "rel=ShortLink must canonicalize to shortlink: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "canonical"
+                    && link.href == "https://example.test/wiki/Semantic_Object_Model"
+            }),
+            "canonical must remain: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "me" && link.href == "https://github.com/plasmate-labs"
+            }),
+            "identity me must remain: {data:?}"
+        );
+        assert!(
+            data.links
+                .iter()
+                .any(|link| link.rel == "help" && link.href == "/docs/help"),
+            "help must remain: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"tag"),
+            "tag must not copy shortlink mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"prefetch"),
+            "prefetch must not copy shortlink mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"stylesheet"),
+            "stylesheet must stay excluded: {data:?}"
+        );
+        assert!(
+            !data.links.iter().any(|link| {
+                link.href == "https://example.test/mixed"
+                    || link.href == "https://example.test/body-short"
+            }),
+            "multi-token rel and body anchors must not copy head shortlink mapping: {data:?}"
+        );
+        assert_eq!(data.meta["citation_title"], "Not a link");
+        assert!(
+            !data.open_graph.contains_key("shortlink") && data.twitter_card.is_empty(),
+            "shortlink must not copy onto OpenGraph or Twitter cards: {data:?}"
         );
     }
 
