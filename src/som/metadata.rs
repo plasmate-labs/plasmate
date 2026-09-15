@@ -103,7 +103,7 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                     .find(|a| a.name.local.as_ref() == "charset")
                     .map(|a| a.value.to_string());
 
-                // OpenGraph: <meta property="og:*" / property="article:*" / property="book:*" / property="profile:*" content="...">
+                // OpenGraph: <meta property="og:*" / property="article:*" / property="book:*" / property="profile:*" / property="al:*" content="...">
                 if let (Some(prop), Some(content)) = (&property, &content) {
                     if prop.starts_with("og:") {
                         data.open_graph.insert(prop.clone(), content.clone());
@@ -114,6 +114,9 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                         data.open_graph
                             .insert(prop.to_ascii_lowercase(), content.clone());
                     } else if is_open_graph_profile_property(prop) {
+                        data.open_graph
+                            .insert(prop.to_ascii_lowercase(), content.clone());
+                    } else if is_app_links_property(prop) {
                         data.open_graph
                             .insert(prop.to_ascii_lowercase(), content.clone());
                     }
@@ -299,6 +302,12 @@ fn is_open_graph_book_property(prop: &str) -> bool {
 fn is_open_graph_profile_property(prop: &str) -> bool {
     prop.to_ascii_lowercase()
         .strip_prefix("profile:")
+        .is_some_and(|rest| !rest.is_empty())
+}
+
+fn is_app_links_property(prop: &str) -> bool {
+    prop.to_ascii_lowercase()
+        .strip_prefix("al:")
         .is_some_and(|rest| !rest.is_empty())
 }
 
@@ -1264,6 +1273,56 @@ mod tests {
         assert!(
             !data.twitter_card.contains_key("profile:username"),
             "profile properties must not copy onto Twitter cards: {data:?}"
+        );
+    }
+
+    #[test]
+    fn app_links_properties_are_extracted() {
+        let html = r#"<html><head>
+            <meta property="al:ios:url" content="plasmate://docs">
+            <meta property="AL:android:url" content="plasmate://docs">
+            <meta property="al:web:url" content="https://example.test/docs">
+            <meta property="al:" content="empty-suffix">
+            <meta property="al" content="too-short">
+            <meta property="al-ios:url" content="hyphen-not-colon">
+            <meta property="music:duration" content="not-app-links">
+            <meta property="video:duration" content="not-app-links-either">
+            <meta property="profile:username" content="ada">
+            <meta property="og:title" content="OG Title">
+            <meta name="al:ios:url" content="not-a-property-attr">
+            <meta name="citation_title" content="Highwire Title">
+            <meta name="description" content="A paper">
+            <meta name="twitter:card" content="summary">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        assert_eq!(data.open_graph["al:ios:url"], "plasmate://docs");
+        assert_eq!(data.open_graph["al:android:url"], "plasmate://docs");
+        assert_eq!(data.open_graph["al:web:url"], "https://example.test/docs");
+        assert_eq!(data.open_graph["og:title"], "OG Title");
+        assert_eq!(data.open_graph["profile:username"], "ada");
+        assert!(
+            !data.open_graph.contains_key("al:")
+                && !data.open_graph.contains_key("al")
+                && !data.open_graph.contains_key("al-ios:url")
+                && !data.open_graph.contains_key("music:duration")
+                && !data.open_graph.contains_key("video:duration"),
+            "bare al / music: / video: must not copy app links mapping: {data:?}"
+        );
+        assert_ne!(
+            data.open_graph.get("al:ios:url").map(String::as_str),
+            Some("not-a-property-attr"),
+            "name= al:* must not copy property= mapping: {data:?}"
+        );
+        assert!(
+            !data.meta.contains_key("al:ios:url") && !data.meta.contains_key("al:android:url"),
+            "app links properties must not copy onto standard meta: {data:?}"
+        );
+        assert_eq!(data.meta["citation_title"], "Highwire Title");
+        assert_eq!(data.meta["description"], "A paper");
+        assert_eq!(data.twitter_card["twitter:card"], "summary");
+        assert!(
+            !data.twitter_card.contains_key("al:ios:url"),
+            "app links properties must not copy onto Twitter cards: {data:?}"
         );
     }
 
