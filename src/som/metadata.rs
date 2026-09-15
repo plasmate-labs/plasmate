@@ -203,6 +203,7 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                             | "help"
                             | "me"
                             | "shortlink"
+                            | "webmention"
                     ) {
                         let link_type = attrs_borrowed
                             .iter()
@@ -1028,6 +1029,90 @@ mod tests {
         assert!(
             !data.open_graph.contains_key("shortlink") && data.twitter_card.is_empty(),
             "shortlink must not copy onto OpenGraph or Twitter cards: {data:?}"
+        );
+    }
+
+    #[test]
+    fn webmention_link_rels_are_extracted() {
+        let html = r#"<html><head>
+            <link rel="canonical" href="https://example.test/notes/som">
+            <link rel="webmention" href="https://example.test/webmention">
+            <link rel="WebMention" href="https://webmention.io/example.test/webmention">
+            <link rel="me" href="https://github.com/plasmate-labs">
+            <link rel="shortlink" href="https://example.test/?p=42">
+            <link rel="pingback" href="https://example.test/xmlrpc.php">
+            <link rel="micropub" href="https://example.test/micropub">
+            <link rel="tag" href="/tags/som">
+            <link rel="prefetch" href="https://example.test/webmention">
+            <link rel="stylesheet" href="/style.css">
+            <link rel="webmention prefetch" href="https://example.test/mixed">
+            <a rel="webmention" href="https://example.test/body-webmention">Body webmention</a>
+            <meta name="citation_title" content="Not a link">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        let rels: Vec<_> = data.links.iter().map(|link| link.rel.as_str()).collect();
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "webmention" && link.href == "https://example.test/webmention"
+            }),
+            "rel=webmention must stay in structured data: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "webmention"
+                    && link.href == "https://webmention.io/example.test/webmention"
+            }),
+            "rel=WebMention must canonicalize to webmention: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "canonical" && link.href == "https://example.test/notes/som"
+            }),
+            "canonical must remain: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "me" && link.href == "https://github.com/plasmate-labs"
+            }),
+            "identity me must remain: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "shortlink" && link.href == "https://example.test/?p=42"
+            }),
+            "shortlink must remain: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"pingback"),
+            "pingback must not copy webmention mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"micropub"),
+            "micropub must not copy webmention mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"tag"),
+            "tag must not copy webmention mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"prefetch"),
+            "prefetch must not copy webmention mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"stylesheet"),
+            "stylesheet must stay excluded: {data:?}"
+        );
+        assert!(
+            !data.links.iter().any(|link| {
+                link.href == "https://example.test/mixed"
+                    || link.href == "https://example.test/body-webmention"
+            }),
+            "multi-token rel and body anchors must not copy head webmention mapping: {data:?}"
+        );
+        assert_eq!(data.meta["citation_title"], "Not a link");
+        assert!(
+            !data.open_graph.contains_key("webmention") && data.twitter_card.is_empty(),
+            "webmention must not copy onto OpenGraph or Twitter cards: {data:?}"
         );
     }
 
