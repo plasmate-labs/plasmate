@@ -7598,4 +7598,113 @@ plasmate fetch https://example.test</code></pre>
             "selector=paragraph should drop buttons: {filtered_elements:?}"
         );
     }
+
+    #[test]
+    fn svg_role_img_title_child_compiles_as_image() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Brand</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <svg id="logo" role="img"><title>Plasmate</title><circle cx="4" cy="4" r="3"></circle></svg>
+  <svg id="labelled" role="img" aria-label="Docs"><rect width="8" height="8"></rect></svg>
+  <svg id="empty-title" role="img"><title>   </title><circle cx="1" cy="1" r="1"></circle></svg>
+  <svg id="decorative"><title>Icon</title><path d="M0 0"></path></svg>
+  <object id="chart" title="Q3"><param name="src" value="/q3.svg"></object>
+  <embed id="flash" title="Ad" src="/ad.swf">
+  <img id="photo" src="/hero.png" alt="Hero">
+  <button id="copy">Copy</button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/brand").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let logo = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("logo"))
+            .expect("role=img svg with title child should compile");
+        assert_eq!(logo.role, ElementRole::Image);
+        assert_eq!(logo.text.as_deref(), Some("Plasmate"));
+        assert!(
+            logo.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("src").is_none()),
+            "svg must not invent src: {logo:?}"
+        );
+        assert!(
+            logo.actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "named svg must not invent actions: {logo:?}"
+        );
+
+        let labelled = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("labelled"))
+            .expect("aria-label svg should remain compiled");
+        assert_eq!(labelled.role, ElementRole::Image);
+
+        assert!(
+            elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("empty-title")),
+            "whitespace-only title child must not keep svg: {elements:?}"
+        );
+        assert!(
+            elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("decorative")),
+            "title child without role=img must stay stripped: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("chart") || element.role != ElementRole::Image
+            }),
+            "object must not copy svg title-child mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("flash") || element.role != ElementRole::Image
+            }),
+            "embed must not copy svg title-child mapping: {elements:?}"
+        );
+
+        let photo = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("photo"))
+            .expect("native img should remain");
+        assert_eq!(photo.role, ElementRole::Image);
+
+        let filtered = crate::som::filter::apply_selector(&som, "image");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("logo") && element.role == ElementRole::Image
+            }),
+            "selector=image should keep title-child svg: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("copy")),
+            "selector=image should drop buttons: {filtered_elements:?}"
+        );
+    }
 }
