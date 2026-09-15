@@ -706,7 +706,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, and compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, and manifest). Useful for crawling, sitemap discovery, feed/hreflang discovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, and compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, and manifest). Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1385,6 +1385,8 @@ fn is_extract_links_document_rel(rel: &str) -> bool {
             | "terms-of-service"
             | "help"
             | "me"
+            | "shortlink"
+            | "webmention"
             | "manifest"
     )
 }
@@ -7240,6 +7242,74 @@ mod tests {
                     || url == "https://example.test/page"
             }),
             "icons, preconnect, dns-prefetch, and base must not be emitted: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_shortlink_and_webmention_head_links() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/notes/">
+<link rel="canonical" href="https://example.test/notes/som">
+<link rel="shortlink" href="https://example.test/?p=42">
+<link rel="ShortLink" href="https://example.test/?curid=42">
+<link rel="webmention" href="https://example.test/webmention">
+<link rel="WebMention" href="https://webmention.io/example.test/webmention">
+<link rel="me" href="https://github.com/plasmate-labs">
+<link rel="micropub" href="https://example.test/micropub">
+<link rel="tag" href="https://example.test/tags/som">
+<link rel="prefetch" href="https://example.test/prefetch">
+<link rel="shortlink prefetch" href="https://example.test/mixed-short">
+<link rel="webmention prefetch" href="https://example.test/mixed-mention">
+<link rel="icon" href="/favicon.ico">
+<title>Note</title>
+</head><body>
+<main>
+  <a href="som">SOM</a>
+  <a rel="shortlink" href="https://example.test/body-short">Body shortlink</a>
+  <a rel="webmention" href="https://example.test/body-webmention">Body webmention</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/?p=42".to_string()),
+            "rel=shortlink must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/?curid=42".to_string()),
+            "rel=ShortLink must canonicalize into extract_links: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/webmention".to_string()),
+            "rel=webmention must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://webmention.io/example.test/webmention".to_string()),
+            "rel=WebMention must canonicalize into extract_links: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/notes/som".to_string()),
+            "canonical must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://github.com/plasmate-labs".to_string()),
+            "identity me must remain: {urls:?}"
+        );
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("micropub")
+                    || url.contains("/tags/som")
+                    || url.contains("prefetch")
+                    || url.contains("mixed-short")
+                    || url.contains("mixed-mention")
+                    || url.contains("favicon")
+            }),
+            "micropub, tag, prefetch, multi-token rels, and icons must not copy shortlink/webmention extract_links: {urls:?}"
         );
     }
 
