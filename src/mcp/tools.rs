@@ -774,7 +774,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, and manifest), and compiled Highwire citation_pdf_url values. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, research PDF discovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, and manifest), compiled Highwire citation_pdf_url values, and compiled Open Graph og:url values. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, research PDF discovery, social canonical recovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1414,6 +1414,7 @@ fn collect_extract_link_urls(som: &Som) -> Vec<String> {
     }
     collect_structured_document_links(som, &mut urls);
     collect_structured_citation_pdf_urls(som, &mut urls);
+    collect_structured_og_url(som, &mut urls);
     let resolve_base = extract_links_resolve_base(som);
     for url in &mut urls {
         *url = resolve_extracted_link(&resolve_base, url);
@@ -1476,6 +1477,24 @@ fn collect_structured_citation_pdf_urls(som: &Som, urls: &mut Vec<String>) {
 }
 
 fn is_extract_links_citation_pdf_href(href: &str) -> bool {
+    is_extract_links_structured_href(href)
+}
+
+fn collect_structured_og_url(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    let Some(href) = data.open_graph.get("og:url") else {
+        return;
+    };
+    let href = href.trim();
+    if !is_extract_links_structured_href(href) {
+        return;
+    }
+    urls.push(href.to_string());
+}
+
+fn is_extract_links_structured_href(href: &str) -> bool {
     if href.is_empty() || href == "#" {
         return false;
     }
@@ -7624,6 +7643,79 @@ mod tests {
                     || url.contains("favicon")
             }),
             "fulltext/abstract, bepress, Dublin Core, property=, and icons must not copy citation_pdf_url extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_open_graph_url() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/notes/">
+<link rel="canonical" href="https://example.test/notes/som">
+<meta property="og:url" content="https://example.test/og/som">
+<meta property="og:image" content="https://example.test/og/som.png">
+<meta property="og:audio" content="https://example.test/og/som.mp3">
+<meta property="og:video" content="https://example.test/og/som.mp4">
+<meta name="twitter:url" content="https://example.test/twitter/som">
+<meta name="citation_pdf_url" content="https://example.test/som.pdf">
+<link rel="icon" href="/favicon.ico">
+<title>Note</title>
+</head><body>
+<main>
+  <a href="som">SOM</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        assert_eq!(
+            som.structured_data
+                .as_ref()
+                .and_then(|data| data.open_graph.get("og:url"))
+                .map(String::as_str),
+            Some("https://example.test/og/som"),
+            "compiler must keep og:url for extract_links to recover"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/og/som".to_string()),
+            "compiled og:url must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/notes/som".to_string()),
+            "canonical must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/som.pdf".to_string()),
+            "citation_pdf_url must remain: {urls:?}"
+        );
+
+        let blocked = crate::som::compiler::compile(
+            r##"<html><head>
+<meta property="og:url" content="javascript:alert(1)">
+<title>Blocked</title>
+</head><body><main><p>No OG URL</p></main></body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("blocked fixture HTML should compile");
+        let blocked_urls = collect_extract_link_urls(&blocked);
+        assert!(
+            !blocked_urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: og:url must not become a fetch target: {blocked_urls:?}"
+        );
+
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("som.png")
+                    || url.contains("som.mp3")
+                    || url.contains("som.mp4")
+                    || url.contains("twitter/som")
+                    || url.contains("favicon")
+            }),
+            "og:image/audio/video, twitter:url, and icons must not copy og:url extract_links: {urls:?}"
         );
     }
 
