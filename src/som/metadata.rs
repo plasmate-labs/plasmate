@@ -205,6 +205,7 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                             | "shortlink"
                             | "webmention"
                             | "pingback"
+                            | "hub"
                     ) {
                         let link_type = attrs_borrowed
                             .iter()
@@ -1201,6 +1202,91 @@ mod tests {
         assert!(
             !data.open_graph.contains_key("pingback") && data.twitter_card.is_empty(),
             "pingback must not copy onto OpenGraph or Twitter cards: {data:?}"
+        );
+    }
+
+    #[test]
+    fn hub_link_rels_are_extracted() {
+        let html = r#"<html><head>
+            <link rel="canonical" href="https://example.test/feed">
+            <link rel="hub" href="https://example.test/hub">
+            <link rel="Hub" href="https://pubsubhubbub.example.test/">
+            <link rel="alternate" type="application/atom+xml" href="https://example.test/feed.atom">
+            <link rel="webmention" href="https://example.test/webmention">
+            <link rel="pingback" href="https://example.test/xmlrpc.php">
+            <link rel="micropub" href="https://example.test/micropub">
+            <link rel="tag" href="/tags/som">
+            <link rel="prefetch" href="https://example.test/hub">
+            <link rel="stylesheet" href="/style.css">
+            <link rel="hub prefetch" href="https://example.test/mixed">
+            <a rel="hub" href="https://example.test/body-hub">Body hub</a>
+            <meta name="citation_title" content="Not a link">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        let rels: Vec<_> = data.links.iter().map(|link| link.rel.as_str()).collect();
+        assert!(
+            data.links
+                .iter()
+                .any(|link| { link.rel == "hub" && link.href == "https://example.test/hub" }),
+            "rel=hub must stay in structured data: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "hub" && link.href == "https://pubsubhubbub.example.test/"
+            }),
+            "rel=Hub must canonicalize to hub: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "canonical" && link.href == "https://example.test/feed"
+            }),
+            "canonical must remain: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "alternate" && link.href == "https://example.test/feed.atom"
+            }),
+            "alternate feed must remain: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "webmention" && link.href == "https://example.test/webmention"
+            }),
+            "webmention must remain: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "pingback" && link.href == "https://example.test/xmlrpc.php"
+            }),
+            "pingback must remain: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"micropub"),
+            "micropub must not copy hub mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"tag"),
+            "tag must not copy hub mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"prefetch"),
+            "prefetch must not copy hub mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"stylesheet"),
+            "stylesheet must stay excluded: {data:?}"
+        );
+        assert!(
+            !data.links.iter().any(|link| {
+                link.href == "https://example.test/mixed"
+                    || link.href == "https://example.test/body-hub"
+            }),
+            "multi-token rel and body anchors must not copy head hub mapping: {data:?}"
+        );
+        assert_eq!(data.meta["citation_title"], "Not a link");
+        assert!(
+            !data.open_graph.contains_key("hub") && data.twitter_card.is_empty(),
+            "hub must not copy onto OpenGraph or Twitter cards: {data:?}"
         );
     }
 
