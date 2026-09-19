@@ -102,6 +102,10 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                     .iter()
                     .find(|a| a.name.local.as_ref() == "charset")
                     .map(|a| a.value.to_string());
+                let http_equiv = attrs_borrowed
+                    .iter()
+                    .find(|a| a.name.local.as_ref() == "http-equiv")
+                    .map(|a| a.value.to_string());
 
                 // OpenGraph: <meta property="og:*" / property="article:*" / property="book:*" / property="profile:*" / property="al:*" content="...">
                 if let (Some(prop), Some(content)) = (&property, &content) {
@@ -164,6 +168,15 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                 // Charset
                 if let Some(cs) = charset {
                     data.meta.insert("charset".to_string(), cs);
+                }
+
+                if let (Some(http_equiv), Some(content)) = (&http_equiv, &content) {
+                    if http_equiv.eq_ignore_ascii_case("refresh") {
+                        let content = content.trim();
+                        if !content.is_empty() {
+                            data.meta.insert("refresh".to_string(), content.to_string());
+                        }
+                    }
                 }
             }
 
@@ -2020,6 +2033,67 @@ mod tests {
         assert!(
             !data.twitter_card.contains_key("fediverse:creator"),
             "fediverse meta must not copy onto Twitter cards: {data:?}"
+        );
+    }
+
+    #[test]
+    fn http_equiv_refresh_meta_is_extracted() {
+        let html = r#"<html><head>
+            <link rel="canonical" href="https://example.test/app">
+            <meta http-equiv="refresh" content="0;url=https://example.test/next">
+            <meta http-equiv="Refresh" content="5; URL='/later'">
+            <meta http-equiv="refresh" content="   ">
+            <meta http-equiv="content-language" content="en">
+            <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+            <meta http-equiv="default-style" content="preferred">
+            <meta http-equiv="x-ua-compatible" content="IE=edge">
+            <meta http-equiv="set-cookie" content="sid=secret">
+            <meta name="refresh" content="0;url=https://example.test/named">
+            <meta property="refresh" content="0;url=https://example.test/property">
+            <meta name="description" content="A paper">
+            <meta name="citation_title" content="Highwire Title">
+            <meta property="og:title" content="OG Title">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        assert_eq!(data.meta["refresh"], "5; URL='/later'");
+        assert_eq!(data.meta["description"], "A paper");
+        assert_eq!(data.meta["citation_title"], "Highwire Title");
+        assert!(
+            data.links
+                .iter()
+                .any(|link| { link.rel == "canonical" && link.href == "https://example.test/app" }),
+            "canonical must remain: {data:?}"
+        );
+        assert!(
+            !data.meta.contains_key("content-language")
+                && !data.meta.contains_key("content-type")
+                && !data.meta.contains_key("default-style")
+                && !data.meta.contains_key("x-ua-compatible")
+                && !data.meta.contains_key("set-cookie"),
+            "other http-equiv values must not copy refresh mapping: {data:?}"
+        );
+        assert_ne!(
+            data.meta.get("refresh").map(String::as_str),
+            Some("0;url=https://example.test/named"),
+            "name= refresh must not copy http-equiv mapping: {data:?}"
+        );
+        assert_ne!(
+            data.meta.get("refresh").map(String::as_str),
+            Some("0;url=https://example.test/property"),
+            "property= refresh must not copy http-equiv mapping: {data:?}"
+        );
+        assert!(
+            data.meta.get("refresh").map(String::as_str) != Some(""),
+            "whitespace-only refresh must not be invented: {data:?}"
+        );
+        assert_eq!(data.open_graph["og:title"], "OG Title");
+        assert!(
+            !data.open_graph.contains_key("refresh"),
+            "http-equiv refresh must not copy onto OpenGraph: {data:?}"
+        );
+        assert!(
+            data.twitter_card.is_empty(),
+            "http-equiv refresh must not copy onto Twitter cards: {data:?}"
         );
     }
 }
