@@ -506,20 +506,8 @@ pub async fn handle_fetch_page(
         }
     };
 
-    // Apply budget truncation if specified
     let delivered_text = if let Some(budget) = params.budget {
-        // Rough approximation: 1 token ≈ 4 characters
-        let max_chars = budget * 4;
-        let som_str = som_json.to_string();
-        if som_str.len() > max_chars {
-            format!(
-                "{{\"truncated\": true, \"original_bytes\": {}, \"message\": \"SOM exceeded budget of {} tokens\"}}",
-                som_str.len(),
-                budget
-            )
-        } else {
-            som_str
-        }
+        som_json_within_token_budget(&som_to_serialize, budget)
     } else {
         som_json.to_string()
     };
@@ -534,6 +522,64 @@ pub async fn handle_fetch_page(
         Some(cache_restored),
     );
     tool_response(delivered_text)
+}
+
+fn som_json_within_token_budget(som: &Som, budget_tokens: usize) -> String {
+    let max_chars = budget_tokens.saturating_mul(4);
+    let serialize = |value: &Som| serde_json::to_string(value).unwrap_or_default();
+    let full = serialize(som);
+    if full.len() <= max_chars {
+        return full;
+    }
+
+    let mut candidate = som.clone();
+    candidate.structured_data = None;
+    let mut json = serialize(&candidate);
+    if json.len() <= max_chars {
+        return json;
+    }
+
+    let preferred: Vec<_> = candidate
+        .regions
+        .iter()
+        .filter(|region| {
+            matches!(
+                region.role,
+                crate::som::types::RegionRole::Main | crate::som::types::RegionRole::Content
+            )
+        })
+        .cloned()
+        .collect();
+    if !preferred.is_empty() {
+        candidate.regions = preferred;
+        json = serialize(&candidate);
+        if json.len() <= max_chars {
+            return json;
+        }
+    }
+
+    loop {
+        json = serialize(&candidate);
+        if json.len() <= max_chars {
+            return json;
+        }
+        let removed = candidate
+            .regions
+            .iter_mut()
+            .rev()
+            .find_map(|region| region.elements.pop());
+        if removed.is_some() {
+            continue;
+        }
+        if candidate.regions.pop().is_some() {
+            continue;
+        }
+        return format!(
+            "{{\"truncated\": true, \"original_bytes\": {}, \"message\": \"SOM exceeded budget of {} tokens\"}}",
+            full.len(),
+            budget_tokens
+        );
+    }
 }
 
 /// Handle the extract_text tool call.
@@ -7650,6 +7696,75 @@ mod tests {
         let mut exact = "Hello".to_string();
         truncate_text_to_chars(&mut exact, 5);
         assert_eq!(exact, "Hello");
+    }
+
+    #[test]
+    fn fetch_page_budget_keeps_fitting_som_instead_of_discarding_it() {
+        let paragraphs = (0..40)
+            .map(|index| format!("<p>Semantic recovery paragraph {index:02} with extra copy.</p>"))
+            .collect::<String>();
+        let html = format!(
+            r##"<html><head><title>Docs</title>
+<meta property="og:url" content="https://example.test/docs">
+</head>
+<body>
+<nav><a href="/home">Home</a><a href="/api">API</a></nav>
+<main><h1>Semantic Object Model</h1>{paragraphs}</main>
+<footer><a href="/legal">Legal</a></footer>
+</body></html>"##
+        );
+        let som = crate::som::compiler::compile(&html, "https://example.test/docs")
+            .expect("fixture HTML should compile");
+        let full = serde_json::to_string(&som).expect("full SOM should serialize");
+        assert!(
+            full.len() > 80,
+            "fixture must exceed a small token budget: {} bytes",
+            full.len()
+        );
+
+        let budget_tokens = (full.len() / 4).saturating_sub(1).max(20);
+        let max_chars = budget_tokens * 4;
+        assert!(
+            full.len() > max_chars,
+            "budget must be below the full SOM: {} vs {}",
+            full.len(),
+            max_chars
+        );
+
+        let delivered = som_json_within_token_budget(&som, budget_tokens);
+        assert!(
+            delivered.len() <= max_chars,
+            "budgeted SOM must fit: {} vs {}",
+            delivered.len(),
+            max_chars
+        );
+        assert!(
+            !delivered.contains("SOM exceeded budget"),
+            "fitting pages must not discard the SOM: {delivered}"
+        );
+        let parsed: serde_json::Value =
+            serde_json::from_str(&delivered).expect("budgeted payload must stay JSON");
+        assert!(
+            parsed
+                .get("regions")
+                .and_then(|regions| regions.as_array())
+                .is_some(),
+            "budgeted fetch_page must keep SOM regions: {parsed}"
+        );
+        assert_eq!(parsed["url"], "https://example.test/docs");
+        assert_eq!(parsed["title"], "Docs");
+
+        let stub = som_json_within_token_budget(&som, 1);
+        assert!(
+            stub.contains("SOM exceeded budget of 1 tokens"),
+            "impossible budgets must keep the stub last resort: {stub}"
+        );
+        let unconstrained = som_json_within_token_budget(&som, full.len());
+        assert_eq!(unconstrained, full);
+        assert!(
+            unconstrained.contains("og:url") || som.structured_data.is_some(),
+            "unconstrained budget must keep the compiled snapshot"
+        );
     }
 
     fn test_som() -> Som {
