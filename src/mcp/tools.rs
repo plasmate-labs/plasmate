@@ -728,7 +728,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, and compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, and manifest). Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, and manifest), and compiled Highwire citation_pdf_url values. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, research PDF discovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1367,6 +1367,7 @@ fn collect_extract_link_urls(som: &Som) -> Vec<String> {
         }
     }
     collect_structured_document_links(som, &mut urls);
+    collect_structured_citation_pdf_urls(som, &mut urls);
     let resolve_base = extract_links_resolve_base(som);
     for url in &mut urls {
         *url = resolve_extracted_link(&resolve_base, url);
@@ -1411,6 +1412,32 @@ fn is_extract_links_document_rel(rel: &str) -> bool {
             | "webmention"
             | "manifest"
     )
+}
+
+fn collect_structured_citation_pdf_urls(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    let Some(href) = data.meta.get("citation_pdf_url") else {
+        return;
+    };
+    let href = href.trim();
+    if !is_extract_links_citation_pdf_href(href) {
+        return;
+    }
+    urls.push(href.to_string());
+}
+
+fn is_extract_links_citation_pdf_href(href: &str) -> bool {
+    if href.is_empty() || href == "#" {
+        return false;
+    }
+    let lower = href.to_ascii_lowercase();
+    !(lower.starts_with("javascript:")
+        || lower.starts_with("mailto:")
+        || lower.starts_with("tel:")
+        || lower.starts_with("data:")
+        || lower.starts_with("vbscript:"))
 }
 
 /// Recursively collect outbound URLs from a SOM element tree.
@@ -7403,6 +7430,78 @@ mod tests {
                     || url.contains("favicon")
             }),
             "micropub, tag, prefetch, multi-token rels, and icons must not copy shortlink/webmention extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_highwire_citation_pdf_url() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/papers/">
+<link rel="canonical" href="https://example.test/papers/som">
+<meta name="citation_title" content="Semantic Object Model">
+<meta name="citation_doi" content="10.1000/plasmate">
+<meta name="citation_pdf_url" content="https://example.test/som.pdf">
+<meta name="citation_fulltext_html_url" content="https://example.test/som.html">
+<meta name="citation_abstract_html_url" content="https://example.test/som-abstract">
+<meta name="bepress_citation_pdf_url" content="https://example.test/bepress.pdf">
+<meta name="dc.identifier" content="https://example.test/dc-id">
+<meta property="citation_pdf_url" content="https://example.test/property.pdf">
+<link rel="icon" href="/favicon.ico">
+<title>Paper</title>
+</head><body>
+<main>
+  <a href="som">SOM</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        assert_eq!(
+            som.structured_data
+                .as_ref()
+                .and_then(|data| data.meta.get("citation_pdf_url"))
+                .map(String::as_str),
+            Some("https://example.test/som.pdf"),
+            "compiler must keep Highwire citation_pdf_url for extract_links to recover"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/som.pdf".to_string()),
+            "compiled citation_pdf_url must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/papers/som".to_string()),
+            "canonical must remain: {urls:?}"
+        );
+
+        let blocked = crate::som::compiler::compile(
+            r##"<html><head>
+<meta name="citation_pdf_url" content="javascript:alert(1)">
+<title>Blocked</title>
+</head><body><main><p>No PDF</p></main></body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("blocked fixture HTML should compile");
+        let blocked_urls = collect_extract_link_urls(&blocked);
+        assert!(
+            !blocked_urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: citation_pdf_url must not become a fetch target: {blocked_urls:?}"
+        );
+
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("som.html")
+                    || url.contains("som-abstract")
+                    || url.contains("bepress.pdf")
+                    || url.contains("dc-id")
+                    || url.contains("property.pdf")
+                    || url.contains("favicon")
+            }),
+            "fulltext/abstract, bepress, Dublin Core, property=, and icons must not copy citation_pdf_url extract_links: {urls:?}"
         );
     }
 
