@@ -728,7 +728,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, and manifest), and compiled Highwire citation_pdf_url values. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, research PDF discovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, and manifest), and compiled Highwire citation_pdf_url values. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, research PDF discovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1410,6 +1410,7 @@ fn is_extract_links_document_rel(rel: &str) -> bool {
             | "me"
             | "shortlink"
             | "webmention"
+            | "pingback"
             | "manifest"
     )
 }
@@ -7430,6 +7431,81 @@ mod tests {
                     || url.contains("favicon")
             }),
             "micropub, tag, prefetch, multi-token rels, and icons must not copy shortlink/webmention extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_pingback_head_links() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/notes/">
+<link rel="canonical" href="https://example.test/notes/som">
+<link rel="pingback" href="https://example.test/xmlrpc.php">
+<link rel="PingBack" href="https://pingback.example.test/xmlrpc">
+<link rel="webmention" href="https://example.test/webmention">
+<link rel="shortlink" href="https://example.test/?p=42">
+<link rel="hub" href="https://example.test/hub">
+<link rel="micropub" href="https://example.test/micropub">
+<link rel="tag" href="https://example.test/tags/som">
+<link rel="prefetch" href="https://example.test/prefetch">
+<link rel="pingback prefetch" href="https://example.test/mixed-ping">
+<link rel="icon" href="/favicon.ico">
+<title>Note</title>
+</head><body>
+<main>
+  <a href="som">SOM</a>
+  <a rel="pingback" href="https://example.test/body-pingback">Body pingback</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        assert!(
+            som.structured_data
+                .as_ref()
+                .map(|data| {
+                    data.links.iter().any(|link| {
+                        link.rel == "pingback" && link.href == "https://example.test/xmlrpc.php"
+                    })
+                })
+                .unwrap_or(false),
+            "compiler must keep pingback for extract_links to recover"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/xmlrpc.php".to_string()),
+            "rel=pingback must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://pingback.example.test/xmlrpc".to_string()),
+            "rel=PingBack must canonicalize into extract_links: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/webmention".to_string()),
+            "webmention must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/?p=42".to_string()),
+            "shortlink must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/notes/som".to_string()),
+            "canonical must remain: {urls:?}"
+        );
+
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("micropub")
+                    || url.contains("/tags/som")
+                    || url.contains("prefetch")
+                    || url.contains("mixed-ping")
+                    || url.contains("favicon")
+                    || url.contains("/hub")
+            }),
+            "micropub, tag, prefetch, multi-token rels, icons, and hub must not copy pingback extract_links: {urls:?}"
         );
     }
 
