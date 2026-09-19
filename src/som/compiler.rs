@@ -7904,4 +7904,43 @@ plasmate fetch https://example.test</code></pre>
             "selector=paragraph should drop buttons: {filtered_elements:?}"
         );
     }
+
+    #[test]
+    fn http_equiv_refresh_is_compiled() {
+        let html = r#"<!DOCTYPE html>
+<html><head>
+<title>Continue</title>
+<link rel="canonical" href="https://example.test/app">
+<meta http-equiv="refresh" content="0;url=https://example.test/next">
+<meta http-equiv="content-language" content="en">
+<meta name="refresh" content="0;url=https://example.test/named">
+<meta name="description" content="A paper">
+</head>
+<body>
+<main><p>Continue to the app</p></main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/continue").unwrap();
+        let meta = som
+            .structured_data
+            .as_ref()
+            .map(|data| &data.meta)
+            .expect("structured data should compile");
+        assert_eq!(
+            meta.get("refresh").map(String::as_str),
+            Some("0;url=https://example.test/next"),
+            "compiler must keep http-equiv refresh for fetch_page to recover"
+        );
+        assert_eq!(meta.get("description").map(String::as_str), Some("A paper"));
+        assert!(
+            !meta.contains_key("content-language"),
+            "content-language must not copy refresh mapping: {meta:?}"
+        );
+        assert_ne!(
+            meta.get("refresh").map(String::as_str),
+            Some("0;url=https://example.test/named"),
+            "name= refresh must not copy http-equiv mapping: {meta:?}"
+        );
+    }
 }
