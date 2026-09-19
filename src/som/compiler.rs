@@ -1389,6 +1389,8 @@ fn node_to_element(
             let role = tag_to_role(tag, &attr_pairs)?;
             let text_content = if tag == "math" {
                 math_readable_text(node, &attr_pairs, &ctx.css_rules)
+            } else if tag == "ruby" {
+                ruby_readable_text(node, &ctx.css_rules)
             } else {
                 get_visible_text_content(node, &ctx.css_rules)
             };
@@ -1677,7 +1679,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "ul" | "ol" | "dl" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
         "p" | "time" | "blockquote" | "figcaption" | "pre" | "abbr" | "address" | "cite"
-        | "dfn" | "code" | "math" => Some(ElementRole::Paragraph),
+        | "dfn" | "code" | "math" | "ruby" => Some(ElementRole::Paragraph),
         "section" | "article" => Some(ElementRole::Section),
         "fieldset" => Some(ElementRole::Group),
         "hr" => Some(ElementRole::Separator),
@@ -3165,6 +3167,41 @@ fn get_visible_text_content(node: &Handle, css_rules: &VisibilityRules) -> Strin
     let mut text = String::new();
     collect_visible_text(node, &mut text, css_rules);
     text
+}
+
+fn ruby_readable_text(node: &Handle, css_rules: &VisibilityRules) -> String {
+    let mut text = String::new();
+    collect_ruby_visible_text(node, &mut text, css_rules);
+    text
+}
+
+fn collect_ruby_visible_text(node: &Handle, buf: &mut String, css_rules: &VisibilityRules) {
+    if heuristics::should_strip(node) || is_css_hidden_element(node, css_rules) {
+        return;
+    }
+    match &node.data {
+        NodeData::Text { contents } => {
+            buf.push_str(&contents.borrow());
+        }
+        NodeData::Element { name, .. } => {
+            let tag = name.local.as_ref();
+            if matches!(tag, "rt" | "rp" | "rtc") {
+                return;
+            }
+            if tag == "br" {
+                buf.push('\n');
+                return;
+            }
+            for child in node.children.borrow().iter() {
+                collect_ruby_visible_text(child, buf, css_rules);
+            }
+        }
+        _ => {
+            for child in node.children.borrow().iter() {
+                collect_ruby_visible_text(child, buf, css_rules);
+            }
+        }
+    }
 }
 
 fn math_readable_text(
@@ -7705,6 +7742,166 @@ plasmate fetch https://example.test</code></pre>
                 .iter()
                 .all(|element| element.html_id.as_deref() != Some("copy")),
             "selector=image should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn ruby_compiles_as_paragraph() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Glossary</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <ruby id="kanji">漢字<rt>かんじ</rt></ruby>
+  <ruby id="linked"><a href="https://example.test/kanji">漢字</a><rt>かんじ</rt></ruby>
+  <ruby id="rb"><rb>東京</rb><rp>(</rp><rt>とうきょう</rt><rp>)</rp></ruby>
+  <ruby id="blank"><rt>   </rt></ruby>
+  <math id="sum"><mn>2</mn><mo>+</mo><mn>2</mn></math>
+  <code id="api">fetch_page</code>
+  <mark id="hit">Not ruby</mark>
+  <kbd id="shortcut">Ctrl+C</kbd>
+  <q id="quote">Quoted aside</q>
+  <button id="copy">Copy</button>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/glossary").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let kanji = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("kanji"))
+            .expect("native ruby should compile");
+        assert_eq!(kanji.role, ElementRole::Paragraph);
+        assert_eq!(kanji.text.as_deref(), Some("漢字"));
+        assert!(
+            kanji
+                .text
+                .as_deref()
+                .is_some_and(|text| !text.contains("かんじ")),
+            "rt annotation must not mix into ruby base text: {kanji:?}"
+        );
+        assert!(
+            kanji
+                .actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "ruby must not invent actions: {kanji:?}"
+        );
+        assert!(
+            kanji
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("annotation").is_none() && attrs.get("rt").is_none()),
+            "ruby must not invent annotation attrs: {kanji:?}"
+        );
+
+        let linked = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("linked"))
+            .expect("ruby with a nested link should still compile");
+        assert_eq!(linked.role, ElementRole::Paragraph);
+        assert_eq!(linked.text.as_deref(), Some("漢字"));
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Link
+                    && element.attrs.as_ref().and_then(|attrs| attrs.get("href"))
+                        == Some(&json!("https://example.test/kanji"))
+            }),
+            "ruby must keep nested links: {elements:?}"
+        );
+
+        let rb = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("rb"))
+            .expect("ruby with rb/rp should compile");
+        assert_eq!(rb.role, ElementRole::Paragraph);
+        assert_eq!(rb.text.as_deref(), Some("東京"));
+        assert!(
+            rb.text
+                .as_deref()
+                .is_some_and(|text| !text.contains('(') && !text.contains("とうきょう")),
+            "rp/rt must not mix into ruby base text: {rb:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("blank")
+                    || (element.role == ElementRole::Paragraph && element.text.is_none())
+            }),
+            "annotation-only ruby must not invent base text: {elements:?}"
+        );
+
+        let sum = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("sum"))
+            .expect("math should remain a paragraph");
+        assert_eq!(sum.role, ElementRole::Paragraph);
+
+        let api = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("api"))
+            .expect("code should remain a paragraph");
+        assert_eq!(api.role, ElementRole::Paragraph);
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Paragraph
+            }),
+            "mark must not copy ruby mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("shortcut")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "kbd must not copy ruby mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("quote")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "q must not copy ruby mapping: {elements:?}"
+        );
+
+        let copy = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("copy"))
+            .expect("copy button should compile");
+        assert_eq!(copy.role, ElementRole::Button);
+
+        let filtered = crate::som::filter::apply_selector(&som, "paragraph");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("kanji")
+                    && element.role == ElementRole::Paragraph
+            }),
+            "selector=paragraph should keep compiled ruby: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("copy")),
+            "selector=paragraph should drop buttons: {filtered_elements:?}"
         );
     }
 }
