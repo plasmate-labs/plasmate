@@ -68,6 +68,17 @@ pub fn get_shadow_root_mode(node: &Handle) -> Option<String> {
     None
 }
 
+fn svg_title_child_accessible_name(node: &Handle) -> bool {
+    node.children.borrow().iter().any(|child| {
+        if let NodeData::Element { name, .. } = &child.data {
+            if name.local.as_ref() == "title" {
+                return !get_all_text(child).trim().is_empty();
+            }
+        }
+        false
+    })
+}
+
 /// Check if a node should be stripped from SOM output.
 pub fn should_strip(node: &Handle) -> bool {
     match &node.data {
@@ -84,13 +95,17 @@ pub fn should_strip(node: &Handle) -> bool {
             }
             // Strip SVGs unless role=img with accessible name
             if tag == "svg" {
-                let attrs = attrs.borrow();
-                let has_role_img = attrs
-                    .iter()
-                    .any(|a| a.name.local.as_ref() == "role" && a.value.as_ref() == "img");
-                let has_name = attrs.iter().any(|a| {
-                    a.name.local.as_ref() == "aria-label" || a.name.local.as_ref() == "title"
-                });
+                let (has_role_img, has_attr_name) = {
+                    let attrs = attrs.borrow();
+                    let has_role_img = attrs
+                        .iter()
+                        .any(|a| a.name.local.as_ref() == "role" && a.value.as_ref() == "img");
+                    let has_attr_name = attrs.iter().any(|a| {
+                        a.name.local.as_ref() == "aria-label" || a.name.local.as_ref() == "title"
+                    });
+                    (has_role_img, has_attr_name)
+                };
+                let has_name = has_attr_name || svg_title_child_accessible_name(node);
                 return !(has_role_img && has_name);
             }
             // Check for hidden elements
