@@ -774,7 +774,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, and manifest), compiled Highwire citation_pdf_url values, and compiled Open Graph og:url values. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, research PDF discovery, social canonical recovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, and manifest), compiled Highwire citation_pdf_url values, compiled Open Graph og:url values, and compiled http-equiv refresh URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, research PDF discovery, social canonical recovery, meta-refresh follow-up, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1415,6 +1415,7 @@ fn collect_extract_link_urls(som: &Som) -> Vec<String> {
     collect_structured_document_links(som, &mut urls);
     collect_structured_citation_pdf_urls(som, &mut urls);
     collect_structured_og_url(som, &mut urls);
+    collect_structured_refresh_url(som, &mut urls);
     let resolve_base = extract_links_resolve_base(som);
     for url in &mut urls {
         *url = resolve_extracted_link(&resolve_base, url);
@@ -1492,6 +1493,66 @@ fn collect_structured_og_url(som: &Som, urls: &mut Vec<String>) {
         return;
     }
     urls.push(href.to_string());
+}
+
+fn collect_structured_refresh_url(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    let Some(content) = data.meta.get("refresh") else {
+        return;
+    };
+    let Some(href) = parse_http_equiv_refresh_url(content) else {
+        return;
+    };
+    if !is_extract_links_structured_href(href) {
+        return;
+    }
+    urls.push(href.to_string());
+}
+
+fn parse_http_equiv_refresh_url(content: &str) -> Option<&str> {
+    let content = content.trim();
+    if content.is_empty() {
+        return None;
+    }
+    let digits = content
+        .char_indices()
+        .take_while(|(_, c)| c.is_ascii_digit())
+        .last()
+        .map(|(i, c)| i + c.len_utf8())
+        .unwrap_or(0);
+    if digits == 0 {
+        return None;
+    }
+    let rest = content[digits..].trim_start();
+    let rest = match rest.as_bytes().first() {
+        Some(b';' | b',') => rest[1..].trim_start(),
+        _ => return None,
+    };
+    if rest.is_empty() {
+        return None;
+    }
+    let rest =
+        if rest.len() >= 4 && rest.is_char_boundary(4) && rest[..4].eq_ignore_ascii_case("url=") {
+            rest[4..].trim_start()
+        } else {
+            rest
+        };
+    let rest = rest.trim();
+    let rest = if rest.len() >= 2
+        && ((rest.starts_with('\'') && rest.ends_with('\''))
+            || (rest.starts_with('"') && rest.ends_with('"')))
+    {
+        rest[1..rest.len() - 1].trim()
+    } else {
+        rest
+    };
+    if rest.is_empty() {
+        None
+    } else {
+        Some(rest)
+    }
 }
 
 fn is_extract_links_structured_href(href: &str) -> bool {
@@ -7716,6 +7777,120 @@ mod tests {
                     || url.contains("favicon")
             }),
             "og:image/audio/video, twitter:url, and icons must not copy og:url extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_http_equiv_refresh_url() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/notes/">
+<link rel="canonical" href="https://example.test/notes/som">
+<meta http-equiv="refresh" content="0;url=https://example.test/next">
+<meta http-equiv="content-language" content="en">
+<meta name="refresh" content="0;url=https://example.test/named">
+<meta property="og:url" content="https://example.test/og/som">
+<link rel="icon" href="/favicon.ico">
+<title>Continue</title>
+</head><body>
+<main>
+  <a href="som">SOM</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        assert_eq!(
+            som.structured_data
+                .as_ref()
+                .and_then(|data| data.meta.get("refresh"))
+                .map(String::as_str),
+            Some("0;url=https://example.test/next"),
+            "compiler must keep http-equiv refresh for extract_links to recover"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/next".to_string()),
+            "compiled http-equiv refresh URL must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/notes/som".to_string()),
+            "canonical must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/og/som".to_string()),
+            "og:url must remain: {urls:?}"
+        );
+
+        let quoted = crate::som::compiler::compile(
+            r##"<html><head>
+<meta http-equiv="Refresh" content="5; URL='/later'">
+<title>Quoted</title>
+</head><body><main><p>Continue</p></main></body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("quoted fixture HTML should compile");
+        let quoted_urls = collect_extract_link_urls(&quoted);
+        assert!(
+            quoted_urls.contains(&"https://example.test/later".to_string()),
+            "quoted refresh URL must resolve: {quoted_urls:?}"
+        );
+
+        let relative = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/notes/">
+<meta http-equiv="refresh" content="0;url=next">
+<title>Relative</title>
+</head><body><main><p>Continue</p></main></body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("relative fixture HTML should compile");
+        let relative_urls = collect_extract_link_urls(&relative);
+        assert!(
+            relative_urls.contains(&"https://example.test/notes/next".to_string()),
+            "relative refresh URL must resolve against document base: {relative_urls:?}"
+        );
+
+        let delay_only = crate::som::compiler::compile(
+            r##"<html><head>
+<meta http-equiv="refresh" content="5">
+<title>Delay</title>
+</head><body><main><p>Stay</p></main></body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("delay-only fixture HTML should compile");
+        let delay_urls = collect_extract_link_urls(&delay_only);
+        assert!(
+            !delay_urls
+                .iter()
+                .any(|url| url.contains("example.test/5") || url.ends_with("/5") || url == "5"),
+            "delay-only refresh must not invent a URL: {delay_urls:?}"
+        );
+
+        let blocked = crate::som::compiler::compile(
+            r##"<html><head>
+<meta http-equiv="refresh" content="0;url=javascript:alert(1)">
+<title>Blocked</title>
+</head><body><main><p>No refresh URL</p></main></body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("blocked fixture HTML should compile");
+        let blocked_urls = collect_extract_link_urls(&blocked);
+        assert!(
+            !blocked_urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: refresh URL must not become a fetch target: {blocked_urls:?}"
+        );
+
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("named")
+                    || url.contains("content-language")
+                    || url.contains("favicon")
+            }),
+            "name=refresh, other http-equiv, and icons must not copy refresh extract_links: {urls:?}"
         );
     }
 
