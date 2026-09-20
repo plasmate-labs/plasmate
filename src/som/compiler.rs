@@ -1679,7 +1679,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "ul" | "ol" | "dl" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
         "p" | "time" | "blockquote" | "figcaption" | "pre" | "abbr" | "address" | "cite"
-        | "dfn" | "code" | "math" | "ruby" => Some(ElementRole::Paragraph),
+        | "dfn" | "code" | "math" | "ruby" | "small" => Some(ElementRole::Paragraph),
         "section" | "article" => Some(ElementRole::Section),
         "fieldset" => Some(ElementRole::Group),
         "hr" => Some(ElementRole::Separator),
@@ -7901,6 +7901,147 @@ plasmate fetch https://example.test</code></pre>
             filtered_elements
                 .iter()
                 .all(|element| element.html_id.as_deref() != Some("copy")),
+            "selector=paragraph should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn small_compiles_as_paragraph() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Legal</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <small id="legal">Copyright 2026 Plasmate Labs</small>
+  <small id="linked"><a href="https://example.test/terms">Terms</a></small>
+  <small id="blank">   </small>
+  <ruby id="kanji">漢字<rt>かんじ</rt></ruby>
+  <code id="api">fetch_page</code>
+  <mark id="hit">Not small</mark>
+  <kbd id="shortcut">Ctrl+C</kbd>
+  <samp id="output">ok</samp>
+  <em id="stress">Not small</em>
+  <button id="accept">Accept</button>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/legal").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let legal = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("legal"))
+            .expect("native small should compile");
+        assert_eq!(legal.role, ElementRole::Paragraph);
+        assert_eq!(legal.text.as_deref(), Some("Copyright 2026 Plasmate Labs"));
+        assert!(
+            legal
+                .actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "small must not invent actions: {legal:?}"
+        );
+
+        let linked = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("linked"))
+            .expect("small with a nested link should still compile");
+        assert_eq!(linked.role, ElementRole::Paragraph);
+        assert_eq!(linked.text.as_deref(), Some("Terms"));
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Link
+                    && element.attrs.as_ref().and_then(|attrs| attrs.get("href"))
+                        == Some(&json!("https://example.test/terms"))
+            }),
+            "small must keep nested links: {elements:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("blank")
+                    || (element.role == ElementRole::Paragraph
+                        && element.text.as_deref().is_none_or(|text| text.is_empty()))
+            }),
+            "whitespace-only small must not invent text: {elements:?}"
+        );
+
+        let kanji = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("kanji"))
+            .expect("ruby should remain a paragraph");
+        assert_eq!(kanji.role, ElementRole::Paragraph);
+
+        let api = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("api"))
+            .expect("code should remain a paragraph");
+        assert_eq!(api.role, ElementRole::Paragraph);
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Paragraph
+            }),
+            "mark must not copy small mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("shortcut")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "kbd must not copy small mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("output")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "samp must not copy small mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("stress")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "em must not copy small mapping: {elements:?}"
+        );
+
+        let accept = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("accept"))
+            .expect("accept button should compile");
+        assert_eq!(accept.role, ElementRole::Button);
+
+        let filtered = crate::som::filter::apply_selector(&som, "paragraph");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("legal")
+                    && element.role == ElementRole::Paragraph
+            }),
+            "selector=paragraph should keep compiled small: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("accept")),
             "selector=paragraph should drop buttons: {filtered_elements:?}"
         );
     }
