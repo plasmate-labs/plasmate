@@ -445,7 +445,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
 pub fn extract_text_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_text".to_string(),
-        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary. Use this (instead of fetch_page) when you only need the written content and do not need to interact with the page or reference specific elements.".to_string(),
+        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary. Includes compiled image alt text when the image has no other readable text, so chart and photo pages still return the authored description. Use this (instead of fetch_page) when you only need the written content and do not need to interact with the page or reference specific elements.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -705,13 +705,27 @@ fn compiled_meta_description(som: &Som) -> Option<&str> {
         .filter(|value| !value.is_empty())
 }
 
+fn compiled_image_alt(element: &crate::som::types::Element) -> Option<&str> {
+    if element.role != crate::som::types::ElementRole::Image {
+        return None;
+    }
+    element
+        .attrs
+        .as_ref()
+        .and_then(|attrs| attrs.get("alt"))
+        .and_then(|value| value.as_str())
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+}
+
 /// Recursively extract text from a SOM element.
 fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<String>) {
     let readable = element
         .text
         .as_deref()
         .filter(|text| !text.is_empty())
-        .or_else(|| element.label.as_deref().filter(|label| !label.is_empty()));
+        .or_else(|| element.label.as_deref().filter(|label| !label.is_empty()))
+        .or_else(|| compiled_image_alt(element));
     if let Some(readable) = readable {
         parts.push(readable.to_string());
     }
@@ -7259,6 +7273,91 @@ mod tests {
         assert!(
             empty_text.contains("Docs") && empty_text.contains("Body copy"),
             "title and body must remain when description is whitespace: {empty_text:?}"
+        );
+    }
+
+    #[test]
+    fn extract_text_includes_compiled_image_alt() {
+        let html = r#"<!DOCTYPE html>
+<html><head>
+<title>Article</title>
+<meta property="og:image" content="https://example.test/og.png">
+</head>
+<body>
+<main>
+  <p>See the chart.</p>
+  <img id="chart" src="/q3.png" alt="  Q3 revenue by region  ">
+  <img id="hero" src="/hero.png" alt="Hero banner">
+  <img id="labelled" src="/logo.png" alt="File name" aria-label="Plasmate logo">
+  <img id="spacer" src="/spacer.png" alt="   ">
+  <img id="plain" src="/plain.png" title="Tooltip only">
+  <video id="clip" src="/clip.mp4" poster="/poster.png"></video>
+  <iframe id="embed" src="https://example.test/embed"></iframe>
+  <button id="copy">Copy</button>
+</main>
+</body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/article")
+            .expect("fixture HTML should compile");
+        let mut elements = Vec::new();
+        fn collect<'a>(
+            nodes: &'a [crate::som::types::Element],
+            out: &mut Vec<&'a crate::som::types::Element>,
+        ) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+        let chart = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("chart"))
+            .expect("compiler must keep nested or top-level img");
+        assert_eq!(chart.role, crate::som::types::ElementRole::Image);
+        assert_eq!(
+            chart
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("alt"))
+                .and_then(|value| value.as_str()),
+            Some("  Q3 revenue by region  "),
+            "compiler must keep image alt for extract_text to recover: {chart:?}"
+        );
+
+        let text = collect_extract_text(&som);
+        assert!(
+            text.contains("Q3 revenue by region"),
+            "extract_text must emit compiled image alt: {text:?}"
+        );
+        assert!(
+            text.contains("Hero banner"),
+            "trimmed image alt must be extractable: {text:?}"
+        );
+        assert!(
+            text.contains("Plasmate logo"),
+            "aria-label must remain preferred over alt: {text:?}"
+        );
+        assert!(
+            text.contains("Article") && text.contains("See the chart.") && text.contains("Copy"),
+            "title, body, and button text must remain: {text:?}"
+        );
+        assert!(
+            extract_text_definition().description.contains("image alt"),
+            "agents must be told image alt text is returned"
+        );
+
+        assert!(
+            !text.contains("File name")
+                && !text.contains("/q3.png")
+                && !text.contains("/hero.png")
+                && !text.contains("/poster.png")
+                && !text.contains("og.png")
+                && !text.contains("https://example.test/embed"),
+            "src, og:image, video poster, iframe src, and labelled-file alt must not copy image-alt extract_text: {text:?}"
         );
     }
 
