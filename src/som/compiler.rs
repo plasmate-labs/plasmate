@@ -1275,7 +1275,7 @@ fn extract_interactive_children(
     if let NodeData::Element { name, .. } = &node.data {
         let tag = name.local.as_ref();
         if let Some(role) = tag_to_role(tag, &attr_pairs) {
-            if role.is_interactive() {
+            if role.is_interactive() || role == ElementRole::Image {
                 if let Some(el) = interactive_node_to_element(
                     node,
                     origin,
@@ -8168,6 +8168,167 @@ plasmate fetch https://example.test</code></pre>
                 .iter()
                 .all(|element| element.html_id.as_deref() != Some("copy")),
             "selector=paragraph should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn paragraph_nested_img_compiles_as_image() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Article</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <p id="caption">See <img id="chart" src="/q3.png" alt="Q3 revenue"> in EMEA.</p>
+  <p id="linked">Open <a href="https://example.test/chart"><img id="thumb" src="/thumb.png" alt="Thumbnail"></a>.</p>
+  <canvas id="board" width="10" height="10">
+    <img id="fallback" src="/fallback.png" alt="Fallback chart">
+  </canvas>
+  <img id="hero" src="/hero.png" alt="Hero">
+  <mark id="hit">Not an image</mark>
+  <button id="copy">Copy</button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/article").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let chart = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("chart"))
+            .expect("img nested in a paragraph should compile");
+        assert_eq!(chart.role, ElementRole::Image);
+        assert_eq!(
+            chart
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("src"))
+                .and_then(|value| value.as_str()),
+            Some("/q3.png")
+        );
+        assert_eq!(
+            chart
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("alt"))
+                .and_then(|value| value.as_str()),
+            Some("Q3 revenue")
+        );
+        assert!(
+            chart
+                .actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "nested img must not invent actions: {chart:?}"
+        );
+
+        let caption = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("caption"))
+            .expect("host paragraph should remain");
+        assert_eq!(caption.role, ElementRole::Paragraph);
+        assert!(
+            caption
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("src").is_none() && attrs.get("alt").is_none()),
+            "paragraph must not invent image attrs from nested img: {caption:?}"
+        );
+
+        let fallback = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("fallback"))
+            .expect("canvas fallback img should compile");
+        assert_eq!(fallback.role, ElementRole::Image);
+        assert_eq!(
+            fallback
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("src"))
+                .and_then(|value| value.as_str()),
+            Some("/fallback.png")
+        );
+
+        let board = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("board"))
+            .expect("canvas should remain a group");
+        assert_eq!(board.role, ElementRole::Group);
+        assert!(
+            board
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("src").is_none()),
+            "canvas must not invent src from nested img: {board:?}"
+        );
+
+        let hero = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("hero"))
+            .expect("top-level img should still compile");
+        assert_eq!(hero.role, ElementRole::Image);
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("thumb") || element.role != ElementRole::Image
+            }),
+            "img nested in a link must not copy paragraph-image mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Link
+                    && element.attrs.as_ref().and_then(|attrs| attrs.get("href"))
+                        == Some(&json!("https://example.test/chart"))
+            }),
+            "linked thumbnail must stay a link: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Image
+            }),
+            "mark must not copy nested img mapping: {elements:?}"
+        );
+
+        let copy = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("copy"))
+            .expect("copy button should compile");
+        assert_eq!(copy.role, ElementRole::Button);
+
+        let filtered = crate::som::filter::apply_selector(&som, "image");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("chart") && element.role == ElementRole::Image
+            }),
+            "selector=image should keep nested paragraph img: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("fallback") && element.role == ElementRole::Image
+            }),
+            "selector=image should keep canvas fallback img: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("copy")),
+            "selector=image should drop buttons: {filtered_elements:?}"
         );
     }
 
