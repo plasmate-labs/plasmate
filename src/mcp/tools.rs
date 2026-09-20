@@ -790,7 +790,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, and manifest), compiled Highwire citation_pdf_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, and compiled fediverse:creator:id actor URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, research PDF discovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, and manifest), compiled Highwire citation_pdf_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, and compiled fediverse:creator:id actor URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, research PDF discovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1477,6 +1477,7 @@ fn is_extract_links_document_rel(rel: &str) -> bool {
             | "webmention"
             | "pingback"
             | "enclosure"
+            | "hub"
             | "manifest"
     )
 }
@@ -7735,6 +7736,10 @@ mod tests {
             urls.contains(&"https://example.test/notes/som".to_string()),
             "canonical must remain: {urls:?}"
         );
+        assert!(
+            urls.contains(&"https://example.test/hub".to_string()),
+            "hub must remain: {urls:?}"
+        );
 
         assert!(
             !urls.iter().any(|url| {
@@ -7743,9 +7748,8 @@ mod tests {
                     || url.contains("prefetch")
                     || url.contains("mixed-ping")
                     || url.contains("favicon")
-                    || url.contains("/hub")
             }),
-            "micropub, tag, prefetch, multi-token rels, icons, and hub must not copy pingback extract_links: {urls:?}"
+            "micropub, tag, prefetch, multi-token rels, and icons must not copy pingback extract_links: {urls:?}"
         );
     }
 
@@ -7811,6 +7815,10 @@ mod tests {
             "canonical must remain: {urls:?}"
         );
         assert!(
+            urls.contains(&"https://example.test/hub".to_string()),
+            "hub must remain: {urls:?}"
+        );
+        assert!(
             extract_links_definition().description.contains("enclosure"),
             "agents must be told enclosure URLs are returned"
         );
@@ -7822,9 +7830,90 @@ mod tests {
                     || url.contains("prefetch")
                     || url.contains("mixed-enclosure")
                     || url.contains("favicon")
-                    || url.contains("/hub")
             }),
-            "micropub, tag, prefetch, multi-token rels, icons, and hub must not copy enclosure extract_links: {urls:?}"
+            "micropub, tag, prefetch, multi-token rels, and icons must not copy enclosure extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_hub_head_links() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/feed/">
+<link rel="canonical" href="https://example.test/feed/som">
+<link rel="hub" href="https://example.test/hub">
+<link rel="Hub" href="https://pubsubhubbub.example.test/">
+<link rel="alternate" type="application/atom+xml" href="https://example.test/feed.atom">
+<link rel="enclosure" type="audio/mpeg" href="https://example.test/ep.mp3">
+<link rel="pingback" href="https://example.test/xmlrpc.php">
+<link rel="micropub" href="https://example.test/micropub">
+<link rel="tag" href="https://example.test/tags/som">
+<link rel="prefetch" href="https://example.test/prefetch">
+<link rel="hub prefetch" href="https://example.test/mixed-hub">
+<link rel="icon" href="/favicon.ico">
+<title>Feed</title>
+</head><body>
+<main>
+  <a href="som">SOM</a>
+  <a rel="hub" href="https://example.test/body-hub">Body hub</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        assert!(
+            som.structured_data
+                .as_ref()
+                .map(|data| {
+                    data.links
+                        .iter()
+                        .any(|link| link.rel == "hub" && link.href == "https://example.test/hub")
+                })
+                .unwrap_or(false),
+            "compiler must keep hub for extract_links to recover"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/hub".to_string()),
+            "rel=hub must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://pubsubhubbub.example.test/".to_string()),
+            "rel=Hub must canonicalize into extract_links: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/feed.atom".to_string()),
+            "alternate must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/ep.mp3".to_string()),
+            "enclosure must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/xmlrpc.php".to_string()),
+            "pingback must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/feed/som".to_string()),
+            "canonical must remain: {urls:?}"
+        );
+        assert!(
+            extract_links_definition().description.contains("hub"),
+            "agents must be told hub URLs are returned"
+        );
+
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("micropub")
+                    || url.contains("/tags/som")
+                    || url.contains("prefetch")
+                    || url.contains("mixed-hub")
+                    || url.contains("favicon")
+            }),
+            "micropub, tag, prefetch, multi-token rels, and icons must not copy hub extract_links: {urls:?}"
         );
     }
 
