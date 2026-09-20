@@ -7037,13 +7037,11 @@ plasmate fetch https://example.test</code></pre>
         assert_eq!(plain.role, ElementRole::Paragraph);
         assert_eq!(plain.text.as_deref(), Some("Support desk"));
 
-        assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("source")
-                    || element.role != ElementRole::Paragraph
-            }),
-            "small must not copy address mapping: {elements:?}"
-        );
+        let source = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("source"))
+            .expect("small should remain a paragraph");
+        assert_eq!(source.role, ElementRole::Paragraph);
         assert!(
             elements.iter().all(|element| {
                 element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Paragraph
