@@ -221,10 +221,11 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                             | "shortlink"
                             | "webmention"
                             | "pingback"
-                            | "hub"
-                            | "enclosure"
-                            | "up"
-                    ) {
+                             | "hub"
+                             | "enclosure"
+                             | "up"
+                             | "contents"
+                     ) {
                         let link_type = attrs_borrowed
                             .iter()
                             .find(|a| a.name.local.as_ref() == "type")
@@ -1496,6 +1497,147 @@ mod tests {
         assert!(
             !data.open_graph.contains_key("up") && data.twitter_card.is_empty(),
             "up must not copy onto OpenGraph or Twitter cards: {data:?}"
+        );
+    }
+
+    #[test]
+    fn contents_link_rels_are_extracted() {
+        let html = r#"<html><head>
+            <link rel="canonical" href="https://example.test/docs/som/compiler">
+            <link rel="contents" href="https://example.test/docs/contents">
+            <link rel="Contents" href="https://example.test/docs/toc">
+            <link rel="prev" href="https://example.test/docs/som/parser">
+            <link rel="help" href="https://example.test/docs/help">
+            <link rel="up" href="https://example.test/docs/som">
+            <link rel="toc" href="https://example.test/docs/toc-synonym">
+            <link rel="chapter" href="https://example.test/docs/chapter">
+            <link rel="glossary" href="https://example.test/docs/glossary">
+            <link rel="appendix" href="https://example.test/docs/appendix">
+            <link rel="section" href="https://example.test/docs/section">
+            <link rel="subsection" href="https://example.test/docs/subsection">
+            <link rel="first" href="https://example.test/docs/start">
+            <link rel="last" href="https://example.test/docs/end">
+            <link rel="start" href="https://example.test/docs">
+            <link rel="top" href="https://example.test/docs">
+            <link rel="index" href="https://example.test/docs/index">
+            <link rel="micropub" href="https://example.test/micropub">
+            <link rel="tag" href="/tags/som">
+            <link rel="prefetch" href="https://example.test/docs/contents">
+            <link rel="stylesheet" href="/style.css">
+            <link rel="contents prefetch" href="https://example.test/mixed">
+            <a rel="contents" href="https://example.test/body-contents">Body contents</a>
+            <meta name="citation_title" content="Not a link">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        let rels: Vec<_> = data.links.iter().map(|link| link.rel.as_str()).collect();
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "contents" && link.href == "https://example.test/docs/contents"
+            }),
+            "rel=contents must stay in structured data: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "contents" && link.href == "https://example.test/docs/toc"
+            }),
+            "rel=Contents must canonicalize to contents: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "canonical" && link.href == "https://example.test/docs/som/compiler"
+            }),
+            "canonical must remain: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "prev" && link.href == "https://example.test/docs/som/parser"
+            }),
+            "prev must remain: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "help" && link.href == "https://example.test/docs/help"
+            }),
+            "help must remain: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "up" && link.href == "https://example.test/docs/som"
+            }),
+            "up must remain after contents mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"toc"),
+            "toc must not copy contents mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"chapter"),
+            "chapter must not copy contents mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"glossary"),
+            "glossary must not copy contents mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"appendix"),
+            "appendix must not copy contents mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"section"),
+            "section must not copy contents mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"subsection"),
+            "subsection must not copy contents mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"first"),
+            "first must not copy contents mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"last"),
+            "last must not copy contents mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"start"),
+            "start must not copy contents mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"top"),
+            "top must not copy contents mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"index"),
+            "index must not copy contents mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"micropub"),
+            "micropub must not copy contents mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"tag"),
+            "tag must not copy contents mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"prefetch"),
+            "prefetch must not copy contents mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"stylesheet"),
+            "stylesheet must stay excluded: {data:?}"
+        );
+        assert!(
+            !data.links.iter().any(|link| {
+                link.href == "https://example.test/mixed"
+                    || link.href == "https://example.test/body-contents"
+                    || link.href == "https://example.test/docs/toc-synonym"
+            }),
+            "multi-token rel, body anchors, and toc synonym must not copy head contents mapping: {data:?}"
+        );
+        assert_eq!(data.meta["citation_title"], "Not a link");
+        assert!(
+            !data.open_graph.contains_key("contents") && data.twitter_card.is_empty(),
+            "contents must not copy onto OpenGraph or Twitter cards: {data:?}"
         );
     }
 
