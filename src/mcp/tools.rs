@@ -790,7 +790,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, and manifest), compiled Highwire citation_pdf_url values, compiled Open Graph og:url values, and compiled http-equiv refresh URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, research PDF discovery, social canonical recovery, meta-refresh follow-up, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, and manifest), compiled Highwire citation_pdf_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, and compiled fediverse:creator:id actor URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, research PDF discovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1432,6 +1432,7 @@ fn collect_extract_link_urls(som: &Som) -> Vec<String> {
     collect_structured_citation_pdf_urls(som, &mut urls);
     collect_structured_og_url(som, &mut urls);
     collect_structured_refresh_url(som, &mut urls);
+    collect_structured_fediverse_creator_id(som, &mut urls);
     let resolve_base = extract_links_resolve_base(som);
     for url in &mut urls {
         *url = resolve_extracted_link(&resolve_base, url);
@@ -1522,6 +1523,20 @@ fn collect_structured_refresh_url(som: &Som, urls: &mut Vec<String>) {
     let Some(href) = parse_http_equiv_refresh_url(content) else {
         return;
     };
+    if !is_extract_links_structured_href(href) {
+        return;
+    }
+    urls.push(href.to_string());
+}
+
+fn collect_structured_fediverse_creator_id(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    let Some(href) = data.meta.get("fediverse:creator:id") else {
+        return;
+    };
+    let href = href.trim();
     if !is_extract_links_structured_href(href) {
         return;
     }
@@ -8069,6 +8084,88 @@ mod tests {
                     || url.contains("favicon")
             }),
             "name=refresh, other http-equiv, and icons must not copy refresh extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_fediverse_creator_id() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/notes/">
+<link rel="canonical" href="https://example.test/notes/som">
+<meta name="fediverse:creator" content="@plasmate@example.test">
+<meta name="fediverse:creator:id" content="https://example.test/users/plasmate">
+<meta name="Fediverse:Creator:Id" content="https://example.test/users/alias">
+<meta name="twitter:creator" content="@twitter">
+<meta name="citation_pdf_url" content="https://example.test/som.pdf">
+<meta property="fediverse:creator:id" content="https://example.test/property-actor">
+<meta name="dc.identifier" content="https://example.test/dc-id">
+<link rel="icon" href="/favicon.ico">
+<title>Note</title>
+</head><body>
+<main>
+  <a href="som">SOM</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        assert_eq!(
+            som.structured_data
+                .as_ref()
+                .and_then(|data| data.meta.get("fediverse:creator:id"))
+                .map(String::as_str),
+            Some("https://example.test/users/alias"),
+            "compiler must keep fediverse:creator:id for extract_links to recover"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/users/alias".to_string()),
+            "compiled fediverse:creator:id must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/notes/som".to_string()),
+            "canonical must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/som.pdf".to_string()),
+            "citation_pdf_url must remain: {urls:?}"
+        );
+
+        let blocked = crate::som::compiler::compile(
+            r##"<html><head>
+<meta name="fediverse:creator:id" content="javascript:alert(1)">
+<title>Blocked</title>
+</head><body><main><p>No actor</p></main></body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("blocked fixture HTML should compile");
+        let blocked_urls = collect_extract_link_urls(&blocked);
+        assert!(
+            !blocked_urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: fediverse:creator:id must not become a fetch target: {blocked_urls:?}"
+        );
+
+        assert!(
+            extract_links_definition()
+                .description
+                .contains("fediverse:creator:id"),
+            "agents must be told fediverse actor URLs are returned"
+        );
+
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("plasmate@example")
+                    || url.contains("twitter")
+                    || url.contains("property-actor")
+                    || url.contains("dc-id")
+                    || url.contains("favicon")
+                    || url.contains("/users/plasmate")
+            }),
+            "handles, twitter:creator, property=, Dublin Core, superseded ids, and icons must not copy fediverse:creator:id extract_links: {urls:?}"
         );
     }
 
