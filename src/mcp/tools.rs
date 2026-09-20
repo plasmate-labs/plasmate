@@ -790,7 +790,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, and manifest), compiled Highwire citation_pdf_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, and compiled fediverse:creator:id actor URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, research PDF discovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, and manifest), compiled Highwire citation_pdf_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, and compiled fediverse:creator:id actor URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, research PDF discovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1478,6 +1478,7 @@ fn is_extract_links_document_rel(rel: &str) -> bool {
             | "pingback"
             | "enclosure"
             | "hub"
+            | "contents"
             | "manifest"
     )
 }
@@ -7914,6 +7915,105 @@ mod tests {
                     || url.contains("favicon")
             }),
             "micropub, tag, prefetch, multi-token rels, and icons must not copy hub extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_contents_head_links() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/docs/">
+<link rel="canonical" href="https://example.test/docs/som">
+<link rel="contents" href="https://example.test/docs/contents">
+<link rel="Contents" href="https://example.test/docs/toc">
+<link rel="prev" href="https://example.test/docs/parser">
+<link rel="help" href="https://example.test/docs/help">
+<link rel="up" href="https://example.test/docs">
+<link rel="hub" href="https://example.test/hub">
+<link rel="chapter" href="https://example.test/docs/chapter">
+<link rel="glossary" href="https://example.test/docs/glossary">
+<link rel="appendix" href="https://example.test/docs/appendix">
+<link rel="section" href="https://example.test/docs/section">
+<link rel="subsection" href="https://example.test/docs/subsection">
+<link rel="toc" href="https://example.test/docs/toc-synonym">
+<link rel="index" href="https://example.test/docs/index">
+<link rel="micropub" href="https://example.test/micropub">
+<link rel="tag" href="https://example.test/tags/som">
+<link rel="prefetch" href="https://example.test/prefetch">
+<link rel="contents prefetch" href="https://example.test/mixed-contents">
+<link rel="icon" href="/favicon.ico">
+<title>Docs</title>
+</head><body>
+<main>
+  <a href="som">SOM</a>
+  <a rel="contents" href="https://example.test/body-contents">Body contents</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        assert!(
+            som.structured_data
+                .as_ref()
+                .map(|data| {
+                    data.links.iter().any(|link| {
+                        link.rel == "contents" && link.href == "https://example.test/docs/contents"
+                    })
+                })
+                .unwrap_or(false),
+            "compiler must keep contents for extract_links to recover"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/docs/contents".to_string()),
+            "rel=contents must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/docs/toc".to_string()),
+            "rel=Contents must canonicalize into extract_links: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/docs/parser".to_string()),
+            "prev must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/docs/help".to_string()),
+            "help must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/hub".to_string()),
+            "hub must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/docs/som".to_string()),
+            "canonical must remain: {urls:?}"
+        );
+        assert!(
+            extract_links_definition().description.contains("contents"),
+            "agents must be told contents URLs are returned"
+        );
+
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("micropub")
+                    || url.contains("/tags/som")
+                    || url.contains("prefetch")
+                    || url.contains("mixed-contents")
+                    || url.contains("favicon")
+                    || url.contains("/docs/chapter")
+                    || url.contains("/docs/glossary")
+                    || url.contains("/docs/appendix")
+                    || url.contains("/docs/section")
+                    || url.contains("/docs/subsection")
+                    || url.contains("toc-synonym")
+                    || url.contains("/docs/index")
+                    || url.ends_with("/docs")
+                    || url.ends_with("/docs/")
+            }),
+            "micropub, tag, prefetch, multi-token rels, icons, and other documentation rels must not copy contents extract_links: {urls:?}"
         );
     }
 
