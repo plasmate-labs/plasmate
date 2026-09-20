@@ -107,7 +107,7 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                     .find(|a| a.name.local.as_ref() == "http-equiv")
                     .map(|a| a.value.to_string());
 
-                // OpenGraph: <meta property="og:*" / property="article:*" / property="book:*" / property="profile:*" / property="al:*" content="...">
+                // OpenGraph: <meta property="og:*" / property="article:*" / property="book:*" / property="profile:*" / property="music:*" / property="al:*" content="...">
                 if let (Some(prop), Some(content)) = (&property, &content) {
                     if prop.starts_with("og:") {
                         data.open_graph.insert(prop.clone(), content.clone());
@@ -118,6 +118,9 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                         data.open_graph
                             .insert(prop.to_ascii_lowercase(), content.clone());
                     } else if is_open_graph_profile_property(prop) {
+                        data.open_graph
+                            .insert(prop.to_ascii_lowercase(), content.clone());
+                    } else if is_open_graph_music_property(prop) {
                         data.open_graph
                             .insert(prop.to_ascii_lowercase(), content.clone());
                     } else if is_app_links_property(prop) {
@@ -218,10 +221,11 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                             | "shortlink"
                             | "webmention"
                             | "pingback"
-                            | "hub"
-                            | "enclosure"
-                            | "contents"
-                    ) {
+                             | "hub"
+                             | "enclosure"
+                             | "up"
+                             | "contents"
+                     ) {
                         let link_type = attrs_borrowed
                             .iter()
                             .find(|a| a.name.local.as_ref() == "type")
@@ -321,6 +325,12 @@ fn is_open_graph_book_property(prop: &str) -> bool {
 fn is_open_graph_profile_property(prop: &str) -> bool {
     prop.to_ascii_lowercase()
         .strip_prefix("profile:")
+        .is_some_and(|rest| !rest.is_empty())
+}
+
+fn is_open_graph_music_property(prop: &str) -> bool {
+    prop.to_ascii_lowercase()
+        .strip_prefix("music:")
         .is_some_and(|rest| !rest.is_empty())
 }
 
@@ -1388,6 +1398,109 @@ mod tests {
     }
 
     #[test]
+    fn up_link_rels_are_extracted() {
+        let html = r#"<html><head>
+            <link rel="canonical" href="https://example.test/docs/som/compiler">
+            <link rel="up" href="https://example.test/docs/som">
+            <link rel="Up" href="https://example.test/docs">
+            <link rel="prev" href="https://example.test/docs/som/parser">
+            <link rel="help" href="https://example.test/docs/help">
+            <link rel="first" href="https://example.test/docs/start">
+            <link rel="last" href="https://example.test/docs/end">
+            <link rel="start" href="https://example.test/docs">
+            <link rel="top" href="https://example.test/docs">
+            <link rel="index" href="https://example.test/docs/index">
+            <link rel="micropub" href="https://example.test/micropub">
+            <link rel="tag" href="/tags/som">
+            <link rel="prefetch" href="https://example.test/docs/som">
+            <link rel="stylesheet" href="/style.css">
+            <link rel="up prefetch" href="https://example.test/mixed">
+            <a rel="up" href="https://example.test/body-up">Body up</a>
+            <meta name="citation_title" content="Not a link">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        let rels: Vec<_> = data.links.iter().map(|link| link.rel.as_str()).collect();
+        assert!(
+            data.links
+                .iter()
+                .any(|link| { link.rel == "up" && link.href == "https://example.test/docs/som" }),
+            "rel=up must stay in structured data: {data:?}"
+        );
+        assert!(
+            data.links
+                .iter()
+                .any(|link| { link.rel == "up" && link.href == "https://example.test/docs" }),
+            "rel=Up must canonicalize to up: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "canonical" && link.href == "https://example.test/docs/som/compiler"
+            }),
+            "canonical must remain: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "prev" && link.href == "https://example.test/docs/som/parser"
+            }),
+            "prev must remain: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "help" && link.href == "https://example.test/docs/help"
+            }),
+            "help must remain: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"first"),
+            "first must not copy up mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"last"),
+            "last must not copy up mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"start"),
+            "start must not copy up mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"top"),
+            "top must not copy up mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"index"),
+            "index must not copy up mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"micropub"),
+            "micropub must not copy up mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"tag"),
+            "tag must not copy up mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"prefetch"),
+            "prefetch must not copy up mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"stylesheet"),
+            "stylesheet must stay excluded: {data:?}"
+        );
+        assert!(
+            !data.links.iter().any(|link| {
+                link.href == "https://example.test/mixed"
+                    || link.href == "https://example.test/body-up"
+            }),
+            "multi-token rel and body anchors must not copy head up mapping: {data:?}"
+        );
+        assert_eq!(data.meta["citation_title"], "Not a link");
+        assert!(
+            !data.open_graph.contains_key("up") && data.twitter_card.is_empty(),
+            "up must not copy onto OpenGraph or Twitter cards: {data:?}"
+        );
+    }
+
+    #[test]
     fn contents_link_rels_are_extracted() {
         let html = r#"<html><head>
             <link rel="canonical" href="https://example.test/docs/som/compiler">
@@ -1448,8 +1561,10 @@ mod tests {
             "help must remain: {data:?}"
         );
         assert!(
-            !rels.contains(&"up"),
-            "up must not copy contents mapping: {data:?}"
+            data.links.iter().any(|link| {
+                link.rel == "up" && link.href == "https://example.test/docs/som"
+            }),
+            "up must remain after contents mapping: {data:?}"
         );
         assert!(
             !rels.contains(&"toc"),
@@ -1694,7 +1809,7 @@ mod tests {
             <meta property="article:" content="empty-suffix">
             <meta property="article" content="too-short">
             <meta property="article-published_time" content="hyphen-not-colon">
-            <meta property="music:duration" content="not-article">
+            <meta property="video:duration" content="not-article">
             <meta property="og:title" content="OG Title">
             <meta name="article:published_time" content="not-a-property-attr">
             <meta name="citation_title" content="Highwire Title">
@@ -1716,8 +1831,8 @@ mod tests {
             !data.open_graph.contains_key("article:")
                 && !data.open_graph.contains_key("article")
                 && !data.open_graph.contains_key("article-published_time")
-                && !data.open_graph.contains_key("music:duration"),
-            "bare article / music:duration must not copy article mapping: {data:?}"
+                && !data.open_graph.contains_key("video:duration"),
+            "bare article / video:duration must not copy article mapping: {data:?}"
         );
         assert_ne!(
             data.open_graph
@@ -1749,7 +1864,6 @@ mod tests {
             <meta property="book:" content="empty-suffix">
             <meta property="book" content="too-short">
             <meta property="book-isbn" content="hyphen-not-colon">
-            <meta property="music:duration" content="not-book">
             <meta property="video:duration" content="not-book-either">
             <meta property="article:section" content="Engineering">
             <meta property="og:title" content="OG Title">
@@ -1771,9 +1885,8 @@ mod tests {
             !data.open_graph.contains_key("book:")
                 && !data.open_graph.contains_key("book")
                 && !data.open_graph.contains_key("book-isbn")
-                && !data.open_graph.contains_key("music:duration")
                 && !data.open_graph.contains_key("video:duration"),
-            "bare book / music: / video: must not copy book mapping: {data:?}",
+            "bare book / video: must not copy book mapping: {data:?}",
         );
         assert_ne!(
             data.open_graph.get("book:isbn").map(String::as_str),
@@ -1802,7 +1915,6 @@ mod tests {
             <meta property="profile:" content="empty-suffix">
             <meta property="profile" content="too-short">
             <meta property="profile-username" content="hyphen-not-colon">
-            <meta property="music:duration" content="not-profile">
             <meta property="video:duration" content="not-profile-either">
             <meta property="book:isbn" content="978-0-123456-47-2">
             <meta property="article:section" content="Engineering">
@@ -1823,9 +1935,8 @@ mod tests {
             !data.open_graph.contains_key("profile:")
                 && !data.open_graph.contains_key("profile")
                 && !data.open_graph.contains_key("profile-username")
-                && !data.open_graph.contains_key("music:duration")
                 && !data.open_graph.contains_key("video:duration"),
-            "bare profile / music: / video: must not copy profile mapping: {data:?}"
+            "bare profile / video: must not copy profile mapping: {data:?}"
         );
         assert_ne!(
             data.open_graph.get("profile:username").map(String::as_str),
@@ -1847,6 +1958,62 @@ mod tests {
     }
 
     #[test]
+    fn music_open_graph_properties_are_extracted() {
+        let html = r#"<html><head>
+            <meta property="music:duration" content="217">
+            <meta property="Music:musician" content="https://example.test/artists/ada">
+            <meta property="music:album" content="https://example.test/albums/som">
+            <meta property="music:" content="empty-suffix">
+            <meta property="music" content="too-short">
+            <meta property="music-duration" content="hyphen-not-colon">
+            <meta property="video:duration" content="not-music">
+            <meta property="article:section" content="Engineering">
+            <meta property="book:isbn" content="978-0-123456-47-2">
+            <meta property="og:title" content="OG Title">
+            <meta name="music:duration" content="not-a-property-attr">
+            <meta name="citation_title" content="Highwire Title">
+            <meta name="description" content="A paper">
+            <meta name="twitter:card" content="summary">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        assert_eq!(data.open_graph["music:duration"], "217");
+        assert_eq!(
+            data.open_graph["music:musician"],
+            "https://example.test/artists/ada"
+        );
+        assert_eq!(
+            data.open_graph["music:album"],
+            "https://example.test/albums/som"
+        );
+        assert_eq!(data.open_graph["og:title"], "OG Title");
+        assert_eq!(data.open_graph["article:section"], "Engineering");
+        assert_eq!(data.open_graph["book:isbn"], "978-0-123456-47-2");
+        assert!(
+            !data.open_graph.contains_key("music:")
+                && !data.open_graph.contains_key("music")
+                && !data.open_graph.contains_key("music-duration")
+                && !data.open_graph.contains_key("video:duration"),
+            "bare music / video: must not copy music mapping"
+        );
+        assert_ne!(
+            data.open_graph.get("music:duration").map(String::as_str),
+            Some("not-a-property-attr"),
+            "name= music:* must not copy property= mapping"
+        );
+        assert!(
+            !data.meta.contains_key("music:duration") && !data.meta.contains_key("music:musician"),
+            "music properties must not copy onto standard meta"
+        );
+        assert_eq!(data.meta["citation_title"], "Highwire Title");
+        assert_eq!(data.meta["description"], "A paper");
+        assert_eq!(data.twitter_card["twitter:card"], "summary");
+        assert!(
+            !data.twitter_card.contains_key("music:duration"),
+            "music properties must not copy onto Twitter cards"
+        );
+    }
+
+    #[test]
     fn app_links_properties_are_extracted() {
         let html = r#"<html><head>
             <meta property="al:ios:url" content="plasmate://docs">
@@ -1855,7 +2022,6 @@ mod tests {
             <meta property="al:" content="empty-suffix">
             <meta property="al" content="too-short">
             <meta property="al-ios:url" content="hyphen-not-colon">
-            <meta property="music:duration" content="not-app-links">
             <meta property="video:duration" content="not-app-links-either">
             <meta property="profile:username" content="ada">
             <meta property="og:title" content="OG Title">
@@ -1874,9 +2040,8 @@ mod tests {
             !data.open_graph.contains_key("al:")
                 && !data.open_graph.contains_key("al")
                 && !data.open_graph.contains_key("al-ios:url")
-                && !data.open_graph.contains_key("music:duration")
                 && !data.open_graph.contains_key("video:duration"),
-            "bare al / music: / video: must not copy app links mapping: {data:?}"
+            "bare al / video: must not copy app links mapping: {data:?}"
         );
         assert_ne!(
             data.open_graph.get("al:ios:url").map(String::as_str),
