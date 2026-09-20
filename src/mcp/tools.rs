@@ -445,7 +445,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
 pub fn extract_text_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_text".to_string(),
-        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Use this (instead of fetch_page) when you only need the written content and do not need to interact with the page or reference specific elements.".to_string(),
+        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary. Use this (instead of fetch_page) when you only need the written content and do not need to interact with the page or reference specific elements.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -613,23 +613,7 @@ pub async fn handle_extract_text(
         }
     };
 
-    // Extract text from all regions
-    let mut text_parts: Vec<String> = Vec::new();
-
-    // Add title if present
-    if !effective_som.title.is_empty() {
-        text_parts.push(effective_som.title.clone());
-        text_parts.push(String::new()); // Empty line after title
-    }
-
-    // Extract text from each region
-    for region in &effective_som.regions {
-        for element in &region.elements {
-            extract_element_text(element, &mut text_parts);
-        }
-    }
-
-    let mut text = text_parts.join("\n");
+    let mut text = collect_extract_text(&effective_som);
 
     // Apply max_chars limit if specified
     if let Some(max_chars) = params.max_chars {
@@ -687,6 +671,38 @@ fn truncate_text_to_chars(text: &mut String, max_chars: usize) {
         text.pop();
     }
     text.push_str(ellipsis);
+}
+
+fn collect_extract_text(som: &Som) -> String {
+    let mut text_parts: Vec<String> = Vec::new();
+
+    if !som.title.is_empty() {
+        text_parts.push(som.title.clone());
+        text_parts.push(String::new());
+    }
+
+    if let Some(description) = compiled_meta_description(som) {
+        if som.title.trim() != description {
+            text_parts.push(description.to_string());
+            text_parts.push(String::new());
+        }
+    }
+
+    for region in &som.regions {
+        for element in &region.elements {
+            extract_element_text(element, &mut text_parts);
+        }
+    }
+
+    text_parts.join("\n")
+}
+
+fn compiled_meta_description(som: &Som) -> Option<&str> {
+    som.structured_data
+        .as_ref()
+        .and_then(|data| data.meta.get("description"))
+        .map(|value| value.trim())
+        .filter(|value| !value.is_empty())
 }
 
 /// Recursively extract text from a SOM element.
@@ -7144,6 +7160,88 @@ mod tests {
             hints: None,
             shadow: None,
         }
+    }
+
+    #[test]
+    fn extract_text_includes_compiled_meta_description() {
+        let html = r#"<!DOCTYPE html>
+<html><head>
+<title>Docs</title>
+<meta name="description" content="  Authored summary for agents.  ">
+<meta property="og:description" content="Open Graph summary">
+<meta name="twitter:description" content="Twitter summary">
+<meta name="keywords" content="som, agents">
+<meta name="author" content="Plasmate">
+<meta property="og:title" content="OG Title">
+</head>
+<body>
+<main><p>Body copy</p></main>
+</body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/docs")
+            .expect("fixture HTML should compile");
+        assert_eq!(
+            som.structured_data
+                .as_ref()
+                .and_then(|data| data.meta.get("description"))
+                .map(|value| value.trim()),
+            Some("Authored summary for agents."),
+            "compiler must keep meta description for extract_text to recover"
+        );
+
+        let text = collect_extract_text(&som);
+        assert!(
+            text.contains("Authored summary for agents."),
+            "extract_text must emit compiled meta description: {text:?}"
+        );
+        assert!(text.contains("Docs"), "title must remain: {text:?}");
+        assert!(
+            text.contains("Body copy"),
+            "body text must remain: {text:?}"
+        );
+        assert!(
+            !text.contains("Open Graph summary")
+                && !text.contains("Twitter summary")
+                && !text.contains("som, agents")
+                && !text.contains("Plasmate")
+                && !text.contains("OG Title"),
+            "og/twitter description, keywords, author, and og:title must not copy meta description extract_text: {text:?}"
+        );
+
+        let duplicate = r#"<!DOCTYPE html>
+<html><head>
+<title>Authored summary for agents.</title>
+<meta name="description" content="Authored summary for agents.">
+</head>
+<body><main><p>Body copy</p></main></body></html>"#;
+        let duplicate_som = crate::som::compiler::compile(duplicate, "https://example.test/docs")
+            .expect("duplicate fixture HTML should compile");
+        let duplicate_text = collect_extract_text(&duplicate_som);
+        assert_eq!(
+            duplicate_text
+                .matches("Authored summary for agents.")
+                .count(),
+            1,
+            "description equal to title must not duplicate: {duplicate_text:?}"
+        );
+
+        let empty = r#"<!DOCTYPE html>
+<html><head>
+<title>Docs</title>
+<meta name="description" content="   ">
+<meta property="og:description" content="Open Graph summary">
+</head>
+<body><main><p>Body copy</p></main></body></html>"#;
+        let empty_som = crate::som::compiler::compile(empty, "https://example.test/docs")
+            .expect("empty fixture HTML should compile");
+        let empty_text = collect_extract_text(&empty_som);
+        assert!(
+            !empty_text.contains("Open Graph summary"),
+            "og:description must not fill a missing meta description: {empty_text:?}"
+        );
+        assert!(
+            empty_text.contains("Docs") && empty_text.contains("Body copy"),
+            "title and body must remain when description is whitespace: {empty_text:?}"
+        );
     }
 
     #[test]
