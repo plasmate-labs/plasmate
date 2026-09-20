@@ -219,6 +219,7 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                             | "webmention"
                             | "pingback"
                             | "hub"
+                            | "enclosure"
                     ) {
                         let link_type = attrs_borrowed
                             .iter()
@@ -1300,6 +1301,88 @@ mod tests {
         assert!(
             !data.open_graph.contains_key("hub") && data.twitter_card.is_empty(),
             "hub must not copy onto OpenGraph or Twitter cards: {data:?}"
+        );
+    }
+
+    #[test]
+    fn enclosure_link_rels_are_extracted() {
+        let html = r#"<html><head>
+            <link rel="canonical" href="https://example.test/podcast/som">
+            <link rel="enclosure" type="audio/mpeg" href="https://example.test/ep.mp3">
+            <link rel="Enclosure" type="video/mp4" href="https://example.test/ep.mp4">
+            <link rel="alternate" type="application/rss+xml" href="https://example.test/feed.xml">
+            <link rel="hub" href="https://example.test/hub">
+            <link rel="micropub" href="https://example.test/micropub">
+            <link rel="tag" href="/tags/som">
+            <link rel="prefetch" href="https://example.test/ep.mp3">
+            <link rel="stylesheet" href="/style.css">
+            <link rel="enclosure prefetch" href="https://example.test/mixed">
+            <a rel="enclosure" href="https://example.test/body-enclosure">Body enclosure</a>
+            <meta name="citation_title" content="Not a link">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        let rels: Vec<_> = data.links.iter().map(|link| link.rel.as_str()).collect();
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "enclosure"
+                    && link.href == "https://example.test/ep.mp3"
+                    && link.r#type.as_deref() == Some("audio/mpeg")
+            }),
+            "rel=enclosure must stay in structured data: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "enclosure"
+                    && link.href == "https://example.test/ep.mp4"
+                    && link.r#type.as_deref() == Some("video/mp4")
+            }),
+            "rel=Enclosure must canonicalize to enclosure: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "canonical" && link.href == "https://example.test/podcast/som"
+            }),
+            "canonical must remain: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "alternate" && link.href == "https://example.test/feed.xml"
+            }),
+            "alternate feed must remain: {data:?}"
+        );
+        assert!(
+            data.links
+                .iter()
+                .any(|link| { link.rel == "hub" && link.href == "https://example.test/hub" }),
+            "hub must remain: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"micropub"),
+            "micropub must not copy enclosure mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"tag"),
+            "tag must not copy enclosure mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"prefetch"),
+            "prefetch must not copy enclosure mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"stylesheet"),
+            "stylesheet must stay excluded: {data:?}"
+        );
+        assert!(
+            !data.links.iter().any(|link| {
+                link.href == "https://example.test/mixed"
+                    || link.href == "https://example.test/body-enclosure"
+            }),
+            "multi-token rel and body anchors must not copy head enclosure mapping: {data:?}"
+        );
+        assert_eq!(data.meta["citation_title"], "Not a link");
+        assert!(
+            !data.open_graph.contains_key("enclosure") && data.twitter_card.is_empty(),
+            "enclosure must not copy onto OpenGraph or Twitter cards: {data:?}"
         );
     }
 
