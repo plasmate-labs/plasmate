@@ -804,7 +804,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, and manifest), compiled Highwire citation_pdf_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, and compiled JSON-LD document url values (WebPage/Article and subtypes). Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, research PDF discovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, and manifest), compiled Highwire citation_pdf_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), and compiled video text-track src values (captions, subtitles, chapters). Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, research PDF discovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, caption/subtitle track recovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1690,6 +1690,7 @@ fn collect_element_links(element: &crate::som::types::Element, urls: &mut Vec<St
         if element.role == crate::som::types::ElementRole::Iframe {
             push_attr_url(attrs, "src", urls);
         }
+        collect_compiled_video_track_srcs(attrs, urls);
     }
     if let Some(ref children) = element.children {
         for child in children {
@@ -1700,6 +1701,28 @@ fn collect_element_links(element: &crate::som::types::Element, urls: &mut Vec<St
         for child in &shadow.elements {
             collect_element_links(child, urls);
         }
+    }
+}
+
+fn collect_compiled_video_track_srcs(attrs: &Value, urls: &mut Vec<String>) {
+    if attrs.get("source_role").and_then(|value| value.as_str()) != Some("video") {
+        return;
+    }
+    let Some(tracks) = attrs.get("tracks").and_then(|value| value.as_array()) else {
+        return;
+    };
+    for track in tracks {
+        let Some(src) = track.get("src").and_then(|value| value.as_str()) else {
+            continue;
+        };
+        let src = src.trim();
+        if src.is_empty() || src == "#" {
+            continue;
+        }
+        if !is_extract_links_structured_href(src) {
+            continue;
+        }
+        urls.push(src.to_string());
     }
 }
 
@@ -8626,6 +8649,130 @@ mod tests {
                     || url == "https://example.test/"
             }),
             "@id, image, nested author.url, Organization, ImageObject, sameAs, untyped url, application/json, and icons must not copy JSON-LD document extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_video_track_srcs() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/media/">
+<link rel="canonical" href="https://example.test/media/tour">
+<link rel="icon" href="/favicon.ico">
+<title>Tour</title>
+</head><body>
+<main>
+  <video id="tour" src="/tour.mp4" poster="/tour.jpg">
+    <track kind="captions" src="/tour.en.vtt" srclang="en" label="English">
+    <track kind="captions" src="captions/es.vtt" srclang="es" label="Español">
+    <track kind="captions" src="javascript:alert(1)" srclang="js" label="XSS">
+    <track kind="chapters" src="   " srclang="en">
+    <track kind="metadata">
+    <source src="/tour.webm" type="video/webm">
+  </video>
+  <video id="plain" src="/plain.mp4"></video>
+  <audio id="song" src="/song.mp3">
+    <track kind="captions" src="/song.en.vtt" srclang="en" label="Lyrics">
+  </audio>
+  <iframe id="embed" src="https://example.test/player"></iframe>
+  <a href="tour">Tour</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        let mut elements = Vec::new();
+        fn collect<'a>(
+            nodes: &'a [crate::som::types::Element],
+            out: &mut Vec<&'a crate::som::types::Element>,
+        ) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+        let tour = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("tour"))
+            .expect("compiler must keep captioned video");
+        assert_eq!(
+            tour.attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("source_role"))
+                .and_then(|value| value.as_str()),
+            Some("video"),
+            "compiler must keep video source_role for extract_links to recover: {tour:?}"
+        );
+        assert!(
+            tour.attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("tracks"))
+                .and_then(|tracks| tracks.as_array())
+                .is_some_and(|tracks| tracks.iter().any(|track| {
+                    track.get("src").and_then(|src| src.as_str()) == Some("/tour.en.vtt")
+                })),
+            "compiler must keep video text-track src for extract_links to recover: {tour:?}"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/tour.en.vtt".to_string()),
+            "compiled video text-track src must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/media/captions/es.vtt".to_string()),
+            "relative video text-track src must resolve against document base: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/media/tour".to_string()),
+            "canonical and in-page links must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/player".to_string()),
+            "iframe src must remain: {urls:?}"
+        );
+        assert!(
+            extract_links_definition()
+                .description
+                .contains("text-track"),
+            "agents must be told video text-track URLs are returned"
+        );
+
+        let blocked = crate::som::compiler::compile(
+            r##"<html><head><title>Blocked</title></head>
+<body><main>
+  <video id="xss" src="/tour.mp4">
+    <track kind="captions" src="javascript:alert(1)" srclang="en" label="XSS">
+  </video>
+</main></body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("blocked fixture HTML should compile");
+        let blocked_urls = collect_extract_link_urls(&blocked);
+        assert!(
+            !blocked_urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: video text-track src must not become a fetch target: {blocked_urls:?}"
+        );
+
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("tour.mp4")
+                    || url.contains("plain.mp4")
+                    || url.contains("tour.jpg")
+                    || url.contains("tour.webm")
+                    || url.contains("song.en.vtt")
+                    || url.contains("song.mp3")
+                    || url.contains("javascript:")
+                    || url.contains("favicon")
+            }),
+            "video src/poster, nested source, audio tracks, javascript:, and icons must not copy video text-track extract_links: {urls:?}"
         );
     }
 
