@@ -790,7 +790,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, and manifest), compiled Highwire citation_pdf_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, and compiled fediverse:creator:id actor URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, research PDF discovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, and manifest), compiled Highwire citation_pdf_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, and compiled JSON-LD document url values (WebPage/Article and subtypes). Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, research PDF discovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1433,6 +1433,7 @@ fn collect_extract_link_urls(som: &Som) -> Vec<String> {
     collect_structured_og_url(som, &mut urls);
     collect_structured_refresh_url(som, &mut urls);
     collect_structured_fediverse_creator_id(som, &mut urls);
+    collect_structured_json_ld_document_urls(som, &mut urls);
     let resolve_base = extract_links_resolve_base(som);
     for url in &mut urls {
         *url = resolve_extracted_link(&resolve_base, url);
@@ -1543,6 +1544,71 @@ fn collect_structured_fediverse_creator_id(som: &Som, urls: &mut Vec<String>) {
         return;
     }
     urls.push(href.to_string());
+}
+
+fn collect_structured_json_ld_document_urls(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    for block in &data.json_ld {
+        if let Some(href) = json_ld_document_url(block) {
+            urls.push(href.to_string());
+        }
+    }
+}
+
+fn json_ld_document_url(block: &Value) -> Option<&str> {
+    if !json_ld_type_is_document(block) {
+        return None;
+    }
+    let href = block.get("url").and_then(Value::as_str)?.trim();
+    if !is_extract_links_structured_href(href) {
+        return None;
+    }
+    Some(href)
+}
+
+fn json_ld_type_is_document(block: &Value) -> bool {
+    match block.get("@type") {
+        Some(Value::String(ty)) => is_json_ld_document_type(ty),
+        Some(Value::Array(types)) => types
+            .iter()
+            .filter_map(Value::as_str)
+            .any(is_json_ld_document_type),
+        _ => false,
+    }
+}
+
+fn is_json_ld_document_type(ty: &str) -> bool {
+    let ty = json_ld_type_name(ty);
+    matches!(
+        ty,
+        "WebPage"
+            | "ItemPage"
+            | "CollectionPage"
+            | "AboutPage"
+            | "ContactPage"
+            | "FAQPage"
+            | "QAPage"
+            | "ProfilePage"
+            | "SearchResultsPage"
+            | "Article"
+            | "NewsArticle"
+            | "BlogPosting"
+            | "ScholarlyArticle"
+            | "TechArticle"
+            | "Report"
+            | "SocialMediaPosting"
+            | "WebSite"
+    )
+}
+
+fn json_ld_type_name(ty: &str) -> &str {
+    let ty = ty.trim();
+    ty.rsplit(['/', '#'])
+        .next()
+        .filter(|name| !name.is_empty())
+        .unwrap_or(ty)
 }
 
 fn parse_http_equiv_refresh_url(content: &str) -> Option<&str> {
@@ -8355,6 +8421,112 @@ mod tests {
                     || url.contains("/users/plasmate")
             }),
             "handles, twitter:creator, property=, Dublin Core, superseded ids, and icons must not copy fediverse:creator:id extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_json_ld_document_urls() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/notes/">
+<link rel="canonical" href="https://example.test/notes/som">
+<meta property="og:url" content="https://example.test/og/som">
+<link rel="icon" href="/favicon.ico">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+  {"@type":"NewsArticle","url":"https://example.test/news/som","@id":"https://example.test/news/som#article","image":"https://example.test/news/som.png","author":{"@type":"Person","name":"Ada","url":"https://example.test/authors/ada"}},
+  {"@type":"Organization","url":"https://example.test/","logo":"https://example.test/logo.png","sameAs":["https://github.com/plasmate-labs"]},
+  {"@type":"ImageObject","url":"https://example.test/hero.jpg"}
+]}
+</script>
+<script type="application/ld+json">
+{"@type":["https://schema.org/BlogPosting"],"url":"https://example.test/blog/som"}
+</script>
+<script type="application/ld+json">
+{"@type":"WebPage","url":"page"}
+</script>
+<script type="application/ld+json">
+{"@type":"Article","url":"javascript:alert(1)"}
+</script>
+<script type="application/ld+json">
+{"@type":"WebPage","url":"   "}
+</script>
+<script type="application/ld+json">
+{"url":"https://example.test/untyped"}
+</script>
+<script type="application/json">
+{"@type":"WebPage","url":"https://example.test/not-jsonld"}
+</script>
+<title>Note</title>
+</head><body>
+<main>
+  <a href="som">SOM</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        let json_ld = som
+            .structured_data
+            .as_ref()
+            .map(|data| data.json_ld.as_slice())
+            .unwrap_or(&[]);
+        assert!(
+            json_ld.iter().any(|block| {
+                block.get("@type").and_then(Value::as_str) == Some("NewsArticle")
+                    && block.get("url").and_then(Value::as_str)
+                        == Some("https://example.test/news/som")
+            }),
+            "compiler must keep JSON-LD NewsArticle url for extract_links to recover: {json_ld:?}"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/news/som".to_string()),
+            "compiled NewsArticle url must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/blog/som".to_string()),
+            "schema.org BlogPosting url must canonicalize into extract_links: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/notes/page".to_string()),
+            "relative WebPage url must resolve against document base: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/notes/som".to_string()),
+            "canonical must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/og/som".to_string()),
+            "og:url must remain: {urls:?}"
+        );
+
+        assert!(
+            extract_links_definition().description.contains("JSON-LD"),
+            "agents must be told JSON-LD document URLs are returned"
+        );
+
+        assert!(
+            !urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: JSON-LD url must not become a fetch target: {urls:?}"
+        );
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("news/som#article")
+                    || url.contains("news/som.png")
+                    || url.contains("/authors/ada")
+                    || url.contains("logo.png")
+                    || url.contains("github.com")
+                    || url.contains("hero.jpg")
+                    || url.contains("untyped")
+                    || url.contains("not-jsonld")
+                    || url.contains("favicon")
+                    || url == "https://example.test/"
+            }),
+            "@id, image, nested author.url, Organization, ImageObject, sameAs, untyped url, application/json, and icons must not copy JSON-LD document extract_links: {urls:?}"
         );
     }
 
