@@ -1679,7 +1679,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "ul" | "ol" | "dl" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
         "p" | "time" | "blockquote" | "figcaption" | "pre" | "abbr" | "address" | "cite"
-        | "dfn" | "code" | "math" | "ruby" | "small" => Some(ElementRole::Paragraph),
+        | "dfn" | "code" | "math" | "ruby" | "small" | "kbd" => Some(ElementRole::Paragraph),
         "section" | "article" => Some(ElementRole::Section),
         "fieldset" => Some(ElementRole::Group),
         "hr" => Some(ElementRole::Separator),
@@ -7432,13 +7432,11 @@ plasmate fetch https://example.test</code></pre>
             }),
             "mark must not copy code mapping: {elements:?}"
         );
-        assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("shortcut")
-                    || element.role != ElementRole::Paragraph
-            }),
-            "kbd must not copy code mapping: {elements:?}"
-        );
+        let shortcut = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("shortcut"))
+            .expect("kbd should remain a paragraph");
+        assert_eq!(shortcut.role, ElementRole::Paragraph);
         assert!(
             elements.iter().all(|element| {
                 element.html_id.as_deref() != Some("output")
@@ -7863,13 +7861,11 @@ plasmate fetch https://example.test</code></pre>
             }),
             "mark must not copy ruby mapping: {elements:?}"
         );
-        assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("shortcut")
-                    || element.role != ElementRole::Paragraph
-            }),
-            "kbd must not copy ruby mapping: {elements:?}"
-        );
+        let shortcut = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("shortcut"))
+            .expect("kbd should remain a paragraph");
+        assert_eq!(shortcut.role, ElementRole::Paragraph);
         assert!(
             elements.iter().all(|element| {
                 element.html_id.as_deref() != Some("quote")
@@ -7997,13 +7993,11 @@ plasmate fetch https://example.test</code></pre>
             }),
             "mark must not copy small mapping: {elements:?}"
         );
-        assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("shortcut")
-                    || element.role != ElementRole::Paragraph
-            }),
-            "kbd must not copy small mapping: {elements:?}"
-        );
+        let shortcut = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("shortcut"))
+            .expect("kbd should remain a paragraph");
+        assert_eq!(shortcut.role, ElementRole::Paragraph);
         assert!(
             elements.iter().all(|element| {
                 element.html_id.as_deref() != Some("output")
@@ -8042,6 +8036,139 @@ plasmate fetch https://example.test</code></pre>
             filtered_elements
                 .iter()
                 .all(|element| element.html_id.as_deref() != Some("accept")),
+            "selector=paragraph should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn kbd_compiles_as_paragraph() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Shortcuts</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <kbd id="shortcut">Ctrl+C</kbd>
+  <kbd id="linked"><a href="https://example.test/shortcuts">Ctrl+K</a></kbd>
+  <kbd id="blank">   </kbd>
+  <small id="legal">Copyright 2026 Plasmate Labs</small>
+  <code id="api">fetch_page</code>
+  <mark id="hit">Not a shortcut</mark>
+  <samp id="output">ok</samp>
+  <em id="stress">Not a shortcut</em>
+  <button id="copy">Copy</button>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/shortcuts").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let shortcut = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("shortcut"))
+            .expect("native kbd should compile");
+        assert_eq!(shortcut.role, ElementRole::Paragraph);
+        assert_eq!(shortcut.text.as_deref(), Some("Ctrl+C"));
+        assert!(
+            shortcut
+                .actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "kbd must not invent actions: {shortcut:?}"
+        );
+
+        let linked = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("linked"))
+            .expect("kbd with a nested link should still compile");
+        assert_eq!(linked.role, ElementRole::Paragraph);
+        assert_eq!(linked.text.as_deref(), Some("Ctrl+K"));
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Link
+                    && element.attrs.as_ref().and_then(|attrs| attrs.get("href"))
+                        == Some(&json!("https://example.test/shortcuts"))
+            }),
+            "kbd must keep nested links: {elements:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("blank")
+                    || (element.role == ElementRole::Paragraph
+                        && element.text.as_deref().is_none_or(|text| text.is_empty()))
+            }),
+            "whitespace-only kbd must not invent text: {elements:?}"
+        );
+
+        let legal = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("legal"))
+            .expect("small should remain a paragraph");
+        assert_eq!(legal.role, ElementRole::Paragraph);
+
+        let api = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("api"))
+            .expect("code should remain a paragraph");
+        assert_eq!(api.role, ElementRole::Paragraph);
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Paragraph
+            }),
+            "mark must not copy kbd mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("output")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "samp must not copy kbd mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("stress")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "em must not copy kbd mapping: {elements:?}"
+        );
+
+        let copy = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("copy"))
+            .expect("copy button should compile");
+        assert_eq!(copy.role, ElementRole::Button);
+
+        let filtered = crate::som::filter::apply_selector(&som, "paragraph");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("shortcut")
+                    && element.role == ElementRole::Paragraph
+            }),
+            "selector=paragraph should keep compiled kbd: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("copy")),
             "selector=paragraph should drop buttons: {filtered_elements:?}"
         );
     }
