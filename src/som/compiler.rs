@@ -1641,6 +1641,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                     "img" => return Some(ElementRole::Image),
                     "heading" => return Some(ElementRole::Heading),
                     "article" => return Some(ElementRole::Section),
+                    "list" => return Some(ElementRole::List),
                     "separator" => return Some(ElementRole::Separator),
                     "alert" | "status" => return Some(ElementRole::Paragraph),
                     "tooltip" => return Some(ElementRole::Paragraph),
@@ -1860,6 +1861,19 @@ fn resolve_description(attrs: &[(String, String)], label_index: &LabelIndex) -> 
 
 fn has_attr(attrs: &[(String, String)], name: &str) -> bool {
     attrs.iter().any(|(n, _)| n == name)
+}
+
+fn has_aria_role_token(attrs: &[(String, String)], role: &str) -> bool {
+    attrs.iter().any(|(name, value)| {
+        name == "role"
+            && value
+                .split_whitespace()
+                .any(|token| token.eq_ignore_ascii_case(role))
+    })
+}
+
+fn is_aria_list_host(tag: &str, attrs: &[(String, String)]) -> bool {
+    !matches!(tag, "ul" | "ol" | "dl") && has_aria_role_token(attrs, "list")
 }
 
 fn is_enabled_contenteditable(attrs: &[(String, String)]) -> bool {
@@ -2370,6 +2384,14 @@ fn build_element_attrs(
             }
         }
         _ => {}
+    }
+
+    if is_aria_list_host(tag, attrs) {
+        let items =
+            extract_aria_list_items_with_limit(node, ctx.config.max_list_items, &ctx.css_rules);
+        if !items.is_empty() {
+            map.insert("items".into(), json!(items));
+        }
     }
 
     if !map.contains_key("level") {
@@ -3013,6 +3035,49 @@ fn extract_list_items_with_limit(
     }
 
     // Add summary if items were truncated
+    if total_count > max_items {
+        let remaining = total_count - max_items;
+        let mut summary = serde_json::Map::new();
+        summary.insert("text".into(), json!(format!("[{} more items]", remaining)));
+        items.push(serde_json::Value::Object(summary));
+    }
+
+    items
+}
+
+fn extract_aria_list_items_with_limit(
+    node: &Handle,
+    max_items: usize,
+    css_rules: &VisibilityRules,
+) -> Vec<serde_json::Value> {
+    let mut items = Vec::new();
+    let mut total_count = 0;
+    let children = node.children.borrow();
+
+    for child in children.iter() {
+        if heuristics::should_strip(child) || is_css_hidden_element(child, css_rules) {
+            continue;
+        }
+        let NodeData::Element { name, .. } = &child.data else {
+            continue;
+        };
+        let child_attrs = get_attr_pairs(child);
+        let is_item = name.local.as_ref() == "li" || has_aria_role_token(&child_attrs, "listitem");
+        if !is_item {
+            continue;
+        }
+        let text = get_visible_text_content(child, css_rules);
+        if text.trim().is_empty() {
+            continue;
+        }
+        total_count += 1;
+        if items.len() < max_items {
+            let mut item = serde_json::Map::new();
+            item.insert("text".into(), json!(heuristics::normalize_text(&text)));
+            items.push(serde_json::Value::Object(item));
+        }
+    }
+
     if total_count > max_items {
         let remaining = total_count - max_items;
         let mut summary = serde_json::Map::new();
@@ -9388,6 +9453,147 @@ plasmate fetch https://example.test</code></pre>
             image_submit.label.as_deref(),
             Some("Go"),
             "input type=image must keep its own alt: {image_submit:?}"
+        );
+    }
+
+    #[test]
+    fn aria_role_list_compiles_listitem_children() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Results</title></head>
+<body>
+<main>
+  <div id="results" role="list" aria-label="Matches">
+    <div id="hit1" role="listitem">Alpha</div>
+    <div id="hit2" role="listitem">  Beta  </div>
+    <div id="skip">Not an item</div>
+    <div id="empty" role="listitem">   </div>
+  </div>
+  <ul id="native"><li>Gamma</li></ul>
+  <div id="box" role="listbox"><div role="option">Delta</div></div>
+  <div id="group" role="group"><div role="listitem">Epsilon</div></div>
+  <div id="feed" role="feed"><div role="listitem">Zeta</div></div>
+  <button id="share">Share</button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/results").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let results = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("results"))
+            .expect("ARIA role=list should compile");
+        assert_eq!(results.role, ElementRole::List);
+        assert!(
+            results
+                .actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "ARIA list must not invent actions: {results:?}"
+        );
+        let items = results
+            .attrs
+            .as_ref()
+            .and_then(|attrs| attrs.get("items"))
+            .and_then(|value| value.as_array())
+            .expect("ARIA list should keep listitem text");
+        assert_eq!(
+            items
+                .iter()
+                .filter_map(|item| item.get("text").and_then(|value| value.as_str()))
+                .collect::<Vec<_>>(),
+            vec!["Alpha", "Beta"]
+        );
+        assert!(
+            results
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("ordered").is_none()
+                    && attrs.get("start").is_none()
+                    && attrs.get("reversed").is_none()
+                    && attrs.get("term").is_none()),
+            "ARIA list must not invent ol/dl attrs: {results:?}"
+        );
+
+        let native = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("native"))
+            .expect("native ul should still compile");
+        assert_eq!(native.role, ElementRole::List);
+        assert_eq!(
+            native
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("items"))
+                .and_then(|value| value.as_array())
+                .and_then(|items| items.first())
+                .and_then(|item| item.get("text"))
+                .and_then(|value| value.as_str()),
+            Some("Gamma")
+        );
+
+        let box_el = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("box"))
+            .expect("listbox should still compile");
+        assert_eq!(box_el.role, ElementRole::Select);
+        assert!(
+            box_el
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("items").is_none()),
+            "listbox must not copy ARIA list mapping: {box_el:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("group") || element.role != ElementRole::List
+            }),
+            "role=group must not copy list mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("feed") || element.role != ElementRole::List
+            }),
+            "role=feed must not copy list mapping: {elements:?}"
+        );
+        assert!(
+            elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("skip")
+                    || element.role != ElementRole::List),
+            "unlabelled div must not copy list mapping: {elements:?}"
+        );
+
+        let filtered = crate::som::filter::apply_selector(&som, "list");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("results") && element.role == ElementRole::List
+            }),
+            "selector=list should keep compiled ARIA lists: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("share")),
+            "selector=list should drop buttons: {filtered_elements:?}"
         );
     }
 }
