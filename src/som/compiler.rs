@@ -7825,6 +7825,117 @@ plasmate fetch https://example.test</code></pre>
     }
 
     #[test]
+    fn svg_role_img_labelledby_compiles_as_image() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Brand</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <p id="brand">  Plasmate  </p>
+  <svg id="logo" role="img" aria-labelledby="brand"><circle cx="4" cy="4" r="3"></circle></svg>
+  <svg id="empty" role="img" aria-labelledby="   "><rect width="8" height="8"></rect></svg>
+  <svg id="decorative" aria-labelledby="brand"><path d="M0 0"></path></svg>
+  <object id="chart" aria-labelledby="brand"><param name="src" value="/q3.svg"></object>
+  <embed id="flash" aria-labelledby="brand" src="/ad.swf">
+  <img id="photo" src="/hero.png" alt="Hero">
+  <button id="copy">Copy</button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/labelledby-brand").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let logo = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("logo"))
+            .expect("role=img svg with aria-labelledby should compile");
+        assert_eq!(logo.role, ElementRole::Image);
+        assert!(
+            logo.text.as_ref().is_none_or(|text| text.is_empty()),
+            "labelledby svg must not invent visible text from the referenced node: {logo:?}"
+        );
+        assert_eq!(
+            logo.label.as_deref(),
+            Some("Plasmate"),
+            "role=img svg must use aria-labelledby as accessible name: {logo:?}"
+        );
+        assert!(
+            logo.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("src").is_none() && attrs.get("alt").is_none()),
+            "svg must not invent src or alt from labelledby: {logo:?}"
+        );
+        assert!(
+            logo.actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "named svg must not invent actions: {logo:?}"
+        );
+
+        assert!(
+            elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("empty")),
+            "whitespace-only aria-labelledby must not keep svg: {elements:?}"
+        );
+        assert!(
+            elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("decorative")),
+            "labelledby without role=img must stay stripped: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("chart") || element.role != ElementRole::Image
+            }),
+            "object must not copy svg labelledby mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("flash") || element.role != ElementRole::Image
+            }),
+            "embed must not copy svg labelledby mapping: {elements:?}"
+        );
+
+        let photo = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("photo"))
+            .expect("native img should remain");
+        assert_eq!(photo.role, ElementRole::Image);
+
+        let filtered = crate::som::filter::apply_selector(&som, "image");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("logo") && element.role == ElementRole::Image
+            }),
+            "selector=image should keep labelledby svg: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("copy")),
+            "selector=image should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
     fn ruby_compiles_as_paragraph() {
         let html = r#"<!DOCTYPE html>
 <html><head><title>Glossary</title></head>

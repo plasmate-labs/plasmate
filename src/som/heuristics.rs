@@ -95,7 +95,7 @@ pub fn should_strip(node: &Handle) -> bool {
             }
             // Strip SVGs unless role=img with accessible name
             if tag == "svg" {
-                let (has_role_img, has_attr_name) = {
+                let (has_role_img, has_attr_name, has_labelledby) = {
                     let attrs = attrs.borrow();
                     let has_role_img = attrs
                         .iter()
@@ -103,9 +103,14 @@ pub fn should_strip(node: &Handle) -> bool {
                     let has_attr_name = attrs.iter().any(|a| {
                         a.name.local.as_ref() == "aria-label" || a.name.local.as_ref() == "title"
                     });
-                    (has_role_img, has_attr_name)
+                    let has_labelledby = attrs.iter().any(|a| {
+                        a.name.local.as_ref() == "aria-labelledby"
+                            && a.value.split_whitespace().any(|id| !id.is_empty())
+                    });
+                    (has_role_img, has_attr_name, has_labelledby)
                 };
-                let has_name = has_attr_name || svg_title_child_accessible_name(node);
+                let has_name =
+                    has_attr_name || has_labelledby || svg_title_child_accessible_name(node);
                 return !(has_role_img && has_name);
             }
             // Check for hidden elements
