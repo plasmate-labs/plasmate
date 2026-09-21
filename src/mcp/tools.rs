@@ -804,7 +804,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, and manifest), compiled Highwire citation_pdf_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), and compiled video text-track src values (captions, subtitles, chapters). Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, research PDF discovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, caption/subtitle track recovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, and manifest), compiled Highwire citation_pdf_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, research PDF discovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1691,6 +1691,7 @@ fn collect_element_links(element: &crate::som::types::Element, urls: &mut Vec<St
             push_attr_url(attrs, "src", urls);
         }
         collect_compiled_video_track_srcs(attrs, urls);
+        collect_compiled_blockquote_cite(attrs, urls);
     }
     if let Some(ref children) = element.children {
         for child in children {
@@ -1702,6 +1703,20 @@ fn collect_element_links(element: &crate::som::types::Element, urls: &mut Vec<St
             collect_element_links(child, urls);
         }
     }
+}
+
+fn collect_compiled_blockquote_cite(attrs: &Value, urls: &mut Vec<String>) {
+    let Some(cite) = attrs.get("cite").and_then(|value| value.as_str()) else {
+        return;
+    };
+    let cite = cite.trim();
+    if cite.is_empty() || cite == "#" {
+        return;
+    }
+    if !is_extract_links_structured_href(cite) {
+        return;
+    }
+    urls.push(cite.to_string());
 }
 
 fn collect_compiled_video_track_srcs(attrs: &Value, urls: &mut Vec<String>) {
@@ -8773,6 +8788,117 @@ mod tests {
                     || url.contains("favicon")
             }),
             "video src/poster, nested source, audio tracks, javascript:, and icons must not copy video text-track extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_blockquote_cite() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/quotes/">
+<link rel="canonical" href="https://example.test/quotes/som">
+<link rel="icon" href="/favicon.ico">
+<title>Quotes</title>
+</head><body>
+<main>
+  <blockquote id="speech" cite="https://example.test/speech">Quoted speech</blockquote>
+  <blockquote id="relative" cite="sources/rfc">Relative cite</blockquote>
+  <blockquote id="xss" cite="javascript:alert(1)">XSS cite</blockquote>
+  <blockquote id="empty" cite="   ">Empty cite</blockquote>
+  <blockquote id="hash" cite="#">Hash cite</blockquote>
+  <blockquote id="plain">No cite</blockquote>
+  <q id="inline" cite="https://example.test/aside">Quoted aside</q>
+  <ins id="insert" cite="https://example.test/ins">Inserted</ins>
+  <del id="delete" cite="https://example.test/del">Deleted</del>
+  <cite id="label">https://example.test/nested-cite</cite>
+  <iframe id="embed" src="https://example.test/player"></iframe>
+  <a href="som">SOM</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        let mut elements = Vec::new();
+        fn collect<'a>(
+            nodes: &'a [crate::som::types::Element],
+            out: &mut Vec<&'a crate::som::types::Element>,
+        ) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+        let speech = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("speech"))
+            .expect("compiler must keep cited blockquote");
+        assert_eq!(speech.role, crate::som::types::ElementRole::Paragraph);
+        assert_eq!(
+            speech
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("cite"))
+                .and_then(|value| value.as_str()),
+            Some("https://example.test/speech"),
+            "compiler must keep blockquote cite for extract_links to recover: {speech:?}"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/speech".to_string()),
+            "compiled blockquote cite must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/quotes/sources/rfc".to_string()),
+            "relative blockquote cite must resolve against document base: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/quotes/som".to_string()),
+            "canonical and in-page links must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/player".to_string()),
+            "iframe src must remain: {urls:?}"
+        );
+        assert!(
+            extract_links_definition()
+                .description
+                .contains("blockquote cite"),
+            "agents must be told blockquote cite URLs are returned"
+        );
+
+        let blocked = crate::som::compiler::compile(
+            r##"<html><head><title>Blocked</title></head>
+<body><main>
+  <blockquote id="xss" cite="javascript:alert(1)">XSS cite</blockquote>
+</main></body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("blocked fixture HTML should compile");
+        let blocked_urls = collect_extract_link_urls(&blocked);
+        assert!(
+            !blocked_urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: blockquote cite must not become a fetch target: {blocked_urls:?}"
+        );
+
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("aside")
+                    || url.contains("/ins")
+                    || url.contains("/del")
+                    || url.contains("nested-cite")
+                    || url.contains("javascript:")
+                    || url.contains("favicon")
+                    || url == "#"
+            }),
+            "q/ins/del cite, nested cite text, javascript:, hash, and icons must not copy blockquote cite extract_links: {urls:?}"
         );
     }
 
