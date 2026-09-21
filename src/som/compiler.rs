@@ -1756,6 +1756,11 @@ fn resolve_label(
                 return Some(alt);
             }
         }
+        if let Some(title) = first_descendant_svg_title(node, css_rules) {
+            if text.as_deref() != Some(title.as_str()) {
+                return Some(title);
+            }
+        }
     }
     if let Some(title) = attrs.iter().find(|(n, _)| n == "title") {
         if !title.1.is_empty() {
@@ -2792,6 +2797,53 @@ fn first_descendant_img_attr(
             if let Some(found) = first_descendant_img_attr(child, attr_name, css_rules) {
                 return Some(found);
             }
+        }
+    }
+    None
+}
+
+fn first_descendant_svg_title(node: &Handle, css_rules: &VisibilityRules) -> Option<String> {
+    for child in node.children.borrow().iter() {
+        if is_css_hidden_element(child, css_rules) {
+            continue;
+        }
+        let NodeData::Element { name, .. } = &child.data else {
+            continue;
+        };
+        let tag = name.local.as_ref();
+        let child_attrs = get_attr_pairs(child);
+        if child_attrs
+            .iter()
+            .any(|(n, v)| n == "aria-hidden" && v.eq_ignore_ascii_case("true"))
+        {
+            continue;
+        }
+        if child_attrs
+            .iter()
+            .any(|(n, v)| n == "hidden" && !v.trim().eq_ignore_ascii_case("until-found"))
+        {
+            continue;
+        }
+        if tag == "svg" {
+            for grandchild in child.children.borrow().iter() {
+                if let NodeData::Element { name, .. } = &grandchild.data {
+                    if name.local.as_ref() == "title" {
+                        let title = heuristics::normalize_text(&get_visible_text_content(
+                            grandchild, css_rules,
+                        ));
+                        if !title.is_empty() {
+                            return Some(title);
+                        }
+                    }
+                }
+            }
+            continue;
+        }
+        if heuristics::should_strip(child) {
+            continue;
+        }
+        if let Some(found) = first_descendant_svg_title(child, css_rules) {
+            return Some(found);
         }
     }
     None
@@ -8522,6 +8574,157 @@ plasmate fetch https://example.test</code></pre>
             caption.label.as_deref(),
             Some("Q3 revenue"),
             "paragraph must not copy descendant img alt onto label: {caption:?}"
+        );
+
+        let image_submit = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("image-submit"))
+            .expect("input type=image should compile");
+        assert_eq!(image_submit.role, ElementRole::Button);
+        assert_eq!(
+            image_submit.label.as_deref(),
+            Some("Go"),
+            "input type=image must keep its own alt: {image_submit:?}"
+        );
+    }
+
+    #[test]
+    fn icon_button_and_link_use_descendant_svg_title() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Toolbar</title></head>
+<body>
+<nav>
+  <a id="home" href="/"><svg viewBox="0 0 8 8"><title>  Home  </title><circle cx="4" cy="4" r="3"></circle></svg></a>
+  <a id="titled" href="/help" title="Tooltip"><svg viewBox="0 0 8 8"><title>Help</title><path d="M0 0"></path></svg></a>
+</nav>
+<main>
+  <button id="close"><svg viewBox="0 0 8 8"><title>Close</title><path d="M0 0"></path></svg></button>
+  <button id="save">Save <svg viewBox="0 0 8 8"><title>disk</title><path d="M0 0"></path></svg></button>
+  <button id="aria" aria-label="Dismiss"><svg viewBox="0 0 8 8"><title>Close</title><path d="M0 0"></path></svg></button>
+  <button id="empty"><svg viewBox="0 0 8 8"><title>   </title><path d="M0 0"></path></svg></button>
+  <button id="hidden"><svg aria-hidden="true" viewBox="0 0 8 8"><title>Hidden</title><path d="M0 0"></path></svg></button>
+  <button id="img-alt"><img src="/x.png" alt="From image"><svg viewBox="0 0 8 8"><title>From svg</title><path d="M0 0"></path></svg></button>
+  <p id="caption">See <svg role="img"><title>Q3 revenue</title><circle cx="1" cy="1" r="1"></circle></svg> in EMEA.</p>
+  <input id="image-submit" type="image" src="/go.png" alt="Go">
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/svg-toolbar").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let close = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("close"))
+            .expect("icon button should compile");
+        assert_eq!(close.role, ElementRole::Button);
+        assert!(
+            close.text.as_ref().is_none_or(|text| text.is_empty()),
+            "icon button must not invent visible text from svg title: {close:?}"
+        );
+        assert_eq!(
+            close.label.as_deref(),
+            Some("Close"),
+            "icon button must use descendant svg title as accessible name: {close:?}"
+        );
+        assert!(
+            close
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("title").is_none()),
+            "button must not copy svg title onto attrs.title: {close:?}"
+        );
+
+        let home = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("home"))
+            .expect("icon link should compile");
+        assert_eq!(home.role, ElementRole::Link);
+        assert_eq!(
+            home.label.as_deref(),
+            Some("Home"),
+            "icon link must use trimmed descendant svg title: {home:?}"
+        );
+
+        let titled = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("titled"))
+            .expect("titled icon link should compile");
+        assert_eq!(
+            titled.label.as_deref(),
+            Some("Help"),
+            "descendant svg title must win over title tooltip: {titled:?}"
+        );
+
+        let save = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("save"))
+            .expect("labelled button should compile");
+        assert_eq!(save.text.as_deref(), Some("Save"));
+        assert_ne!(
+            save.label.as_deref(),
+            Some("disk"),
+            "visible button text must not be replaced by nested svg title: {save:?}"
+        );
+
+        let aria = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("aria"))
+            .expect("aria-label button should compile");
+        assert_eq!(
+            aria.label.as_deref(),
+            Some("Dismiss"),
+            "aria-label must remain preferred over descendant svg title: {aria:?}"
+        );
+
+        let empty = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("empty"))
+            .expect("whitespace-title button should compile");
+        assert!(
+            empty.label.is_none(),
+            "whitespace svg title must not become a name: {empty:?}"
+        );
+
+        let hidden = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("hidden"))
+            .expect("aria-hidden svg button should compile");
+        assert!(
+            hidden.label.is_none(),
+            "aria-hidden svg title must not become a name: {hidden:?}"
+        );
+
+        let img_alt = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("img-alt"))
+            .expect("img+svg button should compile");
+        assert_eq!(
+            img_alt.label.as_deref(),
+            Some("From image"),
+            "descendant img alt must remain preferred over svg title: {img_alt:?}"
+        );
+
+        let caption = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("caption"))
+            .expect("paragraph with nested svg should compile");
+        assert_eq!(caption.role, ElementRole::Paragraph);
+        assert_ne!(
+            caption.label.as_deref(),
+            Some("Q3 revenue"),
+            "paragraph must not copy descendant svg title onto label: {caption:?}"
         );
 
         let image_submit = elements
