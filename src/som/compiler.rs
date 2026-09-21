@@ -1327,7 +1327,14 @@ fn interactive_node_to_element(
         } else {
             Some(heuristics::normalize_text(&text_content))
         };
-        let label = resolve_label(tag, &attr_pairs, &text, &ctx.label_index, node);
+        let label = resolve_label(
+            tag,
+            &attr_pairs,
+            &text,
+            &ctx.label_index,
+            node,
+            &ctx.css_rules,
+        );
         let accessible_name = label.as_deref().or(text.as_deref()).unwrap_or("");
         let raw_id = generate_element_id(origin, role.as_str(), accessible_name, dom_path);
         let id = id_tracker.register(raw_id);
@@ -1426,14 +1433,21 @@ fn node_to_element(
                 text = None;
             }
 
-            let label =
-                resolve_label(tag, &attr_pairs, &text, &ctx.label_index, node).or_else(|| {
-                    if tag == "fieldset" {
-                        extract_legend_text(node, &ctx.css_rules)
-                    } else {
-                        None
-                    }
-                });
+            let label = resolve_label(
+                tag,
+                &attr_pairs,
+                &text,
+                &ctx.label_index,
+                node,
+                &ctx.css_rules,
+            )
+            .or_else(|| {
+                if tag == "fieldset" {
+                    extract_legend_text(node, &ctx.css_rules)
+                } else {
+                    None
+                }
+            });
             let accessible_name = label.as_deref().or(text.as_deref()).unwrap_or("");
             let raw_id = generate_element_id(origin, role.as_str(), accessible_name, dom_path);
             let id = id_tracker.register(raw_id);
@@ -1696,6 +1710,7 @@ fn resolve_label(
     text: &Option<String>,
     label_index: &LabelIndex,
     node: &Handle,
+    css_rules: &VisibilityRules,
 ) -> Option<String> {
     if let Some((_, ids)) = attrs.iter().find(|(n, _)| n == "aria-labelledby") {
         let label = ids
@@ -1730,6 +1745,16 @@ fn resolve_label(
     if let Some(label) = label_index.by_node.get(&(Rc::as_ptr(node) as usize)) {
         if text.as_deref() != Some(label.as_str()) {
             return Some(label.clone());
+        }
+    }
+    if text.as_ref().is_none_or(|value| value.is_empty()) && matches!(tag, "button" | "a") {
+        if let Some(alt) = first_descendant_img_attr(node, "alt", css_rules)
+            .map(|alt| heuristics::normalize_text(&alt))
+            .filter(|alt| !alt.is_empty())
+        {
+            if text.as_deref() != Some(alt.as_str()) {
+                return Some(alt);
+            }
         }
     }
     if let Some(title) = attrs.iter().find(|(n, _)| n == "title") {
@@ -8368,6 +8393,146 @@ plasmate fetch https://example.test</code></pre>
             meta.get("refresh").map(String::as_str),
             Some("0;url=https://example.test/named"),
             "name= refresh must not copy http-equiv mapping: {meta:?}"
+        );
+    }
+
+    #[test]
+    fn icon_button_and_link_use_descendant_img_alt() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Toolbar</title></head>
+<body>
+<nav>
+  <a id="home" href="/"><img src="/home.png" alt="  Home  "></a>
+  <a id="titled" href="/help" title="Tooltip"><img src="/help.png" alt="Help"></a>
+</nav>
+<main>
+  <button id="close"><img src="/x.png" alt="Close"></button>
+  <button id="save">Save <img src="/disk.png" alt="disk"></button>
+  <button id="aria" aria-label="Dismiss"><img src="/x.png" alt="Close"></button>
+  <button id="empty"><img src="/spacer.png" alt="   "></button>
+  <button id="presentational"><img src="/icon.png" alt=""></button>
+  <p id="caption">See <img src="/q3.png" alt="Q3 revenue"> in EMEA.</p>
+  <input id="image-submit" type="image" src="/go.png" alt="Go">
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/toolbar").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let close = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("close"))
+            .expect("icon button should compile");
+        assert_eq!(close.role, ElementRole::Button);
+        assert!(
+            close.text.as_ref().is_none_or(|text| text.is_empty()),
+            "icon button must not invent visible text from img alt: {close:?}"
+        );
+        assert_eq!(
+            close.label.as_deref(),
+            Some("Close"),
+            "icon button must use descendant img alt as accessible name: {close:?}"
+        );
+        assert!(
+            close
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("alt").is_none()),
+            "button must not copy img alt onto attrs.alt: {close:?}"
+        );
+
+        let home = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("home"))
+            .expect("icon link should compile");
+        assert_eq!(home.role, ElementRole::Link);
+        assert_eq!(
+            home.label.as_deref(),
+            Some("Home"),
+            "icon link must use trimmed descendant img alt: {home:?}"
+        );
+
+        let titled = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("titled"))
+            .expect("titled icon link should compile");
+        assert_eq!(
+            titled.label.as_deref(),
+            Some("Help"),
+            "descendant img alt must win over title tooltip: {titled:?}"
+        );
+
+        let save = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("save"))
+            .expect("labelled button should compile");
+        assert_eq!(save.text.as_deref(), Some("Save"));
+        assert_ne!(
+            save.label.as_deref(),
+            Some("disk"),
+            "visible button text must not be replaced by nested img alt: {save:?}"
+        );
+
+        let aria = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("aria"))
+            .expect("aria-label button should compile");
+        assert_eq!(
+            aria.label.as_deref(),
+            Some("Dismiss"),
+            "aria-label must remain preferred over descendant img alt: {aria:?}"
+        );
+
+        let empty = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("empty"))
+            .expect("whitespace-alt button should compile");
+        assert!(
+            empty.label.is_none(),
+            "whitespace img alt must not become a name: {empty:?}"
+        );
+
+        let presentational = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("presentational"))
+            .expect("empty-alt button should compile");
+        assert!(
+            presentational.label.is_none(),
+            "empty img alt must not invent a name: {presentational:?}"
+        );
+
+        let caption = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("caption"))
+            .expect("paragraph with nested img should compile");
+        assert_eq!(caption.role, ElementRole::Paragraph);
+        assert_ne!(
+            caption.label.as_deref(),
+            Some("Q3 revenue"),
+            "paragraph must not copy descendant img alt onto label: {caption:?}"
+        );
+
+        let image_submit = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("image-submit"))
+            .expect("input type=image should compile");
+        assert_eq!(image_submit.role, ElementRole::Button);
+        assert_eq!(
+            image_submit.label.as_deref(),
+            Some("Go"),
+            "input type=image must keep its own alt: {image_submit:?}"
         );
     }
 }
