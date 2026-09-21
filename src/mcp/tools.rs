@@ -804,7 +804,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, and manifest), compiled Highwire citation_pdf_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, research PDF discovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1495,6 +1495,7 @@ fn is_extract_links_document_rel(rel: &str) -> bool {
             | "hub"
             | "contents"
             | "up"
+            | "describedby"
             | "manifest"
     )
 }
@@ -8327,6 +8328,105 @@ mod tests {
                     || url.contains("/docs/subsection")
             }),
             "micropub, tag, prefetch, multi-token rels, icons, first/last/start/top/index, and other documentation rels must not copy up extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_describedby_head_links() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/docs/som/">
+<link rel="canonical" href="https://example.test/docs/som/compiler">
+<link rel="describedby" href="https://example.test/docs/som/compiler.rdf">
+<link rel="DescribedBy" href="https://example.test/docs/som/compiler.jsonld">
+<link rel="contents" href="https://example.test/docs/contents">
+<link rel="up" href="https://example.test/docs/som">
+<link rel="help" href="https://example.test/docs/help">
+<link rel="describes" href="https://example.test/docs/describes">
+<link rel="describedat" href="https://example.test/docs/describedat">
+<link rel="longdesc" href="https://example.test/docs/longdesc">
+<link rel="glossary" href="https://example.test/docs/glossary">
+<link rel="first" href="https://example.test/docs/start">
+<link rel="last" href="https://example.test/docs/end">
+<link rel="index" href="https://example.test/docs/index">
+<link rel="micropub" href="https://example.test/micropub">
+<link rel="tag" href="https://example.test/tags/som">
+<link rel="prefetch" href="https://example.test/prefetch">
+<link rel="describedby prefetch" href="https://example.test/mixed-describedby">
+<link rel="icon" href="/favicon.ico">
+<title>Compiler</title>
+</head><body>
+<main>
+  <a href="compiler">Compiler</a>
+  <a rel="describedby" href="https://example.test/body-describedby">Body describedby</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        assert!(
+            som.structured_data
+                .as_ref()
+                .map(|data| {
+                    data.links.iter().any(|link| {
+                        link.rel == "describedby"
+                            && link.href == "https://example.test/docs/som/compiler.rdf"
+                    })
+                })
+                .unwrap_or(false),
+            "compiler must keep describedby for extract_links to recover"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/docs/som/compiler.rdf".to_string()),
+            "rel=describedby must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/docs/som/compiler.jsonld".to_string()),
+            "rel=DescribedBy must canonicalize into extract_links: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/docs/contents".to_string()),
+            "contents must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/docs/som".to_string()),
+            "up must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/docs/help".to_string()),
+            "help must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/docs/som/compiler".to_string()),
+            "canonical must remain: {urls:?}"
+        );
+        assert!(
+            extract_links_definition()
+                .description
+                .contains("describedby"),
+            "agents must be told describedby URLs are returned"
+        );
+
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("micropub")
+                    || url.contains("/tags/som")
+                    || url.contains("prefetch")
+                    || url.contains("mixed-describedby")
+                    || url.contains("favicon")
+                    || url.contains("/docs/describes")
+                    || url.contains("/docs/describedat")
+                    || url.contains("/docs/longdesc")
+                    || url.contains("/docs/glossary")
+                    || url.contains("/docs/start")
+                    || url.contains("/docs/end")
+                    || url.contains("/docs/index")
+            }),
+            "micropub, tag, prefetch, multi-token rels, icons, describes/describedat/longdesc, and other documentation rels must not copy describedby extract_links: {urls:?}"
         );
     }
 
