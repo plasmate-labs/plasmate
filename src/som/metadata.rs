@@ -228,6 +228,7 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                             | "enclosure"
                             | "up"
                             | "contents"
+                            | "describedby"
                     ) {
                         let link_type = attrs_borrowed
                             .iter()
@@ -1647,6 +1648,128 @@ mod tests {
         assert!(
             !data.open_graph.contains_key("contents") && data.twitter_card.is_empty(),
             "contents must not copy onto OpenGraph or Twitter cards: {data:?}"
+        );
+    }
+
+    #[test]
+    fn describedby_link_rels_are_extracted() {
+        let html = r#"<html><head>
+            <link rel="canonical" href="https://example.test/docs/som/compiler">
+            <link rel="describedby" href="https://example.test/docs/som/compiler.rdf">
+            <link rel="DescribedBy" href="https://example.test/docs/som/compiler.jsonld">
+            <link rel="contents" href="https://example.test/docs/contents">
+            <link rel="up" href="https://example.test/docs/som">
+            <link rel="help" href="https://example.test/docs/help">
+            <link rel="describes" href="https://example.test/docs/describes">
+            <link rel="describedat" href="https://example.test/docs/describedat">
+            <link rel="longdesc" href="https://example.test/docs/longdesc">
+            <link rel="glossary" href="https://example.test/docs/glossary">
+            <link rel="first" href="https://example.test/docs/start">
+            <link rel="last" href="https://example.test/docs/end">
+            <link rel="index" href="https://example.test/docs/index">
+            <link rel="micropub" href="https://example.test/micropub">
+            <link rel="tag" href="/tags/som">
+            <link rel="prefetch" href="https://example.test/docs/som/compiler.rdf">
+            <link rel="stylesheet" href="/style.css">
+            <link rel="describedby prefetch" href="https://example.test/mixed">
+            <a rel="describedby" href="https://example.test/body-describedby">Body describedby</a>
+            <meta name="citation_title" content="Not a link">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        let rels: Vec<_> = data.links.iter().map(|link| link.rel.as_str()).collect();
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "describedby"
+                    && link.href == "https://example.test/docs/som/compiler.rdf"
+            }),
+            "rel=describedby must stay in structured data: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "describedby"
+                    && link.href == "https://example.test/docs/som/compiler.jsonld"
+            }),
+            "rel=DescribedBy must canonicalize to describedby: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "canonical" && link.href == "https://example.test/docs/som/compiler"
+            }),
+            "canonical must remain: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "contents" && link.href == "https://example.test/docs/contents"
+            }),
+            "contents must remain after describedby mapping: {data:?}"
+        );
+        assert!(
+            data.links
+                .iter()
+                .any(|link| { link.rel == "up" && link.href == "https://example.test/docs/som" }),
+            "up must remain after describedby mapping: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "help" && link.href == "https://example.test/docs/help"
+            }),
+            "help must remain: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"describes"),
+            "describes must not copy describedby mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"describedat"),
+            "describedat must not copy describedby mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"longdesc"),
+            "longdesc must not copy describedby mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"glossary"),
+            "glossary must not copy describedby mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"first"),
+            "first must not copy describedby mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"last"),
+            "last must not copy describedby mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"index"),
+            "index must not copy describedby mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"micropub"),
+            "micropub must not copy describedby mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"tag"),
+            "tag must not copy describedby mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"prefetch"),
+            "prefetch must not copy describedby mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"stylesheet"),
+            "stylesheet must stay excluded: {data:?}"
+        );
+        assert!(
+            !data.links.iter().any(|link| {
+                link.href == "https://example.test/mixed"
+                    || link.href == "https://example.test/body-describedby"
+            }),
+            "multi-token rel and body anchors must not copy head describedby mapping: {data:?}"
+        );
+        assert_eq!(data.meta["citation_title"], "Not a link");
+        assert!(
+            !data.open_graph.contains_key("describedby") && data.twitter_card.is_empty(),
+            "describedby must not copy onto OpenGraph or Twitter cards: {data:?}"
         );
     }
 
