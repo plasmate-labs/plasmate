@@ -1691,7 +1691,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "select" => Some(ElementRole::Select),
         "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => Some(ElementRole::Heading),
         "img" | "picture" => Some(ElementRole::Image),
-        "ul" | "ol" | "dl" => Some(ElementRole::List),
+        "ul" | "ol" | "dl" | "menu" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
         "p" | "time" | "blockquote" | "figcaption" | "pre" | "abbr" | "address" | "cite"
         | "dfn" | "code" | "math" | "ruby" | "small" | "kbd" => Some(ElementRole::Paragraph),
@@ -1873,7 +1873,7 @@ fn has_aria_role_token(attrs: &[(String, String)], role: &str) -> bool {
 }
 
 fn is_aria_list_host(tag: &str, attrs: &[(String, String)]) -> bool {
-    !matches!(tag, "ul" | "ol" | "dl") && has_aria_role_token(attrs, "list")
+    !matches!(tag, "ul" | "ol" | "dl" | "menu") && has_aria_role_token(attrs, "list")
 }
 
 fn is_enabled_contenteditable(attrs: &[(String, String)]) -> bool {
@@ -2219,7 +2219,7 @@ fn build_element_attrs(
                 }
             }
         }
-        "ul" => {
+        "ul" | "menu" => {
             map.insert("ordered".into(), json!(false));
             let items =
                 extract_list_items_with_limit(node, ctx.config.max_list_items, &ctx.css_rules);
@@ -9588,6 +9588,155 @@ plasmate fetch https://example.test</code></pre>
                 element.html_id.as_deref() == Some("results") && element.role == ElementRole::List
             }),
             "selector=list should keep compiled ARIA lists: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("share")),
+            "selector=list should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn native_menu_compiles_list_items() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Editor</title></head>
+<body>
+<main>
+  <menu id="toolbar">
+    <li>Cut</li>
+    <li>  Copy  </li>
+    <li>   </li>
+  </menu>
+  <ul id="native"><li>Paste</li></ul>
+  <ol id="steps" start="3"><li>Trim</li></ol>
+  <dir id="legacy"><li>Old</li></dir>
+  <div id="aria-menu" role="menu"><div role="menuitem">Save</div></div>
+  <div id="group" role="group"><li>Nope</li></div>
+  <button id="share">Share</button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/editor").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let toolbar = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("toolbar"))
+            .expect("native menu should compile");
+        assert_eq!(toolbar.role, ElementRole::List);
+        assert!(
+            toolbar
+                .actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "native menu must not invent actions: {toolbar:?}"
+        );
+        let items = toolbar
+            .attrs
+            .as_ref()
+            .and_then(|attrs| attrs.get("items"))
+            .and_then(|value| value.as_array())
+            .expect("native menu should keep li text");
+        assert_eq!(
+            items
+                .iter()
+                .filter_map(|item| item.get("text").and_then(|value| value.as_str()))
+                .collect::<Vec<_>>(),
+            vec!["Cut", "Copy"]
+        );
+        assert_eq!(
+            toolbar
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("ordered"))
+                .and_then(|value| value.as_bool()),
+            Some(false)
+        );
+        assert!(
+            toolbar
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("start").is_none()
+                    && attrs.get("reversed").is_none()
+                    && attrs.get("term").is_none()
+                    && attrs.get("type").is_none()),
+            "native menu must not invent ol/dl/type attrs: {toolbar:?}"
+        );
+
+        let native = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("native"))
+            .expect("native ul should still compile");
+        assert_eq!(native.role, ElementRole::List);
+        assert_eq!(
+            native
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("items"))
+                .and_then(|items| items.as_array())
+                .and_then(|items| items.first())
+                .and_then(|item| item.get("text"))
+                .and_then(|value| value.as_str()),
+            Some("Paste")
+        );
+
+        let steps = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("steps"))
+            .expect("native ol should still compile");
+        assert_eq!(
+            steps
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("start"))
+                .and_then(|value| value.as_i64()),
+            Some(3),
+            "ol start must stay on ol: {steps:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("legacy") || element.role != ElementRole::List
+            }),
+            "obsolete dir must not copy menu list mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("aria-menu") || element.role != ElementRole::List
+            }),
+            "ARIA role=menu must not copy native menu list mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("group") || element.role != ElementRole::List
+            }),
+            "role=group must not copy menu list mapping: {elements:?}"
+        );
+
+        let filtered = crate::som::filter::apply_selector(&som, "list");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("toolbar") && element.role == ElementRole::List
+            }),
+            "selector=list should keep compiled native menus: {filtered_elements:?}"
         );
         assert!(
             filtered_elements
