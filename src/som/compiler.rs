@@ -1705,6 +1705,12 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
     }
 }
 
+fn is_icon_label_host(tag: &str, attrs: &[(String, String)]) -> bool {
+    matches!(tag, "button" | "a")
+        || has_aria_role_token(attrs, "button")
+        || has_aria_role_token(attrs, "link")
+}
+
 fn resolve_label(
     tag: &str,
     attrs: &[(String, String)],
@@ -1748,7 +1754,7 @@ fn resolve_label(
             return Some(label.clone());
         }
     }
-    if text.as_ref().is_none_or(|value| value.is_empty()) && matches!(tag, "button" | "a") {
+    if text.as_ref().is_none_or(|value| value.is_empty()) && is_icon_label_host(tag, attrs) {
         if let Some(label) = first_descendant_img_attr(node, "aria-label", css_rules)
             .map(|label| heuristics::normalize_text(&label))
             .filter(|label| !label.is_empty())
@@ -9743,6 +9749,118 @@ plasmate fetch https://example.test</code></pre>
                 .iter()
                 .all(|element| element.html_id.as_deref() != Some("share")),
             "selector=list should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn aria_button_and_link_hosts_use_descendant_img_alt() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Toolbar</title></head>
+<body>
+<nav>
+  <span id="home" role="link"><img src="/home.png" alt="  Home  "></span>
+</nav>
+<main>
+  <div id="close" role="button"><img src="/x.png" alt="Close"></div>
+  <div id="save" role="button">Save <img src="/disk.png" alt="disk"></div>
+  <div id="aria" role="button" aria-label="Dismiss"><img src="/x.png" alt="Close"></div>
+  <div id="tab" role="tab"><img src="/home.png" alt="Overview"></div>
+  <p id="caption">See <img src="/q3.png" alt="Q3 revenue"> in EMEA.</p>
+  <button id="native"><img src="/x.png" alt="Native"></button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/aria-icon-toolbar").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let close = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("close"))
+            .expect("ARIA icon button should compile");
+        assert_eq!(close.role, ElementRole::Button);
+        assert!(
+            close.text.as_ref().is_none_or(|text| text.is_empty()),
+            "ARIA icon button must not invent visible text from img alt: {close:?}"
+        );
+        assert_eq!(
+            close.label.as_deref(),
+            Some("Close"),
+            "ARIA role=button must use descendant img alt as accessible name: {close:?}"
+        );
+
+        let home = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("home"))
+            .expect("ARIA icon link should compile");
+        assert_eq!(home.role, ElementRole::Link);
+        assert_eq!(
+            home.label.as_deref(),
+            Some("Home"),
+            "ARIA role=link must use trimmed descendant img alt: {home:?}"
+        );
+
+        let save = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("save"))
+            .expect("labelled ARIA button should compile");
+        assert_eq!(save.text.as_deref(), Some("Save"));
+        assert_ne!(
+            save.label.as_deref(),
+            Some("disk"),
+            "visible ARIA button text must not be replaced by nested img alt: {save:?}"
+        );
+
+        let aria = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("aria"))
+            .expect("aria-label ARIA button should compile");
+        assert_eq!(
+            aria.label.as_deref(),
+            Some("Dismiss"),
+            "host aria-label must remain preferred over descendant img alt: {aria:?}"
+        );
+
+        let tab = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("tab"))
+            .expect("ARIA tab should compile");
+        assert_ne!(
+            tab.label.as_deref(),
+            Some("Overview"),
+            "role=tab must not copy descendant img alt: {tab:?}"
+        );
+
+        let caption = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("caption"))
+            .expect("paragraph with nested img should compile");
+        assert_eq!(caption.role, ElementRole::Paragraph);
+        assert_ne!(
+            caption.label.as_deref(),
+            Some("Q3 revenue"),
+            "paragraph must not copy descendant img alt onto label: {caption:?}"
+        );
+
+        let native = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("native"))
+            .expect("native icon button should compile");
+        assert_eq!(
+            native.label.as_deref(),
+            Some("Native"),
+            "native button icon naming must remain: {native:?}"
         );
     }
 }
