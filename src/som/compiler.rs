@@ -1645,7 +1645,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                     "separator" => return Some(ElementRole::Separator),
                     "alert" | "status" => return Some(ElementRole::Paragraph),
                     "tooltip" => return Some(ElementRole::Paragraph),
-                    "group" | "radiogroup" => return Some(ElementRole::Group),
+                    "group" | "radiogroup" | "figure" => return Some(ElementRole::Group),
                     "progressbar" | "meter" => return Some(ElementRole::Group),
                     "presentation" | "none" => return contenteditable_type_role(tag, attrs),
                     _ => {}
@@ -9861,6 +9861,136 @@ plasmate fetch https://example.test</code></pre>
             native.label.as_deref(),
             Some("Native"),
             "native button icon naming must remain: {native:?}"
+        );
+    }
+
+    #[test]
+    fn aria_role_figure_compiles_as_group() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Charts</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <div id="chart" role="figure" aria-label="Q3 revenue">
+    <img id="plot" src="/q3.png" alt="Bars">
+  </div>
+  <div id="named" role="figure" aria-labelledby="caption">Unlabelled host</div>
+  <p id="caption">EMEA mix</p>
+  <figure id="native"><img src="/legacy.png" alt="Legacy"></figure>
+  <div id="photo" role="img" aria-label="Badge"></div>
+  <div id="story" role="article">Not a figure</div>
+  <div id="note" role="note">Aside</div>
+  <div id="doc" role="document">Document</div>
+  <button id="share">Share</button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/charts").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let chart = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("chart"))
+            .expect("ARIA role=figure should compile");
+        assert_eq!(chart.role, ElementRole::Group);
+        assert_eq!(chart.label.as_deref(), Some("Q3 revenue"));
+        assert_eq!(
+            chart
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("source_role"))
+                .and_then(|value| value.as_str()),
+            Some("figure")
+        );
+        assert!(
+            chart
+                .actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "ARIA figure must not invent actions: {chart:?}"
+        );
+        assert!(
+            chart
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("src").is_none() && attrs.get("alt").is_none()),
+            "ARIA figure must not invent image src/alt: {chart:?}"
+        );
+
+        let plot = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("plot"))
+            .expect("nested img should still compile");
+        assert_eq!(plot.role, ElementRole::Image);
+
+        let named = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("named"))
+            .expect("labelledby figure should compile");
+        assert_eq!(named.role, ElementRole::Group);
+        assert_eq!(named.label.as_deref(), Some("EMEA mix"));
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("native") || element.role != ElementRole::Group
+            }),
+            "native figure must not copy ARIA figure mapping: {elements:?}"
+        );
+
+        let photo = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("photo"))
+            .expect("role=img should still compile");
+        assert_eq!(photo.role, ElementRole::Image);
+
+        let story = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("story"))
+            .expect("role=article should still compile");
+        assert_eq!(story.role, ElementRole::Section);
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("note") || element.role != ElementRole::Group
+            }),
+            "role=note must not copy ARIA figure mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("doc") || element.role != ElementRole::Group
+            }),
+            "role=document must not copy ARIA figure mapping: {elements:?}"
+        );
+
+        let filtered = crate::som::filter::apply_selector(&som, "group");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("chart") && element.role == ElementRole::Group
+            }),
+            "selector=group should keep compiled ARIA figures: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("share")),
+            "selector=group should drop buttons: {filtered_elements:?}"
         );
     }
 }
