@@ -1646,6 +1646,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                     "alert" | "status" => return Some(ElementRole::Paragraph),
                     "tooltip" => return Some(ElementRole::Paragraph),
                     "paragraph" => return Some(ElementRole::Paragraph),
+                    "definition" => return Some(ElementRole::Paragraph),
                     "group" | "radiogroup" | "figure" => return Some(ElementRole::Group),
                     "progressbar" | "meter" => return Some(ElementRole::Group),
                     "presentation" | "none" => return contenteditable_type_role(tag, attrs),
@@ -10389,6 +10390,159 @@ plasmate fetch https://example.test</code></pre>
                 element.html_id.as_deref() == Some("lead") && element.role == ElementRole::Paragraph
             }),
             "selector=paragraph should keep compiled ARIA paragraphs: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("share")),
+            "selector=paragraph should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn aria_role_definition_compiles_as_paragraph() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Glossary</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <div id="meaning" role="definition">A Semantic Object Model is structured JSON for agents.</div>
+  <div id="blank" role="definition">   </div>
+  <div id="term" role="term">SOM</div>
+  <div id="note" role="note">Aside</div>
+  <div id="doc" role="document">Document</div>
+  <div id="comment" role="comment">Reviewer note</div>
+  <div id="code" role="code">fetch_page</div>
+  <dfn id="native">Native definition</dfn>
+  <button id="share">Share</button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/glossary").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let meaning = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("meaning"))
+            .expect("ARIA role=definition should compile");
+        assert_eq!(meaning.role, ElementRole::Paragraph);
+        assert_eq!(
+            meaning.text.as_deref(),
+            Some("A Semantic Object Model is structured JSON for agents.")
+        );
+        assert_eq!(
+            meaning
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("source_role"))
+                .and_then(|value| value.as_str()),
+            Some("definition")
+        );
+        assert!(
+            meaning
+                .actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "ARIA definition must not invent actions: {meaning:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("blank")
+                    || element.text.as_ref().is_none_or(|text| text.is_empty())
+            }),
+            "whitespace-only ARIA definition must not invent text: {elements:?}"
+        );
+
+        let native = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("native"))
+            .expect("native dfn should compile");
+        assert_eq!(native.role, ElementRole::Paragraph);
+        assert_eq!(native.text.as_deref(), Some("Native definition"));
+        assert!(
+            native
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "native dfn must not invent ARIA source_role: {native:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("term")
+                    || (element.role != ElementRole::Paragraph
+                        && element.attrs.as_ref().is_none_or(|attrs| {
+                            attrs.get("source_role") != Some(&json!("definition"))
+                        }))
+            }),
+            "role=term must not copy ARIA definition mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("note")
+                    || (element.role != ElementRole::Paragraph
+                        && element.attrs.as_ref().is_none_or(|attrs| {
+                            attrs.get("source_role") != Some(&json!("definition"))
+                        }))
+            }),
+            "role=note must not copy ARIA definition mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("doc")
+                    || (element.role != ElementRole::Paragraph
+                        && element.attrs.as_ref().is_none_or(|attrs| {
+                            attrs.get("source_role") != Some(&json!("definition"))
+                        }))
+            }),
+            "role=document must not copy ARIA definition mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("comment")
+                    || (element.role != ElementRole::Paragraph
+                        && element.attrs.as_ref().is_none_or(|attrs| {
+                            attrs.get("source_role") != Some(&json!("definition"))
+                        }))
+            }),
+            "role=comment must not copy ARIA definition mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("code")
+                    || (element.role != ElementRole::Paragraph
+                        && element.attrs.as_ref().is_none_or(|attrs| {
+                            attrs.get("source_role") != Some(&json!("definition"))
+                        }))
+            }),
+            "role=code must not copy ARIA definition mapping: {elements:?}"
+        );
+
+        let filtered = crate::som::filter::apply_selector(&som, "paragraph");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("meaning")
+                    && element.role == ElementRole::Paragraph
+            }),
+            "selector=paragraph should keep compiled ARIA definitions: {filtered_elements:?}"
         );
         assert!(
             filtered_elements
