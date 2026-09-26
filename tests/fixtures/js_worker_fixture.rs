@@ -66,6 +66,23 @@ fn main() {
         }
         return;
     }
+    if input.contains("__fixture_button_title__") {
+        if input.contains("getAttribute('title')")
+            && input.contains("Close")
+            && input.contains("getAttribute('aria-label')")
+            && !input.contains("fieldAriaLabel")
+            && !input.contains("getAttribute('placeholder')")
+        {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"clicked\":true}}","effective_html":"<html><head><title>Dialog</title></head><body><main><!-- __fixture_button_title__ --><button title='Close'></button></main></body></html>"}}}}"#
+            );
+        } else {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"error\":\"Element not found in DOM\"}}","effective_html":"<html><body><p>mutated</p></body></html>"}}}}"#
+            );
+        }
+        return;
+    }
     if input.contains("__fixture_aria_tab__") {
         if input.contains(r#"[role=\"tab\"]"#) && input.contains("Overview") {
             println!(

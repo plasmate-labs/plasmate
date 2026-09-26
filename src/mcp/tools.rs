@@ -2120,7 +2120,7 @@ pub fn evaluate_definition() -> ToolDefinition {
 pub fn click_definition() -> ToolDefinition {
     ToolDefinition {
         name: "click".to_string(),
-        description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click. Resolves the live control by compiled test_id, or an icon-only link href, when html_id is absent. Resolves relative link hrefs and GET form actions against the document <base href> when present. Follows a compiled GET form action or submitter formaction when clicking a submit button, encoding named text_input/textarea/select/checkbox/radio values as the query (including selected options, the clicked submitter, image-submit x/y coordinates, and listed controls associated by compiled form owner id). Missing form action still submits to the current page URL. Fails closed when the compiled SOM marks the target disabled, without mutating session HTML.".to_string(),
+        description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click. Resolves the live control by compiled test_id, or an icon-only link href, when html_id is absent. Title-only buttons resolve from the compiled title when visible text, value, alt, and aria-label are absent. Resolves relative link hrefs and GET form actions against the document <base href> when present. Follows a compiled GET form action or submitter formaction when clicking a submit button, encoding named text_input/textarea/select/checkbox/radio values as the query (including selected options, the clicked submitter, image-submit x/y coordinates, and listed controls associated by compiled form owner id). Missing form action still submits to the current page URL. Fails closed when the compiled SOM marks the target disabled, without mutating session HTML.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -2931,7 +2931,7 @@ pub async fn handle_click(
 
     // Generate JavaScript to simulate click
     // Resolve by data-plasmate-id, then compiled html_id, then compiled test_id,
-    // then icon-only <a href>, then tag/text/value/aria-label fallback
+    // then icon-only <a href>, then tag/text/value/aria-label/title fallback
     // including compiled ARIA links.
     let element_id = params.element_id.clone();
     let html_id = serde_json::to_string(&element.html_id).unwrap_or_else(|_| "null".to_string());
@@ -2980,6 +2980,9 @@ pub async fn handle_click(
                         : (candidate.textContent || '').trim();
                     if (!candidateLabel) {{
                         candidateLabel = (candidate.getAttribute('aria-label') || '').trim();
+                    }}
+                    if (!candidateLabel) {{
+                        candidateLabel = (candidate.getAttribute('title') || '').trim();
                     }}
                     if (candidateLabel === expected) {{
                         el = candidate;
@@ -5348,6 +5351,59 @@ mod tests {
         let payload = tool_payload(&clicked);
         assert_eq!(payload["title"], "Dialog");
         assert!(payload["regions"].is_array(), "{payload}");
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn click_resolves_button_title_when_textcontent_and_aria_label_are_absent() {
+        let options = stateful_worker_options(Duration::from_secs(5));
+        let sessions = Arc::new(SessionManager::with_worker_options(options));
+        let session_id = sessions.create_session().await.unwrap();
+        let html = "<html><head><title>Dialog</title></head><body><main><!-- __fixture_button_title__ --><button title='Close'></button></main></body></html>";
+        sessions
+            .with_session(&session_id, |session| {
+                session.target.current_url = Some("https://example.test/dialog".to_string());
+                session.target.current_html = Some(html.to_string());
+                session.target.effective_html = Some(html.to_string());
+                session.target.current_som = Some(
+                    plasmate::som::compiler::compile(html, "https://example.test/dialog").unwrap(),
+                );
+                session.target.rebuild_node_map();
+            })
+            .await
+            .unwrap();
+        let element_id = sessions
+            .with_session(&session_id, |session| {
+                let som = session.target.current_som.as_ref().unwrap();
+                som.regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .find(|element| {
+                        element.role == ElementRole::Button
+                            && element.html_id.is_none()
+                            && click_target_label(element) == "Close"
+                    })
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose the title-only button")
+            })
+            .await
+            .unwrap();
+        let client = reqwest::Client::new();
+
+        let clicked = handle_click(
+            &json!({"session_id": session_id, "element_id": element_id}),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert!(clicked.get("isError").is_none(), "{clicked}");
+        let payload = tool_payload(&clicked);
+        assert_eq!(payload["title"], "Dialog");
+        assert!(payload["regions"].is_array(), "{payload}");
+        assert!(
+            click_definition().description.contains("title"),
+            "agents must be told title-only buttons resolve"
+        );
     }
 
     #[tokio::test]
