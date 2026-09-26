@@ -83,6 +83,25 @@ fn main() {
         }
         return;
     }
+    if input.contains("__fixture_button_aria_labelledby__") {
+        if input.contains("getAttribute('aria-labelledby')")
+            && input.contains("getElementById")
+            && input.contains("Close")
+            && input.contains("getAttribute('title')")
+            && !input.contains("fieldAriaLabel")
+            && !input.contains("getAttribute('placeholder')")
+            && !input.contains("getAttribute('aria-describedby')")
+        {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"clicked\":true}}","effective_html":"<html><head><title>Dialog</title></head><body><main><!-- __fixture_button_aria_labelledby__ --><span id='close-label'>Close</span><button aria-labelledby='close-label'></button></main></body></html>"}}}}"#
+            );
+        } else {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"error\":\"Element not found in DOM\"}}","effective_html":"<html><body><p>mutated</p></body></html>"}}}}"#
+            );
+        }
+        return;
+    }
     if input.contains("__fixture_aria_tab__") {
         if input.contains(r#"[role=\"tab\"]"#) && input.contains("Overview") {
             println!(
