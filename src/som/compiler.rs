@@ -1695,7 +1695,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "ul" | "ol" | "dl" | "menu" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
         "p" | "time" | "blockquote" | "figcaption" | "pre" | "abbr" | "address" | "cite"
-        | "dfn" | "code" | "math" | "ruby" | "small" | "kbd" | "output" => {
+        | "dfn" | "code" | "math" | "ruby" | "small" | "kbd" | "output" | "samp" => {
             Some(ElementRole::Paragraph)
         }
         "section" | "article" => Some(ElementRole::Section),
@@ -7631,13 +7631,11 @@ plasmate fetch https://example.test</code></pre>
             .find(|element| element.html_id.as_deref() == Some("shortcut"))
             .expect("kbd should remain a paragraph");
         assert_eq!(shortcut.role, ElementRole::Paragraph);
-        assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("output")
-                    || element.role != ElementRole::Paragraph
-            }),
-            "samp must not copy code mapping: {elements:?}"
-        );
+        let output = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("output"))
+            .expect("samp should remain a paragraph");
+        assert_eq!(output.role, ElementRole::Paragraph);
         assert!(
             elements.iter().all(|element| {
                 element.html_id.as_deref() != Some("name") || element.role != ElementRole::Paragraph
@@ -7781,13 +7779,11 @@ plasmate fetch https://example.test</code></pre>
             "whitespace-only alttext must not be invented: {elements:?}"
         );
 
-        assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("result")
-                    || element.role != ElementRole::Paragraph
-            }),
-            "output must not copy math mapping: {elements:?}"
-        );
+        let result = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("result"))
+            .expect("output should remain a paragraph");
+        assert_eq!(result.role, ElementRole::Paragraph);
         assert!(
             elements.iter().all(|element| {
                 element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Paragraph
@@ -8303,13 +8299,11 @@ plasmate fetch https://example.test</code></pre>
             .find(|element| element.html_id.as_deref() == Some("shortcut"))
             .expect("kbd should remain a paragraph");
         assert_eq!(shortcut.role, ElementRole::Paragraph);
-        assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("output")
-                    || element.role != ElementRole::Paragraph
-            }),
-            "samp must not copy small mapping: {elements:?}"
-        );
+        let output = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("output"))
+            .expect("samp should remain a paragraph");
+        assert_eq!(output.role, ElementRole::Paragraph);
         assert!(
             elements.iter().all(|element| {
                 element.html_id.as_deref() != Some("stress")
@@ -8436,13 +8430,11 @@ plasmate fetch https://example.test</code></pre>
             }),
             "mark must not copy kbd mapping: {elements:?}"
         );
-        assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("output")
-                    || element.role != ElementRole::Paragraph
-            }),
-            "samp must not copy kbd mapping: {elements:?}"
-        );
+        let output = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("output"))
+            .expect("samp should remain a paragraph");
+        assert_eq!(output.role, ElementRole::Paragraph);
         assert!(
             elements.iter().all(|element| {
                 element.html_id.as_deref() != Some("stress")
@@ -8594,13 +8586,11 @@ plasmate fetch https://example.test</code></pre>
             }),
             "data must not copy output mapping: {elements:?}"
         );
-        assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("sample")
-                    || element.role != ElementRole::Paragraph
-            }),
-            "samp must not copy output mapping: {elements:?}"
-        );
+        let sample = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("sample"))
+            .expect("samp should remain a paragraph");
+        assert_eq!(sample.role, ElementRole::Paragraph);
 
         let pay = elements
             .iter()
@@ -8625,6 +8615,138 @@ plasmate fetch https://example.test</code></pre>
             filtered_elements
                 .iter()
                 .all(|element| element.html_id.as_deref() != Some("pay")),
+            "selector=paragraph should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn samp_compiles_as_paragraph() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>CLI</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <samp id="output">ok</samp>
+  <samp id="linked"><a href="https://example.test/cli">done</a></samp>
+  <samp id="blank">   </samp>
+  <kbd id="shortcut">Ctrl+C</kbd>
+  <code id="api">fetch_page</code>
+  <mark id="hit">Not sample output</mark>
+  <var id="name">Not sample output</var>
+  <em id="stress">Not sample output</em>
+  <button id="copy">Copy</button>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/cli").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let output = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("output"))
+            .expect("native samp should compile");
+        assert_eq!(output.role, ElementRole::Paragraph);
+        assert_eq!(output.text.as_deref(), Some("ok"));
+        assert!(
+            output
+                .actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "samp must not invent actions: {output:?}"
+        );
+
+        let linked = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("linked"))
+            .expect("samp with a nested link should still compile");
+        assert_eq!(linked.role, ElementRole::Paragraph);
+        assert_eq!(linked.text.as_deref(), Some("done"));
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Link
+                    && element.attrs.as_ref().and_then(|attrs| attrs.get("href"))
+                        == Some(&json!("https://example.test/cli"))
+            }),
+            "samp must keep nested links: {elements:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("blank")
+                    || (element.role == ElementRole::Paragraph
+                        && element.text.as_deref().is_none_or(|text| text.is_empty()))
+            }),
+            "whitespace-only samp must not invent text: {elements:?}"
+        );
+
+        let shortcut = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("shortcut"))
+            .expect("kbd should remain a paragraph");
+        assert_eq!(shortcut.role, ElementRole::Paragraph);
+
+        let api = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("api"))
+            .expect("code should remain a paragraph");
+        assert_eq!(api.role, ElementRole::Paragraph);
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Paragraph
+            }),
+            "mark must not copy samp mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("name") || element.role != ElementRole::Paragraph
+            }),
+            "var must not copy samp mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("stress")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "em must not copy samp mapping: {elements:?}"
+        );
+
+        let copy = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("copy"))
+            .expect("copy button should compile");
+        assert_eq!(copy.role, ElementRole::Button);
+
+        let filtered = crate::som::filter::apply_selector(&som, "paragraph");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("output")
+                    && element.role == ElementRole::Paragraph
+            }),
+            "selector=paragraph should keep compiled samp: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("copy")),
             "selector=paragraph should drop buttons: {filtered_elements:?}"
         );
     }
