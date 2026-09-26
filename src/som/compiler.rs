@@ -1645,6 +1645,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                     "separator" => return Some(ElementRole::Separator),
                     "alert" | "status" => return Some(ElementRole::Paragraph),
                     "tooltip" => return Some(ElementRole::Paragraph),
+                    "paragraph" => return Some(ElementRole::Paragraph),
                     "group" | "radiogroup" | "figure" => return Some(ElementRole::Group),
                     "progressbar" | "meter" => return Some(ElementRole::Group),
                     "presentation" | "none" => return contenteditable_type_role(tag, attrs),
@@ -9991,6 +9992,134 @@ plasmate fetch https://example.test</code></pre>
                 .iter()
                 .all(|element| element.html_id.as_deref() != Some("share")),
             "selector=group should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn aria_role_paragraph_compiles_as_paragraph() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Docs</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <div id="lead" role="paragraph">Plasmate compiles HTML into SOM.</div>
+  <div id="blank" role="paragraph">   </div>
+  <div id="note" role="note">Aside</div>
+  <div id="doc" role="document">Document</div>
+  <div id="comment" role="comment">Reviewer note</div>
+  <p id="native">Native paragraph</p>
+  <button id="share">Share</button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/docs").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let lead = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("lead"))
+            .expect("ARIA role=paragraph should compile");
+        assert_eq!(lead.role, ElementRole::Paragraph);
+        assert_eq!(
+            lead.text.as_deref(),
+            Some("Plasmate compiles HTML into SOM.")
+        );
+        assert_eq!(
+            lead.attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("source_role"))
+                .and_then(|value| value.as_str()),
+            Some("paragraph")
+        );
+        assert!(
+            lead.actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "ARIA paragraph must not invent actions: {lead:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("blank")
+                    || element.text.as_ref().is_none_or(|text| text.is_empty())
+            }),
+            "whitespace-only ARIA paragraph must not invent text: {elements:?}"
+        );
+
+        let native = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("native"))
+            .expect("native paragraph should compile");
+        assert_eq!(native.role, ElementRole::Paragraph);
+        assert_eq!(native.text.as_deref(), Some("Native paragraph"));
+        assert!(
+            native
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "native p must not invent ARIA source_role: {native:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("note")
+                    || (element.role != ElementRole::Paragraph
+                        && element.attrs.as_ref().is_none_or(|attrs| {
+                            attrs.get("source_role") != Some(&json!("paragraph"))
+                        }))
+            }),
+            "role=note must not copy ARIA paragraph mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("doc")
+                    || (element.role != ElementRole::Paragraph
+                        && element.attrs.as_ref().is_none_or(|attrs| {
+                            attrs.get("source_role") != Some(&json!("paragraph"))
+                        }))
+            }),
+            "role=document must not copy ARIA paragraph mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("comment")
+                    || (element.role != ElementRole::Paragraph
+                        && element.attrs.as_ref().is_none_or(|attrs| {
+                            attrs.get("source_role") != Some(&json!("paragraph"))
+                        }))
+            }),
+            "role=comment must not copy ARIA paragraph mapping: {elements:?}"
+        );
+
+        let filtered = crate::som::filter::apply_selector(&som, "paragraph");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("lead") && element.role == ElementRole::Paragraph
+            }),
+            "selector=paragraph should keep compiled ARIA paragraphs: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("share")),
+            "selector=paragraph should drop buttons: {filtered_elements:?}"
         );
     }
 }
