@@ -1694,7 +1694,9 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "ul" | "ol" | "dl" | "menu" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
         "p" | "time" | "blockquote" | "figcaption" | "pre" | "abbr" | "address" | "cite"
-        | "dfn" | "code" | "math" | "ruby" | "small" | "kbd" => Some(ElementRole::Paragraph),
+        | "dfn" | "code" | "math" | "ruby" | "small" | "kbd" | "output" => {
+            Some(ElementRole::Paragraph)
+        }
         "section" | "article" => Some(ElementRole::Section),
         "fieldset" => Some(ElementRole::Group),
         "hr" => Some(ElementRole::Separator),
@@ -8471,6 +8473,157 @@ plasmate fetch https://example.test</code></pre>
             filtered_elements
                 .iter()
                 .all(|element| element.html_id.as_deref() != Some("copy")),
+            "selector=paragraph should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn output_compiles_as_paragraph() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Checkout</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <form>
+    <label for="qty">Qty</label>
+    <input id="qty" name="qty" type="number" value="2">
+    <output id="total" for="qty">$12.00</output>
+    <output id="linked"><a href="https://example.test/receipt">Receipt</a></output>
+    <output id="blank">   </output>
+  </form>
+  <progress id="upload" value="40" max="100">40%</progress>
+  <meter id="score" min="0" max="100" value="72">72</meter>
+  <data id="sku" value="123">SKU 123</data>
+  <samp id="sample">ok</samp>
+  <div id="live" role="status">Saved</div>
+  <button id="pay">Pay</button>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/checkout").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let total = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("total"))
+            .expect("native output should compile");
+        assert_eq!(total.role, ElementRole::Paragraph);
+        assert_eq!(total.text.as_deref(), Some("$12.00"));
+        assert!(
+            total
+                .actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "output must not invent actions: {total:?}"
+        );
+        assert!(
+            total
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("value").is_none()),
+            "output must not invent a value attr: {total:?}"
+        );
+        assert!(
+            total
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "output must not invent ARIA source_role: {total:?}"
+        );
+
+        let linked = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("linked"))
+            .expect("output with a nested link should still compile");
+        assert_eq!(linked.role, ElementRole::Paragraph);
+        assert_eq!(linked.text.as_deref(), Some("Receipt"));
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Link
+                    && element.attrs.as_ref().and_then(|attrs| attrs.get("href"))
+                        == Some(&json!("https://example.test/receipt"))
+            }),
+            "output must keep nested links: {elements:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("blank")
+                    || (element.role == ElementRole::Paragraph
+                        && element.text.as_deref().is_none_or(|text| text.is_empty()))
+            }),
+            "whitespace-only output must not invent text: {elements:?}"
+        );
+
+        let upload = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("upload"))
+            .expect("progress should remain a group");
+        assert_eq!(upload.role, ElementRole::Group);
+
+        let score = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("score"))
+            .expect("meter should remain a group");
+        assert_eq!(score.role, ElementRole::Group);
+
+        let live = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("live"))
+            .expect("ARIA status should remain a paragraph");
+        assert_eq!(live.role, ElementRole::Paragraph);
+        assert_eq!(live.text.as_deref(), Some("Saved"));
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("sku") || element.role != ElementRole::Paragraph
+            }),
+            "data must not copy output mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("sample")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "samp must not copy output mapping: {elements:?}"
+        );
+
+        let pay = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("pay"))
+            .expect("pay button should compile");
+        assert_eq!(pay.role, ElementRole::Button);
+
+        let filtered = crate::som::filter::apply_selector(&som, "paragraph");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("total")
+                    && element.role == ElementRole::Paragraph
+            }),
+            "selector=paragraph should keep compiled output: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("pay")),
             "selector=paragraph should drop buttons: {filtered_elements:?}"
         );
     }
