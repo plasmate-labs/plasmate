@@ -220,6 +220,24 @@ fn main() {
         }
         return;
     }
+    if input.contains("__fixture_compiled_aria_labelledby__") {
+        if input.contains("getAttribute('aria-labelledby')")
+            && input.contains("fieldLabelledBy")
+            && input.contains("q-label")
+            && input.contains("input, textarea")
+            && !input.contains("getAttribute('placeholder')")
+            && !input.contains("getAttribute('aria-describedby')")
+        {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"typed\":true}}","effective_html":"<html><head><title>Search</title></head><body><main><!-- __fixture_compiled_aria_labelledby__ --><span id='q-label'>Search query</span><input type='search' aria-labelledby='q-label'><input aria-labelledby='other'></main></body></html>"}}}}"#
+            );
+        } else {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"error\":\"Element not found in DOM\"}}","effective_html":"<html><body><p>mutated</p></body></html>"}}}}"#
+            );
+        }
+        return;
+    }
     if input.contains("__fixture_native_radio__") {
         if input.contains("type === 'radio'") {
             println!(
