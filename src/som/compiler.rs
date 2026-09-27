@@ -1652,6 +1652,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                     "code" => return Some(ElementRole::Paragraph),
                     "math" => return Some(ElementRole::Paragraph),
                     "time" => return Some(ElementRole::Paragraph),
+                    "mark" => return Some(ElementRole::Paragraph),
                     "group" | "radiogroup" | "figure" => return Some(ElementRole::Group),
                     "progressbar" | "meter" => return Some(ElementRole::Group),
                     "presentation" | "none" => return contenteditable_type_role(tag, attrs),
@@ -11662,11 +11663,10 @@ plasmate fetch https://example.test</code></pre>
         assert!(
             elements.iter().all(|element| {
                 element.html_id.as_deref() != Some("hit")
-                    || (element.role != ElementRole::Paragraph
-                        && element
-                            .attrs
-                            .as_ref()
-                            .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("time"))))
+                    || element
+                        .attrs
+                        .as_ref()
+                        .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("time")))
             }),
             "role=mark must not copy ARIA time mapping: {elements:?}"
         );
@@ -11699,6 +11699,162 @@ plasmate fetch https://example.test</code></pre>
                     && element.role == ElementRole::Paragraph
             }),
             "selector=paragraph should keep compiled ARIA time: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("share")),
+            "selector=paragraph should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn aria_role_mark_compiles_as_paragraph() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Docs</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <div id="hit" role="mark">Highlighted</div>
+  <div id="blank" role="mark">   </div>
+  <div id="note" role="note">Aside</div>
+  <div id="doc" role="document">Document</div>
+  <div id="comment" role="comment">Reviewer note</div>
+  <div id="published" role="time">27 September 2026</div>
+  <mark id="native">Native highlight</mark>
+  <button id="share">Share</button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/docs").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let hit = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("hit"))
+            .expect("ARIA role=mark should compile");
+        assert_eq!(hit.role, ElementRole::Paragraph);
+        assert_eq!(hit.text.as_deref(), Some("Highlighted"));
+        assert_eq!(
+            hit.attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("source_role"))
+                .and_then(|value| value.as_str()),
+            Some("mark")
+        );
+        assert!(
+            hit.actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "ARIA mark must not invent actions: {hit:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("blank")
+                    || element.text.as_ref().is_none_or(|text| text.is_empty())
+            }),
+            "whitespace-only ARIA mark must not invent text: {elements:?}"
+        );
+
+        let published = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("published"))
+            .expect("ARIA time should remain a paragraph");
+        assert_eq!(published.role, ElementRole::Paragraph);
+        assert_eq!(
+            published
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("source_role"))
+                .and_then(|value| value.as_str()),
+            Some("time")
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("native")
+                    || (element.role != ElementRole::Paragraph
+                        && element
+                            .attrs
+                            .as_ref()
+                            .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("mark"))))
+            }),
+            "native mark must not copy ARIA mark mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("note")
+                    || (element.role != ElementRole::Paragraph
+                        && element
+                            .attrs
+                            .as_ref()
+                            .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("mark"))))
+            }),
+            "role=note must not copy ARIA mark mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("doc")
+                    || (element.role != ElementRole::Paragraph
+                        && element
+                            .attrs
+                            .as_ref()
+                            .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("mark"))))
+            }),
+            "role=document must not copy ARIA mark mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("comment")
+                    || (element.role != ElementRole::Paragraph
+                        && element
+                            .attrs
+                            .as_ref()
+                            .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("mark"))))
+            }),
+            "role=comment must not copy ARIA mark mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("published")
+                    || element
+                        .attrs
+                        .as_ref()
+                        .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("mark")))
+            }),
+            "role=time must not copy ARIA mark mapping: {elements:?}"
+        );
+
+        let share = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("share"))
+            .expect("share button should compile");
+        assert_eq!(share.role, ElementRole::Button);
+
+        let filtered = crate::som::filter::apply_selector(&som, "paragraph");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("hit") && element.role == ElementRole::Paragraph
+            }),
+            "selector=paragraph should keep compiled ARIA mark: {filtered_elements:?}"
         );
         assert!(
             filtered_elements
