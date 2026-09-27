@@ -1698,7 +1698,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "ul" | "ol" | "dl" | "menu" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
         "p" | "time" | "blockquote" | "figcaption" | "pre" | "abbr" | "address" | "cite"
-        | "dfn" | "code" | "math" | "ruby" | "small" | "kbd" | "output" | "samp" => {
+        | "dfn" | "code" | "math" | "ruby" | "small" | "kbd" | "output" | "samp" | "var" => {
             Some(ElementRole::Paragraph)
         }
         "section" | "article" => Some(ElementRole::Section),
@@ -7125,16 +7125,12 @@ plasmate fetch https://example.test</code></pre>
             "absent abbr title must not be invented: {empty:?}"
         );
 
-        assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("term")
-                    || (element.role != ElementRole::Paragraph
-                        && element.attrs.as_ref().is_none_or(|attrs| {
-                            attrs.get("title") != Some(&json!("Not an abbreviation"))
-                        }))
-            }),
-            "var must not copy abbr mapping: {elements:?}"
-        );
+        let term = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("term"))
+            .expect("var should remain a paragraph");
+        assert_eq!(term.role, ElementRole::Paragraph);
+        assert_eq!(term.text.as_deref(), Some("Term"));
         assert!(
             elements.iter().all(|element| {
                 element.html_id.as_deref() != Some("quote")
@@ -7368,12 +7364,12 @@ plasmate fetch https://example.test</code></pre>
             }),
             "mark must not copy cite mapping: {elements:?}"
         );
-        assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("term") || element.role != ElementRole::Paragraph
-            }),
-            "var must not copy cite mapping: {elements:?}"
-        );
+        let term = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("term"))
+            .expect("var should remain a paragraph");
+        assert_eq!(term.role, ElementRole::Paragraph);
+        assert_eq!(term.text.as_deref(), Some("Not a citation"));
 
         let share = elements
             .iter()
@@ -7501,12 +7497,12 @@ plasmate fetch https://example.test</code></pre>
             }),
             "mark must not copy dfn mapping: {elements:?}"
         );
-        assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("name") || element.role != ElementRole::Paragraph
-            }),
-            "var must not copy dfn mapping: {elements:?}"
-        );
+        let name = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("name"))
+            .expect("var should remain a paragraph");
+        assert_eq!(name.role, ElementRole::Paragraph);
+        assert_eq!(name.text.as_deref(), Some("Not a definition"));
         assert!(
             elements.iter().all(|element| {
                 element.html_id.as_deref() != Some("quote")
@@ -7639,12 +7635,12 @@ plasmate fetch https://example.test</code></pre>
             .find(|element| element.html_id.as_deref() == Some("output"))
             .expect("samp should remain a paragraph");
         assert_eq!(output.role, ElementRole::Paragraph);
-        assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("name") || element.role != ElementRole::Paragraph
-            }),
-            "var must not copy code mapping: {elements:?}"
-        );
+        let name = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("name"))
+            .expect("var should remain a paragraph");
+        assert_eq!(name.role, ElementRole::Paragraph);
+        assert_eq!(name.text.as_deref(), Some("Not code"));
         assert!(
             elements.iter().all(|element| {
                 element.html_id.as_deref() != Some("quote")
@@ -8713,12 +8709,12 @@ plasmate fetch https://example.test</code></pre>
             }),
             "mark must not copy samp mapping: {elements:?}"
         );
-        assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("name") || element.role != ElementRole::Paragraph
-            }),
-            "var must not copy samp mapping: {elements:?}"
-        );
+        let name = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("name"))
+            .expect("var should remain a paragraph");
+        assert_eq!(name.role, ElementRole::Paragraph);
+        assert_eq!(name.text.as_deref(), Some("Not sample output"));
         assert!(
             elements.iter().all(|element| {
                 element.html_id.as_deref() != Some("stress")
@@ -8745,6 +8741,150 @@ plasmate fetch https://example.test</code></pre>
                     && element.role == ElementRole::Paragraph
             }),
             "selector=paragraph should keep compiled samp: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("copy")),
+            "selector=paragraph should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn var_compiles_as_paragraph() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>API</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <var id="name">url</var>
+  <var id="linked"><a href="https://example.test/params">selector</a></var>
+  <var id="blank">   </var>
+  <kbd id="shortcut">Ctrl+C</kbd>
+  <code id="api">fetch_page</code>
+  <samp id="output">ok</samp>
+  <mark id="hit">Not a variable</mark>
+  <em id="stress">Not a variable</em>
+  <q id="quote">Quoted aside</q>
+  <button id="copy">Copy</button>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/api").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let name = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("name"))
+            .expect("native var should compile");
+        assert_eq!(name.role, ElementRole::Paragraph);
+        assert_eq!(name.text.as_deref(), Some("url"));
+        assert!(
+            name.actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "var must not invent actions: {name:?}"
+        );
+        assert!(
+            name.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "native var must not invent ARIA source_role: {name:?}"
+        );
+
+        let linked = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("linked"))
+            .expect("var with a nested link should still compile");
+        assert_eq!(linked.role, ElementRole::Paragraph);
+        assert_eq!(linked.text.as_deref(), Some("selector"));
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Link
+                    && element.attrs.as_ref().and_then(|attrs| attrs.get("href"))
+                        == Some(&json!("https://example.test/params"))
+            }),
+            "var must keep nested links: {elements:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("blank")
+                    || (element.role == ElementRole::Paragraph
+                        && element.text.as_deref().is_none_or(|text| text.is_empty()))
+            }),
+            "whitespace-only var must not invent text: {elements:?}"
+        );
+
+        let shortcut = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("shortcut"))
+            .expect("kbd should remain a paragraph");
+        assert_eq!(shortcut.role, ElementRole::Paragraph);
+
+        let api = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("api"))
+            .expect("code should remain a paragraph");
+        assert_eq!(api.role, ElementRole::Paragraph);
+
+        let output = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("output"))
+            .expect("samp should remain a paragraph");
+        assert_eq!(output.role, ElementRole::Paragraph);
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Paragraph
+            }),
+            "mark must not copy var mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("stress")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "em must not copy var mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("quote")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "q must not copy var mapping: {elements:?}"
+        );
+
+        let copy = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("copy"))
+            .expect("copy button should compile");
+        assert_eq!(copy.role, ElementRole::Button);
+
+        let filtered = crate::som::filter::apply_selector(&som, "paragraph");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("name") && element.role == ElementRole::Paragraph
+            }),
+            "selector=paragraph should keep compiled var: {filtered_elements:?}"
         );
         assert!(
             filtered_elements
