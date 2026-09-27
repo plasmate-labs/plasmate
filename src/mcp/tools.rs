@@ -804,7 +804,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org video content/embed recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1449,6 +1449,7 @@ fn collect_extract_link_urls(som: &Som) -> Vec<String> {
     collect_structured_fediverse_creator_id(som, &mut urls);
     collect_structured_json_ld_document_urls(som, &mut urls);
     collect_structured_json_ld_software_install_urls(som, &mut urls);
+    collect_structured_json_ld_video_urls(som, &mut urls);
     let resolve_base = extract_links_resolve_base(som);
     for url in &mut urls {
         *url = resolve_extracted_link(&resolve_base, url);
@@ -1670,6 +1671,46 @@ fn is_json_ld_software_type(ty: &str) -> bool {
         ty,
         "SoftwareApplication" | "WebApplication" | "MobileApplication"
     )
+}
+
+fn collect_structured_json_ld_video_urls(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    for block in &data.json_ld {
+        collect_json_ld_video_urls(block, urls);
+    }
+}
+
+fn collect_json_ld_video_urls(block: &Value, urls: &mut Vec<String>) {
+    if !json_ld_type_is_video(block) {
+        return;
+    }
+    for key in ["contentUrl", "embedUrl"] {
+        let Some(href) = block.get(key).and_then(Value::as_str) else {
+            continue;
+        };
+        let href = href.trim();
+        if !is_extract_links_structured_href(href) {
+            continue;
+        }
+        urls.push(href.to_string());
+    }
+}
+
+fn json_ld_type_is_video(block: &Value) -> bool {
+    match block.get("@type") {
+        Some(Value::String(ty)) => is_json_ld_video_type(ty),
+        Some(Value::Array(types)) => types
+            .iter()
+            .filter_map(Value::as_str)
+            .any(is_json_ld_video_type),
+        _ => false,
+    }
+}
+
+fn is_json_ld_video_type(ty: &str) -> bool {
+    json_ld_type_name(ty) == "VideoObject"
 }
 
 fn parse_http_equiv_refresh_url(content: &str) -> Option<&str> {
@@ -9139,6 +9180,108 @@ mod tests {
                     || url == "https://example.test/"
             }),
             "SoftwareApplication url, image, codeRepository, nested author.url, Product download/install, application/json, Organization, and icons must not copy JSON-LD software install extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_json_ld_video_urls() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/watch/">
+<link rel="canonical" href="https://example.test/watch/tour">
+<link rel="icon" href="/favicon.ico">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"VideoObject","url":"https://example.test/video-only","contentUrl":"https://example.test/tour.mp4","embedUrl":"player","thumbnailUrl":"https://example.test/watch/thumb.jpg","image":"https://example.test/watch/poster.png","author":{"@type":"Organization","name":"Labs","url":"https://example.test/"}}
+</script>
+<script type="application/ld+json">
+{"@type":["https://schema.org/VideoObject"],"contentUrl":"https://example.test/clip.webm","embedUrl":"javascript:alert(1)"}
+</script>
+<script type="application/ld+json">
+{"@type":"AudioObject","contentUrl":"https://example.test/tour.mp3","embedUrl":"https://example.test/audio/embed"}
+</script>
+<script type="application/ld+json">
+{"@type":"ImageObject","contentUrl":"https://example.test/tour.png","embedUrl":"https://example.test/image/embed"}
+</script>
+<script type="application/ld+json">
+{"@type":"MediaObject","contentUrl":"https://example.test/media.bin","embedUrl":"https://example.test/media/embed"}
+</script>
+<script type="application/ld+json">
+{"@type":"VideoObject","contentUrl":"   ","embedUrl":"#"}
+</script>
+<script type="application/json">
+{"@type":"VideoObject","contentUrl":"https://example.test/not-jsonld.mp4"}
+</script>
+<title>Tour</title>
+</head><body>
+<main>
+  <a href="tour">Tour</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        let json_ld = som
+            .structured_data
+            .as_ref()
+            .map(|data| data.json_ld.as_slice())
+            .unwrap_or(&[]);
+        assert!(
+            json_ld.iter().any(|block| {
+                block.get("@type").and_then(Value::as_str) == Some("VideoObject")
+                    && block.get("contentUrl").and_then(Value::as_str)
+                        == Some("https://example.test/tour.mp4")
+                    && block.get("embedUrl").and_then(Value::as_str) == Some("player")
+            }),
+            "compiler must keep JSON-LD VideoObject contentUrl/embedUrl for extract_links to recover: {json_ld:?}"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/tour.mp4".to_string()),
+            "compiled VideoObject contentUrl must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/watch/player".to_string()),
+            "relative VideoObject embedUrl must resolve against document base: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/clip.webm".to_string()),
+            "schema.org VideoObject contentUrl must canonicalize into extract_links: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/watch/tour".to_string()),
+            "canonical and in-page links must remain: {urls:?}"
+        );
+
+        assert!(
+            extract_links_definition()
+                .description
+                .contains("VideoObject contentUrl/embedUrl"),
+            "agents must be told JSON-LD video content/embed URLs are returned"
+        );
+
+        assert!(
+            !urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: VideoObject embedUrl must not become a fetch target: {urls:?}"
+        );
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("video-only")
+                    || url.contains("thumb.jpg")
+                    || url.contains("poster.png")
+                    || url.contains("tour.mp3")
+                    || url.contains("audio/embed")
+                    || url.contains("tour.png")
+                    || url.contains("image/embed")
+                    || url.contains("media.bin")
+                    || url.contains("media/embed")
+                    || url.contains("not-jsonld")
+                    || url.contains("favicon")
+                    || url == "https://example.test/"
+            }),
+            "VideoObject url, thumbnailUrl, image, nested author.url, AudioObject/ImageObject/MediaObject content/embed, application/json, Organization, and icons must not copy JSON-LD video extract_links: {urls:?}"
         );
     }
 
