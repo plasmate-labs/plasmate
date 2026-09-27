@@ -1394,7 +1394,7 @@ fn node_to_element(
             }
 
             let role = tag_to_role(tag, &attr_pairs)?;
-            let text_content = if tag == "math" {
+            let text_content = if tag == "math" || has_aria_role_token(&attr_pairs, "math") {
                 math_readable_text(node, &attr_pairs, &ctx.css_rules)
             } else if tag == "ruby" {
                 ruby_readable_text(node, &ctx.css_rules)
@@ -1650,6 +1650,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                     "term" => return Some(ElementRole::Paragraph),
                     "emphasis" | "strong" => return Some(ElementRole::Paragraph),
                     "code" => return Some(ElementRole::Paragraph),
+                    "math" => return Some(ElementRole::Paragraph),
                     "group" | "radiogroup" | "figure" => return Some(ElementRole::Group),
                     "progressbar" | "meter" => return Some(ElementRole::Group),
                     "presentation" | "none" => return contenteditable_type_role(tag, attrs),
@@ -3418,6 +3419,12 @@ fn math_readable_text(
         .iter()
         .find(|(name, value)| name == "alttext" && !value.trim().is_empty())
         .map(|(_, value)| value.clone())
+        .or_else(|| {
+            attrs
+                .iter()
+                .find(|(name, value)| name == "aria-label" && !value.trim().is_empty())
+                .map(|(_, value)| value.clone())
+        })
         .unwrap_or_default()
 }
 
@@ -11306,6 +11313,194 @@ plasmate fetch https://example.test</code></pre>
             filtered_elements
                 .iter()
                 .all(|element| element.html_id.as_deref() != Some("share")),
+            "selector=paragraph should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn aria_role_math_compiles_as_paragraph() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Proof</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <div id="energy" role="math" aria-label="E = mc^2"></div>
+  <div id="sum" role="math"><mn>2</mn><mo>+</mo><mn>2</mn></div>
+  <div id="tex" role="math">
+    <semantics>
+      <mrow><mi>a</mi></mrow>
+      <annotation encoding="application/x-tex">a^2</annotation>
+    </semantics>
+  </div>
+  <div id="blank" role="math">   </div>
+  <div id="note" role="note">Aside</div>
+  <div id="doc" role="document">Document</div>
+  <div id="comment" role="comment">Reviewer note</div>
+  <div id="api" role="code">fetch_page</div>
+  <math id="native"><mn>3</mn></math>
+  <button id="copy">Copy</button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/proof").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let energy = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("energy"))
+            .expect("ARIA role=math should compile");
+        assert_eq!(energy.role, ElementRole::Paragraph);
+        assert_eq!(energy.text.as_deref(), Some("E = mc^2"));
+        assert_eq!(
+            energy
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("source_role"))
+                .and_then(|value| value.as_str()),
+            Some("math")
+        );
+        assert!(
+            energy
+                .actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "ARIA math must not invent actions: {energy:?}"
+        );
+
+        let sum = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("sum"))
+            .expect("ARIA math with MathML children should compile");
+        assert_eq!(sum.role, ElementRole::Paragraph);
+        assert_eq!(sum.text.as_deref(), Some("2+2"));
+
+        let tex = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("tex"))
+            .expect("ARIA math with annotation should compile");
+        assert_eq!(tex.role, ElementRole::Paragraph);
+        assert_eq!(tex.text.as_deref(), Some("a"));
+        assert!(
+            tex.text
+                .as_deref()
+                .is_some_and(|text| !text.contains("a^2")),
+            "annotation must not duplicate ARIA math text: {tex:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("blank")
+                    || element.text.as_ref().is_none_or(|text| text.is_empty())
+            }),
+            "whitespace-only ARIA math must not invent text: {elements:?}"
+        );
+
+        let native = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("native"))
+            .expect("native math should compile");
+        assert_eq!(native.role, ElementRole::Paragraph);
+        assert_eq!(native.text.as_deref(), Some("3"));
+        assert!(
+            native
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "native math must not invent ARIA source_role: {native:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("note")
+                    || (element.role != ElementRole::Paragraph
+                        && element
+                            .attrs
+                            .as_ref()
+                            .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("math"))))
+            }),
+            "role=note must not copy ARIA math mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("doc")
+                    || (element.role != ElementRole::Paragraph
+                        && element
+                            .attrs
+                            .as_ref()
+                            .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("math"))))
+            }),
+            "role=document must not copy ARIA math mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("comment")
+                    || (element.role != ElementRole::Paragraph
+                        && element
+                            .attrs
+                            .as_ref()
+                            .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("math"))))
+            }),
+            "role=comment must not copy ARIA math mapping: {elements:?}"
+        );
+
+        let api = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("api"))
+            .expect("ARIA code should remain a paragraph");
+        assert_eq!(api.role, ElementRole::Paragraph);
+        assert_eq!(
+            api.attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("source_role"))
+                .and_then(|value| value.as_str()),
+            Some("code")
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("api")
+                    || element
+                        .attrs
+                        .as_ref()
+                        .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("math")))
+            }),
+            "role=code must not copy ARIA math mapping: {elements:?}"
+        );
+
+        let copy = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("copy"))
+            .expect("copy button should compile");
+        assert_eq!(copy.role, ElementRole::Button);
+
+        let filtered = crate::som::filter::apply_selector(&som, "paragraph");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("energy")
+                    && element.role == ElementRole::Paragraph
+            }),
+            "selector=paragraph should keep compiled ARIA math: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("copy")),
             "selector=paragraph should drop buttons: {filtered_elements:?}"
         );
     }
