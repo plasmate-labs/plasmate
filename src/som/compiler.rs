@@ -1649,6 +1649,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                     "definition" => return Some(ElementRole::Paragraph),
                     "term" => return Some(ElementRole::Paragraph),
                     "emphasis" | "strong" => return Some(ElementRole::Paragraph),
+                    "code" => return Some(ElementRole::Paragraph),
                     "group" | "radiogroup" | "figure" => return Some(ElementRole::Group),
                     "progressbar" | "meter" => return Some(ElementRole::Group),
                     "presentation" | "none" => return contenteditable_type_role(tag, attrs),
@@ -11002,6 +11003,164 @@ plasmate fetch https://example.test</code></pre>
                     && element.role == ElementRole::Paragraph
             }),
             "selector=paragraph should keep compiled ARIA strong: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("share")),
+            "selector=paragraph should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn aria_role_code_compiles_as_paragraph() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Docs</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <div id="api" role="code">fetch_page</div>
+  <div id="blank" role="code">   </div>
+  <div id="note" role="note">Aside</div>
+  <div id="doc" role="document">Document</div>
+  <div id="comment" role="comment">Reviewer note</div>
+  <div id="warning" role="strong">never dropped by budget limits</div>
+  <code id="native">Native code</code>
+  <button id="share">Share</button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/docs").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let api = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("api"))
+            .expect("ARIA role=code should compile");
+        assert_eq!(api.role, ElementRole::Paragraph);
+        assert_eq!(api.text.as_deref(), Some("fetch_page"));
+        assert_eq!(
+            api.attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("source_role"))
+                .and_then(|value| value.as_str()),
+            Some("code")
+        );
+        assert!(
+            api.actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "ARIA code must not invent actions: {api:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("blank")
+                    || element.text.as_ref().is_none_or(|text| text.is_empty())
+            }),
+            "whitespace-only ARIA code must not invent text: {elements:?}"
+        );
+
+        let warning = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("warning"))
+            .expect("ARIA strong should remain a paragraph");
+        assert_eq!(warning.role, ElementRole::Paragraph);
+        assert_eq!(
+            warning
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("source_role"))
+                .and_then(|value| value.as_str()),
+            Some("strong")
+        );
+
+        let native = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("native"))
+            .expect("native code should compile");
+        assert_eq!(native.role, ElementRole::Paragraph);
+        assert_eq!(native.text.as_deref(), Some("Native code"));
+        assert!(
+            native
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "native code must not invent ARIA source_role: {native:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("note")
+                    || (element.role != ElementRole::Paragraph
+                        && element
+                            .attrs
+                            .as_ref()
+                            .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("code"))))
+            }),
+            "role=note must not copy ARIA code mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("doc")
+                    || (element.role != ElementRole::Paragraph
+                        && element
+                            .attrs
+                            .as_ref()
+                            .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("code"))))
+            }),
+            "role=document must not copy ARIA code mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("comment")
+                    || (element.role != ElementRole::Paragraph
+                        && element
+                            .attrs
+                            .as_ref()
+                            .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("code"))))
+            }),
+            "role=comment must not copy ARIA code mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("warning")
+                    || element
+                        .attrs
+                        .as_ref()
+                        .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("code")))
+            }),
+            "role=strong must not copy ARIA code mapping: {elements:?}"
+        );
+
+        let share = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("share"))
+            .expect("share button should compile");
+        assert_eq!(share.role, ElementRole::Button);
+
+        let filtered = crate::som::filter::apply_selector(&som, "paragraph");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("api") && element.role == ElementRole::Paragraph
+            }),
+            "selector=paragraph should keep compiled ARIA code: {filtered_elements:?}"
         );
         assert!(
             filtered_elements
