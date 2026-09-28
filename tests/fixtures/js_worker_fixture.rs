@@ -238,6 +238,24 @@ fn main() {
         }
         return;
     }
+    if input.contains("__fixture_compiled_title__") {
+        if input.contains("getAttribute('title')")
+            && input.contains("fieldTitle")
+            && input.contains("Search")
+            && input.contains("input, textarea")
+            && !input.contains("getAttribute('placeholder')")
+            && !input.contains("getAttribute('aria-describedby')")
+        {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"typed\":true}}","effective_html":"<html><head><title>Search</title></head><body><main><!-- __fixture_compiled_title__ --><input type='search' title='Search'><input title='Other'></main></body></html>"}}}}"#
+            );
+        } else {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"error\":\"Element not found in DOM\"}}","effective_html":"<html><body><p>mutated</p></body></html>"}}}}"#
+            );
+        }
+        return;
+    }
     if input.contains("__fixture_native_radio__") {
         if input.contains("type === 'radio'") {
             println!(
