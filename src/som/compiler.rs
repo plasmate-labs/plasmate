@@ -1654,6 +1654,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                     "time" => return Some(ElementRole::Paragraph),
                     "mark" => return Some(ElementRole::Paragraph),
                     "subscript" => return Some(ElementRole::Paragraph),
+                    "superscript" => return Some(ElementRole::Paragraph),
                     "group" | "radiogroup" | "figure" => return Some(ElementRole::Group),
                     "progressbar" | "meter" => return Some(ElementRole::Group),
                     "presentation" | "none" => return contenteditable_type_role(tag, attrs),
@@ -11967,10 +11968,10 @@ plasmate fetch https://example.test</code></pre>
         assert!(
             elements.iter().all(|element| {
                 element.html_id.as_deref() != Some("power")
-                    || (element.role != ElementRole::Paragraph
-                        && element.attrs.as_ref().is_none_or(|attrs| {
-                            attrs.get("source_role") != Some(&json!("subscript"))
-                        }))
+                    || element
+                        .attrs
+                        .as_ref()
+                        .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("subscript")))
             }),
             "role=superscript must not copy ARIA subscript mapping: {elements:?}"
         );
@@ -12002,6 +12003,155 @@ plasmate fetch https://example.test</code></pre>
                 element.html_id.as_deref() == Some("two") && element.role == ElementRole::Paragraph
             }),
             "selector=paragraph should keep compiled ARIA subscript: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("share")),
+            "selector=paragraph should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn aria_role_superscript_compiles_as_paragraph() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Docs</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <div id="power">x<span id="two" role="superscript">2</span></div>
+  <div id="blank" role="superscript">   </div>
+  <div id="note" role="note">Aside</div>
+  <div id="doc" role="document">Document</div>
+  <div id="comment" role="comment">Reviewer note</div>
+  <div id="index" role="subscript">2</div>
+  <div id="hit" role="mark">Highlighted</div>
+  <sup id="native">Native superscript</sup>
+  <button id="share">Share</button>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/docs").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let two = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("two"))
+            .expect("ARIA role=superscript should compile");
+        assert_eq!(two.role, ElementRole::Paragraph);
+        assert_eq!(two.text.as_deref(), Some("2"));
+        assert_eq!(
+            two.attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("source_role"))
+                .and_then(|value| value.as_str()),
+            Some("superscript")
+        );
+        assert!(
+            two.actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "ARIA superscript must not invent actions: {two:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("blank")
+                    || element.text.as_ref().is_none_or(|text| text.is_empty())
+            }),
+            "whitespace-only ARIA superscript must not invent text: {elements:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("native")
+                    || (element.role != ElementRole::Paragraph
+                        && element.attrs.as_ref().is_none_or(|attrs| {
+                            attrs.get("source_role") != Some(&json!("superscript"))
+                        }))
+            }),
+            "native sup must not copy ARIA superscript mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("note")
+                    || (element.role != ElementRole::Paragraph
+                        && element.attrs.as_ref().is_none_or(|attrs| {
+                            attrs.get("source_role") != Some(&json!("superscript"))
+                        }))
+            }),
+            "role=note must not copy ARIA superscript mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("doc")
+                    || (element.role != ElementRole::Paragraph
+                        && element.attrs.as_ref().is_none_or(|attrs| {
+                            attrs.get("source_role") != Some(&json!("superscript"))
+                        }))
+            }),
+            "role=document must not copy ARIA superscript mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("comment")
+                    || (element.role != ElementRole::Paragraph
+                        && element.attrs.as_ref().is_none_or(|attrs| {
+                            attrs.get("source_role") != Some(&json!("superscript"))
+                        }))
+            }),
+            "role=comment must not copy ARIA superscript mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("index")
+                    || element
+                        .attrs
+                        .as_ref()
+                        .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("superscript")))
+            }),
+            "role=subscript must not copy ARIA superscript mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("hit")
+                    || element
+                        .attrs
+                        .as_ref()
+                        .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("superscript")))
+            }),
+            "role=mark must not copy ARIA superscript mapping: {elements:?}"
+        );
+
+        let share = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("share"))
+            .expect("share button should compile");
+        assert_eq!(share.role, ElementRole::Button);
+
+        let filtered = crate::som::filter::apply_selector(&som, "paragraph");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("two") && element.role == ElementRole::Paragraph
+            }),
+            "selector=paragraph should keep compiled ARIA superscript: {filtered_elements:?}"
         );
         assert!(
             filtered_elements
