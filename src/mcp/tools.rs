@@ -804,7 +804,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org breadcrumb trail recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1451,6 +1451,7 @@ fn collect_extract_link_urls(som: &Som) -> Vec<String> {
     collect_structured_json_ld_software_install_urls(som, &mut urls);
     collect_structured_json_ld_video_urls(som, &mut urls);
     collect_structured_json_ld_audio_urls(som, &mut urls);
+    collect_structured_json_ld_image_urls(som, &mut urls);
     collect_structured_json_ld_breadcrumb_urls(som, &mut urls);
     let resolve_base = extract_links_resolve_base(som);
     for url in &mut urls {
@@ -1753,6 +1754,46 @@ fn json_ld_type_is_audio(block: &Value) -> bool {
 
 fn is_json_ld_audio_type(ty: &str) -> bool {
     json_ld_type_name(ty) == "AudioObject"
+}
+
+fn collect_structured_json_ld_image_urls(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    for block in &data.json_ld {
+        collect_json_ld_image_urls(block, urls);
+    }
+}
+
+fn collect_json_ld_image_urls(block: &Value, urls: &mut Vec<String>) {
+    if !json_ld_type_is_image(block) {
+        return;
+    }
+    for key in ["contentUrl", "embedUrl"] {
+        let Some(href) = block.get(key).and_then(Value::as_str) else {
+            continue;
+        };
+        let href = href.trim();
+        if !is_extract_links_structured_href(href) {
+            continue;
+        }
+        urls.push(href.to_string());
+    }
+}
+
+fn json_ld_type_is_image(block: &Value) -> bool {
+    match block.get("@type") {
+        Some(Value::String(ty)) => is_json_ld_image_type(ty),
+        Some(Value::Array(types)) => types
+            .iter()
+            .filter_map(Value::as_str)
+            .any(is_json_ld_image_type),
+        _ => false,
+    }
+}
+
+fn is_json_ld_image_type(ty: &str) -> bool {
+    json_ld_type_name(ty) == "ImageObject"
 }
 
 fn collect_structured_json_ld_breadcrumb_urls(som: &Som, urls: &mut Vec<String>) {
@@ -9530,15 +9571,13 @@ mod tests {
                 url.contains("video-only")
                     || url.contains("thumb.jpg")
                     || url.contains("poster.png")
-                    || url.contains("tour.png")
-                    || url.contains("image/embed")
                     || url.contains("media.bin")
                     || url.contains("media/embed")
                     || url.contains("not-jsonld")
                     || url.contains("favicon")
                     || url == "https://example.test/"
             }),
-            "VideoObject url, thumbnailUrl, image, nested author.url, ImageObject/MediaObject content/embed, application/json, Organization, and icons must not copy JSON-LD video extract_links: {urls:?}"
+            "VideoObject url, thumbnailUrl, image, nested author.url, MediaObject content/embed, application/json, Organization, and icons must not copy JSON-LD video extract_links: {urls:?}"
         );
     }
 
@@ -9630,15 +9669,13 @@ mod tests {
                 url.contains("audio-only")
                     || url.contains("thumb.jpg")
                     || url.contains("cover.png")
-                    || url.contains("tour.png")
-                    || url.contains("image/embed")
                     || url.contains("media.bin")
                     || url.contains("media/embed")
                     || url.contains("not-jsonld")
                     || url.contains("favicon")
                     || url == "https://example.test/"
             }),
-            "AudioObject url, thumbnailUrl, image, nested author.url, ImageObject/MediaObject content/embed, application/json, Organization, and icons must not copy JSON-LD audio extract_links: {urls:?}"
+            "AudioObject url, thumbnailUrl, image, nested author.url, MediaObject content/embed, application/json, Organization, and icons must not copy JSON-LD audio extract_links: {urls:?}"
         );
     }
 
@@ -9742,6 +9779,103 @@ mod tests {
                     || url == "https://example.test/"
             }),
             "ItemList, orphan ListItem, object @id item, untyped entries, nested author.url, application/json, Organization, and icons must not copy JSON-LD breadcrumb extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_json_ld_image_urls() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/gallery/">
+<link rel="canonical" href="https://example.test/gallery/hero">
+<link rel="icon" href="/favicon.ico">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"ImageObject","url":"https://example.test/image-only","contentUrl":"https://example.test/hero.png","embedUrl":"viewer","thumbnailUrl":"https://example.test/gallery/thumb.jpg","caption":"Hero","author":{"@type":"Organization","name":"Labs","url":"https://example.test/"}}
+</script>
+<script type="application/ld+json">
+{"@type":["https://schema.org/ImageObject"],"contentUrl":"https://example.test/clip.webp","embedUrl":"javascript:alert(1)"}
+</script>
+<script type="application/ld+json">
+{"@type":"VideoObject","contentUrl":"https://example.test/hero.mp4","embedUrl":"https://example.test/video/embed"}
+</script>
+<script type="application/ld+json">
+{"@type":"AudioObject","contentUrl":"https://example.test/hero.mp3","embedUrl":"https://example.test/audio/embed"}
+</script>
+<script type="application/ld+json">
+{"@type":"MediaObject","contentUrl":"https://example.test/media.bin","embedUrl":"https://example.test/media/embed"}
+</script>
+<script type="application/ld+json">
+{"@type":"ImageObject","contentUrl":"   ","embedUrl":"#"}
+</script>
+<script type="application/json">
+{"@type":"ImageObject","contentUrl":"https://example.test/not-jsonld.png"}
+</script>
+<title>Hero</title>
+</head><body>
+<main>
+  <a href="hero">Hero</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        let json_ld = som
+            .structured_data
+            .as_ref()
+            .map(|data| data.json_ld.as_slice())
+            .unwrap_or(&[]);
+        assert!(
+            json_ld.iter().any(|block| {
+                block.get("@type").and_then(Value::as_str) == Some("ImageObject")
+                    && block.get("contentUrl").and_then(Value::as_str)
+                        == Some("https://example.test/hero.png")
+                    && block.get("embedUrl").and_then(Value::as_str) == Some("viewer")
+            }),
+            "compiler must keep JSON-LD ImageObject contentUrl/embedUrl for extract_links to recover: {json_ld:?}"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/hero.png".to_string()),
+            "compiled ImageObject contentUrl must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/gallery/viewer".to_string()),
+            "relative ImageObject embedUrl must resolve against document base: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/clip.webp".to_string()),
+            "schema.org ImageObject contentUrl must canonicalize into extract_links: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/gallery/hero".to_string()),
+            "canonical and in-page links must remain: {urls:?}"
+        );
+
+        assert!(
+            extract_links_definition()
+                .description
+                .contains("ImageObject contentUrl/embedUrl"),
+            "agents must be told JSON-LD image content/embed URLs are returned"
+        );
+
+        assert!(
+            !urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: ImageObject embedUrl must not become a fetch target: {urls:?}"
+        );
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("image-only")
+                    || url.contains("thumb.jpg")
+                    || url.contains("media.bin")
+                    || url.contains("media/embed")
+                    || url.contains("not-jsonld")
+                    || url.contains("favicon")
+                    || url == "https://example.test/"
+            }),
+            "ImageObject url, thumbnailUrl, nested author.url, MediaObject content/embed, application/json, Organization, and icons must not copy JSON-LD image extract_links: {urls:?}"
         );
     }
 
