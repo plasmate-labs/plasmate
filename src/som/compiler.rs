@@ -1706,9 +1706,8 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "ul" | "ol" | "dl" | "menu" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
         "p" | "time" | "blockquote" | "figcaption" | "pre" | "abbr" | "address" | "cite"
-        | "dfn" | "code" | "math" | "ruby" | "small" | "kbd" | "output" | "samp" | "var" | "q" => {
-            Some(ElementRole::Paragraph)
-        }
+        | "dfn" | "code" | "math" | "ruby" | "small" | "kbd" | "output" | "samp" | "var" | "q"
+        | "mark" => Some(ElementRole::Paragraph),
         "section" | "article" => Some(ElementRole::Section),
         "fieldset" => Some(ElementRole::Group),
         "hr" => Some(ElementRole::Separator),
@@ -7246,11 +7245,16 @@ plasmate fetch https://example.test</code></pre>
             .find(|element| element.html_id.as_deref() == Some("source"))
             .expect("small should remain a paragraph");
         assert_eq!(source.role, ElementRole::Paragraph);
+        let hit = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("hit"))
+            .expect("native mark should compile");
+        assert_eq!(hit.role, ElementRole::Paragraph);
         assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Paragraph
-            }),
-            "mark must not copy address mapping: {elements:?}"
+            hit.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "native mark must not invent ARIA source_role: {hit:?}"
         );
 
         let share = elements
@@ -7373,11 +7377,16 @@ plasmate fetch https://example.test</code></pre>
                 .is_none_or(|attrs| attrs.get("cite").is_none()),
             "q must not copy blockquote cite: {inline:?}"
         );
+        let hit = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("hit"))
+            .expect("native mark should compile");
+        assert_eq!(hit.role, ElementRole::Paragraph);
         assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Paragraph
-            }),
-            "mark must not copy cite mapping: {elements:?}"
+            hit.attrs.as_ref().is_none_or(
+                |attrs| attrs.get("source_role").is_none() && attrs.get("cite").is_none()
+            ),
+            "native mark must not copy cite mapping: {hit:?}"
         );
         let term = elements
             .iter()
@@ -7506,11 +7515,16 @@ plasmate fetch https://example.test</code></pre>
         assert_eq!(source.role, ElementRole::Paragraph);
         assert_eq!(source.text.as_deref(), Some("RFC 3986"));
 
+        let hit = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("hit"))
+            .expect("native mark should compile");
+        assert_eq!(hit.role, ElementRole::Paragraph);
         assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Paragraph
-            }),
-            "mark must not copy dfn mapping: {elements:?}"
+            hit.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "native mark must not invent ARIA source_role: {hit:?}"
         );
         let name = elements
             .iter()
@@ -7633,11 +7647,16 @@ plasmate fetch https://example.test</code></pre>
         assert_eq!(term.role, ElementRole::Paragraph);
         assert_eq!(term.text.as_deref(), Some("Semantic Object Model"));
 
+        let hit = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("hit"))
+            .expect("native mark should compile");
+        assert_eq!(hit.role, ElementRole::Paragraph);
         assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Paragraph
-            }),
-            "mark must not copy code mapping: {elements:?}"
+            hit.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "native mark must not invent ARIA source_role: {hit:?}"
         );
         let shortcut = elements
             .iter()
@@ -7796,11 +7815,16 @@ plasmate fetch https://example.test</code></pre>
             .find(|element| element.html_id.as_deref() == Some("result"))
             .expect("output should remain a paragraph");
         assert_eq!(result.role, ElementRole::Paragraph);
+        let hit = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("hit"))
+            .expect("native mark should compile");
+        assert_eq!(hit.role, ElementRole::Paragraph);
         assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Paragraph
-            }),
-            "mark must not copy math mapping: {elements:?}"
+            hit.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "native mark must not invent ARIA source_role: {hit:?}"
         );
 
         let api = elements
@@ -8168,11 +8192,16 @@ plasmate fetch https://example.test</code></pre>
             .expect("code should remain a paragraph");
         assert_eq!(api.role, ElementRole::Paragraph);
 
+        let hit = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("hit"))
+            .expect("native mark should compile");
+        assert_eq!(hit.role, ElementRole::Paragraph);
         assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Paragraph
-            }),
-            "mark must not copy ruby mapping: {elements:?}"
+            hit.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "native mark must not invent ARIA source_role: {hit:?}"
         );
         let shortcut = elements
             .iter()
@@ -8299,11 +8328,16 @@ plasmate fetch https://example.test</code></pre>
             .expect("code should remain a paragraph");
         assert_eq!(api.role, ElementRole::Paragraph);
 
+        let hit = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("hit"))
+            .expect("native mark should compile");
+        assert_eq!(hit.role, ElementRole::Paragraph);
         assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Paragraph
-            }),
-            "mark must not copy small mapping: {elements:?}"
+            hit.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "native mark must not invent ARIA source_role: {hit:?}"
         );
         let shortcut = elements
             .iter()
@@ -8435,11 +8469,16 @@ plasmate fetch https://example.test</code></pre>
             .expect("code should remain a paragraph");
         assert_eq!(api.role, ElementRole::Paragraph);
 
+        let hit = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("hit"))
+            .expect("native mark should compile");
+        assert_eq!(hit.role, ElementRole::Paragraph);
         assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Paragraph
-            }),
-            "mark must not copy kbd mapping: {elements:?}"
+            hit.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "native mark must not invent ARIA source_role: {hit:?}"
         );
         let output = elements
             .iter()
@@ -8715,11 +8754,16 @@ plasmate fetch https://example.test</code></pre>
             .expect("code should remain a paragraph");
         assert_eq!(api.role, ElementRole::Paragraph);
 
+        let hit = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("hit"))
+            .expect("native mark should compile");
+        assert_eq!(hit.role, ElementRole::Paragraph);
         assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Paragraph
-            }),
-            "mark must not copy samp mapping: {elements:?}"
+            hit.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "native mark must not invent ARIA source_role: {hit:?}"
         );
         let name = elements
             .iter()
@@ -8859,11 +8903,16 @@ plasmate fetch https://example.test</code></pre>
             .expect("samp should remain a paragraph");
         assert_eq!(output.role, ElementRole::Paragraph);
 
+        let hit = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("hit"))
+            .expect("native mark should compile");
+        assert_eq!(hit.role, ElementRole::Paragraph);
         assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Paragraph
-            }),
-            "mark must not copy var mapping: {elements:?}"
+            hit.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "native mark must not invent ARIA source_role: {hit:?}"
         );
         assert!(
             elements.iter().all(|element| {
@@ -11784,16 +11833,18 @@ plasmate fetch https://example.test</code></pre>
             Some("time")
         );
 
+        let native = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("native"))
+            .expect("native mark should compile");
+        assert_eq!(native.role, ElementRole::Paragraph);
+        assert_eq!(native.text.as_deref(), Some("Native highlight"));
         assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("native")
-                    || (element.role != ElementRole::Paragraph
-                        && element
-                            .attrs
-                            .as_ref()
-                            .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("mark"))))
-            }),
-            "native mark must not copy ARIA mark mapping: {elements:?}"
+            native
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "native mark must not copy ARIA source_role: {native:?}"
         );
         assert!(
             elements.iter().all(|element| {
@@ -12635,11 +12686,16 @@ plasmate fetch https://example.test</code></pre>
             .expect("var should remain a paragraph");
         assert_eq!(name.role, ElementRole::Paragraph);
 
+        let hit = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("hit"))
+            .expect("native mark should compile");
+        assert_eq!(hit.role, ElementRole::Paragraph);
         assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("hit") || element.role != ElementRole::Paragraph
-            }),
-            "mark must not copy q mapping: {elements:?}"
+            hit.attrs.as_ref().is_none_or(
+                |attrs| attrs.get("source_role").is_none() && attrs.get("cite").is_none()
+            ),
+            "native mark must not copy q mapping: {hit:?}"
         );
         assert!(
             elements.iter().all(|element| {
@@ -12681,6 +12737,164 @@ plasmate fetch https://example.test</code></pre>
                     && element.role == ElementRole::Paragraph
             }),
             "selector=paragraph should keep compiled q: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("share")),
+            "selector=paragraph should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn mark_compiles_as_paragraph() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Highlights</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <mark id="hit">Highlighted term</mark>
+  <mark id="linked"><a href="https://example.test/term">Marked link</a></mark>
+  <mark id="blank">   </mark>
+  <div id="aria" role="mark">ARIA highlight</div>
+  <q id="quote">Quoted aside</q>
+  <var id="name">Not a highlight</var>
+  <ins id="insert">Inserted</ins>
+  <del id="delete">Deleted</del>
+  <em id="stress">Not a highlight</em>
+  <button id="share">Share</button>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/highlights").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let hit = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("hit"))
+            .expect("native mark should compile");
+        assert_eq!(hit.role, ElementRole::Paragraph);
+        assert_eq!(hit.text.as_deref(), Some("Highlighted term"));
+        assert!(
+            hit.actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "mark must not invent actions: {hit:?}"
+        );
+        assert!(
+            hit.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "native mark must not invent ARIA source_role: {hit:?}"
+        );
+        assert!(
+            hit.attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("cite").is_none()),
+            "mark must not invent a cite attribute: {hit:?}"
+        );
+
+        let linked = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("linked"))
+            .expect("mark with a nested link should still compile");
+        assert_eq!(linked.role, ElementRole::Paragraph);
+        assert_eq!(linked.text.as_deref(), Some("Marked link"));
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Link
+                    && element.attrs.as_ref().and_then(|attrs| attrs.get("href"))
+                        == Some(&json!("https://example.test/term"))
+            }),
+            "mark must keep nested links: {elements:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("blank")
+                    || (element.role == ElementRole::Paragraph
+                        && element.text.as_deref().is_none_or(|text| text.is_empty()))
+            }),
+            "whitespace-only mark must not invent text: {elements:?}"
+        );
+
+        let aria = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("aria"))
+            .expect("ARIA mark should remain a paragraph");
+        assert_eq!(aria.role, ElementRole::Paragraph);
+        assert_eq!(
+            aria.attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("source_role"))
+                .and_then(|value| value.as_str()),
+            Some("mark")
+        );
+
+        let quote = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("quote"))
+            .expect("q should remain a paragraph");
+        assert_eq!(quote.role, ElementRole::Paragraph);
+
+        let name = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("name"))
+            .expect("var should remain a paragraph");
+        assert_eq!(name.role, ElementRole::Paragraph);
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("insert")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "ins must not copy mark mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("delete")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "del must not copy mark mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("stress")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "em must not copy mark mapping: {elements:?}"
+        );
+
+        let share = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("share"))
+            .expect("share button should compile");
+        assert_eq!(share.role, ElementRole::Button);
+
+        let filtered = crate::som::filter::apply_selector(&som, "paragraph");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("hit") && element.role == ElementRole::Paragraph
+            }),
+            "selector=paragraph should keep compiled mark: {filtered_elements:?}"
         );
         assert!(
             filtered_elements
