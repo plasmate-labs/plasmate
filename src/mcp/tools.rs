@@ -804,7 +804,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1455,6 +1455,7 @@ fn collect_extract_link_urls(som: &Som) -> Vec<String> {
     collect_structured_json_ld_breadcrumb_urls(som, &mut urls);
     collect_structured_json_ld_discussion_urls(som, &mut urls);
     collect_structured_json_ld_significant_urls(som, &mut urls);
+    collect_structured_json_ld_archived_urls(som, &mut urls);
     let resolve_base = extract_links_resolve_base(som);
     for url in &mut urls {
         *url = resolve_extracted_link(&resolve_base, url);
@@ -1943,6 +1944,29 @@ fn is_json_ld_webpage_type(ty: &str) -> bool {
 }
 
 fn push_json_ld_significant_href(href: &str, urls: &mut Vec<String>) {
+    let href = href.trim();
+    if !is_extract_links_structured_href(href) {
+        return;
+    }
+    urls.push(href.to_string());
+}
+
+fn collect_structured_json_ld_archived_urls(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    for block in &data.json_ld {
+        collect_json_ld_archived_urls(block, urls);
+    }
+}
+
+fn collect_json_ld_archived_urls(block: &Value, urls: &mut Vec<String>) {
+    if !json_ld_type_is_document(block) {
+        return;
+    }
+    let Some(href) = block.get("archivedAt").and_then(Value::as_str) else {
+        return;
+    };
     let href = href.trim();
     if !is_extract_links_structured_href(href) {
         return;
@@ -10316,6 +10340,110 @@ mod tests {
                     || url.contains("favicon")
             }),
             "relatedLink, license, Article, NewsArticle, Organization, untyped, object @id, application/json, and icons must not copy JSON-LD significant extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_json_ld_archived_urls() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/notes/">
+<link rel="canonical" href="https://example.test/notes/som">
+<link rel="icon" href="/favicon.ico">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"NewsArticle","url":"https://example.test/news/som","archivedAt":"https://example.test/archive/news/som","discussionUrl":"https://example.test/news/som/comments","relatedLink":"https://example.test/news/related","license":"https://example.test/license","author":{"@type":"Person","name":"Ada","url":"https://example.test/authors/ada"}}
+</script>
+<script type="application/ld+json">
+{"@type":["https://schema.org/BlogPosting"],"archivedAt":"snapshot"}
+</script>
+<script type="application/ld+json">
+{"@type":"WebPage","archivedAt":"javascript:alert(1)"}
+</script>
+<script type="application/ld+json">
+{"@type":"Article","archivedAt":"   "}
+</script>
+<script type="application/ld+json">
+{"@type":"Organization","archivedAt":"https://example.test/org/archive"}
+</script>
+<script type="application/ld+json">
+{"@type":"CreativeWork","archivedAt":"https://example.test/work/archive"}
+</script>
+<script type="application/ld+json">
+{"archivedAt":"https://example.test/untyped"}
+</script>
+<script type="application/ld+json">
+{"@type":"NewsArticle","archivedAt":{"@id":"https://example.test/object-id"}}
+</script>
+<script type="application/json">
+{"@type":"NewsArticle","archivedAt":"https://example.test/not-jsonld"}
+</script>
+<title>Note</title>
+</head><body>
+<main>
+  <a href="som">SOM</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        let json_ld = som
+            .structured_data
+            .as_ref()
+            .map(|data| data.json_ld.as_slice())
+            .unwrap_or(&[]);
+        assert!(
+            json_ld.iter().any(|block| {
+                block.get("@type").and_then(Value::as_str) == Some("NewsArticle")
+                    && block.get("archivedAt").and_then(Value::as_str)
+                        == Some("https://example.test/archive/news/som")
+            }),
+            "compiler must keep JSON-LD NewsArticle archivedAt for extract_links to recover: {json_ld:?}"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/archive/news/som".to_string()),
+            "compiled NewsArticle archivedAt must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/notes/snapshot".to_string()),
+            "relative BlogPosting archivedAt must resolve against document base: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/notes/som".to_string()),
+            "canonical and in-page links must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/news/som/comments".to_string()),
+            "discussionUrl must remain: {urls:?}"
+        );
+
+        assert!(
+            extract_links_definition()
+                .description
+                .contains("archivedAt"),
+            "agents must be told JSON-LD archived snapshot URLs are returned"
+        );
+
+        assert!(
+            !urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: JSON-LD archivedAt must not become a fetch target: {urls:?}"
+        );
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("/news/related")
+                    || url.contains("/license")
+                    || url.contains("/authors/ada")
+                    || url.contains("/org/archive")
+                    || url.contains("/work/archive")
+                    || url.contains("untyped")
+                    || url.contains("object-id")
+                    || url.contains("not-jsonld")
+                    || url.contains("favicon")
+            }),
+            "relatedLink, license, nested author.url, Organization, CreativeWork, untyped, object @id, application/json, and icons must not copy JSON-LD archived extract_links: {urls:?}"
         );
     }
 
