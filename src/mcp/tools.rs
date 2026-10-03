@@ -804,7 +804,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, research HTML fulltext recovery, Dublin Core identifier recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, research HTML fulltext recovery, Dublin Core identifier recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1451,6 +1451,7 @@ fn collect_extract_link_urls(som: &Som) -> Vec<String> {
     collect_structured_fediverse_creator_id(som, &mut urls);
     collect_structured_json_ld_document_urls(som, &mut urls);
     collect_structured_json_ld_software_install_urls(som, &mut urls);
+    collect_structured_json_ld_release_notes_urls(som, &mut urls);
     collect_structured_json_ld_video_urls(som, &mut urls);
     collect_structured_json_ld_audio_urls(som, &mut urls);
     collect_structured_json_ld_image_urls(som, &mut urls);
@@ -1695,6 +1696,40 @@ fn collect_json_ld_software_install_urls(block: &Value, urls: &mut Vec<String>) 
         }
         urls.push(href.to_string());
     }
+}
+
+fn collect_structured_json_ld_release_notes_urls(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    for block in &data.json_ld {
+        collect_json_ld_release_notes_urls(block, urls);
+    }
+}
+
+fn collect_json_ld_release_notes_urls(block: &Value, urls: &mut Vec<String>) {
+    if !json_ld_type_is_software(block) {
+        return;
+    }
+    match block.get("releaseNotes") {
+        Some(Value::String(href)) => push_json_ld_release_notes_href(href, urls),
+        Some(Value::Array(items)) => {
+            for item in items {
+                if let Some(href) = item.as_str() {
+                    push_json_ld_release_notes_href(href, urls);
+                }
+            }
+        }
+        _ => {}
+    }
+}
+
+fn push_json_ld_release_notes_href(href: &str, urls: &mut Vec<String>) {
+    let href = href.trim();
+    if !is_extract_links_structured_href(href) {
+        return;
+    }
+    urls.push(href.to_string());
 }
 
 fn json_ld_type_is_software(block: &Value) -> bool {
@@ -9999,6 +10034,129 @@ mod tests {
                     || url == "https://example.test/"
             }),
             "SoftwareApplication url, image, codeRepository, nested author.url, Product download/install, application/json, Organization, and icons must not copy JSON-LD software install extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_json_ld_release_notes_urls() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/apps/">
+<link rel="canonical" href="https://example.test/apps/plasmate">
+<link rel="icon" href="/favicon.ico">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","url":"https://example.test/software-only","downloadUrl":"https://example.test/install.sh","installUrl":"docs/install","releaseNotes":"https://example.test/changelog.md","softwareHelp":"https://example.test/help","screenshot":"https://example.test/apps/shot.png","codeRepository":"https://github.com/example/plasmate","author":{"@type":"Organization","name":"Labs","url":"https://example.test/","releaseNotes":"https://example.test/org/notes"}}
+</script>
+<script type="application/ld+json">
+{"@type":["https://schema.org/WebApplication"],"releaseNotes":["notes/v1","https://example.test/releases/v2"]}
+</script>
+<script type="application/ld+json">
+{"@type":"MobileApplication","releaseNotes":"javascript:alert(1)"}
+</script>
+<script type="application/ld+json">
+{"@type":"Product","releaseNotes":"https://example.test/product/notes"}
+</script>
+<script type="application/ld+json">
+{"@type":"SoftwareSourceCode","releaseNotes":"https://example.test/source/notes","codeRepository":"https://github.com/example/source"}
+</script>
+<script type="application/ld+json">
+{"@type":"WebPage","releaseNotes":"https://example.test/page/notes"}
+</script>
+<script type="application/ld+json">
+{"@type":"SoftwareApplication","releaseNotes":"   "}
+</script>
+<script type="application/ld+json">
+{"@type":"Organization","releaseNotes":"https://example.test/org/release"}
+</script>
+<script type="application/ld+json">
+{"@type":"CreativeWork","releaseNotes":"https://example.test/work/notes"}
+</script>
+<script type="application/ld+json">
+{"releaseNotes":"https://example.test/untyped"}
+</script>
+<script type="application/ld+json">
+{"@type":"SoftwareApplication","releaseNotes":{"@id":"https://example.test/object-id"}}
+</script>
+<script type="application/json">
+{"@type":"SoftwareApplication","releaseNotes":"https://example.test/not-jsonld.md"}
+</script>
+<title>App</title>
+</head><body>
+<main>
+  <a href="plasmate">Plasmate</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        let json_ld = som
+            .structured_data
+            .as_ref()
+            .map(|data| data.json_ld.as_slice())
+            .unwrap_or(&[]);
+        assert!(
+            json_ld.iter().any(|block| {
+                block.get("@type").and_then(Value::as_str) == Some("SoftwareApplication")
+                    && block.get("releaseNotes").and_then(Value::as_str)
+                        == Some("https://example.test/changelog.md")
+            }),
+            "compiler must keep JSON-LD SoftwareApplication releaseNotes for extract_links to recover: {json_ld:?}"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/changelog.md".to_string()),
+            "compiled SoftwareApplication releaseNotes must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/apps/notes/v1".to_string()),
+            "relative WebApplication releaseNotes must resolve against document base: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/releases/v2".to_string()),
+            "WebApplication releaseNotes array values must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/install.sh".to_string()),
+            "SoftwareApplication downloadUrl must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/apps/plasmate".to_string()),
+            "canonical and in-page links must remain: {urls:?}"
+        );
+
+        assert!(
+            extract_links_definition()
+                .description
+                .contains("SoftwareApplication releaseNotes"),
+            "agents must be told JSON-LD software release-notes URLs are returned"
+        );
+
+        assert!(
+            !urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: SoftwareApplication releaseNotes must not become a fetch target: {urls:?}"
+        );
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("software-only")
+                    || url.contains("/help")
+                    || url.contains("apps/shot.png")
+                    || url.contains("github.com")
+                    || url.contains("/org/notes")
+                    || url.contains("product/notes")
+                    || url.contains("source/notes")
+                    || url.contains("page/notes")
+                    || url.contains("/org/release")
+                    || url.contains("/work/notes")
+                    || url.contains("untyped")
+                    || url.contains("object-id")
+                    || url.contains("not-jsonld")
+                    || url.contains("favicon")
+                    || url == "https://example.test/"
+            }),
+            "softwareHelp/screenshot/codeRepository, nested author.releaseNotes, Product, SoftwareSourceCode, WebPage, Organization, CreativeWork, untyped, object @id, application/json, and icons must not copy JSON-LD releaseNotes extract_links: {urls:?}"
         );
     }
 
