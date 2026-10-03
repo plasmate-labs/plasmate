@@ -804,7 +804,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, research HTML fulltext recovery, Dublin Core identifier recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled JSON-LD license values (WebPage/Article and subtypes), compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, research HTML fulltext recovery, Dublin Core identifier recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, schema.org license recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1460,6 +1460,7 @@ fn collect_extract_link_urls(som: &Som) -> Vec<String> {
     collect_structured_json_ld_significant_urls(som, &mut urls);
     collect_structured_json_ld_archived_urls(som, &mut urls);
     collect_structured_json_ld_same_as_urls(som, &mut urls);
+    collect_structured_json_ld_license_urls(som, &mut urls);
     let resolve_base = extract_links_resolve_base(som);
     for url in &mut urls {
         *url = resolve_extracted_link(&resolve_base, url);
@@ -2073,6 +2074,40 @@ fn collect_json_ld_same_as_urls(block: &Value, urls: &mut Vec<String>) {
 }
 
 fn push_json_ld_same_as_href(href: &str, urls: &mut Vec<String>) {
+    let href = href.trim();
+    if !is_extract_links_structured_href(href) {
+        return;
+    }
+    urls.push(href.to_string());
+}
+
+fn collect_structured_json_ld_license_urls(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    for block in &data.json_ld {
+        collect_json_ld_license_urls(block, urls);
+    }
+}
+
+fn collect_json_ld_license_urls(block: &Value, urls: &mut Vec<String>) {
+    if !json_ld_type_is_document(block) {
+        return;
+    }
+    match block.get("license") {
+        Some(Value::String(href)) => push_json_ld_license_href(href, urls),
+        Some(Value::Array(items)) => {
+            for item in items {
+                if let Some(href) = item.as_str() {
+                    push_json_ld_license_href(href, urls);
+                }
+            }
+        }
+        _ => {}
+    }
+}
+
+fn push_json_ld_license_href(href: &str, urls: &mut Vec<String>) {
     let href = href.trim();
     if !is_extract_links_structured_href(href) {
         return;
@@ -10628,6 +10663,10 @@ mod tests {
             urls.contains(&"https://example.test/notes/som".to_string()),
             "canonical and in-page links must remain: {urls:?}"
         );
+        assert!(
+            urls.contains(&"https://example.test/license".to_string()),
+            "license must remain: {urls:?}"
+        );
 
         assert!(
             extract_links_definition()
@@ -10643,7 +10682,6 @@ mod tests {
         assert!(
             !urls.iter().any(|url| {
                 url.contains("comment-id")
-                    || url.contains("/license")
                     || url.contains("/authors/ada")
                     || url.contains("/org/talk")
                     || url.contains("/work/talk")
@@ -10652,7 +10690,7 @@ mod tests {
                     || url.contains("not-jsonld")
                     || url.contains("favicon")
             }),
-            "comment, license, nested author.url, Organization, CreativeWork, untyped, object @id, application/json, and icons must not copy JSON-LD discussion extract_links: {urls:?}"
+            "comment, nested author.url, Organization, CreativeWork, untyped, object @id, application/json, and icons must not copy JSON-LD discussion extract_links: {urls:?}"
         );
     }
 
@@ -10739,6 +10777,10 @@ mod tests {
             urls.contains(&"https://example.test/guides/som/comments".to_string()),
             "discussionUrl must remain: {urls:?}"
         );
+        assert!(
+            urls.contains(&"https://example.test/license".to_string()),
+            "license must remain: {urls:?}"
+        );
 
         assert!(
             extract_links_definition()
@@ -10754,7 +10796,6 @@ mod tests {
         assert!(
             !urls.iter().any(|url| {
                 url.contains("/guides/related")
-                    || url.contains("/license")
                     || url.contains("/news/featured")
                     || url.contains("/news/top")
                     || url.contains("/org/featured")
@@ -10763,7 +10804,7 @@ mod tests {
                     || url.contains("not-jsonld")
                     || url.contains("favicon")
             }),
-            "relatedLink, license, Article, NewsArticle, Organization, untyped, object @id, application/json, and icons must not copy JSON-LD significant extract_links: {urls:?}"
+            "relatedLink, Article, NewsArticle, Organization, untyped, object @id, application/json, and icons must not copy JSON-LD significant extract_links: {urls:?}"
         );
     }
 
@@ -10843,6 +10884,10 @@ mod tests {
             urls.contains(&"https://example.test/news/som/comments".to_string()),
             "discussionUrl must remain: {urls:?}"
         );
+        assert!(
+            urls.contains(&"https://example.test/license".to_string()),
+            "license must remain: {urls:?}"
+        );
 
         assert!(
             extract_links_definition()
@@ -10858,7 +10903,6 @@ mod tests {
         assert!(
             !urls.iter().any(|url| {
                 url.contains("/news/related")
-                    || url.contains("/license")
                     || url.contains("/authors/ada")
                     || url.contains("/org/archive")
                     || url.contains("/work/archive")
@@ -10867,7 +10911,7 @@ mod tests {
                     || url.contains("not-jsonld")
                     || url.contains("favicon")
             }),
-            "relatedLink, license, nested author.url, Organization, CreativeWork, untyped, object @id, application/json, and icons must not copy JSON-LD archived extract_links: {urls:?}"
+            "relatedLink, nested author.url, Organization, CreativeWork, untyped, object @id, application/json, and icons must not copy JSON-LD archived extract_links: {urls:?}"
         );
     }
 
@@ -10951,6 +10995,10 @@ mod tests {
             urls.contains(&"https://example.test/archive/news/som".to_string()),
             "archivedAt must remain: {urls:?}"
         );
+        assert!(
+            urls.contains(&"https://example.test/license".to_string()),
+            "license must remain: {urls:?}"
+        );
 
         assert!(
             extract_links_definition().description.contains("sameAs"),
@@ -10964,7 +11012,6 @@ mod tests {
         assert!(
             !urls.iter().any(|url| {
                 url.contains("/news/related")
-                    || url.contains("/license")
                     || url.contains("/authors/ada")
                     || url.contains("github.com")
                     || url.contains("/work/identity")
@@ -10973,7 +11020,123 @@ mod tests {
                     || url.contains("not-jsonld")
                     || url.contains("favicon")
             }),
-            "relatedLink, license, nested author.sameAs, Organization, CreativeWork, untyped, object @id, application/json, and icons must not copy JSON-LD sameAs extract_links: {urls:?}"
+            "relatedLink, nested author.sameAs, Organization, CreativeWork, untyped, object @id, application/json, and icons must not copy JSON-LD sameAs extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_json_ld_license_urls() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/notes/">
+<link rel="canonical" href="https://example.test/notes/som">
+<link rel="icon" href="/favicon.ico">
+<meta name="dcterms.license" content="https://example.test/dcterms-license">
+<meta name="dc.rights" content="https://example.test/dc-rights">
+<meta property="cc:license" content="https://example.test/cc-meta">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"NewsArticle","url":"https://example.test/news/som","license":"https://creativecommons.org/licenses/by/4.0/","sameAs":"https://www.wikidata.org/wiki/Q42","relatedLink":"https://example.test/news/related","acquireLicensePage":"https://example.test/acquire","usageInfo":"https://example.test/usage","publishingPrinciples":"https://example.test/principles","author":{"@type":"Person","name":"Ada","url":"https://example.test/authors/ada","license":"https://example.test/authors/ada#license"}}
+</script>
+<script type="application/ld+json">
+{"@type":["https://schema.org/BlogPosting"],"license":["cc-by","https://creativecommons.org/licenses/by-sa/4.0/"]}
+</script>
+<script type="application/ld+json">
+{"@type":"WebPage","license":"javascript:alert(1)"}
+</script>
+<script type="application/ld+json">
+{"@type":"Article","license":"   "}
+</script>
+<script type="application/ld+json">
+{"@type":"Organization","license":"https://example.test/org/license"}
+</script>
+<script type="application/ld+json">
+{"@type":"CreativeWork","license":"https://example.test/work/license"}
+</script>
+<script type="application/ld+json">
+{"license":"https://example.test/untyped"}
+</script>
+<script type="application/ld+json">
+{"@type":"NewsArticle","license":{"@id":"https://example.test/object-id"}}
+</script>
+<script type="application/json">
+{"@type":"NewsArticle","license":"https://example.test/not-jsonld"}
+</script>
+<title>Note</title>
+</head><body>
+<main>
+  <a href="som">SOM</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        let json_ld = som
+            .structured_data
+            .as_ref()
+            .map(|data| data.json_ld.as_slice())
+            .unwrap_or(&[]);
+        assert!(
+            json_ld.iter().any(|block| {
+                block.get("@type").and_then(Value::as_str) == Some("NewsArticle")
+                    && block.get("license").and_then(Value::as_str)
+                        == Some("https://creativecommons.org/licenses/by/4.0/")
+            }),
+            "compiler must keep JSON-LD NewsArticle license for extract_links to recover: {json_ld:?}"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://creativecommons.org/licenses/by/4.0/".to_string()),
+            "compiled NewsArticle license must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/notes/cc-by".to_string()),
+            "relative BlogPosting license must resolve against document base: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://creativecommons.org/licenses/by-sa/4.0/".to_string()),
+            "BlogPosting license array values must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/notes/som".to_string()),
+            "canonical and in-page links must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://www.wikidata.org/wiki/Q42".to_string()),
+            "sameAs must remain: {urls:?}"
+        );
+
+        assert!(
+            extract_links_definition()
+                .description
+                .contains("JSON-LD license"),
+            "agents must be told JSON-LD license URLs are returned"
+        );
+
+        assert!(
+            !urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: JSON-LD license must not become a fetch target: {urls:?}"
+        );
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("/news/related")
+                    || url.contains("/acquire")
+                    || url.contains("/usage")
+                    || url.contains("/principles")
+                    || url.contains("/authors/ada")
+                    || url.contains("dcterms-license")
+                    || url.contains("dc-rights")
+                    || url.contains("cc-meta")
+                    || url.contains("/org/license")
+                    || url.contains("/work/license")
+                    || url.contains("untyped")
+                    || url.contains("object-id")
+                    || url.contains("not-jsonld")
+                    || url.contains("favicon")
+            }),
+            "relatedLink, acquireLicensePage/usageInfo/publishingPrinciples, nested author.license, Dublin Core/cc meta, Organization, CreativeWork, untyped, object @id, application/json, and icons must not copy JSON-LD license extract_links: {urls:?}"
         );
     }
 
