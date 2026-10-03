@@ -804,7 +804,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, research HTML fulltext recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, research HTML fulltext recovery, Dublin Core identifier recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1445,6 +1445,7 @@ fn collect_extract_link_urls(som: &Som) -> Vec<String> {
     collect_structured_document_links(som, &mut urls);
     collect_structured_citation_pdf_urls(som, &mut urls);
     collect_structured_citation_fulltext_html_urls(som, &mut urls);
+    collect_structured_dublin_core_identifier_urls(som, &mut urls);
     collect_structured_og_url(som, &mut urls);
     collect_structured_refresh_url(som, &mut urls);
     collect_structured_fediverse_creator_id(som, &mut urls);
@@ -1540,6 +1541,26 @@ fn collect_structured_citation_fulltext_html_urls(som: &Som, urls: &mut Vec<Stri
         return;
     }
     urls.push(href.to_string());
+}
+
+fn collect_structured_dublin_core_identifier_urls(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    for key in ["dc.identifier", "dcterms.identifier"] {
+        let Some(href) = data.meta.get(key) else {
+            continue;
+        };
+        let href = href.trim();
+        if !is_extract_links_dublin_core_identifier_href(href) {
+            continue;
+        }
+        urls.push(href.to_string());
+    }
+}
+
+fn is_extract_links_dublin_core_identifier_href(href: &str) -> bool {
+    is_extract_links_structured_href(href)
 }
 
 fn collect_structured_og_url(som: &Som, urls: &mut Vec<String>) {
@@ -9295,6 +9316,10 @@ mod tests {
             urls.contains(&"https://example.test/papers/som".to_string()),
             "canonical must remain: {urls:?}"
         );
+        assert!(
+            urls.contains(&"https://example.test/dc-id".to_string()),
+            "dc.identifier must remain: {urls:?}"
+        );
 
         let blocked = crate::som::compiler::compile(
             r##"<html><head>
@@ -9314,11 +9339,10 @@ mod tests {
             !urls.iter().any(|url| {
                 url.contains("som-abstract")
                     || url.contains("bepress.pdf")
-                    || url.contains("dc-id")
                     || url.contains("property.pdf")
                     || url.contains("favicon")
             }),
-            "abstract, bepress, Dublin Core, property=, and icons must not copy citation_pdf_url extract_links: {urls:?}"
+            "abstract, bepress, property=, and icons must not copy citation_pdf_url extract_links: {urls:?}"
         );
     }
 
@@ -9372,6 +9396,10 @@ mod tests {
             urls.contains(&"https://example.test/papers/som".to_string()),
             "canonical must remain: {urls:?}"
         );
+        assert!(
+            urls.contains(&"https://example.test/dc-id".to_string()),
+            "dc.identifier must remain: {urls:?}"
+        );
 
         let blocked = crate::som::compiler::compile(
             r##"<html><head>
@@ -9400,11 +9428,110 @@ mod tests {
                     || url.contains("som-abstract")
                     || url.contains("som.xml")
                     || url.contains("bepress.html")
-                    || url.contains("dc-id")
                     || url.contains("property.html")
                     || url.contains("favicon")
             }),
-            "overwritten name, abstract/xml, bepress, Dublin Core, property=, and icons must not copy citation_fulltext_html_url extract_links: {urls:?}"
+            "overwritten name, abstract/xml, bepress, property=, and icons must not copy citation_fulltext_html_url extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_dublin_core_identifier_urls() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/papers/">
+<link rel="canonical" href="https://example.test/papers/som">
+<meta name="dc.identifier" content="https://example.test/dc-id">
+<meta name="dcterms.identifier" content="record">
+<meta name="dc.relation" content="https://example.test/dc-related">
+<meta name="dcterms.relation" content="https://example.test/dcterms-related">
+<meta name="dc.title" content="https://example.test/dc-title">
+<meta name="dc.creator" content="https://example.test/authors/ada">
+<meta name="citation_doi" content="10.1000/plasmate">
+<meta name="citation_pdf_url" content="https://example.test/som.pdf">
+<meta name="bepress_citation_pdf_url" content="https://example.test/bepress.pdf">
+<meta property="dc.identifier" content="https://example.test/property-id">
+<link rel="icon" href="/favicon.ico">
+<title>Paper</title>
+</head><body>
+<main>
+  <a href="som">SOM</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        assert_eq!(
+            som.structured_data
+                .as_ref()
+                .and_then(|data| data.meta.get("dc.identifier"))
+                .map(String::as_str),
+            Some("https://example.test/dc-id"),
+            "compiler must keep Dublin Core dc.identifier for extract_links to recover"
+        );
+        assert_eq!(
+            som.structured_data
+                .as_ref()
+                .and_then(|data| data.meta.get("dcterms.identifier"))
+                .map(String::as_str),
+            Some("record"),
+            "compiler must keep dcterms.identifier for extract_links to recover"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/dc-id".to_string()),
+            "compiled dc.identifier must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/papers/record".to_string()),
+            "relative dcterms.identifier must resolve against document base: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/som.pdf".to_string()),
+            "citation_pdf_url must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/papers/som".to_string()),
+            "canonical must remain: {urls:?}"
+        );
+
+        let blocked = crate::som::compiler::compile(
+            r##"<html><head>
+<meta name="dc.identifier" content="javascript:alert(1)">
+<meta name="dcterms.identifier" content="javascript:alert(2)">
+<title>Blocked</title>
+</head><body><main><p>No identifier</p></main></body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("blocked fixture HTML should compile");
+        let blocked_urls = collect_extract_link_urls(&blocked);
+        assert!(
+            !blocked_urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: Dublin Core identifier must not become a fetch target: {blocked_urls:?}"
+        );
+
+        assert!(
+            extract_links_definition()
+                .description
+                .contains("dc.identifier"),
+            "agents must be told Dublin Core identifier URLs are returned"
+        );
+
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("dc-related")
+                    || url.contains("dcterms-related")
+                    || url.contains("dc-title")
+                    || url.contains("/authors/ada")
+                    || url.contains("10.1000/plasmate")
+                    || url.contains("bepress.pdf")
+                    || url.contains("property-id")
+                    || url.contains("favicon")
+            }),
+            "relation/title/creator, citation_doi, bepress, property=, and icons must not copy Dublin Core identifier extract_links: {urls:?}"
         );
     }
 
