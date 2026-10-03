@@ -804,7 +804,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled EPrints eprints.official_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled JSON-LD license values (WebPage/Article and subtypes), compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, research HTML fulltext recovery, Dublin Core identifier recovery, EPrints official URL recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, schema.org license recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled EPrints eprints.official_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled JSON-LD license values (WebPage/Article and subtypes), compiled JSON-LD Dataset distribution contentUrl values, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, research HTML fulltext recovery, Dublin Core identifier recovery, EPrints official URL recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, schema.org license recovery, schema.org dataset distribution recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1462,6 +1462,7 @@ fn collect_extract_link_urls(som: &Som) -> Vec<String> {
     collect_structured_json_ld_archived_urls(som, &mut urls);
     collect_structured_json_ld_same_as_urls(som, &mut urls);
     collect_structured_json_ld_license_urls(som, &mut urls);
+    collect_structured_json_ld_dataset_urls(som, &mut urls);
     let resolve_base = extract_links_resolve_base(som);
     for url in &mut urls {
         *url = resolve_extracted_link(&resolve_base, url);
@@ -2132,6 +2133,74 @@ fn push_json_ld_license_href(href: &str, urls: &mut Vec<String>) {
         return;
     }
     urls.push(href.to_string());
+}
+
+fn collect_structured_json_ld_dataset_urls(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    for block in &data.json_ld {
+        collect_json_ld_dataset_urls(block, urls);
+    }
+}
+
+fn collect_json_ld_dataset_urls(block: &Value, urls: &mut Vec<String>) {
+    if !json_ld_type_is_dataset(block) {
+        return;
+    }
+    match block.get("distribution") {
+        Some(Value::Array(items)) => {
+            for item in items {
+                push_json_ld_dataset_distribution_content_url(item, urls);
+            }
+        }
+        Some(item) => push_json_ld_dataset_distribution_content_url(item, urls),
+        None => {}
+    }
+}
+
+fn push_json_ld_dataset_distribution_content_url(item: &Value, urls: &mut Vec<String>) {
+    if !json_ld_type_is_data_download(item) {
+        return;
+    }
+    let Some(href) = item.get("contentUrl").and_then(Value::as_str) else {
+        return;
+    };
+    let href = href.trim();
+    if !is_extract_links_structured_href(href) {
+        return;
+    }
+    urls.push(href.to_string());
+}
+
+fn json_ld_type_is_dataset(block: &Value) -> bool {
+    match block.get("@type") {
+        Some(Value::String(ty)) => is_json_ld_dataset_type(ty),
+        Some(Value::Array(types)) => types
+            .iter()
+            .filter_map(Value::as_str)
+            .any(is_json_ld_dataset_type),
+        _ => false,
+    }
+}
+
+fn is_json_ld_dataset_type(ty: &str) -> bool {
+    json_ld_type_name(ty) == "Dataset"
+}
+
+fn json_ld_type_is_data_download(block: &Value) -> bool {
+    match block.get("@type") {
+        Some(Value::String(ty)) => is_json_ld_data_download_type(ty),
+        Some(Value::Array(types)) => types
+            .iter()
+            .filter_map(Value::as_str)
+            .any(is_json_ld_data_download_type),
+        _ => false,
+    }
+}
+
+fn is_json_ld_data_download_type(ty: &str) -> bool {
+    json_ld_type_name(ty) == "DataDownload"
 }
 
 fn parse_http_equiv_refresh_url(content: &str) -> Option<&str> {
@@ -11259,6 +11328,132 @@ mod tests {
                     || url.contains("favicon")
             }),
             "relatedLink, acquireLicensePage/usageInfo/publishingPrinciples, nested author.license, Dublin Core/cc meta, Organization, CreativeWork, untyped, object @id, application/json, and icons must not copy JSON-LD license extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_json_ld_dataset_urls() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/data/">
+<link rel="canonical" href="https://example.test/data/som">
+<link rel="icon" href="/favicon.ico">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Dataset","url":"https://example.test/dataset-only","identifier":"https://example.test/doi/10.1000/plasmate","license":"https://example.test/dataset-license","sameAs":"https://www.wikidata.org/wiki/Q42","contentUrl":"https://example.test/dataset-direct.csv","distribution":{"@type":"DataDownload","contentUrl":"https://example.test/som.csv","url":"https://example.test/dataset-download-page","encodingFormat":"text/csv","thumbnailUrl":"https://example.test/data/thumb.png"},"author":{"@type":"Organization","name":"Labs","url":"https://example.test/"}}
+</script>
+<script type="application/ld+json">
+{"@type":["https://schema.org/Dataset"],"distribution":[{"@type":"DataDownload","contentUrl":"files/som.json"},{"@type":["https://schema.org/DataDownload"],"contentUrl":"https://example.test/som.parquet"},{"@type":"DataDownload","contentUrl":"javascript:alert(1)"},{"@type":"DataDownload","contentUrl":"   "},{"@type":"DataDownload","contentUrl":{"@id":"https://example.test/object-id"}},{"@type":"MediaObject","contentUrl":"https://example.test/media.bin"},{"contentUrl":"https://example.test/untyped-dist.csv"},"https://example.test/distribution-string"]}
+</script>
+<script type="application/ld+json">
+{"@type":"DataDownload","contentUrl":"https://example.test/orphan.csv"}
+</script>
+<script type="application/ld+json">
+{"@type":"DataCatalog","distribution":{"@type":"DataDownload","contentUrl":"https://example.test/catalog.csv"}}
+</script>
+<script type="application/ld+json">
+{"@type":"CreativeWork","distribution":{"@type":"DataDownload","contentUrl":"https://example.test/work.csv"}}
+</script>
+<script type="application/ld+json">
+{"@type":"WebPage","distribution":{"@type":"DataDownload","contentUrl":"https://example.test/page.csv"}}
+</script>
+<script type="application/ld+json">
+{"@type":"VideoObject","distribution":{"@type":"DataDownload","contentUrl":"https://example.test/video.csv"},"contentUrl":"https://example.test/tour.mp4"}
+</script>
+<script type="application/ld+json">
+{"@type":"Organization","distribution":{"@type":"DataDownload","contentUrl":"https://example.test/org.csv"}}
+</script>
+<script type="application/ld+json">
+{"distribution":{"@type":"DataDownload","contentUrl":"https://example.test/untyped.csv"}}
+</script>
+<script type="application/json">
+{"@type":"Dataset","distribution":{"@type":"DataDownload","contentUrl":"https://example.test/not-jsonld.csv"}}
+</script>
+<title>Dataset</title>
+</head><body>
+<main>
+  <a href="som">SOM</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        let json_ld = som
+            .structured_data
+            .as_ref()
+            .map(|data| data.json_ld.as_slice())
+            .unwrap_or(&[]);
+        assert!(
+            json_ld.iter().any(|block| {
+                block.get("@type").and_then(Value::as_str) == Some("Dataset")
+                    && block
+                        .get("distribution")
+                        .and_then(|value| value.get("contentUrl"))
+                        .and_then(Value::as_str)
+                        == Some("https://example.test/som.csv")
+            }),
+            "compiler must keep JSON-LD Dataset distribution contentUrl for extract_links to recover: {json_ld:?}"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/som.csv".to_string()),
+            "compiled Dataset DataDownload contentUrl must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/data/files/som.json".to_string()),
+            "relative Dataset DataDownload contentUrl must resolve against document base: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/som.parquet".to_string()),
+            "schema.org Dataset DataDownload contentUrl must canonicalize into extract_links: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/data/som".to_string()),
+            "canonical and in-page links must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/tour.mp4".to_string()),
+            "VideoObject contentUrl must remain: {urls:?}"
+        );
+
+        assert!(
+            extract_links_definition()
+                .description
+                .contains("Dataset distribution contentUrl"),
+            "agents must be told JSON-LD dataset distribution URLs are returned"
+        );
+
+        assert!(
+            !urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: Dataset distribution contentUrl must not become a fetch target: {urls:?}"
+        );
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("dataset-only")
+                    || url.contains("/doi/")
+                    || url.contains("dataset-license")
+                    || url.contains("wikidata")
+                    || url.contains("dataset-direct")
+                    || url.contains("dataset-download-page")
+                    || url.contains("thumb.png")
+                    || url.contains("object-id")
+                    || url.contains("media.bin")
+                    || url.contains("untyped-dist")
+                    || url.contains("distribution-string")
+                    || url.contains("orphan.csv")
+                    || url.contains("catalog.csv")
+                    || url.contains("work.csv")
+                    || url.contains("page.csv")
+                    || url.contains("video.csv")
+                    || url.contains("org.csv")
+                    || url.contains("untyped.csv")
+                    || url.contains("not-jsonld")
+                    || url.contains("favicon")
+                    || url == "https://example.test/"
+            }),
+            "Dataset url/identifier/license/sameAs/contentUrl, DataDownload url, MediaObject, string distribution, top-level DataDownload, DataCatalog, CreativeWork, WebPage, Organization, untyped, object @id, application/json, nested author.url, and icons must not copy JSON-LD dataset extract_links: {urls:?}"
         );
     }
 
