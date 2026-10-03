@@ -804,7 +804,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled EPrints eprints.official_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled JSON-LD license values (WebPage/Article and subtypes), compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, research HTML fulltext recovery, Dublin Core identifier recovery, EPrints official URL recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, schema.org license recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled EPrints eprints.official_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled JSON-LD license values (WebPage/Article and subtypes), compiled JSON-LD Product offers url values, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, research HTML fulltext recovery, Dublin Core identifier recovery, EPrints official URL recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, schema.org license recovery, schema.org product-offer recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1462,6 +1462,7 @@ fn collect_extract_link_urls(som: &Som) -> Vec<String> {
     collect_structured_json_ld_archived_urls(som, &mut urls);
     collect_structured_json_ld_same_as_urls(som, &mut urls);
     collect_structured_json_ld_license_urls(som, &mut urls);
+    collect_structured_json_ld_product_offer_urls(som, &mut urls);
     let resolve_base = extract_links_resolve_base(som);
     for url in &mut urls {
         *url = resolve_extracted_link(&resolve_base, url);
@@ -2132,6 +2133,74 @@ fn push_json_ld_license_href(href: &str, urls: &mut Vec<String>) {
         return;
     }
     urls.push(href.to_string());
+}
+
+fn collect_structured_json_ld_product_offer_urls(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    for block in &data.json_ld {
+        collect_json_ld_product_offer_urls(block, urls);
+    }
+}
+
+fn collect_json_ld_product_offer_urls(block: &Value, urls: &mut Vec<String>) {
+    if !json_ld_type_is_product(block) {
+        return;
+    }
+    match block.get("offers") {
+        Some(Value::Array(items)) => {
+            for item in items {
+                push_json_ld_product_offer_url(item, urls);
+            }
+        }
+        Some(item) => push_json_ld_product_offer_url(item, urls),
+        None => {}
+    }
+}
+
+fn push_json_ld_product_offer_url(item: &Value, urls: &mut Vec<String>) {
+    if !json_ld_type_is_offer(item) {
+        return;
+    }
+    let Some(href) = item.get("url").and_then(Value::as_str) else {
+        return;
+    };
+    let href = href.trim();
+    if !is_extract_links_structured_href(href) {
+        return;
+    }
+    urls.push(href.to_string());
+}
+
+fn json_ld_type_is_product(block: &Value) -> bool {
+    match block.get("@type") {
+        Some(Value::String(ty)) => is_json_ld_product_type(ty),
+        Some(Value::Array(types)) => types
+            .iter()
+            .filter_map(Value::as_str)
+            .any(is_json_ld_product_type),
+        _ => false,
+    }
+}
+
+fn is_json_ld_product_type(ty: &str) -> bool {
+    json_ld_type_name(ty) == "Product"
+}
+
+fn json_ld_type_is_offer(block: &Value) -> bool {
+    match block.get("@type") {
+        Some(Value::String(ty)) => is_json_ld_offer_type(ty),
+        Some(Value::Array(types)) => types
+            .iter()
+            .filter_map(Value::as_str)
+            .any(is_json_ld_offer_type),
+        _ => false,
+    }
+}
+
+fn is_json_ld_offer_type(ty: &str) -> bool {
+    json_ld_type_name(ty) == "Offer"
 }
 
 fn parse_http_equiv_refresh_url(content: &str) -> Option<&str> {
@@ -11259,6 +11328,141 @@ mod tests {
                     || url.contains("favicon")
             }),
             "relatedLink, acquireLicensePage/usageInfo/publishingPrinciples, nested author.license, Dublin Core/cc meta, Organization, CreativeWork, untyped, object @id, application/json, and icons must not copy JSON-LD license extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_json_ld_product_offer_urls() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/shop/">
+<link rel="canonical" href="https://example.test/shop/som">
+<link rel="icon" href="/favicon.ico">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Product","name":"SOM","url":"https://example.test/product-only","sameAs":"https://www.wikidata.org/wiki/Q42","image":"https://example.test/som.png","sku":"https://example.test/sku","offers":{"@type":"Offer","url":"https://example.test/buy/som","price":"9.00","priceCurrency":"USD","availability":"https://schema.org/InStock","itemOffered":{"@type":"Product","url":"https://example.test/item-offered"},"seller":{"@type":"Organization","url":"https://example.test/seller"},"image":"https://example.test/offer.png"}}
+</script>
+<script type="application/ld+json">
+{"@type":["https://schema.org/Product"],"offers":[{"@type":"Offer","url":"checkout/som"},{"@type":["https://schema.org/Offer"],"url":"https://example.test/buy/som-alt"},{"@type":"Offer","url":"javascript:alert(1)"},{"@type":"Offer","url":"   "},{"@type":"Offer","url":{"@id":"https://example.test/object-id"}},{"@type":"AggregateOffer","url":"https://example.test/aggregate"},{"@type":"Demand","url":"https://example.test/demand"},{"url":"https://example.test/untyped-offer"},"https://example.test/offer-string"]}
+</script>
+<script type="application/ld+json">
+{"@type":"Offer","url":"https://example.test/orphan-offer"}
+</script>
+<script type="application/ld+json">
+{"@type":"Event","offers":{"@type":"Offer","url":"https://example.test/event-offer"}}
+</script>
+<script type="application/ld+json">
+{"@type":"Service","offers":{"@type":"Offer","url":"https://example.test/service-offer"}}
+</script>
+<script type="application/ld+json">
+{"@type":"IndividualProduct","offers":{"@type":"Offer","url":"https://example.test/individual-offer"}}
+</script>
+<script type="application/ld+json">
+{"@type":"ProductModel","offers":{"@type":"Offer","url":"https://example.test/model-offer"}}
+</script>
+<script type="application/ld+json">
+{"@type":"SoftwareApplication","offers":{"@type":"Offer","url":"https://example.test/software-offer"},"downloadUrl":"https://example.test/app.dmg"}
+</script>
+<script type="application/ld+json">
+{"@type":"WebPage","offers":{"@type":"Offer","url":"https://example.test/page-offer"}}
+</script>
+<script type="application/ld+json">
+{"@type":"Organization","offers":{"@type":"Offer","url":"https://example.test/org-offer"}}
+</script>
+<script type="application/ld+json">
+{"offers":{"@type":"Offer","url":"https://example.test/untyped"}}
+</script>
+<script type="application/json">
+{"@type":"Product","offers":{"@type":"Offer","url":"https://example.test/not-jsonld"}}
+</script>
+<title>Shop</title>
+</head><body>
+<main>
+  <a href="som">SOM</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        let json_ld = som
+            .structured_data
+            .as_ref()
+            .map(|data| data.json_ld.as_slice())
+            .unwrap_or(&[]);
+        assert!(
+            json_ld.iter().any(|block| {
+                block.get("@type").and_then(Value::as_str) == Some("Product")
+                    && block
+                        .get("offers")
+                        .and_then(|value| value.get("url"))
+                        .and_then(Value::as_str)
+                        == Some("https://example.test/buy/som")
+            }),
+            "compiler must keep JSON-LD Product offers url for extract_links to recover: {json_ld:?}"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/buy/som".to_string()),
+            "compiled Product Offer url must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/shop/checkout/som".to_string()),
+            "relative Product Offer url must resolve against document base: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/buy/som-alt".to_string()),
+            "schema.org Product Offer url must canonicalize into extract_links: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/shop/som".to_string()),
+            "canonical and in-page links must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/app.dmg".to_string()),
+            "SoftwareApplication downloadUrl must remain: {urls:?}"
+        );
+
+        assert!(
+            extract_links_definition()
+                .description
+                .contains("Product offers url"),
+            "agents must be told JSON-LD product offer URLs are returned"
+        );
+
+        assert!(
+            !urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: Product Offer url must not become a fetch target: {urls:?}"
+        );
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("product-only")
+                    || url.contains("wikidata")
+                    || url.contains("som.png")
+                    || url.contains("/sku")
+                    || url.contains("schema.org/InStock")
+                    || url.contains("item-offered")
+                    || url.contains("/seller")
+                    || url.contains("offer.png")
+                    || url.contains("object-id")
+                    || url.contains("aggregate")
+                    || url.contains("demand")
+                    || url.contains("untyped-offer")
+                    || url.contains("offer-string")
+                    || url.contains("orphan-offer")
+                    || url.contains("event-offer")
+                    || url.contains("service-offer")
+                    || url.contains("individual-offer")
+                    || url.contains("model-offer")
+                    || url.contains("software-offer")
+                    || url.contains("page-offer")
+                    || url.contains("org-offer")
+                    || url.contains("untyped")
+                    || url.contains("not-jsonld")
+                    || url.contains("favicon")
+            }),
+            "Product url/sameAs/image/sku, Offer availability/itemOffered/seller/image, AggregateOffer, Demand, string offers, top-level Offer, Event, Service, IndividualProduct, ProductModel, SoftwareApplication offers, WebPage, Organization, untyped, object @id, application/json, and icons must not copy JSON-LD product-offer extract_links: {urls:?}"
         );
     }
 
