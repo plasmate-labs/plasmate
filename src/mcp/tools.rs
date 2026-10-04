@@ -804,7 +804,8 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled EPrints eprints.official_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled JSON-LD license values (WebPage/Article and subtypes), compiled JSON-LD JobPosting applicationUrl values, compiled JSON-LD Product offers url values, compiled JSON-LD Dataset distribution contentUrl values, compiled JSON-LD WebSite SearchAction target values, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, research HTML fulltext recovery, Dublin Core identifier recovery, EPrints official URL recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, schema.org license recovery, schema.org job-application recovery, schema.org product-offer recovery, schema.org dataset distribution recovery, schema.org site-search recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
+description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Highwire citation_abstract_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled EPrints eprints.official_url values, compiled Open Graph og:url values, compiled Twitter Card twitter:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD SoftwareApplication codeRepository values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled JSON-LD license values (WebPage/Article and subtypes), compiled JSON-LD JobPosting applicationUrl values, compiled JSON-LD Product offers url values, compiled JSON-LD Dataset distribution contentUrl values, compiled JSON-LD WebSite SearchAction target values, compiled JSON-LD Event url values, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, research HTML fulltext recovery, research HTML abstract recovery, Dublin Core identifier recovery, EPrints official URL recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org software source-repository recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, schema.org license recovery, schema.org job-application recovery, schema.org product-offer recovery, schema.org dataset distribution recovery, schema.org site-search recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
+
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1445,14 +1446,17 @@ fn collect_extract_link_urls(som: &Som) -> Vec<String> {
     collect_structured_document_links(som, &mut urls);
     collect_structured_citation_pdf_urls(som, &mut urls);
     collect_structured_citation_fulltext_html_urls(som, &mut urls);
+    collect_structured_citation_abstract_html_urls(som, &mut urls);
     collect_structured_dublin_core_identifier_urls(som, &mut urls);
     collect_structured_eprints_official_url(som, &mut urls);
     collect_structured_og_url(som, &mut urls);
+    collect_structured_twitter_url(som, &mut urls);
     collect_structured_refresh_url(som, &mut urls);
     collect_structured_fediverse_creator_id(som, &mut urls);
     collect_structured_json_ld_document_urls(som, &mut urls);
     collect_structured_json_ld_software_install_urls(som, &mut urls);
     collect_structured_json_ld_release_notes_urls(som, &mut urls);
+    collect_structured_json_ld_software_repository_urls(som, &mut urls);
     collect_structured_json_ld_video_urls(som, &mut urls);
     collect_structured_json_ld_audio_urls(som, &mut urls);
     collect_structured_json_ld_image_urls(som, &mut urls);
@@ -1466,6 +1470,7 @@ fn collect_extract_link_urls(som: &Som) -> Vec<String> {
     collect_structured_json_ld_product_offer_urls(som, &mut urls);
     collect_structured_json_ld_dataset_urls(som, &mut urls);
     collect_structured_json_ld_search_action_urls(som, &mut urls);
+    collect_structured_json_ld_event_urls(som, &mut urls);
     let resolve_base = extract_links_resolve_base(som);
     for url in &mut urls {
         *url = resolve_extracted_link(&resolve_base, url);
@@ -1550,6 +1555,20 @@ fn collect_structured_citation_fulltext_html_urls(som: &Som, urls: &mut Vec<Stri
     urls.push(href.to_string());
 }
 
+fn collect_structured_citation_abstract_html_urls(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    let Some(href) = data.meta.get("citation_abstract_html_url") else {
+        return;
+    };
+    let href = href.trim();
+    if !is_extract_links_structured_href(href) {
+        return;
+    }
+    urls.push(href.to_string());
+}
+
 fn collect_structured_dublin_core_identifier_urls(som: &Som, urls: &mut Vec<String>) {
     let Some(data) = som.structured_data.as_ref() else {
         return;
@@ -1593,6 +1612,20 @@ fn collect_structured_og_url(som: &Som, urls: &mut Vec<String>) {
         return;
     };
     let Some(href) = data.open_graph.get("og:url") else {
+        return;
+    };
+    let href = href.trim();
+    if !is_extract_links_structured_href(href) {
+        return;
+    }
+    urls.push(href.to_string());
+}
+
+fn collect_structured_twitter_url(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    let Some(href) = data.twitter_card.get("twitter:url") else {
         return;
     };
     let href = href.trim();
@@ -1749,6 +1782,40 @@ fn collect_json_ld_release_notes_urls(block: &Value, urls: &mut Vec<String>) {
 }
 
 fn push_json_ld_release_notes_href(href: &str, urls: &mut Vec<String>) {
+    let href = href.trim();
+    if !is_extract_links_structured_href(href) {
+        return;
+    }
+    urls.push(href.to_string());
+}
+
+fn collect_structured_json_ld_software_repository_urls(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    for block in &data.json_ld {
+        collect_json_ld_software_repository_urls(block, urls);
+    }
+}
+
+fn collect_json_ld_software_repository_urls(block: &Value, urls: &mut Vec<String>) {
+    if !json_ld_type_is_software(block) {
+        return;
+    }
+    match block.get("codeRepository") {
+        Some(Value::String(href)) => push_json_ld_software_repository_href(href, urls),
+        Some(Value::Array(items)) => {
+            for item in items {
+                if let Some(href) = item.as_str() {
+                    push_json_ld_software_repository_href(href, urls);
+                }
+            }
+        }
+        _ => {}
+    }
+}
+
+fn push_json_ld_software_repository_href(href: &str, urls: &mut Vec<String>) {
     let href = href.trim();
     if !is_extract_links_structured_href(href) {
         return;
@@ -2392,6 +2459,44 @@ fn json_ld_search_action_target(action: &Value) -> Option<&str> {
             .and_then(Value::as_str),
         _ => None,
     }
+}
+
+fn collect_structured_json_ld_event_urls(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    for block in &data.json_ld {
+        collect_json_ld_event_urls(block, urls);
+    }
+}
+
+fn collect_json_ld_event_urls(block: &Value, urls: &mut Vec<String>) {
+    if !json_ld_type_is_event(block) {
+        return;
+    }
+    let Some(href) = block.get("url").and_then(Value::as_str) else {
+        return;
+    };
+    let href = href.trim();
+    if !is_extract_links_structured_href(href) {
+        return;
+    }
+    urls.push(href.to_string());
+}
+
+fn json_ld_type_is_event(block: &Value) -> bool {
+    match block.get("@type") {
+        Some(Value::String(ty)) => is_json_ld_event_type(ty),
+        Some(Value::Array(types)) => types
+            .iter()
+            .filter_map(Value::as_str)
+            .any(is_json_ld_event_type),
+        _ => false,
+    }
+}
+
+fn is_json_ld_event_type(ty: &str) -> bool {
+    json_ld_type_name(ty) == "Event"
 }
 
 fn parse_http_equiv_refresh_url(content: &str) -> Option<&str> {
@@ -9662,6 +9767,10 @@ mod tests {
             "citation_fulltext_html_url must remain: {urls:?}"
         );
         assert!(
+            urls.contains(&"https://example.test/som-abstract".to_string()),
+            "citation_abstract_html_url must remain: {urls:?}"
+        );
+        assert!(
             urls.contains(&"https://example.test/papers/som".to_string()),
             "canonical must remain: {urls:?}"
         );
@@ -9686,12 +9795,11 @@ mod tests {
 
         assert!(
             !urls.iter().any(|url| {
-                url.contains("som-abstract")
-                    || url.contains("bepress.pdf")
+                url.contains("bepress.pdf")
                     || url.contains("property.pdf")
                     || url.contains("favicon")
             }),
-            "abstract, bepress, property=, and icons must not copy citation_pdf_url extract_links: {urls:?}"
+            "bepress, property=, and icons must not copy citation_pdf_url extract_links: {urls:?}"
         );
     }
 
@@ -9742,6 +9850,10 @@ mod tests {
             "citation_pdf_url must remain: {urls:?}"
         );
         assert!(
+            urls.contains(&"https://example.test/som-abstract".to_string()),
+            "citation_abstract_html_url must remain: {urls:?}"
+        );
+        assert!(
             urls.contains(&"https://example.test/papers/som".to_string()),
             "canonical must remain: {urls:?}"
         );
@@ -9774,13 +9886,104 @@ mod tests {
         assert!(
             !urls.iter().any(|url| {
                 url.contains("som.html")
-                    || url.contains("som-abstract")
                     || url.contains("som.xml")
                     || url.contains("bepress.html")
                     || url.contains("property.html")
                     || url.contains("favicon")
             }),
-            "overwritten name, abstract/xml, bepress, property=, and icons must not copy citation_fulltext_html_url extract_links: {urls:?}"
+            "overwritten name, xml, bepress, property=, and icons must not copy citation_fulltext_html_url extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_highwire_citation_abstract_html_url() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/papers/">
+<link rel="canonical" href="https://example.test/papers/som">
+<meta name="citation_title" content="Semantic Object Model">
+<meta name="citation_doi" content="10.1000/plasmate">
+<meta name="citation_pdf_url" content="https://example.test/som.pdf">
+<meta name="citation_fulltext_html_url" content="https://example.test/som.html">
+<meta name="citation_abstract_html_url" content="https://example.test/som-abstract">
+<meta name="Citation_Abstract_Html_Url" content="abstract">
+<meta name="citation_fulltext_xml_url" content="https://example.test/som.xml">
+<meta name="bepress_citation_abstract_html_url" content="https://example.test/bepress-abstract">
+<meta name="dc.identifier" content="https://example.test/dc-id">
+<meta property="citation_abstract_html_url" content="https://example.test/property-abstract">
+<link rel="icon" href="/favicon.ico">
+<title>Paper</title>
+</head><body>
+<main>
+  <a href="som">SOM</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        assert_eq!(
+            som.structured_data
+                .as_ref()
+                .and_then(|data| data.meta.get("citation_abstract_html_url"))
+                .map(String::as_str),
+            Some("abstract"),
+            "compiler must keep Highwire citation_abstract_html_url for extract_links to recover"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/papers/abstract".to_string()),
+            "relative citation_abstract_html_url must resolve against document base: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/som.pdf".to_string()),
+            "citation_pdf_url must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/som.html".to_string()),
+            "citation_fulltext_html_url must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/papers/som".to_string()),
+            "canonical must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/dc-id".to_string()),
+            "dc.identifier must remain: {urls:?}"
+        );
+
+        let blocked = crate::som::compiler::compile(
+            r##"<html><head>
+<meta name="citation_abstract_html_url" content="javascript:alert(1)">
+<title>Blocked</title>
+</head><body><main><p>No abstract</p></main></body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("blocked fixture HTML should compile");
+        let blocked_urls = collect_extract_link_urls(&blocked);
+        assert!(
+            !blocked_urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: citation_abstract_html_url must not become a fetch target: {blocked_urls:?}"
+        );
+
+        assert!(
+            extract_links_definition()
+                .description
+                .contains("citation_abstract_html_url"),
+            "agents must be told Highwire HTML abstract URLs are returned"
+        );
+
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("som-abstract")
+                    || url.contains("som.xml")
+                    || url.contains("bepress-abstract")
+                    || url.contains("property-abstract")
+                    || url.contains("favicon")
+            }),
+            "overwritten name, xml, bepress, property=, and icons must not copy citation_abstract_html_url extract_links: {urls:?}"
         );
     }
 
@@ -10033,6 +10236,10 @@ mod tests {
             urls.contains(&"https://example.test/som.pdf".to_string()),
             "citation_pdf_url must remain: {urls:?}"
         );
+        assert!(
+            urls.contains(&"https://example.test/twitter/som".to_string()),
+            "twitter:url must remain: {urls:?}"
+        );
 
         let blocked = crate::som::compiler::compile(
             r##"<html><head>
@@ -10053,10 +10260,110 @@ mod tests {
                 url.contains("som.png")
                     || url.contains("som.mp3")
                     || url.contains("som.mp4")
-                    || url.contains("twitter/som")
                     || url.contains("favicon")
             }),
-            "og:image/audio/video, twitter:url, and icons must not copy og:url extract_links: {urls:?}"
+            "og:image/audio/video and icons must not copy og:url extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_twitter_card_url() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/notes/">
+<link rel="canonical" href="https://example.test/notes/som">
+<meta name="twitter:url" content="https://example.test/twitter/som">
+<meta name="twitter:image" content="https://example.test/twitter/som.png">
+<meta name="twitter:player" content="https://example.test/twitter/player">
+<meta name="twitter:player:stream" content="https://example.test/twitter/som.mp4">
+<meta name="twitter:site" content="@plasmate">
+<meta property="og:url" content="https://example.test/og/som">
+<meta property="og:image" content="https://example.test/og/som.png">
+<meta name="citation_pdf_url" content="https://example.test/som.pdf">
+<link rel="icon" href="/favicon.ico">
+<title>Note</title>
+</head><body>
+<main>
+  <a href="som">SOM</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        assert_eq!(
+            som.structured_data
+                .as_ref()
+                .and_then(|data| data.twitter_card.get("twitter:url"))
+                .map(String::as_str),
+            Some("https://example.test/twitter/som"),
+            "compiler must keep twitter:url for extract_links to recover"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/twitter/som".to_string()),
+            "compiled twitter:url must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/notes/som".to_string()),
+            "canonical must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/og/som".to_string()),
+            "og:url must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/som.pdf".to_string()),
+            "citation_pdf_url must remain: {urls:?}"
+        );
+
+        let relative = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/notes/">
+<meta name="twitter:url" content="card">
+<title>Relative</title>
+</head><body><main><p>No links</p></main></body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("relative fixture HTML should compile");
+        let relative_urls = collect_extract_link_urls(&relative);
+        assert!(
+            relative_urls.contains(&"https://example.test/notes/card".to_string()),
+            "relative twitter:url must resolve against document base: {relative_urls:?}"
+        );
+
+        let blocked = crate::som::compiler::compile(
+            r##"<html><head>
+<meta name="twitter:url" content="javascript:alert(1)">
+<title>Blocked</title>
+</head><body><main><p>No Twitter URL</p></main></body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("blocked fixture HTML should compile");
+        let blocked_urls = collect_extract_link_urls(&blocked);
+        assert!(
+            !blocked_urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: twitter:url must not become a fetch target: {blocked_urls:?}"
+        );
+
+        assert!(
+            extract_links_definition()
+                .description
+                .contains("twitter:url"),
+            "agents must be told Twitter Card URLs are returned"
+        );
+
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("twitter/som.png")
+                    || url.contains("twitter/player")
+                    || url.contains("twitter/som.mp4")
+                    || url.contains("og/som.png")
+                    || url.contains("favicon")
+            }),
+            "twitter:image/player/stream, og:image, and icons must not copy twitter:url extract_links: {urls:?}"
         );
     }
 
@@ -10443,14 +10750,13 @@ mod tests {
             !urls.iter().any(|url| {
                 url.contains("software-only")
                     || url.contains("apps/icon.png")
-                    || url.contains("github.com")
                     || url.contains("product.bin")
                     || url.contains("product/setup")
                     || url.contains("not-jsonld")
                     || url.contains("favicon")
                     || url == "https://example.test/"
             }),
-            "SoftwareApplication url, image, codeRepository, nested author.url, Product download/install, application/json, Organization, and icons must not copy JSON-LD software install extract_links: {urls:?}"
+            "SoftwareApplication url, image, nested author.url, Product download/install, application/json, Organization, and icons must not copy JSON-LD software install extract_links: {urls:?}"
         );
     }
 
@@ -10560,7 +10866,6 @@ mod tests {
                 url.contains("software-only")
                     || url.contains("/help")
                     || url.contains("apps/shot.png")
-                    || url.contains("github.com")
                     || url.contains("/org/notes")
                     || url.contains("product/notes")
                     || url.contains("source/notes")
@@ -10573,7 +10878,129 @@ mod tests {
                     || url.contains("favicon")
                     || url == "https://example.test/"
             }),
-            "softwareHelp/screenshot/codeRepository, nested author.releaseNotes, Product, SoftwareSourceCode, WebPage, Organization, CreativeWork, untyped, object @id, application/json, and icons must not copy JSON-LD releaseNotes extract_links: {urls:?}"
+            "softwareHelp/screenshot, nested author.releaseNotes, Product, SoftwareSourceCode, WebPage, Organization, CreativeWork, untyped, object @id, application/json, and icons must not copy JSON-LD releaseNotes extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_json_ld_software_repository_urls() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/apps/">
+<link rel="canonical" href="https://example.test/apps/plasmate">
+<link rel="icon" href="/favicon.ico">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","url":"https://example.test/software-only","downloadUrl":"https://example.test/install.sh","installUrl":"docs/install","releaseNotes":"https://example.test/changelog.md","softwareHelp":"https://example.test/help","screenshot":"https://example.test/apps/shot.png","codeRepository":"https://example.test/src/plasmate.git","author":{"@type":"Organization","name":"Labs","url":"https://example.test/","codeRepository":"https://example.test/org.git"}}
+</script>
+<script type="application/ld+json">
+{"@type":["https://schema.org/WebApplication"],"codeRepository":["repos/plasmate.git","https://example.test/src/mirror.git"]}
+</script>
+<script type="application/ld+json">
+{"@type":"MobileApplication","codeRepository":"javascript:alert(1)"}
+</script>
+<script type="application/ld+json">
+{"@type":"Product","codeRepository":"https://example.test/product.git"}
+</script>
+<script type="application/ld+json">
+{"@type":"SoftwareSourceCode","codeRepository":"https://example.test/source/plasmate.git","downloadUrl":"https://example.test/source.tgz"}
+</script>
+<script type="application/ld+json">
+{"@type":"WebPage","codeRepository":"https://example.test/page.git"}
+</script>
+<script type="application/ld+json">
+{"@type":"SoftwareApplication","codeRepository":"   "}
+</script>
+<script type="application/ld+json">
+{"@type":"Organization","codeRepository":"https://example.test/org/repo.git"}
+</script>
+<script type="application/ld+json">
+{"@type":"CreativeWork","codeRepository":"https://example.test/work.git"}
+</script>
+<script type="application/ld+json">
+{"codeRepository":"https://example.test/untyped.git"}
+</script>
+<script type="application/ld+json">
+{"@type":"SoftwareApplication","codeRepository":{"@id":"https://example.test/object-id.git"}}
+</script>
+<script type="application/json">
+{"@type":"SoftwareApplication","codeRepository":"https://example.test/not-jsonld.git"}
+</script>
+<title>App</title>
+</head><body>
+<main>
+  <a href="plasmate">Plasmate</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        let json_ld = som
+            .structured_data
+            .as_ref()
+            .map(|data| data.json_ld.as_slice())
+            .unwrap_or(&[]);
+        assert!(
+            json_ld.iter().any(|block| {
+                block.get("@type").and_then(Value::as_str) == Some("SoftwareApplication")
+                    && block.get("codeRepository").and_then(Value::as_str)
+                        == Some("https://example.test/src/plasmate.git")
+            }),
+            "compiler must keep JSON-LD SoftwareApplication codeRepository for extract_links to recover: {json_ld:?}"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/src/plasmate.git".to_string()),
+            "compiled SoftwareApplication codeRepository must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/apps/repos/plasmate.git".to_string()),
+            "relative WebApplication codeRepository must resolve against document base: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/src/mirror.git".to_string()),
+            "WebApplication codeRepository array values must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/install.sh".to_string()),
+            "SoftwareApplication downloadUrl must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/apps/plasmate".to_string()),
+            "canonical and in-page links must remain: {urls:?}"
+        );
+
+        assert!(
+            extract_links_definition()
+                .description
+                .contains("SoftwareApplication codeRepository"),
+            "agents must be told JSON-LD software source-repository URLs are returned"
+        );
+
+        assert!(
+            !urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: SoftwareApplication codeRepository must not become a fetch target: {urls:?}"
+        );
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("software-only")
+                    || url.contains("/help")
+                    || url.contains("apps/shot.png")
+                    || url.contains("/org.git")
+                    || url.contains("product.git")
+                    || url.contains("source/plasmate.git")
+                    || url.contains("page.git")
+                    || url.contains("org/repo.git")
+                    || url.contains("work.git")
+                    || url.contains("untyped")
+                    || url.contains("object-id")
+                    || url.contains("not-jsonld")
+                    || url.contains("favicon")
+                    || url == "https://example.test/"
+            }),
+            "softwareHelp/screenshot/url, nested author.codeRepository, Product, SoftwareSourceCode, WebPage, Organization, CreativeWork, untyped, object @id, application/json, and icons must not copy JSON-LD software source-repository extract_links: {urls:?}"
         );
     }
 
@@ -12003,6 +12430,131 @@ mod tests {
                     || url.contains("favicon")
             }),
             "ReadAction, WebPage, Article, Organization, untyped, object @id, application/json, and icons must not copy JSON-LD SearchAction extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_json_ld_event_urls() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/events/">
+<link rel="canonical" href="https://example.test/events/som">
+<link rel="icon" href="/favicon.ico">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Event","name":"SOM office hours","sameAs":"https://www.wikidata.org/wiki/Q42","image":"https://example.test/events/som.png","identifier":"https://example.test/events/id","url":"https://example.test/events/som-hours","organizer":{"@type":"Organization","url":"https://example.test/org"},"location":{"@type":"Place","url":"https://example.test/venue"},"offers":{"@type":"Offer","url":"https://example.test/event-offer"}}
+</script>
+<script type="application/ld+json">
+{"@type":["https://schema.org/Event"],"url":"office-hours"}
+</script>
+<script type="application/ld+json">
+{"@type":"Event","url":"javascript:alert(1)"}
+</script>
+<script type="application/ld+json">
+{"@type":"Event","url":"   "}
+</script>
+<script type="application/ld+json">
+{"@type":"Event","url":{"@id":"https://example.test/object-id"}}
+</script>
+<script type="application/ld+json">
+{"@type":"MusicEvent","url":"https://example.test/music-event"}
+</script>
+<script type="application/ld+json">
+{"@type":"EducationEvent","url":"https://example.test/education-event"}
+</script>
+<script type="application/ld+json">
+{"@type":"BusinessEvent","url":"https://example.test/business-event"}
+</script>
+<script type="application/ld+json">
+{"@type":"SportsEvent","url":"https://example.test/sports-event"}
+</script>
+<script type="application/ld+json">
+{"@type":"PublicationEvent","url":"https://example.test/publication-event"}
+</script>
+<script type="application/ld+json">
+{"@type":"Organization","url":"https://example.test/org-event"}
+</script>
+<script type="application/ld+json">
+{"@type":"Place","url":"https://example.test/place-event"}
+</script>
+<script type="application/ld+json">
+{"@type":"Product","url":"https://example.test/product-event"}
+</script>
+<script type="application/ld+json">
+{"url":"https://example.test/untyped"}
+</script>
+<script type="application/json">
+{"@type":"Event","url":"https://example.test/not-jsonld"}
+</script>
+<title>Events</title>
+</head><body>
+<main>
+  <a href="som">SOM</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        let json_ld = som
+            .structured_data
+            .as_ref()
+            .map(|data| data.json_ld.as_slice())
+            .unwrap_or(&[]);
+        assert!(
+            json_ld.iter().any(|block| {
+                block.get("@type").and_then(Value::as_str) == Some("Event")
+                    && block.get("url").and_then(Value::as_str)
+                        == Some("https://example.test/events/som-hours")
+            }),
+            "compiler must keep JSON-LD Event url for extract_links to recover: {json_ld:?}"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/events/som-hours".to_string()),
+            "compiled Event url must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/events/office-hours".to_string()),
+            "relative Event url must resolve against document base: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/events/som".to_string()),
+            "canonical and in-page links must remain: {urls:?}"
+        );
+
+        assert!(
+            extract_links_definition().description.contains("Event url"),
+            "agents must be told JSON-LD Event URLs are returned"
+        );
+
+        assert!(
+            !urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: Event url must not become a fetch target: {urls:?}"
+        );
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("wikidata")
+                    || url.contains("som.png")
+                    || url.contains("/events/id")
+                    || url.contains("/org")
+                    || url.contains("/venue")
+                    || url.contains("event-offer")
+                    || url.contains("object-id")
+                    || url.contains("music-event")
+                    || url.contains("education-event")
+                    || url.contains("business-event")
+                    || url.contains("sports-event")
+                    || url.contains("publication-event")
+                    || url.contains("org-event")
+                    || url.contains("place-event")
+                    || url.contains("product-event")
+                    || url.contains("untyped")
+                    || url.contains("not-jsonld")
+                    || url.contains("favicon")
+            }),
+            "Event sameAs/image/identifier, organizer.url, location.url, offers.url, MusicEvent, EducationEvent, BusinessEvent, SportsEvent, PublicationEvent, Organization, Place, Product, untyped, object @id, application/json, and icons must not copy JSON-LD Event extract_links: {urls:?}"
         );
     }
 
