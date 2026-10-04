@@ -1708,7 +1708,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "table" => Some(ElementRole::Table),
         "p" | "time" | "blockquote" | "figcaption" | "pre" | "abbr" | "address" | "cite"
         | "dfn" | "code" | "math" | "ruby" | "small" | "kbd" | "output" | "samp" | "var" | "q"
-        | "mark" => Some(ElementRole::Paragraph),
+        | "mark" | "ins" | "del" => Some(ElementRole::Paragraph),
         "section" | "article" => Some(ElementRole::Section),
         "fieldset" => Some(ElementRole::Group),
         "hr" => Some(ElementRole::Separator),
@@ -12279,15 +12279,17 @@ plasmate fetch https://example.test</code></pre>
             "whitespace-only ARIA deletion must not invent text: {elements:?}"
         );
 
+        let native = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("native"))
+            .expect("native del should compile as its own paragraph mapping");
+        assert_eq!(native.role, ElementRole::Paragraph);
         assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("native")
-                    || (element.role != ElementRole::Paragraph
-                        && element.attrs.as_ref().is_none_or(|attrs| {
-                            attrs.get("source_role") != Some(&json!("deletion"))
-                        }))
-            }),
-            "native del must not copy ARIA deletion mapping: {elements:?}"
+            native
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "native del must not invent ARIA source_role from deletion: {native:?}"
         );
         assert!(
             elements.iter().all(|element| {
@@ -12452,15 +12454,17 @@ plasmate fetch https://example.test</code></pre>
             "whitespace-only ARIA insertion must not invent text: {elements:?}"
         );
 
+        let native = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("native"))
+            .expect("native ins should compile");
+        assert_eq!(native.role, ElementRole::Paragraph);
         assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("native")
-                    || (element.role != ElementRole::Paragraph
-                        && element.attrs.as_ref().is_none_or(|attrs| {
-                            attrs.get("source_role") != Some(&json!("insertion"))
-                        }))
-            }),
-            "native ins must not copy ARIA insertion mapping: {elements:?}"
+            native
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| { attrs.get("source_role") != Some(&json!("insertion")) }),
+            "native ins must not copy ARIA insertion mapping: {native:?}"
         );
         assert!(
             elements.iter().all(|element| {
@@ -12698,19 +12702,27 @@ plasmate fetch https://example.test</code></pre>
             ),
             "native mark must not copy q mapping: {hit:?}"
         );
+        let insert = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("insert"))
+            .expect("native ins should compile");
+        assert_eq!(insert.role, ElementRole::Paragraph);
         assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("insert")
-                    || element.role != ElementRole::Paragraph
-            }),
-            "ins must not copy q mapping: {elements:?}"
+            insert.attrs.as_ref().is_none_or(
+                |attrs| attrs.get("source_role").is_none() && attrs.get("cite").is_none()
+            ),
+            "native ins must not copy q mapping: {insert:?}"
         );
+        let delete = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("delete"))
+            .expect("native del should compile as its own paragraph mapping");
+        assert_eq!(delete.role, ElementRole::Paragraph);
         assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("delete")
-                    || element.role != ElementRole::Paragraph
-            }),
-            "del must not copy q mapping: {elements:?}"
+            delete.attrs.as_ref().is_none_or(
+                |attrs| attrs.get("source_role").is_none() && attrs.get("cite").is_none()
+            ),
+            "native del must not copy q mapping: {delete:?}"
         );
         assert!(
             elements.iter().all(|element| {
@@ -12857,19 +12869,27 @@ plasmate fetch https://example.test</code></pre>
             .expect("var should remain a paragraph");
         assert_eq!(name.role, ElementRole::Paragraph);
 
+        let insert = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("insert"))
+            .expect("native ins should compile");
+        assert_eq!(insert.role, ElementRole::Paragraph);
         assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("insert")
-                    || element.role != ElementRole::Paragraph
+            insert.attrs.as_ref().is_none_or(|attrs| {
+                attrs.get("source_role").is_none() && attrs.get("cite").is_none()
             }),
-            "ins must not copy mark mapping: {elements:?}"
+            "native ins must not copy mark mapping: {insert:?}"
         );
+        let delete = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("delete"))
+            .expect("native del should compile as its own paragraph mapping");
+        assert_eq!(delete.role, ElementRole::Paragraph);
         assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("delete")
-                    || element.role != ElementRole::Paragraph
+            delete.attrs.as_ref().is_none_or(|attrs| {
+                attrs.get("source_role").is_none() && attrs.get("cite").is_none()
             }),
-            "del must not copy mark mapping: {elements:?}"
+            "native del must not copy mark mapping: {delete:?}"
         );
         assert!(
             elements.iter().all(|element| {
@@ -12994,25 +13014,29 @@ plasmate fetch https://example.test</code></pre>
             Some("deletion")
         );
 
+        let insert = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("insert"))
+            .expect("native ins should compile");
+        assert_eq!(insert.role, ElementRole::Paragraph);
         assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("insert")
-                    || (element.role != ElementRole::Paragraph
-                        && element.attrs.as_ref().is_none_or(|attrs| {
-                            attrs.get("source_role") != Some(&json!("suggestion"))
-                        }))
-            }),
-            "native ins must not copy ARIA suggestion mapping: {elements:?}"
+            insert
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| { attrs.get("source_role") != Some(&json!("suggestion")) }),
+            "native ins must not copy ARIA suggestion mapping: {insert:?}"
         );
+        let delete = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("delete"))
+            .expect("native del should compile as its own paragraph mapping");
+        assert_eq!(delete.role, ElementRole::Paragraph);
         assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("delete")
-                    || (element.role != ElementRole::Paragraph
-                        && element.attrs.as_ref().is_none_or(|attrs| {
-                            attrs.get("source_role") != Some(&json!("suggestion"))
-                        }))
-            }),
-            "native del must not copy ARIA suggestion mapping: {elements:?}"
+            delete
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role") != Some(&json!("suggestion"))),
+            "native del must not copy ARIA suggestion mapping: {delete:?}"
         );
         assert!(
             elements.iter().all(|element| {
@@ -13062,6 +13086,415 @@ plasmate fetch https://example.test</code></pre>
                 element.html_id.as_deref() == Some("hint") && element.role == ElementRole::Paragraph
             }),
             "selector=paragraph should keep compiled ARIA suggestion: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("share")),
+            "selector=paragraph should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn ins_compiles_as_paragraph() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Changelog</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <ins id="added">Inserted API</ins>
+  <ins id="linked"><a href="https://example.test/api">Inserted link</a></ins>
+  <ins id="blank">   </ins>
+  <ins id="cited" cite="https://example.test/source">Cited insertion</ins>
+  <ins id="stamped" datetime="2026-09-29">Stamped insertion</ins>
+  <div id="aria" role="insertion">ARIA insertion</div>
+  <mark id="hit">Highlighted</mark>
+  <q id="quote">Quoted aside</q>
+  <del id="delete">Deleted</del>
+  <u id="underline">Underlined</u>
+  <em id="stress">Not an insertion</em>
+  <button id="share">Share</button>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/changelog").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let added = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("added"))
+            .expect("native ins should compile");
+        assert_eq!(added.role, ElementRole::Paragraph);
+        assert_eq!(added.text.as_deref(), Some("Inserted API"));
+        assert!(
+            added
+                .actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "ins must not invent actions: {added:?}"
+        );
+        assert!(
+            added
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "native ins must not invent ARIA source_role: {added:?}"
+        );
+        assert!(
+            added
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("cite").is_none()),
+            "ins must not copy blockquote cite: {added:?}"
+        );
+        assert!(
+            added
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("datetime").is_none()),
+            "ins must not copy time datetime: {added:?}"
+        );
+
+        let linked = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("linked"))
+            .expect("ins with a nested link should still compile");
+        assert_eq!(linked.role, ElementRole::Paragraph);
+        assert_eq!(linked.text.as_deref(), Some("Inserted link"));
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Link
+                    && element.attrs.as_ref().and_then(|attrs| attrs.get("href"))
+                        == Some(&json!("https://example.test/api"))
+            }),
+            "ins must keep nested links: {elements:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("blank")
+                    || (element.role == ElementRole::Paragraph
+                        && element.text.as_deref().is_none_or(|text| text.is_empty()))
+            }),
+            "whitespace-only ins must not invent text: {elements:?}"
+        );
+
+        let cited = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("cited"))
+            .expect("cited ins should still compile as a paragraph");
+        assert_eq!(cited.role, ElementRole::Paragraph);
+        assert_eq!(cited.text.as_deref(), Some("Cited insertion"));
+        assert!(
+            cited
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("cite").is_none()),
+            "ins must not copy blockquote cite attr: {cited:?}"
+        );
+
+        let stamped = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("stamped"))
+            .expect("datetime ins should still compile as a paragraph");
+        assert_eq!(stamped.role, ElementRole::Paragraph);
+        assert_eq!(stamped.text.as_deref(), Some("Stamped insertion"));
+        assert!(
+            stamped
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("datetime").is_none()),
+            "ins must not copy time datetime attr: {stamped:?}"
+        );
+
+        let aria = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("aria"))
+            .expect("ARIA insertion should remain a paragraph");
+        assert_eq!(aria.role, ElementRole::Paragraph);
+        assert_eq!(
+            aria.attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("source_role"))
+                .and_then(|value| value.as_str()),
+            Some("insertion")
+        );
+
+        let hit = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("hit"))
+            .expect("native mark should remain a paragraph");
+        assert_eq!(hit.role, ElementRole::Paragraph);
+        let quote = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("quote"))
+            .expect("q should remain a paragraph");
+        assert_eq!(quote.role, ElementRole::Paragraph);
+
+        let deleted = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("delete"))
+            .expect("native del should compile as its own paragraph mapping");
+        assert_eq!(deleted.role, ElementRole::Paragraph);
+        assert!(
+            deleted
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "native del must not invent ARIA source_role from ins: {deleted:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("underline")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "u must not copy ins mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("stress")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "em must not copy ins mapping: {elements:?}"
+        );
+
+        let share = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("share"))
+            .expect("share button should compile");
+        assert_eq!(share.role, ElementRole::Button);
+
+        let filtered = crate::som::filter::apply_selector(&som, "paragraph");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("added")
+                    && element.role == ElementRole::Paragraph
+            }),
+            "selector=paragraph should keep compiled ins: {filtered_elements:?}"
+        );
+        assert!(
+            filtered_elements
+                .iter()
+                .all(|element| element.html_id.as_deref() != Some("share")),
+            "selector=paragraph should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn del_compiles_as_paragraph() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Changelog</title></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<main>
+  <del id="removed">Removed API</del>
+  <del id="linked"><a href="https://example.test/old">Removed link</a></del>
+  <del id="blank">   </del>
+  <del id="cited" cite="https://example.test/source">Cited deletion</del>
+  <del id="stamped" datetime="2026-10-04">Stamped deletion</del>
+  <div id="aria" role="deletion">ARIA deletion</div>
+  <ins id="added">Inserted API</ins>
+  <mark id="hit">Highlighted</mark>
+  <u id="underline">Underlined</u>
+  <s id="strike">Struck</s>
+  <em id="stress">Not a deletion</em>
+  <button id="share">Share</button>
+  <p>Just text</p>
+</main>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/changelog").unwrap();
+        let mut elements = Vec::new();
+        fn collect<'a>(nodes: &'a [Element], out: &mut Vec<&'a Element>) {
+            for element in nodes {
+                out.push(element);
+                if let Some(children) = &element.children {
+                    collect(children, out);
+                }
+            }
+        }
+        for region in &som.regions {
+            collect(&region.elements, &mut elements);
+        }
+
+        let removed = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("removed"))
+            .expect("native del should compile");
+        assert_eq!(removed.role, ElementRole::Paragraph);
+        assert_eq!(removed.text.as_deref(), Some("Removed API"));
+        assert!(
+            removed
+                .actions
+                .as_ref()
+                .is_none_or(|actions| actions.is_empty()),
+            "del must not invent actions: {removed:?}"
+        );
+        assert!(
+            removed
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "native del must not invent ARIA source_role: {removed:?}"
+        );
+        assert!(
+            removed
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("cite").is_none()),
+            "del must not copy blockquote cite: {removed:?}"
+        );
+        assert!(
+            removed
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("datetime").is_none()),
+            "del must not copy time datetime: {removed:?}"
+        );
+
+        let linked = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("linked"))
+            .expect("del with a nested link should still compile");
+        assert_eq!(linked.role, ElementRole::Paragraph);
+        assert_eq!(linked.text.as_deref(), Some("Removed link"));
+        assert!(
+            elements.iter().any(|element| {
+                element.role == ElementRole::Link
+                    && element.attrs.as_ref().and_then(|attrs| attrs.get("href"))
+                        == Some(&json!("https://example.test/old"))
+            }),
+            "del must keep nested links: {elements:?}"
+        );
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("blank")
+                    || (element.role == ElementRole::Paragraph
+                        && element.text.as_deref().is_none_or(|text| text.is_empty()))
+            }),
+            "whitespace-only del must not invent text: {elements:?}"
+        );
+
+        let cited = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("cited"))
+            .expect("cited del should still compile as a paragraph");
+        assert_eq!(cited.role, ElementRole::Paragraph);
+        assert_eq!(cited.text.as_deref(), Some("Cited deletion"));
+        assert!(
+            cited
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("cite").is_none()),
+            "del must not copy blockquote cite attr: {cited:?}"
+        );
+
+        let stamped = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("stamped"))
+            .expect("datetime del should still compile as a paragraph");
+        assert_eq!(stamped.role, ElementRole::Paragraph);
+        assert_eq!(stamped.text.as_deref(), Some("Stamped deletion"));
+        assert!(
+            stamped
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("datetime").is_none()),
+            "del must not copy time datetime attr: {stamped:?}"
+        );
+
+        let aria = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("aria"))
+            .expect("ARIA deletion should remain a paragraph");
+        assert_eq!(aria.role, ElementRole::Paragraph);
+        assert_eq!(
+            aria.attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("source_role"))
+                .and_then(|value| value.as_str()),
+            Some("deletion")
+        );
+
+        let added = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("added"))
+            .expect("native ins should remain a paragraph");
+        assert_eq!(added.role, ElementRole::Paragraph);
+        assert!(
+            added
+                .attrs
+                .as_ref()
+                .is_none_or(|attrs| attrs.get("source_role").is_none()),
+            "native ins must not invent ARIA source_role from del: {added:?}"
+        );
+
+        let hit = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("hit"))
+            .expect("native mark should remain a paragraph");
+        assert_eq!(hit.role, ElementRole::Paragraph);
+
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("underline")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "u must not copy del mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("strike")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "s must not copy del mapping: {elements:?}"
+        );
+        assert!(
+            elements.iter().all(|element| {
+                element.html_id.as_deref() != Some("stress")
+                    || element.role != ElementRole::Paragraph
+            }),
+            "em must not copy del mapping: {elements:?}"
+        );
+
+        let share = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("share"))
+            .expect("share button should compile");
+        assert_eq!(share.role, ElementRole::Button);
+
+        let filtered = crate::som::filter::apply_selector(&som, "paragraph");
+        let filtered_elements: Vec<_> = filtered
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+        assert!(
+            filtered_elements.iter().any(|element| {
+                element.html_id.as_deref() == Some("removed")
+                    && element.role == ElementRole::Paragraph
+            }),
+            "selector=paragraph should keep compiled del: {filtered_elements:?}"
         );
         assert!(
             filtered_elements
