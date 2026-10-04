@@ -804,7 +804,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled EPrints eprints.official_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled JSON-LD license values (WebPage/Article and subtypes), compiled JSON-LD JobPosting applicationUrl values, compiled JSON-LD Product offers url values, compiled JSON-LD Dataset distribution contentUrl values, compiled JSON-LD WebSite SearchAction target values, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, research HTML fulltext recovery, Dublin Core identifier recovery, EPrints official URL recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, schema.org license recovery, schema.org job-application recovery, schema.org product-offer recovery, schema.org dataset distribution recovery, schema.org site-search recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled EPrints eprints.official_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled JSON-LD license values (WebPage/Article and subtypes), compiled JSON-LD JobPosting applicationUrl values, compiled JSON-LD Product offers url values, compiled JSON-LD Dataset distribution contentUrl values, compiled JSON-LD WebSite SearchAction target values, compiled JSON-LD Event url values, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, research HTML fulltext recovery, Dublin Core identifier recovery, EPrints official URL recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, schema.org license recovery, schema.org job-application recovery, schema.org product-offer recovery, schema.org dataset distribution recovery, schema.org site-search recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1466,6 +1466,7 @@ fn collect_extract_link_urls(som: &Som) -> Vec<String> {
     collect_structured_json_ld_product_offer_urls(som, &mut urls);
     collect_structured_json_ld_dataset_urls(som, &mut urls);
     collect_structured_json_ld_search_action_urls(som, &mut urls);
+    collect_structured_json_ld_event_urls(som, &mut urls);
     let resolve_base = extract_links_resolve_base(som);
     for url in &mut urls {
         *url = resolve_extracted_link(&resolve_base, url);
@@ -2392,6 +2393,44 @@ fn json_ld_search_action_target(action: &Value) -> Option<&str> {
             .and_then(Value::as_str),
         _ => None,
     }
+}
+
+fn collect_structured_json_ld_event_urls(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    for block in &data.json_ld {
+        collect_json_ld_event_urls(block, urls);
+    }
+}
+
+fn collect_json_ld_event_urls(block: &Value, urls: &mut Vec<String>) {
+    if !json_ld_type_is_event(block) {
+        return;
+    }
+    let Some(href) = block.get("url").and_then(Value::as_str) else {
+        return;
+    };
+    let href = href.trim();
+    if !is_extract_links_structured_href(href) {
+        return;
+    }
+    urls.push(href.to_string());
+}
+
+fn json_ld_type_is_event(block: &Value) -> bool {
+    match block.get("@type") {
+        Some(Value::String(ty)) => is_json_ld_event_type(ty),
+        Some(Value::Array(types)) => types
+            .iter()
+            .filter_map(Value::as_str)
+            .any(is_json_ld_event_type),
+        _ => false,
+    }
+}
+
+fn is_json_ld_event_type(ty: &str) -> bool {
+    json_ld_type_name(ty) == "Event"
 }
 
 fn parse_http_equiv_refresh_url(content: &str) -> Option<&str> {
@@ -12003,6 +12042,131 @@ mod tests {
                     || url.contains("favicon")
             }),
             "ReadAction, WebPage, Article, Organization, untyped, object @id, application/json, and icons must not copy JSON-LD SearchAction extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_json_ld_event_urls() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/events/">
+<link rel="canonical" href="https://example.test/events/som">
+<link rel="icon" href="/favicon.ico">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Event","name":"SOM office hours","sameAs":"https://www.wikidata.org/wiki/Q42","image":"https://example.test/events/som.png","identifier":"https://example.test/events/id","url":"https://example.test/events/som-hours","organizer":{"@type":"Organization","url":"https://example.test/org"},"location":{"@type":"Place","url":"https://example.test/venue"},"offers":{"@type":"Offer","url":"https://example.test/event-offer"}}
+</script>
+<script type="application/ld+json">
+{"@type":["https://schema.org/Event"],"url":"office-hours"}
+</script>
+<script type="application/ld+json">
+{"@type":"Event","url":"javascript:alert(1)"}
+</script>
+<script type="application/ld+json">
+{"@type":"Event","url":"   "}
+</script>
+<script type="application/ld+json">
+{"@type":"Event","url":{"@id":"https://example.test/object-id"}}
+</script>
+<script type="application/ld+json">
+{"@type":"MusicEvent","url":"https://example.test/music-event"}
+</script>
+<script type="application/ld+json">
+{"@type":"EducationEvent","url":"https://example.test/education-event"}
+</script>
+<script type="application/ld+json">
+{"@type":"BusinessEvent","url":"https://example.test/business-event"}
+</script>
+<script type="application/ld+json">
+{"@type":"SportsEvent","url":"https://example.test/sports-event"}
+</script>
+<script type="application/ld+json">
+{"@type":"PublicationEvent","url":"https://example.test/publication-event"}
+</script>
+<script type="application/ld+json">
+{"@type":"Organization","url":"https://example.test/org-event"}
+</script>
+<script type="application/ld+json">
+{"@type":"Place","url":"https://example.test/place-event"}
+</script>
+<script type="application/ld+json">
+{"@type":"Product","url":"https://example.test/product-event"}
+</script>
+<script type="application/ld+json">
+{"url":"https://example.test/untyped"}
+</script>
+<script type="application/json">
+{"@type":"Event","url":"https://example.test/not-jsonld"}
+</script>
+<title>Events</title>
+</head><body>
+<main>
+  <a href="som">SOM</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        let json_ld = som
+            .structured_data
+            .as_ref()
+            .map(|data| data.json_ld.as_slice())
+            .unwrap_or(&[]);
+        assert!(
+            json_ld.iter().any(|block| {
+                block.get("@type").and_then(Value::as_str) == Some("Event")
+                    && block.get("url").and_then(Value::as_str)
+                        == Some("https://example.test/events/som-hours")
+            }),
+            "compiler must keep JSON-LD Event url for extract_links to recover: {json_ld:?}"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/events/som-hours".to_string()),
+            "compiled Event url must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/events/office-hours".to_string()),
+            "relative Event url must resolve against document base: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/events/som".to_string()),
+            "canonical and in-page links must remain: {urls:?}"
+        );
+
+        assert!(
+            extract_links_definition().description.contains("Event url"),
+            "agents must be told JSON-LD Event URLs are returned"
+        );
+
+        assert!(
+            !urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: Event url must not become a fetch target: {urls:?}"
+        );
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("wikidata")
+                    || url.contains("som.png")
+                    || url.contains("/events/id")
+                    || url.contains("/org")
+                    || url.contains("/venue")
+                    || url.contains("event-offer")
+                    || url.contains("object-id")
+                    || url.contains("music-event")
+                    || url.contains("education-event")
+                    || url.contains("business-event")
+                    || url.contains("sports-event")
+                    || url.contains("publication-event")
+                    || url.contains("org-event")
+                    || url.contains("place-event")
+                    || url.contains("product-event")
+                    || url.contains("untyped")
+                    || url.contains("not-jsonld")
+                    || url.contains("favicon")
+            }),
+            "Event sameAs/image/identifier, organizer.url, location.url, offers.url, MusicEvent, EducationEvent, BusinessEvent, SportsEvent, PublicationEvent, Organization, Place, Product, untyped, object @id, application/json, and icons must not copy JSON-LD Event extract_links: {urls:?}"
         );
     }
 
