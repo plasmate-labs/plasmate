@@ -804,7 +804,8 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled EPrints eprints.official_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled JSON-LD license values (WebPage/Article and subtypes), compiled JSON-LD JobPosting applicationUrl values, compiled JSON-LD Product offers url values, compiled JSON-LD Dataset distribution contentUrl values, compiled JSON-LD WebSite SearchAction target values, compiled JSON-LD Event url values, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, research HTML fulltext recovery, Dublin Core identifier recovery, EPrints official URL recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, schema.org license recovery, schema.org job-application recovery, schema.org product-offer recovery, schema.org dataset distribution recovery, schema.org site-search recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
+description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled EPrints eprints.official_url values, compiled Open Graph og:url values, compiled Twitter Card twitter:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled JSON-LD license values (WebPage/Article and subtypes), compiled JSON-LD JobPosting applicationUrl values, compiled JSON-LD Product offers url values, compiled JSON-LD Dataset distribution contentUrl values, compiled JSON-LD WebSite SearchAction target values, compiled JSON-LD Event url values, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, research HTML fulltext recovery, Dublin Core identifier recovery, EPrints official URL recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, schema.org license recovery, schema.org job-application recovery, schema.org product-offer recovery, schema.org dataset distribution recovery, schema.org site-search recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
+
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1448,6 +1449,7 @@ fn collect_extract_link_urls(som: &Som) -> Vec<String> {
     collect_structured_dublin_core_identifier_urls(som, &mut urls);
     collect_structured_eprints_official_url(som, &mut urls);
     collect_structured_og_url(som, &mut urls);
+    collect_structured_twitter_url(som, &mut urls);
     collect_structured_refresh_url(som, &mut urls);
     collect_structured_fediverse_creator_id(som, &mut urls);
     collect_structured_json_ld_document_urls(som, &mut urls);
@@ -1594,6 +1596,20 @@ fn collect_structured_og_url(som: &Som, urls: &mut Vec<String>) {
         return;
     };
     let Some(href) = data.open_graph.get("og:url") else {
+        return;
+    };
+    let href = href.trim();
+    if !is_extract_links_structured_href(href) {
+        return;
+    }
+    urls.push(href.to_string());
+}
+
+fn collect_structured_twitter_url(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    let Some(href) = data.twitter_card.get("twitter:url") else {
         return;
     };
     let href = href.trim();
@@ -10072,6 +10088,10 @@ mod tests {
             urls.contains(&"https://example.test/som.pdf".to_string()),
             "citation_pdf_url must remain: {urls:?}"
         );
+        assert!(
+            urls.contains(&"https://example.test/twitter/som".to_string()),
+            "twitter:url must remain: {urls:?}"
+        );
 
         let blocked = crate::som::compiler::compile(
             r##"<html><head>
@@ -10092,10 +10112,110 @@ mod tests {
                 url.contains("som.png")
                     || url.contains("som.mp3")
                     || url.contains("som.mp4")
-                    || url.contains("twitter/som")
                     || url.contains("favicon")
             }),
-            "og:image/audio/video, twitter:url, and icons must not copy og:url extract_links: {urls:?}"
+            "og:image/audio/video and icons must not copy og:url extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_twitter_card_url() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/notes/">
+<link rel="canonical" href="https://example.test/notes/som">
+<meta name="twitter:url" content="https://example.test/twitter/som">
+<meta name="twitter:image" content="https://example.test/twitter/som.png">
+<meta name="twitter:player" content="https://example.test/twitter/player">
+<meta name="twitter:player:stream" content="https://example.test/twitter/som.mp4">
+<meta name="twitter:site" content="@plasmate">
+<meta property="og:url" content="https://example.test/og/som">
+<meta property="og:image" content="https://example.test/og/som.png">
+<meta name="citation_pdf_url" content="https://example.test/som.pdf">
+<link rel="icon" href="/favicon.ico">
+<title>Note</title>
+</head><body>
+<main>
+  <a href="som">SOM</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        assert_eq!(
+            som.structured_data
+                .as_ref()
+                .and_then(|data| data.twitter_card.get("twitter:url"))
+                .map(String::as_str),
+            Some("https://example.test/twitter/som"),
+            "compiler must keep twitter:url for extract_links to recover"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/twitter/som".to_string()),
+            "compiled twitter:url must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/notes/som".to_string()),
+            "canonical must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/og/som".to_string()),
+            "og:url must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/som.pdf".to_string()),
+            "citation_pdf_url must remain: {urls:?}"
+        );
+
+        let relative = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/notes/">
+<meta name="twitter:url" content="card">
+<title>Relative</title>
+</head><body><main><p>No links</p></main></body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("relative fixture HTML should compile");
+        let relative_urls = collect_extract_link_urls(&relative);
+        assert!(
+            relative_urls.contains(&"https://example.test/notes/card".to_string()),
+            "relative twitter:url must resolve against document base: {relative_urls:?}"
+        );
+
+        let blocked = crate::som::compiler::compile(
+            r##"<html><head>
+<meta name="twitter:url" content="javascript:alert(1)">
+<title>Blocked</title>
+</head><body><main><p>No Twitter URL</p></main></body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("blocked fixture HTML should compile");
+        let blocked_urls = collect_extract_link_urls(&blocked);
+        assert!(
+            !blocked_urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: twitter:url must not become a fetch target: {blocked_urls:?}"
+        );
+
+        assert!(
+            extract_links_definition()
+                .description
+                .contains("twitter:url"),
+            "agents must be told Twitter Card URLs are returned"
+        );
+
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("twitter/som.png")
+                    || url.contains("twitter/player")
+                    || url.contains("twitter/som.mp4")
+                    || url.contains("og/som.png")
+                    || url.contains("favicon")
+            }),
+            "twitter:image/player/stream, og:image, and icons must not copy twitter:url extract_links: {urls:?}"
         );
     }
 
