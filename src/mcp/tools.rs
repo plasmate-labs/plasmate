@@ -804,7 +804,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled EPrints eprints.official_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled JSON-LD license values (WebPage/Article and subtypes), compiled JSON-LD Product offers url values, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, research HTML fulltext recovery, Dublin Core identifier recovery, EPrints official URL recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, schema.org license recovery, schema.org product-offer recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled EPrints eprints.official_url values, compiled Open Graph og:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled JSON-LD license values (WebPage/Article and subtypes), compiled JSON-LD JobPosting applicationUrl values, compiled JSON-LD Product offers url values, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, research HTML fulltext recovery, Dublin Core identifier recovery, EPrints official URL recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, schema.org license recovery, schema.org job-application recovery, schema.org product-offer recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1462,6 +1462,7 @@ fn collect_extract_link_urls(som: &Som) -> Vec<String> {
     collect_structured_json_ld_archived_urls(som, &mut urls);
     collect_structured_json_ld_same_as_urls(som, &mut urls);
     collect_structured_json_ld_license_urls(som, &mut urls);
+    collect_structured_json_ld_job_application_urls(som, &mut urls);
     collect_structured_json_ld_product_offer_urls(som, &mut urls);
     let resolve_base = extract_links_resolve_base(som);
     for url in &mut urls {
@@ -2133,6 +2134,44 @@ fn push_json_ld_license_href(href: &str, urls: &mut Vec<String>) {
         return;
     }
     urls.push(href.to_string());
+}
+
+fn collect_structured_json_ld_job_application_urls(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    for block in &data.json_ld {
+        collect_json_ld_job_application_urls(block, urls);
+    }
+}
+
+fn collect_json_ld_job_application_urls(block: &Value, urls: &mut Vec<String>) {
+    if !json_ld_type_is_job_posting(block) {
+        return;
+    }
+    let Some(href) = block.get("applicationUrl").and_then(Value::as_str) else {
+        return;
+    };
+    let href = href.trim();
+    if !is_extract_links_structured_href(href) {
+        return;
+    }
+    urls.push(href.to_string());
+}
+
+fn json_ld_type_is_job_posting(block: &Value) -> bool {
+    match block.get("@type") {
+        Some(Value::String(ty)) => is_json_ld_job_posting_type(ty),
+        Some(Value::Array(types)) => types
+            .iter()
+            .filter_map(Value::as_str)
+            .any(is_json_ld_job_posting_type),
+        _ => false,
+    }
+}
+
+fn is_json_ld_job_posting_type(ty: &str) -> bool {
+    json_ld_type_name(ty) == "JobPosting"
 }
 
 fn collect_structured_json_ld_product_offer_urls(som: &Som, urls: &mut Vec<String>) {
@@ -11328,6 +11367,120 @@ mod tests {
                     || url.contains("favicon")
             }),
             "relatedLink, acquireLicensePage/usageInfo/publishingPrinciples, nested author.license, Dublin Core/cc meta, Organization, CreativeWork, untyped, object @id, application/json, and icons must not copy JSON-LD license extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_json_ld_job_application_urls() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/jobs/">
+<link rel="canonical" href="https://example.test/jobs/som-engineer">
+<link rel="icon" href="/favicon.ico">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"JobPosting","title":"SOM engineer","url":"https://example.test/posting-only","sameAs":"https://www.wikidata.org/wiki/Q42","image":"https://example.test/jobs/som.png","identifier":"https://example.test/jobs/id","applicationUrl":"https://example.test/apply/som","hiringOrganization":{"@type":"Organization","url":"https://example.test/org"}}
+</script>
+<script type="application/ld+json">
+{"@type":["https://schema.org/JobPosting"],"applicationUrl":"apply/som"}
+</script>
+<script type="application/ld+json">
+{"@type":"JobPosting","applicationUrl":"javascript:alert(1)"}
+</script>
+<script type="application/ld+json">
+{"@type":"JobPosting","applicationUrl":"   "}
+</script>
+<script type="application/ld+json">
+{"@type":"JobPosting","applicationUrl":{"@id":"https://example.test/object-id"}}
+</script>
+<script type="application/ld+json">
+{"@type":"Occupation","applicationUrl":"https://example.test/occupation-apply"}
+</script>
+<script type="application/ld+json">
+{"@type":"EmployeeRole","applicationUrl":"https://example.test/role-apply"}
+</script>
+<script type="application/ld+json">
+{"@type":"Organization","applicationUrl":"https://example.test/org-apply"}
+</script>
+<script type="application/ld+json">
+{"@type":"WebPage","applicationUrl":"https://example.test/page-apply"}
+</script>
+<script type="application/ld+json">
+{"@type":"Product","applicationUrl":"https://example.test/product-apply"}
+</script>
+<script type="application/ld+json">
+{"applicationUrl":"https://example.test/untyped"}
+</script>
+<script type="application/json">
+{"@type":"JobPosting","applicationUrl":"https://example.test/not-jsonld"}
+</script>
+<title>Jobs</title>
+</head><body>
+<main>
+  <a href="som-engineer">SOM engineer</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        let json_ld = som
+            .structured_data
+            .as_ref()
+            .map(|data| data.json_ld.as_slice())
+            .unwrap_or(&[]);
+        assert!(
+            json_ld.iter().any(|block| {
+                block.get("@type").and_then(Value::as_str) == Some("JobPosting")
+                    && block.get("applicationUrl").and_then(Value::as_str)
+                        == Some("https://example.test/apply/som")
+            }),
+            "compiler must keep JSON-LD JobPosting applicationUrl for extract_links to recover: {json_ld:?}"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/apply/som".to_string()),
+            "compiled JobPosting applicationUrl must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/jobs/apply/som".to_string()),
+            "relative JobPosting applicationUrl must resolve against document base: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/jobs/som-engineer".to_string()),
+            "canonical and in-page links must remain: {urls:?}"
+        );
+
+        assert!(
+            extract_links_definition()
+                .description
+                .contains("JobPosting applicationUrl"),
+            "agents must be told JSON-LD job-application URLs are returned"
+        );
+
+        assert!(
+            !urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: JobPosting applicationUrl must not become a fetch target: {urls:?}"
+        );
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("posting-only")
+                    || url.contains("wikidata")
+                    || url.contains("som.png")
+                    || url.contains("/jobs/id")
+                    || url.contains("/org")
+                    || url.contains("object-id")
+                    || url.contains("occupation-apply")
+                    || url.contains("role-apply")
+                    || url.contains("org-apply")
+                    || url.contains("page-apply")
+                    || url.contains("product-apply")
+                    || url.contains("untyped")
+                    || url.contains("not-jsonld")
+                    || url.contains("favicon")
+            }),
+            "JobPosting url/sameAs/image/identifier, hiringOrganization.url, Occupation, EmployeeRole, Organization, WebPage, Product, untyped, object @id, application/json, and icons must not copy JSON-LD job-application extract_links: {urls:?}"
         );
     }
 
