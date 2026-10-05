@@ -33,12 +33,18 @@ frequency.
 If these gates are not met, report a no-change or blocked run. Never stash,
 overwrite, reset, or absorb unrelated work.
 
-## Active governor constraint (2026-09-12)
+## Active governor constraint (2026-10-05)
 
-- Window: `2b5286b` .. `17b369e`
+- Window: `a7ddaf4` .. `b56465a`
 - Decision: `NARROW`
-- Merged this run: `17b369e` article selector alias (`e94838a`)
-- Prohibited next: another compiled `attrs.options` / `attrs.caption` /
+- Merged this run: `b56465a` JSON-LD Person `url` extract_links (`901b1df`, #571)
+- Prohibited next: another compiled JSON-LD schema.org type `url` /
+  `webFeed` copy in `extract_links` (`Organization`, `Place`,
+  `LocalBusiness`, `Review`, `Service`, `CreativeWork`, `Patient`,
+  `PerformingGroup`, or remaining `@type` variants). Do not copy #571
+  Person `url` onto CLI, CDP, or SDKs. Do not reopen nested
+  `affiliation` / `worksFor` / `memberOf` / `author` Person urls.
+  Do not copy another compiled `attrs.options` / `attrs.caption` /
   `attrs.items` / `attrs.rows` one-surface copy in parser, SDK, CLI, or MCP
   text extractors. Do not reopen `#` selector matching (region id, SOM
   element id, or `html_id`); #158 closed that advertised contract gap.
@@ -553,7 +559,7 @@ overwrite, reset, or absorb unrelated work.
     install-path, SOM-reference, OpenClaw/Pi, CrewAI, Vercel AI,
     Browser Use, Scrapy, LlamaIndex, AutoGen, or install MCP
     tool-name rewrite; or bounded agent-task recovery that is not
-    another IDL getter, querySelector
+    another JSON-LD schema.org type url/webFeed copy, IDL getter, querySelector
     pseudo, inspect-compact field, compile-attr copy, MCP empty-session
     error-text copy, open_page capacity error-text copy, navigate_to
     missing-session error-text copy, close_page idempotent-success copy,
