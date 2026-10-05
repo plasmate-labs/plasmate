@@ -804,7 +804,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Highwire citation_abstract_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled EPrints eprints.official_url values, compiled Open Graph og:url values, compiled Twitter Card twitter:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD SoftwareApplication codeRepository values, compiled JSON-LD SoftwareSourceCode codeRepository values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled JSON-LD license values (WebPage/Article and subtypes), compiled JSON-LD JobPosting applicationUrl values, compiled JSON-LD Product offers url values, compiled JSON-LD Dataset distribution contentUrl values, compiled JSON-LD WebSite SearchAction target values, compiled JSON-LD Event url values, compiled JSON-LD Course hasCourseInstance url values, compiled JSON-LD Recipe url values, compiled JSON-LD Movie url values, compiled JSON-LD Book url values, compiled JSON-LD HowTo url values, compiled JSON-LD ItemList ListItem url values, compiled JSON-LD PodcastSeries webFeed values, compiled JSON-LD TVSeries url values, compiled JSON-LD MusicRecording url values, compiled JSON-LD VideoGame url values, compiled JSON-LD MusicAlbum url values, compiled JSON-LD MusicPlaylist url values, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, research HTML fulltext recovery, research HTML abstract recovery, Dublin Core identifier recovery, EPrints official URL recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org software source-repository recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, schema.org license recovery, schema.org job-application recovery, schema.org product-offer recovery, schema.org dataset distribution recovery, schema.org site-search recovery, schema.org recipe recovery, schema.org movie recovery, schema.org book recovery, schema.org howto recovery, schema.org item-list recovery, schema.org podcast-feed recovery, schema.org tv-series recovery, schema.org music-recording recovery, schema.org video-game recovery, schema.org music-album recovery, schema.org music-playlist recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Highwire citation_abstract_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled EPrints eprints.official_url values, compiled Open Graph og:url values, compiled Twitter Card twitter:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD SoftwareApplication codeRepository values, compiled JSON-LD SoftwareSourceCode codeRepository values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled JSON-LD license values (WebPage/Article and subtypes), compiled JSON-LD JobPosting applicationUrl values, compiled JSON-LD Product offers url values, compiled JSON-LD Dataset distribution contentUrl values, compiled JSON-LD WebSite SearchAction target values, compiled JSON-LD Event url values, compiled JSON-LD Course hasCourseInstance url values, compiled JSON-LD Recipe url values, compiled JSON-LD Movie url values, compiled JSON-LD Book url values, compiled JSON-LD HowTo url values, compiled JSON-LD ItemList ListItem url values, compiled JSON-LD PodcastSeries webFeed values, compiled JSON-LD TVSeries url values, compiled JSON-LD MusicRecording url values, compiled JSON-LD VideoGame url values, compiled JSON-LD MusicAlbum url values, compiled JSON-LD MusicPlaylist url values, compiled JSON-LD TVEpisode url values, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, research HTML fulltext recovery, research HTML abstract recovery, Dublin Core identifier recovery, EPrints official URL recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org software source-repository recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, schema.org license recovery, schema.org job-application recovery, schema.org product-offer recovery, schema.org dataset distribution recovery, schema.org site-search recovery, schema.org recipe recovery, schema.org movie recovery, schema.org book recovery, schema.org howto recovery, schema.org item-list recovery, schema.org podcast-feed recovery, schema.org tv-series recovery, schema.org music-recording recovery, schema.org video-game recovery, schema.org music-album recovery, schema.org music-playlist recovery, schema.org tv-episode recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1483,6 +1483,7 @@ fn collect_extract_link_urls(som: &Som) -> Vec<String> {
     collect_structured_json_ld_videogame_urls(som, &mut urls);
     collect_structured_json_ld_musicalbum_urls(som, &mut urls);
     collect_structured_json_ld_musicplaylist_urls(som, &mut urls);
+    collect_structured_json_ld_tvepisode_urls(som, &mut urls);
     let resolve_base = extract_links_resolve_base(som);
     for url in &mut urls {
         *url = resolve_extracted_link(&resolve_base, url);
@@ -3059,6 +3060,44 @@ fn json_ld_type_is_musicplaylist(block: &Value) -> bool {
 
 fn is_json_ld_musicplaylist_type(ty: &str) -> bool {
     json_ld_type_name(ty) == "MusicPlaylist"
+}
+
+fn collect_structured_json_ld_tvepisode_urls(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    for block in &data.json_ld {
+        collect_json_ld_tvepisode_urls(block, urls);
+    }
+}
+
+fn collect_json_ld_tvepisode_urls(block: &Value, urls: &mut Vec<String>) {
+    if !json_ld_type_is_tvepisode(block) {
+        return;
+    }
+    let Some(href) = block.get("url").and_then(Value::as_str) else {
+        return;
+    };
+    let href = href.trim();
+    if !is_extract_links_structured_href(href) {
+        return;
+    }
+    urls.push(href.to_string());
+}
+
+fn json_ld_type_is_tvepisode(block: &Value) -> bool {
+    match block.get("@type") {
+        Some(Value::String(ty)) => is_json_ld_tvepisode_type(ty),
+        Some(Value::Array(types)) => types
+            .iter()
+            .filter_map(Value::as_str)
+            .any(is_json_ld_tvepisode_type),
+        _ => false,
+    }
+}
+
+fn is_json_ld_tvepisode_type(ty: &str) -> bool {
+    json_ld_type_name(ty) == "TVEpisode"
 }
 
 fn parse_http_equiv_refresh_url(content: &str) -> Option<&str> {
@@ -14178,6 +14217,10 @@ mod tests {
             urls.contains(&"https://example.test/shows/som".to_string()),
             "canonical and in-page links must remain: {urls:?}"
         );
+        assert!(
+            urls.contains(&"https://example.test/tv-episode".to_string()),
+            "TVEpisode url must remain: {urls:?}"
+        );
 
         assert!(
             extract_links_definition()
@@ -14201,7 +14244,6 @@ mod tests {
                     || url.contains("/shows/pilot")
                     || url.contains("trailer")
                     || url.contains("object-id")
-                    || url.contains("tv-episode")
                     || url.contains("tv-season")
                     || url.contains("video-series")
                     || url.contains("radio-series")
@@ -14211,7 +14253,7 @@ mod tests {
                     || url.contains("not-jsonld")
                     || url.contains("favicon")
             }),
-            "TVSeries sameAs/image/director/actor/studio/season/episode/trailer, TVEpisode, TVSeason, VideoObject, RadioSeries, CreativeWork, Organization, untyped, object @id, application/json, and icons must not copy JSON-LD TVSeries extract_links: {urls:?}"
+            "TVSeries sameAs/image/director/actor/studio/season/episode/trailer, TVSeason, VideoObject, RadioSeries, CreativeWork, Organization, untyped, object @id, application/json, and icons must not copy JSON-LD TVSeries extract_links: {urls:?}"
         );
     }
 
@@ -14714,6 +14756,133 @@ mod tests {
                     || url.contains("favicon")
             }),
             "MusicPlaylist sameAs/image/byArtist/track, MusicGroup, MusicComposition, MusicRelease, CreativeWork, Organization, untyped, object @id, application/json, and icons must not copy JSON-LD MusicPlaylist extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_json_ld_tvepisode_urls() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/episodes/">
+<link rel="canonical" href="https://example.test/episodes/som">
+<link rel="icon" href="/favicon.ico">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TVEpisode","name":"SOM","sameAs":"https://www.wikidata.org/wiki/Q42","image":"https://example.test/episodes/som.png","url":"https://example.test/episodes/som-episode","partOfSeries":{"@type":"TVSeries","url":"https://example.test/shows/nested"},"partOfSeason":{"@type":"TVSeason","url":"https://example.test/shows/season-nested"},"director":{"@type":"Person","url":"https://example.test/directors/ada"},"actor":{"@type":"Person","url":"https://example.test/actors/ada"},"trailer":{"@type":"VideoObject","url":"https://example.test/episodes/trailer","contentUrl":"https://example.test/episodes/trailer.mp4"}}
+</script>
+<script type="application/ld+json">
+{"@type":["https://schema.org/TVEpisode"],"url":"pilot-cut"}
+</script>
+<script type="application/ld+json">
+{"@type":"TVEpisode","url":"javascript:alert(1)"}
+</script>
+<script type="application/ld+json">
+{"@type":"TVEpisode","url":"   "}
+</script>
+<script type="application/ld+json">
+{"@type":"TVEpisode","url":{"@id":"https://example.test/object-id"}}
+</script>
+<script type="application/ld+json">
+{"@type":"TVSeries","url":"https://example.test/tv-series"}
+</script>
+<script type="application/ld+json">
+{"@type":"TVSeason","url":"https://example.test/tv-season"}
+</script>
+<script type="application/ld+json">
+{"@type":"RadioEpisode","url":"https://example.test/radio-episode"}
+</script>
+<script type="application/ld+json">
+{"@type":"Episode","url":"https://example.test/generic-episode"}
+</script>
+<script type="application/ld+json">
+{"@type":"Movie","sameAs":"https://example.test/movie-episode"}
+</script>
+<script type="application/ld+json">
+{"@type":"CreativeWork","url":"https://example.test/work-episode"}
+</script>
+<script type="application/ld+json">
+{"@type":"Organization","url":"https://example.test/org-episode"}
+</script>
+<script type="application/ld+json">
+{"url":"https://example.test/untyped"}
+</script>
+<script type="application/json">
+{"@type":"TVEpisode","url":"https://example.test/not-jsonld"}
+</script>
+<title>Episodes</title>
+</head><body>
+<main>
+  <a href="som">SOM</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        let json_ld = som
+            .structured_data
+            .as_ref()
+            .map(|data| data.json_ld.as_slice())
+            .unwrap_or(&[]);
+        assert!(
+            json_ld.iter().any(|block| {
+                block.get("@type").and_then(Value::as_str) == Some("TVEpisode")
+                    && block.get("url").and_then(Value::as_str)
+                        == Some("https://example.test/episodes/som-episode")
+            }),
+            "compiler must keep JSON-LD TVEpisode url for extract_links to recover: {json_ld:?}"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/episodes/som-episode".to_string()),
+            "compiled TVEpisode url must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/episodes/pilot-cut".to_string()),
+            "relative TVEpisode url must resolve against document base: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/episodes/som".to_string()),
+            "canonical and in-page links must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/tv-series".to_string()),
+            "TVSeries url must remain: {urls:?}"
+        );
+
+        assert!(
+            extract_links_definition()
+                .description
+                .contains("TVEpisode url"),
+            "agents must be told JSON-LD TVEpisode URLs are returned"
+        );
+
+        assert!(
+            !urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: TVEpisode url must not become a fetch target: {urls:?}"
+        );
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("wikidata")
+                    || url.contains("som.png")
+                    || url.contains("/shows/nested")
+                    || url.contains("season-nested")
+                    || url.contains("/directors/ada")
+                    || url.contains("/actors/ada")
+                    || url.contains("trailer")
+                    || url.contains("object-id")
+                    || url.contains("tv-season")
+                    || url.contains("radio-episode")
+                    || url.contains("generic-episode")
+                    || url.contains("movie-episode")
+                    || url.contains("work-episode")
+                    || url.contains("org-episode")
+                    || url.contains("untyped")
+                    || url.contains("not-jsonld")
+                    || url.contains("favicon")
+            }),
+            "TVEpisode sameAs/image/partOfSeries/partOfSeason/director/actor/trailer, TVSeason, RadioEpisode, Episode, Movie, CreativeWork, Organization, untyped, object @id, application/json, and icons must not copy JSON-LD TVEpisode extract_links: {urls:?}"
         );
     }
 
