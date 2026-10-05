@@ -13654,6 +13654,10 @@ mod tests {
             urls.contains(&"https://example.test/films/som".to_string()),
             "canonical and in-page links must remain: {urls:?}"
         );
+        assert!(
+            urls.contains(&"https://example.test/tv-episode".to_string()),
+            "TVEpisode url must remain: {urls:?}"
+        );
 
         assert!(
             extract_links_definition().description.contains("Movie url"),
@@ -13674,7 +13678,6 @@ mod tests {
                     || url.contains("trailer")
                     || url.contains("object-id")
                     || url.contains("tv-series")
-                    || url.contains("tv-episode")
                     || url.contains("video-movie")
                     || url.contains("music-movie")
                     || url.contains("work-movie")
@@ -13683,7 +13686,7 @@ mod tests {
                     || url.contains("not-jsonld")
                     || url.contains("favicon")
             }),
-            "Movie sameAs/image/director/actor/studio/trailer, TVSeries, TVEpisode, VideoObject, MusicAlbum, CreativeWork, Organization, untyped, object @id, application/json, and icons must not copy JSON-LD Movie extract_links: {urls:?}"
+            "Movie sameAs/image/director/actor/studio/trailer, TVSeries, VideoObject, MusicAlbum, CreativeWork, Organization, untyped, object @id, application/json, and icons must not copy JSON-LD Movie extract_links: {urls:?}"
         );
     }
 
