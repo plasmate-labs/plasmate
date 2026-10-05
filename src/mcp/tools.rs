@@ -804,7 +804,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Highwire citation_abstract_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled EPrints eprints.official_url values, compiled Open Graph og:url values, compiled Twitter Card twitter:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD SoftwareApplication codeRepository values, compiled JSON-LD SoftwareSourceCode codeRepository values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled JSON-LD license values (WebPage/Article and subtypes), compiled JSON-LD JobPosting applicationUrl values, compiled JSON-LD Product offers url values, compiled JSON-LD Dataset distribution contentUrl values, compiled JSON-LD WebSite SearchAction target values, compiled JSON-LD Event url values, compiled JSON-LD Course hasCourseInstance url values, compiled JSON-LD Recipe url values, compiled JSON-LD Movie url values, compiled JSON-LD Book url values, compiled JSON-LD HowTo url values, compiled JSON-LD ItemList ListItem url values, compiled JSON-LD PodcastSeries webFeed values, compiled JSON-LD TVSeries url values, compiled JSON-LD MusicRecording url values, compiled JSON-LD VideoGame url values, compiled JSON-LD MusicAlbum url values, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, research HTML fulltext recovery, research HTML abstract recovery, Dublin Core identifier recovery, EPrints official URL recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org software source-repository recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, schema.org license recovery, schema.org job-application recovery, schema.org product-offer recovery, schema.org dataset distribution recovery, schema.org site-search recovery, schema.org recipe recovery, schema.org movie recovery, schema.org book recovery, schema.org howto recovery, schema.org item-list recovery, schema.org podcast-feed recovery, schema.org tv-series recovery, schema.org music-recording recovery, schema.org video-game recovery, schema.org music-album recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Highwire citation_abstract_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled EPrints eprints.official_url values, compiled Open Graph og:url values, compiled Twitter Card twitter:url values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD SoftwareApplication codeRepository values, compiled JSON-LD SoftwareSourceCode codeRepository values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled JSON-LD license values (WebPage/Article and subtypes), compiled JSON-LD JobPosting applicationUrl values, compiled JSON-LD Product offers url values, compiled JSON-LD Dataset distribution contentUrl values, compiled JSON-LD WebSite SearchAction target values, compiled JSON-LD Event url values, compiled JSON-LD Course hasCourseInstance url values, compiled JSON-LD Recipe url values, compiled JSON-LD Movie url values, compiled JSON-LD Book url values, compiled JSON-LD HowTo url values, compiled JSON-LD ItemList ListItem url values, compiled JSON-LD PodcastSeries webFeed values, compiled JSON-LD TVSeries url values, compiled JSON-LD MusicRecording url values, compiled JSON-LD VideoGame url values, compiled JSON-LD MusicAlbum url values, compiled JSON-LD MusicPlaylist url values, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, research HTML fulltext recovery, research HTML abstract recovery, Dublin Core identifier recovery, EPrints official URL recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org software source-repository recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, schema.org license recovery, schema.org job-application recovery, schema.org product-offer recovery, schema.org dataset distribution recovery, schema.org site-search recovery, schema.org recipe recovery, schema.org movie recovery, schema.org book recovery, schema.org howto recovery, schema.org item-list recovery, schema.org podcast-feed recovery, schema.org tv-series recovery, schema.org music-recording recovery, schema.org video-game recovery, schema.org music-album recovery, schema.org music-playlist recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1482,6 +1482,7 @@ fn collect_extract_link_urls(som: &Som) -> Vec<String> {
     collect_structured_json_ld_musicrecording_urls(som, &mut urls);
     collect_structured_json_ld_videogame_urls(som, &mut urls);
     collect_structured_json_ld_musicalbum_urls(som, &mut urls);
+    collect_structured_json_ld_musicplaylist_urls(som, &mut urls);
     let resolve_base = extract_links_resolve_base(som);
     for url in &mut urls {
         *url = resolve_extracted_link(&resolve_base, url);
@@ -3020,6 +3021,44 @@ fn json_ld_type_is_musicalbum(block: &Value) -> bool {
 
 fn is_json_ld_musicalbum_type(ty: &str) -> bool {
     json_ld_type_name(ty) == "MusicAlbum"
+}
+
+fn collect_structured_json_ld_musicplaylist_urls(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    for block in &data.json_ld {
+        collect_json_ld_musicplaylist_urls(block, urls);
+    }
+}
+
+fn collect_json_ld_musicplaylist_urls(block: &Value, urls: &mut Vec<String>) {
+    if !json_ld_type_is_musicplaylist(block) {
+        return;
+    }
+    let Some(href) = block.get("url").and_then(Value::as_str) else {
+        return;
+    };
+    let href = href.trim();
+    if !is_extract_links_structured_href(href) {
+        return;
+    }
+    urls.push(href.to_string());
+}
+
+fn json_ld_type_is_musicplaylist(block: &Value) -> bool {
+    match block.get("@type") {
+        Some(Value::String(ty)) => is_json_ld_musicplaylist_type(ty),
+        Some(Value::Array(types)) => types
+            .iter()
+            .filter_map(Value::as_str)
+            .any(is_json_ld_musicplaylist_type),
+        _ => false,
+    }
+}
+
+fn is_json_ld_musicplaylist_type(ty: &str) -> bool {
+    json_ld_type_name(ty) == "MusicPlaylist"
 }
 
 fn parse_http_equiv_refresh_url(content: &str) -> Option<&str> {
@@ -14202,7 +14241,7 @@ mod tests {
 {"@type":"MusicAlbum","sameAs":"https://example.test/music-album"}
 </script>
 <script type="application/ld+json">
-{"@type":"MusicPlaylist","url":"https://example.test/music-playlist"}
+{"@type":"MusicPlaylist","sameAs":"https://example.test/music-playlist"}
 </script>
 <script type="application/ld+json">
 {"@type":"MusicGroup","url":"https://example.test/music-group"}
@@ -14452,7 +14491,7 @@ mod tests {
 {"@type":"MusicRecording","url":"https://example.test/music-recording"}
 </script>
 <script type="application/ld+json">
-{"@type":"MusicPlaylist","url":"https://example.test/music-playlist"}
+{"@type":"MusicPlaylist","sameAs":"https://example.test/music-playlist"}
 </script>
 <script type="application/ld+json">
 {"@type":"MusicGroup","url":"https://example.test/music-group"}
@@ -14552,7 +14591,133 @@ mod tests {
     }
 
     #[test]
+    fn extract_links_includes_compiled_json_ld_musicplaylist_urls() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/playlists/">
+<link rel="canonical" href="https://example.test/playlists/som">
+<link rel="icon" href="/favicon.ico">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"MusicPlaylist","name":"SOM","sameAs":"https://www.wikidata.org/wiki/Q42","image":"https://example.test/playlists/som.png","url":"https://example.test/playlists/som-playlist","byArtist":{"@type":"MusicGroup","url":"https://example.test/artists/ada"},"track":{"@type":"MusicRecording","url":"https://example.test/tracks/som"}}
+</script>
+<script type="application/ld+json">
+{"@type":["https://schema.org/MusicPlaylist"],"url":"late-night"}
+</script>
+<script type="application/ld+json">
+{"@type":"MusicPlaylist","url":"javascript:alert(1)"}
+</script>
+<script type="application/ld+json">
+{"@type":"MusicPlaylist","url":"   "}
+</script>
+<script type="application/ld+json">
+{"@type":"MusicPlaylist","url":{"@id":"https://example.test/object-id"}}
+</script>
+<script type="application/ld+json">
+{"@type":"MusicAlbum","url":"https://example.test/music-album"}
+</script>
+<script type="application/ld+json">
+{"@type":"MusicRecording","url":"https://example.test/music-recording"}
+</script>
+<script type="application/ld+json">
+{"@type":"MusicGroup","url":"https://example.test/music-group"}
+</script>
+<script type="application/ld+json">
+{"@type":"MusicComposition","url":"https://example.test/music-composition"}
+</script>
+<script type="application/ld+json">
+{"@type":"MusicRelease","url":"https://example.test/music-release"}
+</script>
+<script type="application/ld+json">
+{"@type":"CreativeWork","url":"https://example.test/work-playlist"}
+</script>
+<script type="application/ld+json">
+{"@type":"Organization","url":"https://example.test/org-playlist"}
+</script>
+<script type="application/ld+json">
+{"url":"https://example.test/untyped"}
+</script>
+<script type="application/json">
+{"@type":"MusicPlaylist","url":"https://example.test/not-jsonld"}
+</script>
+<title>Playlists</title>
+</head><body>
+<main>
+  <a href="som">SOM</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
 
+        let json_ld = som
+            .structured_data
+            .as_ref()
+            .map(|data| data.json_ld.as_slice())
+            .unwrap_or(&[]);
+        assert!(
+            json_ld.iter().any(|block| {
+                block.get("@type").and_then(Value::as_str) == Some("MusicPlaylist")
+                    && block.get("url").and_then(Value::as_str)
+                        == Some("https://example.test/playlists/som-playlist")
+            }),
+            "compiler must keep JSON-LD MusicPlaylist url for extract_links to recover: {json_ld:?}"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/playlists/som-playlist".to_string()),
+            "compiled MusicPlaylist url must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/playlists/late-night".to_string()),
+            "relative MusicPlaylist url must resolve against document base: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/playlists/som".to_string()),
+            "canonical and in-page links must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/music-album".to_string()),
+            "MusicAlbum url must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/music-recording".to_string()),
+            "MusicRecording url must remain: {urls:?}"
+        );
+
+        assert!(
+            extract_links_definition()
+                .description
+                .contains("MusicPlaylist url"),
+            "agents must be told JSON-LD MusicPlaylist URLs are returned"
+        );
+
+        assert!(
+            !urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: MusicPlaylist url must not become a fetch target: {urls:?}"
+        );
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("wikidata")
+                    || url.contains("som.png")
+                    || url.contains("/artists/ada")
+                    || url.contains("/tracks/som")
+                    || url.contains("object-id")
+                    || url.contains("music-group")
+                    || url.contains("music-composition")
+                    || url.contains("music-release")
+                    || url.contains("work-playlist")
+                    || url.contains("org-playlist")
+                    || url.contains("untyped")
+                    || url.contains("not-jsonld")
+                    || url.contains("favicon")
+            }),
+            "MusicPlaylist sameAs/image/byArtist/track, MusicGroup, MusicComposition, MusicRelease, CreativeWork, Organization, untyped, object @id, application/json, and icons must not copy JSON-LD MusicPlaylist extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
     fn extract_links_includes_compiled_video_track_srcs() {
         let som = crate::som::compiler::compile(
             r##"<html><head>
