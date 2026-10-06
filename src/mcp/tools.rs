@@ -804,7 +804,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, manifest, and http(s) extension relation types), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Highwire citation_abstract_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled EPrints eprints.official_url values, compiled Bepress bepress_citation_pdf_url values, compiled PRISM prism.url values, compiled Open Graph og:url values, compiled Twitter Card twitter:url values, compiled schema.org itemprop=url meta values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD SoftwareApplication codeRepository values, compiled JSON-LD SoftwareSourceCode codeRepository values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled JSON-LD license values (WebPage/Article and subtypes), compiled JSON-LD JobPosting applicationUrl values, compiled JSON-LD Product offers url values, compiled JSON-LD Dataset distribution contentUrl values, compiled JSON-LD WebSite SearchAction target values, compiled JSON-LD Event url values, compiled JSON-LD Course hasCourseInstance url values, compiled JSON-LD Recipe url values, compiled JSON-LD Movie url values, compiled JSON-LD Book url values, compiled JSON-LD HowTo url values, compiled JSON-LD ItemList ListItem url values, compiled JSON-LD PodcastSeries webFeed values, compiled JSON-LD TVSeries url values, compiled JSON-LD MusicRecording url values, compiled JSON-LD VideoGame url values, compiled JSON-LD MusicAlbum url values, compiled JSON-LD MusicPlaylist url values, compiled JSON-LD TVEpisode url values, compiled JSON-LD MusicGroup url values, compiled JSON-LD Person url values, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, extension-relation API discovery, research PDF discovery, research HTML fulltext recovery, research HTML abstract recovery, Dublin Core identifier recovery, EPrints official URL recovery, Bepress Digital Commons PDF recovery, PRISM URL recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org software source-repository recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, schema.org license recovery, schema.org job-application recovery, schema.org product-offer recovery, schema.org dataset distribution recovery, schema.org site-search recovery, schema.org recipe recovery, schema.org movie recovery, schema.org book recovery, schema.org howto recovery, schema.org item-list recovery, schema.org podcast-feed recovery, schema.org tv-series recovery, schema.org music-recording recovery, schema.org video-game recovery, schema.org music-album recovery, schema.org music-playlist recovery, schema.org tv-episode recovery, schema.org music-group recovery, schema.org person recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, manifest, and http(s) extension relation types), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Highwire citation_abstract_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled EPrints eprints.official_url values, compiled Bepress bepress_citation_pdf_url values, compiled PRISM prism.url values, compiled Open Graph og:url values, compiled App Links al:web:url values, compiled Twitter Card twitter:url values, compiled schema.org itemprop=url meta values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD SoftwareApplication codeRepository values, compiled JSON-LD SoftwareSourceCode codeRepository values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled JSON-LD license values (WebPage/Article and subtypes), compiled JSON-LD JobPosting applicationUrl values, compiled JSON-LD Product offers url values, compiled JSON-LD Dataset distribution contentUrl values, compiled JSON-LD WebSite SearchAction target values, compiled JSON-LD Event url values, compiled JSON-LD Course hasCourseInstance url values, compiled JSON-LD Recipe url values, compiled JSON-LD Movie url values, compiled JSON-LD Book url values, compiled JSON-LD HowTo url values, compiled JSON-LD ItemList ListItem url values, compiled JSON-LD PodcastSeries webFeed values, compiled JSON-LD TVSeries url values, compiled JSON-LD MusicRecording url values, compiled JSON-LD VideoGame url values, compiled JSON-LD MusicAlbum url values, compiled JSON-LD MusicPlaylist url values, compiled JSON-LD TVEpisode url values, compiled JSON-LD MusicGroup url values, compiled JSON-LD Person url values, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, extension-relation API discovery, research PDF discovery, research HTML fulltext recovery, research HTML abstract recovery, Dublin Core identifier recovery, EPrints official URL recovery, Bepress Digital Commons PDF recovery, PRISM URL recovery, social canonical recovery, App Links web fallback recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org software source-repository recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, schema.org license recovery, schema.org job-application recovery, schema.org product-offer recovery, schema.org dataset distribution recovery, schema.org site-search recovery, schema.org recipe recovery, schema.org movie recovery, schema.org book recovery, schema.org howto recovery, schema.org item-list recovery, schema.org podcast-feed recovery, schema.org tv-series recovery, schema.org music-recording recovery, schema.org video-game recovery, schema.org music-album recovery, schema.org music-playlist recovery, schema.org tv-episode recovery, schema.org music-group recovery, schema.org person recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1451,6 +1451,7 @@ fn collect_extract_link_urls(som: &Som) -> Vec<String> {
     collect_structured_bepress_citation_pdf_urls(som, &mut urls);
     collect_structured_prism_url(som, &mut urls);
     collect_structured_og_url(som, &mut urls);
+    collect_structured_al_web_url(som, &mut urls);
     collect_structured_twitter_url(som, &mut urls);
     collect_structured_itemprop_url(som, &mut urls);
     collect_structured_refresh_url(som, &mut urls);
@@ -1692,6 +1693,24 @@ fn collect_structured_og_url(som: &Som, urls: &mut Vec<String>) {
         return;
     }
     urls.push(href.to_string());
+}
+
+fn collect_structured_al_web_url(som: &Som, urls: &mut Vec<String>) {
+    let Some(data) = som.structured_data.as_ref() else {
+        return;
+    };
+    let Some(href) = data.open_graph.get("al:web:url") else {
+        return;
+    };
+    let href = href.trim();
+    if !is_extract_links_al_web_url_href(href) {
+        return;
+    }
+    urls.push(href.to_string());
+}
+
+fn is_extract_links_al_web_url_href(href: &str) -> bool {
+    is_extract_links_structured_href(href)
 }
 
 fn collect_structured_twitter_url(som: &Som, urls: &mut Vec<String>) {
@@ -11471,6 +11490,110 @@ mod tests {
                     || url.contains("favicon")
             }),
             "og:image/audio/video and icons must not copy og:url extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_app_links_web_url() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/notes/">
+<link rel="canonical" href="https://example.test/notes/som">
+<meta property="al:web:url" content="https://example.test/al-web-first">
+<meta property="AL:web:url" content="app-web">
+<meta property="al:ios:url" content="plasmate://docs">
+<meta property="al:android:url" content="plasmate://docs">
+<meta property="al:windows:url" content="plasmate://docs">
+<meta property="og:url" content="https://example.test/og/som">
+<meta property="og:image" content="https://example.test/og/som.png">
+<meta name="twitter:url" content="https://example.test/twitter/som">
+<meta name="al:web:url" content="https://example.test/name-al-web">
+<meta name="citation_pdf_url" content="https://example.test/som.pdf">
+<link rel="icon" href="/favicon.ico">
+<title>Note</title>
+</head><body>
+<main>
+  <a href="som">SOM</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        assert_eq!(
+            som.structured_data
+                .as_ref()
+                .and_then(|data| data.open_graph.get("al:web:url"))
+                .map(String::as_str),
+            Some("app-web"),
+            "compiler must keep al:web:url for extract_links to recover"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/notes/app-web".to_string()),
+            "relative al:web:url must resolve against document base: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/og/som".to_string()),
+            "og:url must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/twitter/som".to_string()),
+            "twitter:url must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/som.pdf".to_string()),
+            "citation_pdf_url must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/notes/som".to_string()),
+            "canonical must remain: {urls:?}"
+        );
+
+        let absolute = crate::som::compiler::compile(
+            r##"<html><head>
+<meta property="al:web:url" content="https://example.test/al-web">
+<title>Absolute</title>
+</head><body><main><p>No links</p></main></body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("absolute fixture HTML should compile");
+        let absolute_urls = collect_extract_link_urls(&absolute);
+        assert!(
+            absolute_urls.contains(&"https://example.test/al-web".to_string()),
+            "compiled al:web:url must be extractable: {absolute_urls:?}"
+        );
+
+        let blocked = crate::som::compiler::compile(
+            r##"<html><head>
+<meta property="al:web:url" content="javascript:alert(1)">
+<title>Blocked</title>
+</head><body><main><p>No App Links web URL</p></main></body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("blocked fixture HTML should compile");
+        let blocked_urls = collect_extract_link_urls(&blocked);
+        assert!(
+            !blocked_urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: al:web:url must not become a fetch target: {blocked_urls:?}"
+        );
+
+        assert!(
+            extract_links_definition().description.contains("al:web:url"),
+            "agents must be told App Links al:web:url values are returned"
+        );
+
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("al-web-first")
+                    || url.contains("plasmate://")
+                    || url.contains("name-al-web")
+                    || url.contains("som.png")
+                    || url.contains("favicon")
+            }),
+            "overwritten property, app-scheme al:ios/android/windows, name=, og:image, and icons must not copy al:web:url extract_links: {urls:?}"
         );
     }
 
