@@ -208,7 +208,7 @@ fn main() {
             && input.contains("fieldAriaLabel")
             && input.contains("Search")
             && input.contains("input, textarea")
-            && !input.contains("getAttribute('placeholder')")
+            && input.contains("fieldPlaceholder")
         {
             println!(
                 r#"{{"status":"evaluation","value":{{"result":"{{\"typed\":true}}","effective_html":"<html><head><title>Search</title></head><body><main><!-- __fixture_compiled_aria_label__ --><input type='search' aria-label='Search'><input aria-label='Other'></main></body></html>"}}}}"#
@@ -225,7 +225,7 @@ fn main() {
             && input.contains("fieldLabelledBy")
             && input.contains("q-label")
             && input.contains("input, textarea")
-            && !input.contains("getAttribute('placeholder')")
+            && input.contains("fieldPlaceholder")
             && !input.contains("getAttribute('aria-describedby')")
         {
             println!(
@@ -243,11 +243,29 @@ fn main() {
             && input.contains("fieldTitle")
             && input.contains("Search")
             && input.contains("input, textarea")
-            && !input.contains("getAttribute('placeholder')")
+            && input.contains("fieldPlaceholder")
             && !input.contains("getAttribute('aria-describedby')")
         {
             println!(
                 r#"{{"status":"evaluation","value":{{"result":"{{\"typed\":true}}","effective_html":"<html><head><title>Search</title></head><body><main><!-- __fixture_compiled_title__ --><input type='search' title='Search'><input title='Other'></main></body></html>"}}}}"#
+            );
+        } else {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"error\":\"Element not found in DOM\"}}","effective_html":"<html><body><p>mutated</p></body></html>"}}}}"#
+            );
+        }
+        return;
+    }
+    if input.contains("__fixture_compiled_placeholder__") {
+        if input.contains("getAttribute('placeholder')")
+            && input.contains("fieldPlaceholder")
+            && input.contains("Search")
+            && input.contains("input, textarea")
+            && input.contains("fieldTitle")
+            && !input.contains("getAttribute('aria-describedby')")
+        {
+            println!(
+                r#"{{"status":"evaluation","value":{{"result":"{{\"typed\":true}}","effective_html":"<html><head><title>Search</title></head><body><main><!-- __fixture_compiled_placeholder__ --><input type='search' placeholder='Search'><input placeholder='Other'></main></body></html>"}}}}"#
             );
         } else {
             println!(
