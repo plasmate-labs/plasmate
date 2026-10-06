@@ -428,7 +428,8 @@ export function findActionTarget(
     index.byCacheKey[value] ??
     index.byHtmlId[value] ??
     index.byTestId[value] ??
-    index.byLabel[value]
+    index.byLabel[value] ??
+    getActionPlan(som).find((item) => item.label?.toLowerCase() === value.toLowerCase())
   );
 }
 

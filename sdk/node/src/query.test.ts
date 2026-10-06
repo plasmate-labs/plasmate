@@ -501,6 +501,7 @@ describe('getActionPlan', () => {
     assert.deepEqual(findActionTarget(som, 'save-button'), save);
     assert.deepEqual(findActionTarget(som, 'settings-save'), save);
     assert.deepEqual(findActionTarget(som, 'Save'), save);
+    assert.deepEqual(findActionTarget(som, 'save'), save);
     assert.deepEqual(findActionTarget(som, 'Save', { by: 'label' }), save);
     assert.deepEqual(findActionTarget(som, 'settings-save', { by: 'test_id' }), save);
     assert.deepEqual(findActionTargetById(som, 'e_save'), save);
