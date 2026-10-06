@@ -3449,6 +3449,9 @@ fn find_element_by_id_in_tree<'a>(
 
 fn typing_block_reason(element: &crate::som::types::Element) -> Option<&'static str> {
     let attrs = element.attrs.as_ref()?;
+    if attr_flag_true(attrs, "aria_disabled") {
+        return Some("aria-disabled");
+    }
     if attr_flag_true(attrs, "disabled") {
         return Some("disabled");
     }
@@ -4915,7 +4918,7 @@ pub fn navigate_to_definition() -> ToolDefinition {
 pub fn type_text_definition() -> ToolDefinition {
     ToolDefinition {
         name: "type_text".to_string(),
-        description: "Type text into a form input or textarea by its SOM element ID. Returns the updated page SOM. Resolves the live control by compiled name, compiled aria-label when name and html_id are absent, compiled aria-labelledby when name, html_id, and aria-label are absent, compiled title when name, html_id, aria-label, and labelledby are absent, or compiled placeholder when name, html_id, aria-label, labelledby, and title are absent. Fails closed when the compiled SOM marks the target disabled, readonly, or inert, without mutating session HTML.".to_string(),
+        description: "Type text into a form input or textarea by its SOM element ID. Returns the updated page SOM. Resolves the live control by compiled name, compiled aria-label when name and html_id are absent, compiled aria-labelledby when name, html_id, and aria-label are absent, compiled title when name, html_id, aria-label, and labelledby are absent, or compiled placeholder when name, html_id, aria-label, labelledby, and title are absent. Fails closed when the compiled SOM marks the target disabled, aria-disabled, readonly, or inert, without mutating session HTML.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -8807,6 +8810,12 @@ mod tests {
         };
         assert_eq!(typing_block_reason(&inert), Some("inert"));
 
+        let aria_disabled = Element {
+            attrs: Some(json!({"aria_disabled": true})),
+            ..inert.clone()
+        };
+        assert_eq!(typing_block_reason(&aria_disabled), Some("aria-disabled"));
+
         let enabled = Element {
             id: "e_email".to_string(),
             role: ElementRole::TextInput,
@@ -8835,34 +8844,56 @@ mod tests {
         };
         assert_eq!(typing_block_reason(&whitespace), None);
         assert!(
-            type_text_definition().description.contains("inert"),
-            "agents must be told inert fields fail closed"
+            type_text_definition().description.contains("aria-disabled"),
+            "agents must be told aria-disabled fields fail closed"
         );
+    }
+
+    #[test]
+    fn compiler_preserves_true_aria_disabled_for_interactive_elements() {
+        let som = plasmate::som::compiler::compile(
+            "<main><input id='blocked' aria-disabled='true'><input id='live' aria-disabled='false'></main>",
+            "https://example.test/aria-disabled",
+        )
+        .unwrap();
+        let blocked = som.regions[0]
+            .elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("blocked"))
+            .expect("blocked input must be compiled");
+        assert_eq!(blocked.attrs.as_ref().unwrap()["aria_disabled"], true);
+        let live = som.regions[0]
+            .elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("live"))
+            .expect("live input must be compiled");
+        assert!(live.attrs.as_ref().unwrap().get("aria_disabled").is_none());
     }
 
     #[tokio::test]
     #[serial_test::serial]
-    async fn type_text_inert_fails_closed_and_preserves_session() {
+    async fn type_text_inert_and_aria_disabled_fail_closed_and_preserve_session() {
         let options = stateful_worker_options(Duration::from_secs(5));
         let sessions = Arc::new(SessionManager::with_worker_options(options));
         let session_id = sessions.create_session().await.unwrap();
-        let html = "<html><head><title>Inert field</title></head><body><main><div inert><input id='email' value='ada@example.test'></div><input id='ok' value='live'></main></body></html>";
+        let html = "<html><head><title>Locked fields</title></head><body><main><div inert><input id='email' value='ada@example.test'></div><input id='aria-email' aria-disabled='true' value='disabled'><input id='ok' value='live'></main></body></html>";
         sessions
             .with_session(&session_id, |session| {
-                session.target.current_url = Some("https://example.test/inert".to_string());
+                session.target.current_url = Some("https://example.test/locked".to_string());
                 session.target.current_html = Some(html.to_string());
                 session.target.effective_html = Some(html.to_string());
                 session.target.current_som = Some(
-                    plasmate::som::compiler::compile(html, "https://example.test/inert").unwrap(),
+                    plasmate::som::compiler::compile(html, "https://example.test/locked").unwrap(),
                 );
                 session.target.rebuild_node_map();
             })
             .await
             .unwrap();
-        let inert_id = sessions
+        let (inert_id, aria_disabled_id) = sessions
             .with_session(&session_id, |session| {
                 let som = session.target.current_som.as_ref().unwrap();
-                som.regions
+                let inert_id = som
+                    .regions
                     .iter()
                     .flat_map(|region| region.elements.iter())
                     .find(|element| {
@@ -8873,7 +8904,21 @@ mod tests {
                                 .is_some_and(|attrs| attr_flag_true(attrs, "inert"))
                     })
                     .map(|element| element.id.clone())
-                    .expect("seeded page must expose an inert input")
+                    .expect("seeded page must expose an inert input");
+                let aria_disabled_id = som
+                    .regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .find(|element| {
+                        element.html_id.as_deref() == Some("aria-email")
+                            && element
+                                .attrs
+                                .as_ref()
+                                .is_some_and(|attrs| attr_flag_true(attrs, "aria_disabled"))
+                    })
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose an aria-disabled input");
+                (inert_id, aria_disabled_id)
             })
             .await
             .unwrap();
@@ -8897,9 +8942,27 @@ mod tests {
             Some(inert_message.as_str())
         );
         assert_eq!(state_fingerprint(&sessions, &session_id).await, before);
+
+        let aria_disabled = handle_type_text(
+            &json!({
+                "session_id": session_id,
+                "element_id": aria_disabled_id,
+                "text": "HACK"
+            }),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert_eq!(aria_disabled["isError"], true, "{aria_disabled}");
+        let aria_disabled_message = format!("Element is aria-disabled: {aria_disabled_id}");
+        assert_eq!(
+            aria_disabled["content"][0]["text"].as_str(),
+            Some(aria_disabled_message.as_str())
+        );
+        assert_eq!(state_fingerprint(&sessions, &session_id).await, before);
         assert!(
-            type_text_definition().description.contains("inert"),
-            "agents must be told inert fields fail closed"
+            type_text_definition().description.contains("aria-disabled"),
+            "agents must be told aria-disabled fields fail closed"
         );
     }
 
