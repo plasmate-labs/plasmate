@@ -3455,6 +3455,9 @@ fn typing_block_reason(element: &crate::som::types::Element) -> Option<&'static 
     if attr_flag_true(attrs, "readonly") {
         return Some("readonly");
     }
+    if attr_flag_true(attrs, "inert") {
+        return Some("inert");
+    }
     None
 }
 
@@ -4912,7 +4915,7 @@ pub fn navigate_to_definition() -> ToolDefinition {
 pub fn type_text_definition() -> ToolDefinition {
     ToolDefinition {
         name: "type_text".to_string(),
-        description: "Type text into a form input or textarea by its SOM element ID. Returns the updated page SOM. Resolves the live control by compiled name, compiled aria-label when name and html_id are absent, compiled aria-labelledby when name, html_id, and aria-label are absent, compiled title when name, html_id, aria-label, and labelledby are absent, or compiled placeholder when name, html_id, aria-label, labelledby, and title are absent. Fails closed when the compiled SOM marks the target disabled or readonly, without mutating session HTML.".to_string(),
+        description: "Type text into a form input or textarea by its SOM element ID. Returns the updated page SOM. Resolves the live control by compiled name, compiled aria-label when name and html_id are absent, compiled aria-labelledby when name, html_id, and aria-label are absent, compiled title when name, html_id, aria-label, and labelledby are absent, or compiled placeholder when name, html_id, aria-label, labelledby, and title are absent. Fails closed when the compiled SOM marks the target disabled, readonly, or inert, without mutating session HTML.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -8786,6 +8789,118 @@ mod tests {
             Some(readonly_message.as_str())
         );
         assert_eq!(state_fingerprint(&sessions, &session_id).await, before);
+    }
+
+    #[test]
+    fn typing_block_reason_keeps_compiled_inert() {
+        let inert = Element {
+            id: "e_email".to_string(),
+            role: ElementRole::TextInput,
+            html_id: Some("email".to_string()),
+            text: None,
+            label: None,
+            actions: Some(vec!["type".into()]),
+            attrs: Some(json!({"inert": true, "value": "ada@example.test"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        };
+        assert_eq!(typing_block_reason(&inert), Some("inert"));
+
+        let enabled = Element {
+            id: "e_email".to_string(),
+            role: ElementRole::TextInput,
+            html_id: Some("email".to_string()),
+            text: None,
+            label: None,
+            actions: Some(vec!["type".into()]),
+            attrs: Some(json!({"value": "ada@example.test"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        };
+        assert_eq!(typing_block_reason(&enabled), None);
+
+        let whitespace = Element {
+            id: "e_email".to_string(),
+            role: ElementRole::TextInput,
+            html_id: Some("email".to_string()),
+            text: None,
+            label: None,
+            actions: Some(vec!["type".into()]),
+            attrs: Some(json!({"inert": "   "})),
+            children: None,
+            hints: None,
+            shadow: None,
+        };
+        assert_eq!(typing_block_reason(&whitespace), None);
+        assert!(
+            type_text_definition().description.contains("inert"),
+            "agents must be told inert fields fail closed"
+        );
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn type_text_inert_fails_closed_and_preserves_session() {
+        let options = stateful_worker_options(Duration::from_secs(5));
+        let sessions = Arc::new(SessionManager::with_worker_options(options));
+        let session_id = sessions.create_session().await.unwrap();
+        let html = "<html><head><title>Inert field</title></head><body><main><div inert><input id='email' value='ada@example.test'></div><input id='ok' value='live'></main></body></html>";
+        sessions
+            .with_session(&session_id, |session| {
+                session.target.current_url = Some("https://example.test/inert".to_string());
+                session.target.current_html = Some(html.to_string());
+                session.target.effective_html = Some(html.to_string());
+                session.target.current_som = Some(
+                    plasmate::som::compiler::compile(html, "https://example.test/inert").unwrap(),
+                );
+                session.target.rebuild_node_map();
+            })
+            .await
+            .unwrap();
+        let inert_id = sessions
+            .with_session(&session_id, |session| {
+                let som = session.target.current_som.as_ref().unwrap();
+                som.regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .find(|element| {
+                        element.html_id.as_deref() == Some("email")
+                            && element
+                                .attrs
+                                .as_ref()
+                                .is_some_and(|attrs| attr_flag_true(attrs, "inert"))
+                    })
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose an inert input")
+            })
+            .await
+            .unwrap();
+        let before = state_fingerprint(&sessions, &session_id).await;
+        let client = reqwest::Client::new();
+
+        let inert = handle_type_text(
+            &json!({
+                "session_id": session_id,
+                "element_id": inert_id,
+                "text": "HACK"
+            }),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert_eq!(inert["isError"], true, "{inert}");
+        let inert_message = format!("Element is inert: {inert_id}");
+        assert_eq!(
+            inert["content"][0]["text"].as_str(),
+            Some(inert_message.as_str())
+        );
+        assert_eq!(state_fingerprint(&sessions, &session_id).await, before);
+        assert!(
+            type_text_definition().description.contains("inert"),
+            "agents must be told inert fields fail closed"
+        );
     }
 
     #[test]
