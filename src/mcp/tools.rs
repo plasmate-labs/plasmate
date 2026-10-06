@@ -4435,6 +4435,28 @@ fn compiled_field_title(element: &crate::som::types::Element) -> Option<&str> {
         .filter(|title| !title.is_empty())
 }
 
+fn compiled_field_placeholder(element: &crate::som::types::Element) -> Option<&str> {
+    if compiled_field_aria_label(element).is_some()
+        || compiled_field_labelledby_label(element).is_some()
+        || compiled_field_title(element).is_some()
+    {
+        return None;
+    }
+    if !matches!(
+        element.role,
+        crate::som::types::ElementRole::TextInput | crate::som::types::ElementRole::Textarea
+    ) {
+        return None;
+    }
+    element
+        .attrs
+        .as_ref()
+        .and_then(|attrs| attrs.get("placeholder"))
+        .and_then(|value| value.as_str())
+        .map(str::trim)
+        .filter(|placeholder| !placeholder.is_empty())
+}
+
 fn compiled_test_id(element: &crate::som::types::Element) -> Option<&str> {
     element
         .attrs
@@ -4814,7 +4836,7 @@ pub fn navigate_to_definition() -> ToolDefinition {
 pub fn type_text_definition() -> ToolDefinition {
     ToolDefinition {
         name: "type_text".to_string(),
-        description: "Type text into a form input or textarea by its SOM element ID. Returns the updated page SOM. Resolves the live control by compiled name, compiled aria-label when name and html_id are absent, compiled aria-labelledby when name, html_id, and aria-label are absent, or compiled title when name, html_id, aria-label, and labelledby are absent. Fails closed when the compiled SOM marks the target disabled or readonly, without mutating session HTML.".to_string(),
+        description: "Type text into a form input or textarea by its SOM element ID. Returns the updated page SOM. Resolves the live control by compiled name, compiled aria-label when name and html_id are absent, compiled aria-labelledby when name, html_id, and aria-label are absent, compiled title when name, html_id, aria-label, and labelledby are absent, or compiled placeholder when name, html_id, aria-label, labelledby, and title are absent. Fails closed when the compiled SOM marks the target disabled or readonly, without mutating session HTML.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -5096,6 +5118,7 @@ pub async fn handle_type_text(
     let field_aria_label = compiled_field_aria_label(element);
     let field_labelledby_label = compiled_field_labelledby_label(element);
     let field_title = compiled_field_title(element);
+    let field_placeholder = compiled_field_placeholder(element);
 
     // Run JS to type text into the element
     let element_id = params.element_id.clone();
@@ -5109,6 +5132,8 @@ pub async fn handle_type_text(
     let field_labelledby_label =
         serde_json::to_string(&field_labelledby_label).unwrap_or_else(|_| "null".to_string());
     let field_title = serde_json::to_string(&field_title).unwrap_or_else(|_| "null".to_string());
+    let field_placeholder =
+        serde_json::to_string(&field_placeholder).unwrap_or_else(|_| "null".to_string());
     let text = serde_json::to_string(&text).unwrap_or_else(|_| "null".to_string());
     let type_js = format!(
         r#"
@@ -5119,6 +5144,7 @@ pub async fn handle_type_text(
                 var fieldAriaLabel = {};
                 var fieldLabelledBy = {};
                 var fieldTitle = {};
+                var fieldPlaceholder = {};
                 var value = {};
                 var el = null;
                 var identified = document.querySelectorAll('[data-plasmate-id]');
@@ -5167,6 +5193,15 @@ pub async fn handle_type_text(
                         }}
                     }}
                 }}
+                if (!el && fieldPlaceholder) {{
+                    var placeholders = document.querySelectorAll('input, textarea');
+                    for (var p = 0; p < placeholders.length; p++) {{
+                        if ((placeholders[p].getAttribute('placeholder') || '').trim() === fieldPlaceholder) {{
+                            el = placeholders[p];
+                            break;
+                        }}
+                    }}
+                }}
                 if (!el) {{
                     return JSON.stringify({{ error: 'Element not found in DOM' }});
                 }}
@@ -5188,6 +5223,7 @@ pub async fn handle_type_text(
         field_aria_label,
         field_labelledby_label,
         field_title,
+        field_placeholder,
         text,
         if append { "true" } else { "false" },
     );
@@ -8840,6 +8876,55 @@ mod tests {
     }
 
     #[test]
+    fn type_text_compiled_field_placeholder_keeps_nonempty_input_placeholders() {
+        let placeholder = Element {
+            id: "e_q".to_string(),
+            role: ElementRole::TextInput,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: Some(vec!["type".into()]),
+            attrs: Some(json!({"placeholder": "Search"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        };
+        assert_eq!(compiled_field_placeholder(&placeholder), Some("Search"));
+
+        let blank = Element {
+            attrs: Some(json!({"placeholder": "  "})),
+            ..placeholder.clone()
+        };
+        assert_eq!(compiled_field_placeholder(&blank), None);
+
+        let aria_label_wins = Element {
+            attrs: Some(json!({"placeholder": "Search", "aria": {"label": "Query"}})),
+            ..placeholder.clone()
+        };
+        assert_eq!(compiled_field_placeholder(&aria_label_wins), None);
+
+        let labelledby_wins = Element {
+            label: Some("Search query".to_string()),
+            attrs: Some(json!({"placeholder": "Search", "aria": {"labelledby": "q-label"}})),
+            ..placeholder.clone()
+        };
+        assert_eq!(compiled_field_placeholder(&labelledby_wins), None);
+
+        let title_wins = Element {
+            attrs: Some(json!({"placeholder": "Search", "title": "Query"})),
+            ..placeholder.clone()
+        };
+        assert_eq!(compiled_field_placeholder(&title_wins), None);
+
+        let button = Element {
+            role: ElementRole::Button,
+            attrs: Some(json!({"placeholder": "Search"})),
+            ..placeholder
+        };
+        assert_eq!(compiled_field_placeholder(&button), None);
+    }
+
+    #[test]
     fn compiled_test_id_keeps_nonempty_locator_values() {
         let button = Element {
             id: "e_pay".to_string(),
@@ -9123,6 +9208,68 @@ mod tests {
         assert!(
             type_text_definition().description.contains("title"),
             "agents must be told title-only inputs resolve"
+        );
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn type_text_resolves_compiled_placeholder_when_name_aria_label_labelledby_and_title_are_absent(
+    ) {
+        let options = stateful_worker_options(Duration::from_secs(5));
+        let sessions = Arc::new(SessionManager::with_worker_options(options));
+        let session_id = sessions.create_session().await.unwrap();
+        let html = "<html><head><title>Search</title></head><body><main><!-- __fixture_compiled_placeholder__ --><input type='search' placeholder='Search'><input placeholder='Other'></main></body></html>";
+        sessions
+            .with_session(&session_id, |session| {
+                session.target.current_url = Some("https://example.test/search".to_string());
+                session.target.current_html = Some(html.to_string());
+                session.target.effective_html = Some(html.to_string());
+                session.target.current_som = Some(
+                    plasmate::som::compiler::compile(html, "https://example.test/search").unwrap(),
+                );
+                session.target.rebuild_node_map();
+            })
+            .await
+            .unwrap();
+        let element_id = sessions
+            .with_session(&session_id, |session| {
+                let som = session.target.current_som.as_ref().unwrap();
+                som.regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .find(|element| {
+                        element.role == ElementRole::TextInput
+                            && element.html_id.is_none()
+                            && compiled_field_name(element).is_none()
+                            && compiled_field_aria_label(element).is_none()
+                            && compiled_field_labelledby_label(element).is_none()
+                            && compiled_field_title(element).is_none()
+                            && compiled_field_placeholder(element) == Some("Search")
+                    })
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose the placeholder-only search input")
+            })
+            .await
+            .unwrap();
+        let client = reqwest::Client::new();
+
+        let typed = handle_type_text(
+            &json!({
+                "session_id": session_id,
+                "element_id": element_id,
+                "text": "plasmate"
+            }),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert!(typed.get("isError").is_none(), "{typed}");
+        let payload = tool_payload(&typed);
+        assert_eq!(payload["title"], "Search");
+        assert!(payload["regions"].is_array(), "{payload}");
+        assert!(
+            type_text_definition().description.contains("placeholder"),
+            "agents must be told placeholder-only inputs resolve"
         );
     }
 
