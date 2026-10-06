@@ -343,6 +343,11 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
         item.blocked_reason = 'disabled';
       }
     }
+    if (el.attrs?.aria?.disabled === true && item.enabled !== false) {
+      item.disabled = true;
+      item.enabled = false;
+      item.blocked_reason = 'disabled';
+    }
     if (el.attrs?.inert !== undefined) {
       item.inert = el.attrs.inert;
       if (el.attrs.inert) {

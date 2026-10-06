@@ -398,6 +398,39 @@ describe('findByText', () => {
 });
 
 describe('getActionPlan', () => {
+  it('treats spec-compliant aria-disabled controls as unavailable', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_main',
+          role: 'main',
+          elements: [
+            {
+              id: 'aria-disabled-button',
+              role: 'button',
+              text: 'Archive',
+              actions: ['click'],
+              attrs: { aria: { disabled: true } },
+            },
+          ],
+        },
+      ],
+    };
+
+    assert.deepEqual(getActionPlan(som)[0], {
+      id: 'aria-disabled-button',
+      cache_key: 'plasmate-action:v1:046c903b',
+      role: 'button',
+      actions: ['click'],
+      enabled: false,
+      label: 'Archive',
+      disabled: true,
+      blocked_reason: 'disabled',
+    });
+    assert.deepEqual(getEnabledActionPlan(som), []);
+  });
+
   it('returns compact action targets', () => {
     const plan = getActionPlan(fixture);
 
