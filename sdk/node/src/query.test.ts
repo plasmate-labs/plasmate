@@ -398,6 +398,39 @@ describe('findByText', () => {
 });
 
 describe('getActionPlan', () => {
+  it('treats spec-compliant aria-disabled controls as unavailable', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_main',
+          role: 'main',
+          elements: [
+            {
+              id: 'aria-disabled-button',
+              role: 'button',
+              text: 'Archive',
+              actions: ['click'],
+              attrs: { aria: { disabled: true } },
+            },
+          ],
+        },
+      ],
+    };
+
+    assert.deepEqual(getActionPlan(som)[0], {
+      id: 'aria-disabled-button',
+      cache_key: 'plasmate-action:v1:046c903b',
+      role: 'button',
+      actions: ['click'],
+      enabled: false,
+      label: 'Archive',
+      disabled: true,
+      blocked_reason: 'disabled',
+    });
+    assert.deepEqual(getEnabledActionPlan(som), []);
+  });
+
   it('returns compact action targets', () => {
     const plan = getActionPlan(fixture);
 
@@ -467,6 +500,8 @@ describe('getActionPlan', () => {
     assert.deepEqual(findActionTarget(som, save.cache_key), save);
     assert.deepEqual(findActionTarget(som, 'save-button'), save);
     assert.deepEqual(findActionTarget(som, 'settings-save'), save);
+    assert.deepEqual(findActionTarget(som, 'Save'), save);
+    assert.deepEqual(findActionTarget(som, 'save'), save);
     assert.deepEqual(findActionTarget(som, 'Save', { by: 'label' }), save);
     assert.deepEqual(findActionTarget(som, 'settings-save', { by: 'test_id' }), save);
     assert.deepEqual(findActionTargetById(som, 'e_save'), save);
@@ -486,6 +521,7 @@ describe('getActionPlan', () => {
     ]);
     assert.equal(findActionTarget(som, 'settings-save', { enabledOnly: true }), undefined);
     assert.equal(findActionTarget(som, 'Save', { by: 'label', enabledOnly: true }), undefined);
+    assert.equal(findActionTarget(som, 'sAvE', { enabledOnly: true }), undefined);
     assert.deepEqual(findActionTargetsByRole(som, 'button', { enabledOnly: true }), []);
     assert.deepEqual(findActionTargetsByAction(som, 'click', { enabledOnly: true }), [
       billing,

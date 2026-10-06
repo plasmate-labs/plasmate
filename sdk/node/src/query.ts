@@ -343,6 +343,11 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
         item.blocked_reason = 'disabled';
       }
     }
+    if (el.attrs?.aria?.disabled === true && item.enabled !== false) {
+      item.disabled = true;
+      item.enabled = false;
+      item.blocked_reason = 'disabled';
+    }
     if (el.attrs?.inert !== undefined) {
       item.inert = el.attrs.inert;
       if (el.attrs.inert) {
@@ -411,6 +416,7 @@ export function findActionTarget(
   value: string,
   options: ActionTargetLookupOptions = {},
 ): ActionPlanItem | undefined {
+  const plan = options.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
   const index = getActionPlanIndex(som, { enabledOnly: options.enabledOnly });
   const by = options.by ?? 'auto';
   if (by === 'id') return index.byId[value];
@@ -422,7 +428,9 @@ export function findActionTarget(
     index.byId[value] ??
     index.byCacheKey[value] ??
     index.byHtmlId[value] ??
-    index.byTestId[value]
+    index.byTestId[value] ??
+    index.byLabel[value] ??
+    plan.find((item) => item.label?.toLowerCase() === value.toLowerCase())
   );
 }
 
