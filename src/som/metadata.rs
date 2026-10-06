@@ -229,7 +229,8 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                             | "up"
                             | "contents"
                             | "describedby"
-                    ) {
+                    ) || is_http_extension_rel(&rel_lower)
+                    {
                         let link_type = attrs_borrowed
                             .iter()
                             .find(|a| a.name.local.as_ref() == "type")
@@ -378,6 +379,22 @@ fn is_schema_itemprop_name(n: &str) -> bool {
 fn is_fediverse_meta_name(n: &str) -> bool {
     n.strip_prefix("fediverse:")
         .is_some_and(|rest| !rest.is_empty())
+}
+
+fn is_http_extension_rel(rel: &str) -> bool {
+    let rel = rel.trim();
+    if rel.chars().any(char::is_whitespace) {
+        return false;
+    }
+    let rest = if let Some(rest) = rel.strip_prefix("https://") {
+        rest
+    } else if let Some(rest) = rel.strip_prefix("http://") {
+        rest
+    } else {
+        return false;
+    };
+    let host = rest.split(['/', '?', '#']).next().unwrap_or("");
+    !host.is_empty()
 }
 
 fn is_document_base_href(href: &str) -> bool {
@@ -1771,6 +1788,78 @@ mod tests {
             !data.open_graph.contains_key("describedby") && data.twitter_card.is_empty(),
             "describedby must not copy onto OpenGraph or Twitter cards: {data:?}"
         );
+    }
+
+    #[test]
+    fn http_extension_rel_link_rels_are_extracted() {
+        let html = r#"<html><head>
+            <link rel="canonical" href="https://example.test/notes/som">
+            <link rel="https://api.w.org/" href="https://example.test/wp-json/">
+            <link rel="HTTPS://API.W.ORG/" href="https://example.test/wp-json/v2">
+            <link rel="http://oembed.com" href="https://example.test/oembed">
+            <link rel="https://api.w.org/ prefetch" href="https://example.test/mixed-wp">
+            <link rel="https://" href="https://example.test/empty-host">
+            <link rel="micropub" href="https://example.test/micropub">
+            <link rel="tag" href="/tags/som">
+            <link rel="prefetch" href="https://example.test/prefetch">
+            <link rel="stylesheet" href="/style.css">
+            <link rel="icon" href="/favicon.ico">
+            <a rel="https://api.w.org/" href="https://example.test/body-wp">Body wp</a>
+            <meta name="citation_title" content="Not a link">
+        </head><body><p>Body</p></body></html>"#;
+        let data = extract_structured_data(html);
+        let rels: Vec<_> = data.links.iter().map(|link| link.rel.as_str()).collect();
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "https://api.w.org/" && link.href == "https://example.test/wp-json/"
+            }),
+            "https extension rel must stay in structured data: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "https://api.w.org/" && link.href == "https://example.test/wp-json/v2"
+            }),
+            "HTTPS extension rel must canonicalize: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| {
+                link.rel == "http://oembed.com" && link.href == "https://example.test/oembed"
+            }),
+            "http extension rel must stay in structured data: {data:?}"
+        );
+        assert!(
+            data.links.iter().any(|link| link.rel == "canonical"),
+            "canonical must remain: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"micropub"),
+            "micropub must not copy extension-rel mapping: {data:?}"
+        );
+        assert!(
+            !rels.contains(&"prefetch"),
+            "prefetch must not copy extension-rel mapping: {data:?}"
+        );
+        assert!(
+            !data.links.iter().any(|link| {
+                link.href == "https://example.test/mixed-wp"
+                    || link.href == "https://example.test/empty-host"
+                    || link.href == "https://example.test/body-wp"
+                    || link.href == "/style.css"
+                    || link.href == "/tags/som"
+            }),
+            "multi-token, empty-host, body anchors, stylesheet, and tag must not copy head extension-rel mapping: {data:?}"
+        );
+        assert_eq!(data.meta["citation_title"], "Not a link");
+        assert!(
+            !data.open_graph.contains_key("https://api.w.org/") && data.twitter_card.is_empty(),
+            "extension rels must not copy onto OpenGraph or Twitter cards: {data:?}"
+        );
+        assert!(is_http_extension_rel("https://api.w.org/"));
+        assert!(is_http_extension_rel("http://oembed.com"));
+        assert!(!is_http_extension_rel("https://api.w.org/ prefetch"));
+        assert!(!is_http_extension_rel("https://"));
+        assert!(!is_http_extension_rel("micropub"));
+        assert!(!is_http_extension_rel("javascript:https://api.w.org/"));
     }
 
     #[test]

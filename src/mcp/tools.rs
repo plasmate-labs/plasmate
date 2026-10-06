@@ -804,7 +804,7 @@ struct ExtractLinksParams {
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, and manifest), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Highwire citation_abstract_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled EPrints eprints.official_url values, compiled Open Graph og:url values, compiled Twitter Card twitter:url values, compiled schema.org itemprop=url meta values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD SoftwareApplication codeRepository values, compiled JSON-LD SoftwareSourceCode codeRepository values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled JSON-LD license values (WebPage/Article and subtypes), compiled JSON-LD JobPosting applicationUrl values, compiled JSON-LD Product offers url values, compiled JSON-LD Dataset distribution contentUrl values, compiled JSON-LD WebSite SearchAction target values, compiled JSON-LD Event url values, compiled JSON-LD Course hasCourseInstance url values, compiled JSON-LD Recipe url values, compiled JSON-LD Movie url values, compiled JSON-LD Book url values, compiled JSON-LD HowTo url values, compiled JSON-LD ItemList ListItem url values, compiled JSON-LD PodcastSeries webFeed values, compiled JSON-LD TVSeries url values, compiled JSON-LD MusicRecording url values, compiled JSON-LD VideoGame url values, compiled JSON-LD MusicAlbum url values, compiled JSON-LD MusicPlaylist url values, compiled JSON-LD TVEpisode url values, compiled JSON-LD MusicGroup url values, compiled JSON-LD Person url values, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, research PDF discovery, research HTML fulltext recovery, research HTML abstract recovery, Dublin Core identifier recovery, EPrints official URL recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org software source-repository recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, schema.org license recovery, schema.org job-application recovery, schema.org product-offer recovery, schema.org dataset distribution recovery, schema.org site-search recovery, schema.org recipe recovery, schema.org movie recovery, schema.org book recovery, schema.org howto recovery, schema.org item-list recovery, schema.org podcast-feed recovery, schema.org tv-series recovery, schema.org music-recording recovery, schema.org video-game recovery, schema.org music-album recovery, schema.org music-playlist recovery, schema.org tv-episode recovery, schema.org music-group recovery, schema.org person recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, manifest, and http(s) extension relation types), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Highwire citation_abstract_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled EPrints eprints.official_url values, compiled Open Graph og:url values, compiled Twitter Card twitter:url values, compiled schema.org itemprop=url meta values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD SoftwareApplication codeRepository values, compiled JSON-LD SoftwareSourceCode codeRepository values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled JSON-LD license values (WebPage/Article and subtypes), compiled JSON-LD JobPosting applicationUrl values, compiled JSON-LD Product offers url values, compiled JSON-LD Dataset distribution contentUrl values, compiled JSON-LD WebSite SearchAction target values, compiled JSON-LD Event url values, compiled JSON-LD Course hasCourseInstance url values, compiled JSON-LD Recipe url values, compiled JSON-LD Movie url values, compiled JSON-LD Book url values, compiled JSON-LD HowTo url values, compiled JSON-LD ItemList ListItem url values, compiled JSON-LD PodcastSeries webFeed values, compiled JSON-LD TVSeries url values, compiled JSON-LD MusicRecording url values, compiled JSON-LD VideoGame url values, compiled JSON-LD MusicAlbum url values, compiled JSON-LD MusicPlaylist url values, compiled JSON-LD TVEpisode url values, compiled JSON-LD MusicGroup url values, compiled JSON-LD Person url values, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, extension-relation API discovery, research PDF discovery, research HTML fulltext recovery, research HTML abstract recovery, Dublin Core identifier recovery, EPrints official URL recovery, social canonical recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org software source-repository recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, schema.org license recovery, schema.org job-application recovery, schema.org product-offer recovery, schema.org dataset distribution recovery, schema.org site-search recovery, schema.org recipe recovery, schema.org movie recovery, schema.org book recovery, schema.org howto recovery, schema.org item-list recovery, schema.org podcast-feed recovery, schema.org tv-series recovery, schema.org music-recording recovery, schema.org video-game recovery, schema.org music-album recovery, schema.org music-playlist recovery, schema.org tv-episode recovery, schema.org music-group recovery, schema.org person recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1508,6 +1508,9 @@ fn collect_structured_document_links(som: &Som, urls: &mut Vec<String>) {
         if href.is_empty() || href == "#" {
             continue;
         }
+        if is_http_extension_rel(&link.rel) && !is_extract_links_structured_href(href) {
+            continue;
+        }
         urls.push(href.to_string());
     }
 }
@@ -1536,7 +1539,23 @@ fn is_extract_links_document_rel(rel: &str) -> bool {
             | "up"
             | "describedby"
             | "manifest"
-    )
+    ) || is_http_extension_rel(rel)
+}
+
+fn is_http_extension_rel(rel: &str) -> bool {
+    let rel = rel.trim();
+    if rel.chars().any(char::is_whitespace) {
+        return false;
+    }
+    let rest = if let Some(rest) = rel.strip_prefix("https://") {
+        rest
+    } else if let Some(rest) = rel.strip_prefix("http://") {
+        rest
+    } else {
+        return false;
+    };
+    let host = rest.split(['/', '?', '#']).next().unwrap_or("");
+    !host.is_empty()
 }
 
 fn collect_structured_citation_pdf_urls(som: &Som, urls: &mut Vec<String>) {
@@ -10413,6 +10432,106 @@ mod tests {
                     || url.contains("/docs/index")
             }),
             "micropub, tag, prefetch, multi-token rels, icons, describes/describedat/longdesc, and other documentation rels must not copy describedby extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_http_extension_rel_head_links() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<base href="/notes/">
+<link rel="canonical" href="https://example.test/notes/som">
+<link rel="https://api.w.org/" href="https://example.test/wp-json/">
+<link rel="HTTPS://API.W.ORG/" href="https://example.test/wp-json/v2">
+<link rel="http://oembed.com" href="https://example.test/oembed">
+<link rel="https://api.w.org/" href="api">
+<link rel="https://api.w.org/ prefetch" href="https://example.test/mixed-wp">
+<link rel="https://" href="https://example.test/empty-host">
+<link rel="micropub" href="https://example.test/micropub">
+<link rel="tag" href="https://example.test/tags/som">
+<link rel="prefetch" href="https://example.test/prefetch">
+<link rel="icon" href="/favicon.ico">
+<title>Notes</title>
+</head><body>
+<main>
+  <a href="som">SOM</a>
+  <a rel="https://api.w.org/" href="https://example.test/body-wp">Body wp</a>
+</main>
+</body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("fixture HTML should compile");
+
+        assert!(
+            som.structured_data
+                .as_ref()
+                .map(|data| {
+                    data.links.iter().any(|link| {
+                        link.rel == "https://api.w.org/"
+                            && link.href == "https://example.test/wp-json/"
+                    })
+                })
+                .unwrap_or(false),
+            "compiler must keep http(s) extension rels for extract_links to recover"
+        );
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/wp-json/".to_string()),
+            "rel=https://api.w.org/ must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/wp-json/v2".to_string()),
+            "rel=HTTPS://API.W.ORG/ must canonicalize into extract_links: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/oembed".to_string()),
+            "rel=http://oembed.com must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/notes/api".to_string()),
+            "relative extension-rel href must resolve against document base: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/notes/som".to_string()),
+            "canonical must remain: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/body-wp".to_string()),
+            "in-page links must remain: {urls:?}"
+        );
+        assert!(
+            extract_links_definition()
+                .description
+                .contains("extension relation"),
+            "agents must be told http(s) extension relation hrefs are returned"
+        );
+
+        let blocked = crate::som::compiler::compile(
+            r##"<html><head>
+<link rel="https://api.w.org/" href="javascript:alert(1)">
+<title>Blocked</title>
+</head><body><main><p>No API</p></main></body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("blocked fixture HTML should compile");
+        let blocked_urls = collect_extract_link_urls(&blocked);
+        assert!(
+            !blocked_urls.iter().any(|url| url.contains("javascript:")),
+            "javascript: extension-rel href must not become a fetch target: {blocked_urls:?}"
+        );
+
+        assert!(
+            !urls.iter().any(|url| {
+                url.contains("mixed-wp")
+                    || url.contains("empty-host")
+                    || url.contains("micropub")
+                    || url.contains("/tags/som")
+                    || url.contains("prefetch")
+                    || url.contains("favicon")
+            }),
+            "multi-token, empty-host, micropub, tag, prefetch, and icons must not copy extension-rel extract_links: {urls:?}"
         );
     }
 
