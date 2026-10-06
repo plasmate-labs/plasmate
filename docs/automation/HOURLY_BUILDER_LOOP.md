@@ -33,15 +33,21 @@ frequency.
 If these gates are not met, report a no-change or blocked run. Never stash,
 overwrite, reset, or absorb unrelated work.
 
-## Active governor constraint (2026-10-05)
+## Active governor constraint (2026-10-06)
 
-- Window: `a7ddaf4` .. `b56465a`
+- Window: `05ceac1` .. `e3b7b26`
 - Decision: `NARROW`
-- Merged this run: `b56465a` JSON-LD Person `url` extract_links (`901b1df`, #571)
-- Prohibited next: another compiled JSON-LD schema.org type `url` /
-  `webFeed` copy in `extract_links` (`Organization`, `Place`,
-  `LocalBusiness`, `Review`, `Service`, `CreativeWork`, `Patient`,
-  `PerformingGroup`, or remaining `@type` variants). Do not copy #571
+- Merged this run: `e3b7b26` App Links `al:web:url` extract_links (`e29cebd`, #579)
+- Prohibited next: another compiled structured-data URL copy in
+  `extract_links` (App Links `al:web:url` / `al:ios:url` /
+  `al:android:url` / `al:windows:url`, Open Graph keys beyond `og:url`,
+  Twitter Card keys beyond `twitter:url`, Highwire `citation_*`,
+  Dublin Core identifiers, EPrints, Bepress, PRISM, `itemprop=url`,
+  http(s) extension relation types, or JSON-LD schema.org type `url` /
+  `webFeed` including remaining `@type` variants). Do not copy #579
+  `al:web:url` onto CLI, CDP, or SDKs. Do not copy #577 `type_text`
+  placeholder lookup onto adjacent handlers (`clear`, `toggle`,
+  `select_option`, `click`) or SDKs. Do not copy #571
   Person `url` onto CLI, CDP, or SDKs. Do not reopen nested
   `affiliation` / `worksFor` / `memberOf` / `author` Person urls.
   Do not copy another compiled `attrs.options` / `attrs.caption` /
@@ -559,7 +565,9 @@ overwrite, reset, or absorb unrelated work.
     install-path, SOM-reference, OpenClaw/Pi, CrewAI, Vercel AI,
     Browser Use, Scrapy, LlamaIndex, AutoGen, or install MCP
     tool-name rewrite; or bounded agent-task recovery that is not
-    another JSON-LD schema.org type url/webFeed copy, IDL getter, querySelector
+    another extract_links structured-data URL copy (App Links, Open Graph,
+    Twitter Card, Highwire, Dublin Core, EPrints, Bepress, PRISM, itemprop,
+    extension rel, JSON-LD schema.org type url/webFeed), IDL getter, querySelector
     pseudo, inspect-compact field, compile-attr copy, MCP empty-session
     error-text copy, open_page capacity error-text copy, navigate_to
     missing-session error-text copy, close_page idempotent-success copy,
