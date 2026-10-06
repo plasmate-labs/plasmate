@@ -3449,11 +3449,31 @@ fn find_element_by_id_in_tree<'a>(
 
 fn typing_block_reason(element: &crate::som::types::Element) -> Option<&'static str> {
     let attrs = element.attrs.as_ref()?;
+    if attr_flag_true(attrs, "aria_disabled") {
+        return Some("aria-disabled");
+    }
     if attr_flag_true(attrs, "disabled") {
         return Some("disabled");
     }
     if attr_flag_true(attrs, "readonly") {
         return Some("readonly");
+    }
+    if attr_flag_true(attrs, "inert") {
+        return Some("inert");
+    }
+    None
+}
+
+fn interaction_block_reason(element: &crate::som::types::Element) -> Option<&'static str> {
+    let attrs = element.attrs.as_ref()?;
+    if attr_flag_true(attrs, "aria_disabled") {
+        return Some("aria-disabled");
+    }
+    if attr_flag_true(attrs, "disabled") {
+        return Some("disabled");
+    }
+    if attr_flag_true(attrs, "inert") {
+        return Some("inert");
     }
     None
 }
@@ -3762,7 +3782,7 @@ pub fn evaluate_definition() -> ToolDefinition {
 pub fn click_definition() -> ToolDefinition {
     ToolDefinition {
         name: "click".to_string(),
-        description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click. Resolves the live control by compiled test_id, or an icon-only link href, when html_id is absent. Title-only buttons resolve from the compiled title when visible text, value, alt, and aria-label are absent. Empty-text buttons named only by aria-labelledby resolve from the referenced accessible name when html_id, test_id, aria-label, and title are absent. Resolves relative link hrefs and GET form actions against the document <base href> when present. Follows a compiled GET form action or submitter formaction when clicking a submit button, encoding named text_input/textarea/select/checkbox/radio values as the query (including selected options, the clicked submitter, image-submit x/y coordinates, and listed controls associated by compiled form owner id). Missing form action still submits to the current page URL. Fails closed when the compiled SOM marks the target disabled, without mutating session HTML.".to_string(),
+        description: "Click an element on the page by its SOM element ID. Returns the updated page SOM after the click. Resolves the live control by compiled test_id, or an icon-only link href, when html_id is absent. Title-only buttons resolve from the compiled title when visible text, value, alt, and aria-label are absent. Empty-text buttons named only by aria-labelledby resolve from the referenced accessible name when html_id, test_id, aria-label, and title are absent. Resolves relative link hrefs and GET form actions against the document <base href> when present. Follows a compiled GET form action or submitter formaction when clicking a submit button, encoding named text_input/textarea/select/checkbox/radio values as the query (including selected options, the clicked submitter, image-submit x/y coordinates, and listed controls associated by compiled form owner id). Missing form action still submits to the current page URL. Fails closed when the compiled SOM marks the target disabled, aria-disabled, or inert, without mutating session HTML.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -4626,12 +4646,8 @@ pub async fn handle_click(
             return error_response(&format!("Element not found: {}", params.element_id));
         }
     };
-    if element
-        .attrs
-        .as_ref()
-        .is_some_and(|attrs| attr_flag_true(attrs, "disabled"))
-    {
-        return error_response(&format!("Element is disabled: {}", params.element_id));
+    if let Some(reason) = interaction_block_reason(element) {
+        return error_response(&format!("Element is {reason}: {}", params.element_id));
     }
 
     // Check if element is clickable (has actions or is interactive)
@@ -4912,7 +4928,7 @@ pub fn navigate_to_definition() -> ToolDefinition {
 pub fn type_text_definition() -> ToolDefinition {
     ToolDefinition {
         name: "type_text".to_string(),
-        description: "Type text into a form input or textarea by its SOM element ID. Returns the updated page SOM. Resolves the live control by compiled name, compiled aria-label when name and html_id are absent, compiled aria-labelledby when name, html_id, and aria-label are absent, compiled title when name, html_id, aria-label, and labelledby are absent, or compiled placeholder when name, html_id, aria-label, labelledby, and title are absent. Fails closed when the compiled SOM marks the target disabled or readonly, without mutating session HTML.".to_string(),
+        description: "Type text into a form input or textarea by its SOM element ID. Returns the updated page SOM. Resolves the live control by compiled name, compiled aria-label when name and html_id are absent, compiled aria-labelledby when name, html_id, and aria-label are absent, compiled title when name, html_id, aria-label, and labelledby are absent, or compiled placeholder when name, html_id, aria-label, labelledby, and title are absent. Fails closed when the compiled SOM marks the target disabled, aria-disabled, readonly, or inert, without mutating session HTML.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -7541,6 +7557,61 @@ mod tests {
         assert_eq!(state_fingerprint(&sessions, &session_id).await, before);
     }
 
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn click_aria_disabled_fails_closed_and_preserves_session() {
+        let options = stateful_worker_options(Duration::from_secs(5));
+        let sessions = Arc::new(SessionManager::with_worker_options(options));
+        let session_id = sessions.create_session().await.unwrap();
+        let html = "<html><head><title>Pay</title></head><body><main><button id='pay-now' aria-disabled='true'>Pay</button></main></body></html>";
+        sessions
+            .with_session(&session_id, |session| {
+                session.target.current_url = Some("https://example.test/pay".to_string());
+                session.target.current_html = Some(html.to_string());
+                session.target.effective_html = Some(html.to_string());
+                session.target.current_som = Some(
+                    plasmate::som::compiler::compile(html, "https://example.test/pay").unwrap(),
+                );
+                session.target.rebuild_node_map();
+            })
+            .await
+            .unwrap();
+        let element_id = sessions
+            .with_session(&session_id, |session| {
+                let som = session.target.current_som.as_ref().unwrap();
+                som.regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .find(|element| {
+                        element.role == ElementRole::Button
+                            && element
+                                .attrs
+                                .as_ref()
+                                .is_some_and(|attrs| attr_flag_true(attrs, "aria_disabled"))
+                    })
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose an aria-disabled button")
+            })
+            .await
+            .unwrap();
+        let before = state_fingerprint(&sessions, &session_id).await;
+        let client = reqwest::Client::new();
+
+        let clicked = handle_click(
+            &json!({"session_id": session_id, "element_id": element_id}),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert_eq!(clicked["isError"], true, "{clicked}");
+        let disabled_message = format!("Element is aria-disabled: {element_id}");
+        assert_eq!(
+            clicked["content"][0]["text"].as_str(),
+            Some(disabled_message.as_str())
+        );
+        assert_eq!(state_fingerprint(&sessions, &session_id).await, before);
+    }
+
     #[test]
     fn resolve_click_fetch_url_keeps_http_targets() {
         assert_eq!(
@@ -8786,6 +8857,178 @@ mod tests {
             Some(readonly_message.as_str())
         );
         assert_eq!(state_fingerprint(&sessions, &session_id).await, before);
+    }
+
+    #[test]
+    fn typing_block_reason_keeps_compiled_inert() {
+        let inert = Element {
+            id: "e_email".to_string(),
+            role: ElementRole::TextInput,
+            html_id: Some("email".to_string()),
+            text: None,
+            label: None,
+            actions: Some(vec!["type".into()]),
+            attrs: Some(json!({"inert": true, "value": "ada@example.test"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        };
+        assert_eq!(typing_block_reason(&inert), Some("inert"));
+
+        let aria_disabled = Element {
+            attrs: Some(json!({"aria_disabled": true})),
+            ..inert.clone()
+        };
+        assert_eq!(typing_block_reason(&aria_disabled), Some("aria-disabled"));
+
+        let enabled = Element {
+            id: "e_email".to_string(),
+            role: ElementRole::TextInput,
+            html_id: Some("email".to_string()),
+            text: None,
+            label: None,
+            actions: Some(vec!["type".into()]),
+            attrs: Some(json!({"value": "ada@example.test"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        };
+        assert_eq!(typing_block_reason(&enabled), None);
+
+        let whitespace = Element {
+            id: "e_email".to_string(),
+            role: ElementRole::TextInput,
+            html_id: Some("email".to_string()),
+            text: None,
+            label: None,
+            actions: Some(vec!["type".into()]),
+            attrs: Some(json!({"inert": "   "})),
+            children: None,
+            hints: None,
+            shadow: None,
+        };
+        assert_eq!(typing_block_reason(&whitespace), None);
+        assert!(
+            type_text_definition().description.contains("aria-disabled"),
+            "agents must be told aria-disabled fields fail closed"
+        );
+    }
+
+    #[test]
+    fn compiler_preserves_true_aria_disabled_for_interactive_elements() {
+        let som = plasmate::som::compiler::compile(
+            "<main><input id='blocked' aria-disabled='true'><input id='live' aria-disabled='false'></main>",
+            "https://example.test/aria-disabled",
+        )
+        .unwrap();
+        let blocked = som.regions[0]
+            .elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("blocked"))
+            .expect("blocked input must be compiled");
+        assert_eq!(blocked.attrs.as_ref().unwrap()["aria_disabled"], true);
+        let live = som.regions[0]
+            .elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("live"))
+            .expect("live input must be compiled");
+        assert!(live.attrs.as_ref().unwrap().get("aria_disabled").is_none());
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn type_text_inert_and_aria_disabled_fail_closed_and_preserve_session() {
+        let options = stateful_worker_options(Duration::from_secs(5));
+        let sessions = Arc::new(SessionManager::with_worker_options(options));
+        let session_id = sessions.create_session().await.unwrap();
+        let html = "<html><head><title>Locked fields</title></head><body><main><div inert><input id='email' value='ada@example.test'></div><input id='aria-email' aria-disabled='true' value='disabled'><input id='ok' value='live'></main></body></html>";
+        sessions
+            .with_session(&session_id, |session| {
+                session.target.current_url = Some("https://example.test/locked".to_string());
+                session.target.current_html = Some(html.to_string());
+                session.target.effective_html = Some(html.to_string());
+                session.target.current_som = Some(
+                    plasmate::som::compiler::compile(html, "https://example.test/locked").unwrap(),
+                );
+                session.target.rebuild_node_map();
+            })
+            .await
+            .unwrap();
+        let (inert_id, aria_disabled_id) = sessions
+            .with_session(&session_id, |session| {
+                let som = session.target.current_som.as_ref().unwrap();
+                let inert_id = som
+                    .regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .find(|element| {
+                        element.html_id.as_deref() == Some("email")
+                            && element
+                                .attrs
+                                .as_ref()
+                                .is_some_and(|attrs| attr_flag_true(attrs, "inert"))
+                    })
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose an inert input");
+                let aria_disabled_id = som
+                    .regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .find(|element| {
+                        element.html_id.as_deref() == Some("aria-email")
+                            && element
+                                .attrs
+                                .as_ref()
+                                .is_some_and(|attrs| attr_flag_true(attrs, "aria_disabled"))
+                    })
+                    .map(|element| element.id.clone())
+                    .expect("seeded page must expose an aria-disabled input");
+                (inert_id, aria_disabled_id)
+            })
+            .await
+            .unwrap();
+        let before = state_fingerprint(&sessions, &session_id).await;
+        let client = reqwest::Client::new();
+
+        let inert = handle_type_text(
+            &json!({
+                "session_id": session_id,
+                "element_id": inert_id,
+                "text": "HACK"
+            }),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert_eq!(inert["isError"], true, "{inert}");
+        let inert_message = format!("Element is inert: {inert_id}");
+        assert_eq!(
+            inert["content"][0]["text"].as_str(),
+            Some(inert_message.as_str())
+        );
+        assert_eq!(state_fingerprint(&sessions, &session_id).await, before);
+
+        let aria_disabled = handle_type_text(
+            &json!({
+                "session_id": session_id,
+                "element_id": aria_disabled_id,
+                "text": "HACK"
+            }),
+            &client,
+            &sessions,
+        )
+        .await;
+        assert_eq!(aria_disabled["isError"], true, "{aria_disabled}");
+        let aria_disabled_message = format!("Element is aria-disabled: {aria_disabled_id}");
+        assert_eq!(
+            aria_disabled["content"][0]["text"].as_str(),
+            Some(aria_disabled_message.as_str())
+        );
+        assert_eq!(state_fingerprint(&sessions, &session_id).await, before);
+        assert!(
+            type_text_definition().description.contains("aria-disabled"),
+            "agents must be told aria-disabled fields fail closed"
+        );
     }
 
     #[test]
@@ -11581,7 +11824,9 @@ mod tests {
         );
 
         assert!(
-            extract_links_definition().description.contains("al:web:url"),
+            extract_links_definition()
+                .description
+                .contains("al:web:url"),
             "agents must be told App Links al:web:url values are returned"
         );
 

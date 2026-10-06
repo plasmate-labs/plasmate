@@ -2432,6 +2432,12 @@ fn build_element_attrs(
     if inherited_inert || has_attr(attrs, "inert") {
         map.insert("inert".into(), json!(true));
     }
+    if attrs
+        .iter()
+        .any(|(name, value)| name == "aria-disabled" && value.trim().eq_ignore_ascii_case("true"))
+    {
+        map.insert("aria_disabled".into(), json!(true));
+    }
     if has_attr(attrs, "autofocus") {
         map.insert("autofocus".into(), json!(true));
     }
