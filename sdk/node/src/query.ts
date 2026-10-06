@@ -427,7 +427,8 @@ export function findActionTarget(
     index.byId[value] ??
     index.byCacheKey[value] ??
     index.byHtmlId[value] ??
-    index.byTestId[value]
+    index.byTestId[value] ??
+    index.byLabel[value]
   );
 }
 
