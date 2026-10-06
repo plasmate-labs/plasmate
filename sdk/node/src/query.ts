@@ -416,6 +416,7 @@ export function findActionTarget(
   value: string,
   options: ActionTargetLookupOptions = {},
 ): ActionPlanItem | undefined {
+  const plan = options.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
   const index = getActionPlanIndex(som, { enabledOnly: options.enabledOnly });
   const by = options.by ?? 'auto';
   if (by === 'id') return index.byId[value];
@@ -429,7 +430,7 @@ export function findActionTarget(
     index.byHtmlId[value] ??
     index.byTestId[value] ??
     index.byLabel[value] ??
-    getActionPlan(som).find((item) => item.label?.toLowerCase() === value.toLowerCase())
+    plan.find((item) => item.label?.toLowerCase() === value.toLowerCase())
   );
 }
 

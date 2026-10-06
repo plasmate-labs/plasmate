@@ -521,6 +521,7 @@ describe('getActionPlan', () => {
     ]);
     assert.equal(findActionTarget(som, 'settings-save', { enabledOnly: true }), undefined);
     assert.equal(findActionTarget(som, 'Save', { by: 'label', enabledOnly: true }), undefined);
+    assert.equal(findActionTarget(som, 'sAvE', { enabledOnly: true }), undefined);
     assert.deepEqual(findActionTargetsByRole(som, 'button', { enabledOnly: true }), []);
     assert.deepEqual(findActionTargetsByAction(som, 'click', { enabledOnly: true }), [
       billing,
