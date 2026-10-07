@@ -109,8 +109,9 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
 
                 // OpenGraph: <meta property="og:*" / property="article:*" / property="book:*" / property="profile:*" / property="music:*" / property="video:*" / property="al:*" content="...">
                 if let (Some(prop), Some(content)) = (&property, &content) {
-                    if prop.starts_with("og:") {
-                        data.open_graph.insert(prop.clone(), content.clone());
+                    let prop_lower = prop.to_ascii_lowercase();
+                    if prop_lower.starts_with("og:") {
+                        data.open_graph.insert(prop_lower, content.clone());
                     } else if is_open_graph_article_property(prop) {
                         data.open_graph
                             .insert(prop.to_ascii_lowercase(), content.clone());
@@ -135,7 +136,8 @@ fn visit_node(node: &Handle, data: &mut StructuredData) {
                 // Twitter Card: name="twitter:*" or property="twitter:*"
                 if let Some(content) = &content {
                     if let Some(key) = twitter_card_key(name_attr.as_deref(), property.as_deref()) {
-                        data.twitter_card.insert(key.to_string(), content.clone());
+                        data.twitter_card
+                            .insert(key.to_ascii_lowercase(), content.clone());
                     }
                 }
 
@@ -447,8 +449,9 @@ fn parse_json_ld_block(text: &str) -> Option<Value> {
 
 fn twitter_card_key<'a>(name: Option<&'a str>, property: Option<&'a str>) -> Option<&'a str> {
     [name, property].into_iter().flatten().find(|key| {
-        key.strip_prefix("twitter:")
-            .is_some_and(|rest| !rest.is_empty())
+        key.get(.."twitter:".len())
+            .is_some_and(|prefix| prefix.eq_ignore_ascii_case("twitter:"))
+            && key.len() > "twitter:".len()
     })
 }
 

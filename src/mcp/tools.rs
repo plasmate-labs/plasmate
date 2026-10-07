@@ -11740,6 +11740,30 @@ mod tests {
     }
 
     #[test]
+    fn extract_links_normalizes_case_variant_social_url_metadata() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<meta property="OG:URL" content="https://example.test/og/case">
+<meta name="Twitter:URL" content="https://example.test/twitter/case">
+<title>Case variants</title>
+</head><body><main><p>No body links</p></main></body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("case-variant social metadata should compile");
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/og/case".to_string()),
+            "case-variant OG:url must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/twitter/case".to_string()),
+            "case-variant Twitter:url must be extractable: {urls:?}"
+        );
+    }
+
+    #[test]
     fn extract_links_includes_compiled_app_links_web_url() {
         let som = crate::som::compiler::compile(
             r##"<html><head>
