@@ -289,7 +289,18 @@ where
                 false
             };
 
-            if matches(element) || cloned.children.is_some() || shadow_match {
+            let matches_self = matches(element);
+            if matches_self {
+                // A selector targets the element, not just its role marker.
+                // Keep the matched element's ordinary authored children so
+                // selecting a button, section, or other container does not
+                // erase its nested label/content. Shadow-root content stays
+                // selector-filtered so unrelated encapsulated content is not
+                // exposed just because its host matched.
+                cloned.children = element.children.clone();
+            }
+
+            if matches_self || cloned.children.is_some() || shadow_match {
                 Some(cloned)
             } else {
                 None
@@ -467,6 +478,35 @@ mod tests {
             filtered.meta.som_bytes,
             serde_json::to_string(&filtered).unwrap().len()
         );
+    }
+
+    #[test]
+    fn test_selector_element_role_preserves_matched_subtree() {
+        let mut som = make_test_som();
+        som.regions[1].elements[1].children = Some(vec![Element {
+            id: "e3-label".to_string(),
+            role: ElementRole::Paragraph,
+            html_id: None,
+            text: Some("Save this report".to_string()),
+            label: None,
+            actions: None,
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        }]);
+
+        let filtered = apply_selector(&som, "button");
+        let button = &filtered.regions[0].elements[0];
+        assert_eq!(button.id, "e3");
+        assert_eq!(
+            button
+                .children
+                .as_ref()
+                .map(|children| children[0].id.as_str()),
+            Some("e3-label")
+        );
+        assert_eq!(filtered.meta.element_count, 2);
     }
 
     #[test]

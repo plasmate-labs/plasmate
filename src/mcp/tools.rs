@@ -415,7 +415,7 @@ async fn load_session_page_for_mcp(
 pub fn fetch_page_definition() -> ToolDefinition {
     ToolDefinition {
         name: "fetch_page".to_string(),
-        description: "Fetch a web page and return its Semantic Object Model (SOM) - structured JSON with typed regions, interactive elements with stable IDs, and clean text content. Output size depends on the page, configuration, serialization, and selector. Prefer this over raw HTTP fetches when an agent needs semantic page structure. Add selector='main' to strip nav/footer, selector='h1' through selector='h6' to isolate a heading level, or selector='interactive' / selector='action:click' / selector='action:type' / selector='action:clear' / selector='action:select' / selector='action:toggle' to return only reusable action targets.".to_string(),
+        description: "Fetch a web page and return its Semantic Object Model (SOM) - structured JSON with typed regions, interactive elements with stable IDs, and clean text content. Output size depends on the page, configuration, serialization, and selector. Prefer this over raw HTTP fetches when an agent needs semantic page structure. For large pages, set budget to cap the returned tokens and combine it with selector='main' when navigation and footer content are not needed. Add selector='main' to strip nav/footer, selector='h1' through selector='h6' to isolate a heading level, or selector='interactive' / selector='action:click' / selector='action:type' / selector='action:clear' / selector='action:select' / selector='action:toggle' to return only reusable action targets.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -425,7 +425,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
                 },
                 "budget": {
                     "type": "integer",
-                    "description": "Maximum output tokens. SOM will be truncated to fit. Default: no limit."
+                    "description": "Maximum output tokens. SOM is reduced to fit while preserving structured regions when possible. For the smallest useful response, combine this with selector='main' or another targeted selector. Default: no limit."
                 },
                 "javascript": {
                     "type": "boolean",
@@ -567,8 +567,8 @@ fn som_json_within_token_budget(som: &Som, budget_tokens: usize) -> String {
             .regions
             .iter_mut()
             .rev()
-            .find_map(|region| region.elements.pop());
-        if removed.is_some() {
+            .any(|region| prune_last_element(&mut region.elements));
+        if removed {
             continue;
         }
         if candidate.regions.pop().is_some() {
@@ -580,6 +580,42 @@ fn som_json_within_token_budget(som: &Som, budget_tokens: usize) -> String {
             budget_tokens
         );
     }
+}
+
+/// Remove the least-prominent trailing element while preserving its container.
+///
+/// Budget trimming should not discard an entire region merely because its
+/// content is nested below one top-level element. Walk into the last child (or
+/// shadow-root child) first, then remove the container only once it is empty.
+fn prune_last_element(elements: &mut Vec<crate::som::types::Element>) -> bool {
+    for element in elements.iter_mut().rev() {
+        let pruned_child = element.children.as_mut().is_some_and(prune_last_element);
+        if pruned_child {
+            if element
+                .children
+                .as_ref()
+                .is_some_and(|children| children.is_empty())
+            {
+                element.children = None;
+            }
+            return true;
+        }
+        let pruned_shadow = element
+            .shadow
+            .as_mut()
+            .is_some_and(|shadow| prune_last_element(&mut shadow.elements));
+        if pruned_shadow {
+            if element
+                .shadow
+                .as_ref()
+                .is_some_and(|shadow| shadow.elements.is_empty())
+            {
+                element.shadow = None;
+            }
+            return true;
+        }
+    }
+    elements.pop().is_some()
 }
 
 /// Handle the extract_text tool call.
@@ -3728,6 +3764,9 @@ struct OpenPageParams {
     url: String,
     #[serde(default)]
     trace: bool,
+    /// Filter only the initial response; the full SOM remains in session state.
+    #[serde(default)]
+    selector: Option<String>,
 }
 
 /// Parameters for evaluate tool.
@@ -3754,7 +3793,7 @@ struct ClosePageParams {
 pub fn open_page_definition() -> ToolDefinition {
     ToolDefinition {
         name: "open_page".to_string(),
-        description: "Open a URL in a persistent browser session. Returns a session_id, the initial SOM, and whether validated local page-state cache restored the SOM/effective HTML. Use this (instead of fetch_page) when you need to interact with the page - click buttons, fill forms, navigate, or run JavaScript. Pair with click, type_text, navigate_to, and evaluate.".to_string(),
+        description: "Open a URL in a persistent browser session. Returns a session_id, the initial SOM, and whether validated local page-state cache restored the SOM/effective HTML. Use this (instead of fetch_page) when you need to interact with the page - click buttons, fill forms, navigate, or run JavaScript. Pair with click, type_text, navigate_to, and evaluate. Use selector='main' or another targeted selector to reduce the initial response; the full SOM stays available for session interactions.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -3765,6 +3804,10 @@ pub fn open_page_definition() -> ToolDefinition {
                 "trace": {
                     "type": "boolean",
                     "description": "Opt in to bounded, privacy-safe in-memory action tracing for this session. Default: false."
+                },
+                "selector": {
+                    "type": "string",
+                    "description": SOM_SELECTOR_DESCRIPTION
                 }
             },
             "required": ["url"]
@@ -3852,6 +3895,7 @@ pub async fn handle_open_page(
     info!(
         url_bytes = params.url.len(),
         trace = params.trace,
+        selector = params.selector.as_deref().unwrap_or(""),
         "open_page"
     );
 
@@ -3882,11 +3926,19 @@ pub async fn handle_open_page(
         })
         .await;
 
-    let som_json = match som_json.flatten() {
+    let _stored_som = match som_json.flatten() {
         Some(v) => v,
         None => {
             sessions.close_session(&session_id).await;
             return error_response("Failed to serialize SOM");
+        }
+    };
+
+    let response_som = match response_som_value(&page_result.som, params.selector.as_deref()) {
+        Ok(value) => value,
+        Err(_) => {
+            sessions.close_session(&session_id).await;
+            return error_response("Failed to serialize response SOM");
         }
     };
 
@@ -3896,7 +3948,7 @@ pub async fn handle_open_page(
         "title": page_result.som.title,
         "url": final_url.clone(),
         "cache_restored": cache_restored,
-        "regions": som_json.get("regions"),
+        "regions": response_som.get("regions"),
         "webmcp": page_result.webmcp
     });
     if let Some(report) = &page_result.js_report {
@@ -3907,7 +3959,7 @@ pub async fn handle_open_page(
         "open_page",
         "som",
         &final_url,
-        None,
+        params.selector.as_deref(),
         source_html_bytes,
         &delivered_text,
         Some(cache_restored),
@@ -3917,6 +3969,16 @@ pub async fn handle_open_page(
     // structured fallback, so expose it in the JS summary instead of turning
     // the whole tool call into an error.
     tool_response(delivered_text)
+}
+
+fn response_som_value(
+    som: &crate::som::types::Som,
+    selector: Option<&str>,
+) -> serde_json::Result<Value> {
+    let response_som = selector
+        .map(|selector| crate::som::filter::apply_selector(som, selector))
+        .unwrap_or_else(|| som.clone());
+    serde_json::to_value(response_som)
 }
 
 fn strip_trailing_evaluate_semicolons(expression: &str) -> &str {
@@ -6375,6 +6437,7 @@ mod tests {
             extract_text_definition(),
             extract_links_definition(),
             inspect_page_definition(),
+            open_page_definition(),
         ] {
             let description = definition.input_schema["properties"]["selector"]["description"]
                 .as_str()
@@ -6387,6 +6450,41 @@ mod tests {
             assert!(description.contains("full SOM is returned unchanged"));
             assert!(description.contains("region id first"));
         }
+    }
+
+    #[test]
+    fn open_page_selector_only_filters_the_initial_response_som() {
+        let mut som = test_som();
+        som.regions.push(Region {
+            id: "nav".to_string(),
+            role: RegionRole::Navigation,
+            label: None,
+            action: None,
+            method: None,
+            target: None,
+            enctype: None,
+            novalidate: None,
+            accept_charset: None,
+            autocomplete: None,
+            elements: vec![],
+        });
+
+        let response = response_som_value(&som, Some("main")).expect("SOM should serialize");
+        assert_eq!(response["regions"].as_array().map(Vec::len), Some(1));
+        assert_eq!(som.regions.len(), 2);
+    }
+
+    #[test]
+    fn fetch_page_schema_connects_budget_with_selector_guidance() {
+        let definition = fetch_page_definition();
+        assert!(definition
+            .description
+            .contains("set budget to cap the returned tokens"));
+        let budget_description = definition.input_schema["properties"]["budget"]["description"]
+            .as_str()
+            .expect("budget schema should have a description");
+        assert!(budget_description.contains("selector='main'"));
+        assert!(budget_description.contains("preserving structured regions"));
     }
 
     fn stateful_worker_fixture() -> PathBuf {
@@ -16664,6 +16762,50 @@ mod tests {
             unconstrained.contains("og:url") || som.structured_data.is_some(),
             "unconstrained budget must keep the compiled snapshot"
         );
+    }
+
+    #[test]
+    fn fetch_page_budget_prunes_nested_elements_before_their_region() {
+        let mut som = test_som();
+        let children = (0..24)
+            .map(|index| {
+                test_element(
+                    &format!("paragraph-{index}"),
+                    ElementRole::Paragraph,
+                    Some("Nested semantic content that can be trimmed safely."),
+                    None,
+                )
+            })
+            .collect();
+        som.regions[0].elements = vec![Element {
+            id: "content".to_string(),
+            role: ElementRole::Section,
+            html_id: None,
+            text: None,
+            label: Some("Content".to_string()),
+            actions: None,
+            attrs: None,
+            children: Some(children),
+            hints: None,
+            shadow: None,
+        }];
+
+        let full = serde_json::to_string(&som).expect("nested SOM should serialize");
+        let budget_tokens = 125;
+        assert!(full.len() > budget_tokens * 4);
+
+        let delivered = som_json_within_token_budget(&som, budget_tokens);
+        let parsed: Value = serde_json::from_str(&delivered).expect("payload must stay JSON");
+        let elements = parsed["regions"][0]["elements"]
+            .as_array()
+            .expect("budgeted payload must preserve the region container");
+        assert_eq!(elements.len(), 1);
+        let retained_children = elements[0]["children"]
+            .as_array()
+            .expect("budget trimming should retain nested content when it fits");
+        assert!(!retained_children.is_empty());
+        assert!(retained_children.len() < 24);
+        assert!(!delivered.contains("SOM exceeded budget"));
     }
 
     fn test_som() -> Som {
