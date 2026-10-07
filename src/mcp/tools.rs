@@ -24,7 +24,7 @@ use crate::js::pipeline::{self, PipelineConfig};
 use crate::js::runtime::RuntimeConfig;
 use crate::js::worker::{self, EvaluationRequest, EvaluationResponse, JsWorkerError};
 use crate::network::fetch;
-use crate::som::types::{Element, Som};
+use crate::som::types::Som;
 
 /// Default timeout for fetching pages (30 seconds).
 const DEFAULT_TIMEOUT_MS: u64 = 30000;
@@ -583,46 +583,11 @@ fn som_json_within_token_budget(som: &Som, budget_tokens: usize) -> String {
 }
 
 fn serialize_budget_candidate(candidate: &mut Som, serialize: &impl Fn(&Som) -> String) -> String {
-    let (element_count, interactive_count) = count_budget_elements(&candidate.regions);
-    candidate.meta.element_count = element_count;
-    candidate.meta.interactive_count = interactive_count;
-
-    // `som_bytes` is part of the payload, so converge after updating it just
-    // as the compiler does for a freshly compiled snapshot.
-    candidate.meta.som_bytes = 0;
-    let mut json = serialize(candidate);
-    for _ in 0..3 {
-        let serialized_len = json.len();
-        if candidate.meta.som_bytes == serialized_len {
-            break;
-        }
-        candidate.meta.som_bytes = serialized_len;
-        json = serialize(candidate);
-    }
-    json
-}
-
-fn count_budget_elements(regions: &[crate::som::types::Region]) -> (usize, usize) {
-    let mut counts = (0, 0);
-    for region in regions {
-        count_budget_elements_in(&region.elements, &mut counts);
-    }
-    counts
-}
-
-fn count_budget_elements_in(elements: &[Element], counts: &mut (usize, usize)) {
-    for element in elements {
-        counts.0 += 1;
-        if element.role.is_interactive() {
-            counts.1 += 1;
-        }
-        if let Some(children) = &element.children {
-            count_budget_elements_in(children, counts);
-        }
-        if let Some(shadow) = &element.shadow {
-            count_budget_elements_in(&shadow.elements, counts);
-        }
-    }
+    // Keep budgeted responses aligned with selector responses: both must count
+    // nested and shadow-root elements and converge `som_bytes` against the
+    // exact serialized SOM that is delivered.
+    *candidate = crate::som::filter::refresh_meta(candidate.clone());
+    serialize(candidate)
 }
 
 /// Remove the least-prominent trailing element while preserving its container.
@@ -16861,6 +16826,40 @@ mod tests {
             serde_json::json!(delivered.len())
         );
         assert!(!delivered.contains("SOM exceeded budget"));
+    }
+
+    #[test]
+    fn fetch_page_budget_counts_shadow_root_elements_in_metadata() {
+        let mut som = test_som();
+        som.regions[0].elements[0].shadow = Some(ShadowRoot {
+            mode: "open".to_string(),
+            elements: vec![test_element(
+                "shadow-label",
+                ElementRole::Paragraph,
+                Some("Shadow content"),
+                None,
+            )],
+        });
+
+        let mut without_structured_data = som.clone();
+        without_structured_data.structured_data = None;
+        let base_len = serde_json::to_string(&without_structured_data)
+            .expect("shadow SOM without structured data should serialize")
+            .len();
+        som.structured_data = Some(StructuredData {
+            json_ld: vec![serde_json::json!({"padding": "x".repeat(1_000)})],
+            ..Default::default()
+        });
+        let full = serde_json::to_string(&som).expect("shadow SOM should serialize");
+        let budget_tokens = base_len / 4 + 20;
+        assert!(full.len() > budget_tokens * 4);
+        let delivered = som_json_within_token_budget(&som, budget_tokens);
+        let parsed: Value = serde_json::from_str(&delivered).expect("payload must stay JSON");
+        assert_eq!(parsed["meta"]["element_count"], serde_json::json!(2));
+        assert_eq!(
+            parsed["meta"]["som_bytes"],
+            serde_json::json!(delivered.len())
+        );
     }
 
     fn test_som() -> Som {
