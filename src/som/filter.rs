@@ -89,7 +89,6 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                     .map(|actions| actions.iter().any(|a| a.eq_ignore_ascii_case(&action)))
                     .unwrap_or(false);
                 let is_submit_control = action == "submit"
-                    && element.role == ElementRole::Button
                     && element
                         .attrs
                         .as_ref()
@@ -619,6 +618,19 @@ mod tests {
             filtered.regions[0].elements[0].html_id.as_deref(),
             Some("save")
         );
+    }
+
+    #[test]
+    fn test_selector_submit_action_keeps_native_submit_with_overridden_role() {
+        let mut som = make_test_som();
+        som.regions[1].elements[1].role = ElementRole::Link;
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({"button_type": "submit"}));
+
+        let filtered = apply_selector(&som, "action:submit");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Link);
     }
 
     #[test]
