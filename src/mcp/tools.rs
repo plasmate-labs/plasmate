@@ -39,7 +39,7 @@ pub struct ToolDefinition {
     pub input_schema: Value,
 }
 
-const SOM_SELECTOR_DESCRIPTION: &str = "Filter to a page region (main, nav/navigation, header, footer, aside, content/article, form, dialog), heading level (h1-h6), element role (button, link, text_input, select, etc.), action surface (interactive, action:click, action:type, action:clear, action:select, action:toggle), or #element-id (region id first, then SOM element/html id). Strips irrelevant regions/elements to reduce tokens. If a selector is unknown or matches nothing, the full SOM is returned unchanged.";
+const SOM_SELECTOR_DESCRIPTION: &str = "Filter to a page region (main, nav/navigation, header, footer, aside, content/article, form, dialog), heading level (h1-h6), element role (button, link, text_input, select, etc.), action surface (interactive, action:click, action:type, action:clear, action:select, action:toggle, action:submit), or #element-id (region id first, then SOM element/html id). Strips irrelevant regions/elements to reduce tokens. If a selector is unknown or matches nothing, the full SOM is returned unchanged.";
 
 /// Parameters for fetch_page tool.
 #[derive(Debug, Deserialize)]
@@ -415,7 +415,7 @@ async fn load_session_page_for_mcp(
 pub fn fetch_page_definition() -> ToolDefinition {
     ToolDefinition {
         name: "fetch_page".to_string(),
-        description: "Fetch a web page and return its Semantic Object Model (SOM) - structured JSON with typed regions, interactive elements with stable IDs, and clean text content. Output size depends on the page, configuration, serialization, and selector. Prefer this over raw HTTP fetches when an agent needs semantic page structure. For large pages, set budget to cap the returned tokens and combine it with selector='main' when navigation and footer content are not needed. Add selector='main' to strip nav/footer, selector='h1' through selector='h6' to isolate a heading level, or selector='interactive' / selector='action:click' / selector='action:type' / selector='action:clear' / selector='action:select' / selector='action:toggle' to return only reusable action targets.".to_string(),
+        description: "Fetch a web page and return its Semantic Object Model (SOM) - structured JSON with typed regions, interactive elements with stable IDs, and clean text content. Output size depends on the page, configuration, serialization, and selector. Prefer this over raw HTTP fetches when an agent needs semantic page structure. For large pages, set budget to cap the returned tokens and combine it with selector='main' when navigation and footer content are not needed. Add selector='main' to strip nav/footer, selector='h1' through selector='h6' to isolate a heading level, or selector='interactive' / selector='action:click' / selector='action:type' / selector='action:clear' / selector='action:select' / selector='action:toggle' / selector='action:submit' to return only reusable action targets.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -6456,6 +6456,7 @@ mod tests {
             assert!(description.contains("heading level (h1-h6)"));
             assert!(description.contains("action:clear"));
             assert!(description.contains("action:toggle"));
+            assert!(description.contains("action:submit"));
             assert!(description.contains("full SOM is returned unchanged"));
             assert!(description.contains("region id first"));
         }
@@ -6488,6 +6489,7 @@ mod tests {
     #[test]
     fn fetch_page_schema_connects_budget_with_selector_guidance() {
         let definition = fetch_page_definition();
+        assert!(definition.description.contains("action:submit"));
         assert!(definition
             .description
             .contains("set budget to cap the returned tokens"));

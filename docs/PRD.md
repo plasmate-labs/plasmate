@@ -1369,8 +1369,9 @@ task contract passes; product claims must not relabel them as successful runs.
   - Added `interactive` selector support to return only actionable elements
     while preserving necessary parent/shadow context.
   - Added `action:<name>` selector support for action menus such as
-    `action:click`, `action:type`, `action:select`, and `action:toggle`, with
-    no-match selectors still falling back to the full SOM.
+    `action:click`, `action:type`, `action:select`, `action:toggle`, and
+    `action:submit`, with no-match selectors still falling back to the full
+    SOM.
   - Added selector-aware cache APIs that keep full-page and selector-specific
     SOM entries distinct, normalize case-insensitive action/role selectors,
     preserve case-sensitive `#id` selectors, and derive selector entries from a
