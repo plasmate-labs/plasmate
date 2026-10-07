@@ -39,7 +39,7 @@ pub struct ToolDefinition {
     pub input_schema: Value,
 }
 
-const SOM_SELECTOR_DESCRIPTION: &str = "Filter to a page region (main, nav/navigation, header, footer, aside, content/article, form, dialog), heading level (h1-h6), element role (button, link, text_input, select, etc.), action surface (interactive, action:click, action:type, action:clear, action:select, action:toggle), or #element-id (region id first, then SOM element/html id). Strips irrelevant regions/elements to reduce tokens. If a selector is unknown or matches nothing, the full SOM is returned unchanged.";
+const SOM_SELECTOR_DESCRIPTION: &str = "Filter to a page region (main, nav/navigation, header, footer, aside, content/article, form, dialog), heading level (h1-h6), element role (button, link, text_input, select, etc.), action surface (interactive, action:click, action:type, action:clear, action:select, action:toggle, action:submit), or #element-id (region id first, then SOM element/html id). Strips irrelevant regions/elements to reduce tokens. If a selector is unknown or matches nothing, the full SOM is returned unchanged.";
 
 /// Parameters for fetch_page tool.
 #[derive(Debug, Deserialize)]
@@ -6456,6 +6456,7 @@ mod tests {
             assert!(description.contains("heading level (h1-h6)"));
             assert!(description.contains("action:clear"));
             assert!(description.contains("action:toggle"));
+            assert!(description.contains("action:submit"));
             assert!(description.contains("full SOM is returned unchanged"));
             assert!(description.contains("region id first"));
         }

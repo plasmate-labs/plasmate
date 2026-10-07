@@ -18,7 +18,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// - Heading levels: `h1` .. `h6` match headings whose compiled `attrs.level`
 ///   is that integer. Missing or out-of-range levels are not invented.
 /// - Action surfaces: `interactive` or `action:click` / `action:type` /
-///   `action:clear` / `action:select` / `action:toggle`
+///   `action:clear` / `action:select` / `action:toggle` / `action:submit`
 /// - Id: `#some-id` - region id first, then SOM element `id` or `html_id`
 ///
 /// Unrecognised selectors return the full SOM unchanged (with a warning to stderr).
@@ -83,11 +83,23 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         let action = action.trim().to_ascii_lowercase();
         if !action.is_empty() {
             return filter_som_elements(som, selector, |element| {
-                element
+                let advertises_action = element
                     .actions
                     .as_ref()
                     .map(|actions| actions.iter().any(|a| a.eq_ignore_ascii_case(&action)))
-                    .unwrap_or(false)
+                    .unwrap_or(false);
+                let is_submit_control = action == "submit"
+                    && element.role == ElementRole::Button
+                    && element
+                        .attrs
+                        .as_ref()
+                        .and_then(|attrs| attrs.get("button_type"))
+                        .and_then(serde_json::Value::as_str)
+                        .is_some_and(|button_type| {
+                            button_type.eq_ignore_ascii_case("submit")
+                                || button_type.eq_ignore_ascii_case("image")
+                        });
+                advertises_action || is_submit_control
             });
         }
     }
@@ -592,6 +604,21 @@ mod tests {
                 .actions
                 .as_ref()
                 .is_some_and(|actions| actions.contains(&"click".to_string()))));
+    }
+
+    #[test]
+    fn test_selector_submit_action_matches_compiled_submit_controls() {
+        let mut som = make_test_som();
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({"button_type": "submit"}));
+
+        let filtered = apply_selector(&som, "action:submit");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(
+            filtered.regions[0].elements[0].html_id.as_deref(),
+            Some("save")
+        );
     }
 
     #[test]

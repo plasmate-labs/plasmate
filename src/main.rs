@@ -121,7 +121,7 @@ enum Commands {
         /// footer, form, dialog, content), heading levels (h1 through h6),
         /// element roles (button, link, text_input, select, etc.), action selectors (interactive,
         /// action:click, action:type, action:clear, action:select,
-        /// action:toggle), or an HTML id selector
+        /// action:toggle, action:submit), or an HTML id selector
         /// (#my-id).
         /// When a role is given, only regions of that role are included.
         /// When an element/action selector or id is given, only matching
@@ -138,6 +138,7 @@ enum Commands {
         ///   --selector action:clear    (only clearable inputs)
         ///   --selector action:select   (only selection targets)
         ///   --selector action:toggle   (only toggle targets)
+        ///   --selector action:submit  (only form submit controls)
         ///   --selector "#toc"          (elements with id="toc")
         ///   --selector main --format text   (main content as plain text)
         #[arg(long)]
