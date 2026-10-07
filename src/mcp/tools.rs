@@ -445,7 +445,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
 pub fn extract_text_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_text".to_string(),
-        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary. Includes compiled image alt text when the image has no other readable text, so chart and photo pages still return the authored description. Use this (instead of fetch_page) when you only need the written content and do not need to interact with the page or reference specific elements.".to_string(),
+        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary. Includes compiled image alt text when the image has no other readable text, and definition-list terms with their descriptions, so chart, photo, and reference pages still return authored context. Use this (instead of fetch_page) when you only need the written content and do not need to interact with the page or reference specific elements.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -737,6 +737,22 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
                 for item in items_arr {
                     if let Some(text) = item.get("text").and_then(|v| v.as_str()) {
                         parts.push(format!("• {}", text));
+                    } else {
+                        let term = item.get("term").and_then(|v| v.as_str()).unwrap_or("");
+                        let description = item
+                            .get("description")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("");
+                        match (term, description) {
+                            (term, description) if !term.is_empty() && !description.is_empty() => {
+                                parts.push(format!("{}: {}", term, description));
+                            }
+                            (term, "") if !term.is_empty() => parts.push(term.to_string()),
+                            ("", description) if !description.is_empty() => {
+                                parts.push(description.to_string());
+                            }
+                            _ => {}
+                        }
                     }
                 }
             }
@@ -10012,6 +10028,31 @@ mod tests {
         assert_eq!(
             parts,
             vec!["United States".to_string(), "Canada".to_string()]
+        );
+    }
+
+    #[test]
+    fn extract_text_includes_compiled_definition_list_items() {
+        let html = r#"<html><head><title>Glossary</title></head><body>
+<main><dl><dt>API</dt><dd>Application programming interface</dd><dt>SOM</dt><dd>Semantic Object Model</dd></dl></main>
+</body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/glossary")
+            .expect("fixture HTML should compile");
+        let text = collect_extract_text(&som);
+
+        assert!(
+            text.contains("API: Application programming interface"),
+            "definition-list term and description must be readable: {text:?}"
+        );
+        assert!(
+            text.contains("SOM: Semantic Object Model"),
+            "all definition-list items must be readable: {text:?}"
+        );
+        assert!(
+            extract_text_definition()
+                .description
+                .contains("definition-list"),
+            "the tool description must advertise definition-list extraction"
         );
     }
 
