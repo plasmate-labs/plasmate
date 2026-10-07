@@ -1925,6 +1925,11 @@ fn actions_for_role(
             .find(|(name, _)| name == "type")
             .map(|(_, value)| value.as_str())
             .unwrap_or("text");
+        if input_type.eq_ignore_ascii_case("hidden") {
+            // Hidden inputs are retained for form-submission context, but are
+            // not editable controls and must not advertise mutation actions.
+            return None;
+        }
         if input_type.eq_ignore_ascii_case("file") {
             return None;
         }
@@ -5814,6 +5819,7 @@ mod tests {
         assert_eq!(source_attrs["input_type"], "hidden");
         assert_eq!(source_attrs["name"], "source");
         assert_eq!(source_attrs["value"], "web");
+        assert_eq!(source.actions, None);
 
         let query = elements
             .iter()
