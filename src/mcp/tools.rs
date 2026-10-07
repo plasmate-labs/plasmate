@@ -567,8 +567,8 @@ fn som_json_within_token_budget(som: &Som, budget_tokens: usize) -> String {
             .regions
             .iter_mut()
             .rev()
-            .find_map(|region| region.elements.pop());
-        if removed.is_some() {
+            .any(|region| prune_last_element(&mut region.elements));
+        if removed {
             continue;
         }
         if candidate.regions.pop().is_some() {
@@ -580,6 +580,42 @@ fn som_json_within_token_budget(som: &Som, budget_tokens: usize) -> String {
             budget_tokens
         );
     }
+}
+
+/// Remove the least-prominent trailing element while preserving its container.
+///
+/// Budget trimming should not discard an entire region merely because its
+/// content is nested below one top-level element. Walk into the last child (or
+/// shadow-root child) first, then remove the container only once it is empty.
+fn prune_last_element(elements: &mut Vec<crate::som::types::Element>) -> bool {
+    for element in elements.iter_mut().rev() {
+        let pruned_child = element.children.as_mut().is_some_and(prune_last_element);
+        if pruned_child {
+            if element
+                .children
+                .as_ref()
+                .is_some_and(|children| children.is_empty())
+            {
+                element.children = None;
+            }
+            return true;
+        }
+        let pruned_shadow = element
+            .shadow
+            .as_mut()
+            .is_some_and(|shadow| prune_last_element(&mut shadow.elements));
+        if pruned_shadow {
+            if element
+                .shadow
+                .as_ref()
+                .is_some_and(|shadow| shadow.elements.is_empty())
+            {
+                element.shadow = None;
+            }
+            return true;
+        }
+    }
+    elements.pop().is_some()
 }
 
 /// Handle the extract_text tool call.
@@ -16664,6 +16700,50 @@ mod tests {
             unconstrained.contains("og:url") || som.structured_data.is_some(),
             "unconstrained budget must keep the compiled snapshot"
         );
+    }
+
+    #[test]
+    fn fetch_page_budget_prunes_nested_elements_before_their_region() {
+        let mut som = test_som();
+        let children = (0..24)
+            .map(|index| {
+                test_element(
+                    &format!("paragraph-{index}"),
+                    ElementRole::Paragraph,
+                    Some("Nested semantic content that can be trimmed safely."),
+                    None,
+                )
+            })
+            .collect();
+        som.regions[0].elements = vec![Element {
+            id: "content".to_string(),
+            role: ElementRole::Section,
+            html_id: None,
+            text: None,
+            label: Some("Content".to_string()),
+            actions: None,
+            attrs: None,
+            children: Some(children),
+            hints: None,
+            shadow: None,
+        }];
+
+        let full = serde_json::to_string(&som).expect("nested SOM should serialize");
+        let budget_tokens = 125;
+        assert!(full.len() > budget_tokens * 4);
+
+        let delivered = som_json_within_token_budget(&som, budget_tokens);
+        let parsed: Value = serde_json::from_str(&delivered).expect("payload must stay JSON");
+        let elements = parsed["regions"][0]["elements"]
+            .as_array()
+            .expect("budgeted payload must preserve the region container");
+        assert_eq!(elements.len(), 1);
+        let retained_children = elements[0]["children"]
+            .as_array()
+            .expect("budget trimming should retain nested content when it fits");
+        assert!(!retained_children.is_empty());
+        assert!(retained_children.len() < 24);
+        assert!(!delivered.contains("SOM exceeded budget"));
     }
 
     fn test_som() -> Som {
