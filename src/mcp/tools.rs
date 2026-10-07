@@ -39,7 +39,7 @@ pub struct ToolDefinition {
     pub input_schema: Value,
 }
 
-const SOM_SELECTOR_DESCRIPTION: &str = "Filter to a page region (main, nav/navigation, header, footer, aside, content/article, form, dialog), heading level (h1-h6), element role (button, link, text_input, select, etc.), action surface (interactive, action:click, action:type, action:clear, action:select, action:toggle), or #element-id. Strips irrelevant regions/elements to reduce tokens.";
+const SOM_SELECTOR_DESCRIPTION: &str = "Filter to a page region (main, nav/navigation, header, footer, aside, content/article, form, dialog), heading level (h1-h6), element role (button, link, text_input, select, etc.), action surface (interactive, action:click, action:type, action:clear, action:select, action:toggle), or #element-id (region id first, then SOM element/html id). Strips irrelevant regions/elements to reduce tokens. If a selector is unknown or matches nothing, the full SOM is returned unchanged.";
 
 /// Parameters for fetch_page tool.
 #[derive(Debug, Deserialize)]
@@ -945,7 +945,7 @@ pub fn inspect_page_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": 256,
-                    "description": "Optional SOM selector; screenshot signals still use the already-fetched effective page HTML."
+                    "description": SOM_SELECTOR_DESCRIPTION
                 },
                 "visual_mode": {
                     "type": "string",
@@ -6374,6 +6374,7 @@ mod tests {
             fetch_page_definition(),
             extract_text_definition(),
             extract_links_definition(),
+            inspect_page_definition(),
         ] {
             let description = definition.input_schema["properties"]["selector"]["description"]
                 .as_str()
@@ -6383,6 +6384,8 @@ mod tests {
             assert!(description.contains("heading level (h1-h6)"));
             assert!(description.contains("action:clear"));
             assert!(description.contains("action:toggle"));
+            assert!(description.contains("full SOM is returned unchanged"));
+            assert!(description.contains("region id first"));
         }
     }
 
@@ -11777,6 +11780,30 @@ mod tests {
                     || url.contains("favicon")
             }),
             "og:image/audio/video and icons must not copy og:url extract_links: {urls:?}"
+        );
+    }
+
+    #[test]
+    fn extract_links_normalizes_case_variant_social_url_metadata() {
+        let som = crate::som::compiler::compile(
+            r##"<html><head>
+<meta property="OG:URL" content="https://example.test/og/case">
+<meta name="Twitter:URL" content="https://example.test/twitter/case">
+<title>Case variants</title>
+</head><body><main><p>No body links</p></main></body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("case-variant social metadata should compile");
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert!(
+            urls.contains(&"https://example.test/og/case".to_string()),
+            "case-variant OG:url must be extractable: {urls:?}"
+        );
+        assert!(
+            urls.contains(&"https://example.test/twitter/case".to_string()),
+            "case-variant Twitter:url must be extractable: {urls:?}"
         );
     }
 
