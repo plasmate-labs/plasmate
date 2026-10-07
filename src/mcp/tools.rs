@@ -24,7 +24,7 @@ use crate::js::pipeline::{self, PipelineConfig};
 use crate::js::runtime::RuntimeConfig;
 use crate::js::worker::{self, EvaluationRequest, EvaluationResponse, JsWorkerError};
 use crate::network::fetch;
-use crate::som::types::Som;
+use crate::som::types::{Element, Som};
 
 /// Default timeout for fetching pages (30 seconds).
 const DEFAULT_TIMEOUT_MS: u64 = 30000;
@@ -534,7 +534,7 @@ fn som_json_within_token_budget(som: &Som, budget_tokens: usize) -> String {
 
     let mut candidate = som.clone();
     candidate.structured_data = None;
-    let mut json = serialize(&candidate);
+    let mut json = serialize_budget_candidate(&mut candidate, &serialize);
     if json.len() <= max_chars {
         return json;
     }
@@ -552,14 +552,14 @@ fn som_json_within_token_budget(som: &Som, budget_tokens: usize) -> String {
         .collect();
     if !preferred.is_empty() {
         candidate.regions = preferred;
-        json = serialize(&candidate);
+        json = serialize_budget_candidate(&mut candidate, &serialize);
         if json.len() <= max_chars {
             return json;
         }
     }
 
     loop {
-        json = serialize(&candidate);
+        json = serialize_budget_candidate(&mut candidate, &serialize);
         if json.len() <= max_chars {
             return json;
         }
@@ -579,6 +579,49 @@ fn som_json_within_token_budget(som: &Som, budget_tokens: usize) -> String {
             full.len(),
             budget_tokens
         );
+    }
+}
+
+fn serialize_budget_candidate(candidate: &mut Som, serialize: &impl Fn(&Som) -> String) -> String {
+    let (element_count, interactive_count) = count_budget_elements(&candidate.regions);
+    candidate.meta.element_count = element_count;
+    candidate.meta.interactive_count = interactive_count;
+
+    // `som_bytes` is part of the payload, so converge after updating it just
+    // as the compiler does for a freshly compiled snapshot.
+    candidate.meta.som_bytes = 0;
+    let mut json = serialize(candidate);
+    for _ in 0..3 {
+        let serialized_len = json.len();
+        if candidate.meta.som_bytes == serialized_len {
+            break;
+        }
+        candidate.meta.som_bytes = serialized_len;
+        json = serialize(candidate);
+    }
+    json
+}
+
+fn count_budget_elements(regions: &[crate::som::types::Region]) -> (usize, usize) {
+    let mut counts = (0, 0);
+    for region in regions {
+        count_budget_elements_in(&region.elements, &mut counts);
+    }
+    counts
+}
+
+fn count_budget_elements_in(elements: &[Element], counts: &mut (usize, usize)) {
+    for element in elements {
+        counts.0 += 1;
+        if element.role.is_interactive() {
+            counts.1 += 1;
+        }
+        if let Some(children) = &element.children {
+            count_budget_elements_in(children, counts);
+        }
+        if let Some(shadow) = &element.shadow {
+            count_budget_elements_in(&shadow.elements, counts);
+        }
     }
 }
 
@@ -16805,6 +16848,15 @@ mod tests {
             .expect("budget trimming should retain nested content when it fits");
         assert!(!retained_children.is_empty());
         assert!(retained_children.len() < 24);
+        assert_eq!(
+            parsed["meta"]["element_count"],
+            serde_json::json!(1 + retained_children.len())
+        );
+        assert_eq!(parsed["meta"]["interactive_count"], serde_json::json!(0));
+        assert_eq!(
+            parsed["meta"]["som_bytes"],
+            serde_json::json!(delivered.len())
+        );
         assert!(!delivered.contains("SOM exceeded budget"));
     }
 
