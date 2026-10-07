@@ -857,6 +857,7 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
 
 /// Parameters for extract_links tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct ExtractLinksParams {
     url: String,
     /// Filter to a specific region before extracting links.
@@ -881,7 +882,8 @@ pub fn extract_links_definition() -> ToolDefinition {
                     "description": SOM_SELECTOR_DESCRIPTION
                 }
             },
-            "required": ["url"]
+            "required": ["url"],
+            "additionalProperties": false
         }),
     }
 }
@@ -6528,6 +6530,17 @@ mod tests {
         }))
         .expect_err("extract_text should reject misspelled fields");
         assert!(text_error.to_string().contains("unknown field"));
+
+        assert_eq!(
+            extract_links_definition().input_schema["additionalProperties"],
+            false
+        );
+        let links_error = serde_json::from_value::<ExtractLinksParams>(json!({
+            "url": "https://example.com",
+            "selecter": "main"
+        }))
+        .expect_err("extract_links should reject misspelled fields");
+        assert!(links_error.to_string().contains("unknown field"));
     }
 
     fn stateful_worker_fixture() -> PathBuf {
