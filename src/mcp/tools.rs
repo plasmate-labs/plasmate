@@ -3992,6 +3992,7 @@ pub async fn handle_open_page(
         "url": final_url.clone(),
         "cache_restored": cache_restored,
         "regions": response_som.get("regions"),
+        "meta": response_som.get("meta"),
         "webmcp": page_result.webmcp
     });
     if let Some(report) = &page_result.js_report {
@@ -6514,6 +6515,8 @@ mod tests {
 
         let response = response_som_value(&som, Some("main")).expect("SOM should serialize");
         assert_eq!(response["regions"].as_array().map(Vec::len), Some(1));
+        assert_eq!(response["meta"]["element_count"], serde_json::json!(1));
+        assert_eq!(response["meta"]["interactive_count"], serde_json::json!(1));
         assert_eq!(som.regions.len(), 2);
     }
 
