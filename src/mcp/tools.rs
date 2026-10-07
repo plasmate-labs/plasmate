@@ -534,7 +534,7 @@ fn som_json_within_token_budget(som: &Som, budget_tokens: usize) -> String {
 
     let mut candidate = som.clone();
     candidate.structured_data = None;
-    let mut json = serialize(&candidate);
+    let mut json = serialize_budget_candidate(&mut candidate, &serialize);
     if json.len() <= max_chars {
         return json;
     }
@@ -552,14 +552,14 @@ fn som_json_within_token_budget(som: &Som, budget_tokens: usize) -> String {
         .collect();
     if !preferred.is_empty() {
         candidate.regions = preferred;
-        json = serialize(&candidate);
+        json = serialize_budget_candidate(&mut candidate, &serialize);
         if json.len() <= max_chars {
             return json;
         }
     }
 
     loop {
-        json = serialize(&candidate);
+        json = serialize_budget_candidate(&mut candidate, &serialize);
         if json.len() <= max_chars {
             return json;
         }
@@ -580,6 +580,14 @@ fn som_json_within_token_budget(som: &Som, budget_tokens: usize) -> String {
             budget_tokens
         );
     }
+}
+
+fn serialize_budget_candidate(candidate: &mut Som, serialize: &impl Fn(&Som) -> String) -> String {
+    // Keep budgeted responses aligned with selector responses: both must count
+    // nested and shadow-root elements and converge `som_bytes` against the
+    // exact serialized SOM that is delivered.
+    *candidate = crate::som::filter::refresh_meta(candidate.clone());
+    serialize(candidate)
 }
 
 /// Remove the least-prominent trailing element while preserving its container.
@@ -3949,6 +3957,7 @@ pub async fn handle_open_page(
         "url": final_url.clone(),
         "cache_restored": cache_restored,
         "regions": response_som.get("regions"),
+        "meta": response_som.get("meta"),
         "webmcp": page_result.webmcp
     });
     if let Some(report) = &page_result.js_report {
@@ -6471,6 +6480,8 @@ mod tests {
 
         let response = response_som_value(&som, Some("main")).expect("SOM should serialize");
         assert_eq!(response["regions"].as_array().map(Vec::len), Some(1));
+        assert_eq!(response["meta"]["element_count"], serde_json::json!(1));
+        assert_eq!(response["meta"]["interactive_count"], serde_json::json!(1));
         assert_eq!(som.regions.len(), 2);
     }
 
@@ -16805,7 +16816,50 @@ mod tests {
             .expect("budget trimming should retain nested content when it fits");
         assert!(!retained_children.is_empty());
         assert!(retained_children.len() < 24);
+        assert_eq!(
+            parsed["meta"]["element_count"],
+            serde_json::json!(1 + retained_children.len())
+        );
+        assert_eq!(parsed["meta"]["interactive_count"], serde_json::json!(0));
+        assert_eq!(
+            parsed["meta"]["som_bytes"],
+            serde_json::json!(delivered.len())
+        );
         assert!(!delivered.contains("SOM exceeded budget"));
+    }
+
+    #[test]
+    fn fetch_page_budget_counts_shadow_root_elements_in_metadata() {
+        let mut som = test_som();
+        som.regions[0].elements[0].shadow = Some(ShadowRoot {
+            mode: "open".to_string(),
+            elements: vec![test_element(
+                "shadow-label",
+                ElementRole::Paragraph,
+                Some("Shadow content"),
+                None,
+            )],
+        });
+
+        let mut without_structured_data = som.clone();
+        without_structured_data.structured_data = None;
+        let base_len = serde_json::to_string(&without_structured_data)
+            .expect("shadow SOM without structured data should serialize")
+            .len();
+        som.structured_data = Some(StructuredData {
+            json_ld: vec![serde_json::json!({"padding": "x".repeat(1_000)})],
+            ..Default::default()
+        });
+        let full = serde_json::to_string(&som).expect("shadow SOM should serialize");
+        let budget_tokens = base_len / 4 + 20;
+        assert!(full.len() > budget_tokens * 4);
+        let delivered = som_json_within_token_budget(&som, budget_tokens);
+        let parsed: Value = serde_json::from_str(&delivered).expect("payload must stay JSON");
+        assert_eq!(parsed["meta"]["element_count"], serde_json::json!(2));
+        assert_eq!(
+            parsed["meta"]["som_bytes"],
+            serde_json::json!(delivered.len())
+        );
     }
 
     fn test_som() -> Som {

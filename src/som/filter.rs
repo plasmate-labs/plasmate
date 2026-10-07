@@ -217,7 +217,7 @@ where
     refresh_meta(result)
 }
 
-fn refresh_meta(mut som: Som) -> Som {
+pub fn refresh_meta(mut som: Som) -> Som {
     let mut element_count = 0;
     let mut interactive_count = 0;
     for region in &som.regions {
