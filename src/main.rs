@@ -389,7 +389,8 @@ enum Commands {
         format: String,
         /// Filter output to a specific SOM region, role, action surface, or
         /// element — same syntax as `plasmate fetch --selector` (e.g. `main`,
-        /// `button`, `interactive`, `action:click`, `#my-id`).
+        /// `button`, `interactive`, `action:click`, `action:type`,
+        /// `action:clear`, `action:select`, `action:toggle`, `#my-id`).
         #[arg(long)]
         selector: Option<String>,
     },
@@ -454,7 +455,8 @@ enum Commands {
         output: Option<String>,
         /// Filter both snapshots to a specific region before diffing.
         /// Same syntax as `plasmate fetch --selector` (e.g. `main`, `nav`,
-        /// `button`, `interactive`, `action:click`, `#my-id`). Useful for
+        /// `button`, `interactive`, `action:click`, `action:type`,
+        /// `action:clear`, `action:select`, `action:toggle`, `#my-id`). Useful for
         /// diffing only the content region or action surface and ignoring
         /// navigation or footer churn.
         #[arg(long)]
