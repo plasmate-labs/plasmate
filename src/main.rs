@@ -118,8 +118,8 @@ enum Commands {
         /// Filter output to a specific SOM region or element.
         ///
         /// Accepts semantic region roles (main, nav, navigation, aside, header,
-        /// footer, form, dialog, content), element roles (button, link,
-        /// text_input, select, etc.), action selectors (interactive,
+        /// footer, form, dialog, content), heading levels (h1 through h6),
+        /// element roles (button, link, text_input, select, etc.), action selectors (interactive,
         /// action:click, action:type, action:clear, action:select,
         /// action:toggle), or an HTML id selector
         /// (#my-id).
@@ -131,6 +131,7 @@ enum Commands {
         /// Examples:
         ///   --selector main            (just the main content region)
         ///   --selector nav             (navigation links only)
+        ///   --selector h1              (level-one headings only)
         ///   --selector interactive     (only actionable elements)
         ///   --selector action:click    (only click targets)
         ///   --selector action:type     (only typing targets)
@@ -387,8 +388,8 @@ enum Commands {
         /// --format`.
         #[arg(long, default_value = "json")]
         format: String,
-        /// Filter output to a specific SOM region, role, action surface, or
-        /// element — same syntax as `plasmate fetch --selector` (e.g. `main`,
+        /// Filter output to a specific SOM region, heading level, role, action
+        /// surface, or element — same syntax as `plasmate fetch --selector` (e.g. `main`, `h1`,
         /// `button`, `interactive`, `action:click`, `action:type`,
         /// `action:clear`, `action:select`, `action:toggle`, `#my-id`).
         #[arg(long)]
@@ -454,7 +455,7 @@ enum Commands {
         #[arg(long, short)]
         output: Option<String>,
         /// Filter both snapshots to a specific region before diffing.
-        /// Same syntax as `plasmate fetch --selector` (e.g. `main`, `nav`,
+        /// Same syntax as `plasmate fetch --selector` (e.g. `main`, `h1`, `nav`,
         /// `button`, `interactive`, `action:click`, `action:type`,
         /// `action:clear`, `action:select`, `action:toggle`, `#my-id`). Useful for
         /// diffing only the content region or action surface and ignoring
