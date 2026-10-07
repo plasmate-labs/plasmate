@@ -292,11 +292,12 @@ where
             let matches_self = matches(element);
             if matches_self {
                 // A selector targets the element, not just its role marker.
-                // Keep the matched element's authored subtree so selecting a
-                // button, section, or other container does not erase its
-                // nested label/content.
+                // Keep the matched element's ordinary authored children so
+                // selecting a button, section, or other container does not
+                // erase its nested label/content. Shadow-root content stays
+                // selector-filtered so unrelated encapsulated content is not
+                // exposed just because its host matched.
                 cloned.children = element.children.clone();
-                cloned.shadow = element.shadow.clone();
             }
 
             if matches_self || cloned.children.is_some() || shadow_match {
