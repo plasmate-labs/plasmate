@@ -120,7 +120,8 @@ enum Commands {
         /// Accepts semantic region roles (main, nav, navigation, aside, header,
         /// footer, form, dialog, content), element roles (button, link,
         /// text_input, select, etc.), action selectors (interactive,
-        /// action:click, action:type, action:select), or an HTML id selector
+        /// action:click, action:type, action:clear, action:select,
+        /// action:toggle), or an HTML id selector
         /// (#my-id).
         /// When a role is given, only regions of that role are included.
         /// When an element/action selector or id is given, only matching
@@ -132,6 +133,10 @@ enum Commands {
         ///   --selector nav             (navigation links only)
         ///   --selector interactive     (only actionable elements)
         ///   --selector action:click    (only click targets)
+        ///   --selector action:type     (only typing targets)
+        ///   --selector action:clear    (only clearable inputs)
+        ///   --selector action:select   (only selection targets)
+        ///   --selector action:toggle   (only toggle targets)
         ///   --selector "#toc"          (elements with id="toc")
         ///   --selector main --format text   (main content as plain text)
         #[arg(long)]
@@ -384,7 +389,8 @@ enum Commands {
         format: String,
         /// Filter output to a specific SOM region, role, action surface, or
         /// element — same syntax as `plasmate fetch --selector` (e.g. `main`,
-        /// `button`, `interactive`, `action:click`, `#my-id`).
+        /// `button`, `interactive`, `action:click`, `action:type`,
+        /// `action:clear`, `action:select`, `action:toggle`, `#my-id`).
         #[arg(long)]
         selector: Option<String>,
     },
@@ -449,7 +455,8 @@ enum Commands {
         output: Option<String>,
         /// Filter both snapshots to a specific region before diffing.
         /// Same syntax as `plasmate fetch --selector` (e.g. `main`, `nav`,
-        /// `button`, `interactive`, `action:click`, `#my-id`). Useful for
+        /// `button`, `interactive`, `action:click`, `action:type`,
+        /// `action:clear`, `action:select`, `action:toggle`, `#my-id`). Useful for
         /// diffing only the content region or action surface and ignoring
         /// navigation or footer churn.
         #[arg(long)]

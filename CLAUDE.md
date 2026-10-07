@@ -757,7 +757,7 @@ Version is derived from `Cargo.toml` via `env!("CARGO_PKG_VERSION")`. Do not har
 - Code changes: shared SOM selectors now support element-role slices such as
   `button`, `link`, `text_input`, and `select`; `interactive` action-surface
   slices; and `action:<name>` selectors such as `action:click`, `action:type`,
-  `action:select`, and `action:toggle`. Parent children and shadow-root context
+  `action:clear`, `action:select`, and `action:toggle`. Parent children and shadow-root context
   are preserved, and no-match selectors still return the full SOM.
 - Docs changes: CLI help, MCP tool descriptions, README selector guidance,
   AGENTS selector syntax, PRD, and roadmap now document selector action

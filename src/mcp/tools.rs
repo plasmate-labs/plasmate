@@ -39,7 +39,7 @@ pub struct ToolDefinition {
     pub input_schema: Value,
 }
 
-const SOM_SELECTOR_DESCRIPTION: &str = "Filter to a page region (main, nav/navigation, header, footer, aside, content/article, form, dialog), element role (button, link, text_input, select, etc.), action surface (interactive, action:click, action:type, action:select), or #element-id. Strips irrelevant regions/elements to reduce tokens.";
+const SOM_SELECTOR_DESCRIPTION: &str = "Filter to a page region (main, nav/navigation, header, footer, aside, content/article, form, dialog), element role (button, link, text_input, select, etc.), action surface (interactive, action:click, action:type, action:clear, action:select, action:toggle), or #element-id. Strips irrelevant regions/elements to reduce tokens.";
 
 /// Parameters for fetch_page tool.
 #[derive(Debug, Deserialize)]
@@ -415,7 +415,7 @@ async fn load_session_page_for_mcp(
 pub fn fetch_page_definition() -> ToolDefinition {
     ToolDefinition {
         name: "fetch_page".to_string(),
-        description: "Fetch a web page and return its Semantic Object Model (SOM) - structured JSON with typed regions, interactive elements with stable IDs, and clean text content. Output size depends on the page, configuration, serialization, and selector. Prefer this over raw HTTP fetches when an agent needs semantic page structure. Add selector='main' to strip nav/footer or selector='interactive' / selector='action:click' to return only reusable action targets.".to_string(),
+        description: "Fetch a web page and return its Semantic Object Model (SOM) - structured JSON with typed regions, interactive elements with stable IDs, and clean text content. Output size depends on the page, configuration, serialization, and selector. Prefer this over raw HTTP fetches when an agent needs semantic page structure. Add selector='main' to strip nav/footer or selector='interactive' / selector='action:click' / selector='action:type' / selector='action:clear' / selector='action:select' / selector='action:toggle' to return only reusable action targets.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -6364,6 +6364,8 @@ mod tests {
                 .expect("selector schema should have a description");
             assert!(description.contains("nav/navigation"));
             assert!(description.contains("content/article"));
+            assert!(description.contains("action:clear"));
+            assert!(description.contains("action:toggle"));
         }
     }
 

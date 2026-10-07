@@ -218,8 +218,10 @@ depending on a hard-coded count; the authoritative registration is
 [`src/mcp/server.rs`](./src/mcp/server.rs).
 
 **Tip:** use `selector="main"` to strip nav/footer, `selector="interactive"`
-to return only actionable elements, or `selector="action:click"` to build a
-compact click-target menu before the LLM sees the content.
+to return only actionable elements, or an action selector such as
+`selector="action:click"`, `selector="action:type"`, `selector="action:clear"`,
+`selector="action:select"`, or `selector="action:toggle"` to build a compact
+action menu before the LLM sees the content.
 Use `cache_status` after repeated fetches to inspect local MCP SOM cache hits,
 misses, selector entries, effective-HTML entries, and avoided HTML work.
 Use `session_status` before long interactive runs to inspect active browser
