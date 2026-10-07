@@ -218,7 +218,8 @@ depending on a hard-coded count; the authoritative registration is
 [`src/mcp/server.rs`](./src/mcp/server.rs).
 
 **Tip:** use `selector="main"` to strip nav/footer, `selector="interactive"`
-to return only actionable elements, or an action selector such as
+to return only actionable elements, `selector="h1"` through `selector="h6"`
+to isolate a heading level, or an action selector such as
 `selector="action:click"`, `selector="action:type"`, `selector="action:clear"`,
 `selector="action:select"`, or `selector="action:toggle"` to build a compact
 action menu before the LLM sees the content.
