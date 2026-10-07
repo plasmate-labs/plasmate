@@ -43,6 +43,7 @@ const SOM_SELECTOR_DESCRIPTION: &str = "Filter to a page region (main, nav/navig
 
 /// Parameters for fetch_page tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct FetchPageParams {
     url: String,
     #[serde(default)]
@@ -62,6 +63,7 @@ fn default_javascript() -> bool {
 
 /// Parameters for extract_text tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct ExtractTextParams {
     url: String,
     #[serde(default)]
@@ -436,7 +438,8 @@ pub fn fetch_page_definition() -> ToolDefinition {
                     "description": SOM_SELECTOR_DESCRIPTION
                 }
             },
-            "required": ["url"]
+            "required": ["url"],
+            "additionalProperties": false
         }),
     }
 }
@@ -462,7 +465,8 @@ pub fn extract_text_definition() -> ToolDefinition {
                     "description": SOM_SELECTOR_DESCRIPTION
                 }
             },
-            "required": ["url"]
+            "required": ["url"],
+            "additionalProperties": false
         }),
     }
 }
@@ -6498,6 +6502,32 @@ mod tests {
             .expect("budget schema should have a description");
         assert!(budget_description.contains("selector='main'"));
         assert!(budget_description.contains("preserving structured regions"));
+    }
+
+    #[test]
+    fn read_tool_schemas_and_params_reject_unknown_fields() {
+        assert_eq!(
+            fetch_page_definition().input_schema["additionalProperties"],
+            false
+        );
+        assert_eq!(
+            extract_text_definition().input_schema["additionalProperties"],
+            false
+        );
+
+        let fetch_error = serde_json::from_value::<FetchPageParams>(json!({
+            "url": "https://example.com",
+            "budegt": 100
+        }))
+        .expect_err("fetch_page should reject misspelled fields");
+        assert!(fetch_error.to_string().contains("unknown field"));
+
+        let text_error = serde_json::from_value::<ExtractTextParams>(json!({
+            "url": "https://example.com",
+            "max_char": 100
+        }))
+        .expect_err("extract_text should reject misspelled fields");
+        assert!(text_error.to_string().contains("unknown field"));
     }
 
     fn stateful_worker_fixture() -> PathBuf {
