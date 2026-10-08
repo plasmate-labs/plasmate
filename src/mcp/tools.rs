@@ -43,6 +43,7 @@ const SOM_SELECTOR_DESCRIPTION: &str = "Filter to a page region (main, nav/navig
 
 /// Parameters for fetch_page tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct FetchPageParams {
     url: String,
     #[serde(default)]
@@ -62,6 +63,7 @@ fn default_javascript() -> bool {
 
 /// Parameters for extract_text tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct ExtractTextParams {
     url: String,
     #[serde(default)]
@@ -436,7 +438,8 @@ pub fn fetch_page_definition() -> ToolDefinition {
                     "description": SOM_SELECTOR_DESCRIPTION
                 }
             },
-            "required": ["url"]
+            "required": ["url"],
+            "additionalProperties": false
         }),
     }
 }
@@ -462,7 +465,8 @@ pub fn extract_text_definition() -> ToolDefinition {
                     "description": SOM_SELECTOR_DESCRIPTION
                 }
             },
-            "required": ["url"]
+            "required": ["url"],
+            "additionalProperties": false
         }),
     }
 }
@@ -853,6 +857,7 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
 
 /// Parameters for extract_links tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct ExtractLinksParams {
     url: String,
     /// Filter to a specific region before extracting links.
@@ -877,7 +882,8 @@ pub fn extract_links_definition() -> ToolDefinition {
                     "description": SOM_SELECTOR_DESCRIPTION
                 }
             },
-            "required": ["url"]
+            "required": ["url"],
+            "additionalProperties": false
         }),
     }
 }
@@ -3554,6 +3560,7 @@ fn attr_flag_true(attrs: &Value, key: &str) -> bool {
 
 /// Parameters for screenshot_page tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct ScreenshotPageParams {
     url: String,
     #[serde(default = "default_width")]
@@ -3599,7 +3606,8 @@ pub fn screenshot_page_definition() -> ToolDefinition {
                     "description": "Image format: png, jpeg, webp. Default: png. (Reserved for future use.)"
                 }
             },
-            "required": ["url"]
+            "required": ["url"],
+            "additionalProperties": false
         }),
     }
 }
@@ -3768,6 +3776,7 @@ fn tool_response(text: String) -> Value {
 
 /// Parameters for open_page tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct OpenPageParams {
     url: String,
     #[serde(default)]
@@ -3818,7 +3827,8 @@ pub fn open_page_definition() -> ToolDefinition {
                     "description": SOM_SELECTOR_DESCRIPTION
                 }
             },
-            "required": ["url"]
+            "required": ["url"],
+            "additionalProperties": false
         }),
     }
 }
@@ -6498,6 +6508,65 @@ mod tests {
             .expect("budget schema should have a description");
         assert!(budget_description.contains("selector='main'"));
         assert!(budget_description.contains("preserving structured regions"));
+    }
+
+    #[test]
+    fn read_tool_schemas_and_params_reject_unknown_fields() {
+        assert_eq!(
+            fetch_page_definition().input_schema["additionalProperties"],
+            false
+        );
+        assert_eq!(
+            extract_text_definition().input_schema["additionalProperties"],
+            false
+        );
+
+        let fetch_error = serde_json::from_value::<FetchPageParams>(json!({
+            "url": "https://example.com",
+            "budegt": 100
+        }))
+        .expect_err("fetch_page should reject misspelled fields");
+        assert!(fetch_error.to_string().contains("unknown field"));
+
+        let text_error = serde_json::from_value::<ExtractTextParams>(json!({
+            "url": "https://example.com",
+            "max_char": 100
+        }))
+        .expect_err("extract_text should reject misspelled fields");
+        assert!(text_error.to_string().contains("unknown field"));
+
+        assert_eq!(
+            extract_links_definition().input_schema["additionalProperties"],
+            false
+        );
+        let links_error = serde_json::from_value::<ExtractLinksParams>(json!({
+            "url": "https://example.com",
+            "selecter": "main"
+        }))
+        .expect_err("extract_links should reject misspelled fields");
+        assert!(links_error.to_string().contains("unknown field"));
+
+        assert_eq!(
+            open_page_definition().input_schema["additionalProperties"],
+            false
+        );
+        let open_error = serde_json::from_value::<OpenPageParams>(json!({
+            "url": "https://example.com",
+            "selctor": "main"
+        }))
+        .expect_err("open_page should reject misspelled fields");
+        assert!(open_error.to_string().contains("unknown field"));
+
+        assert_eq!(
+            screenshot_page_definition().input_schema["additionalProperties"],
+            false
+        );
+        let screenshot_error = serde_json::from_value::<ScreenshotPageParams>(json!({
+            "url": "https://example.com",
+            "heigth": 720
+        }))
+        .expect_err("screenshot_page should reject misspelled fields");
+        assert!(screenshot_error.to_string().contains("unknown field"));
     }
 
     fn stateful_worker_fixture() -> PathBuf {
