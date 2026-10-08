@@ -3774,6 +3774,7 @@ fn tool_response(text: String) -> Value {
 
 /// Parameters for open_page tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct OpenPageParams {
     url: String,
     #[serde(default)]
@@ -3824,7 +3825,8 @@ pub fn open_page_definition() -> ToolDefinition {
                     "description": SOM_SELECTOR_DESCRIPTION
                 }
             },
-            "required": ["url"]
+            "required": ["url"],
+            "additionalProperties": false
         }),
     }
 }
@@ -6541,6 +6543,17 @@ mod tests {
         }))
         .expect_err("extract_links should reject misspelled fields");
         assert!(links_error.to_string().contains("unknown field"));
+
+        assert_eq!(
+            open_page_definition().input_schema["additionalProperties"],
+            false
+        );
+        let open_error = serde_json::from_value::<OpenPageParams>(json!({
+            "url": "https://example.com",
+            "selctor": "main"
+        }))
+        .expect_err("open_page should reject misspelled fields");
+        assert!(open_error.to_string().contains("unknown field"));
     }
 
     fn stateful_worker_fixture() -> PathBuf {
