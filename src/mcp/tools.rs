@@ -423,6 +423,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
             "properties": {
                 "url": {
                     "type": "string",
+                    "minLength": 1,
                     "description": "URL to fetch"
                 },
                 "budget": {
@@ -454,6 +455,7 @@ pub fn extract_text_definition() -> ToolDefinition {
             "properties": {
                 "url": {
                     "type": "string",
+                    "minLength": 1,
                     "description": "URL to fetch"
                 },
                 "max_chars": {
@@ -875,6 +877,7 @@ pub fn extract_links_definition() -> ToolDefinition {
             "properties": {
                 "url": {
                     "type": "string",
+                    "minLength": 1,
                     "description": "URL to fetch"
                 },
                 "selector": {
@@ -899,6 +902,7 @@ pub fn ard_discover_definition() -> ToolDefinition {
                 "url": {
                     "type": "string",
                     "format": "uri",
+                    "minLength": 1,
                     "description": "Operator-supplied public HTTPS page or origin to inspect."
                 },
                 "timeout_ms": {
@@ -940,6 +944,7 @@ pub fn crawl_policy_definition() -> ToolDefinition {
                 "url": {
                     "type": "string",
                     "format": "uri",
+                    "minLength": 1,
                     "maxLength": 4096,
                     "description": "Public HTTP(S) target whose origin-level /robots.txt policy should be evaluated."
                 },
@@ -986,7 +991,7 @@ pub fn inspect_page_definition() -> ToolDefinition {
         input_schema: json!({
             "type": "object",
             "properties": {
-                "url": { "type": "string", "format": "uri", "maxLength": 4096 },
+                "url": { "type": "string", "format": "uri", "minLength": 1, "maxLength": 4096 },
                 "javascript": {
                     "type": "boolean",
                     "default": false,
@@ -3620,6 +3625,7 @@ pub fn screenshot_page_definition() -> ToolDefinition {
             "properties": {
                 "url": {
                     "type": "string",
+                    "minLength": 1,
                     "description": "URL to screenshot"
                 },
                 "width": {
@@ -3848,6 +3854,7 @@ pub fn open_page_definition() -> ToolDefinition {
             "properties": {
                 "url": {
                     "type": "string",
+                    "minLength": 1,
                     "description": "URL to open"
                 },
                 "trace": {
@@ -5056,6 +5063,7 @@ pub fn navigate_to_definition() -> ToolDefinition {
                 },
                 "url": {
                     "type": "string",
+                    "minLength": 1,
                     "description": "URL to navigate to"
                 }
             },
@@ -6504,6 +6512,29 @@ mod tests {
         let schema = evaluate_definition().input_schema;
 
         assert_eq!(schema["properties"]["expression"]["minLength"], 1);
+    }
+
+    #[test]
+    fn page_url_schemas_reject_empty_values_before_dispatch() {
+        let definitions = [
+            fetch_page_definition(),
+            extract_text_definition(),
+            extract_links_definition(),
+            ard_discover_definition(),
+            crawl_policy_definition(),
+            inspect_page_definition(),
+            screenshot_page_definition(),
+            open_page_definition(),
+            navigate_to_definition(),
+        ];
+
+        for definition in definitions {
+            assert_eq!(
+                definition.input_schema["properties"]["url"]["minLength"], 1,
+                "{} must reject empty URLs",
+                definition.name
+            );
+        }
     }
 
     #[test]
