@@ -3560,6 +3560,7 @@ fn attr_flag_true(attrs: &Value, key: &str) -> bool {
 
 /// Parameters for screenshot_page tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct ScreenshotPageParams {
     url: String,
     #[serde(default = "default_width")]
@@ -3605,7 +3606,8 @@ pub fn screenshot_page_definition() -> ToolDefinition {
                     "description": "Image format: png, jpeg, webp. Default: png. (Reserved for future use.)"
                 }
             },
-            "required": ["url"]
+            "required": ["url"],
+            "additionalProperties": false
         }),
     }
 }
@@ -6554,6 +6556,17 @@ mod tests {
         }))
         .expect_err("open_page should reject misspelled fields");
         assert!(open_error.to_string().contains("unknown field"));
+
+        assert_eq!(
+            screenshot_page_definition().input_schema["additionalProperties"],
+            false
+        );
+        let screenshot_error = serde_json::from_value::<ScreenshotPageParams>(json!({
+            "url": "https://example.com",
+            "heigth": 720
+        }))
+        .expect_err("screenshot_page should reject misspelled fields");
+        assert!(screenshot_error.to_string().contains("unknown field"));
     }
 
     fn stateful_worker_fixture() -> PathBuf {
