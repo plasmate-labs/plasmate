@@ -1276,7 +1276,8 @@ pub fn cache_status_definition() -> ToolDefinition {
         description: "Return Plasmate's MCP SOM cache counters and inventory. Use this after repeated fetch_page, extract_text, or extract_links calls to inspect local cache hits, misses, selector entries, and avoided HTML work.".to_string(),
         input_schema: json!({
             "type": "object",
-            "properties": {}
+            "properties": {},
+            "additionalProperties": false
         }),
     }
 }
@@ -1288,13 +1289,27 @@ pub fn session_status_definition() -> ToolDefinition {
         description: "Return Plasmate's MCP browser-session inventory: capacity, age/idle timing, loaded URLs, raw/effective HTML sizes, SOM sizes, node-map counts, structured-data presence, and compiled disabled/readonly interactive counts. Use this to inspect stateful open_page/navigate_to workflows before creating more sessions or retrying type_text on locked fields.".to_string(),
         input_schema: json!({
             "type": "object",
-            "properties": {}
+            "properties": {},
+            "additionalProperties": false
         }),
     }
 }
 
 /// Handle the cache_status tool call.
-pub fn handle_cache_status(cache: &Arc<SomCache>) -> Value {
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct EmptyParams {}
+
+fn validate_empty_arguments(arguments: &Value) -> Result<(), String> {
+    serde_json::from_value::<EmptyParams>(arguments.clone())
+        .map(|_| ())
+        .map_err(|error| format!("Invalid arguments: {error}"))
+}
+
+pub fn handle_cache_status(arguments: &Value, cache: &Arc<SomCache>) -> Value {
+    if let Err(error) = validate_empty_arguments(arguments) {
+        return error_response(&error);
+    }
     let snapshot = cache.snapshot();
     json!({
         "content": [
@@ -1307,7 +1322,10 @@ pub fn handle_cache_status(cache: &Arc<SomCache>) -> Value {
 }
 
 /// Handle the session_status tool call.
-pub async fn handle_session_status(sessions: &Arc<SessionManager>) -> Value {
+pub async fn handle_session_status(arguments: &Value, sessions: &Arc<SessionManager>) -> Value {
+    if let Err(error) = validate_empty_arguments(arguments) {
+        return error_response(&error);
+    }
     let snapshot = sessions.snapshot().await;
     json!({
         "content": [
@@ -1332,7 +1350,7 @@ pub fn trace_status_definition() -> ToolDefinition {
         input_schema: json!({
             "type": "object",
             "properties": {
-                "session_id": {"type": "string", "maxLength": 64, "description": "Session ID from open_page"}
+                "session_id": {"type": "string", "minLength": 1, "maxLength": 64, "description": "Session ID from open_page"}
             },
             "required": ["session_id"],
             "additionalProperties": false
@@ -1347,7 +1365,7 @@ pub fn trace_export_definition() -> ToolDefinition {
         input_schema: json!({
             "type": "object",
             "properties": {
-                "session_id": {"type": "string", "maxLength": 64, "description": "Owning browser session ID"}
+                "session_id": {"type": "string", "minLength": 1, "maxLength": 64, "description": "Owning browser session ID"}
             },
             "required": ["session_id"],
             "additionalProperties": false
@@ -1362,7 +1380,7 @@ pub fn trace_clear_definition() -> ToolDefinition {
         input_schema: json!({
             "type": "object",
             "properties": {
-                "session_id": {"type": "string", "maxLength": 64, "description": "Owning browser session ID"}
+                "session_id": {"type": "string", "minLength": 1, "maxLength": 64, "description": "Owning browser session ID"}
             },
             "required": ["session_id"],
             "additionalProperties": false
@@ -1377,8 +1395,8 @@ pub fn replay_validate_definition() -> ToolDefinition {
         input_schema: json!({
             "type": "object",
             "properties": {
-                "session_id": {"type": "string", "maxLength": 64, "description": "Current owning browser session ID"},
-                "trace_id": {"type": "string", "maxLength": 64, "description": "Trace ID returned by trace_status or trace_export"},
+                "session_id": {"type": "string", "minLength": 1, "maxLength": 64, "description": "Current owning browser session ID"},
+                "trace_id": {"type": "string", "minLength": 1, "maxLength": 64, "description": "Trace ID returned by trace_status or trace_export"},
                 "sequence": {"type": "integer", "minimum": 1, "description": "Retained event sequence to validate"},
                 "confirmed": {"type": "boolean", "description": "Explicit approval of the mutating action; default false. Validation remains side-effect free."}
             },
@@ -1393,8 +1411,8 @@ pub async fn handle_trace_status(arguments: &Value, sessions: &Arc<SessionManage
         Ok(params) => params,
         Err(error) => return error_response(&format!("Invalid arguments: {error}")),
     };
-    if params.session_id.len() > MAX_TRACE_HANDLE_BYTES {
-        return error_response("Invalid arguments: session_id exceeds 64 bytes");
+    if let Some(error) = validate_trace_handle(&params.session_id, "session_id") {
+        return error_response(&error);
     }
     match sessions.trace_status(&params.session_id).await {
         Some(status) => tool_response(serde_json::to_string(&status).unwrap_or_default()),
@@ -1407,8 +1425,8 @@ pub async fn handle_trace_export(arguments: &Value, sessions: &Arc<SessionManage
         Ok(params) => params,
         Err(error) => return error_response(&format!("Invalid arguments: {error}")),
     };
-    if params.session_id.len() > MAX_TRACE_HANDLE_BYTES {
-        return error_response("Invalid arguments: session_id exceeds 64 bytes");
+    if let Some(error) = validate_trace_handle(&params.session_id, "session_id") {
+        return error_response(&error);
     }
     match sessions.trace_export(&params.session_id).await {
         Some(export) => tool_response(serde_json::to_string(&export).unwrap_or_default()),
@@ -1421,8 +1439,8 @@ pub async fn handle_trace_clear(arguments: &Value, sessions: &Arc<SessionManager
         Ok(params) => params,
         Err(error) => return error_response(&format!("Invalid arguments: {error}")),
     };
-    if params.session_id.len() > MAX_TRACE_HANDLE_BYTES {
-        return error_response("Invalid arguments: session_id exceeds 64 bytes");
+    if let Some(error) = validate_trace_handle(&params.session_id, "session_id") {
+        return error_response(&error);
     }
     match sessions.clear_trace(&params.session_id).await {
         Some((cleared_events, status)) => {
@@ -1437,15 +1455,26 @@ pub async fn handle_replay_validate(arguments: &Value, sessions: &Arc<SessionMan
         Ok(request) => request,
         Err(error) => return error_response(&format!("Invalid arguments: {error}")),
     };
-    if request.session_id.len() > MAX_TRACE_HANDLE_BYTES
-        || request.trace_id.len() > MAX_TRACE_HANDLE_BYTES
-    {
-        return error_response("Invalid arguments: session_id or trace_id exceeds 64 bytes");
+    if let Some(error) = validate_trace_handle(&request.session_id, "session_id") {
+        return error_response(&error);
+    }
+    if let Some(error) = validate_trace_handle(&request.trace_id, "trace_id") {
+        return error_response(&error);
     }
     match sessions.validate_trace_replay(&request).await {
         Some(plan) => tool_response(plan.to_string()),
         None => error_response(&format!("Session not found: {}", request.session_id)),
     }
+}
+
+fn validate_trace_handle(value: &str, name: &str) -> Option<String> {
+    if value.is_empty() {
+        return Some(format!("Invalid arguments: {name} must not be empty"));
+    }
+    if value.len() > MAX_TRACE_HANDLE_BYTES {
+        return Some(format!("Invalid arguments: {name} exceeds 64 bytes"));
+    }
+    None
 }
 
 /// Handle the extract_links tool call.
@@ -3788,6 +3817,7 @@ struct OpenPageParams {
 
 /// Parameters for evaluate tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct EvaluateParams {
     session_id: String,
     expression: String,
@@ -3795,6 +3825,7 @@ struct EvaluateParams {
 
 /// Parameters for click tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct ClickParams {
     session_id: String,
     element_id: String,
@@ -3802,6 +3833,7 @@ struct ClickParams {
 
 /// Parameters for close_page tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct ClosePageParams {
     session_id: String,
 }
@@ -3850,7 +3882,8 @@ pub fn evaluate_definition() -> ToolDefinition {
                     "description": "JavaScript expression to evaluate. Return value is serialized to JSON."
                 }
             },
-            "required": ["session_id", "expression"]
+            "required": ["session_id", "expression"],
+            "additionalProperties": false
         }),
     }
 }
@@ -3872,7 +3905,8 @@ pub fn click_definition() -> ToolDefinition {
                     "description": "Element ID from SOM (e.g. 'e5')"
                 }
             },
-            "required": ["session_id", "element_id"]
+            "required": ["session_id", "element_id"],
+            "additionalProperties": false
         }),
     }
 }
@@ -3887,10 +3921,12 @@ pub fn close_page_definition() -> ToolDefinition {
             "properties": {
                 "session_id": {
                     "type": "string",
+                    "minLength": 1,
                     "description": "Session ID to close"
                 }
             },
-            "required": ["session_id"]
+            "required": ["session_id"],
+            "additionalProperties": false
         }),
     }
 }
@@ -4970,6 +5006,7 @@ struct SelectOptionParams {
 
 /// Parameters for toggle tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct ToggleParams {
     session_id: String,
     element_id: String,
@@ -4977,6 +5014,7 @@ struct ToggleParams {
 
 /// Parameters for clear tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct ClearParams {
     session_id: String,
     element_id: String,
@@ -4984,6 +5022,7 @@ struct ClearParams {
 
 /// Parameters for scroll tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct ScrollParams {
     session_id: String,
     #[serde(default = "default_direction")]
@@ -5109,7 +5148,8 @@ pub fn scroll_definition() -> ToolDefinition {
                     "description": "If provided, scroll this element into view instead of scrolling the page."
                 }
             },
-            "required": ["session_id"]
+            "required": ["session_id"],
+            "additionalProperties": false
         }),
     }
 }
@@ -5131,7 +5171,8 @@ pub fn toggle_definition() -> ToolDefinition {
                     "description": "Element ID from SOM (e.g. 'e5')"
                 }
             },
-            "required": ["session_id", "element_id"]
+            "required": ["session_id", "element_id"],
+            "additionalProperties": false
         }),
     }
 }
@@ -5153,7 +5194,8 @@ pub fn clear_definition() -> ToolDefinition {
                     "description": "Element ID from SOM (e.g. 'e5')"
                 }
             },
-            "required": ["session_id", "element_id"]
+            "required": ["session_id", "element_id"],
+            "additionalProperties": false
         }),
     }
 }
@@ -6054,6 +6096,9 @@ pub async fn handle_close_page(arguments: &Value, sessions: &Arc<SessionManager>
             return error_response(&format!("Invalid arguments: {}", e));
         }
     };
+    if params.session_id.is_empty() {
+        return error_response("Invalid arguments: session_id must not be empty");
+    }
 
     info!(session_id = %params.session_id, "close_page");
 
@@ -6078,6 +6123,7 @@ pub async fn handle_close_page(arguments: &Value, sessions: &Arc<SessionManager>
 
 /// Parameters for get_cookies tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct GetCookiesParams {
     session_id: String,
     #[serde(default)]
@@ -6086,6 +6132,7 @@ struct GetCookiesParams {
 
 /// Parameters for set_cookies tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct SetCookiesParams {
     session_id: String,
     cookies: Vec<Value>,
@@ -6093,6 +6140,7 @@ struct SetCookiesParams {
 
 /// Parameters for clear_cookies tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct ClearCookiesParams {
     session_id: String,
     #[serde(default)]
@@ -6120,7 +6168,8 @@ pub fn get_cookies_definition() -> ToolDefinition {
                     "description": "Optional URL to filter cookies by domain/path matching"
                 }
             },
-            "required": ["session_id"]
+            "required": ["session_id"],
+            "additionalProperties": false
         }),
     }
 }
@@ -6156,7 +6205,8 @@ pub fn set_cookies_definition() -> ToolDefinition {
                     }
                 }
             },
-            "required": ["session_id", "cookies"]
+            "required": ["session_id", "cookies"],
+            "additionalProperties": false
         }),
     }
 }
@@ -6186,7 +6236,8 @@ pub fn clear_cookies_definition() -> ToolDefinition {
                     "description": "Only clear cookies matching this URL"
                 }
             },
-            "required": ["session_id"]
+            "required": ["session_id"],
+            "additionalProperties": false
         }),
     }
 }
@@ -6600,6 +6651,54 @@ mod tests {
         }))
         .expect_err("screenshot_page should reject misspelled fields");
         assert!(screenshot_error.to_string().contains("unknown field"));
+
+        for definition in [
+            evaluate_definition(),
+            click_definition(),
+            close_page_definition(),
+            scroll_definition(),
+            toggle_definition(),
+            clear_definition(),
+            get_cookies_definition(),
+            set_cookies_definition(),
+            clear_cookies_definition(),
+        ] {
+            assert_eq!(
+                definition.input_schema["additionalProperties"], false,
+                "{} should reject unknown fields",
+                definition.name
+            );
+        }
+
+        let evaluate_error = serde_json::from_value::<EvaluateParams>(json!({
+            "session_id": "sess-1",
+            "expression": "1",
+            "exrpession": "1"
+        }))
+        .expect_err("evaluate should reject misspelled fields");
+        assert!(evaluate_error.to_string().contains("unknown field"));
+
+        let toggle_error = serde_json::from_value::<ToggleParams>(json!({
+            "session_id": "sess-1",
+            "element_id": "e1",
+            "elment_id": "e1"
+        }))
+        .expect_err("toggle should reject misspelled fields");
+        assert!(toggle_error.to_string().contains("unknown field"));
+
+        let scroll_error = serde_json::from_value::<ScrollParams>(json!({
+            "session_id": "sess-1",
+            "pixles": 10
+        }))
+        .expect_err("scroll should reject misspelled fields");
+        assert!(scroll_error.to_string().contains("unknown field"));
+
+        let cookies_error = serde_json::from_value::<GetCookiesParams>(json!({
+            "session_id": "sess-1",
+            "urll": "https://example.com"
+        }))
+        .expect_err("get_cookies should reject misspelled fields");
+        assert!(cookies_error.to_string().contains("unknown field"));
     }
 
     fn stateful_worker_fixture() -> PathBuf {
@@ -17132,7 +17231,7 @@ mod tests {
             "<html><body>ready</body></html>".to_string(),
         );
 
-        let result = handle_cache_status(&cache);
+        let result = handle_cache_status(&json!({}), &cache);
         let text = result["content"][0]["text"].as_str().unwrap();
         let snapshot: serde_json::Value = serde_json::from_str(text).unwrap();
 
@@ -17141,6 +17240,34 @@ mod tests {
         assert_eq!(snapshot["effective_html_entries"], 1);
         assert_eq!(snapshot["total_effective_html_bytes"], 31);
         assert_eq!(snapshot["max_hot_entries"], 1000);
+    }
+
+    #[tokio::test]
+    async fn empty_status_tools_reject_unknown_arguments() {
+        assert_eq!(
+            cache_status_definition().input_schema["additionalProperties"],
+            false
+        );
+        assert_eq!(
+            session_status_definition().input_schema["additionalProperties"],
+            false
+        );
+
+        let cache = Arc::new(SomCache::new(CacheConfig::default()));
+        let cache_result = handle_cache_status(&json!({"stauts": true}), &cache);
+        assert_eq!(cache_result["isError"], true);
+        assert!(cache_result["content"][0]["text"]
+            .as_str()
+            .unwrap()
+            .contains("unknown field"));
+
+        let sessions = Arc::new(SessionManager::new());
+        let session_result = handle_session_status(&json!({"stauts": true}), &sessions).await;
+        assert_eq!(session_result["isError"], true);
+        assert!(session_result["content"][0]["text"]
+            .as_str()
+            .unwrap()
+            .contains("unknown field"));
     }
 
     #[tokio::test]
@@ -17179,7 +17306,7 @@ mod tests {
         let sessions = Arc::new(SessionManager::new());
         let session_id = sessions.create_session().await.unwrap();
 
-        let result = handle_session_status(&sessions).await;
+        let result = handle_session_status(&json!({}), &sessions).await;
         let text = result["content"][0]["text"].as_str().unwrap();
         let snapshot: serde_json::Value = serde_json::from_str(text).unwrap();
 
@@ -17213,7 +17340,7 @@ mod tests {
             .await
             .unwrap();
 
-        let result = handle_session_status(&sessions).await;
+        let result = handle_session_status(&json!({}), &sessions).await;
         let text = result["content"][0]["text"].as_str().unwrap();
         let snapshot: serde_json::Value = serde_json::from_str(text).unwrap();
         let summary = &snapshot["sessions"].as_array().unwrap()[0];
@@ -17231,7 +17358,15 @@ mod tests {
             replay_validate_definition(),
         ] {
             assert_eq!(definition.input_schema["additionalProperties"], false);
+            assert_eq!(
+                definition.input_schema["properties"]["session_id"]["minLength"],
+                1
+            );
         }
+        assert_eq!(
+            replay_validate_definition().input_schema["properties"]["trace_id"]["minLength"],
+            1
+        );
     }
 
     #[tokio::test]
@@ -17250,6 +17385,30 @@ mod tests {
         )
         .await;
         assert_eq!(invalid["isError"], true);
+
+        let empty = handle_trace_status(&json!({"session_id": ""}), &sessions).await;
+        assert_eq!(empty["isError"], true);
+        assert!(empty["content"][0]["text"]
+            .as_str()
+            .unwrap()
+            .contains("must not be empty"));
+    }
+
+    #[tokio::test]
+    async fn close_page_rejects_empty_session_id() {
+        assert_eq!(
+            close_page_definition().input_schema["properties"]["session_id"]["minLength"],
+            1
+        );
+
+        let sessions = Arc::new(SessionManager::new());
+        let result = handle_close_page(&json!({"session_id": ""}), &sessions).await;
+
+        assert_eq!(result["isError"], true);
+        assert!(result["content"][0]["text"]
+            .as_str()
+            .unwrap()
+            .contains("must not be empty"));
     }
 
     #[test]
