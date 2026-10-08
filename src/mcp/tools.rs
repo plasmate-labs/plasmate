@@ -132,6 +132,10 @@ async fn load_som_for_mcp(
     javascript: bool,
     selector: Option<&str>,
 ) -> Result<(Som, bool), String> {
+    if url.trim().is_empty() {
+        return Err("Invalid arguments: url must not be empty".to_string());
+    }
+
     let fetch_result = fetch::fetch_url(client, url, DEFAULT_TIMEOUT_MS)
         .await
         .map_err(|e| format!("Failed to fetch {}: {}", url, e))?;
@@ -423,6 +427,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
             "properties": {
                 "url": {
                     "type": "string",
+                    "minLength": 1,
                     "description": "URL to fetch"
                 },
                 "budget": {
@@ -454,6 +459,7 @@ pub fn extract_text_definition() -> ToolDefinition {
             "properties": {
                 "url": {
                     "type": "string",
+                    "minLength": 1,
                     "description": "URL to fetch"
                 },
                 "max_chars": {
@@ -875,6 +881,7 @@ pub fn extract_links_definition() -> ToolDefinition {
             "properties": {
                 "url": {
                     "type": "string",
+                    "minLength": 1,
                     "description": "URL to fetch"
                 },
                 "selector": {
@@ -899,6 +906,7 @@ pub fn ard_discover_definition() -> ToolDefinition {
                 "url": {
                     "type": "string",
                     "format": "uri",
+                    "minLength": 1,
                     "description": "Operator-supplied public HTTPS page or origin to inspect."
                 },
                 "timeout_ms": {
@@ -940,6 +948,7 @@ pub fn crawl_policy_definition() -> ToolDefinition {
                 "url": {
                     "type": "string",
                     "format": "uri",
+                    "minLength": 1,
                     "maxLength": 4096,
                     "description": "Public HTTP(S) target whose origin-level /robots.txt policy should be evaluated."
                 },
@@ -986,7 +995,7 @@ pub fn inspect_page_definition() -> ToolDefinition {
         input_schema: json!({
             "type": "object",
             "properties": {
-                "url": { "type": "string", "format": "uri", "maxLength": 4096 },
+                "url": { "type": "string", "format": "uri", "minLength": 1, "maxLength": 4096 },
                 "javascript": {
                     "type": "boolean",
                     "default": false,
@@ -3620,6 +3629,7 @@ pub fn screenshot_page_definition() -> ToolDefinition {
             "properties": {
                 "url": {
                     "type": "string",
+                    "minLength": 1,
                     "description": "URL to screenshot"
                 },
                 "width": {
@@ -3848,6 +3858,7 @@ pub fn open_page_definition() -> ToolDefinition {
             "properties": {
                 "url": {
                     "type": "string",
+                    "minLength": 1,
                     "description": "URL to open"
                 },
                 "trace": {
@@ -3879,6 +3890,7 @@ pub fn evaluate_definition() -> ToolDefinition {
                 },
                 "expression": {
                     "type": "string",
+                    "minLength": 1,
                     "description": "JavaScript expression to evaluate. Return value is serialized to JSON."
                 }
             },
@@ -5055,6 +5067,7 @@ pub fn navigate_to_definition() -> ToolDefinition {
                 },
                 "url": {
                     "type": "string",
+                    "minLength": 1,
                     "description": "URL to navigate to"
                 }
             },
@@ -6455,6 +6468,97 @@ mod tests {
 
         assert!(docs.contains(&format!("| `{registered_name}` |")));
         assert!(!docs.contains("| `screenshot` |"));
+    }
+
+    #[test]
+    fn claude_desktop_setup_lists_every_registered_mcp_tool() {
+        let docs = include_str!("../../docs/claude-desktop-config.md");
+        let definitions = [
+            fetch_page_definition(),
+            extract_text_definition(),
+            extract_links_definition(),
+            ard_discover_definition(),
+            crawl_policy_definition(),
+            inspect_page_definition(),
+            cache_status_definition(),
+            session_status_definition(),
+            trace_status_definition(),
+            trace_export_definition(),
+            trace_clear_definition(),
+            replay_validate_definition(),
+            screenshot_page_definition(),
+            open_page_definition(),
+            evaluate_definition(),
+            click_definition(),
+            close_page_definition(),
+            navigate_to_definition(),
+            type_text_definition(),
+            select_option_definition(),
+            scroll_definition(),
+            toggle_definition(),
+            clear_definition(),
+            get_cookies_definition(),
+            set_cookies_definition(),
+            clear_cookies_definition(),
+        ];
+
+        for definition in definitions {
+            assert!(
+                docs.contains(&format!("| `{}` |", definition.name)),
+                "Claude Desktop setup docs omit registered tool {}",
+                definition.name
+            );
+        }
+    }
+
+    #[test]
+    fn evaluate_schema_rejects_empty_expressions_before_dispatch() {
+        let schema = evaluate_definition().input_schema;
+
+        assert_eq!(schema["properties"]["expression"]["minLength"], 1);
+    }
+
+    #[test]
+    fn page_url_schemas_reject_empty_values_before_dispatch() {
+        let definitions = [
+            fetch_page_definition(),
+            extract_text_definition(),
+            extract_links_definition(),
+            ard_discover_definition(),
+            crawl_policy_definition(),
+            inspect_page_definition(),
+            screenshot_page_definition(),
+            open_page_definition(),
+            navigate_to_definition(),
+        ];
+
+        for definition in definitions {
+            assert_eq!(
+                definition.input_schema["properties"]["url"]["minLength"], 1,
+                "{} must reject empty URLs",
+                definition.name
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn stateless_page_tools_reject_whitespace_urls_before_network_access() {
+        let client = reqwest::Client::new();
+        let cache = Arc::new(SomCache::new(CacheConfig::default()));
+
+        let results = [
+            handle_fetch_page(&json!({"url": " \t\n"}), &client, &cache).await,
+            handle_extract_text(&json!({"url": " \t\n"}), &client, &cache).await,
+            handle_extract_links(&json!({"url": " \t\n"}), &client, &cache).await,
+        ];
+
+        for result in results {
+            assert_eq!(result["isError"], true);
+            assert_eq!(
+                result["content"][0]["text"],
+                "Invalid arguments: url must not be empty"
+            );
+        }
     }
 
     #[test]
