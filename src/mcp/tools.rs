@@ -1276,7 +1276,8 @@ pub fn cache_status_definition() -> ToolDefinition {
         description: "Return Plasmate's MCP SOM cache counters and inventory. Use this after repeated fetch_page, extract_text, or extract_links calls to inspect local cache hits, misses, selector entries, and avoided HTML work.".to_string(),
         input_schema: json!({
             "type": "object",
-            "properties": {}
+            "properties": {},
+            "additionalProperties": false
         }),
     }
 }
@@ -1288,13 +1289,27 @@ pub fn session_status_definition() -> ToolDefinition {
         description: "Return Plasmate's MCP browser-session inventory: capacity, age/idle timing, loaded URLs, raw/effective HTML sizes, SOM sizes, node-map counts, structured-data presence, and compiled disabled/readonly interactive counts. Use this to inspect stateful open_page/navigate_to workflows before creating more sessions or retrying type_text on locked fields.".to_string(),
         input_schema: json!({
             "type": "object",
-            "properties": {}
+            "properties": {},
+            "additionalProperties": false
         }),
     }
 }
 
 /// Handle the cache_status tool call.
-pub fn handle_cache_status(cache: &Arc<SomCache>) -> Value {
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct EmptyParams {}
+
+fn validate_empty_arguments(arguments: &Value) -> Result<(), String> {
+    serde_json::from_value::<EmptyParams>(arguments.clone())
+        .map(|_| ())
+        .map_err(|error| format!("Invalid arguments: {error}"))
+}
+
+pub fn handle_cache_status(arguments: &Value, cache: &Arc<SomCache>) -> Value {
+    if let Err(error) = validate_empty_arguments(arguments) {
+        return error_response(&error);
+    }
     let snapshot = cache.snapshot();
     json!({
         "content": [
@@ -1307,7 +1322,10 @@ pub fn handle_cache_status(cache: &Arc<SomCache>) -> Value {
 }
 
 /// Handle the session_status tool call.
-pub async fn handle_session_status(sessions: &Arc<SessionManager>) -> Value {
+pub async fn handle_session_status(arguments: &Value, sessions: &Arc<SessionManager>) -> Value {
+    if let Err(error) = validate_empty_arguments(arguments) {
+        return error_response(&error);
+    }
     let snapshot = sessions.snapshot().await;
     json!({
         "content": [
@@ -17198,7 +17216,7 @@ mod tests {
             "<html><body>ready</body></html>".to_string(),
         );
 
-        let result = handle_cache_status(&cache);
+        let result = handle_cache_status(&json!({}), &cache);
         let text = result["content"][0]["text"].as_str().unwrap();
         let snapshot: serde_json::Value = serde_json::from_str(text).unwrap();
 
@@ -17207,6 +17225,34 @@ mod tests {
         assert_eq!(snapshot["effective_html_entries"], 1);
         assert_eq!(snapshot["total_effective_html_bytes"], 31);
         assert_eq!(snapshot["max_hot_entries"], 1000);
+    }
+
+    #[tokio::test]
+    async fn empty_status_tools_reject_unknown_arguments() {
+        assert_eq!(
+            cache_status_definition().input_schema["additionalProperties"],
+            false
+        );
+        assert_eq!(
+            session_status_definition().input_schema["additionalProperties"],
+            false
+        );
+
+        let cache = Arc::new(SomCache::new(CacheConfig::default()));
+        let cache_result = handle_cache_status(&json!({"stauts": true}), &cache);
+        assert_eq!(cache_result["isError"], true);
+        assert!(cache_result["content"][0]["text"]
+            .as_str()
+            .unwrap()
+            .contains("unknown field"));
+
+        let sessions = Arc::new(SessionManager::new());
+        let session_result = handle_session_status(&json!({"stauts": true}), &sessions).await;
+        assert_eq!(session_result["isError"], true);
+        assert!(session_result["content"][0]["text"]
+            .as_str()
+            .unwrap()
+            .contains("unknown field"));
     }
 
     #[tokio::test]
@@ -17245,7 +17291,7 @@ mod tests {
         let sessions = Arc::new(SessionManager::new());
         let session_id = sessions.create_session().await.unwrap();
 
-        let result = handle_session_status(&sessions).await;
+        let result = handle_session_status(&json!({}), &sessions).await;
         let text = result["content"][0]["text"].as_str().unwrap();
         let snapshot: serde_json::Value = serde_json::from_str(text).unwrap();
 
@@ -17279,7 +17325,7 @@ mod tests {
             .await
             .unwrap();
 
-        let result = handle_session_status(&sessions).await;
+        let result = handle_session_status(&json!({}), &sessions).await;
         let text = result["content"][0]["text"].as_str().unwrap();
         let snapshot: serde_json::Value = serde_json::from_str(text).unwrap();
         let summary = &snapshot["sessions"].as_array().unwrap()[0];
