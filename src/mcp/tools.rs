@@ -5049,7 +5049,8 @@ pub fn type_text_definition() -> ToolDefinition {
                     "description": "If true, append to existing value instead of replacing. Default: false."
                 }
             },
-            "required": ["session_id", "element_id", "text"]
+            "required": ["session_id", "element_id", "text"],
+            "additionalProperties": false
         }),
     }
 }
@@ -6547,6 +6548,10 @@ mod tests {
         .expect_err("type_text should reject misspelled fields")
         .to_string()
         .contains("unknown field"));
+        assert_eq!(
+            type_text_definition().input_schema["additionalProperties"],
+            false
+        );
 
         assert_eq!(
             extract_links_definition().input_schema["additionalProperties"],
