@@ -4942,6 +4942,7 @@ pub async fn handle_click(
 
 /// Parameters for navigate_to tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct NavigateToParams {
     session_id: String,
     url: String,
@@ -5016,7 +5017,8 @@ pub fn navigate_to_definition() -> ToolDefinition {
                     "description": "URL to navigate to"
                 }
             },
-            "required": ["session_id", "url"]
+            "required": ["session_id", "url"],
+            "additionalProperties": false
         }),
     }
 }
@@ -9800,6 +9802,19 @@ mod tests {
         assert_eq!(definition.name, "ard_discover");
         assert_eq!(definition.input_schema["additionalProperties"], false);
         assert!(serde_json::from_value::<ArdDiscoverParams>(json!({
+            "url": "https://example.com/",
+            "unexpected": true
+        }))
+        .is_err());
+    }
+
+    #[test]
+    fn navigate_to_schema_and_runtime_reject_unknown_arguments() {
+        let definition = navigate_to_definition();
+        assert_eq!(definition.name, "navigate_to");
+        assert_eq!(definition.input_schema["additionalProperties"], false);
+        assert!(serde_json::from_value::<NavigateToParams>(json!({
+            "session_id": "sess-1",
             "url": "https://example.com/",
             "unexpected": true
         }))
