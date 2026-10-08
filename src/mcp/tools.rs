@@ -3788,6 +3788,7 @@ struct OpenPageParams {
 
 /// Parameters for evaluate tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct EvaluateParams {
     session_id: String,
     expression: String,
@@ -3795,6 +3796,7 @@ struct EvaluateParams {
 
 /// Parameters for click tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct ClickParams {
     session_id: String,
     element_id: String,
@@ -3802,6 +3804,7 @@ struct ClickParams {
 
 /// Parameters for close_page tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct ClosePageParams {
     session_id: String,
 }
@@ -3850,7 +3853,8 @@ pub fn evaluate_definition() -> ToolDefinition {
                     "description": "JavaScript expression to evaluate. Return value is serialized to JSON."
                 }
             },
-            "required": ["session_id", "expression"]
+            "required": ["session_id", "expression"],
+            "additionalProperties": false
         }),
     }
 }
@@ -3872,7 +3876,8 @@ pub fn click_definition() -> ToolDefinition {
                     "description": "Element ID from SOM (e.g. 'e5')"
                 }
             },
-            "required": ["session_id", "element_id"]
+            "required": ["session_id", "element_id"],
+            "additionalProperties": false
         }),
     }
 }
@@ -3890,7 +3895,8 @@ pub fn close_page_definition() -> ToolDefinition {
                     "description": "Session ID to close"
                 }
             },
-            "required": ["session_id"]
+            "required": ["session_id"],
+            "additionalProperties": false
         }),
     }
 }
@@ -4970,6 +4976,7 @@ struct SelectOptionParams {
 
 /// Parameters for toggle tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct ToggleParams {
     session_id: String,
     element_id: String,
@@ -4977,6 +4984,7 @@ struct ToggleParams {
 
 /// Parameters for clear tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct ClearParams {
     session_id: String,
     element_id: String,
@@ -4984,6 +4992,7 @@ struct ClearParams {
 
 /// Parameters for scroll tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct ScrollParams {
     session_id: String,
     #[serde(default = "default_direction")]
@@ -5109,7 +5118,8 @@ pub fn scroll_definition() -> ToolDefinition {
                     "description": "If provided, scroll this element into view instead of scrolling the page."
                 }
             },
-            "required": ["session_id"]
+            "required": ["session_id"],
+            "additionalProperties": false
         }),
     }
 }
@@ -5131,7 +5141,8 @@ pub fn toggle_definition() -> ToolDefinition {
                     "description": "Element ID from SOM (e.g. 'e5')"
                 }
             },
-            "required": ["session_id", "element_id"]
+            "required": ["session_id", "element_id"],
+            "additionalProperties": false
         }),
     }
 }
@@ -5153,7 +5164,8 @@ pub fn clear_definition() -> ToolDefinition {
                     "description": "Element ID from SOM (e.g. 'e5')"
                 }
             },
-            "required": ["session_id", "element_id"]
+            "required": ["session_id", "element_id"],
+            "additionalProperties": false
         }),
     }
 }
@@ -6078,6 +6090,7 @@ pub async fn handle_close_page(arguments: &Value, sessions: &Arc<SessionManager>
 
 /// Parameters for get_cookies tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct GetCookiesParams {
     session_id: String,
     #[serde(default)]
@@ -6086,6 +6099,7 @@ struct GetCookiesParams {
 
 /// Parameters for set_cookies tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct SetCookiesParams {
     session_id: String,
     cookies: Vec<Value>,
@@ -6093,6 +6107,7 @@ struct SetCookiesParams {
 
 /// Parameters for clear_cookies tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct ClearCookiesParams {
     session_id: String,
     #[serde(default)]
@@ -6120,7 +6135,8 @@ pub fn get_cookies_definition() -> ToolDefinition {
                     "description": "Optional URL to filter cookies by domain/path matching"
                 }
             },
-            "required": ["session_id"]
+            "required": ["session_id"],
+            "additionalProperties": false
         }),
     }
 }
@@ -6156,7 +6172,8 @@ pub fn set_cookies_definition() -> ToolDefinition {
                     }
                 }
             },
-            "required": ["session_id", "cookies"]
+            "required": ["session_id", "cookies"],
+            "additionalProperties": false
         }),
     }
 }
@@ -6186,7 +6203,8 @@ pub fn clear_cookies_definition() -> ToolDefinition {
                     "description": "Only clear cookies matching this URL"
                 }
             },
-            "required": ["session_id"]
+            "required": ["session_id"],
+            "additionalProperties": false
         }),
     }
 }
@@ -6600,6 +6618,54 @@ mod tests {
         }))
         .expect_err("screenshot_page should reject misspelled fields");
         assert!(screenshot_error.to_string().contains("unknown field"));
+
+        for definition in [
+            evaluate_definition(),
+            click_definition(),
+            close_page_definition(),
+            scroll_definition(),
+            toggle_definition(),
+            clear_definition(),
+            get_cookies_definition(),
+            set_cookies_definition(),
+            clear_cookies_definition(),
+        ] {
+            assert_eq!(
+                definition.input_schema["additionalProperties"], false,
+                "{} should reject unknown fields",
+                definition.name
+            );
+        }
+
+        let evaluate_error = serde_json::from_value::<EvaluateParams>(json!({
+            "session_id": "sess-1",
+            "expression": "1",
+            "exrpession": "1"
+        }))
+        .expect_err("evaluate should reject misspelled fields");
+        assert!(evaluate_error.to_string().contains("unknown field"));
+
+        let toggle_error = serde_json::from_value::<ToggleParams>(json!({
+            "session_id": "sess-1",
+            "element_id": "e1",
+            "elment_id": "e1"
+        }))
+        .expect_err("toggle should reject misspelled fields");
+        assert!(toggle_error.to_string().contains("unknown field"));
+
+        let scroll_error = serde_json::from_value::<ScrollParams>(json!({
+            "session_id": "sess-1",
+            "pixles": 10
+        }))
+        .expect_err("scroll should reject misspelled fields");
+        assert!(scroll_error.to_string().contains("unknown field"));
+
+        let cookies_error = serde_json::from_value::<GetCookiesParams>(json!({
+            "session_id": "sess-1",
+            "urll": "https://example.com"
+        }))
+        .expect_err("get_cookies should reject misspelled fields");
+        assert!(cookies_error.to_string().contains("unknown field"));
     }
 
     fn stateful_worker_fixture() -> PathBuf {
