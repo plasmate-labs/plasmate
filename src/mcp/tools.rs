@@ -3921,6 +3921,7 @@ pub fn close_page_definition() -> ToolDefinition {
             "properties": {
                 "session_id": {
                     "type": "string",
+                    "minLength": 1,
                     "description": "Session ID to close"
                 }
             },
@@ -6095,6 +6096,9 @@ pub async fn handle_close_page(arguments: &Value, sessions: &Arc<SessionManager>
             return error_response(&format!("Invalid arguments: {}", e));
         }
     };
+    if params.session_id.is_empty() {
+        return error_response("Invalid arguments: session_id must not be empty");
+    }
 
     info!(session_id = %params.session_id, "close_page");
 
@@ -17385,6 +17389,23 @@ mod tests {
         let empty = handle_trace_status(&json!({"session_id": ""}), &sessions).await;
         assert_eq!(empty["isError"], true);
         assert!(empty["content"][0]["text"]
+            .as_str()
+            .unwrap()
+            .contains("must not be empty"));
+    }
+
+    #[tokio::test]
+    async fn close_page_rejects_empty_session_id() {
+        assert_eq!(
+            close_page_definition().input_schema["properties"]["session_id"]["minLength"],
+            1
+        );
+
+        let sessions = Arc::new(SessionManager::new());
+        let result = handle_close_page(&json!({"session_id": ""}), &sessions).await;
+
+        assert_eq!(result["isError"], true);
+        assert!(result["content"][0]["text"]
             .as_str()
             .unwrap()
             .contains("must not be empty"));
