@@ -18,7 +18,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// - Heading levels: `h1` .. `h6` match headings whose compiled `attrs.level`
 ///   is that integer. Missing or out-of-range levels are not invented.
 /// - Action surfaces: `interactive`, bare action names (`click`, `type`,
-///   `clear`, `select`, `toggle`, `submit`), or `action:<verb>` forms
+///   `clear`, `select`, `toggle`, `submit`, `reset`), or `action:<verb>` forms
 /// - Id: `#some-id` - region id first, then SOM element `id` or `html_id`
 ///
 /// Unrecognised selectors return the full SOM unchanged (with a warning to stderr).
@@ -82,7 +82,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     let action = selector_lower.strip_prefix("action:").or_else(|| {
         matches!(
             selector_lower.as_str(),
-            "click" | "type" | "clear" | "select" | "toggle" | "submit"
+            "click" | "type" | "clear" | "select" | "toggle" | "submit" | "reset"
         )
         .then_some(selector_lower.as_str())
     });
@@ -105,7 +105,14 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                             button_type.eq_ignore_ascii_case("submit")
                                 || button_type.eq_ignore_ascii_case("image")
                         });
-                advertises_action || is_submit_control
+                let is_reset_control = action == "reset"
+                    && element
+                        .attrs
+                        .as_ref()
+                        .and_then(|attrs| attrs.get("button_type"))
+                        .and_then(serde_json::Value::as_str)
+                        .is_some_and(|button_type| button_type.eq_ignore_ascii_case("reset"));
+                advertises_action || is_submit_control || is_reset_control
             });
         }
     }
@@ -640,6 +647,21 @@ mod tests {
         assert_eq!(
             filtered.regions[0].elements[0].html_id.as_deref(),
             Some("save")
+        );
+    }
+
+    #[test]
+    fn test_selector_reset_action_matches_compiled_reset_controls() {
+        let mut som = make_test_som();
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({"button_type": "reset"}));
+
+        let filtered = apply_selector(&som, "reset");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(
+            filtered.regions[0].elements[0].attrs.as_ref().unwrap()["button_type"],
+            "reset"
         );
     }
 
