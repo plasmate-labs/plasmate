@@ -4950,6 +4950,7 @@ struct NavigateToParams {
 
 /// Parameters for type_text tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct TypeTextParams {
     session_id: String,
     element_id: String,
@@ -6536,6 +6537,16 @@ mod tests {
         }))
         .expect_err("extract_text should reject misspelled fields");
         assert!(text_error.to_string().contains("unknown field"));
+
+        assert!(serde_json::from_value::<TypeTextParams>(json!({
+            "session_id": "sess-1",
+            "element_id": "e1",
+            "text": "plasmate",
+            "apend": true
+        }))
+        .expect_err("type_text should reject misspelled fields")
+        .to_string()
+        .contains("unknown field"));
 
         assert_eq!(
             extract_links_definition().input_schema["additionalProperties"],
