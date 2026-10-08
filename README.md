@@ -219,10 +219,10 @@ depending on a hard-coded count; the authoritative registration is
 
 **Tip:** use `selector="main"` to strip nav/footer, `selector="interactive"`
 to return only actionable elements, `selector="h1"` through `selector="h6"`
-to isolate a heading level, or an action selector such as
-`selector="action:click"`, `selector="action:type"`, `selector="action:clear"`,
-`selector="action:select"`, `selector="action:toggle"`, or
-`selector="action:submit"` to build a compact
+to isolate a heading level, or an action selector such as `selector="click"`
+(the equivalent `selector="action:click"` also works), `selector="type"`,
+`selector="clear"`, `selector="select"`, `selector="toggle"`, or
+`selector="submit"` to build a compact
 action menu before the LLM sees the content.
 Use `cache_status` after repeated fetches to inspect local MCP SOM cache hits,
 misses, selector entries, effective-HTML entries, and avoided HTML work.

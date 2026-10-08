@@ -120,8 +120,7 @@ enum Commands {
         /// Accepts semantic region roles (main, nav, navigation, aside, header,
         /// footer, form, dialog, content), heading levels (h1 through h6),
         /// element roles (button, link, text_input, select, etc.), action selectors (interactive,
-        /// action:click, action:type, action:clear, action:select,
-        /// action:toggle, action:submit), or an HTML id selector
+        /// click/type/clear/select/toggle/submit, or action:<verb>), or an HTML id selector
         /// (#my-id).
         /// When a role is given, only regions of that role are included.
         /// When an element/action selector or id is given, only matching
@@ -133,12 +132,12 @@ enum Commands {
         ///   --selector nav             (navigation links only)
         ///   --selector h1              (level-one headings only)
         ///   --selector interactive     (only actionable elements)
-        ///   --selector action:click    (only click targets)
-        ///   --selector action:type     (only typing targets)
-        ///   --selector action:clear    (only clearable inputs)
-        ///   --selector action:select   (only selection targets)
-        ///   --selector action:toggle   (only toggle targets)
-        ///   --selector action:submit  (only form submit controls)
+        ///   --selector click           (only click targets; action:click also works)
+        ///   --selector type            (only typing targets; action:type also works)
+        ///   --selector clear           (only clearable inputs; action:clear also works)
+        ///   --selector select          (only selection targets; action:select also works)
+        ///   --selector toggle          (only toggle targets; action:toggle also works)
+        ///   --selector submit          (only form submit controls; action:submit also works)
         ///   --selector "#toc"          (elements with id="toc")
         ///   --selector main --format text   (main content as plain text)
         #[arg(long)]
