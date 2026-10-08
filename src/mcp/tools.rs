@@ -1350,7 +1350,7 @@ pub fn trace_status_definition() -> ToolDefinition {
         input_schema: json!({
             "type": "object",
             "properties": {
-                "session_id": {"type": "string", "maxLength": 64, "description": "Session ID from open_page"}
+                "session_id": {"type": "string", "minLength": 1, "maxLength": 64, "description": "Session ID from open_page"}
             },
             "required": ["session_id"],
             "additionalProperties": false
@@ -1365,7 +1365,7 @@ pub fn trace_export_definition() -> ToolDefinition {
         input_schema: json!({
             "type": "object",
             "properties": {
-                "session_id": {"type": "string", "maxLength": 64, "description": "Owning browser session ID"}
+                "session_id": {"type": "string", "minLength": 1, "maxLength": 64, "description": "Owning browser session ID"}
             },
             "required": ["session_id"],
             "additionalProperties": false
@@ -1380,7 +1380,7 @@ pub fn trace_clear_definition() -> ToolDefinition {
         input_schema: json!({
             "type": "object",
             "properties": {
-                "session_id": {"type": "string", "maxLength": 64, "description": "Owning browser session ID"}
+                "session_id": {"type": "string", "minLength": 1, "maxLength": 64, "description": "Owning browser session ID"}
             },
             "required": ["session_id"],
             "additionalProperties": false
@@ -1395,8 +1395,8 @@ pub fn replay_validate_definition() -> ToolDefinition {
         input_schema: json!({
             "type": "object",
             "properties": {
-                "session_id": {"type": "string", "maxLength": 64, "description": "Current owning browser session ID"},
-                "trace_id": {"type": "string", "maxLength": 64, "description": "Trace ID returned by trace_status or trace_export"},
+                "session_id": {"type": "string", "minLength": 1, "maxLength": 64, "description": "Current owning browser session ID"},
+                "trace_id": {"type": "string", "minLength": 1, "maxLength": 64, "description": "Trace ID returned by trace_status or trace_export"},
                 "sequence": {"type": "integer", "minimum": 1, "description": "Retained event sequence to validate"},
                 "confirmed": {"type": "boolean", "description": "Explicit approval of the mutating action; default false. Validation remains side-effect free."}
             },
@@ -1411,8 +1411,8 @@ pub async fn handle_trace_status(arguments: &Value, sessions: &Arc<SessionManage
         Ok(params) => params,
         Err(error) => return error_response(&format!("Invalid arguments: {error}")),
     };
-    if params.session_id.len() > MAX_TRACE_HANDLE_BYTES {
-        return error_response("Invalid arguments: session_id exceeds 64 bytes");
+    if let Some(error) = validate_trace_handle(&params.session_id, "session_id") {
+        return error_response(&error);
     }
     match sessions.trace_status(&params.session_id).await {
         Some(status) => tool_response(serde_json::to_string(&status).unwrap_or_default()),
@@ -1425,8 +1425,8 @@ pub async fn handle_trace_export(arguments: &Value, sessions: &Arc<SessionManage
         Ok(params) => params,
         Err(error) => return error_response(&format!("Invalid arguments: {error}")),
     };
-    if params.session_id.len() > MAX_TRACE_HANDLE_BYTES {
-        return error_response("Invalid arguments: session_id exceeds 64 bytes");
+    if let Some(error) = validate_trace_handle(&params.session_id, "session_id") {
+        return error_response(&error);
     }
     match sessions.trace_export(&params.session_id).await {
         Some(export) => tool_response(serde_json::to_string(&export).unwrap_or_default()),
@@ -1439,8 +1439,8 @@ pub async fn handle_trace_clear(arguments: &Value, sessions: &Arc<SessionManager
         Ok(params) => params,
         Err(error) => return error_response(&format!("Invalid arguments: {error}")),
     };
-    if params.session_id.len() > MAX_TRACE_HANDLE_BYTES {
-        return error_response("Invalid arguments: session_id exceeds 64 bytes");
+    if let Some(error) = validate_trace_handle(&params.session_id, "session_id") {
+        return error_response(&error);
     }
     match sessions.clear_trace(&params.session_id).await {
         Some((cleared_events, status)) => {
@@ -1455,15 +1455,26 @@ pub async fn handle_replay_validate(arguments: &Value, sessions: &Arc<SessionMan
         Ok(request) => request,
         Err(error) => return error_response(&format!("Invalid arguments: {error}")),
     };
-    if request.session_id.len() > MAX_TRACE_HANDLE_BYTES
-        || request.trace_id.len() > MAX_TRACE_HANDLE_BYTES
-    {
-        return error_response("Invalid arguments: session_id or trace_id exceeds 64 bytes");
+    if let Some(error) = validate_trace_handle(&request.session_id, "session_id") {
+        return error_response(&error);
+    }
+    if let Some(error) = validate_trace_handle(&request.trace_id, "trace_id") {
+        return error_response(&error);
     }
     match sessions.validate_trace_replay(&request).await {
         Some(plan) => tool_response(plan.to_string()),
         None => error_response(&format!("Session not found: {}", request.session_id)),
     }
+}
+
+fn validate_trace_handle(value: &str, name: &str) -> Option<String> {
+    if value.is_empty() {
+        return Some(format!("Invalid arguments: {name} must not be empty"));
+    }
+    if value.len() > MAX_TRACE_HANDLE_BYTES {
+        return Some(format!("Invalid arguments: {name} exceeds 64 bytes"));
+    }
+    None
 }
 
 /// Handle the extract_links tool call.
@@ -17343,7 +17354,15 @@ mod tests {
             replay_validate_definition(),
         ] {
             assert_eq!(definition.input_schema["additionalProperties"], false);
+            assert_eq!(
+                definition.input_schema["properties"]["session_id"]["minLength"],
+                1
+            );
         }
+        assert_eq!(
+            replay_validate_definition().input_schema["properties"]["trace_id"]["minLength"],
+            1
+        );
     }
 
     #[tokio::test]
@@ -17362,6 +17381,13 @@ mod tests {
         )
         .await;
         assert_eq!(invalid["isError"], true);
+
+        let empty = handle_trace_status(&json!({"session_id": ""}), &sessions).await;
+        assert_eq!(empty["isError"], true);
+        assert!(empty["content"][0]["text"]
+            .as_str()
+            .unwrap()
+            .contains("must not be empty"));
     }
 
     #[test]
