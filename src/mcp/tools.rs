@@ -4961,6 +4961,7 @@ struct TypeTextParams {
 
 /// Parameters for select_option tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct SelectOptionParams {
     session_id: String,
     element_id: String,
@@ -5076,7 +5077,8 @@ pub fn select_option_definition() -> ToolDefinition {
                     "description": "Option value or visible text to select"
                 }
             },
-            "required": ["session_id", "element_id", "value"]
+            "required": ["session_id", "element_id", "value"],
+            "additionalProperties": false
         }),
     }
 }
@@ -6552,6 +6554,19 @@ mod tests {
             type_text_definition().input_schema["additionalProperties"],
             false
         );
+
+        assert_eq!(
+            select_option_definition().input_schema["additionalProperties"],
+            false
+        );
+        let select_error = serde_json::from_value::<SelectOptionParams>(json!({
+            "session_id": "sess-1",
+            "element_id": "e1",
+            "value": "blue",
+            "vale": "blue"
+        }))
+        .expect_err("select_option should reject misspelled fields");
+        assert!(select_error.to_string().contains("unknown field"));
 
         assert_eq!(
             extract_links_definition().input_schema["additionalProperties"],
