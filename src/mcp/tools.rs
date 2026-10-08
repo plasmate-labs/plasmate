@@ -4942,6 +4942,7 @@ pub async fn handle_click(
 
 /// Parameters for navigate_to tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct NavigateToParams {
     session_id: String,
     url: String,
@@ -4949,6 +4950,7 @@ struct NavigateToParams {
 
 /// Parameters for type_text tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct TypeTextParams {
     session_id: String,
     element_id: String,
@@ -4959,6 +4961,7 @@ struct TypeTextParams {
 
 /// Parameters for select_option tool.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct SelectOptionParams {
     session_id: String,
     element_id: String,
@@ -5016,7 +5019,8 @@ pub fn navigate_to_definition() -> ToolDefinition {
                     "description": "URL to navigate to"
                 }
             },
-            "required": ["session_id", "url"]
+            "required": ["session_id", "url"],
+            "additionalProperties": false
         }),
     }
 }
@@ -5046,7 +5050,8 @@ pub fn type_text_definition() -> ToolDefinition {
                     "description": "If true, append to existing value instead of replacing. Default: false."
                 }
             },
-            "required": ["session_id", "element_id", "text"]
+            "required": ["session_id", "element_id", "text"],
+            "additionalProperties": false
         }),
     }
 }
@@ -5072,7 +5077,8 @@ pub fn select_option_definition() -> ToolDefinition {
                     "description": "Option value or visible text to select"
                 }
             },
-            "required": ["session_id", "element_id", "value"]
+            "required": ["session_id", "element_id", "value"],
+            "additionalProperties": false
         }),
     }
 }
@@ -6534,6 +6540,33 @@ mod tests {
         }))
         .expect_err("extract_text should reject misspelled fields");
         assert!(text_error.to_string().contains("unknown field"));
+
+        assert!(serde_json::from_value::<TypeTextParams>(json!({
+            "session_id": "sess-1",
+            "element_id": "e1",
+            "text": "plasmate",
+            "apend": true
+        }))
+        .expect_err("type_text should reject misspelled fields")
+        .to_string()
+        .contains("unknown field"));
+        assert_eq!(
+            type_text_definition().input_schema["additionalProperties"],
+            false
+        );
+
+        assert_eq!(
+            select_option_definition().input_schema["additionalProperties"],
+            false
+        );
+        let select_error = serde_json::from_value::<SelectOptionParams>(json!({
+            "session_id": "sess-1",
+            "element_id": "e1",
+            "value": "blue",
+            "vale": "blue"
+        }))
+        .expect_err("select_option should reject misspelled fields");
+        assert!(select_error.to_string().contains("unknown field"));
 
         assert_eq!(
             extract_links_definition().input_schema["additionalProperties"],
@@ -9800,6 +9833,19 @@ mod tests {
         assert_eq!(definition.name, "ard_discover");
         assert_eq!(definition.input_schema["additionalProperties"], false);
         assert!(serde_json::from_value::<ArdDiscoverParams>(json!({
+            "url": "https://example.com/",
+            "unexpected": true
+        }))
+        .is_err());
+    }
+
+    #[test]
+    fn navigate_to_schema_and_runtime_reject_unknown_arguments() {
+        let definition = navigate_to_definition();
+        assert_eq!(definition.name, "navigate_to");
+        assert_eq!(definition.input_schema["additionalProperties"], false);
+        assert!(serde_json::from_value::<NavigateToParams>(json!({
+            "session_id": "sess-1",
             "url": "https://example.com/",
             "unexpected": true
         }))
