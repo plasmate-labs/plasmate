@@ -3879,6 +3879,7 @@ pub fn evaluate_definition() -> ToolDefinition {
                 },
                 "expression": {
                     "type": "string",
+                    "minLength": 1,
                     "description": "JavaScript expression to evaluate. Return value is serialized to JSON."
                 }
             },
@@ -6496,6 +6497,13 @@ mod tests {
                 definition.name
             );
         }
+    }
+
+    #[test]
+    fn evaluate_schema_rejects_empty_expressions_before_dispatch() {
+        let schema = evaluate_definition().input_schema;
+
+        assert_eq!(schema["properties"]["expression"]["minLength"], 1);
     }
 
     #[test]
