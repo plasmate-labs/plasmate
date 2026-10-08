@@ -132,6 +132,10 @@ async fn load_som_for_mcp(
     javascript: bool,
     selector: Option<&str>,
 ) -> Result<(Som, bool), String> {
+    if url.trim().is_empty() {
+        return Err("Invalid arguments: url must not be empty".to_string());
+    }
+
     let fetch_result = fetch::fetch_url(client, url, DEFAULT_TIMEOUT_MS)
         .await
         .map_err(|e| format!("Failed to fetch {}: {}", url, e))?;
@@ -6533,6 +6537,26 @@ mod tests {
                 definition.input_schema["properties"]["url"]["minLength"], 1,
                 "{} must reject empty URLs",
                 definition.name
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn stateless_page_tools_reject_whitespace_urls_before_network_access() {
+        let client = reqwest::Client::new();
+        let cache = Arc::new(SomCache::new(CacheConfig::default()));
+
+        let results = [
+            handle_fetch_page(&json!({"url": " \t\n"}), &client, &cache).await,
+            handle_extract_text(&json!({"url": " \t\n"}), &client, &cache).await,
+            handle_extract_links(&json!({"url": " \t\n"}), &client, &cache).await,
+        ];
+
+        for result in results {
+            assert_eq!(result["isError"], true);
+            assert_eq!(
+                result["content"][0]["text"],
+                "Invalid arguments: url must not be empty"
             );
         }
     }
