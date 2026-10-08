@@ -17,8 +17,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `group`, `separator`, `details`, `iframe`
 /// - Heading levels: `h1` .. `h6` match headings whose compiled `attrs.level`
 ///   is that integer. Missing or out-of-range levels are not invented.
-/// - Action surfaces: `interactive` or `action:click` / `action:type` /
-///   `action:clear` / `action:select` / `action:toggle` / `action:submit`
+/// - Action surfaces: `interactive`, bare action names (`click`, `type`,
+///   `clear`, `select`, `toggle`, `submit`), or `action:<verb>` forms
 /// - Id: `#some-id` - region id first, then SOM element `id` or `html_id`
 ///
 /// Unrecognised selectors return the full SOM unchanged (with a warning to stderr).
@@ -79,7 +79,14 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
 
     // Match elements that expose a specific action in their compact action list.
     let selector_lower = selector.to_ascii_lowercase();
-    if let Some(action) = selector_lower.strip_prefix("action:") {
+    let action = selector_lower.strip_prefix("action:").or_else(|| {
+        matches!(
+            selector_lower.as_str(),
+            "click" | "type" | "clear" | "select" | "toggle" | "submit"
+        )
+        .then_some(selector_lower.as_str())
+    });
+    if let Some(action) = action {
         let action = action.trim().to_ascii_lowercase();
         if !action.is_empty() {
             return filter_som_elements(som, selector, |element| {
@@ -603,6 +610,22 @@ mod tests {
                 .actions
                 .as_ref()
                 .is_some_and(|actions| actions.contains(&"click".to_string()))));
+    }
+
+    #[test]
+    fn test_selector_bare_action_alias() {
+        let som = make_test_som();
+        let filtered = apply_selector(&som, " click ");
+
+        assert_eq!(filtered.regions.len(), 2);
+        assert!(filtered
+            .regions
+            .iter()
+            .flat_map(|region| &region.elements)
+            .all(|element| element
+                .actions
+                .as_ref()
+                .is_some_and(|actions| actions.iter().any(|action| action == "click"))));
     }
 
     #[test]
