@@ -18,7 +18,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// - Heading levels: `h1` .. `h6` match headings whose compiled `attrs.level`
 ///   is that integer. Missing or out-of-range levels are not invented.
 /// - Action surfaces: `interactive`, bare action names (`click`, `type`,
-///   `clear`, `select`, `toggle`, `submit`, `reset`), or `action:<verb>` forms
+///   `type_text`, `clear`, `select`, `select_option`, `toggle`, `submit`,
+///   `reset`), or `action:<verb>` forms. The `type_text` and `select_option`
+///   aliases mirror the corresponding MCP interaction tool names.
 /// - Id: `#some-id` - region id first, then SOM element `id` or `html_id`
 ///
 /// Unrecognised selectors return the full SOM unchanged (with a warning to stderr).
@@ -82,13 +84,30 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     let action = selector_lower.strip_prefix("action:").or_else(|| {
         matches!(
             selector_lower.as_str(),
-            "click" | "type" | "clear" | "select" | "toggle" | "submit" | "reset"
+            "click"
+                | "type"
+                | "type_text"
+                | "clear"
+                | "select"
+                | "select_option"
+                | "toggle"
+                | "submit"
+                | "reset"
         )
-        .then_some(selector_lower.as_str())
+        .then_some(match selector_lower.as_str() {
+            "type_text" => "type",
+            "select_option" => "select",
+            action => action,
+        })
     });
     if let Some(action) = action {
         let action = action.trim().to_ascii_lowercase();
         if !action.is_empty() {
+            let action = match action.as_str() {
+                "type_text" => "type",
+                "select_option" => "select",
+                action => action,
+            };
             return filter_som_elements(som, selector, |element| {
                 let advertises_action = element
                     .actions
@@ -633,6 +652,52 @@ mod tests {
                 .actions
                 .as_ref()
                 .is_some_and(|actions| actions.iter().any(|action| action == "click"))));
+    }
+
+    #[test]
+    fn test_selector_mcp_action_aliases() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-input".to_string(),
+            role: ElementRole::TextInput,
+            html_id: None,
+            text: None,
+            label: Some("Query".to_string()),
+            actions: Some(vec!["type".to_string()]),
+            attrs: None,
+            children: None,
+            shadow: None,
+            hints: None,
+        });
+        som.regions[1].elements.push(Element {
+            id: "e-select".to_string(),
+            role: ElementRole::Select,
+            html_id: None,
+            text: None,
+            label: Some("Sort".to_string()),
+            actions: Some(vec!["select".to_string()]),
+            attrs: None,
+            children: None,
+            shadow: None,
+            hints: None,
+        });
+
+        assert_eq!(
+            apply_selector(&som, "type_text").regions[0].elements[0].id,
+            "e-input"
+        );
+        assert_eq!(
+            apply_selector(&som, "action:type_text").regions[0].elements[0].id,
+            "e-input"
+        );
+        assert_eq!(
+            apply_selector(&som, "select_option").regions[0].elements[0].id,
+            "e-select"
+        );
+        assert_eq!(
+            apply_selector(&som, "action:select_option").regions[0].elements[0].id,
+            "e-select"
+        );
     }
 
     #[test]

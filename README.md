@@ -223,7 +223,10 @@ to isolate a heading level, or an action selector such as `selector="click"`
 (the equivalent `selector="action:click"` also works), `selector="type"`,
 `selector="clear"`, `selector="select"`, `selector="toggle"`, or
 `selector="submit"` to build a compact
-action menu before the LLM sees the content.
+action menu before the LLM sees the content. The MCP tool-name aliases
+`selector="type_text"` and `selector="select_option"` (including their
+`action:type_text` and `action:select_option` forms) are also accepted for
+typing and selection targets.
 Use `cache_status` after repeated fetches to inspect local MCP SOM cache hits,
 misses, selector entries, effective-HTML entries, and avoided HTML work.
 Use `session_status` before long interactive runs to inspect active browser

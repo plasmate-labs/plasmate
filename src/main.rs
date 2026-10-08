@@ -120,7 +120,7 @@ enum Commands {
         /// Accepts semantic region roles (main, nav, navigation, aside, header,
         /// footer, form, dialog, content), heading levels (h1 through h6),
         /// element roles (button, link, text_input, select, etc.), action selectors (interactive,
-        /// click/type/clear/select/toggle/submit/reset, or action:<verb>), or an HTML id selector
+        /// click/type/type_text/clear/select/select_option/toggle/submit/reset, or action:<verb>), or an HTML id selector
         /// (#my-id).
         /// When a role is given, only regions of that role are included.
         /// When an element/action selector or id is given, only matching
@@ -134,8 +134,10 @@ enum Commands {
         ///   --selector interactive     (only actionable elements)
         ///   --selector click           (only click targets; action:click also works)
         ///   --selector type            (only typing targets; action:type also works)
+        ///   --selector type_text       (MCP alias for typing targets)
         ///   --selector clear           (only clearable inputs; action:clear also works)
         ///   --selector select          (only selection targets; action:select also works)
+        ///   --selector select_option   (MCP alias for selection targets)
         ///   --selector toggle          (only toggle targets; action:toggle also works)
         ///   --selector submit          (only form submit controls; action:submit also works)
         ///   --selector reset           (only form reset controls; action:reset also works)
