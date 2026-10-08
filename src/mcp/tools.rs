@@ -6458,6 +6458,47 @@ mod tests {
     }
 
     #[test]
+    fn claude_desktop_setup_lists_every_registered_mcp_tool() {
+        let docs = include_str!("../../docs/claude-desktop-config.md");
+        let definitions = [
+            fetch_page_definition(),
+            extract_text_definition(),
+            extract_links_definition(),
+            ard_discover_definition(),
+            crawl_policy_definition(),
+            inspect_page_definition(),
+            cache_status_definition(),
+            session_status_definition(),
+            trace_status_definition(),
+            trace_export_definition(),
+            trace_clear_definition(),
+            replay_validate_definition(),
+            screenshot_page_definition(),
+            open_page_definition(),
+            evaluate_definition(),
+            click_definition(),
+            close_page_definition(),
+            navigate_to_definition(),
+            type_text_definition(),
+            select_option_definition(),
+            scroll_definition(),
+            toggle_definition(),
+            clear_definition(),
+            get_cookies_definition(),
+            set_cookies_definition(),
+            clear_cookies_definition(),
+        ];
+
+        for definition in definitions {
+            assert!(
+                docs.contains(&format!("| `{}` |", definition.name)),
+                "Claude Desktop setup docs omit registered tool {}",
+                definition.name
+            );
+        }
+    }
+
+    #[test]
     fn screenshot_page_times_out_to_som_fallback() {
         let som = test_som();
         let timeout =
