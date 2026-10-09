@@ -464,7 +464,7 @@ pub fn extract_text_definition() -> ToolDefinition {
                 },
                 "max_chars": {
                     "type": "integer",
-                    "description": "Maximum characters to return, including a trailing ellipsis when truncated. Default: no limit."
+                    "description": "Maximum characters to return. Longer text is truncated at a word boundary and gets a trailing ellipsis when at least 3 characters are available; smaller limits return a UTF-8-safe prefix. Default: no limit."
                 },
                 "selector": {
                     "type": "string",
@@ -17030,6 +17030,18 @@ mod tests {
         let mut exact = "Hello".to_string();
         truncate_text_to_chars(&mut exact, 5);
         assert_eq!(exact, "Hello");
+    }
+
+    #[test]
+    fn extract_text_schema_explains_tiny_max_chars_behavior() {
+        let definition = extract_text_definition();
+        let description = definition.input_schema["properties"]["max_chars"]
+            ["description"]
+            .as_str()
+            .expect("max_chars schema should have a description");
+
+        assert!(description.contains("when at least 3 characters are available"));
+        assert!(description.contains("UTF-8-safe prefix"));
     }
 
     #[test]
