@@ -432,6 +432,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
                 },
                 "budget": {
                     "type": "integer",
+                    "minimum": 0,
                     "description": "Maximum output tokens. SOM is reduced to fit while preserving structured regions when possible. For the smallest useful response, combine this with selector='main' or another targeted selector. Default: no limit."
                 },
                 "javascript": {
@@ -6674,6 +6675,10 @@ mod tests {
         let budget_description = definition.input_schema["properties"]["budget"]["description"]
             .as_str()
             .expect("budget schema should have a description");
+        assert_eq!(
+            definition.input_schema["properties"]["budget"]["minimum"],
+            0
+        );
         assert!(budget_description.contains("selector='main'"));
         assert!(budget_description.contains("preserving structured regions"));
     }
