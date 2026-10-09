@@ -222,11 +222,14 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         .as_str()
     {
         "link" => Some(ElementRole::Link),
-        "button" => Some(ElementRole::Button),
+        // These ARIA widget roles compile to the SOM's button role, so expose
+        // the same selector aliases instead of making callers know the
+        // normalized representation.
+        "button" | "menuitem" | "option" | "tab" => Some(ElementRole::Button),
         "text_input" | "textbox" | "searchbox" | "input" => Some(ElementRole::TextInput),
         "textarea" => Some(ElementRole::Textarea),
         "select" | "combobox" | "listbox" => Some(ElementRole::Select),
-        "checkbox" => Some(ElementRole::Checkbox),
+        "checkbox" | "switch" => Some(ElementRole::Checkbox),
         "radio" => Some(ElementRole::Radio),
         "heading" => Some(ElementRole::Heading),
         "image" | "img" => Some(ElementRole::Image),
@@ -517,12 +520,25 @@ mod tests {
     fn test_selector_role_aliases_for_element_roles() {
         let som = make_test_som();
 
-        for selector in ["role=button", "ROLE:BUTTON", "role = button", "role : button"] {
+        for selector in [
+            "role=button",
+            "ROLE:BUTTON",
+            "role = button",
+            "role : button",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1);
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Button);
         }
+    }
+
+    #[test]
+    fn test_selector_aria_widget_role_aliases() {
+        for selector in ["menuitem", "option", "tab"] {
+            assert_eq!(parse_element_role(selector), Some(ElementRole::Button));
+        }
+        assert_eq!(parse_element_role("switch"), Some(ElementRole::Checkbox));
     }
 
     #[test]
