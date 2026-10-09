@@ -18,6 +18,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `radio` / `menuitemradio`, `heading`, `image`, `list`, `table`,
 ///   `paragraph`, `section`,
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
+///   and explicit list aliases `unordered_list`, `ordered_list`, and
+///   `definition_list`,
 ///   `group`, `separator`, `details`, `iframe`
 /// - Heading levels: `h1` .. `h6` match headings whose compiled `attrs.level`
 ///   is that integer. Missing or out-of-range levels are not invented.
@@ -236,7 +238,14 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         "radio" | "menuitemradio" => Some(ElementRole::Radio),
         "heading" => Some(ElementRole::Heading),
         "image" | "img" => Some(ElementRole::Image),
-        "list" | "ul" | "ol" | "dl" | "menu" => Some(ElementRole::List),
+        "list"
+        | "ul"
+        | "ol"
+        | "dl"
+        | "menu"
+        | "unordered_list"
+        | "ordered_list"
+        | "definition_list" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
         "paragraph" | "p" => Some(ElementRole::Paragraph),
         "section" => Some(ElementRole::Section),
@@ -620,6 +629,9 @@ mod tests {
             ("ol", ElementRole::List),
             ("dl", ElementRole::List),
             ("menu", ElementRole::List),
+            ("unordered_list", ElementRole::List),
+            ("ordered_list", ElementRole::List),
+            ("definition_list", ElementRole::List),
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
