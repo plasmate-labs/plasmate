@@ -17,7 +17,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `input`, `textarea`, `select` / `combobox` / `listbox`, `checkbox`,
 ///   `radio` / `menuitemradio`, `heading`, `image`, `list`, `table`,
 ///   `paragraph`, `section`,
-///   plus common HTML tag aliases `a`, `p`, `ul`, and `ol`,
+///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   `group`, `separator`, `details`, `iframe`
 /// - Heading levels: `h1` .. `h6` match headings whose compiled `attrs.level`
 ///   is that integer. Missing or out-of-range levels are not invented.
@@ -236,7 +236,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         "radio" | "menuitemradio" => Some(ElementRole::Radio),
         "heading" => Some(ElementRole::Heading),
         "image" | "img" => Some(ElementRole::Image),
-        "list" | "ul" | "ol" => Some(ElementRole::List),
+        "list" | "ul" | "ol" | "dl" | "menu" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
         "paragraph" | "p" => Some(ElementRole::Paragraph),
         "section" => Some(ElementRole::Section),
@@ -600,8 +600,27 @@ mod tests {
         let mut som = make_test_som();
         som.regions[0].elements[0].role = ElementRole::Link;
         som.regions[1].elements[0].role = ElementRole::Paragraph;
+        som.regions[1].elements.push(Element {
+            id: "e-list".to_string(),
+            role: ElementRole::List,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        });
 
-        for (selector, expected_role) in [("a", ElementRole::Link), ("p", ElementRole::Paragraph)] {
+        for (selector, expected_role) in [
+            ("a", ElementRole::Link),
+            ("p", ElementRole::Paragraph),
+            ("ul", ElementRole::List),
+            ("ol", ElementRole::List),
+            ("dl", ElementRole::List),
+            ("menu", ElementRole::List),
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert!(filtered.regions[0]
