@@ -284,9 +284,10 @@ pub fn refresh_meta(mut som: Som) -> Som {
     som.meta.interactive_count = interactive_count;
 
     // `som_bytes` describes the serialized snapshot, so it must be refreshed
-    // after narrowing the regions. Iterate because the metadata value itself
-    // is part of the serialized payload and its digit count can affect length.
-    for _ in 0..3 {
+    // after narrowing the regions. Iterate until stable because the metadata
+    // value itself is part of the serialized payload and its digit count can
+    // affect length.
+    for _ in 0..8 {
         let serialized_len = serde_json::to_string(&som)
             .map(|json| json.len())
             .unwrap_or(0);
