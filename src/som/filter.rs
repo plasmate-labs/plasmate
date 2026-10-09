@@ -10,7 +10,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///
 /// Supported selectors:
 /// - Region roles: `main`, `nav`/`navigation`, `aside`, `header`, `footer`,
-///   `form`, `dialog`, `content`/`article`
+///   `form`, `dialog`, `content`/`article` (or `role=<region>`)
 /// - Element roles: `link`, `button`, `text_input` / `textbox` / `searchbox` /
 ///   `input`, `textarea`, `select` / `combobox` / `listbox`, `checkbox`,
 ///   `radio`, `heading`, `image`, `list`, `table`, `paragraph`, `section`,
@@ -28,6 +28,12 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// warning) so callers always get usable output.
 pub fn apply_selector(som: &Som, selector: &str) -> Som {
     let selector = selector.trim();
+    let selector_lower = selector.to_ascii_lowercase();
+    let selector = if selector_lower.starts_with("role=") || selector_lower.starts_with("role:") {
+        selector[5..].trim()
+    } else {
+        selector
+    };
 
     // Try to match a region role
     let role_opt: Option<RegionRole> = match selector.to_lowercase().as_str() {
@@ -489,6 +495,17 @@ mod tests {
         let filtered = apply_selector(&som, "main");
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].role, RegionRole::Main);
+    }
+
+    #[test]
+    fn test_selector_role_aliases() {
+        let som = make_test_som();
+
+        for selector in ["role=main", "ROLE:MAIN"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].role, RegionRole::Main);
+        }
     }
 
     #[test]
