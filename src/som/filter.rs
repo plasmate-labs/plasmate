@@ -31,6 +31,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// warning) so callers always get usable output.
 pub fn apply_selector(som: &Som, selector: &str) -> Som {
     let selector = selector.trim();
+    let original_selector = selector;
     let selector_lower = selector.to_ascii_lowercase();
     let selector = selector_lower
         .strip_prefix("role")
@@ -151,7 +152,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
 
     // Try id selector: #my-id. Prefer documented region ids, then SOM
     // element ids or HTML ids. If neither matches, return the full SOM.
-    if let Some(id) = selector.strip_prefix('#') {
+    if let Some(id) = original_selector.strip_prefix('#') {
         let region_matches: Vec<_> = som.regions.iter().filter(|r| r.id == id).cloned().collect();
         if !region_matches.is_empty() {
             let mut result = som.clone();
@@ -544,6 +545,18 @@ mod tests {
             filtered.regions[0].elements[0].html_id.as_deref(),
             Some("intro")
         );
+    }
+
+    #[test]
+    fn test_selector_html_id_preserves_case() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].html_id = Some("IntroPanel".to_string());
+
+        let filtered = apply_selector(&som, "#IntroPanel");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].html_id.as_deref(), Some("IntroPanel"));
+        assert_eq!(apply_selector(&som, "#intropanel").regions.len(), 2);
     }
 
     #[test]
