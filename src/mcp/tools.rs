@@ -464,6 +464,7 @@ pub fn extract_text_definition() -> ToolDefinition {
                 },
                 "max_chars": {
                     "type": "integer",
+                    "minimum": 0,
                     "description": "Maximum characters to return. Longer text is truncated at a word boundary and gets a trailing ellipsis when at least 3 characters are available; smaller limits return a UTF-8-safe prefix. Default: no limit."
                 },
                 "selector": {
@@ -17042,6 +17043,10 @@ mod tests {
 
         assert!(description.contains("when at least 3 characters are available"));
         assert!(description.contains("UTF-8-safe prefix"));
+        assert_eq!(
+            definition.input_schema["properties"]["max_chars"]["minimum"],
+            0
+        );
     }
 
     #[test]
