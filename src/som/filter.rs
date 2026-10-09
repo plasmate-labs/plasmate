@@ -10,7 +10,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///
 /// Supported selectors:
 /// - Region roles: `main`, `nav`/`navigation`, `aside`, `header`, `footer`,
-///   `form`, `dialog`, `content`/`article`
+///   `form`, `dialog`, `content`/`article` (or `role=<region>` / `role:<region>`;
+///   optional whitespace around the separator is accepted)
 /// - Element roles: `link`, `button`, `text_input` / `textbox` / `searchbox` /
 ///   `input`, `textarea`, `select` / `combobox` / `listbox`, `checkbox`,
 ///   `radio`, `heading`, `image`, `list`, `table`, `paragraph`, `section`,
@@ -18,9 +19,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// - Heading levels: `h1` .. `h6` match headings whose compiled `attrs.level`
 ///   is that integer. Missing or out-of-range levels are not invented.
 /// - Action surfaces: `interactive`, bare action names (`click`, `type`,
-///   `type_text`, `clear`, `select`, `select_option`, `toggle`, `submit`,
-///   `reset`), or `action:<verb>` forms. The `type_text` and `select_option`
-///   aliases mirror the corresponding MCP interaction tool names.
+///   `type_text`/`type-text`, `clear`, `select`, `select_option`/`select-option`,
+///   `toggle`, `submit`, `reset`), or `action:<verb>` forms. The text and
+///   select aliases mirror the corresponding MCP interaction tool names.
 /// - Id: `#some-id` - region id first, then SOM element `id` or `html_id`
 ///
 /// Unrecognised selectors return the full SOM unchanged (with a warning to stderr).
@@ -28,6 +29,13 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// warning) so callers always get usable output.
 pub fn apply_selector(som: &Som, selector: &str) -> Som {
     let selector = selector.trim();
+    let selector_lower = selector.to_ascii_lowercase();
+    let selector = selector_lower
+        .strip_prefix("role")
+        .and_then(|rest| rest.trim_start().strip_prefix(['=', ':']))
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .unwrap_or(selector);
 
     // Try to match a region role
     let role_opt: Option<RegionRole> = match selector.to_lowercase().as_str() {
@@ -87,16 +95,18 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             "click"
                 | "type"
                 | "type_text"
+                | "type-text"
                 | "clear"
                 | "select"
                 | "select_option"
+                | "select-option"
                 | "toggle"
                 | "submit"
                 | "reset"
         )
         .then_some(match selector_lower.as_str() {
-            "type_text" => "type",
-            "select_option" => "select",
+            "type_text" | "type-text" => "type",
+            "select_option" | "select-option" => "select",
             action => action,
         })
     });
@@ -104,8 +114,8 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         let action = action.trim().to_ascii_lowercase();
         if !action.is_empty() {
             let action = match action.as_str() {
-                "type_text" => "type",
-                "select_option" => "select",
+                "type_text" | "type-text" => "type",
+                "select_option" | "select-option" => "select",
                 action => action,
             };
             return filter_som_elements(som, selector, |element| {
@@ -490,6 +500,17 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_role_aliases() {
+        let som = make_test_som();
+
+        for selector in ["role=main", "ROLE:MAIN", "role = main", "role : main"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].role, RegionRole::Main);
+        }
+    }
+
+    #[test]
     fn test_selector_nav() {
         let som = make_test_som();
         let filtered = apply_selector(&som, "nav");
@@ -691,11 +712,27 @@ mod tests {
             "e-input"
         );
         assert_eq!(
+            apply_selector(&som, "type-text").regions[0].elements[0].id,
+            "e-input"
+        );
+        assert_eq!(
+            apply_selector(&som, "action:type-text").regions[0].elements[0].id,
+            "e-input"
+        );
+        assert_eq!(
             apply_selector(&som, "select_option").regions[0].elements[0].id,
             "e-select"
         );
         assert_eq!(
             apply_selector(&som, "action:select_option").regions[0].elements[0].id,
+            "e-select"
+        );
+        assert_eq!(
+            apply_selector(&som, "select-option").regions[0].elements[0].id,
+            "e-select"
+        );
+        assert_eq!(
+            apply_selector(&som, "action:select-option").regions[0].elements[0].id,
             "e-select"
         );
     }
