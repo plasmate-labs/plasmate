@@ -114,12 +114,12 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         });
     if let Some(action) = action {
         let action = action.trim().to_ascii_lowercase();
+        let action = match action.as_str() {
+            "type_text" | "type-text" => "type".to_string(),
+            "select_option" | "select-option" => "select".to_string(),
+            _ => action,
+        };
         if !action.is_empty() {
-            let action = match action.as_str() {
-                "type_text" | "type-text" => "type",
-                "select_option" | "select-option" => "select",
-                action => action,
-            };
             return filter_som_elements(som, selector, |element| {
                 let advertises_action = element
                     .actions
