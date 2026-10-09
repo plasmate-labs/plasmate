@@ -488,7 +488,17 @@ fn normalized_selector(selector: Option<&str>) -> Option<String> {
     if selector.starts_with('#') {
         Some(selector.to_string())
     } else {
-        Some(selector.to_ascii_lowercase())
+        let selector = selector.to_ascii_lowercase();
+        for prefix in ["action", "role"] {
+            if let Some(rest) = selector.strip_prefix(prefix) {
+                let rest = rest.trim_start();
+                if let Some(separator @ (':' | '=')) = rest.chars().next() {
+                    let value = rest[separator.len_utf8()..].trim();
+                    return Some(format!("{prefix}{separator}{value}"));
+                }
+            }
+        }
+        Some(selector)
     }
 }
 
@@ -623,6 +633,10 @@ mod tests {
             CacheLookup::Hit(entry) => assert_eq!(entry.som_json, b"click".to_vec()),
             _ => panic!("Expected selector cache hit"),
         }
+        assert!(matches!(
+            cache.lookup_with_selector("https://example.com/app", 111, Some("action : click")),
+            CacheLookup::Hit(_)
+        ));
         match cache.lookup("https://example.com/app", 111) {
             CacheLookup::Hit(entry) => assert_eq!(entry.som_json, b"full".to_vec()),
             _ => panic!("Expected full cache hit"),
