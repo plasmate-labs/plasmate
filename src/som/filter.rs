@@ -15,7 +15,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   and `role:` forms also work for element roles.
 /// - Element roles: `link`, `button`, `text_input` / `textbox` / `searchbox` /
 ///   `input`, `textarea`, `select` / `combobox` / `listbox`, `checkbox`,
-///   `radio`, `heading`, `image`, `list`, `table`, `paragraph`, `section`,
+///   `radio` / `menuitemradio`, `heading`, `image`, `list`, `table`,
+///   `paragraph`, `section`,
 ///   `group`, `separator`, `details`, `iframe`
 /// - Heading levels: `h1` .. `h6` match headings whose compiled `attrs.level`
 ///   is that integer. Missing or out-of-range levels are not invented.
@@ -229,8 +230,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         "text_input" | "textbox" | "searchbox" | "input" => Some(ElementRole::TextInput),
         "textarea" => Some(ElementRole::Textarea),
         "select" | "combobox" | "listbox" => Some(ElementRole::Select),
-        "checkbox" | "switch" => Some(ElementRole::Checkbox),
-        "radio" => Some(ElementRole::Radio),
+        "checkbox" | "switch" | "menuitemcheckbox" => Some(ElementRole::Checkbox),
+        "radio" | "menuitemradio" => Some(ElementRole::Radio),
         "heading" => Some(ElementRole::Heading),
         "image" | "img" => Some(ElementRole::Image),
         "list" => Some(ElementRole::List),
@@ -538,7 +539,10 @@ mod tests {
         for selector in ["menuitem", "option", "tab"] {
             assert_eq!(parse_element_role(selector), Some(ElementRole::Button));
         }
-        assert_eq!(parse_element_role("switch"), Some(ElementRole::Checkbox));
+        for selector in ["switch", "menuitemcheckbox"] {
+            assert_eq!(parse_element_role(selector), Some(ElementRole::Checkbox));
+        }
+        assert_eq!(parse_element_role("menuitemradio"), Some(ElementRole::Radio));
     }
 
     #[test]
