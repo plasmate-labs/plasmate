@@ -20,7 +20,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   is that integer. Missing or out-of-range levels are not invented.
 /// - Action surfaces: `interactive`, bare action names (`click`, `type`,
 ///   `type_text`/`type-text`, `clear`, `select`, `select_option`/`select-option`,
-///   `toggle`, `submit`, `reset`), or `action:<verb>` forms. The text and
+///   `toggle`, `submit`, `reset`), or `action:<verb>` forms (including
+///   `action : <verb>` and `action = <verb>`). The text and
 ///   select aliases mirror the corresponding MCP interaction tool names.
 /// - Id: `#some-id` - region id first, then SOM element `id` or `html_id`
 ///
@@ -89,35 +90,36 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
 
     // Match elements that expose a specific action in their compact action list.
     let selector_lower = selector.to_ascii_lowercase();
-    let action = selector_lower.strip_prefix("action:").or_else(|| {
-        matches!(
-            selector_lower.as_str(),
-            "click"
-                | "type"
-                | "type_text"
-                | "type-text"
-                | "clear"
-                | "select"
-                | "select_option"
-                | "select-option"
-                | "toggle"
-                | "submit"
-                | "reset"
-        )
-        .then_some(match selector_lower.as_str() {
-            "type_text" | "type-text" => "type",
-            "select_option" | "select-option" => "select",
-            action => action,
-        })
-    });
+    let action = selector_lower
+        .strip_prefix("action")
+        .and_then(|rest| rest.trim_start().strip_prefix(['=', ':']))
+        .map(str::trim)
+        .filter(|action| !action.is_empty())
+        .or_else(|| {
+            matches!(
+                selector_lower.as_str(),
+                "click"
+                    | "type"
+                    | "type_text"
+                    | "type-text"
+                    | "clear"
+                    | "select"
+                    | "select_option"
+                    | "select-option"
+                    | "toggle"
+                    | "submit"
+                    | "reset"
+            )
+            .then_some(selector_lower.as_str())
+        });
     if let Some(action) = action {
         let action = action.trim().to_ascii_lowercase();
+        let action = match action.as_str() {
+            "type_text" | "type-text" => "type".to_string(),
+            "select_option" | "select-option" => "select".to_string(),
+            _ => action,
+        };
         if !action.is_empty() {
-            let action = match action.as_str() {
-                "type_text" | "type-text" => "type",
-                "select_option" | "select-option" => "select",
-                action => action,
-            };
             return filter_som_elements(som, selector, |element| {
                 let advertises_action = element
                     .actions
@@ -735,6 +737,49 @@ mod tests {
             apply_selector(&som, "action:select-option").regions[0].elements[0].id,
             "e-select"
         );
+    }
+
+    #[test]
+    fn test_selector_action_accepts_whitespace_around_separator() {
+        let som = make_test_som();
+
+        for selector in ["action : click", "action = click", " ACTION : CLICK "] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 2, "selector: {selector}");
+            assert!(filtered
+                .regions
+                .iter()
+                .flat_map(|region| &region.elements)
+                .all(|element| element
+                    .actions
+                    .as_ref()
+                    .is_some_and(|actions| actions.iter().any(|action| action == "click"))));
+        }
+    }
+
+    #[test]
+    fn test_selector_action_whitespace_preserves_aliases() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-input".to_string(),
+            role: ElementRole::TextInput,
+            html_id: None,
+            text: None,
+            label: Some("Query".to_string()),
+            actions: Some(vec!["type".to_string()]),
+            attrs: None,
+            children: None,
+            shadow: None,
+            hints: None,
+        });
+
+        for selector in ["action : type_text", "action = type-text"] {
+            assert_eq!(
+                apply_selector(&som, selector).regions[0].elements[0].id,
+                "e-input",
+                "selector: {selector}"
+            );
+        }
     }
 
     #[test]
