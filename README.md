@@ -227,6 +227,9 @@ action menu before the LLM sees the content. The MCP tool-name aliases
 `selector="type_text"` and `selector="select_option"` (including their
 `action:type_text` and `action:select_option` forms) are also accepted for
 typing and selection targets.
+Element selectors also accept common HTML tag aliases: `a`/`link`,
+`p`/`paragraph`, and `ul`, `ol`, `dl`, or `menu`/`list` (plus the explicit
+`unordered_list`, `ordered_list`, and `definition_list` forms).
 Use `cache_status` after repeated fetches to inspect local MCP SOM cache hits,
 misses, selector entries, effective-HTML entries, and avoided HTML work.
 Use `session_status` before long interactive runs to inspect active browser

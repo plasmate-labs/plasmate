@@ -119,7 +119,7 @@ enum Commands {
         ///
         /// Accepts semantic region roles (main, nav, navigation, aside, header,
         /// footer, form, dialog, content), heading levels (h1 through h6),
-        /// element roles (button, link, text_input, select, etc.), action selectors (interactive,
+        /// element roles (button, link/a, paragraph/p, list/ul/ol, text_input, select, etc.), action selectors (interactive,
         /// click/type/type_text/clear/select/select_option/toggle/submit/reset, or action:<verb> (action : <verb> and action = <verb> also work), or an HTML id selector
         /// (#my-id).
         /// When a role is given, only regions of that role are included.
