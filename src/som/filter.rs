@@ -20,7 +20,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   is that integer. Missing or out-of-range levels are not invented.
 /// - Action surfaces: `interactive`, bare action names (`click`, `type`,
 ///   `type_text`/`type-text`, `clear`, `select`, `select_option`/`select-option`,
-///   `toggle`, `submit`, `reset`), or `action:<verb>` forms. The text and
+///   `toggle`, `submit`, `reset`), or `action:<verb>` forms (including
+///   `action : <verb>` and `action = <verb>`). The text and
 ///   select aliases mirror the corresponding MCP interaction tool names.
 /// - Id: `#some-id` - region id first, then SOM element `id` or `html_id`
 ///
@@ -753,6 +754,31 @@ mod tests {
                     .actions
                     .as_ref()
                     .is_some_and(|actions| actions.iter().any(|action| action == "click"))));
+        }
+    }
+
+    #[test]
+    fn test_selector_action_whitespace_preserves_aliases() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-input".to_string(),
+            role: ElementRole::TextInput,
+            html_id: None,
+            text: None,
+            label: Some("Query".to_string()),
+            actions: Some(vec!["type".to_string()]),
+            attrs: None,
+            children: None,
+            shadow: None,
+            hints: None,
+        });
+
+        for selector in ["action : type_text", "action = type-text"] {
+            assert_eq!(
+                apply_selector(&som, selector).regions[0].elements[0].id,
+                "e-input",
+                "selector: {selector}"
+            );
         }
     }
 
