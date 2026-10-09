@@ -17,6 +17,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `input`, `textarea`, `select` / `combobox` / `listbox`, `checkbox`,
 ///   `radio` / `menuitemradio`, `heading`, `image`, `list`, `table`,
 ///   `paragraph`, `section`,
+///   plus common HTML tag aliases `a`, `p`, `ul`, and `ol`,
 ///   `group`, `separator`, `details`, `iframe`
 /// - Heading levels: `h1` .. `h6` match headings whose compiled `attrs.level`
 ///   is that integer. Missing or out-of-range levels are not invented.
@@ -223,7 +224,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         .replace('-', "_")
         .as_str()
     {
-        "link" => Some(ElementRole::Link),
+        "link" | "a" => Some(ElementRole::Link),
         // These ARIA widget roles compile to the SOM's button role, so expose
         // the same selector aliases instead of making callers know the
         // normalized representation.
@@ -235,9 +236,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         "radio" | "menuitemradio" => Some(ElementRole::Radio),
         "heading" => Some(ElementRole::Heading),
         "image" | "img" => Some(ElementRole::Image),
-        "list" => Some(ElementRole::List),
+        "list" | "ul" | "ol" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
-        "paragraph" => Some(ElementRole::Paragraph),
+        "paragraph" | "p" => Some(ElementRole::Paragraph),
         "section" => Some(ElementRole::Section),
         "group" => Some(ElementRole::Group),
         "separator" => Some(ElementRole::Separator),
@@ -592,6 +593,22 @@ mod tests {
             filtered.meta.som_bytes,
             serde_json::to_string(&filtered).unwrap().len()
         );
+    }
+
+    #[test]
+    fn test_selector_common_html_tag_aliases() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Link;
+        som.regions[1].elements[0].role = ElementRole::Paragraph;
+
+        for (selector, expected_role) in [("a", ElementRole::Link), ("p", ElementRole::Paragraph)] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert!(filtered.regions[0]
+                .elements
+                .iter()
+                .all(|element| element.role == expected_role));
+        }
     }
 
     #[test]
