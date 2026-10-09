@@ -11,7 +11,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// Supported selectors:
 /// - Region roles: `main`, `nav`/`navigation`, `aside`, `header`, `footer`,
 ///   `form`, `dialog`, `content`/`article` (or `role=<region>` / `role:<region>`;
-///   optional whitespace around the separator is accepted)
+///   optional whitespace around the separator is accepted). The same `role=`
+///   and `role:` forms also work for element roles.
 /// - Element roles: `link`, `button`, `text_input` / `textbox` / `searchbox` /
 ///   `input`, `textarea`, `select` / `combobox` / `listbox`, `checkbox`,
 ///   `radio`, `heading`, `image`, `list`, `table`, `paragraph`, `section`,
@@ -509,6 +510,18 @@ mod tests {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].role, RegionRole::Main);
+        }
+    }
+
+    #[test]
+    fn test_selector_role_aliases_for_element_roles() {
+        let som = make_test_som();
+
+        for selector in ["role=button", "ROLE:BUTTON", "role = button", "role : button"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1);
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Button);
         }
     }
 
