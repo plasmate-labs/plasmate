@@ -432,6 +432,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
                 },
                 "budget": {
                     "type": "integer",
+                    "minimum": 0,
                     "description": "Maximum output tokens. SOM is reduced to fit while preserving structured regions when possible. For the smallest useful response, combine this with selector='main' or another targeted selector. Default: no limit."
                 },
                 "javascript": {
@@ -464,7 +465,8 @@ pub fn extract_text_definition() -> ToolDefinition {
                 },
                 "max_chars": {
                     "type": "integer",
-                    "description": "Maximum characters to return, including a trailing ellipsis when truncated. Default: no limit."
+                    "minimum": 0,
+                    "description": "Maximum characters to return. Longer text is truncated at a word boundary and gets a trailing ellipsis when at least 3 characters are available; smaller limits return a UTF-8-safe prefix. Default: no limit."
                 },
                 "selector": {
                     "type": "string",
@@ -5053,6 +5055,14 @@ fn default_pixels() -> i32 {
     300
 }
 
+fn validate_scroll_direction(direction: &str) -> Result<(), &'static str> {
+    if matches!(direction, "down" | "up" | "top" | "bottom") {
+        Ok(())
+    } else {
+        Err("direction must be one of down, up, top, or bottom")
+    }
+}
+
 /// Get the tool definition for navigate_to.
 pub fn navigate_to_definition() -> ToolDefinition {
     ToolDefinition {
@@ -5709,6 +5719,10 @@ pub async fn handle_scroll(
             return error_response(&format!("Invalid arguments: {}", e));
         }
     };
+
+    if let Err(message) = validate_scroll_direction(&params.direction) {
+        return error_response(&format!("Invalid arguments: {message}"));
+    }
 
     info!(session_id = %params.session_id, direction = %params.direction, "scroll");
 
@@ -6673,6 +6687,10 @@ mod tests {
         let budget_description = definition.input_schema["properties"]["budget"]["description"]
             .as_str()
             .expect("budget schema should have a description");
+        assert_eq!(
+            definition.input_schema["properties"]["budget"]["minimum"],
+            0
+        );
         assert!(budget_description.contains("selector='main'"));
         assert!(budget_description.contains("preserving structured regions"));
     }
@@ -6802,6 +6820,13 @@ mod tests {
         }))
         .expect_err("scroll should reject misspelled fields");
         assert!(scroll_error.to_string().contains("unknown field"));
+
+        assert!(validate_scroll_direction("down").is_ok());
+        assert!(validate_scroll_direction("bottom").is_ok());
+        assert_eq!(
+            validate_scroll_direction("dwon"),
+            Err("direction must be one of down, up, top, or bottom")
+        );
 
         let cookies_error = serde_json::from_value::<GetCookiesParams>(json!({
             "session_id": "sess-1",
@@ -17030,6 +17055,22 @@ mod tests {
         let mut exact = "Hello".to_string();
         truncate_text_to_chars(&mut exact, 5);
         assert_eq!(exact, "Hello");
+    }
+
+    #[test]
+    fn extract_text_schema_explains_tiny_max_chars_behavior() {
+        let definition = extract_text_definition();
+        let description = definition.input_schema["properties"]["max_chars"]
+            ["description"]
+            .as_str()
+            .expect("max_chars schema should have a description");
+
+        assert!(description.contains("when at least 3 characters are available"));
+        assert!(description.contains("UTF-8-safe prefix"));
+        assert_eq!(
+            definition.input_schema["properties"]["max_chars"]["minimum"],
+            0
+        );
     }
 
     #[test]
