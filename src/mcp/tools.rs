@@ -5055,6 +5055,14 @@ fn default_pixels() -> i32 {
     300
 }
 
+fn validate_scroll_direction(direction: &str) -> Result<(), &'static str> {
+    if matches!(direction, "down" | "up" | "top" | "bottom") {
+        Ok(())
+    } else {
+        Err("direction must be one of down, up, top, or bottom")
+    }
+}
+
 /// Get the tool definition for navigate_to.
 pub fn navigate_to_definition() -> ToolDefinition {
     ToolDefinition {
@@ -5711,6 +5719,10 @@ pub async fn handle_scroll(
             return error_response(&format!("Invalid arguments: {}", e));
         }
     };
+
+    if let Err(message) = validate_scroll_direction(&params.direction) {
+        return error_response(&format!("Invalid arguments: {message}"));
+    }
 
     info!(session_id = %params.session_id, direction = %params.direction, "scroll");
 
@@ -6808,6 +6820,13 @@ mod tests {
         }))
         .expect_err("scroll should reject misspelled fields");
         assert!(scroll_error.to_string().contains("unknown field"));
+
+        assert!(validate_scroll_direction("down").is_ok());
+        assert!(validate_scroll_direction("bottom").is_ok());
+        assert_eq!(
+            validate_scroll_direction("dwon"),
+            Err("direction must be one of down, up, top, or bottom")
+        );
 
         let cookies_error = serde_json::from_value::<GetCookiesParams>(json!({
             "session_id": "sess-1",
