@@ -9,8 +9,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
 /// Supported selectors:
-/// - Region roles: `main`, `nav`/`navigation`, `aside`, `header`, `footer`,
-///   `form`, `dialog`, `content`/`article` (or `role=<region>` / `role:<region>`;
+/// - Region roles: `main`, `nav`/`navigation`, `aside`/`complementary`,
+///   `header`/`banner`, `footer`/`contentinfo`,
+///   `form`, `dialog`, `content`/`article`/`region` (or `role=<region>` / `role:<region>`;
 ///   optional whitespace around the separator is accepted). The same `role=`
 ///   and `role:` forms also work for element roles.
 /// - Element roles: `link`, `button`, `text_input` / `textbox` / `searchbox` /
@@ -23,7 +24,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list`,
-///   `group`, `separator`, `details`, `iframe`
+///   `group` / `fieldset`, `separator` / `hr`, `details` / `summary`, `iframe`
 /// - Heading levels: `h1` .. `h6` (or `heading1` .. `heading6`, including
 ///   hyphenated `h-1`/`heading-1` forms) match headings whose compiled
 ///   `attrs.level` is that integer. Missing or out-of-range levels are not invented.
@@ -52,12 +53,12 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     let role_opt: Option<RegionRole> = match selector.to_lowercase().as_str() {
         "main" => Some(RegionRole::Main),
         "nav" | "navigation" => Some(RegionRole::Navigation),
-        "aside" => Some(RegionRole::Aside),
-        "header" => Some(RegionRole::Header),
-        "footer" => Some(RegionRole::Footer),
+        "aside" | "complementary" => Some(RegionRole::Aside),
+        "header" | "banner" => Some(RegionRole::Header),
+        "footer" | "contentinfo" => Some(RegionRole::Footer),
         "form" => Some(RegionRole::Form),
         "dialog" => Some(RegionRole::Dialog),
-        "content" | "article" => Some(RegionRole::Content),
+        "content" | "article" | "region" => Some(RegionRole::Content),
         _ => None,
     };
 
@@ -277,9 +278,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         "table" => Some(ElementRole::Table),
         "paragraph" | "p" => Some(ElementRole::Paragraph),
         "section" => Some(ElementRole::Section),
-        "group" => Some(ElementRole::Group),
-        "separator" => Some(ElementRole::Separator),
-        "details" => Some(ElementRole::Details),
+        "group" | "fieldset" => Some(ElementRole::Group),
+        "separator" | "hr" => Some(ElementRole::Separator),
+        "details" | "summary" => Some(ElementRole::Details),
         "iframe" => Some(ElementRole::Iframe),
         _ => None,
     }
@@ -682,6 +683,85 @@ mod tests {
                 .elements
                 .iter()
                 .all(|element| element.role == expected_role));
+        }
+    }
+
+    #[test]
+    fn test_selector_structural_html_tag_aliases() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Group;
+        som.regions[1].elements[0].role = ElementRole::Separator;
+        som.regions[1].elements.push(Element {
+            id: "e-details".to_string(),
+            role: ElementRole::Details,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for (selector, expected_role) in [
+            ("fieldset", ElementRole::Group),
+            ("hr", ElementRole::Separator),
+            ("summary", ElementRole::Details),
+        ] {
+            assert_eq!(
+                parse_element_role(selector),
+                Some(expected_role.clone()),
+                "selector: {selector}"
+            );
+            let filtered = apply_selector(&som, selector);
+            assert!(
+                filtered
+                    .regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .any(|element| element.role == expected_role),
+                "selector should filter matching SOM elements: {selector}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_selector_aria_landmark_aliases() {
+        let mut som = make_test_som();
+        som.regions[0].role = RegionRole::Header;
+        som.regions[1].role = RegionRole::Footer;
+
+        let mut content = som.regions[0].clone();
+        content.id = "r-content".to_string();
+        content.role = RegionRole::Content;
+        som.regions.push(content);
+
+        let aside = super::super::types::Region {
+            id: "r-aside".to_string(),
+            role: RegionRole::Aside,
+            label: None,
+            action: None,
+            method: None,
+            target: None,
+            enctype: None,
+            novalidate: None,
+            accept_charset: None,
+            autocomplete: None,
+            elements: vec![],
+        };
+        som.regions.push(aside);
+
+        for (selector, expected_role) in [
+            ("banner", RegionRole::Header),
+            ("contentinfo", RegionRole::Footer),
+            ("complementary", RegionRole::Aside),
+            ("region", RegionRole::Content),
+            ("role=region", RegionRole::Content),
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].role, expected_role);
         }
     }
 
