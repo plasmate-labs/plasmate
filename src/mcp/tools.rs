@@ -5056,10 +5056,26 @@ fn default_pixels() -> i32 {
 }
 
 fn validate_scroll_direction(direction: &str) -> Result<(), &'static str> {
-    if matches!(direction, "down" | "up" | "top" | "bottom") {
+    if matches!(direction, "down" | "up" | "top" | "bottom" | "home" | "end") {
         Ok(())
     } else {
-        Err("direction must be one of down, up, top, or bottom")
+        Err("direction must be one of down, up, top, bottom, home, or end")
+    }
+}
+
+fn normalize_scroll_direction(direction: &str) -> String {
+    match direction.trim().to_ascii_lowercase().as_str() {
+        "home" => "top".to_string(),
+        "end" => "bottom".to_string(),
+        normalized => normalized.to_string(),
+    }
+}
+
+fn validate_scroll_pixels(pixels: i32) -> Result<(), &'static str> {
+    if pixels >= 0 {
+        Ok(())
+    } else {
+        Err("pixels must be nonnegative")
     }
 }
 
@@ -5159,11 +5175,12 @@ pub fn scroll_definition() -> ToolDefinition {
                 },
                 "direction": {
                     "type": "string",
-                    "enum": ["down", "up", "top", "bottom"],
-                    "description": "Scroll direction. Default: 'down'."
+                    "enum": ["down", "up", "top", "bottom", "home", "end"],
+                    "description": "Scroll direction. 'home' aliases 'top' and 'end' aliases 'bottom'. Default: 'down'."
                 },
                 "pixels": {
                     "type": "integer",
+                    "minimum": 0,
                     "description": "Number of pixels to scroll for up/down. Default: 300."
                 },
                 "element_id": {
@@ -5720,11 +5737,15 @@ pub async fn handle_scroll(
         }
     };
 
-    if let Err(message) = validate_scroll_direction(&params.direction) {
+    let direction = normalize_scroll_direction(&params.direction);
+    if let Err(message) = validate_scroll_direction(&direction) {
+        return error_response(&format!("Invalid arguments: {message}"));
+    }
+    if let Err(message) = validate_scroll_pixels(params.pixels) {
         return error_response(&format!("Invalid arguments: {message}"));
     }
 
-    info!(session_id = %params.session_id, direction = %params.direction, "scroll");
+    info!(session_id = %params.session_id, direction = %direction, "scroll");
 
     // Get session data
     let session_data = sessions
@@ -5747,7 +5768,7 @@ pub async fn handle_scroll(
     };
 
     // Run JS to scroll
-    let direction = params.direction.clone();
+    let direction = normalize_scroll_direction(&params.direction);
     let pixels = params.pixels;
     let element_id = params.element_id.clone();
     let scroll_js = if let Some(ref eid) = element_id {
@@ -6828,9 +6849,21 @@ mod tests {
 
         assert!(validate_scroll_direction("down").is_ok());
         assert!(validate_scroll_direction("bottom").is_ok());
+        assert!(validate_scroll_direction("home").is_ok());
+        assert!(validate_scroll_direction("end").is_ok());
+        assert_eq!(normalize_scroll_direction("  DOWN "), "down");
+        assert_eq!(normalize_scroll_direction(" HOME "), "top");
+        assert_eq!(normalize_scroll_direction("End"), "bottom");
+        assert!(validate_scroll_direction(&normalize_scroll_direction("  DOWN ")).is_ok());
         assert_eq!(
             validate_scroll_direction("dwon"),
-            Err("direction must be one of down, up, top, or bottom")
+            Err("direction must be one of down, up, top, bottom, home, or end")
+        );
+        assert!(validate_scroll_pixels(0).is_ok());
+        assert!(validate_scroll_pixels(300).is_ok());
+        assert_eq!(
+            validate_scroll_pixels(-1),
+            Err("pixels must be nonnegative")
         );
 
         let cookies_error = serde_json::from_value::<GetCookiesParams>(json!({
