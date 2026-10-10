@@ -5056,15 +5056,19 @@ fn default_pixels() -> i32 {
 }
 
 fn validate_scroll_direction(direction: &str) -> Result<(), &'static str> {
-    if matches!(direction, "down" | "up" | "top" | "bottom") {
+    if matches!(direction, "down" | "up" | "top" | "bottom" | "home" | "end") {
         Ok(())
     } else {
-        Err("direction must be one of down, up, top, or bottom")
+        Err("direction must be one of down, up, top, bottom, home, or end")
     }
 }
 
 fn normalize_scroll_direction(direction: &str) -> String {
-    direction.trim().to_ascii_lowercase()
+    match direction.trim().to_ascii_lowercase().as_str() {
+        "home" => "top".to_string(),
+        "end" => "bottom".to_string(),
+        normalized => normalized.to_string(),
+    }
 }
 
 fn validate_scroll_pixels(pixels: i32) -> Result<(), &'static str> {
@@ -5171,8 +5175,8 @@ pub fn scroll_definition() -> ToolDefinition {
                 },
                 "direction": {
                     "type": "string",
-                    "enum": ["down", "up", "top", "bottom"],
-                    "description": "Scroll direction. Default: 'down'."
+                    "enum": ["down", "up", "top", "bottom", "home", "end"],
+                    "description": "Scroll direction. 'home' aliases 'top' and 'end' aliases 'bottom'. Default: 'down'."
                 },
                 "pixels": {
                     "type": "integer",
@@ -6845,11 +6849,15 @@ mod tests {
 
         assert!(validate_scroll_direction("down").is_ok());
         assert!(validate_scroll_direction("bottom").is_ok());
+        assert!(validate_scroll_direction("home").is_ok());
+        assert!(validate_scroll_direction("end").is_ok());
         assert_eq!(normalize_scroll_direction("  DOWN "), "down");
+        assert_eq!(normalize_scroll_direction(" HOME "), "top");
+        assert_eq!(normalize_scroll_direction("End"), "bottom");
         assert!(validate_scroll_direction(&normalize_scroll_direction("  DOWN ")).is_ok());
         assert_eq!(
             validate_scroll_direction("dwon"),
-            Err("direction must be one of down, up, top, or bottom")
+            Err("direction must be one of down, up, top, bottom, home, or end")
         );
         assert!(validate_scroll_pixels(0).is_ok());
         assert!(validate_scroll_pixels(300).is_ok());
