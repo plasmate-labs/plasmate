@@ -5764,7 +5764,7 @@ pub async fn handle_scroll(
     };
 
     // Run JS to scroll
-    let direction = params.direction.clone();
+    let direction = normalize_scroll_direction(&params.direction);
     let pixels = params.pixels;
     let element_id = params.element_id.clone();
     let scroll_js = if let Some(ref eid) = element_id {
