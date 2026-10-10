@@ -14,7 +14,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   optional whitespace around the separator is accepted). The same `role=`
 ///   and `role:` forms also work for element roles.
 /// - Element roles: `link`, `button`, `text_input` / `textbox` / `searchbox` /
-///   `input`, `textarea`, `select` / `combobox` / `listbox`, `checkbox`,
+///   `input`, HTML text-input types such as `search`, `hidden`, `color`,
+///   `range`, and `file`, `textarea`, `select` / `combobox` / `listbox`, `checkbox`,
 ///   `radio` / `menuitemradio`, `heading`, `image`, `list`, `table`,
 ///   `paragraph`, `section`,
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
@@ -240,6 +241,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "textbox"
         | "searchbox"
         | "input"
+        | "text"
+        | "search"
         | "email"
         | "number"
         | "password"
@@ -249,7 +252,11 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "datetime_local"
         | "month"
         | "time"
-        | "week" => Some(ElementRole::TextInput),
+        | "week"
+        | "color"
+        | "range"
+        | "hidden"
+        | "file" => Some(ElementRole::TextInput),
         "textarea" => Some(ElementRole::Textarea),
         "select" | "combobox" | "listbox" => Some(ElementRole::Select),
         "checkbox" | "switch" | "menuitemcheckbox" => Some(ElementRole::Checkbox),
@@ -734,6 +741,8 @@ mod tests {
     #[test]
     fn test_selector_input_type_aliases_match_compiled_text_input() {
         for selector in [
+            "text",
+            "search",
             "email",
             "number",
             "password",
@@ -744,6 +753,10 @@ mod tests {
             "month",
             "time",
             "week",
+            "color",
+            "range",
+            "hidden",
+            "file",
         ] {
             assert_eq!(
                 parse_element_role(selector),
