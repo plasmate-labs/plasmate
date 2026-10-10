@@ -230,6 +230,11 @@ typing and selection targets.
 Element selectors also accept common HTML tag aliases: `a`/`link`,
 `p`/`paragraph`, and `ul`, `ol`, `dl`, or `menu`/`list` (plus the explicit
 `unordered_list`, `ordered_list`, and `definition_list` forms).
+HTML text-input type names are also accepted as selectors, including
+`text`, `search`, `email`, `number`, `password`, `tel`, `url`, `date`,
+`datetime`/`datetime-local`, `month`, `time`, `week`, `color`, `range`,
+`hidden`, and `file`; each targets the corresponding compiled text-input
+element.
 Use `cache_status` after repeated fetches to inspect local MCP SOM cache hits,
 misses, selector entries, effective-HTML entries, and avoided HTML work.
 Use `session_status` before long interactive runs to inspect active browser

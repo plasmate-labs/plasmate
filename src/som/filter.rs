@@ -14,8 +14,10 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   optional whitespace around the separator is accepted). The same `role=`
 ///   and `role:` forms also work for element roles.
 /// - Element roles: `link`, `button`, `text_input` / `textbox` / `searchbox` /
-///   `input`, HTML text-input types such as `search`, `hidden`, `color`,
-///   `range`, `datetime`, and `file`, `textarea`, `select` / `combobox` / `listbox`, `checkbox`,
+///   `input`, HTML text-input types such as `text`, `search`, `email`, `number`,
+///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local`, `month`,
+///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea`,
+///   `select` / `combobox` / `listbox`, `checkbox`,
 ///   `radio` / `menuitemradio`, `heading`, `image`, `list`, `table`,
 ///   `paragraph`, `section`,
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
