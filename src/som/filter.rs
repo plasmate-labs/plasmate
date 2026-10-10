@@ -9,7 +9,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
 /// Supported selectors:
-/// - Region roles: `main`, `nav`/`navigation`, `aside`, `header`, `footer`,
+/// - Region roles: `main`, `nav`/`navigation`, `aside`/`complementary`,
+///   `header`/`banner`, `footer`/`contentinfo`,
 ///   `form`, `dialog`, `content`/`article` (or `role=<region>` / `role:<region>`;
 ///   optional whitespace around the separator is accepted). The same `role=`
 ///   and `role:` forms also work for element roles.
@@ -52,9 +53,9 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     let role_opt: Option<RegionRole> = match selector.to_lowercase().as_str() {
         "main" => Some(RegionRole::Main),
         "nav" | "navigation" => Some(RegionRole::Navigation),
-        "aside" => Some(RegionRole::Aside),
-        "header" => Some(RegionRole::Header),
-        "footer" => Some(RegionRole::Footer),
+        "aside" | "complementary" => Some(RegionRole::Aside),
+        "header" | "banner" => Some(RegionRole::Header),
+        "footer" | "contentinfo" => Some(RegionRole::Footer),
         "form" => Some(RegionRole::Form),
         "dialog" => Some(RegionRole::Dialog),
         "content" | "article" => Some(RegionRole::Content),
@@ -722,6 +723,38 @@ mod tests {
                     .any(|element| element.role == expected_role),
                 "selector should filter matching SOM elements: {selector}"
             );
+        }
+    }
+
+    #[test]
+    fn test_selector_aria_landmark_aliases() {
+        let mut som = make_test_som();
+        som.regions[0].role = RegionRole::Header;
+        som.regions[1].role = RegionRole::Footer;
+
+        let aside = super::super::types::Region {
+            id: "r-aside".to_string(),
+            role: RegionRole::Aside,
+            label: None,
+            action: None,
+            method: None,
+            target: None,
+            enctype: None,
+            novalidate: None,
+            accept_charset: None,
+            autocomplete: None,
+            elements: vec![],
+        };
+        som.regions.push(aside);
+
+        for (selector, expected_role) in [
+            ("banner", RegionRole::Header),
+            ("contentinfo", RegionRole::Footer),
+            ("complementary", RegionRole::Aside),
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].role, expected_role);
         }
     }
 
