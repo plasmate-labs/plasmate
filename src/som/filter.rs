@@ -15,7 +15,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   and `role:` forms also work for element roles.
 /// - Element roles: `link`, `button`, `text_input` / `textbox` / `searchbox` /
 ///   `input`, HTML text-input types such as `search`, `hidden`, `color`,
-///   `range`, and `file`, `textarea`, `select` / `combobox` / `listbox`, `checkbox`,
+///   `range`, `datetime`, and `file`, `textarea`, `select` / `combobox` / `listbox`, `checkbox`,
 ///   `radio` / `menuitemradio`, `heading`, `image`, `list`, `table`,
 ///   `paragraph`, `section`,
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
@@ -249,6 +249,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "tel"
         | "url"
         | "date"
+        | "datetime"
         | "datetime_local"
         | "month"
         | "time"
@@ -749,6 +750,7 @@ mod tests {
             "tel",
             "url",
             "date",
+            "datetime",
             "datetime-local",
             "month",
             "time",
