@@ -5063,6 +5063,10 @@ fn validate_scroll_direction(direction: &str) -> Result<(), &'static str> {
     }
 }
 
+fn normalize_scroll_direction(direction: &str) -> String {
+    direction.trim().to_ascii_lowercase()
+}
+
 fn validate_scroll_pixels(pixels: i32) -> Result<(), &'static str> {
     if pixels >= 0 {
         Ok(())
@@ -5729,14 +5733,15 @@ pub async fn handle_scroll(
         }
     };
 
-    if let Err(message) = validate_scroll_direction(&params.direction) {
+    let direction = normalize_scroll_direction(&params.direction);
+    if let Err(message) = validate_scroll_direction(&direction) {
         return error_response(&format!("Invalid arguments: {message}"));
     }
     if let Err(message) = validate_scroll_pixels(params.pixels) {
         return error_response(&format!("Invalid arguments: {message}"));
     }
 
-    info!(session_id = %params.session_id, direction = %params.direction, "scroll");
+    info!(session_id = %params.session_id, direction = %direction, "scroll");
 
     // Get session data
     let session_data = sessions
@@ -6840,6 +6845,8 @@ mod tests {
 
         assert!(validate_scroll_direction("down").is_ok());
         assert!(validate_scroll_direction("bottom").is_ok());
+        assert_eq!(normalize_scroll_direction("  DOWN "), "down");
+        assert!(validate_scroll_direction(&normalize_scroll_direction("  DOWN ")).is_ok());
         assert_eq!(
             validate_scroll_direction("dwon"),
             Err("direction must be one of down, up, top, or bottom")
