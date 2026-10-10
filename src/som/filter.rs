@@ -236,7 +236,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         // These ARIA widget roles compile to the SOM's button role, so expose
         // the same selector aliases instead of making callers know the
         // normalized representation.
-        "button" | "menuitem" | "option" | "tab" => Some(ElementRole::Button),
+        "button" | "menuitem" | "menu_item" | "option" | "tab" => Some(ElementRole::Button),
         // HTML input types compile to the same SOM role. Accept their names
         // here so callers can target the controls using the source markup's
         // vocabulary without knowing the normalized role.
@@ -263,8 +263,10 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "file" => Some(ElementRole::TextInput),
         "textarea" => Some(ElementRole::Textarea),
         "select" | "combobox" | "listbox" => Some(ElementRole::Select),
-        "checkbox" | "switch" | "menuitemcheckbox" => Some(ElementRole::Checkbox),
-        "radio" | "menuitemradio" => Some(ElementRole::Radio),
+        "checkbox" | "switch" | "menuitemcheckbox" | "menu_item_checkbox" => {
+            Some(ElementRole::Checkbox)
+        }
+        "radio" | "menuitemradio" | "menu_item_radio" => Some(ElementRole::Radio),
         "heading" => Some(ElementRole::Heading),
         "image" | "img" => Some(ElementRole::Image),
         "list"
@@ -592,13 +594,15 @@ mod tests {
 
     #[test]
     fn test_selector_aria_widget_role_aliases() {
-        for selector in ["menuitem", "option", "tab"] {
+        for selector in ["menuitem", "menu-item", "menu_item", "option", "tab"] {
             assert_eq!(parse_element_role(selector), Some(ElementRole::Button));
         }
-        for selector in ["switch", "menuitemcheckbox"] {
+        for selector in ["switch", "menuitemcheckbox", "menu-item-checkbox"] {
             assert_eq!(parse_element_role(selector), Some(ElementRole::Checkbox));
         }
-        assert_eq!(parse_element_role("menuitemradio"), Some(ElementRole::Radio));
+        for selector in ["menuitemradio", "menu-item-radio"] {
+            assert_eq!(parse_element_role(selector), Some(ElementRole::Radio));
+        }
     }
 
     #[test]
