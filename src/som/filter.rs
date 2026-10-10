@@ -11,7 +11,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// Supported selectors:
 /// - Region roles: `main`, `nav`/`navigation`, `aside`/`complementary`,
 ///   `header`/`banner`, `footer`/`contentinfo`,
-///   `form`, `dialog`, `content`/`article` (or `role=<region>` / `role:<region>`;
+///   `form`, `dialog`, `content`/`article`/`region` (or `role=<region>` / `role:<region>`;
 ///   optional whitespace around the separator is accepted). The same `role=`
 ///   and `role:` forms also work for element roles.
 /// - Element roles: `link`, `button`, `text_input` / `textbox` / `searchbox` /
@@ -58,7 +58,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         "footer" | "contentinfo" => Some(RegionRole::Footer),
         "form" => Some(RegionRole::Form),
         "dialog" => Some(RegionRole::Dialog),
-        "content" | "article" => Some(RegionRole::Content),
+        "content" | "article" | "region" => Some(RegionRole::Content),
         _ => None,
     };
 
@@ -732,6 +732,11 @@ mod tests {
         som.regions[0].role = RegionRole::Header;
         som.regions[1].role = RegionRole::Footer;
 
+        let mut content = som.regions[0].clone();
+        content.id = "r-content".to_string();
+        content.role = RegionRole::Content;
+        som.regions.push(content);
+
         let aside = super::super::types::Region {
             id: "r-aside".to_string(),
             role: RegionRole::Aside,
@@ -751,6 +756,8 @@ mod tests {
             ("banner", RegionRole::Header),
             ("contentinfo", RegionRole::Footer),
             ("complementary", RegionRole::Aside),
+            ("region", RegionRole::Content),
+            ("role=region", RegionRole::Content),
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
