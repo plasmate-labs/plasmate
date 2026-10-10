@@ -219,7 +219,7 @@ depending on a hard-coded count; the authoritative registration is
 
 **Tip:** use `selector="main"` to strip nav/footer, `selector="interactive"`
 to return only actionable elements, `selector="h1"` through `selector="h6"`
-to isolate a heading level, or an action selector such as `selector="click"`
+(or `heading1` through `heading6`) to isolate a heading level, or an action selector such as `selector="click"`
 (the equivalent `selector="action:click"` also works), `selector="type"`,
 `selector="clear"`, `selector="select"`, `selector="toggle"`, or
 `selector="submit"` to build a compact

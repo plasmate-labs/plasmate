@@ -39,7 +39,7 @@ pub struct ToolDefinition {
     pub input_schema: Value,
 }
 
-const SOM_SELECTOR_DESCRIPTION: &str = "Filter to a page region (main, nav/navigation, header, footer, aside, content/article, form, dialog; role=<region> and role:<region> also work), heading level (h1-h6), element role (button, link/a, paragraph/p, list/ul/ol, text_input, select, etc.; role=<element> and role:<element> also work), action surface (interactive, click/type/type_text/type-text/clear/select/select_option/select-option/toggle/submit/reset, or action:click/action:type/action:type_text/action:type-text/action:clear/action:select/action:select_option/action:select-option/action:toggle/action:submit/action:reset; the action=<verb> form also works, with whitespace around either separator such as action : click or action = click), or #element-id (region id first, then SOM element/html id). The type_text/type-text and select_option/select-option aliases, including action=type_text/action=type-text and action=select_option/action=select-option, match the corresponding MCP interaction tool names. Strips irrelevant regions/elements to reduce tokens. If a selector is unknown or matches nothing, the full SOM is returned unchanged.";
+const SOM_SELECTOR_DESCRIPTION: &str = "Filter to a page region (main, nav/navigation, header, footer, aside, content/article, form, dialog; role=<region> and role:<region> also work), heading level (h1-h6, heading1-heading6, or hyphenated h-1/heading-1 forms), element role (button/menuitem/option/tab, link/a, paragraph/p, list/ul/ol/dl/menu, unordered_list/ordered_list/definition_list, image/img, text_input/textbox/searchbox/input, textarea, select/combobox/listbox, checkbox/switch/menuitemcheckbox, radio/menuitemradio, etc.; role=<element> and role:<element> also work), action surface (interactive, click/type/type_text/type-text/clear/select/select_option/select-option/toggle/submit/reset, or action:click/action:type/action:type_text/action:type-text/action:clear/action:select/action:select_option/action:select-option/action:toggle/action:submit/action:reset; the action=<verb> form also works, with whitespace around either separator such as action : click or action = click), or #element-id (region id first, then SOM element/html id). The type_text/type-text and select_option/select-option aliases, including action=type_text/action=type-text and action=select_option/action=select-option, match the corresponding MCP interaction tool names. Strips irrelevant regions/elements to reduce tokens. If a selector is unknown or matches nothing, the full SOM is returned unchanged.";
 
 /// Parameters for fetch_page tool.
 #[derive(Debug, Deserialize)]
@@ -6642,6 +6642,10 @@ mod tests {
             assert!(description.contains("action:clear"));
             assert!(description.contains("action:toggle"));
             assert!(description.contains("action:submit"));
+            assert!(description.contains("checkbox/switch/menuitemcheckbox"));
+            assert!(description.contains("radio/menuitemradio"));
+            assert!(description.contains("select/combobox/listbox"));
+            assert!(description.contains("text_input/textbox/searchbox/input"));
             assert!(description.contains("full SOM is returned unchanged"));
             assert!(description.contains("region id first"));
         }

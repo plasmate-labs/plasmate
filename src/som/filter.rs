@@ -21,8 +21,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list`,
 ///   `group`, `separator`, `details`, `iframe`
-/// - Heading levels: `h1` .. `h6` match headings whose compiled `attrs.level`
-///   is that integer. Missing or out-of-range levels are not invented.
+/// - Heading levels: `h1` .. `h6` (or `heading1` .. `heading6`, including
+///   hyphenated `h-1`/`heading-1` forms) match headings whose compiled
+///   `attrs.level` is that integer. Missing or out-of-range levels are not invented.
 /// - Action surfaces: `interactive`, bare action names (`click`, `type`,
 ///   `type_text`/`type-text`, `clear`, `select`, `select_option`/`select-option`,
 ///   `toggle`, `submit`, `reset`), or `action:<verb>` forms (including
@@ -195,15 +196,16 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
 }
 
 fn parse_heading_level_selector(selector: &str) -> Option<u8> {
-    match selector.trim().to_ascii_lowercase().as_str() {
-        "h1" => Some(1),
-        "h2" => Some(2),
-        "h3" => Some(3),
-        "h4" => Some(4),
-        "h5" => Some(5),
-        "h6" => Some(6),
-        _ => None,
-    }
+    let normalized = selector.trim().to_ascii_lowercase();
+    let suffix = normalized
+        .strip_prefix("heading")
+        .or_else(|| normalized.strip_prefix('h'))?;
+    let level = suffix
+        .strip_prefix('-')
+        .unwrap_or(suffix)
+        .parse::<u8>()
+        .ok()?;
+    (1..=6).contains(&level).then_some(level)
 }
 
 fn heading_compiled_level(element: &Element) -> Option<u8> {
@@ -544,6 +546,21 @@ mod tests {
             assert_eq!(filtered.regions[0].elements.len(), 1);
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Button);
         }
+    }
+
+    #[test]
+    fn test_selector_heading_name_aliases() {
+        for selector in ["h1", "heading1", "HEADING1"] {
+            assert_eq!(
+                parse_heading_level_selector(selector),
+                Some(1),
+                "selector: {selector}"
+            );
+        }
+        assert_eq!(parse_heading_level_selector("heading6"), Some(6));
+        assert_eq!(parse_heading_level_selector("h-6"), Some(6));
+        assert_eq!(parse_heading_level_selector("heading-6"), Some(6));
+        assert_eq!(parse_heading_level_selector("heading7"), None);
     }
 
     #[test]
