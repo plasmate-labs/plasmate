@@ -23,7 +23,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list`,
-///   `group`, `separator`, `details`, `iframe`
+///   `group` / `fieldset`, `separator` / `hr`, `details` / `summary`, `iframe`
 /// - Heading levels: `h1` .. `h6` (or `heading1` .. `heading6`, including
 ///   hyphenated `h-1`/`heading-1` forms) match headings whose compiled
 ///   `attrs.level` is that integer. Missing or out-of-range levels are not invented.
@@ -277,9 +277,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         "table" => Some(ElementRole::Table),
         "paragraph" | "p" => Some(ElementRole::Paragraph),
         "section" => Some(ElementRole::Section),
-        "group" => Some(ElementRole::Group),
-        "separator" => Some(ElementRole::Separator),
-        "details" => Some(ElementRole::Details),
+        "group" | "fieldset" => Some(ElementRole::Group),
+        "separator" | "hr" => Some(ElementRole::Separator),
+        "details" | "summary" => Some(ElementRole::Details),
         "iframe" => Some(ElementRole::Iframe),
         _ => None,
     }
@@ -682,6 +682,46 @@ mod tests {
                 .elements
                 .iter()
                 .all(|element| element.role == expected_role));
+        }
+    }
+
+    #[test]
+    fn test_selector_structural_html_tag_aliases() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Group;
+        som.regions[1].elements[0].role = ElementRole::Separator;
+        som.regions[1].elements.push(Element {
+            id: "e-details".to_string(),
+            role: ElementRole::Details,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for (selector, expected_role) in [
+            ("fieldset", ElementRole::Group),
+            ("hr", ElementRole::Separator),
+            ("summary", ElementRole::Details),
+        ] {
+            assert_eq!(
+                parse_element_role(selector),
+                Some(expected_role.clone()),
+                "selector: {selector}"
+            );
+            let filtered = apply_selector(&som, selector);
+            assert!(
+                filtered
+                    .regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .any(|element| element.role == expected_role),
+                "selector should filter matching SOM elements: {selector}"
+            );
         }
     }
 
