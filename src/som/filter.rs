@@ -21,7 +21,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea`,
 ///   `select` / `combobox` / `listbox`, `checkbox`,
 ///   `radio` / `menuitemradio`, `heading`, `image`, `list`, `table`,
-///   `paragraph`, `section`,
+///   `paragraph` / `alert` / `status` / `tooltip`, `section`,
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list`,
@@ -279,7 +279,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "ordered_list"
         | "definition_list" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
-        "paragraph" | "p" => Some(ElementRole::Paragraph),
+        "paragraph" | "p" | "alert" | "status" | "tooltip" => Some(ElementRole::Paragraph),
         "section" => Some(ElementRole::Section),
         "group" | "fieldset" => Some(ElementRole::Group),
         "separator" | "hr" => Some(ElementRole::Separator),
@@ -602,6 +602,19 @@ mod tests {
             assert_eq!(parse_element_role(selector), Some(ElementRole::Checkbox));
         }
         assert_eq!(parse_element_role("menuitemradio"), Some(ElementRole::Radio));
+    }
+
+    #[test]
+    fn test_selector_aria_content_role_aliases_match_compiled_paragraph() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].role = ElementRole::Paragraph;
+
+        for selector in ["alert", "status", "tooltip"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Paragraph);
+        }
     }
 
     #[test]
