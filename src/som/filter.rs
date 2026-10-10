@@ -233,7 +233,23 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         // the same selector aliases instead of making callers know the
         // normalized representation.
         "button" | "menuitem" | "option" | "tab" => Some(ElementRole::Button),
-        "text_input" | "textbox" | "searchbox" | "input" => Some(ElementRole::TextInput),
+        // HTML input types compile to the same SOM role. Accept their names
+        // here so callers can target the controls using the source markup's
+        // vocabulary without knowing the normalized role.
+        "text_input"
+        | "textbox"
+        | "searchbox"
+        | "input"
+        | "email"
+        | "number"
+        | "password"
+        | "tel"
+        | "url"
+        | "date"
+        | "datetime_local"
+        | "month"
+        | "time"
+        | "week" => Some(ElementRole::TextInput),
         "textarea" => Some(ElementRole::Textarea),
         "select" | "combobox" | "listbox" => Some(ElementRole::Select),
         "checkbox" | "switch" | "menuitemcheckbox" => Some(ElementRole::Checkbox),
@@ -713,6 +729,28 @@ mod tests {
             apply_selector(&som, "textbox").regions[0].elements[0].id,
             "e-search"
         );
+    }
+
+    #[test]
+    fn test_selector_input_type_aliases_match_compiled_text_input() {
+        for selector in [
+            "email",
+            "number",
+            "password",
+            "tel",
+            "url",
+            "date",
+            "datetime-local",
+            "month",
+            "time",
+            "week",
+        ] {
+            assert_eq!(
+                parse_element_role(selector),
+                Some(ElementRole::TextInput),
+                "selector: {selector}"
+            );
+        }
     }
 
     #[test]
