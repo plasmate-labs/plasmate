@@ -14,7 +14,10 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   optional whitespace around the separator is accepted). The same `role=`
 ///   and `role:` forms also work for element roles.
 /// - Element roles: `link`, `button`, `text_input` / `textbox` / `searchbox` /
-///   `input`, `textarea`, `select` / `combobox` / `listbox`, `checkbox`,
+///   `input`, HTML text-input types such as `text`, `search`, `email`, `number`,
+///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local`, `month`,
+///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea`,
+///   `select` / `combobox` / `listbox`, `checkbox`,
 ///   `radio` / `menuitemradio`, `heading`, `image`, `list`, `table`,
 ///   `paragraph`, `section`,
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
@@ -233,7 +236,30 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         // the same selector aliases instead of making callers know the
         // normalized representation.
         "button" | "menuitem" | "option" | "tab" => Some(ElementRole::Button),
-        "text_input" | "textbox" | "searchbox" | "input" => Some(ElementRole::TextInput),
+        // HTML input types compile to the same SOM role. Accept their names
+        // here so callers can target the controls using the source markup's
+        // vocabulary without knowing the normalized role.
+        "text_input"
+        | "textbox"
+        | "searchbox"
+        | "input"
+        | "text"
+        | "search"
+        | "email"
+        | "number"
+        | "password"
+        | "tel"
+        | "url"
+        | "date"
+        | "datetime"
+        | "datetime_local"
+        | "month"
+        | "time"
+        | "week"
+        | "color"
+        | "range"
+        | "hidden"
+        | "file" => Some(ElementRole::TextInput),
         "textarea" => Some(ElementRole::Textarea),
         "select" | "combobox" | "listbox" => Some(ElementRole::Select),
         "checkbox" | "switch" | "menuitemcheckbox" => Some(ElementRole::Checkbox),
@@ -713,6 +739,35 @@ mod tests {
             apply_selector(&som, "textbox").regions[0].elements[0].id,
             "e-search"
         );
+    }
+
+    #[test]
+    fn test_selector_input_type_aliases_match_compiled_text_input() {
+        for selector in [
+            "text",
+            "search",
+            "email",
+            "number",
+            "password",
+            "tel",
+            "url",
+            "date",
+            "datetime",
+            "datetime-local",
+            "month",
+            "time",
+            "week",
+            "color",
+            "range",
+            "hidden",
+            "file",
+        ] {
+            assert_eq!(
+                parse_element_role(selector),
+                Some(ElementRole::TextInput),
+                "selector: {selector}"
+            );
+        }
     }
 
     #[test]
