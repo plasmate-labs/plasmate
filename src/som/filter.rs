@@ -15,12 +15,13 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   optional whitespace around the separator is accepted). The same `role=`
 ///   and `role:` forms also work for element roles.
 /// - Element roles: `link`, `button`, `text_input` / `textbox` / `searchbox` /
-///   `input`, HTML text-input types such as `text`, `search`, `email`, `number`,
+///   `slider` / `spinbutton` / `input`, HTML text-input types such as `text`,
+///   `search`, `email`, `number`,
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local`, `month`,
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea`,
 ///   `select` / `combobox` / `listbox`, `checkbox`,
 ///   `radio` / `menuitemradio`, `heading`, `image`, `list`, `table`,
-///   `paragraph`, `section`,
+///   `paragraph` / `alert` / `status` / `tooltip`, `section`,
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list`,
@@ -243,6 +244,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         "text_input"
         | "textbox"
         | "searchbox"
+        | "slider"
+        | "spinbutton"
         | "input"
         | "text"
         | "search"
@@ -278,7 +281,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "ordered_list"
         | "definition_list" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
-        "paragraph" | "p" => Some(ElementRole::Paragraph),
+        "paragraph" | "p" | "alert" | "status" | "tooltip" => Some(ElementRole::Paragraph),
         "section" => Some(ElementRole::Section),
         "group" | "fieldset" => Some(ElementRole::Group),
         "separator" | "hr" => Some(ElementRole::Separator),
@@ -606,6 +609,19 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_aria_content_role_aliases_match_compiled_paragraph() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].role = ElementRole::Paragraph;
+
+        for selector in ["alert", "status", "tooltip"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Paragraph);
+        }
+    }
+
+    #[test]
     fn test_selector_nav() {
         let som = make_test_som();
         let filtered = apply_selector(&som, "nav");
@@ -823,6 +839,39 @@ mod tests {
             apply_selector(&som, "textbox").regions[0].elements[0].id,
             "e-search"
         );
+    }
+
+    #[test]
+    fn test_selector_aria_text_input_aliases_match_compiled_text_input() {
+        let mut som = make_test_som();
+        for id in ["e-slider", "e-spinbutton"] {
+            som.regions[1].elements.push(Element {
+                id: id.to_string(),
+                role: ElementRole::TextInput,
+                html_id: None,
+                text: None,
+                label: None,
+                actions: Some(vec!["type".to_string()]),
+                attrs: None,
+                children: None,
+                shadow: None,
+                hints: None,
+            });
+        }
+
+        for selector in ["slider", "spinbutton"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 2, "selector: {selector}");
+            assert!(filtered.regions[0]
+                .elements
+                .iter()
+                .any(|element| element.id == format!("e-{selector}")));
+            assert!(filtered.regions[0]
+                .elements
+                .iter()
+                .all(|element| element.role == ElementRole::TextInput));
+        }
     }
 
     #[test]
