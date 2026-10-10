@@ -5792,7 +5792,7 @@ pub async fn handle_scroll(
                         return JSON.stringify({{ error: 'Element not found in DOM' }});
                     }}
                     el.scrollIntoView({{ behavior: 'instant', block: 'center' }});
-                    return JSON.stringify({{ scrolled: true, scrollTop: document.documentElement.scrollTop || 0 }});
+                    return JSON.stringify({{ scrolled: true, scrollTop: Math.max(document.documentElement.scrollTop || 0, document.body.scrollTop || 0) }});
                 }})()
                 "#,
             element_id_json, html_id_json
@@ -5808,7 +5808,7 @@ pub async fn handle_scroll(
             r#"
                 (function() {{
                     {};
-                    return JSON.stringify({{ scrolled: true, scrollTop: document.documentElement.scrollTop || 0 }});
+                    return JSON.stringify({{ scrolled: true, scrollTop: Math.max(document.documentElement.scrollTop || 0, document.body.scrollTop || 0) }});
                 }})()
                 "#,
             scroll_action
