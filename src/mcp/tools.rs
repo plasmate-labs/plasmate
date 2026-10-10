@@ -5776,12 +5776,15 @@ pub async fn handle_scroll(
             .as_ref()
             .and_then(|som| find_som_element_by_id(som, eid))
             .and_then(|element| element.html_id.clone());
+        let element_id_json = serde_json::to_string(eid).unwrap_or_else(|_| "null".to_string());
         let html_id_json = serde_json::to_string(&html_id).unwrap_or_else(|_| "null".to_string());
         format!(
             r#"
                 (function() {{
+                    var elementId = {};
                     var htmlId = {};
-                    var el = document.querySelector('[data-plasmate-id="{}"]');
+                    var el = Array.from(document.querySelectorAll('[data-plasmate-id]'))
+                        .find(function(candidate) {{ return candidate.getAttribute('data-plasmate-id') === elementId; }});
                     if (!el && htmlId !== null) {{
                         el = document.getElementById(htmlId);
                     }}
@@ -5792,7 +5795,7 @@ pub async fn handle_scroll(
                     return JSON.stringify({{ scrolled: true, scrollTop: document.documentElement.scrollTop || 0 }});
                 }})()
                 "#,
-            html_id_json, eid
+            element_id_json, html_id_json
         )
     } else {
         let scroll_action = match direction.as_str() {
