@@ -5063,6 +5063,14 @@ fn validate_scroll_direction(direction: &str) -> Result<(), &'static str> {
     }
 }
 
+fn validate_scroll_pixels(pixels: i32) -> Result<(), &'static str> {
+    if pixels >= 0 {
+        Ok(())
+    } else {
+        Err("pixels must be nonnegative")
+    }
+}
+
 /// Get the tool definition for navigate_to.
 pub fn navigate_to_definition() -> ToolDefinition {
     ToolDefinition {
@@ -5164,6 +5172,7 @@ pub fn scroll_definition() -> ToolDefinition {
                 },
                 "pixels": {
                     "type": "integer",
+                    "minimum": 0,
                     "description": "Number of pixels to scroll for up/down. Default: 300."
                 },
                 "element_id": {
@@ -5721,6 +5730,9 @@ pub async fn handle_scroll(
     };
 
     if let Err(message) = validate_scroll_direction(&params.direction) {
+        return error_response(&format!("Invalid arguments: {message}"));
+    }
+    if let Err(message) = validate_scroll_pixels(params.pixels) {
         return error_response(&format!("Invalid arguments: {message}"));
     }
 
@@ -6831,6 +6843,12 @@ mod tests {
         assert_eq!(
             validate_scroll_direction("dwon"),
             Err("direction must be one of down, up, top, or bottom")
+        );
+        assert!(validate_scroll_pixels(0).is_ok());
+        assert!(validate_scroll_pixels(300).is_ok());
+        assert_eq!(
+            validate_scroll_pixels(-1),
+            Err("pixels must be nonnegative")
         );
 
         let cookies_error = serde_json::from_value::<GetCookiesParams>(json!({
