@@ -5165,7 +5165,7 @@ pub fn select_option_definition() -> ToolDefinition {
 pub fn scroll_definition() -> ToolDefinition {
     ToolDefinition {
         name: "scroll".to_string(),
-        description: "Scroll the page or a specific element into view. Returns the updated page SOM with scroll position.".to_string(),
+        description: "Scroll the current page and return the updated SOM with scroll position. Use direction='down' or 'up' with pixels (default 300) for incremental movement; use 'top'/'home' or 'bottom'/'end' to jump to an edge. Set element_id to scroll a specific SOM element into view instead of the page.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -5776,12 +5776,15 @@ pub async fn handle_scroll(
             .as_ref()
             .and_then(|som| find_som_element_by_id(som, eid))
             .and_then(|element| element.html_id.clone());
+        let element_id_json = serde_json::to_string(eid).unwrap_or_else(|_| "null".to_string());
         let html_id_json = serde_json::to_string(&html_id).unwrap_or_else(|_| "null".to_string());
         format!(
             r#"
                 (function() {{
+                    var elementId = {};
                     var htmlId = {};
-                    var el = document.querySelector('[data-plasmate-id="{}"]');
+                    var el = Array.from(document.querySelectorAll('[data-plasmate-id]'))
+                        .find(function(candidate) {{ return candidate.getAttribute('data-plasmate-id') === elementId; }});
                     if (!el && htmlId !== null) {{
                         el = document.getElementById(htmlId);
                     }}
@@ -5789,10 +5792,10 @@ pub async fn handle_scroll(
                         return JSON.stringify({{ error: 'Element not found in DOM' }});
                     }}
                     el.scrollIntoView({{ behavior: 'instant', block: 'center' }});
-                    return JSON.stringify({{ scrolled: true, scrollTop: document.documentElement.scrollTop || 0 }});
+                    return JSON.stringify({{ scrolled: true, scrollTop: Math.max(document.documentElement.scrollTop || 0, document.body.scrollTop || 0) }});
                 }})()
                 "#,
-            html_id_json, eid
+            element_id_json, html_id_json
         )
     } else {
         let scroll_action = match direction.as_str() {
@@ -5805,7 +5808,7 @@ pub async fn handle_scroll(
             r#"
                 (function() {{
                     {};
-                    return JSON.stringify({{ scrolled: true, scrollTop: document.documentElement.scrollTop || 0 }});
+                    return JSON.stringify({{ scrolled: true, scrollTop: Math.max(document.documentElement.scrollTop || 0, document.body.scrollTop || 0) }});
                 }})()
                 "#,
             scroll_action
@@ -6823,6 +6826,12 @@ mod tests {
                 definition.name
             );
         }
+
+        let scroll_description = scroll_definition().description;
+        assert!(scroll_description.contains("direction='down'"));
+        assert!(scroll_description.contains("'top'/'home'"));
+        assert!(scroll_description.contains("'bottom'/'end'"));
+        assert!(scroll_description.contains("element_id"));
 
         let evaluate_error = serde_json::from_value::<EvaluateParams>(json!({
             "session_id": "sess-1",
