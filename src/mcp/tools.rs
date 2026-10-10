@@ -5165,7 +5165,7 @@ pub fn select_option_definition() -> ToolDefinition {
 pub fn scroll_definition() -> ToolDefinition {
     ToolDefinition {
         name: "scroll".to_string(),
-        description: "Scroll the page or a specific element into view. Returns the updated page SOM with scroll position.".to_string(),
+        description: "Scroll the current page and return the updated SOM with scroll position. Use direction='down' or 'up' with pixels (default 300) for incremental movement; use 'top'/'home' or 'bottom'/'end' to jump to an edge. Set element_id to scroll a specific SOM element into view instead of the page.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -6823,6 +6823,12 @@ mod tests {
                 definition.name
             );
         }
+
+        let scroll_description = scroll_definition().description;
+        assert!(scroll_description.contains("direction='down'"));
+        assert!(scroll_description.contains("'top'/'home'"));
+        assert!(scroll_description.contains("'bottom'/'end'"));
+        assert!(scroll_description.contains("element_id"));
 
         let evaluate_error = serde_json::from_value::<EvaluateParams>(json!({
             "session_id": "sess-1",
