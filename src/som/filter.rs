@@ -27,7 +27,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `definition_list`,
 ///   `group` / `fieldset` / `figure` / `radiogroup` / `progress` / `progressbar`
 ///   / `meter` / `output` / `video` / `canvas`,
-///   `separator` / `hr`, `details` / `summary`, `iframe`
+///   `separator` / `hr`, `details` / `summary`, `iframe`, `audio`
 ///   and the grouped media selector `media` (images and media-capable groups)
 /// - Heading levels: `h1` .. `h6` (or `heading1` .. `heading6`, including
 ///   hyphenated `h-1`/`heading-1` forms) match headings whose compiled
@@ -312,6 +312,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "progressbar"
         | "meter"
         | "output"
+        | "audio"
         | "video"
         | "canvas" => {
             Some(ElementRole::Group)
@@ -747,6 +748,7 @@ mod tests {
             "progressbar",
             "meter",
             "output",
+            "audio",
             "video",
             "canvas",
         ] {
