@@ -41,6 +41,31 @@ def test_async_read_methods_forward_selector() -> None:
     asyncio.run(exercise())
 
 
+def test_sync_extract_text_forwards_javascript_opt_out() -> None:
+    browser = Plasmate()
+    calls = Mock(return_value="text")
+    browser._call_tool = calls  # type: ignore[method-assign]
+
+    assert browser.extract_text("fixture", javascript=False) == "text"
+
+    assert calls.call_args == call("extract_text", {"url": "fixture", "javascript": False})
+
+
+def test_async_extract_text_forwards_javascript_opt_out() -> None:
+    async def exercise() -> None:
+        browser = AsyncPlasmate()
+        calls = AsyncMock(return_value="text")
+        browser._call_tool = calls  # type: ignore[method-assign]
+
+        assert await browser.extract_text("fixture", javascript=False) == "text"
+
+        calls.assert_awaited_once_with(
+            "extract_text", {"url": "fixture", "javascript": False}
+        )
+
+    asyncio.run(exercise())
+
+
 def test_sync_navigate_to_forwards_session_and_url() -> None:
     browser = Plasmate()
     calls = Mock(side_effect=[{}])
