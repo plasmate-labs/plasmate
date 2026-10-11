@@ -374,6 +374,23 @@ export class Plasmate extends EventEmitter {
     return await this.callTool('extract_text', args) as string;
   }
 
+  /**
+   * Fetch a page and return deduplicated outbound URLs, one per line.
+   *
+   * @param url - URL to fetch
+   * @param options.javascript - Enable JS execution (default: true)
+   * @param options.selector - Optional SOM region, role, action, or element-id filter
+   */
+  async extractLinks(url: string, options?: {
+    javascript?: boolean;
+    selector?: string;
+  }): Promise<string> {
+    const args: Record<string, unknown> = { url };
+    if (options?.javascript != null) args.javascript = options.javascript;
+    if (options?.selector != null) args.selector = options.selector;
+    return await this.callTool('extract_links', args) as string;
+  }
+
   // ---- Stateful Tools ----
 
   /**
