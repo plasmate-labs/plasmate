@@ -26,7 +26,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list`,
 ///   `group` / `fieldset` / `figure` / `radiogroup` / `progress` / `progressbar`
-///   / `meter` / `output`,
+///   / `meter` / `output` / `video` / `canvas`,
 ///   `separator` / `hr`, `details` / `summary`, `iframe`
 /// - Heading levels: `h1` .. `h6` (or `heading1` .. `heading6`, including
 ///   hyphenated `h-1`/`heading-1` forms) match headings whose compiled
@@ -292,7 +292,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "progress"
         | "progressbar"
         | "meter"
-        | "output" => {
+        | "output"
+        | "video"
+        | "canvas" => {
             Some(ElementRole::Group)
         }
         "separator" | "hr" => Some(ElementRole::Separator),
@@ -719,7 +721,16 @@ mod tests {
 
     #[test]
     fn test_selector_aria_group_aliases() {
-        for selector in ["figure", "radiogroup", "progress", "progressbar", "meter", "output"] {
+        for selector in [
+            "figure",
+            "radiogroup",
+            "progress",
+            "progressbar",
+            "meter",
+            "output",
+            "video",
+            "canvas",
+        ] {
             assert_eq!(
                 parse_element_role(selector),
                 Some(ElementRole::Group),
