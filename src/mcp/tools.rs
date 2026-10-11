@@ -356,6 +356,7 @@ async fn load_session_page_for_mcp(
     cache: &SomCache,
     url: &str,
 ) -> Result<(String, String, pipeline::PageResult, bool), String> {
+    validate_mcp_url(url)?;
     let fetch_result = fetch::fetch_url(client, url, DEFAULT_TIMEOUT_MS)
         .await
         .map_err(|e| format!("Failed to fetch {}: {}", url, e))?;
@@ -3910,6 +3911,7 @@ pub fn open_page_definition() -> ToolDefinition {
                 "url": {
                     "type": "string",
                     "minLength": 1,
+                    "maxLength": MAX_MCP_URL_BYTES,
                     "description": "URL to open"
                 },
                 "trace": {
@@ -5143,6 +5145,7 @@ pub fn navigate_to_definition() -> ToolDefinition {
                 "url": {
                     "type": "string",
                     "minLength": 1,
+                    "maxLength": MAX_MCP_URL_BYTES,
                     "description": "URL to navigate to"
                 }
             },
@@ -6629,11 +6632,13 @@ mod tests {
     }
 
     #[test]
-    fn stateless_page_url_schemas_and_validation_bound_request_size() {
+    fn page_url_schemas_and_validation_bound_request_size() {
         for definition in [
             fetch_page_definition(),
             extract_text_definition(),
             extract_links_definition(),
+            open_page_definition(),
+            navigate_to_definition(),
         ] {
             assert_eq!(
                 definition.input_schema["properties"]["url"]["maxLength"], MAX_MCP_URL_BYTES,
