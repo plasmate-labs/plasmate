@@ -220,7 +220,11 @@ fn validate_mcp_url(url: &str) -> Result<(), String> {
     }
     let parsed = url::Url::parse(url)
         .map_err(|_| "Invalid arguments: url must be an absolute HTTP(S) URL".to_string())?;
-    if !matches!(parsed.scheme(), "http" | "https") || parsed.host().is_none() {
+    if !matches!(parsed.scheme(), "http" | "https")
+        || parsed.host().is_none()
+        || !parsed.username().is_empty()
+        || parsed.password().is_some()
+    {
         return Err("Invalid arguments: url must be an absolute HTTP(S) URL".to_string());
     }
     Ok(())
@@ -6648,7 +6652,12 @@ mod tests {
             validate_mcp_url(&"x".repeat(MAX_MCP_URL_BYTES + 1)),
             Err("Invalid arguments: url exceeds 4096 bytes".to_string())
         );
-        for invalid_url in ["example.com", "file:///tmp/page.html", "mailto:test@example.com"] {
+        for invalid_url in [
+            "example.com",
+            "file:///tmp/page.html",
+            "mailto:test@example.com",
+            "https://user:secret@example.com/page",
+        ] {
             assert_eq!(
                 validate_mcp_url(invalid_url),
                 Err("Invalid arguments: url must be an absolute HTTP(S) URL".to_string()),
