@@ -881,13 +881,16 @@ struct ExtractLinksParams {
     /// Filter to a specific region before extracting links.
     #[serde(default)]
     selector: Option<String>,
+    /// Limit the number of returned links while preserving discovery order.
+    #[serde(default)]
+    max_links: Option<usize>,
 }
 
 /// Get the tool definition for extract_links.
 pub fn extract_links_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_links".to_string(),
-        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, manifest, and http(s) extension relation types), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Highwire citation_abstract_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled EPrints eprints.official_url values, compiled Bepress bepress_citation_pdf_url values, compiled PRISM prism.url values, compiled Open Graph og:url values, compiled App Links al:web:url values, compiled Twitter Card twitter:url values, compiled schema.org itemprop=url meta values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD SoftwareApplication codeRepository values, compiled JSON-LD SoftwareSourceCode codeRepository values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled JSON-LD license values (WebPage/Article and subtypes), compiled JSON-LD JobPosting applicationUrl values, compiled JSON-LD Product offers url values, compiled JSON-LD Dataset distribution contentUrl values, compiled JSON-LD WebSite SearchAction target values, compiled JSON-LD Event url values, compiled JSON-LD Course hasCourseInstance url values, compiled JSON-LD Recipe url values, compiled JSON-LD Movie url values, compiled JSON-LD Book url values, compiled JSON-LD HowTo url values, compiled JSON-LD ItemList ListItem url values, compiled JSON-LD PodcastSeries webFeed values, compiled JSON-LD TVSeries url values, compiled JSON-LD MusicRecording url values, compiled JSON-LD VideoGame url values, compiled JSON-LD MusicAlbum url values, compiled JSON-LD MusicPlaylist url values, compiled JSON-LD TVEpisode url values, compiled JSON-LD MusicGroup url values, compiled JSON-LD Person url values, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, extension-relation API discovery, research PDF discovery, research HTML fulltext recovery, research HTML abstract recovery, Dublin Core identifier recovery, EPrints official URL recovery, Bepress Digital Commons PDF recovery, PRISM URL recovery, social canonical recovery, App Links web fallback recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org software source-repository recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, schema.org license recovery, schema.org job-application recovery, schema.org product-offer recovery, schema.org dataset distribution recovery, schema.org site-search recovery, schema.org recipe recovery, schema.org movie recovery, schema.org book recovery, schema.org howto recovery, schema.org item-list recovery, schema.org podcast-feed recovery, schema.org tv-series recovery, schema.org music-recording recovery, schema.org video-game recovery, schema.org music-album recovery, schema.org music-playlist recovery, schema.org tv-episode recovery, schema.org music-group recovery, schema.org person recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
+        description: "Fetch a web page and return outbound URLs found in the compiled SOM, one per line, deduplicated. Use max_links to cap the response while preserving discovery order. Relative hrefs and iframe src values are resolved against the document <base href> when present, otherwise the page URL, so follow-up fetch_page calls can use them. Includes link hrefs, iframe src destinations, compiled document <link> hrefs (canonical, alternate, amphtml, author, license, search, prev/next, help, legal, identity, shortlink, webmention, pingback, enclosure, hub, contents, up, describedby, manifest, and http(s) extension relation types), compiled Highwire citation_pdf_url values, compiled Highwire citation_fulltext_html_url values, compiled Highwire citation_abstract_html_url values, compiled Dublin Core dc.identifier/dcterms.identifier values, compiled EPrints eprints.official_url values, compiled Bepress bepress_citation_pdf_url values, compiled PRISM prism.url values, compiled Open Graph og:url values, compiled App Links al:web:url values, compiled Twitter Card twitter:url values, compiled schema.org itemprop=url meta values, compiled http-equiv refresh URLs, compiled fediverse:creator:id actor URLs, compiled JSON-LD document url values (WebPage/Article and subtypes), compiled JSON-LD SoftwareApplication downloadUrl/installUrl values, compiled JSON-LD SoftwareApplication releaseNotes values, compiled JSON-LD SoftwareApplication codeRepository values, compiled JSON-LD SoftwareSourceCode codeRepository values, compiled JSON-LD VideoObject contentUrl/embedUrl values, compiled JSON-LD AudioObject contentUrl/embedUrl values, compiled JSON-LD ImageObject contentUrl/embedUrl values, compiled JSON-LD BreadcrumbList item URLs, compiled JSON-LD discussionUrl values (WebPage/Article and subtypes), compiled JSON-LD WebPage significantLink values, compiled JSON-LD archivedAt values (WebPage/Article and subtypes), compiled JSON-LD sameAs values (WebPage/Article and subtypes), compiled JSON-LD license values (WebPage/Article and subtypes), compiled JSON-LD JobPosting applicationUrl values, compiled JSON-LD Product offers url values, compiled JSON-LD Dataset distribution contentUrl values, compiled JSON-LD WebSite SearchAction target values, compiled JSON-LD Event url values, compiled JSON-LD Course hasCourseInstance url values, compiled JSON-LD Recipe url values, compiled JSON-LD Movie url values, compiled JSON-LD Book url values, compiled JSON-LD HowTo url values, compiled JSON-LD ItemList ListItem url values, compiled JSON-LD PodcastSeries webFeed values, compiled JSON-LD TVSeries url values, compiled JSON-LD MusicRecording url values, compiled JSON-LD VideoGame url values, compiled JSON-LD MusicAlbum url values, compiled JSON-LD MusicPlaylist url values, compiled JSON-LD TVEpisode url values, compiled JSON-LD MusicGroup url values, compiled JSON-LD Person url values, compiled video text-track src values (captions, subtitles, chapters), and compiled blockquote cite URLs. Useful for crawling, sitemap discovery, feed/hreflang discovery, IndieWeb receivers, podcast/media enclosure recovery, WebSub hub discovery, documentation table-of-contents recovery, parent-document recovery, POWDER/DC describedby metadata recovery, extension-relation API discovery, research PDF discovery, research HTML fulltext recovery, research HTML abstract recovery, Dublin Core identifier recovery, EPrints official URL recovery, Bepress Digital Commons PDF recovery, PRISM URL recovery, social canonical recovery, App Links web fallback recovery, meta-refresh follow-up, fediverse actor discovery, schema.org canonical recovery, software install/download recovery, schema.org software release-notes recovery, schema.org software source-repository recovery, schema.org video content/embed recovery, schema.org audio content/embed recovery, schema.org image content/embed recovery, schema.org breadcrumb trail recovery, schema.org discussion-thread recovery, schema.org significant-link recovery, schema.org archived-snapshot recovery, schema.org identity/sameAs recovery, schema.org license recovery, schema.org job-application recovery, schema.org product-offer recovery, schema.org dataset distribution recovery, schema.org site-search recovery, schema.org recipe recovery, schema.org movie recovery, schema.org book recovery, schema.org howto recovery, schema.org item-list recovery, schema.org podcast-feed recovery, schema.org tv-series recovery, schema.org music-recording recovery, schema.org video-game recovery, schema.org music-album recovery, schema.org music-playlist recovery, schema.org tv-episode recovery, schema.org music-group recovery, schema.org person recovery, caption/subtitle track recovery, blockquote citation recovery, and finding related or framed pages.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -903,6 +906,11 @@ pub fn extract_links_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "description": SOM_SELECTOR_DESCRIPTION
+                },
+                "max_links": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Maximum number of URLs to return, preserving discovery order. Default: no limit."
                 }
             },
             "required": ["url"],
@@ -1532,7 +1540,10 @@ pub async fn handle_extract_links(
         }
     };
 
-    let urls = collect_extract_link_urls(&effective_som);
+    let mut urls = collect_extract_link_urls(&effective_som);
+    if let Some(max_links) = params.max_links {
+        urls.truncate(max_links);
+    }
 
     let delivered_text = urls.join("\n");
     plasmate::measurement::record_delivery(
@@ -6783,10 +6794,12 @@ mod tests {
 
         let links_params = serde_json::from_value::<ExtractLinksParams>(json!({
             "url": "https://example.com",
-            "javascript": false
+            "javascript": false,
+            "max_links": 2
         }))
         .expect("extract_links should accept the javascript toggle");
         assert!(!links_params.javascript);
+        assert_eq!(links_params.max_links, Some(2));
 
         assert!(serde_json::from_value::<TypeTextParams>(json!({
             "session_id": "sess-1",
@@ -6818,6 +6831,10 @@ mod tests {
         assert_eq!(
             extract_links_definition().input_schema["additionalProperties"],
             false
+        );
+        assert_eq!(
+            extract_links_definition().input_schema["properties"]["max_links"]["minimum"],
+            0
         );
         let links_error = serde_json::from_value::<ExtractLinksParams>(json!({
             "url": "https://example.com",
@@ -17141,6 +17158,24 @@ mod tests {
         let mut exact = "Hello".to_string();
         truncate_text_to_chars(&mut exact, 5);
         assert_eq!(exact, "Hello");
+    }
+
+    #[test]
+    fn extract_links_max_links_preserves_discovery_order() {
+        let mut urls = vec![
+            "https://example.com/first".to_string(),
+            "https://example.com/second".to_string(),
+            "https://example.com/third".to_string(),
+        ];
+        urls.truncate(2);
+
+        assert_eq!(
+            urls,
+            vec![
+                "https://example.com/first",
+                "https://example.com/second"
+            ]
+        );
     }
 
     #[test]
