@@ -238,7 +238,7 @@ as `menuitem`, `option`, `tab`, `switch`, `menuitemcheckbox`, and
 aliases such as `navigation`, `search`, `banner`, `complementary`, and
 `contentinfo`.
 HTML text-input type names are also accepted as selectors, including
-`text`, `search`, `email`, `number`, `password`, `tel`, `url`, `date`,
+`text`, `search_input`/`search-input`, `email`, `number`, `password`, `tel`, `url`, `date`,
 `datetime`/`datetime-local`, `month`, `time`, `week`, `color`, `range`,
 `hidden`, and `file`; each targets the corresponding compiled text-input
 element.

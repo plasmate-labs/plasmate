@@ -16,7 +16,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   and `role:` forms also work for element roles.
 /// - Element roles: `link`, `button`, `text_input` / `textbox` / `searchbox` /
 ///   `slider` / `spinbutton` / `input`, HTML text-input types such as `text`,
-///   `search`, `email`, `number`,
+///   `search_input` / `search-input`, `email`, `number`,
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local`, `month`,
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea`,
 ///   `select` / `combobox` / `listbox`, `checkbox`,
@@ -250,7 +250,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "spinbutton"
         | "input"
         | "text"
-        | "search"
+        | "search_input"
         | "email"
         | "number"
         | "password"
@@ -906,7 +906,8 @@ mod tests {
     fn test_selector_input_type_aliases_match_compiled_text_input() {
         for selector in [
             "text",
-            "search",
+            "search_input",
+            "search-input",
             "email",
             "number",
             "password",
@@ -928,6 +929,29 @@ mod tests {
                 Some(ElementRole::TextInput),
                 "selector: {selector}"
             );
+        }
+    }
+
+    #[test]
+    fn test_selector_search_input_alias_filters_text_input() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-search".to_string(),
+            role: ElementRole::TextInput,
+            html_id: None,
+            text: None,
+            label: Some("Search".to_string()),
+            actions: Some(vec!["type".to_string()]),
+            attrs: None,
+            children: None,
+            shadow: None,
+            hints: None,
+        });
+
+        for selector in ["search_input", "search-input"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-search");
         }
     }
 
