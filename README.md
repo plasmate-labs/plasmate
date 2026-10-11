@@ -237,6 +237,8 @@ as `menuitem`, `option`, `tab`, `switch`, `menuitemcheckbox`, and
 `menuitemradio` are also accepted. Region selectors accept ARIA landmark
 aliases such as `navigation`, `search`, `banner`, `complementary`, and
 `contentinfo`.
+Use `selector="media"` to keep images and media-capable grouped elements
+such as audio, video, and canvas while removing unrelated page content.
 HTML text-input type names are also accepted as selectors, including
 `text`, `search_input`/`search-input`, `email`, `number`, `password`, `tel`, `url`, `date`,
 `datetime`/`datetime-local`, `month`, `time`, `week`, `color`, `range`,
