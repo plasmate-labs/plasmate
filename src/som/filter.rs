@@ -218,7 +218,7 @@ fn is_media_element(element: &Element) -> bool {
             .as_ref()
             .and_then(|attrs| attrs.get("source_role"))
             .and_then(serde_json::Value::as_str)
-            .is_some_and(|source_role| matches!(source_role, "video" | "canvas"))
+            .is_some_and(|source_role| matches!(source_role, "audio" | "video" | "canvas"))
 }
 
 fn parse_heading_level_selector(selector: &str) -> Option<u8> {
@@ -928,6 +928,18 @@ mod tests {
                 shadow: None,
             },
             Element {
+                id: "e-audio".to_string(),
+                role: ElementRole::Group,
+                html_id: None,
+                text: None,
+                label: Some("Podcast".to_string()),
+                actions: None,
+                attrs: Some(serde_json::json!({"source_role": "audio"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+            Element {
                 id: "e-fieldset".to_string(),
                 role: ElementRole::Group,
                 html_id: None,
@@ -943,14 +955,14 @@ mod tests {
 
         let filtered = apply_selector(&som, "media");
         assert_eq!(filtered.regions.len(), 1);
-        assert_eq!(filtered.regions[0].elements.len(), 2);
+        assert_eq!(filtered.regions[0].elements.len(), 3);
         assert_eq!(
             filtered.regions[0]
                 .elements
                 .iter()
                 .map(|element| element.id.as_str())
                 .collect::<Vec<_>>(),
-            vec!["e-image", "e-video"]
+            vec!["e-image", "e-video", "e-audio"]
         );
     }
 
