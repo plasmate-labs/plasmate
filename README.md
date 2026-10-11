@@ -235,7 +235,8 @@ Structural aliases include `fieldset`/`group`, ARIA group roles
 `details`/`summary`, and `iframe`; `img`/`image` and ARIA widget names such
 as `menuitem`, `option`, `tab`, `switch`, `menuitemcheckbox`, and
 `menuitemradio` are also accepted. Region selectors accept ARIA landmark
-aliases such as `navigation`, `banner`, `complementary`, and `contentinfo`.
+aliases such as `navigation`, `search`, `banner`, `complementary`, and
+`contentinfo`.
 HTML text-input type names are also accepted as selectors, including
 `text`, `search`, `email`, `number`, `password`, `tel`, `url`, `date`,
 `datetime`/`datetime-local`, `month`, `time`, `week`, `color`, `range`,

@@ -55,7 +55,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // Try to match a region role
     let role_opt: Option<RegionRole> = match selector.to_lowercase().as_str() {
         "main" => Some(RegionRole::Main),
-        "nav" | "navigation" => Some(RegionRole::Navigation),
+        "nav" | "navigation" | "search" => Some(RegionRole::Navigation),
         "aside" | "complementary" => Some(RegionRole::Aside),
         "header" | "banner" => Some(RegionRole::Header),
         "footer" | "contentinfo" => Some(RegionRole::Footer),
@@ -794,10 +794,16 @@ mod tests {
         };
         som.regions.push(aside);
 
+        let mut search = som.regions[0].clone();
+        search.id = "r-search".to_string();
+        search.role = RegionRole::Navigation;
+        som.regions.push(search);
+
         for (selector, expected_role) in [
             ("banner", RegionRole::Header),
             ("contentinfo", RegionRole::Footer),
             ("complementary", RegionRole::Aside),
+            ("search", RegionRole::Navigation),
             ("region", RegionRole::Content),
             ("role=region", RegionRole::Content),
         ] {
