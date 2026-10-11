@@ -875,6 +875,9 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
 #[serde(deny_unknown_fields)]
 struct ExtractLinksParams {
     url: String,
+    /// Execute page JavaScript before extracting links (enabled by default).
+    #[serde(default = "default_javascript")]
+    javascript: bool,
     /// Filter to a specific region before extracting links.
     #[serde(default)]
     selector: Option<String>,
@@ -892,6 +895,10 @@ pub fn extract_links_definition() -> ToolDefinition {
                     "type": "string",
                     "minLength": 1,
                     "description": "URL to fetch"
+                },
+                "javascript": {
+                    "type": "boolean",
+                    "description": "Enable JavaScript execution for dynamic/SPA pages. Default: true."
                 },
                 "selector": {
                     "type": "string",
@@ -1508,13 +1515,13 @@ pub async fn handle_extract_links(
         }
     };
 
-    info!(url = %params.url, "extract_links");
+    info!(url = %params.url, javascript = params.javascript, "extract_links");
 
     let (effective_som, cache_restored) = match load_som_for_mcp(
         client,
         cache,
         &params.url,
-        true,
+        params.javascript,
         params.selector.as_deref(),
     )
     .await
@@ -6773,6 +6780,13 @@ mod tests {
             .javascript,
             true
         );
+
+        let links_params = serde_json::from_value::<ExtractLinksParams>(json!({
+            "url": "https://example.com",
+            "javascript": false
+        }))
+        .expect("extract_links should accept the javascript toggle");
+        assert!(!links_params.javascript);
 
         assert!(serde_json::from_value::<TypeTextParams>(json!({
             "session_id": "sess-1",
