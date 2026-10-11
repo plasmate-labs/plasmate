@@ -26,8 +26,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list`,
 ///   `group` / `fieldset` / `figure` / `radiogroup` / `progress` / `progressbar`
-///   / `meter` / `output`,
+///   / `meter` / `output` / `video` / `canvas`,
 ///   `separator` / `hr`, `details` / `summary`, `iframe`
+///   and the grouped media selector `media` (images and media-capable groups)
 /// - Heading levels: `h1` .. `h6` (or `heading1` .. `heading6`, including
 ///   hyphenated `h-1`/`heading-1` forms) match headings whose compiled
 ///   `attrs.level` is that integer. Missing or out-of-range levels are not invented.
@@ -86,6 +87,10 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
 
     // Match element roles, preserving parent containers and shadow roots that
     // contain matching descendants.
+    if selector.eq_ignore_ascii_case("media") {
+        return filter_som_elements(som, selector, is_media_element);
+    }
+
     if let Some(role) = parse_element_role(selector) {
         return filter_som_elements(som, selector, |element| element.role == role);
     }
@@ -202,6 +207,20 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     som.clone()
 }
 
+fn is_media_element(element: &Element) -> bool {
+    if element.role == ElementRole::Image {
+        return true;
+    }
+
+    element.role == ElementRole::Group
+        && element
+            .attrs
+            .as_ref()
+            .and_then(|attrs| attrs.get("source_role"))
+            .and_then(serde_json::Value::as_str)
+            .is_some_and(|source_role| matches!(source_role, "audio" | "video" | "canvas"))
+}
+
 fn parse_heading_level_selector(selector: &str) -> Option<u8> {
     let normalized = selector.trim().to_ascii_lowercase();
     let suffix = normalized
@@ -292,7 +311,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "progress"
         | "progressbar"
         | "meter"
-        | "output" => {
+        | "output"
+        | "video"
+        | "canvas" => {
             Some(ElementRole::Group)
         }
         "separator" | "hr" => Some(ElementRole::Separator),
@@ -719,7 +740,16 @@ mod tests {
 
     #[test]
     fn test_selector_aria_group_aliases() {
-        for selector in ["figure", "radiogroup", "progress", "progressbar", "meter", "output"] {
+        for selector in [
+            "figure",
+            "radiogroup",
+            "progress",
+            "progressbar",
+            "meter",
+            "output",
+            "video",
+            "canvas",
+        ] {
             assert_eq!(
                 parse_element_role(selector),
                 Some(ElementRole::Group),
@@ -866,6 +896,73 @@ mod tests {
         assert_eq!(
             apply_selector(&som, "textbox").regions[0].elements[0].id,
             "e-search"
+        );
+    }
+
+    #[test]
+    fn test_selector_media_groups_visual_and_media_capable_elements() {
+        let mut som = make_test_som();
+        som.regions[1].elements.extend([
+            Element {
+                id: "e-image".to_string(),
+                role: ElementRole::Image,
+                html_id: None,
+                text: None,
+                label: Some("Cover".to_string()),
+                actions: None,
+                attrs: None,
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+            Element {
+                id: "e-video".to_string(),
+                role: ElementRole::Group,
+                html_id: None,
+                text: None,
+                label: Some("Preview".to_string()),
+                actions: None,
+                attrs: Some(serde_json::json!({"source_role": "video"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+            Element {
+                id: "e-audio".to_string(),
+                role: ElementRole::Group,
+                html_id: None,
+                text: None,
+                label: Some("Podcast".to_string()),
+                actions: None,
+                attrs: Some(serde_json::json!({"source_role": "audio"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+            Element {
+                id: "e-fieldset".to_string(),
+                role: ElementRole::Group,
+                html_id: None,
+                text: None,
+                label: Some("Filters".to_string()),
+                actions: None,
+                attrs: Some(serde_json::json!({"source_role": "fieldset"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+        ]);
+
+        let filtered = apply_selector(&som, "media");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 3);
+        assert_eq!(
+            filtered.regions[0]
+                .elements
+                .iter()
+                .map(|element| element.id.as_str())
+                .collect::<Vec<_>>(),
+            vec!["e-image", "e-video", "e-audio"]
         );
     }
 
