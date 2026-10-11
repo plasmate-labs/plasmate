@@ -281,6 +281,7 @@ class Plasmate:
         self,
         url: str,
         *,
+        javascript: bool = True,
         max_chars: Optional[int] = None,
         selector: Optional[str] = None,
     ) -> str:
@@ -289,6 +290,7 @@ class Plasmate:
 
         Args:
             url: URL to fetch
+            javascript: Execute JavaScript before extracting text (default: true)
             max_chars: Maximum characters to return
             selector: Optional SOM region, role, action, or element-id filter
 
@@ -296,6 +298,8 @@ class Plasmate:
             Clean text content
         """
         args: dict[str, Any] = {"url": url}
+        if not javascript:
+            args["javascript"] = False
         if max_chars is not None:
             args["max_chars"] = max_chars
         if selector is not None:
@@ -306,6 +310,7 @@ class Plasmate:
         self,
         url: str,
         *,
+        javascript: bool = True,
         selector: Optional[str] = None,
     ) -> str:
         """
@@ -313,12 +318,15 @@ class Plasmate:
 
         Args:
             url: URL to fetch
+            javascript: Execute JavaScript before extracting links (default: true)
             selector: Optional SOM region, role, action, or element-id filter
 
         Returns:
             Newline-separated URLs (plain text, not JSON)
         """
         args: dict[str, Any] = {"url": url}
+        if not javascript:
+            args["javascript"] = False
         if selector is not None:
             args["selector"] = selector
         return self._call_tool("extract_links", args)
@@ -562,11 +570,14 @@ class AsyncPlasmate:
         self,
         url: str,
         *,
+        javascript: bool = True,
         max_chars: Optional[int] = None,
         selector: Optional[str] = None,
     ) -> str:
         """Fetch a page and return clean, readable text only."""
         args: dict[str, Any] = {"url": url}
+        if not javascript:
+            args["javascript"] = False
         if max_chars is not None:
             args["max_chars"] = max_chars
         if selector is not None:
@@ -577,10 +588,13 @@ class AsyncPlasmate:
         self,
         url: str,
         *,
+        javascript: bool = True,
         selector: Optional[str] = None,
     ) -> str:
         """Fetch a page and return deduplicated outbound URLs, one per line."""
         args: dict[str, Any] = {"url": url}
+        if not javascript:
+            args["javascript"] = False
         if selector is not None:
             args["selector"] = selector
         return await self._call_tool("extract_links", args)
