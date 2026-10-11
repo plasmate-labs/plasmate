@@ -209,13 +209,19 @@ async fn load_som_for_mcp(
 }
 
 fn validate_mcp_url(url: &str) -> Result<(), String> {
-    if url.trim().is_empty() {
+    let url = url.trim();
+    if url.is_empty() {
         return Err("Invalid arguments: url must not be empty".to_string());
     }
     if url.len() > MAX_MCP_URL_BYTES {
         return Err(format!(
             "Invalid arguments: url exceeds {MAX_MCP_URL_BYTES} bytes"
         ));
+    }
+    let parsed = url::Url::parse(url)
+        .map_err(|_| "Invalid arguments: url must be an absolute HTTP(S) URL".to_string())?;
+    if !matches!(parsed.scheme(), "http" | "https") || parsed.host().is_none() {
+        return Err("Invalid arguments: url must be an absolute HTTP(S) URL".to_string());
     }
     Ok(())
 }
@@ -6642,6 +6648,14 @@ mod tests {
             validate_mcp_url(&"x".repeat(MAX_MCP_URL_BYTES + 1)),
             Err("Invalid arguments: url exceeds 4096 bytes".to_string())
         );
+        for invalid_url in ["example.com", "file:///tmp/page.html", "mailto:test@example.com"] {
+            assert_eq!(
+                validate_mcp_url(invalid_url),
+                Err("Invalid arguments: url must be an absolute HTTP(S) URL".to_string()),
+                "url: {invalid_url}"
+            );
+        }
+        assert!(validate_mcp_url(" https://example.com/page ").is_ok());
     }
 
     #[tokio::test]
