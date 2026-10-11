@@ -16,7 +16,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   and `role:` forms also work for element roles.
 /// - Element roles: `link`, `button`, `text_input` / `textbox` / `searchbox` /
 ///   `slider` / `spinbutton` / `input`, HTML text-input types such as `text`,
-///   `search`, `email`, `number`,
+///   `search_input` / `search-input`, `email`, `number`,
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local`, `month`,
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea`,
 ///   `select` / `combobox` / `listbox`, `checkbox`,
@@ -25,7 +25,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list`,
-///   `group` / `fieldset`, `separator` / `hr`, `details` / `summary`, `iframe`
+///   `group` / `fieldset` / `figure` / `radiogroup` / `progress` / `progressbar`
+///   / `meter` / `output`,
+///   `separator` / `hr`, `details` / `summary`, `iframe`
 /// - Heading levels: `h1` .. `h6` (or `heading1` .. `heading6`, including
 ///   hyphenated `h-1`/`heading-1` forms) match headings whose compiled
 ///   `attrs.level` is that integer. Missing or out-of-range levels are not invented.
@@ -53,7 +55,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // Try to match a region role
     let role_opt: Option<RegionRole> = match selector.to_lowercase().as_str() {
         "main" => Some(RegionRole::Main),
-        "nav" | "navigation" => Some(RegionRole::Navigation),
+        "nav" | "navigation" | "search" => Some(RegionRole::Navigation),
         "aside" | "complementary" => Some(RegionRole::Aside),
         "header" | "banner" => Some(RegionRole::Header),
         "footer" | "contentinfo" => Some(RegionRole::Footer),
@@ -248,7 +250,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "spinbutton"
         | "input"
         | "text"
-        | "search"
+        | "search_input"
         | "email"
         | "number"
         | "password"
@@ -283,7 +285,16 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         "table" => Some(ElementRole::Table),
         "paragraph" | "p" | "alert" | "status" | "tooltip" => Some(ElementRole::Paragraph),
         "section" => Some(ElementRole::Section),
-        "group" | "fieldset" => Some(ElementRole::Group),
+        "group"
+        | "fieldset"
+        | "figure"
+        | "radiogroup"
+        | "progress"
+        | "progressbar"
+        | "meter"
+        | "output" => {
+            Some(ElementRole::Group)
+        }
         "separator" | "hr" => Some(ElementRole::Separator),
         "details" | "summary" => Some(ElementRole::Details),
         "iframe" => Some(ElementRole::Iframe),
@@ -707,6 +718,17 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_aria_group_aliases() {
+        for selector in ["figure", "radiogroup", "progress", "progressbar", "meter", "output"] {
+            assert_eq!(
+                parse_element_role(selector),
+                Some(ElementRole::Group),
+                "selector: {selector}"
+            );
+        }
+    }
+
+    #[test]
     fn test_selector_structural_html_tag_aliases() {
         let mut som = make_test_som();
         som.regions[0].elements[0].role = ElementRole::Group;
@@ -772,10 +794,16 @@ mod tests {
         };
         som.regions.push(aside);
 
+        let mut search = som.regions[0].clone();
+        search.id = "r-search".to_string();
+        search.role = RegionRole::Navigation;
+        som.regions.push(search);
+
         for (selector, expected_role) in [
             ("banner", RegionRole::Header),
             ("contentinfo", RegionRole::Footer),
             ("complementary", RegionRole::Aside),
+            ("search", RegionRole::Navigation),
             ("region", RegionRole::Content),
             ("role=region", RegionRole::Content),
         ] {
@@ -878,7 +906,8 @@ mod tests {
     fn test_selector_input_type_aliases_match_compiled_text_input() {
         for selector in [
             "text",
-            "search",
+            "search_input",
+            "search-input",
             "email",
             "number",
             "password",
@@ -900,6 +929,29 @@ mod tests {
                 Some(ElementRole::TextInput),
                 "selector: {selector}"
             );
+        }
+    }
+
+    #[test]
+    fn test_selector_search_input_alias_filters_text_input() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-search".to_string(),
+            role: ElementRole::TextInput,
+            html_id: None,
+            text: None,
+            label: Some("Search".to_string()),
+            actions: Some(vec!["type".to_string()]),
+            attrs: None,
+            children: None,
+            shadow: None,
+            hints: None,
+        });
+
+        for selector in ["search_input", "search-input"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-search");
         }
     }
 
