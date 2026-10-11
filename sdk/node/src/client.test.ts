@@ -22,12 +22,12 @@ describe('read selectors', () => {
 
     await browser.fetchPage('fixture', { selector: 'main' });
     await browser.som('fixture', { selector: 'interactive' });
-    await browser.extractText('fixture', { selector: 'content' });
+    await browser.extractText('fixture', { javascript: false, selector: 'content' });
 
     assert.deepEqual(calls, [
       { name: 'fetch_page', args: { url: 'fixture', selector: 'main' } },
       { name: 'fetch_page', args: { url: 'fixture', selector: 'interactive' } },
-      { name: 'extract_text', args: { url: 'fixture', selector: 'content' } },
+      { name: 'extract_text', args: { url: 'fixture', javascript: false, selector: 'content' } },
     ]);
     browser.close();
   });

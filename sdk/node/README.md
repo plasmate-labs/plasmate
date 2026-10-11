@@ -55,7 +55,7 @@ browser.close();
 
 - **`som(url, options?)`** - Convenience alias for `fetchPage`, returns typed `Som`; options include `budget`, `javascript`, and `selector`
 - **`fetchPage(url, options?)`** - Returns SOM JSON; options include `budget`, `javascript`, and `selector`
-- **`extractText(url, options?)`** - Returns clean text; options include `maxChars` and `selector`
+- **`extractText(url, options?)`** - Returns clean text; options include `javascript`, `maxChars`, and `selector`
 
 ### Stateful (interactive sessions)
 
