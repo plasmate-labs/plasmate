@@ -384,3 +384,42 @@ func (c *Client) ExtractTextWithOptions(url string, opts ExtractTextOptions) (st
 	}
 	return string(raw), nil
 }
+
+// ExtractLinksOptions holds optional parameters for ExtractLinksWithOptions.
+type ExtractLinksOptions struct {
+	JavaScript *bool   // Enable JavaScript execution (defaults to true)
+	Selector   *string // Optional SOM region, role, action, or element-id filter
+}
+
+func extractLinksArguments(url string, opts ExtractLinksOptions) map[string]interface{} {
+	args := map[string]interface{}{"url": url}
+	if opts.JavaScript != nil {
+		args["javascript"] = *opts.JavaScript
+	}
+	if opts.Selector != nil {
+		args["selector"] = *opts.Selector
+	}
+	return args
+}
+
+// ExtractLinks fetches a page and returns deduplicated outbound URLs.
+func (c *Client) ExtractLinks(url string) ([]string, error) {
+	return c.ExtractLinksWithOptions(url, ExtractLinksOptions{})
+}
+
+// ExtractLinksWithOptions fetches links with optional JavaScript and SOM
+// selector limits.
+func (c *Client) ExtractLinksWithOptions(url string, opts ExtractLinksOptions) ([]string, error) {
+	raw, err := c.callTool("extract_links", extractLinksArguments(url, opts))
+	if err != nil {
+		return nil, err
+	}
+	if raw == nil {
+		return nil, nil
+	}
+	var links []string
+	if err := json.Unmarshal(raw, &links); err != nil {
+		return nil, fmt.Errorf("plasmate: unmarshal extracted links: %w", err)
+	}
+	return links, nil
+}

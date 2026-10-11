@@ -56,6 +56,15 @@ func main() {
     }
     fmt.Println(text)
 
+    links, err := client.ExtractLinksWithOptions("https://example.com", plasmate.ExtractLinksOptions{
+        JavaScript: &javascript,
+        Selector:   &selector,
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf("Found %d links\n", len(links))
+
     // Query helpers
     links := plasmate.FindByTag(som, "link")
     fmt.Printf("Found %d links\n", len(links))

@@ -67,6 +67,32 @@ func TestExtractTextArgumentsOmitNilOptions(t *testing.T) {
 	}
 }
 
+func TestExtractLinksArgumentsIncludeOptions(t *testing.T) {
+	javascript := false
+	selector := "main"
+
+	got := extractLinksArguments("fixture", ExtractLinksOptions{
+		JavaScript: &javascript,
+		Selector:   &selector,
+	})
+	want := map[string]interface{}{
+		"url":        "fixture",
+		"javascript": false,
+		"selector":   "main",
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("extract_links arguments = %#v, want %#v", got, want)
+	}
+}
+
+func TestExtractLinksArgumentsOmitNilOptions(t *testing.T) {
+	got := extractLinksArguments("fixture", ExtractLinksOptions{})
+	if len(got) != 1 || got["url"] != "fixture" {
+		t.Fatalf("extract_links arguments = %#v, want only fixture URL", got)
+	}
+}
+
 func TestEmptyToolErrorKeepsBoundedMessage(t *testing.T) {
 	dir := t.TempDir()
 	fixture := filepath.Join(dir, "mcp-fixture.sh")
