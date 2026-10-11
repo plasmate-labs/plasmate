@@ -311,6 +311,7 @@ class Plasmate:
         url: str,
         *,
         javascript: bool = True,
+        max_links: Optional[int] = None,
         selector: Optional[str] = None,
     ) -> str:
         """
@@ -319,6 +320,7 @@ class Plasmate:
         Args:
             url: URL to fetch
             javascript: Execute JavaScript before extracting links (default: true)
+            max_links: Maximum number of URLs to return
             selector: Optional SOM region, role, action, or element-id filter
 
         Returns:
@@ -327,6 +329,8 @@ class Plasmate:
         args: dict[str, Any] = {"url": url}
         if not javascript:
             args["javascript"] = False
+        if max_links is not None:
+            args["max_links"] = max_links
         if selector is not None:
             args["selector"] = selector
         return self._call_tool("extract_links", args)
@@ -589,12 +593,15 @@ class AsyncPlasmate:
         url: str,
         *,
         javascript: bool = True,
+        max_links: Optional[int] = None,
         selector: Optional[str] = None,
     ) -> str:
         """Fetch a page and return deduplicated outbound URLs, one per line."""
         args: dict[str, Any] = {"url": url}
         if not javascript:
             args["javascript"] = False
+        if max_links is not None:
+            args["max_links"] = max_links
         if selector is not None:
             args["selector"] = selector
         return await self._call_tool("extract_links", args)

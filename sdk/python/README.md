@@ -72,7 +72,7 @@ with Plasmate() as browser:
 
 - **`fetch_page(url, *, budget=None, javascript=True, selector=None)`** - Returns SOM dict; optionally scopes the result to a region, role, action, or element ID
 - **`extract_text(url, *, javascript=True, max_chars=None, selector=None)`** - Returns clean text string; optionally disables JavaScript or scopes extraction before text collection
-- **`extract_links(url, *, javascript=True, selector=None)`** - Returns deduplicated outbound URLs; optionally disables JavaScript or scopes link discovery
+- **`extract_links(url, *, javascript=True, max_links=None, selector=None)`** - Returns deduplicated outbound URLs; optionally disables JavaScript, caps results, or scopes link discovery
 
 ### Stateful (interactive sessions)
 
