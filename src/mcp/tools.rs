@@ -66,6 +66,9 @@ fn default_javascript() -> bool {
 #[serde(deny_unknown_fields)]
 struct ExtractTextParams {
     url: String,
+    /// Execute page JavaScript before extracting text (enabled by default).
+    #[serde(default = "default_javascript")]
+    javascript: bool,
     #[serde(default)]
     max_chars: Option<usize>,
     /// Filter to a specific region before extracting text.
@@ -463,6 +466,10 @@ pub fn extract_text_definition() -> ToolDefinition {
                     "minLength": 1,
                     "description": "URL to fetch"
                 },
+                "javascript": {
+                    "type": "boolean",
+                    "description": "Enable JavaScript execution for dynamic/SPA pages. Default: true."
+                },
                 "max_chars": {
                     "type": "integer",
                     "minimum": 0,
@@ -652,13 +659,13 @@ pub async fn handle_extract_text(
         }
     };
 
-    info!(url = %params.url, "extract_text");
+    info!(url = %params.url, javascript = params.javascript, "extract_text");
 
     let (effective_som, cache_restored) = match load_som_for_mcp(
         client,
         cache,
         &params.url,
-        true,
+        params.javascript,
         params.selector.as_deref(),
     )
     .await
@@ -868,6 +875,9 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
 #[serde(deny_unknown_fields)]
 struct ExtractLinksParams {
     url: String,
+    /// Execute page JavaScript before extracting links (enabled by default).
+    #[serde(default = "default_javascript")]
+    javascript: bool,
     /// Filter to a specific region before extracting links.
     #[serde(default)]
     selector: Option<String>,
@@ -885,6 +895,10 @@ pub fn extract_links_definition() -> ToolDefinition {
                     "type": "string",
                     "minLength": 1,
                     "description": "URL to fetch"
+                },
+                "javascript": {
+                    "type": "boolean",
+                    "description": "Enable JavaScript execution for dynamic/SPA pages. Default: true."
                 },
                 "selector": {
                     "type": "string",
@@ -1501,13 +1515,13 @@ pub async fn handle_extract_links(
         }
     };
 
-    info!(url = %params.url, "extract_links");
+    info!(url = %params.url, javascript = params.javascript, "extract_links");
 
     let (effective_som, cache_restored) = match load_som_for_mcp(
         client,
         cache,
         &params.url,
-        true,
+        params.javascript,
         params.selector.as_deref(),
     )
     .await
@@ -6751,6 +6765,28 @@ mod tests {
         }))
         .expect_err("extract_text should reject misspelled fields");
         assert!(text_error.to_string().contains("unknown field"));
+
+        let text_params = serde_json::from_value::<ExtractTextParams>(json!({
+            "url": "https://example.com",
+            "javascript": false
+        }))
+        .expect("extract_text should accept the javascript toggle");
+        assert!(!text_params.javascript);
+        assert_eq!(
+            serde_json::from_value::<ExtractTextParams>(json!({
+                "url": "https://example.com"
+            }))
+            .expect("extract_text should default javascript to enabled")
+            .javascript,
+            true
+        );
+
+        let links_params = serde_json::from_value::<ExtractLinksParams>(json!({
+            "url": "https://example.com",
+            "javascript": false
+        }))
+        .expect("extract_links should accept the javascript toggle");
+        assert!(!links_params.javascript);
 
         assert!(serde_json::from_value::<TypeTextParams>(json!({
             "session_id": "sess-1",

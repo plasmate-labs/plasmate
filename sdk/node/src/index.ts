@@ -358,17 +358,37 @@ export class Plasmate extends EventEmitter {
    * Fetch a page and return clean, readable text only.
    *
    * @param url - URL to fetch
+   * @param options.javascript - Enable JS execution (default: true)
    * @param options.maxChars - Maximum characters to return
    * @param options.selector - Optional SOM region, role, action, or element-id filter
    */
   async extractText(url: string, options?: {
+    javascript?: boolean;
     maxChars?: number;
     selector?: string;
   }): Promise<string> {
     const args: Record<string, unknown> = { url };
+    if (options?.javascript != null) args.javascript = options.javascript;
     if (options?.maxChars != null) args.max_chars = options.maxChars;
     if (options?.selector != null) args.selector = options.selector;
     return await this.callTool('extract_text', args) as string;
+  }
+
+  /**
+   * Fetch a page and return deduplicated outbound URLs, one per line.
+   *
+   * @param url - URL to fetch
+   * @param options.javascript - Enable JS execution (default: true)
+   * @param options.selector - Optional SOM region, role, action, or element-id filter
+   */
+  async extractLinks(url: string, options?: {
+    javascript?: boolean;
+    selector?: string;
+  }): Promise<string> {
+    const args: Record<string, unknown> = { url };
+    if (options?.javascript != null) args.javascript = options.javascript;
+    if (options?.selector != null) args.selector = options.selector;
+    return await this.callTool('extract_links', args) as string;
   }
 
   // ---- Stateful Tools ----
