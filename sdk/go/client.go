@@ -388,6 +388,7 @@ func (c *Client) ExtractTextWithOptions(url string, opts ExtractTextOptions) (st
 // ExtractLinksOptions holds optional parameters for ExtractLinksWithOptions.
 type ExtractLinksOptions struct {
 	JavaScript *bool   // Enable JavaScript execution (defaults to true)
+	MaxLinks   *int    // Maximum number of URLs to return
 	Selector   *string // Optional SOM region, role, action, or element-id filter
 }
 
@@ -395,6 +396,9 @@ func extractLinksArguments(url string, opts ExtractLinksOptions) map[string]inte
 	args := map[string]interface{}{"url": url}
 	if opts.JavaScript != nil {
 		args["javascript"] = *opts.JavaScript
+	}
+	if opts.MaxLinks != nil {
+		args["max_links"] = *opts.MaxLinks
 	}
 	if opts.Selector != nil {
 		args["selector"] = *opts.Selector
@@ -408,7 +412,7 @@ func (c *Client) ExtractLinks(url string) ([]string, error) {
 }
 
 // ExtractLinksWithOptions fetches links with optional JavaScript and SOM
-// selector limits.
+// selector and result-count limits.
 func (c *Client) ExtractLinksWithOptions(url string, opts ExtractLinksOptions) ([]string, error) {
 	raw, err := c.callTool("extract_links", extractLinksArguments(url, opts))
 	if err != nil {
