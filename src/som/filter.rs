@@ -28,6 +28,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `group` / `fieldset` / `figure` / `radiogroup` / `progress` / `progressbar`
 ///   / `meter` / `output` / `video` / `canvas`,
 ///   `separator` / `hr`, `details` / `summary`, `iframe`
+///   and the grouped media selector `media` (images and media-capable groups)
 /// - Heading levels: `h1` .. `h6` (or `heading1` .. `heading6`, including
 ///   hyphenated `h-1`/`heading-1` forms) match headings whose compiled
 ///   `attrs.level` is that integer. Missing or out-of-range levels are not invented.
@@ -86,6 +87,12 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
 
     // Match element roles, preserving parent containers and shadow roots that
     // contain matching descendants.
+    if selector.eq_ignore_ascii_case("media") {
+        return filter_som_elements(som, selector, |element| {
+            matches!(element.role, ElementRole::Image | ElementRole::Group)
+        });
+    }
+
     if let Some(role) = parse_element_role(selector) {
         return filter_som_elements(som, selector, |element| element.role == role);
     }
@@ -878,6 +885,45 @@ mod tests {
             apply_selector(&som, "textbox").regions[0].elements[0].id,
             "e-search"
         );
+    }
+
+    #[test]
+    fn test_selector_media_groups_visual_and_media_capable_elements() {
+        let mut som = make_test_som();
+        som.regions[1].elements.extend([
+            Element {
+                id: "e-image".to_string(),
+                role: ElementRole::Image,
+                html_id: None,
+                text: None,
+                label: Some("Cover".to_string()),
+                actions: None,
+                attrs: None,
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+            Element {
+                id: "e-video".to_string(),
+                role: ElementRole::Group,
+                html_id: None,
+                text: None,
+                label: Some("Preview".to_string()),
+                actions: None,
+                attrs: None,
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+        ]);
+
+        let filtered = apply_selector(&som, "media");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 2);
+        assert!(filtered.regions[0]
+            .elements
+            .iter()
+            .all(|element| matches!(element.role, ElementRole::Image | ElementRole::Group)));
     }
 
     #[test]
