@@ -45,9 +45,11 @@ func main() {
 
     // Scope plain-text reads and optionally cap their size.
     maxChars := 1200
+    javascript := false
     text, err := client.ExtractTextWithOptions("https://example.com", plasmate.ExtractTextOptions{
-        MaxChars: &maxChars,
-        Selector: &selector,
+        MaxChars:   &maxChars,
+        JavaScript: &javascript,
+        Selector:   &selector,
     })
     if err != nil {
         log.Fatal(err)
@@ -142,7 +144,7 @@ all := plasmate.FlatElements(som)
 | `FetchPage(url)` | Fetch page as SOM |
 | `FetchPageWithOptions(url, opts)` | Fetch with budget, JS, or an optional SOM selector |
 | `ExtractText(url)` | Fetch page as plain text |
-| `ExtractTextWithOptions(url, opts)` | Fetch plain text with max-character and SOM selector options |
+| `ExtractTextWithOptions(url, opts)` | Fetch plain text with max-character, JavaScript, and SOM selector options |
 | `OpenPage(url)` | Open interactive session |
 | `Evaluate(sessionID, expr)` | Run JS in page context |
 | `Click(sessionID, elementID)` | Click element, get updated SOM |

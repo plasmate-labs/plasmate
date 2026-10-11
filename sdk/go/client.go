@@ -344,14 +344,18 @@ func (c *Client) ClosePage(sessionID string) error {
 
 // ExtractTextOptions holds optional parameters for ExtractTextWithOptions.
 type ExtractTextOptions struct {
-	MaxChars *int    // Maximum characters to return
-	Selector *string // Optional SOM region, role, action, or element-id filter
+	MaxChars   *int    // Maximum characters to return
+	JavaScript *bool   // Enable JavaScript execution (defaults to true)
+	Selector   *string // Optional SOM region, role, action, or element-id filter
 }
 
 func extractTextArguments(url string, opts ExtractTextOptions) map[string]interface{} {
 	args := map[string]interface{}{"url": url}
 	if opts.MaxChars != nil {
 		args["max_chars"] = *opts.MaxChars
+	}
+	if opts.JavaScript != nil {
+		args["javascript"] = *opts.JavaScript
 	}
 	if opts.Selector != nil {
 		args["selector"] = *opts.Selector

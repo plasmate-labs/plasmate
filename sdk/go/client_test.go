@@ -40,16 +40,19 @@ func TestFetchPageArgumentsOmitNilSelector(t *testing.T) {
 
 func TestExtractTextArgumentsIncludeOptions(t *testing.T) {
 	maxChars := 1200
+	javascript := false
 	selector := "main"
 
 	got := extractTextArguments("fixture", ExtractTextOptions{
-		MaxChars: &maxChars,
-		Selector: &selector,
+		MaxChars:   &maxChars,
+		JavaScript: &javascript,
+		Selector:   &selector,
 	})
 	want := map[string]interface{}{
-		"url":       "fixture",
-		"max_chars": 1200,
-		"selector":  "main",
+		"url":        "fixture",
+		"max_chars":  1200,
+		"javascript": false,
+		"selector":   "main",
 	}
 
 	if !reflect.DeepEqual(got, want) {
