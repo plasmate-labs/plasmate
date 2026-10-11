@@ -88,9 +88,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // Match element roles, preserving parent containers and shadow roots that
     // contain matching descendants.
     if selector.eq_ignore_ascii_case("media") {
-        return filter_som_elements(som, selector, |element| {
-            matches!(element.role, ElementRole::Image | ElementRole::Group)
-        });
+        return filter_som_elements(som, selector, is_media_element);
     }
 
     if let Some(role) = parse_element_role(selector) {
@@ -207,6 +205,20 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         selector
     );
     som.clone()
+}
+
+fn is_media_element(element: &Element) -> bool {
+    if element.role == ElementRole::Image {
+        return true;
+    }
+
+    element.role == ElementRole::Group
+        && element
+            .attrs
+            .as_ref()
+            .and_then(|attrs| attrs.get("source_role"))
+            .and_then(serde_json::Value::as_str)
+            .is_some_and(|source_role| matches!(source_role, "video" | "canvas"))
 }
 
 fn parse_heading_level_selector(selector: &str) -> Option<u8> {
@@ -910,7 +922,19 @@ mod tests {
                 text: None,
                 label: Some("Preview".to_string()),
                 actions: None,
-                attrs: None,
+                attrs: Some(serde_json::json!({"source_role": "video"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+            Element {
+                id: "e-fieldset".to_string(),
+                role: ElementRole::Group,
+                html_id: None,
+                text: None,
+                label: Some("Filters".to_string()),
+                actions: None,
+                attrs: Some(serde_json::json!({"source_role": "fieldset"})),
                 children: None,
                 hints: None,
                 shadow: None,
@@ -920,10 +944,14 @@ mod tests {
         let filtered = apply_selector(&som, "media");
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 2);
-        assert!(filtered.regions[0]
-            .elements
-            .iter()
-            .all(|element| matches!(element.role, ElementRole::Image | ElementRole::Group)));
+        assert_eq!(
+            filtered.regions[0]
+                .elements
+                .iter()
+                .map(|element| element.id.as_str())
+                .collect::<Vec<_>>(),
+            vec!["e-image", "e-video"]
+        );
     }
 
     #[test]
