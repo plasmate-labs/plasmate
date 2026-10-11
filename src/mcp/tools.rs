@@ -29,6 +29,7 @@ use crate::som::types::Som;
 /// Default timeout for fetching pages (30 seconds).
 const DEFAULT_TIMEOUT_MS: u64 = 30000;
 const MAX_TRACE_HANDLE_BYTES: usize = 64;
+const MAX_MCP_URL_BYTES: usize = 4096;
 
 /// MCP tool definition structure.
 #[derive(Debug, Serialize)]
@@ -135,9 +136,7 @@ async fn load_som_for_mcp(
     javascript: bool,
     selector: Option<&str>,
 ) -> Result<(Som, bool), String> {
-    if url.trim().is_empty() {
-        return Err("Invalid arguments: url must not be empty".to_string());
-    }
+    validate_mcp_url(url)?;
 
     let fetch_result = fetch::fetch_url(client, url, DEFAULT_TIMEOUT_MS)
         .await
@@ -207,6 +206,28 @@ async fn load_som_for_mcp(
     } else {
         Ok((page_result.som, false))
     }
+}
+
+fn validate_mcp_url(url: &str) -> Result<(), String> {
+    let url = url.trim();
+    if url.is_empty() {
+        return Err("Invalid arguments: url must not be empty".to_string());
+    }
+    if url.len() > MAX_MCP_URL_BYTES {
+        return Err(format!(
+            "Invalid arguments: url exceeds {MAX_MCP_URL_BYTES} bytes"
+        ));
+    }
+    let parsed = url::Url::parse(url)
+        .map_err(|_| "Invalid arguments: url must be an absolute HTTP(S) URL".to_string())?;
+    if !matches!(parsed.scheme(), "http" | "https")
+        || parsed.host().is_none()
+        || !parsed.username().is_empty()
+        || parsed.password().is_some()
+    {
+        return Err("Invalid arguments: url must be an absolute HTTP(S) URL".to_string());
+    }
+    Ok(())
 }
 
 fn select_and_store_mcp_som(
@@ -431,6 +452,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
                 "url": {
                     "type": "string",
                     "minLength": 1,
+                    "maxLength": MAX_MCP_URL_BYTES,
                     "description": "URL to fetch"
                 },
                 "budget": {
@@ -464,6 +486,7 @@ pub fn extract_text_definition() -> ToolDefinition {
                 "url": {
                     "type": "string",
                     "minLength": 1,
+                    "maxLength": MAX_MCP_URL_BYTES,
                     "description": "URL to fetch"
                 },
                 "javascript": {
@@ -897,6 +920,7 @@ pub fn extract_links_definition() -> ToolDefinition {
                 "url": {
                     "type": "string",
                     "minLength": 1,
+                    "maxLength": MAX_MCP_URL_BYTES,
                     "description": "URL to fetch"
                 },
                 "javascript": {
@@ -6602,6 +6626,45 @@ mod tests {
                 definition.name
             );
         }
+    }
+
+    #[test]
+    fn stateless_page_url_schemas_and_validation_bound_request_size() {
+        for definition in [
+            fetch_page_definition(),
+            extract_text_definition(),
+            extract_links_definition(),
+        ] {
+            assert_eq!(
+                definition.input_schema["properties"]["url"]["maxLength"], MAX_MCP_URL_BYTES,
+                "{} must advertise the URL size limit",
+                definition.name
+            );
+        }
+
+        let prefix = "https://example.com/";
+        assert!(validate_mcp_url(&format!(
+            "{prefix}{}",
+            "x".repeat(MAX_MCP_URL_BYTES - prefix.len())
+        ))
+        .is_ok());
+        assert_eq!(
+            validate_mcp_url(&"x".repeat(MAX_MCP_URL_BYTES + 1)),
+            Err("Invalid arguments: url exceeds 4096 bytes".to_string())
+        );
+        for invalid_url in [
+            "example.com",
+            "file:///tmp/page.html",
+            "mailto:test@example.com",
+            "https://user:secret@example.com/page",
+        ] {
+            assert_eq!(
+                validate_mcp_url(invalid_url),
+                Err("Invalid arguments: url must be an absolute HTTP(S) URL".to_string()),
+                "url: {invalid_url}"
+            );
+        }
+        assert!(validate_mcp_url(" https://example.com/page ").is_ok());
     }
 
     #[tokio::test]
@@ -17171,18 +17234,14 @@ mod tests {
 
         assert_eq!(
             urls,
-            vec![
-                "https://example.com/first",
-                "https://example.com/second"
-            ]
+            vec!["https://example.com/first", "https://example.com/second"]
         );
     }
 
     #[test]
     fn extract_text_schema_explains_tiny_max_chars_behavior() {
         let definition = extract_text_definition();
-        let description = definition.input_schema["properties"]["max_chars"]
-            ["description"]
+        let description = definition.input_schema["properties"]["max_chars"]["description"]
             .as_str()
             .expect("max_chars schema should have a description");
 

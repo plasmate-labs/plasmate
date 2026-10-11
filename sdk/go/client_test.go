@@ -69,15 +69,18 @@ func TestExtractTextArgumentsOmitNilOptions(t *testing.T) {
 
 func TestExtractLinksArgumentsIncludeOptions(t *testing.T) {
 	javascript := false
+	maxLinks := 3
 	selector := "main"
 
 	got := extractLinksArguments("fixture", ExtractLinksOptions{
 		JavaScript: &javascript,
+		MaxLinks:   &maxLinks,
 		Selector:   &selector,
 	})
 	want := map[string]interface{}{
 		"url":        "fixture",
 		"javascript": false,
+		"max_links":  3,
 		"selector":   "main",
 	}
 
