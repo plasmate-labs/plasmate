@@ -40,16 +40,19 @@ func TestFetchPageArgumentsOmitNilSelector(t *testing.T) {
 
 func TestExtractTextArgumentsIncludeOptions(t *testing.T) {
 	maxChars := 1200
+	javascript := false
 	selector := "main"
 
 	got := extractTextArguments("fixture", ExtractTextOptions{
-		MaxChars: &maxChars,
-		Selector: &selector,
+		MaxChars:   &maxChars,
+		JavaScript: &javascript,
+		Selector:   &selector,
 	})
 	want := map[string]interface{}{
-		"url":       "fixture",
-		"max_chars": 1200,
-		"selector":  "main",
+		"url":        "fixture",
+		"max_chars":  1200,
+		"javascript": false,
+		"selector":   "main",
 	}
 
 	if !reflect.DeepEqual(got, want) {
@@ -61,6 +64,32 @@ func TestExtractTextArgumentsOmitNilOptions(t *testing.T) {
 	got := extractTextArguments("fixture", ExtractTextOptions{})
 	if len(got) != 1 || got["url"] != "fixture" {
 		t.Fatalf("extract_text arguments = %#v, want only fixture URL", got)
+	}
+}
+
+func TestExtractLinksArgumentsIncludeOptions(t *testing.T) {
+	javascript := false
+	selector := "main"
+
+	got := extractLinksArguments("fixture", ExtractLinksOptions{
+		JavaScript: &javascript,
+		Selector:   &selector,
+	})
+	want := map[string]interface{}{
+		"url":        "fixture",
+		"javascript": false,
+		"selector":   "main",
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("extract_links arguments = %#v, want %#v", got, want)
+	}
+}
+
+func TestExtractLinksArgumentsOmitNilOptions(t *testing.T) {
+	got := extractLinksArguments("fixture", ExtractLinksOptions{})
+	if len(got) != 1 || got["url"] != "fixture" {
+		t.Fatalf("extract_links arguments = %#v, want only fixture URL", got)
 	}
 }
 

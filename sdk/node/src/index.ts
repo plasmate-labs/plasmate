@@ -379,14 +379,17 @@ export class Plasmate extends EventEmitter {
    *
    * @param url - URL to fetch
    * @param options.javascript - Enable JS execution (default: true)
+   * @param options.maxLinks - Maximum number of URLs to return
    * @param options.selector - Optional SOM region, role, action, or element-id filter
    */
   async extractLinks(url: string, options?: {
     javascript?: boolean;
+    maxLinks?: number;
     selector?: string;
   }): Promise<string> {
     const args: Record<string, unknown> = { url };
     if (options?.javascript != null) args.javascript = options.javascript;
+    if (options?.maxLinks != null) args.max_links = options.maxLinks;
     if (options?.selector != null) args.selector = options.selector;
     return await this.callTool('extract_links', args) as string;
   }

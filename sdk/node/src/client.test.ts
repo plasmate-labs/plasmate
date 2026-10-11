@@ -23,13 +23,13 @@ describe('read selectors', () => {
     await browser.fetchPage('fixture', { selector: 'main' });
     await browser.som('fixture', { selector: 'interactive' });
     await browser.extractText('fixture', { javascript: false, selector: 'content' });
-    await browser.extractLinks('fixture', { javascript: false, selector: 'main' });
+    await browser.extractLinks('fixture', { javascript: false, maxLinks: 3, selector: 'main' });
 
     assert.deepEqual(calls, [
       { name: 'fetch_page', args: { url: 'fixture', selector: 'main' } },
       { name: 'fetch_page', args: { url: 'fixture', selector: 'interactive' } },
       { name: 'extract_text', args: { url: 'fixture', javascript: false, selector: 'content' } },
-      { name: 'extract_links', args: { url: 'fixture', javascript: false, selector: 'main' } },
+      { name: 'extract_links', args: { url: 'fixture', javascript: false, max_links: 3, selector: 'main' } },
     ]);
     browser.close();
   });
