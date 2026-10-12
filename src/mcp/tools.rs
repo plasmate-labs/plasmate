@@ -1027,7 +1027,7 @@ pub fn crawl_policy_definition() -> ToolDefinition {
                 },
                 "product_token": {
                     "type": "string",
-                    "pattern": "^[A-Za-z_-]{1,64}$",
+                    "pattern": "^[A-Za-z0-9_-]{1,64}$",
                     "default": "Plasmate",
                     "description": "Crawler product token used for both User-Agent group selection and the robots.txt request."
                 },
@@ -17852,6 +17852,10 @@ mod tests {
         assert_eq!(
             crawl.input_schema["properties"]["product_token"]["default"],
             "Plasmate"
+        );
+        assert_eq!(
+            crawl.input_schema["properties"]["product_token"]["pattern"],
+            "^[A-Za-z0-9_-]{1,64}$"
         );
         let inspect = inspect_page_definition();
         assert_eq!(inspect.input_schema["additionalProperties"], false);
