@@ -356,6 +356,7 @@ async fn load_session_page_for_mcp(
     cache: &SomCache,
     url: &str,
 ) -> Result<(String, String, pipeline::PageResult, bool), String> {
+    validate_mcp_url(url)?;
     let fetch_result = fetch::fetch_url(client, url, DEFAULT_TIMEOUT_MS)
         .await
         .map_err(|e| format!("Failed to fetch {}: {}", url, e))?;
@@ -955,6 +956,7 @@ pub fn ard_discover_definition() -> ToolDefinition {
                     "type": "string",
                     "format": "uri",
                     "minLength": 1,
+                    "maxLength": MAX_MCP_URL_BYTES,
                     "description": "Operator-supplied public HTTPS page or origin to inspect."
                 },
                 "timeout_ms": {
@@ -976,6 +978,9 @@ pub async fn handle_ard_discover(arguments: &Value) -> Value {
         Ok(params) => params,
         Err(error) => return error_response(&format!("Invalid arguments: {error}")),
     };
+    if let Err(error) = validate_mcp_url(&params.url) {
+        return error_response(&error);
+    }
     match plasmate::ard::discover(&params.url, params.timeout_ms).await {
         Ok(report) => match build_bounded_ard_mcp_result(report) {
             Ok(result) => result,
@@ -1024,6 +1029,9 @@ pub async fn handle_crawl_policy(arguments: &Value) -> Value {
         Ok(params) => params,
         Err(error) => return error_response(&format!("Invalid arguments: {error}")),
     };
+    if let Err(error) = validate_mcp_url(&params.url) {
+        return error_response(&error);
+    }
     match plasmate::crawl_policy::evaluate(&params.url, &params.product_token, params.timeout_ms)
         .await
     {
@@ -1082,6 +1090,9 @@ pub async fn handle_inspect_page(arguments: &Value, client: &reqwest::Client) ->
         Ok(mode) => mode,
         Err(error) => return error_response(&error),
     };
+    if let Err(error) = validate_mcp_url(&params.url) {
+        return error_response(&error);
+    }
     if !(320..=1920).contains(&params.width)
         || !(200..=1080).contains(&params.height)
         || !(100..=10_000).contains(&params.screenshot_timeout_ms)
@@ -3681,6 +3692,7 @@ pub fn screenshot_page_definition() -> ToolDefinition {
                 "url": {
                     "type": "string",
                     "minLength": 1,
+                    "maxLength": MAX_MCP_URL_BYTES,
                     "description": "URL to screenshot"
                 },
                 "width": {
@@ -3715,6 +3727,10 @@ pub async fn handle_screenshot_page(arguments: &Value, client: &reqwest::Client)
             return error_response(&format!("Invalid arguments: {}", e));
         }
     };
+
+    if let Err(error) = validate_mcp_url(&params.url) {
+        return error_response(&error);
+    }
 
     info!(url = %params.url, "screenshot_page");
 
@@ -3910,6 +3926,7 @@ pub fn open_page_definition() -> ToolDefinition {
                 "url": {
                     "type": "string",
                     "minLength": 1,
+                    "maxLength": MAX_MCP_URL_BYTES,
                     "description": "URL to open"
                 },
                 "trace": {
@@ -5143,6 +5160,7 @@ pub fn navigate_to_definition() -> ToolDefinition {
                 "url": {
                     "type": "string",
                     "minLength": 1,
+                    "maxLength": MAX_MCP_URL_BYTES,
                     "description": "URL to navigate to"
                 }
             },
@@ -6629,11 +6647,14 @@ mod tests {
     }
 
     #[test]
-    fn stateless_page_url_schemas_and_validation_bound_request_size() {
+    fn page_url_schemas_and_validation_bound_request_size() {
         for definition in [
             fetch_page_definition(),
             extract_text_definition(),
             extract_links_definition(),
+            open_page_definition(),
+            navigate_to_definition(),
+            screenshot_page_definition(),
         ] {
             assert_eq!(
                 definition.input_schema["properties"]["url"]["maxLength"], MAX_MCP_URL_BYTES,
@@ -6685,6 +6706,22 @@ mod tests {
                 "Invalid arguments: url must not be empty"
             );
         }
+    }
+
+    #[tokio::test]
+    async fn screenshot_page_rejects_invalid_urls_before_network_access() {
+        let client = reqwest::Client::new();
+        let result = handle_screenshot_page(
+            &json!({"url": "https://user:secret@example.com/page"}),
+            &client,
+        )
+        .await;
+
+        assert_eq!(result["isError"], true);
+        assert_eq!(
+            result["content"][0]["text"],
+            "Invalid arguments: url must be an absolute HTTP(S) URL"
+        );
     }
 
     #[test]
@@ -10232,6 +10269,10 @@ mod tests {
         let definition = ard_discover_definition();
         assert_eq!(definition.name, "ard_discover");
         assert_eq!(definition.input_schema["additionalProperties"], false);
+        assert_eq!(
+            definition.input_schema["properties"]["url"]["maxLength"],
+            MAX_MCP_URL_BYTES
+        );
         assert!(serde_json::from_value::<ArdDiscoverParams>(json!({
             "url": "https://example.com/",
             "unexpected": true
@@ -17797,6 +17838,36 @@ mod tests {
             .as_str()
             .unwrap()
             .contains("unknown field"));
+    }
+
+    #[tokio::test]
+    async fn public_policy_tools_reject_unsafe_urls_before_network_access() {
+        for result in [
+            handle_ard_discover(&json!({
+                "url": "https://user:secret@example.com/"
+            }))
+            .await,
+            handle_crawl_policy(&json!({"url": "file:///tmp/robots.txt"})).await,
+        ] {
+            assert_eq!(result["isError"], true);
+            assert_eq!(
+                result["content"][0]["text"],
+                "Invalid arguments: url must be an absolute HTTP(S) URL"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn inspection_rejects_non_http_urls_before_network_access() {
+        let client = reqwest::Client::new();
+        let inspect =
+            handle_inspect_page(&json!({"url": "file:///tmp/page.html"}), &client).await;
+
+        assert_eq!(inspect["isError"], true);
+        assert!(inspect["content"][0]["text"]
+            .as_str()
+            .unwrap()
+            .contains("absolute HTTP(S) URL"));
     }
 
     #[test]
