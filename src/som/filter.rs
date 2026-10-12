@@ -50,6 +50,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         .strip_prefix("role")
         .and_then(|rest| rest.trim_start().strip_prefix(['=', ':']))
         .map(str::trim)
+        .map(strip_selector_quotes)
         .filter(|value| !value.is_empty())
         .unwrap_or(selector);
 
@@ -113,6 +114,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         .strip_prefix("action")
         .and_then(|rest| rest.trim_start().strip_prefix(['=', ':']))
         .map(str::trim)
+        .map(strip_selector_quotes)
         .filter(|action| !action.is_empty())
         .or_else(|| {
             matches!(
@@ -205,6 +207,18 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         selector
     );
     som.clone()
+}
+
+fn strip_selector_quotes(value: &str) -> &str {
+    value
+        .strip_prefix('"')
+        .and_then(|value| value.strip_suffix('"'))
+        .or_else(|| {
+            value
+                .strip_prefix('\'')
+                .and_then(|value| value.strip_suffix('\''))
+        })
+        .unwrap_or(value)
 }
 
 fn is_media_element(element: &Element) -> bool {
@@ -610,6 +624,31 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1);
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Button);
+        }
+    }
+
+    #[test]
+    fn test_selector_role_and_action_aliases_accept_quoted_values() {
+        let som = make_test_som();
+
+        for selector in ["role=\"button\"", "role='button'"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1);
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Button);
+        }
+
+        for selector in ["action=\"click\"", "action='click'"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 2, "selector: {selector}");
+            assert!(filtered
+                .regions
+                .iter()
+                .flat_map(|region| &region.elements)
+                .all(|element| element
+                    .actions
+                    .as_ref()
+                    .is_some_and(|actions| actions.iter().any(|action| action == "click"))));
         }
     }
 
