@@ -99,6 +99,27 @@ fn default_crawl_product_token() -> String {
     "Plasmate".to_string()
 }
 
+fn validate_crawl_product_token(product_token: &str) -> Result<(), String> {
+    let valid = !product_token.is_empty()
+        && product_token.len() <= 64
+        && product_token
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'-');
+    if valid {
+        Ok(())
+    } else {
+        Err("Invalid arguments: product_token must contain only ASCII letters, digits, '_' or '-' and be 1-64 bytes".to_string())
+    }
+}
+
+fn validate_crawl_timeout_ms(timeout_ms: u64) -> Result<(), String> {
+    if (1..=30_000).contains(&timeout_ms) {
+        Ok(())
+    } else {
+        Err("Invalid arguments: timeout_ms must be an integer between 1 and 30000".to_string())
+    }
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct InspectPageParams {
@@ -1014,7 +1035,7 @@ pub fn crawl_policy_definition() -> ToolDefinition {
                 },
                 "product_token": {
                     "type": "string",
-                    "pattern": "^[A-Za-z_-]{1,64}$",
+                    "pattern": "^[A-Za-z0-9_-]{1,64}$",
                     "default": "Plasmate",
                     "description": "Crawler product token used for both User-Agent group selection and the robots.txt request."
                 },
@@ -1022,7 +1043,8 @@ pub fn crawl_policy_definition() -> ToolDefinition {
                     "type": "integer",
                     "minimum": 1,
                     "maximum": 30000,
-                    "default": 10000
+                    "default": 10000,
+                    "description": "Timeout for retrieving robots.txt, in milliseconds; values must be between 1 and 30000."
                 }
             },
             "required": ["url"],
@@ -1040,9 +1062,13 @@ pub async fn handle_crawl_policy(arguments: &Value) -> Value {
         Ok(url) => url,
         Err(error) => return error_response(&error),
     };
-    match plasmate::crawl_policy::evaluate(url, &params.product_token, params.timeout_ms)
-        .await
-    {
+    if let Err(error) = validate_crawl_product_token(&params.product_token) {
+        return error_response(&error);
+    }
+    if let Err(error) = validate_crawl_timeout_ms(params.timeout_ms) {
+        return error_response(&error);
+    }
+    match plasmate::crawl_policy::evaluate(url, &params.product_token, params.timeout_ms).await {
         Ok(report) => match build_bounded_crawl_policy_result(report) {
             Ok(result) => result,
             Err(error) => error_response(&format!("Failed to serialize crawl policy: {error}")),
@@ -17839,6 +17865,14 @@ mod tests {
             crawl.input_schema["properties"]["product_token"]["default"],
             "Plasmate"
         );
+        assert_eq!(
+            crawl.input_schema["properties"]["product_token"]["pattern"],
+            "^[A-Za-z0-9_-]{1,64}$"
+        );
+        assert_eq!(
+            crawl.input_schema["properties"]["timeout_ms"]["description"],
+            "Timeout for retrieving robots.txt, in milliseconds; values must be between 1 and 30000."
+        );
         let inspect = inspect_page_definition();
         assert_eq!(inspect.input_schema["additionalProperties"], false);
         assert!(inspect.description.contains("supervised worker"));
@@ -17901,6 +17935,40 @@ mod tests {
             assert_eq!(
                 result["content"][0]["text"],
                 "Invalid arguments: url must be an absolute HTTP(S) URL"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn crawl_policy_rejects_invalid_product_tokens_before_network_access() {
+        for product_token in ["", "Plasmate Bot", "Plasmate/1", &"x".repeat(65)] {
+            let result = handle_crawl_policy(&json!({
+                "url": "https://example.com/",
+                "product_token": product_token
+            }))
+            .await;
+
+            assert_eq!(result["isError"], true, "token: {product_token:?}");
+            assert_eq!(
+                result["content"][0]["text"],
+                "Invalid arguments: product_token must contain only ASCII letters, digits, '_' or '-' and be 1-64 bytes"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn crawl_policy_rejects_out_of_range_timeouts_before_network_access() {
+        for timeout_ms in [0, 30_001] {
+            let result = handle_crawl_policy(&json!({
+                "url": "https://example.com/",
+                "timeout_ms": timeout_ms
+            }))
+            .await;
+
+            assert_eq!(result["isError"], true, "timeout: {timeout_ms}");
+            assert_eq!(
+                result["content"][0]["text"],
+                "Invalid arguments: timeout_ms must be an integer between 1 and 30000"
             );
         }
     }
