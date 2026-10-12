@@ -427,9 +427,20 @@ def find_action_targets_by_action(
     *,
     enabled_only: bool = False,
 ) -> List[Dict[str, object]]:
-    """Return compact action targets that expose the requested action."""
+    """Return compact action targets that expose the requested action.
+
+    Accept the same interaction aliases as the MCP/CLI selector contract.
+    Compiled SOM actions remain canonical (``type`` and ``select``), so the
+    aliases are normalized only for this lookup.
+    """
     index = get_action_plan_index(som, enabled_only=enabled_only)
-    results = index["by_action"].get(action, [])
+    normalized_action = {
+        "type_text": "type",
+        "type-text": "type",
+        "select_option": "select",
+        "select-option": "select",
+    }.get(action.strip().lower(), action.strip().lower())
+    results = index["by_action"].get(normalized_action, [])
     return list(results) if isinstance(results, list) else []
 
 
