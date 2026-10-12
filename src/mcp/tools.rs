@@ -1083,6 +1083,9 @@ pub async fn handle_inspect_page(arguments: &Value, client: &reqwest::Client) ->
         Ok(mode) => mode,
         Err(error) => return error_response(&error),
     };
+    if let Err(error) = validate_mcp_url(&params.url) {
+        return error_response(&error);
+    }
     if !(320..=1920).contains(&params.width)
         || !(200..=1080).contains(&params.height)
         || !(100..=10_000).contains(&params.screenshot_timeout_ms)
@@ -17802,6 +17805,19 @@ mod tests {
             .as_str()
             .unwrap()
             .contains("unknown field"));
+    }
+
+    #[tokio::test]
+    async fn inspection_rejects_non_http_urls_before_network_access() {
+        let client = reqwest::Client::new();
+        let inspect =
+            handle_inspect_page(&json!({"url": "file:///tmp/page.html"}), &client).await;
+
+        assert_eq!(inspect["isError"], true);
+        assert!(inspect["content"][0]["text"]
+            .as_str()
+            .unwrap()
+            .contains("absolute HTTP(S) URL"));
     }
 
     #[test]
