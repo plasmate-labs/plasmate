@@ -1043,7 +1043,8 @@ pub fn crawl_policy_definition() -> ToolDefinition {
                     "type": "integer",
                     "minimum": 1,
                     "maximum": 30000,
-                    "default": 10000
+                    "default": 10000,
+                    "description": "Timeout for retrieving robots.txt, in milliseconds; values must be between 1 and 30000."
                 }
             },
             "required": ["url"],
@@ -17867,6 +17868,10 @@ mod tests {
         assert_eq!(
             crawl.input_schema["properties"]["product_token"]["pattern"],
             "^[A-Za-z0-9_-]{1,64}$"
+        );
+        assert_eq!(
+            crawl.input_schema["properties"]["timeout_ms"]["description"],
+            "Timeout for retrieving robots.txt, in milliseconds; values must be between 1 and 30000."
         );
         let inspect = inspect_page_definition();
         assert_eq!(inspect.input_schema["additionalProperties"], false);
