@@ -214,13 +214,16 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
 }
 
 fn strip_selector_quotes(value: &str) -> &str {
+    let value = value.trim();
     value
         .strip_prefix('"')
         .and_then(|value| value.strip_suffix('"'))
+        .map(str::trim)
         .or_else(|| {
             value
                 .strip_prefix('\'')
                 .and_then(|value| value.strip_suffix('\''))
+                .map(str::trim)
         })
         .unwrap_or(value)
 }
@@ -635,14 +638,24 @@ mod tests {
     fn test_selector_role_and_action_aliases_accept_quoted_values() {
         let som = make_test_som();
 
-        for selector in ["role=\"button\"", "role='button'"] {
+        for selector in [
+            "role=\"button\"",
+            "role='button'",
+            "role=\" button \"",
+            "role=' button '",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1);
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Button);
         }
 
-        for selector in ["action=\"click\"", "action='click'"] {
+        for selector in [
+            "action=\"click\"",
+            "action='click'",
+            "action=\" click \"",
+            "action=' click '",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 2, "selector: {selector}");
             assert!(filtered
@@ -661,7 +674,13 @@ mod tests {
         let mut som = make_test_som();
         som.regions[0].id = "hero".to_string();
 
-        for selector in ["#hero", "#\"hero\"", "#'hero'"] {
+        for selector in [
+            "#hero",
+            "#\"hero\"",
+            "#'hero'",
+            "#\" hero \"",
+            "#' hero '",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].id, "hero");
