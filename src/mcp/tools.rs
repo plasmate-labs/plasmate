@@ -3685,6 +3685,7 @@ pub fn screenshot_page_definition() -> ToolDefinition {
                 "url": {
                     "type": "string",
                     "minLength": 1,
+                    "maxLength": MAX_MCP_URL_BYTES,
                     "description": "URL to screenshot"
                 },
                 "width": {
@@ -3719,6 +3720,10 @@ pub async fn handle_screenshot_page(arguments: &Value, client: &reqwest::Client)
             return error_response(&format!("Invalid arguments: {}", e));
         }
     };
+
+    if let Err(error) = validate_mcp_url(&params.url) {
+        return error_response(&error);
+    }
 
     info!(url = %params.url, "screenshot_page");
 
@@ -6642,6 +6647,7 @@ mod tests {
             extract_links_definition(),
             open_page_definition(),
             navigate_to_definition(),
+            screenshot_page_definition(),
         ] {
             assert_eq!(
                 definition.input_schema["properties"]["url"]["maxLength"], MAX_MCP_URL_BYTES,
@@ -6693,6 +6699,22 @@ mod tests {
                 "Invalid arguments: url must not be empty"
             );
         }
+    }
+
+    #[tokio::test]
+    async fn screenshot_page_rejects_invalid_urls_before_network_access() {
+        let client = reqwest::Client::new();
+        let result = handle_screenshot_page(
+            &json!({"url": "https://user:secret@example.com/page"}),
+            &client,
+        )
+        .await;
+
+        assert_eq!(result["isError"], true);
+        assert_eq!(
+            result["content"][0]["text"],
+            "Invalid arguments: url must be an absolute HTTP(S) URL"
+        );
     }
 
     #[test]
