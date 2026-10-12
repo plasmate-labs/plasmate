@@ -956,6 +956,7 @@ pub fn ard_discover_definition() -> ToolDefinition {
                     "type": "string",
                     "format": "uri",
                     "minLength": 1,
+                    "maxLength": MAX_MCP_URL_BYTES,
                     "description": "Operator-supplied public HTTPS page or origin to inspect."
                 },
                 "timeout_ms": {
@@ -977,6 +978,9 @@ pub async fn handle_ard_discover(arguments: &Value) -> Value {
         Ok(params) => params,
         Err(error) => return error_response(&format!("Invalid arguments: {error}")),
     };
+    if let Err(error) = validate_mcp_url(&params.url) {
+        return error_response(&error);
+    }
     match plasmate::ard::discover(&params.url, params.timeout_ms).await {
         Ok(report) => match build_bounded_ard_mcp_result(report) {
             Ok(result) => result,
@@ -1025,6 +1029,9 @@ pub async fn handle_crawl_policy(arguments: &Value) -> Value {
         Ok(params) => params,
         Err(error) => return error_response(&format!("Invalid arguments: {error}")),
     };
+    if let Err(error) = validate_mcp_url(&params.url) {
+        return error_response(&error);
+    }
     match plasmate::crawl_policy::evaluate(&params.url, &params.product_token, params.timeout_ms)
         .await
     {
@@ -10262,6 +10269,10 @@ mod tests {
         let definition = ard_discover_definition();
         assert_eq!(definition.name, "ard_discover");
         assert_eq!(definition.input_schema["additionalProperties"], false);
+        assert_eq!(
+            definition.input_schema["properties"]["url"]["maxLength"],
+            MAX_MCP_URL_BYTES
+        );
         assert!(serde_json::from_value::<ArdDiscoverParams>(json!({
             "url": "https://example.com/",
             "unexpected": true
@@ -17827,6 +17838,23 @@ mod tests {
             .as_str()
             .unwrap()
             .contains("unknown field"));
+    }
+
+    #[tokio::test]
+    async fn public_policy_tools_reject_unsafe_urls_before_network_access() {
+        for result in [
+            handle_ard_discover(&json!({
+                "url": "https://user:secret@example.com/"
+            }))
+            .await,
+            handle_crawl_policy(&json!({"url": "file:///tmp/robots.txt"})).await,
+        ] {
+            assert_eq!(result["isError"], true);
+            assert_eq!(
+                result["content"][0]["text"],
+                "Invalid arguments: url must be an absolute HTTP(S) URL"
+            );
+        }
     }
 
     #[tokio::test]
