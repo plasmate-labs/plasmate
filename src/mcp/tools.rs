@@ -136,9 +136,9 @@ async fn load_som_for_mcp(
     javascript: bool,
     selector: Option<&str>,
 ) -> Result<(Som, bool), String> {
-    validate_mcp_url(url)?;
+    let url = normalize_mcp_url(url)?;
 
-    let fetch_result = fetch::fetch_url(client, url, DEFAULT_TIMEOUT_MS)
+    let fetch_result = fetch::fetch_url(client, &url, DEFAULT_TIMEOUT_MS)
         .await
         .map_err(|e| format!("Failed to fetch {}: {}", url, e))?;
 
@@ -228,6 +228,12 @@ fn validate_mcp_url(url: &str) -> Result<(), String> {
         return Err("Invalid arguments: url must be an absolute HTTP(S) URL".to_string());
     }
     Ok(())
+}
+
+fn normalize_mcp_url(url: &str) -> Result<String, String> {
+    let normalized = url.trim();
+    validate_mcp_url(normalized)?;
+    Ok(normalized.to_string())
 }
 
 fn select_and_store_mcp_som(
@@ -356,8 +362,8 @@ async fn load_session_page_for_mcp(
     cache: &SomCache,
     url: &str,
 ) -> Result<(String, String, pipeline::PageResult, bool), String> {
-    validate_mcp_url(url)?;
-    let fetch_result = fetch::fetch_url(client, url, DEFAULT_TIMEOUT_MS)
+    let url = normalize_mcp_url(url)?;
+    let fetch_result = fetch::fetch_url(client, &url, DEFAULT_TIMEOUT_MS)
         .await
         .map_err(|e| format!("Failed to fetch {}: {}", url, e))?;
 
@@ -6686,6 +6692,15 @@ mod tests {
             );
         }
         assert!(validate_mcp_url(" https://example.com/page ").is_ok());
+    }
+
+    #[test]
+    fn normalize_mcp_url_removes_transport_whitespace() {
+        assert_eq!(
+            normalize_mcp_url(" \nhttps://example.com/page\t").unwrap(),
+            "https://example.com/page"
+        );
+        assert!(normalize_mcp_url(" \t\n").is_err());
     }
 
     #[tokio::test]
