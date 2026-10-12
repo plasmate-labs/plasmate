@@ -44,7 +44,10 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// warning) so callers always get usable output.
 pub fn apply_selector(som: &Som, selector: &str) -> Som {
     let selector = selector.trim();
-    let original_selector = selector;
+    // Accept the same quoted selector values that the role/action forms use.
+    // This is convenient when selectors are passed through a shell or JSON
+    // configuration layer that quotes every value uniformly.
+    let selector = strip_selector_quotes(selector);
     let selector_lower = selector.to_ascii_lowercase();
     let selector = selector_lower
         .strip_prefix("role")
@@ -171,7 +174,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
 
     // Try id selector: #my-id. Prefer documented region ids, then SOM
     // element ids or HTML ids. If neither matches, return the full SOM.
-    if let Some(id) = original_selector
+    if let Some(id) = selector
         .strip_prefix('#')
         .map(str::trim)
         .map(strip_selector_quotes)
@@ -214,13 +217,16 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
 }
 
 fn strip_selector_quotes(value: &str) -> &str {
+    let value = value.trim();
     value
         .strip_prefix('"')
         .and_then(|value| value.strip_suffix('"'))
+        .map(str::trim)
         .or_else(|| {
             value
                 .strip_prefix('\'')
                 .and_then(|value| value.strip_suffix('\''))
+                .map(str::trim)
         })
         .unwrap_or(value)
 }
@@ -604,6 +610,17 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_accepts_quoted_bare_values() {
+        let som = make_test_som();
+
+        for selector in ["\"main\"", "'main'", "\" button \"", "' button '"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].role, RegionRole::Main);
+        }
+    }
+
+    #[test]
     fn test_selector_role_aliases() {
         let som = make_test_som();
 
@@ -635,14 +652,24 @@ mod tests {
     fn test_selector_role_and_action_aliases_accept_quoted_values() {
         let som = make_test_som();
 
-        for selector in ["role=\"button\"", "role='button'"] {
+        for selector in [
+            "role=\"button\"",
+            "role='button'",
+            "role=\" button \"",
+            "role=' button '",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1);
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Button);
         }
 
-        for selector in ["action=\"click\"", "action='click'"] {
+        for selector in [
+            "action=\"click\"",
+            "action='click'",
+            "action=\" click \"",
+            "action=' click '",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 2, "selector: {selector}");
             assert!(filtered
@@ -661,7 +688,15 @@ mod tests {
         let mut som = make_test_som();
         som.regions[0].id = "hero".to_string();
 
-        for selector in ["#hero", "#\"hero\"", "#'hero'"] {
+        for selector in [
+            "#hero",
+            "#\"hero\"",
+            "#'hero'",
+            "\"#hero\"",
+            "'#hero'",
+            "#\" hero \"",
+            "#' hero '",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].id, "hero");
