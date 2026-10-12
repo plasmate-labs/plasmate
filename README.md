@@ -221,8 +221,10 @@ depending on a hard-coded count; the authoritative registration is
 to return only actionable elements, `selector="h1"` through `selector="h6"`
 (or `heading1` through `heading6`) to isolate a heading level, or an action selector such as `selector="click"`
 (the equivalent `selector="action:click"` also works), `selector="type"`,
-`selector="clear"`, `selector="select"`, `selector="toggle"`, or
-`selector="submit"` to build a compact
+`selector="clear"`, `selector="select"`, `selector="toggle"`,
+`selector="submit"`, or `selector="reset"` (equivalently
+`selector="action:reset"`, including `action : reset` and `action = reset`)
+to build a compact
 action menu before the LLM sees the content. The MCP tool-name aliases
 `selector="type_text"` and `selector="select_option"` (including their
 `action:type_text` and `action:select_option` forms) are also accepted for

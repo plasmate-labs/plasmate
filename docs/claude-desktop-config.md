@@ -70,7 +70,7 @@ Claude now has access to these tools:
 Ask Claude: "Fetch stripe.com/docs but only the main content, not the nav"
 Claude will call: `fetch_page(url="https://stripe.com/docs", selector="main")`
 
-**Available selectors:** `main`, `nav`/`navigation`/`search`, `header`/`banner`, `footer`/`contentinfo`, `aside`/`complementary`, `content`/`article`/`region`, `form`, `dialog`, `h1` through `h6`, `interactive`, `click`, `type`, `clear`, `select`, `toggle`, `submit` (or the equivalent `action:<verb>` form), element roles such as `button`/`menuitem`/`option`/`tab`, `link`/`a`, `paragraph`/`p`, `list`/`ul`/`ol`/`dl`/`menu`, `unordered_list`/`ordered_list`/`definition_list`, `fieldset`/`group`, `hr`/`separator`, `details`/`summary`, `iframe`, `image`/`img`, and grouped `media`, or any HTML id like `#my-section`.
+**Available selectors:** `main`, `nav`/`navigation`/`search`, `header`/`banner`, `footer`/`contentinfo`, `aside`/`complementary`, `content`/`article`/`region`, `form`, `dialog`, `h1` through `h6`, `interactive`, `click`, `type`/`type_text`/`type-text`, `clear`, `select`/`select_option`/`select-option`, `toggle`, `submit`, `reset` (or the equivalent `action:<verb>` form, including whitespace-tolerant `action : verb` and `action = verb` forms), element roles such as `button`/`menuitem`/`option`/`tab`, `link`/`a`, `paragraph`/`p`, `list`/`ul`/`ol`/`dl`/`menu`, `unordered_list`/`ordered_list`/`definition_list`, `fieldset`/`group`, `hr`/`separator`, `details`/`summary`, `iframe`, `image`/`img`, `audio`, `video`, `canvas`, and grouped `media`, or any HTML id like `#my-section`.
 
 ## Using with Cursor
 
