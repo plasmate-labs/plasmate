@@ -99,6 +99,19 @@ fn default_crawl_product_token() -> String {
     "Plasmate".to_string()
 }
 
+fn validate_crawl_product_token(product_token: &str) -> Result<(), String> {
+    let valid = !product_token.is_empty()
+        && product_token.len() <= 64
+        && product_token
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'-');
+    if valid {
+        Ok(())
+    } else {
+        Err("Invalid arguments: product_token must contain only ASCII letters, digits, '_' or '-' and be 1-64 bytes".to_string())
+    }
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct InspectPageParams {
@@ -1040,9 +1053,10 @@ pub async fn handle_crawl_policy(arguments: &Value) -> Value {
         Ok(url) => url,
         Err(error) => return error_response(&error),
     };
-    match plasmate::crawl_policy::evaluate(url, &params.product_token, params.timeout_ms)
-        .await
-    {
+    if let Err(error) = validate_crawl_product_token(&params.product_token) {
+        return error_response(&error);
+    }
+    match plasmate::crawl_policy::evaluate(url, &params.product_token, params.timeout_ms).await {
         Ok(report) => match build_bounded_crawl_policy_result(report) {
             Ok(result) => result,
             Err(error) => error_response(&format!("Failed to serialize crawl policy: {error}")),
@@ -17901,6 +17915,23 @@ mod tests {
             assert_eq!(
                 result["content"][0]["text"],
                 "Invalid arguments: url must be an absolute HTTP(S) URL"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn crawl_policy_rejects_invalid_product_tokens_before_network_access() {
+        for product_token in ["", "Plasmate Bot", "Plasmate/1", &"x".repeat(65)] {
+            let result = handle_crawl_policy(&json!({
+                "url": "https://example.com/",
+                "product_token": product_token
+            }))
+            .await;
+
+            assert_eq!(result["isError"], true, "token: {product_token:?}");
+            assert_eq!(
+                result["content"][0]["text"],
+                "Invalid arguments: product_token must contain only ASCII letters, digits, '_' or '-' and be 1-64 bytes"
             );
         }
     }
