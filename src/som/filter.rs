@@ -614,6 +614,24 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_role_aliases_for_actions() {
+        let som = make_test_som();
+
+        for selector in ["role=click", "ROLE:CLICK", "role = click", "role : click"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 2, "selector: {selector}");
+            assert!(filtered
+                .regions
+                .iter()
+                .flat_map(|region| &region.elements)
+                .all(|element| element
+                    .actions
+                    .as_ref()
+                    .is_some_and(|actions| actions.iter().any(|action| action == "click"))));
+        }
+    }
+
+    #[test]
     fn test_selector_heading_name_aliases() {
         for selector in ["h1", "heading1", "HEADING1"] {
             assert_eq!(

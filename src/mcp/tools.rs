@@ -40,7 +40,7 @@ pub struct ToolDefinition {
     pub input_schema: Value,
 }
 
-const SOM_SELECTOR_DESCRIPTION: &str = "Filter to a page region (main, nav/navigation/search, header, footer, aside, content/article, form, dialog; role=<region> and role:<region> also work), heading level (h1-h6, heading1-heading6, or hyphenated h-1/heading-1 forms), element role (button/menuitem/option/tab, link/a, paragraph/p, list/ul/ol/dl/menu, unordered_list/ordered_list/definition_list, image/img, media, text_input/textbox/searchbox/input, HTML input types such as text/search/email/number/password/tel/url/date/datetime/datetime-local/month/week/color/range/hidden/file, textarea, select/combobox/listbox, checkbox/switch/menuitemcheckbox, radio/menuitemradio, group/fieldset/figure/radiogroup/progress/progressbar/meter/output/audio/video/canvas, etc.; role=<element> and role:<element> also work), action surface (interactive, click/type/type_text/type-text/clear/select/select_option/select-option/toggle/submit/reset, or action:click/action:type/action:type_text/action:type-text/action:clear/action:select/action:select_option/action:select-option/action:toggle/action:submit/action:reset; the action=<verb> form also works, with whitespace around either separator such as action : click or action = click), or #element-id (region id first, then SOM element/html id). The type_text/type-text and select_option/select-option aliases, including action=type_text/action=type-text and action=select_option/action=select-option, match the corresponding MCP interaction tool names. Strips irrelevant regions/elements to reduce tokens. If a selector is unknown or matches nothing, the full SOM is returned unchanged.";
+const SOM_SELECTOR_DESCRIPTION: &str = "Filter to a page region (main, nav/navigation/search, header, footer, aside, content/article, form, dialog; role=<region> and role:<region> also work), heading level (h1-h6, heading1-heading6, or hyphenated h-1/heading-1 forms), element role (button/menuitem/option/tab, link/a, paragraph/p, list/ul/ol/dl/menu, unordered_list/ordered_list/definition_list, image/img, media, text_input/textbox/searchbox/input, HTML input types such as text/search/email/number/password/tel/url/date/datetime/datetime-local/month/week/color/range/hidden/file, textarea, select/combobox/listbox, checkbox/switch/menuitemcheckbox, radio/menuitemradio, group/fieldset/figure/radiogroup/progress/progressbar/meter/output/audio/video/canvas, etc.; role=<element> and role:<element> also work), action surface (interactive, click/type/type_text/type-text/clear/select/select_option/select-option/toggle/submit/reset, or action:click/action:type/action:type_text/action:type-text/action:clear/action:select/action:select_option/action:select-option/action:toggle/action:submit/action:reset; role=<action> and role:<action> are also accepted, and the action=<verb> form works with whitespace around either separator such as action : click or action = click), or #element-id (region id first, then SOM element/html id). The type_text/type-text and select_option/select-option aliases, including action=type_text/action=type-text and action=select_option/action=select-option, match the corresponding MCP interaction tool names. Strips irrelevant regions/elements to reduce tokens. If a selector is unknown or matches nothing, the full SOM is returned unchanged.";
 
 /// Parameters for fetch_page tool.
 #[derive(Debug, Deserialize)]
@@ -136,9 +136,9 @@ async fn load_som_for_mcp(
     javascript: bool,
     selector: Option<&str>,
 ) -> Result<(Som, bool), String> {
-    let url = normalize_mcp_url(url)?;
+    let url = normalized_mcp_url(url)?;
 
-    let fetch_result = fetch::fetch_url(client, &url, DEFAULT_TIMEOUT_MS)
+    let fetch_result = fetch::fetch_url(client, url, DEFAULT_TIMEOUT_MS)
         .await
         .map_err(|e| format!("Failed to fetch {}: {}", url, e))?;
 
@@ -230,10 +230,10 @@ fn validate_mcp_url(url: &str) -> Result<(), String> {
     Ok(())
 }
 
-fn normalize_mcp_url(url: &str) -> Result<String, String> {
+fn normalized_mcp_url(url: &str) -> Result<&str, String> {
     let normalized = url.trim();
     validate_mcp_url(normalized)?;
-    Ok(normalized.to_string())
+    Ok(normalized)
 }
 
 fn select_and_store_mcp_som(
@@ -362,8 +362,8 @@ async fn load_session_page_for_mcp(
     cache: &SomCache,
     url: &str,
 ) -> Result<(String, String, pipeline::PageResult, bool), String> {
-    let url = normalize_mcp_url(url)?;
-    let fetch_result = fetch::fetch_url(client, &url, DEFAULT_TIMEOUT_MS)
+    let url = normalized_mcp_url(url)?;
+    let fetch_result = fetch::fetch_url(client, url, DEFAULT_TIMEOUT_MS)
         .await
         .map_err(|e| format!("Failed to fetch {}: {}", url, e))?;
 
@@ -984,10 +984,11 @@ pub async fn handle_ard_discover(arguments: &Value) -> Value {
         Ok(params) => params,
         Err(error) => return error_response(&format!("Invalid arguments: {error}")),
     };
-    if let Err(error) = validate_mcp_url(&params.url) {
-        return error_response(&error);
-    }
-    match plasmate::ard::discover(&params.url, params.timeout_ms).await {
+    let url = match normalized_mcp_url(&params.url) {
+        Ok(url) => url,
+        Err(error) => return error_response(&error),
+    };
+    match plasmate::ard::discover(url, params.timeout_ms).await {
         Ok(report) => match build_bounded_ard_mcp_result(report) {
             Ok(result) => result,
             Err(error) => error_response(&format!("Failed to serialize ARD report: {error}")),
@@ -1035,10 +1036,11 @@ pub async fn handle_crawl_policy(arguments: &Value) -> Value {
         Ok(params) => params,
         Err(error) => return error_response(&format!("Invalid arguments: {error}")),
     };
-    if let Err(error) = validate_mcp_url(&params.url) {
-        return error_response(&error);
-    }
-    match plasmate::crawl_policy::evaluate(&params.url, &params.product_token, params.timeout_ms)
+    let url = match normalized_mcp_url(&params.url) {
+        Ok(url) => url,
+        Err(error) => return error_response(&error),
+    };
+    match plasmate::crawl_policy::evaluate(url, &params.product_token, params.timeout_ms)
         .await
     {
         Ok(report) => match build_bounded_crawl_policy_result(report) {
@@ -1096,9 +1098,10 @@ pub async fn handle_inspect_page(arguments: &Value, client: &reqwest::Client) ->
         Ok(mode) => mode,
         Err(error) => return error_response(&error),
     };
-    if let Err(error) = validate_mcp_url(&params.url) {
-        return error_response(&error);
-    }
+    let url = match normalized_mcp_url(&params.url) {
+        Ok(url) => url,
+        Err(error) => return error_response(&error),
+    };
     if !(320..=1920).contains(&params.width)
         || !(200..=1080).contains(&params.height)
         || !(100..=10_000).contains(&params.screenshot_timeout_ms)
@@ -1106,11 +1109,11 @@ pub async fn handle_inspect_page(arguments: &Value, client: &reqwest::Client) ->
             .selector
             .as_ref()
             .is_some_and(|value| value.len() > 256)
-        || params.url.len() > 4096
+        || url.len() > MAX_MCP_URL_BYTES
     {
         return error_response("Inspection dimensions, timeout, URL, or selector exceed limits");
     }
-    let fetch_result = match fetch::fetch_url(client, &params.url, DEFAULT_TIMEOUT_MS).await {
+    let fetch_result = match fetch::fetch_url(client, url, DEFAULT_TIMEOUT_MS).await {
         Ok(result) => result,
         Err(error) => return error_response(&format!("Failed to fetch page: {error}")),
     };
@@ -1135,7 +1138,7 @@ pub async fn handle_inspect_page(arguments: &Value, client: &reqwest::Client) ->
         |selector| crate::som::filter::apply_selector(&page_result.som, selector),
     );
     let mut report = plasmate::inspection::build_report(
-        &params.url,
+        url,
         &fetch_result.url,
         &page_result.effective_html,
         &effective_som,
@@ -3734,17 +3737,18 @@ pub async fn handle_screenshot_page(arguments: &Value, client: &reqwest::Client)
         }
     };
 
-    if let Err(error) = validate_mcp_url(&params.url) {
-        return error_response(&error);
-    }
+    let url = match normalized_mcp_url(&params.url) {
+        Ok(url) => url,
+        Err(error) => return error_response(&error),
+    };
 
     info!(url = %params.url, "screenshot_page");
 
     // Fetch the page and build SOM
-    let fetch_result = match fetch::fetch_url(client, &params.url, DEFAULT_TIMEOUT_MS).await {
+    let fetch_result = match fetch::fetch_url(client, url, DEFAULT_TIMEOUT_MS).await {
         Ok(r) => r,
         Err(e) => {
-            return error_response(&format!("Failed to fetch {}: {}", params.url, e));
+            return error_response(&format!("Failed to fetch {}: {}", url, e));
         }
     };
 
@@ -4031,6 +4035,10 @@ pub async fn handle_open_page(
             return error_response(&format!("Invalid arguments: {}", e));
         }
     };
+
+    if let Err(error) = validate_mcp_url(&params.url) {
+        return error_response(&error);
+    }
 
     info!(
         url_bytes = params.url.len(),
@@ -5322,6 +5330,7 @@ fn resolve_session_navigation_url(
         return Err("URL is required".to_string());
     }
     if url::Url::parse(requested).is_ok() {
+        validate_mcp_url(requested)?;
         return Ok(requested.to_string());
     }
     let Some(base) = current_url.map(str::trim).filter(|url| !url.is_empty()) else {
@@ -5330,9 +5339,12 @@ fn resolve_session_navigation_url(
     let Ok(base) = url::Url::parse(base) else {
         return Err("Relative URL requires a loaded page in this session.".to_string());
     };
-    base.join(requested)
+    let joined = base
+        .join(requested)
         .map(|joined| joined.to_string())
-        .map_err(|_| "Relative URL requires a loaded page in this session.".to_string())
+        .map_err(|_| "Relative URL requires a loaded page in this session.".to_string())?;
+    validate_mcp_url(&joined)?;
+    Ok(joined)
 }
 
 /// Handle the navigate_to tool call.
@@ -6692,15 +6704,10 @@ mod tests {
             );
         }
         assert!(validate_mcp_url(" https://example.com/page ").is_ok());
-    }
-
-    #[test]
-    fn normalize_mcp_url_removes_transport_whitespace() {
         assert_eq!(
-            normalize_mcp_url(" \nhttps://example.com/page\t").unwrap(),
+            normalized_mcp_url(" \thttps://example.com/page\n ").unwrap(),
             "https://example.com/page"
         );
-        assert!(normalize_mcp_url(" \t\n").is_err());
     }
 
     #[tokio::test]
@@ -7369,7 +7376,11 @@ mod tests {
                 Some("https://example.test/search"),
                 "javascript:void(0)"
             ),
-            Ok("javascript:void(0)".to_string())
+            Err("Invalid arguments: url must be an absolute HTTP(S) URL".to_string())
+        );
+        assert_eq!(
+            resolve_session_navigation_url(Some("https://example.test/search"), "file:///tmp/x"),
+            Err("Invalid arguments: url must be an absolute HTTP(S) URL".to_string())
         );
         assert_eq!(
             resolve_session_navigation_url(None, "/results").unwrap_err(),
@@ -7424,6 +7435,28 @@ mod tests {
             "relative navigate_to errors must not echo the requested path: {text}"
         );
         assert!(!text.contains("Failed to fetch"), "{text}");
+    }
+
+    #[tokio::test]
+    async fn open_page_rejects_non_http_urls_before_creating_session() {
+        let sessions = Arc::new(SessionManager::new());
+        let client = reqwest::Client::new();
+        let cache = Arc::new(SomCache::new(CacheConfig::default()));
+
+        let result = handle_open_page(
+            &json!({"url": "javascript:alert(1)"}),
+            &client,
+            &sessions,
+            &cache,
+        )
+        .await;
+
+        assert_eq!(result["isError"], true);
+        assert_eq!(sessions.session_count().await, 0);
+        assert!(result["content"][0]["text"]
+            .as_str()
+            .unwrap()
+            .contains("absolute HTTP(S) URL"));
     }
 
     #[tokio::test]
