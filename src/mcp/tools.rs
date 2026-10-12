@@ -136,7 +136,7 @@ async fn load_som_for_mcp(
     javascript: bool,
     selector: Option<&str>,
 ) -> Result<(Som, bool), String> {
-    validate_mcp_url(url)?;
+    let url = normalized_mcp_url(url)?;
 
     let fetch_result = fetch::fetch_url(client, url, DEFAULT_TIMEOUT_MS)
         .await
@@ -228,6 +228,12 @@ fn validate_mcp_url(url: &str) -> Result<(), String> {
         return Err("Invalid arguments: url must be an absolute HTTP(S) URL".to_string());
     }
     Ok(())
+}
+
+fn normalized_mcp_url(url: &str) -> Result<&str, String> {
+    let normalized = url.trim();
+    validate_mcp_url(normalized)?;
+    Ok(normalized)
 }
 
 fn select_and_store_mcp_som(
@@ -356,7 +362,7 @@ async fn load_session_page_for_mcp(
     cache: &SomCache,
     url: &str,
 ) -> Result<(String, String, pipeline::PageResult, bool), String> {
-    validate_mcp_url(url)?;
+    let url = normalized_mcp_url(url)?;
     let fetch_result = fetch::fetch_url(client, url, DEFAULT_TIMEOUT_MS)
         .await
         .map_err(|e| format!("Failed to fetch {}: {}", url, e))?;
@@ -978,10 +984,11 @@ pub async fn handle_ard_discover(arguments: &Value) -> Value {
         Ok(params) => params,
         Err(error) => return error_response(&format!("Invalid arguments: {error}")),
     };
-    if let Err(error) = validate_mcp_url(&params.url) {
-        return error_response(&error);
-    }
-    match plasmate::ard::discover(&params.url, params.timeout_ms).await {
+    let url = match normalized_mcp_url(&params.url) {
+        Ok(url) => url,
+        Err(error) => return error_response(&error),
+    };
+    match plasmate::ard::discover(url, params.timeout_ms).await {
         Ok(report) => match build_bounded_ard_mcp_result(report) {
             Ok(result) => result,
             Err(error) => error_response(&format!("Failed to serialize ARD report: {error}")),
@@ -1029,10 +1036,11 @@ pub async fn handle_crawl_policy(arguments: &Value) -> Value {
         Ok(params) => params,
         Err(error) => return error_response(&format!("Invalid arguments: {error}")),
     };
-    if let Err(error) = validate_mcp_url(&params.url) {
-        return error_response(&error);
-    }
-    match plasmate::crawl_policy::evaluate(&params.url, &params.product_token, params.timeout_ms)
+    let url = match normalized_mcp_url(&params.url) {
+        Ok(url) => url,
+        Err(error) => return error_response(&error),
+    };
+    match plasmate::crawl_policy::evaluate(url, &params.product_token, params.timeout_ms)
         .await
     {
         Ok(report) => match build_bounded_crawl_policy_result(report) {
@@ -1090,9 +1098,10 @@ pub async fn handle_inspect_page(arguments: &Value, client: &reqwest::Client) ->
         Ok(mode) => mode,
         Err(error) => return error_response(&error),
     };
-    if let Err(error) = validate_mcp_url(&params.url) {
-        return error_response(&error);
-    }
+    let url = match normalized_mcp_url(&params.url) {
+        Ok(url) => url,
+        Err(error) => return error_response(&error),
+    };
     if !(320..=1920).contains(&params.width)
         || !(200..=1080).contains(&params.height)
         || !(100..=10_000).contains(&params.screenshot_timeout_ms)
@@ -1100,11 +1109,11 @@ pub async fn handle_inspect_page(arguments: &Value, client: &reqwest::Client) ->
             .selector
             .as_ref()
             .is_some_and(|value| value.len() > 256)
-        || params.url.len() > 4096
+        || url.len() > MAX_MCP_URL_BYTES
     {
         return error_response("Inspection dimensions, timeout, URL, or selector exceed limits");
     }
-    let fetch_result = match fetch::fetch_url(client, &params.url, DEFAULT_TIMEOUT_MS).await {
+    let fetch_result = match fetch::fetch_url(client, url, DEFAULT_TIMEOUT_MS).await {
         Ok(result) => result,
         Err(error) => return error_response(&format!("Failed to fetch page: {error}")),
     };
@@ -1129,7 +1138,7 @@ pub async fn handle_inspect_page(arguments: &Value, client: &reqwest::Client) ->
         |selector| crate::som::filter::apply_selector(&page_result.som, selector),
     );
     let mut report = plasmate::inspection::build_report(
-        &params.url,
+        url,
         &fetch_result.url,
         &page_result.effective_html,
         &effective_som,
@@ -3728,17 +3737,18 @@ pub async fn handle_screenshot_page(arguments: &Value, client: &reqwest::Client)
         }
     };
 
-    if let Err(error) = validate_mcp_url(&params.url) {
-        return error_response(&error);
-    }
+    let url = match normalized_mcp_url(&params.url) {
+        Ok(url) => url,
+        Err(error) => return error_response(&error),
+    };
 
     info!(url = %params.url, "screenshot_page");
 
     // Fetch the page and build SOM
-    let fetch_result = match fetch::fetch_url(client, &params.url, DEFAULT_TIMEOUT_MS).await {
+    let fetch_result = match fetch::fetch_url(client, url, DEFAULT_TIMEOUT_MS).await {
         Ok(r) => r,
         Err(e) => {
-            return error_response(&format!("Failed to fetch {}: {}", params.url, e));
+            return error_response(&format!("Failed to fetch {}: {}", url, e));
         }
     };
 
@@ -6694,6 +6704,10 @@ mod tests {
             );
         }
         assert!(validate_mcp_url(" https://example.com/page ").is_ok());
+        assert_eq!(
+            normalized_mcp_url(" \thttps://example.com/page\n ").unwrap(),
+            "https://example.com/page"
+        );
     }
 
     #[tokio::test]
