@@ -4026,6 +4026,10 @@ pub async fn handle_open_page(
         }
     };
 
+    if let Err(error) = validate_mcp_url(&params.url) {
+        return error_response(&error);
+    }
+
     info!(
         url_bytes = params.url.len(),
         trace = params.trace,
@@ -5316,6 +5320,7 @@ fn resolve_session_navigation_url(
         return Err("URL is required".to_string());
     }
     if url::Url::parse(requested).is_ok() {
+        validate_mcp_url(requested)?;
         return Ok(requested.to_string());
     }
     let Some(base) = current_url.map(str::trim).filter(|url| !url.is_empty()) else {
@@ -5324,9 +5329,12 @@ fn resolve_session_navigation_url(
     let Ok(base) = url::Url::parse(base) else {
         return Err("Relative URL requires a loaded page in this session.".to_string());
     };
-    base.join(requested)
+    let joined = base
+        .join(requested)
         .map(|joined| joined.to_string())
-        .map_err(|_| "Relative URL requires a loaded page in this session.".to_string())
+        .map_err(|_| "Relative URL requires a loaded page in this session.".to_string())?;
+    validate_mcp_url(&joined)?;
+    Ok(joined)
 }
 
 /// Handle the navigate_to tool call.
@@ -7354,7 +7362,11 @@ mod tests {
                 Some("https://example.test/search"),
                 "javascript:void(0)"
             ),
-            Ok("javascript:void(0)".to_string())
+            Err("Invalid arguments: url must be an absolute HTTP(S) URL".to_string())
+        );
+        assert_eq!(
+            resolve_session_navigation_url(Some("https://example.test/search"), "file:///tmp/x"),
+            Err("Invalid arguments: url must be an absolute HTTP(S) URL".to_string())
         );
         assert_eq!(
             resolve_session_navigation_url(None, "/results").unwrap_err(),
@@ -7409,6 +7421,28 @@ mod tests {
             "relative navigate_to errors must not echo the requested path: {text}"
         );
         assert!(!text.contains("Failed to fetch"), "{text}");
+    }
+
+    #[tokio::test]
+    async fn open_page_rejects_non_http_urls_before_creating_session() {
+        let sessions = Arc::new(SessionManager::new());
+        let client = reqwest::Client::new();
+        let cache = Arc::new(SomCache::new(CacheConfig::default()));
+
+        let result = handle_open_page(
+            &json!({"url": "javascript:alert(1)"}),
+            &client,
+            &sessions,
+            &cache,
+        )
+        .await;
+
+        assert_eq!(result["isError"], true);
+        assert_eq!(sessions.session_count().await, 0);
+        assert!(result["content"][0]["text"]
+            .as_str()
+            .unwrap()
+            .contains("absolute HTTP(S) URL"));
     }
 
     #[tokio::test]
