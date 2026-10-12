@@ -44,7 +44,6 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// warning) so callers always get usable output.
 pub fn apply_selector(som: &Som, selector: &str) -> Som {
     let selector = selector.trim();
-    let original_selector = selector;
     // Accept the same quoted selector values that the role/action forms use.
     // This is convenient when selectors are passed through a shell or JSON
     // configuration layer that quotes every value uniformly.
@@ -175,7 +174,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
 
     // Try id selector: #my-id. Prefer documented region ids, then SOM
     // element ids or HTML ids. If neither matches, return the full SOM.
-    if let Some(id) = original_selector
+    if let Some(id) = selector
         .strip_prefix('#')
         .map(str::trim)
         .map(strip_selector_quotes)
@@ -693,6 +692,8 @@ mod tests {
             "#hero",
             "#\"hero\"",
             "#'hero'",
+            "\"#hero\"",
+            "'#hero'",
             "#\" hero \"",
             "#' hero '",
         ] {
