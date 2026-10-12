@@ -646,12 +646,10 @@ fn parse_user_agent_value(value: &str) -> String {
 }
 
 fn target_path(url: &Url) -> String {
-    let mut value = url.path().to_string();
-    if let Some(query) = url.query() {
-        value.push('?');
-        value.push_str(query);
-    }
-    normalize_path(&value, false)
+    // RFC 9309 evaluates rules against the URI path. The query is not part
+    // of the path and must not make an otherwise allowed resource match a
+    // disallow rule.
+    normalize_path(url.path(), false)
 }
 
 fn normalize_path(input: &str, preserve_pattern_tokens: bool) -> String {
@@ -900,6 +898,24 @@ Disallow: /private
         assert_eq!(result.groups_selected, 1);
         assert_eq!(result.rules_considered, 2);
         assert_eq!(result.matched_rule.unwrap().directive, "disallow");
+    }
+
+    #[test]
+    fn query_string_is_not_used_for_robots_path_matching() {
+        let robots = "User-agent: Plasmate\nDisallow: /blocked\n";
+
+        assert!(decision(
+            robots,
+            "https://example.com/search?q=/blocked",
+            "Plasmate"
+        )
+        .allowed);
+        assert!(!decision(
+            robots,
+            "https://example.com/blocked?q=allowed",
+            "Plasmate"
+        )
+        .allowed);
     }
 
     #[test]
