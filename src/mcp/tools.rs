@@ -1022,7 +1022,7 @@ pub async fn handle_ard_discover(arguments: &Value) -> Value {
 pub fn crawl_policy_definition() -> ToolDefinition {
     ToolDefinition {
         name: "crawl_policy".to_string(),
-        description: "Evaluate the public origin's robots.txt for one target URL and an explicit crawler product token. Returns a bounded plasmate.crawl-policy.v1 advisory decision with the selected group/rule and RFC unavailable-vs-unreachable classification. Use this before a crawl; it does not grant authorization or silently alter fetch_page.".to_string(),
+        description: "Evaluate the public origin's robots.txt for one target URL and an explicit crawler product token. Returns a bounded plasmate.crawl-policy.v1 advisory decision with the selected group/rule and RFC unavailable-vs-unreachable classification. Matching uses the target URI path only (query and fragment are ignored). Use this before a crawl; it does not grant authorization or silently alter fetch_page.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -17860,6 +17860,7 @@ mod tests {
     #[test]
     fn crawl_and_inspection_schemas_are_strict_and_versioned_modes_are_exact() {
         let crawl = crawl_policy_definition();
+        assert!(crawl.description.contains("query and fragment are ignored"));
         assert_eq!(crawl.input_schema["additionalProperties"], false);
         assert_eq!(
             crawl.input_schema["properties"]["product_token"]["default"],
