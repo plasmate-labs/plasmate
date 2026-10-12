@@ -171,7 +171,11 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
 
     // Try id selector: #my-id. Prefer documented region ids, then SOM
     // element ids or HTML ids. If neither matches, return the full SOM.
-    if let Some(id) = original_selector.strip_prefix('#') {
+    if let Some(id) = original_selector
+        .strip_prefix('#')
+        .map(str::trim)
+        .map(strip_selector_quotes)
+    {
         let region_matches: Vec<_> = som.regions.iter().filter(|r| r.id == id).cloned().collect();
         if !region_matches.is_empty() {
             let mut result = som.clone();
@@ -649,6 +653,18 @@ mod tests {
                     .actions
                     .as_ref()
                     .is_some_and(|actions| actions.iter().any(|action| action == "click"))));
+        }
+    }
+
+    #[test]
+    fn test_selector_id_accepts_quoted_values() {
+        let mut som = make_test_som();
+        som.regions[0].id = "hero".to_string();
+
+        for selector in ["#hero", "#\"hero\"", "#'hero'"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].id, "hero");
         }
     }
 
