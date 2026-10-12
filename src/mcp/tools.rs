@@ -112,6 +112,14 @@ fn validate_crawl_product_token(product_token: &str) -> Result<(), String> {
     }
 }
 
+fn validate_crawl_timeout_ms(timeout_ms: u64) -> Result<(), String> {
+    if (1..=30_000).contains(&timeout_ms) {
+        Ok(())
+    } else {
+        Err("Invalid arguments: timeout_ms must be an integer between 1 and 30000".to_string())
+    }
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct InspectPageParams {
@@ -1054,6 +1062,9 @@ pub async fn handle_crawl_policy(arguments: &Value) -> Value {
         Err(error) => return error_response(&error),
     };
     if let Err(error) = validate_crawl_product_token(&params.product_token) {
+        return error_response(&error);
+    }
+    if let Err(error) = validate_crawl_timeout_ms(params.timeout_ms) {
         return error_response(&error);
     }
     match plasmate::crawl_policy::evaluate(url, &params.product_token, params.timeout_ms).await {
@@ -17936,6 +17947,23 @@ mod tests {
             assert_eq!(
                 result["content"][0]["text"],
                 "Invalid arguments: product_token must contain only ASCII letters, digits, '_' or '-' and be 1-64 bytes"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn crawl_policy_rejects_out_of_range_timeouts_before_network_access() {
+        for timeout_ms in [0, 30_001] {
+            let result = handle_crawl_policy(&json!({
+                "url": "https://example.com/",
+                "timeout_ms": timeout_ms
+            }))
+            .await;
+
+            assert_eq!(result["isError"], true, "timeout: {timeout_ms}");
+            assert_eq!(
+                result["content"][0]["text"],
+                "Invalid arguments: timeout_ms must be an integer between 1 and 30000"
             );
         }
     }
