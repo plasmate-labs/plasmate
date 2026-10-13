@@ -57,6 +57,11 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "p": "paragraph",
         "summary": "details",
         "textarea": "textarea",
+        "textbox": "text_input",
+        "searchbox": "text_input",
+        "combobox": "select",
+        "listbox": "select",
+        "select": "select",
         "ul": "list",
     }
     tag = tag.strip().lower()
@@ -437,9 +442,26 @@ def find_action_targets_by_role(
     *,
     enabled_only: bool = False,
 ) -> List[Dict[str, object]]:
-    """Return compact action targets whose SOM role matches exactly."""
+    """Return compact action targets whose SOM role matches the requested role.
+
+    Accept the same common HTML/ARIA role aliases as ``find_by_tag`` so callers
+    can use ``a``/``button``/``input`` and related spellings consistently.
+    """
     index = get_action_plan_index(som, enabled_only=enabled_only)
-    results = index["by_role"].get(role, [])
+    normalized_role = {
+        "a": "link",
+        "button": "button",
+        "fieldset": "group",
+        "img": "image",
+        "input": "text_input",
+        "textarea": "textarea",
+        "textbox": "text_input",
+        "searchbox": "text_input",
+        "combobox": "select",
+        "listbox": "select",
+        "select": "select",
+    }.get(role.strip().lower(), role.strip().lower())
+    results = index["by_role"].get(normalized_role, [])
     return list(results) if isinstance(results, list) else []
 
 

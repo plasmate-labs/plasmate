@@ -268,6 +268,11 @@ class TestFindByTag:
         assert [el.id for el in find_by_tag(sample_som, "a")] == ["e1", "e2"]
         assert [el.id for el in find_by_tag(sample_som, "p")] == ["e4", "e8", "e10"]
 
+    def test_accepts_aria_control_aliases(self, sample_som: Som) -> None:
+        assert [el.id for el in find_by_tag(sample_som, "textbox")] == ["e9"]
+        assert [el.id for el in find_by_tag(sample_som, "searchbox")] == ["e9"]
+        assert find_by_tag(sample_som, "listbox") == []
+
     def test_accepts_heading_level_aliases_and_trimmed_input(self, sample_som: Som) -> None:
         assert [el.id for el in find_by_tag(sample_som, " H1 ")] == ["e3"]
         assert [el.id for el in find_by_tag(sample_som, "heading1")] == ["e3"]
@@ -283,6 +288,15 @@ class TestFindByTag:
 
     def test_finds_shadow_root_roles(self) -> None:
         assert [el.id for el in find_by_tag(_shadow_som(), "paragraph")] == ["shadow_text"]
+
+
+class TestFindActionTargetsByRole:
+    def test_accepts_html_control_aliases(self, sample_som: Som) -> None:
+        assert [item["id"] for item in find_action_targets_by_role(sample_som, "INPUT")] == ["e9"]
+        assert [item["id"] for item in find_action_targets_by_role(sample_som, "textbox")] == ["e9"]
+
+    def test_trims_role_aliases(self, sample_som: Som) -> None:
+        assert [item["id"] for item in find_action_targets_by_role(sample_som, "  a  ")] == ["e1", "e2"]
 
 
 class TestFindInteractive:
@@ -403,6 +417,15 @@ class TestGetActionPlan:
         assert find_action_target_by_label(som, "Save") == save
         assert find_action_targets_by_label(som, "save") == [save]
         assert find_action_targets_by_role(som, "button") == [expected[2], expected[3]]
+        assert [target["id"] for target in find_action_targets_by_role(som, " A ")] == [
+            "e_billing",
+        ]
+        assert [target["id"] for target in find_action_targets_by_role(som, " COMBOBOX ")] == [
+            "e_plan",
+        ]
+        assert [target["id"] for target in find_action_targets_by_role(som, "listbox")] == [
+            "e_plan",
+        ]
         assert find_action_targets_by_action(som, "click") == [
             expected[2],
             expected[3],
