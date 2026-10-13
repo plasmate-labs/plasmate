@@ -16,7 +16,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   and `role:` forms also work for element roles.
 /// - Element roles: `link`, `button`, `text_input` / `textbox` / `searchbox` /
 ///   `slider` / `spinbutton` / `input`, HTML text-input types such as `text`,
-///   `search_input` / `search-input` / `search_control` / `search-control`, `email`, `number`,
+///   `search_input` / `search-input` / `search_control` / `search-control` /
+///   `search_field` / `search-field` / `query_input` / `query-input` /
+///   `query_field` / `query-field`, `email`, `number`,
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local`, `month`,
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea`,
 ///   `select` / `combobox` / `listbox`, `checkbox`,
@@ -296,6 +298,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "search"
         | "search_input"
         | "search_control"
+        | "search_field"
+        | "query_input"
+        | "query_field"
         | "email"
         | "number"
         | "password"
@@ -1149,6 +1154,10 @@ mod tests {
             "search-input",
             "search_control",
             "search-control",
+            "search_field",
+            "search-field",
+            "query_field",
+            "query-field",
             "email",
             "number",
             "password",
@@ -1194,10 +1203,45 @@ mod tests {
             "search-input",
             "search_control",
             "search-control",
+            "search_field",
+            "search-field",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-search");
+        }
+    }
+
+    #[test]
+    fn test_selector_query_input_alias_filters_text_input() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-query".to_string(),
+            role: ElementRole::TextInput,
+            html_id: None,
+            text: None,
+            label: Some("Query".to_string()),
+            actions: Some(vec!["type".to_string()]),
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in [
+            "query_input",
+            "query-input",
+            "query_field",
+            "query-field",
+            "role=query_input",
+            "role:query-input",
+            "role=query_field",
+            "role:query-field",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1);
+            assert_eq!(filtered.regions[0].elements[0].id, "e-query");
         }
     }
 
