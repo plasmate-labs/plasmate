@@ -285,6 +285,15 @@ class TestFindByTag:
         assert [el.id for el in find_by_tag(_shadow_som(), "paragraph")] == ["shadow_text"]
 
 
+class TestFindActionTargetsByRole:
+    def test_accepts_html_control_aliases(self, sample_som: Som) -> None:
+        assert [item["id"] for item in find_action_targets_by_role(sample_som, "INPUT")] == ["e9"]
+        assert [item["id"] for item in find_action_targets_by_role(sample_som, "textbox")] == ["e9"]
+
+    def test_trims_role_aliases(self, sample_som: Som) -> None:
+        assert [item["id"] for item in find_action_targets_by_role(sample_som, "  a  ")] == ["e1", "e2"]
+
+
 class TestFindInteractive:
     def test_finds_all_interactive_elements(self, sample_som: Som) -> None:
         interactive = find_interactive(sample_som)

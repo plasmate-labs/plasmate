@@ -445,7 +445,11 @@ def find_action_targets_by_role(
     index = get_action_plan_index(som, enabled_only=enabled_only)
     normalized_role = {
         "a": "link",
+        "button": "button",
+        "fieldset": "group",
+        "img": "image",
         "input": "text_input",
+        "textarea": "textarea",
         "textbox": "text_input",
         "searchbox": "text_input",
         "combobox": "select",
