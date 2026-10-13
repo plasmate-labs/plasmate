@@ -57,6 +57,11 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "p": "paragraph",
         "summary": "details",
         "textarea": "textarea",
+        "textbox": "text_input",
+        "searchbox": "text_input",
+        "combobox": "select",
+        "listbox": "select",
+        "select": "select",
         "ul": "list",
     }
     tag = tag.strip().lower()

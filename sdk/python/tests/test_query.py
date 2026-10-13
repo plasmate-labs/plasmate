@@ -268,6 +268,11 @@ class TestFindByTag:
         assert [el.id for el in find_by_tag(sample_som, "a")] == ["e1", "e2"]
         assert [el.id for el in find_by_tag(sample_som, "p")] == ["e4", "e8", "e10"]
 
+    def test_accepts_aria_control_aliases(self, sample_som: Som) -> None:
+        assert [el.id for el in find_by_tag(sample_som, "textbox")] == ["e9"]
+        assert [el.id for el in find_by_tag(sample_som, "searchbox")] == ["e9"]
+        assert find_by_tag(sample_som, "listbox") == []
+
     def test_accepts_heading_level_aliases_and_trimmed_input(self, sample_som: Som) -> None:
         assert [el.id for el in find_by_tag(sample_som, " H1 ")] == ["e3"]
         assert [el.id for el in find_by_tag(sample_som, "heading1")] == ["e3"]
