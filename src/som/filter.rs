@@ -16,7 +16,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   and `role:` forms also work for element roles.
 /// - Element roles: `link`, `button`, `text_input` / `textbox` / `searchbox` /
 ///   `slider` / `spinbutton` / `input`, HTML text-input types such as `text`,
-///   `search_input` / `search-input`, `email`, `number`,
+///   `search_input` / `search-input` / `search_control` / `search-control`, `email`, `number`,
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local`, `month`,
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea`,
 ///   `select` / `combobox` / `listbox`, `checkbox`,
@@ -293,7 +293,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "spinbutton"
         | "input"
         | "text"
+        | "search"
         | "search_input"
+        | "search_control"
         | "email"
         | "number"
         | "password"
@@ -478,6 +480,7 @@ fn filter_elements_by_id(elements: &[Element], id: &str) -> Vec<Element> {
         .iter()
         .filter_map(|element| {
             let mut cloned = element.clone();
+            let matches_self = element.id == id || element.html_id.as_deref() == Some(id);
             if let Some(children) = &element.children {
                 let filtered_children = filter_elements_by_id(children, id);
                 cloned.children = if filtered_children.is_empty() {
@@ -503,11 +506,14 @@ fn filter_elements_by_id(elements: &[Element], id: &str) -> Vec<Element> {
                 false
             };
 
-            if element.id == id
-                || element.html_id.as_deref() == Some(id)
-                || cloned.children.is_some()
-                || shadow_match
-            {
+            if matches_self {
+                // An id selector targets the element itself. Preserve its
+                // authored children just as role selectors do; descendants
+                // remain filtered only when the match is found below it.
+                cloned.children = element.children.clone();
+            }
+
+            if matches_self || cloned.children.is_some() || shadow_match {
                 Some(cloned)
             } else {
                 None
@@ -792,6 +798,31 @@ mod tests {
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].html_id.as_deref(), Some("IntroPanel"));
         assert_eq!(apply_selector(&som, "#intropanel").regions.len(), 2);
+    }
+
+    #[test]
+    fn test_selector_html_id_preserves_matched_element_children() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].html_id = Some("panel".to_string());
+        som.regions[1].elements[0].children = Some(vec![Element {
+            id: "panel-label".to_string(),
+            role: ElementRole::Paragraph,
+            html_id: None,
+            text: Some("Panel content".to_string()),
+            label: None,
+            actions: None,
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        }]);
+
+        let filtered = apply_selector(&som, "#panel");
+        let children = filtered.regions[0].elements[0]
+            .children
+            .as_ref()
+            .expect("matched element should retain authored children");
+        assert_eq!(children[0].text.as_deref(), Some("Panel content"));
     }
 
     #[test]
@@ -1113,8 +1144,11 @@ mod tests {
     fn test_selector_input_type_aliases_match_compiled_text_input() {
         for selector in [
             "text",
+            "search",
             "search_input",
             "search-input",
+            "search_control",
+            "search-control",
             "email",
             "number",
             "password",
@@ -1155,7 +1189,12 @@ mod tests {
             hints: None,
         });
 
-        for selector in ["search_input", "search-input"] {
+        for selector in [
+            "search_input",
+            "search-input",
+            "search_control",
+            "search-control",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-search");
