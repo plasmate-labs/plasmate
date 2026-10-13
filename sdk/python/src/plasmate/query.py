@@ -45,7 +45,21 @@ def find_by_label(som: Som, label: str, *, exact: bool = False) -> List[SomEleme
 
 
 def find_by_tag(som: Som, tag: str) -> List[SomElement]:
-    """Find all elements matching the given element role (tag)."""
+    """Find all elements matching an element role or common HTML tag alias."""
+    role_aliases = {
+        "a": "link",
+        "button": "button",
+        "fieldset": "group",
+        "hr": "separator",
+        "img": "image",
+        "input": "text_input",
+        "ol": "list",
+        "p": "paragraph",
+        "summary": "details",
+        "textarea": "textarea",
+        "ul": "list",
+    }
+    tag = role_aliases.get(tag.lower(), tag)
     results: List[SomElement] = []
     for region in som.regions:
         for element in region.elements:

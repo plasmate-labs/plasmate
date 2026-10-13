@@ -264,6 +264,10 @@ class TestFindByTag:
         links = find_by_tag(sample_som, "link")
         assert len(links) == 2
 
+    def test_accepts_common_html_tag_aliases(self, sample_som: Som) -> None:
+        assert [el.id for el in find_by_tag(sample_som, "a")] == ["e1", "e2"]
+        assert [el.id for el in find_by_tag(sample_som, "p")] == ["e4", "e8", "e10"]
+
     def test_finds_paragraphs_including_nested(self, sample_som: Som) -> None:
         paras = find_by_tag(sample_som, "paragraph")
         assert len(paras) == 3  # e4, e8, e10
