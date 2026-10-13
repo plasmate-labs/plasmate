@@ -45,11 +45,33 @@ def find_by_label(som: Som, label: str, *, exact: bool = False) -> List[SomEleme
 
 
 def find_by_tag(som: Som, tag: str) -> List[SomElement]:
-    """Find all elements matching the given element role (tag)."""
+    """Find all elements matching an element role or common HTML tag alias."""
+    role_aliases = {
+        "a": "link",
+        "button": "button",
+        "fieldset": "group",
+        "hr": "separator",
+        "img": "image",
+        "input": "text_input",
+        "ol": "list",
+        "p": "paragraph",
+        "summary": "details",
+        "textarea": "textarea",
+        "ul": "list",
+    }
+    tag = tag.strip().lower()
+    heading_level = None
+    if tag.startswith("heading"):
+        suffix = tag.removeprefix("heading").lstrip("-")
+        if suffix in "123456":
+            heading_level = int(suffix)
+    elif len(tag) == 2 and tag[0] == "h" and tag[1] in "123456":
+        heading_level = int(tag[1])
+    tag = role_aliases.get(tag, tag)
     results: List[SomElement] = []
     for region in som.regions:
         for element in region.elements:
-            _collect_by_role(element, tag, results)
+            _collect_by_tag(element, tag, heading_level, results)
     return results
 
 
@@ -427,9 +449,20 @@ def find_action_targets_by_action(
     *,
     enabled_only: bool = False,
 ) -> List[Dict[str, object]]:
-    """Return compact action targets that expose the requested action."""
+    """Return compact action targets that expose the requested action.
+
+    Accept the same interaction aliases as the MCP/CLI selector contract.
+    Compiled SOM actions remain canonical (``type`` and ``select``), so the
+    aliases are normalized only for this lookup.
+    """
     index = get_action_plan_index(som, enabled_only=enabled_only)
-    results = index["by_action"].get(action, [])
+    normalized_action = {
+        "type_text": "type",
+        "type-text": "type",
+        "select_option": "select",
+        "select-option": "select",
+    }.get(action.strip().lower(), action.strip().lower())
+    results = index["by_action"].get(normalized_action, [])
     return list(results) if isinstance(results, list) else []
 
 
@@ -535,6 +568,25 @@ def _collect_by_role(element: SomElement, role: str, results: List[SomElement]) 
     if element.shadow:
         for child in element.shadow.elements:
             _collect_by_role(child, role, results)
+
+
+def _collect_by_tag(
+    element: SomElement,
+    role: str,
+    heading_level: Optional[int],
+    results: List[SomElement],
+) -> None:
+    if heading_level is not None:
+        if element.role == "heading" and element.attrs and element.attrs.level == heading_level:
+            results.append(element)
+    elif element.role == role:
+        results.append(element)
+    if element.children:
+        for child in element.children:
+            _collect_by_tag(child, role, heading_level, results)
+    if element.shadow:
+        for child in element.shadow.elements:
+            _collect_by_tag(child, role, heading_level, results)
 
 
 def _collect_interactive(element: SomElement, results: List[SomElement]) -> None:

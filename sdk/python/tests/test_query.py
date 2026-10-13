@@ -264,6 +264,16 @@ class TestFindByTag:
         links = find_by_tag(sample_som, "link")
         assert len(links) == 2
 
+    def test_accepts_common_html_tag_aliases(self, sample_som: Som) -> None:
+        assert [el.id for el in find_by_tag(sample_som, "a")] == ["e1", "e2"]
+        assert [el.id for el in find_by_tag(sample_som, "p")] == ["e4", "e8", "e10"]
+
+    def test_accepts_heading_level_aliases_and_trimmed_input(self, sample_som: Som) -> None:
+        assert [el.id for el in find_by_tag(sample_som, " H1 ")] == ["e3"]
+        assert [el.id for el in find_by_tag(sample_som, "heading1")] == ["e3"]
+        assert [el.id for el in find_by_tag(sample_som, "heading-1")] == ["e3"]
+        assert find_by_tag(sample_som, "h2") == []
+
     def test_finds_paragraphs_including_nested(self, sample_som: Som) -> None:
         paras = find_by_tag(sample_som, "paragraph")
         assert len(paras) == 3  # e4, e8, e10
@@ -397,6 +407,15 @@ class TestGetActionPlan:
             expected[2],
             expected[3],
             expected[-1],
+        ]
+        assert [target["id"] for target in find_action_targets_by_action(som, " type-text ")] == [
+            "e_email",
+            "e_upload",
+            "e_quota",
+        ]
+        assert [target["id"] for target in find_action_targets_by_action(som, "select-option")] == [
+            "e_plan",
+            "e_annual",
         ]
         assert find_action_target(som, "settings-save", enabled_only=True) is None
         assert find_action_target(som, "Save", by="label", enabled_only=True) is None
