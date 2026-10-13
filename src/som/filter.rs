@@ -16,7 +16,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   and `role:` forms also work for element roles.
 /// - Element roles: `link`, `button`, `text_input` / `textbox` / `searchbox` /
 ///   `slider` / `spinbutton` / `input`, HTML text-input types such as `text`,
-///   `search_input` / `search-input`, `email`, `number`,
+///   `search_input` / `search-input` / `search_control` / `search-control`, `email`, `number`,
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local`, `month`,
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea`,
 ///   `select` / `combobox` / `listbox`, `checkbox`,
@@ -295,6 +295,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "text"
         | "search"
         | "search_input"
+        | "search_control"
         | "email"
         | "number"
         | "password"
@@ -1146,6 +1147,8 @@ mod tests {
             "search",
             "search_input",
             "search-input",
+            "search_control",
+            "search-control",
             "email",
             "number",
             "password",
@@ -1186,7 +1189,12 @@ mod tests {
             hints: None,
         });
 
-        for selector in ["search_input", "search-input"] {
+        for selector in [
+            "search_input",
+            "search-input",
+            "search_control",
+            "search-control",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-search");
