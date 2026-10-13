@@ -461,16 +461,29 @@ def find_action_targets_by_role(
     index = get_action_plan_index(som, enabled_only=enabled_only)
     normalized_role = {
         "a": "link",
+        "article": "section",
         "button": "button",
+        "combobox": "select",
+        "definition_list": "list",
+        "div": "group",
         "fieldset": "group",
+        "hr": "separator",
         "img": "image",
         "input": "text_input",
+        "listbox": "select",
+        "menu": "list",
+        "ol": "list",
+        "ordered_list": "list",
+        "p": "paragraph",
+        "search": "text_input",
+        "search_input": "text_input",
+        "select": "select",
+        "summary": "details",
         "textarea": "textarea",
         "textbox": "text_input",
         "searchbox": "text_input",
-        "combobox": "select",
-        "listbox": "select",
-        "select": "select",
+        "ul": "list",
+        "unordered_list": "list",
     }.get(role.strip().lower(), role.strip().lower())
     results = index["by_role"].get(normalized_role, [])
     return list(results) if isinstance(results, list) else []
