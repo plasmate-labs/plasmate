@@ -268,6 +268,10 @@ class TestFindByTag:
         assert [el.id for el in find_by_tag(sample_som, "a")] == ["e1", "e2"]
         assert [el.id for el in find_by_tag(sample_som, "p")] == ["e4", "e8", "e10"]
 
+    def test_accepts_heading_level_aliases_and_trimmed_input(self, sample_som: Som) -> None:
+        assert [el.id for el in find_by_tag(sample_som, " H1 ")] == ["e3"]
+        assert find_by_tag(sample_som, "h2") == []
+
     def test_finds_paragraphs_including_nested(self, sample_som: Som) -> None:
         paras = find_by_tag(sample_som, "paragraph")
         assert len(paras) == 3  # e4, e8, e10

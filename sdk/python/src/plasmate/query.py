@@ -59,11 +59,13 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "textarea": "textarea",
         "ul": "list",
     }
-    tag = role_aliases.get(tag.lower(), tag)
+    tag = tag.strip().lower()
+    heading_level = int(tag[1]) if len(tag) == 2 and tag[0] == "h" and tag[1] in "123456" else None
+    tag = role_aliases.get(tag, tag)
     results: List[SomElement] = []
     for region in som.regions:
         for element in region.elements:
-            _collect_by_role(element, tag, results)
+            _collect_by_tag(element, tag, heading_level, results)
     return results
 
 
@@ -560,6 +562,25 @@ def _collect_by_role(element: SomElement, role: str, results: List[SomElement]) 
     if element.shadow:
         for child in element.shadow.elements:
             _collect_by_role(child, role, results)
+
+
+def _collect_by_tag(
+    element: SomElement,
+    role: str,
+    heading_level: Optional[int],
+    results: List[SomElement],
+) -> None:
+    if heading_level is not None:
+        if element.role == "heading" and element.attrs and element.attrs.level == heading_level:
+            results.append(element)
+    elif element.role == role:
+        results.append(element)
+    if element.children:
+        for child in element.children:
+            _collect_by_tag(child, role, heading_level, results)
+    if element.shadow:
+        for child in element.shadow.elements:
+            _collect_by_tag(child, role, heading_level, results)
 
 
 def _collect_interactive(element: SomElement, results: List[SomElement]) -> None:
