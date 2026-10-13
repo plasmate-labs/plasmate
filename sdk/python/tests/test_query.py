@@ -403,6 +403,9 @@ class TestGetActionPlan:
         assert find_action_target_by_label(som, "Save") == save
         assert find_action_targets_by_label(som, "save") == [save]
         assert find_action_targets_by_role(som, "button") == [expected[2], expected[3]]
+        assert [target["id"] for target in find_action_targets_by_role(som, " A ")] == [
+            "e_billing",
+        ]
         assert find_action_targets_by_action(som, "click") == [
             expected[2],
             expected[3],
