@@ -273,6 +273,16 @@ class TestFindByTag:
         for alias in ("menu", "definition-list", "unordered-list", "ordered_list"):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["e11"]
 
+    def test_accepts_structural_html_tag_aliases(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.extend(
+            [
+                SomElement(id="e12", role=ElementRole.section),
+                SomElement(id="e13", role=ElementRole.group),
+            ]
+        )
+        assert [el.id for el in find_by_tag(sample_som, "article")] == ["e7", "e12"]
+        assert [el.id for el in find_by_tag(sample_som, "div")] == ["e13"]
+
     def test_accepts_aria_control_aliases(self, sample_som: Som) -> None:
         assert [el.id for el in find_by_tag(sample_som, "textbox")] == ["e9"]
         assert [el.id for el in find_by_tag(sample_som, "searchbox")] == ["e9"]
