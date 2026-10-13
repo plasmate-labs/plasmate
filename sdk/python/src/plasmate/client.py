@@ -55,9 +55,12 @@ def _extract_last_json(text: str) -> Any:
                 pass
 
     # Phase 3: JSON embedded inside a longer string — try raw_decode from each
-    # '{' position, rightmost first, so we return the *last* complete object
+    # object or array position, rightmost first, so we return the *last*
+    # complete payload.
     decoder = json.JSONDecoder()
-    for pos in reversed([i for i, ch in enumerate(stripped) if ch == "{"]):
+    for pos in reversed(
+        [i for i, ch in enumerate(stripped) if ch in ("{", "[")]
+    ):
         try:
             value, _ = decoder.raw_decode(stripped, pos)
             return value

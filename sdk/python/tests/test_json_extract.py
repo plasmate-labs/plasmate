@@ -33,6 +33,14 @@ class TestExtractLastJson:
         result = _extract_last_json(text)
         assert result == {"status": "done", "count": 42}
 
+    def test_array_embedded_in_log_line(self):
+        """Array payloads embedded in tracing output are valid JSON too."""
+        text = 'INFO: links = ["https://example.test/a", "https://example.test/b"]'
+        assert _extract_last_json(text) == [
+            "https://example.test/a",
+            "https://example.test/b",
+        ]
+
     def test_multiple_json_objects_returns_last(self):
         """When multiple JSON objects exist, return the last complete one."""
         text = '{"partial": true}\n{"final": true}'
