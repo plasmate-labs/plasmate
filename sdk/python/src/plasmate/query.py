@@ -448,6 +448,8 @@ def find_action_targets_by_role(
         "input": "text_input",
         "textbox": "text_input",
         "searchbox": "text_input",
+        "combobox": "select",
+        "listbox": "select",
         "select": "select",
     }.get(role.strip().lower(), role.strip().lower())
     results = index["by_role"].get(normalized_role, [])

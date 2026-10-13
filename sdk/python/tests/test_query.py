@@ -406,6 +406,12 @@ class TestGetActionPlan:
         assert [target["id"] for target in find_action_targets_by_role(som, " A ")] == [
             "e_billing",
         ]
+        assert [target["id"] for target in find_action_targets_by_role(som, " COMBOBOX ")] == [
+            "e_plan",
+        ]
+        assert [target["id"] for target in find_action_targets_by_role(som, "listbox")] == [
+            "e_plan",
+        ]
         assert find_action_targets_by_action(som, "click") == [
             expected[2],
             expected[3],
