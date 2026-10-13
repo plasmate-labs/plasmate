@@ -60,7 +60,13 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "ul": "list",
     }
     tag = tag.strip().lower()
-    heading_level = int(tag[1]) if len(tag) == 2 and tag[0] == "h" and tag[1] in "123456" else None
+    heading_level = None
+    if tag.startswith("heading"):
+        suffix = tag.removeprefix("heading").lstrip("-")
+        if suffix in "123456":
+            heading_level = int(suffix)
+    elif len(tag) == 2 and tag[0] == "h" and tag[1] in "123456":
+        heading_level = int(tag[1])
     tag = role_aliases.get(tag, tag)
     results: List[SomElement] = []
     for region in som.regions:
