@@ -478,6 +478,7 @@ fn filter_elements_by_id(elements: &[Element], id: &str) -> Vec<Element> {
         .iter()
         .filter_map(|element| {
             let mut cloned = element.clone();
+            let matches_self = element.id == id || element.html_id.as_deref() == Some(id);
             if let Some(children) = &element.children {
                 let filtered_children = filter_elements_by_id(children, id);
                 cloned.children = if filtered_children.is_empty() {
@@ -503,11 +504,14 @@ fn filter_elements_by_id(elements: &[Element], id: &str) -> Vec<Element> {
                 false
             };
 
-            if element.id == id
-                || element.html_id.as_deref() == Some(id)
-                || cloned.children.is_some()
-                || shadow_match
-            {
+            if matches_self {
+                // An id selector targets the element itself. Preserve its
+                // authored children just as role selectors do; descendants
+                // remain filtered only when the match is found below it.
+                cloned.children = element.children.clone();
+            }
+
+            if matches_self || cloned.children.is_some() || shadow_match {
                 Some(cloned)
             } else {
                 None
@@ -792,6 +796,31 @@ mod tests {
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].html_id.as_deref(), Some("IntroPanel"));
         assert_eq!(apply_selector(&som, "#intropanel").regions.len(), 2);
+    }
+
+    #[test]
+    fn test_selector_html_id_preserves_matched_element_children() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].html_id = Some("panel".to_string());
+        som.regions[1].elements[0].children = Some(vec![Element {
+            id: "panel-label".to_string(),
+            role: ElementRole::Paragraph,
+            html_id: None,
+            text: Some("Panel content".to_string()),
+            label: None,
+            actions: None,
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        }]);
+
+        let filtered = apply_selector(&som, "#panel");
+        let children = filtered.regions[0].elements[0]
+            .children
+            .as_ref()
+            .expect("matched element should retain authored children");
+        assert_eq!(children[0].text.as_deref(), Some("Panel content"));
     }
 
     #[test]
