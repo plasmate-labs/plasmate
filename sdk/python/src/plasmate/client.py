@@ -24,7 +24,8 @@ def _extract_last_json(text: str) -> Any:
     1. **Fast path** — ``json.loads`` on the stripped text directly.  Handles
        clean output from the MCP stdio transport (the common case).
     2. **Line scan** — try each non-empty line from the end.  Handles output
-       where a progress/info line precedes the JSON on a separate line.
+       where a progress/info line precedes the JSON on a separate line, including
+       valid scalar JSON results such as ``true`` or ``"ok"``.
     3. **Brace walk** — scan for every ``{`` position right-to-left and call
        ``raw_decode`` at each.  Handles JSON embedded within a longer string
        (e.g. a log message that includes the serialised response).
@@ -48,11 +49,12 @@ def _extract_last_json(text: str) -> Any:
     # such as "Fetching …" before outputting the SOM)
     for line in reversed(stripped.splitlines()):
         line = line.strip()
-        if line.startswith(("{", "[")):
-            try:
-                return json.loads(line)
-            except (json.JSONDecodeError, ValueError):
-                pass
+        if not line:
+            continue
+        try:
+            return json.loads(line)
+        except (json.JSONDecodeError, ValueError):
+            pass
 
     # Phase 3: JSON embedded inside a longer string — try raw_decode from each
     # object or array position, rightmost first, so we return the *last*

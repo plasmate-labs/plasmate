@@ -314,6 +314,24 @@ class TestFindActionTargetsByRole:
     def test_trims_role_aliases(self, sample_som: Som) -> None:
         assert [item["id"] for item in find_action_targets_by_role(sample_som, "  a  ")] == ["e1", "e2"]
 
+    def test_accepts_structural_tag_aliases(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(id="e12", role=ElementRole.section, actions=["click"])
+        )
+        assert [item["id"] for item in find_action_targets_by_role(sample_som, "article")] == ["e12"]
+
+    def test_accepts_aria_widget_aliases(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.extend(
+            [
+                SomElement(id="e12", role=ElementRole.button, actions=["click"]),
+                SomElement(id="e13", role=ElementRole.checkbox, actions=["toggle"]),
+                SomElement(id="e14", role=ElementRole.radio, actions=["toggle"]),
+            ]
+        )
+        assert "e12" in [item["id"] for item in find_action_targets_by_role(sample_som, "tab")]
+        assert "e13" in [item["id"] for item in find_action_targets_by_role(sample_som, "switch")]
+        assert "e14" in [item["id"] for item in find_action_targets_by_role(sample_som, "menuitemradio")]
+
 
 class TestFindInteractive:
     def test_finds_all_interactive_elements(self, sample_som: Som) -> None:

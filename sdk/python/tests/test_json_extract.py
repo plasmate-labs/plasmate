@@ -14,6 +14,10 @@ class TestExtractLastJson:
     def test_clean_array(self):
         assert _extract_last_json('[1, 2, 3]') == [1, 2, 3]
 
+    @pytest.mark.parametrize("payload, expected", [("true", True), ('"ok"', "ok"), ("42", 42)])
+    def test_clean_scalar(self, payload, expected):
+        assert _extract_last_json(payload) == expected
+
     def test_whitespace_padding(self):
         assert _extract_last_json('  \n{"a": 1}\n  ') == {"a": 1}
 
