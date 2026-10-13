@@ -293,6 +293,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "spinbutton"
         | "input"
         | "text"
+        | "search"
         | "search_input"
         | "email"
         | "number"
@@ -1142,6 +1143,7 @@ mod tests {
     fn test_selector_input_type_aliases_match_compiled_text_input() {
         for selector in [
             "text",
+            "search",
             "search_input",
             "search-input",
             "email",
