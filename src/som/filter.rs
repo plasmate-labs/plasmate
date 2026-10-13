@@ -16,7 +16,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   and `role:` forms also work for element roles.
 /// - Element roles: `link`, `button`, `text_input` / `textbox` / `searchbox` /
 ///   `slider` / `spinbutton` / `input`, HTML text-input types such as `text`,
-///   `search_input` / `search-input` / `search_control` / `search-control`, `email`, `number`,
+///   `search_input` / `search-input` / `search_control` / `search-control` /
+///   `search_field` / `search-field`, `email`, `number`,
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local`, `month`,
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea`,
 ///   `select` / `combobox` / `listbox`, `checkbox`,
@@ -296,6 +297,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "search"
         | "search_input"
         | "search_control"
+        | "search_field"
         | "email"
         | "number"
         | "password"
@@ -1149,6 +1151,8 @@ mod tests {
             "search-input",
             "search_control",
             "search-control",
+            "search_field",
+            "search-field",
             "email",
             "number",
             "password",
@@ -1194,6 +1198,8 @@ mod tests {
             "search-input",
             "search_control",
             "search-control",
+            "search_field",
+            "search-field",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
