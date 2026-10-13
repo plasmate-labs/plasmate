@@ -473,7 +473,7 @@ async fn load_session_page_for_mcp(
 pub fn fetch_page_definition() -> ToolDefinition {
     ToolDefinition {
         name: "fetch_page".to_string(),
-        description: "Fetch a web page and return its Semantic Object Model (SOM) - structured JSON with typed regions, interactive elements with stable IDs, and clean text content. Output size depends on the page, configuration, serialization, and selector. Prefer this over raw HTTP fetches when an agent needs semantic page structure. For large pages, set budget to cap the returned tokens and combine it with selector='main' when navigation and footer content are not needed. Add selector='main' to strip nav/footer, selector='h1' through selector='h6' to isolate a heading level, or selector='interactive' / selector='click' (or action:click) / selector='type', 'type_text', or 'type-text' (or action:type, action:type_text, or action:type-text) / selector='clear' (or action:clear) / selector='select', 'select_option', or 'select-option' (or action:select, action:select_option, or action:select-option) / selector='toggle' (or action:toggle) / selector='submit' (or action:submit) / selector='reset' (or action:reset) to return only reusable action targets. The action:<verb> form also accepts whitespace around its separator, such as action : reset or action = reset.".to_string(),
+        description: "Fetch a web page and return its Semantic Object Model (SOM) - structured JSON with typed regions, interactive elements with stable IDs, and clean text content. Output size depends on the page, configuration, serialization, and selector. Prefer this over raw HTTP fetches when an agent needs semantic page structure. For large pages, set budget to cap the returned tokens and combine it with selector='main' when navigation and footer content are not needed. Add selector='main' to strip nav/footer, selector='h1' through selector='h6' to isolate a heading level, or selector='interactive' / selector='click' (or action:click) / selector='type', 'type_text', or 'type-text' (or action:type, action:type_text, or action:type-text) / selector='clear' (or action:clear) / selector='select', 'select_option', or 'select-option' (or action:select, action:select_option, or action:select-option) / selector='toggle' (or action:toggle) / selector='submit' (or action:submit) / selector='reset' (or action:reset) to return only reusable action targets. The action:<verb> form also accepts whitespace around its separator, such as action : reset or action = reset; role=<action> and role:<action> are equivalent forms.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -6890,6 +6890,7 @@ mod tests {
         assert!(definition.description.contains("action:type-text"));
         assert!(definition.description.contains("action:select_option"));
         assert!(definition.description.contains("action:select-option"));
+        assert!(definition.description.contains("role=<action> and role:<action>"));
         assert!(definition
             .description
             .contains("set budget to cap the returned tokens"));

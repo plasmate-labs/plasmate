@@ -48,12 +48,18 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
     """Find all elements matching an element role or common HTML tag alias."""
     role_aliases = {
         "a": "link",
+        "article": "section",
         "button": "button",
+        "div": "group",
         "fieldset": "group",
         "hr": "separator",
         "img": "image",
         "input": "text_input",
+        "search": "text_input",
+        "search_input": "text_input",
         "ol": "list",
+        "dl": "list",
+        "menu": "list",
         "p": "paragraph",
         "summary": "details",
         "textarea": "textarea",
@@ -63,15 +69,20 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "listbox": "select",
         "select": "select",
         "ul": "list",
+        "unordered_list": "list",
+        "ordered_list": "list",
+        "definition_list": "list",
     }
-    tag = tag.strip().lower()
+    tag = tag.strip().lower().replace("-", "_")
     heading_level = None
     if tag.startswith("heading"):
-        suffix = tag.removeprefix("heading").lstrip("-")
+        suffix = tag.removeprefix("heading").lstrip("-_")
         if suffix in "123456":
             heading_level = int(suffix)
-    elif len(tag) == 2 and tag[0] == "h" and tag[1] in "123456":
-        heading_level = int(tag[1])
+    elif tag.startswith("h"):
+        suffix = tag[1:].lstrip("_")
+        if suffix in "123456":
+            heading_level = int(suffix)
     tag = role_aliases.get(tag, tag)
     results: List[SomElement] = []
     for region in som.regions:
