@@ -265,12 +265,18 @@ class TestFindByTag:
         assert len(links) == 2
 
     def test_accepts_common_html_tag_aliases(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(id="e11", role=ElementRole.list)
+        )
         assert [el.id for el in find_by_tag(sample_som, "a")] == ["e1", "e2"]
         assert [el.id for el in find_by_tag(sample_som, "p")] == ["e4", "e8", "e10"]
+        for alias in ("menu", "definition-list", "unordered-list", "ordered_list"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == ["e11"]
 
     def test_accepts_aria_control_aliases(self, sample_som: Som) -> None:
         assert [el.id for el in find_by_tag(sample_som, "textbox")] == ["e9"]
         assert [el.id for el in find_by_tag(sample_som, "searchbox")] == ["e9"]
+        assert [el.id for el in find_by_tag(sample_som, "search-input")] == ["e9"]
         assert find_by_tag(sample_som, "listbox") == []
 
     def test_accepts_heading_level_aliases_and_trimmed_input(self, sample_som: Som) -> None:
