@@ -37,7 +37,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `iframe` / `iframes`, `audio` / `audios`, `video` / `videos`,
 ///   `canvas` / `canvases`
 ///   and the grouped media selector `media` / `media_item` / `media-item` /
-///   `mediaitem` / `media_items` / `media-items` (images and media-capable groups)
+///   `mediaitem` / `media_items` / `media-items` (images and media-capable groups).
+///   `audio_item`/`audio-item` and `video_item`/`video-item` are convenient
+///   singular media aliases (and match the grouped media behavior).
 /// - Heading levels: `h1` .. `h6` (or `heading1` .. `heading6`, including
 ///   hyphenated `h-1`/`heading-1` forms) match headings whose compiled
 ///   `attrs.level` is that integer. Missing or out-of-range levels are not invented.
@@ -102,7 +104,12 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // contain matching descendants.
     if matches!(
         selector.to_ascii_lowercase().as_str(),
-        "media" | "media_item" | "media-item" | "mediaitem" | "media_items" | "media-items"
+        "media"
+            | "media_item"
+            | "media-item"
+            | "mediaitem"
+            | "media_items"
+            | "media-items"
     ) {
         return filter_som_elements(som, selector, is_media_element);
     }
@@ -377,8 +384,12 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "output"
         | "audio"
         | "audios"
+        | "audio_item"
+        | "audio-item"
         | "video"
         | "videos"
+        | "video_item"
+        | "video-item"
         | "canvas"
         | "canvases" => {
             Some(ElementRole::Group)
@@ -762,6 +773,18 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].role, role);
+        }
+    }
+
+    #[test]
+    fn test_selector_audio_and_video_item_aliases_match_grouped_media() {
+        for selector in ["audio_item", "audio-item", "video_item", "video-item"] {
+            let mut som = make_test_som();
+            som.regions[0].elements[0].role = ElementRole::Group;
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Group);
         }
     }
 
