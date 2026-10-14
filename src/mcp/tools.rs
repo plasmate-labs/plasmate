@@ -6847,7 +6847,7 @@ mod tests {
             assert!(description.contains("select/combobox/listbox"));
             assert!(description.contains("text_input/textbox/searchbox/search_input/search-input"));
             assert!(description.contains("search_input, search-input"));
-            assert!(description.contains("query_field, or query-field"));
+            assert!(description.contains("query_field, query-field"));
             assert!(description.contains("search by itself selects the search navigation region"));
             assert!(description.contains("full SOM is returned unchanged"));
             assert!(description.contains("region id first"));
