@@ -329,7 +329,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
             Some(ElementRole::Checkbox)
         }
         "radio" | "menuitemradio" | "menu_item_radio" => Some(ElementRole::Radio),
-        "heading" => Some(ElementRole::Heading),
+        "heading" | "headings" => Some(ElementRole::Heading),
         "image" | "img" => Some(ElementRole::Image),
         "list"
         | "ul"
@@ -765,6 +765,18 @@ mod tests {
         assert_eq!(parse_heading_level_selector("h-6"), Some(6));
         assert_eq!(parse_heading_level_selector("heading-6"), Some(6));
         assert_eq!(parse_heading_level_selector("heading7"), None);
+    }
+
+    #[test]
+    fn test_selector_headings_plural_alias() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Heading;
+
+        let filtered = apply_selector(&som, "headings");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Heading);
     }
 
     #[test]
