@@ -18,7 +18,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `slider` / `spinbutton` / `input`, HTML text-input types such as `text`,
 ///   `search_input` / `search-input` / `search_control` / `search-control` /
 ///   `search_field` / `search-field` / `query_input` / `query-input` /
-///   `query_field` / `query-field`, `email`, `number`,
+///   `query_field` / `query-field` / `querybox` / `query-box` /
+///   `search_box` / `search-box`, `email`, `number`,
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local`, `month`,
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea`,
 ///   `select` / `combobox` / `listbox`, `checkbox`,
@@ -299,8 +300,11 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "search_input"
         | "search_control"
         | "search_field"
+        | "search_box"
         | "query_input"
         | "query_field"
+        | "querybox"
+        | "query_box"
         | "email"
         | "number"
         | "password"
@@ -656,6 +660,19 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1);
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Button);
+        }
+    }
+
+    #[test]
+    fn test_selector_search_box_aliases() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::TextInput;
+
+        for selector in ["search_box", "search-box"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1);
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::TextInput);
         }
     }
 
@@ -1158,6 +1175,8 @@ mod tests {
             "search-field",
             "query_field",
             "query-field",
+            "querybox",
+            "query-box",
             "email",
             "number",
             "password",
