@@ -17,7 +17,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// - Element roles: `link`, `button`, `text_input` / `textbox` / `searchbox` /
 ///   `slider` / `spinbutton` / `input`, HTML text-input types such as `text`,
 ///   `search_input` / `search-input` / `search_control` / `search-control` /
-///   `search_field` / `search-field` / `query_input` / `query-input` /
+///   `search_field` / `search-field` / `query` / `query_input` / `query-input` /
 ///   `query_field` / `query-field` / `querybox` / `query-box` /
 ///   `search_box` / `search-box`, `email`, `number`,
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local`, `month`,
@@ -302,6 +302,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "search_field"
         | "search_box"
         | "query_input"
+        | "query"
         | "query_field"
         | "querybox"
         | "query_box"
@@ -1248,6 +1249,7 @@ mod tests {
         });
 
         for selector in [
+            "query",
             "query_input",
             "query-input",
             "query_field",
