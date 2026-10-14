@@ -507,7 +507,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
 pub fn extract_text_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_text".to_string(),
-        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary. Includes compiled image alt text when the image has no other readable text, and definition-list terms with their descriptions, so chart, photo, and reference pages still return authored context. Use this (instead of fetch_page) when you only need the written content and do not need to interact with the page or reference specific elements.".to_string(),
+        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary. Includes compiled image alt text when the image has no other readable text, and definition-list terms with their descriptions, so chart, photo, and reference pages still return authored context. Use this (instead of fetch_page) when you only need written content and do not need to interact with the page or reference specific elements. For large pages, set selector='main' or another targeted selector to omit irrelevant regions before applying max_chars; use selector='content' for article text or selector='heading'/'h1' through 'h6' for headings.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -17378,6 +17378,15 @@ mod tests {
             definition.input_schema["properties"]["max_chars"]["minimum"],
             0
         );
+    }
+
+    #[test]
+    fn extract_text_description_explains_selector_for_large_pages() {
+        let description = extract_text_definition().description;
+
+        assert!(description.contains("selector='main'"));
+        assert!(description.contains("selector='content'"));
+        assert!(description.contains("before applying max_chars"));
     }
 
     #[test]
