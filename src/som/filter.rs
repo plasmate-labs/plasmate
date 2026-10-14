@@ -34,8 +34,10 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `group` / `fieldset` / `figure` / `radiogroup` / `progress` / `progressbar`
 ///   / `meter` / `output` / `video` / `canvas`,
 ///   `separator` / `separators` / `hr`, `details` / `detail` / `summary`,
-///   `iframe` / `iframes`, `audio`
-///   and the grouped media selector `media` (images and media-capable groups)
+///   `iframe` / `iframes`, `audio` / `audios`, `video` / `videos`,
+///   `canvas` / `canvases`
+///   and the grouped media selector `media` / `media_item` / `media-item` /
+///   `mediaitem` / `media_items` / `media-items` (images and media-capable groups)
 /// - Heading levels: `h1` .. `h6` (or `heading1` .. `heading6`, including
 ///   hyphenated `h-1`/`heading-1` forms) match headings whose compiled
 ///   `attrs.level` is that integer. Missing or out-of-range levels are not invented.
@@ -98,7 +100,10 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
 
     // Match element roles, preserving parent containers and shadow roots that
     // contain matching descendants.
-    if selector.eq_ignore_ascii_case("media") {
+    if matches!(
+        selector.to_ascii_lowercase().as_str(),
+        "media" | "media_item" | "media-item" | "mediaitem" | "media_items" | "media-items"
+    ) {
         return filter_som_elements(som, selector, is_media_element);
     }
 
@@ -289,7 +294,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         // These ARIA widget roles compile to the SOM's button role, so expose
         // the same selector aliases instead of making callers know the
         // normalized representation.
-        "button" | "buttons" | "menuitem" | "menu_item" | "option" | "tab" => {
+        "button" | "buttons" | "menuitem" | "menuitems" | "menu_item" | "option"
+        | "options" | "tab" | "tabs" => {
             Some(ElementRole::Button)
         }
         // HTML input types compile to the same SOM role. Accept their names
@@ -370,8 +376,11 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "meter"
         | "output"
         | "audio"
+        | "audios"
         | "video"
-        | "canvas" => {
+        | "videos"
+        | "canvas"
+        | "canvases" => {
             Some(ElementRole::Group)
         }
         "separator" | "separators" | "hr" => Some(ElementRole::Separator),
@@ -706,6 +715,24 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_plural_button_role_aliases() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Button;
+
+        for selector in ["menuitems", "options", "tabs"] {
+            let filtered = apply_selector(&som, selector);
+            assert!(!filtered.regions.is_empty(), "selector: {selector}");
+            assert!(filtered.regions.iter().all(|region| {
+                !region.elements.is_empty()
+                    && region
+                        .elements
+                        .iter()
+                        .all(|element| element.role == ElementRole::Button)
+            }));
+        }
+    }
+
+    #[test]
     fn test_selector_search_box_aliases() {
         let mut som = make_test_som();
         som.regions[0].elements[0].role = ElementRole::TextInput;
@@ -725,6 +752,9 @@ mod tests {
             ("separators", ElementRole::Separator),
             ("detail", ElementRole::Details),
             ("iframes", ElementRole::Iframe),
+            ("audios", ElementRole::Group),
+            ("videos", ElementRole::Group),
+            ("canvases", ElementRole::Group),
         ] {
             let mut som = make_test_som();
             som.regions[0].elements[0].role = role.clone();
@@ -857,6 +887,32 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Image);
+    }
+
+    #[test]
+    fn test_selector_media_item_aliases_match_grouped_media() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Image;
+
+        for selector in ["media", "media_items", "media-items"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Image);
+        }
+    }
+
+    #[test]
+    fn test_selector_media_item_singular_aliases_match_grouped_media() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Image;
+
+        for selector in ["media_item", "media-item", "mediaitem"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Image);
+        }
     }
 
     #[test]
