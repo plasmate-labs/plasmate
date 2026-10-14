@@ -36,7 +36,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `separator` / `separators` / `hr`, `details` / `detail` / `summary`,
 ///   `iframe` / `iframes`, `audio` / `audios`, `video` / `videos`,
 ///   `canvas` / `canvases`
-///   and the grouped media selector `media` (images and media-capable groups)
+///   and the grouped media selector `media` / `media_item` / `media-item` /
+///   `mediaitem` / `media_items` / `media-items` (images and media-capable groups)
 /// - Heading levels: `h1` .. `h6` (or `heading1` .. `heading6`, including
 ///   hyphenated `h-1`/`heading-1` forms) match headings whose compiled
 ///   `attrs.level` is that integer. Missing or out-of-range levels are not invented.
@@ -101,7 +102,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // contain matching descendants.
     if matches!(
         selector.to_ascii_lowercase().as_str(),
-        "media" | "media_items" | "media-items"
+        "media" | "media_item" | "media-item" | "mediaitem" | "media_items" | "media-items"
     ) {
         return filter_som_elements(som, selector, is_media_element);
     }
@@ -894,6 +895,19 @@ mod tests {
         som.regions[0].elements[0].role = ElementRole::Image;
 
         for selector in ["media", "media_items", "media-items"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Image);
+        }
+    }
+
+    #[test]
+    fn test_selector_media_item_singular_aliases_match_grouped_media() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Image;
+
+        for selector in ["media_item", "media-item", "mediaitem"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
