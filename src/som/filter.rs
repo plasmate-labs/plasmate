@@ -33,7 +33,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `definition_list`,
 ///   `group` / `fieldset` / `figure` / `radiogroup` / `progress` / `progressbar`
 ///   / `meter` / `output` / `video` / `canvas`,
-///   `separator` / `hr`, `details` / `summary`, `iframe`, `audio`
+///   `separator` / `separators` / `hr`, `details` / `detail` / `summary`,
+///   `iframe` / `iframes`, `audio`
 ///   and the grouped media selector `media` (images and media-capable groups)
 /// - Heading levels: `h1` .. `h6` (or `heading1` .. `heading6`, including
 ///   hyphenated `h-1`/`heading-1` forms) match headings whose compiled
@@ -354,7 +355,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "unordered_list"
         | "ordered_list"
         | "definition_list" => Some(ElementRole::List),
-        "table" => Some(ElementRole::Table),
+        "table" | "tables" => Some(ElementRole::Table),
         "paragraph" | "paragraphs" | "p" | "blockquote" | "blockquotes" | "quote" | "quotes" | "alert"
         | "status" | "tooltip" => {
             Some(ElementRole::Paragraph)
@@ -373,9 +374,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "canvas" => {
             Some(ElementRole::Group)
         }
-        "separator" | "hr" => Some(ElementRole::Separator),
-        "details" | "summary" => Some(ElementRole::Details),
-        "iframe" => Some(ElementRole::Iframe),
+        "separator" | "separators" | "hr" => Some(ElementRole::Separator),
+        "detail" | "details" | "summary" => Some(ElementRole::Details),
+        "iframe" | "iframes" => Some(ElementRole::Iframe),
         _ => None,
     }
 }
@@ -714,6 +715,23 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1);
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::TextInput);
+        }
+    }
+
+    #[test]
+    fn test_selector_structural_aliases() {
+        for (selector, role) in [
+            ("tables", ElementRole::Table),
+            ("separators", ElementRole::Separator),
+            ("detail", ElementRole::Details),
+            ("iframes", ElementRole::Iframe),
+        ] {
+            let mut som = make_test_som();
+            som.regions[0].elements[0].role = role.clone();
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, role);
         }
     }
 
