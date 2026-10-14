@@ -344,7 +344,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "ordered_list"
         | "definition_list" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
-        "paragraph" | "p" | "blockquote" | "alert" | "status" | "tooltip" => {
+        "paragraph" | "paragraphs" | "p" | "blockquote" | "blockquotes" | "alert"
+        | "status" | "tooltip" => {
             Some(ElementRole::Paragraph)
         }
         "section" => Some(ElementRole::Section),
@@ -669,6 +670,26 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1);
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Button);
+        }
+    }
+
+    #[test]
+    fn test_selector_plural_text_role_aliases() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Paragraph;
+
+        for selector in ["paragraphs", "blockquotes"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(
+                filtered
+                    .regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .filter(|element| element.role == ElementRole::Paragraph)
+                    .count(),
+                2,
+                "selector: {selector}"
+            );
         }
     }
 
