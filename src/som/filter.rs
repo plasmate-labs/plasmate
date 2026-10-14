@@ -14,7 +14,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `form`, `dialog`, `content`/`article`/`region` (or `role=<region>` / `role:<region>`;
 ///   optional whitespace around the separator is accepted). The same `role=`
 ///   and `role:` forms also work for element roles.
-/// - Element roles: `link`, `button`, `text_input` / `textbox` / `searchbox` /
+/// - Element roles: `link` / `links`, `button` / `buttons`, `text_input` /
+///   `text_inputs` / `textbox` / `searchbox` /
 ///   `slider` / `spinbutton` / `input`, HTML text-input types such as `text`,
 ///   `search_input` / `search-input` / `search_control` / `search-control` /
 ///   `search_field` / `search-field` / `query` / `query_input` / `query-input` /
@@ -22,9 +23,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `querybox` / `query-box` /
 ///   `search_box` / `search-box`, `email`, `number`,
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local`, `month`,
-///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea`,
-///   `select` / `combobox` / `listbox`, `checkbox`,
-///   `radio` / `menuitemradio`, `heading`, `image` / `images`, `list`, `table`,
+///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` / `textareas`,
+///   `select` / `selects` / `combobox` / `listbox`, `checkbox` / `checkboxes`,
+///   `radio` / `radios` / `menuitemradio`, `heading`, `image` / `images`, `list`, `table`,
 ///   `paragraph` / `alert` / `status` / `tooltip`, `section`,
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
@@ -282,15 +283,18 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         .replace('-', "_")
         .as_str()
     {
-        "link" | "a" => Some(ElementRole::Link),
+        "link" | "links" | "a" => Some(ElementRole::Link),
         // These ARIA widget roles compile to the SOM's button role, so expose
         // the same selector aliases instead of making callers know the
         // normalized representation.
-        "button" | "menuitem" | "menu_item" | "option" | "tab" => Some(ElementRole::Button),
+        "button" | "buttons" | "menuitem" | "menu_item" | "option" | "tab" => {
+            Some(ElementRole::Button)
+        }
         // HTML input types compile to the same SOM role. Accept their names
         // here so callers can target the controls using the source markup's
         // vocabulary without knowing the normalized role.
         "text_input"
+        | "text_inputs"
         | "textbox"
         | "searchbox"
         | "slider"
@@ -323,12 +327,12 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "range"
         | "hidden"
         | "file" => Some(ElementRole::TextInput),
-        "textarea" => Some(ElementRole::Textarea),
-        "select" | "combobox" | "listbox" => Some(ElementRole::Select),
-        "checkbox" | "switch" | "menuitemcheckbox" | "menu_item_checkbox" => {
+        "textarea" | "textareas" => Some(ElementRole::Textarea),
+        "select" | "selects" | "combobox" | "listbox" => Some(ElementRole::Select),
+        "checkbox" | "checkboxes" | "switch" | "menuitemcheckbox" | "menu_item_checkbox" => {
             Some(ElementRole::Checkbox)
         }
-        "radio" | "menuitemradio" | "menu_item_radio" => Some(ElementRole::Radio),
+        "radio" | "radios" | "menuitemradio" | "menu_item_radio" => Some(ElementRole::Radio),
         "heading" | "headings" => Some(ElementRole::Heading),
         "image" | "images" | "img" => Some(ElementRole::Image),
         "list"
@@ -789,6 +793,35 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Image);
+    }
+
+    #[test]
+    fn test_selector_plural_control_aliases_match_roles() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::TextInput;
+        som.regions[1].elements[0].role = ElementRole::Textarea;
+        som.regions[1].elements.push(Element {
+            id: "e-select".to_string(),
+            role: ElementRole::Select,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for (selector, role) in [
+            ("text_inputs", ElementRole::TextInput),
+            ("textareas", ElementRole::Textarea),
+            ("selects", ElementRole::Select),
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.iter().flat_map(|r| &r.elements).count(), 1);
+            assert_eq!(filtered.regions[0].elements[0].role, role, "selector: {selector}");
+        }
     }
 
     #[test]
