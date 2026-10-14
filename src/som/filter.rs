@@ -34,7 +34,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `group` / `fieldset` / `figure` / `radiogroup` / `progress` / `progressbar`
 ///   / `meter` / `output` / `video` / `canvas`,
 ///   `separator` / `separators` / `hr`, `details` / `detail` / `summary`,
-///   `iframe` / `iframes`, `audio`
+///   `iframe` / `iframes`, `audio` / `audios`, `video` / `videos`,
+///   `canvas` / `canvases`
 ///   and the grouped media selector `media` (images and media-capable groups)
 /// - Heading levels: `h1` .. `h6` (or `heading1` .. `heading6`, including
 ///   hyphenated `h-1`/`heading-1` forms) match headings whose compiled
@@ -370,8 +371,11 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "meter"
         | "output"
         | "audio"
+        | "audios"
         | "video"
-        | "canvas" => {
+        | "videos"
+        | "canvas"
+        | "canvases" => {
             Some(ElementRole::Group)
         }
         "separator" | "separators" | "hr" => Some(ElementRole::Separator),
@@ -725,6 +729,9 @@ mod tests {
             ("separators", ElementRole::Separator),
             ("detail", ElementRole::Details),
             ("iframes", ElementRole::Iframe),
+            ("audios", ElementRole::Group),
+            ("videos", ElementRole::Group),
+            ("canvases", ElementRole::Group),
         ] {
             let mut som = make_test_som();
             som.regions[0].elements[0].role = role.clone();
