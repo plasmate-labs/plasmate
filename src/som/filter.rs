@@ -17,22 +17,24 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// - Element roles: `link` / `links`, `button` / `buttons`, `text_input` /
 ///   `text_inputs` / `textbox` / `searchbox` /
 ///   `slider` / `spinbutton` / `input`, HTML text-input types such as `text`,
-///   `search_input` / `search-input` / `search_control` / `search-control` /
-///   `search_field` / `search-field` / `query` / `query_input` / `query-input` /
-///   `query_field` / `query-field` / `query_control` / `query-control` /
-///   `querybox` / `query-box` /
-///   `search_box` / `search-box`, `email`, `number`,
+///   `search_input` / `search_inputs` / `search-input` / `search_control` /
+///   `search_controls` / `search-control` / `search_field` / `search_fields` /
+///   `search-field` / `query` / `query_input` / `query_inputs` / `query-input` /
+///   `query_field` / `query_fields` / `query-field` / `query_control` /
+///   `query_controls` / `query-control` / `querybox` / `query-box` /
+///   `search_box` / `search_boxes` / `search-box`, `email`, `number`,
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local`, `month`,
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` / `textareas`,
 ///   `select` / `selects` / `combobox` / `listbox`, `checkbox` / `checkboxes`,
 ///   `radio` / `radios` / `menuitemradio`, `heading`, `image` / `images`, `list`, `table`,
-///   `paragraph` / `blockquote` / `quote` / `alert` / `status` / `tooltip`, `section`,
+///   `paragraph` / `blockquote` / `quote` / `alert` / `status` / `tooltip`, `section` / `sections`,
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list`,
 ///   `group` / `fieldset` / `figure` / `radiogroup` / `progress` / `progressbar`
 ///   / `meter` / `output` / `video` / `canvas`,
-///   `separator` / `hr`, `details` / `summary`, `iframe`, `audio`
+///   `separator` / `separators` / `hr`, `details` / `detail` / `summary`,
+///   `iframe` / `iframes`, `audio`
 ///   and the grouped media selector `media` (images and media-capable groups)
 /// - Heading levels: `h1` .. `h6` (or `heading1` .. `heading6`, including
 ///   hyphenated `h-1`/`heading-1` forms) match headings whose compiled
@@ -296,22 +298,32 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         "text_input"
         | "text_inputs"
         | "textbox"
+        | "textboxes"
         | "searchbox"
+        | "searchboxes"
         | "slider"
         | "spinbutton"
         | "input"
         | "text"
         | "search"
         | "search_input"
+        | "search_inputs"
         | "search_control"
+        | "search_controls"
         | "search_field"
+        | "search_fields"
         | "search_box"
+        | "search_boxes"
         | "query_input"
+        | "query_inputs"
         | "query"
         | "query_field"
+        | "query_fields"
         | "query_control"
+        | "query_controls"
         | "querybox"
         | "query_box"
+        | "queryboxes"
         | "email"
         | "number"
         | "password"
@@ -343,12 +355,12 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "unordered_list"
         | "ordered_list"
         | "definition_list" => Some(ElementRole::List),
-        "table" => Some(ElementRole::Table),
+        "table" | "tables" => Some(ElementRole::Table),
         "paragraph" | "paragraphs" | "p" | "blockquote" | "blockquotes" | "quote" | "quotes" | "alert"
         | "status" | "tooltip" => {
             Some(ElementRole::Paragraph)
         }
-        "section" => Some(ElementRole::Section),
+        "section" | "sections" => Some(ElementRole::Section),
         "group"
         | "fieldset"
         | "figure"
@@ -362,9 +374,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "canvas" => {
             Some(ElementRole::Group)
         }
-        "separator" | "hr" => Some(ElementRole::Separator),
-        "details" | "summary" => Some(ElementRole::Details),
-        "iframe" => Some(ElementRole::Iframe),
+        "separator" | "separators" | "hr" => Some(ElementRole::Separator),
+        "detail" | "details" | "summary" => Some(ElementRole::Details),
+        "iframe" | "iframes" => Some(ElementRole::Iframe),
         _ => None,
     }
 }
@@ -704,6 +716,35 @@ mod tests {
             assert_eq!(filtered.regions[0].elements.len(), 1);
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::TextInput);
         }
+    }
+
+    #[test]
+    fn test_selector_structural_aliases() {
+        for (selector, role) in [
+            ("tables", ElementRole::Table),
+            ("separators", ElementRole::Separator),
+            ("detail", ElementRole::Details),
+            ("iframes", ElementRole::Iframe),
+        ] {
+            let mut som = make_test_som();
+            som.regions[0].elements[0].role = role.clone();
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, role);
+        }
+    }
+
+    #[test]
+    fn test_selector_plural_section_alias() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Section;
+
+        let filtered = apply_selector(&som, "sections");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Section);
     }
 
     #[test]
@@ -1154,6 +1195,41 @@ mod tests {
             apply_selector(&som, "textbox").regions[0].elements[0].id,
             "e-search"
         );
+    }
+
+    #[test]
+    fn test_selector_plural_text_control_aliases_match_text_input() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-search".to_string(),
+            role: ElementRole::TextInput,
+            html_id: None,
+            text: None,
+            label: Some("Search".to_string()),
+            actions: None,
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in [
+            "textboxes",
+            "searchboxes",
+            "queryboxes",
+            "search_inputs",
+            "search_controls",
+            "search_fields",
+            "search_boxes",
+            "query_inputs",
+            "query_fields",
+            "query_controls",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-search");
+        }
     }
 
     #[test]
