@@ -17,11 +17,12 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// - Element roles: `link` / `links`, `button` / `buttons`, `text_input` /
 ///   `text_inputs` / `textbox` / `searchbox` /
 ///   `slider` / `spinbutton` / `input`, HTML text-input types such as `text`,
-///   `search_input` / `search-input` / `search_control` / `search-control` /
-///   `search_field` / `search-field` / `query` / `query_input` / `query-input` /
-///   `query_field` / `query-field` / `query_control` / `query-control` /
-///   `querybox` / `query-box` /
-///   `search_box` / `search-box`, `email`, `number`,
+///   `search_input` / `search_inputs` / `search-input` / `search_control` /
+///   `search_controls` / `search-control` / `search_field` / `search_fields` /
+///   `search-field` / `query` / `query_input` / `query_inputs` / `query-input` /
+///   `query_field` / `query_fields` / `query-field` / `query_control` /
+///   `query_controls` / `query-control` / `querybox` / `query-box` /
+///   `search_box` / `search_boxes` / `search-box`, `email`, `number`,
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local`, `month`,
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` / `textareas`,
 ///   `select` / `selects` / `combobox` / `listbox`, `checkbox` / `checkboxes`,
@@ -305,13 +306,20 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "text"
         | "search"
         | "search_input"
+        | "search_inputs"
         | "search_control"
+        | "search_controls"
         | "search_field"
+        | "search_fields"
         | "search_box"
+        | "search_boxes"
         | "query_input"
+        | "query_inputs"
         | "query"
         | "query_field"
+        | "query_fields"
         | "query_control"
+        | "query_controls"
         | "querybox"
         | "query_box"
         | "queryboxes"
@@ -1175,7 +1183,18 @@ mod tests {
             shadow: None,
         });
 
-        for selector in ["textboxes", "searchboxes", "queryboxes"] {
+        for selector in [
+            "textboxes",
+            "searchboxes",
+            "queryboxes",
+            "search_inputs",
+            "search_controls",
+            "search_fields",
+            "search_boxes",
+            "query_inputs",
+            "query_fields",
+            "query_controls",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
