@@ -26,7 +26,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` / `textareas`,
 ///   `select` / `selects` / `combobox` / `listbox`, `checkbox` / `checkboxes`,
 ///   `radio` / `radios` / `menuitemradio`, `heading`, `image` / `images`, `list`, `table`,
-///   `paragraph` / `blockquote` / `alert` / `status` / `tooltip`, `section`,
+///   `paragraph` / `blockquote` / `quote` / `alert` / `status` / `tooltip`, `section`,
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list`,
@@ -344,7 +344,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "ordered_list"
         | "definition_list" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
-        "paragraph" | "paragraphs" | "p" | "blockquote" | "blockquotes" | "alert"
+        "paragraph" | "paragraphs" | "p" | "blockquote" | "blockquotes" | "quote" | "quotes" | "alert"
         | "status" | "tooltip" => {
             Some(ElementRole::Paragraph)
         }
@@ -678,7 +678,7 @@ mod tests {
         let mut som = make_test_som();
         som.regions[0].elements[0].role = ElementRole::Paragraph;
 
-        for selector in ["paragraphs", "blockquotes"] {
+        for selector in ["paragraphs", "blockquotes", "quotes"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(
                 filtered
