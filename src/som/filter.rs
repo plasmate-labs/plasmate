@@ -26,7 +26,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` / `textareas`,
 ///   `select` / `selects` / `combobox` / `listbox`, `checkbox` / `checkboxes`,
 ///   `radio` / `radios` / `menuitemradio`, `heading`, `image` / `images`, `list`, `table`,
-///   `paragraph` / `alert` / `status` / `tooltip`, `section`,
+///   `paragraph` / `blockquote` / `alert` / `status` / `tooltip`, `section`,
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list`,
@@ -344,7 +344,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "ordered_list"
         | "definition_list" => Some(ElementRole::List),
         "table" => Some(ElementRole::Table),
-        "paragraph" | "p" | "alert" | "status" | "tooltip" => Some(ElementRole::Paragraph),
+        "paragraph" | "p" | "blockquote" | "alert" | "status" | "tooltip" => {
+            Some(ElementRole::Paragraph)
+        }
         "section" => Some(ElementRole::Section),
         "group"
         | "fieldset"
@@ -848,6 +850,17 @@ mod tests {
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Paragraph);
         }
+    }
+
+    #[test]
+    fn test_selector_blockquote_alias_matches_compiled_paragraph() {
+        let som = make_test_som();
+
+        let filtered = apply_selector(&som, "blockquote");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Paragraph);
     }
 
     #[test]
