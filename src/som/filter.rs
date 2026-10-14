@@ -24,7 +24,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local`, `month`,
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea`,
 ///   `select` / `combobox` / `listbox`, `checkbox`,
-///   `radio` / `menuitemradio`, `heading`, `image`, `list`, `table`,
+///   `radio` / `menuitemradio`, `heading`, `image` / `images`, `list`, `table`,
 ///   `paragraph` / `alert` / `status` / `tooltip`, `section`,
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
@@ -330,7 +330,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         }
         "radio" | "menuitemradio" | "menu_item_radio" => Some(ElementRole::Radio),
         "heading" | "headings" => Some(ElementRole::Heading),
-        "image" | "img" => Some(ElementRole::Image),
+        "image" | "images" | "img" => Some(ElementRole::Image),
         "list"
         | "ul"
         | "ol"
@@ -777,6 +777,18 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Heading);
+    }
+
+    #[test]
+    fn test_selector_images_plural_alias() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Image;
+
+        let filtered = apply_selector(&som, "images");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Image);
     }
 
     #[test]
