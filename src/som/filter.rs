@@ -290,7 +290,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         // These ARIA widget roles compile to the SOM's button role, so expose
         // the same selector aliases instead of making callers know the
         // normalized representation.
-        "button" | "buttons" | "menuitem" | "menu_item" | "option" | "tab" => {
+        "button" | "buttons" | "menuitem" | "menuitems" | "menu_item" | "option"
+        | "options" | "tab" | "tabs" => {
             Some(ElementRole::Button)
         }
         // HTML input types compile to the same SOM role. Accept their names
@@ -706,6 +707,24 @@ mod tests {
                 2,
                 "selector: {selector}"
             );
+        }
+    }
+
+    #[test]
+    fn test_selector_plural_button_role_aliases() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Button;
+
+        for selector in ["menuitems", "options", "tabs"] {
+            let filtered = apply_selector(&som, selector);
+            assert!(!filtered.regions.is_empty(), "selector: {selector}");
+            assert!(filtered.regions.iter().all(|region| {
+                !region.elements.is_empty()
+                    && region
+                        .elements
+                        .iter()
+                        .all(|element| element.role == ElementRole::Button)
+            }));
         }
     }
 
