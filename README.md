@@ -243,7 +243,10 @@ Use `selector="media"` to keep images and media-capable grouped elements
 such as audio, video, and canvas while removing unrelated page content.
 HTML text-input type names are also accepted as selectors, including
 `text`, `search_input`/`search-input`, `search_control`/`search-control`,
-`search_field`/`search-field`, `query`, `query_input`/`query-input`, `query_field`/`query-field`, `email`, `number`, `password`, `tel`, `url`, `date`,
+`search_field`/`search-field`, `search_box`/`search-box`, `query`,
+`query_input`/`query-input`, `query_field`/`query-field`,
+`query_control`/`query-control`, `querybox`/`query-box`, `email`, `number`,
+`password`, `tel`, `url`, `date`,
 `datetime`/`datetime-local`, `month`, `time`, `week`, `color`, `range`,
 `hidden`, and `file`; each targets the corresponding compiled text-input
 element.
