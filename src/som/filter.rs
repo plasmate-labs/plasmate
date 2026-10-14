@@ -99,7 +99,10 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
 
     // Match element roles, preserving parent containers and shadow roots that
     // contain matching descendants.
-    if selector.eq_ignore_ascii_case("media") {
+    if matches!(
+        selector.to_ascii_lowercase().as_str(),
+        "media" | "media_items" | "media-items"
+    ) {
         return filter_som_elements(som, selector, is_media_element);
     }
 
@@ -883,6 +886,19 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Image);
+    }
+
+    #[test]
+    fn test_selector_media_item_aliases_match_grouped_media() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Image;
+
+        for selector in ["media", "media_items", "media-items"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Image);
+        }
     }
 
     #[test]
