@@ -27,7 +27,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` / `textareas`,
 ///   `select` / `selects` / `combobox` / `listbox`, `checkbox` / `checkboxes`,
 ///   `radio` / `radios` / `menuitemradio`, `heading`, `image` / `images`, `list`, `table`,
-///   `paragraph` / `blockquote` / `quote` / `alert` / `status` / `tooltip`, `section`,
+///   `paragraph` / `blockquote` / `quote` / `alert` / `status` / `tooltip`, `section` / `sections`,
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list`,
@@ -360,7 +360,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "status" | "tooltip" => {
             Some(ElementRole::Paragraph)
         }
-        "section" => Some(ElementRole::Section),
+        "section" | "sections" => Some(ElementRole::Section),
         "group"
         | "fieldset"
         | "figure"
@@ -733,6 +733,18 @@ mod tests {
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].role, role);
         }
+    }
+
+    #[test]
+    fn test_selector_plural_section_alias() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Section;
+
+        let filtered = apply_selector(&som, "sections");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Section);
     }
 
     #[test]
