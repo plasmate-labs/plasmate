@@ -296,7 +296,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         "text_input"
         | "text_inputs"
         | "textbox"
+        | "textboxes"
         | "searchbox"
+        | "searchboxes"
         | "slider"
         | "spinbutton"
         | "input"
@@ -312,6 +314,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "query_control"
         | "querybox"
         | "query_box"
+        | "queryboxes"
         | "email"
         | "number"
         | "password"
@@ -1154,6 +1157,30 @@ mod tests {
             apply_selector(&som, "textbox").regions[0].elements[0].id,
             "e-search"
         );
+    }
+
+    #[test]
+    fn test_selector_plural_text_control_aliases_match_text_input() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-search".to_string(),
+            role: ElementRole::TextInput,
+            html_id: None,
+            text: None,
+            label: Some("Search".to_string()),
+            actions: None,
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["textboxes", "searchboxes", "queryboxes"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-search");
+        }
     }
 
     #[test]
