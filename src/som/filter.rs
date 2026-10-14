@@ -18,7 +18,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `slider` / `spinbutton` / `input`, HTML text-input types such as `text`,
 ///   `search_input` / `search-input` / `search_control` / `search-control` /
 ///   `search_field` / `search-field` / `query` / `query_input` / `query-input` /
-///   `query_field` / `query-field` / `querybox` / `query-box` /
+///   `query_field` / `query-field` / `query_control` / `query-control` /
+///   `querybox` / `query-box` /
 ///   `search_box` / `search-box`, `email`, `number`,
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local`, `month`,
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea`,
@@ -304,6 +305,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "query_input"
         | "query"
         | "query_field"
+        | "query_control"
         | "querybox"
         | "query_box"
         | "email"
@@ -1546,6 +1548,19 @@ mod tests {
         let filtered = apply_selector(&som, " main ");
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].role, RegionRole::Main);
+    }
+
+    #[test]
+    fn test_selector_query_control_aliases_match_text_inputs() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].role = ElementRole::TextInput;
+
+        for selector in ["query_control", "query-control"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::TextInput);
+        }
     }
 
     #[test]
