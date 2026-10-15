@@ -316,9 +316,11 @@ fn parse_heading_level_selector(selector: &str) -> Option<u8> {
     let suffix = normalized
         .strip_prefix("heading")
         .or_else(|| normalized.strip_prefix('h'))?;
-    let level = suffix
-        .strip_prefix('-')
-        .unwrap_or(suffix)
+    let level_suffix = suffix.strip_prefix('-').unwrap_or(suffix);
+    if level_suffix.len() > 1 && level_suffix.starts_with('0') {
+        return None;
+    }
+    let level = level_suffix
         .parse::<u8>()
         .ok()?;
     (1..=6).contains(&level).then_some(level)
@@ -1059,6 +1061,8 @@ mod tests {
         assert_eq!(parse_heading_level_selector("h-6"), Some(6));
         assert_eq!(parse_heading_level_selector("heading-6"), Some(6));
         assert_eq!(parse_heading_level_selector("heading7"), None);
+        assert_eq!(parse_heading_level_selector("h01"), None);
+        assert_eq!(parse_heading_level_selector("heading-01"), None);
     }
 
     #[test]
