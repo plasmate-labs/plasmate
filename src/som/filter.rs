@@ -9,7 +9,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
 /// Supported selectors:
-/// - Region roles: `main`, `nav`/`navs`/`navigation`/`navigations`/`search`/`searches`,
+/// - Region roles: `main`, `nav`/`navs`/`navigation`/`navigations`/`search`/`searches`/
+///   `search_nav`/`search-nav`/`search_navigation`/`search-navigation`,
 ///   `aside`/`asides`/`complementary`, `header`/`headers`/`banner`,
 ///   `footer`/`footers`/`contentinfo`, `form`/`forms`, `dialog`/`dialogs`,
 ///   `content`/`contents`/`article`/`articles`/`region`/`regions` (or `role=<region>` / `role:<region>`;
@@ -75,7 +76,17 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // Try to match a region role
     let role_opt: Option<RegionRole> = match selector.to_lowercase().as_str() {
         "main" => Some(RegionRole::Main),
-        "nav" | "navs" | "navigation" | "navigations" | "search" | "searches" => {
+        "nav"
+        | "navs"
+        | "navigation"
+        | "navigations"
+        | "search"
+        | "searches"
+        | "search_nav"
+        | "search-nav"
+        | "search_navigation"
+        | "search-navigation" =>
+        {
             Some(RegionRole::Navigation)
         }
         "aside" | "asides" | "complementary" => Some(RegionRole::Aside),
@@ -724,6 +735,22 @@ mod tests {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].role, role, "selector: {selector}");
+        }
+    }
+
+    #[test]
+    fn test_selector_search_navigation_aliases() {
+        for selector in [
+            "search",
+            "search_nav",
+            "search-nav",
+            "search_navigation",
+            "search-navigation",
+        ] {
+            let som = make_test_som();
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].role, RegionRole::Navigation);
         }
     }
 
