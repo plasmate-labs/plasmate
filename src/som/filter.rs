@@ -11,7 +11,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// Supported selectors:
 /// - Region roles: `main`, `nav`/`navigation`, `aside`/`complementary`,
 ///   `header`/`banner`, `footer`/`contentinfo`,
-///   `form`, `dialog`, `content`/`article`/`region` (or `role=<region>` / `role:<region>`;
+///   `form`/`forms`, `dialog`/`dialogs`, `content`/`article`/`region` (or `role=<region>` / `role:<region>`;
 ///   optional whitespace around the separator is accepted). The same `role=`
 ///   and `role:` forms also work for element roles.
 /// - Element roles: `link` / `links`, `button` / `buttons`, `text_input` /
@@ -76,8 +76,8 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         "aside" | "complementary" => Some(RegionRole::Aside),
         "header" | "banner" => Some(RegionRole::Header),
         "footer" | "contentinfo" => Some(RegionRole::Footer),
-        "form" => Some(RegionRole::Form),
-        "dialog" => Some(RegionRole::Dialog),
+        "form" | "forms" => Some(RegionRole::Form),
+        "dialog" | "dialogs" => Some(RegionRole::Dialog),
         "content" | "article" | "region" => Some(RegionRole::Content),
         _ => None,
     };
@@ -1221,11 +1221,23 @@ mod tests {
         search.role = RegionRole::Navigation;
         som.regions.push(search);
 
+        let mut form = som.regions[0].clone();
+        form.id = "r-form".to_string();
+        form.role = RegionRole::Form;
+        som.regions.push(form);
+
+        let mut dialog = som.regions[0].clone();
+        dialog.id = "r-dialog".to_string();
+        dialog.role = RegionRole::Dialog;
+        som.regions.push(dialog);
+
         for (selector, expected_role) in [
             ("banner", RegionRole::Header),
             ("contentinfo", RegionRole::Footer),
             ("complementary", RegionRole::Aside),
             ("search", RegionRole::Navigation),
+            ("forms", RegionRole::Form),
+            ("dialogs", RegionRole::Dialog),
             ("region", RegionRole::Content),
             ("role=region", RegionRole::Content),
         ] {
