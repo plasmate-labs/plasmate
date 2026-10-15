@@ -15,6 +15,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `footer`/`footers`/`contentinfo`, `form`/`forms`, `dialog`/`dialogs`,
 ///   `content`/`contents`/`article`/`articles`/`main_content`/`main_contents`/
 ///   `main-content`/`main-contents`/`main content`/`main contents`/
+///   `maincontent`/`maincontents`/
 ///   `region`/`regions` (or `role=<region>` / `role:<region>`;
 ///   optional whitespace around the separator is accepted). The same `role=`
 ///   and `role:` forms also work for element roles.
@@ -84,7 +85,9 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         | "main-content"
         | "main-contents"
         | "main content"
-        | "main contents" => Some(RegionRole::Main),
+        | "main contents"
+        | "maincontent"
+        | "maincontents" => Some(RegionRole::Main),
         "nav"
         | "navs"
         | "navigation"
@@ -723,6 +726,8 @@ mod tests {
             "main-contents",
             "main content",
             "main contents",
+            "maincontent",
+            "maincontents",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
