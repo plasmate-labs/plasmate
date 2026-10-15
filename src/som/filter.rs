@@ -45,7 +45,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// - Heading levels: `h1` .. `h6` (or `heading1` .. `heading6`, including
 ///   hyphenated `h-1`/`heading-1` forms) match headings whose compiled
 ///   `attrs.level` is that integer. Missing or out-of-range levels are not invented.
-/// - Action surfaces: `interactive` / `interactives` / `interactive_elements` /
+/// - Action surfaces: `interactive` / `interactives` / `interactive elements` /
+///   `interactive_elements` /
 ///   `interactive-elements`, bare action names (`click`, `type`,
 ///   `type_text`/`type-text`, `clear`, `select`, `select_option`/`select-option`,
 ///   `toggle`, `submit`, `reset`), or `action:<verb>` forms (including
@@ -125,7 +126,11 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // compact menu of possible targets without full body text.
     if matches!(
         selector.to_ascii_lowercase().as_str(),
-        "interactive" | "interactives" | "interactive_elements" | "interactive-elements"
+        "interactive"
+            | "interactives"
+            | "interactive elements"
+            | "interactive_elements"
+            | "interactive-elements"
     ) {
         return filter_som_elements(som, selector, |element| element.role.is_interactive());
     }
@@ -746,6 +751,7 @@ mod tests {
             "ROLE:INTERACTIVE",
             "role = interactive",
             "interactives",
+            "interactive elements",
             "interactive_elements",
             "interactive-elements",
         ] {
