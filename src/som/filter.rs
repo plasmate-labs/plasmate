@@ -319,7 +319,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         // the same selector aliases instead of making callers know the
         // normalized representation.
         "button" | "buttons" | "menuitem" | "menuitems" | "menu_item" | "option"
-        | "options" | "tab" | "tabs" => {
+        | "options" | "tab" | "tabs" | "treeitem" | "treeitems" | "tree_item" => {
             Some(ElementRole::Button)
         }
         // HTML input types compile to the same SOM role. Accept their names
@@ -1049,7 +1049,16 @@ mod tests {
 
     #[test]
     fn test_selector_aria_widget_role_aliases() {
-        for selector in ["menuitem", "menu-item", "menu_item", "option", "tab"] {
+        for selector in [
+            "menuitem",
+            "menu-item",
+            "menu_item",
+            "option",
+            "tab",
+            "treeitem",
+            "tree-item",
+            "tree_item",
+        ] {
             assert_eq!(parse_element_role(selector), Some(ElementRole::Button));
         }
         for selector in ["switch", "menuitemcheckbox", "menu-item-checkbox"] {

@@ -1637,7 +1637,9 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                         return Some(ElementRole::TextInput)
                     }
                     "combobox" | "listbox" => return Some(ElementRole::Select),
-                    "menuitem" | "tab" | "option" => return Some(ElementRole::Button),
+                    "menuitem" | "tab" | "option" | "treeitem" => {
+                        return Some(ElementRole::Button)
+                    }
                     "img" => return Some(ElementRole::Image),
                     "heading" => return Some(ElementRole::Heading),
                     "article" => return Some(ElementRole::Section),
@@ -5946,6 +5948,7 @@ mod tests {
   <div id="invalid" role="heading" aria-level="9">Invalid</div>
   <h2 id="native">Native</h2>
   <button id="tree" aria-level="2">Billing</button>
+  <div id="treeitem" role="treeitem">Node</div>
   <p>Just text</p>
 </main>
 </body>
@@ -6021,6 +6024,12 @@ mod tests {
             "compact level must not copy onto non-heading roles: {tree:?}"
         );
         assert_eq!(tree_attrs["aria"]["level"], "2");
+
+        let treeitem = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("treeitem"))
+            .expect("ARIA treeitem should compile");
+        assert_eq!(treeitem.role, ElementRole::Button);
 
         assert!(
             elements.iter().any(|element| {
