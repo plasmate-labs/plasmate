@@ -341,6 +341,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
     match selector
         .trim()
         .to_ascii_lowercase()
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join("_")
         .replace(['-', ' '], "_")
         .as_str()
     {
@@ -905,7 +908,8 @@ mod tests {
 
         for (selector, role) in [
             ("text input", ElementRole::TextInput),
-            ("menu item", ElementRole::Button),
+            ("text  input", ElementRole::TextInput),
+            ("menu\titem", ElementRole::Button),
             ("unordered list", ElementRole::List),
         ] {
             som.regions[0].elements[0].role = role.clone();
