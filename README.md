@@ -238,7 +238,8 @@ Structural aliases include `fieldset`/`group`, ARIA group roles
 as `menuitem`, `option`, `tab`, `switch`, `menuitemcheckbox`, and
 `menuitemradio` are also accepted. Region selectors accept ARIA landmark
 aliases such as `navigation`, `search`, `banner`, `complementary`, and
-`contentinfo`.
+`contentinfo`; `forms` and `dialogs` are plural aliases for `form` and
+`dialog`.
 Use `selector="media"` to keep images and media-capable grouped elements
 such as audio, video, and canvas while removing unrelated page content.
 HTML text-input type names are also accepted as selectors, including
