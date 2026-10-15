@@ -120,6 +120,12 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         return filter_som_elements(som, selector, is_media_element);
     }
 
+    // Match only actionable elements. This is useful when an agent needs a
+    // compact menu of possible targets without full body text.
+    if selector.eq_ignore_ascii_case("interactive") {
+        return filter_som_elements(som, selector, |element| element.role.is_interactive());
+    }
+
     if let Some(role) = parse_element_role(selector) {
         return filter_som_elements(som, selector, |element| element.role == role);
     }
@@ -128,12 +134,6 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         return filter_som_elements(som, selector, |element| {
             heading_compiled_level(element) == Some(level)
         });
-    }
-
-    // Match only actionable elements. This is useful when an agent needs a
-    // compact menu of possible targets without full body text.
-    if selector.eq_ignore_ascii_case("interactive") {
-        return filter_som_elements(som, selector, |element| element.role.is_interactive());
     }
 
     // Match elements that expose a specific action in their compact action list.
@@ -730,6 +730,28 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1);
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Button);
+        }
+    }
+
+    #[test]
+    fn test_selector_role_interactive_alias() {
+        let som = make_test_som();
+
+        for selector in ["role=interactive", "ROLE:INTERACTIVE", "role = interactive"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 2, "selector: {selector}");
+            assert_eq!(
+                filtered
+                    .regions
+                    .iter()
+                    .flat_map(|region| region.elements.iter())
+                    .count(),
+                2,
+                "selector: {selector}"
+            );
+            assert!(filtered.regions.iter().all(|region| {
+                region.elements.iter().all(|element| element.role.is_interactive())
+            }));
         }
     }
 
