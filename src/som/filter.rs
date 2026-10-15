@@ -9,9 +9,10 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
 /// Supported selectors:
-/// - Region roles: `main`, `nav`/`navigation`, `aside`/`complementary`,
-///   `header`/`banner`, `footer`/`contentinfo`,
-///   `form`, `dialog`, `content`/`article`/`region` (or `role=<region>` / `role:<region>`;
+/// - Region roles: `main`, `nav`/`navs`/`navigation`/`navigations`/`search`/`searches`,
+///   `aside`/`asides`/`complementary`, `header`/`headers`/`banner`,
+///   `footer`/`footers`/`contentinfo`, `form`/`forms`, `dialog`/`dialogs`,
+///   `content`/`contents`/`article`/`articles`/`region`/`regions` (or `role=<region>` / `role:<region>`;
 ///   optional whitespace around the separator is accepted). The same `role=`
 ///   and `role:` forms also work for element roles.
 /// - Element roles: `link` / `links`, `button` / `buttons`, `text_input` /
@@ -72,13 +73,17 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // Try to match a region role
     let role_opt: Option<RegionRole> = match selector.to_lowercase().as_str() {
         "main" => Some(RegionRole::Main),
-        "nav" | "navigation" | "search" => Some(RegionRole::Navigation),
-        "aside" | "complementary" => Some(RegionRole::Aside),
-        "header" | "banner" => Some(RegionRole::Header),
-        "footer" | "contentinfo" => Some(RegionRole::Footer),
-        "form" => Some(RegionRole::Form),
-        "dialog" => Some(RegionRole::Dialog),
-        "content" | "article" | "region" => Some(RegionRole::Content),
+        "nav" | "navs" | "navigation" | "navigations" | "search" | "searches" => {
+            Some(RegionRole::Navigation)
+        }
+        "aside" | "asides" | "complementary" => Some(RegionRole::Aside),
+        "header" | "headers" | "banner" => Some(RegionRole::Header),
+        "footer" | "footers" | "contentinfo" => Some(RegionRole::Footer),
+        "form" | "forms" => Some(RegionRole::Form),
+        "dialog" | "dialogs" => Some(RegionRole::Dialog),
+        "content" | "contents" | "article" | "articles" | "region" | "regions" => {
+            Some(RegionRole::Content)
+        }
         _ => None,
     };
 
@@ -695,6 +700,23 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_plural_region_aliases() {
+        for (selector, role) in [
+            ("navigations", RegionRole::Navigation),
+            ("asides", RegionRole::Aside),
+            ("headers", RegionRole::Header),
+            ("footers", RegionRole::Footer),
+            ("contents", RegionRole::Content),
+        ] {
+            let mut som = make_test_som();
+            som.regions[0].role = role.clone();
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].role, role, "selector: {selector}");
+        }
+    }
+
+    #[test]
     fn test_selector_role_aliases_for_element_roles() {
         let som = make_test_som();
 
@@ -1221,11 +1243,23 @@ mod tests {
         search.role = RegionRole::Navigation;
         som.regions.push(search);
 
+        let mut form = som.regions[0].clone();
+        form.id = "r-form".to_string();
+        form.role = RegionRole::Form;
+        som.regions.push(form);
+
+        let mut dialog = som.regions[0].clone();
+        dialog.id = "r-dialog".to_string();
+        dialog.role = RegionRole::Dialog;
+        som.regions.push(dialog);
+
         for (selector, expected_role) in [
             ("banner", RegionRole::Header),
             ("contentinfo", RegionRole::Footer),
             ("complementary", RegionRole::Aside),
             ("search", RegionRole::Navigation),
+            ("forms", RegionRole::Form),
+            ("dialogs", RegionRole::Dialog),
             ("region", RegionRole::Content),
             ("role=region", RegionRole::Content),
         ] {
