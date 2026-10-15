@@ -9,7 +9,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
 /// Supported selectors:
-/// - Region roles: `main`, `nav`/`navs`/`navigation`/`navigations`/`search`/`searches`,
+/// - Region roles: `main`, `nav`/`navs`/`navigation`/`navigations`/`search`/`searches`/
+///   `search_nav`/`search-nav`/`search_navigation`/`search-navigation`,
 ///   `aside`/`asides`/`complementary`, `header`/`headers`/`banner`,
 ///   `footer`/`footers`/`contentinfo`, `form`/`forms`, `dialog`/`dialogs`,
 ///   `content`/`contents`/`article`/`articles`/`region`/`regions` (or `role=<region>` / `role:<region>`;
@@ -75,7 +76,17 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // Try to match a region role
     let role_opt: Option<RegionRole> = match selector.to_lowercase().as_str() {
         "main" => Some(RegionRole::Main),
-        "nav" | "navs" | "navigation" | "navigations" | "search" | "searches" => {
+        "nav"
+        | "navs"
+        | "navigation"
+        | "navigations"
+        | "search"
+        | "searches"
+        | "search_nav"
+        | "search-nav"
+        | "search_navigation"
+        | "search-navigation" =>
+        {
             Some(RegionRole::Navigation)
         }
         "aside" | "asides" | "complementary" => Some(RegionRole::Aside),
@@ -319,7 +330,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         // the same selector aliases instead of making callers know the
         // normalized representation.
         "button" | "buttons" | "menuitem" | "menuitems" | "menu_item" | "option"
-        | "options" | "tab" | "tabs" => {
+        | "options" | "tab" | "tabs" | "treeitem" | "treeitems" | "tree_item" => {
             Some(ElementRole::Button)
         }
         // HTML input types compile to the same SOM role. Accept their names
@@ -728,6 +739,22 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_search_navigation_aliases() {
+        for selector in [
+            "search",
+            "search_nav",
+            "search-nav",
+            "search_navigation",
+            "search-navigation",
+        ] {
+            let som = make_test_som();
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].role, RegionRole::Navigation);
+        }
+    }
+
+    #[test]
     fn test_selector_role_aliases_for_element_roles() {
         let som = make_test_som();
 
@@ -1049,7 +1076,16 @@ mod tests {
 
     #[test]
     fn test_selector_aria_widget_role_aliases() {
-        for selector in ["menuitem", "menu-item", "menu_item", "option", "tab"] {
+        for selector in [
+            "menuitem",
+            "menu-item",
+            "menu_item",
+            "option",
+            "tab",
+            "treeitem",
+            "tree-item",
+            "tree_item",
+        ] {
             assert_eq!(parse_element_role(selector), Some(ElementRole::Button));
         }
         for selector in ["switch", "menuitemcheckbox", "menu-item-checkbox"] {
