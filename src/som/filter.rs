@@ -45,7 +45,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// - Heading levels: `h1` .. `h6` (or `heading1` .. `heading6`, including
 ///   hyphenated `h-1`/`heading-1` forms) match headings whose compiled
 ///   `attrs.level` is that integer. Missing or out-of-range levels are not invented.
-/// - Action surfaces: `interactive`, bare action names (`click`, `type`,
+/// - Action surfaces: `interactive` / `interactives` / `interactive_elements` /
+///   `interactive-elements`, bare action names (`click`, `type`,
 ///   `type_text`/`type-text`, `clear`, `select`, `select_option`/`select-option`,
 ///   `toggle`, `submit`, `reset`), or `action:<verb>` forms (including
 ///   `action : <verb>` and `action = <verb>`). The text and
@@ -122,7 +123,10 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
 
     // Match only actionable elements. This is useful when an agent needs a
     // compact menu of possible targets without full body text.
-    if selector.eq_ignore_ascii_case("interactive") {
+    if matches!(
+        selector.to_ascii_lowercase().as_str(),
+        "interactive" | "interactives" | "interactive_elements" | "interactive-elements"
+    ) {
         return filter_som_elements(som, selector, |element| element.role.is_interactive());
     }
 
@@ -737,7 +741,14 @@ mod tests {
     fn test_selector_role_interactive_alias() {
         let som = make_test_som();
 
-        for selector in ["role=interactive", "ROLE:INTERACTIVE", "role = interactive"] {
+        for selector in [
+            "role=interactive",
+            "ROLE:INTERACTIVE",
+            "role = interactive",
+            "interactives",
+            "interactive_elements",
+            "interactive-elements",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 2, "selector: {selector}");
             assert_eq!(
