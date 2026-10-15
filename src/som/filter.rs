@@ -38,8 +38,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `canvas` / `canvases`
 ///   and the grouped media selector `media` / `media_item` / `media-item` /
 ///   `mediaitem` / `media_items` / `media-items` (images and media-capable groups).
-///   `audio_item`/`audio-item` and `video_item`/`video-item` are convenient
-///   singular media aliases (and match the grouped media behavior).
+///   `audio_item`/`audio-item`/`audio_items`/`audio-items` and
+///   `video_item`/`video-item`/`video_items`/`video-items` are convenient
+///   media aliases (and match the grouped media behavior).
 /// - Heading levels: `h1` .. `h6` (or `heading1` .. `heading6`, including
 ///   hyphenated `h-1`/`heading-1` forms) match headings whose compiled
 ///   `attrs.level` is that integer. Missing or out-of-range levels are not invented.
@@ -386,10 +387,14 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "audios"
         | "audio_item"
         | "audio-item"
+        | "audio_items"
+        | "audio-items"
         | "video"
         | "videos"
         | "video_item"
         | "video-item"
+        | "video_items"
+        | "video-items"
         | "canvas"
         | "canvases" => {
             Some(ElementRole::Group)
@@ -778,7 +783,16 @@ mod tests {
 
     #[test]
     fn test_selector_audio_and_video_item_aliases_match_grouped_media() {
-        for selector in ["audio_item", "audio-item", "video_item", "video-item"] {
+        for selector in [
+            "audio_item",
+            "audio-item",
+            "audio_items",
+            "audio-items",
+            "video_item",
+            "video-item",
+            "video_items",
+            "video-items",
+        ] {
             let mut som = make_test_som();
             som.regions[0].elements[0].role = ElementRole::Group;
             let filtered = apply_selector(&som, selector);
