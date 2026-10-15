@@ -217,7 +217,7 @@ cookie operations, and validation-only replay. Query `tools/list` instead of
 depending on a hard-coded count; the authoritative registration is
 [`src/mcp/server.rs`](./src/mcp/server.rs).
 
-**Tip:** use `selector="main"` to strip nav/footer, `selector="interactive"`
+**Tip:** use `selector="main"` (or `main_content`/`main-content`) to strip nav/footer, `selector="interactive"`
 to return only actionable elements, `selector="h1"` through `selector="h6"`
 (or `heading1` through `heading6`) to isolate a heading level, or an action selector such as `selector="click"`
 (the equivalent `selector="action:click"` also works), `selector="type"`,

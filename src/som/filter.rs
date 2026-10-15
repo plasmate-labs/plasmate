@@ -13,7 +13,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `search_nav`/`search-nav`/`search_navigation`/`search-navigation`/`search navigation`,
 ///   `aside`/`asides`/`complementary`, `header`/`headers`/`banner`,
 ///   `footer`/`footers`/`contentinfo`, `form`/`forms`, `dialog`/`dialogs`,
-///   `content`/`contents`/`article`/`articles`/`region`/`regions` (or `role=<region>` / `role:<region>`;
+///   `content`/`contents`/`article`/`articles`/`main_content`/`main-content`/
+///   `region`/`regions` (or `role=<region>` / `role:<region>`;
 ///   optional whitespace around the separator is accepted). The same `role=`
 ///   and `role:` forms also work for element roles.
 /// - Element roles: `link` / `links`, `button` / `buttons`, `text_input` /
@@ -76,7 +77,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
 
     // Try to match a region role
     let role_opt: Option<RegionRole> = match selector.to_lowercase().as_str() {
-        "main" => Some(RegionRole::Main),
+        "main" | "main_content" | "main-content" => Some(RegionRole::Main),
         "nav"
         | "navs"
         | "navigation"
@@ -703,6 +704,16 @@ mod tests {
         let filtered = apply_selector(&som, "main");
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].role, RegionRole::Main);
+    }
+
+    #[test]
+    fn test_selector_main_content_aliases() {
+        let som = make_test_som();
+        for selector in ["main_content", "main-content"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].role, RegionRole::Main);
+        }
     }
 
     #[test]
