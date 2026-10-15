@@ -10,7 +10,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///
 /// Supported selectors:
 /// - Region roles: `main`, `nav`/`navs`/`navigation`/`navigations`/`search`/`searches`/
-///   `search_nav`/`search-nav`/`search_navigation`/`search-navigation`,
+///   `search_nav`/`search-nav`/`search_navigation`/`search-navigation`/`search navigation`,
 ///   `aside`/`asides`/`complementary`, `header`/`headers`/`banner`,
 ///   `footer`/`footers`/`contentinfo`, `form`/`forms`, `dialog`/`dialogs`,
 ///   `content`/`contents`/`article`/`articles`/`region`/`regions` (or `role=<region>` / `role:<region>`;
@@ -63,7 +63,8 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // Accept the same quoted selector values that the role/action forms use.
     // This is convenient when selectors are passed through a shell or JSON
     // configuration layer that quotes every value uniformly.
-    let selector = strip_selector_quotes(selector);
+    let selector = collapse_selector_whitespace(strip_selector_quotes(selector));
+    let selector = selector.as_str();
     let selector_lower = selector.to_ascii_lowercase();
     let selector = selector_lower
         .strip_prefix("role")
@@ -85,7 +86,8 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         | "search_nav"
         | "search-nav"
         | "search_navigation"
-        | "search-navigation" =>
+        | "search-navigation"
+        | "search navigation" =>
         {
             Some(RegionRole::Navigation)
         }
@@ -276,6 +278,10 @@ fn strip_selector_quotes(value: &str) -> &str {
                 .map(str::trim)
         })
         .unwrap_or(value)
+}
+
+fn collapse_selector_whitespace(value: &str) -> String {
+    value.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 fn is_media_element(element: &Element) -> bool {
@@ -746,6 +752,9 @@ mod tests {
             "search-nav",
             "search_navigation",
             "search-navigation",
+            "search navigation",
+            "search   navigation",
+            "  search\tnavigation  ",
         ] {
             let som = make_test_som();
             let filtered = apply_selector(&som, selector);
