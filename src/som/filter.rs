@@ -10,7 +10,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///
 /// Supported selectors:
 /// - Region roles: `main`, `nav`/`navs`/`navigation`/`navigations`/`search`/`searches`/
-///   `search_nav`/`search-nav`/`search_navigation`/`search-navigation`,
+///   `search_nav`/`search-nav`/`search_navigation`/`search-navigation`/`search navigation`,
 ///   `aside`/`asides`/`complementary`, `header`/`headers`/`banner`,
 ///   `footer`/`footers`/`contentinfo`, `form`/`forms`, `dialog`/`dialogs`,
 ///   `content`/`contents`/`article`/`articles`/`region`/`regions` (or `role=<region>` / `role:<region>`;
@@ -85,7 +85,8 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         | "search_nav"
         | "search-nav"
         | "search_navigation"
-        | "search-navigation" =>
+        | "search-navigation"
+        | "search navigation" =>
         {
             Some(RegionRole::Navigation)
         }
@@ -746,6 +747,7 @@ mod tests {
             "search-nav",
             "search_navigation",
             "search-navigation",
+            "search navigation",
         ] {
             let som = make_test_som();
             let filtered = apply_selector(&som, selector);
