@@ -40,7 +40,9 @@ pub struct ToolDefinition {
     pub input_schema: Value,
 }
 
-const SOM_SELECTOR_DESCRIPTION: &str = "Filter to a page region (main, nav/navigation/search/search_nav/search-navigation/search navigation, header, footer, aside, content/article, form, dialog; role=<region> and role:<region> also work), heading level (h1-h6, heading1-heading6, or hyphenated h-1/heading-1 forms), all headings (heading/headings), or an element role (button/buttons/menuitem/option/tab/treeitem, link/links/a, paragraph/paragraphs/blockquote/blockquotes/p, list/ul/ol/dl/menu, unordered_list/ordered_list/definition_list, image/img, media, output/audio/video/canvas, audio/audio_item/audio-item/audios/audio_items/audio-items, video/video_item/video-item/videos/video_items/video-items, (images also accepted) text_input/textbox/searchbox/search_input/search-input (text_inputs also accepted), search_control/search-control/search_field/search-field/search_box/search-box/query/queries, query_input/query-input/query_field/query-field/query_control/query-control/querybox/query-box/input, HTML input types such as text/search/email/number/password/tel/url/date/datetime/datetime-local/month/week/color/range/hidden/file, textarea (textareas also accepted), select/combobox/listbox (selects also accepted), checkbox/switch/menuitemcheckbox (checkboxes also accepted), radio/menuitemradio (radios also accepted), table/tables, section/sections, separator/separators/hr, detail/details/summary, iframe/iframes, group/fieldset/figure/radiogroup/progress/progressbar/meter, etc.; role=<element> and role:<element> also work). Use search_input, search-input, search_control, search-control, search_field, search-field, search_box, search-box, query, queries, query_input, query-input, query_field, query-field, query_control, query-control, querybox, query-box for a search control; search by itself selects the search navigation region; search_nav, search-navigation, and search navigation are explicit aliases for the same region. Action surface (interactive/interactives/interactive_elements/interactive-elements, click/type/type_text/type-text/clear/select/select_option/select-option/toggle/submit/reset, or action:click/action:type/action:type_text/action:type-text/action:clear/action:select/action:select_option/action:select-option/action:toggle/action:submit/action:reset; role=<action> and role:<action> are also accepted, and the action=<verb> form works with whitespace around either separator such as action : click or action = click), or #element-id (region id first, then SOM element/html id). The type_text/type-text and select_option/select-option aliases, including action=type_text/action=type-text and action=select_option/action=select-option, match the corresponding MCP interaction tool names. Strips irrelevant regions/elements to reduce tokens. If a selector is unknown or matches nothing, the full SOM is returned unchanged.";
+const SOM_SELECTOR_DESCRIPTION: &str = "Filter to a page region (main, nav/navigation/search/search_nav/search-navigation/search navigation, header, footer, aside, content/article, form, dialog; role=<region> and role:<region> also work), heading level (h1-h6, heading1-heading6, or hyphenated h-1/heading-1 forms), all headings (heading/headings), or an element role (button/buttons/menuitem/menu item/option/tab/treeitem, link/links/a, paragraph/paragraphs/blockquote/blockquotes/p, list/ul/ol/dl/menu, unordered_list/unordered list/ordered_list/ordered list/definition_list/definition list, image/img, media, output/audio/video/canvas, audio/audio_item/audio-item/audio item/audios/audio_items/audio-items, video/video_item/video-item/video item/videos/video_items/video-items, (images also accepted) text_input/text input/textbox/searchbox/search_input/search-input/search input (text_inputs also accepted), search_control/search-control/search control/search_field/search-field/search field/search_box/search-box/search box/query/queries, query_input/query-input/query input/query_field/query-field/query field/query_control/query-control/query control/querybox/query-box/query box/input, HTML input types such as text/search/email/number/password/tel/url/date/datetime/datetime-local/month/week/color/range/hidden/file, textarea (textareas also accepted), select/combobox/listbox (selects also accepted), checkbox/switch/menuitemcheckbox (checkboxes also accepted), radio/menuitemradio (radios also accepted), table/tables, section/sections, separator/separators/hr, detail/details/summary, iframe/iframes, group/fieldset/figure/radiogroup/progress/progressbar/meter, etc.; role=<element> and role:<element> also work). Use search_input, search-input, search_control, search-control, search_field, search-field, search_box, search-box, query, queries, query_input, query-input, query_field, query-field, querybox, query-box for a search control; search by itself selects the search navigation region; search_nav, search-navigation, and search navigation are explicit aliases for the same region. Action surface (interactive/interactives/interactive_elements/interactive-elements, click/type/type_text/type-text/clear/select/select_option/select-option/toggle/submit/reset, or action:click/action:type/action:type_text/action:type-text/action:clear/action:select/action:select_option/action:select-option/action:toggle/action:submit/action:reset; role=<action> and role:<action> are also accepted, and the action=<verb> form works with whitespace around either separator such as action : click or action = click), or #element-id (region id first, then SOM element/html id). The type_text/type-text and select_option/select-option aliases, including action=type_text/action=type-text and action=select_option/action=select-option, match the corresponding MCP interaction tool names. Strips irrelevant regions/elements to reduce tokens. If a selector is unknown or matches nothing, the full SOM is returned unchanged.";
+
+const SOM_COMPOUND_SELECTOR_DESCRIPTION: &str = " Whitespace-separated compound aliases such as text input, search box, menu item, unordered list, ordered list, and definition list are also accepted.";
 
 /// Parameters for fetch_page tool.
 #[derive(Debug, Deserialize)]
@@ -494,7 +496,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
                 },
                 "selector": {
                     "type": "string",
-                    "description": SOM_SELECTOR_DESCRIPTION
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}")
                 }
             },
             "required": ["url"],
@@ -528,7 +530,7 @@ pub fn extract_text_definition() -> ToolDefinition {
                 },
                 "selector": {
                     "type": "string",
-                    "description": SOM_SELECTOR_DESCRIPTION
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}")
                 }
             },
             "required": ["url"],
@@ -957,7 +959,7 @@ pub fn extract_links_definition() -> ToolDefinition {
                 },
                 "selector": {
                     "type": "string",
-                    "description": SOM_SELECTOR_DESCRIPTION
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}")
                 },
                 "max_links": {
                     "type": "integer",
@@ -1094,7 +1096,7 @@ pub fn inspect_page_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": 256,
-                    "description": SOM_SELECTOR_DESCRIPTION
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}")
                 },
                 "visual_mode": {
                     "type": "string",
@@ -3971,7 +3973,7 @@ pub fn open_page_definition() -> ToolDefinition {
                 },
                 "selector": {
                     "type": "string",
-                    "description": SOM_SELECTOR_DESCRIPTION
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}")
                 }
             },
             "required": ["url"],
@@ -6842,14 +6844,17 @@ mod tests {
             assert!(description.contains("checkbox/switch/menuitemcheckbox"));
             assert!(description.contains("radio/menuitemradio"));
             assert!(description.contains("video/canvas"));
-            assert!(description.contains("audio/audio_item/audio-item/audios"));
-            assert!(description.contains("video/video_item/video-item/videos"));
+            assert!(description.contains("audio/audio_item/audio-item/audio item/audios"));
+            assert!(description.contains("video/video_item/video-item/video item/videos"));
             assert!(description.contains("audio_items/audio-items"));
             assert!(description.contains("video_items/video-items"));
             assert!(description.contains("output/audio/video/canvas"));
+            assert!(description.contains("text input"));
+            assert!(description.contains("menu item"));
+            assert!(description.contains("unordered list"));
             assert!(description.contains("image/img, media,"));
             assert!(description.contains("select/combobox/listbox"));
-            assert!(description.contains("text_input/textbox/searchbox/search_input/search-input"));
+            assert!(description.contains("text_input/text input/textbox/searchbox"));
             assert!(description.contains("search_input, search-input"));
             assert!(description.contains("query/queries"));
             assert!(description.contains("search by itself selects the search navigation region"));
