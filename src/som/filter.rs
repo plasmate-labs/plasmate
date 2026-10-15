@@ -46,6 +46,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `audio_item`/`audio-item`/`audio_items`/`audio-items` and
 ///   `video_item`/`video-item`/`video_items`/`video-items` are convenient
 ///   media aliases (and match the grouped media behavior).
+///   Compound element-role aliases also accept spaces, such as `text input`,
+///   `search box`, `menu item`, and `unordered list`.
 /// - Heading levels: `h1` .. `h6` (or `heading1` .. `heading6`, including
 ///   hyphenated `h-1`/`heading-1` forms) match headings whose compiled
 ///   `attrs.level` is that integer. Missing or out-of-range levels are not invented.
@@ -314,9 +316,11 @@ fn parse_heading_level_selector(selector: &str) -> Option<u8> {
     let suffix = normalized
         .strip_prefix("heading")
         .or_else(|| normalized.strip_prefix('h'))?;
-    let level = suffix
-        .strip_prefix('-')
-        .unwrap_or(suffix)
+    let level_suffix = suffix.strip_prefix('-').unwrap_or(suffix);
+    if level_suffix.len() > 1 && level_suffix.starts_with('0') {
+        return None;
+    }
+    let level = level_suffix
         .parse::<u8>()
         .ok()?;
     (1..=6).contains(&level).then_some(level)
@@ -339,7 +343,10 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
     match selector
         .trim()
         .to_ascii_lowercase()
-        .replace('-', "_")
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join("_")
+        .replace(['-', ' '], "_")
         .as_str()
     {
         "link" | "links" | "a" => Some(ElementRole::Link),
@@ -885,11 +892,33 @@ mod tests {
         let mut som = make_test_som();
         som.regions[0].elements[0].role = ElementRole::TextInput;
 
-        for selector in ["search_box", "search-box"] {
+        for selector in ["search_box", "search-box", "search box"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1);
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::TextInput);
+        }
+    }
+
+    #[test]
+    fn test_selector_accepts_spaced_compound_element_roles() {
+        let mut som = make_test_som();
+        for element in som.regions.iter_mut().flat_map(|region| region.elements.iter_mut()) {
+            element.role = ElementRole::Paragraph;
+        }
+        som.regions[0].elements[0].role = ElementRole::TextInput;
+
+        for (selector, role) in [
+            ("text input", ElementRole::TextInput),
+            ("text  input", ElementRole::TextInput),
+            ("menu\titem", ElementRole::Button),
+            ("unordered list", ElementRole::List),
+        ] {
+            som.regions[0].elements[0].role = role.clone();
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, role, "selector: {selector}");
         }
     }
 
@@ -1032,6 +1061,8 @@ mod tests {
         assert_eq!(parse_heading_level_selector("h-6"), Some(6));
         assert_eq!(parse_heading_level_selector("heading-6"), Some(6));
         assert_eq!(parse_heading_level_selector("heading7"), None);
+        assert_eq!(parse_heading_level_selector("h01"), None);
+        assert_eq!(parse_heading_level_selector("heading-01"), None);
     }
 
     #[test]
