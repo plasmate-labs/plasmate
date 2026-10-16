@@ -35,7 +35,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `select` / `selects` / `combobox` / `comboboxes` / `combo box` /
 ///   `listbox` / `listboxes` / `list box`, `checkbox` / `checkboxes`,
 ///   `radio` / `radios` / `menuitemradio`, `heading`, `image` / `images`, `list`,
-///   `table` / `tables` / `data_table` / `data-table`,
+///   `table` / `tables` / `data_table` / `data_tables` / `data-table` / `data-tables`,
 ///   `paragraph` / `blockquote` / `quote` / `alert` / `status` / `tooltip`, `section` / `sections`,
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
@@ -507,7 +507,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "unordered_list"
         | "ordered_list"
         | "definition_list" => Some(ElementRole::List),
-        "table" | "tables" | "data_table" => Some(ElementRole::Table),
+        "table" | "tables" | "data_table" | "data_tables" => Some(ElementRole::Table),
         "paragraph" | "paragraphs" | "p" | "blockquote" | "blockquotes" | "quote" | "quotes" | "alert"
         | "status" | "tooltip" => {
             Some(ElementRole::Paragraph)
@@ -1517,7 +1517,13 @@ mod tests {
         let mut som = make_test_som();
         som.regions[0].elements[0].role = ElementRole::Table;
 
-        for selector in ["data_table", "data-table"] {
+        for selector in [
+            "data_table",
+            "data_tables",
+            "data-table",
+            "data-tables",
+            "data tables",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
