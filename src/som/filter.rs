@@ -15,8 +15,10 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `footer`/`footers`/`contentinfo`, `form`/`forms`, `dialog`/`dialogs`,
 ///   `content`/`contents`/`article`/`articles`/`main_content`/`main_contents`/
 ///   `main-content`/`main-contents`/`main content`/`main contents`/
+///   `main-region`/`main region`/
 ///   `maincontent`/`maincontents`/
-///   `region`/`regions` (or `role=<region>` / `role:<region>`;
+///   `region`/`regions`/`content-region`/`content region`/`content-regions`/
+///   `content regions` (or `role=<region>` / `role:<region>`;
 ///   optional whitespace around the separator is accepted). The same `role=`
 ///   and `role:` forms also work for element roles.
 /// - Element roles: `link` / `links`, `button` / `buttons`, `text_input` /
@@ -95,6 +97,9 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         | "main-contents"
         | "main content"
         | "main contents"
+        | "main_region"
+        | "main-region"
+        | "main region"
         | "maincontent"
         | "maincontents" => Some(RegionRole::Main),
         "nav"
@@ -116,7 +121,18 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         "footer" | "footers" | "contentinfo" => Some(RegionRole::Footer),
         "form" | "forms" => Some(RegionRole::Form),
         "dialog" | "dialogs" => Some(RegionRole::Dialog),
-        "content" | "contents" | "article" | "articles" | "region" | "regions" => {
+        "content"
+        | "contents"
+        | "article"
+        | "articles"
+        | "region"
+        | "regions"
+        | "content_region"
+        | "content-region"
+        | "content region"
+        | "content_regions"
+        | "content-regions"
+        | "content regions" => {
             Some(RegionRole::Content)
         }
         _ => None,
@@ -914,6 +930,27 @@ mod tests {
         ] {
             let mut som = make_test_som();
             som.regions[0].role = role.clone();
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].role, role, "selector: {selector}");
+        }
+    }
+
+    #[test]
+    fn test_selector_natural_region_aliases() {
+        for (selector, role) in [
+            ("main region", RegionRole::Main),
+            ("main-region", RegionRole::Main),
+            ("content region", RegionRole::Content),
+            ("content-regions", RegionRole::Content),
+        ] {
+            let mut som = make_test_som();
+            som.regions[0].role = role.clone();
+            som.regions[1].role = match role {
+                RegionRole::Main => RegionRole::Content,
+                RegionRole::Content => RegionRole::Main,
+                _ => unreachable!("test only covers main/content aliases"),
+            };
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].role, role, "selector: {selector}");
