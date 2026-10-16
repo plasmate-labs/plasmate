@@ -9,8 +9,12 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
 /// Supported selectors:
-/// - Region roles: `main`, `nav`/`navs`/`navigation`/`navigations`/`search`/`searches`/
-///   `search_nav`/`search-nav`/`search_navigation`/`search-navigation`/`search navigation`,
+/// - Region roles: `main`, `nav`/`navs`/`navigation`/`navigations`/`nav_region`/
+///   `nav-region`/`nav region`/`nav_regions`/`nav-regions`/`nav regions`/
+///   `navigation_region`/`navigation-region`/`navigation region`/
+///   `navigation_regions`/`navigation-regions`/`navigation regions`/`search`/`searches`/
+///   `search_nav`/`search-nav`/`search_navigation`/`search-navigation`/`search navigation`/
+///   `search_navigations`/`search-navigations`/`search navigations`,
 ///   `aside`/`asides`/`complementary`, `header`/`headers`/`banner`,
 ///   `footer`/`footers`/`contentinfo`, `form`/`forms`, `dialog`/`dialogs`,
 ///   `content`/`contents`/`article`/`articles`/`main_content`/`main_contents`/
@@ -39,7 +43,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `check boxes` / `switch` /
 ///   `switches` / `menuitemcheckbox` / `menuitemcheckboxes`, `radio` / `radios` /
 ///   `radio button` / `radio buttons` /
-///   `menuitemradio` / `menuitemradios`, `heading`, `image` / `images`, `list`,
+///   `menuitemradio` / `menuitemradios`, `heading`, `image` / `images`, `list` / `lists`,
 ///   `table` / `tables` / `data_table` / `data_tables` / `data-table` / `data tables`,
 ///   `paragraph` / `blockquote` / `quote` / `alert` / `status` / `tooltip`, `section` / `sections`,
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
@@ -112,13 +116,28 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         | "navs"
         | "navigation"
         | "navigations"
+        | "nav_region"
+        | "nav-region"
+        | "nav region"
+        | "nav_regions"
+        | "nav-regions"
+        | "nav regions"
+        | "navigation_region"
+        | "navigation-region"
+        | "navigation region"
+        | "navigation_regions"
+        | "navigation-regions"
+        | "navigation regions"
         | "search"
         | "searches"
         | "search_nav"
         | "search-nav"
         | "search_navigation"
         | "search-navigation"
-        | "search navigation" =>
+        | "search navigation"
+        | "search_navigations"
+        | "search-navigations"
+        | "search navigations" =>
         {
             Some(RegionRole::Navigation)
         }
@@ -539,6 +558,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         "heading" | "headings" => Some(ElementRole::Heading),
         "image" | "images" | "img" => Some(ElementRole::Image),
         "list"
+        | "lists"
         | "ul"
         | "ol"
         | "dl"
@@ -987,6 +1007,23 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_navigation_region_aliases() {
+        for selector in [
+            "nav region",
+            "nav-region",
+            "nav_regions",
+            "navigation region",
+            "navigation-region",
+            "navigation regions",
+        ] {
+            let som = make_test_som();
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].role, RegionRole::Navigation);
+        }
+    }
+
+    #[test]
     fn test_selector_search_navigation_aliases() {
         for selector in [
             "search",
@@ -995,6 +1032,9 @@ mod tests {
             "search_navigation",
             "search-navigation",
             "search navigation",
+            "search_navigations",
+            "search-navigations",
+            "search navigations",
             "search   navigation",
             "  search\tnavigation  ",
         ] {
@@ -1142,6 +1182,7 @@ mod tests {
     #[test]
     fn test_selector_structural_aliases() {
         for (selector, role) in [
+            ("lists", ElementRole::List),
             ("tables", ElementRole::Table),
             ("data_tables", ElementRole::Table),
             ("data-tables", ElementRole::Table),

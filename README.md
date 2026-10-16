@@ -233,14 +233,15 @@ Use `selector="label:<text>"` or `selector="label=<text>"` for
 case-insensitive accessible-label/text matching on regions and elements;
 whitespace is normalized so labels split across lines still match.
 Element selectors also accept common HTML tag aliases: `a`/`link`,
-`p`/`paragraph`, and `ul`, `ol`, `dl`, or `menu`/`list` (plus the explicit
+`p`/`paragraph`, and `ul`, `ol`, `dl`, or `menu`/`list`/`lists` (plus the explicit
 `unordered_list`, `ordered_list`, and `definition_list` forms).
 Structural aliases include `fieldset`/`group`, ARIA group roles
 `figure`/`radiogroup`/`progressbar`/`meter`, `hr`/`separator`,
 `details`/`summary`, and `iframe`; `img`/`image` and ARIA widget names such
 as `menuitem`/`menu items`, `option`, `tab`, `treeitem`/`tree items`, `switch`,
 `menuitemcheckbox`, and `menuitemradio` are also accepted. Region selectors accept ARIA landmark
-aliases such as `navigation`, `search`, `banner`, `complementary`, and
+aliases such as `navigation`, `nav region`/`nav-region`/`nav regions`,
+`navigation region`/`navigation-region`/`navigation regions`, `search`/`search navigation`/`search navigations`, `banner`, `complementary`, and
 `contentinfo`; `forms` and `dialogs` are plural aliases for `form` and
 `dialog`; `content_region`/`content_regions` (and their hyphenated or
 space-separated forms) select content regions.
