@@ -49,7 +49,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list`,
-///   `group` / `fieldset` / `figure` / `radiogroup` / `progress` / `progressbar`
+///   `group` / `groups` / `fieldset` / `fieldsets` / `figure` / `figures` /
+///   `radiogroup` / `radiogroups` / `progress` / `progressbar`
 ///   / `meter` / `output` / `video` / `canvas`,
 ///   `separator` / `separators` / `hr`, `details` / `detail` / `summary`,
 ///   `iframe` / `iframes`, `audio` / `audios`, `video` / `videos`,
@@ -573,9 +574,13 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         }
         "section" | "sections" => Some(ElementRole::Section),
         "group"
+        | "groups"
         | "fieldset"
+        | "fieldsets"
         | "figure"
+        | "figures"
         | "radiogroup"
+        | "radiogroups"
         | "progress"
         | "progressbar"
         | "meter"
@@ -1190,6 +1195,10 @@ mod tests {
             ("separators", ElementRole::Separator),
             ("detail", ElementRole::Details),
             ("iframes", ElementRole::Iframe),
+            ("groups", ElementRole::Group),
+            ("fieldsets", ElementRole::Group),
+            ("figures", ElementRole::Group),
+            ("radiogroups", ElementRole::Group),
             ("audios", ElementRole::Group),
             ("videos", ElementRole::Group),
             ("canvases", ElementRole::Group),
