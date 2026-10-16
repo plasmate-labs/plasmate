@@ -42,7 +42,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `check boxes` / `switch` /
 ///   `switches` / `menuitemcheckbox` / `menuitemcheckboxes`, `radio` / `radios` /
 ///   `radio button` / `radio buttons` /
-///   `menuitemradio` / `menuitemradios`, `heading`, `image` / `images`, `list`,
+///   `menuitemradio` / `menuitemradios`, `heading`, `image` / `images`, `list` / `lists`,
 ///   `table` / `tables` / `data_table` / `data_tables` / `data-table` / `data tables`,
 ///   `paragraph` / `blockquote` / `quote` / `alert` / `status` / `tooltip`, `section` / `sections`,
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
@@ -554,6 +554,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         "heading" | "headings" => Some(ElementRole::Heading),
         "image" | "images" | "img" => Some(ElementRole::Image),
         "list"
+        | "lists"
         | "ul"
         | "ol"
         | "dl"
@@ -1174,6 +1175,7 @@ mod tests {
     #[test]
     fn test_selector_structural_aliases() {
         for (selector, role) in [
+            ("lists", ElementRole::List),
             ("tables", ElementRole::Table),
             ("data_tables", ElementRole::Table),
             ("data-tables", ElementRole::Table),
