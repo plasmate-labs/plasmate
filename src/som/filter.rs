@@ -9,7 +9,10 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
 /// Supported selectors:
-/// - Region roles: `main`, `nav`/`navs`/`navigation`/`navigations`/`search`/`searches`/
+/// - Region roles: `main`, `nav`/`navs`/`navigation`/`navigations`/`nav_region`/
+///   `nav-region`/`nav region`/`nav_regions`/`nav-regions`/`nav regions`/
+///   `navigation_region`/`navigation-region`/`navigation region`/
+///   `navigation_regions`/`navigation-regions`/`navigation regions`/`search`/`searches`/
 ///   `search_nav`/`search-nav`/`search_navigation`/`search-navigation`/`search navigation`,
 ///   `aside`/`asides`/`complementary`, `header`/`headers`/`banner`,
 ///   `footer`/`footers`/`contentinfo`, `form`/`forms`, `dialog`/`dialogs`,
@@ -112,6 +115,18 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         | "navs"
         | "navigation"
         | "navigations"
+        | "nav_region"
+        | "nav-region"
+        | "nav region"
+        | "nav_regions"
+        | "nav-regions"
+        | "nav regions"
+        | "navigation_region"
+        | "navigation-region"
+        | "navigation region"
+        | "navigation_regions"
+        | "navigation-regions"
+        | "navigation regions"
         | "search"
         | "searches"
         | "search_nav"
@@ -983,6 +998,23 @@ mod tests {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].role, role, "selector: {selector}");
+        }
+    }
+
+    #[test]
+    fn test_selector_navigation_region_aliases() {
+        for selector in [
+            "nav region",
+            "nav-region",
+            "nav_regions",
+            "navigation region",
+            "navigation-region",
+            "navigation regions",
+        ] {
+            let som = make_test_som();
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].role, RegionRole::Navigation);
         }
     }
 
