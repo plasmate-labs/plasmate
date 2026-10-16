@@ -58,6 +58,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `toggle`, `submit`, `reset`), or `action:<verb>` forms (including
 ///   `action : <verb>` and `action = <verb>`). The text and
 ///   select aliases mirror the corresponding MCP interaction tool names.
+/// - Label/text search: `label:<text>` or `label=<text>` matches a region or
+///   element's accessible label, authored text, or legacy title/placeholder
+///   fallback, case-insensitively, preserving parent context.
 /// - Id: `#some-id` - region id first, then SOM element `id` or `html_id`
 ///
 /// Unrecognised selectors return the full SOM unchanged (with a warning to stderr).
@@ -171,6 +174,10 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         return filter_som_elements(som, selector, |element| {
             heading_compiled_level(element) == Some(level)
         });
+    }
+
+    if let Some(label) = parse_label_selector(selector) {
+        return filter_som_by_label(som, selector, &label);
     }
 
     // Match elements that expose a specific action in their compact action list.
@@ -324,6 +331,76 @@ fn parse_heading_level_selector(selector: &str) -> Option<u8> {
         .parse::<u8>()
         .ok()?;
     (1..=6).contains(&level).then_some(level)
+}
+
+fn parse_label_selector(selector: &str) -> Option<String> {
+    let selector_lower = selector.to_ascii_lowercase();
+    let value = selector_lower
+        .strip_prefix("label")
+        .and_then(|rest| rest.trim_start().strip_prefix(['=', ':']))
+        .map(str::trim)
+        .map(strip_selector_quotes)
+        .filter(|value| !value.is_empty())?;
+    Some(normalize_label_text(value))
+}
+
+fn element_matches_label(element: &Element, label: &str) -> bool {
+    let fallback_label = element.attrs.as_ref().and_then(|attrs| {
+        ["title", "placeholder"]
+            .into_iter()
+            .find_map(|key| attrs.get(key).and_then(serde_json::Value::as_str))
+    });
+    [
+        element.label.as_deref(),
+        element.text.as_deref(),
+        fallback_label,
+    ]
+    .into_iter()
+    .flatten()
+    .any(|value| normalize_label_text(value).contains(label))
+}
+
+fn filter_som_by_label(som: &Som, selector: &str, label: &str) -> Som {
+    let filtered_regions: Vec<_> = som
+        .regions
+        .iter()
+        .filter_map(|region| {
+            if region
+                .label
+                .as_deref()
+                .is_some_and(|value| normalize_label_text(value).contains(label))
+            {
+                return Some(region.clone());
+            }
+
+            let elements = filter_elements_by(&region.elements, &|element| {
+                element_matches_label(element, label)
+            });
+            if elements.is_empty() {
+                None
+            } else {
+                let mut region = region.clone();
+                region.elements = elements;
+                Some(region)
+            }
+        })
+        .collect();
+
+    if filtered_regions.is_empty() {
+        eprintln!(
+            "Warning: selector '{}' matched no labels - returning full SOM",
+            selector
+        );
+        return som.clone();
+    }
+
+    let mut result = som.clone();
+    result.regions = filtered_regions;
+    refresh_meta(result)
+}
+
+fn normalize_label_text(value: &str) -> String {
+    value.split_whitespace().collect::<Vec<_>>().join(" ").to_lowercase()
 }
 
 fn heading_compiled_level(element: &Element) -> Option<u8> {
@@ -751,6 +828,59 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].role, RegionRole::Main);
         }
+    }
+
+    #[test]
+    fn test_selector_matches_accessible_labels_and_text() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].label = Some("Billing\n  address".to_string());
+        som.regions[1].elements[1].text = Some("Save\tchanges".to_string());
+
+        for selector in ["label:billing", "label=\"BILLING ADDRESS\""] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].html_id.as_deref(), Some("intro"));
+        }
+
+        let filtered = apply_selector(&som, "label:save");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].html_id.as_deref(), Some("save"));
+    }
+
+    #[test]
+    fn test_selector_matches_legacy_label_fallback_attributes() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-placeholder".to_string(),
+            role: ElementRole::TextInput,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"placeholder": "Search products"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        let filtered = apply_selector(&som, "label:SEARCH PRODUCTS");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-placeholder");
+    }
+
+    #[test]
+    fn test_selector_matches_region_labels() {
+        let mut som = make_test_som();
+        som.regions[1].label = Some("Account\n  filters".to_string());
+
+        let filtered = apply_selector(&som, "label=ACCOUNT FILTERS");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].label.as_deref(), Some("Account\n  filters"));
+        assert_eq!(filtered.regions[0].elements.len(), 2);
     }
 
     #[test]

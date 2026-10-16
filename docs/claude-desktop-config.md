@@ -72,6 +72,10 @@ Claude will call: `fetch_page(url="https://stripe.com/docs", selector="main")`
 
 **Available selectors:** `main`, `nav`/`navigation`/`search`, `header`/`banner`, `footer`/`contentinfo`, `aside`/`complementary`, `content`/`article`/`region`, `form`/`forms`, `dialog`/`dialogs`, `h1` through `h6`, `interactive`, `click`, `type`/`type_text`/`type-text`, `clear`, `select`/`select_option`/`select-option`, `toggle`, `submit`, `reset` (or the equivalent `action:<verb>` form, including whitespace-tolerant `action : verb` and `action = verb` forms), element roles such as `button`/`menuitem`/`option`/`tab`, `link`/`a`, `paragraph`/`paragraphs`/`p`, `blockquote`/`blockquotes`/`quote`/`quotes`, `list`/`ul`/`ol`/`dl`/`menu`, `unordered_list`/`ordered_list`/`definition_list`, `fieldset`/`group`, `hr`/`separator`, `details`/`summary`, `iframe`, `image`/`img`, `audio`, `video`, `canvas`, grouped `media`, and text inputs such as `text`, `search_input`/`search-input`, `search_control`/`search-control`, `search_field`/`search-field`, and `query_input`/`query-input`, or any HTML id like `#my-section`.
 
+Use `label:<text>` or `label=<text>` for case-insensitive accessible-label or
+authored-text matching on regions and elements; whitespace is normalized before
+matching.
+
 ## Using with Cursor
 
 Same config — add to Cursor's MCP settings:

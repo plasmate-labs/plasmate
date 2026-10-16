@@ -121,7 +121,7 @@ enum Commands {
         /// footer, form, dialog, content), heading levels (h1 through h6),
         /// element roles (button, link/a, paragraph/paragraphs/p, blockquote/blockquotes/quote/quotes, list/ul/ol, media/media_item/media-item/mediaitem/media_items/media-items, audio_item/audio-item/audio_items/audio-items, video_item/video-item/video_items/video-items, text_input, search_input/search-input/search_control/search-control/search_field/search-field/search_box/search-box/query/queries/query_input/query-input/query_field/query-field/query_control/query-control/querybox/query-box, select, etc.), action selectors (interactive,
         /// click/type/type_text/clear/select/select_option/toggle/submit/reset, or action:<verb> (action : <verb> and action = <verb> also work), or an HTML id selector
-        /// (#my-id).
+        /// (#my-id), or label:<text>/label=<text> for case-insensitive accessible-label/text matching.
         /// When a role is given, only regions of that role are included.
         /// When an element/action selector or id is given, only matching
         /// elements are kept, with parent containers preserved.
@@ -395,7 +395,7 @@ enum Commands {
         /// surface, or element — same syntax as `plasmate fetch --selector` (e.g. `main`, `h1`,
         /// `button`, `interactive`, `action:click`, `action:type`,
         /// `action:clear`, `action:select`, `action:toggle`, `action:submit`,
-        /// `#my-id`).
+        /// `#my-id`, `label:<text>`).
         #[arg(long)]
         selector: Option<String>,
     },
@@ -462,7 +462,7 @@ enum Commands {
         /// Same syntax as `plasmate fetch --selector` (e.g. `main`, `h1`, `nav`,
         /// `button`, `interactive`, `action:click`, `action:type`,
         /// `action:clear`, `action:select`, `action:toggle`, `action:submit`,
-        /// `#my-id`). Useful for
+        /// `#my-id`, `label:<text>`). Useful for
         /// diffing only the content region or action surface and ignoring
         /// navigation or footer churn.
         #[arg(long)]
