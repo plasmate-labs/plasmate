@@ -21,7 +21,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   and `role:` forms also work for element roles.
 /// - Element roles: `link` / `links`, `button` / `buttons`, `text_input` /
 ///   `text_inputs` / `textbox` / `searchbox` /
-///   `slider` / `sliders` / `spinbutton` / `spinbuttons` / `input`, HTML
+///   `slider` / `sliders` / `spinbutton` / `spinbuttons` / `spin button` /
+///   `spin buttons` / `input`, HTML
 ///   text-input types such as `text`,
 ///   `search_input` / `search_inputs` / `search-input` / `search_control` /
 ///   `search_controls` / `search-control` / `search_field` / `search_fields` /
@@ -448,6 +449,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "sliders"
         | "spinbutton"
         | "spinbuttons"
+        | "spin_button"
+        | "spin_buttons"
         | "input"
         | "text"
         | "search"
@@ -1732,6 +1735,8 @@ mod tests {
             ("sliders", "e-slider"),
             ("spinbutton", "e-spinbutton"),
             ("spinbuttons", "e-spinbutton"),
+            ("spin button", "e-spinbutton"),
+            ("spin buttons", "e-spinbutton"),
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
