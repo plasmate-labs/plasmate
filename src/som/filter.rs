@@ -34,7 +34,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` / `textareas`,
 ///   `select` / `selects` / `combobox` / `comboboxes` / `combo box` /
 ///   `listbox` / `listboxes` / `list box`, `checkbox` / `checkboxes`,
-///   `radio` / `radios` / `menuitemradio`, `heading`, `image` / `images`, `list`, `table`,
+///   `radio` / `radios` / `menuitemradio`, `heading`, `image` / `images`, `list`,
+///   `table` / `tables` / `data_table` / `data-table`,
 ///   `paragraph` / `blockquote` / `quote` / `alert` / `status` / `tooltip`, `section` / `sections`,
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
@@ -506,7 +507,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "unordered_list"
         | "ordered_list"
         | "definition_list" => Some(ElementRole::List),
-        "table" | "tables" => Some(ElementRole::Table),
+        "table" | "tables" | "data_table" => Some(ElementRole::Table),
         "paragraph" | "paragraphs" | "p" | "blockquote" | "blockquotes" | "quote" | "quotes" | "alert"
         | "status" | "tooltip" => {
             Some(ElementRole::Paragraph)
@@ -1508,6 +1509,19 @@ mod tests {
                     .any(|element| element.role == expected_role),
                 "selector should filter matching SOM elements: {selector}"
             );
+        }
+    }
+
+    #[test]
+    fn test_selector_data_table_aliases_match_tables() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Table;
+
+        for selector in ["data_table", "data-table"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Table);
         }
     }
 
