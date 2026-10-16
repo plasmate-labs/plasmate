@@ -117,8 +117,8 @@ enum Commands {
         user_agent: Option<String>,
         /// Filter output to a specific SOM region or element.
         ///
-        /// Accepts semantic region roles (main, nav, navigation, nav_region/nav-region/nav region,
-        /// navigation_region/navigation-region/navigation region, search, aside, header,
+        /// Accepts semantic region roles (main, nav, navigation, nav_region/nav-region/nav region/nav regions,
+        /// navigation_region/navigation-region/navigation region/navigation regions, search, aside, header,
         /// footer, form, dialog, content), heading levels (h1 through h6),
         /// element roles (button, link/a, paragraph/paragraphs/p, blockquote/blockquotes/quote/quotes, list/ul/ol, media/media_item/media-item/mediaitem/media_items/media-items, audio_item/audio-item/audio_items/audio-items, video_item/video-item/video_items/video-items, text_input, search_input/search-input/search_control/search-control/search_field/search-field/search_box/search-box/query/queries/query_input/query-input/query_field/query-field/query_control/query-control/querybox/query-box, select, etc.), action selectors (interactive,
         /// click/type/type_text/clear/select/select_option/toggle/submit/reset, or action:<verb> (action : <verb> and action = <verb> also work), or an HTML id selector
