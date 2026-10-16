@@ -229,6 +229,9 @@ action menu before the LLM sees the content. The MCP tool-name aliases
 `selector="type_text"` and `selector="select_option"` (including their
 `action:type_text` and `action:select_option` forms) are also accepted for
 typing and selection targets.
+Use `selector="label:<text>"` or `selector="label=<text>"` for
+case-insensitive accessible-label/text matching; whitespace is normalized so
+labels split across lines still match.
 Element selectors also accept common HTML tag aliases: `a`/`link`,
 `p`/`paragraph`, and `ul`, `ol`, `dl`, or `menu`/`list` (plus the explicit
 `unordered_list`, `ordered_list`, and `definition_list` forms).

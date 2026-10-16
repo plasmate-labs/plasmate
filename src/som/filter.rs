@@ -342,14 +342,18 @@ fn parse_label_selector(selector: &str) -> Option<String> {
         .map(str::trim)
         .map(strip_selector_quotes)
         .filter(|value| !value.is_empty())?;
-    Some(value.to_string())
+    Some(normalize_label_text(value))
 }
 
 fn element_matches_label(element: &Element, label: &str) -> bool {
     [element.label.as_deref(), element.text.as_deref()]
         .into_iter()
         .flatten()
-        .any(|value| value.to_ascii_lowercase().contains(label))
+        .any(|value| normalize_label_text(value).contains(label))
+}
+
+fn normalize_label_text(value: &str) -> String {
+    value.split_whitespace().collect::<Vec<_>>().join(" ").to_lowercase()
 }
 
 fn heading_compiled_level(element: &Element) -> Option<u8> {
@@ -782,8 +786,8 @@ mod tests {
     #[test]
     fn test_selector_matches_accessible_labels_and_text() {
         let mut som = make_test_som();
-        som.regions[1].elements[0].label = Some("Billing address".to_string());
-        som.regions[1].elements[1].text = Some("Save changes".to_string());
+        som.regions[1].elements[0].label = Some("Billing\n  address".to_string());
+        som.regions[1].elements[1].text = Some("Save\tchanges".to_string());
 
         for selector in ["label:billing", "label=\"BILLING ADDRESS\""] {
             let filtered = apply_selector(&som, selector);
