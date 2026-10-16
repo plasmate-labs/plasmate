@@ -13,7 +13,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `nav-region`/`nav region`/`nav_regions`/`nav-regions`/`nav regions`/
 ///   `navigation_region`/`navigation-region`/`navigation region`/
 ///   `navigation_regions`/`navigation-regions`/`navigation regions`/`search`/`searches`/
-///   `search_nav`/`search-nav`/`search_navigation`/`search-navigation`/`search navigation`,
+///   `search_nav`/`search-nav`/`search_navigation`/`search-navigation`/`search navigation`/
+///   `search_navigations`/`search-navigations`/`search navigations`,
 ///   `aside`/`asides`/`complementary`, `header`/`headers`/`banner`,
 ///   `footer`/`footers`/`contentinfo`, `form`/`forms`, `dialog`/`dialogs`,
 ///   `content`/`contents`/`article`/`articles`/`main_content`/`main_contents`/
@@ -133,7 +134,10 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         | "search-nav"
         | "search_navigation"
         | "search-navigation"
-        | "search navigation" =>
+        | "search navigation"
+        | "search_navigations"
+        | "search-navigations"
+        | "search navigations" =>
         {
             Some(RegionRole::Navigation)
         }
@@ -1028,6 +1032,9 @@ mod tests {
             "search_navigation",
             "search-navigation",
             "search navigation",
+            "search_navigations",
+            "search-navigations",
+            "search navigations",
             "search   navigation",
             "  search\tnavigation  ",
         ] {
