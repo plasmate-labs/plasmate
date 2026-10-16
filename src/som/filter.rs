@@ -1078,6 +1078,7 @@ mod tests {
         for (selector, role) in [
             ("tables", ElementRole::Table),
             ("data_tables", ElementRole::Table),
+            ("data-tables", ElementRole::Table),
             ("data tables", ElementRole::Table),
             ("separators", ElementRole::Separator),
             ("detail", ElementRole::Details),
@@ -1519,7 +1520,14 @@ mod tests {
         let mut som = make_test_som();
         som.regions[0].elements[0].role = ElementRole::Table;
 
-        for selector in ["data_table", "data-table"] {
+        for selector in [
+            "data_table",
+            "data-table",
+            "data_tables",
+            "data-tables",
+            "data table",
+            "data tables",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");

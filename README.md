@@ -244,7 +244,7 @@ aliases such as `navigation`, `search`, `banner`, `complementary`, and
 `contentinfo`; `forms` and `dialogs` are plural aliases for `form` and
 `dialog`.
 Table selectors include `table`/`tables` and `data_table`/`data_tables`
-(with `data-table` and `data tables` accepted too).
+(with `data-table`/`data-tables` and `data table`/`data tables` accepted too).
 Use `selector="media"` to keep images and media-capable grouped elements
 such as audio, video, and canvas while removing unrelated page content.
 HTML text-input type names are also accepted as selectors, including
