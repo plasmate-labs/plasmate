@@ -59,7 +59,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `action : <verb>` and `action = <verb>`). The text and
 ///   select aliases mirror the corresponding MCP interaction tool names.
 /// - Label/text search: `label:<text>` or `label=<text>` matches a region or
-///   element's accessible label or authored text, case-insensitively, preserving parent context.
+///   element's accessible label, authored text, or legacy title/placeholder
+///   fallback, case-insensitively, preserving parent context.
 /// - Id: `#some-id` - region id first, then SOM element `id` or `html_id`
 ///
 /// Unrecognised selectors return the full SOM unchanged (with a warning to stderr).
@@ -344,10 +345,19 @@ fn parse_label_selector(selector: &str) -> Option<String> {
 }
 
 fn element_matches_label(element: &Element, label: &str) -> bool {
-    [element.label.as_deref(), element.text.as_deref()]
-        .into_iter()
-        .flatten()
-        .any(|value| normalize_label_text(value).contains(label))
+    let fallback_label = element.attrs.as_ref().and_then(|attrs| {
+        ["title", "placeholder"]
+            .into_iter()
+            .find_map(|key| attrs.get(key).and_then(serde_json::Value::as_str))
+    });
+    [
+        element.label.as_deref(),
+        element.text.as_deref(),
+        fallback_label,
+    ]
+    .into_iter()
+    .flatten()
+    .any(|value| normalize_label_text(value).contains(label))
 }
 
 fn filter_som_by_label(som: &Som, selector: &str, label: &str) -> Som {
@@ -836,6 +846,29 @@ mod tests {
         let filtered = apply_selector(&som, "label:save");
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].html_id.as_deref(), Some("save"));
+    }
+
+    #[test]
+    fn test_selector_matches_legacy_label_fallback_attributes() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-placeholder".to_string(),
+            role: ElementRole::TextInput,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"placeholder": "Search products"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        let filtered = apply_selector(&som, "label:SEARCH PRODUCTS");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-placeholder");
     }
 
     #[test]
