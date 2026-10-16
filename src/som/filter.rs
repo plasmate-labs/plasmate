@@ -32,7 +32,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `search_box` / `search_boxes` / `search-box`, `email`, `number`,
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local`, `month`,
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` / `textareas`,
-///   `select` / `selects` / `combobox` / `listbox`, `checkbox` / `checkboxes`,
+///   `select` / `selects` / `combobox` / `comboboxes` / `combo box` /
+///   `listbox` / `listboxes` / `list box`, `checkbox` / `checkboxes`,
 ///   `radio` / `radios` / `menuitemradio`, `heading`, `image` / `images`, `list`, `table`,
 ///   `paragraph` / `blockquote` / `quote` / `alert` / `status` / `tooltip`, `section` / `sections`,
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
@@ -489,7 +490,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "hidden"
         | "file" => Some(ElementRole::TextInput),
         "textarea" | "textareas" => Some(ElementRole::Textarea),
-        "select" | "selects" | "combobox" | "listbox" => Some(ElementRole::Select),
+        "select" | "selects" | "combobox" | "comboboxes" | "combo_box" | "listbox"
+        | "listboxes" | "list_box" => Some(ElementRole::Select),
         "checkbox" | "checkboxes" | "switch" | "menuitemcheckbox" | "menu_item_checkbox" => {
             Some(ElementRole::Checkbox)
         }
@@ -1033,6 +1035,18 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1);
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::TextInput);
+        }
+    }
+
+    #[test]
+    fn test_selector_select_aliases_accept_plural_and_spaced_forms() {
+        for selector in ["selects", "comboboxes", "combo box", "listboxes", "list box"] {
+            let mut som = make_test_som();
+            som.regions[0].elements[0].role = ElementRole::Select;
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Select);
         }
     }
 
