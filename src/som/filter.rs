@@ -35,8 +35,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local`, `month`,
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` / `textareas`,
 ///   `select` / `selects` / `combobox` / `comboboxes` / `combo box` /
-///   `listbox` / `listboxes` / `list box`, `checkbox` / `checkboxes`,
-///   `radio` / `radios` / `menuitemradio`, `heading`, `image` / `images`, `list`,
+///   `listbox` / `listboxes` / `list box`, `checkbox` / `checkboxes` / `switch` /
+///   `switches` / `menuitemcheckbox` / `menuitemcheckboxes`, `radio` / `radios` /
+///   `menuitemradio` / `menuitemradios`, `heading`, `image` / `images`, `list`,
 ///   `table` / `tables` / `data_table` / `data_tables` / `data-table` / `data tables`,
 ///   `paragraph` / `blockquote` / `quote` / `alert` / `status` / `tooltip`, `section` / `sections`,
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
@@ -512,10 +513,22 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         "textarea" | "textareas" => Some(ElementRole::Textarea),
         "select" | "selects" | "combobox" | "comboboxes" | "combo_box" | "listbox"
         | "listboxes" | "list_box" => Some(ElementRole::Select),
-        "checkbox" | "checkboxes" | "switch" | "menuitemcheckbox" | "menu_item_checkbox" => {
+        "checkbox"
+        | "checkboxes"
+        | "switch"
+        | "switches"
+        | "menuitemcheckbox"
+        | "menuitemcheckboxes"
+        | "menu_item_checkbox"
+        | "menu_item_checkboxes" => {
             Some(ElementRole::Checkbox)
         }
-        "radio" | "radios" | "menuitemradio" | "menu_item_radio" => Some(ElementRole::Radio),
+        "radio"
+        | "radios"
+        | "menuitemradio"
+        | "menuitemradios"
+        | "menu_item_radio"
+        | "menu_item_radios" => Some(ElementRole::Radio),
         "heading" | "headings" => Some(ElementRole::Heading),
         "image" | "images" | "img" => Some(ElementRole::Image),
         "list"
@@ -1358,11 +1371,44 @@ mod tests {
         ] {
             assert_eq!(parse_element_role(selector), Some(ElementRole::Button));
         }
-        for selector in ["switch", "menuitemcheckbox", "menu-item-checkbox"] {
+        for selector in [
+            "switch",
+            "switches",
+            "menuitemcheckbox",
+            "menuitemcheckboxes",
+            "menu-item-checkbox",
+            "menu-item-checkboxes",
+        ] {
             assert_eq!(parse_element_role(selector), Some(ElementRole::Checkbox));
         }
-        for selector in ["menuitemradio", "menu-item-radio"] {
+        for selector in [
+            "menuitemradio",
+            "menuitemradios",
+            "menu-item-radio",
+            "menu-item-radios",
+        ] {
             assert_eq!(parse_element_role(selector), Some(ElementRole::Radio));
+        }
+    }
+
+    #[test]
+    fn test_selector_plural_aria_toggle_aliases_filter_compiled_roles() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Checkbox;
+        som.regions[1].elements[0].role = ElementRole::Radio;
+
+        for selector in ["switches", "menuitemcheckboxes", "menu-item-checkboxes"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Checkbox);
+        }
+
+        for selector in ["menuitemradios", "menu-item-radios"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Radio);
         }
     }
 
