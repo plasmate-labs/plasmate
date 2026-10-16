@@ -1644,6 +1644,9 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
                     "heading" => return Some(ElementRole::Heading),
                     "article" => return Some(ElementRole::Section),
                     "list" => return Some(ElementRole::List),
+                    // ARIA table-like containers use the same SOM role as
+                    // native tables so selectors and structure stay aligned.
+                    "table" | "grid" | "treegrid" => return Some(ElementRole::Table),
                     "separator" => return Some(ElementRole::Separator),
                     "alert" | "status" => return Some(ElementRole::Paragraph),
                     "tooltip" => return Some(ElementRole::Paragraph),
@@ -10493,6 +10496,39 @@ plasmate fetch https://example.test</code></pre>
                 .all(|element| element.html_id.as_deref() != Some("share")),
             "selector=group should drop buttons: {filtered_elements:?}"
         );
+    }
+
+    #[test]
+    fn aria_table_roles_compile_as_tables() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Data</title></head>
+<body><main>
+  <div id="table" role="table"><div role="row">Revenue</div></div>
+  <div id="grid" role="grid"><div role="row">Units</div></div>
+  <div id="treegrid" role="treegrid"><div role="row">Status</div></div>
+  <div id="group" role="group">Not a table</div>
+</main></body></html>"#;
+
+        let som = compile(html, "https://example.test/data").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        for id in ["table", "grid", "treegrid"] {
+            let element = elements
+                .iter()
+                .find(|element| element.html_id.as_deref() == Some(id))
+                .unwrap_or_else(|| panic!("ARIA {id} should compile"));
+            assert_eq!(element.role, ElementRole::Table, "ARIA role={id}");
+        }
+
+        let group = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("group"))
+            .expect("control group should compile");
+        assert_eq!(group.role, ElementRole::Group);
     }
 
     #[test]
