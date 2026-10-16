@@ -946,8 +946,12 @@ mod tests {
             ("main-region", RegionRole::Main),
             ("main regions", RegionRole::Main),
             ("main-regions", RegionRole::Main),
+            ("main_region", RegionRole::Main),
+            ("main_regions", RegionRole::Main),
             ("content region", RegionRole::Content),
             ("content-regions", RegionRole::Content),
+            ("content_region", RegionRole::Content),
+            ("content_regions", RegionRole::Content),
         ] {
             let mut som = make_test_som();
             som.regions[0].role = role.clone();

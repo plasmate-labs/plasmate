@@ -217,7 +217,7 @@ cookie operations, and validation-only replay. Query `tools/list` instead of
 depending on a hard-coded count; the authoritative registration is
 [`src/mcp/server.rs`](./src/mcp/server.rs).
 
-**Tip:** use `selector="main"` (or `main_content`/`main_contents`/`main-content`/`main-contents`/`main content`/`main contents`) to strip nav/footer, `selector="interactive"`
+**Tip:** use `selector="main"` (or `main_content`/`main_contents`/`main-content`/`main-contents`/`main content`/`main contents`/`main_region`/`main_regions`/`main-region`/`main-regions`/`main region`/`main regions`) to strip nav/footer, `selector="interactive"`
 to return only actionable elements, `selector="h1"` through `selector="h6"`
 (or `heading1` through `heading6`) to isolate a heading level, or an action selector such as `selector="click"`
 (the equivalent `selector="action:click"` also works), `selector="type"`,
@@ -242,7 +242,8 @@ as `menuitem`, `option`, `tab`, `treeitem`, `switch`, `menuitemcheckbox`, and
 `menuitemradio` are also accepted. Region selectors accept ARIA landmark
 aliases such as `navigation`, `search`, `banner`, `complementary`, and
 `contentinfo`; `forms` and `dialogs` are plural aliases for `form` and
-`dialog`.
+`dialog`; `content_region`/`content_regions` (and their hyphenated or
+space-separated forms) select content regions.
 Table selectors include `table`/`tables` and `data_table`/`data_tables`
 (with `data-table`/`data-tables` and `data table`/`data tables` accepted too).
 Use `selector="media"` to keep images and media-capable grouped elements

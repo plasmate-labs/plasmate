@@ -128,7 +128,7 @@ enum Commands {
         /// Unrecognised selectors fall through gracefully (full SOM returned).
         ///
         /// Examples:
-        ///   --selector main            (just the main content region)
+        ///   --selector main            (just the main content region; main_region/main-region/main region aliases also work)
         ///   --selector nav             (navigation links only)
         ///   --selector h1              (level-one headings only)
         ///   --selector interactive     (only actionable elements)
