@@ -15,7 +15,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `footer`/`footers`/`contentinfo`, `form`/`forms`, `dialog`/`dialogs`,
 ///   `content`/`contents`/`article`/`articles`/`main_content`/`main_contents`/
 ///   `main-content`/`main-contents`/`main content`/`main contents`/
-///   `main-region`/`main region`/
+///   `main-region`/`main region`/`main-regions`/`main regions`/
 ///   `maincontent`/`maincontents`/
 ///   `region`/`regions`/`content-region`/`content region`/`content-regions`/
 ///   `content regions` (or `role=<region>` / `role:<region>`;
@@ -100,6 +100,9 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         | "main_region"
         | "main-region"
         | "main region"
+        | "main_regions"
+        | "main-regions"
+        | "main regions"
         | "maincontent"
         | "maincontents" => Some(RegionRole::Main),
         "nav"
@@ -941,6 +944,8 @@ mod tests {
         for (selector, role) in [
             ("main region", RegionRole::Main),
             ("main-region", RegionRole::Main),
+            ("main regions", RegionRole::Main),
+            ("main-regions", RegionRole::Main),
             ("content region", RegionRole::Content),
             ("content-regions", RegionRole::Content),
         ] {
