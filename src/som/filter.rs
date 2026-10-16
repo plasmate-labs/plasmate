@@ -35,7 +35,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `select` / `selects` / `combobox` / `comboboxes` / `combo box` /
 ///   `listbox` / `listboxes` / `list box`, `checkbox` / `checkboxes`,
 ///   `radio` / `radios` / `menuitemradio`, `heading`, `image` / `images`, `list`,
-///   `table` / `tables` / `data_table` / `data_tables` / `data-table` / `data-tables`,
+///   `table` / `tables` / `data_table` / `data_tables` / `data-table` / `data tables`,
 ///   `paragraph` / `blockquote` / `quote` / `alert` / `status` / `tooltip`, `section` / `sections`,
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
@@ -1077,6 +1077,9 @@ mod tests {
     fn test_selector_structural_aliases() {
         for (selector, role) in [
             ("tables", ElementRole::Table),
+            ("data_tables", ElementRole::Table),
+            ("data-tables", ElementRole::Table),
+            ("data tables", ElementRole::Table),
             ("separators", ElementRole::Separator),
             ("detail", ElementRole::Details),
             ("iframes", ElementRole::Iframe),
@@ -1519,9 +1522,10 @@ mod tests {
 
         for selector in [
             "data_table",
-            "data_tables",
             "data-table",
+            "data_tables",
             "data-tables",
+            "data table",
             "data tables",
         ] {
             let filtered = apply_selector(&som, selector);
