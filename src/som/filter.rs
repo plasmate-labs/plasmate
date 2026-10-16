@@ -58,8 +58,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `toggle`, `submit`, `reset`), or `action:<verb>` forms (including
 ///   `action : <verb>` and `action = <verb>`). The text and
 ///   select aliases mirror the corresponding MCP interaction tool names.
-/// - Label/text search: `label:<text>` or `label=<text>` matches an element's
-///   accessible label or authored text, case-insensitively, preserving parent context.
+/// - Label/text search: `label:<text>` or `label=<text>` matches a region or
+///   element's accessible label or authored text, case-insensitively, preserving parent context.
 /// - Id: `#some-id` - region id first, then SOM element `id` or `html_id`
 ///
 /// Unrecognised selectors return the full SOM unchanged (with a warning to stderr).
@@ -176,9 +176,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     }
 
     if let Some(label) = parse_label_selector(selector) {
-        return filter_som_elements(som, selector, |element| {
-            element_matches_label(element, &label)
-        });
+        return filter_som_by_label(som, selector, &label);
     }
 
     // Match elements that expose a specific action in their compact action list.
@@ -350,6 +348,45 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
         .into_iter()
         .flatten()
         .any(|value| normalize_label_text(value).contains(label))
+}
+
+fn filter_som_by_label(som: &Som, selector: &str, label: &str) -> Som {
+    let filtered_regions: Vec<_> = som
+        .regions
+        .iter()
+        .filter_map(|region| {
+            if region
+                .label
+                .as_deref()
+                .is_some_and(|value| normalize_label_text(value).contains(label))
+            {
+                return Some(region.clone());
+            }
+
+            let elements = filter_elements_by(&region.elements, &|element| {
+                element_matches_label(element, label)
+            });
+            if elements.is_empty() {
+                None
+            } else {
+                let mut region = region.clone();
+                region.elements = elements;
+                Some(region)
+            }
+        })
+        .collect();
+
+    if filtered_regions.is_empty() {
+        eprintln!(
+            "Warning: selector '{}' matched no labels - returning full SOM",
+            selector
+        );
+        return som.clone();
+    }
+
+    let mut result = som.clone();
+    result.regions = filtered_regions;
+    refresh_meta(result)
 }
 
 fn normalize_label_text(value: &str) -> String {
@@ -799,6 +836,18 @@ mod tests {
         let filtered = apply_selector(&som, "label:save");
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].html_id.as_deref(), Some("save"));
+    }
+
+    #[test]
+    fn test_selector_matches_region_labels() {
+        let mut som = make_test_som();
+        som.regions[1].label = Some("Account\n  filters".to_string());
+
+        let filtered = apply_selector(&som, "label=ACCOUNT FILTERS");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].label.as_deref(), Some("Account\n  filters"));
+        assert_eq!(filtered.regions[0].elements.len(), 2);
     }
 
     #[test]
