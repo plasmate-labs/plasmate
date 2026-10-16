@@ -35,8 +35,10 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local`, `month`,
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` / `textareas`,
 ///   `select` / `selects` / `combobox` / `comboboxes` / `combo box` /
-///   `listbox` / `listboxes` / `list box`, `checkbox` / `checkboxes` / `switch` /
+///   `listbox` / `listboxes` / `list box`, `checkbox` / `checkboxes` / `check box` /
+///   `check boxes` / `switch` /
 ///   `switches` / `menuitemcheckbox` / `menuitemcheckboxes`, `radio` / `radios` /
+///   `radio button` / `radio buttons` /
 ///   `menuitemradio` / `menuitemradios`, `heading`, `image` / `images`, `list`,
 ///   `table` / `tables` / `data_table` / `data_tables` / `data-table` / `data tables`,
 ///   `paragraph` / `blockquote` / `quote` / `alert` / `status` / `tooltip`, `section` / `sections`,
@@ -515,6 +517,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "listboxes" | "list_box" => Some(ElementRole::Select),
         "checkbox"
         | "checkboxes"
+        | "check_box"
+        | "check_boxes"
         | "switch"
         | "switches"
         | "menuitemcheckbox"
@@ -525,6 +529,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         }
         "radio"
         | "radios"
+        | "radio_button"
+        | "radio_buttons"
         | "menuitemradio"
         | "menuitemradios"
         | "menu_item_radio"
@@ -1374,6 +1380,8 @@ mod tests {
         for selector in [
             "switch",
             "switches",
+            "check box",
+            "check boxes",
             "menuitemcheckbox",
             "menuitemcheckboxes",
             "menu-item-checkbox",
@@ -1384,6 +1392,8 @@ mod tests {
         for selector in [
             "menuitemradio",
             "menuitemradios",
+            "radio button",
+            "radio buttons",
             "menu-item-radio",
             "menu-item-radios",
         ] {
@@ -1397,14 +1407,25 @@ mod tests {
         som.regions[0].elements[0].role = ElementRole::Checkbox;
         som.regions[1].elements[0].role = ElementRole::Radio;
 
-        for selector in ["switches", "menuitemcheckboxes", "menu-item-checkboxes"] {
+        for selector in [
+            "switches",
+            "check box",
+            "check boxes",
+            "menuitemcheckboxes",
+            "menu-item-checkboxes",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Checkbox);
         }
 
-        for selector in ["menuitemradios", "menu-item-radios"] {
+        for selector in [
+            "radio button",
+            "radio buttons",
+            "menuitemradios",
+            "menu-item-radios",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
