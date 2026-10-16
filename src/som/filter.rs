@@ -21,7 +21,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   and `role:` forms also work for element roles.
 /// - Element roles: `link` / `links`, `button` / `buttons`, `text_input` /
 ///   `text_inputs` / `textbox` / `searchbox` /
-///   `slider` / `spinbutton` / `input`, HTML text-input types such as `text`,
+///   `slider` / `sliders` / `spinbutton` / `spinbuttons` / `input`, HTML
+///   text-input types such as `text`,
 ///   `search_input` / `search_inputs` / `search-input` / `search_control` /
 ///   `search_controls` / `search-control` / `search_field` / `search_fields` /
 ///   `search-field` / `query` / `queries` / `query_input` / `query_inputs` / `query-input` /
@@ -444,7 +445,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "searchbox"
         | "searchboxes"
         | "slider"
+        | "sliders"
         | "spinbutton"
+        | "spinbuttons"
         | "input"
         | "text"
         | "search"
@@ -1724,14 +1727,19 @@ mod tests {
             });
         }
 
-        for selector in ["slider", "spinbutton"] {
+        for (selector, expected_id) in [
+            ("slider", "e-slider"),
+            ("sliders", "e-slider"),
+            ("spinbutton", "e-spinbutton"),
+            ("spinbuttons", "e-spinbutton"),
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 2, "selector: {selector}");
             assert!(filtered.regions[0]
                 .elements
                 .iter()
-                .any(|element| element.id == format!("e-{selector}")));
+                .any(|element| element.id == expected_id));
             assert!(filtered.regions[0]
                 .elements
                 .iter()
