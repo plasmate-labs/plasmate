@@ -35,8 +35,11 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local`, `month`,
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` / `textareas`,
 ///   `select` / `selects` / `combobox` / `comboboxes` / `combo box` /
-///   `listbox` / `listboxes` / `list box`, `checkbox` / `checkboxes`,
-///   `radio` / `radios` / `menuitemradio`, `heading`, `image` / `images`, `list`,
+///   `listbox` / `listboxes` / `list box`, `checkbox` / `checkboxes` / `check box` /
+///   `check boxes` / `switch` /
+///   `switches` / `menuitemcheckbox` / `menuitemcheckboxes`, `radio` / `radios` /
+///   `radio button` / `radio buttons` /
+///   `menuitemradio` / `menuitemradios`, `heading`, `image` / `images`, `list`,
 ///   `table` / `tables` / `data_table` / `data_tables` / `data-table` / `data tables`,
 ///   `paragraph` / `blockquote` / `quote` / `alert` / `status` / `tooltip`, `section` / `sections`,
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
@@ -453,8 +456,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         // These ARIA widget roles compile to the SOM's button role, so expose
         // the same selector aliases instead of making callers know the
         // normalized representation.
-        "button" | "buttons" | "menuitem" | "menuitems" | "menu_item" | "option"
-        | "options" | "tab" | "tabs" | "treeitem" | "treeitems" | "tree_item" => {
+        "button" | "buttons" | "menuitem" | "menuitems" | "menu_item" | "menu_items"
+        | "option" | "options" | "tab" | "tabs" | "treeitem" | "treeitems"
+        | "tree_item" | "tree_items" => {
             Some(ElementRole::Button)
         }
         // HTML input types compile to the same SOM role. Accept their names
@@ -512,10 +516,26 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         "textarea" | "textareas" => Some(ElementRole::Textarea),
         "select" | "selects" | "combobox" | "comboboxes" | "combo_box" | "listbox"
         | "listboxes" | "list_box" => Some(ElementRole::Select),
-        "checkbox" | "checkboxes" | "switch" | "menuitemcheckbox" | "menu_item_checkbox" => {
+        "checkbox"
+        | "checkboxes"
+        | "check_box"
+        | "check_boxes"
+        | "switch"
+        | "switches"
+        | "menuitemcheckbox"
+        | "menuitemcheckboxes"
+        | "menu_item_checkbox"
+        | "menu_item_checkboxes" => {
             Some(ElementRole::Checkbox)
         }
-        "radio" | "radios" | "menuitemradio" | "menu_item_radio" => Some(ElementRole::Radio),
+        "radio"
+        | "radios"
+        | "radio_button"
+        | "radio_buttons"
+        | "menuitemradio"
+        | "menuitemradios"
+        | "menu_item_radio"
+        | "menu_item_radios" => Some(ElementRole::Radio),
         "heading" | "headings" => Some(ElementRole::Heading),
         "image" | "images" | "img" => Some(ElementRole::Image),
         "list"
@@ -1350,19 +1370,73 @@ mod tests {
             "menuitem",
             "menu-item",
             "menu_item",
+            "menu items",
+            "menu-items",
+            "menu_items",
             "option",
             "tab",
             "treeitem",
             "tree-item",
             "tree_item",
+            "tree items",
+            "tree-items",
+            "tree_items",
         ] {
             assert_eq!(parse_element_role(selector), Some(ElementRole::Button));
         }
-        for selector in ["switch", "menuitemcheckbox", "menu-item-checkbox"] {
+        for selector in [
+            "switch",
+            "switches",
+            "check box",
+            "check boxes",
+            "menuitemcheckbox",
+            "menuitemcheckboxes",
+            "menu-item-checkbox",
+            "menu-item-checkboxes",
+        ] {
             assert_eq!(parse_element_role(selector), Some(ElementRole::Checkbox));
         }
-        for selector in ["menuitemradio", "menu-item-radio"] {
+        for selector in [
+            "menuitemradio",
+            "menuitemradios",
+            "radio button",
+            "radio buttons",
+            "menu-item-radio",
+            "menu-item-radios",
+        ] {
             assert_eq!(parse_element_role(selector), Some(ElementRole::Radio));
+        }
+    }
+
+    #[test]
+    fn test_selector_plural_aria_toggle_aliases_filter_compiled_roles() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Checkbox;
+        som.regions[1].elements[0].role = ElementRole::Radio;
+
+        for selector in [
+            "switches",
+            "check box",
+            "check boxes",
+            "menuitemcheckboxes",
+            "menu-item-checkboxes",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Checkbox);
+        }
+
+        for selector in [
+            "radio button",
+            "radio buttons",
+            "menuitemradios",
+            "menu-item-radios",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Radio);
         }
     }
 
