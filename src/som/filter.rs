@@ -456,8 +456,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         // These ARIA widget roles compile to the SOM's button role, so expose
         // the same selector aliases instead of making callers know the
         // normalized representation.
-        "button" | "buttons" | "menuitem" | "menuitems" | "menu_item" | "option"
-        | "options" | "tab" | "tabs" | "treeitem" | "treeitems" | "tree_item" => {
+        "button" | "buttons" | "menuitem" | "menuitems" | "menu_item" | "menu_items"
+        | "option" | "options" | "tab" | "tabs" | "treeitem" | "treeitems"
+        | "tree_item" | "tree_items" => {
             Some(ElementRole::Button)
         }
         // HTML input types compile to the same SOM role. Accept their names
@@ -1369,11 +1370,17 @@ mod tests {
             "menuitem",
             "menu-item",
             "menu_item",
+            "menu items",
+            "menu-items",
+            "menu_items",
             "option",
             "tab",
             "treeitem",
             "tree-item",
             "tree_item",
+            "tree items",
+            "tree-items",
+            "tree_items",
         ] {
             assert_eq!(parse_element_role(selector), Some(ElementRole::Button));
         }
