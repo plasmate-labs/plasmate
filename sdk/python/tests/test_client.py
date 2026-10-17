@@ -137,6 +137,29 @@ def test_async_open_page_forwards_selector() -> None:
     asyncio.run(exercise())
 
 
+def test_sync_open_page_forwards_opt_in_trace() -> None:
+    browser = Plasmate()
+    calls = Mock(return_value={})
+    browser._call_tool = calls  # type: ignore[method-assign]
+
+    assert browser.open_page("fixture", trace=True) == {}
+
+    calls.assert_called_once_with("open_page", {"url": "fixture", "trace": True})
+
+
+def test_async_open_page_forwards_opt_in_trace() -> None:
+    async def exercise() -> None:
+        browser = AsyncPlasmate()
+        calls = AsyncMock(return_value={})
+        browser._call_tool = calls  # type: ignore[method-assign]
+
+        assert await browser.open_page("fixture", trace=True) == {}
+
+        calls.assert_awaited_once_with("open_page", {"url": "fixture", "trace": True})
+
+    asyncio.run(exercise())
+
+
 def test_sync_navigate_to_forwards_session_and_url() -> None:
     browser = Plasmate()
     calls = Mock(side_effect=[{}])

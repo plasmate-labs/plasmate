@@ -86,6 +86,8 @@ export interface PageSession {
 /** Options for the initial SOM returned by openPage. */
 export interface OpenPageOptions {
   selector?: string;
+  /** Opt in to bounded, privacy-safe in-memory action tracing for this session. */
+  trace?: boolean;
 }
 
 interface OpenPagePayload {
@@ -449,10 +451,12 @@ export class Plasmate extends EventEmitter {
    *
    * @param url - URL to open
    * @param options.selector - Optional SOM region, role, action, or element-id filter
+   * @param options.trace - Opt in to bounded, privacy-safe in-memory action tracing
    */
   async openPage(url: string, options?: OpenPageOptions): Promise<PageSession> {
     const args: Record<string, unknown> = { url };
     if (options?.selector != null) args.selector = options.selector;
+    if (options?.trace != null) args.trace = options.trace;
     const result = await this.callTool('open_page', args) as OpenPagePayload;
     return {
       sessionId: result.session_id ?? '',

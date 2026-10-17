@@ -357,6 +357,21 @@ describe('openPage payload', () => {
     await browser.openPage('fixture', { selector: 'main' });
     browser.close();
   });
+
+  it('forwards opt-in action tracing', async () => {
+    const browser = new Plasmate({ binary: 'unused' });
+    const client = browser as unknown as {
+      callTool: (name: string, args: Record<string, unknown>) => Promise<unknown>;
+    };
+    client.callTool = async (name, args) => {
+      assert.equal(name, 'open_page');
+      assert.deepEqual(args, { url: 'fixture', trace: true });
+      return { session_id: 's1', regions: [] };
+    };
+
+    await browser.openPage('fixture', { trace: true });
+    browser.close();
+  });
 });
 
 describe('protocol lifecycle', () => {
