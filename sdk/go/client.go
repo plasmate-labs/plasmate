@@ -49,8 +49,9 @@ func NewClient(opts ...ClientOption) *Client {
 
 // PageSession holds the result of opening an interactive page.
 type PageSession struct {
-	SessionID string `json:"session_id"`
-	Som       Som    `json:"som"`
+	SessionID     string `json:"session_id"`
+	Som           Som    `json:"som"`
+	CacheRestored bool   `json:"cache_restored"`
 }
 
 // jsonRPCRequest is a JSON-RPC 2.0 request.

@@ -1,6 +1,7 @@
 package plasmate
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -8,6 +9,16 @@ import (
 	"strings"
 	"testing"
 )
+
+func TestPageSessionDecodesCacheRestored(t *testing.T) {
+	var session PageSession
+	if err := json.Unmarshal([]byte(`{"session_id":"s1","cache_restored":true}`), &session); err != nil {
+		t.Fatalf("unmarshal page session: %v", err)
+	}
+	if !session.CacheRestored {
+		t.Fatalf("cache_restored = false, want true")
+	}
+}
 
 func TestFetchPageArgumentsIncludeSelector(t *testing.T) {
 	budget := 512
