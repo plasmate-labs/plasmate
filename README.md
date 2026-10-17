@@ -238,7 +238,7 @@ Element selectors also accept common HTML tag aliases: `a`/`link`,
 Structural aliases include `fieldset`/`fieldsets`/`group`/`groups`, ARIA group roles
 `figure`/`figures`/`radiogroup`/`radiogroups`/`progressbar`/`progressbars`/
 `meter`/`meters`/`output`/`outputs`, `hr`/`separator`,
-`details`/`summary`, and `iframe`; `img`/`image` and ARIA widget names such
+`details`/`summary`/`summaries`, and `iframe`; `img`/`image` and ARIA widget names such
 as `menuitem`/`menu items`, `option`, `tab`, `treeitem`/`tree items`, `switch`,
 `menuitemcheckbox`, and `menuitemradio` are also accepted. Region selectors accept ARIA landmark
 aliases such as `navigation`, `nav region`/`nav-region`/`nav regions`,

@@ -53,7 +53,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `radiogroup` / `radiogroups` / `progress` / `progressbar` /
 ///   `progressbars` / `meter` / `meters` / `output` / `outputs` /
 ///   `video` / `canvas`,
-///   `separator` / `separators` / `hr`, `details` / `detail` / `summary`,
+///   `separator` / `separators` / `hr`, `details` / `detail` / `summary` /
+///   `summaries`,
 ///   `iframe` / `iframes`, `audio` / `audios`, `video` / `videos`,
 ///   `canvas` / `canvases`
 ///   and the grouped media selector `media` / `media_item` / `media-item` /
@@ -606,7 +607,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
             Some(ElementRole::Group)
         }
         "separator" | "separators" | "hr" => Some(ElementRole::Separator),
-        "detail" | "details" | "summary" => Some(ElementRole::Details),
+        "detail" | "details" | "summary" | "summaries" => Some(ElementRole::Details),
         "iframe" | "iframes" => Some(ElementRole::Iframe),
         _ => None,
     }
@@ -1674,6 +1675,7 @@ mod tests {
             ("fieldset", ElementRole::Group),
             ("hr", ElementRole::Separator),
             ("summary", ElementRole::Details),
+            ("summaries", ElementRole::Details),
         ] {
             assert_eq!(
                 parse_element_role(selector),
