@@ -345,16 +345,30 @@ func decodePageSession(raw []byte) (*PageSession, error) {
 	flatSOM := payload.Regions != nil || payload.Meta != (SomMeta{}) ||
 		payload.SOMVersion != "" || payload.URL != "" || payload.Title != "" ||
 		payload.Lang != "" || payload.StructuredData != nil
-	if len(payload.PageSession.Som.Regions) == 0 && flatSOM {
-		payload.PageSession.Som = Som{
-			SOMVersion:     payload.SOMVersion,
-			URL:            payload.URL,
-			Title:          payload.Title,
-			Lang:           payload.Lang,
-			Regions:        payload.Regions,
-			Meta:           payload.Meta,
-			StructuredData: payload.StructuredData,
+	if flatSOM {
+		som := payload.PageSession.Som
+		if payload.SOMVersion != "" {
+			som.SOMVersion = payload.SOMVersion
 		}
+		if payload.URL != "" {
+			som.URL = payload.URL
+		}
+		if payload.Title != "" {
+			som.Title = payload.Title
+		}
+		if payload.Lang != "" {
+			som.Lang = payload.Lang
+		}
+		if payload.Regions != nil {
+			som.Regions = payload.Regions
+		}
+		if payload.Meta != (SomMeta{}) {
+			som.Meta = payload.Meta
+		}
+		if payload.StructuredData != nil {
+			som.StructuredData = payload.StructuredData
+		}
+		payload.PageSession.Som = som
 	}
 	return &payload.PageSession, nil
 }

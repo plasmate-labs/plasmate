@@ -45,6 +45,17 @@ func TestOpenPagePayloadDecodesFlatSOMWithoutRegions(t *testing.T) {
 	}
 }
 
+func TestOpenPagePayloadMergesSparseFlatSOMWithNestedSOM(t *testing.T) {
+	raw := []byte(`{"session_id":"s1","som":{"title":"Nested","regions":[{"id":"main","role":"main","elements":[]}]},"meta":{"html_bytes":42}}`)
+	session, err := decodePageSession(raw)
+	if err != nil {
+		t.Fatalf("unmarshal open_page payload: %v", err)
+	}
+	if session.Som.Title != "Nested" || len(session.Som.Regions) != 1 || session.Som.Meta.HTMLBytes != 42 {
+		t.Fatalf("decoded SOM = %#v, want nested fields plus flat metadata", session.Som)
+	}
+}
+
 func TestFetchPageArgumentsIncludeSelector(t *testing.T) {
 	budget := 512
 	javascript := false
