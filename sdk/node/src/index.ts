@@ -311,7 +311,7 @@ export class Plasmate extends EventEmitter {
       throw new Error(boundedToolError(result.content?.[0]?.text));
     }
 
-    const text = result.content?.[0]?.text;
+    const text = result.content?.find((item) => item.type === 'text')?.text;
     if (typeof text !== 'string') return null;
     if (name === 'extract_text') return text;
     if (!text) return null;
