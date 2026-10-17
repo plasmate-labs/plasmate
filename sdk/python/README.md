@@ -31,7 +31,7 @@ text = browser.extract_text("https://example.com")
 print(text)
 
 # Interactive browsing
-session = browser.open_page("https://example.com")
+session = browser.open_page("https://example.com", trace=True)
 print(session["session_id"], session["som"]["title"])
 
 title = browser.evaluate(session["session_id"], "document.title")
@@ -76,7 +76,7 @@ with Plasmate() as browser:
 
 ### Stateful (interactive sessions)
 
-- **`open_page(url, selector=None)`** - Returns dict with `session_id` and an initial `som`; use `selector` to reduce the initial response while keeping the full page available to the session
+- **`open_page(url, selector=None, trace=False)`** - Returns dict with `session_id` and an initial `som`; use `selector` to reduce the initial response while keeping the full page available to the session, and set `trace=True` to opt into bounded, privacy-safe in-memory action tracing
 - **`navigate_to(session_id, url)`** - Load a new URL in the same session, get updated SOM
 - **`evaluate(session_id, expression)`** - Run JS, get result
 - **`click(session_id, element_id)`** - Click element, get updated SOM

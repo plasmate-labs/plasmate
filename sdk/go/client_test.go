@@ -1,6 +1,7 @@
 package plasmate
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -8,6 +9,16 @@ import (
 	"strings"
 	"testing"
 )
+
+func TestPageSessionDecodesCacheRestored(t *testing.T) {
+	var session PageSession
+	if err := json.Unmarshal([]byte(`{"session_id":"s1","cache_restored":true}`), &session); err != nil {
+		t.Fatalf("unmarshal page session: %v", err)
+	}
+	if !session.CacheRestored {
+		t.Fatalf("cache_restored = false, want true")
+	}
+}
 
 func TestFetchPageArgumentsIncludeSelector(t *testing.T) {
 	budget := 512
@@ -35,6 +46,32 @@ func TestFetchPageArgumentsOmitNilSelector(t *testing.T) {
 	got := fetchPageArguments("fixture", FetchPageOptions{})
 	if _, ok := got["selector"]; ok {
 		t.Fatalf("fetchPage arguments unexpectedly included nil selector: %#v", got)
+	}
+}
+
+func TestOpenPageArgumentsIncludeOptions(t *testing.T) {
+	selector := "main"
+	trace := true
+
+	got := openPageArguments("fixture", OpenPageOptions{
+		Selector: &selector,
+		Trace:    &trace,
+	})
+	want := map[string]interface{}{
+		"url":      "fixture",
+		"selector": "main",
+		"trace":    true,
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("open_page arguments = %#v, want %#v", got, want)
+	}
+}
+
+func TestOpenPageArgumentsOmitNilOptions(t *testing.T) {
+	got := openPageArguments("fixture", OpenPageOptions{})
+	if len(got) != 1 || got["url"] != "fixture" {
+		t.Fatalf("open_page arguments = %#v, want only fixture URL", got)
 	}
 }
 

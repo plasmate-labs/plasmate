@@ -97,7 +97,12 @@ func main() {
 ## Interactive Sessions
 
 ```go
-session, err := client.OpenPage("https://news.ycombinator.com")
+selector := "main"
+trace := true
+session, err := client.OpenPageWithOptions("https://news.ycombinator.com", plasmate.OpenPageOptions{
+    Selector: &selector,
+    Trace:    &trace,
+})
 if err != nil {
     log.Fatal(err)
 }
@@ -155,6 +160,7 @@ all := plasmate.FlatElements(som)
 | `ExtractText(url)` | Fetch page as plain text |
 | `ExtractTextWithOptions(url, opts)` | Fetch plain text with max-character, JavaScript, and SOM selector options |
 | `OpenPage(url)` | Open interactive session |
+| `OpenPageWithOptions(url, opts)` | Open interactive session with an optional SOM selector or bounded action tracing |
 | `Evaluate(sessionID, expr)` | Run JS in page context |
 | `Click(sessionID, elementID)` | Click element, get updated SOM |
 | `ClosePage(sessionID)` | Close session |
