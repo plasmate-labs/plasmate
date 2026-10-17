@@ -235,9 +235,10 @@ whitespace is normalized so labels split across lines still match.
 Element selectors also accept common HTML tag aliases: `a`/`link`,
 `p`/`paragraph`, and `ul`, `ol`, `dl`, or `menu`/`list`/`lists` (plus the explicit
 `unordered_list`, `ordered_list`, and `definition_list` forms).
-Structural aliases include `fieldset`/`group`, ARIA group roles
-`figure`/`radiogroup`/`progressbar`/`meter`, `hr`/`separator`,
-`details`/`summary`, and `iframe`; `img`/`image` and ARIA widget names such
+Structural aliases include `fieldset`/`fieldsets`/`group`/`groups`, ARIA group roles
+`figure`/`figures`/`radiogroup`/`radiogroups`/`progressbar`/`progressbars`/
+`meter`/`meters`/`output`/`outputs`, `hr`/`separator`,
+`details`/`summary`/`summaries`, and `iframe`; `img`/`image` and ARIA widget names such
 as `menuitem`/`menu items`, `option`, `tab`, `treeitem`/`tree items`, `switch`,
 `menuitemcheckbox`, and `menuitemradio` are also accepted. Region selectors accept ARIA landmark
 aliases such as `navigation`, `nav region`/`nav-region`/`nav regions`,

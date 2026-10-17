@@ -49,9 +49,12 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list`,
-///   `group` / `fieldset` / `figure` / `radiogroup` / `progress` / `progressbar`
-///   / `meter` / `output` / `video` / `canvas`,
-///   `separator` / `separators` / `hr`, `details` / `detail` / `summary`,
+///   `group` / `groups` / `fieldset` / `fieldsets` / `figure` / `figures` /
+///   `radiogroup` / `radiogroups` / `progress` / `progressbar` /
+///   `progressbars` / `meter` / `meters` / `output` / `outputs` /
+///   `video` / `canvas`,
+///   `separator` / `separators` / `hr`, `details` / `detail` / `summary` /
+///   `summaries`,
 ///   `iframe` / `iframes`, `audio` / `audios`, `video` / `videos`,
 ///   `canvas` / `canvases`
 ///   and the grouped media selector `media` / `media_item` / `media-item` /
@@ -573,13 +576,20 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         }
         "section" | "sections" => Some(ElementRole::Section),
         "group"
+        | "groups"
         | "fieldset"
+        | "fieldsets"
         | "figure"
+        | "figures"
         | "radiogroup"
+        | "radiogroups"
         | "progress"
         | "progressbar"
+        | "progressbars"
         | "meter"
+        | "meters"
         | "output"
+        | "outputs"
         | "audio"
         | "audios"
         | "audio_item"
@@ -597,7 +607,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
             Some(ElementRole::Group)
         }
         "separator" | "separators" | "hr" => Some(ElementRole::Separator),
-        "detail" | "details" | "summary" => Some(ElementRole::Details),
+        "detail" | "details" | "summary" | "summaries" => Some(ElementRole::Details),
         "iframe" | "iframes" => Some(ElementRole::Iframe),
         _ => None,
     }
@@ -1190,6 +1200,13 @@ mod tests {
             ("separators", ElementRole::Separator),
             ("detail", ElementRole::Details),
             ("iframes", ElementRole::Iframe),
+            ("groups", ElementRole::Group),
+            ("fieldsets", ElementRole::Group),
+            ("figures", ElementRole::Group),
+            ("radiogroups", ElementRole::Group),
+            ("progressbars", ElementRole::Group),
+            ("meters", ElementRole::Group),
+            ("outputs", ElementRole::Group),
             ("audios", ElementRole::Group),
             ("videos", ElementRole::Group),
             ("canvases", ElementRole::Group),
@@ -1658,6 +1675,7 @@ mod tests {
             ("fieldset", ElementRole::Group),
             ("hr", ElementRole::Separator),
             ("summary", ElementRole::Details),
+            ("summaries", ElementRole::Details),
         ] {
             assert_eq!(
                 parse_element_role(selector),
