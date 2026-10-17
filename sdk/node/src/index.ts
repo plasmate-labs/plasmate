@@ -316,7 +316,7 @@ export class Plasmate extends EventEmitter {
 
     const text = result.content?.find((item) => item.type === 'text')?.text;
     if (typeof text !== 'string') return result.structuredContent?.result ?? null;
-    if (name === 'extract_text') return text;
+    if (name === 'extract_text' || name === 'extract_links') return text;
     if (!text) return result.structuredContent?.result ?? null;
     return parseStructuredToolText(text);
   }
