@@ -90,6 +90,14 @@ def _tool_text(result: Any) -> str:
     return ""
 
 
+def _structured_tool_result(result: Any) -> tuple[bool, Any]:
+    """Return a structured MCP result when the server omits text content."""
+    structured = result.get("structuredContent") if isinstance(result, dict) else None
+    if not isinstance(structured, dict) or "result" not in structured:
+        return False, None
+    return True, structured["result"]
+
+
 MAX_TOOL_ERROR_CHARS = 200
 
 
@@ -253,8 +261,11 @@ class Plasmate:
         if result and result.get("isError"):
             raise RuntimeError(_bounded_tool_error(text))
 
+        has_structured, structured = _structured_tool_result(result)
         if name in ("extract_text", "extract_links"):
-            return text
+            return text if text else structured if has_structured else text
+        if not text and has_structured:
+            return structured
         return _parse_structured_tool_text(text)
 
     # ---- Stateless Tools ----
@@ -559,8 +570,11 @@ class AsyncPlasmate:
         if result and result.get("isError"):
             raise RuntimeError(_bounded_tool_error(text))
 
+        has_structured, structured = _structured_tool_result(result)
         if name in ("extract_text", "extract_links"):
-            return text
+            return text if text else structured if has_structured else text
+        if not text and has_structured:
+            return structured
         return _parse_structured_tool_text(text)
 
     async def fetch_page(
