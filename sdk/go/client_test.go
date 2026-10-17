@@ -125,6 +125,35 @@ func TestOpenPageArgumentsOmitNilOptions(t *testing.T) {
 	}
 }
 
+func TestTypeTextArgumentsIncludeAppend(t *testing.T) {
+	appendText := true
+
+	got := typeTextArguments("s1", "e5", " world", TypeTextOptions{Append: &appendText})
+	want := map[string]interface{}{
+		"session_id": "s1",
+		"element_id": "e5",
+		"text":       " world",
+		"append":     true,
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("type_text arguments = %#v, want %#v", got, want)
+	}
+}
+
+func TestTypeTextArgumentsOmitNilAppend(t *testing.T) {
+	got := typeTextArguments("s1", "e5", "hello", TypeTextOptions{})
+	want := map[string]interface{}{
+		"session_id": "s1",
+		"element_id": "e5",
+		"text":       "hello",
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("type_text arguments = %#v, want %#v", got, want)
+	}
+}
+
 func TestExtractTextArgumentsIncludeOptions(t *testing.T) {
 	maxChars := 1200
 	javascript := false
