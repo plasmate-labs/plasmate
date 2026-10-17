@@ -83,6 +83,11 @@ export interface PageSession {
   som: Som;
 }
 
+/** Options for the initial SOM returned by openPage. */
+export interface OpenPageOptions {
+  selector?: string;
+}
+
 interface OpenPagePayload {
   session_id?: string;
   som?: Som;
@@ -445,7 +450,7 @@ export class Plasmate extends EventEmitter {
    * @param url - URL to open
    * @param options.selector - Optional SOM region, role, action, or element-id filter
    */
-  async openPage(url: string, options?: { selector?: string }): Promise<PageSession> {
+  async openPage(url: string, options?: OpenPageOptions): Promise<PageSession> {
     const args: Record<string, unknown> = { url };
     if (options?.selector != null) args.selector = options.selector;
     const result = await this.callTool('open_page', args) as OpenPagePayload;
