@@ -342,8 +342,10 @@ func decodePageSession(raw []byte) (*PageSession, error) {
 	if err := json.Unmarshal(raw, &payload); err != nil {
 		return nil, fmt.Errorf("plasmate: unmarshal session: %w", err)
 	}
-	if len(payload.PageSession.Som.Regions) == 0 &&
-		(payload.Regions != nil || payload.URL != "" || payload.Title != "") {
+	flatSOM := payload.Regions != nil || payload.Meta != (SomMeta{}) ||
+		payload.SOMVersion != "" || payload.URL != "" || payload.Title != "" ||
+		payload.Lang != "" || payload.StructuredData != nil
+	if len(payload.PageSession.Som.Regions) == 0 && flatSOM {
 		payload.PageSession.Som = Som{
 			SOMVersion:     payload.SOMVersion,
 			URL:            payload.URL,

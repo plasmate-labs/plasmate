@@ -34,6 +34,17 @@ func TestOpenPagePayloadDecodesFlatSOM(t *testing.T) {
 	}
 }
 
+func TestOpenPagePayloadDecodesFlatSOMWithoutRegions(t *testing.T) {
+	raw := []byte(`{"session_id":"s1","som_version":"1.0","meta":{"html_bytes":42}}`)
+	session, err := decodePageSession(raw)
+	if err != nil {
+		t.Fatalf("unmarshal open_page payload: %v", err)
+	}
+	if session.Som.SOMVersion != "1.0" || session.Som.Meta.HTMLBytes != 42 {
+		t.Fatalf("decoded SOM = %#v, want flat version and metadata", session.Som)
+	}
+}
+
 func TestFetchPageArgumentsIncludeSelector(t *testing.T) {
 	budget := 512
 	javascript := false
