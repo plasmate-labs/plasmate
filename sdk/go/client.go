@@ -326,6 +326,19 @@ func (c *Client) OpenPageWithOptions(url string, opts OpenPageOptions) (*PageSes
 	return session, nil
 }
 
+// NavigateTo navigates an existing browser session to a new URL and returns
+// the updated page SOM.
+func (c *Client) NavigateTo(sessionID string, url string) (*PageSession, error) {
+	raw, err := c.callTool("navigate_to", map[string]interface{}{
+		"session_id": sessionID,
+		"url":        url,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return decodePageSession(raw)
+}
+
 func decodePageSession(raw []byte) (*PageSession, error) {
 	var payload struct {
 		PageSession

@@ -56,6 +56,20 @@ func TestOpenPagePayloadMergesSparseFlatSOMWithNestedSOM(t *testing.T) {
 	}
 }
 
+func TestNavigateToPayloadDecodesFlatSOM(t *testing.T) {
+	raw := []byte(`{"session_id":"s1","title":"Next","url":"https://example.com/next","cache_restored":true,"regions":[{"id":"main","role":"main","elements":[]}]}`)
+	session, err := decodePageSession(raw)
+	if err != nil {
+		t.Fatalf("unmarshal navigate_to payload: %v", err)
+	}
+	if session.SessionID != "s1" || session.Som.Title != "Next" || session.Som.URL != "https://example.com/next" {
+		t.Fatalf("decoded session = %#v, want navigation session and flat SOM", session)
+	}
+	if !session.CacheRestored || len(session.Som.Regions) != 1 {
+		t.Fatalf("decoded navigation SOM = %#v, want restored session with one region", session)
+	}
+}
+
 func TestFetchPageArgumentsIncludeSelector(t *testing.T) {
 	budget := 512
 	javascript := false
