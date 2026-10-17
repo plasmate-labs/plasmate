@@ -319,11 +319,42 @@ func (c *Client) OpenPageWithOptions(url string, opts OpenPageOptions) (*PageSes
 	if err != nil {
 		return nil, err
 	}
-	var session PageSession
-	if err := json.Unmarshal(raw, &session); err != nil {
+	session, err := decodePageSession(raw)
+	if err != nil {
+		return nil, err
+	}
+	return session, nil
+}
+
+func decodePageSession(raw []byte) (*PageSession, error) {
+	var payload struct {
+		PageSession
+		// The MCP response currently exposes SOM fields alongside session_id.
+		// Keep accepting a nested som for compatibility with older clients.
+		SOMVersion     string          `json:"som_version"`
+		URL            string          `json:"url"`
+		Title          string          `json:"title"`
+		Lang           string          `json:"lang"`
+		Regions        []Region        `json:"regions"`
+		Meta           SomMeta         `json:"meta"`
+		StructuredData *StructuredData `json:"structured_data,omitempty"`
+	}
+	if err := json.Unmarshal(raw, &payload); err != nil {
 		return nil, fmt.Errorf("plasmate: unmarshal session: %w", err)
 	}
-	return &session, nil
+	if len(payload.PageSession.Som.Regions) == 0 &&
+		(payload.Regions != nil || payload.URL != "" || payload.Title != "") {
+		payload.PageSession.Som = Som{
+			SOMVersion:     payload.SOMVersion,
+			URL:            payload.URL,
+			Title:          payload.Title,
+			Lang:           payload.Lang,
+			Regions:        payload.Regions,
+			Meta:           payload.Meta,
+			StructuredData: payload.StructuredData,
+		}
+	}
+	return &payload.PageSession, nil
 }
 
 // Evaluate executes JavaScript in the page context and returns the result as a string.

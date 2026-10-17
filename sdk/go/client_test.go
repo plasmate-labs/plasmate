@@ -20,6 +20,20 @@ func TestPageSessionDecodesCacheRestored(t *testing.T) {
 	}
 }
 
+func TestOpenPagePayloadDecodesFlatSOM(t *testing.T) {
+	raw := []byte(`{"session_id":"s1","title":"Example","url":"https://example.com","som_version":"1.0","regions":[{"id":"main","role":"main","elements":[]}],"meta":{"html_bytes":42,"som_bytes":84,"element_count":1,"interactive_count":0}}`)
+	session, err := decodePageSession(raw)
+	if err != nil {
+		t.Fatalf("unmarshal open_page payload: %v", err)
+	}
+	if session.SessionID != "s1" || session.Som.Title != "Example" {
+		t.Fatalf("decoded session = %#v, want session and flat SOM", session)
+	}
+	if len(session.Som.Regions) != 1 || session.Som.Meta.HTMLBytes != 42 {
+		t.Fatalf("decoded SOM = %#v, want flat regions and metadata", session.Som)
+	}
+}
+
 func TestFetchPageArgumentsIncludeSelector(t *testing.T) {
 	budget := 512
 	javascript := false
