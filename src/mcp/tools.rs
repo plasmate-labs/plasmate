@@ -30,6 +30,7 @@ use crate::som::types::Som;
 const DEFAULT_TIMEOUT_MS: u64 = 30000;
 const MAX_TRACE_HANDLE_BYTES: usize = 64;
 const MAX_MCP_URL_BYTES: usize = 4096;
+const MAX_MCP_SELECTOR_BYTES: usize = 256;
 
 /// MCP tool definition structure.
 #[derive(Debug, Serialize)]
@@ -496,6 +497,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
                 },
                 "selector": {
                     "type": "string",
+                    "maxLength": MAX_MCP_SELECTOR_BYTES,
                     "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}")
                 }
             },
@@ -3973,6 +3975,7 @@ pub fn open_page_definition() -> ToolDefinition {
                 },
                 "selector": {
                     "type": "string",
+                    "maxLength": MAX_MCP_SELECTOR_BYTES,
                     "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}")
                 }
             },
@@ -4066,6 +4069,15 @@ pub async fn handle_open_page(
 
     if let Err(error) = validate_mcp_url(&params.url) {
         return error_response(&error);
+    }
+    if params
+        .selector
+        .as_ref()
+        .is_some_and(|selector| selector.len() > MAX_MCP_SELECTOR_BYTES)
+    {
+        return error_response(&format!(
+            "Invalid arguments: selector exceeds {MAX_MCP_SELECTOR_BYTES} bytes"
+        ));
     }
 
     info!(
@@ -7511,6 +7523,31 @@ mod tests {
             .as_str()
             .unwrap()
             .contains("absolute HTTP(S) URL"));
+    }
+
+    #[tokio::test]
+    async fn open_page_rejects_oversized_selector_before_creating_session() {
+        let sessions = Arc::new(SessionManager::new());
+        let client = reqwest::Client::new();
+        let cache = Arc::new(SomCache::new(CacheConfig::default()));
+
+        let result = handle_open_page(
+            &json!({
+                "url": "https://example.com",
+                "selector": "x".repeat(MAX_MCP_SELECTOR_BYTES + 1)
+            }),
+            &client,
+            &sessions,
+            &cache,
+        )
+        .await;
+
+        assert_eq!(result["isError"], true);
+        assert!(result["content"][0]["text"]
+            .as_str()
+            .unwrap()
+            .contains("selector exceeds 256 bytes"));
+        assert_eq!(sessions.session_count().await, 0);
     }
 
     #[tokio::test]
