@@ -361,17 +361,21 @@ class Plasmate:
 
     # ---- Stateful Tools ----
 
-    def open_page(self, url: str) -> dict:
+    def open_page(self, url: str, *, selector: Optional[str] = None) -> dict:
         """
         Open a page in a persistent browser session.
 
         Args:
             url: URL to open
+            selector: Optional SOM region, role, action, or element-id filter
 
         Returns:
             Dict with session_id and som
         """
-        return self._call_tool("open_page", {"url": url})
+        args: dict[str, Any] = {"url": url}
+        if selector is not None:
+            args["selector"] = selector
+        return self._call_tool("open_page", args)
 
     def navigate_to(self, session_id: str, url: str) -> dict:
         """
@@ -633,9 +637,12 @@ class AsyncPlasmate:
             args["selector"] = selector
         return await self._call_tool("extract_links", args)
 
-    async def open_page(self, url: str) -> dict:
+    async def open_page(self, url: str, *, selector: Optional[str] = None) -> dict:
         """Open a page in a persistent browser session."""
-        return await self._call_tool("open_page", {"url": url})
+        args: dict[str, Any] = {"url": url}
+        if selector is not None:
+            args["selector"] = selector
+        return await self._call_tool("open_page", args)
 
     async def navigate_to(self, session_id: str, url: str) -> dict:
         """Navigate to a new URL within an existing browser session."""
