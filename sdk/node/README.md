@@ -30,7 +30,7 @@ const text = await browser.extractText('https://example.com');
 console.log(text);
 
 // Interactive browsing
-const session = await browser.openPage('https://example.com');
+const session = await browser.openPage('https://example.com', { trace: true });
 console.log(session.sessionId, session.som.title);
 
 const title = await browser.evaluate(session.sessionId, 'document.title');
@@ -60,7 +60,7 @@ browser.close();
 
 ### Stateful (interactive sessions)
 
-- **`openPage(url, options?)`** - Returns `{ sessionId, som }`; `options.selector` can reduce the initial SOM while keeping the full page available to the session
+- **`openPage(url, options?)`** - Returns `{ sessionId, som }`; `options.selector` can reduce the initial SOM while keeping the full page available to the session, and `options.trace` opts into bounded, privacy-safe in-memory action tracing
 - **`evaluate(sessionId, expression)`** - Run JS, get result
 - **`click(sessionId, elementId)`** - Click element, get updated SOM
 - **`closePage(sessionId)`** - Close session
