@@ -50,8 +50,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list`,
 ///   `group` / `groups` / `fieldset` / `fieldsets` / `figure` / `figures` /
-///   `radiogroup` / `radiogroups` / `progress` / `progressbar`
-///   / `meter` / `output` / `video` / `canvas`,
+///   `radiogroup` / `radiogroups` / `progress` / `progressbar` /
+///   `progressbars` / `meter` / `meters` / `output` / `outputs` /
+///   `video` / `canvas`,
 ///   `separator` / `separators` / `hr`, `details` / `detail` / `summary`,
 ///   `iframe` / `iframes`, `audio` / `audios`, `video` / `videos`,
 ///   `canvas` / `canvases`
@@ -583,8 +584,11 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "radiogroups"
         | "progress"
         | "progressbar"
+        | "progressbars"
         | "meter"
+        | "meters"
         | "output"
+        | "outputs"
         | "audio"
         | "audios"
         | "audio_item"
@@ -1199,6 +1203,9 @@ mod tests {
             ("fieldsets", ElementRole::Group),
             ("figures", ElementRole::Group),
             ("radiogroups", ElementRole::Group),
+            ("progressbars", ElementRole::Group),
+            ("meters", ElementRole::Group),
+            ("outputs", ElementRole::Group),
             ("audios", ElementRole::Group),
             ("videos", ElementRole::Group),
             ("canvases", ElementRole::Group),
