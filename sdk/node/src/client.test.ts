@@ -342,6 +342,21 @@ describe('openPage payload', () => {
     assert.equal(session.som.regions[0]?.id, 'r_main');
     browser.close();
   });
+
+  it('forwards an initial SOM selector', async () => {
+    const browser = new Plasmate({ binary: 'unused' });
+    const client = browser as unknown as {
+      callTool: (name: string, args: Record<string, unknown>) => Promise<unknown>;
+    };
+    client.callTool = async (name, args) => {
+      assert.equal(name, 'open_page');
+      assert.deepEqual(args, { url: 'fixture', selector: 'main' });
+      return { session_id: 's1', regions: [] };
+    };
+
+    await browser.openPage('fixture', { selector: 'main' });
+    browser.close();
+  });
 });
 
 describe('protocol lifecycle', () => {

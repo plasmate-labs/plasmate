@@ -76,7 +76,7 @@ with Plasmate() as browser:
 
 ### Stateful (interactive sessions)
 
-- **`open_page(url)`** - Returns dict with `session_id` and `som`
+- **`open_page(url, selector=None)`** - Returns dict with `session_id` and an initial `som`; use `selector` to reduce the initial response while keeping the full page available to the session
 - **`navigate_to(session_id, url)`** - Load a new URL in the same session, get updated SOM
 - **`evaluate(session_id, expression)`** - Run JS, get result
 - **`click(session_id, element_id)`** - Click element, get updated SOM

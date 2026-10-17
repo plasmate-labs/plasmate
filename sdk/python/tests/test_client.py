@@ -112,6 +112,31 @@ def test_async_extract_links_forwards_max_links() -> None:
     asyncio.run(exercise())
 
 
+def test_sync_open_page_forwards_selector() -> None:
+    browser = Plasmate()
+    calls = Mock(return_value={})
+    browser._call_tool = calls  # type: ignore[method-assign]
+
+    assert browser.open_page("fixture", selector="main") == {}
+
+    calls.assert_called_once_with("open_page", {"url": "fixture", "selector": "main"})
+
+
+def test_async_open_page_forwards_selector() -> None:
+    async def exercise() -> None:
+        browser = AsyncPlasmate()
+        calls = AsyncMock(return_value={})
+        browser._call_tool = calls  # type: ignore[method-assign]
+
+        assert await browser.open_page("fixture", selector="main") == {}
+
+        calls.assert_awaited_once_with(
+            "open_page", {"url": "fixture", "selector": "main"}
+        )
+
+    asyncio.run(exercise())
+
+
 def test_sync_navigate_to_forwards_session_and_url() -> None:
     browser = Plasmate()
     calls = Mock(side_effect=[{}])

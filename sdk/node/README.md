@@ -60,7 +60,7 @@ browser.close();
 
 ### Stateful (interactive sessions)
 
-- **`openPage(url)`** - Returns `{ sessionId, som }`
+- **`openPage(url, options?)`** - Returns `{ sessionId, som }`; `options.selector` can reduce the initial SOM while keeping the full page available to the session
 - **`evaluate(sessionId, expression)`** - Run JS, get result
 - **`click(sessionId, elementId)`** - Click element, get updated SOM
 - **`closePage(sessionId)`** - Close session
