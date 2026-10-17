@@ -418,6 +418,38 @@ func (c *Client) Click(sessionID string, elementID string) (*Som, error) {
 	return Parse(raw)
 }
 
+// TypeText types text into a form control and returns the updated page SOM.
+func (c *Client) TypeText(sessionID string, elementID string, text string) (*Som, error) {
+	return c.TypeTextWithOptions(sessionID, elementID, text, TypeTextOptions{})
+}
+
+// TypeTextOptions holds optional parameters for TypeTextWithOptions.
+type TypeTextOptions struct {
+	Append *bool // Append to the existing value instead of replacing it
+}
+
+func typeTextArguments(sessionID string, elementID string, text string, opts TypeTextOptions) map[string]interface{} {
+	args := map[string]interface{}{
+		"session_id": sessionID,
+		"element_id": elementID,
+		"text":       text,
+	}
+	if opts.Append != nil {
+		args["append"] = *opts.Append
+	}
+	return args
+}
+
+// TypeTextWithOptions types text into a form control with optional append
+// behavior and returns the updated page SOM.
+func (c *Client) TypeTextWithOptions(sessionID string, elementID string, text string, opts TypeTextOptions) (*Som, error) {
+	raw, err := c.callTool("type_text", typeTextArguments(sessionID, elementID, text, opts))
+	if err != nil {
+		return nil, err
+	}
+	return Parse(raw)
+}
+
 // ClosePage closes a browser session and frees resources.
 func (c *Client) ClosePage(sessionID string) error {
 	_, err := c.callTool("close_page", map[string]interface{}{
