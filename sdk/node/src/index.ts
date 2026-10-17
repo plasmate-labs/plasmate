@@ -164,6 +164,14 @@ function boundedToolError(text: unknown): string {
   return `${characters.slice(0, MAX_TOOL_ERROR_CHARS - 1).join('')}…`;
 }
 
+function parseStructuredToolText(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error('Tool returned unparseable output');
+  }
+}
+
 // ---- Client ----
 
 export class Plasmate extends EventEmitter {
@@ -307,13 +315,7 @@ export class Plasmate extends EventEmitter {
     if (typeof text !== 'string') return null;
     if (name === 'extract_text') return text;
     if (!text) return null;
-
-    // Try to parse as JSON, fall back to raw text
-    try {
-      return JSON.parse(text);
-    } catch {
-      return text;
-    }
+    return parseStructuredToolText(text);
   }
 
   // ---- Stateless Tools ----
