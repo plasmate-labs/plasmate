@@ -291,7 +291,30 @@ func (c *Client) FetchPageWithOptions(url string, opts FetchPageOptions) (*Som, 
 
 // OpenPage opens a page in a persistent browser session.
 func (c *Client) OpenPage(url string) (*PageSession, error) {
-	raw, err := c.callTool("open_page", map[string]interface{}{"url": url})
+	return c.OpenPageWithOptions(url, OpenPageOptions{})
+}
+
+// OpenPageOptions holds optional parameters for OpenPageWithOptions.
+type OpenPageOptions struct {
+	Selector *string // Optional SOM region, role, action, or element-id filter
+	Trace    *bool   // Opt in to bounded, privacy-safe in-memory action tracing
+}
+
+func openPageArguments(url string, opts OpenPageOptions) map[string]interface{} {
+	args := map[string]interface{}{"url": url}
+	if opts.Selector != nil {
+		args["selector"] = *opts.Selector
+	}
+	if opts.Trace != nil {
+		args["trace"] = *opts.Trace
+	}
+	return args
+}
+
+// OpenPageWithOptions opens a page in a persistent browser session with
+// optional initial SOM filtering and action tracing.
+func (c *Client) OpenPageWithOptions(url string, opts OpenPageOptions) (*PageSession, error) {
+	raw, err := c.callTool("open_page", openPageArguments(url, opts))
 	if err != nil {
 		return nil, err
 	}

@@ -38,6 +38,32 @@ func TestFetchPageArgumentsOmitNilSelector(t *testing.T) {
 	}
 }
 
+func TestOpenPageArgumentsIncludeOptions(t *testing.T) {
+	selector := "main"
+	trace := true
+
+	got := openPageArguments("fixture", OpenPageOptions{
+		Selector: &selector,
+		Trace:    &trace,
+	})
+	want := map[string]interface{}{
+		"url":      "fixture",
+		"selector": "main",
+		"trace":    true,
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("open_page arguments = %#v, want %#v", got, want)
+	}
+}
+
+func TestOpenPageArgumentsOmitNilOptions(t *testing.T) {
+	got := openPageArguments("fixture", OpenPageOptions{})
+	if len(got) != 1 || got["url"] != "fixture" {
+		t.Fatalf("open_page arguments = %#v, want only fixture URL", got)
+	}
+}
+
 func TestExtractTextArgumentsIncludeOptions(t *testing.T) {
 	maxChars := 1200
 	javascript := false
