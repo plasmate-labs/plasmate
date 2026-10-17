@@ -304,6 +304,7 @@ export class Plasmate extends EventEmitter {
     await this.ensureStarted();
     const result = await this.rpc('tools/call', { name, arguments: args }) as {
       content?: Array<{ type: string; text: string }>;
+      structuredContent?: { result?: unknown };
       isError?: boolean;
     };
 
@@ -314,9 +315,9 @@ export class Plasmate extends EventEmitter {
     }
 
     const text = result.content?.find((item) => item.type === 'text')?.text;
-    if (typeof text !== 'string') return null;
+    if (typeof text !== 'string') return result.structuredContent?.result ?? null;
     if (name === 'extract_text') return text;
-    if (!text) return null;
+    if (!text) return result.structuredContent?.result ?? null;
     return parseStructuredToolText(text);
   }
 
