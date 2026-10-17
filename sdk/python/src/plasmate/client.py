@@ -73,15 +73,21 @@ def _extract_last_json(text: str) -> Any:
 
 
 def _tool_text(result: Any) -> str:
-    """Return the first MCP text block, or an empty string when absent."""
+    """Return the first MCP text block, or an empty string when absent.
+
+    MCP tool results may include non-text content before the structured payload
+    (for example, an image preview), so do not assume the first content block
+    is the text block.
+    """
     content = result.get("content") if isinstance(result, dict) else None
     if not isinstance(content, list) or not content:
         return ""
-    first = content[0]
-    if not isinstance(first, dict):
-        return ""
-    text = first.get("text", "")
-    return text if isinstance(text, str) else ""
+    for block in content:
+        if not isinstance(block, dict) or block.get("type") != "text":
+            continue
+        text = block.get("text", "")
+        return text if isinstance(text, str) else ""
+    return ""
 
 
 MAX_TOOL_ERROR_CHARS = 200

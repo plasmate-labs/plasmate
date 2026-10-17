@@ -61,6 +61,18 @@ for line in sys.stdin:
                 },
             })
             continue
+        if tool_name == "image_then_tool":
+            send({
+                "jsonrpc": "2.0",
+                "id": request.get("id"),
+                "result": {
+                    "content": [
+                        {"type": "image", "data": "ignored"},
+                        {"type": "text", "text": json.dumps({"ok": True})},
+                    ]
+                },
+            })
+            continue
         if tool_name == "extract_text":
             payload = "Plain text fixture"
         elif tool_name == "extract_links":
@@ -138,6 +150,25 @@ def test_async_extract_links_preserves_plain_text(tmp_path: Path) -> None:
             assert await client.extract_links("fixture") == (
                 "https://example.test/a\nhttps://example.test/b"
             )
+        finally:
+            await client.close()
+
+    asyncio.run(exercise())
+
+
+def test_sync_tool_reads_text_after_non_text_content(tmp_path: Path) -> None:
+    client = Plasmate(binary=_fixture(tmp_path))
+    try:
+        assert client._call_tool("image_then_tool", {}) == {"ok": True}
+    finally:
+        client.close()
+
+
+def test_async_tool_reads_text_after_non_text_content(tmp_path: Path) -> None:
+    async def exercise() -> None:
+        client = AsyncPlasmate(binary=_fixture(tmp_path))
+        try:
+            assert await client._call_tool("image_then_tool", {}) == {"ok": True}
         finally:
             await client.close()
 
