@@ -319,11 +319,71 @@ func (c *Client) OpenPageWithOptions(url string, opts OpenPageOptions) (*PageSes
 	if err != nil {
 		return nil, err
 	}
-	var session PageSession
-	if err := json.Unmarshal(raw, &session); err != nil {
+	session, err := decodePageSession(raw)
+	if err != nil {
+		return nil, err
+	}
+	return session, nil
+}
+
+// NavigateTo navigates an existing browser session to a new URL and returns
+// the updated page SOM.
+func (c *Client) NavigateTo(sessionID string, url string) (*PageSession, error) {
+	raw, err := c.callTool("navigate_to", map[string]interface{}{
+		"session_id": sessionID,
+		"url":        url,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return decodePageSession(raw)
+}
+
+func decodePageSession(raw []byte) (*PageSession, error) {
+	var payload struct {
+		PageSession
+		// The MCP response currently exposes SOM fields alongside session_id.
+		// Keep accepting a nested som for compatibility with older clients.
+		SOMVersion     string          `json:"som_version"`
+		URL            string          `json:"url"`
+		Title          string          `json:"title"`
+		Lang           string          `json:"lang"`
+		Regions        []Region        `json:"regions"`
+		Meta           SomMeta         `json:"meta"`
+		StructuredData *StructuredData `json:"structured_data,omitempty"`
+	}
+	if err := json.Unmarshal(raw, &payload); err != nil {
 		return nil, fmt.Errorf("plasmate: unmarshal session: %w", err)
 	}
-	return &session, nil
+	flatSOM := payload.Regions != nil || payload.Meta != (SomMeta{}) ||
+		payload.SOMVersion != "" || payload.URL != "" || payload.Title != "" ||
+		payload.Lang != "" || payload.StructuredData != nil
+	if flatSOM {
+		som := payload.PageSession.Som
+		if payload.SOMVersion != "" {
+			som.SOMVersion = payload.SOMVersion
+		}
+		if payload.URL != "" {
+			som.URL = payload.URL
+		}
+		if payload.Title != "" {
+			som.Title = payload.Title
+		}
+		if payload.Lang != "" {
+			som.Lang = payload.Lang
+		}
+		if payload.Regions != nil {
+			som.Regions = payload.Regions
+		}
+		if payload.Meta != (SomMeta{}) {
+			som.Meta = payload.Meta
+		}
+		if payload.StructuredData != nil {
+			som.StructuredData = payload.StructuredData
+		}
+		payload.PageSession.Som = som
+	}
+	return &payload.PageSession, nil
 }
 
 // Evaluate executes JavaScript in the page context and returns the result as a string.

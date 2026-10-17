@@ -115,6 +115,13 @@ if err != nil {
 }
 fmt.Println("Page after click:", updated.Title)
 
+// Reuse the session for another page.
+next, err := client.NavigateTo(session.SessionID, "https://example.com/next")
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println("Navigated to:", next.Som.URL)
+
 // Evaluate JavaScript
 title, err := client.Evaluate(session.SessionID, "document.title")
 if err != nil {
@@ -161,6 +168,7 @@ all := plasmate.FlatElements(som)
 | `ExtractTextWithOptions(url, opts)` | Fetch plain text with max-character, JavaScript, and SOM selector options |
 | `OpenPage(url)` | Open interactive session |
 | `OpenPageWithOptions(url, opts)` | Open interactive session with an optional SOM selector or bounded action tracing |
+| `NavigateTo(sessionID, url)` | Navigate an existing session and return its updated SOM |
 | `Evaluate(sessionID, expr)` | Run JS in page context |
 | `Click(sessionID, elementID)` | Click element, get updated SOM |
 | `ClosePage(sessionID)` | Close session |
