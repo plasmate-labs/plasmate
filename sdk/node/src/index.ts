@@ -165,11 +165,47 @@ function boundedToolError(text: unknown): string {
 }
 
 function parseStructuredToolText(text: string): unknown {
+  const stripped = text.trim();
+  if (!stripped) return null;
+
   try {
-    return JSON.parse(text);
+    return JSON.parse(stripped);
   } catch {
-    throw new Error('Tool returned unparseable output');
+    // Continue below for progress lines or diagnostics emitted before JSON.
   }
+
+  for (const line of stripped.split(/\r?\n/).reverse()) {
+    if (!line.trim()) continue;
+    try {
+      return JSON.parse(line.trim());
+    } catch {
+      // Try the next candidate line.
+    }
+  }
+
+  for (let position = stripped.length - 1; position >= 0; position -= 1) {
+    if (stripped[position] !== '{' && stripped[position] !== '[') continue;
+    try {
+      return JSON.parse(stripped.slice(position));
+    } catch {
+      // Try the next object or array start from the right.
+    }
+  }
+
+  throw new Error('Tool returned unparseable output');
+}
+
+function toolText(result: { content?: Array<{ type: string; text?: string }> }): string {
+  return (result.content ?? [])
+    .filter((item) => item.type === 'text' && typeof item.text === 'string')
+    .map((item) => item.text as string)
+    .join('\n');
+}
+
+function hasToolText(result: { content?: Array<{ type: string; text?: string }> }): boolean {
+  return (result.content ?? []).some(
+    (item) => item.type === 'text' && typeof item.text === 'string',
+  );
 }
 
 // ---- Client ----
@@ -303,19 +339,20 @@ export class Plasmate extends EventEmitter {
   private async callTool(name: string, args: Record<string, unknown>): Promise<unknown> {
     await this.ensureStarted();
     const result = await this.rpc('tools/call', { name, arguments: args }) as {
-      content?: Array<{ type: string; text: string }>;
+      content?: Array<{ type: string; text?: string }>;
       structuredContent?: { result?: unknown };
       isError?: boolean;
     };
 
     if (result.isError) {
       throw new Error(
-        boundedToolError(result.content?.find((item) => item.type === 'text')?.text),
+        boundedToolError(toolText(result)),
       );
     }
 
-    const text = result.content?.find((item) => item.type === 'text')?.text;
-    if (typeof text !== 'string') return result.structuredContent?.result ?? null;
+    const hasText = hasToolText(result);
+    const text = toolText(result);
+    if (!hasText) return result.structuredContent?.result ?? null;
     if (name === 'extract_text' || name === 'extract_links') return text;
     if (!text) return result.structuredContent?.result ?? null;
     return parseStructuredToolText(text);
