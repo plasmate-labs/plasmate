@@ -79,6 +79,130 @@ input.on('line', (line) => {
     }
   });
 
+  it('keeps plain extract_links output as a string', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'plasmate-node-sdk-'));
+    const fixture = join(directory, 'mcp-fixture.js');
+    writeFileSync(
+      fixture,
+      `#!/usr/bin/env node
+import { createInterface } from 'node:readline';
+
+const send = (value) => process.stdout.write(JSON.stringify(value) + '\\n');
+const input = createInterface({ input: process.stdin });
+
+input.on('line', (line) => {
+  const request = JSON.parse(line);
+  if (request.method === 'initialize') {
+    send({ jsonrpc: '2.0', id: request.id, result: { protocolVersion: '2024-11-05' } });
+  } else if (request.method === 'tools/call') {
+    send({
+      jsonrpc: '2.0',
+      id: request.id,
+      result: { content: [{ type: 'text', text: 'https://example.test/a\\nhttps://example.test/b' }] },
+    });
+  }
+});
+`,
+      'utf8',
+    );
+    chmodSync(fixture, 0o755);
+
+    const browser = new Plasmate({ binary: fixture });
+    try {
+      assert.equal(
+        await browser.extractLinks('fixture'),
+        'https://example.test/a\nhttps://example.test/b',
+      );
+    } finally {
+      browser.close();
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it('uses structuredContent when a tool omits text content', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'plasmate-node-sdk-'));
+    const fixture = join(directory, 'mcp-fixture.js');
+    writeFileSync(
+      fixture,
+      `#!/usr/bin/env node
+import { createInterface } from 'node:readline';
+
+const send = (value) => process.stdout.write(JSON.stringify(value) + '\\n');
+const input = createInterface({ input: process.stdin });
+
+input.on('line', (line) => {
+  const request = JSON.parse(line);
+  if (request.method === 'initialize') {
+    send({ jsonrpc: '2.0', id: request.id, result: { protocolVersion: '2024-11-05' } });
+  } else if (request.method === 'tools/call') {
+    const result = request.params.name === 'extract_text'
+      ? 'structured text'
+      : { title: 'Structured Example' };
+    send({
+      jsonrpc: '2.0',
+      id: request.id,
+      result: { content: [], structuredContent: { result } },
+    });
+  }
+});
+`,
+      'utf8',
+    );
+    chmodSync(fixture, 0o755);
+
+    const browser = new Plasmate({ binary: fixture });
+    try {
+      assert.equal(await browser.extractText('fixture'), 'structured text');
+      assert.deepEqual(await browser.fetchPage('fixture'), { title: 'Structured Example' });
+    } finally {
+      browser.close();
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it('combines text content blocks in order', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'plasmate-node-sdk-'));
+    const fixture = join(directory, 'mcp-fixture.js');
+    writeFileSync(
+      fixture,
+      `#!/usr/bin/env node
+import { createInterface } from 'node:readline';
+
+const send = (value) => process.stdout.write(JSON.stringify(value) + '\\n');
+const input = createInterface({ input: process.stdin });
+
+input.on('line', (line) => {
+  const request = JSON.parse(line);
+  if (request.method === 'initialize') {
+    send({ jsonrpc: '2.0', id: request.id, result: { protocolVersion: '2024-11-05' } });
+  } else if (request.method === 'tools/call') {
+    send({
+      jsonrpc: '2.0',
+      id: request.id,
+      result: {
+        content: [
+          { type: 'image', data: 'ignored' },
+          { type: 'text', text: 'progress' },
+          { type: 'text', text: JSON.stringify({ ok: true }) },
+        ],
+      },
+    });
+  }
+});
+`,
+      'utf8',
+    );
+    chmodSync(fixture, 0o755);
+
+    const browser = new Plasmate({ binary: fixture });
+    try {
+      assert.deepEqual(await browser.fetchPage('fixture'), { ok: true });
+    } finally {
+      browser.close();
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   it('fails closed when a structured tool returns non-JSON text', async () => {
     const directory = mkdtempSync(join(tmpdir(), 'plasmate-node-sdk-'));
     const fixture = join(directory, 'mcp-fixture.js');
