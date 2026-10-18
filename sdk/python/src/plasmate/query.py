@@ -512,14 +512,33 @@ def find_action_targets_by_action(
     aliases are normalized only for this lookup.
     """
     index = get_action_plan_index(som, enabled_only=enabled_only)
+    normalized_action = " ".join(action.strip().lower().split())
+    if normalized_action.startswith("action"):
+        separator = normalized_action[len("action") :].lstrip()
+        if separator.startswith((":", "=")):
+            normalized_action = " ".join(separator[1:].strip().split())
     normalized_action = {
         "type_text": "type",
         "type-text": "type",
+        "type text": "type",
         "select_option": "select",
         "select-option": "select",
-    }.get(action.strip().lower(), action.strip().lower())
-    results = index["by_action"].get(normalized_action, [])
-    return list(results) if isinstance(results, list) else []
+        "select option": "select",
+    }.get(normalized_action, normalized_action)
+    results = list(index["by_action"].get(normalized_action, []))
+    if normalized_action in {"submit", "reset"}:
+        seen_ids = {item.get("id") for item in results}
+        plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
+        for item in plan:
+            button_type = item.get("button_type")
+            matches_submitter = isinstance(button_type, str) and (
+                button_type.lower() == normalized_action
+                or (normalized_action == "submit" and button_type.lower() == "image")
+            )
+            if matches_submitter and item.get("id") not in seen_ids:
+                results.append(item)
+                seen_ids.add(item.get("id"))
+    return results
 
 
 def find_action_target_by_id(
