@@ -322,6 +322,21 @@ func TestFindByID(t *testing.T) {
 	}
 }
 
+func TestFindByRegionID(t *testing.T) {
+	som := mustParse(t)
+
+	region := FindByRegionID(som, "r_main")
+	if region == nil {
+		t.Fatal("FindByRegionID(r_main) returned nil")
+	}
+	if region.Role != "main" {
+		t.Errorf("Role = %q, want main", region.Role)
+	}
+	if FindByRegionID(som, "missing-region") != nil {
+		t.Error("FindByRegionID(missing-region) should return nil")
+	}
+}
+
 func TestFindByHTMLID(t *testing.T) {
 	som := mustParse(t)
 

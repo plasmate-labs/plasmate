@@ -19,6 +19,17 @@ func FindByRole(som *Som, role string) []Region {
 	return result
 }
 
+// FindByRegionID searches top-level regions for the given SOM region ID.
+// Returns nil if not found.
+func FindByRegionID(som *Som, id string) *Region {
+	for i := range som.Regions {
+		if som.Regions[i].ID == id {
+			return &som.Regions[i]
+		}
+	}
+	return nil
+}
+
 // FindByID searches all regions for an element with the given ID.
 // Returns nil if not found.
 func FindByID(som *Som, id string) *Element {

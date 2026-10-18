@@ -75,6 +75,11 @@ func main() {
     pageLinks := plasmate.FindByTag(som, "link")
     fmt.Printf("Found %d links\n", len(pageLinks))
 
+    main := plasmate.FindByRegionID(som, "r_main")
+    if main != nil {
+        fmt.Println("Main region:", main.Role)
+    }
+
     interactive := plasmate.FindInteractive(som)
     fmt.Printf("Found %d interactive elements\n", len(interactive))
 
