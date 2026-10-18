@@ -76,13 +76,18 @@ type jsonRPCError struct {
 }
 
 type toolResult struct {
-	Content []toolContent `json:"content"`
-	IsError bool          `json:"isError"`
+	Content           []toolContent         `json:"content"`
+	IsError           bool                  `json:"isError"`
+	StructuredContent *structuredToolResult `json:"structuredContent,omitempty"`
 }
 
 type toolContent struct {
 	Type string `json:"type"`
 	Text string `json:"text"`
+}
+
+type structuredToolResult struct {
+	Result json.RawMessage `json:"result"`
 }
 
 const maxToolErrorChars = 200
@@ -248,6 +253,9 @@ func (c *Client) callTool(name string, args map[string]interface{}) (json.RawMes
 		return nil, errors.New(boundedToolError(result.Content[0].Text))
 	}
 	if len(result.Content) == 0 || result.Content[0].Text == "" {
+		if result.StructuredContent != nil && len(result.StructuredContent.Result) > 0 {
+			return result.StructuredContent.Result, nil
+		}
 		return nil, nil
 	}
 	return json.RawMessage(result.Content[0].Text), nil
