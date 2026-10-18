@@ -469,6 +469,102 @@ func clearArguments(sessionID string, elementID string) map[string]interface{} {
 	}
 }
 
+// SelectOption selects an option in a dropdown or native radio group and
+// returns the updated page SOM.
+func (c *Client) SelectOption(sessionID string, elementID string, value string) (*Som, error) {
+	raw, err := c.callTool("select_option", selectOptionArguments(sessionID, elementID, value))
+	if err != nil {
+		return nil, err
+	}
+	return Parse(raw)
+}
+
+func selectOptionArguments(sessionID string, elementID string, value string) map[string]interface{} {
+	return map[string]interface{}{
+		"session_id": sessionID,
+		"element_id": elementID,
+		"value":      value,
+	}
+}
+
+// Toggle toggles a checkbox or switch and returns the updated page SOM.
+func (c *Client) Toggle(sessionID string, elementID string) (*Som, error) {
+	raw, err := c.callTool("toggle", toggleArguments(sessionID, elementID))
+	if err != nil {
+		return nil, err
+	}
+	return Parse(raw)
+}
+
+func toggleArguments(sessionID string, elementID string) map[string]interface{} {
+	return map[string]interface{}{
+		"session_id": sessionID,
+		"element_id": elementID,
+	}
+}
+
+// ScrollOptions holds optional parameters for ScrollWithOptions.
+type ScrollOptions struct {
+	Direction string  // down, up, top, bottom, home, or end
+	Pixels    *int    // Number of pixels for up/down; defaults to 300
+	ElementID *string // Optional SOM element to scroll into view
+}
+
+// Scroll direction constants accepted by ScrollWithOptions.
+const (
+	ScrollDown   = "down"
+	ScrollUp     = "up"
+	ScrollTop    = "top"
+	ScrollBottom = "bottom"
+	ScrollHome   = "home"
+	ScrollEnd    = "end"
+)
+
+func scrollArguments(sessionID string, opts ScrollOptions) map[string]interface{} {
+	args := map[string]interface{}{"session_id": sessionID}
+	if opts.Direction != "" {
+		args["direction"] = opts.Direction
+	}
+	if opts.Pixels != nil {
+		args["pixels"] = *opts.Pixels
+	}
+	if opts.ElementID != nil {
+		args["element_id"] = *opts.ElementID
+	}
+	return args
+}
+
+// Scroll scrolls the current page down by the server's default amount and
+// returns the updated page SOM.
+func (c *Client) Scroll(sessionID string) (*Som, error) {
+	return c.ScrollWithOptions(sessionID, ScrollOptions{})
+}
+
+// ScrollWithOptions scrolls the current page or a SOM element into view and
+// returns the updated page SOM.
+func (c *Client) ScrollWithOptions(sessionID string, opts ScrollOptions) (*Som, error) {
+	raw, err := c.callTool("scroll", scrollArguments(sessionID, opts))
+	if err != nil {
+		return nil, err
+	}
+	return Parse(raw)
+}
+
+// ScrollToTop jumps to the top of the current page.
+func (c *Client) ScrollToTop(sessionID string) (*Som, error) {
+	return c.ScrollWithOptions(sessionID, ScrollOptions{Direction: ScrollTop})
+}
+
+// ScrollToBottom jumps to the bottom of the current page.
+func (c *Client) ScrollToBottom(sessionID string) (*Som, error) {
+	return c.ScrollWithOptions(sessionID, ScrollOptions{Direction: ScrollBottom})
+}
+
+// ScrollIntoView brings a SOM element into view and returns the updated page SOM.
+func (c *Client) ScrollIntoView(sessionID string, elementID string) (*Som, error) {
+	return c.ScrollWithOptions(sessionID, ScrollOptions{ElementID: &elementID})
+}
+
 // ClosePage closes a browser session and frees resources.
 func (c *Client) ClosePage(sessionID string) error {
 	_, err := c.callTool("close_page", map[string]interface{}{

@@ -166,6 +166,91 @@ func TestClearArguments(t *testing.T) {
 	}
 }
 
+func TestSelectOptionArguments(t *testing.T) {
+	got := selectOptionArguments("s1", "e5", "premium")
+	want := map[string]interface{}{
+		"session_id": "s1",
+		"element_id": "e5",
+		"value":      "premium",
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("select_option arguments = %#v, want %#v", got, want)
+	}
+}
+
+func TestToggleArguments(t *testing.T) {
+	got := toggleArguments("s1", "e5")
+	want := map[string]interface{}{
+		"session_id": "s1",
+		"element_id": "e5",
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("toggle arguments = %#v, want %#v", got, want)
+	}
+}
+
+func TestScrollArgumentsIncludeOptions(t *testing.T) {
+	pixels := 640
+	elementID := "e5"
+
+	got := scrollArguments("s1", ScrollOptions{
+		Direction: "bottom",
+		Pixels:    &pixels,
+		ElementID: &elementID,
+	})
+	want := map[string]interface{}{
+		"session_id": "s1",
+		"direction":  "bottom",
+		"pixels":     640,
+		"element_id": "e5",
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("scroll arguments = %#v, want %#v", got, want)
+	}
+}
+
+func TestScrollArgumentsOmitDefaults(t *testing.T) {
+	got := scrollArguments("s1", ScrollOptions{})
+	want := map[string]interface{}{"session_id": "s1"}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("scroll arguments = %#v, want %#v", got, want)
+	}
+}
+
+func TestScrollDirectionConstants(t *testing.T) {
+	want := map[string]string{
+		"down":   ScrollDown,
+		"up":     ScrollUp,
+		"top":    ScrollTop,
+		"bottom": ScrollBottom,
+		"home":   ScrollHome,
+		"end":    ScrollEnd,
+	}
+
+	for name, got := range want {
+		if got != name {
+			t.Errorf("scroll direction %q = %q, want %q", name, got, name)
+		}
+	}
+}
+
+func TestScrollIntoViewArguments(t *testing.T) {
+	elementID := "e9"
+	got := scrollArguments("s1", ScrollOptions{ElementID: &elementID})
+	want := map[string]interface{}{
+		"session_id": "s1",
+		"element_id": "e9",
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("scroll into view arguments = %#v, want %#v", got, want)
+	}
+}
+
 func TestExtractTextArgumentsIncludeOptions(t *testing.T) {
 	maxChars := 1200
 	javascript := false

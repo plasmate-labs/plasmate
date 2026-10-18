@@ -127,6 +127,36 @@ if err != nil {
     log.Fatal(err)
 }
 
+// Select an option by value or visible label
+updated, err = client.SelectOption(session.SessionID, "e7", "premium")
+if err != nil {
+	log.Fatal(err)
+}
+
+// Toggle a checkbox or switch
+updated, err = client.Toggle(session.SessionID, "e8")
+if err != nil {
+	log.Fatal(err)
+}
+
+// Scroll down by the server's default amount
+updated, err = client.Scroll(session.SessionID)
+if err != nil {
+	log.Fatal(err)
+}
+
+// Or jump to a specific page edge / element
+pixels := 640
+target := "e9"
+updated, err = client.ScrollWithOptions(session.SessionID, plasmate.ScrollOptions{
+	Direction: "bottom",
+	Pixels:    &pixels,
+	ElementID: &target,
+})
+if err != nil {
+	log.Fatal(err)
+}
+
 // Reuse the session for another page.
 next, err := client.NavigateTo(session.SessionID, "https://example.com/next")
 if err != nil {
@@ -178,6 +208,8 @@ all := plasmate.FlatElements(som)
 | `FetchPageWithOptions(url, opts)` | Fetch with budget, JS, or an optional SOM selector |
 | `ExtractText(url)` | Fetch page as plain text |
 | `ExtractTextWithOptions(url, opts)` | Fetch plain text with max-character, JavaScript, and SOM selector options |
+| `ExtractLinks(url)` | Fetch deduplicated outbound links |
+| `ExtractLinksWithOptions(url, opts)` | Fetch links with JavaScript, maximum-count, and SOM selector options |
 | `OpenPage(url)` | Open interactive session |
 | `OpenPageWithOptions(url, opts)` | Open interactive session with an optional SOM selector or bounded action tracing |
 | `NavigateTo(sessionID, url)` | Navigate an existing session and return its updated SOM |
@@ -186,6 +218,13 @@ all := plasmate.FlatElements(som)
 | `TypeText(sessionID, elementID, text)` | Type into a form control, get updated SOM |
 | `TypeTextWithOptions(sessionID, elementID, text, opts)` | Type with append behavior, get updated SOM |
 | `Clear(sessionID, elementID)` | Clear a text input or textarea, get updated SOM |
+| `SelectOption(sessionID, elementID, value)` | Select a dropdown option or native radio, get updated SOM |
+| `Toggle(sessionID, elementID)` | Toggle a checkbox or switch, get updated SOM |
+| `Scroll(sessionID)` | Scroll down by the server default, get updated SOM |
+| `ScrollWithOptions(sessionID, opts)` | Scroll by direction/pixels or bring an element into view |
+| `ScrollToTop(sessionID)` | Jump to the top of the current page |
+| `ScrollToBottom(sessionID)` | Jump to the bottom of the current page |
+| `ScrollIntoView(sessionID, elementID)` | Bring a SOM element into view |
 | `ClosePage(sessionID)` | Close session |
 | `Close()` | Shut down subprocess |
 
