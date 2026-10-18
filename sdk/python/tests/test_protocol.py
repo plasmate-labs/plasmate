@@ -34,6 +34,16 @@ for line in sys.stdin:
         tool_name = request.get("params", {}).get("name")
         if tool_name == "silent_tool":
             continue
+        if tool_name == "out_of_order_tool":
+            send({"jsonrpc": "2.0", "method": "notifications/progress", "params": {"done": False}})
+            send({"jsonrpc": "2.0", "id": 999, "result": {"stale": True}})
+            send({"jsonrpc": "2.0", "id": True, "result": {"stale": True}})
+            send({
+                "jsonrpc": "2.0",
+                "id": request.get("id"),
+                "result": {"content": [{"type": "text", "text": "{\\"ok\\":true}"}]},
+            })
+            continue
         if tool_name == "empty_error":
             send({
                 "jsonrpc": "2.0",
@@ -131,6 +141,25 @@ def test_async_first_tool_call_does_not_consume_notification_response(tmp_path: 
         client = AsyncPlasmate(binary=_fixture(tmp_path))
         try:
             assert await client._call_tool("fixture_tool", {}) == {"ok": True}
+        finally:
+            await client.close()
+
+    asyncio.run(exercise())
+
+
+def test_sync_tool_matches_response_by_request_id(tmp_path: Path) -> None:
+    client = Plasmate(binary=_fixture(tmp_path))
+    try:
+        assert client._call_tool("out_of_order_tool", {}) == {"ok": True}
+    finally:
+        client.close()
+
+
+def test_async_tool_matches_response_by_request_id(tmp_path: Path) -> None:
+    async def exercise() -> None:
+        client = AsyncPlasmate(binary=_fixture(tmp_path))
+        try:
+            assert await client._call_tool("out_of_order_tool", {}) == {"ok": True}
         finally:
             await client.close()
 
