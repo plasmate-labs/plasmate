@@ -44,9 +44,26 @@ func FindByID(som *Som, id string) *Element {
 // FindByHTMLID searches all regions for an element with the original HTML id.
 // Returns nil if not found.
 func FindByHTMLID(som *Som, htmlID string) *Element {
-	for _, el := range FlatElements(som) {
-		if el.HTMLID != nil && *el.HTMLID == htmlID {
-			return &el
+	for i := range som.Regions {
+		if el := findByHTMLIDInSlice(som.Regions[i].Elements, htmlID); el != nil {
+			return el
+		}
+	}
+	return nil
+}
+
+func findByHTMLIDInSlice(elements []Element, htmlID string) *Element {
+	for i := range elements {
+		if elements[i].HTMLID != nil && *elements[i].HTMLID == htmlID {
+			return &elements[i]
+		}
+		if el := findByHTMLIDInSlice(elements[i].Children, htmlID); el != nil {
+			return el
+		}
+		if elements[i].Shadow != nil {
+			if el := findByHTMLIDInSlice(elements[i].Shadow.Elements, htmlID); el != nil {
+				return el
+			}
 		}
 	}
 	return nil

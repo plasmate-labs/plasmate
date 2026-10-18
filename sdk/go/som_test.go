@@ -337,6 +337,20 @@ func TestFindByRegionID(t *testing.T) {
 	}
 }
 
+func TestFindByHTMLIDReturnsMutableElement(t *testing.T) {
+	som := mustParse(t)
+
+	button := FindByHTMLID(som, "open-filters")
+	if button == nil {
+		t.Fatal("FindByHTMLID(open-filters) returned nil")
+	}
+
+	button.Role = "toggle_button"
+	if got := FindByID(som, "e10").Role; got != "toggle_button" {
+		t.Fatalf("FindByHTMLID returned a copy: FindByID(e10).Role = %q, want toggle_button", got)
+	}
+}
+
 func TestFindByHTMLID(t *testing.T) {
 	som := mustParse(t)
 
