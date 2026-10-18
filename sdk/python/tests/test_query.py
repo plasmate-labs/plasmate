@@ -412,7 +412,7 @@ class TestGetActionPlan:
             == "plasmate-action:v1:5b218ab1"
         )
 
-    def test_indexes_action_targets_for_replay(self) -> None:
+    def test_indexes_action_targets_for_replay(self, sample_som: Som) -> None:
         fixture_dir = REPO_ROOT / "integrations" / "fixtures"
         som = Som.model_validate(
             json.loads((fixture_dir / "action-availability.som.json").read_text())
@@ -496,6 +496,28 @@ class TestGetActionPlan:
             "e_email",
             "e_upload",
             "e_quota",
+        ]
+
+        reset = sample_som.regions[1].elements[0].model_copy(
+            update={
+                "id": "e_reset",
+                "role": ElementRole.button,
+                "actions": ["click"],
+                "attrs": ElementAttrs(button_type="reset"),
+            }
+        )
+        image_submit = sample_som.regions[1].elements[0].model_copy(
+            update={
+                "id": "e_image_submit",
+                "role": ElementRole.button,
+                "actions": ["click"],
+                "attrs": ElementAttrs(button_type="image"),
+            }
+        )
+        sample_som.regions[1].elements.extend([reset, image_submit])
+        assert [target["id"] for target in find_action_targets_by_action(sample_som, "reset")] == ["e_reset"]
+        assert [target["id"] for target in find_action_targets_by_action(sample_som, "action:submit")] == [
+            "e_image_submit",
         ]
         assert find_action_target(som, "settings-save", enabled_only=True) is None
         assert find_action_target(som, "Save", by="label", enabled_only=True) is None

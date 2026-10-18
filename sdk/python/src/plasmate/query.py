@@ -525,8 +525,20 @@ def find_action_targets_by_action(
         "select-option": "select",
         "select option": "select",
     }.get(normalized_action, normalized_action)
-    results = index["by_action"].get(normalized_action, [])
-    return list(results) if isinstance(results, list) else []
+    results = list(index["by_action"].get(normalized_action, []))
+    if normalized_action in {"submit", "reset"}:
+        seen_ids = {item.get("id") for item in results}
+        plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
+        for item in plan:
+            button_type = item.get("button_type")
+            matches_submitter = isinstance(button_type, str) and (
+                button_type.lower() == normalized_action
+                or (normalized_action == "submit" and button_type.lower() == "image")
+            )
+            if matches_submitter and item.get("id") not in seen_ids:
+                results.append(item)
+                seen_ids.add(item.get("id"))
+    return results
 
 
 def find_action_target_by_id(
