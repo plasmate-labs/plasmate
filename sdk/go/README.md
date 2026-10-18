@@ -133,6 +133,12 @@ if err != nil {
 	log.Fatal(err)
 }
 
+// Toggle a checkbox or switch
+updated, err = client.Toggle(session.SessionID, "e8")
+if err != nil {
+	log.Fatal(err)
+}
+
 // Reuse the session for another page.
 next, err := client.NavigateTo(session.SessionID, "https://example.com/next")
 if err != nil {
@@ -193,6 +199,7 @@ all := plasmate.FlatElements(som)
 | `TypeTextWithOptions(sessionID, elementID, text, opts)` | Type with append behavior, get updated SOM |
 | `Clear(sessionID, elementID)` | Clear a text input or textarea, get updated SOM |
 | `SelectOption(sessionID, elementID, value)` | Select a dropdown option or native radio, get updated SOM |
+| `Toggle(sessionID, elementID)` | Toggle a checkbox or switch, get updated SOM |
 | `ClosePage(sessionID)` | Close session |
 | `Close()` | Shut down subprocess |
 

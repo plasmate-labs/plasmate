@@ -487,6 +487,22 @@ func selectOptionArguments(sessionID string, elementID string, value string) map
 	}
 }
 
+// Toggle toggles a checkbox or switch and returns the updated page SOM.
+func (c *Client) Toggle(sessionID string, elementID string) (*Som, error) {
+	raw, err := c.callTool("toggle", toggleArguments(sessionID, elementID))
+	if err != nil {
+		return nil, err
+	}
+	return Parse(raw)
+}
+
+func toggleArguments(sessionID string, elementID string) map[string]interface{} {
+	return map[string]interface{}{
+		"session_id": sessionID,
+		"element_id": elementID,
+	}
+}
+
 // ClosePage closes a browser session and frees resources.
 func (c *Client) ClosePage(sessionID string) error {
 	_, err := c.callTool("close_page", map[string]interface{}{
