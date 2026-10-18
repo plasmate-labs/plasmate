@@ -234,7 +234,7 @@ while IFS= read -r request; do
       printf '%s\n' '{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05"}}'
       ;;
     *'"method":"tools/call"'*)
-      printf '%s\n' '{"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":""}],"isError":true}}'
+      printf '%s\n' '{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":""}],"isError":true}}'
       ;;
   esac
 done
@@ -261,7 +261,7 @@ while IFS= read -r request; do
       printf '%%s\n' '{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05"}}'
       ;;
     *'"method":"tools/call"'*)
-      printf '%%s\n' '{"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"%s"}],"isError":true}}'
+      printf '%%s\n' '{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"%s"}],"isError":true}}'
       ;;
   esac
 done
@@ -279,5 +279,34 @@ done
 	got := []rune(err.Error())
 	if len(got) != 200 || got[len(got)-1] != '…' {
 		t.Fatalf("FetchPage error length/marker = %d/%q, want 200/ellipsis", len(got), got[len(got)-1])
+	}
+}
+
+func TestRPCIgnoresMismatchedResponses(t *testing.T) {
+	dir := t.TempDir()
+	fixture := filepath.Join(dir, "mcp-fixture.sh")
+	script := `#!/bin/sh
+while IFS= read -r request; do
+  case "$request" in
+    *'"method":"initialize"'*)
+      printf '%s\n' '{"jsonrpc":"2.0","id":99,"result":{"protocolVersion":"wrong"}}'
+      printf '%s\n' '{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05"}}'
+      ;;
+    *'"method":"tools/call"'*)
+      printf '%s\n' '{"jsonrpc":"2.0","id":98,"result":{"content":[]}}'
+      printf '%s\n' '{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"expected tool failure"}],"isError":true}}'
+      ;;
+  esac
+done
+`
+	if err := os.WriteFile(fixture, []byte(script), 0o700); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+
+	client := NewClient(WithBinary(fixture))
+	defer client.Close()
+	_, err := client.FetchPage("fixture")
+	if err == nil || err.Error() != "expected tool failure" {
+		t.Fatalf("FetchPage error = %v, want mismatched responses ignored", err)
 	}
 }

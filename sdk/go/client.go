@@ -176,7 +176,7 @@ func (c *Client) send(req jsonRPCRequest) error {
 	return err
 }
 
-func (c *Client) readResponse() (*jsonRPCResponse, error) {
+func (c *Client) readResponse(expectedID int) (*jsonRPCResponse, error) {
 	for c.scanner.Scan() {
 		line := c.scanner.Text()
 		if line == "" {
@@ -185,6 +185,9 @@ func (c *Client) readResponse() (*jsonRPCResponse, error) {
 		var resp jsonRPCResponse
 		if err := json.Unmarshal([]byte(line), &resp); err != nil {
 			continue // skip non-JSON lines
+		}
+		if resp.ID == nil || *resp.ID != expectedID {
+			continue // skip notifications and responses for other requests
 		}
 		return &resp, nil
 	}
@@ -208,7 +211,7 @@ func (c *Client) rpc(method string, params interface{}) (json.RawMessage, error)
 		return nil, err
 	}
 
-	resp, err := c.readResponse()
+	resp, err := c.readResponse(id)
 	if err != nil {
 		return nil, err
 	}
