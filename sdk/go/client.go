@@ -469,6 +469,24 @@ func clearArguments(sessionID string, elementID string) map[string]interface{} {
 	}
 }
 
+// SelectOption selects an option in a dropdown or native radio group and
+// returns the updated page SOM.
+func (c *Client) SelectOption(sessionID string, elementID string, value string) (*Som, error) {
+	raw, err := c.callTool("select_option", selectOptionArguments(sessionID, elementID, value))
+	if err != nil {
+		return nil, err
+	}
+	return Parse(raw)
+}
+
+func selectOptionArguments(sessionID string, elementID string, value string) map[string]interface{} {
+	return map[string]interface{}{
+		"session_id": sessionID,
+		"element_id": elementID,
+		"value":      value,
+	}
+}
+
 // ClosePage closes a browser session and frees resources.
 func (c *Client) ClosePage(sessionID string) error {
 	_, err := c.callTool("close_page", map[string]interface{}{

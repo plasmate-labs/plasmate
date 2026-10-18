@@ -166,6 +166,19 @@ func TestClearArguments(t *testing.T) {
 	}
 }
 
+func TestSelectOptionArguments(t *testing.T) {
+	got := selectOptionArguments("s1", "e5", "premium")
+	want := map[string]interface{}{
+		"session_id": "s1",
+		"element_id": "e5",
+		"value":      "premium",
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("select_option arguments = %#v, want %#v", got, want)
+	}
+}
+
 func TestExtractTextArgumentsIncludeOptions(t *testing.T) {
 	maxChars := 1200
 	javascript := false
