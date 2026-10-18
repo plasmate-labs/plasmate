@@ -206,7 +206,7 @@ class Plasmate:
         self._process.stdin.write(line.encode())
         self._process.stdin.flush()
 
-    def _read_response(self) -> dict:
+    def _read_response(self, expected_id: int) -> dict:
         if not self._process or not self._process.stdout:
             raise RuntimeError("Plasmate process is not running")
         stdout = self._process.stdout
@@ -237,9 +237,14 @@ class Plasmate:
             if not line:
                 continue
             try:
-                return json.loads(line)
+                response = json.loads(line)
             except json.JSONDecodeError:
                 continue  # Skip non-JSON lines (tracing output)
+            if not isinstance(response, dict) or response.get("id") != expected_id:
+                # Notifications and late responses for another request must not
+                # be allowed to satisfy the current RPC call.
+                continue
+            return response
 
     def _rpc(self, method: str, params: Any = None) -> Any:
         with self._lock:
@@ -249,7 +254,7 @@ class Plasmate:
             if params is not None:
                 request["params"] = params
             self._send(request)
-            response = self._read_response()
+            response = self._read_response(request_id)
 
         if "error" in response and response["error"]:
             raise RuntimeError(response["error"]["message"])
@@ -543,7 +548,7 @@ class AsyncPlasmate:
         self._process.stdin.write(line.encode())
         await self._process.stdin.drain()
 
-    async def _read_response(self) -> dict:
+    async def _read_response(self, expected_id: int) -> dict:
         if not self._process or not self._process.stdout:
             raise RuntimeError("Plasmate process is not running")
         stdout = self._process.stdout
@@ -559,9 +564,14 @@ class AsyncPlasmate:
             if not text:
                 continue
             try:
-                return json.loads(text)
+                response = json.loads(text)
             except json.JSONDecodeError:
                 continue
+            if not isinstance(response, dict) or response.get("id") != expected_id:
+                # Notifications and late responses for another request must not
+                # be allowed to satisfy the current RPC call.
+                continue
+            return response
 
     async def _rpc(self, method: str, params: Any = None) -> Any:
         async with self._lock:
@@ -571,7 +581,7 @@ class AsyncPlasmate:
             if params is not None:
                 request["params"] = params
             await self._send(request)
-            response = await self._read_response()
+            response = await self._read_response(request_id)
 
         if "error" in response and response["error"]:
             raise RuntimeError(response["error"]["message"])
