@@ -208,6 +208,8 @@ all := plasmate.FlatElements(som)
 | `FetchPageWithOptions(url, opts)` | Fetch with budget, JS, or an optional SOM selector |
 | `ExtractText(url)` | Fetch page as plain text |
 | `ExtractTextWithOptions(url, opts)` | Fetch plain text with max-character, JavaScript, and SOM selector options |
+| `ExtractLinks(url)` | Fetch deduplicated outbound links |
+| `ExtractLinksWithOptions(url, opts)` | Fetch links with JavaScript, maximum-count, and SOM selector options |
 | `OpenPage(url)` | Open interactive session |
 | `OpenPageWithOptions(url, opts)` | Open interactive session with an optional SOM selector or bounded action tracing |
 | `NavigateTo(sessionID, url)` | Navigate an existing session and return its updated SOM |
