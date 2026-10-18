@@ -222,6 +222,9 @@ all := plasmate.FlatElements(som)
 | `Toggle(sessionID, elementID)` | Toggle a checkbox or switch, get updated SOM |
 | `Scroll(sessionID)` | Scroll down by the server default, get updated SOM |
 | `ScrollWithOptions(sessionID, opts)` | Scroll by direction/pixels or bring an element into view |
+| `ScrollToTop(sessionID)` | Jump to the top of the current page |
+| `ScrollToBottom(sessionID)` | Jump to the bottom of the current page |
+| `ScrollIntoView(sessionID, elementID)` | Bring a SOM element into view |
 | `ClosePage(sessionID)` | Close session |
 | `Close()` | Shut down subprocess |
 

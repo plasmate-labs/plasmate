@@ -510,6 +510,16 @@ type ScrollOptions struct {
 	ElementID *string // Optional SOM element to scroll into view
 }
 
+// Scroll direction constants accepted by ScrollWithOptions.
+const (
+	ScrollDown   = "down"
+	ScrollUp     = "up"
+	ScrollTop    = "top"
+	ScrollBottom = "bottom"
+	ScrollHome   = "home"
+	ScrollEnd    = "end"
+)
+
 func scrollArguments(sessionID string, opts ScrollOptions) map[string]interface{} {
 	args := map[string]interface{}{"session_id": sessionID}
 	if opts.Direction != "" {
@@ -538,6 +548,21 @@ func (c *Client) ScrollWithOptions(sessionID string, opts ScrollOptions) (*Som, 
 		return nil, err
 	}
 	return Parse(raw)
+}
+
+// ScrollToTop jumps to the top of the current page.
+func (c *Client) ScrollToTop(sessionID string) (*Som, error) {
+	return c.ScrollWithOptions(sessionID, ScrollOptions{Direction: ScrollTop})
+}
+
+// ScrollToBottom jumps to the bottom of the current page.
+func (c *Client) ScrollToBottom(sessionID string) (*Som, error) {
+	return c.ScrollWithOptions(sessionID, ScrollOptions{Direction: ScrollBottom})
+}
+
+// ScrollIntoView brings a SOM element into view and returns the updated page SOM.
+func (c *Client) ScrollIntoView(sessionID string, elementID string) (*Som, error) {
+	return c.ScrollWithOptions(sessionID, ScrollOptions{ElementID: &elementID})
 }
 
 // ClosePage closes a browser session and frees resources.
