@@ -243,10 +243,13 @@ class Plasmate:
             if (
                 not isinstance(response, dict)
                 or "id" not in response
+                or type(response.get("id")) is not type(expected_id)
                 or response.get("id") != expected_id
             ):
                 # JSON-RPC notifications have no id; late responses for another
                 # request must not be allowed to satisfy the current RPC call.
+                # Keep JSON scalar types strict: Python considers true equal to 1,
+                # but JSON-RPC request IDs must be matched as serialized values.
                 continue
             return response
 
@@ -574,10 +577,13 @@ class AsyncPlasmate:
             if (
                 not isinstance(response, dict)
                 or "id" not in response
+                or type(response.get("id")) is not type(expected_id)
                 or response.get("id") != expected_id
             ):
                 # JSON-RPC notifications have no id; late responses for another
                 # request must not be allowed to satisfy the current RPC call.
+                # Keep JSON scalar types strict: Python considers true equal to 1,
+                # but JSON-RPC request IDs must be matched as serialized values.
                 continue
             return response
 
