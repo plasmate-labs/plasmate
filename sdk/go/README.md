@@ -139,6 +139,24 @@ if err != nil {
 	log.Fatal(err)
 }
 
+// Scroll down by the server's default amount
+updated, err = client.Scroll(session.SessionID)
+if err != nil {
+	log.Fatal(err)
+}
+
+// Or jump to a specific page edge / element
+pixels := 640
+target := "e9"
+updated, err = client.ScrollWithOptions(session.SessionID, plasmate.ScrollOptions{
+	Direction: "bottom",
+	Pixels:    &pixels,
+	ElementID: &target,
+})
+if err != nil {
+	log.Fatal(err)
+}
+
 // Reuse the session for another page.
 next, err := client.NavigateTo(session.SessionID, "https://example.com/next")
 if err != nil {
@@ -200,6 +218,8 @@ all := plasmate.FlatElements(som)
 | `Clear(sessionID, elementID)` | Clear a text input or textarea, get updated SOM |
 | `SelectOption(sessionID, elementID, value)` | Select a dropdown option or native radio, get updated SOM |
 | `Toggle(sessionID, elementID)` | Toggle a checkbox or switch, get updated SOM |
+| `Scroll(sessionID)` | Scroll down by the server default, get updated SOM |
+| `ScrollWithOptions(sessionID, opts)` | Scroll by direction/pixels or bring an element into view |
 | `ClosePage(sessionID)` | Close session |
 | `Close()` | Shut down subprocess |
 

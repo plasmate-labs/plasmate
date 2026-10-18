@@ -503,6 +503,43 @@ func toggleArguments(sessionID string, elementID string) map[string]interface{} 
 	}
 }
 
+// ScrollOptions holds optional parameters for ScrollWithOptions.
+type ScrollOptions struct {
+	Direction string  // down, up, top, bottom, home, or end
+	Pixels    *int    // Number of pixels for up/down; defaults to 300
+	ElementID *string // Optional SOM element to scroll into view
+}
+
+func scrollArguments(sessionID string, opts ScrollOptions) map[string]interface{} {
+	args := map[string]interface{}{"session_id": sessionID}
+	if opts.Direction != "" {
+		args["direction"] = opts.Direction
+	}
+	if opts.Pixels != nil {
+		args["pixels"] = *opts.Pixels
+	}
+	if opts.ElementID != nil {
+		args["element_id"] = *opts.ElementID
+	}
+	return args
+}
+
+// Scroll scrolls the current page down by the server's default amount and
+// returns the updated page SOM.
+func (c *Client) Scroll(sessionID string) (*Som, error) {
+	return c.ScrollWithOptions(sessionID, ScrollOptions{})
+}
+
+// ScrollWithOptions scrolls the current page or a SOM element into view and
+// returns the updated page SOM.
+func (c *Client) ScrollWithOptions(sessionID string, opts ScrollOptions) (*Som, error) {
+	raw, err := c.callTool("scroll", scrollArguments(sessionID, opts))
+	if err != nil {
+		return nil, err
+	}
+	return Parse(raw)
+}
+
 // ClosePage closes a browser session and frees resources.
 func (c *Client) ClosePage(sessionID string) error {
 	_, err := c.callTool("close_page", map[string]interface{}{

@@ -191,6 +191,36 @@ func TestToggleArguments(t *testing.T) {
 	}
 }
 
+func TestScrollArgumentsIncludeOptions(t *testing.T) {
+	pixels := 640
+	elementID := "e5"
+
+	got := scrollArguments("s1", ScrollOptions{
+		Direction: "bottom",
+		Pixels:    &pixels,
+		ElementID: &elementID,
+	})
+	want := map[string]interface{}{
+		"session_id": "s1",
+		"direction":  "bottom",
+		"pixels":     640,
+		"element_id": "e5",
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("scroll arguments = %#v, want %#v", got, want)
+	}
+}
+
+func TestScrollArgumentsOmitDefaults(t *testing.T) {
+	got := scrollArguments("s1", ScrollOptions{})
+	want := map[string]interface{}{"session_id": "s1"}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("scroll arguments = %#v, want %#v", got, want)
+	}
+}
+
 func TestExtractTextArgumentsIncludeOptions(t *testing.T) {
 	maxChars := 1200
 	javascript := false
