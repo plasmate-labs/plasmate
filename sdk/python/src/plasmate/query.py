@@ -512,6 +512,11 @@ def find_action_targets_by_action(
     aliases are normalized only for this lookup.
     """
     index = get_action_plan_index(som, enabled_only=enabled_only)
+    normalized_action = action.strip().lower()
+    if normalized_action.startswith("action"):
+        separator = normalized_action[len("action") :].lstrip()
+        if separator.startswith((":", "=")):
+            normalized_action = separator[1:].strip()
     normalized_action = {
         "type_text": "type",
         "type-text": "type",
@@ -519,7 +524,7 @@ def find_action_targets_by_action(
         "select_option": "select",
         "select-option": "select",
         "select option": "select",
-    }.get(action.strip().lower(), action.strip().lower())
+    }.get(normalized_action, normalized_action)
     results = index["by_action"].get(normalized_action, [])
     return list(results) if isinstance(results, list) else []
 
