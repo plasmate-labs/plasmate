@@ -474,6 +474,15 @@ class TestGetActionPlan:
             "e_plan",
             "e_annual",
         ]
+        assert [target["id"] for target in find_action_targets_by_action(som, "type text")] == [
+            "e_email",
+            "e_upload",
+            "e_quota",
+        ]
+        assert [target["id"] for target in find_action_targets_by_action(som, "select option")] == [
+            "e_plan",
+            "e_annual",
+        ]
         assert find_action_target(som, "settings-save", enabled_only=True) is None
         assert find_action_target(som, "Save", by="label", enabled_only=True) is None
         assert find_action_targets_by_role(som, "button", enabled_only=True) == []

@@ -515,8 +515,10 @@ def find_action_targets_by_action(
     normalized_action = {
         "type_text": "type",
         "type-text": "type",
+        "type text": "type",
         "select_option": "select",
         "select-option": "select",
+        "select option": "select",
     }.get(action.strip().lower(), action.strip().lower())
     results = index["by_action"].get(normalized_action, [])
     return list(results) if isinstance(results, list) else []
