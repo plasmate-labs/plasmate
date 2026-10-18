@@ -436,8 +436,8 @@ func TestFindByLabel(t *testing.T) {
 	}
 
 	results = FindByLabel(som, "SEARCH", true)
-	if len(results) != 0 {
-		t.Fatalf("FindByLabel(SEARCH, exact) = %#v, want no case-sensitive exact match", results)
+	if len(results) != 1 || results[0].ID != "e5" {
+		t.Fatalf("FindByLabel(SEARCH, exact) = %#v, want e5", results)
 	}
 
 	results = FindByLabel(som, "Search", true)

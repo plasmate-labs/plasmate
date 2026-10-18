@@ -151,21 +151,22 @@ func FindByLabel(som *Som, label string, exact ...bool) []Element {
 	exactMatch := len(exact) > 0 && exact[0]
 	var result []Element
 	for _, r := range som.Regions {
-		collectByLabel(r.Elements, needle, label, exactMatch, &result)
+		collectByLabel(r.Elements, needle, exactMatch, &result)
 	}
 	return result
 }
 
-func collectByLabel(elements []Element, lowerLabel, exactLabel string, exact bool, result *[]Element) {
+func collectByLabel(elements []Element, lowerLabel string, exact bool, result *[]Element) {
 	for _, el := range elements {
 		if el.Label != nil {
-			if (exact && *el.Label == exactLabel) || (!exact && strings.Contains(strings.ToLower(*el.Label), lowerLabel)) {
+			candidate := strings.ToLower(*el.Label)
+			if (exact && candidate == lowerLabel) || (!exact && strings.Contains(candidate, lowerLabel)) {
 				*result = append(*result, el)
 			}
 		}
-		collectByLabel(el.Children, lowerLabel, exactLabel, exact, result)
+		collectByLabel(el.Children, lowerLabel, exact, result)
 		if el.Shadow != nil {
-			collectByLabel(el.Shadow.Elements, lowerLabel, exactLabel, exact, result)
+			collectByLabel(el.Shadow.Elements, lowerLabel, exact, result)
 		}
 	}
 }
