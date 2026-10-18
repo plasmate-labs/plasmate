@@ -176,7 +176,7 @@ func (c *Client) send(req jsonRPCRequest) error {
 	return err
 }
 
-func (c *Client) readResponse() (*jsonRPCResponse, error) {
+func (c *Client) readResponse(expectedID int) (*jsonRPCResponse, error) {
 	for c.scanner.Scan() {
 		line := c.scanner.Text()
 		if line == "" {
@@ -185,6 +185,9 @@ func (c *Client) readResponse() (*jsonRPCResponse, error) {
 		var resp jsonRPCResponse
 		if err := json.Unmarshal([]byte(line), &resp); err != nil {
 			continue // skip non-JSON lines
+		}
+		if resp.ID == nil || *resp.ID != expectedID {
+			continue // skip notifications and responses for other requests
 		}
 		return &resp, nil
 	}
@@ -208,7 +211,7 @@ func (c *Client) rpc(method string, params interface{}) (json.RawMessage, error)
 		return nil, err
 	}
 
-	resp, err := c.readResponse()
+	resp, err := c.readResponse(id)
 	if err != nil {
 		return nil, err
 	}
@@ -416,6 +419,54 @@ func (c *Client) Click(sessionID string, elementID string) (*Som, error) {
 		return nil, err
 	}
 	return Parse(raw)
+}
+
+// TypeText types text into a form control and returns the updated page SOM.
+func (c *Client) TypeText(sessionID string, elementID string, text string) (*Som, error) {
+	return c.TypeTextWithOptions(sessionID, elementID, text, TypeTextOptions{})
+}
+
+// TypeTextOptions holds optional parameters for TypeTextWithOptions.
+type TypeTextOptions struct {
+	Append *bool // Append to the existing value instead of replacing it
+}
+
+func typeTextArguments(sessionID string, elementID string, text string, opts TypeTextOptions) map[string]interface{} {
+	args := map[string]interface{}{
+		"session_id": sessionID,
+		"element_id": elementID,
+		"text":       text,
+	}
+	if opts.Append != nil {
+		args["append"] = *opts.Append
+	}
+	return args
+}
+
+// TypeTextWithOptions types text into a form control with optional append
+// behavior and returns the updated page SOM.
+func (c *Client) TypeTextWithOptions(sessionID string, elementID string, text string, opts TypeTextOptions) (*Som, error) {
+	raw, err := c.callTool("type_text", typeTextArguments(sessionID, elementID, text, opts))
+	if err != nil {
+		return nil, err
+	}
+	return Parse(raw)
+}
+
+// Clear clears a text input or textarea and returns the updated page SOM.
+func (c *Client) Clear(sessionID string, elementID string) (*Som, error) {
+	raw, err := c.callTool("clear", clearArguments(sessionID, elementID))
+	if err != nil {
+		return nil, err
+	}
+	return Parse(raw)
+}
+
+func clearArguments(sessionID string, elementID string) map[string]interface{} {
+	return map[string]interface{}{
+		"session_id": sessionID,
+		"element_id": elementID,
+	}
 }
 
 // ClosePage closes a browser session and frees resources.

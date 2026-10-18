@@ -115,6 +115,18 @@ if err != nil {
 }
 fmt.Println("Page after click:", updated.Title)
 
+// Type into a form control
+updated, err = client.TypeText(session.SessionID, "e6", "plasmate")
+if err != nil {
+    log.Fatal(err)
+}
+
+// Clear the same form control when its current value should be removed
+updated, err = client.Clear(session.SessionID, "e6")
+if err != nil {
+    log.Fatal(err)
+}
+
 // Reuse the session for another page.
 next, err := client.NavigateTo(session.SessionID, "https://example.com/next")
 if err != nil {
@@ -171,6 +183,9 @@ all := plasmate.FlatElements(som)
 | `NavigateTo(sessionID, url)` | Navigate an existing session and return its updated SOM |
 | `Evaluate(sessionID, expr)` | Run JS in page context |
 | `Click(sessionID, elementID)` | Click element, get updated SOM |
+| `TypeText(sessionID, elementID, text)` | Type into a form control, get updated SOM |
+| `TypeTextWithOptions(sessionID, elementID, text, opts)` | Type with append behavior, get updated SOM |
+| `Clear(sessionID, elementID)` | Clear a text input or textarea, get updated SOM |
 | `ClosePage(sessionID)` | Close session |
 | `Close()` | Shut down subprocess |
 
