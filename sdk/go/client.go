@@ -76,13 +76,18 @@ type jsonRPCError struct {
 }
 
 type toolResult struct {
-	Content []toolContent `json:"content"`
-	IsError bool          `json:"isError"`
+	Content           []toolContent         `json:"content"`
+	IsError           bool                  `json:"isError"`
+	StructuredContent *structuredToolResult `json:"structuredContent,omitempty"`
 }
 
 type toolContent struct {
 	Type string `json:"type"`
 	Text string `json:"text"`
+}
+
+type structuredToolResult struct {
+	Result json.RawMessage `json:"result"`
 }
 
 const maxToolErrorChars = 200
@@ -96,6 +101,15 @@ func boundedToolError(text string) string {
 		return text
 	}
 	return string(runes[:maxToolErrorChars-1]) + "…"
+}
+
+func toolErrorMessage(content []toolContent) string {
+	for _, item := range content {
+		if item.Text != "" {
+			return boundedToolError(item.Text)
+		}
+	}
+	return "unknown error"
 }
 
 func (c *Client) ensureStarted() error {
@@ -242,10 +256,12 @@ func (c *Client) callTool(name string, args map[string]interface{}) (json.RawMes
 		return nil, fmt.Errorf("plasmate: unmarshal tool result: %w", err)
 	}
 	if result.IsError {
-		if len(result.Content) == 0 {
-			return nil, errors.New("unknown error")
-		}
-		return nil, errors.New(boundedToolError(result.Content[0].Text))
+		return nil, errors.New(toolErrorMessage(result.Content))
+	}
+	// structuredContent is the canonical machine-readable result when a
+	// server provides both it and a human-readable content block.
+	if result.StructuredContent != nil && len(result.StructuredContent.Result) > 0 {
+		return result.StructuredContent.Result, nil
 	}
 	if len(result.Content) == 0 || result.Content[0].Text == "" {
 		return nil, nil

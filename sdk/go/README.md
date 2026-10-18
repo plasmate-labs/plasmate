@@ -8,7 +8,13 @@ Go SDK for the [Plasmate](https://plasmate.dev) agent-native headless browser.
 go get github.com/plasmate-labs/plasmate/sdk/go@v0.1.0
 ```
 
-Requires the `plasmate` binary in your PATH.
+Requires the `plasmate` binary in your PATH. If the binary is installed
+elsewhere, pass its path with `plasmate.WithBinary`:
+
+```go
+client := plasmate.NewClient(plasmate.WithBinary("/path/to/plasmate"))
+defer client.Close()
+```
 
 ## Quick Start
 
@@ -66,8 +72,8 @@ func main() {
     fmt.Printf("Found %d links\n", len(links))
 
     // Query helpers
-    links := plasmate.FindByTag(som, "link")
-    fmt.Printf("Found %d links\n", len(links))
+    pageLinks := plasmate.FindByTag(som, "link")
+    fmt.Printf("Found %d links\n", len(pageLinks))
 
     interactive := plasmate.FindInteractive(som)
     fmt.Printf("Found %d interactive elements\n", len(interactive))

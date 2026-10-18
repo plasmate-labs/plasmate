@@ -335,6 +335,32 @@ done
 	}
 }
 
+func TestToolErrorUsesFirstNonEmptyContentText(t *testing.T) {
+	dir := t.TempDir()
+	fixture := filepath.Join(dir, "mcp-fixture.sh")
+	if err := os.WriteFile(fixture, []byte(`#!/bin/sh
+while IFS= read -r request; do
+  case "$request" in
+    *'"method":"initialize"'*)
+      printf '%s\n' '{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05"}}'
+      ;;
+    *'"method":"tools/call"'*)
+      printf '%s\n' '{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"image","text":""},{"type":"text","text":"diagnostic from second block"}],"isError":true}}'
+      ;;
+  esac
+done
+`), 0o700); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+
+	client := NewClient(WithBinary(fixture))
+	defer client.Close()
+	_, err := client.FetchPage("fixture")
+	if err == nil || err.Error() != "diagnostic from second block" {
+		t.Fatalf("FetchPage error = %v, want later text diagnostic", err)
+	}
+}
+
 func TestToolErrorDiagnosticIsBounded(t *testing.T) {
 	diagnostic := strings.Repeat("x", 5000)
 	dir := t.TempDir()
@@ -393,5 +419,65 @@ done
 	_, err := client.FetchPage("fixture")
 	if err == nil || err.Error() != "expected tool failure" {
 		t.Fatalf("FetchPage error = %v, want mismatched responses ignored", err)
+	}
+}
+
+func TestStructuredToolResultFallback(t *testing.T) {
+	dir := t.TempDir()
+	fixture := filepath.Join(dir, "mcp-fixture.sh")
+	script := `#!/bin/sh
+while IFS= read -r request; do
+  case "$request" in
+    *'"method":"initialize"'*)
+      printf '%s\n' '{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05"}}'
+      ;;
+    *'"method":"tools/call"'*)
+      printf '%s\n' '{"jsonrpc":"2.0","id":3,"result":{"content":[],"structuredContent":{"result":{"title":"Structured page","regions":[]}}}}'
+      ;;
+  esac
+done
+`
+	if err := os.WriteFile(fixture, []byte(script), 0o700); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+
+	client := NewClient(WithBinary(fixture))
+	defer client.Close()
+	som, err := client.FetchPage("fixture")
+	if err != nil {
+		t.Fatalf("FetchPage error = %v, want structured result decoded", err)
+	}
+	if som.Title != "Structured page" {
+		t.Fatalf("FetchPage title = %q, want structured page", som.Title)
+	}
+}
+
+func TestStructuredToolResultPreferredOverText(t *testing.T) {
+	dir := t.TempDir()
+	fixture := filepath.Join(dir, "mcp-fixture.sh")
+	script := `#!/bin/sh
+while IFS= read -r request; do
+  case "$request" in
+    *'"method":"initialize"'*)
+      printf '%s\n' '{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05"}}'
+      ;;
+    *'"method":"tools/call"'*)
+      printf '%s\n' '{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"human-readable summary"}],"structuredContent":{"result":{"title":"Canonical page","regions":[]}}}}'
+      ;;
+  esac
+done
+`
+	if err := os.WriteFile(fixture, []byte(script), 0o700); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+
+	client := NewClient(WithBinary(fixture))
+	defer client.Close()
+	som, err := client.FetchPage("fixture")
+	if err != nil {
+		t.Fatalf("FetchPage error = %v, want structured result decoded", err)
+	}
+	if som.Title != "Canonical page" {
+		t.Fatalf("FetchPage title = %q, want canonical structured page", som.Title)
 	}
 }
