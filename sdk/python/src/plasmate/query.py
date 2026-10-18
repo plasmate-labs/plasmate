@@ -512,11 +512,11 @@ def find_action_targets_by_action(
     aliases are normalized only for this lookup.
     """
     index = get_action_plan_index(som, enabled_only=enabled_only)
-    normalized_action = action.strip().lower()
+    normalized_action = " ".join(action.strip().lower().split())
     if normalized_action.startswith("action"):
         separator = normalized_action[len("action") :].lstrip()
         if separator.startswith((":", "=")):
-            normalized_action = separator[1:].strip()
+            normalized_action = " ".join(separator[1:].strip().split())
     normalized_action = {
         "type_text": "type",
         "type-text": "type",
