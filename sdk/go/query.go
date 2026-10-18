@@ -116,6 +116,32 @@ func FindByText(som *Som, text string) []Element {
 	return result
 }
 
+// FindByLabel returns all elements whose accessible label matches label.
+// Matching is case-insensitive and uses substring matching.
+func FindByLabel(som *Som, label string, exact ...bool) []Element {
+	needle := strings.ToLower(label)
+	exactMatch := len(exact) > 0 && exact[0]
+	var result []Element
+	for _, r := range som.Regions {
+		collectByLabel(r.Elements, needle, label, exactMatch, &result)
+	}
+	return result
+}
+
+func collectByLabel(elements []Element, lowerLabel, exactLabel string, exact bool, result *[]Element) {
+	for _, el := range elements {
+		if el.Label != nil {
+			if (exact && *el.Label == exactLabel) || (!exact && strings.Contains(strings.ToLower(*el.Label), lowerLabel)) {
+				*result = append(*result, el)
+			}
+		}
+		collectByLabel(el.Children, lowerLabel, exactLabel, exact, result)
+		if el.Shadow != nil {
+			collectByLabel(el.Shadow.Elements, lowerLabel, exactLabel, exact, result)
+		}
+	}
+}
+
 func collectByText(elements []Element, lowerText string, result *[]Element) {
 	for _, el := range elements {
 		if elementMatchesText(el, lowerText) {

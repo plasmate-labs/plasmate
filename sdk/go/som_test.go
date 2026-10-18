@@ -398,6 +398,25 @@ func TestFindByText(t *testing.T) {
 	}
 }
 
+func TestFindByLabel(t *testing.T) {
+	som := mustParse(t)
+
+	results := FindByLabel(som, "search")
+	if len(results) != 1 || results[0].ID != "e5" {
+		t.Fatalf("FindByLabel(search) = %#v, want e5", results)
+	}
+
+	results = FindByLabel(som, "SEARCH", true)
+	if len(results) != 0 {
+		t.Fatalf("FindByLabel(SEARCH, exact) = %#v, want no case-sensitive exact match", results)
+	}
+
+	results = FindByLabel(som, "Search", true)
+	if len(results) != 1 || results[0].ID != "e5" {
+		t.Fatalf("FindByLabel(Search, exact) = %#v, want e5", results)
+	}
+}
+
 func TestFindByTextCompiledListItems(t *testing.T) {
 	ordered := false
 	som := &Som{
