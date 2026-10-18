@@ -252,10 +252,12 @@ func (c *Client) callTool(name string, args map[string]interface{}) (json.RawMes
 		}
 		return nil, errors.New(boundedToolError(result.Content[0].Text))
 	}
+	// structuredContent is the canonical machine-readable result when a
+	// server provides both it and a human-readable content block.
+	if result.StructuredContent != nil && len(result.StructuredContent.Result) > 0 {
+		return result.StructuredContent.Result, nil
+	}
 	if len(result.Content) == 0 || result.Content[0].Text == "" {
-		if result.StructuredContent != nil && len(result.StructuredContent.Result) > 0 {
-			return result.StructuredContent.Result, nil
-		}
 		return nil, nil
 	}
 	return json.RawMessage(result.Content[0].Text), nil
