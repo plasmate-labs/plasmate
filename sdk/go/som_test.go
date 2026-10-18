@@ -322,6 +322,35 @@ func TestFindByID(t *testing.T) {
 	}
 }
 
+func TestFindByRegionID(t *testing.T) {
+	som := mustParse(t)
+
+	region := FindByRegionID(som, "r_main")
+	if region == nil {
+		t.Fatal("FindByRegionID(r_main) returned nil")
+	}
+	if region.Role != "main" {
+		t.Errorf("Role = %q, want main", region.Role)
+	}
+	if FindByRegionID(som, "missing-region") != nil {
+		t.Error("FindByRegionID(missing-region) should return nil")
+	}
+}
+
+func TestFindByHTMLIDReturnsMutableElement(t *testing.T) {
+	som := mustParse(t)
+
+	button := FindByHTMLID(som, "open-filters")
+	if button == nil {
+		t.Fatal("FindByHTMLID(open-filters) returned nil")
+	}
+
+	button.Role = "toggle_button"
+	if got := FindByID(som, "e10").Role; got != "toggle_button" {
+		t.Fatalf("FindByHTMLID returned a copy: FindByID(e10).Role = %q, want toggle_button", got)
+	}
+}
+
 func TestFindByHTMLID(t *testing.T) {
 	som := mustParse(t)
 
@@ -395,6 +424,25 @@ func TestFindByText(t *testing.T) {
 	}
 	if results[0].ID != "e10" {
 		t.Errorf("ID = %q, want e10", results[0].ID)
+	}
+}
+
+func TestFindByLabel(t *testing.T) {
+	som := mustParse(t)
+
+	results := FindByLabel(som, "search")
+	if len(results) != 1 || results[0].ID != "e5" {
+		t.Fatalf("FindByLabel(search) = %#v, want e5", results)
+	}
+
+	results = FindByLabel(som, "SEARCH", true)
+	if len(results) != 1 || results[0].ID != "e5" {
+		t.Fatalf("FindByLabel(SEARCH, exact) = %#v, want e5", results)
+	}
+
+	results = FindByLabel(som, "Search", true)
+	if len(results) != 1 || results[0].ID != "e5" {
+		t.Fatalf("FindByLabel(Search, exact) = %#v, want e5", results)
 	}
 }
 

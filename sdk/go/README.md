@@ -75,6 +75,11 @@ func main() {
     pageLinks := plasmate.FindByTag(som, "link")
     fmt.Printf("Found %d links\n", len(pageLinks))
 
+    main := plasmate.FindByRegionID(som, "r_main")
+    if main != nil {
+        fmt.Println("Main region:", main.Role)
+    }
+
     interactive := plasmate.FindInteractive(som)
     fmt.Printf("Found %d interactive elements\n", len(interactive))
 
@@ -243,6 +248,7 @@ all := plasmate.FlatElements(som)
 | `FindByID(som, id)` | Find element by ID |
 | `FindByTag(som, tag)` | Find elements by role/tag |
 | `FindInteractive(som)` | Find elements with actions |
+| `FindByLabel(som, label, exact...)` | Find elements by accessible label (substring by default; optional exact match) |
 | `FindByText(som, text)` | Case-insensitive text search |
 | `FindByAction(som, action)` | Find elements exposing an action |
 | `FindByHint(som, hint)` | Find elements tagged with a semantic hint |

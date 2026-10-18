@@ -19,6 +19,17 @@ func FindByRole(som *Som, role string) []Region {
 	return result
 }
 
+// FindByRegionID searches top-level regions for the given SOM region ID.
+// Returns nil if not found.
+func FindByRegionID(som *Som, id string) *Region {
+	for i := range som.Regions {
+		if som.Regions[i].ID == id {
+			return &som.Regions[i]
+		}
+	}
+	return nil
+}
+
 // FindByID searches all regions for an element with the given ID.
 // Returns nil if not found.
 func FindByID(som *Som, id string) *Element {
@@ -33,9 +44,26 @@ func FindByID(som *Som, id string) *Element {
 // FindByHTMLID searches all regions for an element with the original HTML id.
 // Returns nil if not found.
 func FindByHTMLID(som *Som, htmlID string) *Element {
-	for _, el := range FlatElements(som) {
-		if el.HTMLID != nil && *el.HTMLID == htmlID {
-			return &el
+	for i := range som.Regions {
+		if el := findByHTMLIDInSlice(som.Regions[i].Elements, htmlID); el != nil {
+			return el
+		}
+	}
+	return nil
+}
+
+func findByHTMLIDInSlice(elements []Element, htmlID string) *Element {
+	for i := range elements {
+		if elements[i].HTMLID != nil && *elements[i].HTMLID == htmlID {
+			return &elements[i]
+		}
+		if el := findByHTMLIDInSlice(elements[i].Children, htmlID); el != nil {
+			return el
+		}
+		if elements[i].Shadow != nil {
+			if el := findByHTMLIDInSlice(elements[i].Shadow.Elements, htmlID); el != nil {
+				return el
+			}
 		}
 	}
 	return nil
@@ -114,6 +142,33 @@ func FindByText(som *Som, text string) []Element {
 		collectByText(r.Elements, lower, &result)
 	}
 	return result
+}
+
+// FindByLabel returns all elements whose accessible label matches label.
+// Matching is case-insensitive and uses substring matching.
+func FindByLabel(som *Som, label string, exact ...bool) []Element {
+	needle := strings.ToLower(label)
+	exactMatch := len(exact) > 0 && exact[0]
+	var result []Element
+	for _, r := range som.Regions {
+		collectByLabel(r.Elements, needle, exactMatch, &result)
+	}
+	return result
+}
+
+func collectByLabel(elements []Element, lowerLabel string, exact bool, result *[]Element) {
+	for _, el := range elements {
+		if el.Label != nil {
+			candidate := strings.ToLower(*el.Label)
+			if (exact && candidate == lowerLabel) || (!exact && strings.Contains(candidate, lowerLabel)) {
+				*result = append(*result, el)
+			}
+		}
+		collectByLabel(el.Children, lowerLabel, exact, result)
+		if el.Shadow != nil {
+			collectByLabel(el.Shadow.Elements, lowerLabel, exact, result)
+		}
+	}
 }
 
 func collectByText(elements []Element, lowerText string, result *[]Element) {
