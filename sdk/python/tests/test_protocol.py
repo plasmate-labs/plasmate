@@ -35,6 +35,7 @@ for line in sys.stdin:
         if tool_name == "silent_tool":
             continue
         if tool_name == "out_of_order_tool":
+            send({"jsonrpc": "2.0", "method": "notifications/progress", "params": {"done": False}})
             send({"jsonrpc": "2.0", "id": 999, "result": {"stale": True}})
             send({
                 "jsonrpc": "2.0",

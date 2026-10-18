@@ -240,9 +240,13 @@ class Plasmate:
                 response = json.loads(line)
             except json.JSONDecodeError:
                 continue  # Skip non-JSON lines (tracing output)
-            if not isinstance(response, dict) or response.get("id") != expected_id:
-                # Notifications and late responses for another request must not
-                # be allowed to satisfy the current RPC call.
+            if (
+                not isinstance(response, dict)
+                or "id" not in response
+                or response.get("id") != expected_id
+            ):
+                # JSON-RPC notifications have no id; late responses for another
+                # request must not be allowed to satisfy the current RPC call.
                 continue
             return response
 
@@ -567,9 +571,13 @@ class AsyncPlasmate:
                 response = json.loads(text)
             except json.JSONDecodeError:
                 continue
-            if not isinstance(response, dict) or response.get("id") != expected_id:
-                # Notifications and late responses for another request must not
-                # be allowed to satisfy the current RPC call.
+            if (
+                not isinstance(response, dict)
+                or "id" not in response
+                or response.get("id") != expected_id
+            ):
+                # JSON-RPC notifications have no id; late responses for another
+                # request must not be allowed to satisfy the current RPC call.
                 continue
             return response
 
