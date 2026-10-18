@@ -335,6 +335,32 @@ done
 	}
 }
 
+func TestToolErrorUsesFirstNonEmptyContentText(t *testing.T) {
+	dir := t.TempDir()
+	fixture := filepath.Join(dir, "mcp-fixture.sh")
+	if err := os.WriteFile(fixture, []byte(`#!/bin/sh
+while IFS= read -r request; do
+  case "$request" in
+    *'"method":"initialize"'*)
+      printf '%s\n' '{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05"}}'
+      ;;
+    *'"method":"tools/call"'*)
+      printf '%s\n' '{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"image","text":""},{"type":"text","text":"diagnostic from second block"}],"isError":true}}'
+      ;;
+  esac
+done
+`), 0o700); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+
+	client := NewClient(WithBinary(fixture))
+	defer client.Close()
+	_, err := client.FetchPage("fixture")
+	if err == nil || err.Error() != "diagnostic from second block" {
+		t.Fatalf("FetchPage error = %v, want later text diagnostic", err)
+	}
+}
+
 func TestToolErrorDiagnosticIsBounded(t *testing.T) {
 	diagnostic := strings.Repeat("x", 5000)
 	dir := t.TempDir()

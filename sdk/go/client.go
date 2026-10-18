@@ -103,6 +103,15 @@ func boundedToolError(text string) string {
 	return string(runes[:maxToolErrorChars-1]) + "…"
 }
 
+func toolErrorMessage(content []toolContent) string {
+	for _, item := range content {
+		if item.Text != "" {
+			return boundedToolError(item.Text)
+		}
+	}
+	return "unknown error"
+}
+
 func (c *Client) ensureStarted() error {
 	if c.initialized {
 		return nil
@@ -247,10 +256,7 @@ func (c *Client) callTool(name string, args map[string]interface{}) (json.RawMes
 		return nil, fmt.Errorf("plasmate: unmarshal tool result: %w", err)
 	}
 	if result.IsError {
-		if len(result.Content) == 0 {
-			return nil, errors.New("unknown error")
-		}
-		return nil, errors.New(boundedToolError(result.Content[0].Text))
+		return nil, errors.New(toolErrorMessage(result.Content))
 	}
 	// structuredContent is the canonical machine-readable result when a
 	// server provides both it and a human-readable content block.
