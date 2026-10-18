@@ -450,6 +450,22 @@ func (c *Client) TypeTextWithOptions(sessionID string, elementID string, text st
 	return Parse(raw)
 }
 
+// Clear clears a text input or textarea and returns the updated page SOM.
+func (c *Client) Clear(sessionID string, elementID string) (*Som, error) {
+	raw, err := c.callTool("clear", clearArguments(sessionID, elementID))
+	if err != nil {
+		return nil, err
+	}
+	return Parse(raw)
+}
+
+func clearArguments(sessionID string, elementID string) map[string]interface{} {
+	return map[string]interface{}{
+		"session_id": sessionID,
+		"element_id": elementID,
+	}
+}
+
 // ClosePage closes a browser session and frees resources.
 func (c *Client) ClosePage(sessionID string) error {
 	_, err := c.callTool("close_page", map[string]interface{}{

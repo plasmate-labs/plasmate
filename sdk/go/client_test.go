@@ -154,6 +154,18 @@ func TestTypeTextArgumentsOmitNilAppend(t *testing.T) {
 	}
 }
 
+func TestClearArguments(t *testing.T) {
+	got := clearArguments("s1", "e5")
+	want := map[string]interface{}{
+		"session_id": "s1",
+		"element_id": "e5",
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("clear arguments = %#v, want %#v", got, want)
+	}
+}
+
 func TestExtractTextArgumentsIncludeOptions(t *testing.T) {
 	maxChars := 1200
 	javascript := false
