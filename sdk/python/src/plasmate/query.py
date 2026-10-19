@@ -577,7 +577,7 @@ def find_action_target_by_label(
 
 
 def find_by_text(som: Som, text: str) -> List[SomElement]:
-    """Find all elements whose text, label, compiled list items, description-list terms/descriptions, select options, table captions, or table cells contain the substring."""
+    """Find elements whose visible or compiled text metadata contains the substring."""
     results: List[SomElement] = []
     lower = text.lower()
     for region in som.regions:
@@ -681,6 +681,8 @@ def _collect_by_text(element: SomElement, lower_text: str, results: List[SomElem
         parts.append(element.text)
     if element.label:
         parts.append(element.label)
+    if element.attrs and element.attrs.description:
+        parts.append(element.attrs.description)
     if element.attrs and element.attrs.items:
         parts.extend(item.text for item in element.attrs.items if item.text)
         parts.extend(item.term for item in element.attrs.items if item.term)

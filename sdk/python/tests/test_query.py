@@ -572,6 +572,38 @@ class TestFindByText:
         assert len(results) == 1
         assert results[0].id == "shadow_text"
 
+    def test_finds_compiled_element_descriptions(self) -> None:
+        som = Som(
+            som_version="1.0",
+            url="https://example.com/descriptions",
+            title="Descriptions",
+            lang="en",
+            regions=[
+                SomRegion(
+                    id="r_main",
+                    role=RegionRole.main,
+                    elements=[
+                        SomElement(
+                            id="e_email",
+                            role=ElementRole.text_input,
+                            attrs=ElementAttrs(
+                                description="Use your work address for alerts"
+                            ),
+                        )
+                    ],
+                )
+            ],
+            meta=SomMeta(
+                html_bytes=100,
+                som_bytes=50,
+                element_count=1,
+                interactive_count=1,
+            ),
+        )
+
+        results = find_by_text(som, "work address")
+        assert [element.id for element in results] == ["e_email"]
+
     def test_no_match_returns_empty(self, sample_som: Som) -> None:
         assert find_by_text(sample_som, "zzz_no_match") == []
 
