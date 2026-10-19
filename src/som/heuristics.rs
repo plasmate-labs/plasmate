@@ -574,10 +574,33 @@ pub fn class_id_region_hint(attrs: &[(String, String)]) -> Option<&'static str> 
 pub fn truncate_text(text: &str, max_chars: usize) -> String {
     let trimmed: String = text.split_whitespace().collect::<Vec<_>>().join(" ");
     if trimmed.chars().count() > max_chars {
+        if max_chars == 0 {
+            return String::new();
+        }
+        if max_chars <= 3 {
+            return if max_chars == 3 {
+                "...".to_string()
+            } else {
+                trimmed.chars().take(max_chars).collect()
+            };
+        }
         let truncated: String = trimmed.chars().take(max_chars.saturating_sub(3)).collect();
         format!("{}...", truncated)
     } else {
         trimmed
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::truncate_text;
+
+    #[test]
+    fn truncate_text_honors_tiny_character_budgets() {
+        assert_eq!(truncate_text("Hello world", 0), "");
+        assert_eq!(truncate_text("Hello world", 1), "H");
+        assert_eq!(truncate_text("Hello world", 2), "He");
+        assert_eq!(truncate_text("Hello world", 3), "...");
     }
 }
 
