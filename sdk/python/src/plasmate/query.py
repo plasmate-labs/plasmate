@@ -60,20 +60,31 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "ol": "list",
         "dl": "list",
         "menu": "list",
+        "menu_item": "button",
+        "menuitem": "button",
+        "menu_item_checkbox": "checkbox",
+        "menuitemcheckbox": "checkbox",
+        "menu_item_radio": "radio",
+        "menuitemradio": "radio",
         "p": "paragraph",
+        "search_box": "text_input",
         "summary": "details",
         "textarea": "textarea",
         "textbox": "text_input",
         "searchbox": "text_input",
         "combobox": "select",
+        "combo_box": "select",
         "listbox": "select",
+        "list_box": "select",
         "select": "select",
+        "switch": "checkbox",
+        "tab": "button",
         "ul": "list",
         "unordered_list": "list",
         "ordered_list": "list",
         "definition_list": "list",
     }
-    tag = tag.strip().lower().replace("-", "_")
+    tag = _normalize_role_alias(tag)
     heading_level = None
     if tag.startswith("heading"):
         suffix = tag.removeprefix("heading").lstrip("-_")
@@ -464,6 +475,7 @@ def find_action_targets_by_role(
         "article": "section",
         "button": "button",
         "combobox": "select",
+        "combo_box": "select",
         "definition_list": "list",
         "div": "group",
         "fieldset": "group",
@@ -484,6 +496,7 @@ def find_action_targets_by_role(
         "p": "paragraph",
         "radio": "radio",
         "search": "text_input",
+        "search_box": "text_input",
         "search_input": "text_input",
         "select": "select",
         "summary": "details",
@@ -493,8 +506,9 @@ def find_action_targets_by_role(
         "textbox": "text_input",
         "searchbox": "text_input",
         "ul": "list",
+        "list_box": "select",
         "unordered_list": "list",
-    }.get(role.strip().lower(), role.strip().lower())
+    }.get(_normalize_role_alias(role), _normalize_role_alias(role))
     results = index["by_role"].get(normalized_role, [])
     return list(results) if isinstance(results, list) else []
 
@@ -616,6 +630,11 @@ def get_token_estimate(som: Union[Som, dict]) -> int:
 
 
 # ---- Internal helpers ----
+
+
+def _normalize_role_alias(value: str) -> str:
+    """Normalize role aliases so hyphenated and spaced forms behave alike."""
+    return "_".join(value.strip().lower().replace("-", " ").split())
 
 
 def _find_element_by_id(element: SomElement, element_id: str) -> Optional[SomElement]:
