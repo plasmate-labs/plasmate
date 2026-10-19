@@ -471,6 +471,16 @@ fn compact_value(element: &Element) -> Option<String> {
 }
 
 fn compact_expanded(element: &Element) -> Option<bool> {
+    if element.role == ElementRole::Details {
+        if let Some(value) = element
+            .attrs
+            .as_ref()
+            .and_then(|attrs| attrs.get("open"))
+            .and_then(serde_json::Value::as_bool)
+        {
+            return Some(value);
+        }
+    }
     if !matches!(
         element.role,
         ElementRole::Button | ElementRole::Link | ElementRole::TextInput | ElementRole::Select
@@ -1221,6 +1231,8 @@ mod tests {
   <button aria-label="Save">Save</button>
   <a href="/docs" aria-expanded="false">Docs</a>
   <div role="combobox" aria-label="Country" aria-expanded="true"></div>
+  <details open><summary>More filters</summary><p>Extra controls</p></details>
+  <details><summary>Advanced</summary><p>More controls</p></details>
   <input type="checkbox" aria-label="Subscribe" aria-expanded="true" checked>
   <p aria-expanded="true">Just text</p>
 </main>"#;
@@ -1268,6 +1280,14 @@ mod tests {
             .expect("combobox should be compact");
         assert_eq!(country.role, "select");
         assert_eq!(country.expanded, Some(true));
+
+        let details: Vec<_> = elements
+            .iter()
+            .filter(|element| element.role == "details")
+            .collect();
+        assert_eq!(details.len(), 2);
+        assert_eq!(details[0].expanded, Some(true));
+        assert_eq!(details[1].expanded, Some(false));
 
         let subscribe = elements
             .iter()
