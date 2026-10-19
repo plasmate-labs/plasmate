@@ -160,7 +160,10 @@ class Plasmate:
             [self._binary, "mcp"],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            # The SDK never reads stderr.  A pipe can fill under verbose
+            # logging and block the MCP child, so keep diagnostics from
+            # becoming a transport backpressure channel.
+            stderr=subprocess.DEVNULL,
         )
 
         # Initialize MCP session
@@ -516,7 +519,10 @@ class AsyncPlasmate:
             self._binary, "mcp",
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
+            # The SDK never reads stderr.  A pipe can fill under verbose
+            # logging and block the MCP child, so keep diagnostics from
+            # becoming a transport backpressure channel.
+            stderr=asyncio.subprocess.DEVNULL,
         )
 
         await self._rpc("initialize", {

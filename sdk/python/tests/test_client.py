@@ -1,9 +1,49 @@
 """Tests for public SDK read-option forwarding."""
 
 import asyncio
+import subprocess
 from unittest.mock import AsyncMock, Mock, call
+from unittest.mock import patch
 
 from plasmate.client import AsyncPlasmate, Plasmate
+
+
+def test_sync_start_does_not_pipe_unread_stderr() -> None:
+    browser = Plasmate(binary="fixture")
+    process = Mock()
+    with patch("plasmate.client.subprocess.Popen", return_value=process) as popen:
+        browser._rpc = Mock(return_value={})  # type: ignore[method-assign]
+        browser._start()
+
+    popen.assert_called_once_with(
+        ["fixture", "mcp"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    )
+
+
+def test_async_start_does_not_pipe_unread_stderr() -> None:
+    async def exercise() -> None:
+        browser = AsyncPlasmate(binary="fixture")
+        process = Mock()
+        with patch(
+            "plasmate.client.asyncio.create_subprocess_exec",
+            new=AsyncMock(return_value=process),
+        ) as create:
+            browser._rpc = AsyncMock(return_value={})  # type: ignore[method-assign]
+            browser._send = AsyncMock()  # type: ignore[method-assign]
+            await browser._start()
+
+        create.assert_awaited_once_with(
+            "fixture",
+            "mcp",
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+
+    asyncio.run(exercise())
 
 
 def test_sync_read_methods_forward_selector() -> None:
