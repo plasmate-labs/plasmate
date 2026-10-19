@@ -471,6 +471,13 @@ fn compact_value(element: &Element) -> Option<String> {
 }
 
 fn compact_expanded(element: &Element) -> Option<bool> {
+    if element.role == ElementRole::Details {
+        return element
+            .attrs
+            .as_ref()
+            .and_then(|attrs| attrs.get("open"))
+            .and_then(parse_bool_value);
+    }
     if !matches!(
         element.role,
         ElementRole::Button | ElementRole::Link | ElementRole::TextInput | ElementRole::Select
@@ -478,11 +485,23 @@ fn compact_expanded(element: &Element) -> Option<bool> {
         return None;
     }
     element.attrs.as_ref().and_then(|attrs| {
-        match attrs.get("aria").and_then(|aria| aria.get("expanded")) {
-            Some(serde_json::Value::Bool(value)) => Some(*value),
-            _ => None,
-        }
+        attrs
+            .get("aria")
+            .and_then(|aria| aria.get("expanded"))
+            .and_then(parse_bool_value)
     })
+}
+
+fn parse_bool_value(value: &serde_json::Value) -> Option<bool> {
+    match value {
+        serde_json::Value::Bool(value) => Some(*value),
+        serde_json::Value::String(value) => match value.trim().to_ascii_lowercase().as_str() {
+            "true" => Some(true),
+            "false" => Some(false),
+            _ => None,
+        },
+        _ => None,
+    }
 }
 
 fn compact_current(element: &Element) -> Option<serde_json::Value> {
@@ -1103,6 +1122,54 @@ mod tests {
                 .all(|element| element.checked.is_none()),
             "paragraphs must not invent checked: {elements:?}"
         );
+    }
+
+    #[test]
+    fn compact_som_preserves_native_disclosure_state() {
+        let html = r#"<main>
+  <details open><summary>More filters</summary><p>Extra controls</p></details>
+  <details><summary>Advanced</summary><p>More controls</p></details>
+  <button aria-expanded="false">Menu</button>
+</main>"#;
+        let som = compiler::compile(html, "https://example.com/").unwrap();
+        let compact = compact_structure(&som);
+        let elements: Vec<_> = compact
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let details: Vec<_> = elements
+            .iter()
+            .filter(|element| element.role == "details")
+            .collect();
+        assert_eq!(details.len(), 2);
+        assert_eq!(details[0].expanded, Some(true));
+        assert_eq!(details[1].expanded, Some(false));
+
+        let menu = elements
+            .iter()
+            .find(|element| element.text.as_deref() == Some("Menu"))
+            .expect("menu button should be compact");
+        assert_eq!(menu.expanded, Some(false));
+    }
+
+    #[test]
+    fn compact_expanded_accepts_string_boolean_values() {
+        let element = Element {
+            id: "button-1".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: Some("Filters".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"aria": {"expanded": " TRUE "}})),
+            children: None,
+            hints: None,
+            shadow: None,
+        };
+
+        assert_eq!(compact_expanded(&element), Some(true));
     }
 
     #[test]
