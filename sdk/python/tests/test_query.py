@@ -604,6 +604,43 @@ class TestFindByText:
         results = find_by_text(som, "work address")
         assert [element.id for element in results] == ["e_email"]
 
+    def test_finds_user_facing_attribute_text(self) -> None:
+        som = Som(
+            som_version="1.0",
+            url="https://example.com/attribute-text",
+            title="Attribute Text",
+            lang="en",
+            regions=[
+                SomRegion(
+                    id="r_main",
+                    role=RegionRole.main,
+                    elements=[
+                        SomElement(
+                            id="e_logo",
+                            role=ElementRole.image,
+                            attrs=ElementAttrs(alt="Product wordmark"),
+                        ),
+                        SomElement(
+                            id="e_search",
+                            role=ElementRole.text_input,
+                            attrs=ElementAttrs(placeholder="Search documentation"),
+                        ),
+                    ],
+                )
+            ],
+            meta=SomMeta(
+                html_bytes=100,
+                som_bytes=50,
+                element_count=2,
+                interactive_count=1,
+            ),
+        )
+
+        assert [element.id for element in find_by_text(som, "wordmark")] == ["e_logo"]
+        assert [element.id for element in find_by_text(som, "documentation")] == [
+            "e_search"
+        ]
+
     def test_no_match_returns_empty(self, sample_som: Som) -> None:
         assert find_by_text(sample_som, "zzz_no_match") == []
 

@@ -683,6 +683,19 @@ def _collect_by_text(element: SomElement, lower_text: str, results: List[SomElem
         parts.append(element.label)
     if element.attrs and element.attrs.description:
         parts.append(element.attrs.description)
+    if element.attrs:
+        parts.extend(
+            value
+            for value in (
+                element.attrs.alt,
+                element.attrs.placeholder,
+                element.attrs.title,
+                element.attrs.summary,
+                element.attrs.legend,
+                element.attrs.section_label,
+            )
+            if value
+        )
     if element.attrs and element.attrs.items:
         parts.extend(item.text for item in element.attrs.items if item.text)
         parts.extend(item.term for item in element.attrs.items if item.term)
