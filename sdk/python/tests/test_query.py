@@ -630,6 +630,17 @@ class TestFindByText:
                             role=ElementRole.button,
                             attrs=ElementAttrs(value="Search documentation"),
                         ),
+                        SomElement(
+                            id="e_progress",
+                            role=ElementRole.section,
+                            attrs=ElementAttrs(
+                                aria={
+                                    "valuetext": "50 percent complete",
+                                    "roledescription": "progress indicator",
+                                    "valuenow": "50",
+                                }
+                            ),
+                        ),
                     ],
                 )
             ],
@@ -645,6 +656,12 @@ class TestFindByText:
         assert [element.id for element in find_by_text(som, "documentation")] == [
             "e_search",
             "e_submit",
+        ]
+        assert [element.id for element in find_by_text(som, "50 percent")] == [
+            "e_progress"
+        ]
+        assert [element.id for element in find_by_text(som, "progress indicator")] == [
+            "e_progress"
         ]
 
     def test_no_match_returns_empty(self, sample_som: Som) -> None:
