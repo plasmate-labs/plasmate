@@ -869,3 +869,23 @@ fn test_render_text_output() {
     assert!(text.contains("[~] Element e1"));
     assert!(text.contains("\"A\" → \"B\""));
 }
+
+#[test]
+fn test_render_text_handles_multibyte_added_preview() {
+    let old = Som {
+        regions: vec![make_region("r1", RegionRole::Main, vec![])],
+        ..empty_som()
+    };
+    let long_text = format!("{}🙂", "é".repeat(29));
+    let new = Som {
+        regions: vec![make_region(
+            "r1",
+            RegionRole::Main,
+            vec![make_element("e1", ElementRole::Paragraph, Some(&long_text))],
+        )],
+        ..empty_som()
+    };
+
+    let text = render_text(&diff_soms(&old, &new, false));
+    assert!(text.contains(&format!("\"{}\"", long_text)));
+}

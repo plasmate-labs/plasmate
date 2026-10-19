@@ -777,13 +777,13 @@ fn render_element_diffs(out: &mut String, diffs: &[ElementDiff], indent: usize) 
             ChangeType::Added => {
                 let role = e.role.as_deref().unwrap_or("?");
                 let text = e.text.as_deref().unwrap_or("");
-                let preview = if text.len() > 60 { &text[..60] } else { text };
+                let preview = text_preview(text, 60);
                 out.push_str(&format!("{}[+] {} {} \"{}\"\n", pad, role, e.id, preview));
             }
             ChangeType::Removed => {
                 let role = e.role.as_deref().unwrap_or("?");
                 let text = e.text.as_deref().unwrap_or("");
-                let preview = if text.len() > 60 { &text[..60] } else { text };
+                let preview = text_preview(text, 60);
                 out.push_str(&format!("{}[-] {} {} \"{}\"\n", pad, role, e.id, preview));
             }
             ChangeType::Modified => {
@@ -833,6 +833,13 @@ fn render_element_diffs(out: &mut String, diffs: &[ElementDiff], indent: usize) 
             }
         }
     }
+}
+
+fn text_preview(text: &str, max_chars: usize) -> &str {
+    text.char_indices()
+        .nth(max_chars)
+        .map(|(index, _)| &text[..index])
+        .unwrap_or(text)
 }
 
 /// One-line summary string.
