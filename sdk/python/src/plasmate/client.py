@@ -182,14 +182,21 @@ class Plasmate:
 
     def close(self) -> None:
         """Shut down the plasmate process."""
-        if self._process:
-            self._process.terminate()
-            try:
-                self._process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                self._process.kill()
-            self._process = None
+        process = self._process
+        self._process = None
         self._initialized = False
+        if process:
+            try:
+                process.terminate()
+            except ProcessLookupError:
+                return
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                try:
+                    process.kill()
+                except ProcessLookupError:
+                    pass
 
     def __enter__(self) -> "Plasmate":
         return self
@@ -539,14 +546,21 @@ class AsyncPlasmate:
 
     async def close(self) -> None:
         """Shut down the plasmate process."""
-        if self._process:
-            self._process.terminate()
-            try:
-                await asyncio.wait_for(self._process.wait(), timeout=5)
-            except asyncio.TimeoutError:
-                self._process.kill()
-            self._process = None
+        process = self._process
+        self._process = None
         self._initialized = False
+        if process:
+            try:
+                process.terminate()
+            except ProcessLookupError:
+                return
+            try:
+                await asyncio.wait_for(process.wait(), timeout=5)
+            except asyncio.TimeoutError:
+                try:
+                    process.kill()
+                except ProcessLookupError:
+                    pass
 
     async def __aenter__(self) -> "AsyncPlasmate":
         return self

@@ -3,12 +3,70 @@
 import asyncio
 import json
 import os
-import threading
 from pathlib import Path
+import subprocess
+import threading
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
 from plasmate.client import AsyncPlasmate, Plasmate
+
+
+def test_sync_close_is_safe_when_process_already_exited() -> None:
+    client = Plasmate()
+    process = Mock()
+    process.terminate.side_effect = ProcessLookupError
+    client._process = process
+    client._initialized = True
+
+    client.close()
+
+    assert client._process is None
+    assert not client._initialized
+
+
+def test_sync_close_ignores_exit_during_kill() -> None:
+    client = Plasmate()
+    process = Mock()
+    process.wait.side_effect = subprocess.TimeoutExpired(cmd="fixture", timeout=5)
+    process.kill.side_effect = ProcessLookupError
+    client._process = process
+
+    client.close()
+
+    assert client._process is None
+
+
+def test_async_close_is_safe_when_process_already_exited() -> None:
+    async def exercise() -> None:
+        client = AsyncPlasmate()
+        process = Mock()
+        process.terminate.side_effect = ProcessLookupError
+        client._process = process
+        client._initialized = True
+
+        await client.close()
+
+        assert client._process is None
+        assert not client._initialized
+
+    asyncio.run(exercise())
+
+
+def test_async_close_ignores_exit_during_kill() -> None:
+    async def exercise() -> None:
+        client = AsyncPlasmate()
+        process = Mock()
+        process.wait = AsyncMock(side_effect=asyncio.TimeoutError)
+        process.kill.side_effect = ProcessLookupError
+        client._process = process
+
+        await client.close()
+
+        assert client._process is None
+
+    asyncio.run(exercise())
 
 
 def _fixture(tmp_path: Path) -> str:
