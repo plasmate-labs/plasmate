@@ -3,12 +3,140 @@
 import asyncio
 import json
 import os
-import threading
 from pathlib import Path
+import subprocess
+import threading
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
 from plasmate.client import AsyncPlasmate, Plasmate
+
+
+def test_sync_start_closes_child_when_initialization_fails() -> None:
+    client = Plasmate(binary="fixture")
+    process = Mock()
+    client._rpc = Mock(side_effect=RuntimeError("initialize failed"))  # type: ignore[method-assign]
+
+    with patch("plasmate.client.subprocess.Popen", return_value=process):
+        with pytest.raises(RuntimeError, match="initialize failed"):
+            client._start()
+
+    process.terminate.assert_called_once_with()
+    assert client._process is None
+    assert not client._initialized
+
+
+def test_async_start_closes_child_when_initialization_fails() -> None:
+    async def exercise() -> None:
+        client = AsyncPlasmate(binary="fixture")
+        process = Mock()
+        process.wait = AsyncMock(return_value=None)
+        client._rpc = AsyncMock(side_effect=RuntimeError("initialize failed"))  # type: ignore[method-assign]
+
+        with patch(
+            "plasmate.client.asyncio.create_subprocess_exec",
+            new=AsyncMock(return_value=process),
+        ):
+            with pytest.raises(RuntimeError, match="initialize failed"):
+                await client._start()
+
+        process.terminate.assert_called_once_with()
+        assert client._process is None
+        assert not client._initialized
+
+    asyncio.run(exercise())
+
+
+def test_sync_close_is_safe_when_process_already_exited() -> None:
+    client = Plasmate()
+    process = Mock()
+    process.terminate.side_effect = ProcessLookupError
+    client._process = process
+    client._initialized = True
+
+    client.close()
+
+    assert client._process is None
+    assert not client._initialized
+
+
+def test_sync_close_ignores_exit_during_kill() -> None:
+    client = Plasmate()
+    process = Mock()
+    process.wait.side_effect = [
+        subprocess.TimeoutExpired(cmd="fixture", timeout=5),
+        None,
+    ]
+    process.kill.side_effect = ProcessLookupError
+    client._process = process
+
+    client.close()
+
+    assert client._process is None
+    assert process.wait.call_count == 2
+
+
+def test_sync_close_reaps_child_after_kill() -> None:
+    client = Plasmate()
+    process = Mock()
+    process.wait.side_effect = [
+        subprocess.TimeoutExpired(cmd="fixture", timeout=5),
+        None,
+    ]
+    client._process = process
+
+    client.close()
+
+    process.kill.assert_called_once_with()
+    assert process.wait.call_count == 2
+
+
+def test_async_close_is_safe_when_process_already_exited() -> None:
+    async def exercise() -> None:
+        client = AsyncPlasmate()
+        process = Mock()
+        process.terminate.side_effect = ProcessLookupError
+        client._process = process
+        client._initialized = True
+
+        await client.close()
+
+        assert client._process is None
+        assert not client._initialized
+
+    asyncio.run(exercise())
+
+
+def test_async_close_ignores_exit_during_kill() -> None:
+    async def exercise() -> None:
+        client = AsyncPlasmate()
+        process = Mock()
+        process.wait = AsyncMock(side_effect=[asyncio.TimeoutError, None])
+        process.kill.side_effect = ProcessLookupError
+        client._process = process
+
+        await client.close()
+
+        assert client._process is None
+        assert process.wait.await_count == 2
+
+    asyncio.run(exercise())
+
+
+def test_async_close_reaps_child_after_kill() -> None:
+    async def exercise() -> None:
+        client = AsyncPlasmate()
+        process = Mock()
+        process.wait = AsyncMock(side_effect=[asyncio.TimeoutError, None])
+        client._process = process
+
+        await client.close()
+
+        process.kill.assert_called_once_with()
+        assert process.wait.await_count == 2
+
+    asyncio.run(exercise())
 
 
 def _fixture(tmp_path: Path) -> str:

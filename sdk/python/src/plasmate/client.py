@@ -160,33 +160,51 @@ class Plasmate:
             [self._binary, "mcp"],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            # The SDK never reads stderr.  A pipe can fill under verbose
+            # logging and block the MCP child, so keep diagnostics from
+            # becoming a transport backpressure channel.
+            stderr=subprocess.DEVNULL,
         )
 
-        # Initialize MCP session
-        self._rpc("initialize", {
-            "protocolVersion": "2024-11-05",
-            "capabilities": {},
-            "clientInfo": {"name": "plasmate-python-sdk", "version": SDK_VERSION},
-        })
+        try:
+            # Initialize MCP session
+            self._rpc("initialize", {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "plasmate-python-sdk", "version": SDK_VERSION},
+            })
 
-        # Send initialized notification
-        self._send({
-            "jsonrpc": "2.0",
-            "method": "notifications/initialized",
-        })
+            # Send initialized notification
+            self._send({
+                "jsonrpc": "2.0",
+                "method": "notifications/initialized",
+            })
+        except BaseException:
+            self.close()
+            raise
         self._initialized = True
 
     def close(self) -> None:
         """Shut down the plasmate process."""
-        if self._process:
-            self._process.terminate()
-            try:
-                self._process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                self._process.kill()
-            self._process = None
+        process = self._process
+        self._process = None
         self._initialized = False
+        if process:
+            try:
+                process.terminate()
+            except ProcessLookupError:
+                return
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                try:
+                    process.kill()
+                except ProcessLookupError:
+                    pass
+                try:
+                    process.wait(timeout=5)
+                except (ProcessLookupError, subprocess.TimeoutExpired):
+                    pass
 
     def __enter__(self) -> "Plasmate":
         return self
@@ -516,31 +534,49 @@ class AsyncPlasmate:
             self._binary, "mcp",
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
+            # The SDK never reads stderr.  A pipe can fill under verbose
+            # logging and block the MCP child, so keep diagnostics from
+            # becoming a transport backpressure channel.
+            stderr=asyncio.subprocess.DEVNULL,
         )
 
-        await self._rpc("initialize", {
-            "protocolVersion": "2024-11-05",
-            "capabilities": {},
-            "clientInfo": {"name": "plasmate-python-sdk", "version": SDK_VERSION},
-        })
+        try:
+            await self._rpc("initialize", {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "plasmate-python-sdk", "version": SDK_VERSION},
+            })
 
-        await self._send({
-            "jsonrpc": "2.0",
-            "method": "notifications/initialized",
-        })
+            await self._send({
+                "jsonrpc": "2.0",
+                "method": "notifications/initialized",
+            })
+        except BaseException:
+            await self.close()
+            raise
         self._initialized = True
 
     async def close(self) -> None:
         """Shut down the plasmate process."""
-        if self._process:
-            self._process.terminate()
-            try:
-                await asyncio.wait_for(self._process.wait(), timeout=5)
-            except asyncio.TimeoutError:
-                self._process.kill()
-            self._process = None
+        process = self._process
+        self._process = None
         self._initialized = False
+        if process:
+            try:
+                process.terminate()
+            except ProcessLookupError:
+                return
+            try:
+                await asyncio.wait_for(process.wait(), timeout=5)
+            except asyncio.TimeoutError:
+                try:
+                    process.kill()
+                except ProcessLookupError:
+                    pass
+                try:
+                    await asyncio.wait_for(process.wait(), timeout=5)
+                except (ProcessLookupError, asyncio.TimeoutError):
+                    pass
 
     async def __aenter__(self) -> "AsyncPlasmate":
         return self
