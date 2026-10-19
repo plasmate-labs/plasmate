@@ -399,6 +399,10 @@ func TestFindInteractive(t *testing.T) {
 func TestFindByText(t *testing.T) {
 	som := mustParse(t)
 
+	if results := FindByText(som, ""); len(results) != 0 {
+		t.Fatalf("FindByText(empty) = %d, want 0", len(results))
+	}
+
 	results := FindByText(som, "hello")
 	if len(results) != 1 {
 		t.Fatalf("FindByText(hello) = %d, want 1", len(results))

@@ -136,6 +136,9 @@ func collectInteractive(elements []Element, result *[]Element) {
 // tables keep titles and cells in attrs.caption / attrs.headers / attrs.rows,
 // leaving element.text empty.
 func FindByText(som *Som, text string) []Element {
+	if text == "" {
+		return nil
+	}
 	lower := strings.ToLower(text)
 	var result []Element
 	for _, r := range som.Regions {
