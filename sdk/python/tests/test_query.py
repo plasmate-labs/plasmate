@@ -289,6 +289,13 @@ class TestFindByTag:
         assert [el.id for el in find_by_tag(sample_som, "search-input")] == ["e9"]
         assert find_by_tag(sample_som, "listbox") == []
 
+    def test_accepts_spaced_aria_widget_aliases(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(id="e12", role=ElementRole.radio)
+        )
+        assert [el.id for el in find_by_tag(sample_som, "menu-item-radio")] == ["e12"]
+        assert [el.id for el in find_by_tag(sample_som, "menu item radio")] == ["e12"]
+
     def test_accepts_heading_level_aliases_and_trimmed_input(self, sample_som: Som) -> None:
         assert [el.id for el in find_by_tag(sample_som, " H1 ")] == ["e3"]
         assert [el.id for el in find_by_tag(sample_som, "heading1")] == ["e3"]
@@ -331,6 +338,17 @@ class TestFindActionTargetsByRole:
         assert "e12" in [item["id"] for item in find_action_targets_by_role(sample_som, "tab")]
         assert "e13" in [item["id"] for item in find_action_targets_by_role(sample_som, "switch")]
         assert "e14" in [item["id"] for item in find_action_targets_by_role(sample_som, "menuitemradio")]
+
+    def test_accepts_hyphenated_and_spaced_aria_widget_aliases(
+        self, sample_som: Som
+    ) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(id="e15", role=ElementRole.radio, actions=["toggle"])
+        )
+        for alias in ("menu-item-radio", "menu item radio"):
+            assert [
+                item["id"] for item in find_action_targets_by_role(sample_som, alias)
+            ] == ["e15"]
 
 
 class TestFindInteractive:
