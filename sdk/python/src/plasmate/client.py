@@ -166,18 +166,22 @@ class Plasmate:
             stderr=subprocess.DEVNULL,
         )
 
-        # Initialize MCP session
-        self._rpc("initialize", {
-            "protocolVersion": "2024-11-05",
-            "capabilities": {},
-            "clientInfo": {"name": "plasmate-python-sdk", "version": SDK_VERSION},
-        })
+        try:
+            # Initialize MCP session
+            self._rpc("initialize", {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "plasmate-python-sdk", "version": SDK_VERSION},
+            })
 
-        # Send initialized notification
-        self._send({
-            "jsonrpc": "2.0",
-            "method": "notifications/initialized",
-        })
+            # Send initialized notification
+            self._send({
+                "jsonrpc": "2.0",
+                "method": "notifications/initialized",
+            })
+        except BaseException:
+            self.close()
+            raise
         self._initialized = True
 
     def close(self) -> None:
@@ -536,16 +540,20 @@ class AsyncPlasmate:
             stderr=asyncio.subprocess.DEVNULL,
         )
 
-        await self._rpc("initialize", {
-            "protocolVersion": "2024-11-05",
-            "capabilities": {},
-            "clientInfo": {"name": "plasmate-python-sdk", "version": SDK_VERSION},
-        })
+        try:
+            await self._rpc("initialize", {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "plasmate-python-sdk", "version": SDK_VERSION},
+            })
 
-        await self._send({
-            "jsonrpc": "2.0",
-            "method": "notifications/initialized",
-        })
+            await self._send({
+                "jsonrpc": "2.0",
+                "method": "notifications/initialized",
+            })
+        except BaseException:
+            await self.close()
+            raise
         self._initialized = True
 
     async def close(self) -> None:

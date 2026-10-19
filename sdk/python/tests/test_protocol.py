@@ -6,11 +6,46 @@ import os
 from pathlib import Path
 import subprocess
 import threading
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
 from plasmate.client import AsyncPlasmate, Plasmate
+
+
+def test_sync_start_closes_child_when_initialization_fails() -> None:
+    client = Plasmate(binary="fixture")
+    process = Mock()
+    client._rpc = Mock(side_effect=RuntimeError("initialize failed"))  # type: ignore[method-assign]
+
+    with patch("plasmate.client.subprocess.Popen", return_value=process):
+        with pytest.raises(RuntimeError, match="initialize failed"):
+            client._start()
+
+    process.terminate.assert_called_once_with()
+    assert client._process is None
+    assert not client._initialized
+
+
+def test_async_start_closes_child_when_initialization_fails() -> None:
+    async def exercise() -> None:
+        client = AsyncPlasmate(binary="fixture")
+        process = Mock()
+        process.wait = AsyncMock(return_value=None)
+        client._rpc = AsyncMock(side_effect=RuntimeError("initialize failed"))  # type: ignore[method-assign]
+
+        with patch(
+            "plasmate.client.asyncio.create_subprocess_exec",
+            new=AsyncMock(return_value=process),
+        ):
+            with pytest.raises(RuntimeError, match="initialize failed"):
+                await client._start()
+
+        process.terminate.assert_called_once_with()
+        assert client._process is None
+        assert not client._initialized
+
+    asyncio.run(exercise())
 
 
 def test_sync_close_is_safe_when_process_already_exited() -> None:
