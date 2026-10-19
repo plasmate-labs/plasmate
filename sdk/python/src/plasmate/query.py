@@ -475,6 +475,7 @@ def find_action_targets_by_role(
         "article": "section",
         "button": "button",
         "combobox": "select",
+        "combo_box": "select",
         "definition_list": "list",
         "div": "group",
         "fieldset": "group",
@@ -495,6 +496,7 @@ def find_action_targets_by_role(
         "p": "paragraph",
         "radio": "radio",
         "search": "text_input",
+        "search_box": "text_input",
         "search_input": "text_input",
         "select": "select",
         "summary": "details",
@@ -504,6 +506,7 @@ def find_action_targets_by_role(
         "textbox": "text_input",
         "searchbox": "text_input",
         "ul": "list",
+        "list_box": "select",
         "unordered_list": "list",
     }.get(_normalize_role_alias(role), _normalize_role_alias(role))
     results = index["by_role"].get(normalized_role, [])
