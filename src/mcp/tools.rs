@@ -773,6 +773,11 @@ fn truncate_text_to_chars(text: &mut String, max_chars: usize) {
 
     let ellipsis = "...";
     let ellipsis_chars = 3;
+    if max_chars == ellipsis_chars {
+        text.clear();
+        text.push_str(ellipsis);
+        return;
+    }
     let content_max = max_chars.saturating_sub(ellipsis_chars);
     if content_max == 0 {
         let truncate_at = text
@@ -17431,6 +17436,11 @@ mod tests {
         truncate_text_to_chars(&mut tiny, 2);
         assert_eq!(tiny, "He");
         assert_eq!(tiny.chars().count(), 2);
+
+        let mut ellipsis_only = "Hello world".to_string();
+        truncate_text_to_chars(&mut ellipsis_only, 3);
+        assert_eq!(ellipsis_only, "...");
+        assert_eq!(ellipsis_only.chars().count(), 3);
 
         let mut zero = "Hello".to_string();
         truncate_text_to_chars(&mut zero, 0);
