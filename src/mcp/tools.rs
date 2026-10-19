@@ -1101,7 +1101,7 @@ pub fn inspect_page_definition() -> ToolDefinition {
         input_schema: json!({
             "type": "object",
             "properties": {
-                "url": { "type": "string", "format": "uri", "minLength": 1, "maxLength": 4096 },
+                "url": { "type": "string", "format": "uri", "minLength": 1, "maxLength": MAX_MCP_URL_BYTES },
                 "javascript": {
                     "type": "boolean",
                     "default": false,
@@ -1109,7 +1109,7 @@ pub fn inspect_page_definition() -> ToolDefinition {
                 },
                 "selector": {
                     "type": "string",
-                    "maxLength": 256,
+                    "maxLength": MAX_MCP_SELECTOR_BYTES,
                     "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}")
                 },
                 "visual_mode": {
@@ -6762,6 +6762,12 @@ mod tests {
             inspect_page_definition(),
             open_page_definition(),
         ] {
+            assert_eq!(
+                definition.input_schema["properties"]["url"]["maxLength"],
+                MAX_MCP_URL_BYTES,
+                "{} must advertise the URL size limit",
+                definition.name
+            );
             assert_eq!(
                 definition.input_schema["properties"]["selector"]["maxLength"],
                 MAX_MCP_SELECTOR_BYTES,
