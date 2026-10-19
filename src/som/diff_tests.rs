@@ -876,7 +876,7 @@ fn test_render_text_handles_multibyte_added_preview() {
         regions: vec![make_region("r1", RegionRole::Main, vec![])],
         ..empty_som()
     };
-    let long_text = format!("{}🙂", "é".repeat(29));
+    let long_text = format!("{}🙂", "é".repeat(69));
     let new = Som {
         regions: vec![make_region(
             "r1",
@@ -887,5 +887,7 @@ fn test_render_text_handles_multibyte_added_preview() {
     };
 
     let text = render_text(&diff_soms(&old, &new, false));
-    assert!(text.contains(&format!("\"{}\"", long_text)));
+    let expected_preview = format!("\"{}...\"", "é".repeat(57));
+    assert!(text.contains(&expected_preview));
+    assert!(!text.contains(&format!("\"{}\"", long_text)));
 }

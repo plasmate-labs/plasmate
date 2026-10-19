@@ -835,11 +835,16 @@ fn render_element_diffs(out: &mut String, diffs: &[ElementDiff], indent: usize) 
     }
 }
 
-fn text_preview(text: &str, max_chars: usize) -> &str {
-    text.char_indices()
-        .nth(max_chars)
-        .map(|(index, _)| &text[..index])
-        .unwrap_or(text)
+fn text_preview(text: &str, max_chars: usize) -> String {
+    let char_count = text.chars().count();
+    if char_count <= max_chars {
+        return text.to_string();
+    }
+
+    let ellipsis = "...";
+    let content_chars = max_chars.saturating_sub(ellipsis.chars().count());
+    let prefix = text.chars().take(content_chars).collect::<String>();
+    format!("{prefix}{ellipsis}")
 }
 
 /// One-line summary string.
