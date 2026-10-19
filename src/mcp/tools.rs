@@ -1144,16 +1144,14 @@ pub async fn handle_inspect_page(arguments: &Value, client: &reqwest::Client) ->
         Ok(url) => url,
         Err(error) => return error_response(&error),
     };
+    if let Err(error) = validate_mcp_selector(params.selector.as_deref()) {
+        return error_response(&error);
+    }
     if !(320..=1920).contains(&params.width)
         || !(200..=1080).contains(&params.height)
         || !(100..=10_000).contains(&params.screenshot_timeout_ms)
-        || params
-            .selector
-            .as_ref()
-            .is_some_and(|value| value.len() > 256)
-        || url.len() > MAX_MCP_URL_BYTES
     {
-        return error_response("Inspection dimensions, timeout, URL, or selector exceed limits");
+        return error_response("Invalid arguments: inspection dimensions or timeout exceed limits");
     }
     let fetch_result = match fetch::fetch_url(client, url, DEFAULT_TIMEOUT_MS).await {
         Ok(result) => result,
@@ -18092,6 +18090,25 @@ mod tests {
             .as_str()
             .unwrap()
             .contains("absolute HTTP(S) URL"));
+    }
+
+    #[tokio::test]
+    async fn inspection_rejects_oversized_selectors_before_network_access() {
+        let client = reqwest::Client::new();
+        let inspect = handle_inspect_page(
+            &json!({
+                "url": "https://example.com/",
+                "selector": "x".repeat(MAX_MCP_SELECTOR_BYTES + 1)
+            }),
+            &client,
+        )
+        .await;
+
+        assert_eq!(inspect["isError"], true);
+        assert_eq!(
+            inspect["content"][0]["text"],
+            "Invalid arguments: selector exceeds 256 bytes"
+        );
     }
 
     #[test]
