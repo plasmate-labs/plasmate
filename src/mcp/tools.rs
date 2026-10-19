@@ -160,6 +160,7 @@ async fn load_som_for_mcp(
     javascript: bool,
     selector: Option<&str>,
 ) -> Result<(Som, bool), String> {
+    validate_mcp_selector(selector)?;
     let url = normalized_mcp_url(url)?;
 
     let fetch_result = fetch::fetch_url(client, url, DEFAULT_TIMEOUT_MS)
@@ -258,6 +259,15 @@ fn normalized_mcp_url(url: &str) -> Result<&str, String> {
     let normalized = url.trim();
     validate_mcp_url(normalized)?;
     Ok(normalized)
+}
+
+fn validate_mcp_selector(selector: Option<&str>) -> Result<(), String> {
+    if selector.is_some_and(|selector| selector.len() > MAX_MCP_SELECTOR_BYTES) {
+        return Err(format!(
+            "Invalid arguments: selector exceeds {MAX_MCP_SELECTOR_BYTES} bytes"
+        ));
+    }
+    Ok(())
 }
 
 fn select_and_store_mcp_som(
@@ -532,6 +542,7 @@ pub fn extract_text_definition() -> ToolDefinition {
                 },
                 "selector": {
                     "type": "string",
+                    "maxLength": MAX_MCP_SELECTOR_BYTES,
                     "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}")
                 }
             },
@@ -961,6 +972,7 @@ pub fn extract_links_definition() -> ToolDefinition {
                 },
                 "selector": {
                     "type": "string",
+                    "maxLength": MAX_MCP_SELECTOR_BYTES,
                     "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}")
                 },
                 "max_links": {
@@ -4070,14 +4082,8 @@ pub async fn handle_open_page(
     if let Err(error) = validate_mcp_url(&params.url) {
         return error_response(&error);
     }
-    if params
-        .selector
-        .as_ref()
-        .is_some_and(|selector| selector.len() > MAX_MCP_SELECTOR_BYTES)
-    {
-        return error_response(&format!(
-            "Invalid arguments: selector exceeds {MAX_MCP_SELECTOR_BYTES} bytes"
-        ));
+    if let Err(error) = validate_mcp_selector(params.selector.as_deref()) {
+        return error_response(&error);
     }
 
     info!(
@@ -6748,6 +6754,27 @@ mod tests {
             normalized_mcp_url(" \thttps://example.com/page\n ").unwrap(),
             "https://example.com/page"
         );
+
+        for definition in [
+            fetch_page_definition(),
+            extract_text_definition(),
+            extract_links_definition(),
+            inspect_page_definition(),
+            open_page_definition(),
+        ] {
+            assert_eq!(
+                definition.input_schema["properties"]["selector"]["maxLength"],
+                MAX_MCP_SELECTOR_BYTES,
+                "{} must advertise the selector size limit",
+                definition.name
+            );
+        }
+        assert!(validate_mcp_selector(Some(&"x".repeat(MAX_MCP_SELECTOR_BYTES))).is_ok());
+        assert_eq!(
+            validate_mcp_selector(Some(&"x".repeat(MAX_MCP_SELECTOR_BYTES + 1))),
+            Err("Invalid arguments: selector exceeds 256 bytes".to_string())
+        );
+        assert!(validate_mcp_selector(None).is_ok());
     }
 
     #[tokio::test]
