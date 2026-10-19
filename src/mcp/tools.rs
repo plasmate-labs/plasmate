@@ -43,7 +43,7 @@ pub struct ToolDefinition {
 
 const SOM_SELECTOR_DESCRIPTION: &str = "Filter to a page region (main/main_region/main-region/main region/main_regions/main-regions/main regions, nav/navigation/nav_region/nav-region/nav region/nav_regions/nav-regions/nav regions/navigation_region/navigation-region/navigation region/navigation_regions/navigation-regions/navigation regions/search/searches/search_nav/search-navigation/search navigation/search_navigations/search-navigations/search navigations, header, footer, aside, content/article/content_region/content-region/content region/content_regions/content-regions/content regions, form, dialog; role=<region> and role:<region> also work), heading level (h1-h6, heading1-heading6, or hyphenated h-1/heading-1 forms), all headings (heading/headings), or an element role (button/buttons/menuitem/option/tab/treeitem, link/links/a, paragraph/paragraphs/blockquote/blockquotes/p, list/ul/ol/dl/menu, unordered_list/ordered_list/definition_list, image/img, media, output/audio/video/canvas, audio/audio_item/audio-item/audios/audio_items/audio-items, video/video_item/video-item/videos/video_items/video-items, (images also accepted) text_input/textbox/searchbox/search_input/search-input (text_inputs also accepted), slider/sliders/spinbutton/spinbuttons/spin button/spin buttons, search_control/search-control/search_field/search-field/search_box/search-box/query/queries, query_input/query-input/query_field/query-field/query_control/query-control/querybox/query-box/input, HTML input types such as text/search/email/number/password/tel/url/date/datetime/datetime-local/month/week/color/range/hidden/file, textarea (textareas also accepted), select/selects/combobox/comboboxes/combo box/listbox/listboxes/list box, checkbox/checkboxes/switch/switches/menuitemcheckbox/menuitemcheckboxes (including hyphenated forms), radio/radios/menuitemradio/menuitemradios (including hyphenated forms), table/tables and data_table/data_tables (also data-table/data-tables and spaced data table/data tables), section/sections, separator/separators/hr, detail/details/summary/summaries, iframe/iframes, group/groups/fieldset/fieldsets/figure/figures/radiogroup/radiogroups/progress/progressbar/progressbars/meter/meters/output/outputs, etc.; role=<element> and role:<element> also work). Use search_input, search-input, search_control, search-control, search_field, search-field, search_box, search-box, query, queries, query_input, query-input, query_field, query-field, query_control, query-control, querybox, query-box for a search control; search by itself selects the search navigation region; search_nav, search-navigation, search navigation, search_navigations, search-navigations, and search navigations are explicit aliases for the same region. Action surface (interactive/interactives/interactive_elements/interactive-elements, click/type/type_text/type-text/clear/select/select_option/select-option/toggle/submit/reset, or action:click/action:type/action:type_text/action:type-text/action:clear/action:select/action:select_option/action:select-option/action:toggle/action:submit/action:reset; role=<action> and role:<action> are also accepted, and the action=<verb> form works with whitespace around either separator such as action : click or action = click), or #element-id (region id first, then SOM element/html id). The type_text/type-text and select_option/select-option aliases, including action=type_text/action=type-text and action=select_option/action=select-option, match the corresponding MCP interaction tool names. Strips irrelevant regions/elements to reduce tokens. If a selector is unknown or matches nothing, the full SOM is returned unchanged.";
 
-const SOM_COMPOUND_SELECTOR_DESCRIPTION: &str = " Use label:<text> or label=<text> for case-insensitive accessible-label or authored-text matching on regions and elements. Whitespace-separated compound aliases such as text input, search box, spin button, menu item, check box, radio button, unordered list, ordered list, definition list, data table, and data tables are also accepted; list/lists are equivalent selectors; data_table/data_tables and data-table/data-tables are equivalent forms.";
+const SOM_COMPOUND_SELECTOR_DESCRIPTION: &str = " Use label:<text> or label=<text> for case-insensitive accessible-label or authored-text matching on regions and elements. Whitespace-separated compound aliases such as text input, search box, spin button, menu item, check box, radio button, unordered list, ordered list, definition list, data table, and data tables are also accepted; list/lists are equivalent selectors; data_table/data_tables and data-table/data-tables are equivalent forms. Selectors are limited to 256 bytes.";
 
 /// Parameters for fetch_page tool.
 #[derive(Debug, Deserialize)]
@@ -160,6 +160,7 @@ async fn load_som_for_mcp(
     javascript: bool,
     selector: Option<&str>,
 ) -> Result<(Som, bool), String> {
+    validate_mcp_selector(selector)?;
     let url = normalized_mcp_url(url)?;
 
     let fetch_result = fetch::fetch_url(client, url, DEFAULT_TIMEOUT_MS)
@@ -258,6 +259,15 @@ fn normalized_mcp_url(url: &str) -> Result<&str, String> {
     let normalized = url.trim();
     validate_mcp_url(normalized)?;
     Ok(normalized)
+}
+
+fn validate_mcp_selector(selector: Option<&str>) -> Result<(), String> {
+    if selector.is_some_and(|selector| selector.len() > MAX_MCP_SELECTOR_BYTES) {
+        return Err(format!(
+            "Invalid arguments: selector exceeds {MAX_MCP_SELECTOR_BYTES} bytes"
+        ));
+    }
+    Ok(())
 }
 
 fn select_and_store_mcp_som(
@@ -532,6 +542,7 @@ pub fn extract_text_definition() -> ToolDefinition {
                 },
                 "selector": {
                     "type": "string",
+                    "maxLength": MAX_MCP_SELECTOR_BYTES,
                     "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}")
                 }
             },
@@ -961,6 +972,7 @@ pub fn extract_links_definition() -> ToolDefinition {
                 },
                 "selector": {
                     "type": "string",
+                    "maxLength": MAX_MCP_SELECTOR_BYTES,
                     "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}")
                 },
                 "max_links": {
@@ -1089,7 +1101,7 @@ pub fn inspect_page_definition() -> ToolDefinition {
         input_schema: json!({
             "type": "object",
             "properties": {
-                "url": { "type": "string", "format": "uri", "minLength": 1, "maxLength": 4096 },
+                "url": { "type": "string", "format": "uri", "minLength": 1, "maxLength": MAX_MCP_URL_BYTES },
                 "javascript": {
                     "type": "boolean",
                     "default": false,
@@ -1097,7 +1109,7 @@ pub fn inspect_page_definition() -> ToolDefinition {
                 },
                 "selector": {
                     "type": "string",
-                    "maxLength": 256,
+                    "maxLength": MAX_MCP_SELECTOR_BYTES,
                     "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}")
                 },
                 "visual_mode": {
@@ -1132,16 +1144,14 @@ pub async fn handle_inspect_page(arguments: &Value, client: &reqwest::Client) ->
         Ok(url) => url,
         Err(error) => return error_response(&error),
     };
+    if let Err(error) = validate_mcp_selector(params.selector.as_deref()) {
+        return error_response(&error);
+    }
     if !(320..=1920).contains(&params.width)
         || !(200..=1080).contains(&params.height)
         || !(100..=10_000).contains(&params.screenshot_timeout_ms)
-        || params
-            .selector
-            .as_ref()
-            .is_some_and(|value| value.len() > 256)
-        || url.len() > MAX_MCP_URL_BYTES
     {
-        return error_response("Inspection dimensions, timeout, URL, or selector exceed limits");
+        return error_response("Invalid arguments: inspection dimensions or timeout exceed limits");
     }
     let fetch_result = match fetch::fetch_url(client, url, DEFAULT_TIMEOUT_MS).await {
         Ok(result) => result,
@@ -4070,14 +4080,8 @@ pub async fn handle_open_page(
     if let Err(error) = validate_mcp_url(&params.url) {
         return error_response(&error);
     }
-    if params
-        .selector
-        .as_ref()
-        .is_some_and(|selector| selector.len() > MAX_MCP_SELECTOR_BYTES)
-    {
-        return error_response(&format!(
-            "Invalid arguments: selector exceeds {MAX_MCP_SELECTOR_BYTES} bytes"
-        ));
+    if let Err(error) = validate_mcp_selector(params.selector.as_deref()) {
+        return error_response(&error);
     }
 
     info!(
@@ -6748,6 +6752,40 @@ mod tests {
             normalized_mcp_url(" \thttps://example.com/page\n ").unwrap(),
             "https://example.com/page"
         );
+
+        for definition in [
+            fetch_page_definition(),
+            extract_text_definition(),
+            extract_links_definition(),
+            inspect_page_definition(),
+            open_page_definition(),
+        ] {
+            assert_eq!(
+                definition.input_schema["properties"]["url"]["maxLength"],
+                MAX_MCP_URL_BYTES,
+                "{} must advertise the URL size limit",
+                definition.name
+            );
+            assert_eq!(
+                definition.input_schema["properties"]["selector"]["maxLength"],
+                MAX_MCP_SELECTOR_BYTES,
+                "{} must advertise the selector size limit",
+                definition.name
+            );
+            assert!(
+                definition.input_schema["properties"]["selector"]["description"]
+                    .as_str()
+                    .is_some_and(|description| description.contains("limited to 256 bytes")),
+                "{} must explain the selector size limit",
+                definition.name
+            );
+        }
+        assert!(validate_mcp_selector(Some(&"x".repeat(MAX_MCP_SELECTOR_BYTES))).is_ok());
+        assert_eq!(
+            validate_mcp_selector(Some(&"x".repeat(MAX_MCP_SELECTOR_BYTES + 1))),
+            Err("Invalid arguments: selector exceeds 256 bytes".to_string())
+        );
+        assert!(validate_mcp_selector(None).is_ok());
     }
 
     #[tokio::test]
@@ -18059,6 +18097,25 @@ mod tests {
             .as_str()
             .unwrap()
             .contains("absolute HTTP(S) URL"));
+    }
+
+    #[tokio::test]
+    async fn inspection_rejects_oversized_selectors_before_network_access() {
+        let client = reqwest::Client::new();
+        let inspect = handle_inspect_page(
+            &json!({
+                "url": "https://example.com/",
+                "selector": "x".repeat(MAX_MCP_SELECTOR_BYTES + 1)
+            }),
+            &client,
+        )
+        .await;
+
+        assert_eq!(inspect["isError"], true);
+        assert_eq!(
+            inspect["content"][0]["text"],
+            "Invalid arguments: selector exceeds 256 bytes"
+        );
     }
 
     #[test]
