@@ -197,6 +197,10 @@ class Plasmate:
                     process.kill()
                 except ProcessLookupError:
                     pass
+                try:
+                    process.wait(timeout=5)
+                except (ProcessLookupError, subprocess.TimeoutExpired):
+                    pass
 
     def __enter__(self) -> "Plasmate":
         return self
@@ -560,6 +564,10 @@ class AsyncPlasmate:
                 try:
                     process.kill()
                 except ProcessLookupError:
+                    pass
+                try:
+                    await asyncio.wait_for(process.wait(), timeout=5)
+                except (ProcessLookupError, asyncio.TimeoutError):
                     pass
 
     async def __aenter__(self) -> "AsyncPlasmate":

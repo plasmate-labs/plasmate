@@ -29,13 +29,32 @@ def test_sync_close_is_safe_when_process_already_exited() -> None:
 def test_sync_close_ignores_exit_during_kill() -> None:
     client = Plasmate()
     process = Mock()
-    process.wait.side_effect = subprocess.TimeoutExpired(cmd="fixture", timeout=5)
+    process.wait.side_effect = [
+        subprocess.TimeoutExpired(cmd="fixture", timeout=5),
+        None,
+    ]
     process.kill.side_effect = ProcessLookupError
     client._process = process
 
     client.close()
 
     assert client._process is None
+    assert process.wait.call_count == 2
+
+
+def test_sync_close_reaps_child_after_kill() -> None:
+    client = Plasmate()
+    process = Mock()
+    process.wait.side_effect = [
+        subprocess.TimeoutExpired(cmd="fixture", timeout=5),
+        None,
+    ]
+    client._process = process
+
+    client.close()
+
+    process.kill.assert_called_once_with()
+    assert process.wait.call_count == 2
 
 
 def test_async_close_is_safe_when_process_already_exited() -> None:
@@ -58,13 +77,29 @@ def test_async_close_ignores_exit_during_kill() -> None:
     async def exercise() -> None:
         client = AsyncPlasmate()
         process = Mock()
-        process.wait = AsyncMock(side_effect=asyncio.TimeoutError)
+        process.wait = AsyncMock(side_effect=[asyncio.TimeoutError, None])
         process.kill.side_effect = ProcessLookupError
         client._process = process
 
         await client.close()
 
         assert client._process is None
+        assert process.wait.await_count == 2
+
+    asyncio.run(exercise())
+
+
+def test_async_close_reaps_child_after_kill() -> None:
+    async def exercise() -> None:
+        client = AsyncPlasmate()
+        process = Mock()
+        process.wait = AsyncMock(side_effect=[asyncio.TimeoutError, None])
+        client._process = process
+
+        await client.close()
+
+        process.kill.assert_called_once_with()
+        assert process.wait.await_count == 2
 
     asyncio.run(exercise())
 
