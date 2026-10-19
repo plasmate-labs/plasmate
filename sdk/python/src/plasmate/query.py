@@ -690,6 +690,7 @@ def _collect_by_text(element: SomElement, lower_text: str, results: List[SomElem
                 element.attrs.alt,
                 element.attrs.placeholder,
                 element.attrs.title,
+                element.attrs.value,
                 element.attrs.summary,
                 element.attrs.legend,
                 element.attrs.section_label,

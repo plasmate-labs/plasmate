@@ -625,6 +625,11 @@ class TestFindByText:
                             role=ElementRole.text_input,
                             attrs=ElementAttrs(placeholder="Search documentation"),
                         ),
+                        SomElement(
+                            id="e_submit",
+                            role=ElementRole.button,
+                            attrs=ElementAttrs(value="Search documentation"),
+                        ),
                     ],
                 )
             ],
@@ -638,7 +643,8 @@ class TestFindByText:
 
         assert [element.id for element in find_by_text(som, "wordmark")] == ["e_logo"]
         assert [element.id for element in find_by_text(som, "documentation")] == [
-            "e_search"
+            "e_search",
+            "e_submit",
         ]
 
     def test_no_match_returns_empty(self, sample_som: Som) -> None:
