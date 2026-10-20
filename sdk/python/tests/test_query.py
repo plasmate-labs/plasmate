@@ -273,6 +273,7 @@ class TestFindByLabel:
         )
 
         assert [el.id for el in find_by_label(sample_som, "billing")] == ["e11"]
+        assert [el.id for el in find_by_label(sample_som, "search products")] == ["e11"]
         assert [el.id for el in find_by_label(sample_som, "PRODUCT PREVIEW")] == ["e11"]
         assert [el.id for el in find_by_label(sample_som, "Close dialog", exact=True)] == ["e11"]
 
