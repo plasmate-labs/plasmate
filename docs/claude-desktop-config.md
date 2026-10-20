@@ -75,8 +75,9 @@ Claude will call: `fetch_page(url="https://stripe.com/docs", selector="main")`
 The plural `lists` selector is also accepted for list elements.
 
 Use `label:<text>` or `label=<text>` for case-insensitive accessible-label or
-authored-text matching on regions and elements; whitespace is normalized before
-matching.
+authored-text matching on regions and elements. When a compiled label is
+unavailable, element matching also checks `aria-label`, `title`, `placeholder`,
+and `alt`; whitespace is normalized before matching.
 
 ## Using with Cursor
 
