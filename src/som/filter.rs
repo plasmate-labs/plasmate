@@ -394,7 +394,7 @@ fn parse_label_selector(selector: &str) -> Option<String> {
 
 fn element_matches_label(element: &Element, label: &str) -> bool {
     let fallback_label = element.attrs.as_ref().and_then(|attrs| {
-        ["title", "placeholder"]
+        ["aria-label", "title", "placeholder"]
             .into_iter()
             .find_map(|key| attrs.get(key).and_then(serde_json::Value::as_str))
     });
@@ -947,6 +947,22 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-placeholder");
+    }
+
+    #[test]
+    fn test_selector_matches_aria_label_fallback_attribute() {
+        let mut som = make_test_som();
+        som.regions[1].elements[1].label = None;
+        som.regions[1].elements[1].text = None;
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({
+            "aria-label": "Search products"
+        }));
+
+        let filtered = apply_selector(&som, "label:products");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e3");
     }
 
     #[test]
