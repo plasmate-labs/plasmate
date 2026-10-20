@@ -277,6 +277,14 @@ class TestFindByLabel:
         assert [el.id for el in find_by_label(sample_som, "PRODUCT PREVIEW")] == ["e11"]
         assert [el.id for el in find_by_label(sample_som, "Close dialog", exact=True)] == ["e11"]
 
+    def test_normalizes_label_whitespace(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(id="e11", role=ElementRole.button, label="Billing\n details")
+        )
+
+        assert [el.id for el in find_by_label(sample_som, "billing details")] == ["e11"]
+        assert [el.id for el in find_by_label(sample_som, "Billing details", exact=True)] == ["e11"]
+
 
 class TestFindByTag:
     def test_finds_all_links(self, sample_som: Som) -> None:
@@ -489,6 +497,7 @@ class TestGetActionPlan:
         assert find_action_target_by_test_id(som, "settings-save") == save
         assert find_action_target_by_label(som, "Save") == save
         assert find_action_targets_by_label(som, "save") == [save]
+        assert find_action_targets_by_label(som, "  Save  ", exact=True) == [save]
         assert find_action_targets_by_role(som, "button") == [expected[2], expected[3]]
         assert [target["id"] for target in find_action_targets_by_role(som, " A ")] == [
             "e_billing",

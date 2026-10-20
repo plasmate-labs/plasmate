@@ -34,6 +34,8 @@ def find_by_html_id(som: Som, html_id: str) -> Optional[SomElement]:
 def find_by_label(som: Som, label: str, *, exact: bool = False) -> List[SomElement]:
     """Find elements by accessible label or its compiled attribute fallbacks."""
     results: List[SomElement] = []
+    normalized_label = _normalize_label_text(label)
+    folded_label = normalized_label.lower()
     for element in flat_elements(som):
         labels = [element.label] if element.label else []
         if element.attrs:
@@ -48,8 +50,11 @@ def find_by_label(som: Som, label: str, *, exact: bool = False) -> List[SomEleme
                 )
                 if value
             )
-        if (exact and any(label == value for value in labels)) or (
-            not exact and any(label.lower() in value.lower() for value in labels)
+        if (exact and any(normalized_label == _normalize_label_text(value) for value in labels)) or (
+            not exact
+            and any(
+                folded_label in _normalize_label_text(value).lower() for value in labels
+            )
         ):
             results.append(element)
     return results
@@ -457,14 +462,16 @@ def find_action_targets_by_label(
     """Return compact action targets whose accessible label matches text."""
     plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
     results: List[Dict[str, object]] = []
+    normalized_label = _normalize_label_text(label)
+    folded_label = normalized_label.lower()
     for item in plan:
         item_label = item.get("label")
         if not isinstance(item_label, str):
             continue
         if exact:
-            if label == item_label:
+            if normalized_label == _normalize_label_text(item_label):
                 results.append(item)
-        elif label.lower() in item_label.lower():
+        elif folded_label in _normalize_label_text(item_label).lower():
             results.append(item)
     return results
 
@@ -646,6 +653,11 @@ def get_token_estimate(som: Union[Som, dict]) -> int:
 def _normalize_role_alias(value: str) -> str:
     """Normalize role aliases so hyphenated and spaced forms behave alike."""
     return "_".join(value.strip().lower().replace("-", " ").split())
+
+
+def _normalize_label_text(value: str) -> str:
+    """Collapse label whitespace while preserving case for exact matches."""
+    return " ".join(value.split())
 
 
 def _find_element_by_id(element: SomElement, element_id: str) -> Optional[SomElement]:
