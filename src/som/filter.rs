@@ -75,8 +75,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `action : <verb>` and `action = <verb>`). The text and
 ///   select aliases mirror the corresponding MCP interaction tool names.
 /// - Label/text search: `label:<text>` or `label=<text>` matches a region or
-///   element's accessible label, authored text, or `aria-label`/title/placeholder
-///   fallback, case-insensitively, preserving parent context.
+///   element's accessible label, authored text, or `aria-label`/title/placeholder/
+///   `alt` fallback, case-insensitively, preserving parent context.
 /// - Id: `#some-id` - region id first, then SOM element `id` or `html_id`
 ///
 /// Unrecognised selectors return the full SOM unchanged (with a warning to stderr).
@@ -405,12 +405,14 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
     }
 
     element.attrs.as_ref().is_some_and(|attrs| {
-        ["aria-label", "title", "placeholder"].into_iter().any(|key| {
-            attrs
-                .get(key)
-                .and_then(serde_json::Value::as_str)
-                .is_some_and(matches)
-        })
+        ["aria-label", "title", "placeholder", "alt"]
+            .into_iter()
+            .any(|key| {
+                attrs
+                    .get(key)
+                    .and_then(serde_json::Value::as_str)
+                    .is_some_and(matches)
+            })
     })
 }
 
@@ -987,6 +989,29 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e3");
+    }
+
+    #[test]
+    fn test_selector_matches_image_alt_fallback_attribute() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-image".to_string(),
+            role: ElementRole::Image,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"alt": "Product preview"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        let filtered = apply_selector(&som, "label:preview");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-image");
     }
 
     #[test]
