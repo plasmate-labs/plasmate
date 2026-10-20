@@ -37,19 +37,7 @@ def find_by_label(som: Som, label: str, *, exact: bool = False) -> List[SomEleme
     normalized_label = _normalize_label_text(label)
     folded_label = normalized_label.lower()
     for element in flat_elements(som):
-        labels = [element.label] if element.label else []
-        if element.attrs:
-            aria_label = (element.attrs.aria or {}).get("label")
-            labels.extend(
-                value
-                for value in (
-                    aria_label,
-                    element.attrs.title,
-                    element.attrs.placeholder,
-                    element.attrs.alt,
-                )
-                if value
-            )
+        labels = _label_candidates(element)
         if (exact and any(normalized_label == _normalize_label_text(value) for value in labels)) or (
             not exact
             and any(
@@ -64,15 +52,22 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
     """Find all elements matching an element role or common HTML tag alias."""
     role_aliases = {
         "a": "link",
+        "buttons": "button",
         "article": "section",
         "button": "button",
+        "checkboxes": "checkbox",
+        "comboboxes": "select",
         "div": "group",
         "fieldset": "group",
         "hr": "separator",
         "img": "image",
         "input": "text_input",
+        "inputs": "text_input",
         "search": "text_input",
         "search_input": "text_input",
+        "search_inputs": "text_input",
+        "search_box": "text_input",
+        "search_boxes": "text_input",
         "ol": "list",
         "dl": "list",
         "menu": "list",
@@ -83,22 +78,29 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "menu_item_radio": "radio",
         "menuitemradio": "radio",
         "p": "paragraph",
-        "search_box": "text_input",
         "summary": "details",
         "textarea": "textarea",
+        "textareas": "textarea",
         "textbox": "text_input",
+        "textboxes": "text_input",
+        "text_inputs": "text_input",
         "searchbox": "text_input",
+        "searchboxes": "text_input",
         "combobox": "select",
         "combo_box": "select",
         "listbox": "select",
         "list_box": "select",
         "select": "select",
+        "selects": "select",
         "switch": "checkbox",
         "tab": "button",
         "ul": "list",
         "unordered_list": "list",
         "ordered_list": "list",
         "definition_list": "list",
+        "links": "link",
+        "listboxes": "select",
+        "radios": "radio",
     }
     tag = _normalize_role_alias(tag)
     heading_level = None
@@ -195,6 +197,9 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
             "enabled": True,
         }
         label = element.label or element.text
+        if not label:
+            candidates = _label_candidates(element)
+            label = candidates[0] if candidates else None
         if label:
             item["label"] = label
         if element.html_id:
@@ -492,15 +497,21 @@ def find_action_targets_by_role(
         "a": "link",
         "article": "section",
         "button": "button",
+        "buttons": "button",
+        "checkboxes": "checkbox",
         "combobox": "select",
         "combo_box": "select",
+        "comboboxes": "select",
         "definition_list": "list",
         "div": "group",
         "fieldset": "group",
         "hr": "separator",
         "img": "image",
         "input": "text_input",
+        "inputs": "text_input",
         "listbox": "select",
+        "listboxes": "select",
+        "links": "link",
         "menu": "list",
         "menu_item": "button",
         "menuitem": "button",
@@ -513,16 +524,24 @@ def find_action_targets_by_role(
         "option": "button",
         "p": "paragraph",
         "radio": "radio",
+        "radios": "radio",
         "search": "text_input",
         "search_box": "text_input",
+        "search_boxes": "text_input",
         "search_input": "text_input",
+        "search_inputs": "text_input",
         "select": "select",
+        "selects": "select",
         "summary": "details",
         "switch": "checkbox",
         "tab": "button",
         "textarea": "textarea",
+        "textareas": "textarea",
         "textbox": "text_input",
+        "textboxes": "text_input",
+        "text_inputs": "text_input",
         "searchbox": "text_input",
+        "searchboxes": "text_input",
         "ul": "list",
         "list_box": "select",
         "unordered_list": "list",
@@ -605,7 +624,10 @@ def find_action_target_by_label(
     som: Som, label: str, *, enabled_only: bool = False
 ) -> Optional[Dict[str, object]]:
     """Return the first compact action target matching an exact accessible label."""
-    return find_action_target(som, label, by="label", enabled_only=enabled_only)
+    matches = find_action_targets_by_label(
+        som, label, exact=True, enabled_only=enabled_only
+    )
+    return matches[0] if matches else None
 
 
 def find_by_text(som: Som, text: str) -> List[SomElement]:
@@ -658,6 +680,24 @@ def _normalize_role_alias(value: str) -> str:
 def _normalize_label_text(value: str) -> str:
     """Collapse label whitespace while preserving case for exact matches."""
     return " ".join(value.split())
+
+
+def _label_candidates(element: SomElement) -> List[str]:
+    """Return accessible labels and compiled attribute fallbacks."""
+    labels = [element.label] if element.label else []
+    if element.attrs:
+        aria_label = (element.attrs.aria or {}).get("label")
+        labels.extend(
+            value
+            for value in (
+                aria_label,
+                element.attrs.title,
+                element.attrs.placeholder,
+                element.attrs.alt,
+            )
+            if isinstance(value, str) and value
+        )
+    return labels
 
 
 def _find_element_by_id(element: SomElement, element_id: str) -> Optional[SomElement]:
