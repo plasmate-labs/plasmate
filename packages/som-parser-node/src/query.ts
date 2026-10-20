@@ -105,11 +105,38 @@ export function findByLabel(
   options?: { exact?: boolean },
 ): SomElement[] {
   const all = getAllElements(som);
+  const normalizedLabel = normalizeLabelText(label);
+  const foldedLabel = normalizedLabel.toLowerCase();
   if (options?.exact) {
-    return all.filter((el) => el.label === label);
+    return all.filter((el) =>
+      labelCandidates(el).some((candidate) => normalizeLabelText(candidate) === normalizedLabel),
+    );
   }
-  const lower = label.toLowerCase();
-  return all.filter((el) => el.label?.toLowerCase().includes(lower));
+  return all.filter((el) =>
+    labelCandidates(el).some((candidate) =>
+      normalizeLabelText(candidate).toLowerCase().includes(foldedLabel),
+    ),
+  );
+}
+
+function normalizeLabelText(value: string): string {
+  return value.trim().replace(/\s+/g, ' ');
+}
+
+function labelCandidates(el: SomElement): string[] {
+  return [
+    el.label,
+    el.attrs?.aria?.label,
+    el.attrs?.title,
+    el.attrs?.placeholder,
+    el.attrs?.alt,
+  ].filter((value): value is string => Boolean(value));
+}
+
+function actionPlanLabel(el: SomElement): string | undefined {
+  return [el.label, el.text, ...labelCandidates(el)].find(
+    (value) => typeof value === 'string' && value.trim().length > 0,
+  );
 }
 
 /** Find all elements that expose a specific action. */
@@ -319,7 +346,7 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
       actions: el.actions ?? [],
       enabled: true,
     };
-    const label = el.label ?? el.text;
+    const label = actionPlanLabel(el);
     if (label) item.label = label;
     if (el.html_id) item.html_id = el.html_id;
     if (el.attrs?.href) item.href = el.attrs.href;

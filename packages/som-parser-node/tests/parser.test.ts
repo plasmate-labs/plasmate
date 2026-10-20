@@ -351,6 +351,34 @@ describe('findByLabel', () => {
     expect(results.map((el) => el.id)).toEqual(['e_7']);
   });
 
+  it('falls back to compiled label attributes and normalizes whitespace', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        ...FIXTURE.regions,
+        {
+          id: 'r_fallbacks',
+          role: 'content',
+          elements: [
+            { id: 'e_9', role: 'button', attrs: { aria: { label: 'Close dialog' } } },
+            { id: 'e_10', role: 'button', attrs: { title: 'Account settings' } },
+            { id: 'e_11', role: 'text_input', attrs: { placeholder: 'Billing\naddress' } },
+            { id: 'e_12', role: 'image', attrs: { alt: 'Product preview' } },
+          ],
+        },
+      ],
+    };
+
+    expect(findByLabel(som, 'dialog').map((el) => el.id)).toEqual(['e_9']);
+    expect(findByLabel(som, 'Account settings', { exact: true }).map((el) => el.id)).toEqual([
+      'e_10',
+    ]);
+    expect(findByLabel(som, 'Billing address', { exact: true }).map((el) => el.id)).toEqual([
+      'e_11',
+    ]);
+    expect(findByLabel(som, 'PREVIEW').map((el) => el.id)).toEqual(['e_12']);
+  });
+
   it('supports exact case-sensitive label matching', () => {
     expect(findByLabel(FIXTURE, 'Search', { exact: true }).map((el) => el.id)).toEqual(['e_7']);
     expect(findByLabel(FIXTURE, 'search', { exact: true })).toEqual([]);
@@ -638,6 +666,74 @@ describe('getActionPlan', () => {
         blocked_reason: 'disabled',
       },
     ]);
+  });
+
+  it('includes compiled accessible-label fallbacks for replay', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_actions',
+          role: 'content',
+          elements: [
+            { id: 'aria-button', role: 'button', actions: ['click'], attrs: { aria: { label: 'Close' } } },
+            { id: 'title-button', role: 'button', actions: ['click'], attrs: { title: 'Settings' } },
+            { id: 'input', role: 'text_input', actions: ['type'], attrs: { placeholder: 'Search here' } },
+          ],
+        },
+      ],
+      meta: { html_bytes: 100, som_bytes: 50, element_count: 3, interactive_count: 3 },
+    };
+
+    expect(getActionPlan(som).map((item) => item.label)).toEqual([
+      'Close',
+      'Settings',
+      'Search here',
+    ]);
+    expect(findActionTargetByLabel(som, 'Settings')?.id).toBe('title-button');
+  });
+
+  it('skips empty labels when building replay targets', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_actions',
+          role: 'content',
+          elements: [
+            { id: 'text-button', role: 'button', label: '', text: 'Save', actions: ['click'] },
+            {
+              id: 'title-button',
+              role: 'button',
+              label: '',
+              actions: ['click'],
+              attrs: { title: 'Settings' },
+            },
+          ],
+        },
+      ],
+      meta: { html_bytes: 100, som_bytes: 50, element_count: 2, interactive_count: 2 },
+    };
+
+    expect(getActionPlan(som).map((item) => item.label)).toEqual(['Save', 'Settings']);
+  });
+
+  it('falls back when a label contains only whitespace', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_actions',
+          role: 'content',
+          elements: [
+            { id: 'text-button', role: 'button', label: '  ', text: 'Save', actions: ['click'] },
+          ],
+        },
+      ],
+      meta: { html_bytes: 100, som_bytes: 50, element_count: 1, interactive_count: 1 },
+    };
+
+    expect(getActionPlan(som).map((item) => item.label)).toEqual(['Save']);
   });
 
   it('returns deterministic cache keys for equivalent action targets', () => {
