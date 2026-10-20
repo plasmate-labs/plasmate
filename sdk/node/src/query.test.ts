@@ -207,6 +207,21 @@ describe('findByLabel', () => {
     assert.deepEqual(findByLabel(fixture, 'Email', { exact: true }).map((el) => el.id), ['e5']);
     assert.deepEqual(findByLabel(fixture, 'email', { exact: true }), []);
   });
+
+  it('normalizes whitespace in exact and partial label matches', () => {
+    const som: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) => ({
+        ...region,
+        elements: region.elements.map((element) =>
+          element.id === 'e5' ? { ...element, label: 'Account\n settings' } : element,
+        ),
+      })),
+    };
+
+    assert.deepEqual(findByLabel(som, 'Account settings', { exact: true }).map((el) => el.id), ['e5']);
+    assert.deepEqual(findByLabel(som, 'account settings').map((el) => el.id), ['e5']);
+  });
 });
 
 describe('findByTag', () => {
@@ -526,6 +541,21 @@ describe('getActionPlan', () => {
     assert.deepEqual(findActionTargetsByAction(som, 'click', { enabledOnly: true }), [
       billing,
     ]);
+  });
+
+  it('normalizes whitespace when finding action labels', () => {
+    const som: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) => ({
+        ...region,
+        elements: region.elements.map((element) =>
+          element.id === 'e5' ? { ...element, label: 'Account\n settings' } : element,
+        ),
+      })),
+    };
+
+    assert.equal(findActionTargetByLabel(som, 'Account settings')?.id, 'e5');
+    assert.deepEqual(findActionTargetsByLabel(som, 'account settings').map((item) => item.id), ['e5']);
   });
 
   it('filters blocked targets from enabled action indexes', () => {

@@ -184,6 +184,10 @@ function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined;
 }
 
+function normalizeLabelText(value: string): string {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
 function stableActionPlanParts(item: Omit<ActionPlanItem, 'cache_key'> | ActionPlanItem) {
   return [
     compactString(item.id),
@@ -423,14 +427,26 @@ export function findActionTarget(
   if (by === 'cache_key') return index.byCacheKey[value];
   if (by === 'html_id') return index.byHtmlId[value];
   if (by === 'test_id') return index.byTestId[value];
-  if (by === 'label') return index.byLabel[value];
+  if (by === 'label') {
+    return (
+      index.byLabel[value] ??
+      plan.find(
+        (item) =>
+          item.label !== undefined && normalizeLabelText(item.label) === normalizeLabelText(value),
+      )
+    );
+  }
   return (
     index.byId[value] ??
     index.byCacheKey[value] ??
     index.byHtmlId[value] ??
     index.byTestId[value] ??
     index.byLabel[value] ??
-    plan.find((item) => item.label?.toLowerCase() === value.toLowerCase())
+    plan.find(
+      (item) =>
+        item.label !== undefined &&
+        normalizeLabelText(item.label).toLowerCase() === normalizeLabelText(value).toLowerCase(),
+    )
   );
 }
 
@@ -441,11 +457,16 @@ export function findActionTargetsByLabel(
   options?: { exact?: boolean; enabledOnly?: boolean },
 ): ActionPlanItem[] {
   const plan = options?.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
+  const normalizedLabel = normalizeLabelText(label);
   if (options?.exact) {
-    return plan.filter((item) => item.label === label);
+    return plan.filter(
+      (item) => item.label !== undefined && normalizeLabelText(item.label) === normalizedLabel,
+    );
   }
-  const lower = label.toLowerCase();
-  return plan.filter((item) => item.label?.toLowerCase().includes(lower));
+  const lower = normalizedLabel.toLowerCase();
+  return plan.filter(
+    (item) => item.label && normalizeLabelText(item.label).toLowerCase().includes(lower),
+  );
 }
 
 /** Find compact action targets by exact SOM role. */
@@ -562,11 +583,16 @@ export function findByLabel(
   options?: { exact?: boolean },
 ): SomElement[] {
   const all = flatElements(som);
+  const normalizedLabel = normalizeLabelText(label);
   if (options?.exact) {
-    return all.filter((el) => el.label === label);
+    return all.filter(
+      (el) => el.label !== undefined && normalizeLabelText(el.label) === normalizedLabel,
+    );
   }
-  const lower = label.toLowerCase();
-  return all.filter((el) => el.label?.toLowerCase().includes(lower));
+  const lower = normalizedLabel.toLowerCase();
+  return all.filter(
+    (el) => el.label && normalizeLabelText(el.label).toLowerCase().includes(lower),
+  );
 }
 
 /** Flatten all elements from all regions into a single array, recursively including children. */
