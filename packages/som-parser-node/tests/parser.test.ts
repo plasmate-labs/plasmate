@@ -791,6 +791,8 @@ describe('getActionPlan', () => {
     expect(findActionTargetByTestId(som, 'settings-save')).toEqual(save);
     expect(findActionTargetByLabel(som, 'Save')).toEqual(save);
     expect(findActionTargetsByLabel(som, 'save')).toEqual([save]);
+    expect(findActionTargetsByLabel(som, '')).toEqual([]);
+    expect(findActionTargetsByLabel(som, '  \n\t')).toEqual([]);
     expect(findActionTargetsByRole(som, 'button')).toEqual([
       action_targets[2],
       action_targets[3],
