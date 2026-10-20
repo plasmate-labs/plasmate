@@ -668,6 +668,31 @@ describe('getActionPlan', () => {
     ]);
   });
 
+  it('includes compiled accessible-label fallbacks for replay', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_actions',
+          role: 'content',
+          elements: [
+            { id: 'aria-button', role: 'button', actions: ['click'], attrs: { aria: { label: 'Close' } } },
+            { id: 'title-button', role: 'button', actions: ['click'], attrs: { title: 'Settings' } },
+            { id: 'input', role: 'text_input', actions: ['type'], attrs: { placeholder: 'Search here' } },
+          ],
+        },
+      ],
+      meta: { html_bytes: 100, som_bytes: 50, element_count: 3, interactive_count: 3 },
+    };
+
+    expect(getActionPlan(som).map((item) => item.label)).toEqual([
+      'Close',
+      'Settings',
+      'Search here',
+    ]);
+    expect(findActionTargetByLabel(som, 'Settings')?.id).toBe('title-button');
+  });
+
   it('returns deterministic cache keys for equivalent action targets', () => {
     expect(
       getActionPlanCacheKey({

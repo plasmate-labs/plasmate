@@ -133,6 +133,10 @@ function labelCandidates(el: SomElement): string[] {
   ].filter((value): value is string => Boolean(value));
 }
 
+function actionPlanLabel(el: SomElement): string | undefined {
+  return el.label ?? el.text ?? labelCandidates(el)[0];
+}
+
 /** Find all elements that expose a specific action. */
 export function findByAction(som: Som, action: ElementAction): SomElement[] {
   return getAllElements(som).filter((el) => el.actions?.includes(action));
@@ -340,7 +344,7 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
       actions: el.actions ?? [],
       enabled: true,
     };
-    const label = el.label ?? el.text;
+    const label = actionPlanLabel(el);
     if (label) item.label = label;
     if (el.html_id) item.html_id = el.html_id;
     if (el.attrs?.href) item.href = el.attrs.href;
