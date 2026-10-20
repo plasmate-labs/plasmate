@@ -75,7 +75,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `action : <verb>` and `action = <verb>`). The text and
 ///   select aliases mirror the corresponding MCP interaction tool names.
 /// - Label/text search: `label:<text>` or `label=<text>` matches a region or
-///   element's accessible label, authored text, or legacy title/placeholder
+///   element's accessible label, authored text, or `aria-label`/title/placeholder
 ///   fallback, case-insensitively, preserving parent context.
 /// - Id: `#some-id` - region id first, then SOM element `id` or `html_id`
 ///
