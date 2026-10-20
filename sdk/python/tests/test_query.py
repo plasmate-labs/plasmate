@@ -320,6 +320,27 @@ class TestFindByTag:
         for alias in ("text inputs", "textboxes", "search boxes", "search inputs"):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["e9"]
 
+    def test_accepts_plural_control_aliases(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.extend(
+            [
+                SomElement(id="e11", role=ElementRole.select, actions=["select"]),
+                SomElement(id="e12", role=ElementRole.textarea, actions=["type"]),
+                SomElement(id="e13", role=ElementRole.checkbox, actions=["toggle"]),
+                SomElement(id="e14", role=ElementRole.radio, actions=["toggle"]),
+            ]
+        )
+        for alias, expected in (
+            ("buttons", ["e5"]),
+            ("links", ["e1", "e2"]),
+            ("selects", ["e11"]),
+            ("comboboxes", ["e11"]),
+            ("listboxes", ["e11"]),
+            ("textareas", ["e12"]),
+            ("checkboxes", ["e13"]),
+            ("radios", ["e14"]),
+        ):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == expected
+
     def test_accepts_spaced_aria_widget_aliases(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.append(
             SomElement(id="e12", role=ElementRole.radio)
@@ -354,6 +375,27 @@ class TestFindActionTargetsByRole:
     def test_accepts_plural_text_control_aliases(self, sample_som: Som) -> None:
         for alias in ("text inputs", "textboxes", "search boxes", "search inputs"):
             assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == ["e9"]
+
+    def test_accepts_plural_control_aliases(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.extend(
+            [
+                SomElement(id="e11", role=ElementRole.select, actions=["select"]),
+                SomElement(id="e12", role=ElementRole.textarea, actions=["type"]),
+                SomElement(id="e13", role=ElementRole.checkbox, actions=["toggle"]),
+                SomElement(id="e14", role=ElementRole.radio, actions=["toggle"]),
+            ]
+        )
+        for alias, expected in (
+            ("buttons", ["e5"]),
+            ("links", ["e1", "e2"]),
+            ("selects", ["e11"]),
+            ("comboboxes", ["e11"]),
+            ("listboxes", ["e11"]),
+            ("textareas", ["e12"]),
+            ("checkboxes", ["e13"]),
+            ("radios", ["e14"]),
+        ):
+            assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == expected
 
     def test_trims_role_aliases(self, sample_som: Som) -> None:
         assert [item["id"] for item in find_action_targets_by_role(sample_som, "  a  ")] == ["e1", "e2"]
