@@ -393,19 +393,25 @@ fn parse_label_selector(selector: &str) -> Option<String> {
 }
 
 fn element_matches_label(element: &Element, label: &str) -> bool {
-    let fallback_label = element.attrs.as_ref().and_then(|attrs| {
-        ["aria-label", "title", "placeholder"]
-            .into_iter()
-            .find_map(|key| attrs.get(key).and_then(serde_json::Value::as_str))
-    });
-    [
-        element.label.as_deref(),
-        element.text.as_deref(),
-        fallback_label,
-    ]
-    .into_iter()
-    .flatten()
-    .any(|value| normalize_label_text(value).contains(label))
+    let matches = |value: &str| normalize_label_text(value).contains(label);
+
+    if element
+        .label
+        .as_deref()
+        .is_some_and(matches)
+        || element.text.as_deref().is_some_and(matches)
+    {
+        return true;
+    }
+
+    element.attrs.as_ref().is_some_and(|attrs| {
+        ["aria-label", "title", "placeholder"].into_iter().any(|key| {
+            attrs
+                .get(key)
+                .and_then(serde_json::Value::as_str)
+                .is_some_and(matches)
+        })
+    })
 }
 
 fn filter_som_by_label(som: &Som, selector: &str, label: &str) -> Som {
@@ -959,6 +965,24 @@ mod tests {
         }));
 
         let filtered = apply_selector(&som, "label:products");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e3");
+    }
+
+    #[test]
+    fn test_selector_checks_all_label_fallback_attributes() {
+        let mut som = make_test_som();
+        som.regions[1].elements[1].label = None;
+        som.regions[1].elements[1].text = None;
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({
+            "aria-label": "Close",
+            "title": "Billing details",
+            "placeholder": "Search products"
+        }));
+
+        let filtered = apply_selector(&som, "label:billing");
 
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
