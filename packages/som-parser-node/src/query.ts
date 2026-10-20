@@ -134,7 +134,7 @@ function labelCandidates(el: SomElement): string[] {
 }
 
 function actionPlanLabel(el: SomElement): string | undefined {
-  return el.label ?? el.text ?? labelCandidates(el)[0];
+  return el.label || el.text || labelCandidates(el)[0];
 }
 
 /** Find all elements that expose a specific action. */

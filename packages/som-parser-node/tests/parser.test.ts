@@ -693,6 +693,31 @@ describe('getActionPlan', () => {
     expect(findActionTargetByLabel(som, 'Settings')?.id).toBe('title-button');
   });
 
+  it('skips empty labels when building replay targets', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_actions',
+          role: 'content',
+          elements: [
+            { id: 'text-button', role: 'button', label: '', text: 'Save', actions: ['click'] },
+            {
+              id: 'title-button',
+              role: 'button',
+              label: '',
+              actions: ['click'],
+              attrs: { title: 'Settings' },
+            },
+          ],
+        },
+      ],
+      meta: { html_bytes: 100, som_bytes: 50, element_count: 2, interactive_count: 2 },
+    };
+
+    expect(getActionPlan(som).map((item) => item.label)).toEqual(['Save', 'Settings']);
+  });
+
   it('returns deterministic cache keys for equivalent action targets', () => {
     expect(
       getActionPlanCacheKey({
