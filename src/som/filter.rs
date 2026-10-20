@@ -174,15 +174,22 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             .cloned()
             .collect();
         if filtered.is_empty() {
-            eprintln!(
-                "Warning: selector '{}' matched no regions - returning full SOM",
-                selector
-            );
-            return som.clone();
+            // Some ARIA names are also element-role aliases (for example,
+            // `article` compiles to a Section). Let those selectors continue
+            // through the element matcher when no region matched.
+            if parse_element_role(selector).is_none() {
+                eprintln!(
+                    "Warning: selector '{}' matched no regions - returning full SOM",
+                    selector
+                );
+                return som.clone();
+            }
         }
-        let mut result = som.clone();
-        result.regions = filtered;
-        return refresh_meta(result);
+        if !filtered.is_empty() {
+            let mut result = som.clone();
+            result.regions = filtered;
+            return refresh_meta(result);
+        }
     }
 
     // Match element roles, preserving parent containers and shadow roots that
@@ -582,7 +589,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "status" | "tooltip" => {
             Some(ElementRole::Paragraph)
         }
-        "section" | "sections" => Some(ElementRole::Section),
+        "article" | "articles" | "section" | "sections" => Some(ElementRole::Section),
         "group"
         | "groups"
         | "fieldset"
@@ -2558,6 +2565,23 @@ mod tests {
         let filtered = apply_selector(&som, "article");
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].role, RegionRole::Content);
+    }
+
+    #[test]
+    fn test_selector_article_role_falls_back_to_section_element() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].role = ElementRole::Section;
+
+        for selector in ["article", "role=article"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements[0].role,
+                ElementRole::Section,
+                "selector: {selector}"
+            );
+        }
     }
 
     #[test]
