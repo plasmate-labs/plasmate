@@ -262,6 +262,20 @@ describe('findByText', () => {
     assert.equal(results[0].id, 'e1');
   });
 
+  it('normalizes whitespace in text matches', () => {
+    const som: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) => ({
+        ...region,
+        elements: region.elements.map((element) =>
+          element.id === 'e3' ? { ...element, text: 'Hello\n  world' } : element,
+        ),
+      })),
+    };
+
+    assert.deepEqual(findByText(som, 'hello world').map((el) => el.id), ['e3']);
+  });
+
   it('matches label-only controls', () => {
     const results = findByText(fixture, 'email');
     assert.equal(results.length, 1);
