@@ -383,6 +383,11 @@ describe('findByLabel', () => {
     expect(findByLabel(FIXTURE, 'Search', { exact: true }).map((el) => el.id)).toEqual(['e_7']);
     expect(findByLabel(FIXTURE, 'search', { exact: true })).toEqual([]);
   });
+
+  it('returns no matches for empty or whitespace-only labels', () => {
+    expect(findByLabel(FIXTURE, '')).toEqual([]);
+    expect(findByLabel(FIXTURE, '  \n\t', { exact: true })).toEqual([]);
+  });
 });
 
 describe('findByText', () => {

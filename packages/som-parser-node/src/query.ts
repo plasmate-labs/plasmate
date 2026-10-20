@@ -106,6 +106,7 @@ export function findByLabel(
 ): SomElement[] {
   const all = getAllElements(som);
   const normalizedLabel = normalizeLabelText(label);
+  if (!normalizedLabel) return [];
   const foldedLabel = normalizedLabel.toLowerCase();
   if (options?.exact) {
     return all.filter((el) =>
