@@ -292,6 +292,11 @@ describe('findByText', () => {
     assert.deepEqual(findByText(fixture, 'nonexistent'), []);
   });
 
+  it('does not match every element for an empty query', () => {
+    assert.deepEqual(findByText(fixture, '   '), []);
+    assert.deepEqual(findByLabel(fixture, '\n\t'), []);
+  });
+
   it('finds compiled list items', () => {
     const som: Som = {
       ...fixture,

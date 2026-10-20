@@ -571,6 +571,7 @@ function searchableTextParts(el: SomElement): string[] {
 /** Find all elements containing the given text (case-insensitive substring match). */
 export function findByText(som: Som, text: string): SomElement[] {
   const lower = normalizeLabelText(text).toLowerCase();
+  if (!lower) return [];
   return flatElements(som).filter((el) =>
     searchableTextParts(el).some((part) => normalizeLabelText(part).toLowerCase().includes(lower)),
   );
@@ -590,6 +591,7 @@ export function findByLabel(
     );
   }
   const lower = normalizedLabel.toLowerCase();
+  if (!lower) return [];
   return all.filter(
     (el) => el.label && normalizeLabelText(el.label).toLowerCase().includes(lower),
   );
