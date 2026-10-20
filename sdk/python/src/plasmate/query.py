@@ -32,14 +32,25 @@ def find_by_html_id(som: Som, html_id: str) -> Optional[SomElement]:
 
 
 def find_by_label(som: Som, label: str, *, exact: bool = False) -> List[SomElement]:
-    """Find elements by accessible label."""
+    """Find elements by accessible label or its compiled attribute fallbacks."""
     results: List[SomElement] = []
     for element in flat_elements(som):
-        element_label = element.label or ""
-        if exact:
-            if label == element_label:
-                results.append(element)
-        elif label.lower() in element_label.lower():
+        labels = [element.label] if element.label else []
+        if element.attrs:
+            aria_label = (element.attrs.aria or {}).get("label")
+            labels.extend(
+                value
+                for value in (
+                    aria_label,
+                    element.attrs.title,
+                    element.attrs.placeholder,
+                    element.attrs.alt,
+                )
+                if value
+            )
+        if (exact and any(label == value for value in labels)) or (
+            not exact and any(label.lower() in value.lower() for value in labels)
+        ):
             results.append(element)
     return results
 

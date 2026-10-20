@@ -258,6 +258,24 @@ class TestFindByLabel:
         assert [el.id for el in find_by_label(sample_som, "Email", exact=True)] == ["e9"]
         assert find_by_label(sample_som, "email", exact=True) == []
 
+    def test_finds_compiled_label_fallback_attributes(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(
+                id="e11",
+                role=ElementRole.button,
+                attrs=ElementAttrs(
+                    aria={"label": "Close dialog"},
+                    title="Billing details",
+                    placeholder="Search products",
+                    alt="Product preview",
+                ),
+            )
+        )
+
+        assert [el.id for el in find_by_label(sample_som, "billing")] == ["e11"]
+        assert [el.id for el in find_by_label(sample_som, "PRODUCT PREVIEW")] == ["e11"]
+        assert [el.id for el in find_by_label(sample_som, "Close dialog", exact=True)] == ["e11"]
+
 
 class TestFindByTag:
     def test_finds_all_links(self, sample_som: Som) -> None:
