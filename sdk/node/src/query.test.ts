@@ -222,6 +222,22 @@ describe('findByLabel', () => {
     assert.deepEqual(findByLabel(som, 'Account settings', { exact: true }).map((el) => el.id), ['e5']);
     assert.deepEqual(findByLabel(som, 'account settings').map((el) => el.id), ['e5']);
   });
+
+  it('returns no matches for empty exact labels', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_empty_label',
+          role: 'content',
+          elements: [{ id: 'empty', role: 'button', label: '  ' }],
+        },
+      ],
+    };
+
+    assert.deepEqual(findByLabel(som, '', { exact: true }), []);
+    assert.deepEqual(findByLabel(som, '\n\t', { exact: true }), []);
+  });
 });
 
 describe('findByTag', () => {
@@ -544,6 +560,10 @@ describe('getActionPlan', () => {
     assert.deepEqual(findActionTargetByTestId(som, 'settings-save'), save);
     assert.deepEqual(findActionTargetByLabel(som, 'Save'), save);
     assert.deepEqual(findActionTargetsByLabel(som, 'save'), [save]);
+    assert.equal(findActionTargetByLabel(som, '  \n\t'), undefined);
+    assert.deepEqual(findActionTargetsByLabel(som, '\t  '), []);
+    assert.equal(findActionTarget(som, '  ', { by: 'label' }), undefined);
+    assert.equal(findActionTarget(som, '\n\t'), undefined);
     assert.deepEqual(findActionTargetsByRole(som, 'button'), [
       action_targets[2],
       action_targets[3],

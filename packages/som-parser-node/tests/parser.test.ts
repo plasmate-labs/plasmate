@@ -383,6 +383,11 @@ describe('findByLabel', () => {
     expect(findByLabel(FIXTURE, 'Search', { exact: true }).map((el) => el.id)).toEqual(['e_7']);
     expect(findByLabel(FIXTURE, 'search', { exact: true })).toEqual([]);
   });
+
+  it('returns no matches for empty or whitespace-only labels', () => {
+    expect(findByLabel(FIXTURE, '')).toEqual([]);
+    expect(findByLabel(FIXTURE, '  \n\t', { exact: true })).toEqual([]);
+  });
 });
 
 describe('findByText', () => {
@@ -786,6 +791,8 @@ describe('getActionPlan', () => {
     expect(findActionTargetByTestId(som, 'settings-save')).toEqual(save);
     expect(findActionTargetByLabel(som, 'Save')).toEqual(save);
     expect(findActionTargetsByLabel(som, 'save')).toEqual([save]);
+    expect(findActionTargetsByLabel(som, '')).toEqual([]);
+    expect(findActionTargetsByLabel(som, '  \n\t')).toEqual([]);
     expect(findActionTargetsByRole(som, 'button')).toEqual([
       action_targets[2],
       action_targets[3],

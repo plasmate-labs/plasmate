@@ -106,6 +106,7 @@ export function findByLabel(
 ): SomElement[] {
   const all = getAllElements(som);
   const normalizedLabel = normalizeLabelText(label);
+  if (!normalizedLabel) return [];
   const foldedLabel = normalizedLabel.toLowerCase();
   if (options?.exact) {
     return all.filter((el) =>
@@ -537,10 +538,12 @@ export function findActionTargetsByLabel(
   options?: { exact?: boolean; enabledOnly?: boolean },
 ): ActionPlanItem[] {
   const plan = options?.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
+  const normalizedLabel = normalizeLabelText(label);
+  if (!normalizedLabel) return [];
   if (options?.exact) {
-    return plan.filter((item) => item.label === label);
+    return plan.filter((item) => item.label === normalizedLabel);
   }
-  const lower = label.toLowerCase();
+  const lower = normalizedLabel.toLowerCase();
   return plan.filter((item) => item.label?.toLowerCase().includes(lower));
 }
 

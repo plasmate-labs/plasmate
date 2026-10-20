@@ -420,6 +420,7 @@ export function findActionTarget(
   value: string,
   options: ActionTargetLookupOptions = {},
 ): ActionPlanItem | undefined {
+  if (!normalizeLabelText(value)) return undefined;
   const plan = options.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
   const index = getActionPlanIndex(som, { enabledOnly: options.enabledOnly });
   const by = options.by ?? 'auto';
@@ -458,6 +459,7 @@ export function findActionTargetsByLabel(
 ): ActionPlanItem[] {
   const plan = options?.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
   const normalizedLabel = normalizeLabelText(label);
+  if (!normalizedLabel) return [];
   if (options?.exact) {
     return plan.filter(
       (item) => item.label !== undefined && normalizeLabelText(item.label) === normalizedLabel,
@@ -585,6 +587,7 @@ export function findByLabel(
 ): SomElement[] {
   const all = flatElements(som);
   const normalizedLabel = normalizeLabelText(label);
+  if (!normalizedLabel) return [];
   if (options?.exact) {
     return all.filter(
       (el) => el.label !== undefined && normalizeLabelText(el.label) === normalizedLabel,
