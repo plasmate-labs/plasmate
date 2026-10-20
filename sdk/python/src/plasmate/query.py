@@ -37,19 +37,7 @@ def find_by_label(som: Som, label: str, *, exact: bool = False) -> List[SomEleme
     normalized_label = _normalize_label_text(label)
     folded_label = normalized_label.lower()
     for element in flat_elements(som):
-        labels = [element.label] if element.label else []
-        if element.attrs:
-            aria_label = (element.attrs.aria or {}).get("label")
-            labels.extend(
-                value
-                for value in (
-                    aria_label,
-                    element.attrs.title,
-                    element.attrs.placeholder,
-                    element.attrs.alt,
-                )
-                if value
-            )
+        labels = _label_candidates(element)
         if (exact and any(normalized_label == _normalize_label_text(value) for value in labels)) or (
             not exact
             and any(
@@ -209,6 +197,9 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
             "enabled": True,
         }
         label = element.label or element.text
+        if not label:
+            candidates = _label_candidates(element)
+            label = candidates[0] if candidates else None
         if label:
             item["label"] = label
         if element.html_id:
@@ -686,6 +677,24 @@ def _normalize_role_alias(value: str) -> str:
 def _normalize_label_text(value: str) -> str:
     """Collapse label whitespace while preserving case for exact matches."""
     return " ".join(value.split())
+
+
+def _label_candidates(element: SomElement) -> List[str]:
+    """Return accessible labels and compiled attribute fallbacks."""
+    labels = [element.label] if element.label else []
+    if element.attrs:
+        aria_label = (element.attrs.aria or {}).get("label")
+        labels.extend(
+            value
+            for value in (
+                aria_label,
+                element.attrs.title,
+                element.attrs.placeholder,
+                element.attrs.alt,
+            )
+            if isinstance(value, str) and value
+        )
+    return labels
 
 
 def _find_element_by_id(element: SomElement, element_id: str) -> Optional[SomElement]:
