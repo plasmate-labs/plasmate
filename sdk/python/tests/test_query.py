@@ -316,6 +316,10 @@ class TestFindByTag:
         assert [el.id for el in find_by_tag(sample_som, "search-input")] == ["e9"]
         assert find_by_tag(sample_som, "listbox") == []
 
+    def test_accepts_plural_text_control_aliases(self, sample_som: Som) -> None:
+        for alias in ("text inputs", "textboxes", "search boxes", "search inputs"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == ["e9"]
+
     def test_accepts_spaced_aria_widget_aliases(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.append(
             SomElement(id="e12", role=ElementRole.radio)
@@ -345,6 +349,10 @@ class TestFindActionTargetsByRole:
         assert [item["id"] for item in find_action_targets_by_role(sample_som, "INPUT")] == ["e9"]
         assert [item["id"] for item in find_action_targets_by_role(sample_som, "textbox")] == ["e9"]
         for alias in ("search-box", "search box"):
+            assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == ["e9"]
+
+    def test_accepts_plural_text_control_aliases(self, sample_som: Som) -> None:
+        for alias in ("text inputs", "textboxes", "search boxes", "search inputs"):
             assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == ["e9"]
 
     def test_trims_role_aliases(self, sample_som: Som) -> None:
