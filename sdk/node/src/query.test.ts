@@ -544,6 +544,10 @@ describe('getActionPlan', () => {
     assert.deepEqual(findActionTargetByTestId(som, 'settings-save'), save);
     assert.deepEqual(findActionTargetByLabel(som, 'Save'), save);
     assert.deepEqual(findActionTargetsByLabel(som, 'save'), [save]);
+    assert.equal(findActionTargetByLabel(som, '  \n\t'), undefined);
+    assert.deepEqual(findActionTargetsByLabel(som, '\t  '), []);
+    assert.equal(findActionTarget(som, '  ', { by: 'label' }), undefined);
+    assert.equal(findActionTarget(som, '\n\t'), undefined);
     assert.deepEqual(findActionTargetsByRole(som, 'button'), [
       action_targets[2],
       action_targets[3],
