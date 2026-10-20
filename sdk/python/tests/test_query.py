@@ -456,6 +456,21 @@ class TestFindInteractive:
 
 
 class TestGetActionPlan:
+    def test_action_target_by_label_normalizes_whitespace(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(
+                id="e11",
+                role=ElementRole.button,
+                label="Account\n settings",
+                actions=["click"],
+            )
+        )
+
+        target = find_action_target_by_label(sample_som, "Account settings")
+
+        assert target is not None
+        assert target["id"] == "e11"
+
     def test_uses_label_fallback_for_unlabelled_controls(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.append(
             SomElement(

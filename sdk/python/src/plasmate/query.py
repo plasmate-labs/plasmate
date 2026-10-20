@@ -624,7 +624,10 @@ def find_action_target_by_label(
     som: Som, label: str, *, enabled_only: bool = False
 ) -> Optional[Dict[str, object]]:
     """Return the first compact action target matching an exact accessible label."""
-    return find_action_target(som, label, by="label", enabled_only=enabled_only)
+    matches = find_action_targets_by_label(
+        som, label, exact=True, enabled_only=enabled_only
+    )
+    return matches[0] if matches else None
 
 
 def find_by_text(som: Som, text: str) -> List[SomElement]:
