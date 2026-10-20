@@ -222,6 +222,22 @@ describe('findByLabel', () => {
     assert.deepEqual(findByLabel(som, 'Account settings', { exact: true }).map((el) => el.id), ['e5']);
     assert.deepEqual(findByLabel(som, 'account settings').map((el) => el.id), ['e5']);
   });
+
+  it('returns no matches for empty exact labels', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_empty_label',
+          role: 'content',
+          elements: [{ id: 'empty', role: 'button', label: '  ' }],
+        },
+      ],
+    };
+
+    assert.deepEqual(findByLabel(som, '', { exact: true }), []);
+    assert.deepEqual(findByLabel(som, '\n\t', { exact: true }), []);
+  });
 });
 
 describe('findByTag', () => {

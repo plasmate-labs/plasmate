@@ -587,6 +587,7 @@ export function findByLabel(
 ): SomElement[] {
   const all = flatElements(som);
   const normalizedLabel = normalizeLabelText(label);
+  if (!normalizedLabel) return [];
   if (options?.exact) {
     return all.filter(
       (el) => el.label !== undefined && normalizeLabelText(el.label) === normalizedLabel,
