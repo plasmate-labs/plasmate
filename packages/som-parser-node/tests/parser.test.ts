@@ -718,6 +718,24 @@ describe('getActionPlan', () => {
     expect(getActionPlan(som).map((item) => item.label)).toEqual(['Save', 'Settings']);
   });
 
+  it('falls back when a label contains only whitespace', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_actions',
+          role: 'content',
+          elements: [
+            { id: 'text-button', role: 'button', label: '  ', text: 'Save', actions: ['click'] },
+          ],
+        },
+      ],
+      meta: { html_bytes: 100, som_bytes: 50, element_count: 1, interactive_count: 1 },
+    };
+
+    expect(getActionPlan(som).map((item) => item.label)).toEqual(['Save']);
+  });
+
   it('returns deterministic cache keys for equivalent action targets', () => {
     expect(
       getActionPlanCacheKey({
