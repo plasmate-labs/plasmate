@@ -231,8 +231,8 @@ action menu before the LLM sees the content. The MCP tool-name aliases
 typing and selection targets.
 Use `selector="label:<text>"` or `selector="label=<text>"` for
 case-insensitive accessible-label/text matching on regions and elements;
-element matching also falls back to `aria-label`, `title`, and `placeholder`
-attributes when a compiled label is unavailable;
+element matching also falls back to `aria-label`, `title`, `placeholder`, and
+`alt` attributes when a compiled label is unavailable;
 whitespace is normalized so labels split across lines still match.
 Element selectors also accept common HTML tag aliases: `a`/`link`,
 `p`/`paragraph`, and `ul`, `ol`, `dl`, or `menu`/`list`/`lists` (plus the explicit
