@@ -420,6 +420,11 @@ describe('findByText', () => {
     expect(findByText(FIXTURE, 'nonexistent')).toHaveLength(0);
   });
 
+  it('returns empty for blank queries', () => {
+    expect(findByText(FIXTURE, '')).toEqual([]);
+    expect(findByText(FIXTURE, '  \n\t ', { exact: true })).toEqual([]);
+  });
+
   it('finds compiled list items', () => {
     const som: Som = {
       ...FIXTURE,

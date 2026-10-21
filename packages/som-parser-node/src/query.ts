@@ -89,6 +89,7 @@ export function findByText(
   options?: { exact?: boolean },
 ): SomElement[] {
   const all = getAllElements(som);
+  if (!text.trim()) return [];
   if (options?.exact) {
     return all.filter((el) => searchableTextParts(el).includes(text));
   }
