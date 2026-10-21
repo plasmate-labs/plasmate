@@ -710,6 +710,8 @@ def find_by_text(som: Som, text: str) -> List[SomElement]:
     """Find elements whose visible or compiled text metadata contains the substring."""
     results: List[SomElement] = []
     lower = text.lower()
+    if not lower:
+        return results
     for region in som.regions:
         for element in region.elements:
             _collect_by_text(element, lower, results)

@@ -870,6 +870,9 @@ class TestFindByText:
     def test_no_match_returns_empty(self, sample_som: Som) -> None:
         assert find_by_text(sample_som, "zzz_no_match") == []
 
+    def test_empty_query_does_not_match_every_element(self, sample_som: Som) -> None:
+        assert find_by_text(sample_som, "") == []
+
     def test_finds_compiled_list_items(self) -> None:
         som = Som(
             som_version="1.0",
