@@ -492,6 +492,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
             "properties": {
                 "url": {
                     "type": "string",
+                    "format": "uri",
                     "minLength": 1,
                     "maxLength": MAX_MCP_URL_BYTES,
                     "description": "URL to fetch"
@@ -527,6 +528,7 @@ pub fn extract_text_definition() -> ToolDefinition {
             "properties": {
                 "url": {
                     "type": "string",
+                    "format": "uri",
                     "minLength": 1,
                     "maxLength": MAX_MCP_URL_BYTES,
                     "description": "URL to fetch"
@@ -967,6 +969,7 @@ pub fn extract_links_definition() -> ToolDefinition {
             "properties": {
                 "url": {
                     "type": "string",
+                    "format": "uri",
                     "minLength": 1,
                     "maxLength": MAX_MCP_URL_BYTES,
                     "description": "URL to fetch"
@@ -3745,6 +3748,7 @@ pub fn screenshot_page_definition() -> ToolDefinition {
             "properties": {
                 "url": {
                     "type": "string",
+                    "format": "uri",
                     "minLength": 1,
                     "maxLength": MAX_MCP_URL_BYTES,
                     "description": "URL to screenshot"
@@ -3980,6 +3984,7 @@ pub fn open_page_definition() -> ToolDefinition {
             "properties": {
                 "url": {
                     "type": "string",
+                    "format": "uri",
                     "minLength": 1,
                     "maxLength": MAX_MCP_URL_BYTES,
                     "description": "URL to open"
@@ -6708,6 +6713,26 @@ mod tests {
             assert_eq!(
                 definition.input_schema["properties"]["url"]["minLength"], 1,
                 "{} must reject empty URLs",
+                definition.name
+            );
+        }
+    }
+
+    #[test]
+    fn absolute_page_url_schemas_advertise_uri_format() {
+        for definition in [
+            fetch_page_definition(),
+            extract_text_definition(),
+            extract_links_definition(),
+            ard_discover_definition(),
+            crawl_policy_definition(),
+            inspect_page_definition(),
+            screenshot_page_definition(),
+            open_page_definition(),
+        ] {
+            assert_eq!(
+                definition.input_schema["properties"]["url"]["format"], "uri",
+                "{} must advertise absolute URL validation",
                 definition.name
             );
         }
