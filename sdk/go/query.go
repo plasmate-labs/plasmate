@@ -712,8 +712,8 @@ func FindActionTarget(som *Som, value string, by ...string) *ActionPlanItem {
 		}
 	}
 	if lookup == "label" {
-		if item, ok := index.ByLabel[value]; ok {
-			return &item
+		if matches := FindActionTargetsByLabel(som, value, true); len(matches) > 0 {
+			return &matches[0]
 		}
 	}
 	return nil
@@ -770,7 +770,10 @@ func FindActionTargetByTestID(som *Som, testID string) *ActionPlanItem {
 
 // FindActionTargetByLabel returns the first compact action target matching an exact accessible label.
 func FindActionTargetByLabel(som *Som, label string) *ActionPlanItem {
-	return FindActionTarget(som, label, "label")
+	if matches := FindActionTargetsByLabel(som, label, true); len(matches) > 0 {
+		return &matches[0]
+	}
+	return nil
 }
 
 // FindActionTargetsByLabel returns compact action targets whose accessible label matches text.
@@ -780,18 +783,22 @@ func FindActionTargetsByLabel(som *Som, label string, exact bool, enabledOnly ..
 		plan = EnabledActionPlan(som)
 	}
 	results := []ActionPlanItem{}
-	needle := strings.ToLower(label)
+	needle := normalizeQueryText(label)
+	if needle == "" {
+		return results
+	}
 	for _, item := range plan {
 		if item.Label == nil {
 			continue
 		}
+		candidate := normalizeQueryText(*item.Label)
 		if exact {
-			if *item.Label == label {
+			if candidate == needle {
 				results = append(results, item)
 			}
 			continue
 		}
-		if strings.Contains(strings.ToLower(*item.Label), needle) {
+		if strings.Contains(candidate, needle) {
 			results = append(results, item)
 		}
 	}

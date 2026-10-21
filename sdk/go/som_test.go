@@ -496,6 +496,24 @@ func TestFindByLabel(t *testing.T) {
 	}
 }
 
+func TestFindActionTargetsByLabelNormalizesQueries(t *testing.T) {
+	som := mustParse(t)
+
+	exact := FindActionTargetByLabel(som, "  SEARCH  ")
+	if exact == nil || exact.ID != "e5" {
+		t.Fatalf("FindActionTargetByLabel(normalized) = %#v, want e5", exact)
+	}
+
+	partial := FindActionTargetsByLabel(som, "  sea  ", false)
+	if len(partial) != 1 || partial[0].ID != "e5" {
+		t.Fatalf("FindActionTargetsByLabel(partial normalized) = %#v, want e5", partial)
+	}
+
+	if got := FindActionTargetsByLabel(som, " \n\t", true); len(got) != 0 {
+		t.Fatalf("FindActionTargetsByLabel(whitespace) = %#v, want none", got)
+	}
+}
+
 func TestFindByTextCompiledListItems(t *testing.T) {
 	ordered := false
 	som := &Som{
