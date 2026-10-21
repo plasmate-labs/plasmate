@@ -696,6 +696,20 @@ class TestGetActionPlan:
         assert [target["id"] for target in index["by_action"]["click"]] == ["e_billing"]
         assert "e_plan" in index["by_id"]
 
+    def test_action_index_normalizes_label_whitespace(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(
+                id="e11",
+                role=ElementRole.button,
+                label="Account\n settings",
+                actions=["click"],
+            )
+        )
+
+        target = get_action_plan_index(sample_som)["by_label"]["Account settings"]
+
+        assert target["id"] == "e11"
+
 
 class TestFindByText:
     def test_finds_by_exact_text(self, sample_som: Som) -> None:

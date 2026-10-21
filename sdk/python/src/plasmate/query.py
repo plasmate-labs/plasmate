@@ -421,6 +421,8 @@ def get_action_plan_index(
             ("label", "by_label"),
         ):
             value = item.get(source_key)
+            if bucket_key == "by_label" and isinstance(value, str):
+                value = _normalize_label_text(value)
             if isinstance(value, str) and value not in index[bucket_key]:
                 index[bucket_key][value] = item
         role = item.get("role")
