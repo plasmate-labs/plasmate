@@ -474,6 +474,10 @@ class TestGetActionPlan:
 
         assert target is not None
         assert target["id"] == "e11"
+        assert find_action_target(sample_som, "Account settings")["id"] == "e11"
+        assert find_action_target(sample_som, "account settings")["id"] == "e11"
+        assert find_action_target(sample_som, "Account settings", by="label")["id"] == "e11"
+        assert find_action_target(sample_som, "  \n\t") is None
 
     def test_uses_label_fallback_for_unlabelled_controls(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.append(
@@ -489,6 +493,23 @@ class TestGetActionPlan:
 
         assert target["id"] == "e11"
         assert target["label"] == "Account settings"
+
+    def test_ignores_whitespace_only_labels_when_selecting_fallback(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(
+                id="e12",
+                role=ElementRole.button,
+                label="  \n\t",
+                text="Visible action",
+                actions=["click"],
+            )
+        )
+
+        target = find_action_target(sample_som, "Visible action")
+
+        assert target is not None
+        assert target["id"] == "e12"
+        assert target["label"] == "Visible action"
 
     def test_returns_compact_action_targets(self, sample_som: Som) -> None:
         plan = get_action_plan(sample_som)
@@ -541,6 +562,18 @@ class TestGetActionPlan:
                 }
             )
             == "plasmate-action:v1:5b218ab1"
+        )
+
+    def test_cache_keys_normalize_label_whitespace(self) -> None:
+        base = {
+            "id": "e_settings",
+            "role": "button",
+            "actions": ["click"],
+            "label": "Account settings",
+        }
+
+        assert get_action_plan_cache_key(base) == get_action_plan_cache_key(
+            {**base, "label": "Account\n settings"}
         )
 
     def test_indexes_action_targets_for_replay(self, sample_som: Som) -> None:
@@ -674,6 +707,20 @@ class TestGetActionPlan:
         assert "button" not in index["by_role"]
         assert [target["id"] for target in index["by_action"]["click"]] == ["e_billing"]
         assert "e_plan" in index["by_id"]
+
+    def test_action_index_normalizes_label_whitespace(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(
+                id="e11",
+                role=ElementRole.button,
+                label="Account\n settings",
+                actions=["click"],
+            )
+        )
+
+        target = get_action_plan_index(sample_som)["by_label"]["Account settings"]
+
+        assert target["id"] == "e11"
 
 
 class TestFindByText:
