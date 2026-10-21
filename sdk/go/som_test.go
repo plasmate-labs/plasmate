@@ -473,6 +473,13 @@ func TestFindByTextUserFacingMetadata(t *testing.T) {
 func TestFindByLabel(t *testing.T) {
 	som := mustParse(t)
 
+	if results := FindByLabel(som, "   "); len(results) != 0 {
+		t.Fatalf("FindByLabel(whitespace) = %d, want 0", len(results))
+	}
+	if results := FindByLabel(som, "  search  "); len(results) != 1 || results[0].ID != "e5" {
+		t.Fatalf("FindByLabel(normalized) = %#v, want e5", results)
+	}
+
 	results := FindByLabel(som, "search")
 	if len(results) != 1 || results[0].ID != "e5" {
 		t.Fatalf("FindByLabel(search) = %#v, want e5", results)
