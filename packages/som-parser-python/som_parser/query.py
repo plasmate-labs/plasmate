@@ -116,7 +116,7 @@ def find_by_text(
 def find_by_label(
     som: Som, label: str, *, exact: bool = False
 ) -> List[SomElement]:
-    """Find elements by their accessible label.
+    """Find elements by their accessible label or compiled fallbacks.
 
     Args:
         som: The parsed SOM object.
@@ -125,14 +125,19 @@ def find_by_label(
                If False (default), case-insensitive substring match.
     """
     results: List[SomElement] = []
+    normalized_label = _normalize_label_text(label)
+    if not normalized_label:
+        return results
+    folded_label = normalized_label.lower()
     for el in get_all_elements(som):
-        el_label = el.label or ""
-        if exact:
-            if label == el_label:
-                results.append(el)
-        else:
-            if label.lower() in el_label.lower():
-                results.append(el)
+        labels = _label_candidates(el)
+        if (exact and any(normalized_label == _normalize_label_text(value) for value in labels)) or (
+            not exact
+            and any(
+                folded_label in _normalize_label_text(value).lower() for value in labels
+            )
+        ):
+            results.append(el)
     return results
 
 
@@ -169,6 +174,29 @@ def _fnv1a32(value: str) -> str:
 
 def _compact_string(value: object) -> Optional[str]:
     return value if isinstance(value, str) and value else None
+
+
+def _normalize_label_text(value: str) -> str:
+    """Collapse label whitespace while preserving case for exact matches."""
+    return " ".join(value.split())
+
+
+def _label_candidates(element: SomElement) -> List[str]:
+    """Return accessible labels and compiled attribute fallbacks."""
+    labels = [element.label] if element.label else []
+    if element.attrs:
+        aria_label = (element.attrs.aria or {}).get("label")
+        labels.extend(
+            value
+            for value in (
+                aria_label,
+                element.attrs.title,
+                element.attrs.placeholder,
+                element.attrs.alt,
+            )
+            if isinstance(value, str) and value
+        )
+    return labels
 
 
 def get_action_plan_cache_key(item: Dict[str, object]) -> str:
@@ -224,6 +252,9 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
             "enabled": True,
         }
         label = el.label or el.text
+        if not label:
+            candidates = _label_candidates(el)
+            label = candidates[0] if candidates else None
         if label:
             item["label"] = label
         if el.html_id:
@@ -489,6 +520,8 @@ def find_action_targets_by_label(
     enabled_only: bool = False,
 ) -> List[Dict[str, object]]:
     """Return compact action targets whose accessible label matches text."""
+    if not label.strip():
+        return []
     plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
     results: List[Dict[str, object]] = []
     for item in plan:

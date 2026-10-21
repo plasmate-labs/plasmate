@@ -285,6 +285,10 @@ class TestFindByLabel:
         assert [el.id for el in find_by_label(sample_som, "billing details")] == ["e11"]
         assert [el.id for el in find_by_label(sample_som, "Billing details", exact=True)] == ["e11"]
 
+    def test_empty_labels_do_not_match_every_labeled_element(self, sample_som: Som) -> None:
+        assert find_by_label(sample_som, "") == []
+        assert find_by_label(sample_som, " \n\t ") == []
+
 
 class TestFindByTag:
     def test_finds_all_links(self, sample_som: Som) -> None:
@@ -578,6 +582,8 @@ class TestGetActionPlan:
         assert find_action_target_by_label(som, "Save") == save
         assert find_action_targets_by_label(som, "save") == [save]
         assert find_action_targets_by_label(som, "  Save  ", exact=True) == [save]
+        assert find_action_targets_by_label(som, "") == []
+        assert find_action_targets_by_label(som, " \n\t ", exact=True) == []
         assert find_action_targets_by_role(som, "button") == [expected[2], expected[3]]
         assert [target["id"] for target in find_action_targets_by_role(som, " A ")] == [
             "e_billing",

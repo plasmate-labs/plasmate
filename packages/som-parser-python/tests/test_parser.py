@@ -12,6 +12,7 @@ from som_parser import (
     SemanticHint,
     Som,
     SomElement,
+    SomElementAttrs,
     SomShadowRoot,
     filter_elements,
     find_action_target,
@@ -421,6 +422,29 @@ class TestFindByLabel:
         assert [el.id for el in find_by_label(som, "Search", exact=True)] == ["e_7"]
         assert find_by_label(som, "search", exact=True) == []
 
+    def test_matches_compiled_label_fallbacks_and_normalizes_whitespace(self, som: Som):
+        som.regions[1].elements.append(
+            SomElement(
+                id="e_11",
+                role=ElementRole.BUTTON,
+                attrs=SomElementAttrs(title="Account settings"),
+            )
+        )
+        som.regions[1].elements.append(
+            SomElement(
+                id="e_12",
+                role=ElementRole.BUTTON,
+                label="Billing\n settings",
+            )
+        )
+
+        assert [el.id for el in find_by_label(som, "settings")] == ["e_11", "e_12"]
+        assert [el.id for el in find_by_label(som, "Billing settings", exact=True)] == ["e_12"]
+
+    def test_empty_labels_do_not_match_every_labeled_element(self, som: Som):
+        assert find_by_label(som, "") == []
+        assert find_by_label(som, " \n\t ") == []
+
 
 class TestFindByText:
     def test_substring(self, som: Som):
@@ -687,6 +711,24 @@ class TestFindByHint:
 
 
 class TestGetActionPlan:
+    def test_uses_compiled_label_fallback_for_action_targets(self):
+        payload = json.loads(json.dumps(FIXTURE_SOM))
+        payload["regions"][1]["elements"].append(
+            {
+                "id": "e_11",
+                "role": "button",
+                "actions": ["click"],
+                "attrs": {"title": "Account settings"},
+            }
+        )
+
+        som = parse_som(payload)
+
+        matches = find_action_targets_by_label(som, "settings")
+
+        assert [target["id"] for target in matches] == ["e_11"]
+        assert matches[0]["label"] == "Account settings"
+
     def test_returns_compact_action_targets(self, som: Som):
         plan = get_action_plan(som)
         assert plan[0] == {
@@ -808,6 +850,8 @@ class TestGetActionPlan:
         assert find_action_target_by_test_id(som, "settings-save") == save
         assert find_action_target_by_label(som, "Save") == save
         assert find_action_targets_by_label(som, "save") == [save]
+        assert find_action_targets_by_label(som, "") == []
+        assert find_action_targets_by_label(som, " \n\t ", exact=True) == []
         assert find_action_targets_by_role(som, ElementRole.BUTTON) == [
             expected_targets[2],
             expected_targets[3],
