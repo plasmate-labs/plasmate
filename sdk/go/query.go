@@ -130,11 +130,10 @@ func collectInteractive(elements []Element, result *[]Element) {
 }
 
 // FindByText returns all elements whose text contains the given substring
-// (case-insensitive). Labels, compiled list-item copy, select options, table
-// captions, and table header/cell copy are searched as well because lists keep
-// item text in attrs.items, selects keep option labels in attrs.options, and
-// tables keep titles and cells in attrs.caption / attrs.headers / attrs.rows,
-// leaving element.text empty.
+// (case-insensitive). User-facing metadata such as labels, alt text,
+// placeholders, titles, values, descriptions, and ARIA value text is searched
+// alongside compiled list-item copy, select options, and table content because
+// those values can be the only authored text available for an element.
 func FindByText(som *Som, text string) []Element {
 	if text == "" {
 		return nil
@@ -150,7 +149,10 @@ func FindByText(som *Som, text string) []Element {
 // FindByLabel returns all elements whose accessible label matches label.
 // Matching is case-insensitive and uses substring matching.
 func FindByLabel(som *Som, label string, exact ...bool) []Element {
-	needle := strings.ToLower(label)
+	needle := normalizeQueryText(label)
+	if needle == "" {
+		return nil
+	}
 	exactMatch := len(exact) > 0 && exact[0]
 	var result []Element
 	for _, r := range som.Regions {
@@ -162,7 +164,7 @@ func FindByLabel(som *Som, label string, exact ...bool) []Element {
 func collectByLabel(elements []Element, lowerLabel string, exact bool, result *[]Element) {
 	for _, el := range elements {
 		if el.Label != nil {
-			candidate := strings.ToLower(*el.Label)
+			candidate := normalizeQueryText(*el.Label)
 			if (exact && candidate == lowerLabel) || (!exact && strings.Contains(candidate, lowerLabel)) {
 				*result = append(*result, el)
 			}
@@ -172,6 +174,10 @@ func collectByLabel(elements []Element, lowerLabel string, exact bool, result *[
 			collectByLabel(el.Shadow.Elements, lowerLabel, exact, result)
 		}
 	}
+}
+
+func normalizeQueryText(value string) string {
+	return strings.ToLower(strings.Join(strings.Fields(value), " "))
 }
 
 func collectByText(elements []Element, lowerText string, result *[]Element) {
@@ -194,6 +200,32 @@ func elementMatchesText(el Element, lowerText string) bool {
 		return true
 	}
 	if el.Attrs != nil {
+		for _, value := range []*string{
+			el.Attrs.Alt,
+			el.Attrs.Placeholder,
+			el.Attrs.Title,
+			el.Attrs.Value,
+			el.Attrs.Description,
+			el.Attrs.SectionLabel,
+			el.Attrs.Legend,
+			el.Attrs.Summary,
+		} {
+			if value != nil && strings.Contains(strings.ToLower(*value), lowerText) {
+				return true
+			}
+		}
+		if aria := el.Attrs.Aria; aria != nil {
+			for _, value := range []*string{
+				aria.Label,
+				aria.Placeholder,
+				aria.ValueText,
+				aria.RoleDescription,
+			} {
+				if value != nil && strings.Contains(strings.ToLower(*value), lowerText) {
+					return true
+				}
+			}
+		}
 		for _, item := range el.Attrs.Items {
 			if strings.Contains(strings.ToLower(item.Text), lowerText) {
 				return true
@@ -680,8 +712,8 @@ func FindActionTarget(som *Som, value string, by ...string) *ActionPlanItem {
 		}
 	}
 	if lookup == "label" {
-		if item, ok := index.ByLabel[value]; ok {
-			return &item
+		if matches := FindActionTargetsByLabel(som, value, true); len(matches) > 0 {
+			return &matches[0]
 		}
 	}
 	return nil
@@ -738,7 +770,10 @@ func FindActionTargetByTestID(som *Som, testID string) *ActionPlanItem {
 
 // FindActionTargetByLabel returns the first compact action target matching an exact accessible label.
 func FindActionTargetByLabel(som *Som, label string) *ActionPlanItem {
-	return FindActionTarget(som, label, "label")
+	if matches := FindActionTargetsByLabel(som, label, true); len(matches) > 0 {
+		return &matches[0]
+	}
+	return nil
 }
 
 // FindActionTargetsByLabel returns compact action targets whose accessible label matches text.
@@ -748,18 +783,22 @@ func FindActionTargetsByLabel(som *Som, label string, exact bool, enabledOnly ..
 		plan = EnabledActionPlan(som)
 	}
 	results := []ActionPlanItem{}
-	needle := strings.ToLower(label)
+	needle := normalizeQueryText(label)
+	if needle == "" {
+		return results
+	}
 	for _, item := range plan {
 		if item.Label == nil {
 			continue
 		}
+		candidate := normalizeQueryText(*item.Label)
 		if exact {
-			if *item.Label == label {
+			if candidate == needle {
 				results = append(results, item)
 			}
 			continue
 		}
-		if strings.Contains(strings.ToLower(*item.Label), needle) {
+		if strings.Contains(candidate, needle) {
 			results = append(results, item)
 		}
 	}
