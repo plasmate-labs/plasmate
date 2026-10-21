@@ -209,6 +209,8 @@ func elementMatchesText(el Element, lowerText string) bool {
 		}
 		if aria := el.Attrs.Aria; aria != nil {
 			for _, value := range []*string{
+				aria.Label,
+				aria.Placeholder,
 				aria.ValueText,
 				aria.RoleDescription,
 			} {

@@ -437,6 +437,8 @@ func TestFindByTextUserFacingMetadata(t *testing.T) {
 	value := "Search documentation"
 	valueText := "50 percent complete"
 	roleDescription := "progress indicator"
+	ariaLabel := "Open settings"
+	ariaPlaceholder := "Filter results"
 	som := &Som{Regions: []Region{{Elements: []Element{
 		{ID: "e_alt", Attrs: &ElementAttrs{Alt: &alt}},
 		{ID: "e_placeholder", Attrs: &ElementAttrs{Placeholder: &placeholder}},
@@ -444,6 +446,8 @@ func TestFindByTextUserFacingMetadata(t *testing.T) {
 		{ID: "e_progress", Attrs: &ElementAttrs{Aria: &AriaState{
 			ValueText: &valueText, RoleDescription: &roleDescription,
 		}}},
+		{ID: "e_aria_label", Attrs: &ElementAttrs{Aria: &AriaState{Label: &ariaLabel}}},
+		{ID: "e_aria_placeholder", Attrs: &ElementAttrs{Aria: &AriaState{Placeholder: &ariaPlaceholder}}},
 	}}}}
 
 	if results := FindByText(som, "wordmark"); len(results) != 1 || results[0].ID != "e_alt" {
@@ -457,6 +461,12 @@ func TestFindByTextUserFacingMetadata(t *testing.T) {
 	}
 	if results := FindByText(som, "progress indicator"); len(results) != 1 || results[0].ID != "e_progress" {
 		t.Fatalf("FindByText(progress indicator) = %#v, want e_progress", results)
+	}
+	if results := FindByText(som, "settings"); len(results) != 1 || results[0].ID != "e_aria_label" {
+		t.Fatalf("FindByText(settings) = %#v, want e_aria_label", results)
+	}
+	if results := FindByText(som, "filter results"); len(results) != 1 || results[0].ID != "e_aria_placeholder" {
+		t.Fatalf("FindByText(filter results) = %#v, want e_aria_placeholder", results)
 	}
 }
 
