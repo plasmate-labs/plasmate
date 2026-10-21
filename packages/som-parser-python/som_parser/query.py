@@ -488,10 +488,12 @@ def find_action_target(
 ) -> Optional[Dict[str, object]]:
     """Return the compact action target matching a replay id.
 
-    ``by="auto"`` checks SOM id, deterministic cache key, HTML id, then test id.
+    ``by="auto"`` checks SOM id, deterministic cache key, HTML id, test id, then
+    a normalized accessible label.
     Use ``by="label"`` only when the label is unique enough for the page.
     """
     index = get_action_plan_index(som, enabled_only=enabled_only)
+    plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
     buckets = {
         "id": "by_id",
         "cache_key": "by_cache_key",
@@ -504,10 +506,38 @@ def find_action_target(
             found = index[bucket].get(value)
             if found is not None:
                 return found
-        return None
+        normalized_value = _normalize_label_text(value)
+        if not normalized_value:
+            return None
+        found = index["by_label"].get(normalized_value)
+        if found is not None:
+            return found
+        folded_value = normalized_value.lower()
+        return next(
+            (
+                item
+                for item in plan
+                if isinstance(item.get("label"), str)
+                and _normalize_label_text(item["label"]).lower() == folded_value
+            ),
+            None,
+        )
     if by not in buckets:
         raise ValueError("by must be one of: auto, id, cache_key, html_id, test_id, label")
-    return index[buckets[by]].get(value)
+    if by != "label":
+        return index[buckets[by]].get(value)
+    normalized_value = _normalize_label_text(value)
+    if not normalized_value:
+        return None
+    return next(
+        (
+            item
+            for item in plan
+            if isinstance(item.get("label"), str)
+            and _normalize_label_text(item["label"]) == normalized_value
+        ),
+        None,
+    )
 
 
 def find_action_targets_by_label(

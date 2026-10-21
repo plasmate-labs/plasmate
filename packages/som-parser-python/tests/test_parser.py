@@ -869,7 +869,10 @@ class TestGetActionPlan:
         assert find_action_target(som, save["cache_key"]) == save
         assert find_action_target(som, "save-button") == save
         assert find_action_target(som, "settings-save") == save
+        assert find_action_target(som, "save") == save
+        assert find_action_target(som, "  SAVE  ") == save
         assert find_action_target(som, "Save", by="label") == save
+        assert find_action_target(som, "  Save  ", by="label") == save
         assert find_action_target(som, "settings-save", by="test_id") == save
         assert find_action_target_by_id(som, "e_save") == save
         assert find_action_target_by_cache_key(som, save["cache_key"]) == save
