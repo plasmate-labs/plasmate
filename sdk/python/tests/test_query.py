@@ -564,6 +564,18 @@ class TestGetActionPlan:
             == "plasmate-action:v1:5b218ab1"
         )
 
+    def test_cache_keys_normalize_label_whitespace(self) -> None:
+        base = {
+            "id": "e_settings",
+            "role": "button",
+            "actions": ["click"],
+            "label": "Account settings",
+        }
+
+        assert get_action_plan_cache_key(base) == get_action_plan_cache_key(
+            {**base, "label": "Account\n settings"}
+        )
+
     def test_indexes_action_targets_for_replay(self, sample_som: Som) -> None:
         fixture_dir = REPO_ROOT / "integrations" / "fixtures"
         som = Som.model_validate(

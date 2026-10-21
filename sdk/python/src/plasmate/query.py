@@ -147,10 +147,12 @@ def get_action_plan_cache_key(item: Dict[str, object]) -> str:
     """Return a deterministic key for caching or comparing an action target."""
     actions = item.get("actions")
     action_values = sorted(actions) if isinstance(actions, list) else []
+    label = item.get("label")
+    normalized_label = _normalize_label_text(label) if isinstance(label, str) else None
     parts = [
         _compact_string(item.get("id")),
         _compact_string(item.get("role")),
-        _compact_string(item.get("label")),
+        normalized_label,
         ",".join(str(action) for action in action_values) or None,
         _compact_string(item.get("name")),
         _compact_string(item.get("href")),
