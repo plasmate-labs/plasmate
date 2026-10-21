@@ -321,6 +321,51 @@ describe('findByText', () => {
     assert.equal(results[0].id, 'e5');
   });
 
+  it('matches user-facing element metadata', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_metadata',
+          role: 'main',
+          elements: [
+            { id: 'e_alt', role: 'image', attrs: { alt: 'Product wordmark' } },
+            {
+              id: 'e_placeholder',
+              role: 'text_input',
+              attrs: { placeholder: 'Search documentation' },
+            },
+            {
+              id: 'e_value',
+              role: 'button',
+              attrs: { value: 'Search documentation' },
+            },
+            {
+              id: 'e_progress',
+              role: 'section',
+              attrs: {
+                aria: {
+                  valuetext: '50 percent complete',
+                  roledescription: 'progress indicator',
+                },
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    assert.deepEqual(findByText(som, 'wordmark').map((el) => el.id), ['e_alt']);
+    assert.deepEqual(findByText(som, 'documentation').map((el) => el.id), [
+      'e_placeholder',
+      'e_value',
+    ]);
+    assert.deepEqual(findByText(som, '50 percent').map((el) => el.id), ['e_progress']);
+    assert.deepEqual(findByText(som, 'progress indicator').map((el) => el.id), [
+      'e_progress',
+    ]);
+  });
+
   it('finds text inside shadow roots', () => {
     const results = findByText(shadowFixture, 'inside shadow');
     assert.equal(results.length, 1);
