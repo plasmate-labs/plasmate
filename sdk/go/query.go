@@ -130,11 +130,10 @@ func collectInteractive(elements []Element, result *[]Element) {
 }
 
 // FindByText returns all elements whose text contains the given substring
-// (case-insensitive). Labels, compiled list-item copy, select options, table
-// captions, and table header/cell copy are searched as well because lists keep
-// item text in attrs.items, selects keep option labels in attrs.options, and
-// tables keep titles and cells in attrs.caption / attrs.headers / attrs.rows,
-// leaving element.text empty.
+// (case-insensitive). User-facing metadata such as labels, alt text,
+// placeholders, titles, values, descriptions, and ARIA value text is searched
+// alongside compiled list-item copy, select options, and table content because
+// those values can be the only authored text available for an element.
 func FindByText(som *Som, text string) []Element {
 	if text == "" {
 		return nil
@@ -194,6 +193,30 @@ func elementMatchesText(el Element, lowerText string) bool {
 		return true
 	}
 	if el.Attrs != nil {
+		for _, value := range []*string{
+			el.Attrs.Alt,
+			el.Attrs.Placeholder,
+			el.Attrs.Title,
+			el.Attrs.Value,
+			el.Attrs.Description,
+			el.Attrs.SectionLabel,
+			el.Attrs.Legend,
+			el.Attrs.Summary,
+		} {
+			if value != nil && strings.Contains(strings.ToLower(*value), lowerText) {
+				return true
+			}
+		}
+		if aria := el.Attrs.Aria; aria != nil {
+			for _, value := range []*string{
+				aria.ValueText,
+				aria.RoleDescription,
+			} {
+				if value != nil && strings.Contains(strings.ToLower(*value), lowerText) {
+					return true
+				}
+			}
+		}
 		for _, item := range el.Attrs.Items {
 			if strings.Contains(strings.ToLower(item.Text), lowerText) {
 				return true

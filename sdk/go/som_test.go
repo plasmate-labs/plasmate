@@ -431,6 +431,35 @@ func TestFindByText(t *testing.T) {
 	}
 }
 
+func TestFindByTextUserFacingMetadata(t *testing.T) {
+	alt := "Product wordmark"
+	placeholder := "Search documentation"
+	value := "Search documentation"
+	valueText := "50 percent complete"
+	roleDescription := "progress indicator"
+	som := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "e_alt", Attrs: &ElementAttrs{Alt: &alt}},
+		{ID: "e_placeholder", Attrs: &ElementAttrs{Placeholder: &placeholder}},
+		{ID: "e_value", Attrs: &ElementAttrs{Value: &value}},
+		{ID: "e_progress", Attrs: &ElementAttrs{Aria: &AriaState{
+			ValueText: &valueText, RoleDescription: &roleDescription,
+		}}},
+	}}}}
+
+	if results := FindByText(som, "wordmark"); len(results) != 1 || results[0].ID != "e_alt" {
+		t.Fatalf("FindByText(wordmark) = %#v, want e_alt", results)
+	}
+	if results := FindByText(som, "documentation"); len(results) != 2 {
+		t.Fatalf("FindByText(documentation) = %d, want 2", len(results))
+	}
+	if results := FindByText(som, "50 percent"); len(results) != 1 || results[0].ID != "e_progress" {
+		t.Fatalf("FindByText(50 percent) = %#v, want e_progress", results)
+	}
+	if results := FindByText(som, "progress indicator"); len(results) != 1 || results[0].ID != "e_progress" {
+		t.Fatalf("FindByText(progress indicator) = %#v, want e_progress", results)
+	}
+}
+
 func TestFindByLabel(t *testing.T) {
 	som := mustParse(t)
 
