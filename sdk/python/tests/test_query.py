@@ -324,6 +324,16 @@ class TestFindByTag:
         for alias in ("text inputs", "textboxes", "search boxes", "search inputs"):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["e9"]
 
+    def test_accepts_search_and_query_control_aliases(self, sample_som: Som) -> None:
+        for alias in (
+            "search-control",
+            "search field",
+            "query",
+            "query-box",
+            "query input",
+        ):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == ["e9"]
+
     def test_accepts_plural_control_aliases(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.extend(
             [
@@ -627,6 +637,18 @@ class TestGetActionPlan:
         assert [target["id"] for target in find_action_targets_by_role(som, "listbox")] == [
             "e_plan",
         ]
+        for alias in (
+            "search-control",
+            "search field",
+            "query",
+            "query-box",
+            "query input",
+        ):
+            assert [target["id"] for target in find_action_targets_by_role(som, alias)] == [
+                "e_email",
+                "e_upload",
+                "e_quota",
+            ]
         assert find_action_targets_by_action(som, "click") == [
             expected[2],
             expected[3],
