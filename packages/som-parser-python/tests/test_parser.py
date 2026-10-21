@@ -421,6 +421,10 @@ class TestFindByLabel:
         assert [el.id for el in find_by_label(som, "Search", exact=True)] == ["e_7"]
         assert find_by_label(som, "search", exact=True) == []
 
+    def test_empty_labels_do_not_match_every_labeled_element(self, som: Som):
+        assert find_by_label(som, "") == []
+        assert find_by_label(som, " \n\t ") == []
+
 
 class TestFindByText:
     def test_substring(self, som: Som):
@@ -808,6 +812,8 @@ class TestGetActionPlan:
         assert find_action_target_by_test_id(som, "settings-save") == save
         assert find_action_target_by_label(som, "Save") == save
         assert find_action_targets_by_label(som, "save") == [save]
+        assert find_action_targets_by_label(som, "") == []
+        assert find_action_targets_by_label(som, " \n\t ", exact=True) == []
         assert find_action_targets_by_role(som, ElementRole.BUTTON) == [
             expected_targets[2],
             expected_targets[3],

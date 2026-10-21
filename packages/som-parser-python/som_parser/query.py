@@ -125,6 +125,8 @@ def find_by_label(
                If False (default), case-insensitive substring match.
     """
     results: List[SomElement] = []
+    if not label.strip():
+        return results
     for el in get_all_elements(som):
         el_label = el.label or ""
         if exact:
@@ -489,6 +491,8 @@ def find_action_targets_by_label(
     enabled_only: bool = False,
 ) -> List[Dict[str, object]]:
     """Return compact action targets whose accessible label matches text."""
+    if not label.strip():
+        return []
     plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
     results: List[Dict[str, object]] = []
     for item in plan:
