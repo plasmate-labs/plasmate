@@ -183,7 +183,7 @@ def _normalize_label_text(value: str) -> str:
 
 def _label_candidates(element: SomElement) -> List[str]:
     """Return accessible labels and compiled attribute fallbacks."""
-    labels = [element.label] if element.label else []
+    labels = [element.label, element.text]
     if element.attrs:
         aria_label = (element.attrs.aria or {}).get("label")
         labels.extend(
@@ -194,9 +194,9 @@ def _label_candidates(element: SomElement) -> List[str]:
                 element.attrs.placeholder,
                 element.attrs.alt,
             )
-            if isinstance(value, str) and value
+            if isinstance(value, str) and value.strip()
         )
-    return labels
+    return [_normalize_label_text(value) for value in labels if isinstance(value, str) and value.strip()]
 
 
 def get_action_plan_cache_key(item: Dict[str, object]) -> str:
@@ -251,10 +251,8 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
             "actions": [action.value for action in el.actions or []],
             "enabled": True,
         }
-        label = el.label or el.text
-        if not label:
-            candidates = _label_candidates(el)
-            label = candidates[0] if candidates else None
+        candidates = _label_candidates(el)
+        label = candidates[0] if candidates else None
         if label:
             item["label"] = label
         if el.html_id:
@@ -520,7 +518,8 @@ def find_action_targets_by_label(
     enabled_only: bool = False,
 ) -> List[Dict[str, object]]:
     """Return compact action targets whose accessible label matches text."""
-    if not label.strip():
+    normalized_label = _normalize_label_text(label)
+    if not normalized_label:
         return []
     plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
     results: List[Dict[str, object]] = []
@@ -529,9 +528,9 @@ def find_action_targets_by_label(
         if not isinstance(item_label, str):
             continue
         if exact:
-            if label == item_label:
+            if normalized_label == _normalize_label_text(item_label):
                 results.append(item)
-        elif label.lower() in item_label.lower():
+        elif normalized_label.lower() in _normalize_label_text(item_label).lower():
             results.append(item)
     return results
 

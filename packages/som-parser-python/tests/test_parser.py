@@ -711,6 +711,33 @@ class TestFindByHint:
 
 
 class TestGetActionPlan:
+    def test_skips_blank_labels_before_using_compiled_fallbacks(self):
+        som = parse_som(
+            {
+                **FIXTURE_SOM,
+                "regions": [
+                    {
+                        "id": "r_blank_label_action",
+                        "role": "main",
+                        "elements": [
+                            {
+                                "id": "blank-label-action",
+                                "role": "button",
+                                "label": "  \n\t",
+                                "text": "Fallback text",
+                                "actions": ["click"],
+                                "attrs": {"title": "Fallback title"},
+                            }
+                        ],
+                    }
+                ],
+            }
+        )
+
+        [target] = get_action_plan(som)
+        assert target["label"] == "Fallback text"
+        assert find_action_target_by_label(som, "Fallback text")["id"] == "blank-label-action"
+
     def test_uses_compiled_label_fallback_for_action_targets(self):
         payload = json.loads(json.dumps(FIXTURE_SOM))
         payload["regions"][1]["elements"].append(
