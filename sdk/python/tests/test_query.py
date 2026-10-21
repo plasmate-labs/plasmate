@@ -627,6 +627,18 @@ class TestGetActionPlan:
         assert [target["id"] for target in find_action_targets_by_role(som, "listbox")] == [
             "e_plan",
         ]
+        for alias in (
+            "search-control",
+            "search field",
+            "query",
+            "query-box",
+            "query input",
+        ):
+            assert [target["id"] for target in find_action_targets_by_role(som, alias)] == [
+                "e_email",
+                "e_upload",
+                "e_quota",
+            ]
         assert find_action_targets_by_action(som, "click") == [
             expected[2],
             expected[3],
