@@ -494,6 +494,23 @@ class TestGetActionPlan:
         assert target["id"] == "e11"
         assert target["label"] == "Account settings"
 
+    def test_ignores_whitespace_only_labels_when_selecting_fallback(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(
+                id="e12",
+                role=ElementRole.button,
+                label="  \n\t",
+                text="Visible action",
+                actions=["click"],
+            )
+        )
+
+        target = find_action_target(sample_som, "Visible action")
+
+        assert target is not None
+        assert target["id"] == "e12"
+        assert target["label"] == "Visible action"
+
     def test_returns_compact_action_targets(self, sample_som: Som) -> None:
         plan = get_action_plan(sample_som)
 

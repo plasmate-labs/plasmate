@@ -199,10 +199,19 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
             "enabled": True,
         }
         label = element.label or element.text
-        if not label:
+        if not _normalize_label_text(label or ""):
+            label = element.text
+        if not _normalize_label_text(label or ""):
             candidates = _label_candidates(element)
-            label = candidates[0] if candidates else None
-        if label:
+            label = next(
+                (
+                    candidate
+                    for candidate in candidates
+                    if _normalize_label_text(candidate)
+                ),
+                None,
+            )
+        if label and _normalize_label_text(label):
             item["label"] = label
         if element.html_id:
             item["html_id"] = element.html_id
