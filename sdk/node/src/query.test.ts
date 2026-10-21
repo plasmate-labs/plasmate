@@ -238,6 +238,29 @@ describe('findByLabel', () => {
     assert.deepEqual(findByLabel(som, '', { exact: true }), []);
     assert.deepEqual(findByLabel(som, '\n\t', { exact: true }), []);
   });
+
+  it('matches compiled label fallbacks', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_fallbacks',
+          role: 'main',
+          elements: [
+            { id: 'aria', role: 'button', attrs: { aria: { label: 'Open menu' } } },
+            { id: 'title', role: 'button', attrs: { title: 'Close dialog' } },
+            { id: 'placeholder', role: 'text_input', attrs: { placeholder: 'Search products' } },
+            { id: 'alt', role: 'image', attrs: { alt: 'Product preview' } },
+          ],
+        },
+      ],
+    };
+
+    assert.deepEqual(findByLabel(som, 'menu').map((el) => el.id), ['aria']);
+    assert.deepEqual(findByLabel(som, 'Close dialog', { exact: true }).map((el) => el.id), ['title']);
+    assert.deepEqual(findByLabel(som, 'products').map((el) => el.id), ['placeholder']);
+    assert.deepEqual(findByLabel(som, 'preview').map((el) => el.id), ['alt']);
+  });
 });
 
 describe('findByTag', () => {
@@ -595,6 +618,57 @@ describe('getActionPlan', () => {
 
     assert.equal(findActionTargetByLabel(som, 'Account settings')?.id, 'e5');
     assert.deepEqual(findActionTargetsByLabel(som, 'account settings').map((item) => item.id), ['e5']);
+  });
+
+  it('uses compiled label fallbacks for action targets', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_fallback_action',
+          role: 'main',
+          elements: [
+            {
+              id: 'fallback-action',
+              role: 'button',
+              actions: ['click'],
+              attrs: { aria: { label: 'Open settings' } },
+            },
+          ],
+        },
+      ],
+    };
+
+    assert.equal(findActionTargetByLabel(som, 'Open settings')?.id, 'fallback-action');
+    assert.deepEqual(findActionTargetsByLabel(som, 'settings').map((item) => item.id), [
+      'fallback-action',
+    ]);
+  });
+
+  it('skips blank labels before using compiled fallbacks', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_blank_label_action',
+          role: 'main',
+          elements: [
+            {
+              id: 'blank-label-action',
+              role: 'button',
+              label: '  \n\t',
+              text: 'Fallback text',
+              actions: ['click'],
+              attrs: { title: 'Fallback title' },
+            },
+          ],
+        },
+      ],
+    };
+
+    const [target] = getActionPlan(som);
+    assert.equal(target.label, 'Fallback text');
+    assert.equal(findActionTargetByLabel(som, 'Fallback text')?.id, 'blank-label-action');
   });
 
   it('filters blocked targets from enabled action indexes', () => {

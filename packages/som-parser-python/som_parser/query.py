@@ -183,7 +183,7 @@ def _normalize_label_text(value: str) -> str:
 
 def _label_candidates(element: SomElement) -> List[str]:
     """Return accessible labels and compiled attribute fallbacks."""
-    labels = [element.label] if element.label else []
+    labels = [element.label, element.text]
     if element.attrs:
         aria_label = (element.attrs.aria or {}).get("label")
         labels.extend(
@@ -194,9 +194,9 @@ def _label_candidates(element: SomElement) -> List[str]:
                 element.attrs.placeholder,
                 element.attrs.alt,
             )
-            if isinstance(value, str) and value
+            if isinstance(value, str) and value.strip()
         )
-    return labels
+    return [_normalize_label_text(value) for value in labels if isinstance(value, str) and value.strip()]
 
 
 def get_action_plan_cache_key(item: Dict[str, object]) -> str:
@@ -251,10 +251,8 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
             "actions": [action.value for action in el.actions or []],
             "enabled": True,
         }
-        label = el.label or el.text
-        if not label:
-            candidates = _label_candidates(el)
-            label = candidates[0] if candidates else None
+        candidates = _label_candidates(el)
+        label = candidates[0] if candidates else None
         if label:
             item["label"] = label
         if el.html_id:
@@ -490,10 +488,12 @@ def find_action_target(
 ) -> Optional[Dict[str, object]]:
     """Return the compact action target matching a replay id.
 
-    ``by="auto"`` checks SOM id, deterministic cache key, HTML id, then test id.
+    ``by="auto"`` checks SOM id, deterministic cache key, HTML id, test id, then
+    a normalized accessible label.
     Use ``by="label"`` only when the label is unique enough for the page.
     """
     index = get_action_plan_index(som, enabled_only=enabled_only)
+    plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
     buckets = {
         "id": "by_id",
         "cache_key": "by_cache_key",
@@ -506,10 +506,38 @@ def find_action_target(
             found = index[bucket].get(value)
             if found is not None:
                 return found
-        return None
+        normalized_value = _normalize_label_text(value)
+        if not normalized_value:
+            return None
+        found = index["by_label"].get(normalized_value)
+        if found is not None:
+            return found
+        folded_value = normalized_value.lower()
+        return next(
+            (
+                item
+                for item in plan
+                if isinstance(item.get("label"), str)
+                and _normalize_label_text(item["label"]).lower() == folded_value
+            ),
+            None,
+        )
     if by not in buckets:
         raise ValueError("by must be one of: auto, id, cache_key, html_id, test_id, label")
-    return index[buckets[by]].get(value)
+    if by != "label":
+        return index[buckets[by]].get(value)
+    normalized_value = _normalize_label_text(value)
+    if not normalized_value:
+        return None
+    return next(
+        (
+            item
+            for item in plan
+            if isinstance(item.get("label"), str)
+            and _normalize_label_text(item["label"]) == normalized_value
+        ),
+        None,
+    )
 
 
 def find_action_targets_by_label(
@@ -520,7 +548,8 @@ def find_action_targets_by_label(
     enabled_only: bool = False,
 ) -> List[Dict[str, object]]:
     """Return compact action targets whose accessible label matches text."""
-    if not label.strip():
+    normalized_label = _normalize_label_text(label)
+    if not normalized_label:
         return []
     plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
     results: List[Dict[str, object]] = []
@@ -529,9 +558,9 @@ def find_action_targets_by_label(
         if not isinstance(item_label, str):
             continue
         if exact:
-            if label == item_label:
+            if normalized_label == _normalize_label_text(item_label):
                 results.append(item)
-        elif label.lower() in item_label.lower():
+        elif normalized_label.lower() in _normalize_label_text(item_label).lower():
             results.append(item)
     return results
 

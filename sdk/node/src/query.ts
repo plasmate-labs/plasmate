@@ -188,6 +188,20 @@ function normalizeLabelText(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
 }
 
+function labelCandidates(el: SomElement): string[] {
+  const candidates = [
+    el.label,
+    el.text,
+    el.attrs?.aria?.label,
+    el.attrs?.title,
+    el.attrs?.placeholder,
+    el.attrs?.alt,
+  ];
+  return candidates
+    .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+    .map(normalizeLabelText);
+}
+
 function stableActionPlanParts(item: Omit<ActionPlanItem, 'cache_key'> | ActionPlanItem) {
   return [
     compactString(item.id),
@@ -246,7 +260,7 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
       actions: el.actions ?? [],
       enabled: true,
     };
-    const label = el.label ?? el.text;
+    const label = labelCandidates(el)[0];
     if (label) item.label = label;
     if (el.html_id) item.html_id = el.html_id;
     if (el.attrs?.href) item.href = el.attrs.href;
@@ -589,14 +603,14 @@ export function findByLabel(
   const normalizedLabel = normalizeLabelText(label);
   if (!normalizedLabel) return [];
   if (options?.exact) {
-    return all.filter(
-      (el) => el.label !== undefined && normalizeLabelText(el.label) === normalizedLabel,
+    return all.filter((el) =>
+      labelCandidates(el).some((value) => normalizeLabelText(value) === normalizedLabel),
     );
   }
   const lower = normalizedLabel.toLowerCase();
   if (!lower) return [];
-  return all.filter(
-    (el) => el.label && normalizeLabelText(el.label).toLowerCase().includes(lower),
+  return all.filter((el) =>
+    labelCandidates(el).some((value) => normalizeLabelText(value).toLowerCase().includes(lower)),
   );
 }
 
