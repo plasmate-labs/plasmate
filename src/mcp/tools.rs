@@ -5227,6 +5227,7 @@ pub fn navigate_to_definition() -> ToolDefinition {
                 },
                 "url": {
                     "type": "string",
+                    "format": "uri-reference",
                     "minLength": 1,
                     "maxLength": MAX_MCP_URL_BYTES,
                     "description": "URL to navigate to"
@@ -6736,6 +6737,14 @@ mod tests {
                 definition.name
             );
         }
+    }
+
+    #[test]
+    fn navigate_schema_advertises_uri_reference_format() {
+        assert_eq!(
+            navigate_to_definition().input_schema["properties"]["url"]["format"],
+            "uri-reference"
+        );
     }
 
     #[test]
