@@ -645,6 +645,32 @@ describe('getActionPlan', () => {
     ]);
   });
 
+  it('skips blank labels before using compiled fallbacks', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_blank_label_action',
+          role: 'main',
+          elements: [
+            {
+              id: 'blank-label-action',
+              role: 'button',
+              label: '  \n\t',
+              text: 'Fallback text',
+              actions: ['click'],
+              attrs: { title: 'Fallback title' },
+            },
+          ],
+        },
+      ],
+    };
+
+    const [target] = getActionPlan(som);
+    assert.equal(target.label, 'Fallback text');
+    assert.equal(findActionTargetByLabel(som, 'Fallback text')?.id, 'blank-label-action');
+  });
+
   it('filters blocked targets from enabled action indexes', () => {
     const { som } = loadActionAvailabilityFixture();
     const enabled = getEnabledActionPlan(som);

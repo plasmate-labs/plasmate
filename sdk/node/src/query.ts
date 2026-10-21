@@ -197,7 +197,9 @@ function labelCandidates(el: SomElement): string[] {
     el.attrs?.placeholder,
     el.attrs?.alt,
   ];
-  return candidates.filter((value): value is string => typeof value === 'string' && value.length > 0);
+  return candidates
+    .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+    .map(normalizeLabelText);
 }
 
 function stableActionPlanParts(item: Omit<ActionPlanItem, 'cache_key'> | ActionPlanItem) {
