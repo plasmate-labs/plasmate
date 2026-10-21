@@ -35,6 +35,8 @@ def find_by_label(som: Som, label: str, *, exact: bool = False) -> List[SomEleme
     """Find elements by accessible label or its compiled attribute fallbacks."""
     results: List[SomElement] = []
     normalized_label = _normalize_label_text(label)
+    if not normalized_label:
+        return results
     folded_label = normalized_label.lower()
     for element in flat_elements(som):
         labels = _label_candidates(element)
@@ -468,6 +470,8 @@ def find_action_targets_by_label(
     plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
     results: List[Dict[str, object]] = []
     normalized_label = _normalize_label_text(label)
+    if not normalized_label:
+        return results
     folded_label = normalized_label.lower()
     for item in plan:
         item_label = item.get("label")
