@@ -101,6 +101,8 @@ def find_by_text(
                If False (default), case-insensitive substring match.
     """
     results: List[SomElement] = []
+    if not text.strip():
+        return results
     for el in get_all_elements(som):
         parts = _searchable_text_parts(el)
         if exact:

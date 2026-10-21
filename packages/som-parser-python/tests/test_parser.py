@@ -473,6 +473,10 @@ class TestFindByText:
         results = find_by_text(som, "xyznonexistent")
         assert len(results) == 0
 
+    def test_empty_query_does_not_match_every_element(self, som: Som):
+        assert find_by_text(som, "") == []
+        assert find_by_text(som, " \n\t ") == []
+
     def test_finds_shadow_root_text(self):
         som = parse_som(
             {
