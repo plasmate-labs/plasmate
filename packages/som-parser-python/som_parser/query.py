@@ -173,6 +173,24 @@ def _compact_string(value: object) -> Optional[str]:
     return value if isinstance(value, str) and value else None
 
 
+def _label_candidates(element: SomElement) -> List[str]:
+    """Return accessible labels and compiled attribute fallbacks."""
+    labels = [element.label] if element.label else []
+    if element.attrs:
+        aria_label = (element.attrs.aria or {}).get("label")
+        labels.extend(
+            value
+            for value in (
+                aria_label,
+                element.attrs.title,
+                element.attrs.placeholder,
+                element.attrs.alt,
+            )
+            if isinstance(value, str) and value
+        )
+    return labels
+
+
 def get_action_plan_cache_key(item: Dict[str, object]) -> str:
     """Return a deterministic key for caching or comparing an action target."""
     actions = item.get("actions")
@@ -226,6 +244,9 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
             "enabled": True,
         }
         label = el.label or el.text
+        if not label:
+            candidates = _label_candidates(el)
+            label = candidates[0] if candidates else None
         if label:
             item["label"] = label
         if el.html_id:

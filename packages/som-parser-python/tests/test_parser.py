@@ -691,6 +691,24 @@ class TestFindByHint:
 
 
 class TestGetActionPlan:
+    def test_uses_compiled_label_fallback_for_action_targets(self):
+        payload = json.loads(json.dumps(FIXTURE_SOM))
+        payload["regions"][1]["elements"].append(
+            {
+                "id": "e_11",
+                "role": "button",
+                "actions": ["click"],
+                "attrs": {"title": "Account settings"},
+            }
+        )
+
+        som = parse_som(payload)
+
+        matches = find_action_targets_by_label(som, "settings")
+
+        assert [target["id"] for target in matches] == ["e_11"]
+        assert matches[0]["label"] == "Account settings"
+
     def test_returns_compact_action_targets(self, som: Som):
         plan = get_action_plan(som)
         assert plan[0] == {
