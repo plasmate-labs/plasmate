@@ -116,7 +116,7 @@ def find_by_text(
 def find_by_label(
     som: Som, label: str, *, exact: bool = False
 ) -> List[SomElement]:
-    """Find elements by their accessible label.
+    """Find elements by their accessible label or compiled fallbacks.
 
     Args:
         som: The parsed SOM object.
@@ -125,16 +125,19 @@ def find_by_label(
                If False (default), case-insensitive substring match.
     """
     results: List[SomElement] = []
-    if not label.strip():
+    normalized_label = _normalize_label_text(label)
+    if not normalized_label:
         return results
+    folded_label = normalized_label.lower()
     for el in get_all_elements(som):
-        el_label = el.label or ""
-        if exact:
-            if label == el_label:
-                results.append(el)
-        else:
-            if label.lower() in el_label.lower():
-                results.append(el)
+        labels = _label_candidates(el)
+        if (exact and any(normalized_label == _normalize_label_text(value) for value in labels)) or (
+            not exact
+            and any(
+                folded_label in _normalize_label_text(value).lower() for value in labels
+            )
+        ):
+            results.append(el)
     return results
 
 
@@ -171,6 +174,11 @@ def _fnv1a32(value: str) -> str:
 
 def _compact_string(value: object) -> Optional[str]:
     return value if isinstance(value, str) and value else None
+
+
+def _normalize_label_text(value: str) -> str:
+    """Collapse label whitespace while preserving case for exact matches."""
+    return " ".join(value.split())
 
 
 def _label_candidates(element: SomElement) -> List[str]:

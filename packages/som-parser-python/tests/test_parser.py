@@ -12,6 +12,7 @@ from som_parser import (
     SemanticHint,
     Som,
     SomElement,
+    SomElementAttrs,
     SomShadowRoot,
     filter_elements,
     find_action_target,
@@ -420,6 +421,25 @@ class TestFindByLabel:
     def test_exact_label_match_is_case_sensitive(self, som: Som):
         assert [el.id for el in find_by_label(som, "Search", exact=True)] == ["e_7"]
         assert find_by_label(som, "search", exact=True) == []
+
+    def test_matches_compiled_label_fallbacks_and_normalizes_whitespace(self, som: Som):
+        som.regions[1].elements.append(
+            SomElement(
+                id="e_11",
+                role=ElementRole.BUTTON,
+                attrs=SomElementAttrs(title="Account settings"),
+            )
+        )
+        som.regions[1].elements.append(
+            SomElement(
+                id="e_12",
+                role=ElementRole.BUTTON,
+                label="Billing\n settings",
+            )
+        )
+
+        assert [el.id for el in find_by_label(som, "settings")] == ["e_11", "e_12"]
+        assert [el.id for el in find_by_label(som, "Billing settings", exact=True)] == ["e_12"]
 
     def test_empty_labels_do_not_match_every_labeled_element(self, som: Som):
         assert find_by_label(som, "") == []
