@@ -474,6 +474,10 @@ class TestGetActionPlan:
 
         assert target is not None
         assert target["id"] == "e11"
+        assert find_action_target(sample_som, "Account settings")["id"] == "e11"
+        assert find_action_target(sample_som, "account settings")["id"] == "e11"
+        assert find_action_target(sample_som, "Account settings", by="label")["id"] == "e11"
+        assert find_action_target(sample_som, "  \n\t") is None
 
     def test_uses_label_fallback_for_unlabelled_controls(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.append(
