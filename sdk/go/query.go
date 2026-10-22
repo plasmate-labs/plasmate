@@ -375,6 +375,7 @@ type ActionPlanItem struct {
 	SubmitNoValidate  *bool       `json:"formnovalidate,omitempty"`
 	AccessKey         *string     `json:"accesskey,omitempty"`
 	Title             *string     `json:"title,omitempty"`
+	Alt               *string     `json:"alt,omitempty"`
 	SourceRole        *string     `json:"source_role,omitempty"`
 	TestID            *string     `json:"test_id,omitempty"`
 	Spellcheck        interface{} `json:"spellcheck,omitempty"`
@@ -542,6 +543,7 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.SubmitNoValidate = el.Attrs.FormNoValidate
 			item.AccessKey = el.Attrs.AccessKey
 			item.Title = el.Attrs.Title
+			item.Alt = el.Attrs.Alt
 			item.SourceRole = el.Attrs.SourceRole
 			item.TestID = el.Attrs.TestID
 			item.Spellcheck = el.Attrs.Spellcheck
@@ -808,21 +810,30 @@ func FindActionTargetsByLabel(som *Som, label string, exact bool, enabledOnly ..
 		return results
 	}
 	for _, item := range plan {
-		if item.Label == nil {
-			continue
-		}
-		candidate := normalizeQueryText(*item.Label)
-		if exact {
-			if candidate == needle {
-				results = append(results, item)
-			}
-			continue
-		}
-		if strings.Contains(candidate, needle) {
+		if actionItemMatchesLabel(item, needle, exact) {
 			results = append(results, item)
 		}
 	}
 	return results
+}
+
+func actionItemMatchesLabel(item ActionPlanItem, needle string, exact bool) bool {
+	matches := func(value *string) bool {
+		if value == nil {
+			return false
+		}
+		candidate := normalizeQueryText(*value)
+		if exact {
+			return candidate == needle
+		}
+		return strings.Contains(candidate, needle)
+	}
+
+	return matches(item.Label) ||
+		matches(item.Title) ||
+		matches(item.Placeholder) ||
+		matches(item.Alt) ||
+		matches(item.AriaLabel)
 }
 
 // FindActionTargetsByRole returns compact action targets whose SOM role matches exactly.

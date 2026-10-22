@@ -534,6 +534,37 @@ func TestFindActionTargetsByLabelNormalizesQueries(t *testing.T) {
 	}
 }
 
+func TestFindActionTargetsByLabelCompiledFallbacks(t *testing.T) {
+	title := "Save changes"
+	placeholder := "Search documentation"
+	alt := "Hero image"
+	ariaLabel := "Open settings"
+	som := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "e_title", Role: "button", Actions: []string{"click"}, Attrs: &ElementAttrs{Title: &title}},
+		{ID: "e_placeholder", Role: "text_input", Actions: []string{"type"}, Attrs: &ElementAttrs{Placeholder: &placeholder}},
+		{ID: "e_alt", Role: "image", Actions: []string{"click"}, Attrs: &ElementAttrs{Alt: &alt}},
+		{ID: "e_aria", Role: "button", Actions: []string{"click"}, Attrs: &ElementAttrs{Aria: &AriaState{Label: &ariaLabel}}},
+	}}}}
+
+	for _, test := range []struct {
+		name  string
+		query string
+		want  string
+	}{
+		{name: "title", query: "save changes", want: "e_title"},
+		{name: "placeholder", query: "search documentation", want: "e_placeholder"},
+		{name: "alt", query: "hero image", want: "e_alt"},
+		{name: "aria label", query: "open settings", want: "e_aria"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			got := FindActionTargetsByLabel(som, test.query, true)
+			if len(got) != 1 || got[0].ID != test.want {
+				t.Fatalf("FindActionTargetsByLabel(%q) = %#v, want %s", test.query, got, test.want)
+			}
+		})
+	}
+}
+
 func TestFindByTextCompiledListItems(t *testing.T) {
 	ordered := false
 	som := &Som{
