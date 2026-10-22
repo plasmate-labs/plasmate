@@ -524,7 +524,14 @@ export function findActionTarget(
   if (by === 'cache_key') return index.byCacheKey[value];
   if (by === 'html_id') return index.byHtmlId[value];
   if (by === 'test_id') return index.byTestId[value];
-  if (by === 'label') return index.byLabel[value];
+  if (by === 'label') {
+    const normalizedLabel = normalizeLabelText(value);
+    if (!normalizedLabel) return undefined;
+    const plan = options.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
+    return plan.find(
+      (item) => item.label !== undefined && normalizeLabelText(item.label) === normalizedLabel,
+    );
+  }
   return (
     index.byId[value] ??
     index.byCacheKey[value] ??

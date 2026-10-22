@@ -723,6 +723,7 @@ describe('getActionPlan', () => {
     expect(findActionTargetsByLabel(som, 'Save changes', { exact: true }).map((item) => item.id)).toEqual([
       'multiline-button',
     ]);
+    expect(findActionTarget(som, 'Save changes', { by: 'label' })?.id).toBe('multiline-button');
     expect(findActionTargetByLabel(som, 'Save changes')?.id).toBe('multiline-button');
   });
 
