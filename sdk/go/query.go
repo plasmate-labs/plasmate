@@ -191,6 +191,9 @@ func elementMatchesLabel(el Element, lowerLabel string, exact bool) bool {
 	if matches(el.Label) {
 		return true
 	}
+	if len(el.Actions) > 0 && matches(el.Text) {
+		return true
+	}
 	if el.Attrs == nil {
 		return false
 	}

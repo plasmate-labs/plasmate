@@ -521,6 +521,14 @@ func TestFindByLabelCompiledFallbacks(t *testing.T) {
 	if results := FindByLabel(som, "open settings", true); len(results) != 1 || results[0].ID != "e10" {
 		t.Fatalf("FindByLabel(aria-label fallback) = %#v, want e10", results)
 	}
+
+	text := "Save changes"
+	textSom := &Som{Regions: []Region{{Elements: []Element{{
+		ID: "e_text_label", Text: &text, Actions: []string{"click"},
+	}}}}}
+	if results := FindByLabel(textSom, "save changes", true); len(results) != 1 || results[0].ID != "e_text_label" {
+		t.Fatalf("FindByLabel(text fallback) = %#v, want e_text_label", results)
+	}
 }
 
 func TestFindActionTargetsByLabelNormalizesQueries(t *testing.T) {
