@@ -146,6 +146,7 @@ func normalizeElementRoleAlias(role string) string {
 		"inputs":             "text_input",
 		"links":              "link",
 		"list_box":           "select",
+		"listbox":            "select",
 		"listboxes":          "select",
 		"menu":               "list",
 		"menu_item":          "button",
