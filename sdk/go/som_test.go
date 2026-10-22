@@ -496,6 +496,26 @@ func TestFindByLabel(t *testing.T) {
 	}
 }
 
+func TestFindByLabelCompiledFallbacks(t *testing.T) {
+	som := mustParse(t)
+
+	if results := FindByLabel(som, "hero image"); len(results) != 1 || results[0].ID != "e7" {
+		t.Fatalf("FindByLabel(alt fallback) = %#v, want e7", results)
+	}
+
+	title := "Save changes"
+	som.Regions[1].Elements[3].Attrs = &ElementAttrs{Title: &title}
+	if results := FindByLabel(som, "save changes", true); len(results) != 1 || results[0].ID != "e6" {
+		t.Fatalf("FindByLabel(title fallback) = %#v, want e6", results)
+	}
+
+	ariaLabel := "Open settings"
+	som.Regions[1].Elements[5].Shadow.Elements[0].Attrs.Aria.Label = &ariaLabel
+	if results := FindByLabel(som, "open settings", true); len(results) != 1 || results[0].ID != "e10" {
+		t.Fatalf("FindByLabel(aria-label fallback) = %#v, want e10", results)
+	}
+}
+
 func TestFindActionTargetsByLabelNormalizesQueries(t *testing.T) {
 	som := mustParse(t)
 
@@ -511,6 +531,37 @@ func TestFindActionTargetsByLabelNormalizesQueries(t *testing.T) {
 
 	if got := FindActionTargetsByLabel(som, " \n\t", true); len(got) != 0 {
 		t.Fatalf("FindActionTargetsByLabel(whitespace) = %#v, want none", got)
+	}
+}
+
+func TestFindActionTargetsByLabelCompiledFallbacks(t *testing.T) {
+	title := "Save changes"
+	placeholder := "Search documentation"
+	alt := "Hero image"
+	ariaLabel := "Open settings"
+	som := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "e_title", Role: "button", Actions: []string{"click"}, Attrs: &ElementAttrs{Title: &title}},
+		{ID: "e_placeholder", Role: "text_input", Actions: []string{"type"}, Attrs: &ElementAttrs{Placeholder: &placeholder}},
+		{ID: "e_alt", Role: "image", Actions: []string{"click"}, Attrs: &ElementAttrs{Alt: &alt}},
+		{ID: "e_aria", Role: "button", Actions: []string{"click"}, Attrs: &ElementAttrs{Aria: &AriaState{Label: &ariaLabel}}},
+	}}}}
+
+	for _, test := range []struct {
+		name  string
+		query string
+		want  string
+	}{
+		{name: "title", query: "save changes", want: "e_title"},
+		{name: "placeholder", query: "search documentation", want: "e_placeholder"},
+		{name: "alt", query: "hero image", want: "e_alt"},
+		{name: "aria label", query: "open settings", want: "e_aria"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			got := FindActionTargetsByLabel(som, test.query, true)
+			if len(got) != 1 || got[0].ID != test.want {
+				t.Fatalf("FindActionTargetsByLabel(%q) = %#v, want %s", test.query, got, test.want)
+			}
+		})
 	}
 }
 
