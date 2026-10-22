@@ -147,6 +147,8 @@ describe('findActionTargetsByAction aliases', () => {
   it('normalizes MCP action aliases and finds submit/reset controls', () => {
     assert.deepEqual(findActionTargetsByAction(fixture, 'action : submit').map((item) => item.id), ['e4']);
     assert.deepEqual(findActionTargetsByAction(fixture, 'action=type_text').map((item) => item.id), ['e5']);
+    assert.deepEqual(findActionTargetsByAction(fixture, 'role : submit').map((item) => item.id), ['e4']);
+    assert.deepEqual(findActionTargetsByAction(fixture, 'ROLE=TYPE_TEXT').map((item) => item.id), ['e5']);
 
     const resetFixture: Som = {
       ...fixture,

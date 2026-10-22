@@ -524,8 +524,13 @@ export function findActionTargetsByAction(
 
 function normalizeActionQuery(action: string): string {
   let normalized = action.trim().toLowerCase().replace(/\s+/g, ' ');
-  if (normalized.startsWith('action')) {
-    const separator = normalized.slice('action'.length).trimStart();
+  const prefix = normalized.startsWith('action')
+    ? 'action'
+    : normalized.startsWith('role')
+      ? 'role'
+      : undefined;
+  if (prefix) {
+    const separator = normalized.slice(prefix.length).trimStart();
     if (separator.startsWith(':') || separator.startsWith('=')) {
       normalized = separator.slice(1).trim().replace(/\s+/g, ' ');
     }
