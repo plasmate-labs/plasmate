@@ -496,6 +496,26 @@ func TestFindByLabel(t *testing.T) {
 	}
 }
 
+func TestFindByLabelCompiledFallbacks(t *testing.T) {
+	som := mustParse(t)
+
+	if results := FindByLabel(som, "hero image"); len(results) != 1 || results[0].ID != "e7" {
+		t.Fatalf("FindByLabel(alt fallback) = %#v, want e7", results)
+	}
+
+	title := "Save changes"
+	som.Regions[1].Elements[3].Attrs = &ElementAttrs{Title: &title}
+	if results := FindByLabel(som, "save changes", true); len(results) != 1 || results[0].ID != "e6" {
+		t.Fatalf("FindByLabel(title fallback) = %#v, want e6", results)
+	}
+
+	ariaLabel := "Open settings"
+	som.Regions[1].Elements[5].Shadow.Elements[0].Attrs.Aria.Label = &ariaLabel
+	if results := FindByLabel(som, "open settings", true); len(results) != 1 || results[0].ID != "e10" {
+		t.Fatalf("FindByLabel(aria-label fallback) = %#v, want e10", results)
+	}
+}
+
 func TestFindActionTargetsByLabelNormalizesQueries(t *testing.T) {
 	som := mustParse(t)
 

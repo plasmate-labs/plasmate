@@ -163,17 +163,37 @@ func FindByLabel(som *Som, label string, exact ...bool) []Element {
 
 func collectByLabel(elements []Element, lowerLabel string, exact bool, result *[]Element) {
 	for _, el := range elements {
-		if el.Label != nil {
-			candidate := normalizeQueryText(*el.Label)
-			if (exact && candidate == lowerLabel) || (!exact && strings.Contains(candidate, lowerLabel)) {
-				*result = append(*result, el)
-			}
+		if elementMatchesLabel(el, lowerLabel, exact) {
+			*result = append(*result, el)
 		}
 		collectByLabel(el.Children, lowerLabel, exact, result)
 		if el.Shadow != nil {
 			collectByLabel(el.Shadow.Elements, lowerLabel, exact, result)
 		}
 	}
+}
+
+// elementMatchesLabel checks the compiled accessible label and the attributes
+// that can supply a label when the page has no explicit accessible name.
+func elementMatchesLabel(el Element, lowerLabel string, exact bool) bool {
+	matches := func(value *string) bool {
+		if value == nil {
+			return false
+		}
+		candidate := normalizeQueryText(*value)
+		return (exact && candidate == lowerLabel) || (!exact && strings.Contains(candidate, lowerLabel))
+	}
+
+	if matches(el.Label) {
+		return true
+	}
+	if el.Attrs == nil {
+		return false
+	}
+	return matches(el.Attrs.Title) ||
+		matches(el.Attrs.Placeholder) ||
+		matches(el.Attrs.Alt) ||
+		(el.Attrs.Aria != nil && matches(el.Attrs.Aria.Label))
 }
 
 func normalizeQueryText(value string) string {
