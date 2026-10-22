@@ -90,10 +90,82 @@ func findByIDInSlice(elements []Element, id string) *Element {
 // This searches element roles (e.g. "link", "button", "heading").
 func FindByTag(som *Som, tag string) []Element {
 	var result []Element
+	tag = normalizeElementRoleAlias(tag)
 	for _, r := range som.Regions {
 		collectByRole(r.Elements, tag, &result)
 	}
 	return result
+}
+
+// normalizeElementRoleAlias keeps Go SDK role lookups aligned with the
+// common HTML/ARIA aliases accepted by the native selector surface.
+func normalizeElementRoleAlias(role string) string {
+	role = strings.Join(strings.Fields(strings.ReplaceAll(strings.ToLower(role), "-", " ")), "_")
+	aliases := map[string]string{
+		"a":                  "link",
+		"article":            "section",
+		"button":             "button",
+		"buttons":            "button",
+		"checkboxes":         "checkbox",
+		"combobox":           "select",
+		"comboboxes":         "select",
+		"combo_box":          "select",
+		"definition_list":    "list",
+		"div":                "group",
+		"fieldset":           "group",
+		"hr":                 "separator",
+		"img":                "image",
+		"input":              "text_input",
+		"inputs":             "text_input",
+		"links":              "link",
+		"list_box":           "select",
+		"listboxes":          "select",
+		"menu":               "list",
+		"menu_item":          "button",
+		"menuitem":           "button",
+		"menuitemcheckbox":   "checkbox",
+		"menu_item_checkbox": "checkbox",
+		"menuitemradio":      "radio",
+		"menu_item_radio":    "radio",
+		"ol":                 "list",
+		"option":             "button",
+		"options":            "button",
+		"ordered_list":       "list",
+		"p":                  "paragraph",
+		"paragraphs":         "paragraph",
+		"radio_buttons":      "radio",
+		"radios":             "radio",
+		"search":             "text_input",
+		"search_box":         "text_input",
+		"search_boxes":       "text_input",
+		"search_control":     "text_input",
+		"search_controls":    "text_input",
+		"search_field":       "text_input",
+		"search_fields":      "text_input",
+		"search_input":       "text_input",
+		"search_inputs":      "text_input",
+		"searchbox":          "text_input",
+		"searchboxes":        "text_input",
+		"selects":            "select",
+		"summary":            "details",
+		"switch":             "checkbox",
+		"tab":                "button",
+		"tabs":               "button",
+		"textarea":           "textarea",
+		"textareas":          "textarea",
+		"textboxes":          "text_input",
+		"text_inputs":        "text_input",
+		"textbox":            "text_input",
+		"tree_item":          "button",
+		"treeitem":           "button",
+		"treeitems":          "button",
+		"ul":                 "list",
+		"unordered_list":     "list",
+	}
+	if canonical, ok := aliases[role]; ok {
+		return canonical
+	}
+	return role
 }
 
 func collectByRole(elements []Element, role string, result *[]Element) {
@@ -866,10 +938,11 @@ func actionItemMatchesLabel(item ActionPlanItem, needle string, exact bool) bool
 		matches(item.AriaLabel)
 }
 
-// FindActionTargetsByRole returns compact action targets whose SOM role matches exactly.
+// FindActionTargetsByRole returns compact action targets whose SOM role matches
+// a canonical role or common HTML/ARIA alias.
 func FindActionTargetsByRole(som *Som, role string, enabledOnly ...bool) []ActionPlanItem {
 	index := GetActionPlanIndex(som, enabledOnly...)
-	return append([]ActionPlanItem(nil), index.ByRole[role]...)
+	return append([]ActionPlanItem(nil), index.ByRole[normalizeElementRoleAlias(role)]...)
 }
 
 // FindActionTargetsByAction returns compact action targets that expose the requested action.
