@@ -611,7 +611,11 @@ export function findActionTargetByLabel(
   label: string,
   options: Pick<ActionTargetLookupOptions, 'enabledOnly'> = {},
 ): ActionPlanItem | undefined {
-  return findActionTarget(som, label, { ...options, by: 'label' });
+  const normalizedLabel = normalizeLabelText(label);
+  if (!normalizedLabel) return undefined;
+  return (options.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som)).find(
+    (item) => item.label !== undefined && normalizeLabelText(item.label) === normalizedLabel,
+  );
 }
 
 /** Extract all links with their text and URLs. */

@@ -723,6 +723,7 @@ describe('getActionPlan', () => {
     expect(findActionTargetsByLabel(som, 'Save changes', { exact: true }).map((item) => item.id)).toEqual([
       'multiline-button',
     ]);
+    expect(findActionTargetByLabel(som, 'Save changes')?.id).toBe('multiline-button');
   });
 
   it('skips empty labels when building replay targets', () => {
