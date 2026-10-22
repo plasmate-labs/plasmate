@@ -63,6 +63,7 @@ const fixture: Som = {
           role: 'button',
           text: 'Submit',
           actions: ['click'],
+          attrs: { button_type: 'submit' },
           hints: ['primary'],
         },
         {
@@ -141,6 +142,35 @@ const shadowFixture: Som = {
     interactive_count: 1,
   },
 };
+
+describe('findActionTargetsByAction aliases', () => {
+  it('normalizes MCP action aliases and finds submit/reset controls', () => {
+    assert.deepEqual(findActionTargetsByAction(fixture, 'action : submit').map((item) => item.id), ['e4']);
+    assert.deepEqual(findActionTargetsByAction(fixture, 'action=type_text').map((item) => item.id), ['e5']);
+
+    const resetFixture: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [
+                ...region.elements,
+                {
+                  id: 'e10',
+                  role: 'button',
+                  text: 'Reset',
+                  actions: ['click'],
+                  attrs: { button_type: 'reset' },
+                },
+              ],
+            }
+          : region,
+      ),
+    };
+    assert.deepEqual(findActionTargetsByAction(resetFixture, 'reset').map((item) => item.id), ['e10']);
+  });
+});
 
 function loadActionAvailabilityFixture(): { som: Som; action_targets: ExpectedActionTarget[] } {
   const fixtureDir = resolve(process.cwd(), '../../integrations/fixtures');

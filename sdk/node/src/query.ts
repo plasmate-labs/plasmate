@@ -497,10 +497,47 @@ export function findActionTargetsByRole(
 /** Find compact action targets that expose the requested action. */
 export function findActionTargetsByAction(
   som: Som,
-  action: ElementAction,
+  action: string,
   options?: { enabledOnly?: boolean },
 ): ActionPlanItem[] {
-  return getActionPlanIndex(som, { enabledOnly: options?.enabledOnly }).byAction[action] ?? [];
+  const normalizedAction = normalizeActionQuery(action);
+  const index = getActionPlanIndex(som, { enabledOnly: options?.enabledOnly });
+  const results = [...(index.byAction[normalizedAction] ?? [])];
+
+  if (normalizedAction !== 'submit' && normalizedAction !== 'reset') {
+    return results;
+  }
+
+  const seenIds = new Set(results.map((item) => item.id));
+  const plan = options?.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
+  for (const item of plan) {
+    const buttonType = item.button_type?.toLowerCase();
+    const matches = buttonType === normalizedAction ||
+      (normalizedAction === 'submit' && buttonType === 'image');
+    if (matches && !seenIds.has(item.id)) {
+      results.push(item);
+      seenIds.add(item.id);
+    }
+  }
+  return results;
+}
+
+function normalizeActionQuery(action: string): string {
+  let normalized = action.trim().toLowerCase().replace(/\s+/g, ' ');
+  if (normalized.startsWith('action')) {
+    const separator = normalized.slice('action'.length).trimStart();
+    if (separator.startsWith(':') || separator.startsWith('=')) {
+      normalized = separator.slice(1).trim().replace(/\s+/g, ' ');
+    }
+  }
+  return {
+    type_text: 'type',
+    'type-text': 'type',
+    'type text': 'type',
+    select_option: 'select',
+    'select-option': 'select',
+    'select option': 'select',
+  }[normalized] ?? normalized;
 }
 
 /** Find a compact action target by its SOM element id. */
