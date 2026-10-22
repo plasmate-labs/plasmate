@@ -180,6 +180,47 @@ export interface ActionTargetLookupOptions {
   enabledOnly?: boolean;
 }
 
+const ELEMENT_ROLES: readonly ElementRole[] = [
+  'link',
+  'button',
+  'text_input',
+  'textarea',
+  'select',
+  'checkbox',
+  'radio',
+  'heading',
+  'image',
+  'list',
+  'table',
+  'paragraph',
+  'section',
+  'group',
+  'separator',
+  'details',
+  'iframe',
+];
+
+const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
+  a: 'link',
+  links: 'link',
+  buttons: 'button',
+  text_inputs: 'text_input',
+  textareas: 'textarea',
+  selects: 'select',
+  checkboxes: 'checkbox',
+  radios: 'radio',
+  headings: 'heading',
+  images: 'image',
+  lists: 'list',
+  tables: 'table',
+  paragraphs: 'paragraph',
+  sections: 'section',
+  groups: 'group',
+  separators: 'separator',
+  details: 'details',
+  iframes: 'iframe',
+};
+
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined;
 }
@@ -485,22 +526,69 @@ export function findActionTargetsByLabel(
   );
 }
 
-/** Find compact action targets by exact SOM role. */
+/** Find compact action targets by canonical SOM role or selector alias. */
 export function findActionTargetsByRole(
   som: Som,
-  role: ElementRole,
+  role: ElementRole | string,
   options?: { enabledOnly?: boolean },
 ): ActionPlanItem[] {
-  return getActionPlanIndex(som, { enabledOnly: options?.enabledOnly }).byRole[role] ?? [];
+  const normalizedRole = role.trim().toLowerCase().replace(/[\s-]+/g, '_');
+  const canonicalRole = ELEMENT_ROLE_ALIASES[normalizedRole] ??
+    (ELEMENT_ROLES.includes(normalizedRole as ElementRole) ? normalizedRole as ElementRole : undefined);
+  return canonicalRole
+    ? getActionPlanIndex(som, { enabledOnly: options?.enabledOnly }).byRole[canonicalRole] ?? []
+    : [];
 }
 
 /** Find compact action targets that expose the requested action. */
 export function findActionTargetsByAction(
   som: Som,
-  action: ElementAction,
+  action: string,
   options?: { enabledOnly?: boolean },
 ): ActionPlanItem[] {
-  return getActionPlanIndex(som, { enabledOnly: options?.enabledOnly }).byAction[action] ?? [];
+  const normalizedAction = normalizeActionQuery(action);
+  const index = getActionPlanIndex(som, { enabledOnly: options?.enabledOnly });
+  const results = [...(index.byAction[normalizedAction] ?? [])];
+
+  if (normalizedAction !== 'submit' && normalizedAction !== 'reset') {
+    return results;
+  }
+
+  const seenIds = new Set(results.map((item) => item.id));
+  const plan = options?.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
+  for (const item of plan) {
+    const buttonType = item.button_type?.toLowerCase();
+    const matches = buttonType === normalizedAction ||
+      (normalizedAction === 'submit' && buttonType === 'image');
+    if (matches && !seenIds.has(item.id)) {
+      results.push(item);
+      seenIds.add(item.id);
+    }
+  }
+  return results;
+}
+
+function normalizeActionQuery(action: string): string {
+  let normalized = action.trim().toLowerCase().replace(/\s+/g, ' ');
+  const prefix = normalized.startsWith('action')
+    ? 'action'
+    : normalized.startsWith('role')
+      ? 'role'
+      : undefined;
+  if (prefix) {
+    const separator = normalized.slice(prefix.length).trimStart();
+    if (separator.startsWith(':') || separator.startsWith('=')) {
+      normalized = separator.slice(1).trim().replace(/\s+/g, ' ');
+    }
+  }
+  return {
+    type_text: 'type',
+    'type-text': 'type',
+    'type text': 'type',
+    select_option: 'select',
+    'select-option': 'select',
+    'select option': 'select',
+  }[normalized] ?? normalized;
 }
 
 /** Find a compact action target by its SOM element id. */

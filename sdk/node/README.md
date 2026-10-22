@@ -126,6 +126,10 @@ const labeledActions = findActionTargetsByLabel(som, 'save');
 const enabledButtons = findActionTargetsByRole(som, 'button', { enabledOnly: true });
 const enabledClicks = findActionTargetsByAction(som, 'click', { enabledOnly: true });
 
+Action lookup accepts the same compact aliases used by MCP selectors, including
+`action:click`, `action=type_text`, and `select_option`. `submit` and `reset`
+also match controls by their compiled button type (including image submitters).
+
 // Search by visible text or accessible label (case-insensitive)
 const matches = findByText(som, 'sign in');
 const labeled = findByLabel(som, 'email');
@@ -154,7 +158,7 @@ browser.close();
 | `getActionPlanCacheKey(item)` | `string` | Deterministic key for caching or comparing action targets |
 | `findActionTarget(som, value, options?)` | `ActionPlanItem \| undefined` | Resolve a target by SOM id, cache key, HTML id, test id, or explicit label |
 | `findActionTargetsByLabel(som, label, options?)` | `ActionPlanItem[]` | Find compact action targets by accessible label |
-| `findActionTargetsByRole(som, role, options?)` | `ActionPlanItem[]` | Find compact action targets by exact SOM role |
+| `findActionTargetsByRole(som, role, options?)` | `ActionPlanItem[]` | Find compact action targets by canonical SOM role or case-insensitive plural/selector alias |
 | `findActionTargetsByAction(som, action, options?)` | `ActionPlanItem[]` | Find compact action targets that expose an action |
 | `findByLabel(som, label, options?)` | `SomElement[]` | Case-insensitive accessible-label search |
 | `findByText(som, text)` | `SomElement[]` | Case-insensitive text search |

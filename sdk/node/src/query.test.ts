@@ -63,6 +63,7 @@ const fixture: Som = {
           role: 'button',
           text: 'Submit',
           actions: ['click'],
+          attrs: { button_type: 'submit' },
           hints: ['primary'],
         },
         {
@@ -141,6 +142,45 @@ const shadowFixture: Som = {
     interactive_count: 1,
   },
 };
+
+describe('findActionTargetsByAction aliases', () => {
+  it('normalizes MCP action aliases and finds submit/reset controls', () => {
+    assert.deepEqual(findActionTargetsByAction(fixture, 'action : submit').map((item) => item.id), ['e4']);
+    assert.deepEqual(findActionTargetsByAction(fixture, 'action=type_text').map((item) => item.id), ['e5']);
+    assert.deepEqual(findActionTargetsByAction(fixture, 'role : submit').map((item) => item.id), ['e4']);
+    assert.deepEqual(findActionTargetsByAction(fixture, 'ROLE=TYPE_TEXT').map((item) => item.id), ['e5']);
+
+    const resetFixture: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [
+                ...region.elements,
+                {
+                  id: 'e10',
+                  role: 'button',
+                  text: 'Reset',
+                  actions: ['click'],
+                  attrs: { button_type: 'reset' },
+                },
+              ],
+            }
+          : region,
+      ),
+    };
+    assert.deepEqual(findActionTargetsByAction(resetFixture, 'reset').map((item) => item.id), ['e10']);
+  });
+});
+
+describe('findActionTargetsByRole aliases', () => {
+  it('normalizes case, whitespace, and plural role aliases', () => {
+    assert.deepEqual(findActionTargetsByRole(fixture, ' BUTTONS ').map((item) => item.id), ['e4']);
+    assert.deepEqual(findActionTargetsByRole(fixture, 'text-input').map((item) => item.id), ['e5']);
+    assert.deepEqual(findActionTargetsByRole(fixture, 'unknown-role'), []);
+  });
+});
 
 function loadActionAvailabilityFixture(): { som: Som; action_targets: ExpectedActionTarget[] } {
   const fixtureDir = resolve(process.cwd(), '../../integrations/fixtures');
