@@ -411,6 +411,13 @@ func TestFindByText(t *testing.T) {
 		t.Errorf("ID = %q, want e4", results[0].ID)
 	}
 
+	normalizedText := "Hello\nworld, this is a test page."
+	som.Regions[1].Elements[1].Text = &normalizedText
+	results = FindByText(som, "hello world")
+	if len(results) != 1 || results[0].ID != "e4" {
+		t.Fatalf("FindByText(normalized whitespace) = %#v, want e4", results)
+	}
+
 	// Case insensitive
 	results = FindByText(som, "WELCOME")
 	if len(results) != 1 {
@@ -514,6 +521,14 @@ func TestFindByLabelCompiledFallbacks(t *testing.T) {
 	if results := FindByLabel(som, "open settings", true); len(results) != 1 || results[0].ID != "e10" {
 		t.Fatalf("FindByLabel(aria-label fallback) = %#v, want e10", results)
 	}
+
+	text := "Save changes"
+	textSom := &Som{Regions: []Region{{Elements: []Element{{
+		ID: "e_text_label", Text: &text, Actions: []string{"click"},
+	}}}}}
+	if results := FindByLabel(textSom, "save changes", true); len(results) != 1 || results[0].ID != "e_text_label" {
+		t.Fatalf("FindByLabel(text fallback) = %#v, want e_text_label", results)
+	}
 }
 
 func TestFindActionTargetsByLabelNormalizesQueries(t *testing.T) {
@@ -531,6 +546,12 @@ func TestFindActionTargetsByLabelNormalizesQueries(t *testing.T) {
 
 	if got := FindActionTargetsByLabel(som, " \n\t", true); len(got) != 0 {
 		t.Fatalf("FindActionTargetsByLabel(whitespace) = %#v, want none", got)
+	}
+
+	index := GetActionPlanIndex(som)
+	indexed := FindActionTargetInIndex(index, "  SEARCH  ", "label")
+	if indexed == nil || indexed.ID != "e5" {
+		t.Fatalf("FindActionTargetInIndex(normalized label) = %#v, want e5", indexed)
 	}
 }
 
@@ -562,6 +583,29 @@ func TestFindActionTargetsByLabelCompiledFallbacks(t *testing.T) {
 				t.Fatalf("FindActionTargetsByLabel(%q) = %#v, want %s", test.query, got, test.want)
 			}
 		})
+	}
+}
+
+func TestGetActionPlanUsesCompiledLabelFallbacks(t *testing.T) {
+	title := "Save changes"
+	placeholder := "Search documentation"
+	alt := "Hero image"
+	ariaLabel := "Open settings"
+	som := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "e_title", Role: "button", Actions: []string{"click"}, Attrs: &ElementAttrs{Title: &title}},
+		{ID: "e_placeholder", Role: "text_input", Actions: []string{"type"}, Attrs: &ElementAttrs{Placeholder: &placeholder}},
+		{ID: "e_alt", Role: "image", Actions: []string{"click"}, Attrs: &ElementAttrs{Alt: &alt}},
+		{ID: "e_aria", Role: "button", Actions: []string{"click"}, Attrs: &ElementAttrs{Aria: &AriaState{Label: &ariaLabel}}},
+	}}}}
+
+	plan := GetActionPlan(som)
+	if len(plan) != 4 {
+		t.Fatalf("GetActionPlan() = %d items, want 4", len(plan))
+	}
+	for i, want := range []string{title, placeholder, alt, ariaLabel} {
+		if plan[i].Label == nil || *plan[i].Label != want {
+			t.Errorf("plan[%d].Label = %v, want %q", i, plan[i].Label, want)
+		}
 	}
 }
 
@@ -959,8 +1003,8 @@ func TestActionPlanLookupHelpers(t *testing.T) {
 	if index.ByTestID["settings-save"].ID != save.ID {
 		t.Fatalf("ByTestID[settings-save] missing save target")
 	}
-	if index.ByLabel["Plan"].ID != "e_plan" {
-		t.Fatalf("ByLabel[Plan] = %#v, want e_plan", index.ByLabel["Plan"])
+	if index.ByLabel["plan"].ID != "e_plan" {
+		t.Fatalf("ByLabel[plan] = %#v, want e_plan", index.ByLabel["plan"])
 	}
 	if got := index.ByRole["button"]; len(got) != 2 || got[0].ID != "e_save" || got[1].ID != "e_preview" {
 		t.Fatalf("ByRole[button] = %#v, want e_save/e_preview", got)
@@ -1022,8 +1066,8 @@ func TestEnabledActionPlanIndexFiltersBlockedTargets(t *testing.T) {
 	if _, ok := index.ByID["e_plan"]; !ok {
 		t.Fatal("enabled-only index omitted enabled e_plan target")
 	}
-	if index.ByLabel["Plan"].ID != "e_plan" {
-		t.Fatalf("enabled-only ByLabel[Plan] = %#v, want e_plan", index.ByLabel["Plan"])
+	if index.ByLabel["plan"].ID != "e_plan" {
+		t.Fatalf("enabled-only ByLabel[plan] = %#v, want e_plan", index.ByLabel["plan"])
 	}
 	if _, ok := index.ByRole["button"]; ok {
 		t.Fatal("enabled-only index included blocked button targets")
