@@ -711,6 +711,11 @@ export function getCompressionRatio(som: Som): number {
   return som.meta.html_bytes / som.meta.som_bytes;
 }
 
+/** Estimate token count using the SOM byte size and a ~4-bytes/token heuristic. */
+export function getTokenEstimate(som: Som): number {
+  return Math.ceil(som.meta.som_bytes / 4);
+}
+
 /** Convert SOM to a readable markdown representation. */
 export function toMarkdown(som: Som): string {
   const lines: string[] = [];

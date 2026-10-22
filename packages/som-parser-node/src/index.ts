@@ -51,6 +51,7 @@ export {
   getText,
   getTextByRegion,
   getCompressionRatio,
+  getTokenEstimate,
   toMarkdown,
   filter,
 } from './query.js';

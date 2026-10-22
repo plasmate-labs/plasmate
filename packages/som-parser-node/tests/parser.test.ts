@@ -35,6 +35,7 @@ import {
   getText,
   getTextByRegion,
   getCompressionRatio,
+  getTokenEstimate,
   toMarkdown,
   filter,
 } from '../src/index.js';
@@ -1173,6 +1174,18 @@ describe('getCompressionRatio', () => {
     expect(getCompressionRatio({ ...FIXTURE, meta: { ...FIXTURE.meta, som_bytes: 0 } })).toBe(
       Infinity,
     );
+  });
+});
+
+describe('getTokenEstimate', () => {
+  it('estimates tokens from som_bytes', () => {
+    expect(getTokenEstimate(FIXTURE)).toBe(200);
+  });
+
+  it('rounds partial tokens up', () => {
+    expect(
+      getTokenEstimate({ ...FIXTURE, meta: { ...FIXTURE.meta, som_bytes: 801 } }),
+    ).toBe(201);
   });
 });
 
