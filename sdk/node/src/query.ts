@@ -658,3 +658,9 @@ function collectElements(elements: SomElement[], result: SomElement[]): void {
 export function getTokenEstimate(som: Som): number {
   return Math.ceil(som.meta.som_bytes / 4);
 }
+
+/** Return the ratio of source HTML bytes to serialized SOM bytes. */
+export function getCompressionRatio(som: Som): number {
+  if (som.meta.som_bytes === 0) return Infinity;
+  return som.meta.html_bytes / som.meta.som_bytes;
+}

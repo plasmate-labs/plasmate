@@ -137,6 +137,10 @@ const all = flatElements(som);
 const tokens = getTokenEstimate(som);
 console.log(`~${tokens} tokens`);
 
+// Compare source HTML size with the serialized SOM size
+const ratio = getCompressionRatio(som);
+console.log(`${ratio}x smaller than source HTML`);
+
 browser.close();
 ```
 
@@ -155,6 +159,7 @@ browser.close();
 | `findByLabel(som, label, options?)` | `SomElement[]` | Case-insensitive accessible-label search |
 | `findByText(som, text)` | `SomElement[]` | Case-insensitive text search |
 | `flatElements(som)` | `SomElement[]` | Flatten all elements |
+| `getCompressionRatio(som)` | `number` | Return html_bytes / som_bytes (`Infinity` for an empty SOM) |
 | `getTokenEstimate(som)` | `number` | Estimate token count (~4 bytes/token) |
 
 ## How It Works
