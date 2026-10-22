@@ -543,10 +543,12 @@ export function findActionTargetsByLabel(
   const normalizedLabel = normalizeLabelText(label);
   if (!normalizedLabel) return [];
   if (options?.exact) {
-    return plan.filter((item) => item.label === normalizedLabel);
+    return plan.filter(
+      (item) => item.label !== undefined && normalizeLabelText(item.label) === normalizedLabel,
+    );
   }
   const lower = normalizedLabel.toLowerCase();
-  return plan.filter((item) => item.label?.toLowerCase().includes(lower));
+  return plan.filter((item) => item.label && normalizeLabelText(item.label).toLowerCase().includes(lower));
 }
 
 /** Find compact action targets by exact SOM role. */

@@ -707,6 +707,24 @@ describe('getActionPlan', () => {
     expect(findActionTargetByLabel(som, 'Settings')?.id).toBe('title-button');
   });
 
+  it('normalizes whitespace when matching visible text labels', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_actions',
+          role: 'content',
+          elements: [{ id: 'multiline-button', role: 'button', text: 'Save\nchanges', actions: ['click'] }],
+        },
+      ],
+      meta: { html_bytes: 100, som_bytes: 50, element_count: 1, interactive_count: 1 },
+    };
+
+    expect(findActionTargetsByLabel(som, 'Save changes', { exact: true }).map((item) => item.id)).toEqual([
+      'multiline-button',
+    ]);
+  });
+
   it('skips empty labels when building replay targets', () => {
     const som: Som = {
       ...FIXTURE,
