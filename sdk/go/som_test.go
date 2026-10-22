@@ -539,6 +539,12 @@ func TestFindActionTargetsByLabelNormalizesQueries(t *testing.T) {
 	if got := FindActionTargetsByLabel(som, " \n\t", true); len(got) != 0 {
 		t.Fatalf("FindActionTargetsByLabel(whitespace) = %#v, want none", got)
 	}
+
+	index := GetActionPlanIndex(som)
+	indexed := FindActionTargetInIndex(index, "  SEARCH  ", "label")
+	if indexed == nil || indexed.ID != "e5" {
+		t.Fatalf("FindActionTargetInIndex(normalized label) = %#v, want e5", indexed)
+	}
 }
 
 func TestFindActionTargetsByLabelCompiledFallbacks(t *testing.T) {

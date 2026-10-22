@@ -690,8 +690,11 @@ func GetActionPlanIndex(som *Som, enabledOnly ...bool) ActionPlanIndex {
 			}
 		}
 		if item.Label != nil {
-			if _, ok := index.ByLabel[*item.Label]; !ok {
-				index.ByLabel[*item.Label] = item
+			label := normalizeQueryText(*item.Label)
+			if label != "" {
+				if _, ok := index.ByLabel[label]; !ok {
+					index.ByLabel[label] = item
+				}
 			}
 		}
 		if item.Role != "" {
@@ -779,7 +782,7 @@ func FindActionTargetInIndex(index ActionPlanIndex, value string, by ...string) 
 		}
 	}
 	if lookup == "label" {
-		if item, ok := index.ByLabel[value]; ok {
+		if item, ok := index.ByLabel[normalizeQueryText(value)]; ok {
 			return &item
 		}
 	}
