@@ -747,6 +747,31 @@ def get_token_estimate(som: Union[Som, dict]) -> int:
     return (som_bytes + 3) // 4
 
 
+def get_compression_ratio(som: Union[Som, dict]) -> float:
+    """Return source HTML bytes divided by serialized SOM bytes.
+
+    Empty SOMs return ``inf``. Dict inputs must include non-negative integer
+    ``html_bytes`` and ``som_bytes`` metadata values.
+    """
+    if isinstance(som, Som):
+        html_bytes = som.meta.html_bytes
+        som_bytes = som.meta.som_bytes
+    else:
+        meta = som.get("meta")
+        html_bytes = meta.get("html_bytes") if isinstance(meta, dict) else None
+        som_bytes = meta.get("som_bytes") if isinstance(meta, dict) else None
+        if any(
+            not isinstance(value, int) or isinstance(value, bool) or value < 0
+            for value in (html_bytes, som_bytes)
+        ):
+            raise ValueError(
+                "SOM metadata must include non-negative html_bytes and som_bytes"
+            )
+    if som_bytes == 0:
+        return float("inf")
+    return html_bytes / som_bytes
+
+
 # ---- Internal helpers ----
 
 
