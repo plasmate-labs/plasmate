@@ -11,12 +11,28 @@ import (
 // FindByRole returns all regions matching the given role.
 func FindByRole(som *Som, role string) []Region {
 	var result []Region
+	role = normalizeRegionRoleAlias(role)
 	for _, r := range som.Regions {
 		if r.Role == role {
 			result = append(result, r)
 		}
 	}
 	return result
+}
+
+// normalizeRegionRoleAlias keeps region lookups tolerant of common HTML/ARIA
+// names while preserving the canonical SOM roles.
+func normalizeRegionRoleAlias(role string) string {
+	role = strings.Join(strings.Fields(strings.ReplaceAll(strings.ToLower(role), "-", " ")), "_")
+	aliases := map[string]string{
+		"aside":   "complementary",
+		"nav":     "navigation",
+		"sidebar": "complementary",
+	}
+	if canonical, ok := aliases[role]; ok {
+		return canonical
+	}
+	return role
 }
 
 // FindByRegionID searches top-level regions for the given SOM region ID.

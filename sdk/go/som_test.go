@@ -380,6 +380,29 @@ func TestFindByTag(t *testing.T) {
 	}
 }
 
+func TestFindByRoleAcceptsCommonRegionAliases(t *testing.T) {
+	som := mustParse(t)
+
+	for _, test := range []struct {
+		alias string
+		role  string
+		want  int
+	}{
+		{alias: " NAV ", role: "navigation", want: 1},
+		{alias: "MAIN", role: "main", want: 1},
+	} {
+		got := FindByRole(som, test.alias)
+		if len(got) != test.want {
+			t.Fatalf("FindByRole(%q) = %d, want %d (%s)", test.alias, len(got), test.want, test.role)
+		}
+		for _, region := range got {
+			if region.Role != test.role {
+				t.Errorf("FindByRole(%q) returned role %q, want %q", test.alias, region.Role, test.role)
+			}
+		}
+	}
+}
+
 func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 	som := mustParse(t)
 
