@@ -25,9 +25,20 @@ func FindByRole(som *Som, role string) []Region {
 func normalizeRegionRoleAlias(role string) string {
 	role = strings.Join(strings.Fields(strings.ReplaceAll(strings.ToLower(role), "-", " ")), "_")
 	aliases := map[string]string{
-		"aside":   "complementary",
-		"nav":     "navigation",
-		"sidebar": "complementary",
+		"article":       "content",
+		"articles":      "content",
+		"asides":        "aside",
+		"banner":        "header",
+		"complementary": "aside",
+		"contentinfo":   "footer",
+		"contents":      "content",
+		"footers":       "footer",
+		"headers":       "header",
+		"nav":           "navigation",
+		"navs":          "navigation",
+		"region":        "content",
+		"regions":       "content",
+		"sidebar":       "aside",
 	}
 	if canonical, ok := aliases[role]; ok {
 		return canonical

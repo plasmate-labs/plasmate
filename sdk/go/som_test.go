@@ -381,24 +381,32 @@ func TestFindByTag(t *testing.T) {
 }
 
 func TestFindByRoleAcceptsCommonRegionAliases(t *testing.T) {
-	som := mustParse(t)
+	som := &Som{Regions: []Region{
+		{ID: "r_navigation", Role: "navigation"},
+		{ID: "r_aside", Role: "aside"},
+		{ID: "r_header", Role: "header"},
+		{ID: "r_footer", Role: "footer"},
+		{ID: "r_content", Role: "content"},
+	}}
 
 	for _, test := range []struct {
 		alias string
 		role  string
-		want  int
+		id    string
 	}{
-		{alias: " NAV ", role: "navigation", want: 1},
-		{alias: "MAIN", role: "main", want: 1},
+		{alias: " NAV ", role: "navigation", id: "r_navigation"},
+		{alias: "aside", role: "aside", id: "r_aside"},
+		{alias: "complementary", role: "aside", id: "r_aside"},
+		{alias: "banner", role: "header", id: "r_header"},
+		{alias: "contentinfo", role: "footer", id: "r_footer"},
+		{alias: "article", role: "content", id: "r_content"},
 	} {
 		got := FindByRole(som, test.alias)
-		if len(got) != test.want {
-			t.Fatalf("FindByRole(%q) = %d, want %d (%s)", test.alias, len(got), test.want, test.role)
+		if len(got) != 1 {
+			t.Fatalf("FindByRole(%q) = %d, want 1 (%s)", test.alias, len(got), test.role)
 		}
-		for _, region := range got {
-			if region.Role != test.role {
-				t.Errorf("FindByRole(%q) returned role %q, want %q", test.alias, region.Role, test.role)
-			}
+		if got[0].ID != test.id || got[0].Role != test.role {
+			t.Errorf("FindByRole(%q) = %#v, want %s/%s", test.alias, got[0], test.id, test.role)
 		}
 	}
 }
