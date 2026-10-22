@@ -578,6 +578,29 @@ func TestFindActionTargetsByLabelCompiledFallbacks(t *testing.T) {
 	}
 }
 
+func TestGetActionPlanUsesCompiledLabelFallbacks(t *testing.T) {
+	title := "Save changes"
+	placeholder := "Search documentation"
+	alt := "Hero image"
+	ariaLabel := "Open settings"
+	som := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "e_title", Role: "button", Actions: []string{"click"}, Attrs: &ElementAttrs{Title: &title}},
+		{ID: "e_placeholder", Role: "text_input", Actions: []string{"type"}, Attrs: &ElementAttrs{Placeholder: &placeholder}},
+		{ID: "e_alt", Role: "image", Actions: []string{"click"}, Attrs: &ElementAttrs{Alt: &alt}},
+		{ID: "e_aria", Role: "button", Actions: []string{"click"}, Attrs: &ElementAttrs{Aria: &AriaState{Label: &ariaLabel}}},
+	}}}}
+
+	plan := GetActionPlan(som)
+	if len(plan) != 4 {
+		t.Fatalf("GetActionPlan() = %d items, want 4", len(plan))
+	}
+	for i, want := range []string{title, placeholder, alt, ariaLabel} {
+		if plan[i].Label == nil || *plan[i].Label != want {
+			t.Errorf("plan[%d].Label = %v, want %q", i, plan[i].Label, want)
+		}
+	}
+}
+
 func TestFindByTextCompiledListItems(t *testing.T) {
 	ordered := false
 	som := &Som{
@@ -972,8 +995,8 @@ func TestActionPlanLookupHelpers(t *testing.T) {
 	if index.ByTestID["settings-save"].ID != save.ID {
 		t.Fatalf("ByTestID[settings-save] missing save target")
 	}
-	if index.ByLabel["Plan"].ID != "e_plan" {
-		t.Fatalf("ByLabel[Plan] = %#v, want e_plan", index.ByLabel["Plan"])
+	if index.ByLabel["plan"].ID != "e_plan" {
+		t.Fatalf("ByLabel[plan] = %#v, want e_plan", index.ByLabel["plan"])
 	}
 	if got := index.ByRole["button"]; len(got) != 2 || got[0].ID != "e_save" || got[1].ID != "e_preview" {
 		t.Fatalf("ByRole[button] = %#v, want e_save/e_preview", got)
@@ -1035,8 +1058,8 @@ func TestEnabledActionPlanIndexFiltersBlockedTargets(t *testing.T) {
 	if _, ok := index.ByID["e_plan"]; !ok {
 		t.Fatal("enabled-only index omitted enabled e_plan target")
 	}
-	if index.ByLabel["Plan"].ID != "e_plan" {
-		t.Fatalf("enabled-only ByLabel[Plan] = %#v, want e_plan", index.ByLabel["Plan"])
+	if index.ByLabel["plan"].ID != "e_plan" {
+		t.Fatalf("enabled-only ByLabel[plan] = %#v, want e_plan", index.ByLabel["plan"])
 	}
 	if _, ok := index.ByRole["button"]; ok {
 		t.Fatal("enabled-only index included blocked button targets")

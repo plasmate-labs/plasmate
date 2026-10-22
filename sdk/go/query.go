@@ -464,6 +464,23 @@ func compactString(value *string) interface{} {
 	return nil
 }
 
+func actionPlanLabel(el Element) *string {
+	candidates := []*string{el.Label, el.Text}
+	if el.Attrs != nil {
+		var ariaLabel *string
+		if el.Attrs.Aria != nil {
+			ariaLabel = el.Attrs.Aria.Label
+		}
+		candidates = append(candidates, ariaLabel, el.Attrs.Title, el.Attrs.Placeholder, el.Attrs.Alt)
+	}
+	for _, candidate := range candidates {
+		if candidate != nil && normalizeQueryText(*candidate) != "" {
+			return candidate
+		}
+	}
+	return nil
+}
+
 func actionPlanCacheParts(item ActionPlanItem) []interface{} {
 	actions := append([]string(nil), item.Actions...)
 	sort.Strings(actions)
@@ -514,11 +531,7 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			Actions: append([]string(nil), el.Actions...),
 			Enabled: true,
 		}
-		if el.Label != nil {
-			item.Label = el.Label
-		} else if el.Text != nil {
-			item.Label = el.Text
-		}
+		item.Label = actionPlanLabel(el)
 		item.HTMLID = el.HTMLID
 		if el.Attrs != nil {
 			item.Href = el.Attrs.Href
