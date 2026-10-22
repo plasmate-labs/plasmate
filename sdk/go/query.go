@@ -129,7 +129,8 @@ func collectInteractive(elements []Element, result *[]Element) {
 	}
 }
 
-// FindByText returns all elements whose text contains the given substring
+// FindByText returns all elements whose text contains the given whitespace-
+// normalized substring
 // (case-insensitive). User-facing metadata such as labels, alt text,
 // placeholders, titles, values, descriptions, and ARIA value text is searched
 // alongside compiled list-item copy, select options, and table content because
@@ -138,7 +139,10 @@ func FindByText(som *Som, text string) []Element {
 	if text == "" {
 		return nil
 	}
-	lower := strings.ToLower(text)
+	lower := normalizeQueryText(text)
+	if lower == "" {
+		return nil
+	}
 	var result []Element
 	for _, r := range som.Regions {
 		collectByText(r.Elements, lower, &result)
@@ -213,10 +217,17 @@ func collectByText(elements []Element, lowerText string, result *[]Element) {
 }
 
 func elementMatchesText(el Element, lowerText string) bool {
-	if el.Text != nil && strings.Contains(strings.ToLower(*el.Text), lowerText) {
+	matches := func(value *string) bool {
+		return value != nil && strings.Contains(normalizeQueryText(*value), lowerText)
+	}
+	matchValue := func(value string) bool {
+		return strings.Contains(normalizeQueryText(value), lowerText)
+	}
+
+	if matches(el.Text) {
 		return true
 	}
-	if el.Label != nil && strings.Contains(strings.ToLower(*el.Label), lowerText) {
+	if matches(el.Label) {
 		return true
 	}
 	if el.Attrs != nil {
@@ -230,7 +241,7 @@ func elementMatchesText(el Element, lowerText string) bool {
 			el.Attrs.Legend,
 			el.Attrs.Summary,
 		} {
-			if value != nil && strings.Contains(strings.ToLower(*value), lowerText) {
+			if matches(value) {
 				return true
 			}
 		}
@@ -241,32 +252,32 @@ func elementMatchesText(el Element, lowerText string) bool {
 				aria.ValueText,
 				aria.RoleDescription,
 			} {
-				if value != nil && strings.Contains(strings.ToLower(*value), lowerText) {
+				if matches(value) {
 					return true
 				}
 			}
 		}
 		for _, item := range el.Attrs.Items {
-			if strings.Contains(strings.ToLower(item.Text), lowerText) {
+			if matchValue(item.Text) {
 				return true
 			}
 		}
-		if el.Attrs.Caption != nil && strings.Contains(strings.ToLower(*el.Attrs.Caption), lowerText) {
+		if matches(el.Attrs.Caption) {
 			return true
 		}
 		for _, option := range el.Attrs.Options {
-			if strings.Contains(strings.ToLower(option.Text), lowerText) {
+			if matchValue(option.Text) {
 				return true
 			}
 		}
 		for _, header := range el.Attrs.Headers {
-			if strings.Contains(strings.ToLower(header), lowerText) {
+			if matchValue(header) {
 				return true
 			}
 		}
 		for _, row := range el.Attrs.Rows {
 			for _, cell := range row {
-				if strings.Contains(strings.ToLower(cell), lowerText) {
+				if matchValue(cell) {
 					return true
 				}
 			}

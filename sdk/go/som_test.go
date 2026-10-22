@@ -411,6 +411,13 @@ func TestFindByText(t *testing.T) {
 		t.Errorf("ID = %q, want e4", results[0].ID)
 	}
 
+	normalizedText := "Hello\nworld, this is a test page."
+	som.Regions[1].Elements[1].Text = &normalizedText
+	results = FindByText(som, "hello world")
+	if len(results) != 1 || results[0].ID != "e4" {
+		t.Fatalf("FindByText(normalized whitespace) = %#v, want e4", results)
+	}
+
 	// Case insensitive
 	results = FindByText(som, "WELCOME")
 	if len(results) != 1 {
