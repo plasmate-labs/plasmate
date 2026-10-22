@@ -380,6 +380,71 @@ func TestFindByTag(t *testing.T) {
 	}
 }
 
+func TestFindByRoleAcceptsCommonRegionAliases(t *testing.T) {
+	som := &Som{Regions: []Region{
+		{ID: "r_navigation", Role: "navigation"},
+		{ID: "r_aside", Role: "aside"},
+		{ID: "r_header", Role: "header"},
+		{ID: "r_footer", Role: "footer"},
+		{ID: "r_content", Role: "content"},
+	}}
+
+	for _, test := range []struct {
+		alias string
+		role  string
+		id    string
+	}{
+		{alias: " NAV ", role: "navigation", id: "r_navigation"},
+		{alias: "aside", role: "aside", id: "r_aside"},
+		{alias: "complementary", role: "aside", id: "r_aside"},
+		{alias: "banner", role: "header", id: "r_header"},
+		{alias: "contentinfo", role: "footer", id: "r_footer"},
+		{alias: "article", role: "content", id: "r_content"},
+	} {
+		got := FindByRole(som, test.alias)
+		if len(got) != 1 {
+			t.Fatalf("FindByRole(%q) = %d, want 1 (%s)", test.alias, len(got), test.role)
+		}
+		if got[0].ID != test.id || got[0].Role != test.role {
+			t.Errorf("FindByRole(%q) = %#v, want %s/%s", test.alias, got[0], test.id, test.role)
+		}
+	}
+}
+
+func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
+	som := mustParse(t)
+
+	for _, test := range []struct {
+		alias string
+		role  string
+		want  int
+	}{
+		{alias: "A", role: "link", want: 2},
+		{alias: "text-input", role: "text_input", want: 1},
+		{alias: "  BUTTONS  ", role: "button", want: 2},
+		{alias: "menu item", role: "button", want: 2},
+		{alias: "img", role: "image", want: 1},
+	} {
+		got := FindByTag(som, test.alias)
+		if len(got) != test.want {
+			t.Fatalf("FindByTag(%q) = %d, want %d (%s)", test.alias, len(got), test.want, test.role)
+		}
+		for _, element := range got {
+			if element.Role != test.role {
+				t.Errorf("FindByTag(%q) returned role %q, want %q", test.alias, element.Role, test.role)
+			}
+		}
+	}
+
+	selectSOM := &Som{Regions: []Region{{Elements: []Element{{ID: "e_select", Role: "select"}}}}}
+	for _, alias := range []string{"list box", "listbox", "listboxes"} {
+		got := FindByTag(selectSOM, alias)
+		if len(got) != 1 || got[0].ID != "e_select" {
+			t.Errorf("FindByTag(%q) = %#v, want e_select", alias, got)
+		}
+	}
+}
+
 func TestFindInteractive(t *testing.T) {
 	som := mustParse(t)
 
@@ -1014,6 +1079,9 @@ func TestActionPlanLookupHelpers(t *testing.T) {
 	}
 	if got := FindActionTargetsByRole(som, "button"); len(got) != 2 || got[0].ID != "e_save" || got[1].ID != "e_preview" {
 		t.Fatalf("FindActionTargetsByRole(button) = %#v, want e_save/e_preview", got)
+	}
+	if got := FindActionTargetsByRole(som, "menu-item"); len(got) != 2 || got[0].ID != "e_save" || got[1].ID != "e_preview" {
+		t.Fatalf("FindActionTargetsByRole(menu-item) = %#v, want e_save/e_preview", got)
 	}
 	if got := FindActionTargetsByAction(som, "click"); len(got) != 3 || got[0].ID != "e_save" || got[1].ID != "e_preview" || got[2].ID != "e_billing" {
 		t.Fatalf("FindActionTargetsByAction(click) = %#v, want e_save/e_preview/e_billing", got)
