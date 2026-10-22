@@ -38,6 +38,7 @@ from som_parser import (
     get_enabled_action_plan,
     get_all_elements,
     get_compression_ratio,
+    get_token_estimate,
     get_forms,
     get_headings,
     get_inputs,
@@ -1176,6 +1177,14 @@ class TestGetCompressionRatio:
         ratio = get_compression_ratio(som)
         assert ratio == 5000 / 800
         assert ratio == 6.25
+
+
+class TestGetTokenEstimate:
+    def test_estimates_tokens_and_rounds_partial_tokens_up(self, som: Som):
+        assert get_token_estimate(som) == 200
+        updated_meta = som.meta.model_copy(update={"som_bytes": 801})
+        updated_som = som.model_copy(update={"meta": updated_meta})
+        assert get_token_estimate(updated_som) == 201
 
 
 class TestToMarkdown:

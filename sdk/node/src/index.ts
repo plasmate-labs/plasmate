@@ -73,6 +73,7 @@ export {
   getActionPlanCacheKey,
   getActionPlanIndex,
   getEnabledActionPlan,
+  getCompressionRatio,
   getTokenEstimate,
 } from './query.js';
 

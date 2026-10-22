@@ -80,6 +80,15 @@ const ratio = getCompressionRatio(som);
 // e.g. 6.25 (HTML was 6.25x larger than the SOM representation)
 ```
 
+### Estimate token usage
+
+```typescript
+import { getTokenEstimate } from 'som-parser';
+
+const tokens = getTokenEstimate(som);
+// Approximate input size for an LLM (~4 SOM bytes per token)
+```
+
 ## API Reference
 
 ### Parser
@@ -115,6 +124,7 @@ const ratio = getCompressionRatio(som);
 | `getText(som): string` | Extract all visible text content, joined with newlines. |
 | `getTextByRegion(som): Array<{ region, role, text }>` | Extract text grouped by region. |
 | `getCompressionRatio(som): number` | Return html_bytes / som_bytes from meta. |
+| `getTokenEstimate(som): number` | Estimate tokens from som_bytes using a ~4-bytes/token heuristic. |
 | `toMarkdown(som): string` | Convert SOM to a readable markdown representation. |
 | `filter(som, predicate): SomElement[]` | Generic filter across all elements. |
 

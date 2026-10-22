@@ -130,6 +130,7 @@ print(som.model_dump_json(indent=2))
 | `get_text(som) -> str` | Extract all visible text content |
 | `get_text_by_region(som) -> list[dict]` | Extract text grouped by region |
 | `get_compression_ratio(som) -> float` | Return `html_bytes / som_bytes` |
+| `get_token_estimate(som) -> int` | Estimate tokens from `som_bytes` using a ~4-bytes/token heuristic |
 | `to_markdown(som) -> str` | Convert SOM to readable markdown |
 | `filter_elements(som, predicate) -> list[SomElement]` | Generic filter with a callable |
 

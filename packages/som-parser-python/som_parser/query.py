@@ -721,6 +721,11 @@ def get_compression_ratio(som: Som) -> float:
     return som.meta.html_bytes / som.meta.som_bytes
 
 
+def get_token_estimate(som: Som) -> int:
+    """Estimate token count from SOM bytes using a ~4-bytes/token heuristic."""
+    return (som.meta.som_bytes + 3) // 4
+
+
 def to_markdown(som: Som) -> str:
     """Convert a SOM object to readable markdown."""
     lines: List[str] = []

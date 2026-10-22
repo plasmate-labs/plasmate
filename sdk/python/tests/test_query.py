@@ -40,6 +40,7 @@ from plasmate.query import (
     get_action_plan,
     get_action_plan_cache_key,
     get_action_plan_index,
+    get_compression_ratio,
     get_enabled_action_plan,
     get_token_estimate,
 )
@@ -1140,6 +1141,17 @@ class TestGetTokenEstimate:
             meta=SomMeta(html_bytes=0, som_bytes=0, element_count=0, interactive_count=0),
         )
         assert get_token_estimate(sample_som) > get_token_estimate(small_som)
+
+
+class TestGetCompressionRatio:
+    def test_uses_source_and_som_bytes(self, sample_som: Som) -> None:
+        assert get_compression_ratio(sample_som) == 2.5
+
+    def test_accepts_dict_and_returns_infinity_for_empty_som(self) -> None:
+        som = {
+            "meta": {"html_bytes": 20, "som_bytes": 0},
+        }
+        assert get_compression_ratio(som) == float("inf")
 
 
 class TestPydanticModels:

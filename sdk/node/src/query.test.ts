@@ -25,6 +25,7 @@ import {
   getActionPlanCacheKey,
   getActionPlanIndex,
   getEnabledActionPlan,
+  getCompressionRatio,
   getTokenEstimate,
 } from './query';
 
@@ -805,5 +806,18 @@ describe('getTokenEstimate', () => {
   it('estimates tokens from som_bytes', () => {
     const tokens = getTokenEstimate(fixture);
     assert.equal(tokens, 500); // 2000 / 4
+  });
+});
+
+describe('getCompressionRatio', () => {
+  it('returns the source-to-SOM byte ratio', () => {
+    assert.equal(getCompressionRatio(fixture), 4);
+  });
+
+  it('returns Infinity when the SOM has no bytes', () => {
+    assert.equal(
+      getCompressionRatio({ ...fixture, meta: { ...fixture.meta, som_bytes: 0 } }),
+      Infinity,
+    );
   });
 });

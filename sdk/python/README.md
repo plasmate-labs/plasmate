@@ -113,7 +113,12 @@ Search and traverse SOM documents:
 from plasmate import Som, find_by_role, find_by_id, find_by_tag
 from plasmate import find_interactive, find_by_label, find_by_text, flat_elements
 from plasmate import find_action_target, find_action_targets_by_action, find_action_targets_by_label
-from plasmate import find_action_targets_by_role, get_action_plan, get_token_estimate
+from plasmate import (
+    find_action_targets_by_role,
+    get_action_plan,
+    get_compression_ratio,
+    get_token_estimate,
+)
 
 # Find all navigation regions
 navs = find_by_role(som, "navigation")
@@ -153,6 +158,9 @@ print(f"{len(all_elements)} total elements")
 # Estimate token usage
 tokens = get_token_estimate(som)
 print(f"~{tokens} tokens")
+
+ratio = get_compression_ratio(som)
+print(f"{ratio}x source-to-SOM ratio")
 ```
 
 ## How It Works

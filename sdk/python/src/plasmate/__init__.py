@@ -59,6 +59,7 @@ from .query import (
     get_action_plan,
     get_action_plan_cache_key,
     get_action_plan_index,
+    get_compression_ratio,
     get_enabled_action_plan,
     get_token_estimate,
 )
@@ -102,6 +103,7 @@ __all__ = [
     "get_action_plan",
     "get_action_plan_cache_key",
     "get_action_plan_index",
+    "get_compression_ratio",
     "get_enabled_action_plan",
     "get_token_estimate",
 ]
