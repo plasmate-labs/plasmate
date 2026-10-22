@@ -128,6 +128,7 @@ function normalizeLabelText(value: string): string {
 function labelCandidates(el: SomElement): string[] {
   return [
     el.label,
+    el.text,
     el.attrs?.aria?.label,
     el.attrs?.title,
     el.attrs?.placeholder,

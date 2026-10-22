@@ -364,6 +364,7 @@ describe('findByLabel', () => {
             { id: 'e_10', role: 'button', attrs: { title: 'Account settings' } },
             { id: 'e_11', role: 'text_input', attrs: { placeholder: 'Billing\naddress' } },
             { id: 'e_12', role: 'image', attrs: { alt: 'Product preview' } },
+            { id: 'e_13', role: 'button', text: 'Save changes', actions: ['click'] },
           ],
         },
       ],
@@ -377,6 +378,9 @@ describe('findByLabel', () => {
       'e_11',
     ]);
     expect(findByLabel(som, 'PREVIEW').map((el) => el.id)).toEqual(['e_12']);
+    expect(findByLabel(som, 'Save changes', { exact: true }).map((el) => el.id)).toEqual([
+      'e_13',
+    ]);
   });
 
   it('supports exact case-sensitive label matching', () => {
