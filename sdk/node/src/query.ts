@@ -180,6 +180,47 @@ export interface ActionTargetLookupOptions {
   enabledOnly?: boolean;
 }
 
+const ELEMENT_ROLES: readonly ElementRole[] = [
+  'link',
+  'button',
+  'text_input',
+  'textarea',
+  'select',
+  'checkbox',
+  'radio',
+  'heading',
+  'image',
+  'list',
+  'table',
+  'paragraph',
+  'section',
+  'group',
+  'separator',
+  'details',
+  'iframe',
+];
+
+const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
+  a: 'link',
+  links: 'link',
+  buttons: 'button',
+  text_inputs: 'text_input',
+  textareas: 'textarea',
+  selects: 'select',
+  checkboxes: 'checkbox',
+  radios: 'radio',
+  headings: 'heading',
+  images: 'image',
+  lists: 'list',
+  tables: 'table',
+  paragraphs: 'paragraph',
+  sections: 'section',
+  groups: 'group',
+  separators: 'separator',
+  details: 'details',
+  iframes: 'iframe',
+};
+
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined;
 }
@@ -485,13 +526,18 @@ export function findActionTargetsByLabel(
   );
 }
 
-/** Find compact action targets by exact SOM role. */
+/** Find compact action targets by canonical SOM role or selector alias. */
 export function findActionTargetsByRole(
   som: Som,
-  role: ElementRole,
+  role: ElementRole | string,
   options?: { enabledOnly?: boolean },
 ): ActionPlanItem[] {
-  return getActionPlanIndex(som, { enabledOnly: options?.enabledOnly }).byRole[role] ?? [];
+  const normalizedRole = role.trim().toLowerCase().replace(/[\s-]+/g, '_');
+  const canonicalRole = ELEMENT_ROLE_ALIASES[normalizedRole] ??
+    (ELEMENT_ROLES.includes(normalizedRole as ElementRole) ? normalizedRole as ElementRole : undefined);
+  return canonicalRole
+    ? getActionPlanIndex(som, { enabledOnly: options?.enabledOnly }).byRole[canonicalRole] ?? []
+    : [];
 }
 
 /** Find compact action targets that expose the requested action. */

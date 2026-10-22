@@ -174,6 +174,14 @@ describe('findActionTargetsByAction aliases', () => {
   });
 });
 
+describe('findActionTargetsByRole aliases', () => {
+  it('normalizes case, whitespace, and plural role aliases', () => {
+    assert.deepEqual(findActionTargetsByRole(fixture, ' BUTTONS ').map((item) => item.id), ['e4']);
+    assert.deepEqual(findActionTargetsByRole(fixture, 'text-input').map((item) => item.id), ['e5']);
+    assert.deepEqual(findActionTargetsByRole(fixture, 'unknown-role'), []);
+  });
+});
+
 function loadActionAvailabilityFixture(): { som: Som; action_targets: ExpectedActionTarget[] } {
   const fixtureDir = resolve(process.cwd(), '../../integrations/fixtures');
   return {
