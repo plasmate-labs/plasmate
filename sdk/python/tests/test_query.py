@@ -344,6 +344,19 @@ class TestFindByTag:
         assert [el.id for el in find_by_tag(sample_som, "search-input")] == ["e9"]
         assert find_by_tag(sample_som, "listbox") == []
 
+    def test_accepts_aria_button_role_aliases(self, sample_som: Som) -> None:
+        for alias in (
+            "menuitem",
+            "menuitems",
+            "option",
+            "options",
+            "tab",
+            "tabs",
+            "treeitem",
+            "treeitems",
+        ):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == ["e5"]
+
     def test_accepts_plural_text_control_aliases(self, sample_som: Som) -> None:
         for alias in ("text inputs", "textboxes", "search boxes", "search inputs"):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["e9"]
@@ -455,6 +468,19 @@ class TestFindActionTargetsByRole:
         assert "e12" in [item["id"] for item in find_action_targets_by_role(sample_som, "tab")]
         assert "e13" in [item["id"] for item in find_action_targets_by_role(sample_som, "switch")]
         assert "e14" in [item["id"] for item in find_action_targets_by_role(sample_som, "menuitemradio")]
+
+    def test_accepts_aria_button_role_aliases(self, sample_som: Som) -> None:
+        for alias in (
+            "menuitem",
+            "menuitems",
+            "option",
+            "options",
+            "tab",
+            "tabs",
+            "treeitem",
+            "treeitems",
+        ):
+            assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == ["e5"]
 
     def test_accepts_hyphenated_and_spaced_aria_widget_aliases(
         self, sample_som: Som
