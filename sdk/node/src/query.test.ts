@@ -178,6 +178,8 @@ describe('findActionTargetsByRole aliases', () => {
   it('normalizes case, whitespace, and plural role aliases', () => {
     assert.deepEqual(findActionTargetsByRole(fixture, ' BUTTONS ').map((item) => item.id), ['e4']);
     assert.deepEqual(findActionTargetsByRole(fixture, 'text-input').map((item) => item.id), ['e5']);
+    assert.deepEqual(findActionTargetsByRole(fixture, 'role:button').map((item) => item.id), ['e4']);
+    assert.deepEqual(findActionTargetsByRole(fixture, 'role=text-input').map((item) => item.id), ['e5']);
     assert.deepEqual(findActionTargetsByRole(fixture, 'unknown-role'), []);
   });
 });

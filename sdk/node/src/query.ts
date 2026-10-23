@@ -586,7 +586,10 @@ export function findActionTargetsByRole(
   role: ElementRole | string,
   options?: { enabledOnly?: boolean },
 ): ActionPlanItem[] {
-  const normalizedRole = role.trim().toLowerCase().replace(/[\s-]+/g, '_');
+  let normalizedRole = role.trim().toLowerCase().replace(/[\s-]+/g, '_');
+  if (normalizedRole.startsWith('role:') || normalizedRole.startsWith('role=')) {
+    normalizedRole = normalizedRole.slice(5).trim();
+  }
   const canonicalRole = ELEMENT_ROLE_ALIASES[normalizedRole] ??
     (ELEMENT_ROLES.includes(normalizedRole as ElementRole) ? normalizedRole as ElementRole : undefined);
   return canonicalRole
