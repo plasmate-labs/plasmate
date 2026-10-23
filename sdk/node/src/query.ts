@@ -13,10 +13,7 @@ export function findByRole(som: Som, role: RegionRole | string): SomRegion[] {
 }
 
 function normalizeRegionRole(role: string): RegionRole | undefined {
-  let normalized = role.trim().toLowerCase().replace(/[\s-]+/g, '_');
-  if (normalized.startsWith('role:') || normalized.startsWith('role=')) {
-    normalized = normalized.slice(5).trim();
-  }
+  let normalized = stripRolePrefix(role).replace(/[\s-]+/g, '_');
   const aliases: Record<string, RegionRole> = {
     main: 'main',
     main_content: 'main',
@@ -586,15 +583,16 @@ export function findActionTargetsByRole(
   role: ElementRole | string,
   options?: { enabledOnly?: boolean },
 ): ActionPlanItem[] {
-  let normalizedRole = role.trim().toLowerCase().replace(/[\s-]+/g, '_');
-  if (normalizedRole.startsWith('role:') || normalizedRole.startsWith('role=')) {
-    normalizedRole = normalizedRole.slice(5).trim();
-  }
+  const normalizedRole = stripRolePrefix(role).replace(/[\s-]+/g, '_');
   const canonicalRole = ELEMENT_ROLE_ALIASES[normalizedRole] ??
     (ELEMENT_ROLES.includes(normalizedRole as ElementRole) ? normalizedRole as ElementRole : undefined);
   return canonicalRole
     ? getActionPlanIndex(som, { enabledOnly: options?.enabledOnly }).byRole[canonicalRole] ?? []
     : [];
+}
+
+function stripRolePrefix(role: string): string {
+  return role.trim().toLowerCase().replace(/^role\s*[:=]\s*/, '');
 }
 
 /** Find compact action targets that expose the requested action. */
