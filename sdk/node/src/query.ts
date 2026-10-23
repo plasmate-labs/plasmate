@@ -89,9 +89,10 @@ function findElementById(elements: SomElement[], id: string): SomElement | undef
   return undefined;
 }
 
-/** Find all elements whose role matches the given element role. */
-export function findByTag(som: Som, tag: ElementRole): SomElement[] {
-  return flatElements(som).filter((el) => el.role === tag);
+/** Find all elements whose role matches a canonical role or selector alias. */
+export function findByTag(som: Som, tag: ElementRole | string): SomElement[] {
+  const normalizedRole = normalizeElementRole(tag);
+  return normalizedRole ? flatElements(som).filter((el) => el.role === normalizedRole) : [];
 }
 
 /** Return all interactive elements (those with a non-empty `actions` array). */
@@ -271,6 +272,12 @@ const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   details: 'details',
   iframes: 'iframe',
 };
+
+function normalizeElementRole(role: string): ElementRole | undefined {
+  const normalizedRole = stripRolePrefix(role).replace(/[\s-]+/g, '_');
+  return ELEMENT_ROLE_ALIASES[normalizedRole] ??
+    (ELEMENT_ROLES.includes(normalizedRole as ElementRole) ? normalizedRole as ElementRole : undefined);
+}
 
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined;

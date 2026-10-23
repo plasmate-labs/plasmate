@@ -337,6 +337,12 @@ describe('findByTag', () => {
     assert.equal(paragraphs.length, 3);
   });
 
+  it('accepts case-insensitive selector aliases', () => {
+    assert.deepEqual(findByTag(fixture, 'BUTTONS').map((el) => el.id), ['e4']);
+    assert.deepEqual(findByTag(fixture, 'role: text-input').map((el) => el.id), ['e5']);
+    assert.deepEqual(findByTag(fixture, '"role=paragraph"').map((el) => el.id), ['e3', 'e7', 'e9']);
+  });
+
   it('returns empty for unused role', () => {
     assert.deepEqual(findByTag(fixture, 'table'), []);
   });
