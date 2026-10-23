@@ -201,6 +201,17 @@ class TestFindByRole:
         result = find_by_role(sample_som, "dialog")
         assert result == []
 
+    def test_accepts_region_selector_aliases(self, sample_som: Som) -> None:
+        assert [region.id for region in find_by_role(sample_som, " MAIN-CONTENT ")] == [
+            "r_main"
+        ]
+        assert [region.id for region in find_by_role(sample_som, '"role=navigation"')] == [
+            "r_navigation"
+        ]
+        assert [region.id for region in find_by_role(sample_som, "role = 'navigation'")] == [
+            "r_navigation"
+        ]
+
     def test_finds_multiple_regions(self) -> None:
         som = Som(
             som_version="1.0",
@@ -214,6 +225,18 @@ class TestFindByRole:
             meta=SomMeta(html_bytes=0, som_bytes=0, element_count=0, interactive_count=0),
         )
         assert len(find_by_role(som, "aside")) == 2
+
+    def test_preserves_extension_role_lookup(self, sample_som: Som) -> None:
+        extension_region = SomRegion.model_construct(
+            id="r_extension", role="extension", elements=[]
+        )
+        som = sample_som.model_copy(
+            update={"regions": [*sample_som.regions, extension_region]}
+        )
+
+        assert [region.id for region in find_by_role(som, "extension")] == [
+            "r_extension"
+        ]
 
 
 class TestFindById:
@@ -320,6 +343,19 @@ class TestFindByTag:
         assert [el.id for el in find_by_tag(sample_som, "searchbox")] == ["e9"]
         assert [el.id for el in find_by_tag(sample_som, "search-input")] == ["e9"]
         assert find_by_tag(sample_som, "listbox") == []
+
+    def test_accepts_aria_button_role_aliases(self, sample_som: Som) -> None:
+        for alias in (
+            "menuitem",
+            "menuitems",
+            "option",
+            "options",
+            "tab",
+            "tabs",
+            "treeitem",
+            "treeitems",
+        ):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == ["e5"]
 
     def test_accepts_plural_text_control_aliases(self, sample_som: Som) -> None:
         for alias in ("text inputs", "textboxes", "search boxes", "search inputs"):
@@ -432,6 +468,19 @@ class TestFindActionTargetsByRole:
         assert "e12" in [item["id"] for item in find_action_targets_by_role(sample_som, "tab")]
         assert "e13" in [item["id"] for item in find_action_targets_by_role(sample_som, "switch")]
         assert "e14" in [item["id"] for item in find_action_targets_by_role(sample_som, "menuitemradio")]
+
+    def test_accepts_aria_button_role_aliases(self, sample_som: Som) -> None:
+        for alias in (
+            "menuitem",
+            "menuitems",
+            "option",
+            "options",
+            "tab",
+            "tabs",
+            "treeitem",
+            "treeitems",
+        ):
+            assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == ["e5"]
 
     def test_accepts_hyphenated_and_spaced_aria_widget_aliases(
         self, sample_som: Som
