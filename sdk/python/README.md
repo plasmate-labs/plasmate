@@ -120,8 +120,9 @@ from plasmate import (
     get_token_estimate,
 )
 
-# Find all navigation regions
-navs = find_by_role(som, "navigation")
+# Find all navigation regions. Common selector aliases are accepted too:
+# "nav", "main-content", "article", and "role=navigation".
+navs = find_by_role(som, "role=navigation")
 
 # Find a specific element
 el = find_by_id(som, "e5")
