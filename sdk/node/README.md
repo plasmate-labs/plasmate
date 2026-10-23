@@ -127,7 +127,8 @@ const enabledButtons = findActionTargetsByRole(som, 'button', { enabledOnly: tru
 const enabledClicks = findActionTargetsByAction(som, 'click', { enabledOnly: true });
 
 Action lookup accepts the same compact aliases used by MCP selectors, including
-`action:click`, `action=type_text`, and `select_option`. `submit` and `reset`
+quoted values such as `"action:click"`, as well as `action:click`,
+`action=type_text`, and `select_option`. `submit` and `reset`
 also match controls by their compiled button type (including image submitters).
 
 // Search by visible text or accessible label (case-insensitive)

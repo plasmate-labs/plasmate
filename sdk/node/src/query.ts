@@ -280,6 +280,18 @@ function normalizeLabelText(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
 }
 
+function normalizeSelectorText(value: string): string {
+  const normalized = normalizeLabelText(value);
+  if (normalized.length >= 2) {
+    const first = normalized[0];
+    const last = normalized[normalized.length - 1];
+    if ((first === '"' && last === '"') || (first === "'" && last === "'")) {
+      return normalizeLabelText(normalized.slice(1, -1));
+    }
+  }
+  return normalized;
+}
+
 function labelCandidates(el: SomElement): string[] {
   const candidates = [
     el.label,
@@ -592,7 +604,7 @@ export function findActionTargetsByRole(
 }
 
 function stripRolePrefix(role: string): string {
-  return role.trim().toLowerCase().replace(/^role\s*[:=]\s*/, '');
+  return normalizeSelectorText(role).toLowerCase().replace(/^role\s*[:=]\s*/, '');
 }
 
 /** Find compact action targets that expose the requested action. */
@@ -624,7 +636,7 @@ export function findActionTargetsByAction(
 }
 
 function normalizeActionQuery(action: string): string {
-  let normalized = action.trim().toLowerCase().replace(/\s+/g, ' ');
+  let normalized = normalizeSelectorText(action).toLowerCase();
   const prefix = normalized.startsWith('action')
     ? 'action'
     : normalized.startsWith('role')
@@ -633,7 +645,7 @@ function normalizeActionQuery(action: string): string {
   if (prefix) {
     const separator = normalized.slice(prefix.length).trimStart();
     if (separator.startsWith(':') || separator.startsWith('=')) {
-      normalized = separator.slice(1).trim().replace(/\s+/g, ' ');
+      normalized = normalizeSelectorText(separator.slice(1)).toLowerCase();
     }
   }
   return {
