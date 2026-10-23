@@ -13,7 +13,10 @@ export function findByRole(som: Som, role: RegionRole | string): SomRegion[] {
 }
 
 function normalizeRegionRole(role: string): RegionRole | undefined {
-  const normalized = role.trim().toLowerCase().replace(/[\s-]+/g, '_');
+  let normalized = role.trim().toLowerCase().replace(/[\s-]+/g, '_');
+  if (normalized.startsWith('role:') || normalized.startsWith('role=')) {
+    normalized = normalized.slice(5).trim();
+  }
   const aliases: Record<string, RegionRole> = {
     main: 'main',
     main_content: 'main',
