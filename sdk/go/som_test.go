@@ -425,6 +425,7 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 		{alias: "menu item", role: "button", want: 2},
 		{alias: "img", role: "image", want: 1},
 		{alias: "query input", role: "text_input", want: 1},
+		{alias: "queries", role: "text_input", want: 1},
 		{alias: "query-field", role: "text_input", want: 1},
 		{alias: "querybox", role: "text_input", want: 1},
 		{alias: "queryboxes", role: "text_input", want: 1},

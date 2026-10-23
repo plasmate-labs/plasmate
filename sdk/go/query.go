@@ -162,6 +162,7 @@ func normalizeElementRoleAlias(role string) string {
 		"p":                  "paragraph",
 		"paragraphs":         "paragraph",
 		"query":              "text_input",
+		"queries":            "text_input",
 		"query_box":          "text_input",
 		"query_boxes":        "text_input",
 		"querybox":           "text_input",
