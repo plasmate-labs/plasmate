@@ -179,6 +179,17 @@ for line in sys.stdin:
                 "result": {"content": [], "isError": True},
             })
             continue
+        if tool_name == "structured_error":
+            send({
+                "jsonrpc": "2.0",
+                "id": request.get("id"),
+                "result": {
+                    "content": [],
+                    "isError": True,
+                    "structuredContent": {"error": {"message": "structured diagnostic"}},
+                },
+            })
+            continue
         if tool_name == "oversized_error":
             send({
                 "jsonrpc": "2.0",
@@ -408,6 +419,27 @@ def test_async_empty_error_content_has_bounded_message(tmp_path: Path) -> None:
         try:
             with pytest.raises(RuntimeError, match="Unknown error"):
                 await client._call_tool("empty_error", {})
+        finally:
+            await client.close()
+
+    asyncio.run(exercise())
+
+
+def test_sync_structured_error_without_text_uses_diagnostic(tmp_path: Path) -> None:
+    client = Plasmate(binary=_fixture(tmp_path))
+    try:
+        with pytest.raises(RuntimeError, match="structured diagnostic"):
+            client._call_tool("structured_error", {})
+    finally:
+        client.close()
+
+
+def test_async_structured_error_without_text_uses_diagnostic(tmp_path: Path) -> None:
+    async def exercise() -> None:
+        client = AsyncPlasmate(binary=_fixture(tmp_path))
+        try:
+            with pytest.raises(RuntimeError, match="structured diagnostic"):
+                await client._call_tool("structured_error", {})
         finally:
             await client.close()
 
