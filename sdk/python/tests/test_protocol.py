@@ -483,6 +483,19 @@ def test_sync_rpc_error_has_bounded_message(tmp_path: Path) -> None:
         client.close()
 
 
+def test_async_rpc_error_has_bounded_message(tmp_path: Path) -> None:
+    async def exercise() -> None:
+        client = AsyncPlasmate(binary=_fixture(tmp_path))
+        try:
+            with pytest.raises(RuntimeError) as error:
+                await client._call_tool("rpc_error", {})
+            assert str(error.value) == f"{'x' * 199}…"
+        finally:
+            await client.close()
+
+    asyncio.run(exercise())
+
+
 def test_sync_oversized_tool_error_has_bounded_message(tmp_path: Path) -> None:
     client = Plasmate(binary=_fixture(tmp_path))
     try:

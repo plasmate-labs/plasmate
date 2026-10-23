@@ -651,8 +651,10 @@ class AsyncPlasmate:
             await self._send(request)
             response = await self._read_response(request_id)
 
-        if "error" in response and response["error"]:
-            raise RuntimeError(response["error"]["message"])
+        error = response.get("error")
+        if error:
+            message = error.get("message") if isinstance(error, dict) else None
+            raise RuntimeError(_bounded_tool_error(message if isinstance(message, str) else ""))
         return response.get("result")
 
     async def _call_tool(self, name: str, arguments: dict) -> Any:
