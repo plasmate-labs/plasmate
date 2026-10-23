@@ -341,6 +341,8 @@ describe('findByTag', () => {
     assert.deepEqual(findByTag(fixture, 'BUTTONS').map((el) => el.id), ['e4']);
     assert.deepEqual(findByTag(fixture, 'role: text-input').map((el) => el.id), ['e5']);
     assert.deepEqual(findByTag(fixture, '"role=paragraph"').map((el) => el.id), ['e3', 'e7', 'e9']);
+    assert.deepEqual(findByTag(fixture, 'search box').map((el) => el.id), ['e5']);
+    assert.deepEqual(findByTag(fixture, 'role=query_input').map((el) => el.id), ['e5']);
   });
 
   it('returns empty for unused role', () => {
