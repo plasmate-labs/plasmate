@@ -140,6 +140,7 @@ func normalizeElementRoleAlias(role string) string {
 		"definition_list":    "list",
 		"div":                "group",
 		"fieldset":           "group",
+		"headings":           "heading",
 		"hr":                 "separator",
 		"img":                "image",
 		"input":              "text_input",
