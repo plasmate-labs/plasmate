@@ -426,6 +426,8 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 		{alias: "img", role: "image", want: 1},
 		{alias: "query input", role: "text_input", want: 1},
 		{alias: "query-field", role: "text_input", want: 1},
+		{alias: "querybox", role: "text_input", want: 1},
+		{alias: "queryboxes", role: "text_input", want: 1},
 	} {
 		got := FindByTag(som, test.alias)
 		if len(got) != test.want {
