@@ -4,9 +4,60 @@
 
 import type { Som, SomRegion, SomElement, RegionRole, ElementRole, ElementAction } from './types';
 
-/** Find all regions matching a given role. */
-export function findByRole(som: Som, role: RegionRole): SomRegion[] {
-  return som.regions.filter((r) => r.role === role);
+/** Find all regions matching a canonical role or common selector alias. */
+export function findByRole(som: Som, role: RegionRole | string): SomRegion[] {
+  const normalizedRole = normalizeRegionRole(role);
+  return normalizedRole
+    ? som.regions.filter((r) => r.role === normalizedRole)
+    : [];
+}
+
+function normalizeRegionRole(role: string): RegionRole | undefined {
+  let normalized = stripRolePrefix(role).replace(/[\s-]+/g, '_');
+  const aliases: Record<string, RegionRole> = {
+    main: 'main',
+    main_content: 'main',
+    main_contents: 'main',
+    main_region: 'main',
+    main_regions: 'main',
+    maincontent: 'main',
+    maincontents: 'main',
+    nav: 'navigation',
+    navs: 'navigation',
+    navigation: 'navigation',
+    navigations: 'navigation',
+    nav_region: 'navigation',
+    nav_regions: 'navigation',
+    navigation_region: 'navigation',
+    navigation_regions: 'navigation',
+    search: 'navigation',
+    searches: 'navigation',
+    search_nav: 'navigation',
+    search_navigation: 'navigation',
+    search_navigations: 'navigation',
+    aside: 'aside',
+    asides: 'aside',
+    complementary: 'aside',
+    header: 'header',
+    headers: 'header',
+    banner: 'header',
+    footer: 'footer',
+    footers: 'footer',
+    contentinfo: 'footer',
+    form: 'form',
+    forms: 'form',
+    dialog: 'dialog',
+    dialogs: 'dialog',
+    content: 'content',
+    contents: 'content',
+    article: 'content',
+    articles: 'content',
+    region: 'content',
+    regions: 'content',
+    content_region: 'content',
+    content_regions: 'content',
+  };
+  return aliases[normalized];
 }
 
 /** Find an element by its stable ID across all regions. Returns undefined if not found. */
@@ -532,12 +583,16 @@ export function findActionTargetsByRole(
   role: ElementRole | string,
   options?: { enabledOnly?: boolean },
 ): ActionPlanItem[] {
-  const normalizedRole = role.trim().toLowerCase().replace(/[\s-]+/g, '_');
+  const normalizedRole = stripRolePrefix(role).replace(/[\s-]+/g, '_');
   const canonicalRole = ELEMENT_ROLE_ALIASES[normalizedRole] ??
     (ELEMENT_ROLES.includes(normalizedRole as ElementRole) ? normalizedRole as ElementRole : undefined);
   return canonicalRole
     ? getActionPlanIndex(som, { enabledOnly: options?.enabledOnly }).byRole[canonicalRole] ?? []
     : [];
+}
+
+function stripRolePrefix(role: string): string {
+  return role.trim().toLowerCase().replace(/^role\s*[:=]\s*/, '');
 }
 
 /** Find compact action targets that expose the requested action. */

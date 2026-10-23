@@ -178,6 +178,10 @@ describe('findActionTargetsByRole aliases', () => {
   it('normalizes case, whitespace, and plural role aliases', () => {
     assert.deepEqual(findActionTargetsByRole(fixture, ' BUTTONS ').map((item) => item.id), ['e4']);
     assert.deepEqual(findActionTargetsByRole(fixture, 'text-input').map((item) => item.id), ['e5']);
+    assert.deepEqual(findActionTargetsByRole(fixture, 'role:button').map((item) => item.id), ['e4']);
+    assert.deepEqual(findActionTargetsByRole(fixture, 'role=text-input').map((item) => item.id), ['e5']);
+    assert.deepEqual(findActionTargetsByRole(fixture, 'role : text-input').map((item) => item.id), ['e5']);
+    assert.deepEqual(findActionTargetsByRole(fixture, 'role = text-input').map((item) => item.id), ['e5']);
     assert.deepEqual(findActionTargetsByRole(fixture, 'unknown-role'), []);
   });
 });
@@ -201,6 +205,23 @@ describe('findByRole', () => {
 
   it('returns empty array for missing role', () => {
     assert.deepEqual(findByRole(fixture, 'dialog'), []);
+  });
+
+  it('accepts common region selector aliases', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        ...fixture.regions,
+        { id: 'r_nav', role: 'navigation', elements: [] },
+        { id: 'r_content', role: 'content', elements: [] },
+      ],
+    };
+    assert.deepEqual(findByRole(som, ' MAIN-CONTENT ').map((region) => region.id), ['r_main']);
+    assert.deepEqual(findByRole(som, 'role:main').map((region) => region.id), ['r_main']);
+    assert.deepEqual(findByRole(som, 'role : main').map((region) => region.id), ['r_main']);
+    assert.deepEqual(findByRole(som, 'role=navigation').map((region) => region.id), ['r_nav']);
+    assert.deepEqual(findByRole(som, 'navigation').map((region) => region.id), ['r_nav']);
+    assert.deepEqual(findByRole(som, 'article').map((region) => region.id), ['r_content']);
   });
 });
 

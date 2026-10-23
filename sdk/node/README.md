@@ -150,7 +150,7 @@ browser.close();
 
 | Function | Returns | Description |
 |----------|---------|-------------|
-| `findByRole(som, role)` | `SomRegion[]` | Find regions by role |
+| `findByRole(som, role)` | `SomRegion[]` | Find regions by canonical role or common selector alias (for example, `main-content`, `role:main`, `navigation`, or `article`) |
 | `findById(som, id)` | `SomElement \| undefined` | Find element by stable ID |
 | `findByTag(som, tag)` | `SomElement[]` | Find elements by element role |
 | `findInteractive(som)` | `SomElement[]` | All elements with actions |
@@ -158,7 +158,7 @@ browser.close();
 | `getActionPlanCacheKey(item)` | `string` | Deterministic key for caching or comparing action targets |
 | `findActionTarget(som, value, options?)` | `ActionPlanItem \| undefined` | Resolve a target by SOM id, cache key, HTML id, test id, or explicit label |
 | `findActionTargetsByLabel(som, label, options?)` | `ActionPlanItem[]` | Find compact action targets by accessible label |
-| `findActionTargetsByRole(som, role, options?)` | `ActionPlanItem[]` | Find compact action targets by canonical SOM role or case-insensitive plural/selector alias |
+| `findActionTargetsByRole(som, role, options?)` | `ActionPlanItem[]` | Find compact action targets by canonical SOM role or case-insensitive plural/selector alias (for example, `buttons`, `role:button`, `role = text-input`, or `role=text-input`) |
 | `findActionTargetsByAction(som, action, options?)` | `ActionPlanItem[]` | Find compact action targets that expose an action |
 | `findByLabel(som, label, options?)` | `SomElement[]` | Case-insensitive accessible-label search |
 | `findByText(som, text)` | `SomElement[]` | Case-insensitive text search |
