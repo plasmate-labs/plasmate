@@ -9,8 +9,51 @@ from .types import Som, SomElement, SomRegion
 
 
 def find_by_role(som: Som, role: str) -> List[SomRegion]:
-    """Return all regions matching the given role."""
-    return [r for r in som.regions if r.role == role]
+    """Return all regions matching a canonical role or selector alias."""
+    normalized_role = {
+        "main": "main",
+        "main_content": "main",
+        "main_contents": "main",
+        "main_region": "main",
+        "main_regions": "main",
+        "maincontent": "main",
+        "maincontents": "main",
+        "nav": "navigation",
+        "navs": "navigation",
+        "navigation": "navigation",
+        "navigations": "navigation",
+        "nav_region": "navigation",
+        "nav_regions": "navigation",
+        "navigation_region": "navigation",
+        "navigation_regions": "navigation",
+        "search": "navigation",
+        "searches": "navigation",
+        "search_nav": "navigation",
+        "search_navigation": "navigation",
+        "search_navigations": "navigation",
+        "aside": "aside",
+        "asides": "aside",
+        "complementary": "aside",
+        "header": "header",
+        "headers": "header",
+        "banner": "header",
+        "footer": "footer",
+        "footers": "footer",
+        "contentinfo": "footer",
+        "form": "form",
+        "forms": "form",
+        "dialog": "dialog",
+        "dialogs": "dialog",
+        "content": "content",
+        "contents": "content",
+        "article": "content",
+        "articles": "content",
+        "region": "content",
+        "regions": "content",
+        "content_region": "content",
+        "content_regions": "content",
+    }.get(_normalize_role_alias(role))
+    return [r for r in som.regions if normalized_role and r.role == normalized_role]
 
 
 def find_by_id(som: Som, element_id: str) -> Optional[SomElement]:
@@ -777,7 +820,16 @@ def get_compression_ratio(som: Union[Som, dict]) -> float:
 
 def _normalize_role_alias(value: str) -> str:
     """Normalize role aliases so hyphenated and spaced forms behave alike."""
-    return "_".join(value.strip().lower().replace("-", " ").split())
+    normalized = " ".join(value.strip().lower().split())
+    if len(normalized) >= 2 and normalized[0] == normalized[-1] and normalized[0] in "\"'":
+        normalized = normalized[1:-1].strip()
+    if normalized.startswith("role"):
+        remainder = normalized[4:].lstrip()
+        if remainder.startswith((":", "=")):
+            normalized = remainder[1:].strip()
+    if len(normalized) >= 2 and normalized[0] == normalized[-1] and normalized[0] in "\"'":
+        normalized = normalized[1:-1].strip()
+    return "_".join(normalized.replace("-", " ").split())
 
 
 def _normalize_label_text(value: str) -> str:

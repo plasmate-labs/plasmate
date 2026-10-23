@@ -201,6 +201,14 @@ class TestFindByRole:
         result = find_by_role(sample_som, "dialog")
         assert result == []
 
+    def test_accepts_region_selector_aliases(self, sample_som: Som) -> None:
+        assert [region.id for region in find_by_role(sample_som, " MAIN-CONTENT ")] == [
+            "r_main"
+        ]
+        assert [region.id for region in find_by_role(sample_som, '"role=navigation"')] == [
+            "r_navigation"
+        ]
+
     def test_finds_multiple_regions(self) -> None:
         som = Som(
             som_version="1.0",
