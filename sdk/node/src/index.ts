@@ -297,7 +297,8 @@ export class Plasmate extends EventEmitter {
           this.pending.delete(response.id);
           clearTimeout(entry.timer);
           if (response.error) {
-            entry.reject(new Error(response.error.message));
+          const message = typeof response.error?.message === 'string' ? response.error.message : '';
+          entry.reject(new Error(boundedToolError(message)));
           } else {
             entry.resolve(response.result);
           }

@@ -162,6 +162,13 @@ for line in sys.stdin:
         tool_name = request.get("params", {}).get("name")
         if tool_name == "silent_tool":
             continue
+        if tool_name == "rpc_error":
+            send({
+                "jsonrpc": "2.0",
+                "id": request.get("id"),
+                "error": {"code": -32603, "message": "x" * 5000},
+            })
+            continue
         if tool_name == "out_of_order_tool":
             send({"jsonrpc": "2.0", "method": "notifications/progress", "params": {"done": False}})
             send({"jsonrpc": "2.0", "id": 999, "result": {"stale": True}})
@@ -462,6 +469,16 @@ def test_sync_structured_error_falls_back_from_empty_nested_message(tmp_path: Pa
     try:
         with pytest.raises(RuntimeError, match="fallback diagnostic"):
             client._call_tool("fallback_structured_error", {})
+    finally:
+        client.close()
+
+
+def test_sync_rpc_error_has_bounded_message(tmp_path: Path) -> None:
+    client = Plasmate(binary=_fixture(tmp_path))
+    try:
+        with pytest.raises(RuntimeError) as error:
+            client._call_tool("rpc_error", {})
+        assert str(error.value) == f"{'x' * 199}…"
     finally:
         client.close()
 
