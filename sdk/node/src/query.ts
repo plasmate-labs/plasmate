@@ -604,7 +604,8 @@ export function findActionTargetsByRole(
 }
 
 function stripRolePrefix(role: string): string {
-  return normalizeSelectorText(role).toLowerCase().replace(/^role\s*[:=]\s*/, '');
+  const normalized = normalizeSelectorText(role).toLowerCase();
+  return normalizeSelectorText(normalized.replace(/^role\s*[:=]\s*/, ''));
 }
 
 /** Find compact action targets that expose the requested action. */
