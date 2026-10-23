@@ -52,8 +52,11 @@ def find_by_role(som: Som, role: str) -> List[SomRegion]:
         "regions": "content",
         "content_region": "content",
         "content_regions": "content",
-    }.get(_normalize_role_alias(role))
-    return [r for r in som.regions if normalized_role and r.role == normalized_role]
+    }
+    normalized_role = normalized_role.get(
+        _normalize_role_alias(role), _normalize_role_alias(role)
+    )
+    return [r for r in som.regions if r.role == normalized_role]
 
 
 def find_by_id(som: Som, element_id: str) -> Optional[SomElement]:

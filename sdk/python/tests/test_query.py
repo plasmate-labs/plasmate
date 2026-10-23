@@ -226,6 +226,18 @@ class TestFindByRole:
         )
         assert len(find_by_role(som, "aside")) == 2
 
+    def test_preserves_extension_role_lookup(self, sample_som: Som) -> None:
+        extension_region = SomRegion.model_construct(
+            id="r_extension", role="extension", elements=[]
+        )
+        som = sample_som.model_copy(
+            update={"regions": [*sample_som.regions, extension_region]}
+        )
+
+        assert [region.id for region in find_by_role(som, "extension")] == [
+            "r_extension"
+        ]
+
 
 class TestFindById:
     def test_finds_top_level_element(self, sample_som: Som) -> None:
