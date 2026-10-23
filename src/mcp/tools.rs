@@ -522,7 +522,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
 pub fn extract_text_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_text".to_string(),
-        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary. Includes compiled image alt text when the image has no other readable text, and definition-list terms with their descriptions, so chart, photo, and reference pages still return authored context. Use this (instead of fetch_page) when you only need written content and do not need to interact with the page or reference specific elements. For large pages, set selector='main' or another targeted selector to omit irrelevant regions before applying max_chars; use selector='content' for article text or selector='heading'/'h1' through 'h6' for headings.".to_string(),
+        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary. Includes compiled image alt text when the image has no other readable text, details disclosure summaries, and definition-list terms with their descriptions, so chart, photo, and reference pages still return authored context. Use this (instead of fetch_page) when you only need written content and do not need to interact with the page or reference specific elements. For large pages, set selector='main' or another targeted selector to omit irrelevant regions before applying max_chars; use selector='content' for article text or selector='heading'/'h1' through 'h6' for headings.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -859,8 +859,13 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
     let readable = element
         .text
         .as_deref()
-        .filter(|text| !text.is_empty())
-        .or_else(|| element.label.as_deref().filter(|label| !label.is_empty()))
+        .filter(|text| !text.trim().is_empty())
+        .or_else(|| {
+            element
+                .label
+                .as_deref()
+                .filter(|label| !label.trim().is_empty())
+        })
         .or_else(|| compiled_image_alt(element));
     let has_readable_text = readable.is_some();
     if let Some(readable) = readable {
@@ -909,10 +914,13 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
             }
         }
         if !has_readable_text {
-            if let Some(summary) = attrs.get("summary").and_then(|v| v.as_str()) {
-                if !summary.is_empty() {
-                    parts.push(summary.to_string());
-                }
+            if let Some(summary) = attrs
+                .get("summary")
+                .and_then(|v| v.as_str())
+                .map(str::trim)
+                .filter(|summary| !summary.is_empty())
+            {
+                parts.push(summary.to_string());
             }
         }
         if let Some(headers) = attrs.get("headers").and_then(|v| v.as_array()) {
@@ -10928,13 +10936,24 @@ mod tests {
 
     #[test]
     fn test_extract_element_text_includes_details_summary_without_direct_text() {
-        let mut details = test_element("filters", ElementRole::Details, None, None);
-        details.attrs = Some(json!({"summary": "Filter results"}));
+        let mut details = test_element("filters", ElementRole::Details, Some(" \n\t "), None);
+        details.attrs = Some(json!({"summary": "  Filter results  "}));
 
         let mut parts = Vec::new();
         extract_element_text(&details, &mut parts);
 
         assert_eq!(parts, vec!["Filter results".to_string()]);
+    }
+
+    #[test]
+    fn test_extract_element_text_ignores_whitespace_only_details_summary() {
+        let mut details = test_element("filters", ElementRole::Details, None, None);
+        details.attrs = Some(json!({"summary": "  \n\t  "}));
+
+        let mut parts = Vec::new();
+        extract_element_text(&details, &mut parts);
+
+        assert!(parts.is_empty(), "whitespace-only summary leaked: {parts:?}");
     }
 
     #[test]
