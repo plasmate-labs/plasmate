@@ -862,6 +862,7 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
         .filter(|text| !text.is_empty())
         .or_else(|| element.label.as_deref().filter(|label| !label.is_empty()))
         .or_else(|| compiled_image_alt(element));
+    let has_readable_text = readable.is_some();
     if let Some(readable) = readable {
         parts.push(readable.to_string());
     }
@@ -905,6 +906,13 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
         if let Some(caption) = attrs.get("caption").and_then(|v| v.as_str()) {
             if !caption.is_empty() {
                 parts.push(caption.to_string());
+            }
+        }
+        if !has_readable_text {
+            if let Some(summary) = attrs.get("summary").and_then(|v| v.as_str()) {
+                if !summary.is_empty() {
+                    parts.push(summary.to_string());
+                }
             }
         }
         if let Some(headers) = attrs.get("headers").and_then(|v| v.as_array()) {
@@ -10916,6 +10924,17 @@ mod tests {
             parts,
             vec!["United States".to_string(), "Canada".to_string()]
         );
+    }
+
+    #[test]
+    fn test_extract_element_text_includes_details_summary_without_direct_text() {
+        let mut details = test_element("filters", ElementRole::Details, None, None);
+        details.attrs = Some(json!({"summary": "Filter results"}));
+
+        let mut parts = Vec::new();
+        extract_element_text(&details, &mut parts);
+
+        assert_eq!(parts, vec!["Filter results".to_string()]);
     }
 
     #[test]
