@@ -150,7 +150,7 @@ browser.close();
 
 | Function | Returns | Description |
 |----------|---------|-------------|
-| `findByRole(som, role)` | `SomRegion[]` | Find regions by role |
+| `findByRole(som, role)` | `SomRegion[]` | Find regions by canonical role or common selector alias (for example, `main-content`, `navigation`, or `article`) |
 | `findById(som, id)` | `SomElement \| undefined` | Find element by stable ID |
 | `findByTag(som, tag)` | `SomElement[]` | Find elements by element role |
 | `findInteractive(som)` | `SomElement[]` | All elements with actions |
