@@ -106,12 +106,14 @@ def _structured_tool_error(result: Any) -> str:
     if not isinstance(structured, dict):
         return ""
     error = structured.get("error")
-    if isinstance(error, str):
+    if isinstance(error, str) and error:
         return error
-    if isinstance(error, dict) and isinstance(error.get("message"), str):
-        return error["message"]
+    if isinstance(error, dict):
+        message = error.get("message")
+        if isinstance(message, str) and message:
+            return message
     message = structured.get("message")
-    return message if isinstance(message, str) else ""
+    return message if isinstance(message, str) and message else ""
 
 
 MAX_TOOL_ERROR_CHARS = 200

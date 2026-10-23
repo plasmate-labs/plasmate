@@ -190,6 +190,17 @@ for line in sys.stdin:
                 },
             })
             continue
+        if tool_name == "fallback_structured_error":
+            send({
+                "jsonrpc": "2.0",
+                "id": request.get("id"),
+                "result": {
+                    "content": [],
+                    "isError": True,
+                    "structuredContent": {"error": {"message": ""}, "message": "fallback diagnostic"},
+                },
+            })
+            continue
         if tool_name == "oversized_error":
             send({
                 "jsonrpc": "2.0",
@@ -444,6 +455,15 @@ def test_async_structured_error_without_text_uses_diagnostic(tmp_path: Path) -> 
             await client.close()
 
     asyncio.run(exercise())
+
+
+def test_sync_structured_error_falls_back_from_empty_nested_message(tmp_path: Path) -> None:
+    client = Plasmate(binary=_fixture(tmp_path))
+    try:
+        with pytest.raises(RuntimeError, match="fallback diagnostic"):
+            client._call_tool("fallback_structured_error", {})
+    finally:
+        client.close()
 
 
 def test_sync_oversized_tool_error_has_bounded_message(tmp_path: Path) -> None:
