@@ -127,7 +127,8 @@ const enabledButtons = findActionTargetsByRole(som, 'button', { enabledOnly: tru
 const enabledClicks = findActionTargetsByAction(som, 'click', { enabledOnly: true });
 
 Action lookup accepts the same compact aliases used by MCP selectors, including
-`action:click`, `action=type_text`, and `select_option`. `submit` and `reset`
+quoted values such as `"action:click"`, as well as `action:click`,
+`action=type_text`, and `select_option`. `submit` and `reset`
 also match controls by their compiled button type (including image submitters).
 
 // Search by visible text or accessible label (case-insensitive)
@@ -152,13 +153,13 @@ browser.close();
 |----------|---------|-------------|
 | `findByRole(som, role)` | `SomRegion[]` | Find regions by canonical role or common selector alias (for example, `main-content`, `role:main`, `navigation`, or `article`) |
 | `findById(som, id)` | `SomElement \| undefined` | Find element by stable ID |
-| `findByTag(som, tag)` | `SomElement[]` | Find elements by element role |
+| `findByTag(som, tag)` | `SomElement[]` | Find elements by canonical role or case-insensitive selector alias (for example, `buttons`, `search box`, `role:text-input`, or `"role=paragraph"`) |
 | `findInteractive(som)` | `SomElement[]` | All elements with actions |
 | `getActionPlan(som)` | `ActionPlanItem[]` | Compact action targets with cache keys, availability, link target/rel/download cues, form/list and form submission context, submitter override cues, popover/command relation cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues |
 | `getActionPlanCacheKey(item)` | `string` | Deterministic key for caching or comparing action targets |
 | `findActionTarget(som, value, options?)` | `ActionPlanItem \| undefined` | Resolve a target by SOM id, cache key, HTML id, test id, or explicit label |
 | `findActionTargetsByLabel(som, label, options?)` | `ActionPlanItem[]` | Find compact action targets by accessible label |
-| `findActionTargetsByRole(som, role, options?)` | `ActionPlanItem[]` | Find compact action targets by canonical SOM role or case-insensitive plural/selector alias (for example, `buttons`, `role:button`, `role = text-input`, or `role=text-input`) |
+| `findActionTargetsByRole(som, role, options?)` | `ActionPlanItem[]` | Find compact action targets by canonical SOM role or case-insensitive plural/selector alias (for example, `buttons`, `role:button`, `role: "button"`, `role = text-input`, or `role=text-input`) |
 | `findActionTargetsByAction(som, action, options?)` | `ActionPlanItem[]` | Find compact action targets that expose an action |
 | `findByLabel(som, label, options?)` | `SomElement[]` | Case-insensitive accessible-label search |
 | `findByText(som, text)` | `SomElement[]` | Case-insensitive text search |

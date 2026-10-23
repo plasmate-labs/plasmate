@@ -147,6 +147,8 @@ describe('findActionTargetsByAction aliases', () => {
   it('normalizes MCP action aliases and finds submit/reset controls', () => {
     assert.deepEqual(findActionTargetsByAction(fixture, 'action : submit').map((item) => item.id), ['e4']);
     assert.deepEqual(findActionTargetsByAction(fixture, 'action=type_text').map((item) => item.id), ['e5']);
+    assert.deepEqual(findActionTargetsByAction(fixture, '"action:submit"').map((item) => item.id), ['e4']);
+    assert.deepEqual(findActionTargetsByAction(fixture, "'type_text'").map((item) => item.id), ['e5']);
     assert.deepEqual(findActionTargetsByAction(fixture, 'role : submit').map((item) => item.id), ['e4']);
     assert.deepEqual(findActionTargetsByAction(fixture, 'ROLE=TYPE_TEXT').map((item) => item.id), ['e5']);
 
@@ -182,6 +184,8 @@ describe('findActionTargetsByRole aliases', () => {
     assert.deepEqual(findActionTargetsByRole(fixture, 'role=text-input').map((item) => item.id), ['e5']);
     assert.deepEqual(findActionTargetsByRole(fixture, 'role : text-input').map((item) => item.id), ['e5']);
     assert.deepEqual(findActionTargetsByRole(fixture, 'role = text-input').map((item) => item.id), ['e5']);
+    assert.deepEqual(findActionTargetsByRole(fixture, 'role: "button"').map((item) => item.id), ['e4']);
+    assert.deepEqual(findActionTargetsByRole(fixture, '"role:button"').map((item) => item.id), ['e4']);
     assert.deepEqual(findActionTargetsByRole(fixture, 'unknown-role'), []);
   });
 });
@@ -217,9 +221,11 @@ describe('findByRole', () => {
       ],
     };
     assert.deepEqual(findByRole(som, ' MAIN-CONTENT ').map((region) => region.id), ['r_main']);
+    assert.deepEqual(findByRole(som, '"main-content"').map((region) => region.id), ['r_main']);
     assert.deepEqual(findByRole(som, 'role:main').map((region) => region.id), ['r_main']);
     assert.deepEqual(findByRole(som, 'role : main').map((region) => region.id), ['r_main']);
     assert.deepEqual(findByRole(som, 'role=navigation').map((region) => region.id), ['r_nav']);
+    assert.deepEqual(findByRole(som, "role = 'navigation'").map((region) => region.id), ['r_nav']);
     assert.deepEqual(findByRole(som, 'navigation').map((region) => region.id), ['r_nav']);
     assert.deepEqual(findByRole(som, 'article').map((region) => region.id), ['r_content']);
   });
@@ -329,6 +335,14 @@ describe('findByTag', () => {
   it('finds elements by role', () => {
     const paragraphs = findByTag(fixture, 'paragraph');
     assert.equal(paragraphs.length, 3);
+  });
+
+  it('accepts case-insensitive selector aliases', () => {
+    assert.deepEqual(findByTag(fixture, 'BUTTONS').map((el) => el.id), ['e4']);
+    assert.deepEqual(findByTag(fixture, 'role: text-input').map((el) => el.id), ['e5']);
+    assert.deepEqual(findByTag(fixture, '"role=paragraph"').map((el) => el.id), ['e3', 'e7', 'e9']);
+    assert.deepEqual(findByTag(fixture, 'search box').map((el) => el.id), ['e5']);
+    assert.deepEqual(findByTag(fixture, 'role=query_input').map((el) => el.id), ['e5']);
   });
 
   it('returns empty for unused role', () => {

@@ -89,9 +89,10 @@ function findElementById(elements: SomElement[], id: string): SomElement | undef
   return undefined;
 }
 
-/** Find all elements whose role matches the given element role. */
-export function findByTag(som: Som, tag: ElementRole): SomElement[] {
-  return flatElements(som).filter((el) => el.role === tag);
+/** Find all elements whose role matches a canonical role or selector alias. */
+export function findByTag(som: Som, tag: ElementRole | string): SomElement[] {
+  const normalizedRole = normalizeElementRole(tag);
+  return normalizedRole ? flatElements(som).filter((el) => el.role === normalizedRole) : [];
 }
 
 /** Return all interactive elements (those with a non-empty `actions` array). */
@@ -255,7 +256,19 @@ const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   a: 'link',
   links: 'link',
   buttons: 'button',
+  input: 'text_input',
+  inputs: 'text_input',
   text_inputs: 'text_input',
+  textbox: 'text_input',
+  textboxes: 'text_input',
+  search_box: 'text_input',
+  searchbox: 'text_input',
+  searchboxes: 'text_input',
+  search_input: 'text_input',
+  query: 'text_input',
+  query_box: 'text_input',
+  querybox: 'text_input',
+  query_input: 'text_input',
   textareas: 'textarea',
   selects: 'select',
   checkboxes: 'checkbox',
@@ -272,12 +285,30 @@ const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   iframes: 'iframe',
 };
 
+function normalizeElementRole(role: string): ElementRole | undefined {
+  const normalizedRole = stripRolePrefix(role).replace(/[\s-]+/g, '_');
+  return ELEMENT_ROLE_ALIASES[normalizedRole] ??
+    (ELEMENT_ROLES.includes(normalizedRole as ElementRole) ? normalizedRole as ElementRole : undefined);
+}
+
 function compactString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined;
 }
 
 function normalizeLabelText(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
+}
+
+function normalizeSelectorText(value: string): string {
+  const normalized = normalizeLabelText(value);
+  if (normalized.length >= 2) {
+    const first = normalized[0];
+    const last = normalized[normalized.length - 1];
+    if ((first === '"' && last === '"') || (first === "'" && last === "'")) {
+      return normalizeLabelText(normalized.slice(1, -1));
+    }
+  }
+  return normalized;
 }
 
 function labelCandidates(el: SomElement): string[] {
@@ -592,7 +623,8 @@ export function findActionTargetsByRole(
 }
 
 function stripRolePrefix(role: string): string {
-  return role.trim().toLowerCase().replace(/^role\s*[:=]\s*/, '');
+  const normalized = normalizeSelectorText(role).toLowerCase();
+  return normalizeSelectorText(normalized.replace(/^role\s*[:=]\s*/, ''));
 }
 
 /** Find compact action targets that expose the requested action. */
@@ -624,7 +656,7 @@ export function findActionTargetsByAction(
 }
 
 function normalizeActionQuery(action: string): string {
-  let normalized = action.trim().toLowerCase().replace(/\s+/g, ' ');
+  let normalized = normalizeSelectorText(action).toLowerCase();
   const prefix = normalized.startsWith('action')
     ? 'action'
     : normalized.startsWith('role')
@@ -633,7 +665,7 @@ function normalizeActionQuery(action: string): string {
   if (prefix) {
     const separator = normalized.slice(prefix.length).trimStart();
     if (separator.startsWith(':') || separator.startsWith('=')) {
-      normalized = separator.slice(1).trim().replace(/\s+/g, ' ');
+      normalized = normalizeSelectorText(separator.slice(1)).toLowerCase();
     }
   }
   return {
