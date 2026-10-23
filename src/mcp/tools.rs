@@ -859,12 +859,14 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
     let readable = element
         .text
         .as_deref()
-        .filter(|text| !text.trim().is_empty())
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
         .or_else(|| {
             element
                 .label
                 .as_deref()
-                .filter(|label| !label.trim().is_empty())
+                .map(str::trim)
+                .filter(|label| !label.is_empty())
         })
         .or_else(|| compiled_image_alt(element));
     let has_readable_text = readable.is_some();
@@ -10954,6 +10956,28 @@ mod tests {
         extract_element_text(&details, &mut parts);
 
         assert!(parts.is_empty(), "whitespace-only summary leaked: {parts:?}");
+    }
+
+    #[test]
+    fn test_extract_element_text_trims_direct_text_and_labels() {
+        let mut section = test_element(
+            "content",
+            ElementRole::Section,
+            Some("  Article text  "),
+            None,
+        );
+        section.children = Some(vec![test_element(
+            "status",
+            ElementRole::Paragraph,
+            Some("  "),
+            None,
+        )]);
+        section.children.as_mut().unwrap()[0].label = Some("  Ready  ".to_string());
+
+        let mut parts = Vec::new();
+        extract_element_text(&section, &mut parts);
+
+        assert_eq!(parts, vec!["Article text".to_string(), "Ready".to_string()]);
     }
 
     #[test]
