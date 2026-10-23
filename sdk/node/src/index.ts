@@ -216,6 +216,19 @@ function hasToolText(result: { content?: Array<{ type: string; text?: string }> 
   );
 }
 
+function structuredToolError(result: { structuredContent?: unknown }): string {
+  const structured = result.structuredContent;
+  if (!structured || typeof structured !== 'object') return '';
+  const error = (structured as { error?: unknown }).error;
+  if (typeof error === 'string' && error) return error;
+  if (error && typeof error === 'object') {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === 'string' && message) return message;
+  }
+  const message = (structured as { message?: unknown }).message;
+  return typeof message === 'string' && message ? message : '';
+}
+
 // ---- Client ----
 
 export class Plasmate extends EventEmitter {
@@ -284,7 +297,8 @@ export class Plasmate extends EventEmitter {
           this.pending.delete(response.id);
           clearTimeout(entry.timer);
           if (response.error) {
-            entry.reject(new Error(response.error.message));
+          const message = typeof response.error?.message === 'string' ? response.error.message : '';
+          entry.reject(new Error(boundedToolError(message)));
           } else {
             entry.resolve(response.result);
           }
@@ -354,7 +368,7 @@ export class Plasmate extends EventEmitter {
 
     if (result.isError) {
       throw new Error(
-        boundedToolError(toolText(result)),
+        boundedToolError(toolText(result) || structuredToolError(result)),
       );
     }
 

@@ -100,6 +100,22 @@ def _structured_tool_result(result: Any) -> tuple[bool, Any]:
     return True, structured["result"]
 
 
+def _structured_tool_error(result: Any) -> str:
+    """Return a useful diagnostic when an MCP error has no text block."""
+    structured = result.get("structuredContent") if isinstance(result, dict) else None
+    if not isinstance(structured, dict):
+        return ""
+    error = structured.get("error")
+    if isinstance(error, str) and error:
+        return error
+    if isinstance(error, dict):
+        message = error.get("message")
+        if isinstance(message, str) and message:
+            return message
+    message = structured.get("message")
+    return message if isinstance(message, str) and message else ""
+
+
 MAX_TOOL_ERROR_CHARS = 200
 
 
@@ -281,8 +297,10 @@ class Plasmate:
             self._send(request)
             response = self._read_response(request_id)
 
-        if "error" in response and response["error"]:
-            raise RuntimeError(response["error"]["message"])
+        error = response.get("error")
+        if error:
+            message = error.get("message") if isinstance(error, dict) else None
+            raise RuntimeError(_bounded_tool_error(message if isinstance(message, str) else ""))
         return response.get("result")
 
     def _call_tool(self, name: str, arguments: dict) -> Any:
@@ -291,7 +309,7 @@ class Plasmate:
 
         text = _tool_text(result)
         if result and result.get("isError"):
-            raise RuntimeError(_bounded_tool_error(text))
+            raise RuntimeError(_bounded_tool_error(text or _structured_tool_error(result)))
 
         has_structured, structured = _structured_tool_result(result)
         if name in ("extract_text", "extract_links"):
@@ -633,8 +651,10 @@ class AsyncPlasmate:
             await self._send(request)
             response = await self._read_response(request_id)
 
-        if "error" in response and response["error"]:
-            raise RuntimeError(response["error"]["message"])
+        error = response.get("error")
+        if error:
+            message = error.get("message") if isinstance(error, dict) else None
+            raise RuntimeError(_bounded_tool_error(message if isinstance(message, str) else ""))
         return response.get("result")
 
     async def _call_tool(self, name: str, arguments: dict) -> Any:
@@ -643,7 +663,7 @@ class AsyncPlasmate:
 
         text = _tool_text(result)
         if result and result.get("isError"):
-            raise RuntimeError(_bounded_tool_error(text))
+            raise RuntimeError(_bounded_tool_error(text or _structured_tool_error(result)))
 
         has_structured, structured = _structured_tool_result(result)
         if name in ("extract_text", "extract_links"):

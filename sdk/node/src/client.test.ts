@@ -453,6 +453,84 @@ input.on('line', (line) => {
     }
   });
 
+  it('uses structured diagnostics when an error has no text block', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'plasmate-node-sdk-'));
+    const fixture = join(directory, 'mcp-fixture.js');
+    writeFileSync(
+      fixture,
+      `#!/usr/bin/env node
+import { createInterface } from 'node:readline';
+
+const send = (value) => process.stdout.write(JSON.stringify(value) + '\\n');
+const input = createInterface({ input: process.stdin });
+
+input.on('line', (line) => {
+  const request = JSON.parse(line);
+  if (request.method === 'initialize') {
+    send({ jsonrpc: '2.0', id: request.id, result: { protocolVersion: '2024-11-05' } });
+  } else if (request.method === 'tools/call') {
+    send({
+      jsonrpc: '2.0',
+      id: request.id,
+      result: { isError: true, content: [], structuredContent: { error: { message: 'structured diagnostic' } } },
+    });
+  }
+});
+`,
+      'utf8',
+    );
+    chmodSync(fixture, 0o755);
+
+    const browser = new Plasmate({ binary: fixture });
+    try {
+      await assert.rejects(browser.fetchPage('fixture'), (error: unknown) => {
+        return error instanceof Error && error.message === 'structured diagnostic';
+      });
+    } finally {
+      browser.close();
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it('falls back when a nested structured diagnostic is empty', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'plasmate-node-sdk-'));
+    const fixture = join(directory, 'mcp-fixture.js');
+    writeFileSync(
+      fixture,
+      `#!/usr/bin/env node
+import { createInterface } from 'node:readline';
+
+const send = (value) => process.stdout.write(JSON.stringify(value) + '\\n');
+const input = createInterface({ input: process.stdin });
+
+input.on('line', (line) => {
+  const request = JSON.parse(line);
+  if (request.method === 'initialize') {
+    send({ jsonrpc: '2.0', id: request.id, result: { protocolVersion: '2024-11-05' } });
+  } else if (request.method === 'tools/call') {
+    send({
+      jsonrpc: '2.0',
+      id: request.id,
+      result: { isError: true, content: [], structuredContent: { error: { message: '' }, message: 'fallback diagnostic' } },
+    });
+  }
+});
+`,
+      'utf8',
+    );
+    chmodSync(fixture, 0o755);
+
+    const browser = new Plasmate({ binary: fixture });
+    try {
+      await assert.rejects(browser.fetchPage('fixture'), (error: unknown) => {
+        return error instanceof Error && error.message === 'fallback diagnostic';
+      });
+    } finally {
+      browser.close();
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   it('bounds oversized tool error diagnostics', async () => {
     const directory = mkdtempSync(join(tmpdir(), 'plasmate-node-sdk-'));
     const fixture = join(directory, 'mcp-fixture.js');
@@ -475,6 +553,41 @@ input.on('line', (line) => {
       id: request.id,
       result: { isError: true, content: [{ type: 'text', text: diagnostic }] },
     });
+  }
+});
+`,
+      'utf8',
+    );
+    chmodSync(fixture, 0o755);
+
+    const browser = new Plasmate({ binary: fixture });
+    try {
+      await assert.rejects(browser.fetchPage('fixture'), (error: unknown) => {
+        return error instanceof Error && error.message === `${'x'.repeat(199)}…`;
+      });
+    } finally {
+      browser.close();
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it('bounds oversized JSON-RPC error diagnostics', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'plasmate-node-sdk-'));
+    const fixture = join(directory, 'mcp-fixture.js');
+    writeFileSync(
+      fixture,
+      `#!/usr/bin/env node
+import { createInterface } from 'node:readline';
+
+const send = (value) => process.stdout.write(JSON.stringify(value) + '\\n');
+const input = createInterface({ input: process.stdin });
+
+input.on('line', (line) => {
+  const request = JSON.parse(line);
+  if (request.method === 'initialize') {
+    send({ jsonrpc: '2.0', id: request.id, result: { protocolVersion: '2024-11-05' } });
+  } else if (request.method === 'tools/call') {
+    send({ jsonrpc: '2.0', id: request.id, error: { code: -32603, message: 'x'.repeat(5000) } });
   }
 });
 `,
