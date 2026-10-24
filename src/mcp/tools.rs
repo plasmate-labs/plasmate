@@ -812,6 +812,7 @@ fn truncate_text_to_chars(text: &mut String, max_chars: usize) {
 
 fn collect_extract_text(som: &Som) -> String {
     let mut text_parts: Vec<String> = Vec::new();
+    let mut body_parts: Vec<String> = Vec::new();
     let normalized_title = normalize_extract_text(&som.title);
 
     if !normalized_title.is_empty() {
@@ -819,22 +820,27 @@ fn collect_extract_text(som: &Som) -> String {
         text_parts.push(String::new());
     }
 
+    for region in &som.regions {
+        if let Some(label) = region.label.as_deref() {
+            push_extract_text_part(&mut body_parts, label);
+        }
+        for element in &region.elements {
+            extract_element_text(element, &mut body_parts);
+        }
+    }
+
     if let Some(description) = compiled_meta_description(som) {
         let normalized_description = normalize_extract_text(description);
-        if !normalized_description.is_empty() && normalized_title != normalized_description {
+        if !normalized_description.is_empty()
+            && normalized_title != normalized_description
+            && !body_parts.contains(&normalized_description)
+        {
             text_parts.push(normalized_description);
             text_parts.push(String::new());
         }
     }
 
-    for region in &som.regions {
-        if let Some(label) = region.label.as_deref() {
-            push_extract_text_part(&mut text_parts, label);
-        }
-        for element in &region.elements {
-            extract_element_text(element, &mut text_parts);
-        }
-    }
+    text_parts.extend(body_parts);
 
     text_parts.join("\n")
 }
@@ -10859,6 +10865,29 @@ mod tests {
             empty_text.contains("Docs") && empty_text.contains("Body copy"),
             "title and body must remain when description is whitespace: {empty_text:?}"
         );
+    }
+
+    #[test]
+    fn extract_text_does_not_repeat_meta_description_found_in_body() {
+        let html = r#"<!DOCTYPE html>
+<html><head>
+<title>Docs</title>
+<meta name="description" content="Authored summary for agents.">
+</head><body><main>
+<p>Authored summary for agents.</p>
+<p>Body copy</p>
+</main></body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/docs")
+            .expect("fixture HTML should compile");
+
+        let text = collect_extract_text(&som);
+
+        assert_eq!(
+            text.matches("Authored summary for agents.").count(),
+            1,
+            "meta description should not repeat body text: {text:?}"
+        );
+        assert!(text.contains("Body copy"), "body text must remain: {text:?}");
     }
 
     #[test]
