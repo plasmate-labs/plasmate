@@ -856,8 +856,9 @@ fn compiled_image_alt(element: &crate::som::types::Element) -> Option<&str> {
 
 fn push_extract_text_part(parts: &mut Vec<String>, text: impl Into<String>) {
     let text = text.into();
-    if !text.is_empty() && parts.last() != Some(&text) {
-        parts.push(text);
+    let text = text.trim();
+    if !text.is_empty() && parts.last().map(String::as_str) != Some(text) {
+        parts.push(text.to_string());
     }
 }
 
@@ -10965,6 +10966,24 @@ mod tests {
             Some("United States"),
             None,
         )]);
+
+        let mut parts = Vec::new();
+        extract_element_text(&select, &mut parts);
+
+        assert_eq!(parts, vec!["United States".to_string()]);
+    }
+
+    #[test]
+    fn test_extract_element_text_trims_adjacent_duplicate_values() {
+        let mut select = test_element(
+            "country",
+            ElementRole::Select,
+            Some(" United States "),
+            None,
+        );
+        select.attrs = Some(json!({
+            "options": [{"text": "United States"}]
+        }));
 
         let mut parts = Vec::new();
         extract_element_text(&select, &mut parts);
