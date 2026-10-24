@@ -101,16 +101,19 @@ def find_by_text(
                If False (default), case-insensitive substring match.
     """
     results: List[SomElement] = []
-    if not text.strip():
+    normalized_text = _normalize_search_text(text)
+    if not normalized_text:
         return results
     for el in get_all_elements(som):
         parts = _searchable_text_parts(el)
         if exact:
-            if text in parts:
+            if any(_normalize_search_text(part) == normalized_text for part in parts):
                 results.append(el)
         else:
-            text_lower = text.lower()
-            if any(text_lower in part.lower() for part in parts):
+            text_lower = normalized_text.lower()
+            if any(
+                text_lower in _normalize_search_text(part).lower() for part in parts
+            ):
                 results.append(el)
     return results
 
@@ -181,6 +184,11 @@ def _compact_string(value: object) -> Optional[str]:
 def _normalize_label_text(value: str) -> str:
     """Collapse label whitespace while preserving case for exact matches."""
     return " ".join(value.split())
+
+
+def _normalize_search_text(value: str) -> str:
+    """Collapse whitespace, including invisible separators, for text queries."""
+    return " ".join(value.replace("\u200b", " ").replace("\ufeff", " ").split())
 
 
 def _label_candidates(element: SomElement) -> List[str]:

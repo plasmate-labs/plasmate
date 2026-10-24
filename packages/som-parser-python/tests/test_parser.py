@@ -470,6 +470,14 @@ class TestFindByText:
         assert len(results) == 1
         assert results[0].id == "e_7"
 
+    def test_normalizes_whitespace_and_zero_width_separators(self, som: Som):
+        som.regions[1].elements.append(
+            SomElement(id="e_11", role=ElementRole.PARAGRAPH, text="hello\u200b   world")
+        )
+
+        assert [el.id for el in find_by_text(som, "hello world")] == ["e_11"]
+        assert [el.id for el in find_by_text(som, "hello world", exact=True)] == ["e_11"]
+
     def test_no_match(self, som: Som):
         results = find_by_text(som, "xyznonexistent")
         assert len(results) == 0
