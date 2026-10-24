@@ -10,6 +10,7 @@
 //! - click: Click an element by SOM element ID
 //! - close_page: Close a session
 
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
@@ -893,6 +894,16 @@ fn push_extract_text_part(parts: &mut Vec<String>, text: impl Into<String>) {
 
 /// Recursively extract text from a SOM element.
 fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<String>) {
+    let mut emitted_datetimes = HashSet::new();
+    extract_element_text_with_seen_datetimes(element, parts, &mut emitted_datetimes);
+}
+
+fn extract_element_text_with_seen_datetimes(
+    element: &crate::som::types::Element,
+    parts: &mut Vec<String>,
+    emitted_datetimes: &mut HashSet<String>,
+) {
+    let datetime = compiled_time_datetime(element).map(normalize_extract_text);
     let readable = element
         .text
         .as_deref()
@@ -910,10 +921,15 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
     let has_readable_text = readable.is_some();
     if let Some(readable) = readable {
         push_extract_text_part(parts, readable);
+        if datetime.as_deref() == Some(normalize_extract_text(readable).as_str()) {
+            emitted_datetimes.insert(normalize_extract_text(readable));
+        }
     }
     if has_readable_text {
-        if let Some(datetime) = compiled_time_datetime(element) {
-            push_extract_text_part(parts, datetime);
+        if let Some(datetime) = datetime.as_deref() {
+            if emitted_datetimes.insert(datetime.to_string()) {
+                push_extract_text_part(parts, datetime);
+            }
         }
     }
     if let Some(description) = compiled_element_description(element) {
@@ -1004,13 +1020,13 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
     // Recurse into children
     if let Some(children) = &element.children {
         for child in children {
-            extract_element_text(child, parts);
+            extract_element_text_with_seen_datetimes(child, parts, emitted_datetimes);
         }
     }
 
     if let Some(shadow) = &element.shadow {
         for child in &shadow.elements {
-            extract_element_text(child, parts);
+            extract_element_text_with_seen_datetimes(child, parts, emitted_datetimes);
         }
     }
 }
@@ -11182,6 +11198,27 @@ mod tests {
             text.matches("2026-09-27").count(),
             1,
             "nested time metadata should be emitted once: {text:?}"
+        );
+    }
+
+    #[test]
+    fn test_extract_element_text_deduplicates_nested_time_metadata() {
+        let mut parent = test_element("event", ElementRole::Paragraph, Some("Published"), None);
+        parent.attrs = Some(json!({"datetime": "2026-09-27"}));
+        let mut child = test_element("event-label", ElementRole::Paragraph, Some("Sunday"), None);
+        child.attrs = Some(json!({"datetime": "2026-09-27"}));
+        parent.children = Some(vec![child]);
+
+        let mut parts = Vec::new();
+        extract_element_text(&parent, &mut parts);
+
+        assert_eq!(
+            parts,
+            vec![
+                "Published".to_string(),
+                "2026-09-27".to_string(),
+                "Sunday".to_string(),
+            ]
         );
     }
 
