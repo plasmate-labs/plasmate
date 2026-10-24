@@ -522,7 +522,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
 pub fn extract_text_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_text".to_string(),
-        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes labeled region context, compiled accessible element descriptions, fieldset legends and section labels, the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary, compiled image alt text when the image has no other readable text, details disclosure summaries, and definition-list terms with their descriptions, so chart, photo, and reference pages still return authored context. Use this (instead of fetch_page) when you only need written content and do not need to interact with the page or reference specific elements. For large pages, set selector='main' or another targeted selector to omit irrelevant regions before applying max_chars; use selector='content' for article text or selector='heading'/'h1' through 'h6' for headings.".to_string(),
+        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes labeled region context, compiled accessible element descriptions, fieldset legends and section labels, the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary, compiled image alt text when the image has no other readable text, machine-readable time values when a time element has no visible text, details disclosure summaries, and definition-list terms with their descriptions, so chart, photo, and reference pages still return authored context. Use this (instead of fetch_page) when you only need written content and do not need to interact with the page or reference specific elements. For large pages, set selector='main' or another targeted selector to omit irrelevant regions before applying max_chars; use selector='content' for article text or selector='heading'/'h1' through 'h6' for headings.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -873,6 +873,16 @@ fn compiled_element_description(element: &crate::som::types::Element) -> Option<
         .filter(|description| !description.is_empty())
 }
 
+fn compiled_time_datetime(element: &crate::som::types::Element) -> Option<&str> {
+    element
+        .attrs
+        .as_ref()
+        .and_then(|attrs| attrs.get("datetime"))
+        .and_then(|value| value.as_str())
+        .map(str::trim)
+        .filter(|datetime| !datetime.is_empty())
+}
+
 fn push_extract_text_part(parts: &mut Vec<String>, text: impl Into<String>) {
     let text = text.into();
     let text = normalize_extract_text(&text);
@@ -895,7 +905,8 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
                 .map(str::trim)
                 .filter(|label| !label.is_empty())
         })
-        .or_else(|| compiled_image_alt(element));
+        .or_else(|| compiled_image_alt(element))
+        .or_else(|| compiled_time_datetime(element));
     let has_readable_text = readable.is_some();
     if let Some(readable) = readable {
         push_extract_text_part(parts, readable);
@@ -11129,6 +11140,24 @@ mod tests {
         extract_element_text(&input, &mut parts);
 
         assert_eq!(parts, vec!["Use at least 12 characters.".to_string()]);
+    }
+
+    #[test]
+    fn test_extract_element_text_includes_machine_readable_time_without_visible_text() {
+        let mut time = test_element("published", ElementRole::Paragraph, None, None);
+        time.attrs = Some(json!({"datetime": " 2026-09-27T18:00:00Z "}));
+
+        let mut parts = Vec::new();
+        extract_element_text(&time, &mut parts);
+
+        assert_eq!(parts, vec!["2026-09-27T18:00:00Z".to_string()]);
+
+        let som = crate::som::compiler::compile(
+            r#"<html><head><title>Schedule</title></head><body><main><time datetime="2026-09-27T18:00:00Z"></time></main></body></html>"#,
+            "https://example.test/schedule",
+        )
+        .expect("fixture HTML should compile");
+        assert!(collect_extract_text(&som).contains("2026-09-27T18:00:00Z"));
     }
 
     #[test]
