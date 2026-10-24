@@ -522,7 +522,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
 pub fn extract_text_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_text".to_string(),
-        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary. Includes compiled image alt text when the image has no other readable text, details disclosure summaries, and definition-list terms with their descriptions, so chart, photo, and reference pages still return authored context. Use this (instead of fetch_page) when you only need written content and do not need to interact with the page or reference specific elements. For large pages, set selector='main' or another targeted selector to omit irrelevant regions before applying max_chars; use selector='content' for article text or selector='heading'/'h1' through 'h6' for headings.".to_string(),
+        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes labeled region context, compiled accessible element descriptions, fieldset legends and section labels, the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary, compiled image alt text when the image has no other readable text, details disclosure summaries, and definition-list terms with their descriptions, so chart, photo, and reference pages still return authored context. Use this (instead of fetch_page) when you only need written content and do not need to interact with the page or reference specific elements. For large pages, set selector='main' or another targeted selector to omit irrelevant regions before applying max_chars; use selector='content' for article text or selector='heading'/'h1' through 'h6' for headings.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -827,6 +827,9 @@ fn collect_extract_text(som: &Som) -> String {
     }
 
     for region in &som.regions {
+        if let Some(label) = region.label.as_deref() {
+            push_extract_text_part(&mut text_parts, label);
+        }
         for element in &region.elements {
             extract_element_text(element, &mut text_parts);
         }
@@ -860,6 +863,16 @@ fn compiled_image_alt(element: &crate::som::types::Element) -> Option<&str> {
         .filter(|value| !value.is_empty())
 }
 
+fn compiled_element_description(element: &crate::som::types::Element) -> Option<&str> {
+    element
+        .attrs
+        .as_ref()
+        .and_then(|attrs| attrs.get("description"))
+        .and_then(|value| value.as_str())
+        .map(str::trim)
+        .filter(|description| !description.is_empty())
+}
+
 fn push_extract_text_part(parts: &mut Vec<String>, text: impl Into<String>) {
     let text = text.into();
     let text = normalize_extract_text(&text);
@@ -886,6 +899,9 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
     let has_readable_text = readable.is_some();
     if let Some(readable) = readable {
         push_extract_text_part(parts, readable);
+    }
+    if let Some(description) = compiled_element_description(element) {
+        push_extract_text_part(parts, description);
     }
 
     // Handle list items
@@ -932,6 +948,13 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
         if let Some(caption) = attrs.get("caption").and_then(|v| v.as_str()) {
             if !caption.is_empty() {
                 push_extract_text_part(parts, caption);
+            }
+        }
+        for context_key in ["legend", "section_label"] {
+            if let Some(context) = attrs.get(context_key).and_then(|v| v.as_str()) {
+                if !context.is_empty() {
+                    push_extract_text_part(parts, context);
+                }
             }
         }
         if !has_readable_text {
@@ -10803,6 +10826,22 @@ mod tests {
     }
 
     #[test]
+    fn extract_text_includes_labeled_region_context() {
+        let mut som = test_som();
+        som.regions[0].label = Some("  Account\n  settings  ".to_string());
+
+        let text = collect_extract_text(&som);
+
+        assert_eq!(text, "App\n\nAccount settings\nSave");
+        assert!(
+            extract_text_definition()
+                .description
+                .contains("labeled region context"),
+            "the tool description must advertise region-label extraction"
+        );
+    }
+
+    #[test]
     fn extract_text_includes_compiled_image_alt() {
         let html = r#"<!DOCTYPE html>
 <html><head>
@@ -11079,6 +11118,40 @@ mod tests {
         extract_element_text(&section, &mut parts);
 
         assert_eq!(parts, vec!["Article text".to_string(), "Ready".to_string()]);
+    }
+
+    #[test]
+    fn test_extract_element_text_includes_accessible_description() {
+        let mut input = test_element("password", ElementRole::TextInput, None, None);
+        input.attrs = Some(json!({"description": "Use at least 12 characters."}));
+
+        let mut parts = Vec::new();
+        extract_element_text(&input, &mut parts);
+
+        assert_eq!(parts, vec!["Use at least 12 characters.".to_string()]);
+    }
+
+    #[test]
+    fn extract_text_includes_fieldset_legends_and_section_labels() {
+        let html = r#"<html><head><title>Settings</title></head><body>
+<main>
+  <section aria-label="Profile settings"><fieldset><legend>Contact details</legend>
+    <label for="email">Email</label><input id="email" aria-label="Email address">
+  </fieldset></section>
+</main>
+</body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/settings")
+            .expect("fixture HTML should compile");
+
+        let text = collect_extract_text(&som);
+
+        assert!(text.contains("Profile settings"), "section label missing: {text:?}");
+        assert!(text.contains("Contact details"), "fieldset legend missing: {text:?}");
+        assert!(
+            extract_text_definition().description.contains("fieldset legends")
+                && extract_text_definition().description.contains("section labels"),
+            "tool description must advertise authored context extraction"
+        );
     }
 
     #[test]
