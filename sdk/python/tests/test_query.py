@@ -805,6 +805,18 @@ class TestFindByText:
         results = find_by_text(sample_som, "click me")
         assert len(results) == 1
 
+    def test_normalizes_whitespace_and_zero_width_separators(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(
+                id="e_split_text",
+                role=ElementRole.button,
+                text="Save\u2060\n changes",
+            )
+        )
+
+        results = find_by_text(sample_som, "save changes")
+        assert [element.id for element in results] == ["e_split_text"]
+
     def test_partial_match(self, sample_som: Som) -> None:
         results = find_by_text(sample_som, "Example")
         texts = [e.text for e in results]

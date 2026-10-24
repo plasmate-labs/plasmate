@@ -393,6 +393,46 @@ describe('findByLabel', () => {
     expect(findByLabel(FIXTURE, '')).toEqual([]);
     expect(findByLabel(FIXTURE, '  \n\t', { exact: true })).toEqual([]);
   });
+
+  it('ignores invisible zero-width separators', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_content',
+          role: 'content',
+          elements: [{ id: 'e_zero_width', role: 'button', label: 'Save\u200Bchanges' }],
+        },
+      ],
+    };
+
+    expect(findByLabel(som, 'save changes')).toEqual([
+      expect.objectContaining({ id: 'e_zero_width' }),
+    ]);
+    expect(findByLabel(som, 'Save changes', { exact: true })).toEqual([
+      expect.objectContaining({ id: 'e_zero_width' }),
+    ]);
+  });
+
+  it('ignores word joiners in labels and text', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_content',
+          role: 'content',
+          elements: [{ id: 'e_word_joiner', role: 'button', label: 'Save\u2060changes' }],
+        },
+      ],
+    };
+
+    expect(findByLabel(som, 'Save changes', { exact: true })).toEqual([
+      expect.objectContaining({ id: 'e_word_joiner' }),
+    ]);
+    expect(findByText(som, 'Save changes', { exact: true })).toEqual([
+      expect.objectContaining({ id: 'e_word_joiner' }),
+    ]);
+  });
 });
 
 describe('findByText', () => {
@@ -444,6 +484,23 @@ describe('findByText', () => {
 
     expect(findByText(som, 'zero width')).toEqual([
       expect.objectContaining({ id: 'e_zero_width' }),
+    ]);
+  });
+
+  it('trims invisible separators at text boundaries', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_content',
+          role: 'content',
+          elements: [{ id: 'e_boundary', role: 'paragraph', text: '\u200BSave changes\uFEFF' }],
+        },
+      ],
+    };
+
+    expect(findByText(som, 'Save changes', { exact: true })).toEqual([
+      expect.objectContaining({ id: 'e_boundary' }),
     ]);
   });
 

@@ -391,6 +391,21 @@ describe('findByText', () => {
     assert.deepEqual(findByText(som, 'hello world').map((el) => el.id), ['e3']);
   });
 
+  it('trims invisible separators at text boundaries', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_boundary',
+          role: 'main',
+          elements: [{ id: 'e_boundary', role: 'paragraph', text: '\u200BSave changes\uFEFF' }],
+        },
+      ],
+    };
+
+    assert.deepEqual(findByText(som, 'Save changes').map((el) => el.id), ['e_boundary']);
+  });
+
   it('matches label-only controls', () => {
     const results = findByText(fixture, 'email');
     assert.equal(results.length, 1);

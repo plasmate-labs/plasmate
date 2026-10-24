@@ -296,7 +296,7 @@ function compactString(value: unknown): string | undefined {
 }
 
 function normalizeLabelText(value: string): string {
-  return value.replace(/\s+/g, ' ').trim();
+  return value.replace(/[\s\u200B\u2060\uFEFF]+/g, ' ').trim();
 }
 
 function normalizeSelectorText(value: string): string {
