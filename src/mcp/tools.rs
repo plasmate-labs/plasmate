@@ -522,7 +522,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
 pub fn extract_text_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_text".to_string(),
-        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes labeled region context, compiled accessible element descriptions, the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary, compiled image alt text when the image has no other readable text, details disclosure summaries, and definition-list terms with their descriptions, so chart, photo, and reference pages still return authored context. Use this (instead of fetch_page) when you only need written content and do not need to interact with the page or reference specific elements. For large pages, set selector='main' or another targeted selector to omit irrelevant regions before applying max_chars; use selector='content' for article text or selector='heading'/'h1' through 'h6' for headings.".to_string(),
+        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes labeled region context, compiled accessible element descriptions, fieldset legends and section labels, the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary, compiled image alt text when the image has no other readable text, details disclosure summaries, and definition-list terms with their descriptions, so chart, photo, and reference pages still return authored context. Use this (instead of fetch_page) when you only need written content and do not need to interact with the page or reference specific elements. For large pages, set selector='main' or another targeted selector to omit irrelevant regions before applying max_chars; use selector='content' for article text or selector='heading'/'h1' through 'h6' for headings.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -948,6 +948,13 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
         if let Some(caption) = attrs.get("caption").and_then(|v| v.as_str()) {
             if !caption.is_empty() {
                 push_extract_text_part(parts, caption);
+            }
+        }
+        for context_key in ["legend", "section_label"] {
+            if let Some(context) = attrs.get(context_key).and_then(|v| v.as_str()) {
+                if !context.is_empty() {
+                    push_extract_text_part(parts, context);
+                }
             }
         }
         if !has_readable_text {
@@ -11122,6 +11129,29 @@ mod tests {
         extract_element_text(&input, &mut parts);
 
         assert_eq!(parts, vec!["Use at least 12 characters.".to_string()]);
+    }
+
+    #[test]
+    fn extract_text_includes_fieldset_legends_and_section_labels() {
+        let html = r#"<html><head><title>Settings</title></head><body>
+<main>
+  <section aria-label="Profile settings"><fieldset><legend>Contact details</legend>
+    <label for="email">Email</label><input id="email" aria-label="Email address">
+  </fieldset></section>
+</main>
+</body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/settings")
+            .expect("fixture HTML should compile");
+
+        let text = collect_extract_text(&som);
+
+        assert!(text.contains("Profile settings"), "section label missing: {text:?}");
+        assert!(text.contains("Contact details"), "fieldset legend missing: {text:?}");
+        assert!(
+            extract_text_definition().description.contains("fieldset legends")
+                && extract_text_definition().description.contains("section labels"),
+            "tool description must advertise authored context extraction"
+        );
     }
 
     #[test]
