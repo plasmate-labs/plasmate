@@ -811,15 +811,17 @@ fn truncate_text_to_chars(text: &mut String, max_chars: usize) {
 
 fn collect_extract_text(som: &Som) -> String {
     let mut text_parts: Vec<String> = Vec::new();
+    let normalized_title = normalize_extract_text(&som.title);
 
-    if !som.title.is_empty() {
-        text_parts.push(som.title.clone());
+    if !normalized_title.is_empty() {
+        text_parts.push(normalized_title.clone());
         text_parts.push(String::new());
     }
 
     if let Some(description) = compiled_meta_description(som) {
-        if som.title.trim() != description {
-            text_parts.push(description.to_string());
+        let normalized_description = normalize_extract_text(description);
+        if !normalized_description.is_empty() && normalized_title != normalized_description {
+            text_parts.push(normalized_description);
             text_parts.push(String::new());
         }
     }
@@ -831,6 +833,10 @@ fn collect_extract_text(som: &Som) -> String {
     }
 
     text_parts.join("\n")
+}
+
+fn normalize_extract_text(text: &str) -> String {
+    text.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 fn compiled_meta_description(som: &Som) -> Option<&str> {
@@ -856,7 +862,7 @@ fn compiled_image_alt(element: &crate::som::types::Element) -> Option<&str> {
 
 fn push_extract_text_part(parts: &mut Vec<String>, text: impl Into<String>) {
     let text = text.into();
-    let text = text.split_whitespace().collect::<Vec<_>>().join(" ");
+    let text = normalize_extract_text(&text);
     if !text.is_empty() && parts.last().map(String::as_str) != Some(text.as_str()) {
         parts.push(text);
     }
@@ -10768,6 +10774,31 @@ mod tests {
         assert!(
             empty_text.contains("Docs") && empty_text.contains("Body copy"),
             "title and body must remain when description is whitespace: {empty_text:?}"
+        );
+    }
+
+    #[test]
+    fn extract_text_normalizes_metadata_before_deduplicating() {
+        let mut som = test_som();
+        som.title = "  Authored   summary\nfor agents.  ".to_string();
+        som.structured_data = Some(StructuredData {
+            meta: std::collections::HashMap::from([(
+                "description".to_string(),
+                "Authored summary for agents.".to_string(),
+            )]),
+            ..Default::default()
+        });
+
+        let text = collect_extract_text(&som);
+
+        assert_eq!(
+            text.matches("Authored summary for agents.").count(),
+            1,
+            "whitespace-only metadata differences must not duplicate text: {text:?}"
+        );
+        assert!(
+            !text.contains("  ") && !text.contains("\n\n\n"),
+            "metadata whitespace should be normalized: {text:?}"
         );
     }
 
