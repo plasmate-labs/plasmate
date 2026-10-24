@@ -522,7 +522,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
 pub fn extract_text_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_text".to_string(),
-        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes labeled region context, compiled accessible element descriptions, fieldset legends and section labels, the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary, compiled image alt text when the image has no other readable text, machine-readable time values when a time element has no visible text, details disclosure summaries, and definition-list terms with their descriptions, so chart, photo, and reference pages still return authored context. Use this (instead of fetch_page) when you only need written content and do not need to interact with the page or reference specific elements. For large pages, set selector='main' or another targeted selector to omit irrelevant regions before applying max_chars; use selector='content' for article text or selector='heading'/'h1' through 'h6' for headings.".to_string(),
+        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes labeled region context, compiled accessible element descriptions, fieldset legends and section labels, the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary, compiled image alt text when the image has no other readable text, machine-readable time values alongside human-readable time labels, details disclosure summaries, and definition-list terms with their descriptions, so chart, photo, and reference pages still return authored context. Use this (instead of fetch_page) when you only need written content and do not need to interact with the page or reference specific elements. For large pages, set selector='main' or another targeted selector to omit irrelevant regions before applying max_chars; use selector='content' for article text or selector='heading'/'h1' through 'h6' for headings.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -910,6 +910,11 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
     let has_readable_text = readable.is_some();
     if let Some(readable) = readable {
         push_extract_text_part(parts, readable);
+    }
+    if has_readable_text {
+        if let Some(datetime) = compiled_time_datetime(element) {
+            push_extract_text_part(parts, datetime);
+        }
     }
     if let Some(description) = compiled_element_description(element) {
         push_extract_text_part(parts, description);
@@ -11158,6 +11163,21 @@ mod tests {
         )
         .expect("fixture HTML should compile");
         assert!(collect_extract_text(&som).contains("2026-09-27T18:00:00Z"));
+    }
+
+    #[test]
+    fn test_extract_element_text_keeps_machine_readable_time_with_visible_text() {
+        let som = crate::som::compiler::compile(
+            r#"<html><head><title>Schedule</title></head><body><main>
+                <p>Published <time datetime="2026-09-27">Sunday</time></p>
+            </main></body></html>"#,
+            "https://example.test/schedule",
+        )
+        .expect("fixture HTML should compile");
+
+        let text = collect_extract_text(&som);
+        assert!(text.contains("Published Sunday"));
+        assert!(text.contains("2026-09-27"));
     }
 
     #[test]
