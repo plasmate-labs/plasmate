@@ -103,7 +103,7 @@ export function findByText(
 }
 
 function normalizeSearchText(value: string): string {
-  return value.trim().replace(/\s+/g, ' ');
+  return value.trim().replace(/[\s\u200B\uFEFF]+/g, ' ');
 }
 
 /** Find elements by accessible label. */

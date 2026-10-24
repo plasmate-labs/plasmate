@@ -430,6 +430,23 @@ describe('findByText', () => {
     ]);
   });
 
+  it('ignores invisible zero-width separators', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_content',
+          role: 'content',
+          elements: [{ id: 'e_zero_width', role: 'paragraph', text: 'Zero\u200Bwidth text' }],
+        },
+      ],
+    };
+
+    expect(findByText(som, 'zero width')).toEqual([
+      expect.objectContaining({ id: 'e_zero_width' }),
+    ]);
+  });
+
   it('returns empty for no match', () => {
     expect(findByText(FIXTURE, 'nonexistent')).toHaveLength(0);
   });
