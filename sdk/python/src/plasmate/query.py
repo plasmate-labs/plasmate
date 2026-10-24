@@ -769,7 +769,7 @@ def find_action_target_by_label(
 def find_by_text(som: Som, text: str) -> List[SomElement]:
     """Find elements whose visible or compiled text metadata contains the substring."""
     results: List[SomElement] = []
-    lower = text.lower()
+    lower = _normalize_label_text(text).lower()
     if not lower:
         return results
     for region in som.regions:
@@ -851,7 +851,9 @@ def _normalize_role_alias(value: str) -> str:
 
 def _normalize_label_text(value: str) -> str:
     """Collapse label whitespace while preserving case for exact matches."""
-    return " ".join(value.split())
+    return " ".join(
+        value.replace("\u200b", " ").replace("\u2060", " ").replace("\ufeff", " ").split()
+    )
 
 
 def _label_candidates(element: SomElement) -> List[str]:
@@ -970,7 +972,7 @@ def _collect_by_text(element: SomElement, lower_text: str, results: List[SomElem
     if element.attrs and element.attrs.rows:
         for row in element.attrs.rows:
             parts.extend(cell for cell in row if cell)
-    if any(lower_text in part.lower() for part in parts):
+    if any(lower_text in _normalize_label_text(part).lower() for part in parts):
         results.append(element)
     if element.children:
         for child in element.children:
