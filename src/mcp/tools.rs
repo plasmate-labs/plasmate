@@ -10,6 +10,7 @@
 //! - click: Click an element by SOM element ID
 //! - close_page: Close a session
 
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
@@ -522,7 +523,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
 pub fn extract_text_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_text".to_string(),
-        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes labeled region context, compiled accessible element descriptions, fieldset legends and section labels, the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary, compiled image alt text when the image has no other readable text, details disclosure summaries, and definition-list terms with their descriptions, so chart, photo, and reference pages still return authored context. Use this (instead of fetch_page) when you only need written content and do not need to interact with the page or reference specific elements. For large pages, set selector='main' or another targeted selector to omit irrelevant regions before applying max_chars; use selector='content' for article text or selector='heading'/'h1' through 'h6' for headings.".to_string(),
+        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes labeled region context, compiled accessible element descriptions, fieldset legends and section labels, the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary, compiled image alt text when the image has no other readable text, machine-readable time values alongside human-readable time labels, details disclosure summaries, and definition-list terms with their descriptions, so chart, photo, and reference pages still return authored context. Use this (instead of fetch_page) when you only need written content and do not need to interact with the page or reference specific elements. For large pages, set selector='main' or another targeted selector to omit irrelevant regions before applying max_chars; use selector='content' for article text or selector='heading'/'h1' through 'h6' for headings.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -873,6 +874,16 @@ fn compiled_element_description(element: &crate::som::types::Element) -> Option<
         .filter(|description| !description.is_empty())
 }
 
+fn compiled_time_datetime(element: &crate::som::types::Element) -> Option<&str> {
+    element
+        .attrs
+        .as_ref()
+        .and_then(|attrs| attrs.get("datetime"))
+        .and_then(|value| value.as_str())
+        .map(str::trim)
+        .filter(|datetime| !datetime.is_empty())
+}
+
 fn push_extract_text_part(parts: &mut Vec<String>, text: impl Into<String>) {
     let text = text.into();
     let text = normalize_extract_text(&text);
@@ -883,6 +894,16 @@ fn push_extract_text_part(parts: &mut Vec<String>, text: impl Into<String>) {
 
 /// Recursively extract text from a SOM element.
 fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<String>) {
+    let mut emitted_datetimes = HashSet::new();
+    extract_element_text_with_seen_datetimes(element, parts, &mut emitted_datetimes);
+}
+
+fn extract_element_text_with_seen_datetimes(
+    element: &crate::som::types::Element,
+    parts: &mut Vec<String>,
+    emitted_datetimes: &mut HashSet<String>,
+) {
+    let datetime = compiled_time_datetime(element).map(normalize_extract_text);
     let readable = element
         .text
         .as_deref()
@@ -895,10 +916,21 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
                 .map(str::trim)
                 .filter(|label| !label.is_empty())
         })
-        .or_else(|| compiled_image_alt(element));
+        .or_else(|| compiled_image_alt(element))
+        .or_else(|| compiled_time_datetime(element));
     let has_readable_text = readable.is_some();
     if let Some(readable) = readable {
         push_extract_text_part(parts, readable);
+        if datetime.as_deref() == Some(normalize_extract_text(readable).as_str()) {
+            emitted_datetimes.insert(normalize_extract_text(readable));
+        }
+    }
+    if has_readable_text {
+        if let Some(datetime) = datetime.as_deref() {
+            if emitted_datetimes.insert(datetime.to_string()) {
+                push_extract_text_part(parts, datetime);
+            }
+        }
     }
     if let Some(description) = compiled_element_description(element) {
         push_extract_text_part(parts, description);
@@ -988,13 +1020,13 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
     // Recurse into children
     if let Some(children) = &element.children {
         for child in children {
-            extract_element_text(child, parts);
+            extract_element_text_with_seen_datetimes(child, parts, emitted_datetimes);
         }
     }
 
     if let Some(shadow) = &element.shadow {
         for child in &shadow.elements {
-            extract_element_text(child, parts);
+            extract_element_text_with_seen_datetimes(child, parts, emitted_datetimes);
         }
     }
 }
@@ -11129,6 +11161,65 @@ mod tests {
         extract_element_text(&input, &mut parts);
 
         assert_eq!(parts, vec!["Use at least 12 characters.".to_string()]);
+    }
+
+    #[test]
+    fn test_extract_element_text_includes_machine_readable_time_without_visible_text() {
+        let mut time = test_element("published", ElementRole::Paragraph, None, None);
+        time.attrs = Some(json!({"datetime": " 2026-09-27T18:00:00Z "}));
+
+        let mut parts = Vec::new();
+        extract_element_text(&time, &mut parts);
+
+        assert_eq!(parts, vec!["2026-09-27T18:00:00Z".to_string()]);
+
+        let som = crate::som::compiler::compile(
+            r#"<html><head><title>Schedule</title></head><body><main><time datetime="2026-09-27T18:00:00Z"></time></main></body></html>"#,
+            "https://example.test/schedule",
+        )
+        .expect("fixture HTML should compile");
+        assert!(collect_extract_text(&som).contains("2026-09-27T18:00:00Z"));
+    }
+
+    #[test]
+    fn test_extract_element_text_keeps_machine_readable_time_with_visible_text() {
+        let som = crate::som::compiler::compile(
+            r#"<html><head><title>Schedule</title></head><body><main>
+                <p>Published <time datetime="2026-09-27">Sunday</time></p>
+            </main></body></html>"#,
+            "https://example.test/schedule",
+        )
+        .expect("fixture HTML should compile");
+
+        let text = collect_extract_text(&som);
+        assert!(text.contains("Published Sunday"));
+        assert!(text.contains("2026-09-27"));
+        assert_eq!(
+            text.matches("2026-09-27").count(),
+            1,
+            "nested time metadata should be emitted once: {text:?}"
+        );
+    }
+
+    #[test]
+    fn test_extract_element_text_deduplicates_nested_time_metadata() {
+        let mut parent = test_element("event", ElementRole::Paragraph, Some("Published"), None);
+        parent.attrs = Some(json!({"datetime": "2026-09-27"}));
+        let mut child = test_element("event-label", ElementRole::Paragraph, Some("Sunday"), None);
+        child.attrs = Some(json!({"datetime": "2026-09-27"}));
+        parent.children = Some(vec![child]);
+
+        let mut parts = Vec::new();
+        extract_element_text(&parent, &mut parts);
+
+        assert_eq!(
+            parts,
+            vec![
+                "Published".to_string(),
+                "2026-09-27".to_string(),
+                "Sunday".to_string(),
+            ]
+        );
     }
 
     #[test]
