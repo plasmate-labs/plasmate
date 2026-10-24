@@ -421,6 +421,15 @@ describe('findByText', () => {
     expect(findByText(FIXTURE, 'home', { exact: true })).toHaveLength(0);
   });
 
+  it('normalizes whitespace for substring and exact matches', () => {
+    expect(findByText(FIXTURE, 'this   is')).toEqual([
+      expect.objectContaining({ id: 'e_4' }),
+    ]);
+    expect(findByText(FIXTURE, '  This \n is a test page.  ', { exact: true })).toEqual([
+      expect.objectContaining({ id: 'e_4' }),
+    ]);
+  });
+
   it('returns empty for no match', () => {
     expect(findByText(FIXTURE, 'nonexistent')).toHaveLength(0);
   });

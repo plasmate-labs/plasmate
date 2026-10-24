@@ -89,14 +89,21 @@ export function findByText(
   options?: { exact?: boolean },
 ): SomElement[] {
   const all = getAllElements(som);
-  if (!text.trim()) return [];
+  const normalizedQuery = normalizeSearchText(text);
+  if (!normalizedQuery) return [];
   if (options?.exact) {
-    return all.filter((el) => searchableTextParts(el).includes(text));
+    return all.filter((el) =>
+      searchableTextParts(el).some((part) => normalizeSearchText(part) === normalizedQuery),
+    );
   }
-  const lower = text.toLowerCase();
+  const lower = normalizedQuery.toLowerCase();
   return all.filter((el) =>
-    searchableTextParts(el).some((part) => part.toLowerCase().includes(lower)),
+    searchableTextParts(el).some((part) => normalizeSearchText(part).toLowerCase().includes(lower)),
   );
+}
+
+function normalizeSearchText(value: string): string {
+  return value.trim().replace(/\s+/g, ' ');
 }
 
 /** Find elements by accessible label. */
