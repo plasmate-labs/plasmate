@@ -183,12 +183,16 @@ def _compact_string(value: object) -> Optional[str]:
 
 def _normalize_label_text(value: str) -> str:
     """Collapse label whitespace while preserving case for exact matches."""
-    return " ".join(value.replace("\u200b", " ").replace("\ufeff", " ").split())
+    return " ".join(
+        value.replace("\u200b", " ").replace("\u2060", " ").replace("\ufeff", " ").split()
+    )
 
 
 def _normalize_search_text(value: str) -> str:
     """Collapse whitespace, including invisible separators, for text queries."""
-    return " ".join(value.replace("\u200b", " ").replace("\ufeff", " ").split())
+    return " ".join(
+        value.replace("\u200b", " ").replace("\u2060", " ").replace("\ufeff", " ").split()
+    )
 
 
 def _label_candidates(element: SomElement) -> List[str]:

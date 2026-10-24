@@ -103,7 +103,7 @@ export function findByText(
 }
 
 function normalizeSearchText(value: string): string {
-  return value.trim().replace(/[\s\u200B\uFEFF]+/g, ' ');
+  return value.trim().replace(/[\s\u200B\u2060\uFEFF]+/g, ' ');
 }
 
 /** Find elements by accessible label. */
@@ -129,7 +129,7 @@ export function findByLabel(
 }
 
 function normalizeLabelText(value: string): string {
-  return value.trim().replace(/[\s\u200B\uFEFF]+/g, ' ');
+  return value.trim().replace(/[\s\u200B\u2060\uFEFF]+/g, ' ');
 }
 
 function labelCandidates(el: SomElement): string[] {

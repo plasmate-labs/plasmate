@@ -413,6 +413,26 @@ describe('findByLabel', () => {
       expect.objectContaining({ id: 'e_zero_width' }),
     ]);
   });
+
+  it('ignores word joiners in labels and text', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_content',
+          role: 'content',
+          elements: [{ id: 'e_word_joiner', role: 'button', label: 'Save\u2060changes' }],
+        },
+      ],
+    };
+
+    expect(findByLabel(som, 'Save changes', { exact: true })).toEqual([
+      expect.objectContaining({ id: 'e_word_joiner' }),
+    ]);
+    expect(findByText(som, 'Save changes', { exact: true })).toEqual([
+      expect.objectContaining({ id: 'e_word_joiner' }),
+    ]);
+  });
 });
 
 describe('findByText', () => {

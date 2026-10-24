@@ -460,6 +460,22 @@ class TestFindByLabel:
             "e_zero_width"
         ]
 
+    def test_ignores_word_joiners_in_labels_and_text(self, som: Som):
+        som.regions[1].elements.append(
+            SomElement(
+                id="e_word_joiner",
+                role=ElementRole.BUTTON,
+                label="Save\u2060changes",
+            )
+        )
+
+        assert [el.id for el in find_by_label(som, "Save changes", exact=True)] == [
+            "e_word_joiner"
+        ]
+        assert [el.id for el in find_by_text(som, "Save changes", exact=True)] == [
+            "e_word_joiner"
+        ]
+
 
 class TestFindByText:
     def test_substring(self, som: Som):
