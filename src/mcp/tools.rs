@@ -854,6 +854,13 @@ fn compiled_image_alt(element: &crate::som::types::Element) -> Option<&str> {
         .filter(|value| !value.is_empty())
 }
 
+fn push_extract_text_part(parts: &mut Vec<String>, text: impl Into<String>) {
+    let text = text.into();
+    if !text.is_empty() && parts.last() != Some(&text) {
+        parts.push(text);
+    }
+}
+
 /// Recursively extract text from a SOM element.
 fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<String>) {
     let readable = element
@@ -871,7 +878,7 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
         .or_else(|| compiled_image_alt(element));
     let has_readable_text = readable.is_some();
     if let Some(readable) = readable {
-        parts.push(readable.to_string());
+        push_extract_text_part(parts, readable);
     }
 
     // Handle list items
@@ -880,7 +887,7 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
             if let Some(items_arr) = items.as_array() {
                 for item in items_arr {
                     if let Some(text) = item.get("text").and_then(|v| v.as_str()) {
-                        parts.push(format!("• {}", text));
+                        push_extract_text_part(parts, format!("• {}", text));
                     } else {
                         let term = item.get("term").and_then(|v| v.as_str()).unwrap_or("");
                         let description = item
@@ -889,11 +896,16 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
                             .unwrap_or("");
                         match (term, description) {
                             (term, description) if !term.is_empty() && !description.is_empty() => {
-                                parts.push(format!("{}: {}", term, description));
+                                push_extract_text_part(
+                                    parts,
+                                    format!("{}: {}", term, description),
+                                );
                             }
-                            (term, "") if !term.is_empty() => parts.push(term.to_string()),
+                            (term, "") if !term.is_empty() => {
+                                push_extract_text_part(parts, term)
+                            }
                             ("", description) if !description.is_empty() => {
-                                parts.push(description.to_string());
+                                push_extract_text_part(parts, description);
                             }
                             _ => {}
                         }
@@ -905,14 +917,14 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
             for option in options {
                 if let Some(text) = option.get("text").and_then(|v| v.as_str()) {
                     if !text.is_empty() {
-                        parts.push(text.to_string());
+                        push_extract_text_part(parts, text);
                     }
                 }
             }
         }
         if let Some(caption) = attrs.get("caption").and_then(|v| v.as_str()) {
             if !caption.is_empty() {
-                parts.push(caption.to_string());
+                push_extract_text_part(parts, caption);
             }
         }
         if !has_readable_text {
@@ -922,13 +934,13 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
                 .map(str::trim)
                 .filter(|summary| !summary.is_empty())
             {
-                parts.push(summary.to_string());
+                push_extract_text_part(parts, summary);
             }
         }
         if let Some(headers) = attrs.get("headers").and_then(|v| v.as_array()) {
             let header_text: Vec<&str> = headers.iter().filter_map(|h| h.as_str()).collect();
             if !header_text.is_empty() {
-                parts.push(header_text.join(" | "));
+                push_extract_text_part(parts, header_text.join(" | "));
             }
         }
         if let Some(rows) = attrs.get("rows").and_then(|v| v.as_array()) {
@@ -936,7 +948,7 @@ fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<St
                 if let Some(cells) = row.as_array() {
                     let cell_text: Vec<&str> = cells.iter().filter_map(|c| c.as_str()).collect();
                     if !cell_text.is_empty() {
-                        parts.push(cell_text.join(" | "));
+                        push_extract_text_part(parts, cell_text.join(" | "));
                     }
                 }
             }
@@ -10934,6 +10946,30 @@ mod tests {
             parts,
             vec!["United States".to_string(), "Canada".to_string()]
         );
+    }
+
+    #[test]
+    fn test_extract_element_text_avoids_adjacent_duplicate_values() {
+        let mut select = test_element(
+            "country",
+            ElementRole::Select,
+            Some("United States"),
+            None,
+        );
+        select.attrs = Some(json!({
+            "options": [{"text": "United States"}]
+        }));
+        select.children = Some(vec![test_element(
+            "country-option",
+            ElementRole::Paragraph,
+            Some("United States"),
+            None,
+        )]);
+
+        let mut parts = Vec::new();
+        extract_element_text(&select, &mut parts);
+
+        assert_eq!(parts, vec!["United States".to_string()]);
     }
 
     #[test]
