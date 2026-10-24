@@ -812,6 +812,7 @@ fn truncate_text_to_chars(text: &mut String, max_chars: usize) {
 
 fn collect_extract_text(som: &Som) -> String {
     let mut text_parts: Vec<String> = Vec::new();
+    let mut body_parts: Vec<String> = Vec::new();
     let normalized_title = normalize_extract_text(&som.title);
 
     if !normalized_title.is_empty() {
@@ -819,22 +820,28 @@ fn collect_extract_text(som: &Som) -> String {
         text_parts.push(String::new());
     }
 
+    for region in &som.regions {
+        if let Some(label) = region.label.as_deref() {
+            push_extract_text_part(&mut body_parts, label);
+        }
+        for element in &region.elements {
+            extract_element_text(element, &mut body_parts);
+        }
+    }
+    let normalized_body = body_parts.join(" ");
+
     if let Some(description) = compiled_meta_description(som) {
         let normalized_description = normalize_extract_text(description);
-        if !normalized_description.is_empty() && normalized_title != normalized_description {
+        if !normalized_description.is_empty()
+            && normalized_title != normalized_description
+            && !normalized_body.contains(&normalized_description)
+        {
             text_parts.push(normalized_description);
             text_parts.push(String::new());
         }
     }
 
-    for region in &som.regions {
-        if let Some(label) = region.label.as_deref() {
-            push_extract_text_part(&mut text_parts, label);
-        }
-        for element in &region.elements {
-            extract_element_text(element, &mut text_parts);
-        }
-    }
+    text_parts.extend(body_parts);
 
     text_parts.join("\n")
 }
@@ -5366,7 +5373,7 @@ pub fn type_text_definition() -> ToolDefinition {
 pub fn select_option_definition() -> ToolDefinition {
     ToolDefinition {
         name: "select_option".to_string(),
-        description: "Select an option in a <select> dropdown or a native radio group by element ID and option value or visible label, including a compiled option label attribute or whitespace-normalized option text. Returns the updated page SOM. On a multiple select, the matched option is added without clearing other selected options. Use this when a compiled element advertises action:select, including radios.".to_string(),
+        description: "Select an option in a <select> dropdown, ARIA listbox option, or native radio group by element ID and option value or visible label, including a compiled option label attribute or whitespace-normalized option text. Returns the updated page SOM. On a multiple select, the matched option is added without clearing other selected options. Use this when a compiled element advertises action:select, including ARIA options and radios.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -5376,7 +5383,7 @@ pub fn select_option_definition() -> ToolDefinition {
                 },
                 "element_id": {
                     "type": "string",
-                    "description": "Element ID of the <select> or native radio from SOM (e.g. 'e5')"
+                    "description": "Element ID of the <select>, ARIA option, or native radio from SOM (e.g. 'e5')"
                 },
                 "value": {
                     "type": "string",
@@ -5884,10 +5891,28 @@ pub async fn handle_select_option(
                     el.dispatchEvent(radioChange);
                     return JSON.stringify({{ selected: true, value: el.value }});
                 }}
-                return JSON.stringify({{ error: 'Element is not a <select>' }});
+                if (el.getAttribute('role') === 'option') {{
+                    var optionText = (el.textContent || '').replace(/\s+/g, ' ').trim();
+                    if (optionText !== '{}') {{
+                        return JSON.stringify({{ error: 'Option not found: {}' }});
+                    }}
+                    var optionContainer = el.parentElement;
+                    if (optionContainer) {{
+                        var options = optionContainer.querySelectorAll('[role="option"]');
+                        for (var k = 0; k < options.length; k++) {{
+                            options[k].setAttribute('aria-selected', options[k] === el ? 'true' : 'false');
+                        }}
+                    }}
+                    el.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                    el.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                    return JSON.stringify({{ selected: true, value: optionText }});
+                }}
+                return JSON.stringify({{ error: 'Element is not a <select>, ARIA option, or radio' }});
             }})()
             "#,
         element_id,
+        escaped_value,
+        escaped_value,
         escaped_value,
         escaped_value,
         escaped_value,
@@ -7108,6 +7133,17 @@ mod tests {
         );
         assert!(budget_description.contains("selector='main'"));
         assert!(budget_description.contains("preserving structured regions"));
+    }
+
+    #[test]
+    fn select_option_schema_mentions_aria_options() {
+        let definition = select_option_definition();
+
+        assert!(definition.description.contains("ARIA listbox option"));
+        assert!(definition.description.contains("ARIA options"));
+        assert!(definition.input_schema["properties"]["element_id"]["description"]
+            .as_str()
+            .is_some_and(|description| description.contains("ARIA option")));
     }
 
     #[test]
@@ -10829,6 +10865,52 @@ mod tests {
         assert!(
             empty_text.contains("Docs") && empty_text.contains("Body copy"),
             "title and body must remain when description is whitespace: {empty_text:?}"
+        );
+    }
+
+    #[test]
+    fn extract_text_does_not_repeat_meta_description_found_in_body() {
+        let html = r#"<!DOCTYPE html>
+<html><head>
+<title>Docs</title>
+<meta name="description" content="Authored summary for agents.">
+</head><body><main>
+<p>Authored summary for agents.</p>
+<p>Body copy</p>
+</main></body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/docs")
+            .expect("fixture HTML should compile");
+
+        let text = collect_extract_text(&som);
+
+        assert_eq!(
+            text.matches("Authored summary for agents.").count(),
+            1,
+            "meta description should not repeat body text: {text:?}"
+        );
+        assert!(text.contains("Body copy"), "body text must remain: {text:?}");
+    }
+
+    #[test]
+    fn extract_text_does_not_repeat_meta_description_split_across_body_elements() {
+        let html = r#"<!DOCTYPE html>
+<html><head>
+<title>Docs</title>
+<meta name="description" content="Authored summary for agents.">
+</head><body><main>
+<p>Authored summary</p>
+<p>for agents.</p>
+<p>Body copy</p>
+</main></body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/docs")
+            .expect("fixture HTML should compile");
+
+        let text = collect_extract_text(&som);
+
+        assert_eq!(
+            text,
+            "Docs\n\nAuthored summary\nfor agents.\nBody copy",
+            "split body text should remain without an added meta description: {text:?}"
         );
     }
 

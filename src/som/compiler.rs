@@ -1460,7 +1460,24 @@ fn node_to_element(
                 inherited_disabled,
                 inherited_inert,
             );
-            let children = build_children(node, origin, id_tracker, dom_path, &role);
+            let children = build_children(node, origin, id_tracker, dom_path, &role).or_else(|| {
+                if role == ElementRole::Select
+                    && (has_aria_role_token(&attr_pairs, "listbox")
+                        || has_aria_role_token(&attr_pairs, "combobox"))
+                {
+                    Some(extract_aria_option_children(
+                        node,
+                        origin,
+                        id_tracker,
+                        dom_path,
+                        ctx,
+                        inherited_disabled,
+                        inherited_inert,
+                    ))
+                } else {
+                    None
+                }
+            });
             let hints = heuristics::infer_class_hints(&attr_pairs);
             let html_id = extract_html_id(&attr_pairs);
             let shadow = extract_shadow_dom(
@@ -1938,6 +1955,9 @@ fn actions_for_role(
         if input_type.eq_ignore_ascii_case("file") {
             return None;
         }
+    }
+    if *role == ElementRole::Button && has_aria_role_token(attrs, "option") {
+        return Some(vec!["select".into()]);
     }
     let actions = role.default_actions();
     if actions.is_empty() {
@@ -2724,6 +2744,44 @@ fn normalize_preformatted_text(text: &str, max_chars: usize) -> String {
     }
     let truncated: String = trimmed.chars().take(max_chars.saturating_sub(3)).collect();
     format!("{truncated}...")
+}
+
+#[allow(clippy::too_many_arguments)]
+fn extract_aria_option_children(
+    node: &Handle,
+    origin: &str,
+    id_tracker: &mut ElementIdTracker,
+    dom_path: &str,
+    ctx: &CompileContext,
+    inherited_disabled: bool,
+    inherited_inert: bool,
+) -> Vec<Element> {
+    node.children
+        .borrow()
+        .iter()
+        .enumerate()
+        .filter_map(|(index, child)| {
+            if heuristics::should_strip(child) {
+                return None;
+            }
+            let child_path = format!("{dom_path}/{index}");
+            let NodeData::Element { .. } = &child.data else {
+                return None;
+            };
+            if !has_aria_role_token(&get_attr_pairs(child), "option") {
+                return None;
+            }
+            interactive_node_to_element(
+                child,
+                origin,
+                id_tracker,
+                &child_path,
+                ctx,
+                inherited_disabled,
+                inherited_inert,
+            )
+        })
+        .collect()
 }
 
 fn build_children(
@@ -10104,6 +10162,47 @@ plasmate fetch https://example.test</code></pre>
                 .iter()
                 .all(|element| element.html_id.as_deref() != Some("share")),
             "selector=list should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn aria_option_advertises_select_action() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Plans</title></head>
+<body><main>
+  <div role="listbox" aria-label="Plans">
+    <div id="starter" role="option" aria-selected="true">Starter</div>
+    <div id="pro" role="option">Pro</div>
+  </div>
+</main></body></html>"#;
+
+        let som = compile(html, "https://example.test/plans").unwrap();
+        fn find_by_html_id<'a>(elements: &'a [Element], html_id: &str) -> Option<&'a Element> {
+            elements.iter().find_map(|element| {
+                if element.html_id.as_deref() == Some(html_id) {
+                    return Some(element);
+                }
+                element
+                    .children
+                    .as_deref()
+                    .and_then(|children| find_by_html_id(children, html_id))
+            })
+        }
+        let option = som
+            .regions
+            .iter()
+            .find_map(|region| find_by_html_id(&region.elements, "starter"))
+            .expect("ARIA option should compile");
+
+        assert_eq!(option.role, ElementRole::Button);
+        assert_eq!(option.actions.as_deref(), Some(["select".to_string()].as_slice()));
+        assert_eq!(
+            option
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("aria"))
+                .and_then(|aria| aria.get("selected")),
+            Some(&json!(true))
         );
     }
 
