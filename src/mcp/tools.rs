@@ -828,12 +828,13 @@ fn collect_extract_text(som: &Som) -> String {
             extract_element_text(element, &mut body_parts);
         }
     }
+    let normalized_body = body_parts.join(" ");
 
     if let Some(description) = compiled_meta_description(som) {
         let normalized_description = normalize_extract_text(description);
         if !normalized_description.is_empty()
             && normalized_title != normalized_description
-            && !body_parts.contains(&normalized_description)
+            && !normalized_body.contains(&normalized_description)
         {
             text_parts.push(normalized_description);
             text_parts.push(String::new());
@@ -10888,6 +10889,29 @@ mod tests {
             "meta description should not repeat body text: {text:?}"
         );
         assert!(text.contains("Body copy"), "body text must remain: {text:?}");
+    }
+
+    #[test]
+    fn extract_text_does_not_repeat_meta_description_split_across_body_elements() {
+        let html = r#"<!DOCTYPE html>
+<html><head>
+<title>Docs</title>
+<meta name="description" content="Authored summary for agents.">
+</head><body><main>
+<p>Authored summary</p>
+<p>for agents.</p>
+<p>Body copy</p>
+</main></body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/docs")
+            .expect("fixture HTML should compile");
+
+        let text = collect_extract_text(&som);
+
+        assert_eq!(
+            text,
+            "Docs\n\nAuthored summary\nfor agents.\nBody copy",
+            "split body text should remain without an added meta description: {text:?}"
+        );
     }
 
     #[test]
