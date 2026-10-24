@@ -856,9 +856,9 @@ fn compiled_image_alt(element: &crate::som::types::Element) -> Option<&str> {
 
 fn push_extract_text_part(parts: &mut Vec<String>, text: impl Into<String>) {
     let text = text.into();
-    let text = text.trim();
-    if !text.is_empty() && parts.last().map(String::as_str) != Some(text) {
-        parts.push(text.to_string());
+    let text = text.split_whitespace().collect::<Vec<_>>().join(" ");
+    if !text.is_empty() && parts.last().map(String::as_str) != Some(text.as_str()) {
+        parts.push(text);
     }
 }
 
@@ -10989,6 +10989,21 @@ mod tests {
         extract_element_text(&select, &mut parts);
 
         assert_eq!(parts, vec!["United States".to_string()]);
+    }
+
+    #[test]
+    fn test_extract_element_text_collapses_internal_whitespace() {
+        let section = test_element(
+            "content",
+            ElementRole::Section,
+            Some("  First line\n\t second line  "),
+            None,
+        );
+
+        let mut parts = Vec::new();
+        extract_element_text(&section, &mut parts);
+
+        assert_eq!(parts, vec!["First line second line".to_string()]);
     }
 
     #[test]
