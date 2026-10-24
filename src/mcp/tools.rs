@@ -5366,7 +5366,7 @@ pub fn type_text_definition() -> ToolDefinition {
 pub fn select_option_definition() -> ToolDefinition {
     ToolDefinition {
         name: "select_option".to_string(),
-        description: "Select an option in a <select> dropdown or a native radio group by element ID and option value or visible label, including a compiled option label attribute or whitespace-normalized option text. Returns the updated page SOM. On a multiple select, the matched option is added without clearing other selected options. Use this when a compiled element advertises action:select, including radios.".to_string(),
+        description: "Select an option in a <select> dropdown, ARIA listbox option, or native radio group by element ID and option value or visible label, including a compiled option label attribute or whitespace-normalized option text. Returns the updated page SOM. On a multiple select, the matched option is added without clearing other selected options. Use this when a compiled element advertises action:select, including ARIA options and radios.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -5376,7 +5376,7 @@ pub fn select_option_definition() -> ToolDefinition {
                 },
                 "element_id": {
                     "type": "string",
-                    "description": "Element ID of the <select> or native radio from SOM (e.g. 'e5')"
+                    "description": "Element ID of the <select>, ARIA option, or native radio from SOM (e.g. 'e5')"
                 },
                 "value": {
                     "type": "string",
@@ -5884,10 +5884,28 @@ pub async fn handle_select_option(
                     el.dispatchEvent(radioChange);
                     return JSON.stringify({{ selected: true, value: el.value }});
                 }}
-                return JSON.stringify({{ error: 'Element is not a <select>' }});
+                if (el.getAttribute('role') === 'option') {{
+                    var optionText = (el.textContent || '').replace(/\s+/g, ' ').trim();
+                    if (optionText !== '{}') {{
+                        return JSON.stringify({{ error: 'Option not found: {}' }});
+                    }}
+                    var optionContainer = el.parentElement;
+                    if (optionContainer) {{
+                        var options = optionContainer.querySelectorAll('[role="option"]');
+                        for (var k = 0; k < options.length; k++) {{
+                            options[k].setAttribute('aria-selected', options[k] === el ? 'true' : 'false');
+                        }}
+                    }}
+                    el.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                    el.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                    return JSON.stringify({{ selected: true, value: optionText }});
+                }}
+                return JSON.stringify({{ error: 'Element is not a <select>, ARIA option, or radio' }});
             }})()
             "#,
         element_id,
+        escaped_value,
+        escaped_value,
         escaped_value,
         escaped_value,
         escaped_value,
@@ -7108,6 +7126,17 @@ mod tests {
         );
         assert!(budget_description.contains("selector='main'"));
         assert!(budget_description.contains("preserving structured regions"));
+    }
+
+    #[test]
+    fn select_option_schema_mentions_aria_options() {
+        let definition = select_option_definition();
+
+        assert!(definition.description.contains("ARIA listbox option"));
+        assert!(definition.description.contains("ARIA options"));
+        assert!(definition.input_schema["properties"]["element_id"]["description"]
+            .as_str()
+            .is_some_and(|description| description.contains("ARIA option")));
     }
 
     #[test]
