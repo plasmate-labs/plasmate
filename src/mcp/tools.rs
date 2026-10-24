@@ -522,7 +522,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
 pub fn extract_text_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_text".to_string(),
-        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary. Includes compiled image alt text when the image has no other readable text, details disclosure summaries, and definition-list terms with their descriptions, so chart, photo, and reference pages still return authored context. Use this (instead of fetch_page) when you only need written content and do not need to interact with the page or reference specific elements. For large pages, set selector='main' or another targeted selector to omit irrelevant regions before applying max_chars; use selector='content' for article text or selector='heading'/'h1' through 'h6' for headings.".to_string(),
+        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes labeled region context, the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary, compiled image alt text when the image has no other readable text, details disclosure summaries, and definition-list terms with their descriptions, so chart, photo, and reference pages still return authored context. Use this (instead of fetch_page) when you only need written content and do not need to interact with the page or reference specific elements. For large pages, set selector='main' or another targeted selector to omit irrelevant regions before applying max_chars; use selector='content' for article text or selector='heading'/'h1' through 'h6' for headings.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -827,6 +827,9 @@ fn collect_extract_text(som: &Som) -> String {
     }
 
     for region in &som.regions {
+        if let Some(label) = region.label.as_deref() {
+            push_extract_text_part(&mut text_parts, label);
+        }
         for element in &region.elements {
             extract_element_text(element, &mut text_parts);
         }
@@ -10799,6 +10802,22 @@ mod tests {
         assert!(
             !text.contains("  ") && !text.contains("\n\n\n"),
             "metadata whitespace should be normalized: {text:?}"
+        );
+    }
+
+    #[test]
+    fn extract_text_includes_labeled_region_context() {
+        let mut som = test_som();
+        som.regions[0].label = Some("  Account\n  settings  ".to_string());
+
+        let text = collect_extract_text(&som);
+
+        assert_eq!(text, "App\n\nAccount settings\nSave");
+        assert!(
+            extract_text_definition()
+                .description
+                .contains("labeled region context"),
+            "the tool description must advertise region-label extraction"
         );
     }
 
