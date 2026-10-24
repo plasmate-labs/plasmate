@@ -393,6 +393,26 @@ describe('findByLabel', () => {
     expect(findByLabel(FIXTURE, '')).toEqual([]);
     expect(findByLabel(FIXTURE, '  \n\t', { exact: true })).toEqual([]);
   });
+
+  it('ignores invisible zero-width separators', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_content',
+          role: 'content',
+          elements: [{ id: 'e_zero_width', role: 'button', label: 'Save\u200Bchanges' }],
+        },
+      ],
+    };
+
+    expect(findByLabel(som, 'save changes')).toEqual([
+      expect.objectContaining({ id: 'e_zero_width' }),
+    ]);
+    expect(findByLabel(som, 'Save changes', { exact: true })).toEqual([
+      expect.objectContaining({ id: 'e_zero_width' }),
+    ]);
+  });
 });
 
 describe('findByText', () => {

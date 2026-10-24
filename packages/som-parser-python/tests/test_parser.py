@@ -446,6 +446,20 @@ class TestFindByLabel:
         assert find_by_label(som, "") == []
         assert find_by_label(som, " \n\t ") == []
 
+    def test_ignores_invisible_zero_width_separators(self, som: Som):
+        som.regions[1].elements.append(
+            SomElement(
+                id="e_zero_width",
+                role=ElementRole.BUTTON,
+                label="Save\u200bchanges",
+            )
+        )
+
+        assert [el.id for el in find_by_label(som, "save changes")] == ["e_zero_width"]
+        assert [el.id for el in find_by_label(som, "Save changes", exact=True)] == [
+            "e_zero_width"
+        ]
+
 
 class TestFindByText:
     def test_substring(self, som: Som):

@@ -129,7 +129,7 @@ export function findByLabel(
 }
 
 function normalizeLabelText(value: string): string {
-  return value.trim().replace(/\s+/g, ' ');
+  return value.trim().replace(/[\s\u200B\uFEFF]+/g, ' ');
 }
 
 function labelCandidates(el: SomElement): string[] {

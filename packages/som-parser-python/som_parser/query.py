@@ -183,7 +183,7 @@ def _compact_string(value: object) -> Optional[str]:
 
 def _normalize_label_text(value: str) -> str:
     """Collapse label whitespace while preserving case for exact matches."""
-    return " ".join(value.split())
+    return " ".join(value.replace("\u200b", " ").replace("\ufeff", " ").split())
 
 
 def _normalize_search_text(value: str) -> str:
