@@ -11178,6 +11178,11 @@ mod tests {
         let text = collect_extract_text(&som);
         assert!(text.contains("Published Sunday"));
         assert!(text.contains("2026-09-27"));
+        assert_eq!(
+            text.matches("2026-09-27").count(),
+            1,
+            "nested time metadata should be emitted once: {text:?}"
+        );
     }
 
     #[test]
