@@ -487,6 +487,23 @@ describe('findByText', () => {
     ]);
   });
 
+  it('trims invisible separators at text boundaries', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_content',
+          role: 'content',
+          elements: [{ id: 'e_boundary', role: 'paragraph', text: '\u200BSave changes\uFEFF' }],
+        },
+      ],
+    };
+
+    expect(findByText(som, 'Save changes', { exact: true })).toEqual([
+      expect.objectContaining({ id: 'e_boundary' }),
+    ]);
+  });
+
   it('returns empty for no match', () => {
     expect(findByText(FIXTURE, 'nonexistent')).toHaveLength(0);
   });
