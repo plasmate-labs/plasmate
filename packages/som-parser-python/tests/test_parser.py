@@ -503,6 +503,16 @@ class TestFindByText:
             "e_metadata"
         ]
 
+    def test_matches_aria_label_metadata(self, som: Som):
+        som.regions[1].elements.append(
+            SomElement(
+                id="e_aria_label",
+                role=ElementRole.BUTTON,
+                attrs={"aria": {"label": "Open settings"}},
+            )
+        )
+        assert [el.id for el in find_by_text(som, "settings")] == ["e_aria_label"]
+
     def test_exact_no_match(self, som: Som):
         results = find_by_text(som, "home", exact=True)
         assert len(results) == 0

@@ -63,6 +63,7 @@ function searchableTextParts(el: SomElement): string[] {
     el.attrs?.summary,
     el.attrs?.legend,
     el.attrs?.section_label,
+    el.attrs?.aria?.label,
     el.attrs?.aria?.valuetext,
     el.attrs?.aria?.roledescription,
   ]) {
