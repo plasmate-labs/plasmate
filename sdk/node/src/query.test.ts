@@ -355,6 +355,22 @@ describe('findByTag', () => {
     ]) {
       assert.deepEqual(findByTag(fixture, alias).map((el) => el.id), ['e4'], alias);
     }
+    assert.deepEqual(findByTag(fixture, 'switch').map((el) => el.id), ['e8']);
+    const radioFixture: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [
+                ...region.elements,
+                { id: 'e10', role: 'radio', text: 'Use saved address', actions: ['toggle'] },
+              ],
+            }
+          : region,
+      ),
+    };
+    assert.deepEqual(findByTag(radioFixture, 'menu-item-radio').map((el) => el.id), ['e10']);
   });
 
   it('returns empty for unused role', () => {
