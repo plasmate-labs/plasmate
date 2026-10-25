@@ -186,6 +186,27 @@ describe('findActionTargetsByRole aliases', () => {
     assert.deepEqual(findActionTargetsByRole(fixture, 'role = text-input').map((item) => item.id), ['e5']);
     assert.deepEqual(findActionTargetsByRole(fixture, 'role: "button"').map((item) => item.id), ['e4']);
     assert.deepEqual(findActionTargetsByRole(fixture, '"role:button"').map((item) => item.id), ['e4']);
+    const selectFixture: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [
+                ...region.elements,
+                { id: 'e11', role: 'select', text: 'Country', actions: ['select'] },
+              ],
+            }
+          : region,
+      ),
+    };
+    for (const alias of ['combo boxes', 'list boxes']) {
+      assert.deepEqual(
+        findActionTargetsByRole(selectFixture, alias).map((item) => item.id),
+        ['e11'],
+        alias,
+      );
+    }
     assert.deepEqual(findActionTargetsByRole(fixture, 'unknown-role'), []);
   });
 });
@@ -343,6 +364,58 @@ describe('findByTag', () => {
     assert.deepEqual(findByTag(fixture, '"role=paragraph"').map((el) => el.id), ['e3', 'e7', 'e9']);
     assert.deepEqual(findByTag(fixture, 'search box').map((el) => el.id), ['e5']);
     assert.deepEqual(findByTag(fixture, 'role=query_input').map((el) => el.id), ['e5']);
+  });
+
+  it('accepts ARIA button-role aliases', () => {
+    for (const alias of [
+      'menuitem',
+      'menu-items',
+      'option',
+      'tabs',
+      'tree-item',
+    ]) {
+      assert.deepEqual(findByTag(fixture, alias).map((el) => el.id), ['e4'], alias);
+    }
+    assert.deepEqual(findByTag(fixture, 'switch').map((el) => el.id), ['e8']);
+    const selectFixture: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [
+                ...region.elements,
+                { id: 'e11', role: 'select', text: 'Country', actions: ['select'] },
+              ],
+            }
+          : region,
+      ),
+    };
+    for (const alias of [
+      'combobox',
+      'combo-box',
+      'combo boxes',
+      'listbox',
+      'list-box',
+      'list boxes',
+    ]) {
+      assert.deepEqual(findByTag(selectFixture, alias).map((el) => el.id), ['e11'], alias);
+    }
+    const radioFixture: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [
+                ...region.elements,
+                { id: 'e10', role: 'radio', text: 'Use saved address', actions: ['toggle'] },
+              ],
+            }
+          : region,
+      ),
+    };
+    assert.deepEqual(findByTag(radioFixture, 'menu-item-radio').map((el) => el.id), ['e10']);
   });
 
   it('returns empty for unused role', () => {
