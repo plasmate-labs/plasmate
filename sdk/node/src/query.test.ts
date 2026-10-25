@@ -364,6 +364,21 @@ describe('findByTag', () => {
     assert.deepEqual(findByTag(fixture, '"role=paragraph"').map((el) => el.id), ['e3', 'e7', 'e9']);
     assert.deepEqual(findByTag(fixture, 'search box').map((el) => el.id), ['e5']);
     assert.deepEqual(findByTag(fixture, 'role=query_input').map((el) => el.id), ['e5']);
+    for (const alias of [
+      'search',
+      'searches',
+      'search-control',
+      'search-field',
+      'search-inputs',
+      'query',
+      'queries',
+      'query-boxes',
+      'query-control',
+      'query-field',
+      'query-inputs',
+    ]) {
+      assert.deepEqual(findByTag(fixture, alias).map((el) => el.id), ['e5'], alias);
+    }
   });
 
   it('accepts data table aliases', () => {
