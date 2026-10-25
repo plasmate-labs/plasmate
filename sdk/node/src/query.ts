@@ -309,6 +309,8 @@ const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   images: 'image',
   lists: 'list',
   tables: 'table',
+  data_table: 'table',
+  data_tables: 'table',
   paragraphs: 'paragraph',
   sections: 'section',
   groups: 'group',
