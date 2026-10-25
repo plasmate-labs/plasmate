@@ -345,6 +345,18 @@ describe('findByTag', () => {
     assert.deepEqual(findByTag(fixture, 'role=query_input').map((el) => el.id), ['e5']);
   });
 
+  it('accepts ARIA button-role aliases', () => {
+    for (const alias of [
+      'menuitem',
+      'menu-items',
+      'option',
+      'tabs',
+      'tree-item',
+    ]) {
+      assert.deepEqual(findByTag(fixture, alias).map((el) => el.id), ['e4'], alias);
+    }
+  });
+
   it('returns empty for unused role', () => {
     assert.deepEqual(findByTag(fixture, 'table'), []);
   });
