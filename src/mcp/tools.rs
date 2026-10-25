@@ -847,10 +847,14 @@ fn collect_extract_text(som: &Som) -> String {
 }
 
 fn normalized_body_contains(body: &str, needle: &str) -> bool {
-    let needle_words: Vec<_> = needle.split(' ').collect();
+    let needle_words: Vec<_> = needle
+        .split_whitespace()
+        .map(str::to_lowercase)
+        .collect();
     !needle_words.is_empty()
         && body
-            .split(' ')
+            .split_whitespace()
+            .map(str::to_lowercase)
             .collect::<Vec<_>>()
             .windows(needle_words.len())
             .any(|window| window == needle_words)
@@ -10942,6 +10946,27 @@ mod tests {
             text,
             "Docs\n\nGuide for agents\n\nGuides for agents",
             "a substring match must not suppress the authored meta description: {text:?}"
+        );
+    }
+
+    #[test]
+    fn extract_text_does_not_repeat_meta_description_when_body_only_changes_case() {
+        let html = r#"<!DOCTYPE html>
+<html><head>
+<title>Docs</title>
+<meta name="description" content="Guide for agents">
+</head><body><main>
+<p>GUIDE FOR AGENTS</p>
+</main></body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/docs")
+            .expect("fixture HTML should compile");
+
+        let text = collect_extract_text(&som);
+
+        assert_eq!(
+            text,
+            "Docs\n\nGUIDE FOR AGENTS",
+            "case-only differences must not duplicate the authored meta description: {text:?}"
         );
     }
 
