@@ -356,6 +356,23 @@ describe('findByTag', () => {
       assert.deepEqual(findByTag(fixture, alias).map((el) => el.id), ['e4'], alias);
     }
     assert.deepEqual(findByTag(fixture, 'switch').map((el) => el.id), ['e8']);
+    const selectFixture: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [
+                ...region.elements,
+                { id: 'e11', role: 'select', text: 'Country', actions: ['select'] },
+              ],
+            }
+          : region,
+      ),
+    };
+    for (const alias of ['combobox', 'combo-box', 'listbox', 'list-box']) {
+      assert.deepEqual(findByTag(selectFixture, alias).map((el) => el.id), ['e11'], alias);
+    }
     const radioFixture: Som = {
       ...fixture,
       regions: fixture.regions.map((region) =>
