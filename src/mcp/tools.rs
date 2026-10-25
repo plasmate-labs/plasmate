@@ -820,13 +820,27 @@ fn collect_extract_text(som: &Som) -> String {
         text_parts.push(String::new());
     }
 
+    let mut emitted_datetimes = HashSet::new();
     for region in &som.regions {
         if let Some(label) = region.label.as_deref() {
             push_extract_text_part(&mut body_parts, label);
         }
         for element in &region.elements {
-            extract_element_text(element, &mut body_parts);
+            extract_element_text_with_seen_datetimes(
+                element,
+                &mut body_parts,
+                &mut emitted_datetimes,
+            );
         }
+    }
+
+    if !normalized_title.is_empty()
+        && body_parts.first().is_some_and(|part| {
+            normalize_extract_text_for_match(&normalized_title)
+                == normalize_extract_text_for_match(part)
+        })
+    {
+        body_parts.remove(0);
     }
     let normalized_body = body_parts.join(" ");
 
@@ -845,7 +859,7 @@ fn collect_extract_text(som: &Som) -> String {
 
     text_parts.extend(body_parts);
 
-    text_parts.join("\n")
+    text_parts.join("\n").trim_end().to_string()
 }
 
 fn normalized_body_contains(body: &str, needle: &str) -> bool {
@@ -922,12 +936,20 @@ fn compiled_time_datetime(element: &crate::som::types::Element) -> Option<&str> 
 fn push_extract_text_part(parts: &mut Vec<String>, text: impl Into<String>) {
     let text = text.into();
     let text = normalize_extract_text(&text);
-    if !text.is_empty() && parts.last().map(String::as_str) != Some(text.as_str()) {
+    if text.is_empty() {
+        return;
+    }
+
+    let duplicate = parts.last().is_some_and(|last| {
+        normalize_extract_text_for_match(last) == normalize_extract_text_for_match(&text)
+    });
+    if !duplicate {
         parts.push(text);
     }
 }
 
 /// Recursively extract text from a SOM element.
+#[cfg(test)]
 fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<String>) {
     let mut emitted_datetimes = HashSet::new();
     extract_element_text_with_seen_datetimes(element, parts, &mut emitted_datetimes);
@@ -11025,6 +11047,60 @@ mod tests {
     }
 
     #[test]
+    fn extract_text_does_not_repeat_adjacent_body_text_when_only_case_and_punctuation_change() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Docs</title></head><body><main>
+<p>Release notes.</p>
+<p>RELEASE NOTES</p>
+<p>Body copy</p>
+</main></body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/docs")
+            .expect("fixture HTML should compile");
+
+        let text = collect_extract_text(&som);
+
+        assert_eq!(
+            text,
+            "Docs\n\nRelease notes.\nBody copy",
+            "adjacent body duplicates should use the same tolerant matching as metadata: {text:?}"
+        );
+    }
+
+    #[test]
+    fn extract_text_does_not_repeat_title_when_first_body_part_is_the_same_heading() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Docs</title></head><body><main>
+<h1> docs! </h1>
+<p>Body copy</p>
+</main></body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/docs")
+            .expect("fixture HTML should compile");
+
+        let text = collect_extract_text(&som);
+
+        assert_eq!(
+            text, "Docs\n\nBody copy",
+            "the title should not repeat an equivalent first body heading: {text:?}"
+        );
+    }
+
+    #[test]
+    fn extract_text_does_not_leave_trailing_blank_lines_without_body_text() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Docs</title>
+<meta name="description" content="Authored summary for agents.">
+</head><body></body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/docs")
+            .expect("fixture HTML should compile");
+
+        assert_eq!(
+            collect_extract_text(&som),
+            "Docs\n\nAuthored summary for agents.",
+            "clean text should not end with separator whitespace"
+        );
+    }
+
+    #[test]
     fn extract_text_normalizes_metadata_before_deduplicating() {
         let mut som = test_som();
         som.title = "  Authored   summary\nfor agents.  ".to_string();
@@ -11411,6 +11487,26 @@ mod tests {
                 "2026-09-27".to_string(),
                 "Sunday".to_string(),
             ]
+        );
+    }
+
+    #[test]
+    fn extract_text_deduplicates_datetime_metadata_across_sibling_elements() {
+        let som = crate::som::compiler::compile(
+            r#"<html><head><title>Schedule</title></head><body><main>
+                <time datetime="2026-09-27">Start</time>
+                <time datetime="2026-09-27">End</time>
+            </main></body></html>"#,
+            "https://example.test/schedule",
+        )
+        .expect("fixture HTML should compile");
+
+        let text = collect_extract_text(&som);
+
+        assert_eq!(
+            text.matches("2026-09-27").count(),
+            1,
+            "sibling time elements should share datetime deduplication: {text:?}"
         );
     }
 
