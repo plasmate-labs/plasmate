@@ -922,7 +922,14 @@ fn compiled_time_datetime(element: &crate::som::types::Element) -> Option<&str> 
 fn push_extract_text_part(parts: &mut Vec<String>, text: impl Into<String>) {
     let text = text.into();
     let text = normalize_extract_text(&text);
-    if !text.is_empty() && parts.last().map(String::as_str) != Some(text.as_str()) {
+    if text.is_empty() {
+        return;
+    }
+
+    let duplicate = parts.last().is_some_and(|last| {
+        normalize_extract_text_for_match(last) == normalize_extract_text_for_match(&text)
+    });
+    if !duplicate {
         parts.push(text);
     }
 }
@@ -11021,6 +11028,26 @@ mod tests {
             text,
             "guide for agents\n\nBody copy",
             "title-equivalent descriptions must not be emitted twice: {text:?}"
+        );
+    }
+
+    #[test]
+    fn extract_text_does_not_repeat_adjacent_body_text_when_only_case_and_punctuation_change() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Docs</title></head><body><main>
+<p>Release notes.</p>
+<p>RELEASE NOTES</p>
+<p>Body copy</p>
+</main></body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/docs")
+            .expect("fixture HTML should compile");
+
+        let text = collect_extract_text(&som);
+
+        assert_eq!(
+            text,
+            "Docs\n\nRelease notes.\nBody copy",
+            "adjacent body duplicates should use the same tolerant matching as metadata: {text:?}"
         );
     }
 
