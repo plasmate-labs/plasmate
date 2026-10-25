@@ -383,6 +383,42 @@ describe('findByTag', () => {
     }
   });
 
+  it('accepts common HTML tag aliases', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_tags',
+          role: 'main',
+          elements: [
+            { id: 'article', role: 'section' },
+            { id: 'group', role: 'group' },
+            { id: 'separator', role: 'separator' },
+            { id: 'image', role: 'image' },
+            { id: 'list', role: 'list' },
+            { id: 'paragraph', role: 'paragraph' },
+            { id: 'details', role: 'details' },
+          ],
+        },
+      ],
+      meta: fixture.meta,
+    };
+    const aliases: Record<string, string> = {
+      article: 'article',
+      div: 'group',
+      fieldset: 'group',
+      hr: 'separator',
+      img: 'image',
+      ol: 'list',
+      p: 'paragraph',
+      summary: 'details',
+      ul: 'list',
+    };
+    for (const [alias, id] of Object.entries(aliases)) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), [id], alias);
+    }
+  });
+
   it('accepts ARIA button-role aliases', () => {
     for (const alias of [
       'menuitem',
