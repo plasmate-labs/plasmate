@@ -832,9 +832,11 @@ fn collect_extract_text(som: &Som) -> String {
 
     if let Some(description) = compiled_meta_description(som) {
         let normalized_description = normalize_extract_text(description);
+        let title_matches_description = normalize_extract_text_for_match(&normalized_title)
+            == normalize_extract_text_for_match(&normalized_description);
         if !normalized_description.is_empty()
-            && normalized_title != normalized_description
-            && !normalized_body.contains(&normalized_description)
+            && !title_matches_description
+            && !normalized_body_contains(&normalized_body, &normalized_description)
         {
             text_parts.push(normalized_description);
             text_parts.push(String::new());
@@ -844,6 +846,32 @@ fn collect_extract_text(som: &Som) -> String {
     text_parts.extend(body_parts);
 
     text_parts.join("\n")
+}
+
+fn normalized_body_contains(body: &str, needle: &str) -> bool {
+    let normalized_body = normalize_extract_text_for_match(body);
+    let normalized_needle = normalize_extract_text_for_match(needle);
+    !normalized_needle.is_empty()
+        && format!(" {normalized_body} ").contains(&format!(" {normalized_needle} "))
+}
+
+fn normalize_extract_text_for_match(text: &str) -> String {
+    let mut normalized = String::new();
+    let mut pending_space = false;
+
+    for character in text.chars() {
+        if character.is_alphanumeric() {
+            if pending_space && !normalized.is_empty() {
+                normalized.push(' ');
+            }
+            normalized.extend(character.to_lowercase());
+            pending_space = false;
+        } else {
+            pending_space = true;
+        }
+    }
+
+    normalized
 }
 
 fn normalize_extract_text(text: &str) -> String {
@@ -10911,6 +10939,88 @@ mod tests {
             text,
             "Docs\n\nAuthored summary\nfor agents.\nBody copy",
             "split body text should remain without an added meta description: {text:?}"
+        );
+    }
+
+    #[test]
+    fn extract_text_keeps_meta_description_when_body_only_contains_it_as_substring() {
+        let html = r#"<!DOCTYPE html>
+<html><head>
+<title>Docs</title>
+<meta name="description" content="Guide for agents">
+</head><body><main>
+<p>Guides for agents</p>
+</main></body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/docs")
+            .expect("fixture HTML should compile");
+
+        let text = collect_extract_text(&som);
+
+        assert_eq!(
+            text,
+            "Docs\n\nGuide for agents\n\nGuides for agents",
+            "a substring match must not suppress the authored meta description: {text:?}"
+        );
+    }
+
+    #[test]
+    fn extract_text_does_not_repeat_meta_description_when_body_only_changes_case() {
+        let html = r#"<!DOCTYPE html>
+<html><head>
+<title>Docs</title>
+<meta name="description" content="Guide for agents">
+</head><body><main>
+<p>GUIDE FOR AGENTS</p>
+</main></body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/docs")
+            .expect("fixture HTML should compile");
+
+        let text = collect_extract_text(&som);
+
+        assert_eq!(
+            text,
+            "Docs\n\nGUIDE FOR AGENTS",
+            "case-only differences must not duplicate the authored meta description: {text:?}"
+        );
+    }
+
+    #[test]
+    fn extract_text_does_not_repeat_meta_description_when_body_only_changes_punctuation() {
+        let html = r#"<!DOCTYPE html>
+<html><head>
+<title>Docs</title>
+<meta name="description" content="Guide for agents.">
+</head><body><main>
+<p>Guide for agents</p>
+</main></body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/docs")
+            .expect("fixture HTML should compile");
+
+        let text = collect_extract_text(&som);
+
+        assert_eq!(
+            text,
+            "Docs\n\nGuide for agents",
+            "punctuation-only differences must not duplicate the authored meta description: {text:?}"
+        );
+    }
+
+    #[test]
+    fn extract_text_does_not_repeat_meta_description_when_title_only_changes_case_and_punctuation() {
+        let html = r#"<!DOCTYPE html>
+<html><head>
+<title>guide for agents</title>
+<meta name="description" content="Guide for agents.">
+</head><body><main><p>Body copy</p></main></body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/docs")
+            .expect("fixture HTML should compile");
+
+        let text = collect_extract_text(&som);
+
+        assert_eq!(
+            text,
+            "guide for agents\n\nBody copy",
+            "title-equivalent descriptions must not be emitted twice: {text:?}"
         );
     }
 
