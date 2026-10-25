@@ -854,7 +854,7 @@ fn collect_extract_text(som: &Som) -> String {
 
     text_parts.extend(body_parts);
 
-    text_parts.join("\n")
+    text_parts.join("\n").trim_end().to_string()
 }
 
 fn normalized_body_contains(body: &str, needle: &str) -> bool {
@@ -11075,6 +11075,22 @@ mod tests {
         assert_eq!(
             text, "Docs\n\nBody copy",
             "the title should not repeat an equivalent first body heading: {text:?}"
+        );
+    }
+
+    #[test]
+    fn extract_text_does_not_leave_trailing_blank_lines_without_body_text() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Docs</title>
+<meta name="description" content="Authored summary for agents.">
+</head><body></body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/docs")
+            .expect("fixture HTML should compile");
+
+        assert_eq!(
+            collect_extract_text(&som),
+            "Docs\n\nAuthored summary for agents.",
+            "clean text should not end with separator whitespace"
         );
     }
 
