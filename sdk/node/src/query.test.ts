@@ -436,6 +436,23 @@ describe('findByTag', () => {
     for (const alias of ['check box', 'check boxes']) {
       assert.deepEqual(findByTag(checkboxFixture, alias).map((el) => el.id), ['e8', 'e12'], alias);
     }
+    const spinButtonFixture: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [
+                ...region.elements,
+                { id: 'e13', role: 'text_input', text: 'Quantity', actions: ['type'] },
+              ],
+            }
+          : region,
+      ),
+    };
+    for (const alias of ['spin button', 'spin buttons']) {
+      assert.deepEqual(findByTag(spinButtonFixture, alias).map((el) => el.id), ['e5', 'e13'], alias);
+    }
   });
 
   it('returns empty for unused role', () => {

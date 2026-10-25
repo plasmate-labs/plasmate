@@ -153,7 +153,7 @@ browser.close();
 |----------|---------|-------------|
 | `findByRole(som, role)` | `SomRegion[]` | Find regions by canonical role or common selector alias (for example, `main-content`, `role:main`, `navigation`, or `article`) |
 | `findById(som, id)` | `SomElement \| undefined` | Find element by stable ID |
-| `findByTag(som, tag)` | `SomElement[]` | Find elements by canonical role or case-insensitive selector alias (for example, `buttons`, `search box`, `radio button`, `check box`, `role:text-input`, or `"role=paragraph"`) |
+| `findByTag(som, tag)` | `SomElement[]` | Find elements by canonical role or case-insensitive selector alias (for example, `buttons`, `search box`, `spin button`, `radio button`, `check box`, `role:text-input`, or `"role=paragraph"`) |
 | `findInteractive(som)` | `SomElement[]` | All elements with actions |
 | `getActionPlan(som)` | `ActionPlanItem[]` | Compact action targets with cache keys, availability, link target/rel/download cues, form/list and form submission context, submitter override cues, popover/command relation cues, text-entry/input-affordance cues, validation/range constraints, ARIA live-region cues, ARIA owns/flowto/details relationships, ARIA widget affordances, orientation/sort/value state, and set-position cues |
 | `getActionPlanCacheKey(item)` | `string` | Deterministic key for caching or comparing action targets |

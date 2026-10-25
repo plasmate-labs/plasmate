@@ -282,6 +282,8 @@ const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   radio_buttons: 'radio',
   check_box: 'checkbox',
   check_boxes: 'checkbox',
+  spin_button: 'text_input',
+  spin_buttons: 'text_input',
   spinbutton: 'text_input',
   spinbuttons: 'text_input',
   switch: 'checkbox',
