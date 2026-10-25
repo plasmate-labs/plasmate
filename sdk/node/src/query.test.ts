@@ -434,6 +434,22 @@ describe('findByTag', () => {
     }
   });
 
+  it('accepts blockquote aliases for paragraph elements', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_quote',
+          role: 'main',
+          elements: [{ id: 'quote', role: 'paragraph', text: 'A cited thought' }],
+        },
+      ],
+    };
+    for (const alias of ['blockquote', 'blockquotes', 'quote', 'quotes']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['quote'], alias);
+    }
+  });
+
   it('accepts ARIA button-role aliases', () => {
     for (const alias of [
       'menuitem',
