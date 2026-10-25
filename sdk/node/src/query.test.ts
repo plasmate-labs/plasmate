@@ -450,7 +450,7 @@ describe('findByTag', () => {
           : region,
       ),
     };
-    for (const alias of ['spin button', 'spin buttons']) {
+    for (const alias of ['slider', 'sliders', 'spin button', 'spin buttons', 'range']) {
       assert.deepEqual(findByTag(spinButtonFixture, alias).map((el) => el.id), ['e5', 'e13'], alias);
     }
   });
