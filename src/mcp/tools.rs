@@ -847,17 +847,29 @@ fn collect_extract_text(som: &Som) -> String {
 }
 
 fn normalized_body_contains(body: &str, needle: &str) -> bool {
-    let needle_words: Vec<_> = needle
-        .split_whitespace()
-        .map(str::to_lowercase)
-        .collect();
-    !needle_words.is_empty()
-        && body
-            .split_whitespace()
-            .map(str::to_lowercase)
-            .collect::<Vec<_>>()
-            .windows(needle_words.len())
-            .any(|window| window == needle_words)
+    let normalized_body = normalize_extract_text_for_match(body);
+    let normalized_needle = normalize_extract_text_for_match(needle);
+    !normalized_needle.is_empty()
+        && format!(" {normalized_body} ").contains(&format!(" {normalized_needle} "))
+}
+
+fn normalize_extract_text_for_match(text: &str) -> String {
+    let mut normalized = String::new();
+    let mut pending_space = false;
+
+    for character in text.chars() {
+        if character.is_alphanumeric() {
+            if pending_space && !normalized.is_empty() {
+                normalized.push(' ');
+            }
+            normalized.extend(character.to_lowercase());
+            pending_space = false;
+        } else {
+            pending_space = true;
+        }
+    }
+
+    normalized
 }
 
 fn normalize_extract_text(text: &str) -> String {
@@ -10967,6 +10979,27 @@ mod tests {
             text,
             "Docs\n\nGUIDE FOR AGENTS",
             "case-only differences must not duplicate the authored meta description: {text:?}"
+        );
+    }
+
+    #[test]
+    fn extract_text_does_not_repeat_meta_description_when_body_only_changes_punctuation() {
+        let html = r#"<!DOCTYPE html>
+<html><head>
+<title>Docs</title>
+<meta name="description" content="Guide for agents.">
+</head><body><main>
+<p>Guide for agents</p>
+</main></body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/docs")
+            .expect("fixture HTML should compile");
+
+        let text = collect_extract_text(&som);
+
+        assert_eq!(
+            text,
+            "Docs\n\nGuide for agents",
+            "punctuation-only differences must not duplicate the authored meta description: {text:?}"
         );
     }
 
