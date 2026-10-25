@@ -820,12 +820,17 @@ fn collect_extract_text(som: &Som) -> String {
         text_parts.push(String::new());
     }
 
+    let mut emitted_datetimes = HashSet::new();
     for region in &som.regions {
         if let Some(label) = region.label.as_deref() {
             push_extract_text_part(&mut body_parts, label);
         }
         for element in &region.elements {
-            extract_element_text(element, &mut body_parts);
+            extract_element_text_with_seen_datetimes(
+                element,
+                &mut body_parts,
+                &mut emitted_datetimes,
+            );
         }
     }
 
@@ -944,6 +949,7 @@ fn push_extract_text_part(parts: &mut Vec<String>, text: impl Into<String>) {
 }
 
 /// Recursively extract text from a SOM element.
+#[cfg(test)]
 fn extract_element_text(element: &crate::som::types::Element, parts: &mut Vec<String>) {
     let mut emitted_datetimes = HashSet::new();
     extract_element_text_with_seen_datetimes(element, parts, &mut emitted_datetimes);
@@ -11481,6 +11487,26 @@ mod tests {
                 "2026-09-27".to_string(),
                 "Sunday".to_string(),
             ]
+        );
+    }
+
+    #[test]
+    fn extract_text_deduplicates_datetime_metadata_across_sibling_elements() {
+        let som = crate::som::compiler::compile(
+            r#"<html><head><title>Schedule</title></head><body><main>
+                <time datetime="2026-09-27">Start</time>
+                <time datetime="2026-09-27">End</time>
+            </main></body></html>"#,
+            "https://example.test/schedule",
+        )
+        .expect("fixture HTML should compile");
+
+        let text = collect_extract_text(&som);
+
+        assert_eq!(
+            text.matches("2026-09-27").count(),
+            1,
+            "sibling time elements should share datetime deduplication: {text:?}"
         );
     }
 
