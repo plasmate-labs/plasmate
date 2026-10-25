@@ -828,6 +828,15 @@ fn collect_extract_text(som: &Som) -> String {
             extract_element_text(element, &mut body_parts);
         }
     }
+
+    if !normalized_title.is_empty()
+        && body_parts.first().is_some_and(|part| {
+            normalize_extract_text_for_match(&normalized_title)
+                == normalize_extract_text_for_match(part)
+        })
+    {
+        body_parts.remove(0);
+    }
     let normalized_body = body_parts.join(" ");
 
     if let Some(description) = compiled_meta_description(som) {
@@ -11048,6 +11057,24 @@ mod tests {
             text,
             "Docs\n\nRelease notes.\nBody copy",
             "adjacent body duplicates should use the same tolerant matching as metadata: {text:?}"
+        );
+    }
+
+    #[test]
+    fn extract_text_does_not_repeat_title_when_first_body_part_is_the_same_heading() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Docs</title></head><body><main>
+<h1> docs! </h1>
+<p>Body copy</p>
+</main></body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/docs")
+            .expect("fixture HTML should compile");
+
+        let text = collect_extract_text(&som);
+
+        assert_eq!(
+            text, "Docs\n\nBody copy",
+            "the title should not repeat an equivalent first body heading: {text:?}"
         );
     }
 
