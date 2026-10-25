@@ -416,6 +416,26 @@ describe('findByTag', () => {
       ),
     };
     assert.deepEqual(findByTag(radioFixture, 'menu-item-radio').map((el) => el.id), ['e10']);
+    for (const alias of ['radio button', 'radio buttons', 'radiobutton', 'radiobuttons']) {
+      assert.deepEqual(findByTag(radioFixture, alias).map((el) => el.id), ['e10'], alias);
+    }
+    const checkboxFixture: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [
+                ...region.elements,
+                { id: 'e12', role: 'checkbox', text: 'Remember me', actions: ['toggle'] },
+              ],
+            }
+          : region,
+      ),
+    };
+    for (const alias of ['check box', 'check boxes']) {
+      assert.deepEqual(findByTag(checkboxFixture, alias).map((el) => el.id), ['e8', 'e12'], alias);
+    }
   });
 
   it('returns empty for unused role', () => {
