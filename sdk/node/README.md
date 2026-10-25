@@ -133,6 +133,7 @@ also match controls by their compiled button type (including image submitters).
 
 // Search by visible text or accessible label (case-insensitive)
 const matches = findByText(som, 'sign in');
+const exactMatches = findByText(som, 'Sign in', { exact: true });
 const labeled = findByLabel(som, 'email');
 
 // Flatten all elements across all regions
@@ -162,7 +163,7 @@ browser.close();
 | `findActionTargetsByRole(som, role, options?)` | `ActionPlanItem[]` | Find compact action targets by canonical SOM role or case-insensitive plural/selector alias (for example, `buttons`, `role:button`, `role: "button"`, `role = text-input`, or `role=text-input`) |
 | `findActionTargetsByAction(som, action, options?)` | `ActionPlanItem[]` | Find compact action targets that expose an action |
 | `findByLabel(som, label, options?)` | `SomElement[]` | Case-insensitive accessible-label search |
-| `findByText(som, text)` | `SomElement[]` | Case-insensitive text search |
+| `findByText(som, text, options?)` | `SomElement[]` | Case-insensitive substring search; pass `{ exact: true }` for an exact, case-sensitive match |
 | `flatElements(som)` | `SomElement[]` | Flatten all elements |
 | `getCompressionRatio(som)` | `number` | Return html_bytes / som_bytes (`Infinity` for an empty SOM) |
 | `getTokenEstimate(som)` | `number` | Estimate token count (~4 bytes/token) |

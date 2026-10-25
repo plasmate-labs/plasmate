@@ -766,15 +766,21 @@ def find_action_target_by_label(
     return matches[0] if matches else None
 
 
-def find_by_text(som: Som, text: str) -> List[SomElement]:
-    """Find elements whose visible or compiled text metadata contains the substring."""
+def find_by_text(
+    som: Som, text: str, *, exact: bool = False
+) -> List[SomElement]:
+    """Find elements by visible or compiled text metadata.
+
+    Matching is case-insensitive substring search by default. Set ``exact`` to
+    require a case-sensitive match after whitespace normalization.
+    """
     results: List[SomElement] = []
-    lower = _normalize_label_text(text).lower()
-    if not lower:
+    normalized_text = _normalize_label_text(text)
+    if not normalized_text:
         return results
     for region in som.regions:
         for element in region.elements:
-            _collect_by_text(element, lower, results)
+            _collect_by_text(element, normalized_text, exact, results)
     return results
 
 
@@ -931,7 +937,12 @@ def _collect_interactive(element: SomElement, results: List[SomElement]) -> None
             _collect_interactive(child, results)
 
 
-def _collect_by_text(element: SomElement, lower_text: str, results: List[SomElement]) -> None:
+def _collect_by_text(
+    element: SomElement,
+    normalized_text: str,
+    exact: bool,
+    results: List[SomElement],
+) -> None:
     parts = []
     if element.text:
         parts.append(element.text)
@@ -972,14 +983,21 @@ def _collect_by_text(element: SomElement, lower_text: str, results: List[SomElem
     if element.attrs and element.attrs.rows:
         for row in element.attrs.rows:
             parts.extend(cell for cell in row if cell)
-    if any(lower_text in _normalize_label_text(part).lower() for part in parts):
+    if any(
+        (
+            _normalize_label_text(part) == normalized_text
+            if exact
+            else normalized_text.lower() in _normalize_label_text(part).lower()
+        )
+        for part in parts
+    ):
         results.append(element)
     if element.children:
         for child in element.children:
-            _collect_by_text(child, lower_text, results)
+            _collect_by_text(child, normalized_text, exact, results)
     if element.shadow:
         for child in element.shadow.elements:
-            _collect_by_text(child, lower_text, results)
+            _collect_by_text(child, normalized_text, exact, results)
 
 
 def _flatten(element: SomElement, results: List[SomElement]) -> None:

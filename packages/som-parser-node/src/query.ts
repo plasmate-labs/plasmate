@@ -54,6 +54,23 @@ function searchableTextParts(el: SomElement): string[] {
   if (el.label) {
     parts.push(el.label);
   }
+  for (const value of [
+    el.attrs?.description,
+    el.attrs?.alt,
+    el.attrs?.placeholder,
+    el.attrs?.title,
+    el.attrs?.value,
+    el.attrs?.summary,
+    el.attrs?.legend,
+    el.attrs?.section_label,
+    el.attrs?.aria?.label,
+    el.attrs?.aria?.valuetext,
+    el.attrs?.aria?.roledescription,
+  ]) {
+    if (value) {
+      parts.push(value);
+    }
+  }
   for (const item of el.attrs?.items ?? []) {
     if (item.text) {
       parts.push(item.text);

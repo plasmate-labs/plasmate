@@ -491,6 +491,28 @@ class TestFindByText:
         results = find_by_text(som, "Home", exact=True)
         assert len(results) == 1
 
+    def test_exact_match_in_compiled_metadata(self, som: Som):
+        som.regions[1].elements.append(
+            SomElement(
+                id="e_metadata",
+                role=ElementRole.BUTTON,
+                attrs={"description": "Confirm purchase"},
+            )
+        )
+        assert [el.id for el in find_by_text(som, "Confirm purchase", exact=True)] == [
+            "e_metadata"
+        ]
+
+    def test_matches_aria_label_metadata(self, som: Som):
+        som.regions[1].elements.append(
+            SomElement(
+                id="e_aria_label",
+                role=ElementRole.BUTTON,
+                attrs={"aria": {"label": "Open settings"}},
+            )
+        )
+        assert [el.id for el in find_by_text(som, "settings")] == ["e_aria_label"]
+
     def test_exact_no_match(self, som: Som):
         results = find_by_text(som, "home", exact=True)
         assert len(results) == 0

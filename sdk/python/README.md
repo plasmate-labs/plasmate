@@ -150,6 +150,8 @@ enabled_clicks = find_action_targets_by_action(som, "click", enabled_only=True)
 
 # Search by visible text or accessible label (case-insensitive)
 results = find_by_text(som, "sign up")
+# Use exact=True for a case-sensitive, whitespace-normalized match.
+exact_results = find_by_text(som, "Sign up", exact=True)
 labeled = find_by_label(som, "email")
 
 # Flatten all elements for iteration

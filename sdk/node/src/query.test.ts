@@ -504,6 +504,12 @@ describe('findByText', () => {
     assert.equal(results[0].id, 'e1');
   });
 
+  it('supports exact text matching without case folding', () => {
+    assert.deepEqual(findByText(fixture, 'Hello World', { exact: true }).map((el) => el.id), ['e3']);
+    assert.deepEqual(findByText(fixture, 'hello world', { exact: true }), []);
+    assert.deepEqual(findByText(fixture, 'Hello', { exact: true }), []);
+  });
+
   it('normalizes whitespace in text matches', () => {
     const som: Som = {
       ...fixture,
@@ -568,6 +574,11 @@ describe('findByText', () => {
                 },
               },
             },
+            {
+              id: 'e_aria_label',
+              role: 'button',
+              attrs: { aria: { label: 'Open settings' } },
+            },
           ],
         },
       ],
@@ -582,6 +593,7 @@ describe('findByText', () => {
     assert.deepEqual(findByText(som, 'progress indicator').map((el) => el.id), [
       'e_progress',
     ]);
+    assert.deepEqual(findByText(som, 'settings').map((el) => el.id), ['e_aria_label']);
   });
 
   it('finds text inside shadow roots', () => {

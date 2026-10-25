@@ -805,6 +805,13 @@ class TestFindByText:
         results = find_by_text(sample_som, "click me")
         assert len(results) == 1
 
+    def test_exact_is_case_sensitive_and_not_a_substring(self, sample_som: Som) -> None:
+        assert [element.id for element in find_by_text(sample_som, "Click Me", exact=True)] == [
+            "e5"
+        ]
+        assert find_by_text(sample_som, "click me", exact=True) == []
+        assert find_by_text(sample_som, "Click", exact=True) == []
+
     def test_normalizes_whitespace_and_zero_width_separators(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.append(
             SomElement(

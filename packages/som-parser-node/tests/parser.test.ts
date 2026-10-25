@@ -461,6 +461,24 @@ describe('findByText', () => {
     expect(findByText(FIXTURE, 'home', { exact: true })).toHaveLength(0);
   });
 
+  it('finds exact matches in compiled metadata', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [{
+        id: 'r_metadata',
+        role: 'main',
+        elements: [{
+          id: 'e_metadata',
+          role: 'button',
+          attrs: { description: 'Confirm purchase' },
+        }],
+      }],
+    };
+    expect(findByText(som, 'Confirm purchase', { exact: true }).map((el) => el.id)).toEqual([
+      'e_metadata',
+    ]);
+  });
+
   it('normalizes whitespace for substring and exact matches', () => {
     expect(findByText(FIXTURE, 'this   is')).toEqual([
       expect.objectContaining({ id: 'e_4' }),
