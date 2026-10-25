@@ -834,7 +834,7 @@ fn collect_extract_text(som: &Som) -> String {
         let normalized_description = normalize_extract_text(description);
         if !normalized_description.is_empty()
             && normalized_title != normalized_description
-            && !normalized_body.contains(&normalized_description)
+            && !normalized_body_contains(&normalized_body, &normalized_description)
         {
             text_parts.push(normalized_description);
             text_parts.push(String::new());
@@ -844,6 +844,16 @@ fn collect_extract_text(som: &Som) -> String {
     text_parts.extend(body_parts);
 
     text_parts.join("\n")
+}
+
+fn normalized_body_contains(body: &str, needle: &str) -> bool {
+    let needle_words: Vec<_> = needle.split(' ').collect();
+    !needle_words.is_empty()
+        && body
+            .split(' ')
+            .collect::<Vec<_>>()
+            .windows(needle_words.len())
+            .any(|window| window == needle_words)
 }
 
 fn normalize_extract_text(text: &str) -> String {
@@ -10911,6 +10921,27 @@ mod tests {
             text,
             "Docs\n\nAuthored summary\nfor agents.\nBody copy",
             "split body text should remain without an added meta description: {text:?}"
+        );
+    }
+
+    #[test]
+    fn extract_text_keeps_meta_description_when_body_only_contains_it_as_substring() {
+        let html = r#"<!DOCTYPE html>
+<html><head>
+<title>Docs</title>
+<meta name="description" content="Guide for agents">
+</head><body><main>
+<p>Guides for agents</p>
+</main></body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/docs")
+            .expect("fixture HTML should compile");
+
+        let text = collect_extract_text(&som);
+
+        assert_eq!(
+            text,
+            "Docs\n\nGuide for agents\n\nGuides for agents",
+            "a substring match must not suppress the authored meta description: {text:?}"
         );
     }
 
