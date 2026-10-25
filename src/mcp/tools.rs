@@ -832,8 +832,10 @@ fn collect_extract_text(som: &Som) -> String {
 
     if let Some(description) = compiled_meta_description(som) {
         let normalized_description = normalize_extract_text(description);
+        let title_matches_description = normalize_extract_text_for_match(&normalized_title)
+            == normalize_extract_text_for_match(&normalized_description);
         if !normalized_description.is_empty()
-            && normalized_title != normalized_description
+            && !title_matches_description
             && !normalized_body_contains(&normalized_body, &normalized_description)
         {
             text_parts.push(normalized_description);
@@ -11000,6 +11002,25 @@ mod tests {
             text,
             "Docs\n\nGuide for agents",
             "punctuation-only differences must not duplicate the authored meta description: {text:?}"
+        );
+    }
+
+    #[test]
+    fn extract_text_does_not_repeat_meta_description_when_title_only_changes_case_and_punctuation() {
+        let html = r#"<!DOCTYPE html>
+<html><head>
+<title>guide for agents</title>
+<meta name="description" content="Guide for agents.">
+</head><body><main><p>Body copy</p></main></body></html>"#;
+        let som = crate::som::compiler::compile(html, "https://example.test/docs")
+            .expect("fixture HTML should compile");
+
+        let text = collect_extract_text(&som);
+
+        assert_eq!(
+            text,
+            "guide for agents\n\nBody copy",
+            "title-equivalent descriptions must not be emitted twice: {text:?}"
         );
     }
 
