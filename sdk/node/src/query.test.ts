@@ -186,6 +186,27 @@ describe('findActionTargetsByRole aliases', () => {
     assert.deepEqual(findActionTargetsByRole(fixture, 'role = text-input').map((item) => item.id), ['e5']);
     assert.deepEqual(findActionTargetsByRole(fixture, 'role: "button"').map((item) => item.id), ['e4']);
     assert.deepEqual(findActionTargetsByRole(fixture, '"role:button"').map((item) => item.id), ['e4']);
+    const selectFixture: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [
+                ...region.elements,
+                { id: 'e11', role: 'select', text: 'Country', actions: ['select'] },
+              ],
+            }
+          : region,
+      ),
+    };
+    for (const alias of ['combo boxes', 'list boxes']) {
+      assert.deepEqual(
+        findActionTargetsByRole(selectFixture, alias).map((item) => item.id),
+        ['e11'],
+        alias,
+      );
+    }
     assert.deepEqual(findActionTargetsByRole(fixture, 'unknown-role'), []);
   });
 });
@@ -370,7 +391,14 @@ describe('findByTag', () => {
           : region,
       ),
     };
-    for (const alias of ['combobox', 'combo-box', 'listbox', 'list-box']) {
+    for (const alias of [
+      'combobox',
+      'combo-box',
+      'combo boxes',
+      'listbox',
+      'list-box',
+      'list boxes',
+    ]) {
       assert.deepEqual(findByTag(selectFixture, alias).map((el) => el.id), ['e11'], alias);
     }
     const radioFixture: Som = {
