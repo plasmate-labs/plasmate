@@ -820,10 +820,20 @@ function searchableTextParts(el: SomElement): string[] {
   return parts;
 }
 
-/** Find all elements containing the given text (case-insensitive substring match). */
-export function findByText(som: Som, text: string): SomElement[] {
-  const lower = normalizeLabelText(text).toLowerCase();
-  if (!lower) return [];
+/** Find all elements containing the given text (case-insensitive substring match by default). */
+export function findByText(
+  som: Som,
+  text: string,
+  options?: { exact?: boolean },
+): SomElement[] {
+  const normalizedText = normalizeLabelText(text);
+  if (!normalizedText) return [];
+  if (options?.exact) {
+    return flatElements(som).filter((el) =>
+      searchableTextParts(el).some((part) => normalizeLabelText(part) === normalizedText),
+    );
+  }
+  const lower = normalizedText.toLowerCase();
   return flatElements(som).filter((el) =>
     searchableTextParts(el).some((part) => normalizeLabelText(part).toLowerCase().includes(lower)),
   );

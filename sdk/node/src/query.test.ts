@@ -504,6 +504,12 @@ describe('findByText', () => {
     assert.equal(results[0].id, 'e1');
   });
 
+  it('supports exact text matching without case folding', () => {
+    assert.deepEqual(findByText(fixture, 'Hello World', { exact: true }).map((el) => el.id), ['e3']);
+    assert.deepEqual(findByText(fixture, 'hello world', { exact: true }), []);
+    assert.deepEqual(findByText(fixture, 'Hello', { exact: true }), []);
+  });
+
   it('normalizes whitespace in text matches', () => {
     const som: Som = {
       ...fixture,
