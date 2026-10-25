@@ -366,6 +366,23 @@ describe('findByTag', () => {
     assert.deepEqual(findByTag(fixture, 'role=query_input').map((el) => el.id), ['e5']);
   });
 
+  it('accepts data table aliases', () => {
+    const som: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [...region.elements, { id: 'e12', role: 'table', text: 'Orders' }],
+            }
+          : region,
+      ),
+    };
+    for (const alias of ['data_table', 'data-tables', 'data tables']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['e12'], alias);
+    }
+  });
+
   it('accepts ARIA button-role aliases', () => {
     for (const alias of [
       'menuitem',
