@@ -391,6 +391,26 @@ class TestFindByTag:
         ):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["e5"]
 
+    def test_accepts_checkbox_and_radio_role_aliases(self, sample_som: Som) -> None:
+        checkbox = SomElement(id="checkbox", role=ElementRole.checkbox, actions=["toggle"])
+        radio = SomElement(id="radio", role=ElementRole.radio, actions=["click"])
+        som = Som(
+            som_version=sample_som.som_version,
+            url=sample_som.url,
+            title=sample_som.title,
+            lang=sample_som.lang,
+            meta=sample_som.meta,
+            regions=[SomRegion(id="r_controls", role=RegionRole.main, elements=[checkbox, radio])],
+        )
+        for alias in ("check box", "check-box", "menu item checkboxes"):
+            assert [element.id for element in find_by_tag(som, alias)] == ["checkbox"]
+        for alias in ("radio button", "radio-button", "menu item radios"):
+            assert [element.id for element in find_by_tag(som, alias)] == ["radio"]
+        for alias in ("check box", "menu item checkboxes"):
+            assert [item["id"] for item in find_action_targets_by_role(som, alias)] == ["checkbox"]
+        for alias in ("radio button", "menu item radios"):
+            assert [item["id"] for item in find_action_targets_by_role(som, alias)] == ["radio"]
+
     def test_accepts_plural_text_control_aliases(self, sample_som: Som) -> None:
         for alias in ("text inputs", "textboxes", "search boxes", "search inputs"):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["e9"]
