@@ -509,9 +509,13 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 		id    string
 	}{
 		{alias: "data tables", id: "table"},
+		{alias: "figure", id: "group"},
+		{alias: "figures", id: "group"},
 		{alias: "groups", id: "group"},
 		{alias: "iframes", id: "iframe"},
 		{alias: "lists", id: "list"},
+		{alias: "radiogroup", id: "group"},
+		{alias: "radiogroups", id: "group"},
 		{alias: "tables", id: "table"},
 		{alias: "tree items", id: "button"},
 	} {
