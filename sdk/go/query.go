@@ -390,6 +390,7 @@ func elementMatchesLabel(el Element, lowerLabel string, exact bool) bool {
 }
 
 func normalizeQueryText(value string) string {
+	value = strings.NewReplacer("\u200b", " ", "\u2060", " ", "\ufeff", " ").Replace(value)
 	return strings.ToLower(strings.Join(strings.Fields(value), " "))
 }
 

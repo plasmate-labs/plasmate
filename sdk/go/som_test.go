@@ -556,6 +556,13 @@ func TestFindByText(t *testing.T) {
 		t.Fatalf("FindByText(normalized whitespace) = %#v, want e4", results)
 	}
 
+	invisibleSeparatorText := "Save\u2060\n changes"
+	som.Regions[1].Elements[3].Text = &invisibleSeparatorText
+	results = FindByText(som, "save changes")
+	if len(results) != 1 || results[0].ID != "e6" {
+		t.Fatalf("FindByText(invisible separators) = %#v, want e6", results)
+	}
+
 	// Case insensitive
 	results = FindByText(som, "WELCOME")
 	if len(results) != 1 {
