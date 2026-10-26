@@ -364,7 +364,7 @@ class TestFindByTag:
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["video"]
         for alias in ("canvas", "canvases", "canvas-item", "canvas_items"):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["canvas"]
-        for alias in ("media", "media-item", "media_items"):
+        for alias in ("media", "media-item", "mediaitem", "media_items"):
             assert [el.id for el in find_by_tag(sample_som, alias)] == [
                 "e6",
                 "audio",

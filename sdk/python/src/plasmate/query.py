@@ -22,7 +22,7 @@ _MEDIA_TAG_ALIASES = {
     "video_item": "video",
     "video_items": "video",
 }
-_MEDIA_GROUP_ALIASES = {"media", "media_item", "media_items"}
+_MEDIA_GROUP_ALIASES = {"media", "media_item", "mediaitem", "media_items"}
 
 
 def find_by_role(som: Som, role: str) -> List[SomRegion]:
