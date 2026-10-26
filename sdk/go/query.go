@@ -118,10 +118,54 @@ func findByIDInSlice(elements []Element, id string) *Element {
 func FindByTag(som *Som, tag string) []Element {
 	var result []Element
 	tag = normalizeElementRoleAlias(tag)
+	if sourceRole, ok := mediaTagAliases[tag]; ok {
+		for _, element := range FlatElements(som) {
+			if element.Attrs != nil && element.Attrs.SourceRole != nil && *element.Attrs.SourceRole == sourceRole {
+				result = append(result, element)
+			}
+		}
+		return result
+	}
+	if mediaGroupAliases[tag] {
+		for _, element := range FlatElements(som) {
+			if element.Role == "image" || (element.Attrs != nil && element.Attrs.SourceRole != nil && mediaSourceRoles[*element.Attrs.SourceRole]) {
+				result = append(result, element)
+			}
+		}
+		return result
+	}
 	for _, r := range som.Regions {
 		collectByRole(r.Elements, tag, &result)
 	}
 	return result
+}
+
+var mediaTagAliases = map[string]string{
+	"audio":        "audio",
+	"audios":       "audio",
+	"audio_item":   "audio",
+	"audio_items":  "audio",
+	"canvas":       "canvas",
+	"canvases":     "canvas",
+	"canvas_item":  "canvas",
+	"canvas_items": "canvas",
+	"video":        "video",
+	"videos":       "video",
+	"video_item":   "video",
+	"video_items":  "video",
+}
+
+var mediaGroupAliases = map[string]bool{
+	"media":       true,
+	"media_item":  true,
+	"mediaitem":   true,
+	"media_items": true,
+}
+
+var mediaSourceRoles = map[string]bool{
+	"audio":  true,
+	"video":  true,
+	"canvas": true,
 }
 
 // normalizeElementRoleAlias keeps Go SDK role lookups aligned with the

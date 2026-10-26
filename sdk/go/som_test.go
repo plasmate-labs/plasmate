@@ -483,6 +483,36 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 	}
 }
 
+func TestFindByTagAcceptsMediaAliases(t *testing.T) {
+	audio, video, canvas := "audio", "video", "canvas"
+	som := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "image", Role: "image"},
+		{ID: "audio", Role: "group", Attrs: &ElementAttrs{SourceRole: &audio}},
+		{ID: "video", Role: "group", Attrs: &ElementAttrs{SourceRole: &video}},
+		{ID: "canvas", Role: "group", Attrs: &ElementAttrs{SourceRole: &canvas}},
+	}}}}
+
+	for _, test := range []struct {
+		alias string
+		want  []string
+	}{
+		{alias: "audio-item", want: []string{"audio"}},
+		{alias: "videos", want: []string{"video"}},
+		{alias: "canvas_items", want: []string{"canvas"}},
+		{alias: "media", want: []string{"image", "audio", "video", "canvas"}},
+	} {
+		got := FindByTag(som, test.alias)
+		if len(got) != len(test.want) {
+			t.Fatalf("FindByTag(%q) = %d, want %d", test.alias, len(got), len(test.want))
+		}
+		for i, element := range got {
+			if element.ID != test.want[i] {
+				t.Errorf("FindByTag(%q)[%d] = %q, want %q", test.alias, i, element.ID, test.want[i])
+			}
+		}
+	}
+}
+
 func TestFindInteractive(t *testing.T) {
 	som := mustParse(t)
 
