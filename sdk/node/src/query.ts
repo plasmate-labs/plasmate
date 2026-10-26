@@ -783,6 +783,9 @@ function normalizeActionQuery(action: string): string {
     }
   }
   return {
+    clear_text: 'clear',
+    'clear-text': 'clear',
+    'clear text': 'clear',
     type_text: 'type',
     'type-text': 'type',
     'type text': 'type',
