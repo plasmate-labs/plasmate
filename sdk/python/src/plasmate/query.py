@@ -5,7 +5,24 @@ from __future__ import annotations
 import json
 from typing import Dict, List, Literal, Optional, Union
 
-from .types import Som, SomElement, SomRegion
+from .types import ElementRole, Som, SomElement, SomRegion
+
+
+_MEDIA_TAG_ALIASES = {
+    "audio": "audio",
+    "audios": "audio",
+    "audio_item": "audio",
+    "audio_items": "audio",
+    "canvas": "canvas",
+    "canvases": "canvas",
+    "canvas_item": "canvas",
+    "canvas_items": "canvas",
+    "video": "video",
+    "videos": "video",
+    "video_item": "video",
+    "video_items": "video",
+}
+_MEDIA_GROUP_ALIASES = {"media", "media_item", "mediaitem", "media_items"}
 
 
 def find_by_role(som: Som, role: str) -> List[SomRegion]:
@@ -112,6 +129,8 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "treeitem": "button",
         "treeitems": "button",
         "checkboxes": "checkbox",
+        "check_box": "checkbox",
+        "check_boxes": "checkbox",
         "comboboxes": "select",
         "div": "group",
         "fieldset": "group",
@@ -141,12 +160,20 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "ol": "list",
         "dl": "list",
         "menu": "list",
+        "blockquote": "paragraph",
+        "blockquotes": "paragraph",
+        "quote": "paragraph",
+        "quotes": "paragraph",
         "menu_item": "button",
         "menuitem": "button",
         "menu_item_checkbox": "checkbox",
+        "menu_item_checkboxes": "checkbox",
         "menuitemcheckbox": "checkbox",
+        "menuitemcheckboxes": "checkbox",
         "menu_item_radio": "radio",
+        "menu_item_radios": "radio",
         "menuitemradio": "radio",
+        "menuitemradios": "radio",
         "p": "paragraph",
         "summary": "details",
         "textarea": "textarea",
@@ -171,6 +198,10 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "links": "link",
         "listboxes": "select",
         "radios": "radio",
+        "radio_button": "radio",
+        "radio_buttons": "radio",
+        "radiobutton": "radio",
+        "radiobuttons": "radio",
     }
     tag = _normalize_role_alias(tag)
     heading_level = None
@@ -182,12 +213,29 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         suffix = tag[1:].lstrip("_")
         if suffix in "123456":
             heading_level = int(suffix)
+    media_source_role = _MEDIA_TAG_ALIASES.get(tag)
+    if media_source_role is not None:
+        return [
+            element
+            for element in flat_elements(som)
+            if element.attrs is not None
+            and element.attrs.source_role == media_source_role
+        ]
+    if tag in _MEDIA_GROUP_ALIASES:
+        return [element for element in flat_elements(som) if _is_media_element(element)]
     tag = role_aliases.get(tag, tag)
     results: List[SomElement] = []
     for region in som.regions:
         for element in region.elements:
             _collect_by_tag(element, tag, heading_level, results)
     return results
+
+
+def _is_media_element(element: SomElement) -> bool:
+    return element.role == ElementRole.image or (
+        element.attrs is not None
+        and element.attrs.source_role in {"audio", "video", "canvas"}
+    )
 
 
 def find_interactive(som: Som) -> List[SomElement]:
@@ -617,6 +665,8 @@ def find_action_targets_by_role(
         "menuitem": "button",
         "menuitems": "button",
         "checkboxes": "checkbox",
+        "check_box": "checkbox",
+        "check_boxes": "checkbox",
         "combobox": "select",
         "combo_box": "select",
         "comboboxes": "select",
@@ -634,9 +684,13 @@ def find_action_targets_by_role(
         "menu_item": "button",
         "menuitem": "button",
         "menu_item_checkbox": "checkbox",
+        "menu_item_checkboxes": "checkbox",
         "menuitemcheckbox": "checkbox",
+        "menuitemcheckboxes": "checkbox",
         "menu_item_radio": "radio",
+        "menu_item_radios": "radio",
         "menuitemradio": "radio",
+        "menuitemradios": "radio",
         "ol": "list",
         "option": "button",
         "options": "button",
@@ -644,6 +698,10 @@ def find_action_targets_by_role(
         "p": "paragraph",
         "radio": "radio",
         "radios": "radio",
+        "radio_button": "radio",
+        "radio_buttons": "radio",
+        "radiobutton": "radio",
+        "radiobuttons": "radio",
         "search": "text_input",
         "search_box": "text_input",
         "search_boxes": "text_input",

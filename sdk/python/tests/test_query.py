@@ -338,6 +338,53 @@ class TestFindByTag:
         assert [el.id for el in find_by_tag(sample_som, "article")] == ["e7", "e12"]
         assert [el.id for el in find_by_tag(sample_som, "div")] == ["e13"]
 
+    def test_accepts_blockquote_aliases(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(id="quote", role=ElementRole.paragraph, text="A cited thought")
+        )
+
+        for alias in ("blockquote", "blockquotes", "quote", "quotes"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == [
+                "e4",
+                "e8",
+                "quote",
+                "e10",
+            ]
+
+    def test_accepts_media_aliases(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.extend(
+            [
+                SomElement(
+                    id="audio",
+                    role=ElementRole.group,
+                    attrs=ElementAttrs(source_role="audio"),
+                ),
+                SomElement(
+                    id="video",
+                    role=ElementRole.group,
+                    attrs=ElementAttrs(source_role="video"),
+                ),
+                SomElement(
+                    id="canvas",
+                    role=ElementRole.group,
+                    attrs=ElementAttrs(source_role="canvas"),
+                ),
+            ]
+        )
+        for alias in ("audio", "audios", "audio-item", "audio_items"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == ["audio"]
+        for alias in ("video", "videos", "video-item", "video_items"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == ["video"]
+        for alias in ("canvas", "canvases", "canvas-item", "canvas_items"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == ["canvas"]
+        for alias in ("media", "media-item", "mediaitem", "media_items"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == [
+                "e6",
+                "audio",
+                "video",
+                "canvas",
+            ]
+
     def test_accepts_aria_control_aliases(self, sample_som: Som) -> None:
         assert [el.id for el in find_by_tag(sample_som, "textbox")] == ["e9"]
         assert [el.id for el in find_by_tag(sample_som, "searchbox")] == ["e9"]
@@ -356,6 +403,26 @@ class TestFindByTag:
             "treeitems",
         ):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["e5"]
+
+    def test_accepts_checkbox_and_radio_role_aliases(self, sample_som: Som) -> None:
+        checkbox = SomElement(id="checkbox", role=ElementRole.checkbox, actions=["toggle"])
+        radio = SomElement(id="radio", role=ElementRole.radio, actions=["click"])
+        som = Som(
+            som_version=sample_som.som_version,
+            url=sample_som.url,
+            title=sample_som.title,
+            lang=sample_som.lang,
+            meta=sample_som.meta,
+            regions=[SomRegion(id="r_controls", role=RegionRole.main, elements=[checkbox, radio])],
+        )
+        for alias in ("check box", "check-box", "menu item checkboxes"):
+            assert [element.id for element in find_by_tag(som, alias)] == ["checkbox"]
+        for alias in ("radio button", "radio-button", "menu item radios"):
+            assert [element.id for element in find_by_tag(som, alias)] == ["radio"]
+        for alias in ("check box", "menu item checkboxes"):
+            assert [item["id"] for item in find_action_targets_by_role(som, alias)] == ["checkbox"]
+        for alias in ("radio button", "menu item radios"):
+            assert [item["id"] for item in find_action_targets_by_role(som, alias)] == ["radio"]
 
     def test_accepts_plural_text_control_aliases(self, sample_som: Som) -> None:
         for alias in ("text inputs", "textboxes", "search boxes", "search inputs"):
