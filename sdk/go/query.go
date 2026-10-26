@@ -183,6 +183,7 @@ func normalizeElementRoleAlias(role string) string {
 		"combobox":           "select",
 		"comboboxes":         "select",
 		"combo_box":          "select",
+		"combo_boxes":        "select",
 		"definition_list":    "list",
 		"div":                "group",
 		"fieldset":           "group",

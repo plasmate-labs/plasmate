@@ -450,7 +450,7 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 	}
 
 	selectSOM := &Som{Regions: []Region{{Elements: []Element{{ID: "e_select", Role: "select"}}}}}
-	for _, alias := range []string{"list box", "listbox", "listboxes"} {
+	for _, alias := range []string{"combo boxes", "list box", "listbox", "listboxes"} {
 		got := FindByTag(selectSOM, alias)
 		if len(got) != 1 || got[0].ID != "e_select" {
 			t.Errorf("FindByTag(%q) = %#v, want e_select", alias, got)
