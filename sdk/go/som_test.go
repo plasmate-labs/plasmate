@@ -382,6 +382,7 @@ func TestFindByTag(t *testing.T) {
 
 func TestFindByRoleAcceptsCommonRegionAliases(t *testing.T) {
 	som := &Som{Regions: []Region{
+		{ID: "r_main", Role: "main"},
 		{ID: "r_navigation", Role: "navigation"},
 		{ID: "r_aside", Role: "aside"},
 		{ID: "r_header", Role: "header"},
@@ -395,6 +396,9 @@ func TestFindByRoleAcceptsCommonRegionAliases(t *testing.T) {
 		id    string
 	}{
 		{alias: " NAV ", role: "navigation", id: "r_navigation"},
+		{alias: "role:main", role: "main", id: "r_main"},
+		{alias: "role = 'navigation'", role: "navigation", id: "r_navigation"},
+		{alias: "\"main-content\"", role: "main", id: "r_main"},
 		{alias: "aside", role: "aside", id: "r_aside"},
 		{alias: "complementary", role: "aside", id: "r_aside"},
 		{alias: "banner", role: "header", id: "r_header"},
@@ -423,6 +427,7 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 		{alias: "text-input", role: "text_input", want: 1},
 		{alias: "  BUTTONS  ", role: "button", want: 2},
 		{alias: "menu item", role: "button", want: 2},
+		{alias: "role: text-input", role: "text_input", want: 1},
 		{alias: "img", role: "image", want: 1},
 		{alias: "headings", role: "heading", want: 1},
 		{alias: "blockquote", role: "paragraph", want: 2},

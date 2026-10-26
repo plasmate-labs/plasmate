@@ -23,22 +23,45 @@ func FindByRole(som *Som, role string) []Region {
 // normalizeRegionRoleAlias keeps region lookups tolerant of common HTML/ARIA
 // names while preserving the canonical SOM roles.
 func normalizeRegionRoleAlias(role string) string {
-	role = strings.Join(strings.Fields(strings.ReplaceAll(strings.ToLower(role), "-", " ")), "_")
+	role = normalizeRoleQuery(role)
 	aliases := map[string]string{
-		"article":       "content",
-		"articles":      "content",
-		"asides":        "aside",
-		"banner":        "header",
-		"complementary": "aside",
-		"contentinfo":   "footer",
-		"contents":      "content",
-		"footers":       "footer",
-		"headers":       "header",
-		"nav":           "navigation",
-		"navs":          "navigation",
-		"region":        "content",
-		"regions":       "content",
-		"sidebar":       "aside",
+		"article":            "content",
+		"articles":           "content",
+		"asides":             "aside",
+		"banner":             "header",
+		"complementary":      "aside",
+		"contentinfo":        "footer",
+		"contents":           "content",
+		"content_region":     "content",
+		"content_regions":    "content",
+		"dialog":             "dialog",
+		"dialogs":            "dialog",
+		"footers":            "footer",
+		"form":               "form",
+		"forms":              "form",
+		"headers":            "header",
+		"main_content":       "main",
+		"main_contents":      "main",
+		"main_region":        "main",
+		"main_regions":       "main",
+		"maincontent":        "main",
+		"maincontents":       "main",
+		"nav":                "navigation",
+		"navs":               "navigation",
+		"navigation":         "navigation",
+		"navigations":        "navigation",
+		"nav_region":         "navigation",
+		"nav_regions":        "navigation",
+		"navigation_region":  "navigation",
+		"navigation_regions": "navigation",
+		"region":             "content",
+		"regions":            "content",
+		"search":             "navigation",
+		"searches":           "navigation",
+		"search_nav":         "navigation",
+		"search_navigation":  "navigation",
+		"search_navigations": "navigation",
+		"sidebar":            "aside",
 	}
 	if canonical, ok := aliases[role]; ok {
 		return canonical
@@ -171,7 +194,7 @@ var mediaSourceRoles = map[string]bool{
 // normalizeElementRoleAlias keeps Go SDK role lookups aligned with the
 // common HTML/ARIA aliases accepted by the native selector surface.
 func normalizeElementRoleAlias(role string) string {
-	role = strings.Join(strings.Fields(strings.ReplaceAll(strings.ToLower(role), "-", " ")), "_")
+	role = normalizeRoleQuery(role)
 	aliases := map[string]string{
 		"a":                  "link",
 		"article":            "section",
@@ -280,6 +303,25 @@ func normalizeElementRoleAlias(role string) string {
 		return canonical
 	}
 	return role
+}
+
+func normalizeRoleQuery(value string) string {
+	value = strings.TrimSpace(strings.ToLower(value))
+	if len(value) >= 2 && ((value[0] == '"' && value[len(value)-1] == '"') ||
+		(value[0] == '\'' && value[len(value)-1] == '\'')) {
+		value = strings.TrimSpace(value[1 : len(value)-1])
+	}
+	if strings.HasPrefix(value, "role") {
+		rest := strings.TrimSpace(value[len("role"):])
+		if strings.HasPrefix(rest, ":") || strings.HasPrefix(rest, "=") {
+			value = strings.TrimSpace(rest[1:])
+			if len(value) >= 2 && ((value[0] == '"' && value[len(value)-1] == '"') ||
+				(value[0] == '\'' && value[len(value)-1] == '\'')) {
+				value = strings.TrimSpace(value[1 : len(value)-1])
+			}
+		}
+	}
+	return strings.Join(strings.Fields(strings.ReplaceAll(value, "-", " ")), "_")
 }
 
 func collectByRole(elements []Element, role string, result *[]Element) {
