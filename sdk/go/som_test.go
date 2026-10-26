@@ -434,6 +434,10 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 		{alias: "query-field", role: "text_input", want: 1},
 		{alias: "querybox", role: "text_input", want: 1},
 		{alias: "queryboxes", role: "text_input", want: 1},
+		{alias: "slider", role: "text_input", want: 1},
+		{alias: "spin buttons", role: "text_input", want: 1},
+		{alias: "range", role: "text_input", want: 1},
+		{alias: "sections", role: "section", want: 1},
 	} {
 		got := FindByTag(som, test.alias)
 		if len(got) != test.want {
@@ -447,7 +451,7 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 	}
 
 	selectSOM := &Som{Regions: []Region{{Elements: []Element{{ID: "e_select", Role: "select"}}}}}
-	for _, alias := range []string{"list box", "listbox", "listboxes"} {
+	for _, alias := range []string{"combo boxes", "list box", "listbox", "listboxes"} {
 		got := FindByTag(selectSOM, alias)
 		if len(got) != 1 || got[0].ID != "e_select" {
 			t.Errorf("FindByTag(%q) = %#v, want e_select", alias, got)
@@ -465,6 +469,7 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 	}{
 		{alias: "check box", id: "e_checkbox"},
 		{alias: "check boxes", id: "e_checkbox"},
+		{alias: "switches", id: "e_checkbox"},
 		{alias: "menu items", id: "e_button"},
 		{alias: "menuitems", id: "e_button"},
 		{alias: "menu item checkboxes", id: "e_checkbox"},
