@@ -242,6 +242,7 @@ func normalizeElementRoleAlias(role string) string {
 		"search_inputs":      "text_input",
 		"searchbox":          "text_input",
 		"searchboxes":        "text_input",
+		"sections":           "section",
 		"selects":            "select",
 		"slider":             "text_input",
 		"sliders":            "text_input",
