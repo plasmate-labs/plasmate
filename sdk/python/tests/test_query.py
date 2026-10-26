@@ -338,6 +338,19 @@ class TestFindByTag:
         assert [el.id for el in find_by_tag(sample_som, "article")] == ["e7", "e12"]
         assert [el.id for el in find_by_tag(sample_som, "div")] == ["e13"]
 
+    def test_accepts_blockquote_aliases(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(id="quote", role=ElementRole.paragraph, text="A cited thought")
+        )
+
+        for alias in ("blockquote", "blockquotes", "quote", "quotes"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == [
+                "e4",
+                "e8",
+                "quote",
+                "e10",
+            ]
+
     def test_accepts_media_aliases(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.extend(
             [
