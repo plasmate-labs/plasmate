@@ -509,15 +509,35 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 		id    string
 	}{
 		{alias: "data tables", id: "table"},
+		{alias: "figure", id: "group"},
+		{alias: "figures", id: "group"},
 		{alias: "groups", id: "group"},
 		{alias: "iframes", id: "iframe"},
 		{alias: "lists", id: "list"},
+		{alias: "radiogroup", id: "group"},
+		{alias: "radiogroups", id: "group"},
 		{alias: "tables", id: "table"},
 		{alias: "tree items", id: "button"},
 	} {
 		got := FindByTag(aliasSOM, test.alias)
 		if len(got) != 1 || got[0].ID != test.id {
 			t.Errorf("FindByTag(%q) = %#v, want %s", test.alias, got, test.id)
+		}
+	}
+
+	progressSOM := &Som{Regions: []Region{{Elements: []Element{{ID: "progress", Role: "group"}}}}}
+	for _, alias := range []string{"progress", "progressbar", "progressbars"} {
+		got := FindByTag(progressSOM, alias)
+		if len(got) != 1 || got[0].ID != "progress" {
+			t.Errorf("FindByTag(%q) = %#v, want progress", alias, got)
+		}
+	}
+
+	meterSOM := &Som{Regions: []Region{{Elements: []Element{{ID: "meter", Role: "group"}}}}}
+	for _, alias := range []string{"meter", "meters"} {
+		got := FindByTag(meterSOM, alias)
+		if len(got) != 1 || got[0].ID != "meter" {
+			t.Errorf("FindByTag(%q) = %#v, want meter", alias, got)
 		}
 	}
 
