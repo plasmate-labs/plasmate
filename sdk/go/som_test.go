@@ -455,6 +455,7 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 	}
 
 	roleAliasSOM := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "e_button", Role: "button"},
 		{ID: "e_checkbox", Role: "checkbox"},
 		{ID: "e_radio", Role: "radio"},
 	}}}}
@@ -464,6 +465,12 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 	}{
 		{alias: "check box", id: "e_checkbox"},
 		{alias: "check boxes", id: "e_checkbox"},
+		{alias: "menu items", id: "e_button"},
+		{alias: "menuitems", id: "e_button"},
+		{alias: "menu item checkboxes", id: "e_checkbox"},
+		{alias: "menuitemcheckboxes", id: "e_checkbox"},
+		{alias: "menu item radios", id: "e_radio"},
+		{alias: "menuitemradios", id: "e_radio"},
 		{alias: "radio button", id: "e_radio"},
 		{alias: "radio buttons", id: "e_radio"},
 		{alias: "radiobutton", id: "e_radio"},

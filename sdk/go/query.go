@@ -212,6 +212,16 @@ func normalizeElementRoleAlias(role string) string {
 		"ul":                 "list",
 		"unordered_list":     "list",
 	}
+	for alias, canonical := range map[string]string{
+		"menu_items":           "button",
+		"menuitems":            "button",
+		"menuitemcheckboxes":   "checkbox",
+		"menu_item_checkboxes": "checkbox",
+		"menuitemradios":       "radio",
+		"menu_item_radios":     "radio",
+	} {
+		aliases[alias] = canonical
+	}
 	if canonical, ok := aliases[role]; ok {
 		return canonical
 	}
