@@ -298,6 +298,48 @@ func TestFindByRole(t *testing.T) {
 	}
 }
 
+func TestQueryHelpersHandleNilSOM(t *testing.T) {
+	if got := FindByRole(nil, "main"); got != nil {
+		t.Fatalf("FindByRole(nil) = %#v, want nil", got)
+	}
+	if got := FindByRegionID(nil, "main"); got != nil {
+		t.Fatalf("FindByRegionID(nil) = %#v, want nil", got)
+	}
+	if got := FindByID(nil, "e1"); got != nil {
+		t.Fatalf("FindByID(nil) = %#v, want nil", got)
+	}
+	if got := FindByHTMLID(nil, "e1"); got != nil {
+		t.Fatalf("FindByHTMLID(nil) = %#v, want nil", got)
+	}
+	if got := FindByTag(nil, "button"); got != nil {
+		t.Fatalf("FindByTag(nil) = %#v, want nil", got)
+	}
+	if got := FindInteractive(nil); got != nil {
+		t.Fatalf("FindInteractive(nil) = %#v, want nil", got)
+	}
+	if got := FindByText(nil, "text"); got != nil {
+		t.Fatalf("FindByText(nil) = %#v, want nil", got)
+	}
+	if got := FindByLabel(nil, "label"); got != nil {
+		t.Fatalf("FindByLabel(nil) = %#v, want nil", got)
+	}
+	if got := FindByAction(nil, "click"); got != nil {
+		t.Fatalf("FindByAction(nil) = %#v, want nil", got)
+	}
+	if got := FindByHint(nil, "primary"); got != nil {
+		t.Fatalf("FindByHint(nil) = %#v, want nil", got)
+	}
+	if got := FlatElements(nil); got != nil {
+		t.Fatalf("FlatElements(nil) = %#v, want nil", got)
+	}
+	if got := GetActionPlan(nil); got == nil || len(got) != 0 {
+		t.Fatalf("GetActionPlan(nil) = %#v, want empty non-nil slice", got)
+	}
+	if got := GetActionPlanIndex(nil); len(got.ByID) != 0 || len(got.ByRole) != 0 || len(got.ByAction) != 0 {
+		t.Fatalf("GetActionPlanIndex(nil) = %#v, want empty index", got)
+	}
+}
+
 func TestFindByID(t *testing.T) {
 	som := mustParse(t)
 
@@ -382,6 +424,7 @@ func TestFindByTag(t *testing.T) {
 
 func TestFindByRoleAcceptsCommonRegionAliases(t *testing.T) {
 	som := &Som{Regions: []Region{
+		{ID: "r_main", Role: "main"},
 		{ID: "r_navigation", Role: "navigation"},
 		{ID: "r_aside", Role: "aside"},
 		{ID: "r_header", Role: "header"},
@@ -395,6 +438,9 @@ func TestFindByRoleAcceptsCommonRegionAliases(t *testing.T) {
 		id    string
 	}{
 		{alias: " NAV ", role: "navigation", id: "r_navigation"},
+		{alias: "role:main", role: "main", id: "r_main"},
+		{alias: "role = 'navigation'", role: "navigation", id: "r_navigation"},
+		{alias: "\"main-content\"", role: "main", id: "r_main"},
 		{alias: "aside", role: "aside", id: "r_aside"},
 		{alias: "complementary", role: "aside", id: "r_aside"},
 		{alias: "banner", role: "header", id: "r_header"},
@@ -423,6 +469,7 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 		{alias: "text-input", role: "text_input", want: 1},
 		{alias: "  BUTTONS  ", role: "button", want: 2},
 		{alias: "menu item", role: "button", want: 2},
+		{alias: "role: text-input", role: "text_input", want: 1},
 		{alias: "img", role: "image", want: 1},
 		{alias: "headings", role: "heading", want: 1},
 		{alias: "blockquote", role: "paragraph", want: 2},
@@ -447,6 +494,30 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 			if element.Role != test.role {
 				t.Errorf("FindByTag(%q) returned role %q, want %q", test.alias, element.Role, test.role)
 			}
+		}
+	}
+
+	aliasSOM := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "table", Role: "table"},
+		{ID: "group", Role: "group"},
+		{ID: "iframe", Role: "iframe"},
+		{ID: "list", Role: "list"},
+		{ID: "button", Role: "button"},
+	}}}}
+	for _, test := range []struct {
+		alias string
+		id    string
+	}{
+		{alias: "data tables", id: "table"},
+		{alias: "groups", id: "group"},
+		{alias: "iframes", id: "iframe"},
+		{alias: "lists", id: "list"},
+		{alias: "tables", id: "table"},
+		{alias: "tree items", id: "button"},
+	} {
+		got := FindByTag(aliasSOM, test.alias)
+		if len(got) != 1 || got[0].ID != test.id {
+			t.Errorf("FindByTag(%q) = %#v, want %s", test.alias, got, test.id)
 		}
 	}
 
@@ -554,6 +625,13 @@ func TestFindByText(t *testing.T) {
 	results = FindByText(som, "hello world")
 	if len(results) != 1 || results[0].ID != "e4" {
 		t.Fatalf("FindByText(normalized whitespace) = %#v, want e4", results)
+	}
+
+	invisibleSeparatorText := "Save\u2060\n changes"
+	som.Regions[1].Elements[3].Text = &invisibleSeparatorText
+	results = FindByText(som, "save changes")
+	if len(results) != 1 || results[0].ID != "e6" {
+		t.Fatalf("FindByText(invisible separators) = %#v, want e6", results)
 	}
 
 	// Case insensitive

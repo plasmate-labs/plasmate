@@ -10,6 +10,9 @@ import (
 
 // FindByRole returns all regions matching the given role.
 func FindByRole(som *Som, role string) []Region {
+	if som == nil {
+		return nil
+	}
 	var result []Region
 	role = normalizeRegionRoleAlias(role)
 	for _, r := range som.Regions {
@@ -23,22 +26,45 @@ func FindByRole(som *Som, role string) []Region {
 // normalizeRegionRoleAlias keeps region lookups tolerant of common HTML/ARIA
 // names while preserving the canonical SOM roles.
 func normalizeRegionRoleAlias(role string) string {
-	role = strings.Join(strings.Fields(strings.ReplaceAll(strings.ToLower(role), "-", " ")), "_")
+	role = normalizeRoleQuery(role)
 	aliases := map[string]string{
-		"article":       "content",
-		"articles":      "content",
-		"asides":        "aside",
-		"banner":        "header",
-		"complementary": "aside",
-		"contentinfo":   "footer",
-		"contents":      "content",
-		"footers":       "footer",
-		"headers":       "header",
-		"nav":           "navigation",
-		"navs":          "navigation",
-		"region":        "content",
-		"regions":       "content",
-		"sidebar":       "aside",
+		"article":            "content",
+		"articles":           "content",
+		"asides":             "aside",
+		"banner":             "header",
+		"complementary":      "aside",
+		"contentinfo":        "footer",
+		"contents":           "content",
+		"content_region":     "content",
+		"content_regions":    "content",
+		"dialog":             "dialog",
+		"dialogs":            "dialog",
+		"footers":            "footer",
+		"form":               "form",
+		"forms":              "form",
+		"headers":            "header",
+		"main_content":       "main",
+		"main_contents":      "main",
+		"main_region":        "main",
+		"main_regions":       "main",
+		"maincontent":        "main",
+		"maincontents":       "main",
+		"nav":                "navigation",
+		"navs":               "navigation",
+		"navigation":         "navigation",
+		"navigations":        "navigation",
+		"nav_region":         "navigation",
+		"nav_regions":        "navigation",
+		"navigation_region":  "navigation",
+		"navigation_regions": "navigation",
+		"region":             "content",
+		"regions":            "content",
+		"search":             "navigation",
+		"searches":           "navigation",
+		"search_nav":         "navigation",
+		"search_navigation":  "navigation",
+		"search_navigations": "navigation",
+		"sidebar":            "aside",
 	}
 	if canonical, ok := aliases[role]; ok {
 		return canonical
@@ -49,6 +75,9 @@ func normalizeRegionRoleAlias(role string) string {
 // FindByRegionID searches top-level regions for the given SOM region ID.
 // Returns nil if not found.
 func FindByRegionID(som *Som, id string) *Region {
+	if som == nil {
+		return nil
+	}
 	for i := range som.Regions {
 		if som.Regions[i].ID == id {
 			return &som.Regions[i]
@@ -60,6 +89,9 @@ func FindByRegionID(som *Som, id string) *Region {
 // FindByID searches all regions for an element with the given ID.
 // Returns nil if not found.
 func FindByID(som *Som, id string) *Element {
+	if som == nil {
+		return nil
+	}
 	for _, r := range som.Regions {
 		if el := findByIDInSlice(r.Elements, id); el != nil {
 			return el
@@ -71,6 +103,9 @@ func FindByID(som *Som, id string) *Element {
 // FindByHTMLID searches all regions for an element with the original HTML id.
 // Returns nil if not found.
 func FindByHTMLID(som *Som, htmlID string) *Element {
+	if som == nil {
+		return nil
+	}
 	for i := range som.Regions {
 		if el := findByHTMLIDInSlice(som.Regions[i].Elements, htmlID); el != nil {
 			return el
@@ -116,6 +151,9 @@ func findByIDInSlice(elements []Element, id string) *Element {
 // FindByTag returns all elements whose role matches the given tag.
 // This searches element roles (e.g. "link", "button", "heading").
 func FindByTag(som *Som, tag string) []Element {
+	if som == nil {
+		return nil
+	}
 	var result []Element
 	tag = normalizeElementRoleAlias(tag)
 	if sourceRole, ok := mediaTagAliases[tag]; ok {
@@ -171,7 +209,7 @@ var mediaSourceRoles = map[string]bool{
 // normalizeElementRoleAlias keeps Go SDK role lookups aligned with the
 // common HTML/ARIA aliases accepted by the native selector surface.
 func normalizeElementRoleAlias(role string) string {
-	role = strings.Join(strings.Fields(strings.ReplaceAll(strings.ToLower(role), "-", " ")), "_")
+	role = normalizeRoleQuery(role)
 	aliases := map[string]string{
 		"a":                  "link",
 		"article":            "section",
@@ -185,17 +223,23 @@ func normalizeElementRoleAlias(role string) string {
 		"combo_box":          "select",
 		"combo_boxes":        "select",
 		"definition_list":    "list",
+		"data_table":         "table",
+		"data_tables":        "table",
 		"div":                "group",
+		"details":            "details",
 		"fieldset":           "group",
 		"headings":           "heading",
 		"hr":                 "separator",
 		"img":                "image",
+		"images":             "image",
 		"input":              "text_input",
 		"inputs":             "text_input",
 		"links":              "link",
 		"list_box":           "select",
+		"list_boxes":         "select",
 		"listbox":            "select",
 		"listboxes":          "select",
+		"lists":              "list",
 		"menu":               "list",
 		"menu_item":          "button",
 		"menuitem":           "button",
@@ -255,6 +299,7 @@ func normalizeElementRoleAlias(role string) string {
 		"switches":           "checkbox",
 		"tab":                "button",
 		"tabs":               "button",
+		"tables":             "table",
 		"textarea":           "textarea",
 		"textareas":          "textarea",
 		"textboxes":          "text_input",
@@ -262,9 +307,12 @@ func normalizeElementRoleAlias(role string) string {
 		"textbox":            "text_input",
 		"tree_item":          "button",
 		"treeitem":           "button",
+		"tree_items":         "button",
 		"treeitems":          "button",
 		"ul":                 "list",
 		"unordered_list":     "list",
+		"groups":             "group",
+		"iframes":            "iframe",
 	}
 	for alias, canonical := range map[string]string{
 		"menu_items":           "button",
@@ -282,6 +330,25 @@ func normalizeElementRoleAlias(role string) string {
 	return role
 }
 
+func normalizeRoleQuery(value string) string {
+	value = strings.TrimSpace(strings.ToLower(value))
+	if len(value) >= 2 && ((value[0] == '"' && value[len(value)-1] == '"') ||
+		(value[0] == '\'' && value[len(value)-1] == '\'')) {
+		value = strings.TrimSpace(value[1 : len(value)-1])
+	}
+	if strings.HasPrefix(value, "role") {
+		rest := strings.TrimSpace(value[len("role"):])
+		if strings.HasPrefix(rest, ":") || strings.HasPrefix(rest, "=") {
+			value = strings.TrimSpace(rest[1:])
+			if len(value) >= 2 && ((value[0] == '"' && value[len(value)-1] == '"') ||
+				(value[0] == '\'' && value[len(value)-1] == '\'')) {
+				value = strings.TrimSpace(value[1 : len(value)-1])
+			}
+		}
+	}
+	return strings.Join(strings.Fields(strings.ReplaceAll(value, "-", " ")), "_")
+}
+
 func collectByRole(elements []Element, role string, result *[]Element) {
 	for _, el := range elements {
 		if el.Role == role {
@@ -296,6 +363,9 @@ func collectByRole(elements []Element, role string, result *[]Element) {
 
 // FindInteractive returns all elements that have at least one action.
 func FindInteractive(som *Som) []Element {
+	if som == nil {
+		return nil
+	}
 	var result []Element
 	for _, r := range som.Regions {
 		collectInteractive(r.Elements, &result)
@@ -322,7 +392,7 @@ func collectInteractive(elements []Element, result *[]Element) {
 // alongside compiled list-item copy, select options, and table content because
 // those values can be the only authored text available for an element.
 func FindByText(som *Som, text string) []Element {
-	if text == "" {
+	if som == nil || text == "" {
 		return nil
 	}
 	lower := normalizeQueryText(text)
@@ -339,6 +409,9 @@ func FindByText(som *Som, text string) []Element {
 // FindByLabel returns all elements whose accessible label matches label.
 // Matching is case-insensitive and uses substring matching.
 func FindByLabel(som *Som, label string, exact ...bool) []Element {
+	if som == nil {
+		return nil
+	}
 	needle := normalizeQueryText(label)
 	if needle == "" {
 		return nil
@@ -390,6 +463,7 @@ func elementMatchesLabel(el Element, lowerLabel string, exact bool) bool {
 }
 
 func normalizeQueryText(value string) string {
+	value = strings.NewReplacer("\u200b", " ", "\u2060", " ", "\ufeff", " ").Replace(value)
 	return strings.ToLower(strings.Join(strings.Fields(value), " "))
 }
 
@@ -477,6 +551,9 @@ func elementMatchesText(el Element, lowerText string) bool {
 
 // FindByAction returns all elements that expose a specific action.
 func FindByAction(som *Som, action string) []Element {
+	if som == nil {
+		return nil
+	}
 	var result []Element
 	for _, el := range FlatElements(som) {
 		if containsString(el.Actions, action) {
@@ -488,6 +565,9 @@ func FindByAction(som *Som, action string) []Element {
 
 // FindByHint returns all elements tagged with a specific semantic hint.
 func FindByHint(som *Som, hint string) []Element {
+	if som == nil {
+		return nil
+	}
 	var result []Element
 	for _, el := range FlatElements(som) {
 		if containsString(el.Hints, hint) {
@@ -509,6 +589,9 @@ func containsString(values []string, target string) bool {
 // FlatElements returns all elements from all regions flattened into a single slice,
 // including nested children and shadow-root elements via depth-first traversal.
 func FlatElements(som *Som) []Element {
+	if som == nil {
+		return nil
+	}
 	var result []Element
 	for _, r := range som.Regions {
 		flattenElements(r.Elements, &result)
@@ -705,6 +788,9 @@ func GetActionPlanCacheKey(item ActionPlanItem) string {
 // GetActionPlan returns compact action targets for agent planning.
 func GetActionPlan(som *Som) []ActionPlanItem {
 	items := []ActionPlanItem{}
+	if som == nil {
+		return items
+	}
 	formContextByID := map[string]Region{}
 	for _, region := range som.Regions {
 		for _, el := range flattenRegionElements(region.Elements) {
