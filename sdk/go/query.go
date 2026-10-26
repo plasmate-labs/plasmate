@@ -260,6 +260,8 @@ func normalizeElementRoleAlias(role string) string {
 		"progress":           "group",
 		"progressbar":        "group",
 		"progressbars":       "group",
+		"meter":              "group",
+		"meters":             "group",
 		"query":              "text_input",
 		"queries":            "text_input",
 		"query_box":          "text_input",

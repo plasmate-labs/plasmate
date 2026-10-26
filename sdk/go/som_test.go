@@ -529,6 +529,14 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 		}
 	}
 
+	meterSOM := &Som{Regions: []Region{{Elements: []Element{{ID: "meter", Role: "group"}}}}}
+	for _, alias := range []string{"meter", "meters"} {
+		got := FindByTag(meterSOM, alias)
+		if len(got) != 1 || got[0].ID != "meter" {
+			t.Errorf("FindByTag(%q) = %#v, want meter", alias, got)
+		}
+	}
+
 	selectSOM := &Som{Regions: []Region{{Elements: []Element{{ID: "e_select", Role: "select"}}}}}
 	for _, alias := range []string{"combo boxes", "list box", "listbox", "listboxes"} {
 		got := FindByTag(selectSOM, alias)
