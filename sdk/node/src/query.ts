@@ -91,6 +91,14 @@ function findElementById(elements: SomElement[], id: string): SomElement | undef
 
 /** Find all elements whose role matches a canonical role or selector alias. */
 export function findByTag(som: Som, tag: ElementRole | string): SomElement[] {
+  const normalizedTag = stripRolePrefix(tag).replace(/[\s-]+/g, '_');
+  const mediaSourceRole = MEDIA_TAG_ALIASES[normalizedTag];
+  if (mediaSourceRole) {
+    return flatElements(som).filter((el) => el.attrs?.source_role === mediaSourceRole);
+  }
+  if (normalizedTag in MEDIA_GROUP_ALIASES) {
+    return flatElements(som).filter(isMediaElement);
+  }
   const normalizedRole = normalizeElementRole(tag);
   return normalizedRole ? flatElements(som).filter((el) => el.role === normalizedRole) : [];
 }
@@ -254,6 +262,7 @@ const ELEMENT_ROLES: readonly ElementRole[] = [
 
 const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   a: 'link',
+  article: 'section',
   links: 'link',
   buttons: 'button',
   menuitem: 'button',
@@ -282,6 +291,10 @@ const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   radio_buttons: 'radio',
   check_box: 'checkbox',
   check_boxes: 'checkbox',
+  div: 'group',
+  fieldset: 'group',
+  hr: 'separator',
+  img: 'image',
   slider: 'text_input',
   sliders: 'text_input',
   spin_button: 'text_input',
@@ -304,14 +317,29 @@ const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   text_inputs: 'text_input',
   textbox: 'text_input',
   textboxes: 'text_input',
+  search: 'text_input',
+  searches: 'text_input',
+  search_control: 'text_input',
+  search_controls: 'text_input',
+  search_field: 'text_input',
+  search_fields: 'text_input',
   search_box: 'text_input',
+  search_boxes: 'text_input',
   searchbox: 'text_input',
   searchboxes: 'text_input',
   search_input: 'text_input',
+  search_inputs: 'text_input',
   query: 'text_input',
+  queries: 'text_input',
   query_box: 'text_input',
+  query_boxes: 'text_input',
   querybox: 'text_input',
   query_input: 'text_input',
+  query_inputs: 'text_input',
+  query_control: 'text_input',
+  query_controls: 'text_input',
+  query_field: 'text_input',
+  query_fields: 'text_input',
   textareas: 'textarea',
   selects: 'select',
   checkboxes: 'checkbox',
@@ -319,6 +347,19 @@ const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   headings: 'heading',
   images: 'image',
   lists: 'list',
+  ol: 'list',
+  dl: 'list',
+  menu: 'list',
+  p: 'paragraph',
+  blockquote: 'paragraph',
+  blockquotes: 'paragraph',
+  quote: 'paragraph',
+  quotes: 'paragraph',
+  summary: 'details',
+  ul: 'list',
+  unordered_list: 'list',
+  ordered_list: 'list',
+  definition_list: 'list',
   tables: 'table',
   data_table: 'table',
   data_tables: 'table',
@@ -329,6 +370,34 @@ const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   details: 'details',
   iframes: 'iframe',
 };
+
+const MEDIA_TAG_ALIASES: Record<string, string> = {
+  audio: 'audio',
+  audios: 'audio',
+  audio_item: 'audio',
+  audio_items: 'audio',
+  canvas: 'canvas',
+  canvases: 'canvas',
+  canvas_item: 'canvas',
+  canvas_items: 'canvas',
+  video: 'video',
+  videos: 'video',
+  video_item: 'video',
+  video_items: 'video',
+};
+
+const MEDIA_GROUP_ALIASES: Record<string, true> = {
+  media: true,
+  media_item: true,
+  mediaitem: true,
+  media_items: true,
+};
+
+function isMediaElement(element: SomElement): boolean {
+  return element.role === 'image' ||
+    (element.attrs?.source_role !== undefined &&
+      ['audio', 'video', 'canvas'].includes(element.attrs.source_role));
+}
 
 function normalizeElementRole(role: string): ElementRole | undefined {
   const normalizedRole = stripRolePrefix(role).replace(/[\s-]+/g, '_');

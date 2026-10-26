@@ -364,6 +364,21 @@ describe('findByTag', () => {
     assert.deepEqual(findByTag(fixture, '"role=paragraph"').map((el) => el.id), ['e3', 'e7', 'e9']);
     assert.deepEqual(findByTag(fixture, 'search box').map((el) => el.id), ['e5']);
     assert.deepEqual(findByTag(fixture, 'role=query_input').map((el) => el.id), ['e5']);
+    for (const alias of [
+      'search',
+      'searches',
+      'search-control',
+      'search-field',
+      'search-inputs',
+      'query',
+      'queries',
+      'query-boxes',
+      'query-control',
+      'query-field',
+      'query-inputs',
+    ]) {
+      assert.deepEqual(findByTag(fixture, alias).map((el) => el.id), ['e5'], alias);
+    }
   });
 
   it('accepts data table aliases', () => {
@@ -380,6 +395,88 @@ describe('findByTag', () => {
     };
     for (const alias of ['data_table', 'data-tables', 'data tables']) {
       assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['e12'], alias);
+    }
+  });
+
+  it('accepts common HTML tag aliases', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_tags',
+          role: 'main',
+          elements: [
+            { id: 'article', role: 'section' },
+            { id: 'group', role: 'group' },
+            { id: 'separator', role: 'separator' },
+            { id: 'image', role: 'image' },
+            { id: 'list', role: 'list' },
+            { id: 'paragraph', role: 'paragraph' },
+            { id: 'details', role: 'details' },
+          ],
+        },
+      ],
+      meta: fixture.meta,
+    };
+    const aliases: Record<string, string> = {
+      article: 'article',
+      div: 'group',
+      fieldset: 'group',
+      hr: 'separator',
+      img: 'image',
+      ol: 'list',
+      p: 'paragraph',
+      summary: 'details',
+      ul: 'list',
+    };
+    for (const [alias, id] of Object.entries(aliases)) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), [id], alias);
+    }
+  });
+
+  it('accepts blockquote aliases for paragraph elements', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_quote',
+          role: 'main',
+          elements: [{ id: 'quote', role: 'paragraph', text: 'A cited thought' }],
+        },
+      ],
+    };
+    for (const alias of ['blockquote', 'blockquotes', 'quote', 'quotes']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['quote'], alias);
+    }
+  });
+
+  it('accepts media aliases for source-role elements', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_media',
+          role: 'main',
+          elements: [
+            { id: 'image', role: 'image' },
+            { id: 'audio', role: 'group', attrs: { source_role: 'audio' } },
+            { id: 'video', role: 'group', attrs: { source_role: 'video' } },
+            { id: 'canvas', role: 'group', attrs: { source_role: 'canvas' } },
+          ],
+        },
+      ],
+    };
+    for (const alias of ['audio', 'audios', 'audio-item', 'audio_items']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['audio'], alias);
+    }
+    for (const alias of ['video', 'videos', 'video-item', 'video_items']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['video'], alias);
+    }
+    for (const alias of ['canvas', 'canvases', 'canvas-item', 'canvas_items']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['canvas'], alias);
+    }
+    for (const alias of ['media', 'media-item', 'media_items']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['image', 'audio', 'video', 'canvas'], alias);
     }
   });
 
