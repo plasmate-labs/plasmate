@@ -453,6 +453,27 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 			t.Errorf("FindByTag(%q) = %#v, want e_select", alias, got)
 		}
 	}
+
+	roleAliasSOM := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "e_checkbox", Role: "checkbox"},
+		{ID: "e_radio", Role: "radio"},
+	}}}}
+	for _, test := range []struct {
+		alias string
+		id    string
+	}{
+		{alias: "check box", id: "e_checkbox"},
+		{alias: "check boxes", id: "e_checkbox"},
+		{alias: "radio button", id: "e_radio"},
+		{alias: "radio buttons", id: "e_radio"},
+		{alias: "radiobutton", id: "e_radio"},
+		{alias: "radiobuttons", id: "e_radio"},
+	} {
+		got := FindByTag(roleAliasSOM, test.alias)
+		if len(got) != 1 || got[0].ID != test.id {
+			t.Errorf("FindByTag(%q) = %#v, want %s", test.alias, got, test.id)
+		}
+	}
 }
 
 func TestFindInteractive(t *testing.T) {
