@@ -465,6 +465,7 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 	}{
 		{alias: "check box", id: "e_checkbox"},
 		{alias: "check boxes", id: "e_checkbox"},
+		{alias: "switches", id: "e_checkbox"},
 		{alias: "menu items", id: "e_button"},
 		{alias: "menuitems", id: "e_button"},
 		{alias: "menu item checkboxes", id: "e_checkbox"},

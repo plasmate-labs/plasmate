@@ -243,6 +243,7 @@ func normalizeElementRoleAlias(role string) string {
 		"selects":            "select",
 		"summary":            "details",
 		"switch":             "checkbox",
+		"switches":           "checkbox",
 		"tab":                "button",
 		"tabs":               "button",
 		"textarea":           "textarea",
