@@ -118,10 +118,54 @@ func findByIDInSlice(elements []Element, id string) *Element {
 func FindByTag(som *Som, tag string) []Element {
 	var result []Element
 	tag = normalizeElementRoleAlias(tag)
+	if sourceRole, ok := mediaTagAliases[tag]; ok {
+		for _, element := range FlatElements(som) {
+			if element.Attrs != nil && element.Attrs.SourceRole != nil && *element.Attrs.SourceRole == sourceRole {
+				result = append(result, element)
+			}
+		}
+		return result
+	}
+	if mediaGroupAliases[tag] {
+		for _, element := range FlatElements(som) {
+			if element.Role == "image" || (element.Attrs != nil && element.Attrs.SourceRole != nil && mediaSourceRoles[*element.Attrs.SourceRole]) {
+				result = append(result, element)
+			}
+		}
+		return result
+	}
 	for _, r := range som.Regions {
 		collectByRole(r.Elements, tag, &result)
 	}
 	return result
+}
+
+var mediaTagAliases = map[string]string{
+	"audio":        "audio",
+	"audios":       "audio",
+	"audio_item":   "audio",
+	"audio_items":  "audio",
+	"canvas":       "canvas",
+	"canvases":     "canvas",
+	"canvas_item":  "canvas",
+	"canvas_items": "canvas",
+	"video":        "video",
+	"videos":       "video",
+	"video_item":   "video",
+	"video_items":  "video",
+}
+
+var mediaGroupAliases = map[string]bool{
+	"media":       true,
+	"media_item":  true,
+	"mediaitem":   true,
+	"media_items": true,
+}
+
+var mediaSourceRoles = map[string]bool{
+	"audio":  true,
+	"video":  true,
+	"canvas": true,
 }
 
 // normalizeElementRoleAlias keeps Go SDK role lookups aligned with the
@@ -134,6 +178,8 @@ func normalizeElementRoleAlias(role string) string {
 		"button":             "button",
 		"buttons":            "button",
 		"checkboxes":         "checkbox",
+		"check_box":          "checkbox",
+		"check_boxes":        "checkbox",
 		"combobox":           "select",
 		"comboboxes":         "select",
 		"combo_box":          "select",
@@ -161,6 +207,10 @@ func normalizeElementRoleAlias(role string) string {
 		"options":            "button",
 		"ordered_list":       "list",
 		"p":                  "paragraph",
+		"blockquote":         "paragraph",
+		"blockquotes":        "paragraph",
+		"quote":              "paragraph",
+		"quotes":             "paragraph",
 		"paragraphs":         "paragraph",
 		"query":              "text_input",
 		"queries":            "text_input",
@@ -175,7 +225,10 @@ func normalizeElementRoleAlias(role string) string {
 		"query_input":        "text_input",
 		"query_inputs":       "text_input",
 		"radio_buttons":      "radio",
+		"radio_button":       "radio",
 		"radios":             "radio",
+		"radiobutton":        "radio",
+		"radiobuttons":       "radio",
 		"search":             "text_input",
 		"search_box":         "text_input",
 		"search_boxes":       "text_input",
@@ -202,6 +255,16 @@ func normalizeElementRoleAlias(role string) string {
 		"treeitems":          "button",
 		"ul":                 "list",
 		"unordered_list":     "list",
+	}
+	for alias, canonical := range map[string]string{
+		"menu_items":           "button",
+		"menuitems":            "button",
+		"menuitemcheckboxes":   "checkbox",
+		"menu_item_checkboxes": "checkbox",
+		"menuitemradios":       "radio",
+		"menu_item_radios":     "radio",
+	} {
+		aliases[alias] = canonical
 	}
 	if canonical, ok := aliases[role]; ok {
 		return canonical

@@ -425,6 +425,10 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 		{alias: "menu item", role: "button", want: 2},
 		{alias: "img", role: "image", want: 1},
 		{alias: "headings", role: "heading", want: 1},
+		{alias: "blockquote", role: "paragraph", want: 2},
+		{alias: "blockquotes", role: "paragraph", want: 2},
+		{alias: "quote", role: "paragraph", want: 2},
+		{alias: "quotes", role: "paragraph", want: 2},
 		{alias: "query input", role: "text_input", want: 1},
 		{alias: "queries", role: "text_input", want: 1},
 		{alias: "query-field", role: "text_input", want: 1},
@@ -447,6 +451,64 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 		got := FindByTag(selectSOM, alias)
 		if len(got) != 1 || got[0].ID != "e_select" {
 			t.Errorf("FindByTag(%q) = %#v, want e_select", alias, got)
+		}
+	}
+
+	roleAliasSOM := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "e_button", Role: "button"},
+		{ID: "e_checkbox", Role: "checkbox"},
+		{ID: "e_radio", Role: "radio"},
+	}}}}
+	for _, test := range []struct {
+		alias string
+		id    string
+	}{
+		{alias: "check box", id: "e_checkbox"},
+		{alias: "check boxes", id: "e_checkbox"},
+		{alias: "menu items", id: "e_button"},
+		{alias: "menuitems", id: "e_button"},
+		{alias: "menu item checkboxes", id: "e_checkbox"},
+		{alias: "menuitemcheckboxes", id: "e_checkbox"},
+		{alias: "menu item radios", id: "e_radio"},
+		{alias: "menuitemradios", id: "e_radio"},
+		{alias: "radio button", id: "e_radio"},
+		{alias: "radio buttons", id: "e_radio"},
+		{alias: "radiobutton", id: "e_radio"},
+		{alias: "radiobuttons", id: "e_radio"},
+	} {
+		got := FindByTag(roleAliasSOM, test.alias)
+		if len(got) != 1 || got[0].ID != test.id {
+			t.Errorf("FindByTag(%q) = %#v, want %s", test.alias, got, test.id)
+		}
+	}
+}
+
+func TestFindByTagAcceptsMediaAliases(t *testing.T) {
+	audio, video, canvas := "audio", "video", "canvas"
+	som := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "image", Role: "image"},
+		{ID: "audio", Role: "group", Attrs: &ElementAttrs{SourceRole: &audio}},
+		{ID: "video", Role: "group", Attrs: &ElementAttrs{SourceRole: &video}},
+		{ID: "canvas", Role: "group", Attrs: &ElementAttrs{SourceRole: &canvas}},
+	}}}}
+
+	for _, test := range []struct {
+		alias string
+		want  []string
+	}{
+		{alias: "audio-item", want: []string{"audio"}},
+		{alias: "videos", want: []string{"video"}},
+		{alias: "canvas_items", want: []string{"canvas"}},
+		{alias: "media", want: []string{"image", "audio", "video", "canvas"}},
+	} {
+		got := FindByTag(som, test.alias)
+		if len(got) != len(test.want) {
+			t.Fatalf("FindByTag(%q) = %d, want %d", test.alias, len(got), len(test.want))
+		}
+		for i, element := range got {
+			if element.ID != test.want[i] {
+				t.Errorf("FindByTag(%q)[%d] = %q, want %q", test.alias, i, element.ID, test.want[i])
+			}
 		}
 	}
 }
