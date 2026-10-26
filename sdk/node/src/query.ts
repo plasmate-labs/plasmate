@@ -91,6 +91,14 @@ function findElementById(elements: SomElement[], id: string): SomElement | undef
 
 /** Find all elements whose role matches a canonical role or selector alias. */
 export function findByTag(som: Som, tag: ElementRole | string): SomElement[] {
+  const normalizedTag = stripRolePrefix(tag).replace(/[\s-]+/g, '_');
+  const mediaSourceRole = MEDIA_TAG_ALIASES[normalizedTag];
+  if (mediaSourceRole) {
+    return flatElements(som).filter((el) => el.attrs?.source_role === mediaSourceRole);
+  }
+  if (normalizedTag in MEDIA_GROUP_ALIASES) {
+    return flatElements(som).filter(isMediaElement);
+  }
   const normalizedRole = normalizeElementRole(tag);
   return normalizedRole ? flatElements(som).filter((el) => el.role === normalizedRole) : [];
 }
@@ -362,6 +370,34 @@ const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   details: 'details',
   iframes: 'iframe',
 };
+
+const MEDIA_TAG_ALIASES: Record<string, string> = {
+  audio: 'audio',
+  audios: 'audio',
+  audio_item: 'audio',
+  audio_items: 'audio',
+  canvas: 'canvas',
+  canvases: 'canvas',
+  canvas_item: 'canvas',
+  canvas_items: 'canvas',
+  video: 'video',
+  videos: 'video',
+  video_item: 'video',
+  video_items: 'video',
+};
+
+const MEDIA_GROUP_ALIASES: Record<string, true> = {
+  media: true,
+  media_item: true,
+  mediaitem: true,
+  media_items: true,
+};
+
+function isMediaElement(element: SomElement): boolean {
+  return element.role === 'image' ||
+    (element.attrs?.source_role !== undefined &&
+      ['audio', 'video', 'canvas'].includes(element.attrs.source_role));
+}
 
 function normalizeElementRole(role: string): ElementRole | undefined {
   const normalizedRole = stripRolePrefix(role).replace(/[\s-]+/g, '_');

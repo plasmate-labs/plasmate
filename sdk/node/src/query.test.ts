@@ -450,6 +450,36 @@ describe('findByTag', () => {
     }
   });
 
+  it('accepts media aliases for source-role elements', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_media',
+          role: 'main',
+          elements: [
+            { id: 'image', role: 'image' },
+            { id: 'audio', role: 'group', attrs: { source_role: 'audio' } },
+            { id: 'video', role: 'group', attrs: { source_role: 'video' } },
+            { id: 'canvas', role: 'group', attrs: { source_role: 'canvas' } },
+          ],
+        },
+      ],
+    };
+    for (const alias of ['audio', 'audios', 'audio-item', 'audio_items']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['audio'], alias);
+    }
+    for (const alias of ['video', 'videos', 'video-item', 'video_items']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['video'], alias);
+    }
+    for (const alias of ['canvas', 'canvases', 'canvas-item', 'canvas_items']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['canvas'], alias);
+    }
+    for (const alias of ['media', 'media-item', 'media_items']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['image', 'audio', 'video', 'canvas'], alias);
+    }
+  });
+
   it('accepts ARIA button-role aliases', () => {
     for (const alias of [
       'menuitem',
