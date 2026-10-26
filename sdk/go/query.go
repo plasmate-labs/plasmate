@@ -10,6 +10,9 @@ import (
 
 // FindByRole returns all regions matching the given role.
 func FindByRole(som *Som, role string) []Region {
+	if som == nil {
+		return nil
+	}
 	var result []Region
 	role = normalizeRegionRoleAlias(role)
 	for _, r := range som.Regions {
@@ -72,6 +75,9 @@ func normalizeRegionRoleAlias(role string) string {
 // FindByRegionID searches top-level regions for the given SOM region ID.
 // Returns nil if not found.
 func FindByRegionID(som *Som, id string) *Region {
+	if som == nil {
+		return nil
+	}
 	for i := range som.Regions {
 		if som.Regions[i].ID == id {
 			return &som.Regions[i]
@@ -83,6 +89,9 @@ func FindByRegionID(som *Som, id string) *Region {
 // FindByID searches all regions for an element with the given ID.
 // Returns nil if not found.
 func FindByID(som *Som, id string) *Element {
+	if som == nil {
+		return nil
+	}
 	for _, r := range som.Regions {
 		if el := findByIDInSlice(r.Elements, id); el != nil {
 			return el
@@ -94,6 +103,9 @@ func FindByID(som *Som, id string) *Element {
 // FindByHTMLID searches all regions for an element with the original HTML id.
 // Returns nil if not found.
 func FindByHTMLID(som *Som, htmlID string) *Element {
+	if som == nil {
+		return nil
+	}
 	for i := range som.Regions {
 		if el := findByHTMLIDInSlice(som.Regions[i].Elements, htmlID); el != nil {
 			return el
@@ -139,6 +151,9 @@ func findByIDInSlice(elements []Element, id string) *Element {
 // FindByTag returns all elements whose role matches the given tag.
 // This searches element roles (e.g. "link", "button", "heading").
 func FindByTag(som *Som, tag string) []Element {
+	if som == nil {
+		return nil
+	}
 	var result []Element
 	tag = normalizeElementRoleAlias(tag)
 	if sourceRole, ok := mediaTagAliases[tag]; ok {
@@ -348,6 +363,9 @@ func collectByRole(elements []Element, role string, result *[]Element) {
 
 // FindInteractive returns all elements that have at least one action.
 func FindInteractive(som *Som) []Element {
+	if som == nil {
+		return nil
+	}
 	var result []Element
 	for _, r := range som.Regions {
 		collectInteractive(r.Elements, &result)
@@ -374,7 +392,7 @@ func collectInteractive(elements []Element, result *[]Element) {
 // alongside compiled list-item copy, select options, and table content because
 // those values can be the only authored text available for an element.
 func FindByText(som *Som, text string) []Element {
-	if text == "" {
+	if som == nil || text == "" {
 		return nil
 	}
 	lower := normalizeQueryText(text)
@@ -391,6 +409,9 @@ func FindByText(som *Som, text string) []Element {
 // FindByLabel returns all elements whose accessible label matches label.
 // Matching is case-insensitive and uses substring matching.
 func FindByLabel(som *Som, label string, exact ...bool) []Element {
+	if som == nil {
+		return nil
+	}
 	needle := normalizeQueryText(label)
 	if needle == "" {
 		return nil
@@ -530,6 +551,9 @@ func elementMatchesText(el Element, lowerText string) bool {
 
 // FindByAction returns all elements that expose a specific action.
 func FindByAction(som *Som, action string) []Element {
+	if som == nil {
+		return nil
+	}
 	var result []Element
 	for _, el := range FlatElements(som) {
 		if containsString(el.Actions, action) {
@@ -541,6 +565,9 @@ func FindByAction(som *Som, action string) []Element {
 
 // FindByHint returns all elements tagged with a specific semantic hint.
 func FindByHint(som *Som, hint string) []Element {
+	if som == nil {
+		return nil
+	}
 	var result []Element
 	for _, el := range FlatElements(som) {
 		if containsString(el.Hints, hint) {
@@ -562,6 +589,9 @@ func containsString(values []string, target string) bool {
 // FlatElements returns all elements from all regions flattened into a single slice,
 // including nested children and shadow-root elements via depth-first traversal.
 func FlatElements(som *Som) []Element {
+	if som == nil {
+		return nil
+	}
 	var result []Element
 	for _, r := range som.Regions {
 		flattenElements(r.Elements, &result)
@@ -758,6 +788,9 @@ func GetActionPlanCacheKey(item ActionPlanItem) string {
 // GetActionPlan returns compact action targets for agent planning.
 func GetActionPlan(som *Som) []ActionPlanItem {
 	items := []ActionPlanItem{}
+	if som == nil {
+		return items
+	}
 	formContextByID := map[string]Region{}
 	for _, region := range som.Regions {
 		for _, el := range flattenRegionElements(region.Elements) {

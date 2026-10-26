@@ -298,6 +298,48 @@ func TestFindByRole(t *testing.T) {
 	}
 }
 
+func TestQueryHelpersHandleNilSOM(t *testing.T) {
+	if got := FindByRole(nil, "main"); got != nil {
+		t.Fatalf("FindByRole(nil) = %#v, want nil", got)
+	}
+	if got := FindByRegionID(nil, "main"); got != nil {
+		t.Fatalf("FindByRegionID(nil) = %#v, want nil", got)
+	}
+	if got := FindByID(nil, "e1"); got != nil {
+		t.Fatalf("FindByID(nil) = %#v, want nil", got)
+	}
+	if got := FindByHTMLID(nil, "e1"); got != nil {
+		t.Fatalf("FindByHTMLID(nil) = %#v, want nil", got)
+	}
+	if got := FindByTag(nil, "button"); got != nil {
+		t.Fatalf("FindByTag(nil) = %#v, want nil", got)
+	}
+	if got := FindInteractive(nil); got != nil {
+		t.Fatalf("FindInteractive(nil) = %#v, want nil", got)
+	}
+	if got := FindByText(nil, "text"); got != nil {
+		t.Fatalf("FindByText(nil) = %#v, want nil", got)
+	}
+	if got := FindByLabel(nil, "label"); got != nil {
+		t.Fatalf("FindByLabel(nil) = %#v, want nil", got)
+	}
+	if got := FindByAction(nil, "click"); got != nil {
+		t.Fatalf("FindByAction(nil) = %#v, want nil", got)
+	}
+	if got := FindByHint(nil, "primary"); got != nil {
+		t.Fatalf("FindByHint(nil) = %#v, want nil", got)
+	}
+	if got := FlatElements(nil); got != nil {
+		t.Fatalf("FlatElements(nil) = %#v, want nil", got)
+	}
+	if got := GetActionPlan(nil); got == nil || len(got) != 0 {
+		t.Fatalf("GetActionPlan(nil) = %#v, want empty non-nil slice", got)
+	}
+	if got := GetActionPlanIndex(nil); len(got.ByID) != 0 || len(got.ByRole) != 0 || len(got.ByAction) != 0 {
+		t.Fatalf("GetActionPlanIndex(nil) = %#v, want empty index", got)
+	}
+}
+
 func TestFindByID(t *testing.T) {
 	som := mustParse(t)
 
