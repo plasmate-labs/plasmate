@@ -5,7 +5,24 @@ from __future__ import annotations
 import json
 from typing import Dict, List, Literal, Optional, Union
 
-from .types import Som, SomElement, SomRegion
+from .types import ElementRole, Som, SomElement, SomRegion
+
+
+_MEDIA_TAG_ALIASES = {
+    "audio": "audio",
+    "audios": "audio",
+    "audio_item": "audio",
+    "audio_items": "audio",
+    "canvas": "canvas",
+    "canvases": "canvas",
+    "canvas_item": "canvas",
+    "canvas_items": "canvas",
+    "video": "video",
+    "videos": "video",
+    "video_item": "video",
+    "video_items": "video",
+}
+_MEDIA_GROUP_ALIASES = {"media", "media_item", "media_items"}
 
 
 def find_by_role(som: Som, role: str) -> List[SomRegion]:
@@ -182,12 +199,29 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         suffix = tag[1:].lstrip("_")
         if suffix in "123456":
             heading_level = int(suffix)
+    media_source_role = _MEDIA_TAG_ALIASES.get(tag)
+    if media_source_role is not None:
+        return [
+            element
+            for element in flat_elements(som)
+            if element.attrs is not None
+            and element.attrs.source_role == media_source_role
+        ]
+    if tag in _MEDIA_GROUP_ALIASES:
+        return [element for element in flat_elements(som) if _is_media_element(element)]
     tag = role_aliases.get(tag, tag)
     results: List[SomElement] = []
     for region in som.regions:
         for element in region.elements:
             _collect_by_tag(element, tag, heading_level, results)
     return results
+
+
+def _is_media_element(element: SomElement) -> bool:
+    return element.role == ElementRole.image or (
+        element.attrs is not None
+        and element.attrs.source_role in {"audio", "video", "canvas"}
+    )
 
 
 def find_interactive(som: Som) -> List[SomElement]:

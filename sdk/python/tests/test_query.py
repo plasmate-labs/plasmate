@@ -338,6 +338,40 @@ class TestFindByTag:
         assert [el.id for el in find_by_tag(sample_som, "article")] == ["e7", "e12"]
         assert [el.id for el in find_by_tag(sample_som, "div")] == ["e13"]
 
+    def test_accepts_media_aliases(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.extend(
+            [
+                SomElement(
+                    id="audio",
+                    role=ElementRole.group,
+                    attrs=ElementAttrs(source_role="audio"),
+                ),
+                SomElement(
+                    id="video",
+                    role=ElementRole.group,
+                    attrs=ElementAttrs(source_role="video"),
+                ),
+                SomElement(
+                    id="canvas",
+                    role=ElementRole.group,
+                    attrs=ElementAttrs(source_role="canvas"),
+                ),
+            ]
+        )
+        for alias in ("audio", "audios", "audio-item", "audio_items"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == ["audio"]
+        for alias in ("video", "videos", "video-item", "video_items"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == ["video"]
+        for alias in ("canvas", "canvases", "canvas-item", "canvas_items"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == ["canvas"]
+        for alias in ("media", "media-item", "media_items"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == [
+                "e6",
+                "audio",
+                "video",
+                "canvas",
+            ]
+
     def test_accepts_aria_control_aliases(self, sample_som: Som) -> None:
         assert [el.id for el in find_by_tag(sample_som, "textbox")] == ["e9"]
         assert [el.id for el in find_by_tag(sample_som, "searchbox")] == ["e9"]
