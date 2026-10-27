@@ -338,6 +338,16 @@ class TestFindByTag:
         assert [el.id for el in find_by_tag(sample_som, "article")] == ["e7", "e12"]
         assert [el.id for el in find_by_tag(sample_som, "div")] == ["e13"]
 
+    def test_accepts_plural_fieldset_alias(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(id="fieldset", role=ElementRole.group, actions=["click"])
+        )
+
+        assert [el.id for el in find_by_tag(sample_som, "fieldsets")] == ["fieldset"]
+        assert [item["id"] for item in find_action_targets_by_role(sample_som, "fieldsets")] == [
+            "fieldset"
+        ]
+
     def test_accepts_blockquote_aliases(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.append(
             SomElement(id="quote", role=ElementRole.paragraph, text="A cited thought")

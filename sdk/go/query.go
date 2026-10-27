@@ -228,6 +228,7 @@ func normalizeElementRoleAlias(role string) string {
 		"div":                "group",
 		"details":            "details",
 		"fieldset":           "group",
+		"fieldsets":          "group",
 		"figure":             "group",
 		"figures":            "group",
 		"headings":           "heading",

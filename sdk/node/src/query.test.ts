@@ -210,6 +210,24 @@ describe('findActionTargetsByRole aliases', () => {
         alias,
       );
     }
+    const fieldsetFixture: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [
+                ...region.elements,
+                { id: 'e12', role: 'group', text: 'Profile', actions: ['click'] },
+              ],
+            }
+          : region,
+      ),
+    };
+    assert.deepEqual(
+      findActionTargetsByRole(fieldsetFixture, 'fieldsets').map((item) => item.id),
+      ['e12'],
+    );
     assert.deepEqual(findActionTargetsByRole(fixture, 'unknown-role'), []);
   });
 });
