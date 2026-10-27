@@ -517,6 +517,26 @@ describe('findByTag', () => {
     }
   });
 
+  it('accepts ARIA paragraph aliases', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_messages',
+          role: 'main',
+          elements: [
+            { id: 'alert', role: 'paragraph', text: 'Saved' },
+            { id: 'status', role: 'paragraph', text: 'Ready' },
+            { id: 'tooltip', role: 'paragraph', text: 'Help' },
+          ],
+        },
+      ],
+    };
+    for (const alias of ['alert', 'status', 'tooltip']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['alert', 'status', 'tooltip'], alias);
+    }
+  });
+
   it('accepts media aliases for source-role elements', () => {
     const som: Som = {
       ...fixture,
