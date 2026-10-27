@@ -371,6 +371,7 @@ const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   table_grid: 'table',
   table_grids: 'table',
   treegrid: 'table',
+  treegrids: 'table',
   tree_grids: 'table',
   tree_grid: 'table',
   paragraphs: 'paragraph',

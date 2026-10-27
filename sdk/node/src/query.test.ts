@@ -228,6 +228,24 @@ describe('findActionTargetsByRole aliases', () => {
       findActionTargetsByRole(fieldsetFixture, 'fieldsets').map((item) => item.id),
       ['e12'],
     );
+    const tableFixture: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [
+                ...region.elements,
+                { id: 'e13', role: 'table', text: 'Orders', actions: ['click'] },
+              ],
+            }
+          : region,
+      ),
+    };
+    assert.deepEqual(
+      findActionTargetsByRole(tableFixture, 'treegrids').map((item) => item.id),
+      ['e13'],
+    );
     assert.deepEqual(findActionTargetsByRole(fixture, 'unknown-role'), []);
   });
 });
@@ -440,6 +458,7 @@ describe('findByTag', () => {
       'table_grid',
       'table-grids',
       'treegrid',
+      'treegrids',
       'tree grids',
     ]) {
       assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['e12'], alias);
