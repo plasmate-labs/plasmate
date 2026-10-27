@@ -184,6 +184,12 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "text_inputs": "text_input",
         "searchbox": "text_input",
         "searchboxes": "text_input",
+        "slider": "text_input",
+        "sliders": "text_input",
+        "spinbutton": "text_input",
+        "spinbuttons": "text_input",
+        "spin_button": "text_input",
+        "spin_buttons": "text_input",
         "combobox": "select",
         "combo_box": "select",
         "listbox": "select",
@@ -213,6 +219,7 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "table_grid": "table",
         "table_grids": "table",
         "treegrid": "table",
+        "treegrids": "table",
         "tree_grids": "table",
         "tree_grid": "table",
     }
@@ -725,6 +732,12 @@ def find_action_targets_by_role(
         "search_fields": "text_input",
         "search_input": "text_input",
         "search_inputs": "text_input",
+        "slider": "text_input",
+        "sliders": "text_input",
+        "spinbutton": "text_input",
+        "spinbuttons": "text_input",
+        "spin_button": "text_input",
+        "spin_buttons": "text_input",
         "query": "text_input",
         "queries": "text_input",
         "query_box": "text_input",
@@ -745,6 +758,19 @@ def find_action_targets_by_role(
         "textareas": "textarea",
         "textbox": "text_input",
         "textboxes": "text_input",
+        "tables": "table",
+        "data_table": "table",
+        "data_tables": "table",
+        "data_grid": "table",
+        "data_grids": "table",
+        "grid": "table",
+        "grids": "table",
+        "table_grid": "table",
+        "table_grids": "table",
+        "treegrid": "table",
+        "treegrids": "table",
+        "tree_grids": "table",
+        "tree_grid": "table",
         "treeitem": "button",
         "treeitems": "button",
         "text_inputs": "text_input",
@@ -772,6 +798,12 @@ def find_action_targets_by_action(
     """
     index = get_action_plan_index(som, enabled_only=enabled_only)
     normalized_action = " ".join(action.strip().lower().split())
+    if (
+        len(normalized_action) >= 2
+        and normalized_action[0] == normalized_action[-1]
+        and normalized_action[0] in "\"'"
+    ):
+        normalized_action = normalized_action[1:-1].strip()
     if normalized_action.startswith("action"):
         separator = normalized_action[len("action") :].lstrip()
         if separator.startswith((":", "=")):

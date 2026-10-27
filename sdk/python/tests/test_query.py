@@ -464,6 +464,8 @@ class TestFindByTag:
             ("comboboxes", ["e11"]),
             ("listboxes", ["e11"]),
             ("textareas", ["e12"]),
+            ("slider", ["e9"]),
+            ("spin buttons", ["e9"]),
             ("checkboxes", ["e13"]),
             ("radios", ["e14"]),
         ):
@@ -504,6 +506,7 @@ class TestFindByTag:
             "table grid",
             "table-grids",
             "treegrid",
+            "treegrids",
         ):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["table"]
 
@@ -519,7 +522,16 @@ class TestFindActionTargetsByRole:
             assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == ["e9"]
 
     def test_accepts_plural_text_control_aliases(self, sample_som: Som) -> None:
-        for alias in ("text inputs", "textboxes", "search boxes", "search inputs"):
+        for alias in (
+            "text inputs",
+            "textboxes",
+            "search boxes",
+            "search inputs",
+            "slider",
+            "sliders",
+            "spinbutton",
+            "spin buttons",
+        ):
             assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == ["e9"]
 
     def test_accepts_plural_control_aliases(self, sample_som: Som) -> None:
@@ -551,6 +563,23 @@ class TestFindActionTargetsByRole:
             SomElement(id="e12", role=ElementRole.section, actions=["click"])
         )
         assert [item["id"] for item in find_action_targets_by_role(sample_som, "article")] == ["e12"]
+
+    def test_accepts_table_grid_aliases(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(id="e12", role=ElementRole.table, actions=["click"])
+        )
+        for alias in (
+            "tables",
+            "data_table",
+            "data-grids",
+            "grid",
+            "table grid",
+            "treegrid",
+            "treegrids",
+        ):
+            assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
+                "e12"
+            ]
 
     def test_accepts_aria_widget_aliases(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.extend(
@@ -587,6 +616,17 @@ class TestFindActionTargetsByRole:
             assert [
                 item["id"] for item in find_action_targets_by_role(sample_som, alias)
             ] == ["e15"]
+
+
+class TestFindActionTargetsByAction:
+    def test_accepts_quoted_action_aliases(self, sample_som: Som) -> None:
+        assert [
+            item["id"]
+            for item in find_action_targets_by_action(sample_som, '"action:type_text"')
+        ] == ["e9"]
+        assert [
+            item["id"] for item in find_action_targets_by_action(sample_som, "'action:clear'")
+        ] == ["e9"]
 
 
 class TestFindInteractive:
