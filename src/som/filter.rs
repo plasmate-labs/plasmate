@@ -593,6 +593,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "grids"
         | "data_grid"
         | "data_grids"
+        | "tree_grid"
+        | "tree_grids"
         | "treegrid"
         | "treegrids" => Some(ElementRole::Table),
         "paragraph" | "paragraphs" | "p" | "blockquote" | "blockquotes" | "quote" | "quotes" | "alert"
@@ -2615,6 +2617,8 @@ mod tests {
             "grids",
             "data-grid",
             "data grids",
+            "tree-grid",
+            "tree grids",
             "treegrid",
             "treegrids",
             "role=grid",
