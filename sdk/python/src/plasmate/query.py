@@ -203,6 +203,18 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "radio_buttons": "radio",
         "radiobutton": "radio",
         "radiobuttons": "radio",
+        "tables": "table",
+        "data_table": "table",
+        "data_tables": "table",
+        "data_grid": "table",
+        "data_grids": "table",
+        "grid": "table",
+        "grids": "table",
+        "table_grid": "table",
+        "table_grids": "table",
+        "treegrid": "table",
+        "tree_grids": "table",
+        "tree_grid": "table",
     }
     tag = _normalize_role_alias(tag)
     heading_level = None

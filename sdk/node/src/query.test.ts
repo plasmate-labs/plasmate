@@ -419,6 +419,33 @@ describe('findByTag', () => {
     }
   });
 
+  it('accepts table and grid aliases', () => {
+    const som: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [...region.elements, { id: 'e12', role: 'table', text: 'Orders' }],
+            }
+          : region,
+      ),
+    };
+    for (const alias of [
+      'data_grid',
+      'data-grids',
+      'data tables',
+      'grid',
+      'grids',
+      'table_grid',
+      'table-grids',
+      'treegrid',
+      'tree grids',
+    ]) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['e12'], alias);
+    }
+  });
+
   it('accepts common HTML tag aliases', () => {
     const som: Som = {
       ...fixture,
