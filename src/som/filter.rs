@@ -36,7 +36,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `query_field` / `query_fields` / `query-field` / `query_control` /
 ///   `query_controls` / `query-control` / `querybox` / `query-box` /
 ///   `search_box` / `search_boxes` / `search-box`, `email`, `number`,
-///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local`, `month`,
+///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local` /
+///   `date_time` / `date-time` / `date time`, `date_time_local` /
+///   `date-time-local` / `date time local`, `month`,
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` / `textareas`,
 ///   `select` / `selects` / `combobox` / `comboboxes` / `combo box` /
 ///   `listbox` / `listboxes` / `list box`, `checkbox` / `checkboxes` / `check box` /
@@ -209,6 +211,14 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         return filter_som_elements(som, selector, is_media_element);
     }
 
+    // Native audio/video/canvas nodes compile to the grouped SOM role, so
+    // their source-specific selectors must retain the source-role detail.
+    if let Some(source_role) = media_source_role(selector) {
+        return filter_som_elements(som, selector, |element| {
+            is_source_role_element(element, source_role)
+        });
+    }
+
     // Match only actionable elements. This is useful when an agent needs a
     // compact menu of possible targets without full body text.
     if matches!(
@@ -367,13 +377,32 @@ fn is_media_element(element: &Element) -> bool {
         return true;
     }
 
+    ["audio", "video", "canvas"]
+        .into_iter()
+        .any(|source_role| is_source_role_element(element, source_role))
+}
+
+fn media_source_role(selector: &str) -> Option<&'static str> {
+    match selector.to_ascii_lowercase().as_str() {
+        "audio" | "audios" | "audio_item" | "audio-item" | "audio_items" | "audio-items" => {
+            Some("audio")
+        }
+        "video" | "videos" | "video_item" | "video-item" | "video_items" | "video-items" => {
+            Some("video")
+        }
+        "canvas" | "canvases" => Some("canvas"),
+        _ => None,
+    }
+}
+
+fn is_source_role_element(element: &Element, source_role: &str) -> bool {
     element.role == ElementRole::Group
         && element
             .attrs
             .as_ref()
             .and_then(|attrs| attrs.get("source_role"))
             .and_then(serde_json::Value::as_str)
-            .is_some_and(|source_role| matches!(source_role, "audio" | "video" | "canvas"))
+            .is_some_and(|value| value.eq_ignore_ascii_case(source_role))
 }
 
 fn parse_heading_level_selector(selector: &str) -> Option<u8> {
@@ -546,6 +575,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "date"
         | "datetime"
         | "datetime_local"
+        | "date_time"
+        | "date_time_local"
         | "month"
         | "time"
         | "week"
@@ -1295,9 +1326,6 @@ mod tests {
             ("progressbars", ElementRole::Group),
             ("meters", ElementRole::Group),
             ("outputs", ElementRole::Group),
-            ("audios", ElementRole::Group),
-            ("videos", ElementRole::Group),
-            ("canvases", ElementRole::Group),
         ] {
             let mut som = make_test_som();
             som.regions[0].elements[0].role = role.clone();
@@ -1322,6 +1350,13 @@ mod tests {
         ] {
             let mut som = make_test_som();
             som.regions[0].elements[0].role = ElementRole::Group;
+            let source_role = if selector.starts_with("audio") {
+                "audio"
+            } else {
+                "video"
+            };
+            som.regions[0].elements[0].attrs =
+                Some(serde_json::json!({"source_role": source_role}));
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
@@ -2080,6 +2115,12 @@ mod tests {
             "date",
             "datetime",
             "datetime-local",
+            "date_time",
+            "date-time",
+            "date time",
+            "date_time_local",
+            "date-time-local",
+            "date time local",
             "month",
             "time",
             "week",
@@ -2093,6 +2134,38 @@ mod tests {
                 Some(ElementRole::TextInput),
                 "selector: {selector}"
             );
+        }
+    }
+
+    #[test]
+    fn test_selector_datetime_natural_aliases_filter_text_input() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-datetime".to_string(),
+            role: ElementRole::TextInput,
+            html_id: None,
+            text: None,
+            label: Some("Appointment".to_string()),
+            actions: Some(vec!["type".to_string()]),
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in [
+            "date_time",
+            "date-time",
+            "date time",
+            "date_time_local",
+            "date-time-local",
+            "date time local",
+            "role=date-time",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-datetime");
         }
     }
 
@@ -2636,6 +2709,44 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-grid");
+        }
+    }
+
+    #[test]
+    fn test_selector_specific_media_aliases_exclude_other_groups() {
+        let mut som = make_test_som();
+        som.regions[1].elements.extend([
+            Element {
+                id: "e-video".to_string(),
+                role: ElementRole::Group,
+                html_id: None,
+                text: None,
+                label: None,
+                actions: None,
+                attrs: Some(serde_json::json!({"source_role": "video"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+            Element {
+                id: "e-fieldset".to_string(),
+                role: ElementRole::Group,
+                html_id: None,
+                text: None,
+                label: None,
+                actions: None,
+                attrs: Some(serde_json::json!({"source_role": "fieldset"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+        ]);
+
+        for selector in ["video", "videos", "video-item", "role=video"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-video");
         }
     }
 
