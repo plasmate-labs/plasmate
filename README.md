@@ -248,8 +248,9 @@ aliases such as `navigation`, `nav region`/`nav-region`/`nav regions`,
 `contentinfo`; `forms` and `dialogs` are plural aliases for `form` and
 `dialog`; `content_region`/`content_regions` (and their hyphenated or
 space-separated forms) select content regions.
-Table selectors include `table`/`tables` and `data_table`/`data_tables`
-(with `data-table`/`data-tables` and `data table`/`data tables` accepted too).
+Table selectors include `table`/`tables`, `data_table`/`data_tables`, and
+`grid`/`grids`/`data_grid`/`data_grids`/`treegrid`/`treegrids` (with
+hyphenated and space-separated forms accepted too).
 Use `selector="media"` to keep images and media-capable grouped elements
 such as audio, video, and canvas while removing unrelated page content.
 HTML text-input type names are also accepted as selectors, including

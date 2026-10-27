@@ -53,6 +53,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `radiogroup` / `radiogroups` / `progress` / `progressbar` /
 ///   `progressbars` / `meter` / `meters` / `output` / `outputs` /
 ///   `video` / `canvas`,
+///   `grid` / `grids` / `data_grid` / `data_grids` / `treegrid` / `treegrids`,
 ///   `separator` / `separators` / `hr`, `details` / `detail` / `summary` /
 ///   `summaries`,
 ///   `iframe` / `iframes`, `audio` / `audios`, `video` / `videos`,
@@ -584,7 +585,18 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "unordered_list"
         | "ordered_list"
         | "definition_list" => Some(ElementRole::List),
-        "table" | "tables" | "data_table" | "data_tables" => Some(ElementRole::Table),
+        "table"
+        | "tables"
+        | "data_table"
+        | "data_tables"
+        | "grid"
+        | "grids"
+        | "data_grid"
+        | "data_grids"
+        | "tree_grid"
+        | "tree_grids"
+        | "treegrid"
+        | "treegrids" => Some(ElementRole::Table),
         "paragraph" | "paragraphs" | "p" | "blockquote" | "blockquotes" | "quote" | "quotes" | "alert"
         | "status" | "tooltip" => {
             Some(ElementRole::Paragraph)
@@ -2581,6 +2593,41 @@ mod tests {
                 ElementRole::Section,
                 "selector: {selector}"
             );
+        }
+    }
+
+    #[test]
+    fn test_selector_grid_aliases_match_table_elements() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-grid".to_string(),
+            role: ElementRole::Table,
+            html_id: None,
+            text: None,
+            label: Some("Results".to_string()),
+            actions: None,
+            attrs: Some(serde_json::json!({"source_role": "grid"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in [
+            "grid",
+            "grids",
+            "data-grid",
+            "data grids",
+            "tree-grid",
+            "tree grids",
+            "treegrid",
+            "treegrids",
+            "role=grid",
+            "role: data-grid",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-grid");
         }
     }
 
