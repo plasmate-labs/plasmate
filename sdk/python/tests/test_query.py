@@ -552,6 +552,22 @@ class TestFindActionTargetsByRole:
         )
         assert [item["id"] for item in find_action_targets_by_role(sample_som, "article")] == ["e12"]
 
+    def test_accepts_table_grid_aliases(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(id="e12", role=ElementRole.table, actions=["click"])
+        )
+        for alias in (
+            "tables",
+            "data_table",
+            "data-grids",
+            "grid",
+            "table grid",
+            "treegrid",
+        ):
+            assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
+                "e12"
+            ]
+
     def test_accepts_aria_widget_aliases(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.extend(
             [
