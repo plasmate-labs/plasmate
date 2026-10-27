@@ -496,6 +496,7 @@ class TestFindByTag:
         for alias in (
             "data_table",
             "data-tables",
+            "tables",
             "data grid",
             "data-grids",
             "table grid",

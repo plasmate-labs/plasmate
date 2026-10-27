@@ -203,6 +203,7 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "radio_buttons": "radio",
         "radiobutton": "radio",
         "radiobuttons": "radio",
+        "tables": "table",
         "data_table": "table",
         "data_tables": "table",
         "data_grid": "table",
