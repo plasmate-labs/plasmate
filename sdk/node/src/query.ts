@@ -293,6 +293,7 @@ const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   check_boxes: 'checkbox',
   div: 'group',
   fieldset: 'group',
+  fieldsets: 'group',
   hr: 'separator',
   img: 'image',
   slider: 'text_input',
