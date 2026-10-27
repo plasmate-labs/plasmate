@@ -37,7 +37,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `query_controls` / `query-control` / `querybox` / `query-box` /
 ///   `search_box` / `search_boxes` / `search-box`, `email`, `number`,
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local` /
-///   `date_time` / `date-time` / `date time`, `month`,
+///   `date_time` / `date-time` / `date time`, `date_time_local` /
+///   `date-time-local` / `date time local`, `month`,
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` / `textareas`,
 ///   `select` / `selects` / `combobox` / `comboboxes` / `combo box` /
 ///   `listbox` / `listboxes` / `list box`, `checkbox` / `checkboxes` / `check box` /
@@ -575,6 +576,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "datetime"
         | "datetime_local"
         | "date_time"
+        | "date_time_local"
         | "month"
         | "time"
         | "week"
@@ -2116,6 +2118,9 @@ mod tests {
             "date_time",
             "date-time",
             "date time",
+            "date_time_local",
+            "date-time-local",
+            "date time local",
             "month",
             "time",
             "week",
@@ -2148,7 +2153,15 @@ mod tests {
             shadow: None,
         });
 
-        for selector in ["date_time", "date-time", "date time", "role=date-time"] {
+        for selector in [
+            "date_time",
+            "date-time",
+            "date time",
+            "date_time_local",
+            "date-time-local",
+            "date time local",
+            "role=date-time",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
