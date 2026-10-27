@@ -53,7 +53,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `radiogroup` / `radiogroups` / `progress` / `progressbar` /
 ///   `progressbars` / `meter` / `meters` / `output` / `outputs` /
 ///   `video` / `canvas`,
-///   `grid` / `grids` / `treegrid` / `treegrids`,
+///   `grid` / `grids` / `data_grid` / `data_grids` / `treegrid` / `treegrids`,
 ///   `separator` / `separators` / `hr`, `details` / `detail` / `summary` /
 ///   `summaries`,
 ///   `iframe` / `iframes`, `audio` / `audios`, `video` / `videos`,
@@ -585,8 +585,16 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "unordered_list"
         | "ordered_list"
         | "definition_list" => Some(ElementRole::List),
-        "table" | "tables" | "data_table" | "data_tables" | "grid" | "grids"
-        | "treegrid" | "treegrids" => Some(ElementRole::Table),
+        "table"
+        | "tables"
+        | "data_table"
+        | "data_tables"
+        | "grid"
+        | "grids"
+        | "data_grid"
+        | "data_grids"
+        | "treegrid"
+        | "treegrids" => Some(ElementRole::Table),
         "paragraph" | "paragraphs" | "p" | "blockquote" | "blockquotes" | "quote" | "quotes" | "alert"
         | "status" | "tooltip" => {
             Some(ElementRole::Paragraph)
@@ -2602,7 +2610,16 @@ mod tests {
             shadow: None,
         });
 
-        for selector in ["grid", "grids", "treegrid", "treegrids", "role=grid"] {
+        for selector in [
+            "grid",
+            "grids",
+            "data-grid",
+            "data grids",
+            "treegrid",
+            "treegrids",
+            "role=grid",
+            "role: data-grid",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");

@@ -93,7 +93,7 @@ Tool descriptions are read by LLMs (Claude, GPT-4, etc.) to decide which tool to
 | `content` | Article / content regions |
 | `form` | Form regions |
 | `dialog` | Dialog/modal regions |
-| `button` / `link` / `text_input` / `grid` / `treegrid` | Elements with that SOM role or source-role alias, preserving parent context |
+| `button` / `link` / `text_input` / `grid` / `data-grid` / `treegrid` | Elements with that SOM role or source-role alias, preserving parent context |
 | `interactive` | Elements with interactive SOM roles |
 | `action:click` / `action:type` / `action:clear` / `action:select` / `action:toggle` / `action:submit` | Elements exposing that compact action |
 | `#foo` | Region with id `foo`, or element with SOM id / `html_id` `foo` |
