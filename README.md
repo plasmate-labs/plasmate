@@ -259,7 +259,7 @@ HTML text-input type names are also accepted as selectors, including
 `query_input`/`query-input`, `query_field`/`query-field`,
 `query_control`/`query-control`, `querybox`/`query-box`, `email`, `number`,
 `password`, `tel`, `url`, `date`,
-`datetime`/`datetime-local`, `month`, `time`, `week`, `color`, `range`,
+`datetime`/`datetime-local` (also `date_time`/`date-time`/`date time`), `month`, `time`, `week`, `color`, `range`,
 `hidden`, and `file`; each targets the corresponding compiled text-input
 element.
 Use `cache_status` after repeated fetches to inspect local MCP SOM cache hits,

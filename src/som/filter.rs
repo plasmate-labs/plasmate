@@ -36,7 +36,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `query_field` / `query_fields` / `query-field` / `query_control` /
 ///   `query_controls` / `query-control` / `querybox` / `query-box` /
 ///   `search_box` / `search_boxes` / `search-box`, `email`, `number`,
-///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local`, `month`,
+///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local` /
+///   `date_time` / `date-time` / `date time`, `month`,
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` / `textareas`,
 ///   `select` / `selects` / `combobox` / `comboboxes` / `combo box` /
 ///   `listbox` / `listboxes` / `list box`, `checkbox` / `checkboxes` / `check box` /
@@ -573,6 +574,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "date"
         | "datetime"
         | "datetime_local"
+        | "date_time"
         | "month"
         | "time"
         | "week"
@@ -2111,6 +2113,9 @@ mod tests {
             "date",
             "datetime",
             "datetime-local",
+            "date_time",
+            "date-time",
+            "date time",
             "month",
             "time",
             "week",
@@ -2124,6 +2129,30 @@ mod tests {
                 Some(ElementRole::TextInput),
                 "selector: {selector}"
             );
+        }
+    }
+
+    #[test]
+    fn test_selector_datetime_natural_aliases_filter_text_input() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-datetime".to_string(),
+            role: ElementRole::TextInput,
+            html_id: None,
+            text: None,
+            label: Some("Appointment".to_string()),
+            actions: Some(vec!["type".to_string()]),
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["date_time", "date-time", "date time", "role=date-time"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-datetime");
         }
     }
 
