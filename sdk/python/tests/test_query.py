@@ -489,6 +489,21 @@ class TestFindByTag:
     def test_finds_none_for_missing_tag(self, sample_som: Som) -> None:
         assert find_by_tag(sample_som, "table") == []
 
+    def test_accepts_table_grid_aliases(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(id="table", role=ElementRole.table, text="Orders")
+        )
+        for alias in (
+            "data_table",
+            "data-tables",
+            "data grid",
+            "data-grids",
+            "table grid",
+            "table-grids",
+            "treegrid",
+        ):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == ["table"]
+
     def test_finds_shadow_root_roles(self) -> None:
         assert [el.id for el in find_by_tag(_shadow_som(), "paragraph")] == ["shadow_text"]
 
