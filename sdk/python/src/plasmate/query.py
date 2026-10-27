@@ -219,6 +219,7 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "table_grid": "table",
         "table_grids": "table",
         "treegrid": "table",
+        "treegrids": "table",
         "tree_grids": "table",
         "tree_grid": "table",
     }
@@ -767,6 +768,7 @@ def find_action_targets_by_role(
         "table_grid": "table",
         "table_grids": "table",
         "treegrid": "table",
+        "treegrids": "table",
         "tree_grids": "table",
         "tree_grid": "table",
         "treeitem": "button",

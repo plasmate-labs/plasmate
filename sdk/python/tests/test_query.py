@@ -506,6 +506,7 @@ class TestFindByTag:
             "table grid",
             "table-grids",
             "treegrid",
+            "treegrids",
         ):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["table"]
 
@@ -574,6 +575,7 @@ class TestFindActionTargetsByRole:
             "grid",
             "table grid",
             "treegrid",
+            "treegrids",
         ):
             assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
                 "e12"
