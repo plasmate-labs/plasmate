@@ -228,6 +228,35 @@ describe('findActionTargetsByRole aliases', () => {
       findActionTargetsByRole(fieldsetFixture, 'fieldsets').map((item) => item.id),
       ['e12'],
     );
+    const structuralFixture: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [
+                ...region.elements,
+                { id: 'e14', role: 'group', text: 'Progress', actions: ['click'] },
+                { id: 'e15', role: 'details', text: 'Details', actions: ['click'] },
+              ],
+            }
+          : region,
+      ),
+    };
+    for (const alias of ['figure', 'radiogroups', 'progressbar', 'meters', 'outputs']) {
+      assert.deepEqual(
+        findActionTargetsByRole(structuralFixture, alias).map((item) => item.id),
+        ['e14'],
+        alias,
+      );
+    }
+    for (const alias of ['detail', 'summaries']) {
+      assert.deepEqual(
+        findActionTargetsByRole(structuralFixture, alias).map((item) => item.id),
+        ['e15'],
+        alias,
+      );
+    }
     const tableFixture: Som = {
       ...fixture,
       regions: fixture.regions.map((region) =>
@@ -498,6 +527,28 @@ describe('findByTag', () => {
     };
     for (const [alias, id] of Object.entries(aliases)) {
       assert.deepEqual(findByTag(som, alias).map((el) => el.id), [id], alias);
+    }
+  });
+
+  it('accepts structural and details aliases', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_structural',
+          role: 'main',
+          elements: [
+            { id: 'group', role: 'group' },
+            { id: 'details', role: 'details' },
+          ],
+        },
+      ],
+    };
+    for (const alias of ['figure', 'radiogroup', 'progress', 'progressbar', 'meter', 'output']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['group'], alias);
+    }
+    for (const alias of ['detail', 'summaries']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['details'], alias);
     }
   });
 
