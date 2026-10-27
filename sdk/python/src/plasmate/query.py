@@ -772,6 +772,12 @@ def find_action_targets_by_action(
     """
     index = get_action_plan_index(som, enabled_only=enabled_only)
     normalized_action = " ".join(action.strip().lower().split())
+    if (
+        len(normalized_action) >= 2
+        and normalized_action[0] == normalized_action[-1]
+        and normalized_action[0] in "\"'"
+    ):
+        normalized_action = normalized_action[1:-1].strip()
     if normalized_action.startswith("action"):
         separator = normalized_action[len("action") :].lstrip()
         if separator.startswith((":", "=")):

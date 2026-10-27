@@ -589,6 +589,17 @@ class TestFindActionTargetsByRole:
             ] == ["e15"]
 
 
+class TestFindActionTargetsByAction:
+    def test_accepts_quoted_action_aliases(self, sample_som: Som) -> None:
+        assert [
+            item["id"]
+            for item in find_action_targets_by_action(sample_som, '"action:type_text"')
+        ] == ["e9"]
+        assert [
+            item["id"] for item in find_action_targets_by_action(sample_som, "'action:clear'")
+        ] == ["e9"]
+
+
 class TestFindInteractive:
     def test_finds_all_interactive_elements(self, sample_som: Som) -> None:
         interactive = find_interactive(sample_som)
