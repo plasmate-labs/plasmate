@@ -53,7 +53,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `radiogroup` / `radiogroups` / `progress` / `progressbar` /
 ///   `progressbars` / `meter` / `meters` / `output` / `outputs` /
 ///   `video` / `canvas`,
-///   `grid` / `grids` / `data_grid` / `data_grids` / `treegrid` / `treegrids`,
+///   `grid` / `grids` / `data_grid` / `data_grids` / `data-grid` / `data-grids` /
+///   `treegrid` / `treegrids` / `tree-grid` / `tree-grids` / `table_grid` /
+///   `table-grid` / `table grids` / `table-grids`,
 ///   `separator` / `separators` / `hr`, `details` / `detail` / `summary` /
 ///   `summaries`,
 ///   `iframe` / `iframes`, `audio` / `audios`, `video` / `videos`,
@@ -593,6 +595,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "grids"
         | "data_grid"
         | "data_grids"
+        | "table_grid"
+        | "table_grids"
         | "tree_grid"
         | "tree_grids"
         | "treegrid"
@@ -2621,6 +2625,10 @@ mod tests {
             "tree grids",
             "treegrid",
             "treegrids",
+            "table-grid",
+            "table grids",
+            "table-grids",
+            "table_grid",
             "role=grid",
             "role: data-grid",
         ] {
