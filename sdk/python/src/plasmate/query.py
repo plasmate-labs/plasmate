@@ -208,6 +208,8 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "data_tables": "table",
         "data_grid": "table",
         "data_grids": "table",
+        "grid": "table",
+        "grids": "table",
         "table_grid": "table",
         "table_grids": "table",
         "treegrid": "table",

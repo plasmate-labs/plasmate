@@ -499,6 +499,8 @@ class TestFindByTag:
             "tables",
             "data grid",
             "data-grids",
+            "grid",
+            "grids",
             "table grid",
             "table-grids",
             "treegrid",

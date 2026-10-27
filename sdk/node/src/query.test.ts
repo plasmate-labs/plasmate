@@ -435,6 +435,8 @@ describe('findByTag', () => {
       'data_grid',
       'data-grids',
       'data tables',
+      'grid',
+      'grids',
       'table_grid',
       'table-grids',
       'treegrid',

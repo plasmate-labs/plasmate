@@ -366,6 +366,8 @@ const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   data_tables: 'table',
   data_grid: 'table',
   data_grids: 'table',
+  grid: 'table',
+  grids: 'table',
   table_grid: 'table',
   table_grids: 'table',
   treegrid: 'table',
