@@ -211,6 +211,9 @@ class TestFindByRole:
         assert [region.id for region in find_by_role(sample_som, "role = 'navigation'")] == [
             "r_navigation"
         ]
+        assert [region.id for region in find_by_role(sample_som, "content-info")] == [
+            "r_footer"
+        ]
 
     def test_finds_multiple_regions(self) -> None:
         som = Som(
@@ -354,6 +357,31 @@ class TestFindByTag:
             "outputs",
         ):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["group"], alias
+
+    def test_accepts_image_iframe_and_details_aliases(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.extend(
+            [
+                SomElement(id="image", role=ElementRole.image, actions=["click"]),
+                SomElement(id="frame", role=ElementRole.iframe, actions=["click"]),
+                SomElement(id="details", role=ElementRole.details, actions=["click"]),
+            ]
+        )
+
+        for alias in ("image", "images"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == ["e6", "image"]
+        for alias in ("iframe", "iframes"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == ["frame"]
+        for alias in ("details", "detail", "summary", "summaries"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == ["details"]
+
+        for alias, expected in (
+            ("images", "image"),
+            ("iframes", "frame"),
+            ("summaries", "details"),
+        ):
+            assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
+                expected
+            ]
 
     def test_accepts_plural_fieldset_alias(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.append(
