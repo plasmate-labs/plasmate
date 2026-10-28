@@ -338,6 +338,23 @@ class TestFindByTag:
         assert [el.id for el in find_by_tag(sample_som, "article")] == ["e7", "e12"]
         assert [el.id for el in find_by_tag(sample_som, "div")] == ["e13"]
 
+    def test_accepts_group_backed_structural_tag_aliases(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(SomElement(id="group", role=ElementRole.group))
+        for alias in (
+            "figure",
+            "figures",
+            "radiogroup",
+            "radiogroups",
+            "progress",
+            "progressbar",
+            "progressbars",
+            "meter",
+            "meters",
+            "output",
+            "outputs",
+        ):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == ["group"], alias
+
     def test_accepts_plural_fieldset_alias(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.append(
             SomElement(id="fieldset", role=ElementRole.group, actions=["click"])
@@ -564,6 +581,36 @@ class TestFindActionTargetsByRole:
         )
         assert [item["id"] for item in find_action_targets_by_role(sample_som, "article")] == ["e12"]
 
+    def test_accepts_group_backed_structural_aliases(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(id="e12", role=ElementRole.group, actions=["click"])
+        )
+        for alias in (
+            "figure",
+            "figures",
+            "radiogroup",
+            "radiogroups",
+            "progress",
+            "progressbar",
+            "progressbars",
+            "meter",
+            "meters",
+            "output",
+            "outputs",
+        ):
+            assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
+                "e12"
+            ], alias
+
+    def test_accepts_blockquote_action_role_aliases(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(id="quote", role=ElementRole.paragraph, actions=["click"])
+        )
+        for alias in ("blockquote", "blockquotes", "quote", "quotes"):
+            assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
+                "quote"
+            ], alias
+
     def test_accepts_table_grid_aliases(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.append(
             SomElement(id="e12", role=ElementRole.table, actions=["click"])
@@ -627,6 +674,12 @@ class TestFindActionTargetsByAction:
         assert [
             item["id"] for item in find_action_targets_by_action(sample_som, "'action:clear'")
         ] == ["e9"]
+
+    def test_accepts_clear_text_action_aliases(self, sample_som: Som) -> None:
+        for alias in ("clear_text", "clear-text", "clear text", "action:clear_text"):
+            assert [
+                item["id"] for item in find_action_targets_by_action(sample_som, alias)
+            ] == ["e9"], alias
 
 
 class TestFindInteractive:
