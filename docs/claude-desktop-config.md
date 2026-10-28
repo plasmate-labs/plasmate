@@ -76,7 +76,9 @@ The plural `lists` selector is also accepted for list elements.
 
 Source-specific media selectors are also accepted: `audio_item`/`audio-item`,
 `video_item`/`video-item`, and `canvas_item`/`canvas-item`, including plural
-forms, target only the corresponding native media elements.
+forms, target only the corresponding native media elements. Use `canvas` for
+all canvas elements, or `canvas_item` to isolate canvas elements on a mixed
+media page.
 
 Use `label:<text>` or `label=<text>` for case-insensitive accessible-label or
 authored-text matching on regions and elements. When a compiled label is

@@ -255,7 +255,9 @@ Use `selector="media"` to keep images and media-capable grouped elements
 such as audio, video, and canvas while removing unrelated page content.
 Source-specific media selectors are also available: `audio_item`/`audio-item`,
 `video_item`/`video-item`, and `canvas_item`/`canvas-item` (including their
-plural forms) target only the corresponding native media elements.
+plural forms) target only the corresponding native media elements. Use
+`canvas` when you want every canvas element, or `canvas_item` when filtering a
+mixed media page down to canvas elements only.
 HTML text-input type names are also accepted as selectors, including
 `text`, `search_input`/`search-input`, `search_control`/`search-control`,
 `search_field`/`search-field`, `search_box`/`search-box`, `query`,
