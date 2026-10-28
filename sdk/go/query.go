@@ -1151,8 +1151,35 @@ func actionItemMatchesLabel(item ActionPlanItem, needle string, exact bool) bool
 // FindActionTargetsByRole returns compact action targets whose SOM role matches
 // a canonical role or common HTML/ARIA alias.
 func FindActionTargetsByRole(som *Som, role string, enabledOnly ...bool) []ActionPlanItem {
+	normalizedRole := normalizeElementRoleAlias(role)
+	if sourceRole, ok := mediaTagAliases[normalizedRole]; ok {
+		var result []ActionPlanItem
+		plan := GetActionPlan(som)
+		if len(enabledOnly) > 0 && enabledOnly[0] {
+			plan = EnabledActionPlan(som)
+		}
+		for _, item := range plan {
+			if item.SourceRole != nil && *item.SourceRole == sourceRole {
+				result = append(result, item)
+			}
+		}
+		return result
+	}
+	if mediaGroupAliases[normalizedRole] {
+		var result []ActionPlanItem
+		plan := GetActionPlan(som)
+		if len(enabledOnly) > 0 && enabledOnly[0] {
+			plan = EnabledActionPlan(som)
+		}
+		for _, item := range plan {
+			if item.Role == "image" || (item.SourceRole != nil && mediaSourceRoles[*item.SourceRole]) {
+				result = append(result, item)
+			}
+		}
+		return result
+	}
 	index := GetActionPlanIndex(som, enabledOnly...)
-	return append([]ActionPlanItem(nil), index.ByRole[normalizeElementRoleAlias(role)]...)
+	return append([]ActionPlanItem(nil), index.ByRole[normalizedRole]...)
 }
 
 // FindActionTargetsByAction returns compact action targets that expose the requested action.
