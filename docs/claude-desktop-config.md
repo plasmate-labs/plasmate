@@ -74,9 +74,10 @@ Claude will call: `fetch_page(url="https://stripe.com/docs", selector="main")`
 
 The plural `lists` selector is also accepted for list elements.
 
-Source-specific media selectors are also accepted: `audio_item`/`audio-item`,
-`video_item`/`video-item`, and `canvas_item`/`canvas-item`, including plural
-forms, target only the corresponding native media elements. Use `canvas` for
+Source-specific media selectors are also accepted: `audio_item`/`audio-item`/
+`audioitem`, `video_item`/`video-item`/`videoitem`, and
+`canvas_item`/`canvas-item`/`canvasitem`, including plural forms, target only
+the corresponding native media elements. Use `canvas` for
 all canvas elements, or `canvas_item` to isolate canvas elements on a mixed
 media page.
 

@@ -387,14 +387,34 @@ fn is_media_element(element: &Element) -> bool {
 
 fn media_source_role(selector: &str) -> Option<&'static str> {
     match selector.to_ascii_lowercase().as_str() {
-        "audio" | "audios" | "audio_item" | "audio-item" | "audio_items" | "audio-items" => {
+        "audio"
+        | "audios"
+        | "audio_item"
+        | "audio-item"
+        | "audioitem"
+        | "audio_items"
+        | "audio-items"
+        | "audioitems" => {
             Some("audio")
         }
-        "video" | "videos" | "video_item" | "video-item" | "video_items" | "video-items" => {
+        "video"
+        | "videos"
+        | "video_item"
+        | "video-item"
+        | "videoitem"
+        | "video_items"
+        | "video-items"
+        | "videoitems" => {
             Some("video")
         }
-        "canvas" | "canvases" | "canvas_item" | "canvas-item" | "canvas_items"
-        | "canvas-items" => Some("canvas"),
+        "canvas"
+        | "canvases"
+        | "canvas_item"
+        | "canvas-item"
+        | "canvasitem"
+        | "canvas_items"
+        | "canvas-items"
+        | "canvasitems" => Some("canvas"),
         _ => None,
     }
 }
@@ -1359,16 +1379,22 @@ mod tests {
         for selector in [
             "audio_item",
             "audio-item",
+            "audioitem",
             "audio_items",
             "audio-items",
+            "audioitems",
             "video_item",
             "video-item",
+            "videoitem",
             "video_items",
             "video-items",
+            "videoitems",
             "canvas_item",
             "canvas-item",
+            "canvasitem",
             "canvas_items",
             "canvas-items",
+            "canvasitems",
         ] {
             let mut som = make_test_som();
             som.regions[0].elements[0].role = ElementRole::Group;
