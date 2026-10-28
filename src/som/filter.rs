@@ -152,7 +152,9 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         {
             Some(RegionRole::Navigation)
         }
-        "aside" | "asides" | "complementary" => Some(RegionRole::Aside),
+        "aside" | "asides" | "sidebar" | "sidebars" | "complementary" => {
+            Some(RegionRole::Aside)
+        }
         "header" | "headers" | "banner" => Some(RegionRole::Header),
         "footer" | "footers" | "contentinfo" => Some(RegionRole::Footer),
         "form" | "forms" => Some(RegionRole::Form),
@@ -1126,6 +1128,8 @@ mod tests {
         for (selector, role) in [
             ("navigations", RegionRole::Navigation),
             ("asides", RegionRole::Aside),
+            ("sidebar", RegionRole::Aside),
+            ("sidebars", RegionRole::Aside),
             ("headers", RegionRole::Header),
             ("footers", RegionRole::Footer),
             ("contents", RegionRole::Content),
