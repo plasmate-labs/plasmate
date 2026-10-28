@@ -57,6 +57,7 @@ def find_by_role(som: Som, role: str) -> List[SomRegion]:
         "footer": "footer",
         "footers": "footer",
         "contentinfo": "footer",
+        "content_info": "footer",
         "form": "form",
         "forms": "form",
         "dialog": "dialog",
