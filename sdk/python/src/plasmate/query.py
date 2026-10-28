@@ -824,6 +824,9 @@ def find_action_targets_by_action(
         if separator.startswith((":", "=")):
             normalized_action = " ".join(separator[1:].strip().split())
     normalized_action = {
+        "clear_text": "clear",
+        "clear-text": "clear",
+        "clear text": "clear",
         "type_text": "type",
         "type-text": "type",
         "type text": "type",

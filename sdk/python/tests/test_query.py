@@ -658,6 +658,12 @@ class TestFindActionTargetsByAction:
             item["id"] for item in find_action_targets_by_action(sample_som, "'action:clear'")
         ] == ["e9"]
 
+    def test_accepts_clear_text_action_aliases(self, sample_som: Som) -> None:
+        for alias in ("clear_text", "clear-text", "clear text", "action:clear_text"):
+            assert [
+                item["id"] for item in find_action_targets_by_action(sample_som, alias)
+            ] == ["e9"], alias
+
 
 class TestFindInteractive:
     def test_finds_all_interactive_elements(self, sample_som: Som) -> None:
