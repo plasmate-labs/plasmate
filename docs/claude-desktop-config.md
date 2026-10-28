@@ -74,6 +74,10 @@ Claude will call: `fetch_page(url="https://stripe.com/docs", selector="main")`
 
 The plural `lists` selector is also accepted for list elements.
 
+Source-specific media selectors are also accepted: `audio_item`/`audio-item`,
+`video_item`/`video-item`, and `canvas_item`/`canvas-item`, including plural
+forms, target only the corresponding native media elements.
+
 Use `label:<text>` or `label=<text>` for case-insensitive accessible-label or
 authored-text matching on regions and elements. When a compiled label is
 unavailable, element matching also checks `aria-label`, `title`, `placeholder`,
