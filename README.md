@@ -245,7 +245,7 @@ as `menuitem`/`menu items`, `option`, `tab`, `treeitem`/`tree items`, `switch`,
 `menuitemcheckbox`, and `menuitemradio` are also accepted. Region selectors accept ARIA landmark
 aliases such as `navigation`, `nav region`/`nav-region`/`nav regions`,
 `navigation region`/`navigation-region`/`navigation regions`, `search`/`search navigation`/`search navigations`, `banner`, `complementary`, and
-`contentinfo`; `forms` and `dialogs` are plural aliases for `form` and
+`contentinfo`/`content_info`/`content-info`; `forms` and `dialogs` are plural aliases for `form` and
 `dialog`; `content_region`/`content_regions` (and their hyphenated or
 space-separated forms) select content regions.
 Table selectors include `table`/`tables`, `data_table`/`data_tables`, and
