@@ -757,6 +757,15 @@ export function findActionTargetsByRole(
   options?: { enabledOnly?: boolean },
 ): ActionPlanItem[] {
   const normalizedRole = stripRolePrefix(role).replace(/[\s-]+/g, '_');
+  const mediaSourceRole = MEDIA_TAG_ALIASES[normalizedRole];
+  const plan = options?.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
+  if (mediaSourceRole) {
+    return plan.filter((item) => item.source_role === mediaSourceRole);
+  }
+  if (normalizedRole in MEDIA_GROUP_ALIASES) {
+    return plan.filter((item) => item.role === 'image' ||
+      (item.source_role !== undefined && ['audio', 'video', 'canvas'].includes(item.source_role)));
+  }
   const canonicalRole = ELEMENT_ROLE_ALIASES[normalizedRole] ??
     (ELEMENT_ROLES.includes(normalizedRole as ElementRole) ? normalizedRole as ElementRole : undefined);
   return canonicalRole

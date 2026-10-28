@@ -604,6 +604,31 @@ class TestFindActionTargetsByRole:
         ):
             assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == expected
 
+    def test_accepts_media_aliases(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.extend(
+            [
+                SomElement(
+                    id="audio",
+                    role=ElementRole.group,
+                    actions=["click"],
+                    attrs=ElementAttrs(source_role="audio"),
+                ),
+                SomElement(
+                    id="video",
+                    role=ElementRole.group,
+                    actions=["click"],
+                    attrs=ElementAttrs(source_role="video"),
+                ),
+            ]
+        )
+        assert [item["id"] for item in find_action_targets_by_role(sample_som, "audio-item")] == [
+            "audio"
+        ]
+        assert [item["id"] for item in find_action_targets_by_role(sample_som, "media")] == [
+            "audio",
+            "video",
+        ]
+
     def test_trims_role_aliases(self, sample_som: Som) -> None:
         assert [item["id"] for item in find_action_targets_by_role(sample_som, "  a  ")] == ["e1", "e2"]
 

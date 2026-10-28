@@ -298,6 +298,31 @@ describe('findActionTargetsByRole aliases', () => {
     );
     assert.deepEqual(findActionTargetsByRole(fixture, 'unknown-role'), []);
   });
+
+  it('accepts media aliases for actionable source-role elements', () => {
+    const mediaFixture: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_media',
+          role: 'main',
+          elements: [
+            { id: 'image', role: 'image', actions: ['click'] },
+            { id: 'audio', role: 'group', actions: ['click'], attrs: { source_role: 'audio' } },
+            { id: 'video', role: 'group', actions: ['click'], attrs: { source_role: 'video' } },
+            { id: 'canvas', role: 'group', actions: ['click'], attrs: { source_role: 'canvas' } },
+          ],
+        },
+      ],
+    };
+    assert.deepEqual(findActionTargetsByRole(mediaFixture, 'audio-item').map((item) => item.id), ['audio']);
+    assert.deepEqual(findActionTargetsByRole(mediaFixture, 'media-items').map((item) => item.id), [
+      'image',
+      'audio',
+      'video',
+      'canvas',
+    ]);
+  });
 });
 
 function loadActionAvailabilityFixture(): { som: Som; action_targets: ExpectedActionTarget[] } {

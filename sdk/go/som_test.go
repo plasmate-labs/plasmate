@@ -611,6 +611,35 @@ func TestFindByTagAcceptsMediaAliases(t *testing.T) {
 	}
 }
 
+func TestFindActionTargetsByRoleAcceptsMediaAliases(t *testing.T) {
+	audio, video, canvas := "audio", "video", "canvas"
+	som := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "image", Role: "image", Actions: []string{"click"}},
+		{ID: "audio", Role: "group", Actions: []string{"click"}, Attrs: &ElementAttrs{SourceRole: &audio}},
+		{ID: "video", Role: "group", Actions: []string{"click"}, Attrs: &ElementAttrs{SourceRole: &video}},
+		{ID: "canvas", Role: "group", Actions: []string{"click"}, Attrs: &ElementAttrs{SourceRole: &canvas}},
+	}}}}
+
+	for _, test := range []struct {
+		alias string
+		want  []string
+	}{
+		{alias: "audio-item", want: []string{"audio"}},
+		{alias: "canvas_items", want: []string{"canvas"}},
+		{alias: "media", want: []string{"image", "audio", "video", "canvas"}},
+	} {
+		got := FindActionTargetsByRole(som, test.alias)
+		if len(got) != len(test.want) {
+			t.Fatalf("FindActionTargetsByRole(%q) = %d, want %d", test.alias, len(got), len(test.want))
+		}
+		for i, item := range got {
+			if item.ID != test.want[i] {
+				t.Errorf("FindActionTargetsByRole(%q)[%d] = %q, want %q", test.alias, i, item.ID, test.want[i])
+			}
+		}
+	}
+}
+
 func TestFindInteractive(t *testing.T) {
 	som := mustParse(t)
 
