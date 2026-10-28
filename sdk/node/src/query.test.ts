@@ -228,6 +228,74 @@ describe('findActionTargetsByRole aliases', () => {
       findActionTargetsByRole(fieldsetFixture, 'fieldsets').map((item) => item.id),
       ['e12'],
     );
+    const structuralFixture: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [
+                ...region.elements,
+                { id: 'e14', role: 'group', text: 'Progress', actions: ['click'] },
+                { id: 'e15', role: 'details', text: 'Details', actions: ['click'] },
+              ],
+            }
+          : region,
+      ),
+    };
+    for (const alias of ['figure', 'radiogroups', 'progressbar', 'meters', 'outputs']) {
+      assert.deepEqual(
+        findActionTargetsByRole(structuralFixture, alias).map((item) => item.id),
+        ['e14'],
+        alias,
+      );
+    }
+    for (const alias of ['detail', 'summaries']) {
+      assert.deepEqual(
+        findActionTargetsByRole(structuralFixture, alias).map((item) => item.id),
+        ['e15'],
+        alias,
+      );
+    }
+    const sectionFixture: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [
+                ...region.elements,
+                { id: 'e16', role: 'section', text: 'Article', actions: ['click'] },
+              ],
+            }
+          : region,
+      ),
+    };
+    for (const alias of ['article', 'articles', 'sections']) {
+      assert.deepEqual(
+        findActionTargetsByRole(sectionFixture, alias).map((item) => item.id),
+        ['e16'],
+        alias,
+      );
+    }
+    const tableFixture: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [
+                ...region.elements,
+                { id: 'e13', role: 'table', text: 'Orders', actions: ['click'] },
+              ],
+            }
+          : region,
+      ),
+    };
+    assert.deepEqual(
+      findActionTargetsByRole(tableFixture, 'treegrids').map((item) => item.id),
+      ['e13'],
+    );
     assert.deepEqual(findActionTargetsByRole(fixture, 'unknown-role'), []);
   });
 });
@@ -440,6 +508,7 @@ describe('findByTag', () => {
       'table_grid',
       'table-grids',
       'treegrid',
+      'treegrids',
       'tree grids',
     ]) {
       assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['e12'], alias);
@@ -482,6 +551,41 @@ describe('findByTag', () => {
     }
   });
 
+  it('accepts structural and details aliases', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_structural',
+          role: 'main',
+          elements: [
+            { id: 'group', role: 'group' },
+            { id: 'details', role: 'details' },
+          ],
+        },
+      ],
+    };
+    for (const alias of ['figure', 'radiogroup', 'progress', 'progressbar', 'meter', 'output']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['group'], alias);
+    }
+    for (const alias of ['detail', 'summaries']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['details'], alias);
+    }
+    const sectionSom: Som = {
+      ...som,
+      regions: [
+        {
+          id: 'r_section',
+          role: 'main',
+          elements: [{ id: 'section', role: 'section', text: 'A section' }],
+        },
+      ],
+    };
+    for (const alias of ['article', 'articles', 'sections']) {
+      assert.deepEqual(findByTag(sectionSom, alias).map((el) => el.id), ['section'], alias);
+    }
+  });
+
   it('accepts blockquote aliases for paragraph elements', () => {
     const som: Som = {
       ...fixture,
@@ -495,6 +599,26 @@ describe('findByTag', () => {
     };
     for (const alias of ['blockquote', 'blockquotes', 'quote', 'quotes']) {
       assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['quote'], alias);
+    }
+  });
+
+  it('accepts ARIA paragraph aliases', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_messages',
+          role: 'main',
+          elements: [
+            { id: 'alert', role: 'paragraph', text: 'Saved' },
+            { id: 'status', role: 'paragraph', text: 'Ready' },
+            { id: 'tooltip', role: 'paragraph', text: 'Help' },
+          ],
+        },
+      ],
+    };
+    for (const alias of ['alert', 'status', 'tooltip']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['alert', 'status', 'tooltip'], alias);
     }
   });
 
