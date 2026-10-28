@@ -370,6 +370,7 @@ const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   alert: 'paragraph',
   status: 'paragraph',
   tooltip: 'paragraph',
+  articles: 'section',
   summary: 'details',
   detail: 'details',
   summaries: 'details',

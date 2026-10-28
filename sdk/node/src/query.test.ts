@@ -257,6 +257,27 @@ describe('findActionTargetsByRole aliases', () => {
         alias,
       );
     }
+    const sectionFixture: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [
+                ...region.elements,
+                { id: 'e16', role: 'section', text: 'Article', actions: ['click'] },
+              ],
+            }
+          : region,
+      ),
+    };
+    for (const alias of ['article', 'articles', 'sections']) {
+      assert.deepEqual(
+        findActionTargetsByRole(sectionFixture, alias).map((item) => item.id),
+        ['e16'],
+        alias,
+      );
+    }
     const tableFixture: Som = {
       ...fixture,
       regions: fixture.regions.map((region) =>
@@ -549,6 +570,19 @@ describe('findByTag', () => {
     }
     for (const alias of ['detail', 'summaries']) {
       assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['details'], alias);
+    }
+    const sectionSom: Som = {
+      ...som,
+      regions: [
+        {
+          id: 'r_section',
+          role: 'main',
+          elements: [{ id: 'section', role: 'section', text: 'A section' }],
+        },
+      ],
+    };
+    for (const alias of ['article', 'articles', 'sections']) {
+      assert.deepEqual(findByTag(sectionSom, alias).map((el) => el.id), ['section'], alias);
     }
   });
 
