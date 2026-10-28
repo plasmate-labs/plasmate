@@ -196,6 +196,8 @@ if err != nil {
 // Find elements
 el := plasmate.FindByID(som, "e3")
 navs := plasmate.FindByRole(som, "navigation")
+// Common region aliases such as "content-info" also map to canonical roles.
+footers := plasmate.FindByRole(som, "content-info")
 buttons := plasmate.FindByTag(som, "button")
 results := plasmate.FindByText(som, "sign in")
 clickable := plasmate.FindByAction(som, "click")
