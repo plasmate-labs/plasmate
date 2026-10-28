@@ -67,7 +67,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `mediaitem` / `media_items` / `media-items` (images and media-capable groups).
 ///   `audio_item`/`audio-item`/`audio_items`/`audio-items` and
 ///   `video_item`/`video-item`/`video_items`/`video-items` are convenient
-///   media aliases (and match the grouped media behavior).
+///   media aliases (and match the grouped media behavior). The equivalent
+///   `canvas_item`/`canvas-item`/`canvas_items`/`canvas-items` forms are also
+///   supported.
 ///   Compound element-role aliases also accept spaces, such as `text input`,
 ///   `search box`, `menu item`, and `unordered list`.
 /// - Heading levels: `h1` .. `h6` (or `heading1` .. `heading6`, including
@@ -391,7 +393,8 @@ fn media_source_role(selector: &str) -> Option<&'static str> {
         "video" | "videos" | "video_item" | "video-item" | "video_items" | "video-items" => {
             Some("video")
         }
-        "canvas" | "canvases" => Some("canvas"),
+        "canvas" | "canvases" | "canvas_item" | "canvas-item" | "canvas_items"
+        | "canvas-items" => Some("canvas"),
         _ => None,
     }
 }
@@ -1352,7 +1355,7 @@ mod tests {
     }
 
     #[test]
-    fn test_selector_audio_and_video_item_aliases_match_grouped_media() {
+    fn test_selector_media_source_item_aliases_match_grouped_media() {
         for selector in [
             "audio_item",
             "audio-item",
@@ -1362,13 +1365,19 @@ mod tests {
             "video-item",
             "video_items",
             "video-items",
+            "canvas_item",
+            "canvas-item",
+            "canvas_items",
+            "canvas-items",
         ] {
             let mut som = make_test_som();
             som.regions[0].elements[0].role = ElementRole::Group;
             let source_role = if selector.starts_with("audio") {
                 "audio"
-            } else {
+            } else if selector.starts_with("video") {
                 "video"
+            } else {
+                "canvas"
             };
             som.regions[0].elements[0].attrs =
                 Some(serde_json::json!({"source_role": source_role}));
