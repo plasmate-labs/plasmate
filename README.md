@@ -253,6 +253,12 @@ Table selectors include `table`/`tables`, `data_table`/`data_tables`, and
 hyphenated and space-separated forms accepted too).
 Use `selector="media"` to keep images and media-capable grouped elements
 such as audio, video, and canvas while removing unrelated page content.
+Source-specific media selectors are also available: `audio_item`/`audio-item`/
+`audioitem`, `video_item`/`video-item`/`videoitem`, and
+`canvas_item`/`canvas-item`/`canvasitem` (including their plural forms) target
+only the corresponding native media elements. Use
+`canvas` when you want every canvas element, or `canvas_item` when filtering a
+mixed media page down to canvas elements only.
 HTML text-input type names are also accepted as selectors, including
 `text`, `search_input`/`search-input`, `search_control`/`search-control`,
 `search_field`/`search-field`, `search_box`/`search-box`, `query`,
