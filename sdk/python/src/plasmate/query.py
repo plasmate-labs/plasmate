@@ -696,6 +696,22 @@ def find_action_targets_by_role(
     can use ``a``/``button``/``input`` and related spellings consistently.
     """
     index = get_action_plan_index(som, enabled_only=enabled_only)
+    normalized_alias = _normalize_role_alias(role)
+    media_source_role = _MEDIA_TAG_ALIASES.get(normalized_alias)
+    plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
+    if media_source_role is not None:
+        return [
+            item
+            for item in plan
+            if item.get("source_role") == media_source_role
+        ]
+    if normalized_alias in _MEDIA_GROUP_ALIASES:
+        return [
+            item
+            for item in plan
+            if item.get("role") == ElementRole.image.value
+            or item.get("source_role") in {"audio", "video", "canvas"}
+        ]
     normalized_role = {
         "a": "link",
         "article": "section",
@@ -819,7 +835,7 @@ def find_action_targets_by_role(
         "ul": "list",
         "list_box": "select",
         "unordered_list": "list",
-    }.get(_normalize_role_alias(role), _normalize_role_alias(role))
+    }.get(normalized_alias, normalized_alias)
     results = index["by_role"].get(normalized_role, [])
     return list(results) if isinstance(results, list) else []
 
