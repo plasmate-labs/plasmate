@@ -118,7 +118,7 @@ enum Commands {
         /// Filter output to a specific SOM region or element.
         ///
         /// Accepts semantic region roles (main, nav, navigation, nav_region/nav-region/nav region/nav regions,
-        /// navigation_region/navigation-region/navigation region/navigation regions, search/search navigation/search navigations, aside, header,
+        /// navigation_region/navigation-region/navigation region/navigation regions, search/search navigation/search navigations, aside/sidebar/sidebars, header,
         /// footer, form, dialog, content), heading levels (h1 through h6),
         /// including data-grid/data-grids and spaced or underscored forms for table-like elements,
         /// element roles (button, link/a, paragraph/paragraphs/p, blockquote/blockquotes/quote/quotes, list/ul/ol, grid/grids/data-grid/data-grids/data grid/data grids/treegrid/treegrids/tree-grid/tree-grids/tree grid/tree grids/table/table-grid/table-grids/table grid/table grids, media/media_item/media-item/mediaitem/media_items/media-items, audio_item/audio-item/audio_items/audio-items, video_item/video-item/video_items/video-items, canvas/canvases/canvas_item/canvas-item/canvas_items/canvas-items, text_input, search_input/search-input/search_control/search-control/search_field/search-field/search_box/search-box/query/queries/query_input/query-input/query_field/query-field/query_control/query-control/querybox/query-box, datetime/date_time/date-time/date time/date_time_local/date-time-local/date time local, select, etc.), action selectors (interactive,
