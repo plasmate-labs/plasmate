@@ -585,6 +585,15 @@ class TestFindActionTargetsByRole:
                 "e12"
             ], alias
 
+    def test_accepts_blockquote_action_role_aliases(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(id="quote", role=ElementRole.paragraph, actions=["click"])
+        )
+        for alias in ("blockquote", "blockquotes", "quote", "quotes"):
+            assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
+                "quote"
+            ], alias
+
     def test_accepts_table_grid_aliases(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.append(
             SomElement(id="e12", role=ElementRole.table, actions=["click"])
