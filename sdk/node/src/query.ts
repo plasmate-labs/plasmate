@@ -37,6 +37,8 @@ function normalizeRegionRole(role: string): RegionRole | undefined {
     search_navigations: 'navigation',
     aside: 'aside',
     asides: 'aside',
+    sidebar: 'aside',
+    sidebars: 'aside',
     complementary: 'aside',
     header: 'header',
     headers: 'header',

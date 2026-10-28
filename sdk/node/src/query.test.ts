@@ -363,6 +363,14 @@ describe('findByRole', () => {
     assert.deepEqual(findByRole(som, "role = 'navigation'").map((region) => region.id), ['r_nav']);
     assert.deepEqual(findByRole(som, 'navigation').map((region) => region.id), ['r_nav']);
     assert.deepEqual(findByRole(som, 'article').map((region) => region.id), ['r_content']);
+
+    const asideSom: Som = {
+      ...som,
+      regions: [...som.regions, { id: 'r_aside', role: 'aside', elements: [] }],
+    };
+    for (const alias of ['aside', 'asides', 'sidebar', 'sidebars', 'complementary']) {
+      assert.deepEqual(findByRole(asideSom, alias).map((region) => region.id), ['r_aside'], alias);
+    }
   });
 });
 

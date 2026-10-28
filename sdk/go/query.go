@@ -65,6 +65,7 @@ func normalizeRegionRoleAlias(role string) string {
 		"search_navigation":  "navigation",
 		"search_navigations": "navigation",
 		"sidebar":            "aside",
+		"sidebars":           "aside",
 	}
 	if canonical, ok := aliases[role]; ok {
 		return canonical
