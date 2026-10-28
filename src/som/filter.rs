@@ -15,7 +15,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `navigation_regions`/`navigation-regions`/`navigation regions`/`search`/`searches`/
 ///   `search_nav`/`search-nav`/`search_navigation`/`search-navigation`/`search navigation`/
 ///   `search_navigations`/`search-navigations`/`search navigations`,
-///   `aside`/`asides`/`complementary`, `header`/`headers`/`banner`,
+///   `aside`/`asides`/`sidebar`/`sidebars`/`complementary`,
+///   `header`/`headers`/`banner`,
 ///   `footer`/`footers`/`contentinfo`, `form`/`forms`, `dialog`/`dialogs`,
 ///   `content`/`contents`/`article`/`articles`/`main_content`/`main_contents`/
 ///   `main-content`/`main-contents`/`main content`/`main contents`/
@@ -1130,6 +1131,8 @@ mod tests {
             ("asides", RegionRole::Aside),
             ("sidebar", RegionRole::Aside),
             ("sidebars", RegionRole::Aside),
+            ("role=sidebar", RegionRole::Aside),
+            ("role:sidebars", RegionRole::Aside),
             ("headers", RegionRole::Header),
             ("footers", RegionRole::Footer),
             ("contents", RegionRole::Content),
