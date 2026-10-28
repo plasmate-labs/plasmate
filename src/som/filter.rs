@@ -41,6 +41,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `date-time-local` / `date time local`, `month`,
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` / `textareas`,
 ///   `select` / `selects` / `combobox` / `comboboxes` / `combo box` /
+///   `combo boxes` / `combo-boxes` /
 ///   `listbox` / `listboxes` / `list box`, `checkbox` / `checkboxes` / `check box` /
 ///   `check boxes` / `switch` /
 ///   `switches` / `menuitemcheckbox` / `menuitemcheckboxes`, `radio` / `radios` /
@@ -585,7 +586,13 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "hidden"
         | "file" => Some(ElementRole::TextInput),
         "textarea" | "textareas" => Some(ElementRole::Textarea),
-        "select" | "selects" | "combobox" | "comboboxes" | "combo_box" | "listbox"
+        "select"
+        | "selects"
+        | "combobox"
+        | "comboboxes"
+        | "combo_box"
+        | "combo_boxes"
+        | "listbox"
         | "listboxes" | "list_box" => Some(ElementRole::Select),
         "checkbox"
         | "checkboxes"
@@ -1276,7 +1283,15 @@ mod tests {
 
     #[test]
     fn test_selector_select_aliases_accept_plural_and_spaced_forms() {
-        for selector in ["selects", "comboboxes", "combo box", "listboxes", "list box"] {
+        for selector in [
+            "selects",
+            "comboboxes",
+            "combo box",
+            "combo boxes",
+            "combo-boxes",
+            "listboxes",
+            "list box",
+        ] {
             let mut som = make_test_som();
             som.regions[0].elements[0].role = ElementRole::Select;
             let filtered = apply_selector(&som, selector);
