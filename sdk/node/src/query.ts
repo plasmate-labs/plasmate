@@ -46,6 +46,7 @@ function normalizeRegionRole(role: string): RegionRole | undefined {
     footer: 'footer',
     footers: 'footer',
     contentinfo: 'footer',
+    content_info: 'footer',
     form: 'form',
     forms: 'form',
     dialog: 'dialog',
