@@ -263,7 +263,8 @@ HTML text-input type names are also accepted as selectors, including
 `text`, `search_input`/`search-input`, `search_control`/`search-control`,
 `search_field`/`search-field`, `search_box`/`search-box`, `query`,
 `query_input`/`query-input`, `query_field`/`query-field`,
-`query_control`/`query-control`, `querybox`/`query-box`, `email`, `number`,
+`query_control`/`query-control`, `querybox`/`query-box`,
+`queryboxes`/`query_boxes`/`query-boxes`/`query boxes`, `email`, `number`,
 `password`, `tel`, `url`, `date`,
 `datetime`/`datetime-local` (also `date_time`/`date-time`/`date time` and `date_time_local`/`date-time-local`/`date time local`), `month`, `time`, `week`, `color`, `range`,
 `hidden`, and `file`; each targets the corresponding compiled text-input
