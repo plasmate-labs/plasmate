@@ -566,6 +566,7 @@ func FindByAction(som *Som, action string) []Element {
 	if som == nil {
 		return nil
 	}
+	action = normalizeActionQuery(action)
 	var result []Element
 	for _, el := range FlatElements(som) {
 		if containsString(el.Actions, action) {

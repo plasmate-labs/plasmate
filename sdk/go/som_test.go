@@ -1095,6 +1095,9 @@ func TestFindByActionAndHint(t *testing.T) {
 	if len(clickable) != 5 {
 		t.Fatalf("FindByAction(click) = %d, want 5", len(clickable))
 	}
+	if got := FindByAction(som, "action:type_text"); len(got) != 1 || got[0].ID != "e5" {
+		t.Fatalf("FindByAction(action:type_text) = %#v, want e5", got)
+	}
 
 	primary := FindByHint(som, "primary")
 	if len(primary) != 1 {
