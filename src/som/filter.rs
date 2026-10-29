@@ -36,14 +36,16 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `search-field` / `query` / `queries` / `query_input` / `query_inputs` / `query-input` /
 ///   `query_field` / `query_fields` / `query-field` / `query_control` /
 ///   `query_controls` / `query-control` / `querybox` / `query-box` /
-///   `search_box` / `search_boxes` / `search-box`, `email`, `number`,
+///   `query_boxes` / `query-boxes` / `search_box` / `search_boxes` / `search-box`,
+///   `email`, `number`,
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local` /
 ///   `date_time` / `date-time` / `date time`, `date_time_local` /
 ///   `date-time-local` / `date time local`, `month`,
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` / `textareas`,
 ///   `select` / `selects` / `combobox` / `comboboxes` / `combo box` /
 ///   `combo boxes` / `combo-boxes` /
-///   `listbox` / `listboxes` / `list box`, `checkbox` / `checkboxes` / `check box` /
+///   `listbox` / `listboxes` / `list_box` / `list_boxes` / `list box` / `list boxes`,
+///   `checkbox` / `checkboxes` / `check box` /
 ///   `check boxes` / `switch` /
 ///   `switches` / `menuitemcheckbox` / `menuitemcheckboxes`, `radio` / `radios` /
 ///   `radio button` / `radio buttons` /
@@ -566,6 +568,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "text_inputs"
         | "textbox"
         | "textboxes"
+        | "text_box"
+        | "text_boxes"
         | "searchbox"
         | "searchboxes"
         | "slider"
@@ -596,6 +600,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "querybox"
         | "query_box"
         | "queryboxes"
+        | "query_boxes"
         | "email"
         | "number"
         | "password"
@@ -621,7 +626,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "combo_box"
         | "combo_boxes"
         | "listbox"
-        | "listboxes" | "list_box" => Some(ElementRole::Select),
+        | "listboxes"
+        | "list_box"
+        | "list_boxes" => Some(ElementRole::Select),
         "checkbox"
         | "checkboxes"
         | "check_box"
@@ -1316,6 +1323,39 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_text_box_aliases() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::TextInput;
+
+        for selector in [
+            "text_box",
+            "text-box",
+            "text box",
+            "text_boxes",
+            "text-boxes",
+            "text boxes",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::TextInput);
+        }
+    }
+
+    #[test]
+    fn test_selector_query_box_plural_aliases() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::TextInput;
+
+        for selector in ["queryboxes", "query_boxes", "query-boxes", "query boxes"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::TextInput);
+        }
+    }
+
+    #[test]
     fn test_selector_select_aliases_accept_plural_and_spaced_forms() {
         for selector in [
             "selects",
@@ -1324,7 +1364,10 @@ mod tests {
             "combo boxes",
             "combo-boxes",
             "listboxes",
+            "list_box",
+            "list_boxes",
             "list box",
+            "list boxes",
         ] {
             let mut som = make_test_som();
             som.regions[0].elements[0].role = ElementRole::Select;
