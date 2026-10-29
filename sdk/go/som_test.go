@@ -619,8 +619,14 @@ func TestFindByTagAcceptsMediaAliases(t *testing.T) {
 		want  []string
 	}{
 		{alias: "audio-item", want: []string{"audio"}},
+		{alias: "audioitem", want: []string{"audio"}},
+		{alias: "audioitems", want: []string{"audio"}},
 		{alias: "videos", want: []string{"video"}},
+		{alias: "videoitem", want: []string{"video"}},
+		{alias: "videoitems", want: []string{"video"}},
 		{alias: "canvas_items", want: []string{"canvas"}},
+		{alias: "canvasitem", want: []string{"canvas"}},
+		{alias: "canvasitems", want: []string{"canvas"}},
 		{alias: "media", want: []string{"image", "audio", "video", "canvas"}},
 	} {
 		got := FindByTag(som, test.alias)
@@ -649,7 +655,11 @@ func TestFindActionTargetsByRoleAcceptsMediaAliases(t *testing.T) {
 		want  []string
 	}{
 		{alias: "audio-item", want: []string{"audio"}},
+		{alias: "audioitem", want: []string{"audio"}},
+		{alias: "audioitems", want: []string{"audio"}},
 		{alias: "canvas_items", want: []string{"canvas"}},
+		{alias: "canvasitem", want: []string{"canvas"}},
+		{alias: "canvasitems", want: []string{"canvas"}},
 		{alias: "media", want: []string{"image", "audio", "video", "canvas"}},
 	} {
 		got := FindActionTargetsByRole(som, test.alias)
