@@ -514,6 +514,10 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 		id    string
 	}{
 		{alias: "data tables", id: "table"},
+		{alias: "data-grid", id: "table"},
+		{alias: "grid", id: "table"},
+		{alias: "table grids", id: "table"},
+		{alias: "treegrid", id: "table"},
 		{alias: "figure", id: "group"},
 		{alias: "figures", id: "group"},
 		{alias: "groups", id: "group"},
@@ -1095,6 +1099,9 @@ func TestFindByActionAndHint(t *testing.T) {
 	if len(clickable) != 5 {
 		t.Fatalf("FindByAction(click) = %d, want 5", len(clickable))
 	}
+	if got := FindByAction(som, "action:type_text"); len(got) != 1 || got[0].ID != "e5" {
+		t.Fatalf("FindByAction(action:type_text) = %#v, want e5", got)
+	}
 
 	primary := FindByHint(som, "primary")
 	if len(primary) != 1 {
@@ -1292,6 +1299,34 @@ func TestActionPlanLookupHelpers(t *testing.T) {
 	}
 	if got := FindActionTargetsByAction(som, "click"); len(got) != 3 || got[0].ID != "e_save" || got[1].ID != "e_preview" || got[2].ID != "e_billing" {
 		t.Fatalf("FindActionTargetsByAction(click) = %#v, want e_save/e_preview/e_billing", got)
+	}
+	legacyActionSom := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "e_legacy_type", Role: "text_input", Actions: []string{"type_text"}},
+		{ID: "e_canonical_type", Role: "text_input", Actions: []string{"type", "type_text"}},
+	}}}}
+	if got := FindActionTargetsByAction(legacyActionSom, "type"); len(got) != 2 || got[0].ID != "e_legacy_type" || got[1].ID != "e_canonical_type" {
+		t.Fatalf("FindActionTargetsByAction(type) = %#v, want both legacy and canonical targets once", got)
+	}
+	for _, alias := range []string{"action : submit", "action=submit", `"action:submit"`} {
+		if got := FindActionTargetsByAction(som, alias); len(got) != 1 || got[0].ID != "e_save" {
+			t.Fatalf("FindActionTargetsByAction(%q) = %#v, want e_save", alias, got)
+		}
+	}
+	canonicalType := FindActionTargetsByAction(som, "type")
+	if got := FindActionTargetsByAction(som, "action=type_text"); !reflect.DeepEqual(got, canonicalType) {
+		t.Fatalf("FindActionTargetsByAction(action=type_text) = %#v, want canonical type targets", got)
+	}
+	canonicalSelect := FindActionTargetsByAction(som, "select")
+	if got := FindActionTargetsByAction(som, "action:select_option"); !reflect.DeepEqual(got, canonicalSelect) {
+		t.Fatalf("FindActionTargetsByAction(action:select_option) = %#v, want canonical select targets", got)
+	}
+	reset := "reset"
+	resetSom := &Som{Regions: []Region{{Elements: []Element{{
+		ID: "e_reset", Role: "button", Actions: []string{"click"},
+		Attrs: &ElementAttrs{ButtonType: &reset},
+	}}}}}
+	if got := FindActionTargetsByAction(resetSom, "reset"); len(got) != 1 || got[0].ID != "e_reset" {
+		t.Fatalf("FindActionTargetsByAction(reset) = %#v, want e_reset", got)
 	}
 	if found := FindActionTargetByLabel(som, "Plan"); found == nil || found.ID != "e_plan" {
 		t.Fatalf("FindActionTargetByLabel(Plan) = %#v, want e_plan", found)

@@ -227,12 +227,16 @@ func normalizeElementRoleAlias(role string) string {
 		"definition_list":    "list",
 		"data_table":         "table",
 		"data_tables":        "table",
+		"data_grid":          "table",
+		"data_grids":         "table",
 		"div":                "group",
 		"details":            "details",
 		"fieldset":           "group",
 		"fieldsets":          "group",
 		"figure":             "group",
 		"figures":            "group",
+		"grid":               "table",
+		"grids":              "table",
 		"headings":           "heading",
 		"hr":                 "separator",
 		"img":                "image",
@@ -312,6 +316,8 @@ func normalizeElementRoleAlias(role string) string {
 		"tab":                "button",
 		"tabs":               "button",
 		"tables":             "table",
+		"table_grid":         "table",
+		"table_grids":        "table",
 		"textarea":           "textarea",
 		"textareas":          "textarea",
 		"textboxes":          "text_input",
@@ -321,6 +327,10 @@ func normalizeElementRoleAlias(role string) string {
 		"treeitem":           "button",
 		"tree_items":         "button",
 		"treeitems":          "button",
+		"tree_grid":          "table",
+		"tree_grids":         "table",
+		"treegrid":           "table",
+		"treegrids":          "table",
 		"ul":                 "list",
 		"unordered_list":     "list",
 		"groups":             "group",
@@ -566,6 +576,7 @@ func FindByAction(som *Som, action string) []Element {
 	if som == nil {
 		return nil
 	}
+	action = normalizeActionQuery(action)
 	var result []Element
 	for _, el := range FlatElements(som) {
 		if containsString(el.Actions, action) {
@@ -1000,9 +1011,19 @@ func GetActionPlanIndex(som *Som, enabledOnly ...bool) ActionPlanIndex {
 		if item.Role != "" {
 			index.ByRole[item.Role] = append(index.ByRole[item.Role], item)
 		}
+		indexedActions := map[string]struct{}{}
 		for _, action := range item.Actions {
 			if action != "" {
-				index.ByAction[action] = append(index.ByAction[action], item)
+				for _, key := range []string{action, normalizeActionQuery(action)} {
+					if key == "" {
+						continue
+					}
+					if _, ok := indexedActions[key]; ok {
+						continue
+					}
+					indexedActions[key] = struct{}{}
+					index.ByAction[key] = append(index.ByAction[key], item)
+				}
 			}
 		}
 	}
@@ -1186,8 +1207,70 @@ func FindActionTargetsByRole(som *Som, role string, enabledOnly ...bool) []Actio
 
 // FindActionTargetsByAction returns compact action targets that expose the requested action.
 func FindActionTargetsByAction(som *Som, action string, enabledOnly ...bool) []ActionPlanItem {
+	action = normalizeActionQuery(action)
 	index := GetActionPlanIndex(som, enabledOnly...)
-	return append([]ActionPlanItem(nil), index.ByAction[action]...)
+	results := append([]ActionPlanItem(nil), index.ByAction[action]...)
+	if action != "submit" && action != "reset" {
+		return results
+	}
+
+	seen := make(map[string]struct{}, len(results))
+	for _, item := range results {
+		seen[item.ID] = struct{}{}
+	}
+	plan := GetActionPlan(som)
+	if len(enabledOnly) > 0 && enabledOnly[0] {
+		plan = EnabledActionPlan(som)
+	}
+	for _, item := range plan {
+		buttonType := ""
+		if item.ButtonType != nil {
+			buttonType = strings.ToLower(strings.TrimSpace(*item.ButtonType))
+		}
+		matches := buttonType == action || (action == "submit" && buttonType == "image")
+		if matches {
+			if _, ok := seen[item.ID]; !ok {
+				results = append(results, item)
+				seen[item.ID] = struct{}{}
+			}
+		}
+	}
+	return results
+}
+
+func normalizeActionQuery(action string) string {
+	normalized := normalizeQueryText(action)
+	if len(normalized) >= 2 && ((normalized[0] == '"' && normalized[len(normalized)-1] == '"') ||
+		(normalized[0] == '\'' && normalized[len(normalized)-1] == '\'')) {
+		normalized = strings.TrimSpace(normalized[1 : len(normalized)-1])
+	}
+	for _, prefix := range []string{"action", "role"} {
+		if strings.HasPrefix(normalized, prefix) {
+			rest := strings.TrimSpace(normalized[len(prefix):])
+			if strings.HasPrefix(rest, ":") || strings.HasPrefix(rest, "=") {
+				normalized = strings.TrimSpace(rest[1:])
+				if len(normalized) >= 2 && ((normalized[0] == '"' && normalized[len(normalized)-1] == '"') ||
+					(normalized[0] == '\'' && normalized[len(normalized)-1] == '\'')) {
+					normalized = strings.TrimSpace(normalized[1 : len(normalized)-1])
+				}
+			}
+		}
+	}
+	aliases := map[string]string{
+		"clear_text":    "clear",
+		"clear-text":    "clear",
+		"clear text":    "clear",
+		"type_text":     "type",
+		"type-text":     "type",
+		"type text":     "type",
+		"select_option": "select",
+		"select-option": "select",
+		"select option": "select",
+	}
+	if canonical, ok := aliases[normalized]; ok {
+		return canonical
+	}
+	return normalized
 }
 
 func flattenRegionElements(elements []Element) []Element {
