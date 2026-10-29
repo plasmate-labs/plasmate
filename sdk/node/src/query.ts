@@ -786,8 +786,7 @@ export function findActionTargetsByRole(
     return plan.filter((item) => item.role === 'image' ||
       (item.source_role !== undefined && ['audio', 'video', 'canvas'].includes(item.source_role)));
   }
-  const canonicalRole = ELEMENT_ROLE_ALIASES[normalizedRole] ??
-    (ELEMENT_ROLES.includes(normalizedRole as ElementRole) ? normalizedRole as ElementRole : undefined);
+  const canonicalRole = normalizeElementRole(role);
   return canonicalRole
     ? getActionPlanIndex(som, { enabledOnly: options?.enabledOnly }).byRole[canonicalRole] ?? []
     : [];

@@ -299,6 +299,12 @@ describe('findActionTargetsByRole aliases', () => {
     assert.deepEqual(findActionTargetsByRole(fixture, 'unknown-role'), []);
   });
 
+  it('accepts HTML input type aliases for action targets', () => {
+    for (const alias of ['email', 'date', 'datetime-local', 'number', 'password', 'url']) {
+      assert.deepEqual(findActionTargetsByRole(fixture, alias).map((item) => item.id), ['e5'], alias);
+    }
+  });
+
   it('accepts media aliases for actionable source-role elements', () => {
     const mediaFixture: Som = {
       ...fixture,
