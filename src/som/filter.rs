@@ -36,7 +36,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `search-field` / `query` / `queries` / `query_input` / `query_inputs` / `query-input` /
 ///   `query_field` / `query_fields` / `query-field` / `query_control` /
 ///   `query_controls` / `query-control` / `querybox` / `query-box` /
-///   `search_box` / `search_boxes` / `search-box`, `email`, `number`,
+///   `query_boxes` / `query-boxes` / `search_box` / `search_boxes` / `search-box`,
+///   `email`, `number`,
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local` /
 ///   `date_time` / `date-time` / `date time`, `date_time_local` /
 ///   `date-time-local` / `date time local`, `month`,
@@ -597,6 +598,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "querybox"
         | "query_box"
         | "queryboxes"
+        | "query_boxes"
         | "email"
         | "number"
         | "password"
@@ -1314,6 +1316,19 @@ mod tests {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1);
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::TextInput);
+        }
+    }
+
+    #[test]
+    fn test_selector_query_box_plural_aliases() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::TextInput;
+
+        for selector in ["queryboxes", "query_boxes", "query-boxes", "query boxes"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::TextInput);
         }
     }
