@@ -522,6 +522,8 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 		alias string
 		id    string
 	}{
+		{alias: "output", id: "group"},
+		{alias: "outputs", id: "group"},
 		{alias: "data tables", id: "table"},
 		{alias: "data-grid", id: "table"},
 		{alias: "grid", id: "table"},
