@@ -428,11 +428,35 @@ class TestFindByTag:
                 ),
             ]
         )
-        for alias in ("audio", "audios", "audio-item", "audio_items"):
+        for alias in (
+            "audio",
+            "audios",
+            "audio-item",
+            "audioitem",
+            "audio_items",
+            "audio-items",
+            "audioitems",
+        ):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["audio"]
-        for alias in ("video", "videos", "video-item", "video_items"):
+        for alias in (
+            "video",
+            "videos",
+            "video-item",
+            "videoitem",
+            "video_items",
+            "video-items",
+            "videoitems",
+        ):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["video"]
-        for alias in ("canvas", "canvases", "canvas-item", "canvas_items"):
+        for alias in (
+            "canvas",
+            "canvases",
+            "canvas-item",
+            "canvasitem",
+            "canvas_items",
+            "canvas-items",
+            "canvasitems",
+        ):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["canvas"]
         for alias in ("media", "media-item", "mediaitem", "media_items"):
             assert [el.id for el in find_by_tag(sample_som, alias)] == [
@@ -665,14 +689,27 @@ class TestFindActionTargetsByRole:
                     actions=["click"],
                     attrs=ElementAttrs(source_role="video"),
                 ),
+                SomElement(
+                    id="canvas",
+                    role=ElementRole.group,
+                    actions=["click"],
+                    attrs=ElementAttrs(source_role="canvas"),
+                ),
             ]
         )
-        assert [item["id"] for item in find_action_targets_by_role(sample_som, "audio-item")] == [
-            "audio"
-        ]
+        for aliases, expected in (
+            (("audio-item", "audioitem", "audio-items", "audioitems"), "audio"),
+            (("video-item", "videoitem", "video-items", "videoitems"), "video"),
+            (("canvas-item", "canvasitem", "canvas-items", "canvasitems"), "canvas"),
+        ):
+            for alias in aliases:
+                assert [
+                    item["id"] for item in find_action_targets_by_role(sample_som, alias)
+                ] == [expected]
         assert [item["id"] for item in find_action_targets_by_role(sample_som, "media")] == [
             "audio",
             "video",
+            "canvas",
         ]
 
     def test_trims_role_aliases(self, sample_som: Som) -> None:
