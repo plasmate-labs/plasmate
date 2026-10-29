@@ -1011,9 +1011,19 @@ func GetActionPlanIndex(som *Som, enabledOnly ...bool) ActionPlanIndex {
 		if item.Role != "" {
 			index.ByRole[item.Role] = append(index.ByRole[item.Role], item)
 		}
+		indexedActions := map[string]struct{}{}
 		for _, action := range item.Actions {
 			if action != "" {
-				index.ByAction[action] = append(index.ByAction[action], item)
+				for _, key := range []string{action, normalizeActionQuery(action)} {
+					if key == "" {
+						continue
+					}
+					if _, ok := indexedActions[key]; ok {
+						continue
+					}
+					indexedActions[key] = struct{}{}
+					index.ByAction[key] = append(index.ByAction[key], item)
+				}
 			}
 		}
 	}

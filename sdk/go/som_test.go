@@ -1300,6 +1300,13 @@ func TestActionPlanLookupHelpers(t *testing.T) {
 	if got := FindActionTargetsByAction(som, "click"); len(got) != 3 || got[0].ID != "e_save" || got[1].ID != "e_preview" || got[2].ID != "e_billing" {
 		t.Fatalf("FindActionTargetsByAction(click) = %#v, want e_save/e_preview/e_billing", got)
 	}
+	legacyActionSom := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "e_legacy_type", Role: "text_input", Actions: []string{"type_text"}},
+		{ID: "e_canonical_type", Role: "text_input", Actions: []string{"type", "type_text"}},
+	}}}}
+	if got := FindActionTargetsByAction(legacyActionSom, "type"); len(got) != 2 || got[0].ID != "e_legacy_type" || got[1].ID != "e_canonical_type" {
+		t.Fatalf("FindActionTargetsByAction(type) = %#v, want both legacy and canonical targets once", got)
+	}
 	for _, alias := range []string{"action : submit", "action=submit", `"action:submit"`} {
 		if got := FindActionTargetsByAction(som, alias); len(got) != 1 || got[0].ID != "e_save" {
 			t.Fatalf("FindActionTargetsByAction(%q) = %#v, want e_save", alias, got)
