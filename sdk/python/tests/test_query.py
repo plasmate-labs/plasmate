@@ -1459,6 +1459,10 @@ class TestGetTokenEstimate:
         estimate = get_token_estimate(d)
         assert estimate > 0
 
+    def test_rounds_legacy_dict_estimates_up(self) -> None:
+        # Nine serialized bytes should estimate three tokens, matching metadata-backed SOMs.
+        assert get_token_estimate({"a": ""}) == 3
+
     def test_larger_som_has_more_tokens(self, sample_som: Som) -> None:
         small_som = Som(
             som_version="1.0",

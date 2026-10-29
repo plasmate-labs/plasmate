@@ -982,7 +982,7 @@ def get_token_estimate(som: Union[Som, dict]) -> int:
             or isinstance(som_bytes, bool)
             or som_bytes < 0
         ):
-            return len(json.dumps(som)) // 4
+            return (len(json.dumps(som)) + 3) // 4
     return (som_bytes + 3) // 4
 
 
