@@ -1293,6 +1293,27 @@ func TestActionPlanLookupHelpers(t *testing.T) {
 	if got := FindActionTargetsByAction(som, "click"); len(got) != 3 || got[0].ID != "e_save" || got[1].ID != "e_preview" || got[2].ID != "e_billing" {
 		t.Fatalf("FindActionTargetsByAction(click) = %#v, want e_save/e_preview/e_billing", got)
 	}
+	for _, alias := range []string{"action : submit", "action=submit", `"action:submit"`} {
+		if got := FindActionTargetsByAction(som, alias); len(got) != 1 || got[0].ID != "e_save" {
+			t.Fatalf("FindActionTargetsByAction(%q) = %#v, want e_save", alias, got)
+		}
+	}
+	canonicalType := FindActionTargetsByAction(som, "type")
+	if got := FindActionTargetsByAction(som, "action=type_text"); !reflect.DeepEqual(got, canonicalType) {
+		t.Fatalf("FindActionTargetsByAction(action=type_text) = %#v, want canonical type targets", got)
+	}
+	canonicalSelect := FindActionTargetsByAction(som, "select")
+	if got := FindActionTargetsByAction(som, "action:select_option"); !reflect.DeepEqual(got, canonicalSelect) {
+		t.Fatalf("FindActionTargetsByAction(action:select_option) = %#v, want canonical select targets", got)
+	}
+	reset := "reset"
+	resetSom := &Som{Regions: []Region{{Elements: []Element{{
+		ID: "e_reset", Role: "button", Actions: []string{"click"},
+		Attrs: &ElementAttrs{ButtonType: &reset},
+	}}}}}
+	if got := FindActionTargetsByAction(resetSom, "reset"); len(got) != 1 || got[0].ID != "e_reset" {
+		t.Fatalf("FindActionTargetsByAction(reset) = %#v, want e_reset", got)
+	}
 	if found := FindActionTargetByLabel(som, "Plan"); found == nil || found.ID != "e_plan" {
 		t.Fatalf("FindActionTargetByLabel(Plan) = %#v, want e_plan", found)
 	}

@@ -1186,8 +1186,70 @@ func FindActionTargetsByRole(som *Som, role string, enabledOnly ...bool) []Actio
 
 // FindActionTargetsByAction returns compact action targets that expose the requested action.
 func FindActionTargetsByAction(som *Som, action string, enabledOnly ...bool) []ActionPlanItem {
+	action = normalizeActionQuery(action)
 	index := GetActionPlanIndex(som, enabledOnly...)
-	return append([]ActionPlanItem(nil), index.ByAction[action]...)
+	results := append([]ActionPlanItem(nil), index.ByAction[action]...)
+	if action != "submit" && action != "reset" {
+		return results
+	}
+
+	seen := make(map[string]struct{}, len(results))
+	for _, item := range results {
+		seen[item.ID] = struct{}{}
+	}
+	plan := GetActionPlan(som)
+	if len(enabledOnly) > 0 && enabledOnly[0] {
+		plan = EnabledActionPlan(som)
+	}
+	for _, item := range plan {
+		buttonType := ""
+		if item.ButtonType != nil {
+			buttonType = strings.ToLower(strings.TrimSpace(*item.ButtonType))
+		}
+		matches := buttonType == action || (action == "submit" && buttonType == "image")
+		if matches {
+			if _, ok := seen[item.ID]; !ok {
+				results = append(results, item)
+				seen[item.ID] = struct{}{}
+			}
+		}
+	}
+	return results
+}
+
+func normalizeActionQuery(action string) string {
+	normalized := normalizeQueryText(action)
+	if len(normalized) >= 2 && ((normalized[0] == '"' && normalized[len(normalized)-1] == '"') ||
+		(normalized[0] == '\'' && normalized[len(normalized)-1] == '\'')) {
+		normalized = strings.TrimSpace(normalized[1 : len(normalized)-1])
+	}
+	for _, prefix := range []string{"action", "role"} {
+		if strings.HasPrefix(normalized, prefix) {
+			rest := strings.TrimSpace(normalized[len(prefix):])
+			if strings.HasPrefix(rest, ":") || strings.HasPrefix(rest, "=") {
+				normalized = strings.TrimSpace(rest[1:])
+				if len(normalized) >= 2 && ((normalized[0] == '"' && normalized[len(normalized)-1] == '"') ||
+					(normalized[0] == '\'' && normalized[len(normalized)-1] == '\'')) {
+					normalized = strings.TrimSpace(normalized[1 : len(normalized)-1])
+				}
+			}
+		}
+	}
+	aliases := map[string]string{
+		"clear_text":    "clear",
+		"clear-text":    "clear",
+		"clear text":    "clear",
+		"type_text":     "type",
+		"type-text":     "type",
+		"type text":     "type",
+		"select_option": "select",
+		"select-option": "select",
+		"select option": "select",
+	}
+	if canonical, ok := aliases[normalized]; ok {
+		return canonical
+	}
+	return normalized
 }
 
 func flattenRegionElements(elements []Element) []Element {
