@@ -525,6 +525,7 @@ func main() {
 </code></pre>
 <h3 id="findbyrolesom-role">`FindByRole(som, role)`</h3><p>Find all regions matching a given role.</p>
 <pre><code class="language-go">navRegions := plasmate.FindByRole(som, &quot;navigation&quot;)
+footerRegions := plasmate.FindByRole(som, &quot;content-info&quot;)
 </code></pre>
 <h3 id="findbyidsom-id">`FindByID(som, id)`</h3><p>Find a single element by its stable ID. Returns <code>nil</code> if not found.</p>
 <pre><code class="language-go">el := plasmate.FindByID(som, &quot;login-btn&quot;)

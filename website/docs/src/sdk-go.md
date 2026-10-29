@@ -107,6 +107,7 @@ Find all regions matching a given role.
 
 ```go
 navRegions := plasmate.FindByRole(som, "navigation")
+footerRegions := plasmate.FindByRole(som, "content-info")
 ```
 
 ### `FindByID(som, id)`
