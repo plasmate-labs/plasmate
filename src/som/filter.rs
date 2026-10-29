@@ -43,7 +43,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` / `textareas`,
 ///   `select` / `selects` / `combobox` / `comboboxes` / `combo box` /
 ///   `combo boxes` / `combo-boxes` /
-///   `listbox` / `listboxes` / `list box`, `checkbox` / `checkboxes` / `check box` /
+///   `listbox` / `listboxes` / `list_box` / `list_boxes` / `list box` / `list boxes`,
+///   `checkbox` / `checkboxes` / `check box` /
 ///   `check boxes` / `switch` /
 ///   `switches` / `menuitemcheckbox` / `menuitemcheckboxes`, `radio` / `radios` /
 ///   `radio button` / `radio buttons` /
@@ -621,7 +622,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "combo_box"
         | "combo_boxes"
         | "listbox"
-        | "listboxes" | "list_box" => Some(ElementRole::Select),
+        | "listboxes"
+        | "list_box"
+        | "list_boxes" => Some(ElementRole::Select),
         "checkbox"
         | "checkboxes"
         | "check_box"
@@ -1324,7 +1327,10 @@ mod tests {
             "combo boxes",
             "combo-boxes",
             "listboxes",
+            "list_box",
+            "list_boxes",
             "list box",
+            "list boxes",
         ] {
             let mut som = make_test_som();
             som.regions[0].elements[0].role = ElementRole::Select;
