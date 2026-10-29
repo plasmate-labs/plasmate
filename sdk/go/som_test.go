@@ -491,6 +491,7 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 		{alias: "number", role: "text_input", want: 1},
 		{alias: "password", role: "text_input", want: 1},
 		{alias: "date-time", role: "text_input", want: 1},
+		{alias: "datetime-local", role: "text_input", want: 1},
 		{alias: "date time local", role: "text_input", want: 1},
 		{alias: "month", role: "text_input", want: 1},
 		{alias: "color", role: "text_input", want: 1},

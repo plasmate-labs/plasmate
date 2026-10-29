@@ -253,6 +253,7 @@ func normalizeElementRoleAlias(role string) string {
 		"url":                "text_input",
 		"date":               "text_input",
 		"datetime":           "text_input",
+		"datetime_local":     "text_input",
 		"date_time":          "text_input",
 		"date_time_local":    "text_input",
 		"month":              "text_input",
