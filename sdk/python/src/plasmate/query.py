@@ -206,6 +206,7 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "combo_boxes": "select",
         "listbox": "select",
         "list_box": "select",
+        "list_boxes": "select",
         "select": "select",
         "selects": "select",
         "switch": "checkbox",
@@ -743,6 +744,8 @@ def find_action_targets_by_role(
         "inputs": "text_input",
         "listbox": "select",
         "listboxes": "select",
+        "list_box": "select",
+        "list_boxes": "select",
         "links": "link",
         "menu": "list",
         "menu_item": "button",
@@ -836,6 +839,7 @@ def find_action_targets_by_role(
         "searchboxes": "text_input",
         "ul": "list",
         "list_box": "select",
+        "list_boxes": "select",
         "unordered_list": "list",
     }.get(normalized_alias, normalized_alias)
     results = index["by_role"].get(normalized_role, [])
