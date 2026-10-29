@@ -299,6 +299,12 @@ describe('findActionTargetsByRole aliases', () => {
     assert.deepEqual(findActionTargetsByRole(fixture, 'unknown-role'), []);
   });
 
+  it('accepts HTML input type aliases for action targets', () => {
+    for (const alias of ['email', 'date', 'datetime-local', 'number', 'password', 'url', 'queryboxes']) {
+      assert.deepEqual(findActionTargetsByRole(fixture, alias).map((item) => item.id), ['e5'], alias);
+    }
+  });
+
   it('accepts media aliases for actionable source-role elements', () => {
     const mediaFixture: Som = {
       ...fixture,
@@ -501,6 +507,32 @@ describe('findByTag', () => {
       'query-control',
       'query-field',
       'query-inputs',
+    ]) {
+      assert.deepEqual(findByTag(fixture, alias).map((el) => el.id), ['e5'], alias);
+    }
+  });
+
+  it('accepts HTML input type aliases', () => {
+    for (const alias of [
+      'text',
+      'email',
+      'number',
+      'password',
+      'tel',
+      'url',
+      'date',
+      'datetime',
+      'datetime-local',
+      'date-time',
+      'date-time-local',
+      'month',
+      'time',
+      'week',
+      'color',
+      'range',
+      'hidden',
+      'file',
+      'queryboxes',
     ]) {
       assert.deepEqual(findByTag(fixture, alias).map((el) => el.id), ['e5'], alias);
     }

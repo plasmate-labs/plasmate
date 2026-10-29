@@ -349,12 +349,30 @@ const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   query_box: 'text_input',
   query_boxes: 'text_input',
   querybox: 'text_input',
+  queryboxes: 'text_input',
   query_input: 'text_input',
   query_inputs: 'text_input',
   query_control: 'text_input',
   query_controls: 'text_input',
   query_field: 'text_input',
   query_fields: 'text_input',
+  text: 'text_input',
+  email: 'text_input',
+  number: 'text_input',
+  password: 'text_input',
+  tel: 'text_input',
+  url: 'text_input',
+  date: 'text_input',
+  datetime: 'text_input',
+  datetime_local: 'text_input',
+  date_time: 'text_input',
+  date_time_local: 'text_input',
+  month: 'text_input',
+  time: 'text_input',
+  week: 'text_input',
+  color: 'text_input',
+  hidden: 'text_input',
+  file: 'text_input',
   textareas: 'textarea',
   selects: 'select',
   checkboxes: 'checkbox',
@@ -769,8 +787,7 @@ export function findActionTargetsByRole(
     return plan.filter((item) => item.role === 'image' ||
       (item.source_role !== undefined && ['audio', 'video', 'canvas'].includes(item.source_role)));
   }
-  const canonicalRole = ELEMENT_ROLE_ALIASES[normalizedRole] ??
-    (ELEMENT_ROLES.includes(normalizedRole as ElementRole) ? normalizedRole as ElementRole : undefined);
+  const canonicalRole = normalizeElementRole(role);
   return canonicalRole
     ? getActionPlanIndex(som, { enabledOnly: options?.enabledOnly }).byRole[canonicalRole] ?? []
     : [];
