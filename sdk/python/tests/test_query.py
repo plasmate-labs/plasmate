@@ -483,6 +483,20 @@ class TestFindByTag:
 
     def test_accepts_plural_text_control_aliases(self, sample_som: Som) -> None:
         for alias in (
+            "text",
+            "email",
+            "number",
+            "password",
+            "tel",
+            "url",
+            "date",
+            "datetime-local",
+            "month",
+            "week",
+            "color",
+            "range",
+            "hidden",
+            "file",
             "text inputs",
             "text_box",
             "text_boxes",
@@ -576,7 +590,24 @@ class TestFindActionTargetsByRole:
     def test_accepts_html_control_aliases(self, sample_som: Som) -> None:
         assert [item["id"] for item in find_action_targets_by_role(sample_som, "INPUT")] == ["e9"]
         assert [item["id"] for item in find_action_targets_by_role(sample_som, "textbox")] == ["e9"]
-        for alias in ("search-box", "search box"):
+        for alias in (
+            "text",
+            "email",
+            "number",
+            "password",
+            "tel",
+            "url",
+            "date",
+            "datetime-local",
+            "month",
+            "week",
+            "color",
+            "range",
+            "hidden",
+            "file",
+            "search-box",
+            "search box",
+        ):
             assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == ["e9"]
 
     def test_accepts_plural_text_control_aliases(self, sample_som: Som) -> None:
