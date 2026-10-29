@@ -101,6 +101,7 @@ Find all regions matching a given role.
 import { findByRole } from 'plasmate';
 
 const navRegions = findByRole(som, 'navigation');
+const footerRegions = findByRole(som, 'content-info');
 ```
 
 ### `findById(som, id)`

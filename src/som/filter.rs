@@ -17,7 +17,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `search_navigations`/`search-navigations`/`search navigations`,
 ///   `aside`/`asides`/`sidebar`/`sidebars`/`complementary`,
 ///   `header`/`headers`/`banner`,
-///   `footer`/`footers`/`contentinfo`, `form`/`forms`, `dialog`/`dialogs`,
+///   `footer`/`footers`/`contentinfo`/`content_info`/`content-info`, `form`/`forms`, `dialog`/`dialogs`,
 ///   `content`/`contents`/`article`/`articles`/`main_content`/`main_contents`/
 ///   `main-content`/`main-contents`/`main content`/`main contents`/
 ///   `main-region`/`main region`/`main-regions`/`main regions`/
@@ -157,7 +157,9 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             Some(RegionRole::Aside)
         }
         "header" | "headers" | "banner" => Some(RegionRole::Header),
-        "footer" | "footers" | "contentinfo" => Some(RegionRole::Footer),
+        "footer" | "footers" | "contentinfo" | "content_info" | "content-info" => {
+            Some(RegionRole::Footer)
+        }
         "form" | "forms" => Some(RegionRole::Form),
         "dialog" | "dialogs" => Some(RegionRole::Dialog),
         "content"
@@ -1136,6 +1138,8 @@ mod tests {
             ("headers", RegionRole::Header),
             ("footers", RegionRole::Footer),
             ("contents", RegionRole::Content),
+            ("content-info", RegionRole::Footer),
+            ("content_info", RegionRole::Footer),
         ] {
             let mut som = make_test_som();
             som.regions[0].role = role.clone();
@@ -1938,6 +1942,7 @@ mod tests {
         for (selector, expected_role) in [
             ("banner", RegionRole::Header),
             ("contentinfo", RegionRole::Footer),
+            ("content-info", RegionRole::Footer),
             ("complementary", RegionRole::Aside),
             ("search", RegionRole::Navigation),
             ("forms", RegionRole::Form),
