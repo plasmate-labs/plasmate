@@ -506,6 +506,31 @@ describe('findByTag', () => {
     }
   });
 
+  it('accepts HTML input type aliases', () => {
+    for (const alias of [
+      'text',
+      'email',
+      'number',
+      'password',
+      'tel',
+      'url',
+      'date',
+      'datetime',
+      'datetime-local',
+      'date-time',
+      'date-time-local',
+      'month',
+      'time',
+      'week',
+      'color',
+      'range',
+      'hidden',
+      'file',
+    ]) {
+      assert.deepEqual(findByTag(fixture, alias).map((el) => el.id), ['e5'], alias);
+    }
+  });
+
   it('accepts data table aliases', () => {
     const som: Som = {
       ...fixture,
