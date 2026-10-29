@@ -482,7 +482,28 @@ class TestFindByTag:
             assert [item["id"] for item in find_action_targets_by_role(som, alias)] == ["radio"]
 
     def test_accepts_plural_text_control_aliases(self, sample_som: Som) -> None:
-        for alias in ("text inputs", "textboxes", "search boxes", "search inputs"):
+        for alias in (
+            "text",
+            "email",
+            "number",
+            "password",
+            "tel",
+            "url",
+            "date",
+            "datetime-local",
+            "month",
+            "week",
+            "color",
+            "range",
+            "hidden",
+            "file",
+            "text inputs",
+            "text_box",
+            "text_boxes",
+            "textboxes",
+            "search boxes",
+            "search inputs",
+        ):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["e9"]
 
     def test_accepts_search_and_query_control_aliases(self, sample_som: Som) -> None:
@@ -512,6 +533,8 @@ class TestFindByTag:
             ("combo boxes", ["e11"]),
             ("combo-boxes", ["e11"]),
             ("listboxes", ["e11"]),
+            ("list_box", ["e11"]),
+            ("list boxes", ["e11"]),
             ("textareas", ["e12"]),
             ("slider", ["e9"]),
             ("spin buttons", ["e9"]),
@@ -567,12 +590,31 @@ class TestFindActionTargetsByRole:
     def test_accepts_html_control_aliases(self, sample_som: Som) -> None:
         assert [item["id"] for item in find_action_targets_by_role(sample_som, "INPUT")] == ["e9"]
         assert [item["id"] for item in find_action_targets_by_role(sample_som, "textbox")] == ["e9"]
-        for alias in ("search-box", "search box"):
+        for alias in (
+            "text",
+            "email",
+            "number",
+            "password",
+            "tel",
+            "url",
+            "date",
+            "datetime-local",
+            "month",
+            "week",
+            "color",
+            "range",
+            "hidden",
+            "file",
+            "search-box",
+            "search box",
+        ):
             assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == ["e9"]
 
     def test_accepts_plural_text_control_aliases(self, sample_som: Som) -> None:
         for alias in (
             "text inputs",
+            "text_box",
+            "text_boxes",
             "textboxes",
             "search boxes",
             "search inputs",
@@ -600,6 +642,8 @@ class TestFindActionTargetsByRole:
             ("combo boxes", ["e11"]),
             ("combo-boxes", ["e11"]),
             ("listboxes", ["e11"]),
+            ("list_box", ["e11"]),
+            ("list boxes", ["e11"]),
             ("textareas", ["e12"]),
             ("checkboxes", ["e13"]),
             ("radios", ["e14"]),
@@ -1445,6 +1489,10 @@ class TestGetTokenEstimate:
         d = {"som_version": "1.0", "title": "Test"}
         estimate = get_token_estimate(d)
         assert estimate > 0
+
+    def test_rounds_legacy_dict_estimates_up(self) -> None:
+        # Nine serialized bytes should estimate three tokens, matching metadata-backed SOMs.
+        assert get_token_estimate({"a": ""}) == 3
 
     def test_larger_som_has_more_tokens(self, sample_som: Som) -> None:
         small_som = Som(
