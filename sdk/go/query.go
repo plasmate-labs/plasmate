@@ -212,6 +212,8 @@ var mediaSourceRoles = map[string]bool{
 // common HTML/ARIA aliases accepted by the native selector surface.
 func normalizeElementRoleAlias(role string) string {
 	role = normalizeRoleQuery(role)
+	// Native HTML input types compile to the SOM text_input role. Keep
+	// Go SDK queries aligned with the shared selector vocabulary.
 	aliases := map[string]string{
 		"a":                  "link",
 		"article":            "section",
@@ -243,6 +245,22 @@ func normalizeElementRoleAlias(role string) string {
 		"images":             "image",
 		"input":              "text_input",
 		"inputs":             "text_input",
+		"text":               "text_input",
+		"email":              "text_input",
+		"number":             "text_input",
+		"password":           "text_input",
+		"tel":                "text_input",
+		"url":                "text_input",
+		"date":               "text_input",
+		"datetime":           "text_input",
+		"date_time":          "text_input",
+		"date_time_local":    "text_input",
+		"month":              "text_input",
+		"time":               "text_input",
+		"week":               "text_input",
+		"color":              "text_input",
+		"hidden":             "text_input",
+		"file":               "text_input",
 		"links":              "link",
 		"list_box":           "select",
 		"list_boxes":         "select",
