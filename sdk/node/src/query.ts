@@ -440,6 +440,7 @@ const MEDIA_GROUP_ALIASES: Record<string, true> = {
   media_item: true,
   mediaitem: true,
   media_items: true,
+  mediaitems: true,
 };
 
 function isMediaElement(element: SomElement): boolean {

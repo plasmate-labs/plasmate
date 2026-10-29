@@ -206,6 +206,7 @@ var mediaGroupAliases = map[string]bool{
 	"media_item":  true,
 	"mediaitem":   true,
 	"media_items": true,
+	"mediaitems":  true,
 }
 
 var mediaSourceRoles = map[string]bool{

@@ -715,7 +715,7 @@ describe('findByTag', () => {
     for (const alias of ['canvas', 'canvases', 'canvas-item', 'canvas_items']) {
       assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['canvas'], alias);
     }
-    for (const alias of ['media', 'media-item', 'media_items']) {
+    for (const alias of ['media', 'media-item', 'media_items', 'mediaitems']) {
       assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['image', 'audio', 'video', 'canvas'], alias);
     }
   });
