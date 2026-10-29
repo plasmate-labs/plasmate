@@ -482,7 +482,14 @@ class TestFindByTag:
             assert [item["id"] for item in find_action_targets_by_role(som, alias)] == ["radio"]
 
     def test_accepts_plural_text_control_aliases(self, sample_som: Som) -> None:
-        for alias in ("text inputs", "textboxes", "search boxes", "search inputs"):
+        for alias in (
+            "text inputs",
+            "text_box",
+            "text_boxes",
+            "textboxes",
+            "search boxes",
+            "search inputs",
+        ):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["e9"]
 
     def test_accepts_search_and_query_control_aliases(self, sample_som: Som) -> None:
@@ -575,6 +582,8 @@ class TestFindActionTargetsByRole:
     def test_accepts_plural_text_control_aliases(self, sample_som: Som) -> None:
         for alias in (
             "text inputs",
+            "text_box",
+            "text_boxes",
             "textboxes",
             "search boxes",
             "search inputs",
