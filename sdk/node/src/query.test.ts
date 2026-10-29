@@ -300,7 +300,7 @@ describe('findActionTargetsByRole aliases', () => {
   });
 
   it('accepts HTML input type aliases for action targets', () => {
-    for (const alias of ['email', 'date', 'datetime-local', 'number', 'password', 'url']) {
+    for (const alias of ['email', 'date', 'datetime-local', 'number', 'password', 'url', 'queryboxes']) {
       assert.deepEqual(findActionTargetsByRole(fixture, alias).map((item) => item.id), ['e5'], alias);
     }
   });
@@ -532,6 +532,7 @@ describe('findByTag', () => {
       'range',
       'hidden',
       'file',
+      'queryboxes',
     ]) {
       assert.deepEqual(findByTag(fixture, alias).map((el) => el.id), ['e5'], alias);
     }

@@ -349,6 +349,7 @@ const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   query_box: 'text_input',
   query_boxes: 'text_input',
   querybox: 'text_input',
+  queryboxes: 'text_input',
   query_input: 'text_input',
   query_inputs: 'text_input',
   query_control: 'text_input',
