@@ -568,6 +568,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "text_inputs"
         | "textbox"
         | "textboxes"
+        | "text_box"
+        | "text_boxes"
         | "searchbox"
         | "searchboxes"
         | "slider"
@@ -1316,6 +1318,26 @@ mod tests {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1);
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::TextInput);
+        }
+    }
+
+    #[test]
+    fn test_selector_text_box_aliases() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::TextInput;
+
+        for selector in [
+            "text_box",
+            "text-box",
+            "text box",
+            "text_boxes",
+            "text-boxes",
+            "text boxes",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::TextInput);
         }
     }
