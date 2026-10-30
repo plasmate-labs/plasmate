@@ -887,6 +887,10 @@ fn test_price_detection_various_currencies() {
     assert!(is_price_text("UZS 12,500"));
     assert!(is_price_text("VES 199.00"));
     assert!(is_price_text("ZWL 49.90"));
+    assert!(is_price_text("BOB 49.90"));
+    assert!(is_price_text("1,299 CRC"));
+    assert!(is_price_text("UGX 125,000"));
+    assert!(is_price_text("49.90 YER"));
     assert!(is_price_text("€ 1 299,99"));
     assert!(is_price_text("€\u{a0}1\u{a0}299,99"));
     assert!(is_price_text("1 299,99 €"));
