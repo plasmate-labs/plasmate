@@ -184,15 +184,21 @@ var mediaTagAliases = map[string]string{
 	"audio":        "audio",
 	"audios":       "audio",
 	"audio_item":   "audio",
+	"audioitem":    "audio",
 	"audio_items":  "audio",
+	"audioitems":   "audio",
 	"canvas":       "canvas",
 	"canvases":     "canvas",
 	"canvas_item":  "canvas",
+	"canvasitem":   "canvas",
 	"canvas_items": "canvas",
+	"canvasitems":  "canvas",
 	"video":        "video",
 	"videos":       "video",
 	"video_item":   "video",
+	"videoitem":    "video",
 	"video_items":  "video",
+	"videoitems":   "video",
 }
 
 var mediaGroupAliases = map[string]bool{
@@ -200,6 +206,7 @@ var mediaGroupAliases = map[string]bool{
 	"media_item":  true,
 	"mediaitem":   true,
 	"media_items": true,
+	"mediaitems":  true,
 }
 
 var mediaSourceRoles = map[string]bool{

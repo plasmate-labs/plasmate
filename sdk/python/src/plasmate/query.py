@@ -12,17 +12,23 @@ _MEDIA_TAG_ALIASES = {
     "audio": "audio",
     "audios": "audio",
     "audio_item": "audio",
+    "audioitem": "audio",
     "audio_items": "audio",
+    "audioitems": "audio",
     "canvas": "canvas",
     "canvases": "canvas",
     "canvas_item": "canvas",
+    "canvasitem": "canvas",
     "canvas_items": "canvas",
+    "canvasitems": "canvas",
     "video": "video",
     "videos": "video",
     "video_item": "video",
+    "videoitem": "video",
     "video_items": "video",
+    "videoitems": "video",
 }
-_MEDIA_GROUP_ALIASES = {"media", "media_item", "mediaitem", "media_items"}
+_MEDIA_GROUP_ALIASES = {"media", "media_item", "mediaitem", "media_items", "mediaitems"}
 
 
 def find_by_role(som: Som, role: str) -> List[SomRegion]:
