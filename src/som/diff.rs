@@ -615,7 +615,7 @@ fn is_price_text(text: &str) -> bool {
     use std::sync::OnceLock;
     static PRICE_RE: OnceLock<regex::Regex> = OnceLock::new();
     let re = PRICE_RE.get_or_init(|| {
-        regex::Regex::new(r"[$€£¥₹₽₩₺]\s*(?:\d{1,3}(?:[.,]\d{3})+|\d+)(?:[.,]\d{2})?").unwrap()
+        regex::Regex::new(r"[$€£¥₹₽₩₺₫₦₪₱₴฿₡₲₭₮₾₿]\s*(?:\d{1,3}(?:[.,]\d{3})+|\d+)(?:[.,]\d{2})?").unwrap()
     });
     if re.is_match(text) {
         return true;
@@ -625,7 +625,7 @@ fn is_price_text(text: &str) -> bool {
     // "USD 49.99" or "49,99 EUR") when a symbol would be ambiguous.
     static CODE_PRICE_RE: OnceLock<regex::Regex> = OnceLock::new();
     let code_re = CODE_PRICE_RE.get_or_init(|| {
-        regex::Regex::new(r"(?i)(?:\b(?:AED|AUD|BRL|CAD|CHF|CNY|DKK|EUR|GBP|HKD|ILS|INR|JPY|KRW|MXN|NOK|NZD|PLN|RUB|SAR|SEK|SGD|TRY|USD|ZAR)\s*(?:\d{1,3}(?:[.,]\d{3})+|\d+)(?:[.,]\d{2})?|(?:\d{1,3}(?:[.,]\d{3})+|\d+)(?:[.,]\d{2})?\s*\b(?:AED|AUD|BRL|CAD|CHF|CNY|DKK|EUR|GBP|HKD|ILS|INR|JPY|KRW|MXN|NOK|NZD|PLN|RUB|SAR|SEK|SGD|TRY|USD|ZAR)\b)").unwrap()
+        regex::Regex::new(r"(?i)(?:\b(?:AED|AUD|BGN|BRL|CAD|CHF|CLP|CNY|COP|CZK|DKK|EUR|GBP|HKD|HUF|IDR|ILS|INR|ISK|JPY|KES|KRW|KWD|KZT|MXN|MYR|NOK|NZD|PKR|PLN|QAR|RON|RUB|SAR|SEK|SGD|THB|TRY|TWD|UAH|USD|VND|ZAR)\s*(?:\d{1,3}(?:[.,]\d{3})+|\d+)(?:[.,]\d{2})?|(?:\d{1,3}(?:[.,]\d{3})+|\d+)(?:[.,]\d{2})?\s*\b(?:AED|AUD|BGN|BRL|CAD|CHF|CLP|CNY|COP|CZK|DKK|EUR|GBP|HKD|HUF|IDR|ILS|INR|ISK|JPY|KES|KRW|KWD|KZT|MXN|MYR|NOK|NZD|PKR|PLN|QAR|RON|RUB|SAR|SEK|SGD|THB|TRY|TWD|UAH|USD|VND|ZAR)\b)").unwrap()
     });
     if code_re.is_match(text) {
         return true;
