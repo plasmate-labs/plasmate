@@ -820,8 +820,33 @@ fn test_price_detection_various_currencies() {
     assert!(is_price_text("£1,299.99"));
     assert!(is_price_text("¥5000"));
     assert!(is_price_text("Total: $12.50"));
+    assert!(is_price_text("49.99"));
+    assert!(is_price_text("Sale: 1,299.99"));
     assert!(!is_price_text("Hello world"));
     assert!(!is_price_text("100 items"));
+    assert!(!is_price_text("measurement 12.345"));
+}
+
+#[test]
+fn test_bare_decimal_price_change_detection() {
+    let old = Som {
+        regions: vec![make_region(
+            "r1",
+            RegionRole::Main,
+            vec![make_element("price", ElementRole::Paragraph, Some("49.99"))],
+        )],
+        ..empty_som()
+    };
+    let new = Som {
+        regions: vec![make_region(
+            "r1",
+            RegionRole::Main,
+            vec![make_element("price", ElementRole::Paragraph, Some("59.99"))],
+        )],
+        ..empty_som()
+    };
+
+    assert!(diff_soms(&old, &new, false).summary.has_price_changes);
 }
 
 #[test]

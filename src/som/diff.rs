@@ -615,7 +615,18 @@ fn is_price_text(text: &str) -> bool {
     use std::sync::OnceLock;
     static PRICE_RE: OnceLock<regex::Regex> = OnceLock::new();
     let re = PRICE_RE.get_or_init(|| regex::Regex::new(r"[$€£¥]\s*[\d,]+\.?\d*").unwrap());
-    re.is_match(text)
+    if re.is_match(text) {
+        return true;
+    }
+
+    // Some pages omit the currency symbol but still render prices as a
+    // decimal with exactly two fractional digits. Keep the boundaries tight
+    // so version numbers and longer measurements are not treated as prices.
+    static BARE_PRICE_RE: OnceLock<regex::Regex> = OnceLock::new();
+    let bare_re = BARE_PRICE_RE.get_or_init(|| {
+        regex::Regex::new(r"(?:^|[^\w.])(?:\d{1,3}(?:,\d{3})+|\d+)\.\d{2}(?:$|[^\w.])").unwrap()
+    });
+    bare_re.is_match(text)
 }
 
 fn detect_price_changes_in_regions(regions: &[RegionDiff]) -> bool {
