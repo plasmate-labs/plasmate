@@ -556,6 +556,27 @@ describe('findByTag', () => {
     }
   });
 
+  it('accepts spaced textarea aliases', () => {
+    const textareaFixture: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [
+                ...region.elements,
+                { id: 'e10', role: 'textarea', text: 'Notes', actions: ['type', 'clear'] },
+              ],
+            }
+          : region,
+      ),
+    };
+    for (const alias of ['text_area', 'text-area', 'text area', 'text_areas', 'text-areas', 'text areas']) {
+      assert.deepEqual(findByTag(textareaFixture, alias).map((el) => el.id), ['e10'], alias);
+      assert.deepEqual(findActionTargetsByRole(textareaFixture, alias).map((item) => item.id), ['e10'], alias);
+    }
+  });
+
   it('accepts data table aliases', () => {
     const som: Som = {
       ...fixture,

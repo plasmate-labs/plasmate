@@ -377,6 +377,8 @@ const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   color: 'text_input',
   hidden: 'text_input',
   file: 'text_input',
+  text_area: 'textarea',
+  text_areas: 'textarea',
   textareas: 'textarea',
   selects: 'select',
   checkboxes: 'checkbox',
