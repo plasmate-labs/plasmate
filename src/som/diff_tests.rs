@@ -826,6 +826,13 @@ fn test_price_detection_various_currencies() {
     assert!(is_price_text("₪49.90"));
     assert!(is_price_text("₱1,299.50"));
     assert!(is_price_text("₴799.00"));
+    assert!(is_price_text("฿2,500"));
+    assert!(is_price_text("₡15,000"));
+    assert!(is_price_text("₲75,000"));
+    assert!(is_price_text("₭125,000"));
+    assert!(is_price_text("₮9,999"));
+    assert!(is_price_text("₾49.90"));
+    assert!(is_price_text("₿0.05"));
     assert!(is_price_text("Total: $12.50"));
     assert!(is_price_text("49.99"));
     assert!(is_price_text("Sale: 1,299.99"));
