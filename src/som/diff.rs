@@ -616,7 +616,7 @@ fn is_price_text(text: &str) -> bool {
     static PRICE_RE: OnceLock<regex::Regex> = OnceLock::new();
     let re = PRICE_RE.get_or_init(|| {
         regex::Regex::new(
-            r"[$€£¥₹₽₩₺₫₦₪₱₴฿₡₲₭₮₾₿₵₸₼]\s*(?:\d{1,3}(?:[.,\s]\d{3})+|\d+)(?:[.,]\d{2})?",
+            r"(?:[$€£¥₹₽₩₺₫₦₪₱₴฿₡₲₭₮₾₿₵₸₼]\s*(?:\d{1,3}(?:[.,\s]\d{3})+|\d+)(?:[.,]\d{2})?|(?:\d{1,3}(?:[.,\s]\d{3})+|\d+)(?:[.,]\d{2})?\s*[$€£¥₹₽₩₺₫₦₪₱₴฿₡₲₭₮₾₿₵₸₼])",
         )
         .unwrap()
     });

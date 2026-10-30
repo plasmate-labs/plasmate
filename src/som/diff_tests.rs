@@ -883,6 +883,8 @@ fn test_price_detection_various_currencies() {
     assert!(is_price_text("₼1,299.00"));
     assert!(is_price_text("€ 1 299,99"));
     assert!(is_price_text("€\u{a0}1\u{a0}299,99"));
+    assert!(is_price_text("1 299,99 €"));
+    assert!(is_price_text("49,90€"));
     assert!(is_price_text("1 299,99 EUR"));
     assert!(is_price_text("1 299,99"));
     assert!(!is_price_text("Hello world"));
