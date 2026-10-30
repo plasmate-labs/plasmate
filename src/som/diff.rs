@@ -634,6 +634,16 @@ fn is_price_text(text: &str) -> bool {
         return true;
     }
 
+    // Percentage discounts are price signals too, even when a storefront
+    // shows only the reduction (for example, "Save 20%" or "-12,5 %").
+    static PERCENT_RE: OnceLock<regex::Regex> = OnceLock::new();
+    let percent_re = PERCENT_RE.get_or_init(|| {
+        regex::Regex::new(r"(?:^|[^\w.,])[+-]?\d+(?:[.,]\d+)?\s*%(?:$|[^\w])").unwrap()
+    });
+    if percent_re.is_match(text) {
+        return true;
+    }
+
     // Some pages omit the currency symbol but still render prices as a
     // decimal with exactly two fractional digits. Keep the boundaries tight
     // so version numbers and longer measurements are not treated as prices.
