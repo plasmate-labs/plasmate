@@ -540,6 +540,12 @@ describe('findByTag', () => {
     }
   });
 
+  it('accepts spaced text box aliases', () => {
+    for (const alias of ['text_box', 'text-box', 'text boxes', 'text-boxes']) {
+      assert.deepEqual(findByTag(fixture, alias).map((el) => el.id), ['e5'], alias);
+    }
+  });
+
   it('accepts data table aliases', () => {
     const som: Som = {
       ...fixture,
