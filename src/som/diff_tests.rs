@@ -817,8 +817,10 @@ fn test_realistic_som_diff() {
 fn test_price_detection_various_currencies() {
     assert!(is_price_text("$49.99"));
     assert!(is_price_text("€199.00"));
+    assert!(is_price_text("€49,99"));
     assert!(is_price_text("£1,299.99"));
     assert!(is_price_text("¥5000"));
+    assert!(is_price_text("₹1,299.50"));
     assert!(is_price_text("Total: $12.50"));
     assert!(is_price_text("49.99"));
     assert!(is_price_text("Sale: 1,299.99"));

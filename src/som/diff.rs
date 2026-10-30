@@ -609,12 +609,14 @@ fn region_role_str(role: &RegionRole) -> String {
         .unwrap_or_else(|| format!("{:?}", role))
 }
 
-/// Matches: $X.XX, $X,XXX.XX, €X.XX, £X.XX, and bare decimals that look
-/// like prices.
+/// Matches currency amounts with dot- or comma-decimal separators, plus bare
+/// decimals that look like prices.
 fn is_price_text(text: &str) -> bool {
     use std::sync::OnceLock;
     static PRICE_RE: OnceLock<regex::Regex> = OnceLock::new();
-    let re = PRICE_RE.get_or_init(|| regex::Regex::new(r"[$€£¥]\s*[\d,]+\.?\d*").unwrap());
+    let re = PRICE_RE.get_or_init(|| {
+        regex::Regex::new(r"[$€£¥₹₽₩₺]\s*(?:\d{1,3}(?:[.,]\d{3})+|\d+)(?:[.,]\d{2})?").unwrap()
+    });
     if re.is_match(text) {
         return true;
     }
@@ -624,10 +626,8 @@ fn is_price_text(text: &str) -> bool {
     // so version numbers and longer measurements are not treated as prices.
     static BARE_PRICE_RE: OnceLock<regex::Regex> = OnceLock::new();
     let bare_re = BARE_PRICE_RE.get_or_init(|| {
-        regex::Regex::new(
-            r"(?:^|[^\w.,])(?:\d{1,3}(?:[.,]\d{3})+|\d+)[.,]\d{2}(?:$|[^\w.,])",
-        )
-        .unwrap()
+        regex::Regex::new(r"(?:^|[^\w.,])(?:\d{1,3}(?:[.,]\d{3})+|\d+)[.,]\d{2}(?:$|[^\w.,])")
+            .unwrap()
     });
     bare_re.is_match(text)
 }
