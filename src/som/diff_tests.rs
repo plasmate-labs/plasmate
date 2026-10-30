@@ -822,6 +822,8 @@ fn test_price_detection_various_currencies() {
     assert!(is_price_text("Total: $12.50"));
     assert!(is_price_text("49.99"));
     assert!(is_price_text("Sale: 1,299.99"));
+    assert!(is_price_text("49,99"));
+    assert!(is_price_text("Sale: 1.299,99"));
     assert!(!is_price_text("Hello world"));
     assert!(!is_price_text("100 items"));
     assert!(!is_price_text("measurement 12.345"));
