@@ -878,6 +878,10 @@ fn test_price_detection_various_currencies() {
     assert!(is_price_text("AMD 1,299"));
     assert!(is_price_text("AZN 49.90"));
     assert!(is_price_text("BDT 1,299"));
+    assert!(is_price_text("€ 1 299,99"));
+    assert!(is_price_text("€\u{a0}1\u{a0}299,99"));
+    assert!(is_price_text("1 299,99 EUR"));
+    assert!(is_price_text("1 299,99"));
     assert!(!is_price_text("Hello world"));
     assert!(!is_price_text("100 items"));
     assert!(!is_price_text("measurement 12.345"));
