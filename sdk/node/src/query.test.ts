@@ -321,7 +321,9 @@ describe('findActionTargetsByRole aliases', () => {
         },
       ],
     };
-    assert.deepEqual(findActionTargetsByRole(mediaFixture, 'audio-item').map((item) => item.id), ['audio']);
+    for (const alias of ['audio-item', 'audioitem', 'audioitems']) {
+      assert.deepEqual(findActionTargetsByRole(mediaFixture, alias).map((item) => item.id), ['audio'], alias);
+    }
     assert.deepEqual(findActionTargetsByRole(mediaFixture, 'media-items').map((item) => item.id), [
       'image',
       'audio',
@@ -706,13 +708,13 @@ describe('findByTag', () => {
         },
       ],
     };
-    for (const alias of ['audio', 'audios', 'audio-item', 'audio_items']) {
+    for (const alias of ['audio', 'audios', 'audio-item', 'audioitem', 'audio_items', 'audioitems']) {
       assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['audio'], alias);
     }
-    for (const alias of ['video', 'videos', 'video-item', 'video_items']) {
+    for (const alias of ['video', 'videos', 'video-item', 'videoitem', 'video_items', 'videoitems']) {
       assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['video'], alias);
     }
-    for (const alias of ['canvas', 'canvases', 'canvas-item', 'canvas_items']) {
+    for (const alias of ['canvas', 'canvases', 'canvas-item', 'canvasitem', 'canvas_items', 'canvasitems']) {
       assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['canvas'], alias);
     }
     for (const alias of ['media', 'media-item', 'media_items', 'mediaitems']) {
