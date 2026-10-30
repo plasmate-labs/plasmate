@@ -891,12 +891,15 @@ fn test_price_detection_various_currencies() {
     assert!(is_price_text("1,299 CRC"));
     assert!(is_price_text("UGX 125,000"));
     assert!(is_price_text("49.90 YER"));
+    assert!(is_price_text("CHF 1'299.90"));
+    assert!(is_price_text("1'299.90 CHF"));
     assert!(is_price_text("€ 1 299,99"));
     assert!(is_price_text("€\u{a0}1\u{a0}299,99"));
     assert!(is_price_text("1 299,99 €"));
     assert!(is_price_text("49,90€"));
     assert!(is_price_text("1 299,99 EUR"));
     assert!(is_price_text("1 299,99"));
+    assert!(is_price_text("1'299.99"));
     assert!(!is_price_text("Hello world"));
     assert!(!is_price_text("100 items"));
     assert!(!is_price_text("measurement 12.345"));
