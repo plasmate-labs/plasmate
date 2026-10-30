@@ -845,6 +845,12 @@ fn test_price_detection_various_currencies() {
     assert!(is_price_text("CZK 1,299"));
     assert!(is_price_text("1,499 THB"));
     assert!(is_price_text("UAH 799.00"));
+    assert!(is_price_text("KES 1,299"));
+    assert!(is_price_text("KZT 12,500"));
+    assert!(is_price_text("MYR 49.90"));
+    assert!(is_price_text("PKR 1,999"));
+    assert!(is_price_text("QAR 199.00"));
+    assert!(is_price_text("TWD 1,299"));
     assert!(!is_price_text("Hello world"));
     assert!(!is_price_text("100 items"));
     assert!(!is_price_text("measurement 12.345"));
