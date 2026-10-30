@@ -873,6 +873,11 @@ fn test_price_detection_various_currencies() {
     assert!(is_price_text("XAF 12,500"));
     assert!(is_price_text("XOF 12,500"));
     assert!(is_price_text("ZMW 199.00"));
+    assert!(is_price_text("AFN 1,299"));
+    assert!(is_price_text("ALL 1,299"));
+    assert!(is_price_text("AMD 1,299"));
+    assert!(is_price_text("AZN 49.90"));
+    assert!(is_price_text("BDT 1,299"));
     assert!(!is_price_text("Hello world"));
     assert!(!is_price_text("100 items"));
     assert!(!is_price_text("measurement 12.345"));
