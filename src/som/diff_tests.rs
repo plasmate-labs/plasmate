@@ -867,6 +867,12 @@ fn test_price_detection_various_currencies() {
     assert!(is_price_text("RSD 1,299"));
     assert!(is_price_text("TND 49.900"));
     assert!(is_price_text("UYU 1,299"));
+    assert!(is_price_text("GHS 1,299"));
+    assert!(is_price_text("KHR 12,500"));
+    assert!(is_price_text("MNT 49.90"));
+    assert!(is_price_text("XAF 12,500"));
+    assert!(is_price_text("XOF 12,500"));
+    assert!(is_price_text("ZMW 199.00"));
     assert!(!is_price_text("Hello world"));
     assert!(!is_price_text("100 items"));
     assert!(!is_price_text("measurement 12.345"));
