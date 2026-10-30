@@ -183,6 +183,9 @@ describe('findActionTargetsByRole aliases', () => {
   it('normalizes case, whitespace, and plural role aliases', () => {
     assert.deepEqual(findActionTargetsByRole(fixture, ' BUTTONS ').map((item) => item.id), ['e4']);
     assert.deepEqual(findActionTargetsByRole(fixture, 'text-input').map((item) => item.id), ['e5']);
+    for (const alias of ['text field', 'text fields']) {
+      assert.deepEqual(findActionTargetsByRole(fixture, alias).map((item) => item.id), ['e5'], alias);
+    }
     assert.deepEqual(findActionTargetsByRole(fixture, 'role:button').map((item) => item.id), ['e4']);
     assert.deepEqual(findActionTargetsByRole(fixture, 'role=text-input').map((item) => item.id), ['e5']);
     assert.deepEqual(findActionTargetsByRole(fixture, 'role : text-input').map((item) => item.id), ['e5']);
@@ -541,7 +544,14 @@ describe('findByTag', () => {
   });
 
   it('accepts spaced text box aliases', () => {
-    for (const alias of ['text_box', 'text-box', 'text boxes', 'text-boxes']) {
+    for (const alias of [
+      'text_box',
+      'text-box',
+      'text boxes',
+      'text-boxes',
+      'text field',
+      'text fields',
+    ]) {
       assert.deepEqual(findByTag(fixture, alias).map((el) => el.id), ['e5'], alias);
     }
   });

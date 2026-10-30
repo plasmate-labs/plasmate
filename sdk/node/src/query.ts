@@ -332,6 +332,8 @@ const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   text_inputs: 'text_input',
   text_box: 'text_input',
   text_boxes: 'text_input',
+  text_field: 'text_input',
+  text_fields: 'text_input',
   textbox: 'text_input',
   textboxes: 'text_input',
   search: 'text_input',
