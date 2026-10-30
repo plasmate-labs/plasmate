@@ -855,12 +855,18 @@ fn test_price_detection_various_currencies() {
     assert!(is_price_text("BAM 49.90"));
     assert!(is_price_text("BHD 19.500"));
     assert!(is_price_text("DOP 1,299"));
+    assert!(is_price_text("EGP 1,299"));
     assert!(is_price_text("HRK 99.00"));
     assert!(is_price_text("JOD 7.50"));
+    assert!(is_price_text("JMD 1,299"));
     assert!(is_price_text("MAD 199.00"));
+    assert!(is_price_text("NGN 12,500"));
     assert!(is_price_text("OMR 12.500"));
+    assert!(is_price_text("PEN 49.90"));
+    assert!(is_price_text("PHP 2,499"));
     assert!(is_price_text("RSD 1,299"));
     assert!(is_price_text("TND 49.900"));
+    assert!(is_price_text("UYU 1,299"));
     assert!(!is_price_text("Hello world"));
     assert!(!is_price_text("100 items"));
     assert!(!is_price_text("measurement 12.345"));
