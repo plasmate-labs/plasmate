@@ -183,6 +183,9 @@ describe('findActionTargetsByRole aliases', () => {
   it('normalizes case, whitespace, and plural role aliases', () => {
     assert.deepEqual(findActionTargetsByRole(fixture, ' BUTTONS ').map((item) => item.id), ['e4']);
     assert.deepEqual(findActionTargetsByRole(fixture, 'text-input').map((item) => item.id), ['e5']);
+    for (const alias of ['text field', 'text fields']) {
+      assert.deepEqual(findActionTargetsByRole(fixture, alias).map((item) => item.id), ['e5'], alias);
+    }
     assert.deepEqual(findActionTargetsByRole(fixture, 'role:button').map((item) => item.id), ['e4']);
     assert.deepEqual(findActionTargetsByRole(fixture, 'role=text-input').map((item) => item.id), ['e5']);
     assert.deepEqual(findActionTargetsByRole(fixture, 'role : text-input').map((item) => item.id), ['e5']);
@@ -537,6 +540,40 @@ describe('findByTag', () => {
       'queryboxes',
     ]) {
       assert.deepEqual(findByTag(fixture, alias).map((el) => el.id), ['e5'], alias);
+    }
+  });
+
+  it('accepts spaced text box aliases', () => {
+    for (const alias of [
+      'text_box',
+      'text-box',
+      'text boxes',
+      'text-boxes',
+      'text field',
+      'text fields',
+    ]) {
+      assert.deepEqual(findByTag(fixture, alias).map((el) => el.id), ['e5'], alias);
+    }
+  });
+
+  it('accepts spaced textarea aliases', () => {
+    const textareaFixture: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [
+                ...region.elements,
+                { id: 'e10', role: 'textarea', text: 'Notes', actions: ['type', 'clear'] },
+              ],
+            }
+          : region,
+      ),
+    };
+    for (const alias of ['text_area', 'text-area', 'text area', 'text_areas', 'text-areas', 'text areas']) {
+      assert.deepEqual(findByTag(textareaFixture, alias).map((el) => el.id), ['e10'], alias);
+      assert.deepEqual(findActionTargetsByRole(textareaFixture, alias).map((item) => item.id), ['e10'], alias);
     }
   });
 

@@ -27,7 +27,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   optional whitespace around the separator is accepted). The same `role=`
 ///   and `role:` forms also work for element roles.
 /// - Element roles: `link` / `links`, `button` / `buttons`, `text_input` /
-///   `text_inputs` / `textbox` / `searchbox` /
+///   `text_inputs` / `text_box` / `text_boxes` / `text_field` /
+///   `text_fields` / `textbox` / `searchbox` /
 ///   `slider` / `sliders` / `spinbutton` / `spinbuttons` / `spin button` /
 ///   `spin buttons` / `input`, HTML
 ///   text-input types such as `text`,
@@ -41,7 +42,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local` /
 ///   `date_time` / `date-time` / `date time`, `date_time_local` /
 ///   `date-time-local` / `date time local`, `month`,
-///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` / `textareas`,
+///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` /
+///   `textareas` / `text_area` / `text_areas`,
 ///   `select` / `selects` / `combobox` / `comboboxes` / `combo box` /
 ///   `combo boxes` / `combo-boxes` /
 ///   `listbox` / `listboxes` / `list_box` / `list_boxes` / `list box` / `list boxes`,
@@ -570,6 +572,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "textboxes"
         | "text_box"
         | "text_boxes"
+        | "text_field"
+        | "text_fields"
         | "searchbox"
         | "searchboxes"
         | "slider"
@@ -618,7 +622,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "range"
         | "hidden"
         | "file" => Some(ElementRole::TextInput),
-        "textarea" | "textareas" => Some(ElementRole::Textarea),
+        "textarea" | "textareas" | "text_area" | "text_areas" => Some(ElementRole::Textarea),
         "select"
         | "selects"
         | "combobox"
@@ -1640,7 +1644,13 @@ mod tests {
 
         for (selector, role) in [
             ("text_inputs", ElementRole::TextInput),
+            ("text_fields", ElementRole::TextInput),
+            ("text-field", ElementRole::TextInput),
+            ("text field", ElementRole::TextInput),
             ("textareas", ElementRole::Textarea),
+            ("text_areas", ElementRole::Textarea),
+            ("text-area", ElementRole::Textarea),
+            ("text area", ElementRole::Textarea),
             ("selects", ElementRole::Select),
         ] {
             let filtered = apply_selector(&som, selector);
