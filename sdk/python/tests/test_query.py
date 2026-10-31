@@ -524,11 +524,11 @@ class TestFindByTag:
             meta=sample_som.meta,
             regions=[SomRegion(id="r_controls", role=RegionRole.main, elements=[checkbox, radio])],
         )
-        for alias in ("check box", "check-box", "menu item checkboxes"):
+        for alias in ("check box", "check-box", "menu item checkboxes", "switches"):
             assert [element.id for element in find_by_tag(som, alias)] == ["checkbox"]
         for alias in ("radio button", "radio-button", "menu item radios"):
             assert [element.id for element in find_by_tag(som, alias)] == ["radio"]
-        for alias in ("check box", "menu item checkboxes"):
+        for alias in ("check box", "menu item checkboxes", "switches"):
             assert [item["id"] for item in find_action_targets_by_role(som, alias)] == ["checkbox"]
         for alias in ("radio button", "menu item radios"):
             assert [item["id"] for item in find_action_targets_by_role(som, alias)] == ["radio"]
