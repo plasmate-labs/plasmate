@@ -1302,6 +1302,7 @@ describe('getActionPlan', () => {
     assert.deepEqual(findActionTargetByHtmlId(som, 'save-button'), save);
     assert.deepEqual(findActionTargetByTestId(som, 'settings-save'), save);
     assert.deepEqual(findActionTargetByLabel(som, 'Save'), save);
+    assert.deepEqual(findActionTargetByLabel(som, 'save'), save);
     assert.deepEqual(findActionTargetsByLabel(som, 'save'), [save]);
     assert.equal(findActionTargetByLabel(som, '  \n\t'), undefined);
     assert.deepEqual(findActionTargetsByLabel(som, '\t  '), []);

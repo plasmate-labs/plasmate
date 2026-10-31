@@ -772,7 +772,8 @@ export function findActionTarget(
       index.byLabel[value] ??
       plan.find(
         (item) =>
-          item.label !== undefined && normalizeLabelText(item.label) === normalizeLabelText(value),
+          item.label !== undefined &&
+          normalizeLabelText(item.label).toLowerCase() === normalizeLabelText(value).toLowerCase(),
       )
     );
   }
