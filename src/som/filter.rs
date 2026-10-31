@@ -59,7 +59,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `definition_list`,
 ///   `group` / `groups` / `fieldset` / `fieldsets` / `figure` / `figures` /
 ///   `radiogroup` / `radiogroups` / `progress` / `progressbar` /
-///   `progressbars` / `meter` / `meters` / `output` / `outputs` /
+///   `progress_bar` / `progress-bar` / `progress bar` / `progressbars` /
+///   `meter` / `meters` / `output` / `outputs` /
 ///   `video` / `canvas`,
 ///   `grid` / `grids` / `data_grid` / `data_grids` / `data-grid` / `data-grids` /
 ///   `treegrid` / `treegrids` / `tree-grid` / `tree-grids` / `table_grid` /
@@ -443,7 +444,12 @@ fn media_source_role(selector: &str) -> Option<&'static str> {
 
 fn source_specific_group_role(selector: &str) -> Option<&'static str> {
     match selector.to_ascii_lowercase().as_str() {
-        "progress" | "progressbar" | "progressbars" => Some("progressbar"),
+        "progress"
+        | "progressbar"
+        | "progress_bar"
+        | "progress-bar"
+        | "progress bar"
+        | "progressbars" => Some("progressbar"),
         "meter" | "meters" => Some("meter"),
         _ => None,
     }
@@ -739,6 +745,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "radiogroups"
         | "progress"
         | "progressbar"
+        | "progress_bar"
+        | "progress-bar"
+        | "progress bar"
         | "progressbars"
         | "meter"
         | "meters"
@@ -1938,6 +1947,9 @@ mod tests {
             "radiogroup",
             "progress",
             "progressbar",
+            "progress_bar",
+            "progress-bar",
+            "progress bar",
             "meter",
             "output",
             "audio",
@@ -2972,6 +2984,9 @@ mod tests {
         for (selector, expected_id) in [
             ("progress", "e-progress"),
             ("progressbar", "e-progress"),
+            ("progress_bar", "e-progress"),
+            ("progress-bar", "e-progress"),
+            ("progress bar", "e-progress"),
             ("meter", "e-meter"),
         ] {
             let filtered = apply_selector(&som, selector);
