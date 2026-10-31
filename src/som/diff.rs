@@ -636,11 +636,12 @@ fn is_price_text(text: &str) -> bool {
 
     // Some locales render the currency as a word-like suffix or prefix
     // rather than an ISO code or standalone symbol (for example, "499 Kč",
-    // "zł 1,299", "199 kr", "R$ 49,90", "руб 1 299", or "Rs. 1,299").
+    // "zł 1,299", "199 kr", "R$ 49,90", "руб 1 299", "Rs. 1,299",
+    // "S/ 1,299", or "د.إ 1,299").
     static LOCALIZED_PRICE_RE: OnceLock<regex::Regex> = OnceLock::new();
     let localized_re = LOCALIZED_PRICE_RE.get_or_init(|| {
         regex::Regex::new(
-            r"(?i)(?:^|[^\w])(?:Kč|zł|kr|R\$|lei|руб\.?|лв\.?|Rs\.?)\s*(?:\d{1,3}(?:[.,'\s]\d{3})+|\d+)(?:[.,]\d{2})?(?:$|[^\w])|(?:^|[^\w])(?:\d{1,3}(?:[.,'\s]\d{3})+|\d+)(?:[.,]\d{2})?\s*(?:Kč|zł|kr|R\$|lei|руб\.?|лв\.?|Rs\.?)\s*(?:$|[^\w])",
+            r"(?i)(?:^|[^\w])(?:Kč|zł|kr|R\$|lei|руб\.?|лв\.?|Rs\.?|S/|د\.إ)\s*(?:\d{1,3}(?:[.,'\s]\d{3})+|\d+)(?:[.,]\d{2})?(?:$|[^\w])|(?:^|[^\w])(?:\d{1,3}(?:[.,'\s]\d{3})+|\d+)(?:[.,]\d{2})?\s*(?:Kč|zł|kr|R\$|lei|руб\.?|лв\.?|Rs\.?|S/|د\.إ)\s*(?:$|[^\w])",
         )
         .unwrap()
     });

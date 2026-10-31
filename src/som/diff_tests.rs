@@ -938,6 +938,8 @@ fn test_price_detection_various_currencies() {
     assert!(is_price_text("1.299 lei"));
     assert!(is_price_text("руб 1 299"));
     assert!(is_price_text("лв. 49"));
+    assert!(is_price_text("S/ 1,299"));
+    assert!(is_price_text("د.إ 1,299"));
     assert!(is_price_text("Save 20%"));
     assert!(is_price_text("-12,5 %"));
     assert!(is_price_text("100.0% off"));
