@@ -366,7 +366,7 @@ class TestFindByTag:
                 SomElement(
                     id="progress",
                     role=ElementRole.group,
-                    attrs=ElementAttrs(source_role="ProgressBar"),
+                    attrs=ElementAttrs(source_role="progress-bar"),
                 ),
                 SomElement(
                     id="meter",
@@ -377,7 +377,13 @@ class TestFindByTag:
             ]
         )
 
-        for alias in ("progress", "progressbar", "progress-bar", "progressbars"):
+        for alias in (
+            "progress",
+            "progressbar",
+            "progress-bar",
+            "progress bar",
+            "progressbars",
+        ):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["progress"], alias
         for alias in ("meter", "meters"):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["meter"], alias
@@ -518,11 +524,11 @@ class TestFindByTag:
             meta=sample_som.meta,
             regions=[SomRegion(id="r_controls", role=RegionRole.main, elements=[checkbox, radio])],
         )
-        for alias in ("check box", "check-box", "menu item checkboxes"):
+        for alias in ("check box", "check-box", "menu item checkboxes", "switches"):
             assert [element.id for element in find_by_tag(som, alias)] == ["checkbox"]
         for alias in ("radio button", "radio-button", "menu item radios"):
             assert [element.id for element in find_by_tag(som, alias)] == ["radio"]
-        for alias in ("check box", "menu item checkboxes"):
+        for alias in ("check box", "menu item checkboxes", "switches"):
             assert [item["id"] for item in find_action_targets_by_role(som, alias)] == ["checkbox"]
         for alias in ("radio button", "menu item radios"):
             assert [item["id"] for item in find_action_targets_by_role(som, alias)] == ["radio"]
@@ -791,7 +797,7 @@ class TestFindActionTargetsByRole:
                     id="progress",
                     role=ElementRole.group,
                     actions=["click"],
-                    attrs=ElementAttrs(source_role="ProgressBar"),
+                    attrs=ElementAttrs(source_role="progress bar"),
                 ),
                 SomElement(
                     id="meter",
@@ -803,7 +809,13 @@ class TestFindActionTargetsByRole:
             ]
         )
 
-        for alias in ("progress", "progressbar", "progress-bar", "progressbars"):
+        for alias in (
+            "progress",
+            "progressbar",
+            "progress-bar",
+            "progress bar",
+            "progressbars",
+        ):
             assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
                 "progress"
             ], alias
