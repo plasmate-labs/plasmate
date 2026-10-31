@@ -59,7 +59,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `definition_list`,
 ///   `group` / `groups` / `fieldset` / `fieldsets` / `figure` / `figures` /
 ///   `radiogroup` / `radiogroups` / `progress` / `progressbar` /
-///   `progressbars` / `meter` / `meters` / `output` / `outputs` /
+///   `progress_bar` / `progress-bar` / `progress bar` / `progressbars` /
+///   `meter` / `meters` / `output` / `outputs` /
 ///   `video` / `canvas`,
 ///   `grid` / `grids` / `data_grid` / `data_grids` / `data-grid` / `data-grids` /
 ///   `treegrid` / `treegrids` / `tree-grid` / `tree-grids` / `table_grid` /
@@ -229,6 +230,19 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         return filter_som_elements(som, selector, |element| {
             is_source_role_element(element, source_role)
         });
+    }
+
+    // Native progress/meter controls and ARIA progressbar roles compile to
+    // the generic Group role, but retain their source role in attrs. Prefer
+    // that metadata when it is present so a progress selector does not also
+    // return unrelated groups. Legacy or hand-built SOMs without the
+    // metadata continue through the generic Group role matcher below.
+    if let Some(source_role) = source_specific_group_role(selector) {
+        if som_contains_source_role(som, source_role) {
+            return filter_som_elements(som, selector, |element| {
+                is_source_role_element(element, source_role)
+            });
+        }
     }
 
     // Match only actionable elements. This is useful when an agent needs a
@@ -426,6 +440,38 @@ fn media_source_role(selector: &str) -> Option<&'static str> {
         | "canvasitems" => Some("canvas"),
         _ => None,
     }
+}
+
+fn source_specific_group_role(selector: &str) -> Option<&'static str> {
+    match selector.to_ascii_lowercase().as_str() {
+        "progress"
+        | "progressbar"
+        | "progress_bar"
+        | "progress-bar"
+        | "progress bar"
+        | "progressbars" => Some("progressbar"),
+        "meter" | "meters" => Some("meter"),
+        _ => None,
+    }
+}
+
+fn som_contains_source_role(som: &Som, source_role: &str) -> bool {
+    som.regions
+        .iter()
+        .any(|region| elements_contain_source_role(&region.elements, source_role))
+}
+
+fn elements_contain_source_role(elements: &[Element], source_role: &str) -> bool {
+    elements.iter().any(|element| {
+        is_source_role_element(element, source_role)
+            || element
+                .children
+                .as_deref()
+                .is_some_and(|children| elements_contain_source_role(children, source_role))
+            || element.shadow.as_ref().is_some_and(|shadow| {
+                elements_contain_source_role(&shadow.elements, source_role)
+            })
+    })
 }
 
 fn is_source_role_element(element: &Element, source_role: &str) -> bool {
@@ -699,6 +745,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "radiogroups"
         | "progress"
         | "progressbar"
+        | "progress_bar"
+        | "progress-bar"
+        | "progress bar"
         | "progressbars"
         | "meter"
         | "meters"
@@ -1898,6 +1947,9 @@ mod tests {
             "radiogroup",
             "progress",
             "progressbar",
+            "progress_bar",
+            "progress-bar",
+            "progress bar",
             "meter",
             "output",
             "audio",
@@ -2884,6 +2936,63 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-video");
+        }
+    }
+
+    #[test]
+    fn test_selector_progress_controls_exclude_unrelated_groups() {
+        let mut som = make_test_som();
+        som.regions[1].elements.extend([
+            Element {
+                id: "e-progress".to_string(),
+                role: ElementRole::Group,
+                html_id: None,
+                text: None,
+                label: None,
+                actions: None,
+                attrs: Some(serde_json::json!({"source_role": "progressbar"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+            Element {
+                id: "e-meter".to_string(),
+                role: ElementRole::Group,
+                html_id: None,
+                text: None,
+                label: None,
+                actions: None,
+                attrs: Some(serde_json::json!({"source_role": "meter"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+            Element {
+                id: "e-group".to_string(),
+                role: ElementRole::Group,
+                html_id: None,
+                text: None,
+                label: None,
+                actions: None,
+                attrs: None,
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+        ]);
+
+        for (selector, expected_id) in [
+            ("progress", "e-progress"),
+            ("progressbar", "e-progress"),
+            ("progress_bar", "e-progress"),
+            ("progress-bar", "e-progress"),
+            ("progress bar", "e-progress"),
+            ("meter", "e-meter"),
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, expected_id);
         }
     }
 

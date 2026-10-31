@@ -97,10 +97,16 @@ export function findByTag(som: Som, tag: ElementRole | string): SomElement[] {
   const normalizedTag = stripRolePrefix(tag).replace(/[\s-]+/g, '_');
   const mediaSourceRole = MEDIA_TAG_ALIASES[normalizedTag];
   if (mediaSourceRole) {
-    return flatElements(som).filter((el) => el.attrs?.source_role === mediaSourceRole);
+    return flatElements(som).filter((el) => sourceRoleMatches(el.attrs?.source_role, mediaSourceRole));
   }
   if (normalizedTag in MEDIA_GROUP_ALIASES) {
     return flatElements(som).filter(isMediaElement);
+  }
+  const sourceSpecificGroupRole = SOURCE_SPECIFIC_GROUP_ALIASES[normalizedTag];
+  if (sourceSpecificGroupRole && somContainsSourceRole(som, sourceSpecificGroupRole)) {
+    return flatElements(som).filter(
+      (el) => sourceRoleMatches(el.attrs?.source_role, sourceSpecificGroupRole),
+    );
   }
   const normalizedRole = normalizeElementRole(tag);
   return normalizedRole ? flatElements(som).filter((el) => el.role === normalizedRole) : [];
@@ -455,10 +461,30 @@ const MEDIA_GROUP_ALIASES: Record<string, true> = {
   mediaitems: true,
 };
 
+const SOURCE_SPECIFIC_GROUP_ALIASES: Record<string, string> = {
+  progress: 'progressbar',
+  progressbar: 'progressbar',
+  progress_bar: 'progressbar',
+  progressbars: 'progressbar',
+  meter: 'meter',
+  meters: 'meter',
+};
+
+function somContainsSourceRole(som: Som, sourceRole: string): boolean {
+  return flatElements(som).some(
+    (el) => sourceRoleMatches(el.attrs?.source_role, sourceRole),
+  );
+}
+
+function sourceRoleMatches(actual: string | undefined, expected: string): boolean {
+  return actual?.toLowerCase() === expected;
+}
+
 function isMediaElement(element: SomElement): boolean {
   return element.role === 'image' ||
-    (element.attrs?.source_role !== undefined &&
-      ['audio', 'video', 'canvas'].includes(element.attrs.source_role));
+    ['audio', 'video', 'canvas'].some((sourceRole) =>
+      sourceRoleMatches(element.attrs?.source_role, sourceRole),
+    );
 }
 
 function normalizeElementRole(role: string): ElementRole | undefined {
@@ -746,7 +772,8 @@ export function findActionTarget(
       index.byLabel[value] ??
       plan.find(
         (item) =>
-          item.label !== undefined && normalizeLabelText(item.label) === normalizeLabelText(value),
+          item.label !== undefined &&
+          normalizeLabelText(item.label).toLowerCase() === normalizeLabelText(value).toLowerCase(),
       )
     );
   }
@@ -794,11 +821,19 @@ export function findActionTargetsByRole(
   const mediaSourceRole = MEDIA_TAG_ALIASES[normalizedRole];
   const plan = options?.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
   if (mediaSourceRole) {
-    return plan.filter((item) => item.source_role === mediaSourceRole);
+    return plan.filter((item) => sourceRoleMatches(item.source_role, mediaSourceRole));
   }
   if (normalizedRole in MEDIA_GROUP_ALIASES) {
     return plan.filter((item) => item.role === 'image' ||
-      (item.source_role !== undefined && ['audio', 'video', 'canvas'].includes(item.source_role)));
+      ['audio', 'video', 'canvas'].some((sourceRole) =>
+        sourceRoleMatches(item.source_role, sourceRole),
+      ));
+  }
+  const sourceSpecificGroupRole = SOURCE_SPECIFIC_GROUP_ALIASES[normalizedRole];
+  if (sourceSpecificGroupRole && plan.some(
+    (item) => sourceRoleMatches(item.source_role, sourceSpecificGroupRole),
+  )) {
+    return plan.filter((item) => sourceRoleMatches(item.source_role, sourceSpecificGroupRole));
   }
   const canonicalRole = normalizeElementRole(role);
   return canonicalRole

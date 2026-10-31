@@ -334,6 +334,34 @@ describe('findActionTargetsByRole aliases', () => {
       'canvas',
     ]);
   });
+
+  it('narrows progress and meter action aliases using source-role metadata', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_controls',
+          role: 'main',
+          elements: [
+            { id: 'progress', role: 'group', actions: ['click'], attrs: { source_role: 'progressbar' } },
+            { id: 'meter', role: 'group', actions: ['click'], attrs: { source_role: 'meter' } },
+            { id: 'other', role: 'group', actions: ['click'] },
+          ],
+        },
+      ],
+    };
+    for (const alias of ['progress', 'progressbar', 'progress-bar', 'progressbars']) {
+      assert.deepEqual(findActionTargetsByRole(som, alias).map((item) => item.id), ['progress'], alias);
+    }
+    for (const alias of ['meter', 'meters']) {
+      assert.deepEqual(findActionTargetsByRole(som, alias).map((item) => item.id), ['meter'], alias);
+    }
+    assert.deepEqual(findActionTargetsByRole(som, 'output').map((item) => item.id), [
+      'progress',
+      'meter',
+      'other',
+    ]);
+  });
 });
 
 function loadActionAvailabilityFixture(): { som: Som; action_targets: ExpectedActionTarget[] } {
@@ -691,6 +719,47 @@ describe('findByTag', () => {
     for (const alias of ['article', 'articles', 'sections']) {
       assert.deepEqual(findByTag(sectionSom, alias).map((el) => el.id), ['section'], alias);
     }
+  });
+
+  it('narrows progress and meter aliases using source-role metadata', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_controls',
+          role: 'main',
+          elements: [
+            { id: 'progress', role: 'group', attrs: { source_role: 'progressbar' } },
+            { id: 'meter', role: 'group', attrs: { source_role: 'meter' } },
+            { id: 'other', role: 'group' },
+          ],
+        },
+      ],
+    };
+    for (const alias of ['progress', 'progressbar', 'progress-bar', 'progressbars']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['progress'], alias);
+    }
+    for (const alias of ['meter', 'meters']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['meter'], alias);
+    }
+    assert.deepEqual(findByTag(som, 'output').map((el) => el.id), ['progress', 'meter', 'other']);
+  });
+
+  it('matches source-role aliases without depending on metadata casing', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [{
+        id: 'r_media',
+        role: 'main',
+        elements: [
+          { id: 'audio', role: 'group', actions: ['click'], attrs: { source_role: 'Audio' } },
+          { id: 'video', role: 'group', actions: ['click'], attrs: { source_role: 'VIDEO' } },
+        ],
+      }],
+    };
+    assert.deepEqual(findByTag(som, 'audio').map((el) => el.id), ['audio']);
+    assert.deepEqual(findByTag(som, 'media').map((el) => el.id), ['audio', 'video']);
+    assert.deepEqual(findActionTargetsByRole(som, 'video').map((item) => item.id), ['video']);
   });
 
   it('accepts blockquote aliases for paragraph elements', () => {
@@ -1233,6 +1302,7 @@ describe('getActionPlan', () => {
     assert.deepEqual(findActionTargetByHtmlId(som, 'save-button'), save);
     assert.deepEqual(findActionTargetByTestId(som, 'settings-save'), save);
     assert.deepEqual(findActionTargetByLabel(som, 'Save'), save);
+    assert.deepEqual(findActionTargetByLabel(som, 'save'), save);
     assert.deepEqual(findActionTargetsByLabel(som, 'save'), [save]);
     assert.equal(findActionTargetByLabel(som, '  \n\t'), undefined);
     assert.deepEqual(findActionTargetsByLabel(som, '\t  '), []);
