@@ -360,6 +360,28 @@ class TestFindByTag:
         ):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["group"], alias
 
+    def test_narrows_progress_and_meter_aliases_using_source_roles(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.extend(
+            [
+                SomElement(
+                    id="progress",
+                    role=ElementRole.group,
+                    attrs=ElementAttrs(source_role="ProgressBar"),
+                ),
+                SomElement(
+                    id="meter",
+                    role=ElementRole.group,
+                    attrs=ElementAttrs(source_role="meter"),
+                ),
+                SomElement(id="other-group", role=ElementRole.group),
+            ]
+        )
+
+        for alias in ("progress", "progressbar", "progress-bar", "progressbars"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == ["progress"], alias
+        for alias in ("meter", "meters"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == ["meter"], alias
+
     def test_accepts_image_iframe_and_details_aliases(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.extend(
             [
@@ -514,7 +536,9 @@ class TestFindByTag:
             "tel",
             "url",
             "date",
+            "date-time",
             "datetime-local",
+            "date time local",
             "month",
             "week",
             "color",
@@ -622,7 +646,9 @@ class TestFindActionTargetsByRole:
             "tel",
             "url",
             "date",
+            "date-time",
             "datetime-local",
+            "date time local",
             "month",
             "week",
             "color",
@@ -712,6 +738,20 @@ class TestFindActionTargetsByRole:
             "canvas",
         ]
 
+    def test_media_action_alias_normalizes_source_role_case(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(
+                id="audio-upper",
+                role=ElementRole.group,
+                actions=["click"],
+                attrs=ElementAttrs(source_role="Audio"),
+            )
+        )
+
+        assert [item["id"] for item in find_action_targets_by_role(sample_som, "media")] == [
+            "audio-upper",
+        ]
+
     def test_trims_role_aliases(self, sample_som: Som) -> None:
         assert [item["id"] for item in find_action_targets_by_role(sample_som, "  a  ")] == ["e1", "e2"]
 
@@ -740,6 +780,36 @@ class TestFindActionTargetsByRole:
         ):
             assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
                 "e12"
+            ], alias
+
+    def test_narrows_progress_and_meter_action_aliases_using_source_roles(
+        self, sample_som: Som
+    ) -> None:
+        sample_som.regions[1].elements.extend(
+            [
+                SomElement(
+                    id="progress",
+                    role=ElementRole.group,
+                    actions=["click"],
+                    attrs=ElementAttrs(source_role="ProgressBar"),
+                ),
+                SomElement(
+                    id="meter",
+                    role=ElementRole.group,
+                    actions=["click"],
+                    attrs=ElementAttrs(source_role="meter"),
+                ),
+                SomElement(id="other-group", role=ElementRole.group, actions=["click"]),
+            ]
+        )
+
+        for alias in ("progress", "progressbar", "progress-bar", "progressbars"):
+            assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
+                "progress"
+            ], alias
+        for alias in ("meter", "meters"):
+            assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
+                "meter"
             ], alias
 
     def test_accepts_blockquote_action_role_aliases(self, sample_som: Som) -> None:
