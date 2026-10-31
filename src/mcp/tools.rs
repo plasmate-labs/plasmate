@@ -32,6 +32,8 @@ const DEFAULT_TIMEOUT_MS: u64 = 30000;
 const MAX_TRACE_HANDLE_BYTES: usize = 64;
 const MAX_MCP_URL_BYTES: usize = 4096;
 const MAX_MCP_SELECTOR_BYTES: usize = 256;
+const MCP_ABSOLUTE_PAGE_URL_DESCRIPTION: &str =
+    "Absolute HTTP(S) URL without embedded credentials.";
 
 /// MCP tool definition structure.
 #[derive(Debug, Serialize)]
@@ -248,12 +250,14 @@ fn validate_mcp_url(url: &str) -> Result<(), String> {
     }
     let parsed = url::Url::parse(url)
         .map_err(|_| "Invalid arguments: url must be an absolute HTTP(S) URL".to_string())?;
-    if !matches!(parsed.scheme(), "http" | "https")
-        || parsed.host().is_none()
-        || !parsed.username().is_empty()
-        || parsed.password().is_some()
-    {
+    if !matches!(parsed.scheme(), "http" | "https") || parsed.host().is_none() {
         return Err("Invalid arguments: url must be an absolute HTTP(S) URL".to_string());
+    }
+    if !parsed.username().is_empty() || parsed.password().is_some() {
+        return Err(
+            "Invalid arguments: url must not include embedded credentials; use an absolute HTTP(S) URL without user info"
+                .to_string(),
+        );
     }
     Ok(())
 }
@@ -498,7 +502,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
                     "format": "uri",
                     "minLength": 1,
                     "maxLength": MAX_MCP_URL_BYTES,
-                    "description": "URL to fetch"
+                    "description": MCP_ABSOLUTE_PAGE_URL_DESCRIPTION
                 },
                 "budget": {
                     "type": "integer",
@@ -534,7 +538,7 @@ pub fn extract_text_definition() -> ToolDefinition {
                     "format": "uri",
                     "minLength": 1,
                     "maxLength": MAX_MCP_URL_BYTES,
-                    "description": "URL to fetch"
+                    "description": MCP_ABSOLUTE_PAGE_URL_DESCRIPTION
                 },
                 "javascript": {
                     "type": "boolean",
@@ -1123,7 +1127,7 @@ pub fn extract_links_definition() -> ToolDefinition {
                     "format": "uri",
                     "minLength": 1,
                     "maxLength": MAX_MCP_URL_BYTES,
-                    "description": "URL to fetch"
+                    "description": MCP_ABSOLUTE_PAGE_URL_DESCRIPTION
                 },
                 "javascript": {
                     "type": "boolean",
@@ -1159,7 +1163,9 @@ pub fn ard_discover_definition() -> ToolDefinition {
                     "format": "uri",
                     "minLength": 1,
                     "maxLength": MAX_MCP_URL_BYTES,
-                    "description": "Operator-supplied public HTTPS page or origin to inspect."
+                    "description": format!(
+                        "Operator-supplied public HTTPS page or origin to inspect. {MCP_ABSOLUTE_PAGE_URL_DESCRIPTION}"
+                    )
                 },
                 "timeout_ms": {
                     "type": "integer",
@@ -1206,7 +1212,9 @@ pub fn crawl_policy_definition() -> ToolDefinition {
                     "format": "uri",
                     "minLength": 1,
                     "maxLength": 4096,
-                    "description": "Public HTTP(S) target whose origin-level /robots.txt policy should be evaluated."
+                    "description": format!(
+                        "Public HTTP(S) target whose origin-level /robots.txt policy should be evaluated. {MCP_ABSOLUTE_PAGE_URL_DESCRIPTION}"
+                    )
                 },
                 "product_token": {
                     "type": "string",
@@ -1260,7 +1268,13 @@ pub fn inspect_page_definition() -> ToolDefinition {
         input_schema: json!({
             "type": "object",
             "properties": {
-                "url": { "type": "string", "format": "uri", "minLength": 1, "maxLength": MAX_MCP_URL_BYTES },
+                "url": {
+                    "type": "string",
+                    "format": "uri",
+                    "minLength": 1,
+                    "maxLength": MAX_MCP_URL_BYTES,
+                    "description": MCP_ABSOLUTE_PAGE_URL_DESCRIPTION
+                },
                 "javascript": {
                     "type": "boolean",
                     "default": false,
@@ -3902,7 +3916,7 @@ pub fn screenshot_page_definition() -> ToolDefinition {
                     "format": "uri",
                     "minLength": 1,
                     "maxLength": MAX_MCP_URL_BYTES,
-                    "description": "URL to screenshot"
+                    "description": MCP_ABSOLUTE_PAGE_URL_DESCRIPTION
                 },
                 "width": {
                     "type": "integer",
@@ -4138,7 +4152,7 @@ pub fn open_page_definition() -> ToolDefinition {
                     "format": "uri",
                     "minLength": 1,
                     "maxLength": MAX_MCP_URL_BYTES,
-                    "description": "URL to open"
+                    "description": MCP_ABSOLUTE_PAGE_URL_DESCRIPTION
                 },
                 "trace": {
                     "type": "boolean",
@@ -5381,7 +5395,9 @@ pub fn navigate_to_definition() -> ToolDefinition {
                     "format": "uri-reference",
                     "minLength": 1,
                     "maxLength": MAX_MCP_URL_BYTES,
-                    "description": "URL to navigate to"
+                    "description": format!(
+                        "Relative URL reference or absolute HTTP(S) URL without embedded credentials. {MCP_ABSOLUTE_PAGE_URL_DESCRIPTION}"
+                    )
                 }
             },
             "required": ["session_id", "url"],
@@ -6905,14 +6921,25 @@ mod tests {
                 "{} must advertise absolute URL validation",
                 definition.name
             );
+            assert!(
+                definition.input_schema["properties"]["url"]["description"]
+                    .as_str()
+                    .is_some_and(|description| description.contains("without embedded credentials")),
+                "{} must warn against embedded URL credentials",
+                definition.name
+            );
         }
     }
 
     #[test]
     fn navigate_schema_advertises_uri_reference_format() {
-        assert_eq!(
-            navigate_to_definition().input_schema["properties"]["url"]["format"],
-            "uri-reference"
+        let url_schema = &navigate_to_definition().input_schema["properties"]["url"];
+        assert_eq!(url_schema["format"], "uri-reference");
+        assert!(
+            url_schema["description"]
+                .as_str()
+                .is_some_and(|description| description.contains("without embedded credentials")),
+            "navigate_to must warn against embedded credentials in absolute URLs"
         );
     }
 
@@ -6947,7 +6974,6 @@ mod tests {
             "example.com",
             "file:///tmp/page.html",
             "mailto:test@example.com",
-            "https://user:secret@example.com/page",
         ] {
             assert_eq!(
                 validate_mcp_url(invalid_url),
@@ -6955,6 +6981,10 @@ mod tests {
                 "url: {invalid_url}"
             );
         }
+        assert_eq!(
+            validate_mcp_url("https://user:secret@example.com/page"),
+            Err("Invalid arguments: url must not include embedded credentials; use an absolute HTTP(S) URL without user info".to_string())
+        );
         assert!(validate_mcp_url(" https://example.com/page ").is_ok());
         assert_eq!(
             normalized_mcp_url(" \thttps://example.com/page\n ").unwrap(),
@@ -7028,7 +7058,7 @@ mod tests {
         assert_eq!(result["isError"], true);
         assert_eq!(
             result["content"][0]["text"],
-            "Invalid arguments: url must be an absolute HTTP(S) URL"
+            "Invalid arguments: url must not include embedded credentials; use an absolute HTTP(S) URL without user info"
         );
     }
 
