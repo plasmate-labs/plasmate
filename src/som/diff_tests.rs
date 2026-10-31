@@ -292,6 +292,37 @@ fn test_price_change_detection() {
 }
 
 #[test]
+fn test_localized_rs_price_change_detection() {
+    let old = Som {
+        regions: vec![make_region(
+            "r1",
+            RegionRole::Main,
+            vec![make_element(
+                "e1",
+                ElementRole::Paragraph,
+                Some("Rs. 1,299"),
+            )],
+        )],
+        ..empty_som()
+    };
+
+    let new = Som {
+        regions: vec![make_region(
+            "r1",
+            RegionRole::Main,
+            vec![make_element(
+                "e1",
+                ElementRole::Paragraph,
+                Some("Rs. 1,499"),
+            )],
+        )],
+        ..empty_som()
+    };
+
+    assert!(diff_soms(&old, &new, false).summary.has_price_changes);
+}
+
+#[test]
 fn test_multiple_simultaneous_changes() {
     let old = Som {
         title: "Old Title".into(),
