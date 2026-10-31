@@ -5395,7 +5395,9 @@ pub fn navigate_to_definition() -> ToolDefinition {
                     "format": "uri-reference",
                     "minLength": 1,
                     "maxLength": MAX_MCP_URL_BYTES,
-                    "description": "URL to navigate to"
+                    "description": format!(
+                        "Relative URL reference or absolute HTTP(S) URL without embedded credentials. {MCP_ABSOLUTE_PAGE_URL_DESCRIPTION}"
+                    )
                 }
             },
             "required": ["session_id", "url"],
@@ -6931,9 +6933,13 @@ mod tests {
 
     #[test]
     fn navigate_schema_advertises_uri_reference_format() {
-        assert_eq!(
-            navigate_to_definition().input_schema["properties"]["url"]["format"],
-            "uri-reference"
+        let url_schema = &navigate_to_definition().input_schema["properties"]["url"];
+        assert_eq!(url_schema["format"], "uri-reference");
+        assert!(
+            url_schema["description"]
+                .as_str()
+                .is_some_and(|description| description.contains("without embedded credentials")),
+            "navigate_to must warn against embedded credentials in absolute URLs"
         );
     }
 
