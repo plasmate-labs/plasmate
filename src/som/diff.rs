@@ -616,7 +616,7 @@ fn is_price_text(text: &str) -> bool {
     static PRICE_RE: OnceLock<regex::Regex> = OnceLock::new();
     let re = PRICE_RE.get_or_init(|| {
         regex::Regex::new(
-            r"(?:[$€£¥₹₽₩₺₫₦₪₱₴฿₡₲₭₮₾₿₵₸₼]\s*(?:\d{1,3}(?:[.,\s]\d{3})+|\d+)(?:[.,]\d{2})?|(?:\d{1,3}(?:[.,\s]\d{3})+|\d+)(?:[.,]\d{2})?\s*[$€£¥₹₽₩₺₫₦₪₱₴฿₡₲₭₮₾₿₵₸₼])",
+            r"(?:[$€£¥₹₽₩₺₫₦₪₱₴฿₡₲₭₮₾₿₵₸₼]\s*(?:\d{1,3}(?:[.,'\s]\d{3})+|\d+)(?:[.,]\d{2})?|(?:\d{1,3}(?:[.,'\s]\d{3})+|\d+)(?:[.,]\d{2})?\s*[$€£¥₹₽₩₺₫₦₪₱₴฿₡₲₭₮₾₿₵₸₼])",
         )
         .unwrap()
     });
@@ -628,9 +628,20 @@ fn is_price_text(text: &str) -> bool {
     // "USD 49.99" or "49,99 EUR") when a symbol would be ambiguous.
     static CODE_PRICE_RE: OnceLock<regex::Regex> = OnceLock::new();
     let code_re = CODE_PRICE_RE.get_or_init(|| {
-        regex::Regex::new(r"(?i)(?:\b(?:AED|AFN|ALL|AMD|ARS|AUD|AZN|BAM|BDT|BGN|BHD|BRL|BWP|BYN|CAD|CHF|CLP|CNY|COP|CZK|DKK|DOP|EGP|EUR|GEL|GHS|GBP|HKD|HNL|HRK|HUF|IDR|ILS|INR|ISK|JOD|JMD|JPY|KES|KGS|KHR|KRW|KWD|KZT|LAK|MAD|MMK|MNT|MOP|MVR|MXN|MYR|NGN|NOK|NPR|NZD|OMR|PEN|PHP|PKR|PLN|QAR|RON|RSD|RUB|SAR|SCR|SEK|SGD|SZL|THB|TND|TRY|TWD|UAH|USD|UYU|UZS|VND|VES|XAF|XOF|XPF|ZAR|ZMW|ZWL)\s*(?:\d{1,3}(?:[.,\s]\d{3})+|\d+)(?:[.,]\d{2})?|(?:\d{1,3}(?:[.,\s]\d{3})+|\d+)(?:[.,]\d{2})?\s*\b(?:AED|AFN|ALL|AMD|ARS|AUD|AZN|BAM|BDT|BGN|BHD|BRL|BWP|BYN|CAD|CHF|CLP|CNY|COP|CZK|DKK|DOP|EGP|EUR|GEL|GHS|GBP|HKD|HNL|HRK|HUF|IDR|ILS|INR|ISK|JOD|JMD|JPY|KES|KGS|KHR|KRW|KWD|KZT|LAK|MAD|MMK|MNT|MOP|MVR|MXN|MYR|NGN|NOK|NPR|NZD|OMR|PEN|PHP|PKR|PLN|QAR|RON|RSD|RUB|SAR|SCR|SEK|SGD|SZL|THB|TND|TRY|TWD|UAH|USD|UYU|UZS|VND|VES|XAF|XOF|XPF|ZAR|ZMW|ZWL)\b)").unwrap()
+        regex::Regex::new(r"(?i)(?:\b(?:AED|AFN|ALL|AMD|ARS|AUD|AZN|BAM|BDT|BGN|BHD|BOB|BRL|BWP|BYN|CAD|CHF|CLP|CNY|COP|CRC|CVE|CZK|DKK|DOP|EGP|EUR|GEL|GHS|GBP|GTQ|HKD|HNL|HRK|HUF|IDR|ILS|INR|ISK|JOD|JMD|JPY|KES|KGS|KHR|KRW|KWD|KZT|LAK|LBP|LYD|MAD|MMK|MNT|MOP|MVR|MXN|MYR|MZN|NAD|NGN|NOK|NPR|NZD|OMR|PAB|PEN|PHP|PKR|PLN|QAR|RON|RSD|RUB|SAR|SCR|SEK|SBD|SGD|SLL|SOS|SSP|STN|SZL|THB|TND|TRY|TWD|TZS|UAH|UGX|USD|UYU|UZS|VND|VES|WST|XAF|XOF|XPF|YER|ZAR|ZMW|ZWL)\s*(?:\d{1,3}(?:[.,'\s]\d{3})+|\d+)(?:[.,]\d{2})?|(?:\d{1,3}(?:[.,'\s]\d{3})+|\d+)(?:[.,]\d{2})?\s*\b(?:AED|AFN|ALL|AMD|ARS|AUD|AZN|BAM|BDT|BGN|BHD|BOB|BRL|BWP|BYN|CAD|CHF|CLP|CNY|COP|CRC|CVE|CZK|DKK|DOP|EGP|EUR|GEL|GHS|GBP|GTQ|HKD|HNL|HRK|HUF|IDR|ILS|INR|ISK|JOD|JMD|JPY|KES|KGS|KHR|KRW|KWD|KZT|LAK|LBP|LYD|MAD|MMK|MNT|MOP|MVR|MXN|MYR|MZN|NAD|NGN|NOK|NPR|NZD|OMR|PAB|PEN|PHP|PKR|PLN|QAR|RON|RSD|RUB|SAR|SCR|SEK|SBD|SGD|SLL|SOS|SSP|STN|SZL|THB|TND|TRY|TWD|TZS|UAH|UGX|USD|UYU|UZS|VND|VES|WST|XAF|XOF|XPF|YER|ZAR|ZMW|ZWL)\b)").unwrap()
     });
     if code_re.is_match(text) {
+        return true;
+    }
+
+    // Percentage discounts are price signals too, even when a storefront
+    // shows only the reduction (for example, "Save 20%" or "-12,5 %").
+    // Include full-width and Arabic percent signs used by localized pages.
+    static PERCENT_RE: OnceLock<regex::Regex> = OnceLock::new();
+    let percent_re = PERCENT_RE.get_or_init(|| {
+        regex::Regex::new(r"(?:^|[^\w.,])[+-]?\d+(?:[.,]\d+)?\s*[%％٪](?:$|[^\w])").unwrap()
+    });
+    if percent_re.is_match(text) {
         return true;
     }
 
@@ -639,7 +650,7 @@ fn is_price_text(text: &str) -> bool {
     // so version numbers and longer measurements are not treated as prices.
     static BARE_PRICE_RE: OnceLock<regex::Regex> = OnceLock::new();
     let bare_re = BARE_PRICE_RE.get_or_init(|| {
-        regex::Regex::new(r"(?:^|[^\w.,])(?:\d{1,3}(?:[.,\s]\d{3})+|\d+)[.,]\d{2}(?:$|[^\w.,])")
+        regex::Regex::new(r"(?:^|[^\w.,'])\d{1,3}(?:[.,'\s]\d{3})+[.,]\d{2}(?:$|[^\w.,'])|(?:^|[^\w.,'])\d+[.,]\d{2}(?:$|[^\w.,'])")
             .unwrap()
     });
     bare_re.is_match(text)
