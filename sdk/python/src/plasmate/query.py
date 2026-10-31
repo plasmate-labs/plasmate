@@ -29,6 +29,14 @@ _MEDIA_TAG_ALIASES = {
     "videoitems": "video",
 }
 _MEDIA_GROUP_ALIASES = {"media", "media_item", "mediaitem", "media_items", "mediaitems"}
+_SOURCE_SPECIFIC_GROUP_ALIASES = {
+    "progress": "progressbar",
+    "progressbar": "progressbar",
+    "progress_bar": "progressbar",
+    "progressbars": "progressbar",
+    "meter": "meter",
+    "meters": "meter",
+}
 
 
 def find_by_role(som: Som, role: str) -> List[SomRegion]:
@@ -283,11 +291,20 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         return [
             element
             for element in flat_elements(som)
-            if element.attrs is not None
-            and element.attrs.source_role == media_source_role
+            if _source_role_matches(element, media_source_role)
         ]
     if tag in _MEDIA_GROUP_ALIASES:
         return [element for element in flat_elements(som) if _is_media_element(element)]
+    source_specific_group_role = _SOURCE_SPECIFIC_GROUP_ALIASES.get(tag)
+    if source_specific_group_role is not None and any(
+        _source_role_matches(element, source_specific_group_role)
+        for element in flat_elements(som)
+    ):
+        return [
+            element
+            for element in flat_elements(som)
+            if _source_role_matches(element, source_specific_group_role)
+        ]
     tag = role_aliases.get(tag, tag)
     results: List[SomElement] = []
     for region in som.regions:
@@ -298,8 +315,17 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
 
 def _is_media_element(element: SomElement) -> bool:
     return element.role == ElementRole.image or (
+        _source_role_matches(element, "audio")
+        or _source_role_matches(element, "video")
+        or _source_role_matches(element, "canvas")
+    )
+
+
+def _source_role_matches(element: SomElement, expected: str) -> bool:
+    return (
         element.attrs is not None
-        and element.attrs.source_role in {"audio", "video", "canvas"}
+        and isinstance(element.attrs.source_role, str)
+        and element.attrs.source_role.lower() == expected
     )
 
 
@@ -729,7 +755,8 @@ def find_action_targets_by_role(
         return [
             item
             for item in plan
-            if item.get("source_role") == media_source_role
+            if isinstance(item.get("source_role"), str)
+            and item["source_role"].lower() == media_source_role
         ]
     if normalized_alias in _MEDIA_GROUP_ALIASES:
         return [
@@ -737,6 +764,18 @@ def find_action_targets_by_role(
             for item in plan
             if item.get("role") == ElementRole.image.value
             or item.get("source_role") in {"audio", "video", "canvas"}
+        ]
+    source_specific_group_role = _SOURCE_SPECIFIC_GROUP_ALIASES.get(normalized_alias)
+    if source_specific_group_role is not None and any(
+        isinstance(item.get("source_role"), str)
+        and item["source_role"].lower() == source_specific_group_role
+        for item in plan
+    ):
+        return [
+            item
+            for item in plan
+            if isinstance(item.get("source_role"), str)
+            and item["source_role"].lower() == source_specific_group_role
         ]
     normalized_role = {
         "a": "link",
