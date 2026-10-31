@@ -334,6 +334,34 @@ describe('findActionTargetsByRole aliases', () => {
       'canvas',
     ]);
   });
+
+  it('narrows progress and meter action aliases using source-role metadata', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_controls',
+          role: 'main',
+          elements: [
+            { id: 'progress', role: 'group', actions: ['click'], attrs: { source_role: 'progressbar' } },
+            { id: 'meter', role: 'group', actions: ['click'], attrs: { source_role: 'meter' } },
+            { id: 'other', role: 'group', actions: ['click'] },
+          ],
+        },
+      ],
+    };
+    for (const alias of ['progress', 'progressbar', 'progress-bar', 'progressbars']) {
+      assert.deepEqual(findActionTargetsByRole(som, alias).map((item) => item.id), ['progress'], alias);
+    }
+    for (const alias of ['meter', 'meters']) {
+      assert.deepEqual(findActionTargetsByRole(som, alias).map((item) => item.id), ['meter'], alias);
+    }
+    assert.deepEqual(findActionTargetsByRole(som, 'output').map((item) => item.id), [
+      'progress',
+      'meter',
+      'other',
+    ]);
+  });
 });
 
 function loadActionAvailabilityFixture(): { som: Som; action_targets: ExpectedActionTarget[] } {
@@ -691,6 +719,30 @@ describe('findByTag', () => {
     for (const alias of ['article', 'articles', 'sections']) {
       assert.deepEqual(findByTag(sectionSom, alias).map((el) => el.id), ['section'], alias);
     }
+  });
+
+  it('narrows progress and meter aliases using source-role metadata', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_controls',
+          role: 'main',
+          elements: [
+            { id: 'progress', role: 'group', attrs: { source_role: 'progressbar' } },
+            { id: 'meter', role: 'group', attrs: { source_role: 'meter' } },
+            { id: 'other', role: 'group' },
+          ],
+        },
+      ],
+    };
+    for (const alias of ['progress', 'progressbar', 'progress-bar', 'progressbars']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['progress'], alias);
+    }
+    for (const alias of ['meter', 'meters']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['meter'], alias);
+    }
+    assert.deepEqual(findByTag(som, 'output').map((el) => el.id), ['progress', 'meter', 'other']);
   });
 
   it('accepts blockquote aliases for paragraph elements', () => {

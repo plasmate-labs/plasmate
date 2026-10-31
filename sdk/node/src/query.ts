@@ -102,6 +102,12 @@ export function findByTag(som: Som, tag: ElementRole | string): SomElement[] {
   if (normalizedTag in MEDIA_GROUP_ALIASES) {
     return flatElements(som).filter(isMediaElement);
   }
+  const sourceSpecificGroupRole = SOURCE_SPECIFIC_GROUP_ALIASES[normalizedTag];
+  if (sourceSpecificGroupRole && somContainsSourceRole(som, sourceSpecificGroupRole)) {
+    return flatElements(som).filter(
+      (el) => el.attrs?.source_role?.toLowerCase() === sourceSpecificGroupRole,
+    );
+  }
   const normalizedRole = normalizeElementRole(tag);
   return normalizedRole ? flatElements(som).filter((el) => el.role === normalizedRole) : [];
 }
@@ -455,6 +461,21 @@ const MEDIA_GROUP_ALIASES: Record<string, true> = {
   mediaitems: true,
 };
 
+const SOURCE_SPECIFIC_GROUP_ALIASES: Record<string, string> = {
+  progress: 'progressbar',
+  progressbar: 'progressbar',
+  progress_bar: 'progressbar',
+  progressbars: 'progressbar',
+  meter: 'meter',
+  meters: 'meter',
+};
+
+function somContainsSourceRole(som: Som, sourceRole: string): boolean {
+  return flatElements(som).some(
+    (el) => el.attrs?.source_role?.toLowerCase() === sourceRole,
+  );
+}
+
 function isMediaElement(element: SomElement): boolean {
   return element.role === 'image' ||
     (element.attrs?.source_role !== undefined &&
@@ -799,6 +820,12 @@ export function findActionTargetsByRole(
   if (normalizedRole in MEDIA_GROUP_ALIASES) {
     return plan.filter((item) => item.role === 'image' ||
       (item.source_role !== undefined && ['audio', 'video', 'canvas'].includes(item.source_role)));
+  }
+  const sourceSpecificGroupRole = SOURCE_SPECIFIC_GROUP_ALIASES[normalizedRole];
+  if (sourceSpecificGroupRole && plan.some(
+    (item) => item.source_role?.toLowerCase() === sourceSpecificGroupRole,
+  )) {
+    return plan.filter((item) => item.source_role?.toLowerCase() === sourceSpecificGroupRole);
   }
   const canonicalRole = normalizeElementRole(role);
   return canonicalRole
