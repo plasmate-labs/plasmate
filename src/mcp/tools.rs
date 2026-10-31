@@ -32,6 +32,8 @@ const DEFAULT_TIMEOUT_MS: u64 = 30000;
 const MAX_TRACE_HANDLE_BYTES: usize = 64;
 const MAX_MCP_URL_BYTES: usize = 4096;
 const MAX_MCP_SELECTOR_BYTES: usize = 256;
+const MCP_ABSOLUTE_PAGE_URL_DESCRIPTION: &str =
+    "Absolute HTTP(S) URL without embedded credentials.";
 
 /// MCP tool definition structure.
 #[derive(Debug, Serialize)]
@@ -500,7 +502,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
                     "format": "uri",
                     "minLength": 1,
                     "maxLength": MAX_MCP_URL_BYTES,
-                    "description": "URL to fetch"
+                    "description": MCP_ABSOLUTE_PAGE_URL_DESCRIPTION
                 },
                 "budget": {
                     "type": "integer",
@@ -536,7 +538,7 @@ pub fn extract_text_definition() -> ToolDefinition {
                     "format": "uri",
                     "minLength": 1,
                     "maxLength": MAX_MCP_URL_BYTES,
-                    "description": "URL to fetch"
+                    "description": MCP_ABSOLUTE_PAGE_URL_DESCRIPTION
                 },
                 "javascript": {
                     "type": "boolean",
@@ -1125,7 +1127,7 @@ pub fn extract_links_definition() -> ToolDefinition {
                     "format": "uri",
                     "minLength": 1,
                     "maxLength": MAX_MCP_URL_BYTES,
-                    "description": "URL to fetch"
+                    "description": MCP_ABSOLUTE_PAGE_URL_DESCRIPTION
                 },
                 "javascript": {
                     "type": "boolean",
@@ -1161,7 +1163,9 @@ pub fn ard_discover_definition() -> ToolDefinition {
                     "format": "uri",
                     "minLength": 1,
                     "maxLength": MAX_MCP_URL_BYTES,
-                    "description": "Operator-supplied public HTTPS page or origin to inspect."
+                    "description": format!(
+                        "Operator-supplied public HTTPS page or origin to inspect. {MCP_ABSOLUTE_PAGE_URL_DESCRIPTION}"
+                    )
                 },
                 "timeout_ms": {
                     "type": "integer",
@@ -1208,7 +1212,9 @@ pub fn crawl_policy_definition() -> ToolDefinition {
                     "format": "uri",
                     "minLength": 1,
                     "maxLength": 4096,
-                    "description": "Public HTTP(S) target whose origin-level /robots.txt policy should be evaluated."
+                    "description": format!(
+                        "Public HTTP(S) target whose origin-level /robots.txt policy should be evaluated. {MCP_ABSOLUTE_PAGE_URL_DESCRIPTION}"
+                    )
                 },
                 "product_token": {
                     "type": "string",
@@ -1262,7 +1268,13 @@ pub fn inspect_page_definition() -> ToolDefinition {
         input_schema: json!({
             "type": "object",
             "properties": {
-                "url": { "type": "string", "format": "uri", "minLength": 1, "maxLength": MAX_MCP_URL_BYTES },
+                "url": {
+                    "type": "string",
+                    "format": "uri",
+                    "minLength": 1,
+                    "maxLength": MAX_MCP_URL_BYTES,
+                    "description": MCP_ABSOLUTE_PAGE_URL_DESCRIPTION
+                },
                 "javascript": {
                     "type": "boolean",
                     "default": false,
@@ -3904,7 +3916,7 @@ pub fn screenshot_page_definition() -> ToolDefinition {
                     "format": "uri",
                     "minLength": 1,
                     "maxLength": MAX_MCP_URL_BYTES,
-                    "description": "URL to screenshot"
+                    "description": MCP_ABSOLUTE_PAGE_URL_DESCRIPTION
                 },
                 "width": {
                     "type": "integer",
@@ -4140,7 +4152,7 @@ pub fn open_page_definition() -> ToolDefinition {
                     "format": "uri",
                     "minLength": 1,
                     "maxLength": MAX_MCP_URL_BYTES,
-                    "description": "URL to open"
+                    "description": MCP_ABSOLUTE_PAGE_URL_DESCRIPTION
                 },
                 "trace": {
                     "type": "boolean",
@@ -6905,6 +6917,13 @@ mod tests {
             assert_eq!(
                 definition.input_schema["properties"]["url"]["format"], "uri",
                 "{} must advertise absolute URL validation",
+                definition.name
+            );
+            assert!(
+                definition.input_schema["properties"]["url"]["description"]
+                    .as_str()
+                    .is_some_and(|description| description.contains("without embedded credentials")),
+                "{} must warn against embedded URL credentials",
                 definition.name
             );
         }
