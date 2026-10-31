@@ -636,9 +636,10 @@ fn is_price_text(text: &str) -> bool {
 
     // Percentage discounts are price signals too, even when a storefront
     // shows only the reduction (for example, "Save 20%" or "-12,5 %").
+    // Include full-width and Arabic percent signs used by localized pages.
     static PERCENT_RE: OnceLock<regex::Regex> = OnceLock::new();
     let percent_re = PERCENT_RE.get_or_init(|| {
-        regex::Regex::new(r"(?:^|[^\w.,])[+-]?\d+(?:[.,]\d+)?\s*%(?:$|[^\w])").unwrap()
+        regex::Regex::new(r"(?:^|[^\w.,])[+-]?\d+(?:[.,]\d+)?\s*[%％٪](?:$|[^\w])").unwrap()
     });
     if percent_re.is_match(text) {
         return true;

@@ -903,6 +903,8 @@ fn test_price_detection_various_currencies() {
     assert!(is_price_text("Save 20%"));
     assert!(is_price_text("-12,5 %"));
     assert!(is_price_text("100.0% off"));
+    assert!(is_price_text("20％ off"));
+    assert!(is_price_text("خصم ١٠٪"));
     assert!(!is_price_text("Hello world"));
     assert!(!is_price_text("100 items"));
     assert!(!is_price_text("measurement 12.345"));
