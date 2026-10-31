@@ -485,6 +485,12 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
                     .and_then(serde_json::Value::as_str)
                     .is_some_and(matches)
             })
+            || attrs
+                .get("aria")
+                .and_then(serde_json::Value::as_object)
+                .and_then(|aria| aria.get("label"))
+                .and_then(serde_json::Value::as_str)
+                .is_some_and(matches)
     })
 }
 
@@ -1064,6 +1070,22 @@ mod tests {
         som.regions[1].elements[1].text = None;
         som.regions[1].elements[1].attrs = Some(serde_json::json!({
             "aria-label": "Search products"
+        }));
+
+        let filtered = apply_selector(&som, "label:products");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e3");
+    }
+
+    #[test]
+    fn test_selector_matches_compiled_aria_label_metadata() {
+        let mut som = make_test_som();
+        som.regions[1].elements[1].label = None;
+        som.regions[1].elements[1].text = None;
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({
+            "aria": {"label": "Search products"}
         }));
 
         let filtered = apply_selector(&som, "label:products");
