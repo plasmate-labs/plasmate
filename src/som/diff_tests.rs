@@ -292,6 +292,37 @@ fn test_price_change_detection() {
 }
 
 #[test]
+fn test_localized_rs_price_change_detection() {
+    let old = Som {
+        regions: vec![make_region(
+            "r1",
+            RegionRole::Main,
+            vec![make_element(
+                "e1",
+                ElementRole::Paragraph,
+                Some("Rs. 1,299"),
+            )],
+        )],
+        ..empty_som()
+    };
+
+    let new = Som {
+        regions: vec![make_region(
+            "r1",
+            RegionRole::Main,
+            vec![make_element(
+                "e1",
+                ElementRole::Paragraph,
+                Some("Rs. 1,499"),
+            )],
+        )],
+        ..empty_som()
+    };
+
+    assert!(diff_soms(&old, &new, false).summary.has_price_changes);
+}
+
+#[test]
 fn test_multiple_simultaneous_changes() {
     let old = Som {
         title: "Old Title".into(),
@@ -900,6 +931,15 @@ fn test_price_detection_various_currencies() {
     assert!(is_price_text("1 299,99 EUR"));
     assert!(is_price_text("1 299,99"));
     assert!(is_price_text("1'299.99"));
+    assert!(is_price_text("499 Kč"));
+    assert!(is_price_text("zł 1,299"));
+    assert!(is_price_text("199 kr"));
+    assert!(is_price_text("R$ 49,90"));
+    assert!(is_price_text("1.299 lei"));
+    assert!(is_price_text("руб 1 299"));
+    assert!(is_price_text("лв. 49"));
+    assert!(is_price_text("S/ 1,299"));
+    assert!(is_price_text("د.إ 1,299"));
     assert!(is_price_text("Save 20%"));
     assert!(is_price_text("-12,5 %"));
     assert!(is_price_text("100.0% off"));
