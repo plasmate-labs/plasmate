@@ -248,12 +248,14 @@ fn validate_mcp_url(url: &str) -> Result<(), String> {
     }
     let parsed = url::Url::parse(url)
         .map_err(|_| "Invalid arguments: url must be an absolute HTTP(S) URL".to_string())?;
-    if !matches!(parsed.scheme(), "http" | "https")
-        || parsed.host().is_none()
-        || !parsed.username().is_empty()
-        || parsed.password().is_some()
-    {
+    if !matches!(parsed.scheme(), "http" | "https") || parsed.host().is_none() {
         return Err("Invalid arguments: url must be an absolute HTTP(S) URL".to_string());
+    }
+    if !parsed.username().is_empty() || parsed.password().is_some() {
+        return Err(
+            "Invalid arguments: url must not include embedded credentials; use an absolute HTTP(S) URL without user info"
+                .to_string(),
+        );
     }
     Ok(())
 }
@@ -6947,7 +6949,6 @@ mod tests {
             "example.com",
             "file:///tmp/page.html",
             "mailto:test@example.com",
-            "https://user:secret@example.com/page",
         ] {
             assert_eq!(
                 validate_mcp_url(invalid_url),
@@ -6955,6 +6956,10 @@ mod tests {
                 "url: {invalid_url}"
             );
         }
+        assert_eq!(
+            validate_mcp_url("https://user:secret@example.com/page"),
+            Err("Invalid arguments: url must not include embedded credentials; use an absolute HTTP(S) URL without user info".to_string())
+        );
         assert!(validate_mcp_url(" https://example.com/page ").is_ok());
         assert_eq!(
             normalized_mcp_url(" \thttps://example.com/page\n ").unwrap(),
@@ -7028,7 +7033,7 @@ mod tests {
         assert_eq!(result["isError"], true);
         assert_eq!(
             result["content"][0]["text"],
-            "Invalid arguments: url must be an absolute HTTP(S) URL"
+            "Invalid arguments: url must not include embedded credentials; use an absolute HTTP(S) URL without user info"
         );
     }
 
