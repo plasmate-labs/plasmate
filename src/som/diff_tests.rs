@@ -900,6 +900,10 @@ fn test_price_detection_various_currencies() {
     assert!(is_price_text("1 299,99 EUR"));
     assert!(is_price_text("1 299,99"));
     assert!(is_price_text("1'299.99"));
+    assert!(is_price_text("499 Kč"));
+    assert!(is_price_text("zł 1,299"));
+    assert!(is_price_text("199 kr"));
+    assert!(is_price_text("R$ 49,90"));
     assert!(is_price_text("Save 20%"));
     assert!(is_price_text("-12,5 %"));
     assert!(is_price_text("100.0% off"));

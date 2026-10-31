@@ -634,6 +634,20 @@ fn is_price_text(text: &str) -> bool {
         return true;
     }
 
+    // Some locales render the currency as a word-like suffix or prefix
+    // rather than an ISO code or standalone symbol (for example, "499 Kč",
+    // "zł 1,299", "199 kr", or "R$ 49,90").
+    static LOCALIZED_PRICE_RE: OnceLock<regex::Regex> = OnceLock::new();
+    let localized_re = LOCALIZED_PRICE_RE.get_or_init(|| {
+        regex::Regex::new(
+            r"(?i)(?:^|[^\w])(?:Kč|zł|kr|R\$)\s*(?:\d{1,3}(?:[.,'\s]\d{3})+|\d+)(?:[.,]\d{2})?(?:$|[^\w])|(?:^|[^\w])(?:\d{1,3}(?:[.,'\s]\d{3})+|\d+)(?:[.,]\d{2})?\s*(?:Kč|zł|kr|R\$)(?:$|[^\w])",
+        )
+        .unwrap()
+    });
+    if localized_re.is_match(text) {
+        return true;
+    }
+
     // Percentage discounts are price signals too, even when a storefront
     // shows only the reduction (for example, "Save 20%" or "-12,5 %").
     // Include full-width and Arabic percent signs used by localized pages.
