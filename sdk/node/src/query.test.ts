@@ -745,6 +745,23 @@ describe('findByTag', () => {
     assert.deepEqual(findByTag(som, 'output').map((el) => el.id), ['progress', 'meter', 'other']);
   });
 
+  it('matches source-role aliases without depending on metadata casing', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [{
+        id: 'r_media',
+        role: 'main',
+        elements: [
+          { id: 'audio', role: 'group', actions: ['click'], attrs: { source_role: 'Audio' } },
+          { id: 'video', role: 'group', actions: ['click'], attrs: { source_role: 'VIDEO' } },
+        ],
+      }],
+    };
+    assert.deepEqual(findByTag(som, 'audio').map((el) => el.id), ['audio']);
+    assert.deepEqual(findByTag(som, 'media').map((el) => el.id), ['audio', 'video']);
+    assert.deepEqual(findActionTargetsByRole(som, 'video').map((item) => item.id), ['video']);
+  });
+
   it('accepts blockquote aliases for paragraph elements', () => {
     const som: Som = {
       ...fixture,
