@@ -174,6 +174,7 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "datetime_local": "text_input",
         "date_time_local": "text_input",
         "month": "text_input",
+        "time": "text_input",
         "week": "text_input",
         "color": "text_input",
         "range": "text_input",
@@ -243,6 +244,7 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "select": "select",
         "selects": "select",
         "switch": "checkbox",
+        "switches": "checkbox",
         "tab": "button",
         "ul": "list",
         "unordered_list": "list",
@@ -324,11 +326,16 @@ def _is_media_element(element: SomElement) -> bool:
 
 
 def _source_role_matches(element: SomElement, expected: str) -> bool:
-    return (
-        element.attrs is not None
-        and isinstance(element.attrs.source_role, str)
-        and element.attrs.source_role.lower() == expected
+    return element.attrs is not None and _source_role_value_matches(
+        element.attrs.source_role, expected
     )
+
+
+def _source_role_value_matches(value: object, expected: str) -> bool:
+    """Match source roles across case, spacing, and hyphenation variants."""
+    if not isinstance(value, str):
+        return False
+    return _normalize_role_alias(value).replace("_", "") == expected.replace("_", "")
 
 
 def find_interactive(som: Som) -> List[SomElement]:
@@ -757,8 +764,7 @@ def find_action_targets_by_role(
         return [
             item
             for item in plan
-            if isinstance(item.get("source_role"), str)
-            and item["source_role"].lower() == media_source_role
+            if _source_role_value_matches(item.get("source_role"), media_source_role)
         ]
     if normalized_alias in _MEDIA_GROUP_ALIASES:
         return [
@@ -766,21 +772,21 @@ def find_action_targets_by_role(
             for item in plan
             if item.get("role") == ElementRole.image.value
             or (
-                isinstance(item.get("source_role"), str)
-                and item["source_role"].lower() in {"audio", "video", "canvas"}
+                any(
+                    _source_role_value_matches(item.get("source_role"), source_role)
+                    for source_role in ("audio", "video", "canvas")
+                )
             )
         ]
     source_specific_group_role = _SOURCE_SPECIFIC_GROUP_ALIASES.get(normalized_alias)
     if source_specific_group_role is not None and any(
-        isinstance(item.get("source_role"), str)
-        and item["source_role"].lower() == source_specific_group_role
+        _source_role_value_matches(item.get("source_role"), source_specific_group_role)
         for item in plan
     ):
         return [
             item
             for item in plan
-            if isinstance(item.get("source_role"), str)
-            and item["source_role"].lower() == source_specific_group_role
+            if _source_role_value_matches(item.get("source_role"), source_specific_group_role)
         ]
     normalized_role = {
         "a": "link",
@@ -821,6 +827,7 @@ def find_action_targets_by_role(
         "datetime_local": "text_input",
         "date_time_local": "text_input",
         "month": "text_input",
+        "time": "text_input",
         "week": "text_input",
         "color": "text_input",
         "range": "text_input",
@@ -897,6 +904,7 @@ def find_action_targets_by_role(
         "detail": "details",
         "summaries": "details",
         "switch": "checkbox",
+        "switches": "checkbox",
         "tab": "button",
         "tabs": "button",
         "textarea": "textarea",
