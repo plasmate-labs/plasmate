@@ -765,7 +765,10 @@ def find_action_targets_by_role(
             item
             for item in plan
             if item.get("role") == ElementRole.image.value
-            or item.get("source_role") in {"audio", "video", "canvas"}
+            or (
+                isinstance(item.get("source_role"), str)
+                and item["source_role"].lower() in {"audio", "video", "canvas"}
+            )
         ]
     source_specific_group_role = _SOURCE_SPECIFIC_GROUP_ALIASES.get(normalized_alias)
     if source_specific_group_role is not None and any(

@@ -738,6 +738,20 @@ class TestFindActionTargetsByRole:
             "canvas",
         ]
 
+    def test_media_action_alias_normalizes_source_role_case(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(
+                id="audio-upper",
+                role=ElementRole.group,
+                actions=["click"],
+                attrs=ElementAttrs(source_role="Audio"),
+            )
+        )
+
+        assert [item["id"] for item in find_action_targets_by_role(sample_som, "media")] == [
+            "audio-upper",
+        ]
+
     def test_trims_role_aliases(self, sample_som: Som) -> None:
         assert [item["id"] for item in find_action_targets_by_role(sample_som, "  a  ")] == ["e1", "e2"]
 
