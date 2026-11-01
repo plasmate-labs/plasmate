@@ -411,6 +411,7 @@ const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   unordered_list: 'list',
   ordered_list: 'list',
   definition_list: 'list',
+  definition_lists: 'list',
   tables: 'table',
   data_table: 'table',
   data_tables: 'table',
