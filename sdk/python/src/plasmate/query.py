@@ -810,6 +810,7 @@ def find_action_targets_by_role(
         "combo_boxes": "select",
         "definition_list": "list",
         "div": "group",
+        "dl": "list",
         "fieldset": "group",
         "fieldsets": "group",
         "figure": "group",
