@@ -26,7 +26,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `content regions` (or `role=<region>` / `role:<region>`;
 ///   optional whitespace around the separator is accepted). The same `role=`
 ///   and `role:` forms also work for element roles.
-/// - Element roles: `link` / `links`, `button` / `buttons`, `text_input` /
+/// - Element roles: `link` / `links` / `anchor` / `anchors` / `hyperlink` /
+///   `hyperlinks`, `button` / `buttons`, `text_input` /
 ///   `text_inputs` / `text_box` / `text_boxes` / `text_field` /
 ///   `text_fields` / `textbox` / `searchbox` /
 ///   `slider` / `sliders` / `spinbutton` / `spinbuttons` / `spin button` /
@@ -54,7 +55,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `menuitemradio` / `menuitemradios`, `heading`, `image` / `images`, `list` / `lists`,
 ///   `table` / `tables` / `data_table` / `data_tables` / `data-table` / `data tables`,
 ///   `paragraph` / `blockquote` / `quote` / `alert` / `status` / `tooltip`, `section` / `sections`,
-///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
+///   plus common HTML tag aliases `a`/`anchor`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list` / `definition_lists`,
 ///   `group` / `groups` / `fieldset` / `fieldsets` / `figure` / `figures` /
@@ -606,7 +607,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         .replace(['-', ' '], "_")
         .as_str()
     {
-        "link" | "links" | "a" => Some(ElementRole::Link),
+        "link" | "links" | "a" | "anchor" | "anchors" | "hyperlink" | "hyperlinks" => {
+            Some(ElementRole::Link)
+        }
         // These ARIA widget roles compile to the SOM's button role, so expose
         // the same selector aliases instead of making callers know the
         // normalized representation.
@@ -1312,6 +1315,31 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1);
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Button);
+        }
+    }
+
+    #[test]
+    fn test_selector_accepts_anchor_aliases_for_links() {
+        let som = make_test_som();
+
+        for selector in [
+            "anchor",
+            "anchors",
+            "role=anchor",
+            "role:anchors",
+            "hyperlink",
+            "hyperlinks",
+            "role=hyperlink",
+            "role:hyperlinks",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Link);
         }
     }
 
