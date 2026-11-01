@@ -472,6 +472,8 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 	}{
 		{alias: "A", role: "link", want: 2},
 		{alias: "text-input", role: "text_input", want: 1},
+		{alias: "text field", role: "text_input", want: 1},
+		{alias: "text fields", role: "text_input", want: 1},
 		{alias: "  BUTTONS  ", role: "button", want: 2},
 		{alias: "menu item", role: "button", want: 2},
 		{alias: "role: text-input", role: "text_input", want: 1},
@@ -518,6 +520,7 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 	aliasSOM := &Som{Regions: []Region{{Elements: []Element{
 		{ID: "table", Role: "table"},
 		{ID: "group", Role: "group"},
+		{ID: "details", Role: "details"},
 		{ID: "iframe", Role: "iframe"},
 		{ID: "list", Role: "list"},
 		{ID: "button", Role: "button"},
@@ -540,6 +543,8 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 		{alias: "lists", id: "list"},
 		{alias: "radiogroup", id: "group"},
 		{alias: "radiogroups", id: "group"},
+		{alias: "detail", id: "details"},
+		{alias: "summaries", id: "details"},
 		{alias: "tables", id: "table"},
 		{alias: "tree items", id: "button"},
 	} {
@@ -550,8 +555,17 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 	}
 
 	definitionListSOM := &Som{Regions: []Region{{Elements: []Element{{ID: "definition-list", Role: "list"}}}}}
-	if got := FindByTag(definitionListSOM, "definition lists"); len(got) != 1 || got[0].ID != "definition-list" {
-		t.Errorf("FindByTag(definition lists) = %#v, want definition-list", got)
+	for _, alias := range []string{"dl", "definition lists"} {
+		if got := FindByTag(definitionListSOM, alias); len(got) != 1 || got[0].ID != "definition-list" {
+			t.Errorf("FindByTag(%q) = %#v, want definition-list", alias, got)
+		}
+	}
+
+	textAreaSOM := &Som{Regions: []Region{{Elements: []Element{{ID: "text-area", Role: "textarea"}}}}}
+	for _, alias := range []string{"text area", "text areas"} {
+		if got := FindByTag(textAreaSOM, alias); len(got) != 1 || got[0].ID != "text-area" {
+			t.Errorf("FindByTag(%q) = %#v, want text-area", alias, got)
+		}
 	}
 
 	progressSOM := &Som{Regions: []Region{{Elements: []Element{{ID: "progress", Role: "group"}}}}}
