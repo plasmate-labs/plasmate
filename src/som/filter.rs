@@ -56,7 +56,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `paragraph` / `blockquote` / `quote` / `alert` / `status` / `tooltip`, `section` / `sections`,
 ///   plus common HTML tag aliases `a`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
-///   `definition_list`,
+///   `definition_list` / `definition_lists`,
 ///   `group` / `groups` / `fieldset` / `fieldsets` / `figure` / `figures` /
 ///   `radiogroup` / `radiogroups` / `progress` / `progressbar` /
 ///   `progress_bar` / `progress-bar` / `progress bar` / `progressbars` /
@@ -715,7 +715,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "menu"
         | "unordered_list"
         | "ordered_list"
-        | "definition_list" => Some(ElementRole::List),
+        | "definition_list"
+        | "definition_lists" => Some(ElementRole::List),
         "table"
         | "tables"
         | "data_table"
@@ -1930,6 +1931,7 @@ mod tests {
             ("unordered_list", ElementRole::List),
             ("ordered_list", ElementRole::List),
             ("definition_list", ElementRole::List),
+            ("definition_lists", ElementRole::List),
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");

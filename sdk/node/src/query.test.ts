@@ -522,6 +522,26 @@ describe('findByTag', () => {
     assert.equal(paragraphs.length, 3);
   });
 
+  it('accepts plural definition-list aliases for element and action queries', () => {
+    const som: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [...region.elements, { id: 'definition-list', role: 'list', actions: ['click'] }],
+            }
+          : region,
+      ),
+    };
+
+    assert.deepEqual(findByTag(som, 'definition_lists').map((item) => item.id), ['definition-list']);
+    assert.deepEqual(
+      findActionTargetsByRole(som, 'definition_lists').map((item) => item.id),
+      ['definition-list'],
+    );
+  });
+
   it('accepts case-insensitive selector aliases', () => {
     assert.deepEqual(findByTag(fixture, 'BUTTONS').map((el) => el.id), ['e4']);
     assert.deepEqual(findByTag(fixture, 'role: text-input').map((el) => el.id), ['e5']);
