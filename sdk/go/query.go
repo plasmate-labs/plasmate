@@ -227,6 +227,7 @@ func normalizeElementRoleAlias(role string) string {
 		"anchors":            "link",
 		"alert":              "paragraph",
 		"article":            "section",
+		"articles":           "section",
 		"button":             "button",
 		"buttons":            "button",
 		"checkboxes":         "checkbox",
