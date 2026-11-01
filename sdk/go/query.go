@@ -296,6 +296,7 @@ func normalizeElementRoleAlias(role string) string {
 		"quotes":             "paragraph",
 		"paragraphs":         "paragraph",
 		"progress":           "group",
+		"progress_bar":       "group",
 		"progressbar":        "group",
 		"progressbars":       "group",
 		"meter":              "group",

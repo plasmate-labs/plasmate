@@ -576,7 +576,7 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 	}
 
 	progressSOM := &Som{Regions: []Region{{Elements: []Element{{ID: "progress", Role: "group"}}}}}
-	for _, alias := range []string{"progress", "progressbar", "progressbars"} {
+	for _, alias := range []string{"progress", "progressbar", "progressbars", "progress_bar", "progress-bar", "progress bar"} {
 		got := FindByTag(progressSOM, alias)
 		if len(got) != 1 || got[0].ID != "progress" {
 			t.Errorf("FindByTag(%q) = %#v, want progress", alias, got)
