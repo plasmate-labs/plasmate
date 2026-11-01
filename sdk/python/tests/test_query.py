@@ -354,6 +354,27 @@ class TestFindByTag:
         assert [el.id for el in find_by_tag(sample_som, "article")] == ["e7", "e12"]
         assert [el.id for el in find_by_tag(sample_som, "div")] == ["e13"]
 
+    def test_accepts_plural_structural_aliases(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.extend(
+            [
+                SomElement(id="paragraph", role=ElementRole.paragraph, actions=["click"]),
+                SomElement(id="section", role=ElementRole.section, actions=["click"]),
+                SomElement(id="group", role=ElementRole.group, actions=["click"]),
+                SomElement(id="separator", role=ElementRole.separator, actions=["click"]),
+            ]
+        )
+
+        for alias, expected in (
+            ("paragraphs", "paragraph"),
+            ("sections", "section"),
+            ("groups", "group"),
+            ("separators", "separator"),
+        ):
+            assert expected in [el.id for el in find_by_tag(sample_som, alias)], alias
+            assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
+                expected
+            ], alias
+
     def test_accepts_group_backed_structural_tag_aliases(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.append(SomElement(id="group", role=ElementRole.group))
         for alias in (
