@@ -321,8 +321,14 @@ class TestFindByLabel:
 
 class TestFindByTag:
     def test_finds_all_links(self, sample_som: Som) -> None:
-        links = find_by_tag(sample_som, "link")
-        assert len(links) == 2
+        for alias in ("link", "anchor", "anchors", "hyperlink", "hyperlinks"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == ["e1", "e2"]
+
+    def test_action_role_accepts_link_aliases(self, sample_som: Som) -> None:
+        for alias in ("anchor", "anchors", "hyperlink", "hyperlinks"):
+            assert [
+                item["id"] for item in find_action_targets_by_role(sample_som, alias)
+            ] == ["e1", "e2"]
 
     def test_accepts_common_html_tag_aliases(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.append(
