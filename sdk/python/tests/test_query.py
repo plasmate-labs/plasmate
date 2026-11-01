@@ -326,12 +326,23 @@ class TestFindByTag:
 
     def test_accepts_common_html_tag_aliases(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.append(
-            SomElement(id="e11", role=ElementRole.list)
+            SomElement(id="e11", role=ElementRole.list, actions=["click"])
         )
         assert [el.id for el in find_by_tag(sample_som, "a")] == ["e1", "e2"]
         assert [el.id for el in find_by_tag(sample_som, "p")] == ["e4", "e8", "e10"]
-        for alias in ("menu", "definition-list", "unordered-list", "ordered_list"):
+        for alias in (
+            "menu",
+            "dl",
+            "definition-list",
+            "definition_lists",
+            "unordered-list",
+            "ordered_list",
+        ):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["e11"]
+        for alias in ("dl", "definition_lists"):
+            assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
+                "e11"
+            ]
 
     def test_accepts_structural_html_tag_aliases(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.extend(
@@ -584,13 +595,18 @@ class TestFindByTag:
             ("buttons", ["e5"]),
             ("links", ["e1", "e2"]),
             ("selects", ["e11"]),
+            ("combobox", ["e11"]),
             ("comboboxes", ["e11"]),
+            ("combo_box", ["e11"]),
             ("combo boxes", ["e11"]),
             ("combo-boxes", ["e11"]),
+            ("listbox", ["e11"]),
             ("listboxes", ["e11"]),
             ("list_box", ["e11"]),
             ("list boxes", ["e11"]),
             ("textareas", ["e12"]),
+            ("text_area", ["e12"]),
+            ("text areas", ["e12"]),
             ("slider", ["e9"]),
             ("spin buttons", ["e9"]),
             ("checkboxes", ["e13"]),
@@ -699,10 +715,14 @@ class TestFindActionTargetsByRole:
             ("comboboxes", ["e11"]),
             ("combo boxes", ["e11"]),
             ("combo-boxes", ["e11"]),
+            ("combobox", ["e11"]),
             ("listboxes", ["e11"]),
+            ("listbox", ["e11"]),
             ("list_box", ["e11"]),
             ("list boxes", ["e11"]),
             ("textareas", ["e12"]),
+            ("text_area", ["e12"]),
+            ("text areas", ["e12"]),
             ("checkboxes", ["e13"]),
             ("radios", ["e14"]),
         ):
