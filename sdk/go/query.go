@@ -353,6 +353,8 @@ func normalizeElementRoleAlias(role string) string {
 		"textarea":           "textarea",
 		"textareas":          "textarea",
 		"textboxes":          "text_input",
+		"text_field":         "text_input",
+		"text_fields":        "text_input",
 		"text_inputs":        "text_input",
 		"textbox":            "text_input",
 		"tree_item":          "button",
