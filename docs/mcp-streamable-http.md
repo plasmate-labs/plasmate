@@ -58,7 +58,7 @@ Plasmate returns HTTP 405 because it does not emit server-initiated requests or
 notifications. POST responses use `application/json`; accepted notification
 POSTs return HTTP 202 with no body.
 
-## MCP 2026-07-28 release candidate
+## MCP 2026-07-28 transport (initially implemented against the release candidate)
 
 The modern path is stateless: it ignores legacy `Mcp-Session-Id` headers and
 does not implement initialize, GET, or DELETE semantics. Every POST must include:
@@ -81,8 +81,11 @@ annotations because no Plasmate tool schema declares such annotations.
 ## Specification status
 
 This implementation was checked on 2026-07-19 against the official MCP
-`2025-11-25` Streamable HTTP specification, the official draft Streamable HTTP
-and versioning pages for `2026-07-28`, and the official release-candidate
-announcement. The modern revision is still a locked release candidate; rerun
-the transport conformance tests and review header, error, and discovery schemas
-against the final specification when it publishes on 2026-07-28.
+`2025-11-25` Streamable HTTP specification, the draft Streamable HTTP and
+versioning pages for `2026-07-28`, and the release-candidate announcement.
+The `2026-07-28` revision has since been published as the [dated MCP
+specification](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http).
+That publication does not by itself establish that Plasmate has passed a new
+conformance run. Re-run transport tests and review headers, error handling,
+and discovery behavior against the published revision before claiming full
+`2026-07-28` conformance.
