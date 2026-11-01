@@ -175,11 +175,21 @@ func FindByTag(som *Som, tag string) []Element {
 		}
 		return result
 	}
-	if sourceRole, ok := sourceSpecificGroupRole(query); ok && somContainsSourceRole(som, sourceRole) {
+	if sourceRole, ok := sourceSpecificGroupRole(query); ok {
+		hasSourceMetadata := somContainsSourceRole(som, sourceRole)
+		var legacyGroups []Element
 		for _, element := range FlatElements(som) {
-			if element.Attrs != nil && element.Attrs.SourceRole != nil && *element.Attrs.SourceRole == sourceRole {
+			matchesSourceRole := element.Attrs != nil && element.Attrs.SourceRole != nil && *element.Attrs.SourceRole == sourceRole
+			matchesCanonicalRole := element.Attrs == nil && element.Role == sourceRole
+			matchesLegacyGroup := !hasSourceMetadata && element.Attrs == nil && element.Role == "group"
+			if matchesSourceRole || matchesCanonicalRole {
 				result = append(result, element)
+			} else if matchesLegacyGroup {
+				legacyGroups = append(legacyGroups, element)
 			}
+		}
+		if len(result) == 0 {
+			result = legacyGroups
 		}
 		return result
 	}

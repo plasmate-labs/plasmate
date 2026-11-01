@@ -703,6 +703,21 @@ func TestFindByTagFiltersSourceSpecificGroups(t *testing.T) {
 	}
 }
 
+func TestFindByTagMatchesCanonicalSourceRolesWithoutMetadata(t *testing.T) {
+	som := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "progress", Role: "progressbar"},
+		{ID: "meter", Role: "meter"},
+		{ID: "plain-group", Role: "group"},
+	}}}}
+
+	if got := FindByTag(som, "progress"); len(got) != 1 || got[0].ID != "progress" {
+		t.Fatalf("FindByTag(progress) = %#v, want canonical progressbar", got)
+	}
+	if got := FindByTag(som, "meter"); len(got) != 1 || got[0].ID != "meter" {
+		t.Fatalf("FindByTag(meter) = %#v, want canonical meter", got)
+	}
+}
+
 func TestFindActionTargetsByRoleAcceptsMediaAliases(t *testing.T) {
 	audio, video, canvas := "audio", "video", "canvas"
 	som := &Som{Regions: []Region{{Elements: []Element{
