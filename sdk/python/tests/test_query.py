@@ -330,11 +330,19 @@ class TestFindByTag:
         )
         assert [el.id for el in find_by_tag(sample_som, "a")] == ["e1", "e2"]
         assert [el.id for el in find_by_tag(sample_som, "p")] == ["e4", "e8", "e10"]
-        for alias in ("menu", "dl", "definition-list", "unordered-list", "ordered_list"):
+        for alias in (
+            "menu",
+            "dl",
+            "definition-list",
+            "definition_lists",
+            "unordered-list",
+            "ordered_list",
+        ):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["e11"]
-        assert [item["id"] for item in find_action_targets_by_role(sample_som, "dl")] == [
-            "e11"
-        ]
+        for alias in ("dl", "definition_lists"):
+            assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
+                "e11"
+            ]
 
     def test_accepts_structural_html_tag_aliases(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.extend(
