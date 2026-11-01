@@ -343,6 +343,8 @@ func normalizeElementRoleAlias(role string) string {
 		"spinbutton":         "text_input",
 		"spinbuttons":        "text_input",
 		"summary":            "details",
+		"detail":             "details",
+		"summaries":          "details",
 		"switch":             "checkbox",
 		"switches":           "checkbox",
 		"tab":                "button",

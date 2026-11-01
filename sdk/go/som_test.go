@@ -520,6 +520,7 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 	aliasSOM := &Som{Regions: []Region{{Elements: []Element{
 		{ID: "table", Role: "table"},
 		{ID: "group", Role: "group"},
+		{ID: "details", Role: "details"},
 		{ID: "iframe", Role: "iframe"},
 		{ID: "list", Role: "list"},
 		{ID: "button", Role: "button"},
@@ -542,6 +543,8 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 		{alias: "lists", id: "list"},
 		{alias: "radiogroup", id: "group"},
 		{alias: "radiogroups", id: "group"},
+		{alias: "detail", id: "details"},
+		{alias: "summaries", id: "details"},
 		{alias: "tables", id: "table"},
 		{alias: "tree items", id: "button"},
 	} {
