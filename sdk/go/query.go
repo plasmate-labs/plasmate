@@ -157,6 +157,7 @@ func FindByTag(som *Som, tag string) []Element {
 		return nil
 	}
 	var result []Element
+	query := normalizeRoleQuery(tag)
 	tag = normalizeElementRoleAlias(tag)
 	if sourceRole, ok := mediaTagAliases[tag]; ok {
 		for _, element := range FlatElements(som) {
@@ -169,6 +170,14 @@ func FindByTag(som *Som, tag string) []Element {
 	if mediaGroupAliases[tag] {
 		for _, element := range FlatElements(som) {
 			if element.Role == "image" || (element.Attrs != nil && element.Attrs.SourceRole != nil && mediaSourceRoles[*element.Attrs.SourceRole]) {
+				result = append(result, element)
+			}
+		}
+		return result
+	}
+	if sourceRole, ok := sourceSpecificGroupRole(query); ok && somContainsSourceRole(som, sourceRole) {
+		for _, element := range FlatElements(som) {
+			if element.Attrs != nil && element.Attrs.SourceRole != nil && *element.Attrs.SourceRole == sourceRole {
 				result = append(result, element)
 			}
 		}
@@ -213,6 +222,26 @@ var mediaSourceRoles = map[string]bool{
 	"audio":  true,
 	"video":  true,
 	"canvas": true,
+}
+
+func sourceSpecificGroupRole(tag string) (string, bool) {
+	switch tag {
+	case "progress", "progressbar", "progress_bar", "progressbars":
+		return "progressbar", true
+	case "meter", "meters":
+		return "meter", true
+	default:
+		return "", false
+	}
+}
+
+func somContainsSourceRole(som *Som, sourceRole string) bool {
+	for _, element := range FlatElements(som) {
+		if element.Attrs != nil && element.Attrs.SourceRole != nil && *element.Attrs.SourceRole == sourceRole {
+			return true
+		}
+	}
+	return false
 }
 
 // normalizeElementRoleAlias keeps Go SDK role lookups aligned with the

@@ -680,6 +680,29 @@ func TestFindByTagAcceptsMediaAliases(t *testing.T) {
 	}
 }
 
+func TestFindByTagFiltersSourceSpecificGroups(t *testing.T) {
+	progress, meter := "progressbar", "meter"
+	som := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "progress", Role: "group", Attrs: &ElementAttrs{SourceRole: &progress}},
+		{ID: "meter", Role: "group", Attrs: &ElementAttrs{SourceRole: &meter}},
+		{ID: "plain-group", Role: "group"},
+	}}}}
+
+	for _, test := range []struct {
+		alias string
+		want  string
+	}{
+		{alias: "progress", want: "progress"},
+		{alias: "progress-bar", want: "progress"},
+		{alias: "meters", want: "meter"},
+	} {
+		got := FindByTag(som, test.alias)
+		if len(got) != 1 || got[0].ID != test.want {
+			t.Errorf("FindByTag(%q) = %#v, want %s", test.alias, got, test.want)
+		}
+	}
+}
+
 func TestFindActionTargetsByRoleAcceptsMediaAliases(t *testing.T) {
 	audio, video, canvas := "audio", "video", "canvas"
 	som := &Som{Regions: []Region{{Elements: []Element{
