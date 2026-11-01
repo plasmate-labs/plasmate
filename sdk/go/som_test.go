@@ -471,6 +471,10 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 		want  int
 	}{
 		{alias: "A", role: "link", want: 2},
+		{alias: "anchor", role: "link", want: 2},
+		{alias: "anchors", role: "link", want: 2},
+		{alias: "hyperlink", role: "link", want: 2},
+		{alias: "hyperlinks", role: "link", want: 2},
 		{alias: "text-input", role: "text_input", want: 1},
 		{alias: "text field", role: "text_input", want: 1},
 		{alias: "text fields", role: "text_input", want: 1},

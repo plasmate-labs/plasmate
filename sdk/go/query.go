@@ -223,6 +223,8 @@ func normalizeElementRoleAlias(role string) string {
 	// Go SDK queries aligned with the shared selector vocabulary.
 	aliases := map[string]string{
 		"a":                  "link",
+		"anchor":             "link",
+		"anchors":            "link",
 		"alert":              "paragraph",
 		"article":            "section",
 		"button":             "button",
@@ -273,6 +275,8 @@ func normalizeElementRoleAlias(role string) string {
 		"hidden":             "text_input",
 		"file":               "text_input",
 		"links":              "link",
+		"hyperlink":          "link",
+		"hyperlinks":         "link",
 		"list_box":           "select",
 		"list_boxes":         "select",
 		"listbox":            "select",
