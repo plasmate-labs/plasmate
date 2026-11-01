@@ -558,6 +558,13 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 		}
 	}
 
+	textAreaSOM := &Som{Regions: []Region{{Elements: []Element{{ID: "text-area", Role: "textarea"}}}}}
+	for _, alias := range []string{"text area", "text areas"} {
+		if got := FindByTag(textAreaSOM, alias); len(got) != 1 || got[0].ID != "text-area" {
+			t.Errorf("FindByTag(%q) = %#v, want text-area", alias, got)
+		}
+	}
+
 	progressSOM := &Som{Regions: []Region{{Elements: []Element{{ID: "progress", Role: "group"}}}}}
 	for _, alias := range []string{"progress", "progressbar", "progressbars"} {
 		got := FindByTag(progressSOM, alias)
