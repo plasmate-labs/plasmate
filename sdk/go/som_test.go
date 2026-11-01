@@ -471,6 +471,10 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 		want  int
 	}{
 		{alias: "A", role: "link", want: 2},
+		{alias: "anchor", role: "link", want: 2},
+		{alias: "anchors", role: "link", want: 2},
+		{alias: "hyperlink", role: "link", want: 2},
+		{alias: "hyperlinks", role: "link", want: 2},
 		{alias: "text-input", role: "text_input", want: 1},
 		{alias: "text field", role: "text_input", want: 1},
 		{alias: "text fields", role: "text_input", want: 1},
@@ -505,6 +509,7 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 		{alias: "spin buttons", role: "text_input", want: 1},
 		{alias: "range", role: "text_input", want: 1},
 		{alias: "sections", role: "section", want: 1},
+		{alias: "articles", role: "section", want: 1},
 	} {
 		got := FindByTag(som, test.alias)
 		if len(got) != test.want {
@@ -672,6 +677,44 @@ func TestFindByTagAcceptsMediaAliases(t *testing.T) {
 				t.Errorf("FindByTag(%q)[%d] = %q, want %q", test.alias, i, element.ID, test.want[i])
 			}
 		}
+	}
+}
+
+func TestFindByTagFiltersSourceSpecificGroups(t *testing.T) {
+	progress, meter := "progressbar", "meter"
+	som := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "progress", Role: "group", Attrs: &ElementAttrs{SourceRole: &progress}},
+		{ID: "meter", Role: "group", Attrs: &ElementAttrs{SourceRole: &meter}},
+		{ID: "plain-group", Role: "group"},
+	}}}}
+
+	for _, test := range []struct {
+		alias string
+		want  string
+	}{
+		{alias: "progress", want: "progress"},
+		{alias: "progress-bar", want: "progress"},
+		{alias: "meters", want: "meter"},
+	} {
+		got := FindByTag(som, test.alias)
+		if len(got) != 1 || got[0].ID != test.want {
+			t.Errorf("FindByTag(%q) = %#v, want %s", test.alias, got, test.want)
+		}
+	}
+}
+
+func TestFindByTagMatchesCanonicalSourceRolesWithoutMetadata(t *testing.T) {
+	som := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "progress", Role: "progressbar"},
+		{ID: "meter", Role: "meter"},
+		{ID: "plain-group", Role: "group"},
+	}}}}
+
+	if got := FindByTag(som, "progress"); len(got) != 1 || got[0].ID != "progress" {
+		t.Fatalf("FindByTag(progress) = %#v, want canonical progressbar", got)
+	}
+	if got := FindByTag(som, "meter"); len(got) != 1 || got[0].ID != "meter" {
+		t.Fatalf("FindByTag(meter) = %#v, want canonical meter", got)
 	}
 }
 

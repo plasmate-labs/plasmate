@@ -157,6 +157,7 @@ func FindByTag(som *Som, tag string) []Element {
 		return nil
 	}
 	var result []Element
+	query := normalizeRoleQuery(tag)
 	tag = normalizeElementRoleAlias(tag)
 	if sourceRole, ok := mediaTagAliases[tag]; ok {
 		for _, element := range FlatElements(som) {
@@ -171,6 +172,24 @@ func FindByTag(som *Som, tag string) []Element {
 			if element.Role == "image" || (element.Attrs != nil && element.Attrs.SourceRole != nil && mediaSourceRoles[*element.Attrs.SourceRole]) {
 				result = append(result, element)
 			}
+		}
+		return result
+	}
+	if sourceRole, ok := sourceSpecificGroupRole(query); ok {
+		hasSourceMetadata := somContainsSourceRole(som, sourceRole)
+		var legacyGroups []Element
+		for _, element := range FlatElements(som) {
+			matchesSourceRole := element.Attrs != nil && element.Attrs.SourceRole != nil && *element.Attrs.SourceRole == sourceRole
+			matchesCanonicalRole := element.Attrs == nil && element.Role == sourceRole
+			matchesLegacyGroup := !hasSourceMetadata && element.Attrs == nil && element.Role == "group"
+			if matchesSourceRole || matchesCanonicalRole {
+				result = append(result, element)
+			} else if matchesLegacyGroup {
+				legacyGroups = append(legacyGroups, element)
+			}
+		}
+		if len(result) == 0 {
+			result = legacyGroups
 		}
 		return result
 	}
@@ -215,6 +234,26 @@ var mediaSourceRoles = map[string]bool{
 	"canvas": true,
 }
 
+func sourceSpecificGroupRole(tag string) (string, bool) {
+	switch tag {
+	case "progress", "progressbar", "progress_bar", "progressbars":
+		return "progressbar", true
+	case "meter", "meters":
+		return "meter", true
+	default:
+		return "", false
+	}
+}
+
+func somContainsSourceRole(som *Som, sourceRole string) bool {
+	for _, element := range FlatElements(som) {
+		if element.Attrs != nil && element.Attrs.SourceRole != nil && *element.Attrs.SourceRole == sourceRole {
+			return true
+		}
+	}
+	return false
+}
+
 // normalizeElementRoleAlias keeps Go SDK role lookups aligned with the
 // common HTML/ARIA aliases accepted by the native selector surface.
 func normalizeElementRoleAlias(role string) string {
@@ -223,8 +262,11 @@ func normalizeElementRoleAlias(role string) string {
 	// Go SDK queries aligned with the shared selector vocabulary.
 	aliases := map[string]string{
 		"a":                  "link",
+		"anchor":             "link",
+		"anchors":            "link",
 		"alert":              "paragraph",
 		"article":            "section",
+		"articles":           "section",
 		"button":             "button",
 		"buttons":            "button",
 		"checkboxes":         "checkbox",
@@ -273,6 +315,8 @@ func normalizeElementRoleAlias(role string) string {
 		"hidden":             "text_input",
 		"file":               "text_input",
 		"links":              "link",
+		"hyperlink":          "link",
+		"hyperlinks":         "link",
 		"list_box":           "select",
 		"list_boxes":         "select",
 		"listbox":            "select",
