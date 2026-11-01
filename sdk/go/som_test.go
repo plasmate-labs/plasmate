@@ -568,8 +568,22 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 		}
 	}
 
+	textBoxSOM := &Som{Regions: []Region{{Elements: []Element{{ID: "text-box", Role: "text_input"}}}}}
+	for _, alias := range []string{"text box", "text boxes"} {
+		if got := FindByTag(textBoxSOM, alias); len(got) != 1 || got[0].ID != "text-box" {
+			t.Errorf("FindByTag(%q) = %#v, want text-box", alias, got)
+		}
+	}
+
+	separatorSOM := &Som{Regions: []Region{{Elements: []Element{{ID: "separator", Role: "separator"}}}}}
+	for _, alias := range []string{"separator", "separators"} {
+		if got := FindByTag(separatorSOM, alias); len(got) != 1 || got[0].ID != "separator" {
+			t.Errorf("FindByTag(%q) = %#v, want separator", alias, got)
+		}
+	}
+
 	progressSOM := &Som{Regions: []Region{{Elements: []Element{{ID: "progress", Role: "group"}}}}}
-	for _, alias := range []string{"progress", "progressbar", "progressbars"} {
+	for _, alias := range []string{"progress", "progressbar", "progressbars", "progress_bar", "progress-bar", "progress bar"} {
 		got := FindByTag(progressSOM, alias)
 		if len(got) != 1 || got[0].ID != "progress" {
 			t.Errorf("FindByTag(%q) = %#v, want progress", alias, got)
