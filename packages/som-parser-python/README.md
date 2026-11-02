@@ -120,7 +120,7 @@ print(som.model_dump_json(indent=2))
 | `get_action_plan_cache_key(item) -> str` | Return a deterministic key for caching or comparing an action target |
 | `find_action_target(som, value, by="auto", enabled_only=False) -> dict \| None` | Resolve a replay id by SOM id, cache key, HTML id, test id, explicit label, or auto lookup |
 | `find_action_targets_by_label(som, label, exact=False, enabled_only=False) -> list[dict]` | Search compact action targets by accessible label |
-| `find_action_targets_by_role(som, role, enabled_only=False) -> list[dict]` | Find compact action targets by exact SOM role |
+| `find_action_targets_by_role(som, role, enabled_only=False) -> list[dict]` | Find compact action targets by SOM role or heading-level alias such as `h2`/`heading-2` |
 | `find_action_targets_by_action(som, action, enabled_only=False) -> list[dict]` | Find compact action targets that expose an action |
 | `get_interactive_elements(som) -> list[SomElement]` | Get elements that have actions |
 | `get_links(som) -> list[dict]` | Extract all links as `{text, href, id}` dicts |

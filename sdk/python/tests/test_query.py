@@ -655,6 +655,23 @@ class TestFindByTag:
         assert [el.id for el in find_by_tag(sample_som, "heading-1")] == ["e3"]
         assert find_by_tag(sample_som, "h2") == []
 
+    def test_accepts_heading_level_aliases_for_action_targets(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(
+                id="action-heading",
+                role=ElementRole.heading,
+                text="Expandable section",
+                actions=["click"],
+                attrs=ElementAttrs(level=2),
+            )
+        )
+
+        for alias in ("h2", "heading2", "h-2", "heading-2", "h 2", "heading 2"):
+            targets = find_action_targets_by_role(sample_som, alias)
+            assert [target["id"] for target in targets] == ["action-heading"], alias
+            assert targets[0]["level"] == "2"
+        assert find_action_targets_by_role(sample_som, "heading7") == []
+
     def test_finds_paragraphs_including_nested(self, sample_som: Som) -> None:
         paras = find_by_tag(sample_som, "paragraph")
         assert len(paras) == 3  # e4, e8, e10
@@ -1138,6 +1155,7 @@ class TestGetActionPlan:
         assert find_action_targets_by_label(som, "") == []
         assert find_action_targets_by_label(som, " \n\t ", exact=True) == []
         assert find_action_targets_by_role(som, "button") == [expected[2], expected[3]]
+        assert find_action_targets_by_role(som, ElementRole.button) == [expected[2], expected[3]]
         assert [target["id"] for target in find_action_targets_by_role(som, " A ")] == [
             "e_billing",
         ]
