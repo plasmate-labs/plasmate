@@ -1391,6 +1391,11 @@ class TestFindByText:
                                 }
                             ),
                         ),
+                        SomElement(
+                            id="e_menu",
+                            role=ElementRole.button,
+                            attrs=ElementAttrs(aria={"label": "Close menu"}),
+                        ),
                     ],
                 )
             ],
@@ -1412,6 +1417,9 @@ class TestFindByText:
         ]
         assert [element.id for element in find_by_text(som, "progress indicator")] == [
             "e_progress"
+        ]
+        assert [element.id for element in find_by_text(som, "close menu")] == [
+            "e_menu"
         ]
 
     def test_no_match_returns_empty(self, sample_som: Som) -> None:
