@@ -516,6 +516,40 @@ describe('findByLabel', () => {
   });
 });
 
+describe('findActionTargetsByRole heading aliases', () => {
+  it('accepts heading level aliases', () => {
+    const som: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'header'
+          ? {
+              ...region,
+              elements: [
+                ...region.elements,
+                {
+                  id: 'action-heading',
+                  role: 'heading',
+                  text: 'Expandable section',
+                  actions: ['click'],
+                  attrs: { level: 2 },
+                },
+              ],
+            }
+          : region,
+      ),
+    };
+
+    for (const alias of ['h2', 'heading2', 'h-2', 'heading-2']) {
+      assert.deepEqual(
+        findActionTargetsByRole(som, alias).map((item) => item.id),
+        ['action-heading'],
+        alias,
+      );
+    }
+    assert.deepEqual(findActionTargetsByRole(som, 'heading7'), []);
+  });
+});
+
 describe('findByTag', () => {
   it('accepts heading level aliases', () => {
     const som: Som = {

@@ -686,6 +686,7 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.aria?.multiselectable !== undefined) item.multiselectable = el.attrs.aria.multiselectable;
     if (el.attrs?.aria?.orientation !== undefined) item.orientation = el.attrs.aria.orientation;
     if (el.attrs?.aria?.sort !== undefined) item.sort = el.attrs.aria.sort;
+    if (el.attrs?.level !== undefined) item.level = String(el.attrs.level);
     if (el.attrs?.aria?.level !== undefined) item.level = el.attrs.aria.level;
     if (el.attrs?.aria?.posinset !== undefined) item.posinset = el.attrs.aria.posinset;
     if (el.attrs?.aria?.setsize !== undefined) item.setsize = el.attrs.aria.setsize;
@@ -838,6 +839,10 @@ export function findActionTargetsByRole(
   const normalizedRole = stripRolePrefix(role).replace(/[\s-]+/g, '_');
   const mediaSourceRole = MEDIA_TAG_ALIASES[normalizedRole];
   const plan = options?.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
+  const headingLevel = parseHeadingLevelSelector(role);
+  if (headingLevel !== undefined) {
+    return plan.filter((item) => item.role === 'heading' && item.level === String(headingLevel));
+  }
   if (mediaSourceRole) {
     return plan.filter((item) => sourceRoleMatches(item.source_role, mediaSourceRole));
   }
