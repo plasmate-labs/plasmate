@@ -765,7 +765,7 @@ def find_action_targets_by_label(
 
 def find_action_targets_by_role(
     som: Som,
-    role: str,
+    role: Union[ElementRole, str],
     *,
     enabled_only: bool = False,
 ) -> List[Dict[str, object]]:
@@ -774,7 +774,8 @@ def find_action_targets_by_role(
     Accept the same common HTML/ARIA role aliases as ``find_by_tag`` so callers
     can use ``a``/``button``/``input`` and related spellings consistently.
     """
-    normalized_alias = _normalize_role_alias(role)
+    role_value = role.value if isinstance(role, ElementRole) else role
+    normalized_alias = _normalize_role_alias(role_value)
     media_source_role = _MEDIA_TAG_ALIASES.get(normalized_alias)
     plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
     heading_level = _parse_heading_level_selector(normalized_alias)

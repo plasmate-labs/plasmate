@@ -1155,6 +1155,7 @@ class TestGetActionPlan:
         assert find_action_targets_by_label(som, "") == []
         assert find_action_targets_by_label(som, " \n\t ", exact=True) == []
         assert find_action_targets_by_role(som, "button") == [expected[2], expected[3]]
+        assert find_action_targets_by_role(som, ElementRole.button) == [expected[2], expected[3]]
         assert [target["id"] for target in find_action_targets_by_role(som, " A ")] == [
             "e_billing",
         ]
