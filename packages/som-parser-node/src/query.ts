@@ -598,9 +598,34 @@ export function findActionTargetsByRole(
 }
 
 function parseHeadingLevelSelector(selector: string): number | undefined {
-  const normalized = selector.trim().toLowerCase();
-  const match = /^(?:h|heading)(?:\s+|-)?([1-6])$/.exec(normalized);
+  const normalized = normalizeRoleQuery(selector);
+  const match = /^(?:h|heading)_?([1-6])$/.exec(normalized);
   return match ? Number(match[1]) : undefined;
+}
+
+function normalizeRoleQuery(value: string): string {
+  let normalized = value.trim().toLowerCase();
+  if (
+    normalized.length >= 2 &&
+    ((normalized.startsWith('"') && normalized.endsWith('"')) ||
+      (normalized.startsWith("'") && normalized.endsWith("'")))
+  ) {
+    normalized = normalized.slice(1, -1).trim();
+  }
+  if (normalized.startsWith('role')) {
+    const rest = normalized.slice('role'.length).trim();
+    if (rest.startsWith(':') || rest.startsWith('=')) {
+      normalized = rest.slice(1).trim();
+      if (
+        normalized.length >= 2 &&
+        ((normalized.startsWith('"') && normalized.endsWith('"')) ||
+          (normalized.startsWith("'") && normalized.endsWith("'")))
+      ) {
+        normalized = normalized.slice(1, -1).trim();
+      }
+    }
+  }
+  return normalized.replace(/-/g, ' ').split(/\s+/).filter(Boolean).join('_');
 }
 
 /** Find compact action targets that expose the requested action. */

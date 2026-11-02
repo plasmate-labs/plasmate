@@ -961,7 +961,17 @@ describe('getActionPlan', () => {
       ],
     };
 
-    for (const alias of ['h2', 'heading2', 'h-2', 'heading-2', 'h 2', 'heading 2']) {
+    for (const alias of [
+      'h2',
+      'heading2',
+      'h-2',
+      'heading-2',
+      'h 2',
+      'heading 2',
+      'role:h2',
+      "role = 'heading 2'",
+      '"h-2"',
+    ]) {
       expect(findActionTargetsByRole(som, alias).map((item) => item.id)).toEqual([
         'action-heading',
       ]);
