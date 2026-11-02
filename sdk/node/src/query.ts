@@ -507,7 +507,7 @@ function normalizeElementRole(role: string): ElementRole | undefined {
 
 function parseHeadingLevelSelector(selector: string): number | undefined {
   const normalized = stripRolePrefix(selector).trim().toLowerCase();
-  const match = /^(?:h|heading)(?:\s+|-)?([1-6])$/.exec(normalized);
+  const match = /^(?:h|heading)(?:\s+|-|_)?([1-6])$/.exec(normalized);
   return match ? Number(match[1]) : undefined;
 }
 
