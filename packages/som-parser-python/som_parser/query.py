@@ -205,6 +205,23 @@ def _normalize_label_text(value: str) -> str:
     )
 
 
+def _normalize_role_alias(value: str) -> str:
+    """Normalize role aliases so hyphenated and spaced forms behave alike."""
+    normalized = " ".join(value.strip().lower().split())
+    return "_".join(normalized.replace("-", " ").split())
+
+
+def _parse_heading_level_selector(value: str) -> Optional[int]:
+    """Return the heading level for selectors such as ``h 2`` or ``heading-2``."""
+    if value.startswith("heading"):
+        suffix = value.removeprefix("heading").lstrip("-_")
+    elif value.startswith("h"):
+        suffix = value[1:].lstrip("-_")
+    else:
+        return None
+    return int(suffix) if suffix in "123456" else None
+
+
 def _normalize_search_text(value: str) -> str:
     """Collapse whitespace, including invisible separators, for text queries."""
     return " ".join(
@@ -383,6 +400,8 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["pattern"] = attrs.pattern
             if attrs.description:
                 item["description"] = attrs.description
+            if attrs.level is not None:
+                item["level"] = str(attrs.level)
             if attrs.checked is not None:
                 item["checked"] = attrs.checked
             elif attrs.aria and "checked" in attrs.aria:
@@ -602,10 +621,20 @@ def find_action_targets_by_role(
     *,
     enabled_only: bool = False,
 ) -> List[Dict[str, object]]:
-    """Return compact action targets whose SOM role matches exactly."""
+    """Return compact action targets matching a role or heading-level alias."""
     role_value = role.value if isinstance(role, ElementRole) else role
+    normalized_role = _normalize_role_alias(role_value)
+    heading_level = _parse_heading_level_selector(normalized_role)
+    plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
+    if heading_level is not None:
+        return [
+            item
+            for item in plan
+            if item.get("role") == ElementRole.HEADING.value
+            and str(item.get("level")) == str(heading_level)
+        ]
     index = get_action_plan_index(som, enabled_only=enabled_only)
-    results = index["by_role"].get(role_value, [])
+    results = index["by_role"].get(normalized_role, [])
     return list(results) if isinstance(results, list) else []
 
 

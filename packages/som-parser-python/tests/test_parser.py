@@ -930,6 +930,7 @@ class TestGetActionPlan:
             "e_preview",
             "e_billing",
         ]
+
         assert find_action_target(som, "e_save") == save
         assert find_action_target(som, save["cache_key"]) == save
         assert find_action_target(som, "save-button") == save
@@ -962,6 +963,25 @@ class TestGetActionPlan:
         assert find_action_targets_by_action(som, "click", enabled_only=True) == [
             expected_targets[-1]
         ]
+
+    def test_accepts_heading_level_aliases_for_action_targets(self, som: Som):
+        payload = json.loads(json.dumps(FIXTURE_SOM))
+        payload["regions"][1]["elements"].append(
+            {
+                "id": "action-heading",
+                "role": "heading",
+                "text": "Expandable section",
+                "actions": ["click"],
+                "attrs": {"level": 2},
+            }
+        )
+        som = parse_som(payload)
+
+        for alias in ("h2", "heading2", "h-2", "heading-2", "h 2", "heading 2"):
+            targets = find_action_targets_by_role(som, alias)
+            assert [target["id"] for target in targets] == ["action-heading"], alias
+            assert targets[0]["level"] == "2"
+        assert find_action_targets_by_role(som, "heading7") == []
 
     def test_enabled_action_plan_index_filters_blocked_targets(self):
         som, _ = _load_action_availability_fixture()
