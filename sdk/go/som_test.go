@@ -752,6 +752,24 @@ func TestFindActionTargetsByRoleAcceptsMediaAliases(t *testing.T) {
 	}
 }
 
+func TestFindActionTargetsByRoleAcceptsHeadingLevelAliases(t *testing.T) {
+	levelTwo, levelThree := 2, 3
+	som := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "heading-2", Role: "heading", Actions: []string{"click"}, Attrs: &ElementAttrs{Level: &levelTwo}},
+		{ID: "heading-3", Role: "heading", Actions: []string{"click"}, Attrs: &ElementAttrs{Level: &levelThree}},
+	}}}}
+
+	for _, alias := range []string{"h2", "heading2", "h-2", "heading-2", "h 2", "heading 2"} {
+		got := FindActionTargetsByRole(som, alias)
+		if len(got) != 1 || got[0].ID != "heading-2" {
+			t.Errorf("FindActionTargetsByRole(%q) = %#v, want heading-2", alias, got)
+		}
+	}
+	if got := FindActionTargetsByRole(som, "heading7"); len(got) != 0 {
+		t.Fatalf("FindActionTargetsByRole(heading7) = %#v, want no matches", got)
+	}
+}
+
 func TestFindInteractive(t *testing.T) {
 	som := mustParse(t)
 

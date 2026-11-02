@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"hash/fnv"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -959,6 +960,10 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 			item.Spellcheck = el.Attrs.Spellcheck
 			item.Draggable = el.Attrs.Draggable
 			item.InputType = el.Attrs.InputType
+			if el.Attrs.Level != nil {
+				level := strconv.Itoa(*el.Attrs.Level)
+				item.Level = &level
+			}
 			item.Value = el.Attrs.Value
 			item.Placeholder = el.Attrs.Placeholder
 			item.MinLength = el.Attrs.MinLength
@@ -1263,6 +1268,19 @@ func actionItemMatchesLabel(item ActionPlanItem, needle string, exact bool) bool
 // a canonical role or common HTML/ARIA alias.
 func FindActionTargetsByRole(som *Som, role string, enabledOnly ...bool) []ActionPlanItem {
 	normalizedRole := normalizeElementRoleAlias(role)
+	if headingLevel, ok := parseHeadingLevelSelector(role); ok {
+		plan := GetActionPlan(som)
+		if len(enabledOnly) > 0 && enabledOnly[0] {
+			plan = EnabledActionPlan(som)
+		}
+		result := make([]ActionPlanItem, 0)
+		for _, item := range plan {
+			if item.Role == "heading" && item.Level != nil && *item.Level == headingLevel {
+				result = append(result, item)
+			}
+		}
+		return result
+	}
 	if sourceRole, ok := mediaTagAliases[normalizedRole]; ok {
 		var result []ActionPlanItem
 		plan := GetActionPlan(som)
@@ -1291,6 +1309,20 @@ func FindActionTargetsByRole(som *Som, role string, enabledOnly ...bool) []Actio
 	}
 	index := GetActionPlanIndex(som, enabledOnly...)
 	return append([]ActionPlanItem(nil), index.ByRole[normalizedRole]...)
+}
+
+func parseHeadingLevelSelector(selector string) (string, bool) {
+	normalized := normalizeRoleQuery(selector)
+	for _, prefix := range []string{"heading", "h"} {
+		if !strings.HasPrefix(normalized, prefix) {
+			continue
+		}
+		suffix := strings.TrimPrefix(normalized[len(prefix):], "_")
+		if len(suffix) == 1 && suffix[0] >= '1' && suffix[0] <= '6' {
+			return strconv.Itoa(int(suffix[0] - '0')), true
+		}
+	}
+	return "", false
 }
 
 // FindActionTargetsByAction returns compact action targets that expose the requested action.

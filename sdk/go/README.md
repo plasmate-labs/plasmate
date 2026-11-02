@@ -260,7 +260,7 @@ all := plasmate.FlatElements(som)
 | `FindActionTarget(som, value, by...)` | Resolve a replay id by SOM id, cache key, HTML id, test id, exact label, or auto lookup |
 | `FindActionTargetByLabel(som, label)` | Resolve the first compact target with an exact accessible label |
 | `FindActionTargetsByLabel(som, label, exact, enabledOnly...)` | Return compact targets whose label matches exactly or by substring |
-| `FindActionTargetsByRole(som, role, enabledOnly...)` | Return compact action targets for one SOM role |
+| `FindActionTargetsByRole(som, role, enabledOnly...)` | Return compact action targets for one SOM role or heading-level alias such as `h2`/`heading-2` |
 | `FindActionTargetsByAction(som, action, enabledOnly...)` | Return compact action targets exposing one action |
 | `FlatElements(som)` | Flatten all elements, including shadow roots |
 | `TokenEstimate(som)` | Estimate token count |

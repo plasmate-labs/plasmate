@@ -941,6 +941,44 @@ describe('getActionPlan', () => {
     ]);
   });
 
+  it('accepts heading-level aliases for action targets', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_headings',
+          role: 'content',
+          elements: [
+            {
+              id: 'action-heading',
+              role: 'heading',
+              text: 'Expandable section',
+              actions: ['click'],
+              attrs: { level: 2 },
+            },
+          ],
+        },
+      ],
+    };
+
+    for (const alias of [
+      'h2',
+      'heading2',
+      'h-2',
+      'heading-2',
+      'h 2',
+      'heading 2',
+      'role:h2',
+      "role = 'heading 2'",
+      '"h-2"',
+    ]) {
+      expect(findActionTargetsByRole(som, alias).map((item) => item.id)).toEqual([
+        'action-heading',
+      ]);
+    }
+    expect(findActionTargetsByRole(som, 'heading7')).toEqual([]);
+  });
+
   it('filters blocked targets from enabled action indexes', () => {
     const { som } = loadActionAvailabilityFixture();
     const enabled = getEnabledActionPlan(som);

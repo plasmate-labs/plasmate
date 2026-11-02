@@ -456,6 +456,7 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.aria?.multiselectable !== undefined) item.multiselectable = el.attrs.aria.multiselectable;
     if (el.attrs?.aria?.orientation !== undefined) item.orientation = el.attrs.aria.orientation;
     if (el.attrs?.aria?.sort !== undefined) item.sort = el.attrs.aria.sort;
+    if (el.attrs?.level !== undefined) item.level = String(el.attrs.level);
     if (el.attrs?.aria?.level !== undefined) item.level = el.attrs.aria.level;
     if (el.attrs?.aria?.posinset !== undefined) item.posinset = el.attrs.aria.posinset;
     if (el.attrs?.aria?.setsize !== undefined) item.setsize = el.attrs.aria.setsize;
@@ -582,13 +583,49 @@ export function findActionTargetsByLabel(
   return plan.filter((item) => item.label && normalizeLabelText(item.label).toLowerCase().includes(lower));
 }
 
-/** Find compact action targets by exact SOM role. */
+/** Find compact action targets by SOM role or heading-level selector alias. */
 export function findActionTargetsByRole(
   som: Som,
-  role: ElementRole,
+  role: ElementRole | string,
   options?: { enabledOnly?: boolean },
 ): ActionPlanItem[] {
+  const headingLevel = parseHeadingLevelSelector(role);
+  if (headingLevel !== undefined) {
+    const plan = options?.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
+    return plan.filter((item) => item.role === 'heading' && item.level === String(headingLevel));
+  }
   return getActionPlanIndex(som, { enabledOnly: options?.enabledOnly }).byRole[role] ?? [];
+}
+
+function parseHeadingLevelSelector(selector: string): number | undefined {
+  const normalized = normalizeRoleQuery(selector);
+  const match = /^(?:h|heading)_?([1-6])$/.exec(normalized);
+  return match ? Number(match[1]) : undefined;
+}
+
+function normalizeRoleQuery(value: string): string {
+  let normalized = value.trim().toLowerCase();
+  if (
+    normalized.length >= 2 &&
+    ((normalized.startsWith('"') && normalized.endsWith('"')) ||
+      (normalized.startsWith("'") && normalized.endsWith("'")))
+  ) {
+    normalized = normalized.slice(1, -1).trim();
+  }
+  if (normalized.startsWith('role')) {
+    const rest = normalized.slice('role'.length).trim();
+    if (rest.startsWith(':') || rest.startsWith('=')) {
+      normalized = rest.slice(1).trim();
+      if (
+        normalized.length >= 2 &&
+        ((normalized.startsWith('"') && normalized.endsWith('"')) ||
+          (normalized.startsWith("'") && normalized.endsWith("'")))
+      ) {
+        normalized = normalized.slice(1, -1).trim();
+      }
+    }
+  }
+  return normalized.replace(/-/g, ' ').split(/\s+/).filter(Boolean).join('_');
 }
 
 /** Find compact action targets that expose the requested action. */
