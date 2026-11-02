@@ -1396,6 +1396,13 @@ class TestFindByText:
                             role=ElementRole.button,
                             attrs=ElementAttrs(aria={"label": "Close menu"}),
                         ),
+                        SomElement(
+                            id="e_help",
+                            role=ElementRole.text_input,
+                            attrs=ElementAttrs(
+                                aria={"description": "Password requirements"}
+                            ),
+                        ),
                     ],
                 )
             ],
@@ -1420,6 +1427,9 @@ class TestFindByText:
         ]
         assert [element.id for element in find_by_text(som, "close menu")] == [
             "e_menu"
+        ]
+        assert [element.id for element in find_by_text(som, "password requirements")] == [
+            "e_help"
         ]
 
     def test_no_match_returns_empty(self, sample_som: Som) -> None:

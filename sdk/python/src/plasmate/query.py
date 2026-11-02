@@ -1278,7 +1278,7 @@ def _collect_by_text(
             )
             if value
         )
-        for key in ("valuetext", "roledescription"):
+        for key in ("description", "valuetext", "roledescription"):
             value = (element.attrs.aria or {}).get(key)
             if isinstance(value, str) and value:
                 parts.append(value)
