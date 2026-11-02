@@ -344,6 +344,7 @@ describe('findActionTargetsByRole aliases', () => {
           role: 'main',
           elements: [
             { id: 'progress', role: 'group', actions: ['click'], attrs: { source_role: 'progressbar' } },
+            { id: 'padded-progress', role: 'group', actions: ['click'], attrs: { source_role: ' progress-bar ' } },
             { id: 'meter', role: 'group', actions: ['click'], attrs: { source_role: 'meter' } },
             { id: 'other', role: 'group', actions: ['click'] },
           ],
@@ -351,13 +352,18 @@ describe('findActionTargetsByRole aliases', () => {
       ],
     };
     for (const alias of ['progress', 'progressbar', 'progress-bar', 'progressbars']) {
-      assert.deepEqual(findActionTargetsByRole(som, alias).map((item) => item.id), ['progress'], alias);
+      assert.deepEqual(
+        findActionTargetsByRole(som, alias).map((item) => item.id),
+        ['progress', 'padded-progress'],
+        alias,
+      );
     }
     for (const alias of ['meter', 'meters']) {
       assert.deepEqual(findActionTargetsByRole(som, alias).map((item) => item.id), ['meter'], alias);
     }
     assert.deepEqual(findActionTargetsByRole(som, 'output').map((item) => item.id), [
       'progress',
+      'padded-progress',
       'meter',
       'other',
     ]);
@@ -539,7 +545,7 @@ describe('findActionTargetsByRole heading aliases', () => {
       ),
     };
 
-    for (const alias of ['h2', 'heading2', 'h-2', 'heading-2', 'h 2', 'heading 2']) {
+    for (const alias of ['h2', 'heading2', 'h-2', 'heading-2', 'h 2', 'heading 2', 'h_2', 'heading_2']) {
       assert.deepEqual(
         findActionTargetsByRole(som, alias).map((item) => item.id),
         ['action-heading'],
@@ -566,10 +572,10 @@ describe('findByTag', () => {
           : region,
       ),
     };
-    for (const alias of ['h1', 'heading1', 'h-1', 'heading-1', 'h 1', 'heading 1']) {
+    for (const alias of ['h1', 'heading1', 'h-1', 'heading-1', 'h 1', 'heading 1', 'h_1', 'heading_1']) {
       assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['e1'], alias);
     }
-    for (const alias of ['h2', 'heading2', 'h-2', 'heading-2', 'h 2', 'heading 2']) {
+    for (const alias of ['h2', 'heading2', 'h-2', 'heading-2', 'h 2', 'heading 2', 'h_2', 'heading_2']) {
       assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['e10'], alias);
     }
     assert.deepEqual(findByTag(som, 'heading7'), []);
@@ -578,6 +584,17 @@ describe('findByTag', () => {
   it('finds elements by role', () => {
     const paragraphs = findByTag(fixture, 'paragraph');
     assert.equal(paragraphs.length, 3);
+  });
+
+  it('accepts anchor aliases for links in element and action queries', () => {
+    for (const alias of ['a', 'anchor', 'anchors', 'links']) {
+      assert.deepEqual(findByTag(fixture, alias).map((el) => el.id), ['e2'], alias);
+      assert.deepEqual(
+        findActionTargetsByRole(fixture, alias).map((item) => item.id),
+        ['e2'],
+        alias,
+      );
+    }
   });
 
   it('accepts plural definition-list aliases for element and action queries', () => {
@@ -830,7 +847,7 @@ describe('findByTag', () => {
         id: 'r_media',
         role: 'main',
         elements: [
-          { id: 'audio', role: 'group', actions: ['click'], attrs: { source_role: 'Audio' } },
+          { id: 'audio', role: 'group', actions: ['click'], attrs: { source_role: ' Audio ' } },
           { id: 'video', role: 'group', actions: ['click'], attrs: { source_role: 'VIDEO' } },
         ],
       }],

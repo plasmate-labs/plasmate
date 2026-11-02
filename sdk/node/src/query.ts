@@ -277,6 +277,8 @@ const ELEMENT_ROLES: readonly ElementRole[] = [
 
 const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   a: 'link',
+  anchor: 'link',
+  anchors: 'link',
   article: 'section',
   links: 'link',
   buttons: 'button',
@@ -489,7 +491,7 @@ function sourceRoleMatches(actual: string | undefined, expected: string): boolea
 }
 
 function normalizeSourceRole(value: string): string {
-  return value.toLowerCase().replace(/[\s_-]+/g, '');
+  return value.trim().toLowerCase().replace(/[\s_-]+/g, '');
 }
 
 function isMediaElement(element: SomElement): boolean {
@@ -507,7 +509,7 @@ function normalizeElementRole(role: string): ElementRole | undefined {
 
 function parseHeadingLevelSelector(selector: string): number | undefined {
   const normalized = stripRolePrefix(selector).trim().toLowerCase();
-  const match = /^(?:h|heading)(?:\s+|-)?([1-6])$/.exec(normalized);
+  const match = /^(?:h|heading)(?:\s+|-|_)?([1-6])$/.exec(normalized);
   return match ? Number(match[1]) : undefined;
 }
 
