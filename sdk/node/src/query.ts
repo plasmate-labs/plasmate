@@ -478,7 +478,11 @@ function somContainsSourceRole(som: Som, sourceRole: string): boolean {
 }
 
 function sourceRoleMatches(actual: string | undefined, expected: string): boolean {
-  return actual?.toLowerCase() === expected;
+  return actual !== undefined && normalizeSourceRole(actual) === normalizeSourceRole(expected);
+}
+
+function normalizeSourceRole(value: string): string {
+  return value.toLowerCase().replace(/[\s_-]+/g, '');
 }
 
 function isMediaElement(element: SomElement): boolean {
