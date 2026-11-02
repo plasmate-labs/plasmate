@@ -774,7 +774,6 @@ def find_action_targets_by_role(
     Accept the same common HTML/ARIA role aliases as ``find_by_tag`` so callers
     can use ``a``/``button``/``input`` and related spellings consistently.
     """
-    index = get_action_plan_index(som, enabled_only=enabled_only)
     normalized_alias = _normalize_role_alias(role)
     media_source_role = _MEDIA_TAG_ALIASES.get(normalized_alias)
     plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
@@ -814,6 +813,7 @@ def find_action_targets_by_role(
             for item in plan
             if _source_role_value_matches(item.get("source_role"), source_specific_group_role)
         ]
+    index = get_action_plan_index(som, enabled_only=enabled_only)
     normalized_role = {
         "a": "link",
         "anchor": "link",
