@@ -793,8 +793,11 @@ describe('findByTag', () => {
         ],
       }],
     };
-    assert.deepEqual(findByTag(som, 'progress-bar').map((el) => el.id), ['progress']);
+    for (const alias of ['progress-bar', 'progress bars']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['progress'], alias);
+    }
     assert.deepEqual(findActionTargetsByRole(som, 'progressbar').map((item) => item.id), ['progress']);
+    assert.deepEqual(findActionTargetsByRole(som, 'progress bars').map((item) => item.id), ['progress']);
   });
 
   it('accepts blockquote aliases for paragraph elements', () => {

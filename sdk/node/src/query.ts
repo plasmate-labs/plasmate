@@ -466,6 +466,7 @@ const SOURCE_SPECIFIC_GROUP_ALIASES: Record<string, string> = {
   progress: 'progressbar',
   progressbar: 'progressbar',
   progress_bar: 'progressbar',
+  progress_bars: 'progressbar',
   progressbars: 'progressbar',
   meter: 'meter',
   meters: 'meter',
