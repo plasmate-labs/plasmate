@@ -544,6 +544,8 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["pattern"] = attrs.pattern
             if attrs.description:
                 item["description"] = attrs.description
+            if attrs.level is not None:
+                item["level"] = str(attrs.level)
             if attrs.checked is not None:
                 item["checked"] = attrs.checked
             elif attrs.aria and "checked" in attrs.aria:
@@ -776,6 +778,14 @@ def find_action_targets_by_role(
     normalized_alias = _normalize_role_alias(role)
     media_source_role = _MEDIA_TAG_ALIASES.get(normalized_alias)
     plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
+    heading_level = _parse_heading_level_selector(normalized_alias)
+    if heading_level is not None:
+        return [
+            item
+            for item in plan
+            if item.get("role") == ElementRole.heading.value
+            and str(item.get("level")) == str(heading_level)
+        ]
     if media_source_role is not None:
         return [
             item
@@ -1145,6 +1155,17 @@ def _normalize_role_alias(value: str) -> str:
     if len(normalized) >= 2 and normalized[0] == normalized[-1] and normalized[0] in "\"'":
         normalized = normalized[1:-1].strip()
     return "_".join(normalized.replace("-", " ").split())
+
+
+def _parse_heading_level_selector(value: str) -> Optional[int]:
+    """Return the heading level for selectors such as ``h 2`` or ``heading-2``."""
+    if value.startswith("heading"):
+        suffix = value.removeprefix("heading").lstrip("-_")
+    elif value.startswith("h"):
+        suffix = value[1:].lstrip("-_")
+    else:
+        return None
+    return int(suffix) if suffix in "123456" else None
 
 
 def _normalize_label_text(value: str) -> str:
