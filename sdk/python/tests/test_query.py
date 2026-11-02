@@ -341,11 +341,12 @@ class TestFindByTag:
             "dl",
             "definition-list",
             "definition_lists",
+            "lists",
             "unordered-list",
             "ordered_list",
         ):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["e11"]
-        for alias in ("dl", "definition_lists"):
+        for alias in ("dl", "definition_lists", "lists"):
             assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
                 "e11"
             ]
