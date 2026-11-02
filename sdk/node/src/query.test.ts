@@ -344,6 +344,7 @@ describe('findActionTargetsByRole aliases', () => {
           role: 'main',
           elements: [
             { id: 'progress', role: 'group', actions: ['click'], attrs: { source_role: 'progressbar' } },
+            { id: 'padded-progress', role: 'group', actions: ['click'], attrs: { source_role: ' progress-bar ' } },
             { id: 'meter', role: 'group', actions: ['click'], attrs: { source_role: 'meter' } },
             { id: 'other', role: 'group', actions: ['click'] },
           ],
@@ -351,13 +352,18 @@ describe('findActionTargetsByRole aliases', () => {
       ],
     };
     for (const alias of ['progress', 'progressbar', 'progress-bar', 'progressbars']) {
-      assert.deepEqual(findActionTargetsByRole(som, alias).map((item) => item.id), ['progress'], alias);
+      assert.deepEqual(
+        findActionTargetsByRole(som, alias).map((item) => item.id),
+        ['progress', 'padded-progress'],
+        alias,
+      );
     }
     for (const alias of ['meter', 'meters']) {
       assert.deepEqual(findActionTargetsByRole(som, alias).map((item) => item.id), ['meter'], alias);
     }
     assert.deepEqual(findActionTargetsByRole(som, 'output').map((item) => item.id), [
       'progress',
+      'padded-progress',
       'meter',
       'other',
     ]);
@@ -830,7 +836,7 @@ describe('findByTag', () => {
         id: 'r_media',
         role: 'main',
         elements: [
-          { id: 'audio', role: 'group', actions: ['click'], attrs: { source_role: 'Audio' } },
+          { id: 'audio', role: 'group', actions: ['click'], attrs: { source_role: ' Audio ' } },
           { id: 'video', role: 'group', actions: ['click'], attrs: { source_role: 'VIDEO' } },
         ],
       }],

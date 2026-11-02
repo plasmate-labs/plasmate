@@ -489,7 +489,7 @@ function sourceRoleMatches(actual: string | undefined, expected: string): boolea
 }
 
 function normalizeSourceRole(value: string): string {
-  return value.toLowerCase().replace(/[\s_-]+/g, '');
+  return value.trim().toLowerCase().replace(/[\s_-]+/g, '');
 }
 
 function isMediaElement(element: SomElement): boolean {
