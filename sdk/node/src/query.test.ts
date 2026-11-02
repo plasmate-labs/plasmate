@@ -539,7 +539,7 @@ describe('findActionTargetsByRole heading aliases', () => {
       ),
     };
 
-    for (const alias of ['h2', 'heading2', 'h-2', 'heading-2']) {
+    for (const alias of ['h2', 'heading2', 'h-2', 'heading-2', 'h 2', 'heading 2']) {
       assert.deepEqual(
         findActionTargetsByRole(som, alias).map((item) => item.id),
         ['action-heading'],
@@ -566,10 +566,10 @@ describe('findByTag', () => {
           : region,
       ),
     };
-    for (const alias of ['h1', 'heading1', 'h-1', 'heading-1']) {
+    for (const alias of ['h1', 'heading1', 'h-1', 'heading-1', 'h 1', 'heading 1']) {
       assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['e1'], alias);
     }
-    for (const alias of ['h2', 'heading2', 'h-2', 'heading-2']) {
+    for (const alias of ['h2', 'heading2', 'h-2', 'heading-2', 'h 2', 'heading 2']) {
       assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['e10'], alias);
     }
     assert.deepEqual(findByTag(som, 'heading7'), []);
