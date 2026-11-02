@@ -517,6 +517,30 @@ describe('findByLabel', () => {
 });
 
 describe('findByTag', () => {
+  it('accepts heading level aliases', () => {
+    const som: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'header'
+          ? {
+              ...region,
+              elements: [
+                ...region.elements,
+                { id: 'e10', role: 'heading', text: 'Section', attrs: { level: 2 } },
+              ],
+            }
+          : region,
+      ),
+    };
+    for (const alias of ['h1', 'heading1', 'h-1', 'heading-1']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['e1'], alias);
+    }
+    for (const alias of ['h2', 'heading2', 'h-2', 'heading-2']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['e10'], alias);
+    }
+    assert.deepEqual(findByTag(som, 'heading7'), []);
+  });
+
   it('finds elements by role', () => {
     const paragraphs = findByTag(fixture, 'paragraph');
     assert.equal(paragraphs.length, 3);

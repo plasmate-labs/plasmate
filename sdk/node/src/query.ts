@@ -95,6 +95,12 @@ function findElementById(elements: SomElement[], id: string): SomElement | undef
 /** Find all elements whose role matches a canonical role or selector alias. */
 export function findByTag(som: Som, tag: ElementRole | string): SomElement[] {
   const normalizedTag = stripRolePrefix(tag).replace(/[\s-]+/g, '_');
+  const headingLevel = parseHeadingLevelSelector(tag);
+  if (headingLevel !== undefined) {
+    return flatElements(som).filter(
+      (el) => el.role === 'heading' && el.attrs?.level === headingLevel,
+    );
+  }
   const mediaSourceRole = MEDIA_TAG_ALIASES[normalizedTag];
   if (mediaSourceRole) {
     return flatElements(som).filter((el) => sourceRoleMatches(el.attrs?.source_role, mediaSourceRole));
@@ -497,6 +503,12 @@ function normalizeElementRole(role: string): ElementRole | undefined {
   const normalizedRole = stripRolePrefix(role).replace(/[\s-]+/g, '_');
   return ELEMENT_ROLE_ALIASES[normalizedRole] ??
     (ELEMENT_ROLES.includes(normalizedRole as ElementRole) ? normalizedRole as ElementRole : undefined);
+}
+
+function parseHeadingLevelSelector(selector: string): number | undefined {
+  const normalized = stripRolePrefix(selector).trim().toLowerCase();
+  const match = /^(?:h|heading)-?([1-6])$/.exec(normalized);
+  return match ? Number(match[1]) : undefined;
 }
 
 function compactString(value: unknown): string | undefined {
