@@ -586,6 +586,17 @@ describe('findByTag', () => {
     assert.equal(paragraphs.length, 3);
   });
 
+  it('accepts anchor aliases for links in element and action queries', () => {
+    for (const alias of ['a', 'anchor', 'anchors', 'links']) {
+      assert.deepEqual(findByTag(fixture, alias).map((el) => el.id), ['e2'], alias);
+      assert.deepEqual(
+        findActionTargetsByRole(fixture, alias).map((item) => item.id),
+        ['e2'],
+        alias,
+      );
+    }
+  });
+
   it('accepts plural definition-list aliases for element and action queries', () => {
     const som: Som = {
       ...fixture,
