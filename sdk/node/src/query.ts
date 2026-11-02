@@ -466,6 +466,7 @@ const SOURCE_SPECIFIC_GROUP_ALIASES: Record<string, string> = {
   progress: 'progressbar',
   progressbar: 'progressbar',
   progress_bar: 'progressbar',
+  progress_bars: 'progressbar',
   progressbars: 'progressbar',
   meter: 'meter',
   meters: 'meter',
@@ -478,7 +479,11 @@ function somContainsSourceRole(som: Som, sourceRole: string): boolean {
 }
 
 function sourceRoleMatches(actual: string | undefined, expected: string): boolean {
-  return actual?.toLowerCase() === expected;
+  return actual !== undefined && normalizeSourceRole(actual) === normalizeSourceRole(expected);
+}
+
+function normalizeSourceRole(value: string): string {
+  return value.toLowerCase().replace(/[\s_-]+/g, '');
 }
 
 function isMediaElement(element: SomElement): boolean {

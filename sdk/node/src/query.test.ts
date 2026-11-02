@@ -782,6 +782,25 @@ describe('findByTag', () => {
     assert.deepEqual(findActionTargetsByRole(som, 'video').map((item) => item.id), ['video']);
   });
 
+  it('matches source-role aliases across separators', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [{
+        id: 'r_controls',
+        role: 'main',
+        elements: [
+          { id: 'progress', role: 'group', actions: ['click'], attrs: { source_role: 'PROGRESS_BAR' } },
+        ],
+      }],
+    };
+    for (const alias of ['progress-bar', 'progress bars']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['progress'], alias);
+    }
+    assert.deepEqual(findActionTargetsByRole(som, 'progressbar').map((item) => item.id), ['progress']);
+    assert.deepEqual(findActionTargetsByRole(som, 'progress-bar').map((item) => item.id), ['progress']);
+    assert.deepEqual(findActionTargetsByRole(som, 'progress bars').map((item) => item.id), ['progress']);
+  });
+
   it('accepts blockquote aliases for paragraph elements', () => {
     const som: Som = {
       ...fixture,
