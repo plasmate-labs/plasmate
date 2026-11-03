@@ -1084,6 +1084,20 @@ class TestGetHeadings:
         assert len(headings) == 1
         assert headings[0] == {"level": 1, "text": "Welcome", "id": "e_3"}
 
+    def test_headings_preserve_missing_level(self, som: Som):
+        payload = json.loads(json.dumps(FIXTURE_SOM))
+        payload["regions"][1]["elements"].append(
+            {"id": "e_heading_missing_level", "role": "heading", "text": "Untitled"}
+        )
+
+        headings = get_headings(parse_som(payload))
+
+        assert headings[-1] == {
+            "level": None,
+            "text": "Untitled",
+            "id": "e_heading_missing_level",
+        }
+
 
 class TestGetText:
     def test_text(self, som: Som):
