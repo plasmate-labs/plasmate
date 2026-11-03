@@ -496,6 +496,36 @@ describe('findByText', () => {
     expect(findByLabel(ariaSom, 'password requirements').map((el) => el.id)).toEqual([
       'e_aria_description',
     ]);
+    expect(findByLabel({
+      ...FIXTURE,
+      regions: [{
+        ...FIXTURE.regions[0],
+        elements: [{
+          id: 'e_aria_value',
+          role: 'slider',
+          attrs: { aria: { valuetext: '75 percent' } },
+        }, {
+          id: 'e_aria_role',
+          role: 'button',
+          attrs: { aria: { roledescription: 'dismiss control' } },
+        }],
+      }],
+    }, 'percent').map((el) => el.id)).toEqual(['e_aria_value']);
+    expect(findByLabel({
+      ...FIXTURE,
+      regions: [{
+        ...FIXTURE.regions[0],
+        elements: [{
+          id: 'e_aria_value',
+          role: 'slider',
+          attrs: { aria: { valuetext: '75 percent' } },
+        }, {
+          id: 'e_aria_role',
+          role: 'button',
+          attrs: { aria: { roledescription: 'dismiss control' } },
+        }],
+      }],
+    }, 'dismiss control', { exact: true }).map((el) => el.id)).toEqual(['e_aria_role']);
   });
 
   it('normalizes whitespace for substring and exact matches', () => {
