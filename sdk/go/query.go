@@ -570,7 +570,7 @@ func elementMatchesLabel(el Element, lowerLabel string, exact bool) bool {
 	return matches(el.Attrs.Title) ||
 		matches(el.Attrs.Placeholder) ||
 		matches(el.Attrs.Alt) ||
-		(el.Attrs.Aria != nil && matches(el.Attrs.Aria.Label))
+		(el.Attrs.Aria != nil && (matches(el.Attrs.Aria.Label) || matches(el.Attrs.Aria.Description)))
 }
 
 func normalizeQueryText(value string) string {
@@ -624,6 +624,7 @@ func elementMatchesText(el Element, lowerText string) bool {
 				aria.Label,
 				aria.Placeholder,
 				aria.ValueText,
+				aria.Description,
 				aria.RoleDescription,
 			} {
 				if matches(value) {

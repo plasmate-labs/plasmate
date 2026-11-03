@@ -306,6 +306,20 @@ class TestFindByLabel:
         assert [el.id for el in find_by_label(sample_som, "PRODUCT PREVIEW")] == ["e11"]
         assert [el.id for el in find_by_label(sample_som, "Close dialog", exact=True)] == ["e11"]
 
+    def test_finds_aria_description_fallback(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(
+                id="e11",
+                role=ElementRole.text_input,
+                attrs=ElementAttrs(aria={"description": "Password requirements"}),
+            )
+        )
+
+        assert [el.id for el in find_by_label(sample_som, "password requirements")] == ["e11"]
+        assert [el.id for el in find_by_label(sample_som, "Password requirements", exact=True)] == [
+            "e11"
+        ]
+
     def test_normalizes_label_whitespace(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.append(
             SomElement(id="e11", role=ElementRole.button, label="Billing\n details")

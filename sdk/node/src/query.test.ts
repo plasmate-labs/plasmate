@@ -507,6 +507,11 @@ describe('findByLabel', () => {
           role: 'main',
           elements: [
             { id: 'aria', role: 'button', attrs: { aria: { label: 'Open menu' } } },
+            {
+              id: 'aria-description',
+              role: 'text_input',
+              attrs: { aria: { description: 'Password requirements' } },
+            },
             { id: 'title', role: 'button', attrs: { title: 'Close dialog' } },
             { id: 'placeholder', role: 'text_input', attrs: { placeholder: 'Search products' } },
             { id: 'alt', role: 'image', attrs: { alt: 'Product preview' } },
@@ -516,6 +521,9 @@ describe('findByLabel', () => {
     };
 
     assert.deepEqual(findByLabel(som, 'menu').map((el) => el.id), ['aria']);
+    assert.deepEqual(findByLabel(som, 'password requirements').map((el) => el.id), [
+      'aria-description',
+    ]);
     assert.deepEqual(findByLabel(som, 'Close dialog', { exact: true }).map((el) => el.id), ['title']);
     assert.deepEqual(findByLabel(som, 'products').map((el) => el.id), ['placeholder']);
     assert.deepEqual(findByLabel(som, 'preview').map((el) => el.id), ['alt']);
@@ -1477,6 +1485,12 @@ describe('getActionPlan', () => {
               actions: ['click'],
               attrs: { aria: { label: 'Open settings' } },
             },
+            {
+              id: 'description-action',
+              role: 'button',
+              actions: ['click'],
+              attrs: { aria: { description: 'Password requirements' } },
+            },
           ],
         },
       ],
@@ -1486,6 +1500,7 @@ describe('getActionPlan', () => {
     assert.deepEqual(findActionTargetsByLabel(som, 'settings').map((item) => item.id), [
       'fallback-action',
     ]);
+    assert.equal(findActionTargetByLabel(som, 'Password requirements')?.id, 'description-action');
   });
 
   it('skips blank labels before using compiled fallbacks', () => {

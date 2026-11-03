@@ -155,6 +155,7 @@ function labelCandidates(el: SomElement): string[] {
     el.label,
     el.text,
     el.attrs?.aria?.label,
+    el.attrs?.aria?.description,
     el.attrs?.title,
     el.attrs?.placeholder,
     el.attrs?.alt,
