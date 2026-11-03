@@ -165,6 +165,7 @@ type AriaState struct {
 	ValueNow         *string     `json:"valuenow,omitempty"`
 	ValueText        *string     `json:"valuetext,omitempty"`
 	Label            *string     `json:"label,omitempty"`
+	Description      *string     `json:"description,omitempty"`
 	LabelledBy       *string     `json:"labelledby,omitempty"`
 	DescribedBy      *string     `json:"describedby,omitempty"`
 }

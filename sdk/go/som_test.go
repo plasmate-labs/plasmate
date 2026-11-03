@@ -843,6 +843,7 @@ func TestFindByTextUserFacingMetadata(t *testing.T) {
 	roleDescription := "progress indicator"
 	ariaLabel := "Open settings"
 	ariaPlaceholder := "Filter results"
+	ariaDescription := "Password requirements"
 	som := &Som{Regions: []Region{{Elements: []Element{
 		{ID: "e_alt", Attrs: &ElementAttrs{Alt: &alt}},
 		{ID: "e_placeholder", Attrs: &ElementAttrs{Placeholder: &placeholder}},
@@ -852,6 +853,7 @@ func TestFindByTextUserFacingMetadata(t *testing.T) {
 		}}},
 		{ID: "e_aria_label", Attrs: &ElementAttrs{Aria: &AriaState{Label: &ariaLabel}}},
 		{ID: "e_aria_placeholder", Attrs: &ElementAttrs{Aria: &AriaState{Placeholder: &ariaPlaceholder}}},
+		{ID: "e_aria_description", Attrs: &ElementAttrs{Aria: &AriaState{Description: &ariaDescription}}},
 	}}}}
 
 	if results := FindByText(som, "wordmark"); len(results) != 1 || results[0].ID != "e_alt" {
@@ -871,6 +873,21 @@ func TestFindByTextUserFacingMetadata(t *testing.T) {
 	}
 	if results := FindByText(som, "filter results"); len(results) != 1 || results[0].ID != "e_aria_placeholder" {
 		t.Fatalf("FindByText(filter results) = %#v, want e_aria_placeholder", results)
+	}
+	if results := FindByText(som, "password requirements"); len(results) != 1 || results[0].ID != "e_aria_description" {
+		t.Fatalf("FindByText(password requirements) = %#v, want e_aria_description", results)
+	}
+}
+
+func TestFindByLabelMatchesAriaDescription(t *testing.T) {
+	description := "Password requirements"
+	som := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "e_password", Attrs: &ElementAttrs{Aria: &AriaState{Description: &description}}},
+	}}}}
+
+	results := FindByLabel(som, "password requirements")
+	if len(results) != 1 || results[0].ID != "e_password" {
+		t.Fatalf("FindByLabel(password requirements) = %#v, want e_password", results)
 	}
 }
 
