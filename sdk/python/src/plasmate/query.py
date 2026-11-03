@@ -297,15 +297,7 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "tree_grid": "table",
     }
     tag = _normalize_role_alias(tag)
-    heading_level = None
-    if tag.startswith("heading"):
-        suffix = tag.removeprefix("heading").lstrip("-_")
-        if suffix in "123456":
-            heading_level = int(suffix)
-    elif tag.startswith("h"):
-        suffix = tag[1:].lstrip("_")
-        if suffix in "123456":
-            heading_level = int(suffix)
+    heading_level = _parse_heading_level_selector(tag)
     media_source_role = _MEDIA_TAG_ALIASES.get(tag)
     if media_source_role is not None:
         return [
@@ -1161,9 +1153,9 @@ def _normalize_role_alias(value: str) -> str:
 def _parse_heading_level_selector(value: str) -> Optional[int]:
     """Return the heading level for selectors such as ``h 2`` or ``heading-2``."""
     if value.startswith("heading"):
-        suffix = value.removeprefix("heading").lstrip("-_")
+        suffix = value.removeprefix("heading").lstrip("-_ ")
     elif value.startswith("h"):
-        suffix = value[1:].lstrip("-_")
+        suffix = value[1:].lstrip("-_ ")
     else:
         return None
     return int(suffix) if suffix in "123456" else None

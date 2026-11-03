@@ -652,7 +652,8 @@ class TestFindByTag:
     def test_accepts_heading_level_aliases_and_trimmed_input(self, sample_som: Som) -> None:
         assert [el.id for el in find_by_tag(sample_som, " H1 ")] == ["e3"]
         assert [el.id for el in find_by_tag(sample_som, "heading1")] == ["e3"]
-        assert [el.id for el in find_by_tag(sample_som, "heading-1")] == ["e3"]
+        for alias in ("heading-1", "h_1", "heading_1", "h 1", "heading 1"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == ["e3"]
         assert find_by_tag(sample_som, "h2") == []
 
     def test_accepts_heading_level_aliases_for_action_targets(self, sample_som: Som) -> None:
@@ -666,7 +667,16 @@ class TestFindByTag:
             )
         )
 
-        for alias in ("h2", "heading2", "h-2", "heading-2", "h 2", "heading 2"):
+        for alias in (
+            "h2",
+            "heading2",
+            "h-2",
+            "heading-2",
+            "h_2",
+            "heading_2",
+            "h 2",
+            "heading 2",
+        ):
             targets = find_action_targets_by_role(sample_som, alias)
             assert [target["id"] for target in targets] == ["action-heading"], alias
             assert targets[0]["level"] == "2"
