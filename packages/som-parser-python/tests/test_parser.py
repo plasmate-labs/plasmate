@@ -833,6 +833,23 @@ class TestGetActionPlan:
         assert [target["id"] for target in matches] == ["e_11"]
         assert matches[0]["label"] == "Account settings"
 
+    def test_uses_aria_description_for_action_targets(self):
+        payload = json.loads(json.dumps(FIXTURE_SOM))
+        payload["regions"][1]["elements"].append(
+            {
+                "id": "e_12",
+                "role": "button",
+                "actions": ["click"],
+                "attrs": {"aria": {"description": "Save changes"}},
+            }
+        )
+
+        som = parse_som(payload)
+
+        matches = find_action_targets_by_label(som, "save changes")
+
+        assert [target["id"] for target in matches] == ["e_12"]
+
     def test_returns_compact_action_targets(self, som: Som):
         plan = get_action_plan(som)
         assert plan[0] == {

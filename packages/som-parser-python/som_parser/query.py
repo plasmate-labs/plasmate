@@ -243,6 +243,7 @@ def _label_candidates(element: SomElement) -> List[str]:
             value
             for value in (
                 aria_label,
+                (element.attrs.aria or {}).get("description"),
                 element.attrs.title,
                 element.attrs.placeholder,
                 element.attrs.alt,
