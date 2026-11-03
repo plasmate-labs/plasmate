@@ -91,7 +91,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   select aliases mirror the corresponding MCP interaction tool names.
 /// - Label/text search: `label:<text>` or `label=<text>` matches a region or
 ///   element's accessible label, authored text, or `aria-label`/title/placeholder/
-///   `alt` fallback, case-insensitively, preserving parent context.
+///   `alt`/`description` fallback, case-insensitively, preserving parent context.
 /// - Id: `#some-id` - region id first, then SOM element `id` or `html_id`
 ///
 /// Unrecognised selectors return the full SOM unchanged (with a warning to stderr).
@@ -524,7 +524,7 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
     }
 
     element.attrs.as_ref().is_some_and(|attrs| {
-        ["aria-label", "title", "placeholder", "alt"]
+        ["aria-label", "title", "placeholder", "alt", "description"]
             .into_iter()
             .any(|key| {
                 attrs
@@ -1142,6 +1142,22 @@ mod tests {
         }));
 
         let filtered = apply_selector(&som, "label:products");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e3");
+    }
+
+    #[test]
+    fn test_selector_matches_compiled_description_metadata() {
+        let mut som = make_test_som();
+        som.regions[1].elements[1].label = None;
+        som.regions[1].elements[1].text = None;
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({
+            "description": "Password must be at least 12 characters"
+        }));
+
+        let filtered = apply_selector(&som, "label:password");
 
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
