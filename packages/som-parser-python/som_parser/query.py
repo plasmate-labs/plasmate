@@ -83,6 +83,7 @@ def _searchable_text_parts(el: SomElement) -> List[str]:
                 el.attrs.legend,
                 el.attrs.section_label,
                 (el.attrs.aria or {}).get("label"),
+                (el.attrs.aria or {}).get("description"),
                 (el.attrs.aria or {}).get("valuetext"),
                 (el.attrs.aria or {}).get("roledescription"),
             )
