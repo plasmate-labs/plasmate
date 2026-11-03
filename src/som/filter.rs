@@ -91,7 +91,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   select aliases mirror the corresponding MCP interaction tool names.
 /// - Label/text search: `label:<text>` or `label=<text>` matches a region or
 ///   element's accessible label, authored text, or `aria-label`/title/placeholder/
-///   `alt`/`description` fallback, case-insensitively, preserving parent context.
+///   `alt`/`description` fallbacks (including nested ARIA descriptions),
+///   case-insensitively, preserving parent context.
 /// - Id: `#some-id` - region id first, then SOM element `id` or `html_id`
 ///
 /// Unrecognised selectors return the full SOM unchanged (with a warning to stderr).
@@ -535,9 +536,13 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
             || attrs
                 .get("aria")
                 .and_then(serde_json::Value::as_object)
-                .and_then(|aria| aria.get("label"))
-                .and_then(serde_json::Value::as_str)
-                .is_some_and(matches)
+                .is_some_and(|aria| {
+                    ["label", "description"].into_iter().any(|key| {
+                        aria.get(key)
+                            .and_then(serde_json::Value::as_str)
+                            .is_some_and(matches)
+                    })
+                })
     })
 }
 
@@ -1158,6 +1163,22 @@ mod tests {
         }));
 
         let filtered = apply_selector(&som, "label:password");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e3");
+    }
+
+    #[test]
+    fn test_selector_matches_nested_aria_description_metadata() {
+        let mut som = make_test_som();
+        som.regions[1].elements[1].label = None;
+        som.regions[1].elements[1].text = None;
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({
+            "aria": {"description": "Password requirements"}
+        }));
+
+        let filtered = apply_selector(&som, "label:requirements");
 
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
