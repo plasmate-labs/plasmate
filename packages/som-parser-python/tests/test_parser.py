@@ -989,7 +989,18 @@ class TestGetActionPlan:
         )
         som = parse_som(payload)
 
-        for alias in ("h2", "heading2", "h-2", "heading-2", "h 2", "heading 2"):
+        for alias in (
+            "h2",
+            "heading2",
+            "h-2",
+            "heading-2",
+            "h 2",
+            "heading 2",
+            "role=h2",
+            "role:heading-2",
+            "role = h 2",
+            "role : heading 2",
+        ):
             targets = find_action_targets_by_role(som, alias)
             assert [target["id"] for target in targets] == ["action-heading"], alias
             assert targets[0]["level"] == "2"

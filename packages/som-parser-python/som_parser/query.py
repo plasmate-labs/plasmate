@@ -209,6 +209,10 @@ def _normalize_label_text(value: str) -> str:
 def _normalize_role_alias(value: str) -> str:
     """Normalize role aliases so hyphenated and spaced forms behave alike."""
     normalized = " ".join(value.strip().lower().split())
+    if normalized.startswith("role"):
+        remainder = normalized[4:].lstrip()
+        if remainder.startswith((":", "=")):
+            normalized = remainder[1:].strip()
     return "_".join(normalized.replace("-", " ").split())
 
 
