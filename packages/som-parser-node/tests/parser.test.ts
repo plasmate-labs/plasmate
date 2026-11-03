@@ -493,6 +493,9 @@ describe('findByText', () => {
     expect(findByText(ariaSom, 'password requirements').map((el) => el.id)).toEqual([
       'e_aria_description',
     ]);
+    expect(findByLabel(ariaSom, 'password requirements').map((el) => el.id)).toEqual([
+      'e_aria_description',
+    ]);
   });
 
   it('normalizes whitespace for substring and exact matches', () => {
