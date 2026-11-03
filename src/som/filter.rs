@@ -80,8 +80,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   Compound element-role aliases also accept spaces, such as `text input`,
 ///   `search box`, `menu item`, and `unordered list`.
 /// - Heading levels: `h1` .. `h6` (or `heading1` .. `heading6`, including
-///   hyphenated `h-1`/`heading-1` forms) match headings whose compiled
-///   `attrs.level` is that integer. Missing or out-of-range levels are not invented.
+///   hyphenated, underscored, and spaced forms such as `h-1`, `h_1`, and
+///   `h 1`) match headings whose compiled `attrs.level` is that integer.
+///   Missing or out-of-range levels are not invented.
 /// - Action surfaces: `interactive` / `interactives` / `interactive element` /
 ///   `interactive-element` / `interactive elements` / `interactive_elements` /
 ///   `interactive-elements`, bare action names (`click`, `type`,
@@ -491,7 +492,7 @@ fn parse_heading_level_selector(selector: &str) -> Option<u8> {
     let suffix = normalized
         .strip_prefix("heading")
         .or_else(|| normalized.strip_prefix('h'))?;
-    let level_suffix = suffix.strip_prefix('-').unwrap_or(suffix);
+    let level_suffix = suffix.trim_start_matches(['-', '_', ' ']);
     if level_suffix.len() > 1 && level_suffix.starts_with('0') {
         return None;
     }
@@ -1728,7 +1729,11 @@ mod tests {
         }
         assert_eq!(parse_heading_level_selector("heading6"), Some(6));
         assert_eq!(parse_heading_level_selector("h-6"), Some(6));
+        assert_eq!(parse_heading_level_selector("h_6"), Some(6));
+        assert_eq!(parse_heading_level_selector("h 6"), Some(6));
         assert_eq!(parse_heading_level_selector("heading-6"), Some(6));
+        assert_eq!(parse_heading_level_selector("heading_6"), Some(6));
+        assert_eq!(parse_heading_level_selector("heading 6"), Some(6));
         assert_eq!(parse_heading_level_selector("heading7"), None);
         assert_eq!(parse_heading_level_selector("h01"), None);
         assert_eq!(parse_heading_level_selector("heading-01"), None);
