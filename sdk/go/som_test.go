@@ -1030,18 +1030,22 @@ func TestGetActionPlanUsesCompiledLabelFallbacks(t *testing.T) {
 	placeholder := "Search documentation"
 	alt := "Hero image"
 	ariaLabel := "Open settings"
+	ariaValueText := "Monthly plan"
+	ariaRoleDescription := "Plan option"
 	som := &Som{Regions: []Region{{Elements: []Element{
 		{ID: "e_title", Role: "button", Actions: []string{"click"}, Attrs: &ElementAttrs{Title: &title}},
 		{ID: "e_placeholder", Role: "text_input", Actions: []string{"type"}, Attrs: &ElementAttrs{Placeholder: &placeholder}},
 		{ID: "e_alt", Role: "image", Actions: []string{"click"}, Attrs: &ElementAttrs{Alt: &alt}},
 		{ID: "e_aria", Role: "button", Actions: []string{"click"}, Attrs: &ElementAttrs{Aria: &AriaState{Label: &ariaLabel}}},
+		{ID: "e_value_text", Role: "slider", Actions: []string{"click"}, Attrs: &ElementAttrs{Aria: &AriaState{ValueText: &ariaValueText}}},
+		{ID: "e_role_description", Role: "option", Actions: []string{"click"}, Attrs: &ElementAttrs{Aria: &AriaState{RoleDescription: &ariaRoleDescription}}},
 	}}}}
 
 	plan := GetActionPlan(som)
-	if len(plan) != 4 {
-		t.Fatalf("GetActionPlan() = %d items, want 4", len(plan))
+	if len(plan) != 6 {
+		t.Fatalf("GetActionPlan() = %d items, want 6", len(plan))
 	}
-	for i, want := range []string{title, placeholder, alt, ariaLabel} {
+	for i, want := range []string{title, placeholder, alt, ariaLabel, ariaValueText, ariaRoleDescription} {
 		if plan[i].Label == nil || *plan[i].Label != want {
 			t.Errorf("plan[%d].Label = %v, want %q", i, plan[i].Label, want)
 		}

@@ -859,11 +859,15 @@ func actionPlanLabel(el Element) *string {
 	if el.Attrs != nil {
 		var ariaLabel *string
 		var ariaDescription *string
+		var ariaValueText *string
+		var ariaRoleDescription *string
 		if el.Attrs.Aria != nil {
 			ariaLabel = el.Attrs.Aria.Label
 			ariaDescription = el.Attrs.Aria.Description
+			ariaValueText = el.Attrs.Aria.ValueText
+			ariaRoleDescription = el.Attrs.Aria.RoleDescription
 		}
-		candidates = append(candidates, ariaLabel, ariaDescription, el.Attrs.Title, el.Attrs.Placeholder, el.Attrs.Alt)
+		candidates = append(candidates, ariaLabel, ariaDescription, ariaValueText, ariaRoleDescription, el.Attrs.Title, el.Attrs.Placeholder, el.Attrs.Alt)
 	}
 	for _, candidate := range candidates {
 		if candidate != nil && normalizeQueryText(*candidate) != "" {
