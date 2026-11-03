@@ -974,11 +974,13 @@ func TestFindActionTargetsByLabelCompiledFallbacks(t *testing.T) {
 	placeholder := "Search documentation"
 	alt := "Hero image"
 	ariaLabel := "Open settings"
+	ariaDescription := "Password requirements"
 	som := &Som{Regions: []Region{{Elements: []Element{
 		{ID: "e_title", Role: "button", Actions: []string{"click"}, Attrs: &ElementAttrs{Title: &title}},
 		{ID: "e_placeholder", Role: "text_input", Actions: []string{"type"}, Attrs: &ElementAttrs{Placeholder: &placeholder}},
 		{ID: "e_alt", Role: "image", Actions: []string{"click"}, Attrs: &ElementAttrs{Alt: &alt}},
 		{ID: "e_aria", Role: "button", Actions: []string{"click"}, Attrs: &ElementAttrs{Aria: &AriaState{Label: &ariaLabel}}},
+		{ID: "e_aria_description", Role: "button", Actions: []string{"click"}, Attrs: &ElementAttrs{Aria: &AriaState{Description: &ariaDescription}}},
 	}}}}
 
 	for _, test := range []struct {
@@ -990,6 +992,7 @@ func TestFindActionTargetsByLabelCompiledFallbacks(t *testing.T) {
 		{name: "placeholder", query: "search documentation", want: "e_placeholder"},
 		{name: "alt", query: "hero image", want: "e_alt"},
 		{name: "aria label", query: "open settings", want: "e_aria"},
+		{name: "aria description", query: "password requirements", want: "e_aria_description"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			got := FindActionTargetsByLabel(som, test.query, true)
