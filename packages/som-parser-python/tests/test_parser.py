@@ -989,7 +989,18 @@ class TestGetActionPlan:
         )
         som = parse_som(payload)
 
-        for alias in ("h2", "heading2", "h-2", "heading-2", "h 2", "heading 2"):
+        for alias in (
+            "h2",
+            "heading2",
+            "h-2",
+            "heading-2",
+            "h 2",
+            "heading 2",
+            "role=h2",
+            "role:heading-2",
+            "role = h 2",
+            "role : heading 2",
+        ):
             targets = find_action_targets_by_role(som, alias)
             assert [target["id"] for target in targets] == ["action-heading"], alias
             assert targets[0]["level"] == "2"
@@ -1072,6 +1083,20 @@ class TestGetHeadings:
         headings = get_headings(som)
         assert len(headings) == 1
         assert headings[0] == {"level": 1, "text": "Welcome", "id": "e_3"}
+
+    def test_headings_preserve_missing_level(self, som: Som):
+        payload = json.loads(json.dumps(FIXTURE_SOM))
+        payload["regions"][1]["elements"].append(
+            {"id": "e_heading_missing_level", "role": "heading", "text": "Untitled"}
+        )
+
+        headings = get_headings(parse_som(payload))
+
+        assert headings[-1] == {
+            "level": None,
+            "text": "Untitled",
+            "id": "e_heading_missing_level",
+        }
 
 
 class TestGetText:

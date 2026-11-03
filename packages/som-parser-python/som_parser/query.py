@@ -209,6 +209,10 @@ def _normalize_label_text(value: str) -> str:
 def _normalize_role_alias(value: str) -> str:
     """Normalize role aliases so hyphenated and spaced forms behave alike."""
     normalized = " ".join(value.strip().lower().split())
+    if normalized.startswith("role"):
+        remainder = normalized[4:].lstrip()
+        if remainder.startswith((":", "=")):
+            normalized = remainder[1:].strip()
     return "_".join(normalized.replace("-", " ").split())
 
 
@@ -717,7 +721,7 @@ def get_headings(som: Som) -> List[Dict[str, object]]:
     """Extract heading hierarchy as a list of dicts with level, text, and id."""
     headings: List[Dict[str, object]] = []
     for el in find_by_role(som, ElementRole.HEADING):
-        level = el.attrs.level if el.attrs and el.attrs.level is not None else 0
+        level = el.attrs.level if el.attrs else None
         headings.append({"level": level, "text": el.text, "id": el.id})
     return headings
 
