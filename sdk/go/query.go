@@ -567,10 +567,15 @@ func elementMatchesLabel(el Element, lowerLabel string, exact bool) bool {
 	if el.Attrs == nil {
 		return false
 	}
-	return matches(el.Attrs.Title) ||
+	if matches(el.Attrs.Title) ||
 		matches(el.Attrs.Placeholder) ||
-		matches(el.Attrs.Alt) ||
-		(el.Attrs.Aria != nil && (matches(el.Attrs.Aria.Label) || matches(el.Attrs.Aria.Description)))
+		matches(el.Attrs.Alt) {
+		return true
+	}
+	return el.Attrs.Aria != nil && (matches(el.Attrs.Aria.Label) ||
+		matches(el.Attrs.Aria.Description) ||
+		matches(el.Attrs.Aria.ValueText) ||
+		matches(el.Attrs.Aria.RoleDescription))
 }
 
 func normalizeQueryText(value string) string {

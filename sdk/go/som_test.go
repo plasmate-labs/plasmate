@@ -891,6 +891,28 @@ func TestFindByLabelMatchesAriaDescription(t *testing.T) {
 	}
 }
 
+func TestFindByLabelMatchesAriaValueFallbacks(t *testing.T) {
+	valueText := "Monthly plan"
+	roleDescription := "Plan option"
+	som := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "e_value_text", Attrs: &ElementAttrs{Aria: &AriaState{ValueText: &valueText}}},
+		{ID: "e_role_description", Attrs: &ElementAttrs{Aria: &AriaState{RoleDescription: &roleDescription}}},
+	}}}}
+
+	for _, test := range []struct {
+		label string
+		want  string
+	}{
+		{label: "monthly plan", want: "e_value_text"},
+		{label: "plan option", want: "e_role_description"},
+	} {
+		results := FindByLabel(som, test.label)
+		if len(results) != 1 || results[0].ID != test.want {
+			t.Fatalf("FindByLabel(%q) = %#v, want %s", test.label, results, test.want)
+		}
+	}
+}
+
 func TestFindByLabel(t *testing.T) {
 	som := mustParse(t)
 
