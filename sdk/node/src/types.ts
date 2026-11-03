@@ -192,6 +192,7 @@ export interface AriaState {
   valuenow?: string;
   valuetext?: string;
   label?: string;
+  description?: string;
   labelledby?: string;
   describedby?: string;
 }

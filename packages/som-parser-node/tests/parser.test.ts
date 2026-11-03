@@ -477,6 +477,22 @@ describe('findByText', () => {
     expect(findByText(som, 'Confirm purchase', { exact: true }).map((el) => el.id)).toEqual([
       'e_metadata',
     ]);
+
+    const ariaSom: Som = {
+      ...FIXTURE,
+      regions: [{
+        id: 'r_aria_metadata',
+        role: 'main',
+        elements: [{
+          id: 'e_aria_description',
+          role: 'text_input',
+          attrs: { aria: { description: 'Password requirements' } },
+        }],
+      }],
+    };
+    expect(findByText(ariaSom, 'password requirements').map((el) => el.id)).toEqual([
+      'e_aria_description',
+    ]);
   });
 
   it('normalizes whitespace for substring and exact matches', () => {
