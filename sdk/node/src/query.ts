@@ -539,6 +539,8 @@ function labelCandidates(el: SomElement): string[] {
     el.text,
     el.attrs?.aria?.label,
     el.attrs?.aria?.description,
+    el.attrs?.aria?.valuetext,
+    el.attrs?.aria?.roledescription,
     el.attrs?.title,
     el.attrs?.placeholder,
     el.attrs?.alt,

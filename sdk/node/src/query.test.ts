@@ -527,6 +527,36 @@ describe('findByLabel', () => {
     assert.deepEqual(findByLabel(som, 'Close dialog', { exact: true }).map((el) => el.id), ['title']);
     assert.deepEqual(findByLabel(som, 'products').map((el) => el.id), ['placeholder']);
     assert.deepEqual(findByLabel(som, 'preview').map((el) => el.id), ['alt']);
+    assert.deepEqual(findByLabel({
+      ...fixture,
+      regions: [{
+        ...fixture.regions[0],
+        elements: [{
+          id: 'aria-value',
+          role: 'slider',
+          attrs: { aria: { valuetext: '75 percent' } },
+        }, {
+          id: 'aria-role',
+          role: 'button',
+          attrs: { aria: { roledescription: 'dismiss control' } },
+        }],
+      }],
+    } as Som, 'percent').map((el) => el.id), ['aria-value']);
+    assert.deepEqual(findByLabel({
+      ...fixture,
+      regions: [{
+        ...fixture.regions[0],
+        elements: [{
+          id: 'aria-value',
+          role: 'slider',
+          attrs: { aria: { valuetext: '75 percent' } },
+        }, {
+          id: 'aria-role',
+          role: 'button',
+          attrs: { aria: { roledescription: 'dismiss control' } },
+        }],
+      }],
+    } as Som, 'dismiss control', { exact: true }).map((el) => el.id), ['aria-role']);
   });
 });
 

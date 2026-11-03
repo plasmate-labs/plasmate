@@ -853,10 +853,12 @@ func actionPlanLabel(el Element) *string {
 	candidates := []*string{el.Label, el.Text}
 	if el.Attrs != nil {
 		var ariaLabel *string
+		var ariaDescription *string
 		if el.Attrs.Aria != nil {
 			ariaLabel = el.Attrs.Aria.Label
+			ariaDescription = el.Attrs.Aria.Description
 		}
-		candidates = append(candidates, ariaLabel, el.Attrs.Title, el.Attrs.Placeholder, el.Attrs.Alt)
+		candidates = append(candidates, ariaLabel, ariaDescription, el.Attrs.Title, el.Attrs.Placeholder, el.Attrs.Alt)
 	}
 	for _, candidate := range candidates {
 		if candidate != nil && normalizeQueryText(*candidate) != "" {

@@ -1170,7 +1170,7 @@ def _normalize_label_text(value: str) -> str:
 
 def _label_candidates(element: SomElement) -> List[str]:
     """Return accessible labels and compiled attribute fallbacks."""
-    labels = [element.label] if element.label else []
+    labels = [value for value in (element.label, element.text) if value]
     if element.attrs:
         aria_label = (element.attrs.aria or {}).get("label")
         labels.extend(
