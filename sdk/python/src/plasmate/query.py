@@ -1278,10 +1278,13 @@ def _collect_by_text(
             )
             if value
         )
-        for key in ("valuetext", "roledescription"):
+        for key in ("description", "valuetext", "roledescription"):
             value = (element.attrs.aria or {}).get(key)
             if isinstance(value, str) and value:
                 parts.append(value)
+        aria_label = (element.attrs.aria or {}).get("label")
+        if isinstance(aria_label, str) and aria_label:
+            parts.append(aria_label)
     if element.attrs and element.attrs.items:
         parts.extend(item.text for item in element.attrs.items if item.text)
         parts.extend(item.term for item in element.attrs.items if item.term)

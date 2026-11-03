@@ -1138,6 +1138,11 @@ describe('findByText', () => {
               role: 'button',
               attrs: { aria: { label: 'Open settings' } },
             },
+            {
+              id: 'e_aria_description',
+              role: 'text_input',
+              attrs: { aria: { description: 'Password requirements' } },
+            },
           ],
         },
       ],
@@ -1153,6 +1158,9 @@ describe('findByText', () => {
       'e_progress',
     ]);
     assert.deepEqual(findByText(som, 'settings').map((el) => el.id), ['e_aria_label']);
+    assert.deepEqual(findByText(som, 'password requirements').map((el) => el.id), [
+      'e_aria_description',
+    ]);
   });
 
   it('finds text inside shadow roots', () => {
