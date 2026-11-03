@@ -283,6 +283,15 @@ class TestFindByLabel:
         results = find_by_label(sample_som, "email")
         assert [el.id for el in results] == ["e9"]
 
+    def test_finds_authored_text_fallback(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(id="e11", role=ElementRole.button, text="Save changes")
+        )
+
+        assert [el.id for el in find_by_label(
+            sample_som, "Save changes", exact=True
+        )] == ["e11"]
+
     def test_exact_label_match_is_case_sensitive(self, sample_som: Som) -> None:
         assert [el.id for el in find_by_label(sample_som, "Email", exact=True)] == ["e9"]
         assert find_by_label(sample_som, "email", exact=True) == []
