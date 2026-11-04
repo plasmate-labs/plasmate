@@ -1107,8 +1107,11 @@ func GetActionPlanIndex(som *Som, enabledOnly ...bool) ActionPlanIndex {
 				index.ByTestID[*item.TestID] = item
 			}
 		}
-		if item.Label != nil {
-			label := normalizeQueryText(*item.Label)
+		for _, candidate := range actionItemLabelValues(item) {
+			if candidate == nil {
+				continue
+			}
+			label := normalizeQueryText(*candidate)
 			if label != "" {
 				if _, ok := index.ByLabel[label]; !ok {
 					index.ByLabel[label] = item
@@ -1271,15 +1274,26 @@ func actionItemMatchesLabel(item ActionPlanItem, needle string, exact bool) bool
 		return strings.Contains(candidate, needle)
 	}
 
-	return matches(item.Label) ||
-		matches(item.Title) ||
-		matches(item.Placeholder) ||
-		matches(item.Alt) ||
-		matches(item.AriaLabel) ||
-		matches(item.Description) ||
-		matches(item.AriaDescription) ||
-		matches(item.ValueText) ||
-		matches(item.RoleDescription)
+	for _, candidate := range actionItemLabelValues(item) {
+		if matches(candidate) {
+			return true
+		}
+	}
+	return false
+}
+
+func actionItemLabelValues(item ActionPlanItem) []*string {
+	return []*string{
+		item.Label,
+		item.Title,
+		item.Placeholder,
+		item.Alt,
+		item.AriaLabel,
+		item.Description,
+		item.AriaDescription,
+		item.ValueText,
+		item.RoleDescription,
+	}
 }
 
 // FindActionTargetsByRole returns compact action targets whose SOM role matches

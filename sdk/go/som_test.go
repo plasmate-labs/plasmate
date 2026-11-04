@@ -1029,6 +1029,27 @@ func TestFindActionTargetsByLabelCompiledFallbacks(t *testing.T) {
 		})
 	}
 
+	index := GetActionPlanIndex(som)
+	for _, test := range []struct {
+		query string
+		want  string
+	}{
+		{query: "save changes", want: "e_title"},
+		{query: "search documentation", want: "e_placeholder"},
+		{query: "hero image", want: "e_alt"},
+		{query: "open settings", want: "e_aria"},
+		{query: "password requirements", want: "e_aria"},
+		{query: "monthly plan", want: "e_aria"},
+		{query: "plan option", want: "e_aria"},
+	} {
+		t.Run("indexed "+test.query, func(t *testing.T) {
+			got := FindActionTargetInIndex(index, test.query, "label")
+			if got == nil || got.ID != test.want {
+				t.Fatalf("FindActionTargetInIndex(%q) = %#v, want %s", test.query, got, test.want)
+			}
+		})
+	}
+
 	plan := GetActionPlan(som)
 	if len(plan) != 4 {
 		t.Fatalf("GetActionPlan() = %d items, want 4", len(plan))
