@@ -71,12 +71,14 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `iframe` / `iframes`, `audio` / `audios`, `video` / `videos`,
 ///   `canvas` / `canvases`
 ///   and the grouped media selector `media` / `media_item` / `media-item` /
-///   `mediaitem` / `media_items` / `media-items` (images and media-capable groups).
-///   `audio_item`/`audio-item`/`audio_items`/`audio-items` and
-///   `video_item`/`video-item`/`video_items`/`video-items` are convenient
+///   `media item` / `mediaitem` / `media_items` / `media-items` / `media items`
+///   (images and media-capable groups).
+///   `audio_item`/`audio-item`/`audio item`/`audio_items`/`audio-items`/
+///   `audio items` and `video_item`/`video-item`/`video item`/
+///   `video_items`/`video-items`/`video items` are convenient
 ///   media aliases (and match the grouped media behavior). The equivalent
-///   `canvas_item`/`canvas-item`/`canvas_items`/`canvas-items` forms are also
-///   supported.
+///   `canvas_item`/`canvas-item`/`canvas item`/`canvas_items`/`canvas-items`/
+///   `canvas items` forms are also supported.
 ///   Compound element-role aliases also accept spaces, such as `text input`,
 ///   `search box`, `menu item`, and `unordered list`.
 /// - Heading levels: `h1` .. `h6` (or `heading1` .. `heading6`, including
@@ -220,9 +222,11 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         "media"
             | "media_item"
             | "media-item"
+            | "media item"
             | "mediaitem"
             | "media_items"
             | "media-items"
+            | "media items"
     ) {
         return filter_som_elements(som, selector, is_media_element);
     }
@@ -417,9 +421,11 @@ fn media_source_role(selector: &str) -> Option<&'static str> {
         | "audios"
         | "audio_item"
         | "audio-item"
+        | "audio item"
         | "audioitem"
         | "audio_items"
         | "audio-items"
+        | "audio items"
         | "audioitems" => {
             Some("audio")
         }
@@ -427,9 +433,11 @@ fn media_source_role(selector: &str) -> Option<&'static str> {
         | "videos"
         | "video_item"
         | "video-item"
+        | "video item"
         | "videoitem"
         | "video_items"
         | "video-items"
+        | "video items"
         | "videoitems" => {
             Some("video")
         }
@@ -437,9 +445,11 @@ fn media_source_role(selector: &str) -> Option<&'static str> {
         | "canvases"
         | "canvas_item"
         | "canvas-item"
+        | "canvas item"
         | "canvasitem"
         | "canvas_items"
         | "canvas-items"
+        | "canvas items"
         | "canvasitems" => Some("canvas"),
         _ => None,
     }
@@ -452,7 +462,10 @@ fn source_specific_group_role(selector: &str) -> Option<&'static str> {
         | "progress_bar"
         | "progress-bar"
         | "progress bar"
-        | "progressbars" => Some("progressbar"),
+        | "progressbars"
+        | "progress_bars"
+        | "progress-bars"
+        | "progress bars" => Some("progressbar"),
         "meter" | "meters" => Some("meter"),
         _ => None,
     }
@@ -766,6 +779,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "progress-bar"
         | "progress bar"
         | "progressbars"
+        | "progress_bars"
+        | "progress-bars"
+        | "progress bars"
         | "meter"
         | "meters"
         | "output"
@@ -1598,21 +1614,27 @@ mod tests {
         for selector in [
             "audio_item",
             "audio-item",
+            "audio item",
             "audioitem",
             "audio_items",
             "audio-items",
+            "audio items",
             "audioitems",
             "video_item",
             "video-item",
+            "video item",
             "videoitem",
             "video_items",
             "video-items",
+            "video items",
             "videoitems",
             "canvas_item",
             "canvas-item",
+            "canvas item",
             "canvasitem",
             "canvas_items",
             "canvas-items",
+            "canvas items",
             "canvasitems",
         ] {
             let mut som = make_test_som();
@@ -1626,6 +1648,7 @@ mod tests {
             };
             som.regions[0].elements[0].attrs =
                 Some(serde_json::json!({"source_role": source_role}));
+            som.regions[1].elements[0].role = ElementRole::Group;
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
@@ -1781,12 +1804,24 @@ mod tests {
         let mut som = make_test_som();
         som.regions[0].elements[0].role = ElementRole::Image;
 
-        for selector in ["media_item", "media-item", "mediaitem"] {
+        for selector in ["media_item", "media-item", "media item", "mediaitem"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Image);
         }
+    }
+
+    #[test]
+    fn test_selector_media_item_plural_spaced_alias_matches_grouped_media() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Image;
+
+        let filtered = apply_selector(&som, "media items");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Image);
     }
 
     #[test]
@@ -2045,6 +2080,9 @@ mod tests {
             "progress_bar",
             "progress-bar",
             "progress bar",
+            "progress_bars",
+            "progress-bars",
+            "progress bars",
             "meter",
             "output",
             "audio",
@@ -2054,6 +2092,31 @@ mod tests {
             assert_eq!(
                 parse_element_role(selector),
                 Some(ElementRole::Group),
+                "selector: {selector}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_selector_progress_plural_aliases_preserve_source_specific_matching() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Group;
+        som.regions[0].elements[0].attrs = Some(serde_json::json!({
+            "source_role": "progressbar"
+        }));
+        som.regions[1].elements[0].role = ElementRole::Group;
+
+        for selector in ["progress_bars", "progress-bars", "progress bars"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements[0]
+                    .attrs
+                    .as_ref()
+                    .and_then(|attrs| attrs.get("source_role"))
+                    .and_then(serde_json::Value::as_str),
+                Some("progressbar"),
                 "selector: {selector}"
             );
         }
