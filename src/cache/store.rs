@@ -531,6 +531,14 @@ fn canonical_selector_alias(value: &str) -> String {
         // aliases accepted by `apply_selector`.
         "buttons" => "button".to_string(),
         "links" | "anchors" | "hyperlink" | "hyperlinks" => "link".to_string(),
+        // Table-like aliases all resolve to the SOM table role. Reuse one
+        // cache entry for the spellings exposed by the selector contract.
+        "tables" | "data_table" | "data_tables" | "data-table" | "data-tables" | "data table"
+        | "data tables" | "grid" | "grids" | "data_grid" | "data_grids" | "data-grid"
+        | "data-grids" | "data grid" | "data grids" | "table_grid" | "table_grids"
+        | "table-grid" | "table-grids" | "table grid" | "table grids" | "tree_grid"
+        | "tree_grids" | "tree-grid" | "tree-grids" | "tree grid" | "tree grids" | "treegrid"
+        | "treegrids" => "table".to_string(),
         value => value.to_string(),
     }
 }
@@ -756,6 +764,44 @@ mod tests {
                     CacheLookup::Hit(_)
                 ),
                 "equivalent selector should hit cache: {stored} vs {lookup}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_selector_cache_keys_reuse_table_aliases() {
+        let cache = SomCache::new(CacheConfig::default());
+        for stored in [
+            "tables",
+            "data_table",
+            "data-table",
+            "data table",
+            "grid",
+            "data_grid",
+            "data-grid",
+            "data grid",
+            "table_grid",
+            "table-grid",
+            "table grid",
+            "treegrid",
+            "tree_grid",
+            "tree-grid",
+            "tree grid",
+        ] {
+            cache.store_with_selector(
+                "https://example.com/app",
+                111,
+                Some(stored),
+                stored.as_bytes().to_vec(),
+                100,
+            );
+
+            assert!(
+                matches!(
+                    cache.lookup_with_selector("https://example.com/app", 111, Some("table")),
+                    CacheLookup::Hit(_)
+                ),
+                "table alias should share the canonical cache key: {stored}"
             );
         }
     }
