@@ -527,10 +527,36 @@ fn normalized_selector(selector: Option<&str>) -> Option<String> {
 
 fn canonical_selector_alias(value: &str) -> String {
     match value {
+        // Region aliases share one cache entry with their canonical role.
+        "main_content" | "main_contents" | "main-content" | "main-contents" | "main content"
+        | "main contents" | "main_region" | "main-region" | "main region" | "main_regions"
+        | "main-regions" | "main regions" | "maincontent" | "maincontents" => "main".to_string(),
+        "navs" | "navigation" | "navigations" | "nav_region" | "nav-region" | "nav region"
+        | "nav_regions" | "nav-regions" | "nav regions" | "navigation_region"
+        | "navigation-region" | "navigation region" | "navigation_regions"
+        | "navigation-regions" | "navigation regions" => "nav".to_string(),
+        "searches" | "search_nav" | "search-nav" | "search_navigation" | "search-navigation"
+        | "search navigation" | "search_navigations" | "search-navigations"
+        | "search navigations" => "search".to_string(),
+        "asides" | "sidebar" | "sidebars" | "complementary" => "aside".to_string(),
+        "headers" | "banner" => "header".to_string(),
+        "footers" | "contentinfo" | "content_info" | "content-info" => "footer".to_string(),
+        "forms" => "form".to_string(),
+        "dialogs" => "dialog".to_string(),
+        "contents" | "content_region" | "content-region" | "content region" | "content_regions"
+        | "content-regions" | "content regions" => "content".to_string(),
         // Keep cache entries shared across the most common plural element
         // aliases accepted by `apply_selector`.
         "buttons" => "button".to_string(),
         "links" | "anchors" | "hyperlink" | "hyperlinks" => "link".to_string(),
+        // Table-like aliases all resolve to the SOM table role. Reuse one
+        // cache entry for the spellings exposed by the selector contract.
+        "tables" | "data_table" | "data_tables" | "data-table" | "data-tables" | "data table"
+        | "data tables" | "grid" | "grids" | "data_grid" | "data_grids" | "data-grid"
+        | "data-grids" | "data grid" | "data grids" | "table_grid" | "table_grids"
+        | "table-grid" | "table-grids" | "table grid" | "table grids" | "tree_grid"
+        | "tree_grids" | "tree-grid" | "tree-grids" | "tree grid" | "tree grids" | "treegrid"
+        | "treegrids" => "table".to_string(),
         value => value.to_string(),
     }
 }
@@ -756,6 +782,75 @@ mod tests {
                     CacheLookup::Hit(_)
                 ),
                 "equivalent selector should hit cache: {stored} vs {lookup}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_selector_cache_keys_reuse_table_aliases() {
+        let cache = SomCache::new(CacheConfig::default());
+        for stored in [
+            "tables",
+            "data_table",
+            "data-table",
+            "data table",
+            "grid",
+            "data_grid",
+            "data-grid",
+            "data grid",
+            "table_grid",
+            "table-grid",
+            "table grid",
+            "treegrid",
+            "tree_grid",
+            "tree-grid",
+            "tree grid",
+        ] {
+            cache.store_with_selector(
+                "https://example.com/app",
+                111,
+                Some(stored),
+                stored.as_bytes().to_vec(),
+                100,
+            );
+
+            assert!(
+                matches!(
+                    cache.lookup_with_selector("https://example.com/app", 111, Some("table")),
+                    CacheLookup::Hit(_)
+                ),
+                "table alias should share the canonical cache key: {stored}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_selector_cache_keys_reuse_region_aliases() {
+        let cache = SomCache::new(CacheConfig::default());
+        for (stored, canonical) in [
+            ("main-region", "main"),
+            ("navigation regions", "nav"),
+            ("search_navigation", "search"),
+            ("sidebar", "aside"),
+            ("content-info", "footer"),
+            ("forms", "form"),
+            ("dialogs", "dialog"),
+            ("content regions", "content"),
+        ] {
+            cache.store_with_selector(
+                "https://example.com/app",
+                111,
+                Some(stored),
+                stored.as_bytes().to_vec(),
+                100,
+            );
+
+            assert!(
+                matches!(
+                    cache.lookup_with_selector("https://example.com/app", 111, Some(canonical)),
+                    CacheLookup::Hit(_)
+                ),
+                "region alias should share the canonical cache key: {stored}"
             );
         }
     }
