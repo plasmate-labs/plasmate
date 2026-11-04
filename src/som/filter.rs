@@ -52,7 +52,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `check boxes` / `switch` /
 ///   `switches` / `menuitemcheckbox` / `menuitemcheckboxes`, `radio` / `radios` /
 ///   `radio button` / `radio buttons` /
-///   `menuitemradio` / `menuitemradios`, `heading`, `image` / `images`, `list` / `lists`,
+///   `menuitemradio` / `menuitemradios`, `heading`, `image` / `images` / `image_item` /
+///   `image-item` / `image item` / `imageitem` / `image_items` / `image-items` /
+///   `image items` / `imageitems`, `list` / `lists`,
 ///   `table` / `tables` / `data_table` / `data_tables` / `data-table` / `data tables`,
 ///   `paragraph` / `blockquote` / `quote` / `alert` / `status` / `tooltip`, `section` / `sections`,
 ///   plus common HTML tag aliases `a`/`anchor`, `p`, `ul`, `ol`, `dl`, and `menu`,
@@ -735,7 +737,19 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "menu_item_radio"
         | "menu_item_radios" => Some(ElementRole::Radio),
         "heading" | "headings" => Some(ElementRole::Heading),
-        "image" | "images" | "img" => Some(ElementRole::Image),
+        "image"
+        | "images"
+        | "img"
+        | "picture"
+        | "pictures"
+        | "image_item"
+        | "image-item"
+        | "image item"
+        | "imageitem"
+        | "image_items"
+        | "image-items"
+        | "image items"
+        | "imageitems" => Some(ElementRole::Image),
         "list"
         | "lists"
         | "ul"
@@ -767,6 +781,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         "article" | "articles" | "section" | "sections" => Some(ElementRole::Section),
         "group"
         | "groups"
+        | "div"
         | "fieldset"
         | "fieldsets"
         | "figure"
@@ -1787,6 +1802,41 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_picture_tag_aliases() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Image;
+
+        for selector in ["picture", "pictures"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Image);
+        }
+    }
+
+    #[test]
+    fn test_selector_image_item_aliases() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Image;
+
+        for selector in [
+            "image_item",
+            "image-item",
+            "image item",
+            "imageitem",
+            "image_items",
+            "image-items",
+            "image items",
+            "imageitems",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Image);
+        }
+    }
+
+    #[test]
     fn test_selector_media_item_aliases_match_grouped_media() {
         let mut som = make_test_som();
         som.regions[0].elements[0].role = ElementRole::Image;
@@ -2141,6 +2191,7 @@ mod tests {
         });
 
         for (selector, expected_role) in [
+            ("div", ElementRole::Group),
             ("fieldset", ElementRole::Group),
             ("hr", ElementRole::Separator),
             ("summary", ElementRole::Details),
