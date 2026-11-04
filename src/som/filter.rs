@@ -452,7 +452,10 @@ fn source_specific_group_role(selector: &str) -> Option<&'static str> {
         | "progress_bar"
         | "progress-bar"
         | "progress bar"
-        | "progressbars" => Some("progressbar"),
+        | "progressbars"
+        | "progress_bars"
+        | "progress-bars"
+        | "progress bars" => Some("progressbar"),
         "meter" | "meters" => Some("meter"),
         _ => None,
     }
@@ -2060,6 +2063,31 @@ mod tests {
             assert_eq!(
                 parse_element_role(selector),
                 Some(ElementRole::Group),
+                "selector: {selector}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_selector_progress_plural_aliases_preserve_source_specific_matching() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Group;
+        som.regions[0].elements[0].attrs = Some(serde_json::json!({
+            "source_role": "progressbar"
+        }));
+        som.regions[1].elements[0].role = ElementRole::Group;
+
+        for selector in ["progress_bars", "progress-bars", "progress bars"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements[0]
+                    .attrs
+                    .as_ref()
+                    .and_then(|attrs| attrs.get("source_role"))
+                    .and_then(serde_json::Value::as_str),
+                Some("progressbar"),
                 "selector: {selector}"
             );
         }
