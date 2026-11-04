@@ -567,10 +567,15 @@ func elementMatchesLabel(el Element, lowerLabel string, exact bool) bool {
 	if el.Attrs == nil {
 		return false
 	}
-	return matches(el.Attrs.Title) ||
+	if matches(el.Attrs.Title) ||
 		matches(el.Attrs.Placeholder) ||
-		matches(el.Attrs.Alt) ||
-		(el.Attrs.Aria != nil && (matches(el.Attrs.Aria.Label) || matches(el.Attrs.Aria.Description)))
+		matches(el.Attrs.Alt) {
+		return true
+	}
+	return el.Attrs.Aria != nil && (matches(el.Attrs.Aria.Label) ||
+		matches(el.Attrs.Aria.Description) ||
+		matches(el.Attrs.Aria.ValueText) ||
+		matches(el.Attrs.Aria.RoleDescription))
 }
 
 func normalizeQueryText(value string) string {
@@ -799,6 +804,7 @@ type ActionPlanItem struct {
 	AriaPlaceholder   *string     `json:"aria_placeholder,omitempty"`
 	AriaAutocomplete  *string     `json:"aria_autocomplete,omitempty"`
 	AriaLabel         *string     `json:"aria_label,omitempty"`
+	AriaDescription   *string     `json:"aria_description,omitempty"`
 	LabelledBy        *string     `json:"labelledby,omitempty"`
 	DescribedBy       *string     `json:"describedby,omitempty"`
 	ActiveDescendant  *string     `json:"active_descendant,omitempty"`
@@ -854,11 +860,15 @@ func actionPlanLabel(el Element) *string {
 	if el.Attrs != nil {
 		var ariaLabel *string
 		var ariaDescription *string
+		var ariaValueText *string
+		var ariaRoleDescription *string
 		if el.Attrs.Aria != nil {
 			ariaLabel = el.Attrs.Aria.Label
 			ariaDescription = el.Attrs.Aria.Description
+			ariaValueText = el.Attrs.Aria.ValueText
+			ariaRoleDescription = el.Attrs.Aria.RoleDescription
 		}
-		candidates = append(candidates, ariaLabel, ariaDescription, el.Attrs.Title, el.Attrs.Placeholder, el.Attrs.Alt)
+		candidates = append(candidates, ariaLabel, ariaDescription, ariaValueText, ariaRoleDescription, el.Attrs.Title, el.Attrs.Placeholder, el.Attrs.Alt)
 	}
 	for _, candidate := range candidates {
 		if candidate != nil && normalizeQueryText(*candidate) != "" {
@@ -995,6 +1005,7 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.AriaPlaceholder = el.Attrs.Aria.Placeholder
 				item.AriaAutocomplete = el.Attrs.Aria.Autocomplete
 				item.AriaLabel = el.Attrs.Aria.Label
+				item.AriaDescription = el.Attrs.Aria.Description
 				item.LabelledBy = el.Attrs.Aria.LabelledBy
 				item.DescribedBy = el.Attrs.Aria.DescribedBy
 				item.ActiveDescendant = el.Attrs.Aria.ActiveDescendant
@@ -1096,8 +1107,11 @@ func GetActionPlanIndex(som *Som, enabledOnly ...bool) ActionPlanIndex {
 				index.ByTestID[*item.TestID] = item
 			}
 		}
-		if item.Label != nil {
-			label := normalizeQueryText(*item.Label)
+		for _, candidate := range actionItemLabelValues(item) {
+			if candidate == nil {
+				continue
+			}
+			label := normalizeQueryText(*candidate)
 			if label != "" {
 				if _, ok := index.ByLabel[label]; !ok {
 					index.ByLabel[label] = item
@@ -1260,11 +1274,26 @@ func actionItemMatchesLabel(item ActionPlanItem, needle string, exact bool) bool
 		return strings.Contains(candidate, needle)
 	}
 
-	return matches(item.Label) ||
-		matches(item.Title) ||
-		matches(item.Placeholder) ||
-		matches(item.Alt) ||
-		matches(item.AriaLabel)
+	for _, candidate := range actionItemLabelValues(item) {
+		if matches(candidate) {
+			return true
+		}
+	}
+	return false
+}
+
+func actionItemLabelValues(item ActionPlanItem) []*string {
+	return []*string{
+		item.Label,
+		item.Title,
+		item.Placeholder,
+		item.Alt,
+		item.AriaLabel,
+		item.Description,
+		item.AriaDescription,
+		item.ValueText,
+		item.RoleDescription,
+	}
 }
 
 // FindActionTargetsByRole returns compact action targets whose SOM role matches
