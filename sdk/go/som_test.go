@@ -976,8 +976,8 @@ func TestFindActionTargetsByLabelNormalizesQueries(t *testing.T) {
 	}
 
 	partial := FindActionTargetsByLabel(som, "  sea  ", false)
-	if len(partial) != 1 || partial[0].ID != "e5" {
-		t.Fatalf("FindActionTargetsByLabel(partial normalized) = %#v, want e5", partial)
+	if len(partial) != 2 || partial[0].ID != "e5" || partial[1].ID != "e10" {
+		t.Fatalf("FindActionTargetsByLabel(partial normalized) = %#v, want e5/e10", partial)
 	}
 
 	if got := FindActionTargetsByLabel(som, " \n\t", true); len(got) != 0 {
