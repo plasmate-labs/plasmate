@@ -71,7 +71,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `iframe` / `iframes`, `audio` / `audios`, `video` / `videos`,
 ///   `canvas` / `canvases`
 ///   and the grouped media selector `media` / `media_item` / `media-item` /
-///   `mediaitem` / `media_items` / `media-items` (images and media-capable groups).
+///   `media item` / `mediaitem` / `media_items` / `media-items` / `media items`
+///   (images and media-capable groups).
 ///   `audio_item`/`audio-item`/`audio_items`/`audio-items` and
 ///   `video_item`/`video-item`/`video_items`/`video-items` are convenient
 ///   media aliases (and match the grouped media behavior). The equivalent
@@ -220,9 +221,11 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         "media"
             | "media_item"
             | "media-item"
+            | "media item"
             | "mediaitem"
             | "media_items"
             | "media-items"
+            | "media items"
     ) {
         return filter_som_elements(som, selector, is_media_element);
     }
@@ -1787,12 +1790,24 @@ mod tests {
         let mut som = make_test_som();
         som.regions[0].elements[0].role = ElementRole::Image;
 
-        for selector in ["media_item", "media-item", "mediaitem"] {
+        for selector in ["media_item", "media-item", "media item", "mediaitem"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Image);
         }
+    }
+
+    #[test]
+    fn test_selector_media_item_plural_spaced_alias_matches_grouped_media() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Image;
+
+        let filtered = apply_selector(&som, "media items");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Image);
     }
 
     #[test]
