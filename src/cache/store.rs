@@ -497,16 +497,41 @@ fn normalized_selector(selector: Option<&str>) -> Option<String> {
         // Keep cache keys aligned with `apply_selector`: equivalent quoted
         // and whitespace-separated forms should share one selector entry.
         let selector = selector.to_ascii_lowercase();
-        for prefix in ["action", "role"] {
+        for prefix in ["action", "role", "label"] {
             if let Some(rest) = selector.strip_prefix(prefix) {
                 let rest = rest.trim_start();
                 if let Some(separator @ (':' | '=')) = rest.chars().next() {
-                    let value = rest[separator.len_utf8()..].trim();
-                    return Some(format!("{prefix}:{value}"));
+                    let value = strip_selector_quotes(rest[separator.len_utf8()..].trim());
+                    let value = match prefix {
+                        // `apply_selector` treats role=<value> as the same
+                        // selector as the bare role/action value.
+                        "role" => canonical_selector_alias(value),
+                        "action" => match value {
+                            "type_text" | "type-text" => "type".to_string(),
+                            "select_option" | "select-option" => "select".to_string(),
+                            value => value.to_string(),
+                        },
+                        _ => value.to_string(),
+                    };
+                    return Some(if prefix == "label" {
+                        format!("label:{value}")
+                    } else {
+                        value
+                    });
                 }
             }
         }
-        Some(selector)
+        Some(canonical_selector_alias(&selector))
+    }
+}
+
+fn canonical_selector_alias(value: &str) -> String {
+    match value {
+        // Keep cache entries shared across the most common plural element
+        // aliases accepted by `apply_selector`.
+        "buttons" => "button".to_string(),
+        "links" | "anchors" | "hyperlink" | "hyperlinks" => "link".to_string(),
+        value => value.to_string(),
     }
 }
 
@@ -678,6 +703,60 @@ mod tests {
         match cache.lookup_with_selector("https://example.com/app", 111, Some("role=button")) {
             CacheLookup::Hit(entry) => assert_eq!(entry.som_json, b"button".to_vec()),
             _ => panic!("Expected equivalent selector cache hit"),
+        }
+    }
+
+    #[test]
+    fn test_selector_cache_keys_canonicalize_inner_quoted_values() {
+        let cache = SomCache::new(CacheConfig::default());
+        for (stored, lookup) in [
+            ("role='BUTTON'", "role=button"),
+            ("action=\"CLICK\"", "action:click"),
+            ("label:'Save Button'", "label=save button"),
+        ] {
+            cache.store_with_selector(
+                "https://example.com/app",
+                111,
+                Some(stored),
+                stored.as_bytes().to_vec(),
+                100,
+            );
+
+            assert!(
+                matches!(
+                    cache.lookup_with_selector("https://example.com/app", 111, Some(lookup)),
+                    CacheLookup::Hit(_)
+                ),
+                "equivalent selector should hit cache: {stored} vs {lookup}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_selector_cache_keys_reuse_role_and_action_aliases() {
+        let cache = SomCache::new(CacheConfig::default());
+        for (stored, lookup) in [
+            ("role=BUTTON", "button"),
+            ("role=BUTTONS", "button"),
+            ("links", "link"),
+            ("action=TYPE_TEXT", "type"),
+            ("action:select-option", "select"),
+        ] {
+            cache.store_with_selector(
+                "https://example.com/app",
+                111,
+                Some(stored),
+                stored.as_bytes().to_vec(),
+                100,
+            );
+
+            assert!(
+                matches!(
+                    cache.lookup_with_selector("https://example.com/app", 111, Some(lookup)),
+                    CacheLookup::Hit(_)
+                ),
+                "equivalent selector should hit cache: {stored} vs {lookup}"
+            );
         }
     }
 
