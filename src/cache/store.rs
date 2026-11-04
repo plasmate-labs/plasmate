@@ -489,8 +489,10 @@ fn normalized_selector(selector: Option<&str>) -> Option<String> {
     // IDs retain the same case-sensitive cache semantics as unquoted IDs.
     let selector = strip_selector_quotes(selector);
     let selector = selector.split_whitespace().collect::<Vec<_>>().join(" ");
-    if selector.starts_with('#') {
-        Some(selector.to_string())
+    if let Some(id) = selector.strip_prefix('#') {
+        // `apply_selector` accepts both #id and #'id'/#"id" forms while
+        // preserving ID case. Keep those spellings on the same cache entry.
+        Some(format!("#{id}", id = strip_selector_quotes(id.trim())))
     } else {
         // Keep cache keys aligned with `apply_selector`: equivalent quoted
         // and whitespace-separated forms should share one selector entry.
@@ -717,6 +719,27 @@ mod tests {
         ));
         assert!(matches!(
             cache.lookup_with_selector("https://example.com/app", 111, Some("#savebutton")),
+            CacheLookup::Miss
+        ));
+    }
+
+    #[test]
+    fn test_inner_quoted_id_selector_cache_keys_match_unquoted_ids() {
+        let cache = SomCache::new(CacheConfig::default());
+        cache.store_with_selector(
+            "https://example.com/app",
+            111,
+            Some("#'SaveButton'"),
+            b"save".to_vec(),
+            100,
+        );
+
+        assert!(matches!(
+            cache.lookup_with_selector("https://example.com/app", 111, Some("#SaveButton")),
+            CacheLookup::Hit(_)
+        ));
+        assert!(matches!(
+            cache.lookup_with_selector("https://example.com/app", 111, Some("#'savebutton'")),
             CacheLookup::Miss
         ));
     }
