@@ -485,21 +485,42 @@ fn normalized_selector(selector: Option<&str>) -> Option<String> {
     if selector.is_empty() {
         return None;
     }
-    if selector.starts_with('#') {
-        Some(selector.to_string())
+    // Normalize shell/JSON quoting before classifying the selector so quoted
+    // IDs retain the same case-sensitive cache semantics as unquoted IDs.
+    let selector = strip_selector_quotes(selector);
+    let selector = selector.split_whitespace().collect::<Vec<_>>().join(" ");
+    if let Some(id) = selector.strip_prefix('#') {
+        // `apply_selector` accepts both #id and #'id'/#"id" forms while
+        // preserving ID case. Keep those spellings on the same cache entry.
+        Some(format!("#{id}", id = strip_selector_quotes(id.trim())))
     } else {
+        // Keep cache keys aligned with `apply_selector`: equivalent quoted
+        // and whitespace-separated forms should share one selector entry.
         let selector = selector.to_ascii_lowercase();
         for prefix in ["action", "role"] {
             if let Some(rest) = selector.strip_prefix(prefix) {
                 let rest = rest.trim_start();
                 if let Some(separator @ (':' | '=')) = rest.chars().next() {
                     let value = rest[separator.len_utf8()..].trim();
-                    return Some(format!("{prefix}{separator}{value}"));
+                    return Some(format!("{prefix}:{value}"));
                 }
             }
         }
         Some(selector)
     }
+}
+
+fn strip_selector_quotes(value: &str) -> &str {
+    value
+        .strip_prefix('"')
+        .and_then(|value| value.strip_suffix('"'))
+        .or_else(|| {
+            value
+                .strip_prefix('\'')
+                .and_then(|value| value.strip_suffix('\''))
+        })
+        .map(str::trim)
+        .unwrap_or(value)
 }
 
 fn cache_key(url: &str, selector: Option<&str>) -> String {
@@ -644,6 +665,23 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_cache_keys_canonicalize_quotes_and_whitespace() {
+        let cache = SomCache::new(CacheConfig::default());
+        cache.store_with_selector(
+            "https://example.com/app",
+            111,
+            Some("  'ROLE :  BUTTON'  "),
+            b"button".to_vec(),
+            100,
+        );
+
+        match cache.lookup_with_selector("https://example.com/app", 111, Some("role=button")) {
+            CacheLookup::Hit(entry) => assert_eq!(entry.som_json, b"button".to_vec()),
+            _ => panic!("Expected equivalent selector cache hit"),
+        }
+    }
+
+    #[test]
     fn test_id_selector_cache_keys_preserve_case() {
         let cache = SomCache::new(CacheConfig::default());
         cache.store_with_selector(
@@ -661,6 +699,48 @@ mod tests {
         assert!(matches!(
             cache.lookup_with_selector("https://example.com/app", 111, Some("#SaveButton")),
             CacheLookup::Hit(_)
+        ));
+    }
+
+    #[test]
+    fn test_quoted_id_selector_cache_keys_preserve_case() {
+        let cache = SomCache::new(CacheConfig::default());
+        cache.store_with_selector(
+            "https://example.com/app",
+            111,
+            Some("  '#SaveButton'  "),
+            b"save".to_vec(),
+            100,
+        );
+
+        assert!(matches!(
+            cache.lookup_with_selector("https://example.com/app", 111, Some("#SaveButton")),
+            CacheLookup::Hit(_)
+        ));
+        assert!(matches!(
+            cache.lookup_with_selector("https://example.com/app", 111, Some("#savebutton")),
+            CacheLookup::Miss
+        ));
+    }
+
+    #[test]
+    fn test_inner_quoted_id_selector_cache_keys_match_unquoted_ids() {
+        let cache = SomCache::new(CacheConfig::default());
+        cache.store_with_selector(
+            "https://example.com/app",
+            111,
+            Some("#'SaveButton'"),
+            b"save".to_vec(),
+            100,
+        );
+
+        assert!(matches!(
+            cache.lookup_with_selector("https://example.com/app", 111, Some("#SaveButton")),
+            CacheLookup::Hit(_)
+        ));
+        assert!(matches!(
+            cache.lookup_with_selector("https://example.com/app", 111, Some("#'savebutton'")),
+            CacheLookup::Miss
         ));
     }
 
