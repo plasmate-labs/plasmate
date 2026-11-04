@@ -766,6 +766,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "progress-bar"
         | "progress bar"
         | "progressbars"
+        | "progress_bars"
+        | "progress-bars"
+        | "progress bars"
         | "meter"
         | "meters"
         | "output"
@@ -2045,6 +2048,9 @@ mod tests {
             "progress_bar",
             "progress-bar",
             "progress bar",
+            "progress_bars",
+            "progress-bars",
+            "progress bars",
             "meter",
             "output",
             "audio",
