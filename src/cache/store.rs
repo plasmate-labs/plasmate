@@ -502,7 +502,22 @@ fn normalized_selector(selector: Option<&str>) -> Option<String> {
                 let rest = rest.trim_start();
                 if let Some(separator @ (':' | '=')) = rest.chars().next() {
                     let value = strip_selector_quotes(rest[separator.len_utf8()..].trim());
-                    return Some(format!("{prefix}:{value}"));
+                    let value = match prefix {
+                        // `apply_selector` treats role=<value> as the same
+                        // selector as the bare role/action value.
+                        "role" => value.to_string(),
+                        "action" => match value {
+                            "type_text" | "type-text" => "type".to_string(),
+                            "select_option" | "select-option" => "select".to_string(),
+                            value => value.to_string(),
+                        },
+                        _ => value.to_string(),
+                    };
+                    return Some(if prefix == "label" {
+                        format!("label:{value}")
+                    } else {
+                        value
+                    });
                 }
             }
         }
@@ -688,6 +703,32 @@ mod tests {
             ("role='BUTTON'", "role=button"),
             ("action=\"CLICK\"", "action:click"),
             ("label:'Save Button'", "label=save button"),
+        ] {
+            cache.store_with_selector(
+                "https://example.com/app",
+                111,
+                Some(stored),
+                stored.as_bytes().to_vec(),
+                100,
+            );
+
+            assert!(
+                matches!(
+                    cache.lookup_with_selector("https://example.com/app", 111, Some(lookup)),
+                    CacheLookup::Hit(_)
+                ),
+                "equivalent selector should hit cache: {stored} vs {lookup}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_selector_cache_keys_reuse_role_and_action_aliases() {
+        let cache = SomCache::new(CacheConfig::default());
+        for (stored, lookup) in [
+            ("role=BUTTON", "button"),
+            ("action=TYPE_TEXT", "type"),
+            ("action:select-option", "select"),
         ] {
             cache.store_with_selector(
                 "https://example.com/app",
