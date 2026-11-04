@@ -51,6 +51,7 @@ const SOM_PROGRESS_SELECTOR_DESCRIPTION: &str =
     " Progress controls also accept progress_bar and progress-bar aliases, plus progress_bars, progress-bars, and progress bars.";
 
 const SOM_TABLE_SELECTOR_DESCRIPTION: &str = " Table-like element selectors also include data-grid/data-grids, data_grid/data_grids, table_grid/table_grids, table-grid/table-grids, and spaced data grid/data grids or table grid/table grids forms.";
+const SOM_HTML_SELECTOR_DESCRIPTION: &str = " HTML tag aliases include div for SOM group elements.";
 
 /// Parameters for fetch_page tool.
 #[derive(Debug, Deserialize)]
@@ -518,7 +519,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 }
             },
             "required": ["url"],
@@ -554,7 +555,7 @@ pub fn extract_text_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 }
             },
             "required": ["url"],
@@ -1138,7 +1139,7 @@ pub fn extract_links_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 },
                 "max_links": {
                     "type": "integer",
@@ -1285,7 +1286,7 @@ pub fn inspect_page_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 },
                 "visual_mode": {
                     "type": "string",
@@ -4163,7 +4164,7 @@ pub fn open_page_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 }
             },
             "required": ["url"],
@@ -7159,6 +7160,7 @@ mod tests {
             assert!(description.contains("tree_grid/tree_grids and tree-grid/tree-grids"));
             assert!(description.contains("spaced data table/data tables"));
             assert!(description.contains("image/img, media,"));
+            assert!(description.contains("div for SOM group elements"));
             assert!(description.contains("link/links/a/anchor/anchors/hyperlink/hyperlinks"));
             assert!(description.contains(
                 "select/selects/combobox/comboboxes/combo box/combo boxes/combo-boxes/listbox/listboxes/list_box/list_boxes/list box/list boxes"

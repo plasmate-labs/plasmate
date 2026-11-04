@@ -767,6 +767,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         "article" | "articles" | "section" | "sections" => Some(ElementRole::Section),
         "group"
         | "groups"
+        | "div"
         | "fieldset"
         | "fieldsets"
         | "figure"
@@ -2141,6 +2142,7 @@ mod tests {
         });
 
         for (selector, expected_role) in [
+            ("div", ElementRole::Group),
             ("fieldset", ElementRole::Group),
             ("hr", ElementRole::Separator),
             ("summary", ElementRole::Details),

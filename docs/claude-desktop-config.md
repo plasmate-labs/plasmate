@@ -72,7 +72,8 @@ Claude will call: `fetch_page(url="https://stripe.com/docs", selector="main")`
 
 **Available selectors:** `main` (also `main_content`/`main-content`/`main region`), `nav`/`navigation`/`nav region`/`nav-region`/`nav regions`/`navigation region`/`navigation-region`/`navigation regions`/`search`/`search navigation`/`search navigations` (also `search_nav`/`search-navigation`/`search navigation`), `header`/`banner`, `footer`/`contentinfo`/`content_info`/`content-info`, `aside`/`asides`/`sidebar`/`sidebars`/`complementary`, `content`/`article`/`region` (also `content_region`/`content-region`/`content region`), `form`/`forms`, `dialog`/`dialogs`, `h1` through `h6`, `interactive`, `click`, `type`/`type_text`/`type-text`, `clear`, `select`/`select_option`/`select-option`, `toggle`, `submit`, `reset` (or the equivalent `action:<verb>` form, including whitespace-tolerant `action : verb` and `action = verb` forms), element roles such as `button`/`buttons`/`menuitem`/`menu items`/`option`/`options`/`tab`/`tabs`/`treeitem`/`tree items`, `link`/`links`/`a`, `paragraph`/`paragraphs`/`p`, `blockquote`/`blockquotes`/`quote`/`quotes`, `list`/`ul`/`ol`/`dl`/`menu`, `unordered_list`/`ordered_list`/`definition_list`, `fieldset`/`group`, `hr`/`separator`, `details`/`summary`, `iframe`, `image`/`images`/`img`, `audio`, `video`, `canvas`, grouped `media`, and text inputs such as `text`, `text_input`/`text input`/`textbox`/`searchbox`, `search_input`/`search-input`/`search box`, `search_control`/`search-control`, `search_field`/`search-field`, and `query_input`/`query-input`, or any HTML id like `#my-section`.
 
-The plural `lists` selector is also accepted for list elements.
+The `div` selector targets SOM group elements compiled from ordinary HTML
+`<div>` containers. The plural `lists` selector is also accepted for list elements.
 
 Source-specific media selectors are also accepted: `audio_item`/`audio-item`/
 `audioitem`, `video_item`/`video-item`/`videoitem`, and
