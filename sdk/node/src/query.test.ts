@@ -945,7 +945,7 @@ describe('findByTag', () => {
         },
       ],
     };
-    for (const alias of ['alert', 'status', 'tooltip']) {
+    for (const alias of ['alert', 'alerts', 'status', 'statuses', 'tooltip', 'tooltips']) {
       assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['alert', 'status', 'tooltip'], alias);
     }
   });

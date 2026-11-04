@@ -56,7 +56,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `image-item` / `image item` / `imageitem` / `image_items` / `image-items` /
 ///   `image items` / `imageitems`, `list` / `lists`,
 ///   `table` / `tables` / `data_table` / `data_tables` / `data-table` / `data tables`,
-///   `paragraph` / `blockquote` / `quote` / `alert` / `status` / `tooltip`, `section` / `sections`,
+///   `paragraph` / `blockquote` / `quote` / `alert` / `alerts` / `status` /
+///   `statuses` / `tooltip` / `tooltips`, `section` / `sections`,
 ///   plus common HTML tag aliases `a`/`anchor`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list` / `definition_lists`,
@@ -791,7 +792,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "treegrid"
         | "treegrids" => Some(ElementRole::Table),
         "paragraph" | "paragraphs" | "p" | "blockquote" | "blockquotes" | "quote" | "quotes" | "alert"
-        | "status" | "tooltip" => {
+        | "alerts" | "status" | "statuses" | "tooltip" | "tooltips" => {
             Some(ElementRole::Paragraph)
         }
         "article" | "articles" | "section" | "sections" => Some(ElementRole::Section),
@@ -1132,6 +1133,18 @@ mod tests {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].role, RegionRole::Main);
+        }
+    }
+
+    #[test]
+    fn test_selector_accepts_plural_aria_paragraph_aliases() {
+        let som = make_test_som();
+
+        for selector in ["alerts", "statuses", "tooltips"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Paragraph);
         }
     }
 

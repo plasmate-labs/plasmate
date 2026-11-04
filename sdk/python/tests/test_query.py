@@ -709,6 +709,11 @@ class TestFindByTag:
         paras = find_by_tag(sample_som, "paragraph")
         assert len(paras) == 3  # e4, e8, e10
 
+    def test_accepts_aria_paragraph_aliases(self, sample_som: Som) -> None:
+        expected = ["e4", "e8", "e10"]
+        for alias in ("alert", "alerts", "status", "statuses", "tooltip", "tooltips"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == expected
+
     def test_finds_none_for_missing_tag(self, sample_som: Som) -> None:
         assert find_by_tag(sample_som, "table") == []
 
