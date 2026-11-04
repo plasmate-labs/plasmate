@@ -735,7 +735,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "menu_item_radio"
         | "menu_item_radios" => Some(ElementRole::Radio),
         "heading" | "headings" => Some(ElementRole::Heading),
-        "image" | "images" | "img" => Some(ElementRole::Image),
+        "image" | "images" | "img" | "picture" | "pictures" => Some(ElementRole::Image),
         "list"
         | "lists"
         | "ul"
@@ -1785,6 +1785,19 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Image);
+    }
+
+    #[test]
+    fn test_selector_picture_tag_aliases() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Image;
+
+        for selector in ["picture", "pictures"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Image);
+        }
     }
 
     #[test]

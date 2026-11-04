@@ -51,7 +51,7 @@ const SOM_PROGRESS_SELECTOR_DESCRIPTION: &str =
     " Progress controls also accept progress_bar and progress-bar aliases, plus progress_bars, progress-bars, and progress bars.";
 
 const SOM_TABLE_SELECTOR_DESCRIPTION: &str = " Table-like element selectors also include data-grid/data-grids, data_grid/data_grids, table_grid/table_grids, table-grid/table-grids, and spaced data grid/data grids or table grid/table grids forms.";
-const SOM_HTML_SELECTOR_DESCRIPTION: &str = " HTML tag aliases include div for SOM group elements.";
+const SOM_HTML_SELECTOR_DESCRIPTION: &str = " HTML tag aliases include div for SOM group elements, and picture/pictures for image elements.";
 
 /// Parameters for fetch_page tool.
 #[derive(Debug, Deserialize)]
