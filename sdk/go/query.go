@@ -804,6 +804,7 @@ type ActionPlanItem struct {
 	AriaPlaceholder   *string     `json:"aria_placeholder,omitempty"`
 	AriaAutocomplete  *string     `json:"aria_autocomplete,omitempty"`
 	AriaLabel         *string     `json:"aria_label,omitempty"`
+	AriaDescription   *string     `json:"aria_description,omitempty"`
 	LabelledBy        *string     `json:"labelledby,omitempty"`
 	DescribedBy       *string     `json:"describedby,omitempty"`
 	ActiveDescendant  *string     `json:"active_descendant,omitempty"`
@@ -1004,6 +1005,7 @@ func GetActionPlan(som *Som) []ActionPlanItem {
 				item.AriaPlaceholder = el.Attrs.Aria.Placeholder
 				item.AriaAutocomplete = el.Attrs.Aria.Autocomplete
 				item.AriaLabel = el.Attrs.Aria.Label
+				item.AriaDescription = el.Attrs.Aria.Description
 				item.LabelledBy = el.Attrs.Aria.LabelledBy
 				item.DescribedBy = el.Attrs.Aria.DescribedBy
 				item.ActiveDescendant = el.Attrs.Aria.ActiveDescendant
@@ -1273,7 +1275,11 @@ func actionItemMatchesLabel(item ActionPlanItem, needle string, exact bool) bool
 		matches(item.Title) ||
 		matches(item.Placeholder) ||
 		matches(item.Alt) ||
-		matches(item.AriaLabel)
+		matches(item.AriaLabel) ||
+		matches(item.Description) ||
+		matches(item.AriaDescription) ||
+		matches(item.ValueText) ||
+		matches(item.RoleDescription)
 }
 
 // FindActionTargetsByRole returns compact action targets whose SOM role matches

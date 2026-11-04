@@ -997,12 +997,15 @@ func TestFindActionTargetsByLabelCompiledFallbacks(t *testing.T) {
 	alt := "Hero image"
 	ariaLabel := "Open settings"
 	ariaDescription := "Password requirements"
+	ariaValueText := "Monthly plan"
+	ariaRoleDescription := "Plan option"
 	som := &Som{Regions: []Region{{Elements: []Element{
 		{ID: "e_title", Role: "button", Actions: []string{"click"}, Attrs: &ElementAttrs{Title: &title}},
 		{ID: "e_placeholder", Role: "text_input", Actions: []string{"type"}, Attrs: &ElementAttrs{Placeholder: &placeholder}},
 		{ID: "e_alt", Role: "image", Actions: []string{"click"}, Attrs: &ElementAttrs{Alt: &alt}},
-		{ID: "e_aria", Role: "button", Actions: []string{"click"}, Attrs: &ElementAttrs{Aria: &AriaState{Label: &ariaLabel}}},
-		{ID: "e_aria_description", Role: "button", Actions: []string{"click"}, Attrs: &ElementAttrs{Aria: &AriaState{Description: &ariaDescription}}},
+		{ID: "e_aria", Role: "button", Actions: []string{"click"}, Attrs: &ElementAttrs{Aria: &AriaState{
+			Label: &ariaLabel, Description: &ariaDescription, ValueText: &ariaValueText, RoleDescription: &ariaRoleDescription,
+		}}},
 	}}}}
 
 	for _, test := range []struct {
@@ -1014,7 +1017,9 @@ func TestFindActionTargetsByLabelCompiledFallbacks(t *testing.T) {
 		{name: "placeholder", query: "search documentation", want: "e_placeholder"},
 		{name: "alt", query: "hero image", want: "e_alt"},
 		{name: "aria label", query: "open settings", want: "e_aria"},
-		{name: "aria description", query: "password requirements", want: "e_aria_description"},
+		{name: "aria description", query: "password requirements", want: "e_aria"},
+		{name: "aria value text", query: "monthly plan", want: "e_aria"},
+		{name: "aria role description", query: "plan option", want: "e_aria"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			got := FindActionTargetsByLabel(som, test.query, true)
@@ -1022,6 +1027,14 @@ func TestFindActionTargetsByLabelCompiledFallbacks(t *testing.T) {
 				t.Fatalf("FindActionTargetsByLabel(%q) = %#v, want %s", test.query, got, test.want)
 			}
 		})
+	}
+
+	plan := GetActionPlan(som)
+	if len(plan) != 4 {
+		t.Fatalf("GetActionPlan() = %d items, want 4", len(plan))
+	}
+	if plan[3].AriaDescription == nil || *plan[3].AriaDescription != ariaDescription {
+		t.Fatalf("GetActionPlan() ARIA description = %#v, want %q", plan[3].AriaDescription, ariaDescription)
 	}
 }
 
