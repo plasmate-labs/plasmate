@@ -505,7 +505,7 @@ fn normalized_selector(selector: Option<&str>) -> Option<String> {
                     let value = match prefix {
                         // `apply_selector` treats role=<value> as the same
                         // selector as the bare role/action value.
-                        "role" => value.to_string(),
+                        "role" => canonical_selector_alias(value),
                         "action" => match value {
                             "type_text" | "type-text" => "type".to_string(),
                             "select_option" | "select-option" => "select".to_string(),
@@ -521,7 +521,17 @@ fn normalized_selector(selector: Option<&str>) -> Option<String> {
                 }
             }
         }
-        Some(selector)
+        Some(canonical_selector_alias(&selector))
+    }
+}
+
+fn canonical_selector_alias(value: &str) -> String {
+    match value {
+        // Keep cache entries shared across the most common plural element
+        // aliases accepted by `apply_selector`.
+        "buttons" => "button".to_string(),
+        "links" | "anchors" | "hyperlink" | "hyperlinks" => "link".to_string(),
+        value => value.to_string(),
     }
 }
 
@@ -727,6 +737,8 @@ mod tests {
         let cache = SomCache::new(CacheConfig::default());
         for (stored, lookup) in [
             ("role=BUTTON", "button"),
+            ("role=BUTTONS", "button"),
+            ("links", "link"),
             ("action=TYPE_TEXT", "type"),
             ("action:select-option", "select"),
         ] {
