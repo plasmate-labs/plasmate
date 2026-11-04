@@ -764,14 +764,30 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "tables"
         | "data_table"
         | "data_tables"
+        | "data-table"
+        | "data-tables"
+        | "data table"
+        | "data tables"
         | "grid"
         | "grids"
         | "data_grid"
         | "data_grids"
+        | "data-grid"
+        | "data-grids"
+        | "data grid"
+        | "data grids"
         | "table_grid"
         | "table_grids"
+        | "table-grid"
+        | "table-grids"
+        | "table grid"
+        | "table grids"
         | "tree_grid"
         | "tree_grids"
+        | "tree-grid"
+        | "tree-grids"
+        | "tree grid"
+        | "tree grids"
         | "treegrid"
         | "treegrids" => Some(ElementRole::Table),
         "paragraph" | "paragraphs" | "p" | "blockquote" | "blockquotes" | "quote" | "quotes" | "alert"
@@ -1604,6 +1620,12 @@ mod tests {
             ("data_tables", ElementRole::Table),
             ("data-tables", ElementRole::Table),
             ("data tables", ElementRole::Table),
+            ("data-grid", ElementRole::Table),
+            ("data grids", ElementRole::Table),
+            ("table-grid", ElementRole::Table),
+            ("table grids", ElementRole::Table),
+            ("tree-grid", ElementRole::Table),
+            ("tree grids", ElementRole::Table),
             ("separators", ElementRole::Separator),
             ("detail", ElementRole::Details),
             ("iframes", ElementRole::Iframe),
