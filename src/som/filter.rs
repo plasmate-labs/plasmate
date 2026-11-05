@@ -94,8 +94,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// - Action surfaces: `interactive` / `interactives` / `interactive element` /
 ///   `interactive-element` / `interactive elements` / `interactive_elements` /
 ///   `interactive-elements`, bare action names (`click`, `type`,
-///   `type_text`/`type-text`, `clear`/`clear_text`/`clear-text`/`clear text`,
-///   `select`, `select_option`/`select-option`,
+///   `type_text`/`type-text`/`type text`, `clear`/`clear_text`/`clear-text`/
+///   `clear text`, `select`, `select_option`/`select-option`/`select option`,
 ///   `toggle`, `submit`, `reset`), or `action:<verb>` forms (including
 ///   `action : <verb>` and `action = <verb>`). The text and
 ///   select aliases mirror the corresponding MCP interaction tool names.
@@ -323,6 +323,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                     | "type"
                     | "type_text"
                     | "type-text"
+                    | "type text"
                     | "clear"
                     | "clear_text"
                     | "clear-text"
@@ -330,6 +331,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                     | "select"
                     | "select_option"
                     | "select-option"
+                    | "select option"
                     | "toggle"
                     | "submit"
                     | "reset"
@@ -339,9 +341,9 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     if let Some(action) = action {
         let action = action.trim().to_ascii_lowercase();
         let action = match action.as_str() {
-            "type_text" | "type-text" => "type".to_string(),
+            "type_text" | "type-text" | "type text" => "type".to_string(),
             "clear_text" | "clear-text" | "clear text" => "clear".to_string(),
-            "select_option" | "select-option" => "select".to_string(),
+            "select_option" | "select-option" | "select option" => "select".to_string(),
             _ => action,
         };
         if !action.is_empty() {
@@ -2908,6 +2910,35 @@ mod tests {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e2", "selector: {selector}");
+        }
+    }
+
+    #[test]
+    fn test_selector_spaced_mcp_action_aliases() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].actions = Some(vec!["type".to_string()]);
+        som.regions[1].elements.push(Element {
+            id: "e-select".to_string(),
+            role: ElementRole::Select,
+            html_id: None,
+            text: None,
+            label: Some("Sort".to_string()),
+            actions: Some(vec!["select".to_string()]),
+            attrs: None,
+            children: None,
+            shadow: None,
+            hints: None,
+        });
+
+        for selector in ["type text", "action:type text", "action : type text"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e2", "selector: {selector}");
+        }
+        for selector in ["select option", "action:select option", "action : select option"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-select", "selector: {selector}");
         }
     }
 
