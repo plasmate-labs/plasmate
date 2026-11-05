@@ -1057,7 +1057,7 @@ describe('findByTag', () => {
           : region,
       ),
     };
-    for (const alias of ['check box', 'check boxes']) {
+    for (const alias of ['check box', 'check boxes', 'menuitem_checkbox', 'menuitem_checkboxes']) {
       assert.deepEqual(findByTag(checkboxFixture, alias).map((el) => el.id), ['e8', 'e12'], alias);
     }
     const spinButtonFixture: Som = {

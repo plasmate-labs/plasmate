@@ -334,8 +334,10 @@ func normalizeElementRoleAlias(role string) string {
 		"menu_item":          "button",
 		"menuitem":           "button",
 		"menuitemcheckbox":   "checkbox",
+		"menuitem_checkbox":  "checkbox",
 		"menu_item_checkbox": "checkbox",
 		"menuitemradio":      "radio",
+		"menuitem_radio":     "radio",
 		"menu_item_radio":    "radio",
 		"ol":                 "list",
 		"option":             "button",
@@ -438,8 +440,10 @@ func normalizeElementRoleAlias(role string) string {
 		"menu_items":           "button",
 		"menuitems":            "button",
 		"menuitemcheckboxes":   "checkbox",
+		"menuitem_checkboxes":  "checkbox",
 		"menu_item_checkboxes": "checkbox",
 		"menuitemradios":       "radio",
+		"menuitem_radios":      "radio",
 		"menu_item_radios":     "radio",
 	} {
 		aliases[alias] = canonical
