@@ -549,8 +549,10 @@ fn canonical_selector_alias(value: &str) -> String {
         | "alert-dialog" | "alert-dialogs" | "alert dialog" | "alert dialogs" => {
             "dialog".to_string()
         }
-        "contents" | "content_region" | "content-region" | "content region" | "content_regions"
-        | "content-regions" | "content regions" => "content".to_string(),
+        "contents" | "article" | "articles" | "content_region" | "content-region"
+        | "content region" | "content_regions" | "content-regions" | "content regions" => {
+            "content".to_string()
+        }
         // Keep cache entries shared across the most common plural element
         // aliases accepted by `apply_selector`.
         "buttons" => "button".to_string(),
@@ -852,6 +854,8 @@ mod tests {
             ("alert-dialogs", "dialog"),
             ("alert dialog", "dialog"),
             ("alert dialogs", "dialog"),
+            ("article", "content"),
+            ("articles", "content"),
             ("content regions", "content"),
         ] {
             let cache = SomCache::new(CacheConfig::default());
