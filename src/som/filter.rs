@@ -76,7 +76,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `iframe` / `iframes`, `audio` / `audios`, `video` / `videos`,
 ///   `canvas` / `canvases`
 ///   and the grouped media selector `media` / `media_item` / `media-item` /
-///   `media item` / `mediaitem` / `media_items` / `media-items` / `media items`
+///   `media item` / `mediaitem` / `media_items` / `media-items` / `media items` /
+///   `mediaitems`
 ///   (images and media-capable groups).
 ///   `audio_item`/`audio-item`/`audio item`/`audio_items`/`audio-items`/
 ///   `audio items` and `video_item`/`video-item`/`video item`/
@@ -251,6 +252,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "media_items"
             | "media-items"
             | "media items"
+            | "mediaitems"
     ) {
         return filter_som_elements(som, selector, is_media_element);
     }
@@ -1903,7 +1905,7 @@ mod tests {
         let mut som = make_test_som();
         som.regions[0].elements[0].role = ElementRole::Image;
 
-        for selector in ["media", "media_items", "media-items"] {
+        for selector in ["media", "media_items", "media-items", "mediaitems"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
