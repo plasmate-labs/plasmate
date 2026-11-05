@@ -540,11 +540,19 @@ fn canonical_selector_alias(value: &str) -> String {
         | "search navigations" => "search".to_string(),
         "asides" | "sidebar" | "sidebars" | "complementary" => "aside".to_string(),
         "headers" | "banner" => "header".to_string(),
-        "footers" | "contentinfo" | "content_info" | "content-info" => "footer".to_string(),
+        "footers" | "contentinfo" | "contentinfos" | "content_info" | "content_infos"
+        | "content-info" | "content-infos" | "content info" | "content infos" => {
+            "footer".to_string()
+        }
         "forms" => "form".to_string(),
-        "dialogs" | "alertdialog" | "alertdialogs" => "dialog".to_string(),
-        "contents" | "content_region" | "content-region" | "content region" | "content_regions"
-        | "content-regions" | "content regions" => "content".to_string(),
+        "dialogs" | "alertdialog" | "alertdialogs" | "alert_dialog" | "alert_dialogs"
+        | "alert-dialog" | "alert-dialogs" | "alert dialog" | "alert dialogs" => {
+            "dialog".to_string()
+        }
+        "contents" | "article" | "articles" | "content_region" | "content-region"
+        | "content region" | "content_regions" | "content-regions" | "content regions" => {
+            "content".to_string()
+        }
         // Keep cache entries shared across the most common plural element
         // aliases accepted by `apply_selector`.
         "buttons" => "button".to_string(),
@@ -826,19 +834,31 @@ mod tests {
 
     #[test]
     fn test_selector_cache_keys_reuse_region_aliases() {
-        let cache = SomCache::new(CacheConfig::default());
         for (stored, canonical) in [
             ("main-region", "main"),
             ("navigation regions", "nav"),
             ("search_navigation", "search"),
             ("sidebar", "aside"),
             ("content-info", "footer"),
+            ("contentinfos", "footer"),
+            ("content_infos", "footer"),
+            ("content-infos", "footer"),
+            ("content infos", "footer"),
             ("forms", "form"),
             ("dialogs", "dialog"),
             ("alertdialog", "dialog"),
             ("alertdialogs", "dialog"),
+            ("alert_dialog", "dialog"),
+            ("alert_dialogs", "dialog"),
+            ("alert-dialog", "dialog"),
+            ("alert-dialogs", "dialog"),
+            ("alert dialog", "dialog"),
+            ("alert dialogs", "dialog"),
+            ("article", "content"),
+            ("articles", "content"),
             ("content regions", "content"),
         ] {
+            let cache = SomCache::new(CacheConfig::default());
             cache.store_with_selector(
                 "https://example.com/app",
                 111,
