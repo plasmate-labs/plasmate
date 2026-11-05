@@ -430,6 +430,7 @@ func TestFindByRoleAcceptsCommonRegionAliases(t *testing.T) {
 		{ID: "r_header", Role: "header"},
 		{ID: "r_footer", Role: "footer"},
 		{ID: "r_content", Role: "content"},
+		{ID: "r_dialog", Role: "dialog"},
 	}}
 
 	for _, test := range []struct {
@@ -454,6 +455,8 @@ func TestFindByRoleAcceptsCommonRegionAliases(t *testing.T) {
 		{alias: "content_info", role: "footer", id: "r_footer"},
 		{alias: "content_infos", role: "footer", id: "r_footer"},
 		{alias: "article", role: "content", id: "r_content"},
+		{alias: "alertdialog", role: "dialog", id: "r_dialog"},
+		{alias: "alert-dialogs", role: "dialog", id: "r_dialog"},
 	} {
 		got := FindByRole(som, test.alias)
 		if len(got) != 1 {
