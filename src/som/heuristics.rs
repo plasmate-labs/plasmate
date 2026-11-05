@@ -115,6 +115,12 @@ pub fn should_strip(node: &Handle) -> bool {
             }
             // Check for hidden elements
             let attrs = attrs.borrow();
+            // A native dialog is rendered only while its `open` attribute is
+            // present. Omit closed dialogs so agents see the same visible
+            // surface as a browser user.
+            if tag == "dialog" && !attrs.iter().any(|a| a.name.local.as_ref() == "open") {
+                return true;
+            }
             if attrs.iter().any(|a| {
                 a.name.local.as_ref() == "hidden"
                     && !a.value.as_ref().trim().eq_ignore_ascii_case("until-found")

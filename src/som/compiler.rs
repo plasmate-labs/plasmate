@@ -3721,6 +3721,35 @@ mod tests {
     }
 
     #[test]
+    fn test_closed_native_dialog_is_not_compiled() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Checkout</title></head>
+<body>
+<main><p>Review order</p></main>
+<dialog id="closed"><button>Hidden action</button></dialog>
+<dialog id="open" open aria-label="Confirm purchase">
+  <button>Place order</button>
+</dialog>
+</body>
+</html>"#;
+
+        let som = compile(html, "https://example.test/checkout").unwrap();
+        let dialogs: Vec<_> = som
+            .regions
+            .iter()
+            .filter(|region| region.role == RegionRole::Dialog)
+            .collect();
+        assert_eq!(dialogs.len(), 1, "closed dialogs must not become regions");
+        assert_eq!(dialogs[0].label.as_deref(), Some("Confirm purchase"));
+        assert!(dialogs[0].elements.iter().any(|element| {
+            element.role == ElementRole::Button && element.text.as_deref() == Some("Place order")
+        }));
+        assert!(dialogs[0].elements.iter().all(|element| {
+            element.text.as_deref() != Some("Hidden action")
+        }));
+    }
+
+    #[test]
     fn test_form_region() {
         let html = r#"<!DOCTYPE html>
 <html><head><title>Login</title></head>
