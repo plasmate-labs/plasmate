@@ -246,7 +246,8 @@ as `menuitem`/`menu items`, `option`, `tab`, `treeitem`/`tree items`, `switch`,
 aliases such as `navigation`, `nav region`/`nav-region`/`nav regions`,
 `navigation region`/`navigation-region`/`navigation regions`, `search`/`search navigation`/`search navigations`, `banner`, `complementary`, and
 `contentinfo`/`content_info`/`content-info`; `forms` and `dialogs` are plural aliases for `form` and
-`dialog`; `content_region`/`content_regions` (and their hyphenated or
+`dialog`; `alertdialog`/`alertdialogs` (including `alert-dialog`/`alert-dialogs` and
+space-separated forms) target dialog regions; `content_region`/`content_regions` (and their hyphenated or
 space-separated forms) select content regions.
 Table selectors include `table`/`tables`, `data_table`/`data_tables`, and
 `grid`/`grids`/`data_grid`/`data_grids`/`treegrid`/`treegrids` (with
