@@ -17,7 +17,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `search_navigations`/`search-navigations`/`search navigations`,
 ///   `aside`/`asides`/`sidebar`/`sidebars`/`complementary`,
 ///   `header`/`headers`/`banner`,
-///   `footer`/`footers`/`contentinfo`/`content_info`/`content-info`, `form`/`forms`, `dialog`/`dialogs`,
+///   `footer`/`footers`/`contentinfo`/`content_info`/`content-info`, `form`/`forms`, `dialog`/`dialogs`/
+///   `alertdialog`/`alertdialogs`,
 ///   `content`/`contents`/`article`/`articles`/`main_content`/`main_contents`/
 ///   `main-content`/`main-contents`/`main content`/`main contents`/
 ///   `main-region`/`main region`/`main-regions`/`main regions`/
@@ -184,7 +185,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             Some(RegionRole::Footer)
         }
         "form" | "forms" => Some(RegionRole::Form),
-        "dialog" | "dialogs" => Some(RegionRole::Dialog),
+        "dialog" | "dialogs" | "alertdialog" | "alertdialogs" => Some(RegionRole::Dialog),
         "content"
         | "contents"
         | "article"
@@ -2330,6 +2331,8 @@ mod tests {
             ("search", RegionRole::Navigation),
             ("forms", RegionRole::Form),
             ("dialogs", RegionRole::Dialog),
+            ("alertdialog", RegionRole::Dialog),
+            ("alertdialogs", RegionRole::Dialog),
             ("region", RegionRole::Content),
             ("role=region", RegionRole::Content),
         ] {
