@@ -391,6 +391,16 @@ describe('findByRole', () => {
     assert.deepEqual(findByRole(fixture, 'dialog'), []);
   });
 
+  it('accepts alertdialog region aliases', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [...fixture.regions, { id: 'r_alert', role: 'dialog', elements: [] }],
+    };
+    for (const alias of ['alertdialog', 'alertdialogs', 'alert-dialog', 'alert-dialogs']) {
+      assert.deepEqual(findByRole(som, alias).map((region) => region.id), ['r_alert'], alias);
+    }
+  });
+
   it('accepts common region selector aliases', () => {
     const som: Som = {
       ...fixture,
