@@ -44,11 +44,13 @@ pub struct ToolDefinition {
     pub input_schema: Value,
 }
 
-const SOM_SELECTOR_DESCRIPTION: &str = "Filter to a page region (main/main_region/main-region/main region/main_regions/main-regions/main regions, nav/navigation/nav_region/nav-region/nav region/nav_regions/nav-regions/nav regions/navigation_region/navigation-region/navigation region/navigation_regions/navigation-regions/navigation regions/search/searches/search_nav/search-navigation/search navigation/search_navigations/search-navigations/search navigations, header, footer, aside/sidebar/sidebars, content/article/content_region/content-region/content region/content_regions/content-regions/content regions, form, dialog; role=<region> and role:<region> also work), heading level (h1-h6, heading1-heading6, including hyphenated, underscored, and spaced forms such as h-1, h_1, and h 1), all headings (heading/headings), or an element role (button/buttons/menuitem/option/tab/treeitem, link/links/a/anchor/anchors/hyperlink/hyperlinks, paragraph/paragraphs/blockquote/blockquotes/p/alert/alerts/status/statuses/tooltip/tooltips, list/ul/ol/dl/menu, unordered_list/ordered_list/definition_list, image/img, media, output/audio/video/canvas, audio/audio_item/audio-item/audioitem/audios/audio_items/audio-items/audioitems, video/video_item/video-item/videoitem/videos/video_items/video-items/videoitems, canvas/canvas_item/canvas-item/canvasitem/canvases/canvas_items/canvas-items/canvasitems, (images also accepted) text_input/textbox/searchbox/search_input/search-input (text_inputs also accepted), slider/sliders/spinbutton/spinbuttons/spin button/spin buttons, search_control/search-control/search_field/search-field/search_box/search-box/query/queries/queryboxes/query_boxes/query-boxes/query boxes, query_input/query-input/query_field/query-field/query_control/query-control/querybox/query-box/input, HTML input types such as text/search/email/number/password/tel/url/date/datetime/datetime-local/date_time/date-time/date time/date_time_local/date-time-local/date time local/month/week/color/range/hidden/file, textarea (textareas also accepted), select/selects/combobox/comboboxes/combo box/combo boxes/combo-boxes/listbox/listboxes/list_box/list_boxes/list box/list boxes, checkbox/checkboxes/switch/switches/menuitemcheckbox/menuitemcheckboxes (including hyphenated forms), radio/radios/menuitemradio/menuitemradios (including hyphenated forms), table/tables/data_table/data_tables/grid/grids/treegrid/treegrids/tree_grid/tree_grids/tree-grid/tree-grids/tree grid/tree grids (also data-table/data-tables and spaced data table/data tables), section/sections, separator/separators/hr, detail/details/summary/summaries, iframe/iframes, group/groups/fieldset/fieldsets/figure/figures/radiogroup/radiogroups/progress/progressbar/progressbars/meter/meters/output/outputs, etc.; role=<element> and role:<element> also work). Use search_input, search-input, search_control, search-control, search_field, search-field, search_box, search-box, query, queries, query_input, query-input, query_field, query-field, query_control, query-control, querybox, query-box for a search control; search by itself selects the search navigation region; search_nav, search-navigation, search navigation, search_navigations, search-navigations, and search navigations are explicit aliases for the same region. Action surface (interactive/interactives/interactive_elements/interactive-elements, click/type/type_text/type-text/clear/select/select_option/select-option/toggle/submit/reset, or action:click/action:type/action:type_text/action:type-text/action:clear/action:select/action:select_option/action:select-option/action:toggle/action:submit/action:reset; role=<action> and role:<action> are also accepted, and the action=<verb> form works with whitespace around either separator such as action : click or action = click), or #element-id (region id first, then SOM element/html id). The type_text/type-text and select_option/select-option aliases, including action=type_text/action=type-text and action=select_option/action=select-option, match the corresponding MCP interaction tool names. Selector names are case-insensitive. Strips irrelevant regions/elements to reduce tokens. If a selector is unknown or matches nothing, the full SOM is returned unchanged.";
+const SOM_SELECTOR_DESCRIPTION: &str = "Filter to a page region (main/main_region/main-region/main region/main_regions/main-regions/main regions, nav/navigation/nav_region/nav-region/nav region/nav_regions/nav-regions/nav regions/navigation_region/navigation-region/navigation region/navigation_regions/navigation-regions/navigation regions/search/searches/search_nav/search-navigation/search navigation/search_navigations/search-navigations/search navigations, header, footer, aside/sidebar/sidebars, content/article/content_region/content-region/content region/content_regions/content-regions/content regions, form, dialog; role=<region> and role:<region> also work), heading level (h1-h6, heading1-heading6, including hyphenated, underscored, and spaced forms such as h-1, h_1, and h 1), all headings (heading/headings), or an element role (button/buttons/menuitem/option/tab/treeitem, link/links/a/anchor/anchors/hyperlink/hyperlinks, paragraph/paragraphs/blockquote/blockquotes/p/alert/alerts/status/statuses/tooltip/tooltips, list/ul/ol/dl/menu, unordered_list/ordered_list/definition_list, image/img, media, output/audio/video/canvas, audio/audio_item/audio-item/audioitem/audios/audio_items/audio-items/audioitems, video/video_item/video-item/videoitem/videos/video_items/video-items/videoitems, canvas/canvas_item/canvas-item/canvasitem/canvases/canvas_items/canvas-items/canvasitems, (images also accepted) text_input/textbox/searchbox/search_input/search-input (text_inputs also accepted), slider/sliders/spinbutton/spinbuttons/spin button/spin buttons, search_control/search-control/search_field/search-field/search_box/search-box/query/queries/queryboxes/query_boxes/query-boxes/query boxes, query_input/query-input/query_field/query-field/query_control/query-control/querybox/query-box/input, HTML input types such as text/search/email/number/password/tel/url/date/datetime/datetime-local/date_time/date-time/date time/date_time_local/date-time-local/date time local/month/week/color/range/hidden/file, textarea (textareas also accepted), select/selects/combobox/comboboxes/combo box/combo boxes/combo-boxes/listbox/listboxes/list_box/list_boxes/list box/list boxes, checkbox/checkboxes/switch/switches/menuitemcheckbox/menuitemcheckboxes (including hyphenated forms), radio/radios/menuitemradio/menuitemradios (including hyphenated forms), table/tables/data_table/data_tables/grid/grids/treegrid/treegrids/tree_grid/tree_grids/tree-grid/tree-grids/tree grid/tree grids (also data-table/data-tables and spaced data table/data tables), section/sections, separator/separators/hr, detail/details/summary/summaries, iframe/iframes, group/groups/fieldset/fieldsets/figure/figures/radiogroup/radiogroups/progress/progressbar/progressbars/meter/meters/output/outputs, etc.; role=<element> and role:<element> also work). Use search_input, search-input, search_control, search-control, search_field, search-field, search_box, search-box, query, queries, query_input, query-input, query_field, query-field, query_control, query-control, querybox, query-box for a search control; search by itself selects the search navigation region; search_nav, search-navigation, search navigation, search_navigations, search-navigations, and search navigations are explicit aliases for the same region. Action surface (interactive/interactives/interactive_elements/interactive-elements, click/type/type_text/type-text/type text/clear/select/select_option/select-option/select option/toggle/submit/reset, or action:click/action:type/action:type_text/action:type-text/action:clear/action:select/action:select_option/action:select-option/action:toggle/action:submit/action:reset; role=<action> and role:<action> are also accepted, and the action=<verb> form works with whitespace around either separator such as action : click or action = click), or #element-id (region id first, then SOM element/html id). The type_text/type-text/type text and select_option/select-option/select option aliases, including action=type_text/action=type-text and action=select_option/action=select-option, match the corresponding MCP interaction tool names. Selector names are case-insensitive. Strips irrelevant regions/elements to reduce tokens. If a selector is unknown or matches nothing, the full SOM is returned unchanged.";
 
 const SOM_COMPOUND_SELECTOR_DESCRIPTION: &str = " Use label:<text> or label=<text> for case-insensitive accessible-label or authored-text matching on regions and elements; element fallbacks also include aria-label, title, placeholder, and alt attributes, plus aria-description and compiled description attributes. Whitespace-separated compound aliases such as text input, text field, text area, search box, spin button, progress bar, progress bars, menu item, check box, radio button, combo box, combo boxes, media item, media items, audio item, audio items, video item, video items, canvas item, canvas items, unordered list, ordered list, definition list, definition lists, data table, data tables, data grid, data grids, and tree grids are also accepted; list/lists are equivalent selectors; data_table/data_tables and data-table/data-tables are equivalent forms; data_grid/data_grids and data-grid/data-grids are equivalent forms; tree_grid/tree_grids and tree-grid/tree-grids are equivalent forms. Selector names are case-insensitive. Selectors are limited to 256 bytes.";
 const SOM_PROGRESS_SELECTOR_DESCRIPTION: &str =
     " Progress controls also accept progress_bar and progress-bar aliases, plus progress_bars, progress-bars, and progress bars.";
+const SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION: &str =
+    " Action aliases also accept type text and select option forms, including action:type text and action:select option. Clear actions also accept clear_text, clear-text, and clear text aliases, including action:clear-text.";
 
 const SOM_TABLE_SELECTOR_DESCRIPTION: &str = " Table-like element selectors also include data-grid/data-grids, data_grid/data_grids, table_grid/table_grids, table-grid/table-grids, and spaced data grid/data grids or table grid/table grids forms.";
 const SOM_HTML_SELECTOR_DESCRIPTION: &str = " HTML tag aliases include div for SOM group elements, and picture/pictures/image_item/image-item/image item/imageitems for image elements.";
@@ -519,7 +521,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 }
             },
             "required": ["url"],
@@ -555,7 +557,7 @@ pub fn extract_text_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 }
             },
             "required": ["url"],
@@ -1139,7 +1141,7 @@ pub fn extract_links_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 },
                 "max_links": {
                     "type": "integer",
@@ -1286,7 +1288,7 @@ pub fn inspect_page_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 },
                 "visual_mode": {
                     "type": "string",
@@ -3682,12 +3684,18 @@ fn parse_http_equiv_refresh_url(content: &str) -> Option<&str> {
     if rest.is_empty() {
         return None;
     }
-    let rest =
-        if rest.len() >= 4 && rest.is_char_boundary(4) && rest[..4].eq_ignore_ascii_case("url=") {
-            rest[4..].trim_start()
-        } else {
-            rest
-        };
+    let rest = if rest.len() >= 3
+        && rest.is_char_boundary(3)
+        && rest[..3].eq_ignore_ascii_case("url")
+    {
+        let after_name = rest[3..].trim_start();
+        after_name
+            .strip_prefix('=')
+            .map(str::trim_start)
+            .unwrap_or(rest)
+    } else {
+        rest
+    };
     let rest = rest.trim();
     let rest = if rest.len() >= 2
         && ((rest.starts_with('\'') && rest.ends_with('\''))
@@ -4164,7 +4172,7 @@ pub fn open_page_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 }
             },
             "required": ["url"],
@@ -7135,6 +7143,9 @@ mod tests {
             assert!(description.contains("h-1, h_1, and h 1"));
             assert!(description.contains("Selector names are case-insensitive"));
             assert!(description.contains("action:clear"));
+            assert!(description.contains("clear_text, clear-text, and clear text aliases"));
+            assert!(description.contains("type text"));
+            assert!(description.contains("select option"));
             assert!(description.contains("action:toggle"));
             assert!(description.contains("action:submit"));
             assert!(description.contains("checkbox/checkboxes/switch/switches/menuitemcheckbox"));
@@ -13731,6 +13742,20 @@ mod tests {
         assert!(
             quoted_urls.contains(&"https://example.test/later".to_string()),
             "quoted refresh URL must resolve: {quoted_urls:?}"
+        );
+
+        let spaced = crate::som::compiler::compile(
+            r##"<html><head>
+<meta http-equiv="refresh" content="5; URL = ' /spaced ' ">
+<title>Spaced</title>
+</head><body><main><p>Continue</p></main></body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("spaced refresh fixture should compile");
+        let spaced_urls = collect_extract_link_urls(&spaced);
+        assert!(
+            spaced_urls.contains(&"https://example.test/spaced".to_string()),
+            "refresh URL with spaces around '=' must resolve: {spaced_urls:?}"
         );
 
         let relative = crate::som::compiler::compile(
