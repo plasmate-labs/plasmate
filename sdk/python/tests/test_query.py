@@ -210,7 +210,7 @@ class TestFindByRole:
             regions=[SomRegion(id="r_alert", role=RegionRole.dialog, elements=[])],
             meta=SomMeta(html_bytes=0, som_bytes=0, element_count=0, interactive_count=0),
         )
-        for alias in ("alertdialog", "alertdialogs"):
+        for alias in ("alertdialog", "alertdialogs", "alert-dialog", "alert-dialogs"):
             assert [region.id for region in find_by_role(som, alias)] == ["r_alert"]
 
     def test_accepts_region_selector_aliases(self, sample_som: Som) -> None:

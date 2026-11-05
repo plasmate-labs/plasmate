@@ -82,6 +82,8 @@ def find_by_role(som: Som, role: str) -> List[SomRegion]:
         "dialogs": "dialog",
         "alertdialog": "dialog",
         "alertdialogs": "dialog",
+        "alert_dialog": "dialog",
+        "alert_dialogs": "dialog",
         "content": "content",
         "contents": "content",
         "article": "content",
