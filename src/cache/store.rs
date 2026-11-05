@@ -542,8 +542,10 @@ fn canonical_selector_alias(value: &str) -> String {
         "headers" | "banner" => "header".to_string(),
         "footers" | "contentinfo" | "content_info" | "content-info" => "footer".to_string(),
         "forms" => "form".to_string(),
-        "dialogs" | "alertdialog" | "alertdialogs" | "alert-dialog" | "alert-dialogs"
-        | "alert dialog" | "alert dialogs" => "dialog".to_string(),
+        "dialogs" | "alertdialog" | "alertdialogs" | "alert_dialog" | "alert_dialogs"
+        | "alert-dialog" | "alert-dialogs" | "alert dialog" | "alert dialogs" => {
+            "dialog".to_string()
+        }
         "contents" | "content_region" | "content-region" | "content region" | "content_regions"
         | "content-regions" | "content regions" => "content".to_string(),
         // Keep cache entries shared across the most common plural element
@@ -837,6 +839,8 @@ mod tests {
             ("dialogs", "dialog"),
             ("alertdialog", "dialog"),
             ("alertdialogs", "dialog"),
+            ("alert_dialog", "dialog"),
+            ("alert_dialogs", "dialog"),
             ("alert-dialog", "dialog"),
             ("alert-dialogs", "dialog"),
             ("alert dialog", "dialog"),

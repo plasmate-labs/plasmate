@@ -190,6 +190,8 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         | "dialogs"
         | "alertdialog"
         | "alertdialogs"
+        | "alert_dialog"
+        | "alert_dialogs"
         | "alert-dialog"
         | "alert-dialogs"
         | "alert dialog"
@@ -2345,6 +2347,8 @@ mod tests {
             ("dialogs", RegionRole::Dialog),
             ("alertdialog", RegionRole::Dialog),
             ("alertdialogs", RegionRole::Dialog),
+            ("alert_dialog", RegionRole::Dialog),
+            ("alert_dialogs", RegionRole::Dialog),
             ("alert-dialog", RegionRole::Dialog),
             ("alert-dialogs", RegionRole::Dialog),
             ("alert dialog", RegionRole::Dialog),
