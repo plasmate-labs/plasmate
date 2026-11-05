@@ -540,7 +540,10 @@ fn canonical_selector_alias(value: &str) -> String {
         | "search navigations" => "search".to_string(),
         "asides" | "sidebar" | "sidebars" | "complementary" => "aside".to_string(),
         "headers" | "banner" => "header".to_string(),
-        "footers" | "contentinfo" | "content_info" | "content-info" => "footer".to_string(),
+        "footers" | "contentinfo" | "contentinfos" | "content_info" | "content_infos"
+        | "content-info" | "content-infos" | "content info" | "content infos" => {
+            "footer".to_string()
+        }
         "forms" => "form".to_string(),
         "dialogs" | "alertdialog" | "alertdialogs" | "alert_dialog" | "alert_dialogs"
         | "alert-dialog" | "alert-dialogs" | "alert dialog" | "alert dialogs" => {
@@ -835,6 +838,10 @@ mod tests {
             ("search_navigation", "search"),
             ("sidebar", "aside"),
             ("content-info", "footer"),
+            ("contentinfos", "footer"),
+            ("content_infos", "footer"),
+            ("content-infos", "footer"),
+            ("content infos", "footer"),
             ("forms", "form"),
             ("dialogs", "dialog"),
             ("alertdialog", "dialog"),
