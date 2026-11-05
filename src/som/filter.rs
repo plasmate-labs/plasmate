@@ -736,6 +736,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "switches"
         | "menuitemcheckbox"
         | "menuitemcheckboxes"
+        | "menuitem_checkbox"
+        | "menuitem_checkboxes"
         | "menu_item_checkbox"
         | "menu_item_checkboxes" => {
             Some(ElementRole::Checkbox)
@@ -746,6 +748,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "radio_buttons"
         | "menuitemradio"
         | "menuitemradios"
+        | "menuitem_radio"
+        | "menuitem_radios"
         | "menu_item_radio"
         | "menu_item_radios" => Some(ElementRole::Radio),
         "heading" | "headings" => Some(ElementRole::Heading),
@@ -2537,6 +2541,49 @@ mod tests {
                 .elements
                 .iter()
                 .all(|element| element.role == ElementRole::TextInput));
+        }
+    }
+
+    #[test]
+    fn test_selector_hyphenated_menu_item_control_aliases() {
+        let mut som = make_test_som();
+        som.regions[1].elements.extend([
+            Element {
+                id: "e-menu-checkbox".to_string(),
+                role: ElementRole::Checkbox,
+                html_id: None,
+                text: None,
+                label: Some("Enable alerts".to_string()),
+                actions: None,
+                attrs: None,
+                children: None,
+                shadow: None,
+                hints: None,
+            },
+            Element {
+                id: "e-menu-radio".to_string(),
+                role: ElementRole::Radio,
+                html_id: None,
+                text: None,
+                label: Some("Daily".to_string()),
+                actions: None,
+                attrs: None,
+                children: None,
+                shadow: None,
+                hints: None,
+            },
+        ]);
+
+        for (selector, expected_id) in [
+            ("menuitem-checkbox", "e-menu-checkbox"),
+            ("menuitem-checkboxes", "e-menu-checkbox"),
+            ("menuitem-radio", "e-menu-radio"),
+            ("menuitem-radios", "e-menu-radio"),
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, expected_id);
         }
     }
 
