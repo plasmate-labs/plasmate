@@ -94,7 +94,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// - Action surfaces: `interactive` / `interactives` / `interactive element` /
 ///   `interactive-element` / `interactive elements` / `interactive_elements` /
 ///   `interactive-elements`, bare action names (`click`, `type`,
-///   `type_text`/`type-text`, `clear`, `select`, `select_option`/`select-option`,
+///   `type_text`/`type-text`, `clear`/`clear_text`/`clear-text`/`clear text`,
+///   `select`, `select_option`/`select-option`,
 ///   `toggle`, `submit`, `reset`), or `action:<verb>` forms (including
 ///   `action : <verb>` and `action = <verb>`). The text and
 ///   select aliases mirror the corresponding MCP interaction tool names.
@@ -323,6 +324,9 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                     | "type_text"
                     | "type-text"
                     | "clear"
+                    | "clear_text"
+                    | "clear-text"
+                    | "clear text"
                     | "select"
                     | "select_option"
                     | "select-option"
@@ -336,6 +340,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         let action = action.trim().to_ascii_lowercase();
         let action = match action.as_str() {
             "type_text" | "type-text" => "type".to_string(),
+            "clear_text" | "clear-text" | "clear text" => "clear".to_string(),
             "select_option" | "select-option" => "select".to_string(),
             _ => action,
         };
@@ -2885,6 +2890,25 @@ mod tests {
             apply_selector(&som, "action:select-option").regions[0].elements[0].id,
             "e-select"
         );
+    }
+
+    #[test]
+    fn test_selector_clear_action_aliases() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].actions = Some(vec!["clear".to_string()]);
+
+        for selector in [
+            "clear_text",
+            "clear-text",
+            "clear text",
+            "action:clear_text",
+            "action:clear-text",
+            "action : clear text",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e2", "selector: {selector}");
+        }
     }
 
     #[test]

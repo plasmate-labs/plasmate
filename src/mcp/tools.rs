@@ -49,6 +49,8 @@ const SOM_SELECTOR_DESCRIPTION: &str = "Filter to a page region (main/main_regio
 const SOM_COMPOUND_SELECTOR_DESCRIPTION: &str = " Use label:<text> or label=<text> for case-insensitive accessible-label or authored-text matching on regions and elements; element fallbacks also include aria-label, title, placeholder, and alt attributes, plus aria-description and compiled description attributes. Whitespace-separated compound aliases such as text input, text field, text area, search box, spin button, progress bar, progress bars, menu item, check box, radio button, combo box, combo boxes, media item, media items, audio item, audio items, video item, video items, canvas item, canvas items, unordered list, ordered list, definition list, definition lists, data table, data tables, data grid, data grids, and tree grids are also accepted; list/lists are equivalent selectors; data_table/data_tables and data-table/data-tables are equivalent forms; data_grid/data_grids and data-grid/data-grids are equivalent forms; tree_grid/tree_grids and tree-grid/tree-grids are equivalent forms. Selector names are case-insensitive. Selectors are limited to 256 bytes.";
 const SOM_PROGRESS_SELECTOR_DESCRIPTION: &str =
     " Progress controls also accept progress_bar and progress-bar aliases, plus progress_bars, progress-bars, and progress bars.";
+const SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION: &str =
+    " Clear actions also accept clear_text, clear-text, and clear text aliases, including action:clear-text.";
 
 const SOM_TABLE_SELECTOR_DESCRIPTION: &str = " Table-like element selectors also include data-grid/data-grids, data_grid/data_grids, table_grid/table_grids, table-grid/table-grids, and spaced data grid/data grids or table grid/table grids forms.";
 const SOM_HTML_SELECTOR_DESCRIPTION: &str = " HTML tag aliases include div for SOM group elements, and picture/pictures/image_item/image-item/image item/imageitems for image elements.";
@@ -519,7 +521,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 }
             },
             "required": ["url"],
@@ -555,7 +557,7 @@ pub fn extract_text_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 }
             },
             "required": ["url"],
@@ -1139,7 +1141,7 @@ pub fn extract_links_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 },
                 "max_links": {
                     "type": "integer",
@@ -1286,7 +1288,7 @@ pub fn inspect_page_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 },
                 "visual_mode": {
                     "type": "string",
@@ -4170,7 +4172,7 @@ pub fn open_page_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 }
             },
             "required": ["url"],
@@ -7141,6 +7143,7 @@ mod tests {
             assert!(description.contains("h-1, h_1, and h 1"));
             assert!(description.contains("Selector names are case-insensitive"));
             assert!(description.contains("action:clear"));
+            assert!(description.contains("clear_text, clear-text, and clear text aliases"));
             assert!(description.contains("action:toggle"));
             assert!(description.contains("action:submit"));
             assert!(description.contains("checkbox/checkboxes/switch/switches/menuitemcheckbox"));
