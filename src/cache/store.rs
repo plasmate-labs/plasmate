@@ -542,7 +542,7 @@ fn canonical_selector_alias(value: &str) -> String {
         "headers" | "banner" => "header".to_string(),
         "footers" | "contentinfo" | "content_info" | "content-info" => "footer".to_string(),
         "forms" => "form".to_string(),
-        "dialogs" => "dialog".to_string(),
+        "dialogs" | "alertdialog" | "alertdialogs" => "dialog".to_string(),
         "contents" | "content_region" | "content-region" | "content region" | "content_regions"
         | "content-regions" | "content regions" => "content".to_string(),
         // Keep cache entries shared across the most common plural element
@@ -835,6 +835,8 @@ mod tests {
             ("content-info", "footer"),
             ("forms", "form"),
             ("dialogs", "dialog"),
+            ("alertdialog", "dialog"),
+            ("alertdialogs", "dialog"),
             ("content regions", "content"),
         ] {
             cache.store_with_selector(
