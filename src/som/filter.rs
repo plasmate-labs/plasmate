@@ -170,7 +170,17 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             Some(RegionRole::Aside)
         }
         "header" | "headers" | "banner" => Some(RegionRole::Header),
-        "footer" | "footers" | "contentinfo" | "content_info" | "content-info" => {
+        "footer"
+        | "footers"
+        | "contentinfo"
+        | "contentinfos"
+        | "content_info"
+        | "content_infos"
+        | "content-info"
+        | "content-infos"
+        | "content info"
+        | "content infos" =>
+        {
             Some(RegionRole::Footer)
         }
         "form" | "forms" => Some(RegionRole::Form),
@@ -1347,6 +1357,8 @@ mod tests {
             ("contents", RegionRole::Content),
             ("content-info", RegionRole::Footer),
             ("content_info", RegionRole::Footer),
+            ("content-infos", RegionRole::Footer),
+            ("content_infos", RegionRole::Footer),
         ] {
             let mut som = make_test_som();
             som.regions[0].role = role.clone();

@@ -211,9 +211,10 @@ class TestFindByRole:
         assert [region.id for region in find_by_role(sample_som, "role = 'navigation'")] == [
             "r_navigation"
         ]
-        assert [region.id for region in find_by_role(sample_som, "content-info")] == [
-            "r_footer"
-        ]
+        for alias in ("content-info", "content-infos", "content_infos"):
+            assert [region.id for region in find_by_role(sample_som, alias)] == [
+                "r_footer"
+            ]
 
     def test_finds_multiple_regions(self) -> None:
         som = Som(
