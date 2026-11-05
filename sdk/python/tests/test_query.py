@@ -211,9 +211,10 @@ class TestFindByRole:
         assert [region.id for region in find_by_role(sample_som, "role = 'navigation'")] == [
             "r_navigation"
         ]
-        assert [region.id for region in find_by_role(sample_som, "content-info")] == [
-            "r_footer"
-        ]
+        for alias in ("content-info", "content-infos", "content_infos"):
+            assert [region.id for region in find_by_role(sample_som, alias)] == [
+                "r_footer"
+            ]
 
     def test_finds_multiple_regions(self) -> None:
         som = Som(
@@ -708,6 +709,11 @@ class TestFindByTag:
     def test_finds_paragraphs_including_nested(self, sample_som: Som) -> None:
         paras = find_by_tag(sample_som, "paragraph")
         assert len(paras) == 3  # e4, e8, e10
+
+    def test_accepts_aria_paragraph_aliases(self, sample_som: Som) -> None:
+        expected = ["e4", "e8", "e10"]
+        for alias in ("alert", "alerts", "status", "statuses", "tooltip", "tooltips"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == expected
 
     def test_finds_none_for_missing_tag(self, sample_som: Som) -> None:
         assert find_by_tag(sample_som, "table") == []

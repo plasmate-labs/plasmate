@@ -448,8 +448,11 @@ func TestFindByRoleAcceptsCommonRegionAliases(t *testing.T) {
 		{alias: "complementary", role: "aside", id: "r_aside"},
 		{alias: "banner", role: "header", id: "r_header"},
 		{alias: "contentinfo", role: "footer", id: "r_footer"},
+		{alias: "contentinfos", role: "footer", id: "r_footer"},
 		{alias: "content-info", role: "footer", id: "r_footer"},
+		{alias: "content-infos", role: "footer", id: "r_footer"},
 		{alias: "content_info", role: "footer", id: "r_footer"},
+		{alias: "content_infos", role: "footer", id: "r_footer"},
 		{alias: "article", role: "content", id: "r_content"},
 	} {
 		got := FindByRole(som, test.alias)
@@ -488,8 +491,11 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 		{alias: "quote", role: "paragraph", want: 2},
 		{alias: "quotes", role: "paragraph", want: 2},
 		{alias: "alert", role: "paragraph", want: 2},
+		{alias: "alerts", role: "paragraph", want: 2},
 		{alias: "status", role: "paragraph", want: 2},
+		{alias: "statuses", role: "paragraph", want: 2},
 		{alias: "tooltip", role: "paragraph", want: 2},
+		{alias: "tooltips", role: "paragraph", want: 2},
 		{alias: "query input", role: "text_input", want: 1},
 		{alias: "queries", role: "text_input", want: 1},
 		{alias: "query-field", role: "text_input", want: 1},

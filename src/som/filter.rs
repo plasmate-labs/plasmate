@@ -56,7 +56,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `image-item` / `image item` / `imageitem` / `image_items` / `image-items` /
 ///   `image items` / `imageitems`, `list` / `lists`,
 ///   `table` / `tables` / `data_table` / `data_tables` / `data-table` / `data tables`,
-///   `paragraph` / `blockquote` / `quote` / `alert` / `status` / `tooltip`, `section` / `sections`,
+///   `paragraph` / `blockquote` / `quote` / `alert` / `alerts` / `status` /
+///   `statuses` / `tooltip` / `tooltips`, `section` / `sections`,
 ///   plus common HTML tag aliases `a`/`anchor`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list` / `definition_lists`,
@@ -169,7 +170,17 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             Some(RegionRole::Aside)
         }
         "header" | "headers" | "banner" => Some(RegionRole::Header),
-        "footer" | "footers" | "contentinfo" | "content_info" | "content-info" => {
+        "footer"
+        | "footers"
+        | "contentinfo"
+        | "contentinfos"
+        | "content_info"
+        | "content_infos"
+        | "content-info"
+        | "content-infos"
+        | "content info"
+        | "content infos" =>
+        {
             Some(RegionRole::Footer)
         }
         "form" | "forms" => Some(RegionRole::Form),
@@ -791,7 +802,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "treegrid"
         | "treegrids" => Some(ElementRole::Table),
         "paragraph" | "paragraphs" | "p" | "blockquote" | "blockquotes" | "quote" | "quotes" | "alert"
-        | "status" | "tooltip" => {
+        | "alerts" | "status" | "statuses" | "tooltip" | "tooltips" => {
             Some(ElementRole::Paragraph)
         }
         "article" | "articles" | "section" | "sections" => Some(ElementRole::Section),
@@ -1136,6 +1147,18 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_accepts_plural_aria_paragraph_aliases() {
+        let som = make_test_som();
+
+        for selector in ["alerts", "statuses", "tooltips"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Paragraph);
+        }
+    }
+
+    #[test]
     fn test_selector_matches_accessible_labels_and_text() {
         let mut som = make_test_som();
         som.regions[1].elements[0].label = Some("Billing\n  address".to_string());
@@ -1334,6 +1357,8 @@ mod tests {
             ("contents", RegionRole::Content),
             ("content-info", RegionRole::Footer),
             ("content_info", RegionRole::Footer),
+            ("content-infos", RegionRole::Footer),
+            ("content_infos", RegionRole::Footer),
         ] {
             let mut som = make_test_som();
             som.regions[0].role = role.clone();
