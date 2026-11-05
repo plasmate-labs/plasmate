@@ -3682,12 +3682,18 @@ fn parse_http_equiv_refresh_url(content: &str) -> Option<&str> {
     if rest.is_empty() {
         return None;
     }
-    let rest =
-        if rest.len() >= 4 && rest.is_char_boundary(4) && rest[..4].eq_ignore_ascii_case("url=") {
-            rest[4..].trim_start()
-        } else {
-            rest
-        };
+    let rest = if rest.len() >= 3
+        && rest.is_char_boundary(3)
+        && rest[..3].eq_ignore_ascii_case("url")
+    {
+        let after_name = rest[3..].trim_start();
+        after_name
+            .strip_prefix('=')
+            .map(str::trim_start)
+            .unwrap_or(rest)
+    } else {
+        rest
+    };
     let rest = rest.trim();
     let rest = if rest.len() >= 2
         && ((rest.starts_with('\'') && rest.ends_with('\''))
@@ -13731,6 +13737,20 @@ mod tests {
         assert!(
             quoted_urls.contains(&"https://example.test/later".to_string()),
             "quoted refresh URL must resolve: {quoted_urls:?}"
+        );
+
+        let spaced = crate::som::compiler::compile(
+            r##"<html><head>
+<meta http-equiv="refresh" content="5; URL = ' /spaced ' ">
+<title>Spaced</title>
+</head><body><main><p>Continue</p></main></body></html>"##,
+            "https://example.test/page",
+        )
+        .expect("spaced refresh fixture should compile");
+        let spaced_urls = collect_extract_link_urls(&spaced);
+        assert!(
+            spaced_urls.contains(&"https://example.test/spaced".to_string()),
+            "refresh URL with spaces around '=' must resolve: {spaced_urls:?}"
         );
 
         let relative = crate::som::compiler::compile(
