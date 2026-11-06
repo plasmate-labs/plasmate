@@ -418,6 +418,7 @@ class TestFindByTag:
 
         for alias, expected in (
             ("paragraphs", "paragraph"),
+            ("articles", "section"),
             ("sections", "section"),
             ("content", "section"),
             ("contents", "section"),
