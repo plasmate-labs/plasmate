@@ -230,8 +230,9 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             .collect();
         if filtered.is_empty() {
             // Some ARIA names are also element-role aliases (for example,
-            // `article` compiles to a Section). Let those selectors continue
-            // through the element matcher when no region matched.
+            // `article` and `region` compile to a Section). Let those
+            // selectors continue through the element matcher when no region
+            // matched.
             if parse_element_role(selector).is_none() {
                 eprintln!(
                     "Warning: selector '{}' matched no regions - returning full SOM",
@@ -877,7 +878,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "tooltips" => {
             Some(ElementRole::Paragraph)
         }
-        "article" | "articles" | "section" | "sections" => Some(ElementRole::Section),
+        "article" | "articles" | "region" | "regions" | "section" | "sections" => {
+            Some(ElementRole::Section)
+        }
         "group"
         | "groups"
         | "div"
@@ -3409,6 +3412,23 @@ mod tests {
         som.regions[1].elements[0].role = ElementRole::Section;
 
         for selector in ["article", "role=article"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements[0].role,
+                ElementRole::Section,
+                "selector: {selector}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_selector_region_role_falls_back_to_section_element() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].role = ElementRole::Section;
+
+        for selector in ["region", "regions", "role=region"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
