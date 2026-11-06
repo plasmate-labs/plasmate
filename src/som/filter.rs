@@ -229,9 +229,10 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             .cloned()
             .collect();
         if filtered.is_empty() {
-            // Some ARIA names are also element-role aliases (for example,
-            // `article` compiles to a Section). Let those selectors continue
-            // through the element matcher when no region matched.
+            // Some semantic names are also element-role aliases (for
+            // example, `article`, `content`, and `region` compile to a
+            // Section). Let those selectors continue through the element
+            // matcher when no region matched.
             if parse_element_role(selector).is_none() {
                 eprintln!(
                     "Warning: selector '{}' matched no regions - returning full SOM",
@@ -325,6 +326,22 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                 }),
                 _ => false,
             }
+        });
+    }
+
+    // Native output elements compile as Paragraph so their authored text and
+    // nested links stay in the readable text path. Keep the source-facing
+    // selector specific to output elements instead of returning every
+    // paragraph in the document.
+    if selector.eq_ignore_ascii_case("output") || selector.eq_ignore_ascii_case("outputs") {
+        return filter_som_elements(som, selector, |element| {
+            element.role == ElementRole::Paragraph
+                && element.attrs.as_ref().is_some_and(|attrs| {
+                    attrs
+                        .get("source_tag")
+                        .and_then(serde_json::Value::as_str)
+                        .is_some_and(|tag| tag.eq_ignore_ascii_case("output"))
+                })
         });
     }
 
@@ -877,7 +894,10 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "tooltips" => {
             Some(ElementRole::Paragraph)
         }
-        "article" | "articles" | "section" | "sections" => Some(ElementRole::Section),
+        "article" | "articles" | "content" | "contents" | "region" | "regions"
+        | "content_region" | "content_regions" | "section" | "sections" => {
+            Some(ElementRole::Section)
+        }
         "group"
         | "groups"
         | "div"
@@ -1630,7 +1650,7 @@ mod tests {
 
         for selector in [
             "abbr", "address", "cite", "code", "dfn", "figcaption", "kbd", "math", "pre",
-            "q", "ruby", "samp", "small", "var", "output", "outputs", "role=code", "role:var",
+            "q", "ruby", "samp", "small", "var", "role=code", "role:var",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
@@ -2384,7 +2404,6 @@ mod tests {
             "progress-bars",
             "progress bars",
             "meter",
-            "output",
             "audio",
             "video",
             "canvas",
@@ -2394,6 +2413,32 @@ mod tests {
                 Some(ElementRole::Group),
                 "selector: {selector}"
             );
+        }
+    }
+
+    #[test]
+    fn test_selector_output_matches_only_native_output_elements() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].role = ElementRole::Paragraph;
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({"source_tag": "output"}));
+        som.regions[1].elements.push(Element {
+            id: "e-paragraph".to_string(),
+            role: ElementRole::Paragraph,
+            html_id: None,
+            text: Some("A paragraph".to_string()),
+            label: None,
+            actions: None,
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["output", "outputs", "role=output"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e2", "selector: {selector}");
         }
     }
 
@@ -3409,6 +3454,34 @@ mod tests {
         som.regions[1].elements[0].role = ElementRole::Section;
 
         for selector in ["article", "role=article"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements[0].role,
+                ElementRole::Section,
+                "selector: {selector}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_selector_region_role_falls_back_to_section_element() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].role = ElementRole::Section;
+
+        for selector in [
+            "content",
+            "contents",
+            "region",
+            "regions",
+            "content-region",
+            "content regions",
+            "role=content",
+            "role=region",
+            "role=content-region",
+            "role:content region",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
