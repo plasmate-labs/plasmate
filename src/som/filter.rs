@@ -62,7 +62,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `figcaption` / `kbd` / `math` / `pre` / `q` / `ruby` / `samp` /
 ///   `small` / `var` / `s` / `ins` / `del` / `mark` / `subscript` /
 ///   `superscript` / `deletion` / `insertion` / `suggestion` / `definition` /
-///   `term` / `emphasis` / `strong` / `blockquote` / `quote` / `alert` /
+///   `term` / `emphasis` / `strong` / `blockquote` / `quote` / `output` /
+///   `outputs` / `alert` /
 ///   `alerts` / `status` / `statuses` / `tooltip` /
 ///   `tooltips`, `section` / `sections`,
 ///   plus common HTML tag aliases `a`/`anchor`, `p`, `ul`, `ol`, `dl`, and `menu`,
@@ -71,7 +72,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `group` / `groups` / `fieldset` / `fieldsets` / `figure` / `figures` /
 ///   `radiogroup` / `radiogroups` / `progress` / `progressbar` /
 ///   `progress_bar` / `progress-bar` / `progress bar` / `progressbars` /
-///   `meter` / `meters` / `output` / `outputs` /
+///   `meter` / `meters` /
 ///   `video` / `canvas`,
 ///   `grid` / `grids` / `data_grid` / `data_grids` / `data-grid` / `data-grids` /
 ///   `treegrid` / `treegrids` / `tree-grid` / `tree-grids` / `table_grid` /
@@ -843,6 +844,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "s" | "ins" | "del" | "mark" | "subscript" | "superscript" | "deletion"
         | "insertion" | "suggestion" | "definition" | "definitions" | "term" | "terms"
         | "emphasis" | "emphases" | "strong" | "strongs" | "blockquote" | "blockquotes" | "quote" | "quotes"
+        | "output" | "outputs"
         | "alert" | "alerts" | "status" | "statuses" | "tooltip"
         | "tooltips" => {
             Some(ElementRole::Paragraph)
@@ -868,8 +870,6 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "progress bars"
         | "meter"
         | "meters"
-        | "output"
-        | "outputs"
         | "audio"
         | "audios"
         | "audio_item"
@@ -1548,7 +1548,7 @@ mod tests {
 
         for selector in [
             "abbr", "address", "cite", "code", "dfn", "figcaption", "kbd", "math", "pre",
-            "q", "ruby", "samp", "small", "var", "role=code", "role:var",
+            "q", "ruby", "samp", "small", "var", "output", "outputs", "role=code", "role:var",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
@@ -1782,7 +1782,6 @@ mod tests {
             ("radiogroups", ElementRole::Group),
             ("progressbars", ElementRole::Group),
             ("meters", ElementRole::Group),
-            ("outputs", ElementRole::Group),
         ] {
             let mut som = make_test_som();
             som.regions[0].elements[0].role = role.clone();
