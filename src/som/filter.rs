@@ -61,8 +61,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `paragraph` / `p` / `abbr` / `address` / `cite` / `code` / `dfn` /
 ///   `figcaption` / `kbd` / `math` / `pre` / `q` / `ruby` / `samp` /
 ///   `small` / `var` / `s` / `ins` / `del` / `mark` / `subscript` /
-///   `superscript` / `deletion` / `insertion` / `suggestion` / `blockquote` /
-///   `quote` / `alert` / `alerts` / `status` / `statuses` / `tooltip` /
+///   `superscript` / `deletion` / `insertion` / `suggestion` / `definition` /
+///   `term` / `emphasis` / `strong` / `blockquote` / `quote` / `alert` /
+///   `alerts` / `status` / `statuses` / `tooltip` /
 ///   `tooltips`, `section` / `sections`,
 ///   plus common HTML tag aliases `a`/`anchor`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
@@ -840,7 +841,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         "paragraph" | "paragraphs" | "p" | "abbr" | "address" | "cite" | "code" | "dfn"
         | "figcaption" | "kbd" | "math" | "pre" | "q" | "ruby" | "samp" | "small" | "var"
         | "s" | "ins" | "del" | "mark" | "subscript" | "superscript" | "deletion"
-        | "insertion" | "suggestion" | "blockquote" | "blockquotes" | "quote" | "quotes"
+        | "insertion" | "suggestion" | "definition" | "definitions" | "term" | "terms"
+        | "emphasis" | "emphases" | "strong" | "strongs" | "blockquote" | "blockquotes" | "quote" | "quotes"
         | "alert" | "alerts" | "status" | "statuses" | "tooltip"
         | "tooltips" => {
             Some(ElementRole::Paragraph)
@@ -1567,6 +1569,27 @@ mod tests {
             "deletion",
             "insertion",
             "suggestion",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Paragraph);
+        }
+    }
+
+    #[test]
+    fn test_selector_accepts_remaining_compiled_text_aliases() {
+        let som = make_test_som();
+
+        for selector in [
+            "definition",
+            "role:definition",
+            "term",
+            "terms",
+            "emphasis",
+            "emphases",
+            "strong",
+            "strongs",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
