@@ -418,7 +418,14 @@ class TestFindByTag:
 
         for alias, expected in (
             ("paragraphs", "paragraph"),
+            ("articles", "section"),
             ("sections", "section"),
+            ("content", "section"),
+            ("contents", "section"),
+            ("region", "section"),
+            ("regions", "section"),
+            ("content-region", "section"),
+            ("content regions", "section"),
             ("groups", "group"),
             ("separators", "separator"),
         ):
