@@ -300,6 +300,15 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         return filter_som_elements(som, selector, |element| element.role.is_interactive());
     }
 
+    // `time` is both an HTML input type and a native text element. The SOM
+    // uses TextInput for the former and Paragraph for the latter, so keep the
+    // source-facing selector useful for both compiled forms.
+    if selector.eq_ignore_ascii_case("time") {
+        return filter_som_elements(som, selector, |element| {
+            matches!(element.role, ElementRole::Paragraph | ElementRole::TextInput)
+        });
+    }
+
     if let Some(role) = parse_element_role(selector) {
         return filter_som_elements(som, selector, |element| element.role == role);
     }
@@ -2751,6 +2760,33 @@ mod tests {
                 Some(ElementRole::TextInput),
                 "selector: {selector}"
             );
+        }
+    }
+
+    #[test]
+    fn test_selector_time_matches_native_time_and_time_input() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-time-input".to_string(),
+            role: ElementRole::TextInput,
+            html_id: None,
+            text: None,
+            label: Some("Start time".to_string()),
+            actions: Some(vec!["type".to_string()]),
+            attrs: None,
+            children: None,
+            shadow: None,
+            hints: None,
+        });
+
+        for selector in ["time", "TIME", "role=time"] {
+            let filtered = apply_selector(&som, selector);
+            let ids = filtered.regions[0]
+                .elements
+                .iter()
+                .map(|element| element.id.as_str())
+                .collect::<Vec<_>>();
+            assert_eq!(ids, vec!["e2", "e-time-input"], "selector: {selector}");
         }
     }
 
