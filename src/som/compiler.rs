@@ -2207,6 +2207,7 @@ fn build_element_attrs(
             }
         }
         "time" => {
+            map.insert("source_tag".into(), json!("time"));
             if let Some((_, datetime)) = attrs.iter().find(|(n, _)| n == "datetime") {
                 if !datetime.trim().is_empty() {
                     map.insert("datetime".into(), json!(datetime));
@@ -11855,6 +11856,14 @@ plasmate fetch https://example.test</code></pre>
                 .and_then(|attrs| attrs.get("datetime"))
                 .and_then(|value| value.as_str()),
             Some("2026-09-27")
+        );
+        assert_eq!(
+            native
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("source_tag"))
+                .and_then(|value| value.as_str()),
+            Some("time")
         );
         assert!(
             native
