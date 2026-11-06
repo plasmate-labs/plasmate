@@ -487,6 +487,43 @@ class TestFindByTag:
                 "output"
             ], alias
 
+    def test_time_aliases_match_native_time_elements_and_time_inputs(
+        self, sample_som: Som
+    ) -> None:
+        sample_som.regions[1].elements.extend(
+            [
+                SomElement(
+                    id="time-text",
+                    role=ElementRole.paragraph,
+                    attrs=ElementAttrs(source_tag="TIME"),
+                    actions=["click"],
+                ),
+                SomElement(
+                    id="time-input",
+                    role=ElementRole.text_input,
+                    attrs=ElementAttrs(input_type=" time "),
+                    actions=["type"],
+                ),
+                SomElement(
+                    id="ordinary-text-input",
+                    role=ElementRole.text_input,
+                    attrs=ElementAttrs(input_type="date"),
+                    actions=["type"],
+                ),
+                SomElement(id="ordinary-paragraph", role=ElementRole.paragraph),
+            ]
+        )
+
+        for alias in ("time", "times"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == [
+                "time-text",
+                "time-input",
+            ], alias
+            assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
+                "time-text",
+                "time-input",
+            ], alias
+
     def test_narrows_progress_and_meter_aliases_using_source_roles(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.extend(
             [
@@ -680,7 +717,6 @@ class TestFindByTag:
             "datetime-local",
             "date time local",
             "month",
-            "time",
             "week",
             "color",
             "range",
@@ -828,7 +864,6 @@ class TestFindActionTargetsByRole:
             "datetime-local",
             "date time local",
             "month",
-            "time",
             "week",
             "color",
             "range",

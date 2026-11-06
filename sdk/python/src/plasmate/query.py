@@ -352,6 +352,8 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
     }
     tag = _normalize_role_alias(tag)
     heading_level = _parse_heading_level_selector(tag)
+    if tag in {"time", "times"}:
+        return [element for element in flat_elements(som) if _is_time_element(element)]
     media_source_role = _MEDIA_TAG_ALIASES.get(tag)
     if media_source_role is not None:
         return [
@@ -399,6 +401,19 @@ def _is_media_element(element: SomElement) -> bool:
 def _source_role_matches(element: SomElement, expected: str) -> bool:
     return element.attrs is not None and _source_role_value_matches(
         element.attrs.source_role, expected
+    )
+
+
+def _is_time_element(element: SomElement) -> bool:
+    attrs = element.attrs
+    if attrs is None:
+        return False
+    if element.role == ElementRole.paragraph:
+        return _source_role_value_matches(attrs.source_tag, "time") or _source_role_value_matches(
+            attrs.source_role, "time"
+        )
+    return element.role == ElementRole.text_input and _source_role_value_matches(
+        attrs.input_type, "time"
     )
 
 
@@ -842,6 +857,22 @@ def find_action_targets_by_role(
             for item in plan
             if item.get("role") == ElementRole.heading.value
             and str(item.get("level")) == str(heading_level)
+        ]
+    if normalized_alias in {"time", "times"}:
+        return [
+            item
+            for item in plan
+            if (
+                item.get("role") == ElementRole.paragraph.value
+                and (
+                    _source_role_value_matches(item.get("source_tag"), "time")
+                    or _source_role_value_matches(item.get("source_role"), "time")
+                )
+            )
+            or (
+                item.get("role") == ElementRole.text_input.value
+                and _source_role_value_matches(item.get("input_type"), "time")
+            )
         ]
     if media_source_role is not None:
         return [
