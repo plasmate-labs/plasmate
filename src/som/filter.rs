@@ -58,7 +58,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `image-item` / `image item` / `imageitem` / `image_items` / `image-items` /
 ///   `image items` / `imageitems`, `list` / `lists`,
 ///   `table` / `tables` / `data_table` / `data_tables` / `data-table` / `data tables`,
-///   `paragraph` / `blockquote` / `quote` / `alert` / `alerts` / `status` /
+///   `paragraph` / `p` / `s` / `blockquote` / `quote` / `alert` / `alerts` / `status` /
 ///   `statuses` / `tooltip` / `tooltips`, `section` / `sections`,
 ///   plus common HTML tag aliases `a`/`anchor`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
@@ -833,7 +833,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "tree grids"
         | "treegrid"
         | "treegrids" => Some(ElementRole::Table),
-        "paragraph" | "paragraphs" | "p" | "blockquote" | "blockquotes" | "quote" | "quotes" | "alert"
+        "paragraph" | "paragraphs" | "p" | "s" | "blockquote" | "blockquotes" | "quote" | "quotes" | "alert"
         | "alerts" | "status" | "statuses" | "tooltip" | "tooltips" => {
             Some(ElementRole::Paragraph)
         }
@@ -1517,6 +1517,18 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Link);
+        }
+    }
+
+    #[test]
+    fn test_selector_accepts_s_alias_for_paragraphs() {
+        let som = make_test_som();
+
+        for selector in ["s", "role=s"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Paragraph);
         }
     }
 
