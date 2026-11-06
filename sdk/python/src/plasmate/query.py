@@ -33,6 +33,7 @@ _SOURCE_SPECIFIC_GROUP_ALIASES = {
     "progress": "progressbar",
     "progressbar": "progressbar",
     "progress_bar": "progressbar",
+    "progress_bars": "progressbar",
     "progressbars": "progressbar",
     "meter": "meter",
     "meters": "meter",
@@ -228,6 +229,37 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "blockquotes": "paragraph",
         "quote": "paragraph",
         "quotes": "paragraph",
+        "abbr": "paragraph",
+        "address": "paragraph",
+        "cite": "paragraph",
+        "code": "paragraph",
+        "dfn": "paragraph",
+        "figcaption": "paragraph",
+        "kbd": "paragraph",
+        "math": "paragraph",
+        "pre": "paragraph",
+        "q": "paragraph",
+        "ruby": "paragraph",
+        "samp": "paragraph",
+        "small": "paragraph",
+        "var": "paragraph",
+        "s": "paragraph",
+        "ins": "paragraph",
+        "del": "paragraph",
+        "mark": "paragraph",
+        "subscript": "paragraph",
+        "superscript": "paragraph",
+        "deletion": "paragraph",
+        "insertion": "paragraph",
+        "suggestion": "paragraph",
+        "definition": "paragraph",
+        "definitions": "paragraph",
+        "term": "paragraph",
+        "terms": "paragraph",
+        "emphasis": "paragraph",
+        "emphases": "paragraph",
+        "strong": "paragraph",
+        "strongs": "paragraph",
         "alert": "paragraph",
         "alerts": "paragraph",
         "status": "paragraph",
@@ -302,11 +334,10 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "radiogroups": "group",
         "progress": "group",
         "progressbar": "group",
+        "progress_bars": "group",
         "progressbars": "group",
         "meter": "group",
         "meters": "group",
-        "output": "group",
-        "outputs": "group",
         "tables": "table",
         "data_table": "table",
         "data_tables": "table",
@@ -323,6 +354,8 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
     }
     tag = _normalize_role_alias(tag)
     heading_level = _parse_heading_level_selector(tag)
+    if tag in {"time", "times"}:
+        return [element for element in flat_elements(som) if _is_time_element(element)]
     media_source_role = _MEDIA_TAG_ALIASES.get(tag)
     if media_source_role is not None:
         return [
@@ -332,6 +365,15 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         ]
     if tag in _MEDIA_GROUP_ALIASES:
         return [element for element in flat_elements(som) if _is_media_element(element)]
+    if tag in {"output", "outputs"}:
+        return [
+            element
+            for element in flat_elements(som)
+            if element.role == ElementRole.paragraph
+            and _source_role_value_matches(
+                element.attrs.source_tag if element.attrs else None, "output"
+            )
+        ]
     source_specific_group_role = _SOURCE_SPECIFIC_GROUP_ALIASES.get(tag)
     if source_specific_group_role is not None and any(
         _source_role_matches(element, source_specific_group_role)
@@ -361,6 +403,19 @@ def _is_media_element(element: SomElement) -> bool:
 def _source_role_matches(element: SomElement, expected: str) -> bool:
     return element.attrs is not None and _source_role_value_matches(
         element.attrs.source_role, expected
+    )
+
+
+def _is_time_element(element: SomElement) -> bool:
+    attrs = element.attrs
+    if attrs is None:
+        return False
+    if element.role == ElementRole.paragraph:
+        return _source_role_value_matches(attrs.source_tag, "time") or _source_role_value_matches(
+            attrs.source_role, "time"
+        )
+    return element.role == ElementRole.text_input and _source_role_value_matches(
+        attrs.input_type, "time"
     )
 
 
@@ -535,6 +590,8 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["title"] = attrs.title
             if attrs.source_role:
                 item["source_role"] = attrs.source_role
+            if attrs.source_tag:
+                item["source_tag"] = attrs.source_tag
             if attrs.test_id:
                 item["test_id"] = attrs.test_id
             if attrs.spellcheck is not None:
@@ -803,6 +860,22 @@ def find_action_targets_by_role(
             if item.get("role") == ElementRole.heading.value
             and str(item.get("level")) == str(heading_level)
         ]
+    if normalized_alias in {"time", "times"}:
+        return [
+            item
+            for item in plan
+            if (
+                item.get("role") == ElementRole.paragraph.value
+                and (
+                    _source_role_value_matches(item.get("source_tag"), "time")
+                    or _source_role_value_matches(item.get("source_role"), "time")
+                )
+            )
+            or (
+                item.get("role") == ElementRole.text_input.value
+                and _source_role_value_matches(item.get("input_type"), "time")
+            )
+        ]
     if media_source_role is not None:
         return [
             item
@@ -820,6 +893,13 @@ def find_action_targets_by_role(
                     for source_role in ("audio", "video", "canvas")
                 )
             )
+        ]
+    if normalized_alias in {"output", "outputs"}:
+        return [
+            item
+            for item in plan
+            if item.get("role") == ElementRole.paragraph.value
+            and _source_role_value_matches(item.get("source_tag"), "output")
         ]
     source_specific_group_role = _SOURCE_SPECIFIC_GROUP_ALIASES.get(normalized_alias)
     if source_specific_group_role is not None and any(
@@ -925,6 +1005,37 @@ def find_action_targets_by_role(
         "blockquotes": "paragraph",
         "quote": "paragraph",
         "quotes": "paragraph",
+        "abbr": "paragraph",
+        "address": "paragraph",
+        "cite": "paragraph",
+        "code": "paragraph",
+        "dfn": "paragraph",
+        "figcaption": "paragraph",
+        "kbd": "paragraph",
+        "math": "paragraph",
+        "pre": "paragraph",
+        "q": "paragraph",
+        "ruby": "paragraph",
+        "samp": "paragraph",
+        "small": "paragraph",
+        "var": "paragraph",
+        "s": "paragraph",
+        "ins": "paragraph",
+        "del": "paragraph",
+        "mark": "paragraph",
+        "subscript": "paragraph",
+        "superscript": "paragraph",
+        "deletion": "paragraph",
+        "insertion": "paragraph",
+        "suggestion": "paragraph",
+        "definition": "paragraph",
+        "definitions": "paragraph",
+        "term": "paragraph",
+        "terms": "paragraph",
+        "emphasis": "paragraph",
+        "emphases": "paragraph",
+        "strong": "paragraph",
+        "strongs": "paragraph",
         "alert": "paragraph",
         "alerts": "paragraph",
         "status": "paragraph",
@@ -941,11 +1052,10 @@ def find_action_targets_by_role(
         "radiogroups": "group",
         "progress": "group",
         "progressbar": "group",
+        "progress_bars": "group",
         "progressbars": "group",
         "meter": "group",
         "meters": "group",
-        "output": "group",
-        "outputs": "group",
         "search": "text_input",
         "search_box": "text_input",
         "search_boxes": "text_input",

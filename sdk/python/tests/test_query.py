@@ -434,6 +434,24 @@ class TestFindByTag:
                 expected
             ], alias
 
+    def test_accepts_inline_text_role_aliases(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(id="inline-text", role=ElementRole.paragraph, actions=["click"])
+        )
+        aliases = (
+            "abbr", "address", "cite", "code", "dfn", "figcaption", "kbd", "math",
+            "pre", "q", "ruby", "samp", "small", "var", "s", "ins", "del", "mark",
+            "subscript", "superscript", "deletion", "insertion", "suggestion", "definition",
+            "definitions", "term", "terms", "emphasis", "emphases", "strong", "strongs",
+        )
+        for alias in aliases:
+            assert [el.id for el in find_by_tag(sample_som, alias)] == [
+                "e4", "e8", "inline-text", "e10"
+            ], alias
+            assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
+                "inline-text"
+            ], alias
+
     def test_accepts_group_backed_structural_tag_aliases(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.append(SomElement(id="group", role=ElementRole.group))
         for alias in (
@@ -443,13 +461,69 @@ class TestFindByTag:
             "radiogroups",
             "progress",
             "progressbar",
+            "progress_bars",
             "progressbars",
             "meter",
             "meters",
-            "output",
-            "outputs",
         ):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["group"], alias
+
+    def test_output_aliases_match_only_native_output_elements(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.extend(
+            [
+                SomElement(
+                    id="output",
+                    role=ElementRole.paragraph,
+                    attrs=ElementAttrs(source_tag="output"),
+                    actions=["click"],
+                ),
+                SomElement(id="other-paragraph", role=ElementRole.paragraph),
+                SomElement(id="other-group", role=ElementRole.group, actions=["click"]),
+            ]
+        )
+
+        for alias in ("output", "outputs"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == ["output"], alias
+            assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
+                "output"
+            ], alias
+
+    def test_time_aliases_match_native_time_elements_and_time_inputs(
+        self, sample_som: Som
+    ) -> None:
+        sample_som.regions[1].elements.extend(
+            [
+                SomElement(
+                    id="time-text",
+                    role=ElementRole.paragraph,
+                    attrs=ElementAttrs(source_tag="TIME"),
+                    actions=["click"],
+                ),
+                SomElement(
+                    id="time-input",
+                    role=ElementRole.text_input,
+                    attrs=ElementAttrs(input_type=" time "),
+                    actions=["type"],
+                ),
+                SomElement(
+                    id="ordinary-text-input",
+                    role=ElementRole.text_input,
+                    attrs=ElementAttrs(input_type="date"),
+                    actions=["type"],
+                ),
+                SomElement(id="ordinary-paragraph", role=ElementRole.paragraph),
+            ]
+        )
+
+        for alias in ("time", "times"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == [
+                "time-text",
+                "time-input",
+            ], alias
+            assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
+                "time-text",
+                "time-input",
+            ], alias
 
     def test_narrows_progress_and_meter_aliases_using_source_roles(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.extend(
@@ -473,6 +547,7 @@ class TestFindByTag:
             "progressbar",
             "progress-bar",
             "progress bar",
+            "progress_bars",
             "progressbars",
         ):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["progress"], alias
@@ -644,7 +719,6 @@ class TestFindByTag:
             "datetime-local",
             "date time local",
             "month",
-            "time",
             "week",
             "color",
             "range",
@@ -792,7 +866,6 @@ class TestFindActionTargetsByRole:
             "datetime-local",
             "date time local",
             "month",
-            "time",
             "week",
             "color",
             "range",
@@ -922,8 +995,6 @@ class TestFindActionTargetsByRole:
             "progressbars",
             "meter",
             "meters",
-            "output",
-            "outputs",
         ):
             assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
                 "e12"
@@ -955,6 +1026,7 @@ class TestFindActionTargetsByRole:
             "progressbar",
             "progress-bar",
             "progress bar",
+            "progress_bars",
             "progressbars",
         ):
             assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
