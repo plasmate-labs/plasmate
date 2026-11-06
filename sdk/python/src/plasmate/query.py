@@ -140,6 +140,8 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
     """Find all elements matching an element role or common HTML tag alias."""
     role_aliases = {
         "a": "link",
+        "area": "link",
+        "areas": "link",
         "anchor": "link",
         "anchors": "link",
         "buttons": "button",
@@ -880,6 +882,8 @@ def find_action_targets_by_role(
         "list_box": "select",
         "list_boxes": "select",
         "links": "link",
+        "area": "link",
+        "areas": "link",
         "hyperlink": "link",
         "hyperlinks": "link",
         "menu": "list",

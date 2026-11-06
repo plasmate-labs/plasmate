@@ -283,6 +283,8 @@ const ELEMENT_ROLES: readonly ElementRole[] = [
 
 const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   a: 'link',
+  area: 'link',
+  areas: 'link',
   anchor: 'link',
   anchors: 'link',
   article: 'section',
