@@ -1730,7 +1730,7 @@ fn tag_to_role(tag: &str, attrs: &[(String, String)]) -> Option<ElementRole> {
         "table" => Some(ElementRole::Table),
         "p" | "time" | "blockquote" | "figcaption" | "pre" | "abbr" | "address" | "cite"
         | "dfn" | "code" | "math" | "ruby" | "small" | "kbd" | "output" | "samp" | "var" | "q"
-        | "mark" | "ins" | "del" => Some(ElementRole::Paragraph),
+        | "mark" | "ins" | "del" | "s" => Some(ElementRole::Paragraph),
         "section" | "article" => Some(ElementRole::Section),
         "fieldset" => Some(ElementRole::Group),
         "hr" => Some(ElementRole::Separator),
@@ -13647,13 +13647,11 @@ plasmate fetch https://example.test</code></pre>
             }),
             "u must not copy del mapping: {elements:?}"
         );
-        assert!(
-            elements.iter().all(|element| {
-                element.html_id.as_deref() != Some("strike")
-                    || element.role != ElementRole::Paragraph
-            }),
-            "s must not copy del mapping: {elements:?}"
-        );
+        let strike = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("strike"))
+            .expect("native s should compile as a paragraph");
+        assert_eq!(strike.role, ElementRole::Paragraph);
         assert!(
             elements.iter().all(|element| {
                 element.html_id.as_deref() != Some("stress")

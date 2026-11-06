@@ -940,6 +940,12 @@ describe('findByTag', () => {
     }
   });
 
+  it('accepts area aliases for link elements', () => {
+    for (const alias of ['area', 'areas']) {
+      assert.deepEqual(findByTag(fixture, alias).map((el) => el.id), ['e2'], alias);
+    }
+  });
+
   it('accepts ARIA paragraph aliases', () => {
     const som: Som = {
       ...fixture,

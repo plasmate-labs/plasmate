@@ -234,8 +234,8 @@ case-insensitive accessible-label/text matching on regions and elements;
 element matching also falls back to `aria-label`, `title`, `placeholder`, and
 `alt` attributes when a compiled label is unavailable;
 whitespace is normalized so labels split across lines still match.
-Element selectors also accept common HTML tag aliases: `a`/`anchor`/`anchors`/`hyperlink`/`hyperlinks`/`link`/`links`,
-`p`/`paragraph`, and `ul`, `ol`, `dl`, or `menu`/`list`/`lists` (plus the explicit
+Element selectors also accept common HTML tag aliases: `a`/`area`/`areas`/`anchor`/`anchors`/`hyperlink`/`hyperlinks`/`link`/`links`,
+`p`/`s`/`ins`/`del`/`mark`/`paragraph`, and `ul`, `ol`, `dl`, or `menu`/`list`/`lists` (plus the explicit
 `unordered_list`, `ordered_list`, and `definition_list` forms).
 Structural aliases include `div`/`fieldset`/`fieldsets`/`group`/`groups`, `section`/`sections`, and ARIA group roles
 `figure`/`figures`/`radiogroup`/`radiogroups`/`progressbar`/`progressbars`/
