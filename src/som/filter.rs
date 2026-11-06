@@ -833,7 +833,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "tree grids"
         | "treegrid"
         | "treegrids" => Some(ElementRole::Table),
-        "paragraph" | "paragraphs" | "p" | "s" | "blockquote" | "blockquotes" | "quote" | "quotes" | "alert"
+        "paragraph" | "paragraphs" | "p" | "s" | "ins" | "del" | "mark" | "blockquote" | "blockquotes" | "quote" | "quotes" | "alert"
         | "alerts" | "status" | "statuses" | "tooltip" | "tooltips" => {
             Some(ElementRole::Paragraph)
         }
@@ -1521,10 +1521,10 @@ mod tests {
     }
 
     #[test]
-    fn test_selector_accepts_s_alias_for_paragraphs() {
+    fn test_selector_accepts_inline_text_tag_aliases_for_paragraphs() {
         let som = make_test_som();
 
-        for selector in ["s", "role=s"] {
+        for selector in ["s", "role=s", "ins", "role=ins", "del", "role:del", "mark"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
