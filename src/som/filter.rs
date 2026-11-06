@@ -879,7 +879,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
             Some(ElementRole::Paragraph)
         }
         "article" | "articles" | "content" | "contents" | "region" | "regions"
-        | "section" | "sections" => Some(ElementRole::Section),
+        | "content_region" | "content_regions" | "section" | "sections" => {
+            Some(ElementRole::Section)
+        }
         "group"
         | "groups"
         | "div"
@@ -3432,8 +3434,12 @@ mod tests {
             "contents",
             "region",
             "regions",
+            "content-region",
+            "content regions",
             "role=content",
             "role=region",
+            "role=content-region",
+            "role:content region",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
