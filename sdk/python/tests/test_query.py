@@ -464,10 +464,28 @@ class TestFindByTag:
             "progressbars",
             "meter",
             "meters",
-            "output",
-            "outputs",
         ):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["group"], alias
+
+    def test_output_aliases_match_only_native_output_elements(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.extend(
+            [
+                SomElement(
+                    id="output",
+                    role=ElementRole.paragraph,
+                    attrs=ElementAttrs(source_tag="output"),
+                    actions=["click"],
+                ),
+                SomElement(id="other-paragraph", role=ElementRole.paragraph),
+                SomElement(id="other-group", role=ElementRole.group, actions=["click"]),
+            ]
+        )
+
+        for alias in ("output", "outputs"):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == ["output"], alias
+            assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
+                "output"
+            ], alias
 
     def test_narrows_progress_and_meter_aliases_using_source_roles(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.extend(
@@ -940,8 +958,6 @@ class TestFindActionTargetsByRole:
             "progressbars",
             "meter",
             "meters",
-            "output",
-            "outputs",
         ):
             assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
                 "e12"

@@ -336,8 +336,6 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "progressbars": "group",
         "meter": "group",
         "meters": "group",
-        "output": "group",
-        "outputs": "group",
         "tables": "table",
         "data_table": "table",
         "data_tables": "table",
@@ -363,6 +361,15 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         ]
     if tag in _MEDIA_GROUP_ALIASES:
         return [element for element in flat_elements(som) if _is_media_element(element)]
+    if tag in {"output", "outputs"}:
+        return [
+            element
+            for element in flat_elements(som)
+            if element.role == ElementRole.paragraph
+            and _source_role_value_matches(
+                element.attrs.source_tag if element.attrs else None, "output"
+            )
+        ]
     source_specific_group_role = _SOURCE_SPECIFIC_GROUP_ALIASES.get(tag)
     if source_specific_group_role is not None and any(
         _source_role_matches(element, source_specific_group_role)
@@ -566,6 +573,8 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 item["title"] = attrs.title
             if attrs.source_role:
                 item["source_role"] = attrs.source_role
+            if attrs.source_tag:
+                item["source_tag"] = attrs.source_tag
             if attrs.test_id:
                 item["test_id"] = attrs.test_id
             if attrs.spellcheck is not None:
@@ -852,6 +861,13 @@ def find_action_targets_by_role(
                 )
             )
         ]
+    if normalized_alias in {"output", "outputs"}:
+        return [
+            item
+            for item in plan
+            if item.get("role") == ElementRole.paragraph.value
+            and _source_role_value_matches(item.get("source_tag"), "output")
+        ]
     source_specific_group_role = _SOURCE_SPECIFIC_GROUP_ALIASES.get(normalized_alias)
     if source_specific_group_role is not None and any(
         _source_role_value_matches(item.get("source_role"), source_specific_group_role)
@@ -1006,8 +1022,6 @@ def find_action_targets_by_role(
         "progressbars": "group",
         "meter": "group",
         "meters": "group",
-        "output": "group",
-        "outputs": "group",
         "search": "text_input",
         "search_box": "text_input",
         "search_boxes": "text_input",

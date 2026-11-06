@@ -134,6 +134,7 @@ class ElementAttrs(BaseModel):
     accesskey: Optional[str] = None
     title: Optional[str] = None
     source_role: Optional[str] = None
+    source_tag: Optional[str] = None
     test_id: Optional[str] = None
     spellcheck: Optional[Union[bool, str]] = None
     draggable: Optional[Union[bool, str]] = None
