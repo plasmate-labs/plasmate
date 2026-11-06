@@ -461,6 +461,7 @@ class TestFindByTag:
             "radiogroups",
             "progress",
             "progressbar",
+            "progress_bars",
             "progressbars",
             "meter",
             "meters",
@@ -546,6 +547,7 @@ class TestFindByTag:
             "progressbar",
             "progress-bar",
             "progress bar",
+            "progress_bars",
             "progressbars",
         ):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["progress"], alias
@@ -1024,6 +1026,7 @@ class TestFindActionTargetsByRole:
             "progressbar",
             "progress-bar",
             "progress bar",
+            "progress_bars",
             "progressbars",
         ):
             assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
