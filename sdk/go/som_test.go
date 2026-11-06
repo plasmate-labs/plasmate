@@ -519,6 +519,10 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 		{alias: "range", role: "text_input", want: 1},
 		{alias: "sections", role: "section", want: 1},
 		{alias: "articles", role: "section", want: 1},
+		{alias: "content", role: "section", want: 1},
+		{alias: "contents", role: "section", want: 1},
+		{alias: "region", role: "section", want: 1},
+		{alias: "regions", role: "section", want: 1},
 		{alias: "content-region", role: "section", want: 1},
 		{alias: "content regions", role: "section", want: 1},
 	} {
