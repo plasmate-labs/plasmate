@@ -434,6 +434,24 @@ class TestFindByTag:
                 expected
             ], alias
 
+    def test_accepts_inline_text_role_aliases(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(id="inline-text", role=ElementRole.paragraph, actions=["click"])
+        )
+        aliases = (
+            "abbr", "address", "cite", "code", "dfn", "figcaption", "kbd", "math",
+            "pre", "q", "ruby", "samp", "small", "var", "s", "ins", "del", "mark",
+            "subscript", "superscript", "deletion", "insertion", "suggestion", "definition",
+            "definitions", "term", "terms", "emphasis", "emphases", "strong", "strongs",
+        )
+        for alias in aliases:
+            assert [el.id for el in find_by_tag(sample_som, alias)] == [
+                "e4", "e8", "inline-text", "e10"
+            ], alias
+            assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
+                "inline-text"
+            ], alias
+
     def test_accepts_group_backed_structural_tag_aliases(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.append(SomElement(id="group", role=ElementRole.group))
         for alias in (
