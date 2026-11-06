@@ -268,7 +268,7 @@ spaced or hyphenated forms), `search_input`/`search-input`, `search_control`/`se
 `query_control`/`query-control`, `querybox`/`query-box`,
 `queryboxes`/`query_boxes`/`query-boxes`/`query boxes`, `email`, `number`,
 `password`, `tel`, `url`, `date`,
-`datetime`/`datetime-local` (also `date_time`/`date-time`/`date time` and `date_time_local`/`date-time-local`/`date time local`), `month`, `time`, `week`, `color`, `range`,
+`datetime`/`datetime-local` (also `date_time`/`date-time`/`date time` and `date_time_local`/`date-time-local`/`date time local`), `month`, `time`/`times`, `week`, `color`, `range`,
 `hidden`, and `file`; each targets the corresponding compiled text-input
 element.
 Use `cache_status` after repeated fetches to inspect local MCP SOM cache hits,

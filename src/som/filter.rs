@@ -45,7 +45,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local` /
 ///   `date_time` / `date-time` / `date time`, `date_time_local` /
 ///   `date-time-local` / `date time local`, `month`,
-///   `time`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` /
+///   `time` / `times`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` /
 ///   `textareas` / `text_area` / `text_areas`,
 ///   `select` / `selects` / `combobox` / `comboboxes` / `combo box` /
 ///   `combo boxes` / `combo-boxes` /
@@ -304,7 +304,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // uses TextInput for the former and Paragraph for the latter, so keep the
     // source-facing selector useful for both compiled forms without treating
     // every text input or paragraph as a time value.
-    if selector.eq_ignore_ascii_case("time") {
+    if selector.eq_ignore_ascii_case("time") || selector.eq_ignore_ascii_case("times") {
         return filter_som_elements(som, selector, |element| {
             match element.role {
                 ElementRole::Paragraph => element.attrs.as_ref().is_some_and(|attrs| {
@@ -1587,7 +1587,7 @@ mod tests {
             hints: None,
         });
 
-        for selector in ["time", "TIME", "role=time"] {
+        for selector in ["time", "times", "TIME", "role=time", "role=times"] {
             let filtered = apply_selector(&som, selector);
             let ids = filtered.regions[0]
                 .elements
