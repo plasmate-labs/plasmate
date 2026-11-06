@@ -229,10 +229,10 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             .cloned()
             .collect();
         if filtered.is_empty() {
-            // Some ARIA names are also element-role aliases (for example,
-            // `article` and `region` compile to a Section). Let those
-            // selectors continue through the element matcher when no region
-            // matched.
+            // Some semantic names are also element-role aliases (for
+            // example, `article`, `content`, and `region` compile to a
+            // Section). Let those selectors continue through the element
+            // matcher when no region matched.
             if parse_element_role(selector).is_none() {
                 eprintln!(
                     "Warning: selector '{}' matched no regions - returning full SOM",
@@ -878,9 +878,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "tooltips" => {
             Some(ElementRole::Paragraph)
         }
-        "article" | "articles" | "region" | "regions" | "section" | "sections" => {
-            Some(ElementRole::Section)
-        }
+        "article" | "articles" | "content" | "contents" | "region" | "regions"
+        | "section" | "sections" => Some(ElementRole::Section),
         "group"
         | "groups"
         | "div"
@@ -3428,7 +3427,14 @@ mod tests {
         let mut som = make_test_som();
         som.regions[1].elements[0].role = ElementRole::Section;
 
-        for selector in ["region", "regions", "role=region"] {
+        for selector in [
+            "content",
+            "contents",
+            "region",
+            "regions",
+            "role=content",
+            "role=region",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
