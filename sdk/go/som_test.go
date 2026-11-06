@@ -519,6 +519,8 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 		{alias: "range", role: "text_input", want: 1},
 		{alias: "sections", role: "section", want: 1},
 		{alias: "articles", role: "section", want: 1},
+		{alias: "content-region", role: "section", want: 1},
+		{alias: "content regions", role: "section", want: 1},
 	} {
 		got := FindByTag(som, test.alias)
 		if len(got) != test.want {

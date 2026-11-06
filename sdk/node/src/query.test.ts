@@ -859,7 +859,7 @@ describe('findByTag', () => {
         },
       ],
     };
-    for (const alias of ['article', 'articles', 'sections']) {
+    for (const alias of ['article', 'articles', 'sections', 'content-region', 'content regions']) {
       assert.deepEqual(findByTag(sectionSom, alias).map((el) => el.id), ['section'], alias);
     }
   });

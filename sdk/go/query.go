@@ -275,6 +275,8 @@ func normalizeElementRoleAlias(role string) string {
 		"alerts":             "paragraph",
 		"article":            "section",
 		"articles":           "section",
+		"content_region":     "section",
+		"content_regions":    "section",
 		"button":             "button",
 		"buttons":            "button",
 		"checkboxes":         "checkbox",

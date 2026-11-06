@@ -288,6 +288,8 @@ const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   anchor: 'link',
   anchors: 'link',
   article: 'section',
+  content_region: 'section',
+  content_regions: 'section',
   links: 'link',
   buttons: 'button',
   menuitem: 'button',
