@@ -60,7 +60,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `table` / `tables` / `data_table` / `data_tables` / `data-table` / `data tables`,
 ///   `paragraph` / `p` / `abbr` / `address` / `cite` / `code` / `dfn` /
 ///   `figcaption` / `kbd` / `math` / `pre` / `q` / `ruby` / `samp` /
-///   `small` / `var` / `s` / `ins` / `del` / `mark` / `blockquote` /
+///   `small` / `var` / `s` / `ins` / `del` / `mark` / `subscript` /
+///   `superscript` / `deletion` / `insertion` / `suggestion` / `blockquote` /
 ///   `quote` / `alert` / `alerts` / `status` / `statuses` / `tooltip` /
 ///   `tooltips`, `section` / `sections`,
 ///   plus common HTML tag aliases `a`/`anchor`, `p`, `ul`, `ol`, `dl`, and `menu`,
@@ -838,8 +839,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "treegrids" => Some(ElementRole::Table),
         "paragraph" | "paragraphs" | "p" | "abbr" | "address" | "cite" | "code" | "dfn"
         | "figcaption" | "kbd" | "math" | "pre" | "q" | "ruby" | "samp" | "small" | "var"
-        | "s" | "ins" | "del" | "mark" | "blockquote" | "blockquotes"
-        | "quote" | "quotes" | "alert" | "alerts" | "status" | "statuses" | "tooltip"
+        | "s" | "ins" | "del" | "mark" | "subscript" | "superscript" | "deletion"
+        | "insertion" | "suggestion" | "blockquote" | "blockquotes" | "quote" | "quotes"
+        | "alert" | "alerts" | "status" | "statuses" | "tooltip"
         | "tooltips" => {
             Some(ElementRole::Paragraph)
         }
@@ -1545,6 +1547,26 @@ mod tests {
         for selector in [
             "abbr", "address", "cite", "code", "dfn", "figcaption", "kbd", "math", "pre",
             "q", "ruby", "samp", "small", "var", "role=code", "role:var",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Paragraph);
+        }
+    }
+
+    #[test]
+    fn test_selector_accepts_aria_text_role_aliases_for_paragraphs() {
+        let som = make_test_som();
+
+        for selector in [
+            "subscript",
+            "role=subscript",
+            "superscript",
+            "role:superscript",
+            "deletion",
+            "insertion",
+            "suggestion",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
