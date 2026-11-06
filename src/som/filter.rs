@@ -302,10 +302,29 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
 
     // `time` is both an HTML input type and a native text element. The SOM
     // uses TextInput for the former and Paragraph for the latter, so keep the
-    // source-facing selector useful for both compiled forms.
+    // source-facing selector useful for both compiled forms without treating
+    // every text input or paragraph as a time value.
     if selector.eq_ignore_ascii_case("time") {
         return filter_som_elements(som, selector, |element| {
-            matches!(element.role, ElementRole::Paragraph | ElementRole::TextInput)
+            match element.role {
+                ElementRole::Paragraph => element.attrs.as_ref().is_some_and(|attrs| {
+                    attrs
+                        .get("source_tag")
+                        .and_then(serde_json::Value::as_str)
+                        .is_some_and(|tag| tag.eq_ignore_ascii_case("time"))
+                        || attrs
+                            .get("source_role")
+                            .and_then(serde_json::Value::as_str)
+                            .is_some_and(|role| role.eq_ignore_ascii_case("time"))
+                }),
+                ElementRole::TextInput => element.attrs.as_ref().is_some_and(|attrs| {
+                    attrs
+                        .get("input_type")
+                        .and_then(serde_json::Value::as_str)
+                        .is_some_and(|input_type| input_type.eq_ignore_ascii_case("time"))
+                }),
+                _ => false,
+            }
         });
     }
 
@@ -1554,6 +1573,7 @@ mod tests {
     #[test]
     fn test_selector_time_matches_native_time_and_time_input() {
         let mut som = make_test_som();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({"source_tag": "time"}));
         som.regions[1].elements.push(Element {
             id: "e-time-input".to_string(),
             role: ElementRole::TextInput,
@@ -1561,7 +1581,7 @@ mod tests {
             text: None,
             label: Some("Start time".to_string()),
             actions: Some(vec!["type".to_string()]),
-            attrs: None,
+            attrs: Some(serde_json::json!({"input_type": "time"})),
             children: None,
             shadow: None,
             hints: None,
@@ -1576,6 +1596,32 @@ mod tests {
                 .collect::<Vec<_>>();
             assert_eq!(ids, vec!["e2", "e-time-input"], "selector: {selector}");
         }
+    }
+
+    #[test]
+    fn test_selector_time_excludes_other_paragraphs_and_inputs() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({"source_tag": "time"}));
+        som.regions[1].elements.push(Element {
+            id: "e-text-input".to_string(),
+            role: ElementRole::TextInput,
+            html_id: None,
+            text: None,
+            label: Some("Name".to_string()),
+            actions: Some(vec!["type".to_string()]),
+            attrs: Some(serde_json::json!({"input_type": "text"})),
+            children: None,
+            shadow: None,
+            hints: None,
+        });
+
+        let filtered = apply_selector(&som, "time");
+        let ids = filtered.regions[0]
+            .elements
+            .iter()
+            .map(|element| element.id.as_str())
+            .collect::<Vec<_>>();
+        assert_eq!(ids, vec!["e2"]);
     }
 
     #[test]
