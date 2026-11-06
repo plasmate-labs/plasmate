@@ -112,6 +112,8 @@ export interface SomElementAttrs {
   tabindex?: number | string;
   accesskey?: string;
   title?: string;
+  /** Internal compiler hint for source-facing selectors such as `time`. */
+  source_tag?: string;
   source_role?: string;
   test_id?: string;
   spellcheck?: boolean | string;

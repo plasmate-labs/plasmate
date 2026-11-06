@@ -702,7 +702,6 @@ describe('findByTag', () => {
       'date-time',
       'date-time-local',
       'month',
-      'time',
       'week',
       'color',
       'range',
@@ -711,6 +710,36 @@ describe('findByTag', () => {
       'queryboxes',
     ]) {
       assert.deepEqual(findByTag(fixture, alias).map((el) => el.id), ['e5'], alias);
+    }
+  });
+
+  it('narrows time aliases to native time elements and time inputs', () => {
+    const som: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [
+                ...region.elements,
+                { id: 'time-text', role: 'paragraph', actions: ['click'], attrs: { source_tag: 'TIME' } },
+                { id: 'time-input', role: 'text_input', actions: ['type'], attrs: { input_type: ' time ' } },
+                { id: 'other-input', role: 'text_input', attrs: { input_type: 'text' } },
+              ],
+            }
+          : region,
+      ),
+    };
+
+    for (const alias of ['time', 'times', 'role=time', 'role:times']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), [
+        'time-text',
+        'time-input',
+      ], alias);
+      assert.deepEqual(findActionTargetsByRole(som, alias).map((item) => item.id), [
+        'time-text',
+        'time-input',
+      ], alias);
     }
   });
 
