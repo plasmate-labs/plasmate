@@ -2214,6 +2214,9 @@ fn build_element_attrs(
                 }
             }
         }
+        "output" => {
+            map.insert("source_tag".into(), json!("output"));
+        }
         "blockquote" => {
             if let Some((_, cite)) = attrs.iter().find(|(n, _)| n == "cite") {
                 if !cite.trim().is_empty() {
@@ -8678,6 +8681,13 @@ plasmate fetch https://example.test</code></pre>
             .expect("native output should compile");
         assert_eq!(total.role, ElementRole::Paragraph);
         assert_eq!(total.text.as_deref(), Some("$12.00"));
+        assert_eq!(
+            total
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("source_tag")),
+            Some(&json!("output"))
+        );
         assert!(
             total
                 .actions
