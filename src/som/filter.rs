@@ -58,15 +58,21 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `image-item` / `image item` / `imageitem` / `image_items` / `image-items` /
 ///   `image items` / `imageitems`, `list` / `lists`,
 ///   `table` / `tables` / `data_table` / `data_tables` / `data-table` / `data tables`,
-///   `paragraph` / `p` / `s` / `blockquote` / `quote` / `alert` / `alerts` / `status` /
-///   `statuses` / `tooltip` / `tooltips`, `section` / `sections`,
+///   `paragraph` / `p` / `abbr` / `address` / `cite` / `code` / `dfn` /
+///   `figcaption` / `kbd` / `math` / `pre` / `q` / `ruby` / `samp` /
+///   `small` / `var` / `s` / `ins` / `del` / `mark` / `subscript` /
+///   `superscript` / `deletion` / `insertion` / `suggestion` / `definition` /
+///   `term` / `emphasis` / `strong` / `blockquote` / `quote` / `output` /
+///   `outputs` / `alert` /
+///   `alerts` / `status` / `statuses` / `tooltip` /
+///   `tooltips`, `section` / `sections`,
 ///   plus common HTML tag aliases `a`/`anchor`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list` / `definition_lists`,
 ///   `group` / `groups` / `fieldset` / `fieldsets` / `figure` / `figures` /
 ///   `radiogroup` / `radiogroups` / `progress` / `progressbar` /
 ///   `progress_bar` / `progress-bar` / `progress bar` / `progressbars` /
-///   `meter` / `meters` / `output` / `outputs` /
+///   `meter` / `meters` /
 ///   `video` / `canvas`,
 ///   `grid` / `grids` / `data_grid` / `data_grids` / `data-grid` / `data-grids` /
 ///   `treegrid` / `treegrids` / `tree-grid` / `tree-grids` / `table_grid` /
@@ -833,8 +839,14 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "tree grids"
         | "treegrid"
         | "treegrids" => Some(ElementRole::Table),
-        "paragraph" | "paragraphs" | "p" | "s" | "ins" | "del" | "mark" | "blockquote" | "blockquotes" | "quote" | "quotes" | "alert"
-        | "alerts" | "status" | "statuses" | "tooltip" | "tooltips" => {
+        "paragraph" | "paragraphs" | "p" | "abbr" | "address" | "cite" | "code" | "dfn"
+        | "figcaption" | "kbd" | "math" | "pre" | "q" | "ruby" | "samp" | "small" | "var"
+        | "s" | "ins" | "del" | "mark" | "subscript" | "superscript" | "deletion"
+        | "insertion" | "suggestion" | "definition" | "definitions" | "term" | "terms"
+        | "emphasis" | "emphases" | "strong" | "strongs" | "blockquote" | "blockquotes" | "quote" | "quotes"
+        | "output" | "outputs"
+        | "alert" | "alerts" | "status" | "statuses" | "tooltip"
+        | "tooltips" => {
             Some(ElementRole::Paragraph)
         }
         "article" | "articles" | "section" | "sections" => Some(ElementRole::Section),
@@ -858,8 +870,6 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "progress bars"
         | "meter"
         | "meters"
-        | "output"
-        | "outputs"
         | "audio"
         | "audios"
         | "audio_item"
@@ -1533,6 +1543,62 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_accepts_native_paragraph_tag_aliases() {
+        let som = make_test_som();
+
+        for selector in [
+            "abbr", "address", "cite", "code", "dfn", "figcaption", "kbd", "math", "pre",
+            "q", "ruby", "samp", "small", "var", "output", "outputs", "role=code", "role:var",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Paragraph);
+        }
+    }
+
+    #[test]
+    fn test_selector_accepts_aria_text_role_aliases_for_paragraphs() {
+        let som = make_test_som();
+
+        for selector in [
+            "subscript",
+            "role=subscript",
+            "superscript",
+            "role:superscript",
+            "deletion",
+            "insertion",
+            "suggestion",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Paragraph);
+        }
+    }
+
+    #[test]
+    fn test_selector_accepts_remaining_compiled_text_aliases() {
+        let som = make_test_som();
+
+        for selector in [
+            "definition",
+            "role:definition",
+            "term",
+            "terms",
+            "emphasis",
+            "emphases",
+            "strong",
+            "strongs",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Paragraph);
+        }
+    }
+
+    #[test]
     fn test_selector_role_interactive_alias() {
         let som = make_test_som();
 
@@ -1716,7 +1782,6 @@ mod tests {
             ("radiogroups", ElementRole::Group),
             ("progressbars", ElementRole::Group),
             ("meters", ElementRole::Group),
-            ("outputs", ElementRole::Group),
         ] {
             let mut som = make_test_som();
             som.regions[0].elements[0].role = role.clone();
