@@ -298,6 +298,19 @@ func TestFindByRole(t *testing.T) {
 	}
 }
 
+func TestFindByRoleMatchesStoredRolesCaseInsensitively(t *testing.T) {
+	som := &Som{Regions: []Region{{ID: "R_MAIN", Role: "MAIN", Elements: []Element{
+		{ID: "E_BUTTON", Role: "BUTTON"},
+	}}}}
+
+	if got := FindByRole(som, "main"); len(got) != 1 || got[0].ID != "R_MAIN" {
+		t.Fatalf("FindByRole(main) = %#v, want R_MAIN", got)
+	}
+	if got := FindByTag(som, "button"); len(got) != 1 || got[0].ID != "E_BUTTON" {
+		t.Fatalf("FindByTag(button) = %#v, want E_BUTTON", got)
+	}
+}
+
 func TestQueryHelpersHandleNilSOM(t *testing.T) {
 	if got := FindByRole(nil, "main"); got != nil {
 		t.Fatalf("FindByRole(nil) = %#v, want nil", got)
