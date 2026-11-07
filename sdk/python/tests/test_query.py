@@ -534,6 +534,8 @@ class TestFindByTag:
             "time_controls",
             "timecontrol",
             "timecontrols",
+            "time-picker",
+            "time-pickers",
         ):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["time-input"], alias
             assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [

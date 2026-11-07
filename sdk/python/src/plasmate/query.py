@@ -47,6 +47,8 @@ _TIME_INPUT_ALIASES = {
     "time_controls",
     "timecontrol",
     "timecontrols",
+    "time_picker",
+    "time_pickers",
 }
 
 
