@@ -182,6 +182,20 @@ func FindByTag(som *Som, tag string) []Element {
 		}
 		return result
 	}
+	// Native <output> elements compile to the paragraph role while retaining
+	// their source tag. Prefer that metadata when present, but keep matching
+	// legacy SOMs that represented output as a generic group.
+	if query == "output" || query == "outputs" {
+		for _, element := range FlatElements(som) {
+			if element.Role == "paragraph" && element.Attrs != nil &&
+				element.Attrs.SourceTag != nil && *element.Attrs.SourceTag == "output" {
+				result = append(result, element)
+			}
+		}
+		if len(result) > 0 {
+			return result
+		}
+	}
 	if sourceRole, ok := sourceSpecificGroupRole(query); ok {
 		hasSourceMetadata := somContainsSourceRole(som, sourceRole)
 		var legacyGroups []Element

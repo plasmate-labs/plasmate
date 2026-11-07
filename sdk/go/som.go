@@ -85,6 +85,7 @@ type ElementAttrs struct {
 	AccessKey       *string        `json:"accesskey,omitempty"`
 	Title           *string        `json:"title,omitempty"`
 	SourceRole      *string        `json:"source_role,omitempty"`
+	SourceTag       *string        `json:"source_tag,omitempty"`
 	TestID          *string        `json:"test_id,omitempty"`
 	Spellcheck      interface{}    `json:"spellcheck,omitempty"`
 	Draggable       interface{}    `json:"draggable,omitempty"`
