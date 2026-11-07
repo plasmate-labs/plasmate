@@ -898,6 +898,27 @@ class TestFindByTag:
 
 
 class TestFindActionTargetsByRole:
+    def test_matches_serialized_roles_case_insensitively(self, sample_som: Som) -> None:
+        uppercase_button = SomElement.model_construct(
+            id="e_upper_action_button", role="BUTTON", text="Upper action", actions=["click"]
+        )
+        som = sample_som.model_copy(
+            update={
+                "regions": [
+                    *sample_som.regions,
+                    SomRegion(
+                        id="r_upper_action_button",
+                        role=RegionRole.main,
+                        elements=[uppercase_button],
+                    ),
+                ]
+            }
+        )
+
+        assert [
+            item["id"] for item in find_action_targets_by_role(som, "button")
+        ][-1] == "e_upper_action_button"
+
     def test_accepts_html_control_aliases(self, sample_som: Som) -> None:
         assert [item["id"] for item in find_action_targets_by_role(sample_som, "INPUT")] == ["e9"]
         assert [item["id"] for item in find_action_targets_by_role(sample_som, "textbox")] == ["e9"]
