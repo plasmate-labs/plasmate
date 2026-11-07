@@ -41,6 +41,8 @@ _SOURCE_SPECIFIC_GROUP_ALIASES = {
 _TIME_INPUT_ALIASES = {
     "time_input",
     "time_inputs",
+    "timeinput",
+    "timeinputs",
     "time_control",
     "time_controls",
     "timecontrol",

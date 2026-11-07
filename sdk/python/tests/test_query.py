@@ -528,6 +528,8 @@ class TestFindByTag:
         for alias in (
             "time_input",
             "time_inputs",
+            "timeinput",
+            "timeinputs",
             "time_control",
             "time_controls",
             "timecontrol",
