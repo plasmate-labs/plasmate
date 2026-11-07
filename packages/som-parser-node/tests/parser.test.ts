@@ -323,6 +323,11 @@ describe('findByRole', () => {
     };
 
     expect(findByRole(uppercaseRoles, 'link')).toHaveLength(3);
+    expect(findActionTargetsByRole(uppercaseRoles, 'ROLE: LINK').map((item) => item.id)).toEqual([
+      'e_1',
+      'e_2',
+      'e_5',
+    ]);
   });
 
   it('finds headings', () => {
@@ -773,6 +778,32 @@ describe('findByAction', () => {
   it('finds typeable elements', () => {
     expect(findByAction(FIXTURE, 'type').map((el) => el.id)).toEqual(['e_7']);
   });
+
+  it('matches serialized actions case-insensitively', () => {
+    const uppercaseActions: Som = {
+      ...FIXTURE,
+      regions: FIXTURE.regions.map((region) => ({
+        ...region,
+        elements: region.elements.map((element) => ({
+          ...element,
+          actions: element.actions?.map((action) => action.toUpperCase() as typeof action),
+        })),
+      })),
+    };
+
+    expect(findByAction(uppercaseActions, 'CLICK').map((el) => el.id)).toEqual([
+      'e_1',
+      'e_2',
+      'e_5',
+      'e_8',
+    ]);
+    expect(findActionTargetsByAction(uppercaseActions, 'CLICK').map((item) => item.id)).toEqual([
+      'e_1',
+      'e_2',
+      'e_5',
+      'e_8',
+    ]);
+  });
 });
 
 describe('findByHint', () => {
@@ -1005,6 +1036,32 @@ describe('getActionPlan', () => {
     ]);
   });
 
+  it('normalizes role and action keys in the replay index', () => {
+    const uppercase: Som = {
+      ...FIXTURE,
+      regions: FIXTURE.regions.map((region) => ({
+        ...region,
+        elements: region.elements.map((element) => ({
+          ...element,
+          role: element.role.toUpperCase() as typeof element.role,
+          actions: element.actions?.map((action) => action.toUpperCase() as typeof action),
+        })),
+      })),
+    };
+
+    const index = getActionPlanIndex(uppercase);
+
+    expect(index.byRole.link.map((target) => target.id)).toEqual(['e_1', 'e_2', 'e_5']);
+    expect(index.byAction.click.map((target) => target.id)).toEqual([
+      'e_1',
+      'e_2',
+      'e_5',
+      'e_8',
+    ]);
+    expect(index.byRole.LINK).toBeUndefined();
+    expect(index.byAction.CLICK).toBeUndefined();
+  });
+
   it('accepts heading-level aliases for action targets', () => {
     const som: Som = {
       ...FIXTURE,
@@ -1147,6 +1204,18 @@ describe('getForms', () => {
     expect(forms).toHaveLength(1);
     expect(forms[0].id).toBe('r_form');
     expect(forms[0].action).toBe('/search');
+  });
+
+  it('matches serialized region roles case-insensitively', () => {
+    const uppercaseRegions: Som = {
+      ...FIXTURE,
+      regions: FIXTURE.regions.map((region) => ({
+        ...region,
+        role: region.role.toUpperCase() as typeof region.role,
+      })),
+    };
+
+    expect(getForms(uppercaseRegions).map((region) => region.id)).toEqual(['r_form']);
   });
 });
 
