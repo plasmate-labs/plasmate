@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Dict, List, Literal, Optional, Union
 
-from .types import ElementRole, Som, SomElement, SomRegion
+from .types import ElementRole, RegionRole, Som, SomElement, SomRegion
 
 
 _MEDIA_TAG_ALIASES = {
@@ -109,7 +109,12 @@ def find_by_role(som: Som, role: str) -> List[SomRegion]:
     normalized_role = normalized_role.get(
         _normalize_role_alias(role), _normalize_role_alias(role)
     )
-    return [r for r in som.regions if r.role == normalized_role]
+    return [
+        r
+        for r in som.regions
+        if (r.role.value if isinstance(r.role, RegionRole) else str(r.role)).casefold()
+        == normalized_role
+    ]
 
 
 def find_by_id(som: Som, element_id: str) -> Optional[SomElement]:
@@ -370,7 +375,7 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         return [
             element
             for element in flat_elements(som)
-            if element.role == ElementRole.text_input
+            if _element_role_matches(element, ElementRole.text_input)
             and _source_role_value_matches(
                 element.attrs.input_type if element.attrs else None, "time"
             )
@@ -390,7 +395,7 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         return [
             element
             for element in flat_elements(som)
-            if element.role == ElementRole.paragraph
+            if _element_role_matches(element, ElementRole.paragraph)
             and _source_role_value_matches(
                 element.attrs.source_tag if element.attrs else None, "output"
             )
@@ -414,7 +419,7 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
 
 
 def _is_media_element(element: SomElement) -> bool:
-    return element.role == ElementRole.image or (
+    return _element_role_matches(element, ElementRole.image) or (
         _source_role_matches(element, "audio")
         or _source_role_matches(element, "video")
         or _source_role_matches(element, "canvas")
@@ -431,11 +436,11 @@ def _is_time_element(element: SomElement) -> bool:
     attrs = element.attrs
     if attrs is None:
         return False
-    if element.role == ElementRole.paragraph:
+    if _element_role_matches(element, ElementRole.paragraph):
         return _source_role_value_matches(attrs.source_tag, "time") or _source_role_value_matches(
             attrs.source_role, "time"
         )
-    return element.role == ElementRole.text_input and _source_role_value_matches(
+    return _element_role_matches(element, ElementRole.text_input) and _source_role_value_matches(
         attrs.input_type, "time"
     )
 
@@ -445,6 +450,27 @@ def _source_role_value_matches(value: object, expected: str) -> bool:
     if not isinstance(value, str):
         return False
     return _normalize_role_alias(value).replace("_", "") == expected.replace("_", "")
+
+
+def _element_role_matches(element: SomElement, expected: ElementRole | str) -> bool:
+    """Match enum and serialized element roles without depending on case."""
+    actual = _element_role_value(element.role)
+    expected_value = expected.value if isinstance(expected, ElementRole) else str(expected)
+    return actual is not None and actual.casefold() == expected_value.casefold()
+
+
+def _element_role_value(value: object) -> Optional[str]:
+    """Return an element role from either a parsed enum or serialized text."""
+    if isinstance(value, ElementRole):
+        return value.value
+    return value if isinstance(value, str) else None
+
+
+def _action_plan_role_matches(item: Dict[str, object], expected: ElementRole | str) -> bool:
+    """Match compact action roles without depending on serialized casing."""
+    actual = item.get("role")
+    expected_value = expected.value if isinstance(expected, ElementRole) else str(expected)
+    return isinstance(actual, str) and actual.casefold() == expected_value.casefold()
 
 
 def find_interactive(som: Som) -> List[SomElement]:
@@ -519,9 +545,12 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 form_context_by_id[el.id] = region
     for element in find_interactive(som):
         attrs = element.attrs
+        role = _element_role_value(element.role)
+        if role is None:
+            continue
         item: Dict[str, object] = {
             "id": element.id,
-            "role": element.role.value,
+            "role": role,
             "actions": element.actions or [],
             "enabled": True,
         }
@@ -758,12 +787,12 @@ def get_action_plan_index(
                 index[bucket_key][value] = item
         role = item.get("role")
         if isinstance(role, str):
-            index["by_role"].setdefault(role, []).append(item)
+            index["by_role"].setdefault(role.casefold(), []).append(item)
         actions = item.get("actions")
         if isinstance(actions, list):
             for action in actions:
                 if isinstance(action, str):
-                    index["by_action"].setdefault(action, []).append(item)
+                    index["by_action"].setdefault(action.casefold(), []).append(item)
     return index
 
 
@@ -878,7 +907,7 @@ def find_action_targets_by_role(
         return [
             item
             for item in plan
-            if item.get("role") == ElementRole.heading.value
+            if _action_plan_role_matches(item, ElementRole.heading)
             and str(item.get("level")) == str(heading_level)
         ]
     if normalized_alias in {"time", "times"}:
@@ -886,14 +915,14 @@ def find_action_targets_by_role(
             item
             for item in plan
             if (
-                item.get("role") == ElementRole.paragraph.value
+                _action_plan_role_matches(item, ElementRole.paragraph)
                 and (
                     _source_role_value_matches(item.get("source_tag"), "time")
                     or _source_role_value_matches(item.get("source_role"), "time")
                 )
             )
             or (
-                item.get("role") == ElementRole.text_input.value
+                _action_plan_role_matches(item, ElementRole.text_input)
                 and _source_role_value_matches(item.get("input_type"), "time")
             )
         ]
@@ -901,7 +930,7 @@ def find_action_targets_by_role(
         return [
             item
             for item in plan
-            if item.get("role") == ElementRole.text_input.value
+            if _action_plan_role_matches(item, ElementRole.text_input)
             and _source_role_value_matches(item.get("input_type"), "time")
         ]
     if media_source_role is not None:
@@ -914,7 +943,7 @@ def find_action_targets_by_role(
         return [
             item
             for item in plan
-            if item.get("role") == ElementRole.image.value
+            if _action_plan_role_matches(item, ElementRole.image)
             or (
                 any(
                     _source_role_value_matches(item.get("source_role"), source_role)
@@ -926,7 +955,7 @@ def find_action_targets_by_role(
         return [
             item
             for item in plan
-            if item.get("role") == ElementRole.paragraph.value
+            if _action_plan_role_matches(item, ElementRole.paragraph)
             and _source_role_value_matches(item.get("source_tag"), "output")
         ]
     source_specific_group_role = _SOURCE_SPECIFIC_GROUP_ALIASES.get(normalized_alias)
@@ -1150,7 +1179,7 @@ def find_action_targets_by_role(
         "list_boxes": "select",
         "unordered_list": "list",
     }.get(normalized_alias, normalized_alias)
-    results = index["by_role"].get(normalized_role, [])
+    results = index["by_role"].get(normalized_role.casefold(), [])
     return list(results) if isinstance(results, list) else []
 
 
@@ -1386,7 +1415,7 @@ def _find_element_by_id(element: SomElement, element_id: str) -> Optional[SomEle
 
 
 def _collect_by_role(element: SomElement, role: str, results: List[SomElement]) -> None:
-    if element.role == role:
+    if _element_role_matches(element, role):
         results.append(element)
     if element.children:
         for child in element.children:
@@ -1403,9 +1432,9 @@ def _collect_by_tag(
     results: List[SomElement],
 ) -> None:
     if heading_level is not None:
-        if element.role == "heading" and element.attrs and element.attrs.level == heading_level:
+        if _element_role_matches(element, "heading") and element.attrs and element.attrs.level == heading_level:
             results.append(element)
-    elif element.role == role:
+    elif _element_role_matches(element, role):
         results.append(element)
     if element.children:
         for child in element.children:
