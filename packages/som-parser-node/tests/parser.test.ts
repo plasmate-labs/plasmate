@@ -310,6 +310,10 @@ describe('findByRole', () => {
     expect(links.map((l) => l.text)).toEqual(['Home', 'About', 'Learn more']);
   });
 
+  it('matches stored roles case-insensitively', () => {
+    expect(findByRole(FIXTURE, 'LINK')).toHaveLength(3);
+  });
+
   it('finds headings', () => {
     expect(findByRole(FIXTURE, 'heading')).toHaveLength(1);
   });

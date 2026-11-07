@@ -31,9 +31,10 @@ export function getAllElements(som: Som): SomElement[] {
   return result;
 }
 
-/** Find all elements with a specific role. */
-export function findByRole(som: Som, role: ElementRole): SomElement[] {
-  return getAllElements(som).filter((el) => el.role === role);
+/** Find all elements with a specific role, ignoring role casing. */
+export function findByRole(som: Som, role: ElementRole | string): SomElement[] {
+  const normalizedRole = role.toLowerCase();
+  return getAllElements(som).filter((el) => el.role.toLowerCase() === normalizedRole);
 }
 
 /** Find an element by its SOM id. */
