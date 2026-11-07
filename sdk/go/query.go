@@ -188,7 +188,7 @@ func FindByTag(som *Som, tag string) []Element {
 	if query == "output" || query == "outputs" {
 		for _, element := range FlatElements(som) {
 			if element.Role == "paragraph" && element.Attrs != nil &&
-				element.Attrs.SourceTag != nil && *element.Attrs.SourceTag == "output" {
+				element.Attrs.SourceTag != nil && strings.EqualFold(*element.Attrs.SourceTag, "output") {
 				result = append(result, element)
 			}
 		}

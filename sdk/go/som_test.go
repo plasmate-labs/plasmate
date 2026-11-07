@@ -663,7 +663,7 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 func TestFindByTagMatchesNativeOutputSourceTag(t *testing.T) {
 	var som Som
 	if err := json.Unmarshal([]byte(`{"regions":[{"elements":[
-		{"id":"native-output","role":"paragraph","attrs":{"source_tag":"output"}},
+		{"id":"native-output","role":"paragraph","attrs":{"source_tag":"OuTpUt"}},
 		{"id":"plain-paragraph","role":"paragraph"}
 	]}]}`), &som); err != nil {
 		t.Fatalf("unmarshal output fixture: %v", err)
