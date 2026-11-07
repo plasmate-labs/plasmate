@@ -737,7 +737,18 @@ describe('findByTag', () => {
       ], alias);
     }
 
-    for (const alias of ['time-input', 'time-inputs', 'role=time-input', 'role:time-inputs']) {
+    for (const alias of [
+      'time-input',
+      'time-inputs',
+      'time-control',
+      'time-controls',
+      'timecontrol',
+      'timecontrols',
+      'role=time-input',
+      'role:time-inputs',
+      'role=time-control',
+      'role:time-controls',
+    ]) {
       assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['time-input'], alias);
       assert.deepEqual(findActionTargetsByRole(som, alias).map((item) => item.id), ['time-input'], alias);
     }
