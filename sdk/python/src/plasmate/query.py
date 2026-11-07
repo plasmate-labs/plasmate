@@ -38,6 +38,14 @@ _SOURCE_SPECIFIC_GROUP_ALIASES = {
     "meter": "meter",
     "meters": "meter",
 }
+_TIME_INPUT_ALIASES = {
+    "time_input",
+    "time_inputs",
+    "time_control",
+    "time_controls",
+    "timecontrol",
+    "timecontrols",
+}
 
 
 def find_by_role(som: Som, role: str) -> List[SomRegion]:
@@ -354,14 +362,7 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
     }
     tag = _normalize_role_alias(tag)
     heading_level = _parse_heading_level_selector(tag)
-    if tag in {
-        "time_input",
-        "time_inputs",
-        "time_control",
-        "time_controls",
-        "timecontrol",
-        "timecontrols",
-    }:
+    if tag in _TIME_INPUT_ALIASES:
         return [
             element
             for element in flat_elements(som)
@@ -892,14 +893,7 @@ def find_action_targets_by_role(
                 and _source_role_value_matches(item.get("input_type"), "time")
             )
         ]
-    if normalized_alias in {
-        "time_input",
-        "time_inputs",
-        "time_control",
-        "time_controls",
-        "timecontrol",
-        "timecontrols",
-    }:
+    if normalized_alias in _TIME_INPUT_ALIASES:
         return [
             item
             for item in plan
