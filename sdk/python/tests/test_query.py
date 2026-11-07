@@ -1169,6 +1169,27 @@ class TestFindActionTargetsByRole:
 
 
 class TestFindActionTargetsByAction:
+    def test_matches_serialized_actions_case_insensitively(self, sample_som: Som) -> None:
+        uppercase_click = SomElement.model_construct(
+            id="e_upper_action_click", role="BUTTON", text="Upper action", actions=["CLICK"]
+        )
+        som = sample_som.model_copy(
+            update={
+                "regions": [
+                    *sample_som.regions,
+                    SomRegion(
+                        id="r_upper_action_click",
+                        role=RegionRole.main,
+                        elements=[uppercase_click],
+                    ),
+                ]
+            }
+        )
+
+        assert [
+            item["id"] for item in find_action_targets_by_action(som, "click")
+        ][-1] == "e_upper_action_click"
+
     def test_accepts_quoted_action_aliases(self, sample_som: Som) -> None:
         assert [
             item["id"]

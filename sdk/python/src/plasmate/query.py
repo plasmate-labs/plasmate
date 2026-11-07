@@ -792,7 +792,7 @@ def get_action_plan_index(
         if isinstance(actions, list):
             for action in actions:
                 if isinstance(action, str):
-                    index["by_action"].setdefault(action, []).append(item)
+                    index["by_action"].setdefault(action.casefold(), []).append(item)
     return index
 
 
