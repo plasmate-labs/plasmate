@@ -201,6 +201,19 @@ class TestFindByRole:
         result = find_by_role(sample_som, "dialog")
         assert result == []
 
+    def test_matches_stored_role_case_insensitively(self, sample_som: Som) -> None:
+        uppercase_region = SomRegion.model_construct(
+            id="r_upper_navigation", role="NAVIGATION", elements=[]
+        )
+        som = sample_som.model_copy(
+            update={"regions": [*sample_som.regions, uppercase_region]}
+        )
+
+        assert [region.id for region in find_by_role(som, "navigation")] == [
+            "r_navigation",
+            "r_upper_navigation",
+        ]
+
     def test_accepts_alertdialog_region_aliases(self) -> None:
         som = Som(
             som_version="1.0",

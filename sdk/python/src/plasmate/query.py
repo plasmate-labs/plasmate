@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Dict, List, Literal, Optional, Union
 
-from .types import ElementRole, Som, SomElement, SomRegion
+from .types import ElementRole, RegionRole, Som, SomElement, SomRegion
 
 
 _MEDIA_TAG_ALIASES = {
@@ -109,7 +109,12 @@ def find_by_role(som: Som, role: str) -> List[SomRegion]:
     normalized_role = normalized_role.get(
         _normalize_role_alias(role), _normalize_role_alias(role)
     )
-    return [r for r in som.regions if r.role == normalized_role]
+    return [
+        r
+        for r in som.regions
+        if (r.role.value if isinstance(r.role, RegionRole) else str(r.role)).casefold()
+        == normalized_role
+    ]
 
 
 def find_by_id(som: Som, element_id: str) -> Optional[SomElement]:
