@@ -660,6 +660,45 @@ func TestFindByTagAcceptsCommonRoleAliases(t *testing.T) {
 	}
 }
 
+func TestFindByTagMatchesNativeOutputSourceTag(t *testing.T) {
+	var som Som
+	if err := json.Unmarshal([]byte(`{"regions":[{"elements":[
+		{"id":"native-output","role":"paragraph","attrs":{"source_tag":"OuTpUt"}},
+		{"id":"plain-paragraph","role":"paragraph"}
+	]}]}`), &som); err != nil {
+		t.Fatalf("unmarshal output fixture: %v", err)
+	}
+
+	for _, alias := range []string{"output", "outputs"} {
+		got := FindByTag(&som, alias)
+		if len(got) != 1 || got[0].ID != "native-output" {
+			t.Errorf("FindByTag(%q) = %#v, want native-output only", alias, got)
+		}
+	}
+}
+
+func TestFindByTagMatchesSourceRolesCaseInsensitively(t *testing.T) {
+	upperAudio := "AuDiO"
+	upperProgress := "PrOgReSsBaR"
+	som := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "audio", Role: "group", Attrs: &ElementAttrs{SourceRole: &upperAudio}},
+		{ID: "progress", Role: "group", Attrs: &ElementAttrs{SourceRole: &upperProgress}},
+	}}}}
+
+	for _, test := range []struct {
+		alias string
+		want  string
+	}{
+		{alias: "audio", want: "audio"},
+		{alias: "progress", want: "progress"},
+	} {
+		got := FindByTag(som, test.alias)
+		if len(got) != 1 || got[0].ID != test.want {
+			t.Errorf("FindByTag(%q) = %#v, want %s", test.alias, got, test.want)
+		}
+	}
+}
+
 func TestFindByTagAcceptsMediaAliases(t *testing.T) {
 	audio, video, canvas := "audio", "video", "canvas"
 	som := &Som{Regions: []Region{{Elements: []Element{
