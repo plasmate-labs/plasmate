@@ -599,7 +599,9 @@ export function findActionTargetsByRole(
     const plan = options?.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
     return plan.filter((item) => item.role === 'heading' && item.level === String(headingLevel));
   }
-  return getActionPlanIndex(som, { enabledOnly: options?.enabledOnly }).byRole[role] ?? [];
+  const normalizedRole = normalizeRoleQuery(role);
+  const plan = options?.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
+  return plan.filter((item) => item.role.toLowerCase() === normalizedRole);
 }
 
 function parseHeadingLevelSelector(selector: string): number | undefined {
