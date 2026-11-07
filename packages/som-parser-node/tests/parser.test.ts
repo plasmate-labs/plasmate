@@ -311,7 +311,18 @@ describe('findByRole', () => {
   });
 
   it('matches stored roles case-insensitively', () => {
-    expect(findByRole(FIXTURE, 'LINK')).toHaveLength(3);
+    const uppercaseRoles: Som = {
+      ...FIXTURE,
+      regions: FIXTURE.regions.map((region) => ({
+        ...region,
+        elements: region.elements.map((element) => ({
+          ...element,
+          role: element.role.toUpperCase() as typeof element.role,
+        })),
+      })),
+    };
+
+    expect(findByRole(uppercaseRoles, 'link')).toHaveLength(3);
   });
 
   it('finds headings', () => {
