@@ -246,7 +246,7 @@ describe('findActionTargetsByRole aliases', () => {
           : region,
       ),
     };
-    for (const alias of ['figure', 'radiogroups', 'progressbar', 'meters', 'outputs']) {
+    for (const alias of ['figure', 'radiogroups', 'progressbar', 'meters']) {
       assert.deepEqual(
         findActionTargetsByRole(structuralFixture, alias).map((item) => item.id),
         ['e14'],
@@ -361,12 +361,7 @@ describe('findActionTargetsByRole aliases', () => {
     for (const alias of ['meter', 'meters']) {
       assert.deepEqual(findActionTargetsByRole(som, alias).map((item) => item.id), ['meter'], alias);
     }
-    assert.deepEqual(findActionTargetsByRole(som, 'output').map((item) => item.id), [
-      'progress',
-      'padded-progress',
-      'meter',
-      'other',
-    ]);
+    assert.deepEqual(findActionTargetsByRole(som, 'output'), []);
   });
 });
 
@@ -872,7 +867,7 @@ describe('findByTag', () => {
         },
       ],
     };
-    for (const alias of ['figure', 'radiogroup', 'progress', 'progressbar', 'meter', 'output']) {
+    for (const alias of ['figure', 'radiogroup', 'progress', 'progressbar', 'meter']) {
       assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['group'], alias);
     }
     for (const alias of ['detail', 'summaries']) {
@@ -914,7 +909,14 @@ describe('findByTag', () => {
     for (const alias of ['meter', 'meters']) {
       assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['meter'], alias);
     }
-    assert.deepEqual(findByTag(som, 'output').map((el) => el.id), ['progress', 'meter', 'other']);
+    som.regions[0].elements.push({
+      id: 'output',
+      role: 'paragraph',
+      attrs: { source_tag: 'OUTPUT' },
+    });
+    for (const alias of ['output', 'outputs']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['output'], alias);
+    }
   });
 
   it('matches source-role aliases without depending on metadata casing', () => {

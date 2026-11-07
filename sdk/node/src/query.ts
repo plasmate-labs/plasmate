@@ -114,6 +114,11 @@ export function findByTag(som: Som, tag: ElementRole | string): SomElement[] {
   if (normalizedTag in MEDIA_GROUP_ALIASES) {
     return flatElements(som).filter(isMediaElement);
   }
+  if (normalizedTag === 'output' || normalizedTag === 'outputs') {
+    return flatElements(som).filter((el) =>
+      el.role === 'paragraph' && sourceRoleMatches(el.attrs?.source_tag, 'output'),
+    );
+  }
   // `time` is both a native text element and an HTML input type. Keep the
   // source-facing selector narrow so it does not return every text input or
   // paragraph in the document.
@@ -894,6 +899,11 @@ export function findActionTargetsByRole(
       ['audio', 'video', 'canvas'].some((sourceRole) =>
         sourceRoleMatches(item.source_role, sourceRole),
       ));
+  }
+  if (normalizedRole === 'output' || normalizedRole === 'outputs') {
+    return plan.filter((item) =>
+      item.role === 'paragraph' && sourceRoleMatches(item.source_tag, 'output'),
+    );
   }
   if (normalizedRole === 'time' || normalizedRole === 'times') {
     return plan.filter((item) =>
