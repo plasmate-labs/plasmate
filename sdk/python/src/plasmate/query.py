@@ -354,6 +354,22 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
     }
     tag = _normalize_role_alias(tag)
     heading_level = _parse_heading_level_selector(tag)
+    if tag in {
+        "time_input",
+        "time_inputs",
+        "time_control",
+        "time_controls",
+        "timecontrol",
+        "timecontrols",
+    }:
+        return [
+            element
+            for element in flat_elements(som)
+            if element.role == ElementRole.text_input
+            and _source_role_value_matches(
+                element.attrs.input_type if element.attrs else None, "time"
+            )
+        ]
     if tag in {"time", "times"}:
         return [element for element in flat_elements(som) if _is_time_element(element)]
     media_source_role = _MEDIA_TAG_ALIASES.get(tag)
@@ -875,6 +891,20 @@ def find_action_targets_by_role(
                 item.get("role") == ElementRole.text_input.value
                 and _source_role_value_matches(item.get("input_type"), "time")
             )
+        ]
+    if normalized_alias in {
+        "time_input",
+        "time_inputs",
+        "time_control",
+        "time_controls",
+        "timecontrol",
+        "timecontrols",
+    }:
+        return [
+            item
+            for item in plan
+            if item.get("role") == ElementRole.text_input.value
+            and _source_role_value_matches(item.get("input_type"), "time")
         ]
     if media_source_role is not None:
         return [

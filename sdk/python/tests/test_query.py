@@ -525,6 +525,19 @@ class TestFindByTag:
                 "time-input",
             ], alias
 
+        for alias in (
+            "time_input",
+            "time_inputs",
+            "time_control",
+            "time_controls",
+            "timecontrol",
+            "timecontrols",
+        ):
+            assert [el.id for el in find_by_tag(sample_som, alias)] == ["time-input"], alias
+            assert [item["id"] for item in find_action_targets_by_role(sample_som, alias)] == [
+                "time-input"
+            ], alias
+
     def test_narrows_progress_and_meter_aliases_using_source_roles(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.extend(
             [
