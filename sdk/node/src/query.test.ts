@@ -736,6 +736,11 @@ describe('findByTag', () => {
         'time-input',
       ], alias);
     }
+
+    for (const alias of ['time-input', 'time-inputs', 'role=time-input', 'role:time-inputs']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['time-input'], alias);
+      assert.deepEqual(findActionTargetsByRole(som, alias).map((item) => item.id), ['time-input'], alias);
+    }
   });
 
   it('accepts spaced text box aliases', () => {

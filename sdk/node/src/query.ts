@@ -119,6 +119,9 @@ export function findByTag(som: Som, tag: ElementRole | string): SomElement[] {
       el.role === 'paragraph' && sourceRoleMatches(el.attrs?.source_tag, 'output'),
     );
   }
+  if (normalizedTag === 'time_input' || normalizedTag === 'time_inputs') {
+    return flatElements(som).filter(isTimeInputElement);
+  }
   // `time` is both a native text element and an HTML input type. Keep the
   // source-facing selector narrow so it does not return every text input or
   // paragraph in the document.
@@ -539,6 +542,10 @@ function isTimeElement(element: SomElement): boolean {
     return sourceRoleMatches(element.attrs?.source_tag, 'time') ||
       sourceRoleMatches(element.attrs?.source_role, 'time');
   }
+  return isTimeInputElement(element);
+}
+
+function isTimeInputElement(element: SomElement): boolean {
   return element.role === 'text_input' &&
     sourceRoleMatches(element.attrs?.input_type, 'time');
 }
@@ -904,6 +911,10 @@ export function findActionTargetsByRole(
     return plan.filter((item) =>
       item.role === 'paragraph' && sourceRoleMatches(item.source_tag, 'output'),
     );
+  }
+  if (normalizedRole === 'time_input' || normalizedRole === 'time_inputs') {
+    return plan.filter((item) => item.role === 'text_input' &&
+      sourceRoleMatches(item.input_type, 'time'));
   }
   if (normalizedRole === 'time' || normalizedRole === 'times') {
     return plan.filter((item) =>
