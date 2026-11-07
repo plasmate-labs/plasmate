@@ -114,6 +114,21 @@ export function findByTag(som: Som, tag: ElementRole | string): SomElement[] {
   if (normalizedTag in MEDIA_GROUP_ALIASES) {
     return flatElements(som).filter(isMediaElement);
   }
+  if (normalizedTag === 'output' || normalizedTag === 'outputs') {
+    return flatElements(som).filter((el) =>
+      el.role === 'paragraph' && sourceRoleMatches(el.attrs?.source_tag, 'output'),
+    );
+  }
+  if (['time_input', 'time_inputs', 'time_control', 'time_controls', 'timecontrol', 'timecontrols']
+    .includes(normalizedTag)) {
+    return flatElements(som).filter(isTimeInputElement);
+  }
+  // `time` is both a native text element and an HTML input type. Keep the
+  // source-facing selector narrow so it does not return every text input or
+  // paragraph in the document.
+  if (normalizedTag === 'time' || normalizedTag === 'times') {
+    return flatElements(som).filter(isTimeElement);
+  }
   const sourceSpecificGroupRole = SOURCE_SPECIFIC_GROUP_ALIASES[normalizedTag];
   if (sourceSpecificGroupRole && somContainsSourceRole(som, sourceSpecificGroupRole)) {
     return flatElements(som).filter(
@@ -177,6 +192,7 @@ export interface ActionPlanItem {
   formnovalidate?: boolean;
   accesskey?: string;
   title?: string;
+  source_tag?: string;
   source_role?: string;
   test_id?: string;
   spellcheck?: boolean | string;
@@ -522,6 +538,19 @@ function isMediaElement(element: SomElement): boolean {
     );
 }
 
+function isTimeElement(element: SomElement): boolean {
+  if (element.role === 'paragraph') {
+    return sourceRoleMatches(element.attrs?.source_tag, 'time') ||
+      sourceRoleMatches(element.attrs?.source_role, 'time');
+  }
+  return isTimeInputElement(element);
+}
+
+function isTimeInputElement(element: SomElement): boolean {
+  return element.role === 'text_input' &&
+    sourceRoleMatches(element.attrs?.input_type, 'time');
+}
+
 function normalizeElementRole(role: string): ElementRole | undefined {
   const normalizedRole = stripRolePrefix(role).replace(/[\s-]+/g, '_');
   return ELEMENT_ROLE_ALIASES[normalizedRole] ??
@@ -665,6 +694,7 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.formnovalidate !== undefined) item.formnovalidate = el.attrs.formnovalidate;
     if (el.attrs?.accesskey) item.accesskey = el.attrs.accesskey;
     if (el.attrs?.title) item.title = el.attrs.title;
+    if (el.attrs?.source_tag) item.source_tag = el.attrs.source_tag;
     if (el.attrs?.source_role) item.source_role = el.attrs.source_role;
     if (el.attrs?.test_id) item.test_id = el.attrs.test_id;
     if (el.attrs?.spellcheck !== undefined) item.spellcheck = el.attrs.spellcheck;
@@ -877,6 +907,23 @@ export function findActionTargetsByRole(
       ['audio', 'video', 'canvas'].some((sourceRole) =>
         sourceRoleMatches(item.source_role, sourceRole),
       ));
+  }
+  if (normalizedRole === 'output' || normalizedRole === 'outputs') {
+    return plan.filter((item) =>
+      item.role === 'paragraph' && sourceRoleMatches(item.source_tag, 'output'),
+    );
+  }
+  if (['time_input', 'time_inputs', 'time_control', 'time_controls', 'timecontrol', 'timecontrols']
+    .includes(normalizedRole)) {
+    return plan.filter((item) => item.role === 'text_input' &&
+      sourceRoleMatches(item.input_type, 'time'));
+  }
+  if (normalizedRole === 'time' || normalizedRole === 'times') {
+    return plan.filter((item) =>
+      (item.role === 'paragraph' &&
+        (sourceRoleMatches(item.source_tag, 'time') || sourceRoleMatches(item.source_role, 'time'))) ||
+      (item.role === 'text_input' && sourceRoleMatches(item.input_type, 'time')),
+    );
   }
   const sourceSpecificGroupRole = SOURCE_SPECIFIC_GROUP_ALIASES[normalizedRole];
   if (sourceSpecificGroupRole && plan.some(

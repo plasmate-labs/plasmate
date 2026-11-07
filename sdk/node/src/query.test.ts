@@ -246,7 +246,7 @@ describe('findActionTargetsByRole aliases', () => {
           : region,
       ),
     };
-    for (const alias of ['figure', 'radiogroups', 'progressbar', 'meters', 'outputs']) {
+    for (const alias of ['figure', 'radiogroups', 'progressbar', 'meters']) {
       assert.deepEqual(
         findActionTargetsByRole(structuralFixture, alias).map((item) => item.id),
         ['e14'],
@@ -361,12 +361,7 @@ describe('findActionTargetsByRole aliases', () => {
     for (const alias of ['meter', 'meters']) {
       assert.deepEqual(findActionTargetsByRole(som, alias).map((item) => item.id), ['meter'], alias);
     }
-    assert.deepEqual(findActionTargetsByRole(som, 'output').map((item) => item.id), [
-      'progress',
-      'padded-progress',
-      'meter',
-      'other',
-    ]);
+    assert.deepEqual(findActionTargetsByRole(som, 'output'), []);
   });
 });
 
@@ -702,7 +697,6 @@ describe('findByTag', () => {
       'date-time',
       'date-time-local',
       'month',
-      'time',
       'week',
       'color',
       'range',
@@ -711,6 +705,52 @@ describe('findByTag', () => {
       'queryboxes',
     ]) {
       assert.deepEqual(findByTag(fixture, alias).map((el) => el.id), ['e5'], alias);
+    }
+  });
+
+  it('narrows time aliases to native time elements and time inputs', () => {
+    const som: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) =>
+        region.role === 'main'
+          ? {
+              ...region,
+              elements: [
+                ...region.elements,
+                { id: 'time-text', role: 'paragraph', actions: ['click'], attrs: { source_tag: 'TIME' } },
+                { id: 'time-input', role: 'text_input', actions: ['type'], attrs: { input_type: ' time ' } },
+                { id: 'other-input', role: 'text_input', attrs: { input_type: 'text' } },
+              ],
+            }
+          : region,
+      ),
+    };
+
+    for (const alias of ['time', 'times', 'role=time', 'role:times']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), [
+        'time-text',
+        'time-input',
+      ], alias);
+      assert.deepEqual(findActionTargetsByRole(som, alias).map((item) => item.id), [
+        'time-text',
+        'time-input',
+      ], alias);
+    }
+
+    for (const alias of [
+      'time-input',
+      'time-inputs',
+      'time-control',
+      'time-controls',
+      'timecontrol',
+      'timecontrols',
+      'role=time-input',
+      'role:time-inputs',
+      'role=time-control',
+      'role:time-controls',
+    ]) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['time-input'], alias);
+      assert.deepEqual(findActionTargetsByRole(som, alias).map((item) => item.id), ['time-input'], alias);
     }
   });
 
@@ -843,7 +883,7 @@ describe('findByTag', () => {
         },
       ],
     };
-    for (const alias of ['figure', 'radiogroup', 'progress', 'progressbar', 'meter', 'output']) {
+    for (const alias of ['figure', 'radiogroup', 'progress', 'progressbar', 'meter']) {
       assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['group'], alias);
     }
     for (const alias of ['detail', 'summaries']) {
@@ -885,7 +925,14 @@ describe('findByTag', () => {
     for (const alias of ['meter', 'meters']) {
       assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['meter'], alias);
     }
-    assert.deepEqual(findByTag(som, 'output').map((el) => el.id), ['progress', 'meter', 'other']);
+    som.regions[0].elements.push({
+      id: 'output',
+      role: 'paragraph',
+      attrs: { source_tag: 'OUTPUT' },
+    });
+    for (const alias of ['output', 'outputs']) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['output'], alias);
+    }
   });
 
   it('matches source-role aliases without depending on metadata casing', () => {
