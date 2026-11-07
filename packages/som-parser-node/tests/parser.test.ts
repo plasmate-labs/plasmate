@@ -323,6 +323,11 @@ describe('findByRole', () => {
     };
 
     expect(findByRole(uppercaseRoles, 'link')).toHaveLength(3);
+    expect(findActionTargetsByRole(uppercaseRoles, 'ROLE: LINK').map((item) => item.id)).toEqual([
+      'e_1',
+      'e_2',
+      'e_5',
+    ]);
   });
 
   it('finds headings', () => {
