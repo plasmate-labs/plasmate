@@ -8,12 +8,12 @@ import type { Som, SomRegion, SomElement, RegionRole, ElementRole, ElementAction
 export function findByRole(som: Som, role: RegionRole | string): SomRegion[] {
   const normalizedRole = normalizeRegionRole(role);
   return normalizedRole
-    ? som.regions.filter((r) => r.role === normalizedRole)
+    ? som.regions.filter((r) => r.role.toLowerCase() === normalizedRole)
     : [];
 }
 
 function normalizeRegionRole(role: string): RegionRole | undefined {
-  let normalized = stripRolePrefix(role).replace(/[\s-]+/g, '_');
+  let normalized = stripRolePrefix(role).toLowerCase().replace(/[\s-]+/g, '_');
   const aliases: Record<string, RegionRole> = {
     main: 'main',
     main_content: 'main',

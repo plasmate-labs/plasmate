@@ -17,7 +17,7 @@ func FindByRole(som *Som, role string) []Region {
 	var result []Region
 	role = normalizeRegionRoleAlias(role)
 	for _, r := range som.Regions {
-		if r.Role == role {
+		if strings.EqualFold(r.Role, role) {
 			result = append(result, r)
 		}
 	}
@@ -495,7 +495,7 @@ func normalizeRoleQuery(value string) string {
 
 func collectByRole(elements []Element, role string, result *[]Element) {
 	for _, el := range elements {
-		if el.Role == role {
+		if strings.EqualFold(el.Role, role) {
 			*result = append(*result, el)
 		}
 		collectByRole(el.Children, role, result)

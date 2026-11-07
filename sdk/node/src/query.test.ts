@@ -382,6 +382,18 @@ describe('findByRole', () => {
     assert.equal(mains[0].id, 'r_main');
   });
 
+  it('matches region roles case-insensitively', () => {
+    const uppercaseRoles: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) => ({
+        ...region,
+        role: region.role.toUpperCase() as typeof region.role,
+      })),
+    };
+
+    assert.deepEqual(findByRole(uppercaseRoles, 'MAIN').map((region) => region.id), ['r_main']);
+  });
+
   it('returns empty array for missing role', () => {
     assert.deepEqual(findByRole(fixture, 'dialog'), []);
   });
