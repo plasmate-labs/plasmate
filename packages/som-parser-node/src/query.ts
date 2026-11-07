@@ -172,8 +172,11 @@ function actionPlanLabel(el: SomElement): string | undefined {
 }
 
 /** Find all elements that expose a specific action. */
-export function findByAction(som: Som, action: ElementAction): SomElement[] {
-  return getAllElements(som).filter((el) => el.actions?.includes(action));
+export function findByAction(som: Som, action: ElementAction | string): SomElement[] {
+  const normalizedAction = normalizeActionQuery(action);
+  return getAllElements(som).filter((el) =>
+    el.actions?.some((candidate) => normalizeActionQuery(candidate) === normalizedAction),
+  );
 }
 
 /** Find all elements tagged with a specific semantic hint. */
@@ -638,10 +641,18 @@ function normalizeRoleQuery(value: string): string {
 /** Find compact action targets that expose the requested action. */
 export function findActionTargetsByAction(
   som: Som,
-  action: ElementAction,
+  action: ElementAction | string,
   options?: { enabledOnly?: boolean },
 ): ActionPlanItem[] {
-  return getActionPlanIndex(som, { enabledOnly: options?.enabledOnly }).byAction[action] ?? [];
+  const normalizedAction = normalizeActionQuery(action);
+  const plan = options?.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
+  return plan.filter((item) =>
+    item.actions.some((candidate) => normalizeActionQuery(candidate) === normalizedAction),
+  );
+}
+
+function normalizeActionQuery(value: string): string {
+  return value.trim().toLowerCase();
 }
 
 /** Find a compact action target by its SOM element id. */

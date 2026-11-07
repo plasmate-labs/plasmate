@@ -778,6 +778,32 @@ describe('findByAction', () => {
   it('finds typeable elements', () => {
     expect(findByAction(FIXTURE, 'type').map((el) => el.id)).toEqual(['e_7']);
   });
+
+  it('matches serialized actions case-insensitively', () => {
+    const uppercaseActions: Som = {
+      ...FIXTURE,
+      regions: FIXTURE.regions.map((region) => ({
+        ...region,
+        elements: region.elements.map((element) => ({
+          ...element,
+          actions: element.actions?.map((action) => action.toUpperCase() as typeof action),
+        })),
+      })),
+    };
+
+    expect(findByAction(uppercaseActions, 'CLICK').map((el) => el.id)).toEqual([
+      'e_1',
+      'e_2',
+      'e_5',
+      'e_8',
+    ]);
+    expect(findActionTargetsByAction(uppercaseActions, 'CLICK').map((item) => item.id)).toEqual([
+      'e_1',
+      'e_2',
+      'e_5',
+      'e_8',
+    ]);
+  });
 });
 
 describe('findByHint', () => {
