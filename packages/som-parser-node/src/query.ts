@@ -537,9 +537,9 @@ export function getActionPlanIndex(
     if (item.label && !hasOwnActionPlanKey(index.byLabel, item.label)) {
       index.byLabel[item.label] = item;
     }
-    (index.byRole[item.role] ??= []).push(item);
+    (index.byRole[normalizeRoleIndexKey(item.role)] ??= []).push(item);
     for (const action of item.actions) {
-      (index.byAction[action] ??= []).push(item);
+      (index.byAction[normalizeActionQuery(action)] ??= []).push(item);
     }
   }
   return index;
@@ -652,6 +652,10 @@ export function findActionTargetsByAction(
 }
 
 function normalizeActionQuery(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function normalizeRoleIndexKey(value: string): string {
   return value.trim().toLowerCase();
 }
 

@@ -1036,6 +1036,32 @@ describe('getActionPlan', () => {
     ]);
   });
 
+  it('normalizes role and action keys in the replay index', () => {
+    const uppercase: Som = {
+      ...FIXTURE,
+      regions: FIXTURE.regions.map((region) => ({
+        ...region,
+        elements: region.elements.map((element) => ({
+          ...element,
+          role: element.role.toUpperCase() as typeof element.role,
+          actions: element.actions?.map((action) => action.toUpperCase() as typeof action),
+        })),
+      })),
+    };
+
+    const index = getActionPlanIndex(uppercase);
+
+    expect(index.byRole.link.map((target) => target.id)).toEqual(['e_1', 'e_2', 'e_5']);
+    expect(index.byAction.click.map((target) => target.id)).toEqual([
+      'e_1',
+      'e_2',
+      'e_5',
+      'e_8',
+    ]);
+    expect(index.byRole.LINK).toBeUndefined();
+    expect(index.byAction.CLICK).toBeUndefined();
+  });
+
   it('accepts heading-level aliases for action targets', () => {
     const som: Som = {
       ...FIXTURE,
