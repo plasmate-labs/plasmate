@@ -214,6 +214,23 @@ class TestFindByRole:
             "r_upper_navigation",
         ]
 
+    def test_matches_stored_element_role_case_insensitively(self, sample_som: Som) -> None:
+        uppercase_button = SomElement.model_construct(
+            id="e_upper_button", role="BUTTON", text="Uppercase", actions=["click"]
+        )
+        som = sample_som.model_copy(
+            update={
+                "regions": [
+                    *sample_som.regions,
+                    SomRegion(
+                        id="r_upper_button", role=RegionRole.main, elements=[uppercase_button]
+                    ),
+                ]
+            }
+        )
+
+        assert [element.id for element in find_by_tag(som, "button")][-1] == "e_upper_button"
+
     def test_accepts_alertdialog_region_aliases(self) -> None:
         som = Som(
             som_version="1.0",

@@ -375,7 +375,7 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         return [
             element
             for element in flat_elements(som)
-            if element.role == ElementRole.text_input
+            if _element_role_matches(element, ElementRole.text_input)
             and _source_role_value_matches(
                 element.attrs.input_type if element.attrs else None, "time"
             )
@@ -395,7 +395,7 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         return [
             element
             for element in flat_elements(som)
-            if element.role == ElementRole.paragraph
+            if _element_role_matches(element, ElementRole.paragraph)
             and _source_role_value_matches(
                 element.attrs.source_tag if element.attrs else None, "output"
             )
@@ -419,7 +419,7 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
 
 
 def _is_media_element(element: SomElement) -> bool:
-    return element.role == ElementRole.image or (
+    return _element_role_matches(element, ElementRole.image) or (
         _source_role_matches(element, "audio")
         or _source_role_matches(element, "video")
         or _source_role_matches(element, "canvas")
@@ -436,11 +436,11 @@ def _is_time_element(element: SomElement) -> bool:
     attrs = element.attrs
     if attrs is None:
         return False
-    if element.role == ElementRole.paragraph:
+    if _element_role_matches(element, ElementRole.paragraph):
         return _source_role_value_matches(attrs.source_tag, "time") or _source_role_value_matches(
             attrs.source_role, "time"
         )
-    return element.role == ElementRole.text_input and _source_role_value_matches(
+    return _element_role_matches(element, ElementRole.text_input) and _source_role_value_matches(
         attrs.input_type, "time"
     )
 
@@ -450,6 +450,13 @@ def _source_role_value_matches(value: object, expected: str) -> bool:
     if not isinstance(value, str):
         return False
     return _normalize_role_alias(value).replace("_", "") == expected.replace("_", "")
+
+
+def _element_role_matches(element: SomElement, expected: ElementRole | str) -> bool:
+    """Match enum and serialized element roles without depending on case."""
+    actual = element.role.value if isinstance(element.role, ElementRole) else str(element.role)
+    expected_value = expected.value if isinstance(expected, ElementRole) else str(expected)
+    return actual.casefold() == expected_value.casefold()
 
 
 def find_interactive(som: Som) -> List[SomElement]:
@@ -1391,7 +1398,7 @@ def _find_element_by_id(element: SomElement, element_id: str) -> Optional[SomEle
 
 
 def _collect_by_role(element: SomElement, role: str, results: List[SomElement]) -> None:
-    if element.role == role:
+    if _element_role_matches(element, role):
         results.append(element)
     if element.children:
         for child in element.children:
@@ -1408,9 +1415,9 @@ def _collect_by_tag(
     results: List[SomElement],
 ) -> None:
     if heading_level is not None:
-        if element.role == "heading" and element.attrs and element.attrs.level == heading_level:
+        if _element_role_matches(element, "heading") and element.attrs and element.attrs.level == heading_level:
             results.append(element)
-    elif element.role == role:
+    elif _element_role_matches(element, role):
         results.append(element)
     if element.children:
         for child in element.children:
