@@ -1205,6 +1205,18 @@ describe('getForms', () => {
     expect(forms[0].id).toBe('r_form');
     expect(forms[0].action).toBe('/search');
   });
+
+  it('matches serialized region roles case-insensitively', () => {
+    const uppercaseRegions: Som = {
+      ...FIXTURE,
+      regions: FIXTURE.regions.map((region) => ({
+        ...region,
+        role: region.role.toUpperCase() as typeof region.role,
+      })),
+    };
+
+    expect(getForms(uppercaseRegions).map((region) => region.id)).toEqual(['r_form']);
+  });
 });
 
 describe('getInputs', () => {

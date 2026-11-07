@@ -721,7 +721,7 @@ export function getLinks(som: Som): Array<{ text: string; href: string; id: stri
 
 /** Get all form regions. */
 export function getForms(som: Som): SomRegion[] {
-  return som.regions.filter((r) => r.role === 'form');
+  return som.regions.filter((r) => r.role.toLowerCase() === 'form');
 }
 
 const INPUT_ROLES: ElementRole[] = ['text_input', 'textarea', 'select', 'checkbox', 'radio'];
