@@ -13,6 +13,7 @@ from som_parser import (
     Som,
     SomElement,
     SomElementAttrs,
+    SomRegion,
     SomShadowRoot,
     filter_elements,
     find_action_target,
@@ -359,6 +360,20 @@ class TestFindByRole:
     def test_no_results(self, som: Som):
         tables = find_by_role(som, ElementRole.TABLE)
         assert tables == []
+
+    def test_matches_serialized_role_case_insensitively(self, som: Som):
+        uppercase_button = SomElement.model_construct(
+            id="e_upper_button", role="BUTTON", text="Uppercase"
+        )
+        uppercase_region = SomRegion.model_construct(
+            id="r_upper_button", role="MAIN", elements=[uppercase_button]
+        )
+        som = som.model_copy(update={"regions": [*som.regions, uppercase_region]})
+
+        assert [el.id for el in find_by_role(som, "BUTTON")] == [
+            "e_8",
+            "e_upper_button",
+        ]
 
 
 class TestFindById:
@@ -777,6 +792,23 @@ class TestFindByAction:
         typed = find_by_action(som, ElementAction.TYPE)
         assert [el.id for el in typed] == ["e_7"]
 
+    def test_matches_serialized_action_case_insensitively(self, som: Som):
+        uppercase_button = SomElement.model_construct(
+            id="e_upper_action", role="BUTTON", actions=["CLICK"]
+        )
+        uppercase_region = SomRegion.model_construct(
+            id="r_upper_action", role="MAIN", elements=[uppercase_button]
+        )
+        som = som.model_copy(update={"regions": [*som.regions, uppercase_region]})
+
+        assert [el.id for el in find_by_action(som, "CLICK")] == [
+            "e_1",
+            "e_2",
+            "e_5",
+            "e_8",
+            "e_upper_action",
+        ]
+
 
 class TestFindByHint:
     def test_finds_required_elements(self, som: Som):
@@ -785,6 +817,20 @@ class TestFindByHint:
 
     def test_returns_empty_for_missing_hint(self, som: Som):
         assert find_by_hint(som, SemanticHint.DANGER) == []
+
+    def test_matches_serialized_hint_case_insensitively(self, som: Som):
+        uppercase_required = SomElement.model_construct(
+            id="e_upper_hint", role="TEXT_INPUT", hints=["REQUIRED"]
+        )
+        uppercase_region = SomRegion.model_construct(
+            id="r_upper_hint", role="MAIN", elements=[uppercase_required]
+        )
+        som = som.model_copy(update={"regions": [*som.regions, uppercase_region]})
+
+        assert [el.id for el in find_by_hint(som, "REQUIRED")] == [
+            "e_7",
+            "e_upper_hint",
+        ]
 
 
 class TestGetActionPlan:
