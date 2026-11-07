@@ -168,7 +168,7 @@ func FindByTag(som *Som, tag string) []Element {
 	tag = normalizeElementRoleAlias(tag)
 	if sourceRole, ok := mediaTagAliases[tag]; ok {
 		for _, element := range FlatElements(som) {
-			if element.Attrs != nil && element.Attrs.SourceRole != nil && *element.Attrs.SourceRole == sourceRole {
+			if element.Attrs != nil && element.Attrs.SourceRole != nil && strings.EqualFold(*element.Attrs.SourceRole, sourceRole) {
 				result = append(result, element)
 			}
 		}
@@ -176,7 +176,7 @@ func FindByTag(som *Som, tag string) []Element {
 	}
 	if mediaGroupAliases[tag] {
 		for _, element := range FlatElements(som) {
-			if element.Role == "image" || (element.Attrs != nil && element.Attrs.SourceRole != nil && mediaSourceRoles[*element.Attrs.SourceRole]) {
+			if element.Role == "image" || (element.Attrs != nil && element.Attrs.SourceRole != nil && mediaSourceRoles[strings.ToLower(*element.Attrs.SourceRole)]) {
 				result = append(result, element)
 			}
 		}
@@ -200,7 +200,7 @@ func FindByTag(som *Som, tag string) []Element {
 		hasSourceMetadata := somContainsSourceRole(som, sourceRole)
 		var legacyGroups []Element
 		for _, element := range FlatElements(som) {
-			matchesSourceRole := element.Attrs != nil && element.Attrs.SourceRole != nil && *element.Attrs.SourceRole == sourceRole
+			matchesSourceRole := element.Attrs != nil && element.Attrs.SourceRole != nil && strings.EqualFold(*element.Attrs.SourceRole, sourceRole)
 			matchesCanonicalRole := element.Attrs == nil && element.Role == sourceRole
 			matchesLegacyGroup := !hasSourceMetadata && element.Attrs == nil && element.Role == "group"
 			if matchesSourceRole || matchesCanonicalRole {
@@ -268,7 +268,7 @@ func sourceSpecificGroupRole(tag string) (string, bool) {
 
 func somContainsSourceRole(som *Som, sourceRole string) bool {
 	for _, element := range FlatElements(som) {
-		if element.Attrs != nil && element.Attrs.SourceRole != nil && *element.Attrs.SourceRole == sourceRole {
+		if element.Attrs != nil && element.Attrs.SourceRole != nil && strings.EqualFold(*element.Attrs.SourceRole, sourceRole) {
 			return true
 		}
 	}
