@@ -394,8 +394,8 @@ enum Commands {
         /// --format`.
         #[arg(long, default_value = "json")]
         format: String,
-        /// Filter output to a specific SOM region, heading level, role, action
-        /// surface, or element — same syntax as `plasmate fetch --selector` (e.g. `main`, `h1`,
+        /// Filter output to a specific SOM region, landmark inventory, heading level, role, action
+        /// surface, or element — same syntax as `plasmate fetch --selector` (e.g. `landmark`, `main`, `h1`,
         /// `button`, `interactive`, `action:click`, `action:type`,
         /// `action:clear`, `action:select`, `action:toggle`, `action:submit`,
         /// `#my-id`, `label:<text>`).
@@ -461,8 +461,8 @@ enum Commands {
         /// Write output to a file instead of stdout
         #[arg(long, short)]
         output: Option<String>,
-        /// Filter both snapshots to a specific region before diffing.
-        /// Same syntax as `plasmate fetch --selector` (e.g. `main`, `h1`, `nav`,
+        /// Filter both snapshots to a specific region or landmark inventory before diffing.
+        /// Same syntax as `plasmate fetch --selector` (e.g. `landmark`, `main`, `h1`, `nav`,
         /// `button`, `interactive`, `action:click`, `action:type`,
         /// `action:clear`, `action:select`, `action:toggle`, `action:submit`,
         /// `#my-id`, `label:<text>`). Useful for
