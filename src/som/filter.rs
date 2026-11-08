@@ -30,10 +30,10 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   and `role:` forms also work for element roles.
 /// - Element roles: `link` / `links` / `a` / `area` / `areas` / `anchor` /
 ///   `anchors` / `hyperlink` / `hyperlinks`, `button` / `buttons`, `text_input` /
-///   `text_inputs` / `text_box` / `text_boxes` / `text_field` /
-///   `text_fields` / `textbox` / `searchbox` /
+///   `text_inputs` / `input` / `inputs` / `text_box` / `text_boxes` / `text_field` /
+///   `text_fields` / `textboxes` / `textfields` / `textbox` / `searchbox` /
 ///   `slider` / `sliders` / `spinbutton` / `spinbuttons` / `spin button` /
-///   `spin buttons` / `input`, HTML
+///   `spin buttons`, HTML
 ///   text-input types such as `text`,
 ///   `search_input` / `search_inputs` / `search-input` / `search_control` /
 ///   `search_controls` / `search-control` / `search_field` / `search_fields` /
@@ -747,6 +747,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "text_boxes"
         | "text_field"
         | "text_fields"
+        | "textfields"
         | "searchbox"
         | "searchboxes"
         | "slider"
@@ -778,6 +779,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "query_box"
         | "queryboxes"
         | "query_boxes"
+        | "inputs"
         | "email"
         | "number"
         | "password"
@@ -2163,6 +2165,7 @@ mod tests {
         });
 
         for (selector, role) in [
+            ("inputs", ElementRole::TextInput),
             ("text_inputs", ElementRole::TextInput),
             ("text_fields", ElementRole::TextInput),
             ("text-field", ElementRole::TextInput),
@@ -2669,6 +2672,7 @@ mod tests {
 
         for selector in [
             "textboxes",
+            "textfields",
             "searchboxes",
             "queryboxes",
             "search_inputs",

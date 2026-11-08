@@ -261,7 +261,7 @@ only the corresponding native media elements. Use
 `canvas` when you want every canvas element, or `canvas_item` when filtering a
 mixed media page down to canvas elements only.
 HTML text-input type names are also accepted as selectors, including
-`text`, `textbox`/`textboxes`/`text_box`/`text-box`/`text box` (and plural
+`text`, `input`/`inputs`, `text_input`/`text_inputs`, `textbox`/`textboxes`/`text_box`/`text-box`/`text box` (and plural
 spaced or hyphenated forms), `search_input`/`search-input`, `search_control`/`search-control`,
 `search_field`/`search-field`, `search_box`/`search-box`, `query`,
 `query_input`/`query-input`, `query_field`/`query-field`,
