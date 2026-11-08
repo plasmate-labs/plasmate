@@ -283,10 +283,14 @@ def _label_candidates(element: SomElement) -> List[str]:
 def get_action_plan_cache_key(item: Dict[str, object]) -> str:
     """Return a deterministic key for caching or comparing an action target."""
     actions = item.get("actions")
-    action_values = sorted(actions) if isinstance(actions, list) else []
+    action_values = (
+        sorted(_enum_value(action).casefold() for action in actions)
+        if isinstance(actions, list)
+        else []
+    )
     parts = [
         _compact_string(item.get("id")),
-        _compact_string(item.get("role")),
+        _enum_value(item.get("role")).casefold() if item.get("role") is not None else None,
         _compact_string(item.get("label")),
         ",".join(str(action) for action in action_values) or None,
         _compact_string(item.get("name")),

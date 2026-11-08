@@ -1008,6 +1008,24 @@ class TestGetActionPlan:
             == "plasmate-action:v1:0b6b537f"
         )
 
+    def test_cache_keys_ignore_serialized_enum_case(self):
+        item = {
+            "id": "e_7",
+            "role": "text_input",
+            "actions": ["type", "clear"],
+            "label": "Search",
+            "name": "q",
+            "input_type": "text",
+            "placeholder": "Search...",
+        }
+        legacy_item = {
+            **item,
+            "role": "TEXT_INPUT",
+            "actions": ["CLEAR", "TYPE"],
+        }
+
+        assert get_action_plan_cache_key(item) == get_action_plan_cache_key(legacy_item)
+
     def test_matches_shared_action_availability_manifest(self):
         som, expected_targets = _load_action_availability_fixture()
 
