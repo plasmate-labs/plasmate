@@ -622,12 +622,15 @@ pub(crate) fn decode_limited_body(
 }
 
 fn content_encoding_header(headers: &reqwest::header::HeaderMap) -> Option<String> {
-    let values: Vec<_> = headers
+    let encodings: Vec<_> = headers
         .get_all(reqwest::header::CONTENT_ENCODING)
         .iter()
         .filter_map(|value| value.to_str().ok())
+        .flat_map(|value| value.split(','))
+        .map(str::trim)
+        .filter(|encoding| !encoding.is_empty())
         .collect();
-    (!values.is_empty()).then(|| values.join(", "))
+    (!encodings.is_empty()).then(|| encodings.join(", "))
 }
 
 fn decode_one_body_encoding(
@@ -989,17 +992,28 @@ mod security_tests {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.append(
             reqwest::header::CONTENT_ENCODING,
-            reqwest::header::HeaderValue::from_static("gzip"),
+            reqwest::header::HeaderValue::from_static(" gzip, "),
         );
         headers.append(
             reqwest::header::CONTENT_ENCODING,
-            reqwest::header::HeaderValue::from_static("br"),
+            reqwest::header::HeaderValue::from_static(" br "),
         );
 
         assert_eq!(
             content_encoding_header(&headers).as_deref(),
             Some("gzip, br")
         );
+    }
+
+    #[test]
+    fn empty_content_encoding_headers_are_ignored() {
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.append(
+            reqwest::header::CONTENT_ENCODING,
+            reqwest::header::HeaderValue::from_static("  ,  "),
+        );
+
+        assert_eq!(content_encoding_header(&headers), None);
     }
 
     #[tokio::test]
