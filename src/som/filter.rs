@@ -45,7 +45,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `password`, `tel`, `url`, `date`, `datetime` / `datetime-local` /
 ///   `date_time` / `date-time` / `date time`, `date_time_local` /
 ///   `date-time-local` / `date time local`, `month`,
-///   `time` / `times`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` /
+///   `time` / `times` / `time_input` / `time_inputs` / `time-input` /
+///   `time-inputs` / `time input` / `time inputs`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` /
 ///   `textareas` / `text_area` / `text_areas`,
 ///   `select` / `selects` / `combobox` / `comboboxes` / `combo box` /
 ///   `combo boxes` / `combo-boxes` /
@@ -326,6 +327,24 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                 }),
                 _ => false,
             }
+        });
+    }
+
+    // Explicit time-input selectors are useful when a page contains both a
+    // native <time> element and a time form control. Keep the bare `time`
+    // selector's backwards-compatible mixed behavior above.
+    if matches!(
+        selector.to_ascii_lowercase().as_str(),
+        "time_input" | "time_inputs" | "time-input" | "time-inputs" | "time input" | "time inputs"
+    ) {
+        return filter_som_elements(som, selector, |element| {
+            element.role == ElementRole::TextInput
+                && element.attrs.as_ref().is_some_and(|attrs| {
+                    attrs
+                        .get("input_type")
+                        .and_then(serde_json::Value::as_str)
+                        .is_some_and(|input_type| input_type.eq_ignore_ascii_case("time"))
+                })
         });
     }
 
@@ -1644,6 +1663,41 @@ mod tests {
             .map(|element| element.id.as_str())
             .collect::<Vec<_>>();
         assert_eq!(ids, vec!["e2"]);
+    }
+
+    #[test]
+    fn test_selector_time_input_targets_only_time_controls() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({"source_tag": "time"}));
+        som.regions[1].elements.push(Element {
+            id: "e-time-input".to_string(),
+            role: ElementRole::TextInput,
+            html_id: None,
+            text: None,
+            label: Some("Start time".to_string()),
+            actions: Some(vec!["type".to_string()]),
+            attrs: Some(serde_json::json!({"input_type": "time"})),
+            children: None,
+            shadow: None,
+            hints: None,
+        });
+
+        for selector in [
+            "time_input",
+            "time_inputs",
+            "time-input",
+            "time-inputs",
+            "time input",
+            "time inputs",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            let ids = filtered.regions[0]
+                .elements
+                .iter()
+                .map(|element| element.id.as_str())
+                .collect::<Vec<_>>();
+            assert_eq!(ids, vec!["e-time-input"], "selector: {selector}");
+        }
     }
 
     #[test]

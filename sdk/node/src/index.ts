@@ -193,14 +193,68 @@ function parseStructuredToolText(text: string): unknown {
 
   for (let position = stripped.length - 1; position >= 0; position -= 1) {
     if (stripped[position] !== '{' && stripped[position] !== '[') continue;
+    const end = findJsonValueEnd(stripped, position);
+    if (end === null) continue;
     try {
-      return JSON.parse(stripped.slice(position));
+      // The right-most opener may be a nested value. Prefer enclosing
+      // objects/arrays so a diagnostic suffix cannot truncate a structured
+      // payload.
+      let payloadStart = position;
+      let payloadEnd = end;
+      for (let enclosing = position - 1; enclosing >= 0; enclosing -= 1) {
+        if (stripped[enclosing] !== '{' && stripped[enclosing] !== '[') continue;
+        const enclosingEnd = findJsonValueEnd(stripped, enclosing);
+        if (enclosingEnd === null || enclosingEnd < payloadEnd) continue;
+        try {
+          JSON.parse(stripped.slice(enclosing, enclosingEnd));
+          payloadStart = enclosing;
+          payloadEnd = enclosingEnd;
+        } catch {
+          // Ignore unrelated delimiters in progress text.
+        }
+      }
+      return JSON.parse(stripped.slice(payloadStart, payloadEnd));
     } catch {
       // Try the next object or array start from the right.
     }
   }
 
   throw new Error('Tool returned unparseable output');
+}
+
+/** Find the end of one balanced JSON object or array, ignoring quoted delimiters. */
+function findJsonValueEnd(text: string, start: number): number | null {
+  const expectedClosers: string[] = [];
+  let inString = false;
+  let escaped = false;
+
+  for (let position = start; position < text.length; position += 1) {
+    const character = text[position];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (character === '\\') {
+        escaped = true;
+      } else if (character === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (character === '"') {
+      inString = true;
+    } else if (character === '{') {
+      expectedClosers.push('}');
+    } else if (character === '[') {
+      expectedClosers.push(']');
+    } else if (character === '}' || character === ']') {
+      if (expectedClosers.pop() !== character) return null;
+      if (expectedClosers.length === 0) return position + 1;
+    }
+  }
+
+  return null;
 }
 
 function toolText(result: { content?: Array<{ type: string; text?: string }> }): string {
