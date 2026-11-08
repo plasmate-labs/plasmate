@@ -193,14 +193,51 @@ function parseStructuredToolText(text: string): unknown {
 
   for (let position = stripped.length - 1; position >= 0; position -= 1) {
     if (stripped[position] !== '{' && stripped[position] !== '[') continue;
+    const end = findJsonValueEnd(stripped, position);
+    if (end === null) continue;
     try {
-      return JSON.parse(stripped.slice(position));
+      return JSON.parse(stripped.slice(position, end));
     } catch {
       // Try the next object or array start from the right.
     }
   }
 
   throw new Error('Tool returned unparseable output');
+}
+
+/** Find the end of one balanced JSON object or array, ignoring quoted delimiters. */
+function findJsonValueEnd(text: string, start: number): number | null {
+  const expectedClosers: string[] = [];
+  let inString = false;
+  let escaped = false;
+
+  for (let position = start; position < text.length; position += 1) {
+    const character = text[position];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (character === '\\') {
+        escaped = true;
+      } else if (character === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (character === '"') {
+      inString = true;
+    } else if (character === '{') {
+      expectedClosers.push('}');
+    } else if (character === '[') {
+      expectedClosers.push(']');
+    } else if (character === '}' || character === ']') {
+      if (expectedClosers.pop() !== character) return null;
+      if (expectedClosers.length === 0) return position + 1;
+    }
+  }
+
+  return null;
 }
 
 function toolText(result: { content?: Array<{ type: string; text?: string }> }): string {
