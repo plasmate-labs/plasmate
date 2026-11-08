@@ -200,6 +200,21 @@ class TestParseSom:
         assert nav_elements[0].html_id == "home-link"
         assert nav_elements[0].text == "Home"
 
+    def test_case_insensitive_enum_values(self):
+        payload = json.loads(json.dumps(FIXTURE_SOM))
+        payload["regions"][0]["role"] = "NAVIGATION"
+        payload["regions"][0]["elements"][0]["role"] = "LINK"
+        payload["regions"][0]["elements"][0]["actions"] = ["CLICK"]
+        payload["regions"][0]["elements"][0]["hints"] = ["PRIMARY"]
+
+        result = parse_som(payload)
+
+        element = result.regions[0].elements[0]
+        assert result.regions[0].role == RegionRole.NAVIGATION
+        assert element.role == ElementRole.LINK
+        assert element.actions == [ElementAction.CLICK]
+        assert element.hints == [SemanticHint.PRIMARY]
+
     def test_group_role_and_legend_attr_parse(self):
         payload = {
             **FIXTURE_SOM,
