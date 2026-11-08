@@ -31,7 +31,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// - Element roles: `link` / `links` / `a` / `area` / `areas` / `anchor` /
 ///   `anchors` / `hyperlink` / `hyperlinks`, `button` / `buttons`, `text_input` /
 ///   `text_inputs` / `input` / `inputs` / `text_box` / `text_boxes` / `text_field` /
-///   `text_fields` / `textbox` / `searchbox` /
+///   `text_fields` / `textboxes` / `textfields` / `textbox` / `searchbox` /
 ///   `slider` / `sliders` / `spinbutton` / `spinbuttons` / `spin button` /
 ///   `spin buttons`, HTML
 ///   text-input types such as `text`,
@@ -747,6 +747,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "text_boxes"
         | "text_field"
         | "text_fields"
+        | "textfields"
         | "searchbox"
         | "searchboxes"
         | "slider"
@@ -2671,6 +2672,7 @@ mod tests {
 
         for selector in [
             "textboxes",
+            "textfields",
             "searchboxes",
             "queryboxes",
             "search_inputs",
