@@ -550,11 +550,7 @@ async fn response_to_result(
         .filter_map(|value| value.to_str().ok())
         .map(str::to_string)
         .collect();
-    let content_encoding = response
-        .headers()
-        .get(reqwest::header::CONTENT_ENCODING)
-        .and_then(|value| value.to_str().ok())
-        .map(str::to_string);
+    let content_encoding = content_encoding_header(response.headers());
 
     if status >= 400 {
         return Err(FetchError::HttpError {
@@ -623,6 +619,15 @@ pub(crate) fn decode_limited_body(
         decoded = decode_one_body_encoding(&decoded, encoding, max_decoded_bytes)?;
     }
     Ok(decoded)
+}
+
+fn content_encoding_header(headers: &reqwest::header::HeaderMap) -> Option<String> {
+    let values: Vec<_> = headers
+        .get_all(reqwest::header::CONTENT_ENCODING)
+        .iter()
+        .filter_map(|value| value.to_str().ok())
+        .collect();
+    (!values.is_empty()).then(|| values.join(", "))
 }
 
 fn decode_one_body_encoding(
@@ -977,6 +982,24 @@ mod security_tests {
 
         let decoded = decode_limited_body(&wire, Some("gzip, br"), 1024).unwrap();
         assert_eq!(decoded, b"stacked encodings stay readable");
+    }
+
+    #[test]
+    fn repeated_content_encoding_headers_are_combined() {
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.append(
+            reqwest::header::CONTENT_ENCODING,
+            reqwest::header::HeaderValue::from_static("gzip"),
+        );
+        headers.append(
+            reqwest::header::CONTENT_ENCODING,
+            reqwest::header::HeaderValue::from_static("br"),
+        );
+
+        assert_eq!(
+            content_encoding_header(&headers).as_deref(),
+            Some("gzip, br")
+        );
     }
 
     #[tokio::test]
