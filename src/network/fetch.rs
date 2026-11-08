@@ -43,7 +43,7 @@ pub enum FetchError {
 pub struct FetchLimits {
     /// Maximum declared wire size. This rejects oversized Content-Length before reading.
     pub max_compressed_bytes: usize,
-    /// Maximum bytes after bounded gzip/brotli/deflate decoding.
+    /// Maximum bytes after bounded, possibly stacked gzip/brotli/deflate decoding.
     pub max_body_bytes: usize,
     pub max_redirects: usize,
 }
@@ -550,11 +550,7 @@ async fn response_to_result(
         .filter_map(|value| value.to_str().ok())
         .map(str::to_string)
         .collect();
-    let content_encoding = response
-        .headers()
-        .get(reqwest::header::CONTENT_ENCODING)
-        .and_then(|value| value.to_str().ok())
-        .map(str::to_string);
+    let content_encoding = content_encoding_header(response.headers());
 
     if status >= 400 {
         return Err(FetchError::HttpError {
@@ -603,21 +599,57 @@ pub(crate) fn decode_limited_body(
     content_encoding: Option<&str>,
     max_decoded_bytes: usize,
 ) -> Result<Vec<u8>, FetchError> {
+    let encodings: Vec<_> = content_encoding
+        .unwrap_or("identity")
+        .split(',')
+        .map(str::trim)
+        .filter(|encoding| !encoding.is_empty())
+        .collect();
+    let encodings = if encodings.is_empty() {
+        vec!["identity"]
+    } else {
+        encodings
+    };
+
+    // Content-Encoding lists codings in the order they were applied. Decode
+    // the representation in reverse so stacked gzip/br responses work while
+    // each intermediate buffer remains bounded.
+    let mut decoded = wire_body.to_vec();
+    for encoding in encodings.into_iter().rev() {
+        decoded = decode_one_body_encoding(&decoded, encoding, max_decoded_bytes)?;
+    }
+    Ok(decoded)
+}
+
+fn content_encoding_header(headers: &reqwest::header::HeaderMap) -> Option<String> {
+    let encodings: Vec<_> = headers
+        .get_all(reqwest::header::CONTENT_ENCODING)
+        .iter()
+        .filter_map(|value| value.to_str().ok())
+        .flat_map(|value| value.split(','))
+        .map(str::trim)
+        .filter(|encoding| !encoding.is_empty())
+        .collect();
+    (!encodings.is_empty()).then(|| encodings.join(", "))
+}
+
+fn decode_one_body_encoding(
+    wire_body: &[u8],
+    encoding: &str,
+    max_decoded_bytes: usize,
+) -> Result<Vec<u8>, FetchError> {
     use std::io::{Cursor, Read};
 
-    let encoding = content_encoding
-        .unwrap_or("identity")
-        .trim()
-        .to_ascii_lowercase();
+    let encoding = encoding.to_ascii_lowercase();
     let reader: Box<dyn Read> = match encoding.as_str() {
-        "" | "identity" => Box::new(Cursor::new(wire_body)),
+        "identity" => Box::new(Cursor::new(wire_body)),
         "gzip" | "x-gzip" => Box::new(flate2::read::GzDecoder::new(Cursor::new(wire_body))),
         "deflate" => Box::new(flate2::read::DeflateDecoder::new(Cursor::new(wire_body))),
         "br" => Box::new(brotli::Decompressor::new(Cursor::new(wire_body), 4096)),
         other => {
             return Err(FetchError::NavigationFailed(format!(
                 "unsupported Content-Encoding '{other}'"
-            )))
+            )));
         }
     };
     let mut decoded = Vec::new();
@@ -939,6 +971,66 @@ mod security_tests {
             result,
             Err(FetchError::BodyTooLarge { limit: 1024 })
         ));
+    }
+
+    #[test]
+    fn stacked_content_encoding_cannot_expand_an_intermediate_stage() {
+        let mut gzip = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::fast());
+        gzip.write_all(&vec![b'a'; 4096]).unwrap();
+        let gzip_wire = gzip.finish().unwrap();
+
+        let mut brotli = brotli::CompressorWriter::new(Vec::new(), 4096, 5, 22);
+        brotli.write_all(&gzip_wire).unwrap();
+        let wire = brotli.into_inner();
+
+        let result = decode_limited_body(&wire, Some("gzip, br"), 1024);
+        assert!(matches!(
+            result,
+            Err(FetchError::BodyTooLarge { limit: 1024 })
+        ));
+    }
+
+    #[test]
+    fn stacked_content_encodings_decode_in_reverse_order() {
+        let mut gzip = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::fast());
+        gzip.write_all(b"stacked encodings stay readable").unwrap();
+        let gzip_wire = gzip.finish().unwrap();
+
+        let mut brotli = brotli::CompressorWriter::new(Vec::new(), 4096, 5, 22);
+        brotli.write_all(&gzip_wire).unwrap();
+        let wire = brotli.into_inner();
+
+        let decoded = decode_limited_body(&wire, Some("gzip, br"), 1024).unwrap();
+        assert_eq!(decoded, b"stacked encodings stay readable");
+    }
+
+    #[test]
+    fn repeated_content_encoding_headers_are_combined() {
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.append(
+            reqwest::header::CONTENT_ENCODING,
+            reqwest::header::HeaderValue::from_static(" gzip, "),
+        );
+        headers.append(
+            reqwest::header::CONTENT_ENCODING,
+            reqwest::header::HeaderValue::from_static(" br "),
+        );
+
+        assert_eq!(
+            content_encoding_header(&headers).as_deref(),
+            Some("gzip, br")
+        );
+    }
+
+    #[test]
+    fn empty_content_encoding_headers_are_ignored() {
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.append(
+            reqwest::header::CONTENT_ENCODING,
+            reqwest::header::HeaderValue::from_static("  ,  "),
+        );
+
+        assert_eq!(content_encoding_header(&headers), None);
     }
 
     #[tokio::test]
