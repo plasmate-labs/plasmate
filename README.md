@@ -229,6 +229,10 @@ action menu before the LLM sees the content. The MCP tool-name aliases
 `selector="type_text"` and `selector="select_option"` (including their
 `action:type_text` and `action:select_option` forms) are also accepted for
 typing and selection targets.
+Use `selector="landmark"` (or `selector="landmarks"`) first when you need a
+compact inventory of the page's compiled regions before choosing a narrower
+region selector; the inventory keeps region metadata and removes their
+elements.
 Use `selector="label:<text>"` or `selector="label=<text>"` for
 case-insensitive accessible-label/text matching on regions and elements;
 element matching also falls back to `aria-label`, `title`, `placeholder`, and
