@@ -472,6 +472,19 @@ class TestFindByLabel:
         assert [el.id for el in find_by_label(som, "settings")] == ["e_11", "e_12"]
         assert [el.id for el in find_by_label(som, "Billing settings", exact=True)] == ["e_12"]
 
+    def test_matches_compiled_description_fallback(self, som: Som):
+        som.regions[1].elements.append(
+            SomElement(
+                id="e_description",
+                role=ElementRole.TEXT_INPUT,
+                attrs={"description": "Password requirements"},
+            )
+        )
+
+        assert [el.id for el in find_by_label(som, "requirements")] == [
+            "e_description"
+        ]
+
     def test_empty_labels_do_not_match_every_labeled_element(self, som: Som):
         assert find_by_label(som, "") == []
         assert find_by_label(som, " \n\t ") == []
