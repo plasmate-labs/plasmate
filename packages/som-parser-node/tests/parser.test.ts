@@ -330,6 +330,15 @@ describe('findByRole', () => {
     ]);
   });
 
+  it('normalizes role prefixes, quotes, and surrounding whitespace', () => {
+    expect(findByRole(FIXTURE, ' ROLE : "LINK" ').map((el) => el.id)).toEqual([
+      'e_1',
+      'e_2',
+      'e_5',
+    ]);
+    expect(findByRole(FIXTURE, 'role=heading')).toHaveLength(1);
+  });
+
   it('finds headings', () => {
     expect(findByRole(FIXTURE, 'heading')).toHaveLength(1);
   });

@@ -33,7 +33,7 @@ export function getAllElements(som: Som): SomElement[] {
 
 /** Find all elements with a specific role, ignoring role casing. */
 export function findByRole(som: Som, role: ElementRole | string): SomElement[] {
-  const normalizedRole = role.toLowerCase();
+  const normalizedRole = normalizeRoleQuery(role);
   return getAllElements(som).filter((el) => el.role.toLowerCase() === normalizedRole);
 }
 
