@@ -9,7 +9,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
 /// Supported selectors:
-/// - Region roles: `main`, `nav`/`navs`/`navigation`/`navigations`/`nav_region`/
+/// - Region roles: `landmark`/`landmarks` (all compiled regions), `main`, `nav`/`navs`/`navigation`/`navigations`/`nav_region`/
 ///   `nav-region`/`nav region`/`nav_regions`/`nav-regions`/`nav regions`/
 ///   `navigation_region`/`navigation-region`/`navigation region`/
 ///   `navigation_regions`/`navigation-regions`/`navigation regions`/`search`/`searches`/
@@ -130,6 +130,24 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         .map(strip_selector_quotes)
         .filter(|value| !value.is_empty())
         .unwrap_or(selector);
+
+    // Return the page's compiled regions as a compact landmark inventory.
+    // Unlike a specific region-role selector, this is useful when an agent
+    // needs to discover the page structure before choosing a narrower target.
+    if selector.eq_ignore_ascii_case("landmark") || selector.eq_ignore_ascii_case("landmarks") {
+        if som.regions.is_empty() {
+            eprintln!(
+                "Warning: selector '{}' matched no landmarks - returning full SOM",
+                selector
+            );
+            return som.clone();
+        }
+        let mut result = som.clone();
+        for region in &mut result.regions {
+            region.elements.clear();
+        }
+        return refresh_meta(result);
+    }
 
     // Try to match a region role
     let role_opt: Option<RegionRole> = match selector.to_lowercase().as_str() {
@@ -3368,6 +3386,18 @@ mod tests {
         let filtered = apply_selector(&som, " main ");
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].role, RegionRole::Main);
+    }
+
+    #[test]
+    fn test_selector_landmarks_returns_region_inventory_without_elements() {
+        let som = make_test_som();
+        let filtered = apply_selector(&som, " LANDMARKS ");
+
+        assert_eq!(filtered.regions.len(), som.regions.len());
+        assert!(filtered.regions.iter().all(|region| region.elements.is_empty()));
+        assert_eq!(filtered.meta.element_count, 0);
+        assert_eq!(filtered.meta.interactive_count, 0);
+        assert!(som.regions.iter().any(|region| !region.elements.is_empty()));
     }
 
     #[test]
