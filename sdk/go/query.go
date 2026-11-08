@@ -201,7 +201,10 @@ func FindByTag(som *Som, tag string) []Element {
 		var legacyGroups []Element
 		for _, element := range FlatElements(som) {
 			matchesSourceRole := element.Attrs != nil && element.Attrs.SourceRole != nil && strings.EqualFold(*element.Attrs.SourceRole, sourceRole)
-			matchesCanonicalRole := element.Attrs == nil && element.Role == sourceRole
+			// Canonical source roles can carry ordinary element metadata too;
+			// only the absence of source_role distinguishes them from the
+			// source-specific representation above.
+			matchesCanonicalRole := strings.EqualFold(element.Role, sourceRole)
 			matchesLegacyGroup := !hasSourceMetadata && element.Attrs == nil && element.Role == "group"
 			if matchesSourceRole || matchesCanonicalRole {
 				result = append(result, element)
@@ -707,7 +710,7 @@ func FindByAction(som *Som, action string) []Element {
 	action = normalizeActionQuery(action)
 	var result []Element
 	for _, el := range FlatElements(som) {
-		if containsString(el.Actions, action) {
+		if containsNormalizedString(el.Actions, action, normalizeActionQuery) {
 			result = append(result, el)
 		}
 	}
@@ -719,18 +722,22 @@ func FindByHint(som *Som, hint string) []Element {
 	if som == nil {
 		return nil
 	}
+	hint = normalizeQueryText(hint)
+	if hint == "" {
+		return nil
+	}
 	var result []Element
 	for _, el := range FlatElements(som) {
-		if containsString(el.Hints, hint) {
+		if containsNormalizedString(el.Hints, hint, normalizeQueryText) {
 			result = append(result, el)
 		}
 	}
 	return result
 }
 
-func containsString(values []string, target string) bool {
+func containsNormalizedString(values []string, target string, normalize func(string) string) bool {
 	for _, value := range values {
-		if value == target {
+		if normalize(value) == target {
 			return true
 		}
 	}
