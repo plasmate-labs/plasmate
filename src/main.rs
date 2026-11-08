@@ -117,7 +117,7 @@ enum Commands {
         user_agent: Option<String>,
         /// Filter output to a specific SOM region or element.
         ///
-        /// Accepts semantic region roles (main, nav, navigation, nav_region/nav-region/nav region/nav regions,
+        /// Accepts the compact landmark/landmarks inventory or semantic region roles (main, nav, navigation, nav_region/nav-region/nav region/nav regions,
         /// navigation_region/navigation-region/navigation region/navigation regions, search/search navigation/search navigations, aside/sidebar/sidebars, header,
         /// footer, form, dialog, content), heading levels (h1 through h6),
         /// including data-grid/data-grids and spaced or underscored forms for table-like elements,
@@ -130,6 +130,7 @@ enum Commands {
         /// Unrecognised selectors fall through gracefully (full SOM returned).
         ///
         /// Examples:
+        ///   --selector landmark       (region metadata without nested elements; landmarks also works)
         ///   --selector main            (just the main content region; main_region/main-region/main region aliases also work)
         ///   --selector nav             (navigation links only)
         ///   --selector h1              (level-one headings only)
