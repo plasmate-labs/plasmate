@@ -196,7 +196,24 @@ function parseStructuredToolText(text: string): unknown {
     const end = findJsonValueEnd(stripped, position);
     if (end === null) continue;
     try {
-      return JSON.parse(stripped.slice(position, end));
+      // The right-most opener may be a nested value. Prefer enclosing
+      // objects/arrays so a diagnostic suffix cannot truncate a structured
+      // payload.
+      let payloadStart = position;
+      let payloadEnd = end;
+      for (let enclosing = position - 1; enclosing >= 0; enclosing -= 1) {
+        if (stripped[enclosing] !== '{' && stripped[enclosing] !== '[') continue;
+        const enclosingEnd = findJsonValueEnd(stripped, enclosing);
+        if (enclosingEnd === null || enclosingEnd < payloadEnd) continue;
+        try {
+          JSON.parse(stripped.slice(enclosing, enclosingEnd));
+          payloadStart = enclosing;
+          payloadEnd = enclosingEnd;
+        } catch {
+          // Ignore unrelated delimiters in progress text.
+        }
+      }
+      return JSON.parse(stripped.slice(payloadStart, payloadEnd));
     } catch {
       // Try the next object or array start from the right.
     }
