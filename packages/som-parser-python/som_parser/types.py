@@ -8,7 +8,18 @@ from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel
 
 
-class RegionRole(str, Enum):
+class _CaseInsensitiveStrEnum(str, Enum):
+    @classmethod
+    def _missing_(cls, value: object):
+        if isinstance(value, str):
+            folded = value.casefold()
+            for member in cls:
+                if member.value.casefold() == folded:
+                    return member
+        return None
+
+
+class RegionRole(_CaseInsensitiveStrEnum):
     NAVIGATION = "navigation"
     MAIN = "main"
     ASIDE = "aside"
@@ -19,7 +30,7 @@ class RegionRole(str, Enum):
     CONTENT = "content"
 
 
-class ElementRole(str, Enum):
+class ElementRole(_CaseInsensitiveStrEnum):
     LINK = "link"
     BUTTON = "button"
     TEXT_INPUT = "text_input"
@@ -39,7 +50,7 @@ class ElementRole(str, Enum):
     IFRAME = "iframe"
 
 
-class ElementAction(str, Enum):
+class ElementAction(_CaseInsensitiveStrEnum):
     CLICK = "click"
     TYPE = "type"
     CLEAR = "clear"
@@ -47,7 +58,7 @@ class ElementAction(str, Enum):
     TOGGLE = "toggle"
 
 
-class SemanticHint(str, Enum):
+class SemanticHint(_CaseInsensitiveStrEnum):
     ACTIVE = "active"
     BADGE = "badge"
     CARD = "card"

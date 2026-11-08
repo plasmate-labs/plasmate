@@ -13,6 +13,7 @@ from som_parser import (
     Som,
     SomElement,
     SomElementAttrs,
+    SomRegion,
     SomShadowRoot,
     filter_elements,
     find_action_target,
@@ -199,6 +200,21 @@ class TestParseSom:
         assert nav_elements[0].html_id == "home-link"
         assert nav_elements[0].text == "Home"
 
+    def test_case_insensitive_enum_values(self):
+        payload = json.loads(json.dumps(FIXTURE_SOM))
+        payload["regions"][0]["role"] = "NAVIGATION"
+        payload["regions"][0]["elements"][0]["role"] = "LINK"
+        payload["regions"][0]["elements"][0]["actions"] = ["CLICK"]
+        payload["regions"][0]["elements"][0]["hints"] = ["PRIMARY"]
+
+        result = parse_som(payload)
+
+        element = result.regions[0].elements[0]
+        assert result.regions[0].role == RegionRole.NAVIGATION
+        assert element.role == ElementRole.LINK
+        assert element.actions == [ElementAction.CLICK]
+        assert element.hints == [SemanticHint.PRIMARY]
+
     def test_group_role_and_legend_attr_parse(self):
         payload = {
             **FIXTURE_SOM,
@@ -360,6 +376,20 @@ class TestFindByRole:
         tables = find_by_role(som, ElementRole.TABLE)
         assert tables == []
 
+    def test_matches_serialized_role_case_insensitively(self, som: Som):
+        uppercase_button = SomElement.model_construct(
+            id="e_upper_button", role="BUTTON", text="Uppercase"
+        )
+        uppercase_region = SomRegion.model_construct(
+            id="r_upper_button", role="MAIN", elements=[uppercase_button]
+        )
+        som = som.model_copy(update={"regions": [*som.regions, uppercase_region]})
+
+        assert [el.id for el in find_by_role(som, "BUTTON")] == [
+            "e_8",
+            "e_upper_button",
+        ]
+
 
 class TestFindById:
     def test_found(self, som: Som):
@@ -441,6 +471,19 @@ class TestFindByLabel:
 
         assert [el.id for el in find_by_label(som, "settings")] == ["e_11", "e_12"]
         assert [el.id for el in find_by_label(som, "Billing settings", exact=True)] == ["e_12"]
+
+    def test_matches_compiled_description_fallback(self, som: Som):
+        som.regions[1].elements.append(
+            SomElement(
+                id="e_description",
+                role=ElementRole.TEXT_INPUT,
+                attrs={"description": "Password requirements"},
+            )
+        )
+
+        assert [el.id for el in find_by_label(som, "requirements")] == [
+            "e_description"
+        ]
 
     def test_empty_labels_do_not_match_every_labeled_element(self, som: Som):
         assert find_by_label(som, "") == []
@@ -777,6 +820,23 @@ class TestFindByAction:
         typed = find_by_action(som, ElementAction.TYPE)
         assert [el.id for el in typed] == ["e_7"]
 
+    def test_matches_serialized_action_case_insensitively(self, som: Som):
+        uppercase_button = SomElement.model_construct(
+            id="e_upper_action", role="BUTTON", actions=["CLICK"]
+        )
+        uppercase_region = SomRegion.model_construct(
+            id="r_upper_action", role="MAIN", elements=[uppercase_button]
+        )
+        som = som.model_copy(update={"regions": [*som.regions, uppercase_region]})
+
+        assert [el.id for el in find_by_action(som, "CLICK")] == [
+            "e_1",
+            "e_2",
+            "e_5",
+            "e_8",
+            "e_upper_action",
+        ]
+
 
 class TestFindByHint:
     def test_finds_required_elements(self, som: Som):
@@ -785,6 +845,20 @@ class TestFindByHint:
 
     def test_returns_empty_for_missing_hint(self, som: Som):
         assert find_by_hint(som, SemanticHint.DANGER) == []
+
+    def test_matches_serialized_hint_case_insensitively(self, som: Som):
+        uppercase_required = SomElement.model_construct(
+            id="e_upper_hint", role="TEXT_INPUT", hints=["REQUIRED"]
+        )
+        uppercase_region = SomRegion.model_construct(
+            id="r_upper_hint", role="MAIN", elements=[uppercase_required]
+        )
+        som = som.model_copy(update={"regions": [*som.regions, uppercase_region]})
+
+        assert [el.id for el in find_by_hint(som, "REQUIRED")] == [
+            "e_7",
+            "e_upper_hint",
+        ]
 
 
 class TestGetActionPlan:
@@ -933,6 +1007,24 @@ class TestGetActionPlan:
             )
             == "plasmate-action:v1:0b6b537f"
         )
+
+    def test_cache_keys_ignore_serialized_enum_case(self):
+        item = {
+            "id": "e_7",
+            "role": "text_input",
+            "actions": ["type", "clear"],
+            "label": "Search",
+            "name": "q",
+            "input_type": "text",
+            "placeholder": "Search...",
+        }
+        legacy_item = {
+            **item,
+            "role": "TEXT_INPUT",
+            "actions": ["CLEAR", "TYPE"],
+        }
+
+        assert get_action_plan_cache_key(item) == get_action_plan_cache_key(legacy_item)
 
     def test_matches_shared_action_availability_manifest(self):
         som, expected_targets = _load_action_availability_fixture()

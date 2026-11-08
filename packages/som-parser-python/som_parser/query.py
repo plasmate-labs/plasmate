@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from enum import Enum
 from typing import Callable, Dict, List, Literal, Optional, Union
 
 from .types import (
@@ -44,8 +45,12 @@ def find_by_role(som: Som, role: Union[ElementRole, str]) -> List[SomElement]:
         role: An ElementRole enum value or string (e.g. "link").
     """
     if isinstance(role, str):
-        role = ElementRole(role)
-    return [el for el in get_all_elements(som) if el.role == role]
+        role = ElementRole(role.casefold())
+    return [
+        el
+        for el in get_all_elements(som)
+        if _enum_value(el.role).casefold() == _enum_value(role).casefold()
+    ]
 
 
 def find_by_id(som: Som, id: str) -> Optional[SomElement]:
@@ -169,8 +174,16 @@ def find_by_action(
 ) -> List[SomElement]:
     """Find all elements that expose a specific action."""
     if isinstance(action, str):
-        action = ElementAction(action)
-    return [el for el in get_all_elements(som) if el.actions and action in el.actions]
+        action = ElementAction(action.casefold())
+    action_value = _enum_value(action).casefold()
+    return [
+        el
+        for el in get_all_elements(som)
+        if el.actions
+        and any(
+            _enum_value(candidate).casefold() == action_value for candidate in el.actions
+        )
+    ]
 
 
 def find_by_hint(
@@ -178,8 +191,16 @@ def find_by_hint(
 ) -> List[SomElement]:
     """Find all elements tagged with a specific semantic hint."""
     if isinstance(hint, str):
-        hint = SemanticHint(hint)
-    return [el for el in get_all_elements(som) if el.hints and hint in el.hints]
+        hint = SemanticHint(hint.casefold())
+    hint_value = _enum_value(hint).casefold()
+    return [
+        el
+        for el in get_all_elements(som)
+        if el.hints
+        and any(
+            _enum_value(candidate).casefold() == hint_value for candidate in el.hints
+        )
+    ]
 
 
 def get_interactive_elements(som: Som) -> List[SomElement]:
@@ -197,6 +218,11 @@ def _fnv1a32(value: str) -> str:
 
 def _compact_string(value: object) -> Optional[str]:
     return value if isinstance(value, str) and value else None
+
+
+def _enum_value(value: object) -> str:
+    """Return enum values and model-constructed serialized strings uniformly."""
+    return value.value if isinstance(value, Enum) else str(value)
 
 
 def _normalize_label_text(value: str) -> str:
@@ -244,6 +270,7 @@ def _label_candidates(element: SomElement) -> List[str]:
             for value in (
                 aria_label,
                 (element.attrs.aria or {}).get("description"),
+                element.attrs.description,
                 element.attrs.title,
                 element.attrs.placeholder,
                 element.attrs.alt,
@@ -256,10 +283,14 @@ def _label_candidates(element: SomElement) -> List[str]:
 def get_action_plan_cache_key(item: Dict[str, object]) -> str:
     """Return a deterministic key for caching or comparing an action target."""
     actions = item.get("actions")
-    action_values = sorted(actions) if isinstance(actions, list) else []
+    action_values = (
+        sorted(_enum_value(action).casefold() for action in actions)
+        if isinstance(actions, list)
+        else []
+    )
     parts = [
         _compact_string(item.get("id")),
-        _compact_string(item.get("role")),
+        _enum_value(item.get("role")).casefold() if item.get("role") is not None else None,
         _compact_string(item.get("label")),
         ",".join(str(action) for action in action_values) or None,
         _compact_string(item.get("name")),
