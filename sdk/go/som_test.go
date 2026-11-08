@@ -712,6 +712,18 @@ func TestFindByTagMatchesSourceRolesCaseInsensitively(t *testing.T) {
 	}
 }
 
+func TestFindByTagMatchesCanonicalSourceRolesWithMetadata(t *testing.T) {
+	sourceTag := "progress"
+	som := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "progress", Role: "PrOgReSsBaR", Attrs: &ElementAttrs{SourceTag: &sourceTag}},
+	}}}}
+
+	got := FindByTag(som, "progress")
+	if len(got) != 1 || got[0].ID != "progress" {
+		t.Fatalf("FindByTag(progress) = %#v, want canonical progressbar with metadata", got)
+	}
+}
+
 func TestFindByTagAcceptsMediaAliases(t *testing.T) {
 	audio, video, canvas := "audio", "video", "canvas"
 	som := &Som{Regions: []Region{{Elements: []Element{

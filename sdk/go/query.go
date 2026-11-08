@@ -201,7 +201,10 @@ func FindByTag(som *Som, tag string) []Element {
 		var legacyGroups []Element
 		for _, element := range FlatElements(som) {
 			matchesSourceRole := element.Attrs != nil && element.Attrs.SourceRole != nil && strings.EqualFold(*element.Attrs.SourceRole, sourceRole)
-			matchesCanonicalRole := element.Attrs == nil && element.Role == sourceRole
+			// Canonical source roles can carry ordinary element metadata too;
+			// only the absence of source_role distinguishes them from the
+			// source-specific representation above.
+			matchesCanonicalRole := strings.EqualFold(element.Role, sourceRole)
 			matchesLegacyGroup := !hasSourceMetadata && element.Attrs == nil && element.Role == "group"
 			if matchesSourceRole || matchesCanonicalRole {
 				result = append(result, element)
