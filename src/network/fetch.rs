@@ -43,7 +43,7 @@ pub enum FetchError {
 pub struct FetchLimits {
     /// Maximum declared wire size. This rejects oversized Content-Length before reading.
     pub max_compressed_bytes: usize,
-    /// Maximum bytes after bounded gzip/brotli/deflate decoding.
+    /// Maximum bytes after bounded, possibly stacked gzip/brotli/deflate decoding.
     pub max_body_bytes: usize,
     pub max_redirects: usize,
 }
@@ -967,6 +967,23 @@ mod security_tests {
         let wire = encoder.finish().unwrap();
         assert!(wire.len() < 1024);
         let result = decode_limited_body(&wire, Some("gzip"), 1024);
+        assert!(matches!(
+            result,
+            Err(FetchError::BodyTooLarge { limit: 1024 })
+        ));
+    }
+
+    #[test]
+    fn stacked_content_encoding_cannot_expand_an_intermediate_stage() {
+        let mut gzip = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::fast());
+        gzip.write_all(&vec![b'a'; 4096]).unwrap();
+        let gzip_wire = gzip.finish().unwrap();
+
+        let mut brotli = brotli::CompressorWriter::new(Vec::new(), 4096, 5, 22);
+        brotli.write_all(&gzip_wire).unwrap();
+        let wire = brotli.into_inner();
+
+        let result = decode_limited_body(&wire, Some("gzip, br"), 1024);
         assert!(matches!(
             result,
             Err(FetchError::BodyTooLarge { limit: 1024 })
