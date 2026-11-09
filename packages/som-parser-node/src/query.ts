@@ -646,9 +646,22 @@ export function findActionTargetsByAction(
 ): ActionPlanItem[] {
   const normalizedAction = normalizeActionQuery(action);
   const plan = options?.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
-  return plan.filter((item) =>
+  const results = plan.filter((item) =>
     item.actions.some((candidate) => normalizeActionQuery(candidate) === normalizedAction),
   );
+  if (normalizedAction !== 'submit' && normalizedAction !== 'reset') return results;
+
+  const seenIds = new Set(results.map((item) => item.id));
+  for (const item of plan) {
+    const buttonType = item.button_type?.toLowerCase();
+    const matches = buttonType === normalizedAction ||
+      (normalizedAction === 'submit' && buttonType === 'image');
+    if (matches && !seenIds.has(item.id)) {
+      results.push(item);
+      seenIds.add(item.id);
+    }
+  }
+  return results;
 }
 
 function normalizeActionQuery(value: string): string {

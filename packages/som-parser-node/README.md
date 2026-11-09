@@ -59,6 +59,10 @@ const clickable = findByAction(som, 'click');
 const fields = findByLabel(som, 'email');
 ```
 
+Action lookup accepts the same compact aliases used by MCP selectors, including
+`action:click`, `action=type_text`, quoted values, and `select-option`. `submit`
+and `reset` also match compiled button types, including image submitters.
+
 ### Convert to markdown
 
 ```typescript

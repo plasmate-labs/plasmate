@@ -834,6 +834,29 @@ describe('findByAction', () => {
       expect(findByAction(FIXTURE, alias).map((el) => el.id)).toEqual(['e_7']);
     }
   });
+
+  it('matches submit and reset by compiled button type', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_form',
+          role: 'form',
+          elements: [
+            { id: 'submit', role: 'button', actions: ['click'], attrs: { button_type: 'submit' } },
+            { id: 'image-submit', role: 'button', actions: ['click'], attrs: { button_type: 'image' } },
+            { id: 'reset', role: 'button', actions: ['click'], attrs: { button_type: 'reset' } },
+          ],
+        },
+      ],
+    };
+
+    expect(findActionTargetsByAction(som, 'submit').map((item) => item.id)).toEqual([
+      'submit',
+      'image-submit',
+    ]);
+    expect(findActionTargetsByAction(som, 'reset').map((item) => item.id)).toEqual(['reset']);
+  });
 });
 
 describe('findByHint', () => {
