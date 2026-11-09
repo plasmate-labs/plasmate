@@ -1324,6 +1324,33 @@ class TestGetActionPlan:
             "cache_key": "plasmate-action:v1:5b218ab1",
         }
 
+    def test_marks_aria_disabled_targets_unavailable(self, sample_som: Som) -> None:
+        aria_disabled_som = sample_som.model_copy(
+            update={
+                "regions": [
+                    SomRegion(
+                        id="r_form",
+                        role=RegionRole.form,
+                        elements=[
+                            SomElement(
+                                id="locked",
+                                role=ElementRole.button,
+                                text="Archive",
+                                actions=["click"],
+                                attrs=ElementAttrs(aria_disabled=True),
+                            )
+                        ],
+                    )
+                ]
+            }
+        )
+
+        plan = get_action_plan(aria_disabled_som)
+
+        assert plan[0]["aria_disabled"] is True
+        assert plan[0]["enabled"] is False
+        assert plan[0]["blocked_reason"] == "aria-disabled"
+
     def test_matches_shared_action_availability_manifest(self) -> None:
         fixture_dir = REPO_ROOT / "integrations" / "fixtures"
         som = Som.model_validate(

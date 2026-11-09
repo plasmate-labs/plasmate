@@ -103,6 +103,7 @@ class ElementAttrs(BaseModel):
     hreflang: Optional[str] = None
     type: Optional[str] = None
     referrerpolicy: Optional[str] = None
+    aria_disabled: Optional[bool] = None
     download: Optional[Union[bool, str]] = None
     input_type: Optional[str] = None
     value: Optional[str] = None
