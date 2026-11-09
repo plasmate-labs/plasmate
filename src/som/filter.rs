@@ -56,10 +56,12 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `listbox` / `listboxes` / `list_box` / `list_boxes` / `list box` / `list boxes`,
 ///   `checkbox` / `checkboxes` / `check box` /
 ///   `check boxes` / `switch` /
-///   `switches` / `menuitemcheckbox` / `menuitemcheckboxes`, `radio` / `radios` /
+///   `switches` / `menuitemcheckbox` / `menuitemcheckboxes` /
+///   `menu-item-checkbox` / `menu-item-checkboxes`, `radio` / `radios` /
 ///   `radiobutton` / `radiobuttons` / `radio-button` / `radio-buttons` /
 ///   `radio button` / `radio buttons` /
-///   `menuitemradio` / `menuitemradios`, `heading`, `image` / `images` / `image_item` /
+///   `menuitemradio` / `menuitemradios` / `menu-item-radio` /
+///   `menu-item-radios`, `heading`, `image` / `images` / `image_item` /
 ///   `image-item` / `image item` / `imageitem` / `image_items` / `image-items` /
 ///   `image items` / `imageitems`, `list` / `lists`,
 ///   `table` / `tables` / `data_table` / `data_tables` / `data-table` / `data tables`,
@@ -876,6 +878,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "menuitemcheckboxes"
         | "menuitem_checkbox"
         | "menuitem_checkboxes"
+        | "menu-item-checkbox"
+        | "menu-item-checkboxes"
         | "menu_item_checkbox"
         | "menu_item_checkboxes" => {
             Some(ElementRole::Checkbox)
@@ -892,6 +896,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "menuitemradios"
         | "menuitem_radio"
         | "menuitem_radios"
+        | "menu-item-radio"
+        | "menu-item-radios"
         | "menu_item_radio"
         | "menu_item_radios" => Some(ElementRole::Radio),
         "heading" | "headings" => Some(ElementRole::Heading),
