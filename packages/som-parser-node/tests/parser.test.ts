@@ -813,6 +813,20 @@ describe('findByAction', () => {
       'e_8',
     ]);
   });
+
+  it('normalizes MCP action aliases and prefixes', () => {
+    for (const alias of ['action:click', 'action = click', 'role:click', '"click"']) {
+      expect(findByAction(FIXTURE, alias).map((el) => el.id)).toEqual([
+        'e_1',
+        'e_2',
+        'e_5',
+        'e_8',
+      ]);
+    }
+    for (const alias of ['type_text', 'type-text', 'type text', 'action:type_text']) {
+      expect(findByAction(FIXTURE, alias).map((el) => el.id)).toEqual(['e_7']);
+    }
+  });
 });
 
 describe('findByHint', () => {

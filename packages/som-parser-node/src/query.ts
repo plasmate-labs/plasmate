@@ -652,7 +652,39 @@ export function findActionTargetsByAction(
 }
 
 function normalizeActionQuery(value: string): string {
-  return value.trim().toLowerCase();
+  let normalized = value.trim().toLowerCase();
+  if (
+    normalized.length >= 2 &&
+    ((normalized.startsWith('"') && normalized.endsWith('"')) ||
+      (normalized.startsWith("'") && normalized.endsWith("'")))
+  ) {
+    normalized = normalized.slice(1, -1).trim();
+  }
+  for (const prefix of ['action', 'role']) {
+    const separator = normalized.startsWith(prefix)
+      ? normalized.slice(prefix.length).trimStart()
+      : '';
+    if (separator.startsWith(':') || separator.startsWith('=')) {
+      normalized = separator.slice(1).trim();
+      break;
+    }
+  }
+  switch (normalized) {
+    case 'clear_text':
+    case 'clear-text':
+    case 'clear text':
+      return 'clear';
+    case 'type_text':
+    case 'type-text':
+    case 'type text':
+      return 'type';
+    case 'select_option':
+    case 'select-option':
+    case 'select option':
+      return 'select';
+    default:
+      return normalized;
+  }
 }
 
 function normalizeRoleIndexKey(value: string): string {
