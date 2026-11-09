@@ -175,7 +175,7 @@ function actionPlanLabel(el: SomElement): string | undefined {
 export function findByAction(som: Som, action: ElementAction | string): SomElement[] {
   const normalizedAction = normalizeActionQuery(action);
   return getAllElements(som).filter((el) =>
-    el.actions?.some((candidate) => normalizeActionQuery(candidate) === normalizedAction),
+    matchesAction(el.actions, el.attrs?.button_type, normalizedAction),
   );
 }
 
@@ -647,16 +647,13 @@ export function findActionTargetsByAction(
   const normalizedAction = normalizeActionQuery(action);
   const plan = options?.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
   const results = plan.filter((item) =>
-    item.actions.some((candidate) => normalizeActionQuery(candidate) === normalizedAction),
+    matchesAction(item.actions, item.button_type, normalizedAction),
   );
   if (normalizedAction !== 'submit' && normalizedAction !== 'reset') return results;
 
   const seenIds = new Set(results.map((item) => item.id));
   for (const item of plan) {
-    const buttonType = item.button_type?.toLowerCase();
-    const matches = buttonType === normalizedAction ||
-      (normalizedAction === 'submit' && buttonType === 'image');
-    if (matches && !seenIds.has(item.id)) {
+    if (matchesAction(item.actions, item.button_type, normalizedAction) && !seenIds.has(item.id)) {
       results.push(item);
       seenIds.add(item.id);
     }
@@ -705,6 +702,20 @@ function normalizeActionQuery(value: string): string {
     default:
       return normalized;
   }
+}
+
+function matchesAction(
+  actions: ElementAction[] | undefined,
+  buttonType: string | undefined,
+  normalizedAction: string,
+): boolean {
+  if (actions?.some((candidate) => normalizeActionQuery(candidate) === normalizedAction)) {
+    return true;
+  }
+  if (normalizedAction !== 'submit' && normalizedAction !== 'reset') return false;
+  const normalizedButtonType = buttonType?.toLowerCase();
+  return normalizedButtonType === normalizedAction ||
+    (normalizedAction === 'submit' && normalizedButtonType === 'image');
 }
 
 function normalizeRoleIndexKey(value: string): string {

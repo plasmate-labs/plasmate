@@ -856,6 +856,11 @@ describe('findByAction', () => {
       'image-submit',
     ]);
     expect(findActionTargetsByAction(som, 'reset').map((item) => item.id)).toEqual(['reset']);
+    expect(findByAction(som, 'action:submit').map((element) => element.id)).toEqual([
+      'submit',
+      'image-submit',
+    ]);
+    expect(findByAction(som, 'role:reset').map((element) => element.id)).toEqual(['reset']);
   });
 });
 
