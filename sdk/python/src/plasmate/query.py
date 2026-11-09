@@ -50,6 +50,12 @@ _TIME_INPUT_ALIASES = {
     "time_picker",
     "time_pickers",
 }
+_INTERACTIVE_ALIASES = {
+    "interactive",
+    "interactives",
+    "interactive_element",
+    "interactive_elements",
+}
 
 
 def find_by_role(som: Som, role: str) -> List[SomRegion]:
@@ -400,6 +406,8 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
                 element.attrs.source_tag if element.attrs else None, "output"
             )
         ]
+    if tag in _INTERACTIVE_ALIASES:
+        return find_interactive(som)
     source_specific_group_role = _SOURCE_SPECIFIC_GROUP_ALIASES.get(tag)
     if source_specific_group_role is not None and any(
         _source_role_matches(element, source_specific_group_role)
@@ -958,6 +966,8 @@ def find_action_targets_by_role(
             if _action_plan_role_matches(item, ElementRole.paragraph)
             and _source_role_value_matches(item.get("source_tag"), "output")
         ]
+    if normalized_alias in _INTERACTIVE_ALIASES:
+        return plan
     source_specific_group_role = _SOURCE_SPECIFIC_GROUP_ALIASES.get(normalized_alias)
     if source_specific_group_role is not None and any(
         _source_role_value_matches(item.get("source_role"), source_specific_group_role)

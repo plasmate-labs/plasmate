@@ -119,6 +119,10 @@ export function findByTag(som: Som, tag: ElementRole | string): SomElement[] {
       el.role === 'paragraph' && sourceRoleMatches(el.attrs?.source_tag, 'output'),
     );
   }
+  if (['interactive', 'interactives', 'interactive_elements']
+    .includes(normalizedTag)) {
+    return findInteractive(som);
+  }
   if (['time_input', 'time_inputs', 'time_control', 'time_controls', 'timecontrol', 'timecontrols',
     'time_picker', 'time_pickers', 'timepicker', 'timepickers']
     .includes(normalizedTag)) {
@@ -913,6 +917,10 @@ export function findActionTargetsByRole(
     return plan.filter((item) =>
       item.role === 'paragraph' && sourceRoleMatches(item.source_tag, 'output'),
     );
+  }
+  if (['interactive', 'interactives', 'interactive_elements', 'interactive-elements']
+    .includes(normalizedRole)) {
+    return plan;
   }
   if (['time_input', 'time_inputs', 'time_control', 'time_controls', 'timecontrol', 'timecontrols',
     'time_picker', 'time_pickers', 'timepicker', 'timepickers']

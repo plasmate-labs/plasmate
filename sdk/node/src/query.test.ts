@@ -180,6 +180,17 @@ describe('findActionTargetsByAction aliases', () => {
 });
 
 describe('findActionTargetsByRole aliases', () => {
+  it('returns all action targets for interactive aliases', () => {
+    for (const alias of ['interactive', 'interactives', 'interactive_elements', 'interactive-elements']) {
+      assert.deepEqual(findActionTargetsByRole(fixture, alias).map((item) => item.id), [
+        'e2',
+        'e4',
+        'e5',
+        'e8',
+      ], alias);
+    }
+  });
+
   it('normalizes case, whitespace, and plural role aliases', () => {
     assert.deepEqual(findActionTargetsByRole(fixture, ' BUTTONS ').map((item) => item.id), ['e4']);
     assert.deepEqual(findActionTargetsByRole(fixture, 'text-input').map((item) => item.id), ['e5']);
@@ -639,6 +650,17 @@ describe('findByTag', () => {
   it('finds elements by role', () => {
     const paragraphs = findByTag(fixture, 'paragraph');
     assert.equal(paragraphs.length, 3);
+  });
+
+  it('finds interactive elements through selector aliases', () => {
+    for (const alias of ['interactive', 'interactives', 'interactive-elements']) {
+      assert.deepEqual(findByTag(fixture, alias).map((el) => el.id), [
+        'e2',
+        'e4',
+        'e5',
+        'e8',
+      ], alias);
+    }
   });
 
   it('accepts anchor aliases for links in element and action queries', () => {

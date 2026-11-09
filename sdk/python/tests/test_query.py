@@ -386,6 +386,22 @@ class TestFindByLabel:
 
 
 class TestFindByTag:
+    def test_interactive_aliases_match_find_interactive(self, sample_som: Som) -> None:
+        expected = [element.id for element in find_interactive(sample_som)]
+        for alias in (
+            "interactive",
+            "interactives",
+            "interactive element",
+            "interactive-element",
+            "interactive elements",
+            "interactive_elements",
+            "interactive-elements",
+        ):
+            assert [element.id for element in find_by_tag(sample_som, alias)] == expected, alias
+            assert [
+                item["id"] for item in find_action_targets_by_role(sample_som, alias)
+            ] == expected, alias
+
     def test_finds_all_links(self, sample_som: Som) -> None:
         for alias in (
             "link",
