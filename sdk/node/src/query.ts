@@ -120,7 +120,7 @@ export function findByTag(som: Som, tag: ElementRole | string): SomElement[] {
     );
   }
   if (['time_input', 'time_inputs', 'time_control', 'time_controls', 'timecontrol', 'timecontrols',
-    'time_picker', 'time_pickers']
+    'time_picker', 'time_pickers', 'timepicker', 'timepickers']
     .includes(normalizedTag)) {
     return flatElements(som).filter(isTimeInputElement);
   }
@@ -915,7 +915,7 @@ export function findActionTargetsByRole(
     );
   }
   if (['time_input', 'time_inputs', 'time_control', 'time_controls', 'timecontrol', 'timecontrols',
-    'time_picker', 'time_pickers']
+    'time_picker', 'time_pickers', 'timepicker', 'timepickers']
     .includes(normalizedRole)) {
     return plan.filter((item) => item.role === 'text_input' &&
       sourceRoleMatches(item.input_type, 'time'));

@@ -758,6 +758,8 @@ describe('findByTag', () => {
       'timecontrols',
       'time_picker',
       'time_pickers',
+      'timepicker',
+      'timepickers',
       'time-picker',
       'time-pickers',
       'time picker',
