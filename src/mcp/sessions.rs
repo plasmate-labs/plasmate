@@ -430,7 +430,8 @@ fn count_blocked_interactives(
     for element in elements {
         if element.role.is_interactive() {
             if let Some(attrs) = &element.attrs {
-                if attr_flag_true(attrs, "disabled") {
+                if attr_flag_true(attrs, "disabled") || attr_flag_true(attrs, "aria_disabled")
+                {
                     *disabled += 1;
                 }
                 if attr_flag_true(attrs, "readonly") {
@@ -535,7 +536,7 @@ mod tests {
     async fn snapshot_counts_disabled_and_readonly_interactives() {
         let manager = SessionManager::new();
         let id = manager.create_session().await.unwrap();
-        let html = "<html><head><title>Locked fields</title></head><body><main><input id='coupon' disabled value='SAVE'><textarea id='notes' readonly>Draft</textarea><button>Ok</button></main></body></html>";
+        let html = "<html><head><title>Locked fields</title></head><body><main><input id='coupon' disabled value='SAVE'><textarea id='notes' readonly>Draft</textarea><button aria-disabled='true'>Locked</button><button>Ok</button></main></body></html>";
         manager
             .with_session(&id, |session| {
                 session.target.current_url = Some("https://example.test/locked".to_string());
@@ -549,8 +550,8 @@ mod tests {
             .unwrap();
 
         let snapshot = manager.snapshot().await;
-        assert_eq!(snapshot.sessions[0].interactive_count, Some(3));
-        assert_eq!(snapshot.sessions[0].disabled_count, Some(1));
+        assert_eq!(snapshot.sessions[0].interactive_count, Some(4));
+        assert_eq!(snapshot.sessions[0].disabled_count, Some(2));
         assert_eq!(snapshot.sessions[0].readonly_count, Some(1));
         assert!(manager.close_session(&id).await);
     }
