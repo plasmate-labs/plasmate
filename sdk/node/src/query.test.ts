@@ -652,6 +652,17 @@ describe('findByTag', () => {
     assert.equal(paragraphs.length, 3);
   });
 
+  it('finds interactive elements through selector aliases', () => {
+    for (const alias of ['interactive', 'interactives', 'interactive-elements']) {
+      assert.deepEqual(findByTag(fixture, alias).map((el) => el.id), [
+        'e2',
+        'e4',
+        'e5',
+        'e8',
+      ], alias);
+    }
+  });
+
   it('accepts anchor aliases for links in element and action queries', () => {
     for (const alias of ['a', 'anchor', 'anchors', 'links']) {
       assert.deepEqual(findByTag(fixture, alias).map((el) => el.id), ['e2'], alias);
