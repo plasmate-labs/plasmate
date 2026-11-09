@@ -813,6 +813,55 @@ describe('findByAction', () => {
       'e_8',
     ]);
   });
+
+  it('normalizes MCP action aliases and prefixes', () => {
+    for (const alias of ['action:click', 'action = click', 'role:click', '"click"']) {
+      expect(findByAction(FIXTURE, alias).map((el) => el.id)).toEqual([
+        'e_1',
+        'e_2',
+        'e_5',
+        'e_8',
+      ]);
+    }
+    for (const alias of [
+      'type_text',
+      'type-text',
+      'type text',
+      'action:type_text',
+      'action: "type_text"',
+      "role='type text'",
+    ]) {
+      expect(findByAction(FIXTURE, alias).map((el) => el.id)).toEqual(['e_7']);
+    }
+  });
+
+  it('matches submit and reset by compiled button type', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_form',
+          role: 'form',
+          elements: [
+            { id: 'submit', role: 'button', actions: ['click'], attrs: { button_type: 'submit' } },
+            { id: 'image-submit', role: 'button', actions: ['click'], attrs: { button_type: 'image' } },
+            { id: 'reset', role: 'button', actions: ['click'], attrs: { button_type: 'reset' } },
+          ],
+        },
+      ],
+    };
+
+    expect(findActionTargetsByAction(som, 'submit').map((item) => item.id)).toEqual([
+      'submit',
+      'image-submit',
+    ]);
+    expect(findActionTargetsByAction(som, 'reset').map((item) => item.id)).toEqual(['reset']);
+    expect(findByAction(som, 'action:submit').map((element) => element.id)).toEqual([
+      'submit',
+      'image-submit',
+    ]);
+    expect(findByAction(som, 'role:reset').map((element) => element.id)).toEqual(['reset']);
+  });
 });
 
 describe('findByHint', () => {

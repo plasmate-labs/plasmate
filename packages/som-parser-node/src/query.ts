@@ -175,7 +175,7 @@ function actionPlanLabel(el: SomElement): string | undefined {
 export function findByAction(som: Som, action: ElementAction | string): SomElement[] {
   const normalizedAction = normalizeActionQuery(action);
   return getAllElements(som).filter((el) =>
-    el.actions?.some((candidate) => normalizeActionQuery(candidate) === normalizedAction),
+    matchesAction(el.actions, el.attrs?.button_type, normalizedAction),
   );
 }
 
@@ -646,13 +646,76 @@ export function findActionTargetsByAction(
 ): ActionPlanItem[] {
   const normalizedAction = normalizeActionQuery(action);
   const plan = options?.enabledOnly ? getEnabledActionPlan(som) : getActionPlan(som);
-  return plan.filter((item) =>
-    item.actions.some((candidate) => normalizeActionQuery(candidate) === normalizedAction),
+  const results = plan.filter((item) =>
+    matchesAction(item.actions, item.button_type, normalizedAction),
   );
+  if (normalizedAction !== 'submit' && normalizedAction !== 'reset') return results;
+
+  const seenIds = new Set(results.map((item) => item.id));
+  for (const item of plan) {
+    if (matchesAction(item.actions, item.button_type, normalizedAction) && !seenIds.has(item.id)) {
+      results.push(item);
+      seenIds.add(item.id);
+    }
+  }
+  return results;
 }
 
 function normalizeActionQuery(value: string): string {
-  return value.trim().toLowerCase();
+  let normalized = value.trim().toLowerCase();
+  if (
+    normalized.length >= 2 &&
+    ((normalized.startsWith('"') && normalized.endsWith('"')) ||
+      (normalized.startsWith("'") && normalized.endsWith("'")))
+  ) {
+    normalized = normalized.slice(1, -1).trim();
+  }
+  for (const prefix of ['action', 'role']) {
+    const separator = normalized.startsWith(prefix)
+      ? normalized.slice(prefix.length).trimStart()
+      : '';
+    if (separator.startsWith(':') || separator.startsWith('=')) {
+      normalized = separator.slice(1).trim();
+      if (
+        normalized.length >= 2 &&
+        ((normalized.startsWith('"') && normalized.endsWith('"')) ||
+          (normalized.startsWith("'") && normalized.endsWith("'")))
+      ) {
+        normalized = normalized.slice(1, -1).trim();
+      }
+      break;
+    }
+  }
+  switch (normalized) {
+    case 'clear_text':
+    case 'clear-text':
+    case 'clear text':
+      return 'clear';
+    case 'type_text':
+    case 'type-text':
+    case 'type text':
+      return 'type';
+    case 'select_option':
+    case 'select-option':
+    case 'select option':
+      return 'select';
+    default:
+      return normalized;
+  }
+}
+
+function matchesAction(
+  actions: ElementAction[] | undefined,
+  buttonType: string | undefined,
+  normalizedAction: string,
+): boolean {
+  if (actions?.some((candidate) => normalizeActionQuery(candidate) === normalizedAction)) {
+    return true;
+  }
+  if (normalizedAction !== 'submit' && normalizedAction !== 'reset') return false;
+  const normalizedButtonType = buttonType?.toLowerCase();
+  return normalizedButtonType === normalizedAction ||
+    (normalizedAction === 'submit' && normalizedButtonType === 'image');
 }
 
 function normalizeRoleIndexKey(value: string): string {
