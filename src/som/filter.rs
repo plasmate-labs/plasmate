@@ -46,8 +46,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `date_time` / `date-time` / `date time`, `date_time_local` /
 ///   `date-time-local` / `date time local`, `month`,
 ///   `time` / `times` / `time_input` / `time_inputs` / `time-input` /
-///   `time-inputs` / `time input` / `time inputs` / `time_picker` /
-///   `time_pickers` / `time-picker` / `time-pickers` / `time picker` /
+///   `time-inputs` / `time input` / `time inputs` / `timeinput` / `timeinputs` /
+///   `timecontrol` / `timecontrols` / `time_picker` / `time_pickers` /
+///   `timepicker` / `timepickers` / `time-picker` / `time-pickers` / `time picker` /
 ///   `time pickers`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` /
 ///   `textareas` / `text_area` / `text_areas`,
 ///   `select` / `selects` / `combobox` / `comboboxes` / `combo box` /
@@ -357,12 +358,18 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         selector.to_ascii_lowercase().as_str(),
         "time_input"
             | "time_inputs"
+            | "timeinput"
+            | "timeinputs"
+            | "timecontrol"
+            | "timecontrols"
             | "time-input"
             | "time-inputs"
             | "time input"
             | "time inputs"
             | "time_picker"
             | "time_pickers"
+            | "timepicker"
+            | "timepickers"
             | "time-picker"
             | "time-pickers"
             | "time picker"
@@ -1716,12 +1723,18 @@ mod tests {
         for selector in [
             "time_input",
             "time_inputs",
+            "timeinput",
+            "timeinputs",
+            "timecontrol",
+            "timecontrols",
             "time-input",
             "time-inputs",
             "time input",
             "time inputs",
             "time_picker",
             "time_pickers",
+            "timepicker",
+            "timepickers",
             "time-picker",
             "time-pickers",
             "time picker",
