@@ -823,7 +823,14 @@ describe('findByAction', () => {
         'e_8',
       ]);
     }
-    for (const alias of ['type_text', 'type-text', 'type text', 'action:type_text']) {
+    for (const alias of [
+      'type_text',
+      'type-text',
+      'type text',
+      'action:type_text',
+      'action: "type_text"',
+      "role='type text'",
+    ]) {
       expect(findByAction(FIXTURE, alias).map((el) => el.id)).toEqual(['e_7']);
     }
   });

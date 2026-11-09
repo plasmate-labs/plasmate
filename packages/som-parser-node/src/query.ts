@@ -666,6 +666,13 @@ function normalizeActionQuery(value: string): string {
       : '';
     if (separator.startsWith(':') || separator.startsWith('=')) {
       normalized = separator.slice(1).trim();
+      if (
+        normalized.length >= 2 &&
+        ((normalized.startsWith('"') && normalized.endsWith('"')) ||
+          (normalized.startsWith("'") && normalized.endsWith("'")))
+      ) {
+        normalized = normalized.slice(1, -1).trim();
+      }
       break;
     }
   }
