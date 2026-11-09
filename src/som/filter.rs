@@ -57,7 +57,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `checkbox` / `checkboxes` / `check box` /
 ///   `check boxes` / `switch` /
 ///   `switches` / `menuitemcheckbox` / `menuitemcheckboxes`, `radio` / `radios` /
-///   `radio button` / `radio buttons` /
+///   `radiobutton` / `radiobuttons` / `radio button` / `radio buttons` /
 ///   `menuitemradio` / `menuitemradios`, `heading`, `image` / `images` / `image_item` /
 ///   `image-item` / `image item` / `imageitem` / `image_items` / `image-items` /
 ///   `image items` / `imageitems`, `list` / `lists`,
@@ -881,6 +881,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         }
         "radio"
         | "radios"
+        | "radiobutton"
+        | "radiobuttons"
         | "radio_button"
         | "radio_buttons"
         | "menuitemradio"
@@ -2321,6 +2323,8 @@ mod tests {
         for selector in [
             "menuitemradio",
             "menuitemradios",
+            "radiobutton",
+            "radiobuttons",
             "radio button",
             "radio buttons",
             "menu-item-radio",
@@ -2350,6 +2354,8 @@ mod tests {
         }
 
         for selector in [
+            "radiobutton",
+            "radiobuttons",
             "radio button",
             "radio buttons",
             "menuitemradios",
