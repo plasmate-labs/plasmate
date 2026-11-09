@@ -991,6 +991,34 @@ class TestGetActionPlan:
             }
         ]
 
+    def test_marks_aria_disabled_targets_unavailable(self):
+        aria_disabled_som = parse_som(
+            {
+                **FIXTURE_SOM,
+                "regions": [
+                    {
+                        "id": "r_form",
+                        "role": "form",
+                        "elements": [
+                            {
+                                "id": "locked",
+                                "role": "button",
+                                "text": "Archive",
+                                "actions": ["click"],
+                                "attrs": {"aria_disabled": True},
+                            }
+                        ],
+                    }
+                ],
+            }
+        )
+
+        plan = get_action_plan(aria_disabled_som)
+
+        assert plan[0]["aria_disabled"] is True
+        assert plan[0]["enabled"] is False
+        assert plan[0]["blocked_reason"] == "aria-disabled"
+
     def test_returns_deterministic_cache_keys(self):
         assert (
             get_action_plan_cache_key(

@@ -89,6 +89,7 @@ export interface SomElementAttrs {
   required?: boolean;
   readonly?: boolean;
   disabled?: boolean;
+  aria_disabled?: boolean;
   inert?: boolean;
   checked?: boolean;
   group?: string;

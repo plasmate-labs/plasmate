@@ -103,6 +103,7 @@ class SomElementAttrs(BaseModel):
     type: Optional[str] = None
     referrerpolicy: Optional[str] = None
     download: Optional[Union[bool, str]] = None
+    aria_disabled: Optional[bool] = None
     input_type: Optional[str] = None
     value: Optional[str] = None
     placeholder: Optional[str] = None

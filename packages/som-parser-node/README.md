@@ -59,6 +59,9 @@ const clickable = findByAction(som, 'click');
 const fields = findByLabel(som, 'email');
 ```
 
+Targets compiled with `aria-disabled="true"` remain in the plan with
+`enabled: false`, `aria_disabled: true`, and `blocked_reason: 'aria-disabled'`.
+
 Action lookup accepts the same compact aliases used by MCP selectors, including
 `action:click`, `action=type_text`, quoted values, and `select-option`. `submit`
 and `reset` also match compiled button types, including image submitters.

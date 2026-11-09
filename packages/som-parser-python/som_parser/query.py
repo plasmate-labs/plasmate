@@ -505,6 +505,11 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                 if attrs.disabled:
                     item["enabled"] = False
                     item["blocked_reason"] = "disabled"
+            if attrs.aria_disabled is not None:
+                item["aria_disabled"] = attrs.aria_disabled
+                if attrs.aria_disabled and item.get("enabled") is not False:
+                    item["enabled"] = False
+                    item["blocked_reason"] = "aria-disabled"
             if attrs.inert is not None:
                 item["inert"] = attrs.inert
                 if attrs.inert:
