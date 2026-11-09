@@ -75,6 +75,9 @@ Claude will call: `fetch_page(url="https://stripe.com/docs", selector="main")`
 Inline text tags `time`/`times`, `s`, `ins`, `del`, and `mark` are also accepted as paragraph selectors,
 including their `role=` and `role:` forms.
 
+Time form controls also accept `time_input`/`time-input`/`time input` and
+`time_picker`/`time-picker`/`time picker`, including plural forms.
+
 Alert-dialog regions also accept `alertdialog`/`alertdialogs`, plus hyphenated
 and space-separated forms (`alert-dialog`, `alert dialogs`, and so on).
 

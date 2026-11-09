@@ -46,7 +46,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `date_time` / `date-time` / `date time`, `date_time_local` /
 ///   `date-time-local` / `date time local`, `month`,
 ///   `time` / `times` / `time_input` / `time_inputs` / `time-input` /
-///   `time-inputs` / `time input` / `time inputs`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` /
+///   `time-inputs` / `time input` / `time inputs` / `time_picker` /
+///   `time_pickers` / `time-picker` / `time-pickers` / `time picker` /
+///   `time pickers`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` /
 ///   `textareas` / `text_area` / `text_areas`,
 ///   `select` / `selects` / `combobox` / `comboboxes` / `combo box` /
 ///   `combo boxes` / `combo-boxes` /
@@ -353,7 +355,18 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // selector's backwards-compatible mixed behavior above.
     if matches!(
         selector.to_ascii_lowercase().as_str(),
-        "time_input" | "time_inputs" | "time-input" | "time-inputs" | "time input" | "time inputs"
+        "time_input"
+            | "time_inputs"
+            | "time-input"
+            | "time-inputs"
+            | "time input"
+            | "time inputs"
+            | "time_picker"
+            | "time_pickers"
+            | "time-picker"
+            | "time-pickers"
+            | "time picker"
+            | "time pickers"
     ) {
         return filter_som_elements(som, selector, |element| {
             element.role == ElementRole::TextInput
@@ -1707,6 +1720,12 @@ mod tests {
             "time-inputs",
             "time input",
             "time inputs",
+            "time_picker",
+            "time_pickers",
+            "time-picker",
+            "time-pickers",
+            "time picker",
+            "time pickers",
         ] {
             let filtered = apply_selector(&som, selector);
             let ids = filtered.regions[0]
