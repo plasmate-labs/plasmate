@@ -914,6 +914,10 @@ export function findActionTargetsByRole(
       item.role === 'paragraph' && sourceRoleMatches(item.source_tag, 'output'),
     );
   }
+  if (['interactive', 'interactives', 'interactive_elements', 'interactive-elements']
+    .includes(normalizedRole)) {
+    return plan;
+  }
   if (['time_input', 'time_inputs', 'time_control', 'time_controls', 'timecontrol', 'timecontrols',
     'time_picker', 'time_pickers', 'timepicker', 'timepickers']
     .includes(normalizedRole)) {

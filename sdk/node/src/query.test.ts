@@ -180,6 +180,17 @@ describe('findActionTargetsByAction aliases', () => {
 });
 
 describe('findActionTargetsByRole aliases', () => {
+  it('returns all action targets for interactive aliases', () => {
+    for (const alias of ['interactive', 'interactives', 'interactive_elements', 'interactive-elements']) {
+      assert.deepEqual(findActionTargetsByRole(fixture, alias).map((item) => item.id), [
+        'e2',
+        'e4',
+        'e5',
+        'e8',
+      ], alias);
+    }
+  });
+
   it('normalizes case, whitespace, and plural role aliases', () => {
     assert.deepEqual(findActionTargetsByRole(fixture, ' BUTTONS ').map((item) => item.id), ['e4']);
     assert.deepEqual(findActionTargetsByRole(fixture, 'text-input').map((item) => item.id), ['e5']);
