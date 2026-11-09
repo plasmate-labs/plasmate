@@ -1489,6 +1489,39 @@ describe('getActionPlan', () => {
     assert.deepEqual(getEnabledActionPlan(som), []);
   });
 
+  it('preserves the compiled aria-disabled state for replay targets', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_main',
+          role: 'main',
+          elements: [
+            {
+              id: 'compiled-aria-disabled',
+              role: 'button',
+              text: 'Archive',
+              actions: ['click'],
+              attrs: { aria_disabled: true },
+            },
+          ],
+        },
+      ],
+    };
+
+    assert.deepEqual(getActionPlan(som)[0], {
+      id: 'compiled-aria-disabled',
+      cache_key: 'plasmate-action:v1:250d5fbe',
+      role: 'button',
+      actions: ['click'],
+      enabled: false,
+      label: 'Archive',
+      aria_disabled: true,
+      blocked_reason: 'aria-disabled',
+    });
+    assert.deepEqual(getEnabledActionPlan(som), []);
+  });
+
   it('returns compact action targets', () => {
     const plan = getActionPlan(fixture);
 
