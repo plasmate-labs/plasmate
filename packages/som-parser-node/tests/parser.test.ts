@@ -937,6 +937,38 @@ describe('getActionPlan', () => {
     ]);
   });
 
+  it('marks aria-disabled targets unavailable without conflating native disabled state', () => {
+    const som: Som = {
+      ...FIXTURE,
+      regions: [
+        {
+          id: 'r_form',
+          role: 'form',
+          elements: [
+            {
+              id: 'locked',
+              role: 'button',
+              text: 'Archive',
+              actions: ['click'],
+              attrs: { aria_disabled: true },
+            },
+          ],
+        },
+      ],
+      meta: { html_bytes: 100, som_bytes: 50, element_count: 1, interactive_count: 1 },
+    };
+
+    expect(getActionPlan(som)).toEqual([
+      expect.objectContaining({
+        id: 'locked',
+        enabled: false,
+        aria_disabled: true,
+        blocked_reason: 'aria-disabled',
+      }),
+    ]);
+    expect(getEnabledActionPlan(som)).toEqual([]);
+  });
+
   it('includes compiled accessible-label fallbacks for replay', () => {
     const som: Som = {
       ...FIXTURE,
