@@ -561,8 +561,9 @@ fn canonical_selector_alias(value: &str) -> String {
         // cache entry for the spellings exposed by the selector contract.
         "tables" | "data_table" | "data_tables" | "data-table" | "data-tables" | "data table"
         | "data tables" | "grid" | "grids" | "data_grid" | "data_grids" | "data-grid"
-        | "data-grids" | "data grid" | "data grids" | "table_grid" | "table_grids"
-        | "table-grid" | "table-grids" | "table grid" | "table grids" | "tree_grid"
+        | "data-grids" | "data grid" | "data grids" | "datagrid" | "datagrids"
+        | "table_grid" | "table_grids" | "tablegrid" | "tablegrids" | "table-grid"
+        | "table-grids" | "table grid" | "table grids" | "tree_grid"
         | "tree_grids" | "tree-grid" | "tree-grids" | "tree grid" | "tree grids" | "treegrid"
         | "treegrids" => "table".to_string(),
         value => value.to_string(),
@@ -806,9 +807,11 @@ mod tests {
             "data_grid",
             "data-grid",
             "data grid",
+            "datagrid",
             "table_grid",
             "table-grid",
             "table grid",
+            "tablegrid",
             "treegrid",
             "tree_grid",
             "tree-grid",
