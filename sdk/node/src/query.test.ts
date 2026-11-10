@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import type { Som } from './types';
+import type { RegionRole, Som } from './types';
 import {
   findActionTarget,
   findActionTargetByCacheKey,
@@ -405,6 +405,18 @@ describe('findByRole', () => {
     assert.deepEqual(findByRole(uppercaseRoles, 'MAIN').map((region) => region.id), ['r_main']);
   });
 
+  it('ignores incidental whitespace in compiled region roles', () => {
+    const paddedRoles: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) => ({
+        ...region,
+        role: ` ${region.role} ` as RegionRole,
+      })),
+    };
+
+    assert.deepEqual(findByRole(paddedRoles, 'header').map((region) => region.id), ['r_header']);
+  });
+
   it('returns empty array for missing role', () => {
     assert.deepEqual(findByRole(fixture, 'dialog'), []);
   });
@@ -444,7 +456,7 @@ describe('findByRole', () => {
       ...som,
       regions: [...som.regions, { id: 'r_aside', role: 'aside', elements: [] }],
     };
-    for (const alias of ['aside', 'asides', 'sidebar', 'sidebars', 'complementary']) {
+    for (const alias of ['aside', 'asides', 'sidebar', 'sidebars', 'complementary', 'complementaries']) {
       assert.deepEqual(findByRole(asideSom, alias).map((region) => region.id), ['r_aside'], alias);
     }
   });
@@ -1026,6 +1038,34 @@ describe('findByTag', () => {
     };
     for (const alias of ['blockquote', 'blockquotes', 'quote', 'quotes']) {
       assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['quote'], alias);
+    }
+  });
+
+  it('accepts inline text and ARIA text aliases for paragraph elements', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_inline_text',
+          role: 'main',
+          elements: [{ id: 'inline-text', role: 'paragraph', text: 'Inline', actions: ['click'] }],
+        },
+      ],
+    };
+    const aliases = [
+      'abbr', 'address', 'cite', 'code', 'dfn', 'figcaption', 'kbd', 'math',
+      'pre', 'q', 'ruby', 'samp', 'small', 'var', 's', 'ins', 'del', 'mark',
+      'subscript', 'superscript', 'deletion', 'insertion', 'suggestion',
+      'definition', 'definitions', 'term', 'terms', 'emphasis', 'emphases',
+      'strong', 'strongs',
+    ];
+    for (const alias of aliases) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['inline-text'], alias);
+      assert.deepEqual(
+        findActionTargetsByRole(som, alias).map((item) => item.id),
+        ['inline-text'],
+        alias,
+      );
     }
   });
 

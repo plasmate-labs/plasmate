@@ -8,7 +8,7 @@ import type { Som, SomRegion, SomElement, RegionRole, ElementRole, ElementAction
 export function findByRole(som: Som, role: RegionRole | string): SomRegion[] {
   const normalizedRole = normalizeRegionRole(role);
   return normalizedRole
-    ? som.regions.filter((r) => r.role.toLowerCase() === normalizedRole)
+    ? som.regions.filter((r) => r.role.trim().toLowerCase() === normalizedRole)
     : [];
 }
 
@@ -40,6 +40,7 @@ function normalizeRegionRole(role: string): RegionRole | undefined {
     sidebar: 'aside',
     sidebars: 'aside',
     complementary: 'aside',
+    complementaries: 'aside',
     header: 'header',
     headers: 'header',
     banner: 'header',
@@ -444,6 +445,37 @@ const ELEMENT_ROLE_ALIASES: Record<string, ElementRole> = {
   dl: 'list',
   menu: 'list',
   p: 'paragraph',
+  abbr: 'paragraph',
+  address: 'paragraph',
+  cite: 'paragraph',
+  code: 'paragraph',
+  dfn: 'paragraph',
+  figcaption: 'paragraph',
+  kbd: 'paragraph',
+  math: 'paragraph',
+  pre: 'paragraph',
+  q: 'paragraph',
+  ruby: 'paragraph',
+  samp: 'paragraph',
+  small: 'paragraph',
+  var: 'paragraph',
+  s: 'paragraph',
+  ins: 'paragraph',
+  del: 'paragraph',
+  mark: 'paragraph',
+  subscript: 'paragraph',
+  superscript: 'paragraph',
+  deletion: 'paragraph',
+  insertion: 'paragraph',
+  suggestion: 'paragraph',
+  definition: 'paragraph',
+  definitions: 'paragraph',
+  term: 'paragraph',
+  terms: 'paragraph',
+  emphasis: 'paragraph',
+  emphases: 'paragraph',
+  strong: 'paragraph',
+  strongs: 'paragraph',
   blockquote: 'paragraph',
   blockquotes: 'paragraph',
   quote: 'paragraph',
