@@ -87,6 +87,8 @@ def find_by_role(som: Som, role: str) -> List[SomRegion]:
         "sidebars": "aside",
         "complementary": "aside",
         "complementaries": "aside",
+        "complementary_region": "aside",
+        "complementary_regions": "aside",
         "header": "header",
         "headers": "header",
         "banner": "header",

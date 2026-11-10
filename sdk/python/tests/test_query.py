@@ -271,7 +271,15 @@ class TestFindByRole:
             meta=SomMeta(html_bytes=0, som_bytes=0, element_count=0, interactive_count=0),
         )
         assert len(find_by_role(som, "aside")) == 2
-        for alias in ("asides", "sidebar", "sidebars", "complementary", "complementaries"):
+        for alias in (
+            "asides",
+            "sidebar",
+            "sidebars",
+            "complementary",
+            "complementaries",
+            "complementary_region",
+            "complementary_regions",
+        ):
             assert len(find_by_role(som, alias)) == 2
 
     def test_preserves_extension_role_lookup(self, sample_som: Som) -> None:

@@ -456,7 +456,16 @@ describe('findByRole', () => {
       ...som,
       regions: [...som.regions, { id: 'r_aside', role: 'aside', elements: [] }],
     };
-    for (const alias of ['aside', 'asides', 'sidebar', 'sidebars', 'complementary', 'complementaries']) {
+    for (const alias of [
+      'aside',
+      'asides',
+      'sidebar',
+      'sidebars',
+      'complementary',
+      'complementaries',
+      'complementary_region',
+      'complementary_regions',
+    ]) {
       assert.deepEqual(findByRole(asideSom, alias).map((region) => region.id), ['r_aside'], alias);
     }
   });
