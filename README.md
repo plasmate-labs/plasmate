@@ -245,7 +245,8 @@ Structural aliases include `div`/`fieldset`/`fieldsets`/`group`/`groups`, `secti
 `figure`/`figures`/`radiogroup`/`radiogroups`/`progressbar`/`progressbars`/
 `meter`/`meters`/`output`/`outputs`, `hr`/`separator`,
 `details`/`summary`/`summaries`, and `iframe`; `img`/`image` and ARIA widget names such
-as `menuitem`/`menu items`, `option`, `tab`, `treeitem`/`tree items`, `switch`,
+as `menuitem`/`menu items`, `option`/`options`, `tab`/`tabs`,
+`treeitem`/`tree items`/`treeitems`, `switch`,
 `menuitemcheckbox`, and `menuitemradio` are also accepted. Region selectors accept ARIA landmark
 aliases such as `navigation`, `nav region`/`nav-region`/`nav regions`,
 `navigation region`/`navigation-region`/`navigation regions`, `search`/`search navigation`/`search navigations`, `banner`/`banners`, `complementary`/`complementaries`, and
@@ -254,8 +255,11 @@ aliases such as `navigation`, `nav region`/`nav-region`/`nav regions`,
 space-separated forms) target dialog regions; `content_region`/`content_regions` (and their hyphenated or
 space-separated forms) select content regions.
 Table selectors include `table`/`tables`, `data_table`/`data_tables`, and
-`grid`/`grids`/`data_grid`/`data_grids`/`datagrid`/`datagrids`/`tablegrid`/`tablegrids`/`treegrid`/`treegrids` (with
-hyphenated and space-separated forms accepted too).
+`grid`/`grids`/`data_grid`/`data_grids`/`datagrid`/`datagrids`/`data-grid`/`data-grids`,
+`table_grid`/`table_grids`/`tablegrid`/`tablegrids`/`table-grid`/`table-grids`,
+and `treegrid`/`treegrids`/`tree_grid`/`tree_grids`/`tree-grid`/`tree-grids`
+(with space-separated forms such as `data grid`, `table grid`, and `tree grid`
+accepted too).
 Use `selector="media"` to keep images and media-capable grouped elements
 such as audio, video, and canvas while removing unrelated page content.
 Source-specific media selectors are also available: `audio_item`/`audio-item`/
