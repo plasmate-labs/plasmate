@@ -507,8 +507,11 @@ fn normalized_selector(selector: Option<&str>) -> Option<String> {
                         // selector as the bare role/action value.
                         "role" => canonical_selector_alias(value),
                         "action" => match value {
-                            "type_text" | "type-text" => "type".to_string(),
-                            "select_option" | "select-option" => "select".to_string(),
+                            "type_text" | "type-text" | "type text" => "type".to_string(),
+                            "clear_text" | "clear-text" | "clear text" => "clear".to_string(),
+                            "select_option" | "select-option" | "select option" => {
+                                "select".to_string()
+                            }
                             value => value.to_string(),
                         },
                         _ => value.to_string(),
@@ -527,6 +530,11 @@ fn normalized_selector(selector: Option<&str>) -> Option<String> {
 
 fn canonical_selector_alias(value: &str) -> String {
     match value {
+        // Bare action aliases use the same compact action cache entry as
+        // their action:<verb> forms and as the MCP tool names.
+        "type_text" | "type-text" | "type text" => "type".to_string(),
+        "clear_text" | "clear-text" | "clear text" => "clear".to_string(),
+        "select_option" | "select-option" | "select option" => "select".to_string(),
         // Region aliases share one cache entry with their canonical role.
         "main_content" | "main_contents" | "main-content" | "main-contents" | "main content"
         | "main contents" | "main_region" | "main-region" | "main region" | "main_regions"
@@ -840,6 +848,35 @@ mod tests {
                     CacheLookup::Hit(_)
                 ),
                 "equivalent selector should hit cache: {stored} vs {lookup}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_selector_cache_keys_reuse_spaced_action_aliases() {
+        let cache = SomCache::new(CacheConfig::default());
+        for (stored, canonical) in [
+            ("type text", "type"),
+            ("action:type text", "type"),
+            ("clear_text", "clear"),
+            ("action : clear text", "clear"),
+            ("select option", "select"),
+            ("action=select option", "select"),
+        ] {
+            cache.store_with_selector(
+                "https://example.com/app",
+                111,
+                Some(stored),
+                stored.as_bytes().to_vec(),
+                100,
+            );
+
+            assert!(
+                matches!(
+                    cache.lookup_with_selector("https://example.com/app", 111, Some(canonical)),
+                    CacheLookup::Hit(_)
+                ),
+                "action alias should share the canonical cache key: {stored}"
             );
         }
     }
