@@ -636,6 +636,12 @@ fn canonical_selector_alias(value: &str) -> String {
         | "radio_button" | "radio_buttons" | "menuitemradio" | "menuitemradios"
         | "menuitem_radio" | "menuitem_radios" | "menu-item-radio" | "menu-item-radios"
         | "menu_item_radio" | "menu_item_radios" => "radio".to_string(),
+        // Image source aliases all resolve to the SOM image role. Keep cache
+        // lookups aligned with the selector vocabulary accepted by
+        // `apply_selector`.
+        "image" | "images" | "img" | "picture" | "pictures" | "image_item"
+        | "image-item" | "image item" | "imageitem" | "image_items" | "image-items"
+        | "image items" | "imageitems" => "image".to_string(),
         value => value.to_string(),
     }
 }
@@ -1074,6 +1080,28 @@ mod tests {
                     CacheLookup::Hit(_)
                 ),
                 "radio-group alias should share the group cache key: {stored}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_selector_cache_keys_reuse_image_aliases() {
+        let cache = SomCache::new(CacheConfig::default());
+        for stored in ["img", "picture", "image-item", "image items", "images"] {
+            cache.store_with_selector(
+                "https://example.com/app",
+                111,
+                Some(stored),
+                stored.as_bytes().to_vec(),
+                100,
+            );
+
+            assert!(
+                matches!(
+                    cache.lookup_with_selector("https://example.com/app", 111, Some("image")),
+                    CacheLookup::Hit(_)
+                ),
+                "image alias should share the canonical cache key: {stored}"
             );
         }
     }
