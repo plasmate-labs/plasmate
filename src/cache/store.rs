@@ -557,6 +557,15 @@ fn canonical_selector_alias(value: &str) -> String {
         // aliases accepted by `apply_selector`.
         "buttons" => "button".to_string(),
         "links" | "anchors" | "hyperlink" | "hyperlinks" => "link".to_string(),
+        // Text-control aliases all resolve to the SOM text-input role. Keep
+        // compact and source-oriented spellings on one cache entry too.
+        "text" | "text_inputs" | "textbox" | "textboxes" | "text_box" | "text_boxes"
+        | "text_field" | "text_fields" | "textinput" | "textinputs" | "textfields"
+        | "searchbox" | "searchboxes" | "slider" | "sliders" | "spinbutton"
+        | "spinbuttons" | "spin_button" | "spin_buttons" | "input" | "inputs" | "email"
+        | "number" | "password" | "tel" | "url" | "date" | "datetime"
+        | "datetime_local" | "date_time" | "date_time_local" | "month" | "time" | "week"
+        | "color" | "range" | "hidden" | "file" => "text_input".to_string(),
         // Table-like aliases all resolve to the SOM table role. Reuse one
         // cache entry for the spellings exposed by the selector contract.
         "tables" | "data_table" | "data_tables" | "data-table" | "data-tables" | "data table"
@@ -774,6 +783,10 @@ mod tests {
             ("role=BUTTON", "button"),
             ("role=BUTTONS", "button"),
             ("links", "link"),
+            ("text", "text_input"),
+            ("textinput", "text_input"),
+            ("textfields", "text_input"),
+            ("searchbox", "text_input"),
             ("action=TYPE_TEXT", "type"),
             ("action:select-option", "select"),
         ] {
