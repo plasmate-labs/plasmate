@@ -254,7 +254,7 @@ aliases such as `navigation`, `nav region`/`nav-region`/`nav regions`,
 space-separated forms) target dialog regions; `content_region`/`content_regions` (and their hyphenated or
 space-separated forms) select content regions.
 Table selectors include `table`/`tables`, `data_table`/`data_tables`, and
-`grid`/`grids`/`data_grid`/`data_grids`/`treegrid`/`treegrids` (with
+`grid`/`grids`/`data_grid`/`data_grids`/`datagrid`/`datagrids`/`tablegrid`/`tablegrids`/`treegrid`/`treegrids` (with
 hyphenated and space-separated forms accepted too).
 Use `selector="media"` to keep images and media-capable grouped elements
 such as audio, video, and canvas while removing unrelated page content.

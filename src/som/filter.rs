@@ -81,9 +81,10 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `progress_bar` / `progress-bar` / `progress bar` / `progressbars` /
 ///   `meter` / `meters` /
 ///   `video` / `canvas`,
-///   `grid` / `grids` / `data_grid` / `data_grids` / `data-grid` / `data-grids` /
+///   `grid` / `grids` / `data_grid` / `data_grids` / `datagrid` / `datagrids` /
+///   `data-grid` / `data-grids` /
 ///   `treegrid` / `treegrids` / `tree-grid` / `tree-grids` / `table_grid` /
-///   `table-grid` / `table grids` / `table-grids`,
+///   `tablegrid` / `tablegrids` / `table-grid` / `table grids` / `table-grids`,
 ///   `separator` / `separators` / `hr`, `details` / `detail` / `summary` /
 ///   `summaries`,
 ///   `iframe` / `iframes`, `audio` / `audios`, `video` / `videos`,
@@ -936,12 +937,16 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "grids"
         | "data_grid"
         | "data_grids"
+        | "datagrid"
+        | "datagrids"
         | "data-grid"
         | "data-grids"
         | "data grid"
         | "data grids"
         | "table_grid"
         | "table_grids"
+        | "tablegrid"
+        | "tablegrids"
         | "table-grid"
         | "table-grids"
         | "table grid"
@@ -1987,8 +1992,12 @@ mod tests {
             ("data-tables", ElementRole::Table),
             ("data tables", ElementRole::Table),
             ("data-grid", ElementRole::Table),
+            ("datagrid", ElementRole::Table),
+            ("datagrids", ElementRole::Table),
             ("data grids", ElementRole::Table),
             ("table-grid", ElementRole::Table),
+            ("tablegrid", ElementRole::Table),
+            ("tablegrids", ElementRole::Table),
             ("table grids", ElementRole::Table),
             ("tree-grid", ElementRole::Table),
             ("tree grids", ElementRole::Table),
