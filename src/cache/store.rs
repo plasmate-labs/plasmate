@@ -569,7 +569,7 @@ fn canonical_selector_alias(value: &str) -> String {
         | "query_control" | "query_controls" | "querybox" | "query_box" | "queryboxes"
         | "query_boxes"
         | "number" | "password" | "tel" | "url" | "date" | "datetime"
-        | "datetime_local" | "date_time" | "date_time_local" | "month" | "time" | "week"
+        | "datetime_local" | "date_time" | "date_time_local" | "month" | "week"
         | "color" | "range" | "hidden" | "file" => "text_input".to_string(),
         // Table-like aliases all resolve to the SOM table role. Reuse one
         // cache entry for the spellings exposed by the selector contract.
