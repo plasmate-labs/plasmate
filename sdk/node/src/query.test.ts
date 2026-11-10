@@ -1029,6 +1029,34 @@ describe('findByTag', () => {
     }
   });
 
+  it('accepts inline text and ARIA text aliases for paragraph elements', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [
+        {
+          id: 'r_inline_text',
+          role: 'main',
+          elements: [{ id: 'inline-text', role: 'paragraph', text: 'Inline', actions: ['click'] }],
+        },
+      ],
+    };
+    const aliases = [
+      'abbr', 'address', 'cite', 'code', 'dfn', 'figcaption', 'kbd', 'math',
+      'pre', 'q', 'ruby', 'samp', 'small', 'var', 's', 'ins', 'del', 'mark',
+      'subscript', 'superscript', 'deletion', 'insertion', 'suggestion',
+      'definition', 'definitions', 'term', 'terms', 'emphasis', 'emphases',
+      'strong', 'strongs',
+    ];
+    for (const alias of aliases) {
+      assert.deepEqual(findByTag(som, alias).map((el) => el.id), ['inline-text'], alias);
+      assert.deepEqual(
+        findActionTargetsByRole(som, alias).map((item) => item.id),
+        ['inline-text'],
+        alias,
+      );
+    }
+  });
+
   it('accepts area aliases for link elements', () => {
     for (const alias of ['area', 'areas']) {
       assert.deepEqual(findByTag(fixture, alias).map((el) => el.id), ['e2'], alias);
