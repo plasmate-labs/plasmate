@@ -593,6 +593,13 @@ fn canonical_selector_alias(value: &str) -> String {
         | "menuitemcheckbox" | "menuitemcheckboxes" | "menuitem_checkbox"
         | "menuitem_checkboxes" | "menu-item-checkbox" | "menu-item-checkboxes"
         | "menu_item_checkbox" | "menu_item_checkboxes" => "checkbox".to_string(),
+        // Radio-group aliases compile to the generic SOM group role. Reuse
+        // the same cache entry for the source-oriented spellings accepted by
+        // `apply_selector`.
+        "radiogroup" | "radiogroups" | "radio_group" | "radio_groups"
+        | "radio-group" | "radio-groups" | "radio group" | "radio groups" => {
+            "group".to_string()
+        }
         "radios" | "radiobutton" | "radiobuttons" | "radio-button" | "radio-buttons"
         | "radio_button" | "radio_buttons" | "menuitemradio" | "menuitemradios"
         | "menuitem_radio" | "menuitem_radios" | "menu-item-radio" | "menu-item-radios"
@@ -900,6 +907,37 @@ mod tests {
                     CacheLookup::Hit(_)
                 ),
                 "form-control alias should share the canonical cache key: {stored}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_selector_cache_keys_reuse_radio_group_aliases() {
+        let cache = SomCache::new(CacheConfig::default());
+        for stored in [
+            "radiogroup",
+            "radiogroups",
+            "radio_group",
+            "radio_groups",
+            "radio-group",
+            "radio-groups",
+            "radio group",
+            "radio groups",
+        ] {
+            cache.store_with_selector(
+                "https://example.com/app",
+                111,
+                Some(stored),
+                stored.as_bytes().to_vec(),
+                100,
+            );
+
+            assert!(
+                matches!(
+                    cache.lookup_with_selector("https://example.com/app", 111, Some("group")),
+                    CacheLookup::Hit(_)
+                ),
+                "radio-group alias should share the group cache key: {stored}"
             );
         }
     }
