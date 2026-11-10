@@ -421,6 +421,14 @@ describe('findByRole', () => {
     assert.deepEqual(findByRole(fixture, 'dialog'), []);
   });
 
+  it('preserves custom region role lookup', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [...fixture.regions, { id: 'r_extension', role: 'extension' as RegionRole, elements: [] }],
+    };
+    assert.deepEqual(findByRole(som, 'extension').map((region) => region.id), ['r_extension']);
+  });
+
   it('accepts alertdialog region aliases', () => {
     const som: Som = {
       ...fixture,
