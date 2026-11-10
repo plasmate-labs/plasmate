@@ -594,6 +594,16 @@ fn canonical_selector_alias(value: &str) -> String {
         | "table-grids" | "table grid" | "table grids" | "tree_grid"
         | "tree_grids" | "tree-grid" | "tree-grids" | "tree grid" | "tree grids" | "treegrid"
         | "treegrids" => "table".to_string(),
+        // Native text and ARIA content aliases all compile to the paragraph
+        // role. Reuse one cache entry for the source-facing spellings that
+        // `apply_selector` accepts.
+        "paragraph" | "paragraphs" | "p" | "abbr" | "address" | "cite" | "code" | "dfn"
+        | "figcaption" | "kbd" | "math" | "pre" | "q" | "ruby" | "samp" | "small" | "var" | "s"
+        | "ins" | "del" | "mark" | "subscript" | "superscript" | "deletion" | "insertion"
+        | "suggestion" | "definition" | "definitions" | "term" | "terms" | "emphasis"
+        | "emphases" | "strong" | "strongs" | "blockquote" | "blockquotes" | "quote" | "quotes"
+        | "output" | "outputs" | "alert" | "alerts" | "status" | "statuses" | "tooltip"
+        | "tooltips" => "paragraph".to_string(),
         // Form-control aliases all resolve to one SOM role. Keep cache hits
         // stable when callers use the HTML or ARIA vocabulary accepted by
         // `apply_selector`.
@@ -948,6 +958,28 @@ mod tests {
                     CacheLookup::Hit(_)
                 ),
                 "table alias should share the canonical cache key: {stored}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_selector_cache_keys_reuse_paragraph_aliases() {
+        let cache = SomCache::new(CacheConfig::default());
+        for stored in ["paragraphs", "blockquote", "alerts", "statuses", "tooltips"] {
+            cache.store_with_selector(
+                "https://example.com/app",
+                111,
+                Some(stored),
+                stored.as_bytes().to_vec(),
+                100,
+            );
+
+            assert!(
+                matches!(
+                    cache.lookup_with_selector("https://example.com/app", 111, Some("paragraph")),
+                    CacheLookup::Hit(_)
+                ),
+                "paragraph alias should share the canonical cache key: {stored}"
             );
         }
     }
