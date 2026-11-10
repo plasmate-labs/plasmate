@@ -15,8 +15,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `navigation_regions`/`navigation-regions`/`navigation regions`/`search`/`searches`/
 ///   `search_nav`/`search-nav`/`search_navigation`/`search-navigation`/`search navigation`/
 ///   `search_navigations`/`search-navigations`/`search navigations`,
-///   `aside`/`asides`/`sidebar`/`sidebars`/`complementary`,
-///   `header`/`headers`/`banner`,
+///   `aside`/`asides`/`sidebar`/`sidebars`/`complementary`/`complementaries`,
+///   `header`/`headers`/`banner`/`banners`,
 ///   `footer`/`footers`/`contentinfo`/`content_info`/`content-info`, `form`/`forms`, `dialog`/`dialogs`/
 ///   `alertdialog`/`alertdialogs`/`alert-dialog`/`alert-dialogs`/`alert dialog`/
 ///   `alert dialogs`,
@@ -203,10 +203,15 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         {
             Some(RegionRole::Navigation)
         }
-        "aside" | "asides" | "sidebar" | "sidebars" | "complementary" => {
+        "aside"
+        | "asides"
+        | "sidebar"
+        | "sidebars"
+        | "complementary"
+        | "complementaries" => {
             Some(RegionRole::Aside)
         }
-        "header" | "headers" | "banner" => Some(RegionRole::Header),
+        "header" | "headers" | "banner" | "banners" => Some(RegionRole::Header),
         "footer"
         | "footers"
         | "contentinfo"
@@ -1518,9 +1523,11 @@ mod tests {
             ("asides", RegionRole::Aside),
             ("sidebar", RegionRole::Aside),
             ("sidebars", RegionRole::Aside),
+            ("complementaries", RegionRole::Aside),
             ("role=sidebar", RegionRole::Aside),
             ("role:sidebars", RegionRole::Aside),
             ("headers", RegionRole::Header),
+            ("banners", RegionRole::Header),
             ("footers", RegionRole::Footer),
             ("contents", RegionRole::Content),
             ("content-info", RegionRole::Footer),
