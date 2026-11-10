@@ -12,7 +12,7 @@ export function findByRole(som: Som, role: RegionRole | string): SomRegion[] {
     : [];
 }
 
-function normalizeRegionRole(role: string): RegionRole | undefined {
+function normalizeRegionRole(role: string): string | undefined {
   let normalized = stripRolePrefix(role).toLowerCase().replace(/[\s-]+/g, '_');
   const aliases: Record<string, RegionRole> = {
     main: 'main',
@@ -41,6 +41,8 @@ function normalizeRegionRole(role: string): RegionRole | undefined {
     sidebars: 'aside',
     complementary: 'aside',
     complementaries: 'aside',
+    complementary_region: 'aside',
+    complementary_regions: 'aside',
     header: 'header',
     headers: 'header',
     banner: 'header',
@@ -67,7 +69,7 @@ function normalizeRegionRole(role: string): RegionRole | undefined {
     content_region: 'content',
     content_regions: 'content',
   };
-  return aliases[normalized];
+  return normalized ? aliases[normalized] ?? normalized : undefined;
 }
 
 /** Find an element by its stable ID across all regions. Returns undefined if not found. */
