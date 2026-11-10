@@ -558,7 +558,9 @@ fn canonical_selector_alias(value: &str) -> String {
         // Keep cache entries shared across the most common plural element
         // aliases accepted by `apply_selector`.
         "buttons" => "button".to_string(),
-        "links" | "anchors" | "hyperlink" | "hyperlinks" => "link".to_string(),
+        "links" | "a" | "area" | "areas" | "anchor" | "anchors" | "hyperlink" | "hyperlinks" => {
+            "link".to_string()
+        }
         // Text-control aliases all resolve to the SOM text-input role. Keep
         // compact and source-oriented spellings on one cache entry too.
         "text" | "text_inputs" | "textbox" | "textboxes" | "text_box" | "text_boxes"
@@ -790,6 +792,10 @@ mod tests {
             ("role=BUTTON", "button"),
             ("role=BUTTONS", "button"),
             ("links", "link"),
+            ("a", "link"),
+            ("area", "link"),
+            ("areas", "link"),
+            ("anchor", "link"),
             ("text", "text_input"),
             ("textinput", "text_input"),
             ("textfields", "text_input"),
