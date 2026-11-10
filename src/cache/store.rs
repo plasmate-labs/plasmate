@@ -584,6 +584,19 @@ fn canonical_selector_alias(value: &str) -> String {
         | "table-grids" | "table grid" | "table grids" | "tree_grid"
         | "tree_grids" | "tree-grid" | "tree-grids" | "tree grid" | "tree grids" | "treegrid"
         | "treegrids" => "table".to_string(),
+        // Form-control aliases all resolve to one SOM role. Keep cache hits
+        // stable when callers use the HTML or ARIA vocabulary accepted by
+        // `apply_selector`.
+        "selects" | "combobox" | "comboboxes" | "combo_box" | "combo_boxes" | "listbox"
+        | "listboxes" | "list_box" | "list_boxes" => "select".to_string(),
+        "checkboxes" | "check_box" | "check_boxes" | "switch" | "switches"
+        | "menuitemcheckbox" | "menuitemcheckboxes" | "menuitem_checkbox"
+        | "menuitem_checkboxes" | "menu-item-checkbox" | "menu-item-checkboxes"
+        | "menu_item_checkbox" | "menu_item_checkboxes" => "checkbox".to_string(),
+        "radios" | "radiobutton" | "radiobuttons" | "radio-button" | "radio-buttons"
+        | "radio_button" | "radio_buttons" | "menuitemradio" | "menuitemradios"
+        | "menuitem_radio" | "menuitem_radios" | "menu-item-radio" | "menu-item-radios"
+        | "menu_item_radio" | "menu_item_radios" => "radio".to_string(),
         value => value.to_string(),
     }
 }
@@ -858,6 +871,35 @@ mod tests {
                     CacheLookup::Hit(_)
                 ),
                 "table alias should share the canonical cache key: {stored}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_selector_cache_keys_reuse_form_control_aliases() {
+        let cache = SomCache::new(CacheConfig::default());
+        for (stored, canonical) in [
+            ("comboboxes", "select"),
+            ("list boxes", "select"),
+            ("switches", "checkbox"),
+            ("menu-item-checkboxes", "checkbox"),
+            ("radiobuttons", "radio"),
+            ("menu item radios", "radio"),
+        ] {
+            cache.store_with_selector(
+                "https://example.com/app",
+                111,
+                Some(stored),
+                stored.as_bytes().to_vec(),
+                100,
+            );
+
+            assert!(
+                matches!(
+                    cache.lookup_with_selector("https://example.com/app", 111, Some(canonical)),
+                    CacheLookup::Hit(_)
+                ),
+                "form-control alias should share the canonical cache key: {stored}"
             );
         }
     }
