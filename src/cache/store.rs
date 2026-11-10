@@ -529,6 +529,18 @@ fn normalized_selector(selector: Option<&str>) -> Option<String> {
 }
 
 fn canonical_selector_alias(value: &str) -> String {
+    // Heading selectors accept spaced, underscored, and hyphenated forms;
+    // reuse the same cache entry as the compact `h1`-`h6` spelling.
+    let compact = value.replace(['-', '_', ' '], "");
+    if let Some(level) = compact
+        .strip_prefix("heading")
+        .or_else(|| compact.strip_prefix('h'))
+    {
+        if matches!(level, "1" | "2" | "3" | "4" | "5" | "6") {
+            return format!("h{level}");
+        }
+    }
+
     match value {
         // Bare action aliases use the same compact action cache entry as
         // their action:<verb> forms and as the MCP tool names.
@@ -980,6 +992,28 @@ mod tests {
                     CacheLookup::Hit(_)
                 ),
                 "paragraph alias should share the canonical cache key: {stored}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_selector_cache_keys_reuse_heading_aliases() {
+        let cache = SomCache::new(CacheConfig::default());
+        for (stored, canonical) in [("heading 1", "h1"), ("h_2", "h2"), ("h-3", "h3")] {
+            cache.store_with_selector(
+                "https://example.com/app",
+                111,
+                Some(stored),
+                stored.as_bytes().to_vec(),
+                100,
+            );
+
+            assert!(
+                matches!(
+                    cache.lookup_with_selector("https://example.com/app", 111, Some(canonical)),
+                    CacheLookup::Hit(_)
+                ),
+                "heading alias should share the canonical cache key: {stored}"
             );
         }
     }
